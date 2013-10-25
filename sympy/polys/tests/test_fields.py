@@ -2,11 +2,11 @@
 
 from sympy.polys.fields import field, FracField
 from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ, RR
-from sympy.polys.orderings import lex, grlex
+from sympy.polys.domains import ZZ, QQ
+from sympy.polys.orderings import lex
 
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.core import Symbol, symbols
+from sympy.core import symbols
 from sympy import sqrt, Rational
 
 def test_FracField___init__():

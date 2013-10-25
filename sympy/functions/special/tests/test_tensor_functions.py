@@ -3,7 +3,6 @@ from sympy import (
     symbols, transpose,
 )
 from sympy.physics.secondquant import evaluate_deltas, F
-from sympy.utilities.pytest import XFAIL
 
 x, y = symbols('x y')
 

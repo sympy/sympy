@@ -1,7 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
 from sympy import symbols
-from sympy.logic.boolalg import Or, Equivalent, Implies
+from sympy.logic.boolalg import Or, Equivalent
 from sympy.logic.inference import is_literal, literal_symbol, \
      pl_true, satisfiable, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \

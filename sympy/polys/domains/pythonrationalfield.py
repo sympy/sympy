@@ -3,10 +3,12 @@
 from __future__ import print_function, division
 
 from sympy.polys.domains.rationalfield import RationalField
-from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPyRational
+from sympy.polys.domains.groundtypes import PythonInteger
+from sympy.polys.domains.pythonrational import PythonRational
+from sympy.polys.domains.groundtypes import SymPyRational
 
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 class PythonRationalField(RationalField):

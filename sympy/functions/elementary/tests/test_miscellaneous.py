@@ -2,7 +2,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.utilities.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, real_root
-from sympy import S, Float, I, cos, sin, oo, pi, Add
+from sympy import S, I, cos, sin, oo
 
 
 def test_Min():
@@ -153,7 +153,7 @@ def test_Max():
     assert Max(a, b).is_real
 
 def test_root():
-    from sympy.abc import x, y, z
+    from sympy.abc import x
     n = Symbol('n', integer=True)
 
     assert root(2, 2) == sqrt(2)

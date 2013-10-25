@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic
-from sympy.functions import adjoint, conjugate
+from sympy.core.basic import Basic
+from sympy.functions.elementary.complexes import adjoint, conjugate
 from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
 

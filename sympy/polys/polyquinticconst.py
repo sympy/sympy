@@ -11,12 +11,13 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.numbers import I
 from sympy.polys.polytools import Poly
 from sympy.core.evalf import N
-from sympy.functions import sqrt
-from sympy.utilities import public
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.utilities.decorator import public
 
 x = Symbol('x')
 

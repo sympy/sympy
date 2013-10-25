@@ -2,14 +2,14 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.basic import Basic
+from sympy.core.core import C
+from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -19,14 +19,17 @@ from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.utilities import xthreaded, flatten
+from sympy.utilities.decorator import xthreaded
 from sympy.utilities.misc import filldedent
-from sympy.polys import Poly, PolynomialError
-from sympy.solvers.solvers import solve, posify
-from sympy.functions import Piecewise, sqrt, sign
-from sympy.geometry import Curve
-from sympy.functions.elementary.piecewise import piecewise_fold
-from sympy.series import limit
+from sympy.polys.polytools import Poly
+from sympy.polys.polyerrors import PolynomialError
+from sympy.solvers.solvers import solve
+from sympy.simplify.simplify import posify
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import sign
+from sympy.geometry.curve import Curve
+from sympy.series.limits import limit
 
 
 # TODO get these helper functions into a super class for sum-like

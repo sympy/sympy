@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.basic import C, sympify, cacheit
+from sympy.core.core import C
+from sympy.core.sympify import sympify
+from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.numbers import igcdex
 from sympy.core.function import Function, ArgumentIndexError

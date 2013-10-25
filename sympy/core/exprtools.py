@@ -14,9 +14,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
-from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered)
+from sympy.core.compatibility import default_sort_key
+from sympy.utilities.iterables import common_prefix, common_suffix, variations
+from sympy.core.compatibility import ordered
 
 from collections import defaultdict
 

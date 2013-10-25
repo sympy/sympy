@@ -3,9 +3,7 @@ functions. """
 
 from sympy.polys.partfrac import (
     apart_undetermined_coeffs,
-    apart_full_decomposition,
     apart,
-    apart_list_full_decomposition,
     apart_list, assemble_partfrac_list
 )
 

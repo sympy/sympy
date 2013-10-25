@@ -1,11 +1,12 @@
 from __future__ import print_function, division
 
-from sympy import pi, I
-from sympy.core.basic import C
+from sympy.core.numbers import pi, I
+from sympy.core.core import C
 from sympy.core.singleton import S
-from sympy.core import Dummy, sympify
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions import assoc_legendre
+from sympy.functions.special.polynomials import assoc_legendre
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt

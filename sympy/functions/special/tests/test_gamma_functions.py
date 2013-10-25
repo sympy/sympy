@@ -1,8 +1,7 @@
 from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, cancel, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta,
-    factorial)
+    cos, O, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
@@ -78,7 +77,6 @@ def test_gamma_series():
 
 
 def tn_branch(s, func):
-    from sympy import I, pi, exp_polar
     from random import uniform
     c = uniform(1, 5)
     expr = func(s, c*exp_polar(I*pi)) - func(s, c*exp_polar(-I*pi))
@@ -88,7 +86,7 @@ def tn_branch(s, func):
 
 
 def test_lowergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy import meijerg, expint
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
     assert lowergamma(x, y).diff(x) == \
@@ -126,7 +124,7 @@ def test_lowergamma():
 
 
 def test_uppergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy import meijerg, expint
     assert uppergamma(4, 0) == 6
     assert uppergamma(x, y).diff(y) == -y**(x - 1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
@@ -161,8 +159,6 @@ def test_uppergamma():
 
 
 def test_polygamma():
-    from sympy import I
-
     assert polygamma(n, nan) == nan
 
     assert polygamma(0, oo) == oo
@@ -215,7 +211,6 @@ def test_polygamma():
                                                                  + zeta(ni + 1))*factorial(ni)
 
     # Polygamma of non-negative integer order is unbranched:
-    from sympy import exp_polar
     k = Symbol('n', integer=True, nonnegative=True)
     assert polygamma(k, exp_polar(2*I*pi)*x) == polygamma(k, x)
 

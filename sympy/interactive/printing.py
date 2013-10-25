@@ -2,8 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy import latex
-from sympy import preview
+from sympy.printing.latex import latex
+from sympy.printing.preview import preview
 from sympy.core.compatibility import cStringIO, integer_types, string_types
 from sympy.utilities.misc import debug
 

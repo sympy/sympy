@@ -8,9 +8,9 @@ import math
 
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
-from sympy.core import sympify
+from sympy.core.sympify import sympify
 from sympy.core.evalf import bitcount
-from sympy.core.numbers import igcd, oo, Rational
+from sympy.core.numbers import igcd, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange

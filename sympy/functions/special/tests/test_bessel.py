@@ -1,8 +1,7 @@
 from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros, besselj, \
     bessely, besseli, besselk, hankel1, hankel2, expand_func, \
-    latex, sqrt, sinh, cosh
+    sqrt, sinh, cosh
 from sympy.functions.special.bessel import fn
-from sympy.utilities.pytest import raises, skip
 from sympy.utilities.randtest import \
     random_complex_number as randcplx, \
     test_numerically as tn, \

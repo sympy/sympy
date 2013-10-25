@@ -1,6 +1,6 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
-                   exp_polar, polar_lift, polygamma, hyper, log, expand_func)
+                   exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
@@ -27,7 +27,7 @@ def test_rewrite_single():
     tn(x**y)
 
     def u(expr, x):
-        from sympy import Add, exp, exp_polar
+        from sympy import Add
         r = _rewrite_single(expr, x)
         e = Add(*[res[0]*res[2] for res in r[0]]).replace(
             exp_polar, exp)  # XXX Hack?
@@ -90,7 +90,7 @@ def test_inflate():
 
 
 def test_recursive():
-    from sympy import symbols, exp_polar, expand
+    from sympy import symbols
     a, b, c = symbols('a b c', positive=True)
     e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))
     assert simplify(e.expand()) == (
@@ -210,8 +210,7 @@ def test_meijerint():
 
 
 def test_bessel():
-    from sympy import (besselj, Heaviside, besseli, polar_lift, exp_polar,
-                       powdenest)
+    from sympy import besselj, besseli
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
                      meijerg=True, conds='none')) == \
         2*sin(pi*(a/2 - b/2))/(pi*(a - b)*(a + b))
@@ -259,7 +258,7 @@ def test_bessel():
 
 
 def test_inversion():
-    from sympy import piecewise_fold, besselj, sqrt, I, sin, cos, Heaviside
+    from sympy import piecewise_fold, besselj, Heaviside
 
     def inv(f):
         return piecewise_fold(meijerint_inversion(f, s, t))
@@ -276,7 +275,7 @@ def test_inversion():
 
 def test_lookup_table():
     from random import uniform, randrange
-    from sympy import Add, unpolarify, exp_polar, exp
+    from sympy import Add
     from sympy.integrals.meijerint import z as z_dummy
     table = {}
     _create_lookup_table(table)
@@ -324,8 +323,7 @@ def test_linear_subs():
 
 def test_probability():
     # various integrals from probability theory
-    from sympy.abc import x, y, z
-    from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp, sin
+    from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
     sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
                              bounded=True, positive=True)
@@ -518,7 +516,7 @@ def test_probability():
 def test_expint():
     """ Test various exponential integrals. """
     from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,
-                       sin, cos, sinh, cosh, Ei)
+                       sinh, cosh, Ei)
     assert simplify(unpolarify(integrate(exp(-z*x)/x**y, (x, 1, oo),
                 meijerg=True, conds='none'
                 ).rewrite(expint).expand(func=True))) == expint(y, z)
@@ -569,9 +567,9 @@ def test_expint():
 
 
 def test_messy():
-    from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
-                       atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
-                       fourier_transform, sqrt, Abs)
+    from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
+                       acoth, E1, besselj, acosh, asin, And, re,
+                       fourier_transform)
     assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)

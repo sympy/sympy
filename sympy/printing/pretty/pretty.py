@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core.singleton import S
+from sympy.core.core import C
 from sympy.core.function import _coeff_isneg
-from sympy.utilities import group
-from sympy.utilities.iterables import has_variety
+from sympy.utilities.iterables import group, has_variety
 from sympy.core.sympify import SympifyError
 from sympy.core.compatibility import u, xrange
 
@@ -16,7 +16,7 @@ from .pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
     pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
     annotated
 
-from sympy.utilities import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode

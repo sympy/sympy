@@ -71,8 +71,10 @@ from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
-from sympy.ntheory import nextprime, isprime, factorint
-from sympy.utilities import subsets
+from sympy.ntheory.generate import nextprime
+from sympy.ntheory.primetest import isprime
+from sympy.ntheory.factor_ import factorint
+from sympy.utilities.iterables import subsets
 
 from math import ceil as _ceil, log as _log
 

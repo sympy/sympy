@@ -1,7 +1,7 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
-    Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
+    Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
     sympify, tan, tanh, root, simplify, atan2, arg)
 from sympy.core.function import nfloat
@@ -1318,7 +1318,6 @@ def test_lambert_multivariate():
 
 @XFAIL
 def test_other_lambert():
-    from sympy.abc import x
     assert solve(3*sin(x) - x*sin(3), x) == [3]
     assert set(solve(3*log(x) - x*log(3))) == set(
         [3, -3*LambertW(-log(3)/3)/log(3)])

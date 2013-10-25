@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from sympy.core import Set, Dict, Tuple
 from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 

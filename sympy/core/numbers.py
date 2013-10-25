@@ -231,7 +231,6 @@ class Number(AtomicExpr):
         raise TypeError(msg % type(obj).__name__)
 
     def __divmod__(self, other):
-        from .containers import Tuple
         from sympy.functions.elementary.complexes import sign
 
         try:
@@ -1369,7 +1368,7 @@ class Rational(Number):
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
         """
-        from sympy.ntheory import factorint
+        from sympy.ntheory.factor_ import factorint
 
         f = factorint(self.p, limit=limit, use_trial=use_trial,
                       use_rho=use_rho, use_pm1=use_pm1,
@@ -1564,14 +1563,12 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __divmod__(self, other):
-        from .containers import Tuple
         if isinstance(other, Integer):
             return Tuple(*(divmod(self.p, other.p)))
         else:
             return Number.__divmod__(self, other)
 
     def __rdivmod__(self, other):
-        from .containers import Tuple
         if isinstance(other, integer_types):
             return Tuple(*(divmod(other, self.p)))
         else:
@@ -1702,7 +1699,7 @@ class Integer(Rational):
         the argument which is not done here for sake of speed.
 
         """
-        from sympy import perfect_power
+        from sympy.ntheory.factor_ import perfect_power
 
         if expt is S.Infinity:
             if self.p > S.One:

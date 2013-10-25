@@ -2,7 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.core.symbol import Dummy, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S
 
@@ -12,7 +16,7 @@ from sympy.polys.polyutils import _analyze_gens
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densebasic import (
-    dmp_zero, dmp_one, dmp_ground, dmp_normal,
+    dmp_zero, dmp_one, dmp_ground,
     dup_from_raw_dict, dmp_raise, dup_random
 )
 
@@ -26,9 +30,10 @@ from sympy.polys.factortools import (
 
 from sympy.polys.domains import ZZ
 
-from sympy.ntheory import nextprime
+from sympy.ntheory.generate import nextprime
 
-from sympy.utilities import subsets, public
+from sympy.utilities.iterables import subsets
+from sympy.utilities.decorator import public
 
 from sympy.core.compatibility import xrange
 

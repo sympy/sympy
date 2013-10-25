@@ -1,10 +1,10 @@
 from sympy import (
-    Abs, acos, acosh, Add, adjoint, asin, asinh, atan, Ci, conjugate, cos,
+    Abs, acos, acosh, Add, asin, asinh, atan, Ci, cos,
     Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma, factor, Function,
-    Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
+    I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
-    sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan, And, Eq, Or
+    sstr, Sum, Symbol, symbols, sympify, trigsimp,
+    Tuple, nan, And, Eq
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -655,7 +655,6 @@ def test_issue_1785():
 
 def test_is_number():
     from sympy.abc import x, y, z
-    from sympy import cos, sin
     assert Integral(x).is_number is False
     assert Integral(1, x).is_number is False
     assert Integral(1, (x, 1)).is_number is True
@@ -911,7 +910,6 @@ def test_issue_1323():
 
 
 def test_issue1394():
-    from sympy import simplify
     assert simplify(integrate(x*sqrt(1 + 2*x), x)) == \
         sqrt(2*x + 1)*(6*x**2 + x - 1)/15
 
@@ -922,14 +920,14 @@ def test_issue1638():
 
 
 def test_issue1893():
-    from sympy import simplify, expand_func, polygamma, gamma
+    from sympy import expand_func, polygamma, gamma
     a = Symbol('a', positive=True)
     assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
         (a*polygamma(0, a) + 1)*gamma(a)
 
 
 def test_issue1388():
-    from sympy import lowergamma, simplify
+    from sympy import lowergamma
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 

@@ -11,6 +11,7 @@ import warnings
 from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.stats.crv_types import NormalDistribution
 
 x, y, z = symbols('x,y,z')
 
@@ -198,7 +199,6 @@ def test_sympy__core__basic__Atom():
 
 
 def test_sympy__core__basic__Basic():
-    from sympy.core.basic import Basic
     assert _test_args(Basic())
 
 
@@ -439,12 +439,11 @@ def test_sympy__core__sets__FiniteSet():
 
 @XFAIL
 def test_sympy__core__sets__Interval():
-    from sympy.core.sets import Interval
     assert _test_args(Interval(0, 1))
 
 
 def test_sympy__core__sets__ProductSet():
-    from sympy.core.sets import ProductSet, Interval
+    from sympy.core.sets import ProductSet
     assert _test_args(ProductSet(Interval(0, 1), Interval(0, 1)))
 
 
@@ -455,13 +454,13 @@ def test_sympy__core__sets__Set():
 
 
 def test_sympy__core__sets__Intersection():
-    from sympy.core.sets import Intersection, Interval
+    from sympy.core.sets import Intersection
     assert _test_args(Intersection(Interval(0, 3), Interval(2, 4),
         evaluate=False))
 
 
 def test_sympy__core__sets__Union():
-    from sympy.core.sets import Union, Interval
+    from sympy.core.sets import Union
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
 
@@ -492,7 +491,7 @@ def test_sympy__sets__fancysets__Reals():
 
 def test_sympy__sets__fancysets__ImageSet():
     from sympy.sets.fancysets import ImageSet
-    from sympy import S, Lambda, Symbol
+    from sympy import Lambda, Symbol
     x = Symbol('x')
     assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
@@ -503,8 +502,6 @@ def test_sympy__sets__fancysets__Range():
 
 # STATS
 
-
-from sympy.stats.crv_types import NormalDistribution
 nd = NormalDistribution(0, 1)
 from sympy.stats.frv_types import DieDistribution
 die = DieDistribution(6)
@@ -589,7 +586,7 @@ def test_sympy__stats__rv__ConditionalDomain():
 
 def test_sympy__stats__rv__PSpace():
     from sympy.stats.rv import PSpace, RandomDomain
-    from sympy import Dict, FiniteSet
+    from sympy import FiniteSet
     D = RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3, 4, 5, 6))
     assert _test_args(PSpace(D, die))
 
@@ -679,15 +676,14 @@ def test_sympy__stats__frv__FinitePSpace():
 
 
 def test_sympy__stats__frv__SingleFinitePSpace():
-    from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDomain
+    from sympy.stats.frv import SingleFinitePSpace
     from sympy import Symbol
 
     assert _test_args(SingleFinitePSpace(Symbol('x'), die))
 
 
 def test_sympy__stats__frv__ProductFinitePSpace():
-    from sympy.stats.frv import (SingleFiniteDomain, SingleFinitePSpace,
-        ProductFinitePSpace)
+    from sympy.stats.frv import SingleFinitePSpace, ProductFinitePSpace
     from sympy import Symbol
     xp = SingleFinitePSpace(Symbol('x'), die)
     yp = SingleFinitePSpace(Symbol('y'), die)
@@ -709,7 +705,7 @@ def test_sympy__stats__frv_types__FiniteDistributionHandmade():
 
 def test_sympy__stats__crv__ContinuousDistributionHandmade():
     from sympy.stats.crv import ContinuousDistributionHandmade
-    from sympy import Symbol, Interval
+    from sympy import Symbol
     assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
                                                      Interval(0, 2)))
 
@@ -824,7 +820,6 @@ def test_sympy__stats__crv_types__NakagamiDistribution():
 
 
 def test_sympy__stats__crv_types__NormalDistribution():
-    from sympy.stats.crv_types import NormalDistribution
     assert _test_args(NormalDistribution(0, 1))
 
 
@@ -1044,7 +1039,6 @@ def test_sympy__functions__elementary__exponential__ExpBase():
 
 
 def test_sympy__functions__elementary__exponential__exp():
-    from sympy.functions.elementary.exponential import exp
     assert _test_args(exp(2))
 
 
@@ -1694,7 +1688,7 @@ def test_sympy__liealgebras__weyl_group__WeylGroup():
 
 @XFAIL
 def test_sympy__liealgebras__root_system__RootSystem():
-    from sympy.liealgebras.root_system import RootSyStem
+    from sympy.liealgebras.root_system import RootSystem
     assert _test_args(RootSystem("A2"))
 
 @XFAIL
@@ -1859,7 +1853,6 @@ def test_sympy__matrices__expressions__matexpr__MatrixExpr():
 
 def test_sympy__matrices__expressions__matexpr__MatrixElement():
     from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-    from sympy import S
     assert _test_args(MatrixElement(MatrixSymbol('A', 3, 5), S(2), S(3)))
 
 @XFAIL
@@ -1933,18 +1926,16 @@ def test_sympy__matrices__expressions__determinant__Determinant():
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
-    from sympy import Lambda, symbols
+    from sympy import Lambda
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
 def test_sympy__matrices__expressions__fourier__DFT():
     from sympy.matrices.expressions.fourier import DFT
-    from sympy import S
     assert _test_args(DFT(S(2)))
 
 def test_sympy__matrices__expressions__fourier__IDFT():
     from sympy.matrices.expressions.fourier import IDFT
-    from sympy import S
     assert _test_args(IDFT(S(2)))
 
 from sympy.matrices.expressions import MatrixSymbol
@@ -2075,7 +2066,6 @@ def test_sympy__physics__quantum__cartesian__ZOp():
 
 def test_sympy__physics__quantum__cg__CG():
     from sympy.physics.quantum.cg import CG
-    from sympy import S
     assert _test_args(CG(S(3)/2, S(3)/2, S(1)/2, -S(1)/2, 1, 1))
 
 
@@ -2231,7 +2221,6 @@ def test_sympy__physics__quantum__hilbert__HilbertSpace():
 
 def test_sympy__physics__quantum__hilbert__L2():
     from sympy.physics.quantum.hilbert import L2
-    from sympy import oo, Interval
     assert _test_args(L2(Interval(0, oo)))
 
 
@@ -2533,7 +2522,6 @@ def test_sympy__physics__quantum__state__TimeDepState():
 
 def test_sympy__physics__quantum__state__Wavefunction():
     from sympy.physics.quantum.state import Wavefunction
-    from sympy.functions import sin
     from sympy import Piecewise, pi
     n = 1
     L = 1
@@ -2805,12 +2793,11 @@ def test_sympy__physics__hep__gamma_matrices__GammaMatrixHead():
 
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
-    from sympy import Symbol
     assert _test_args(TensorIndexType('Lorentz', metric=False))
 
 
 def test_sympy__tensor__tensor__TensorSymmetry():
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
     assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
 
 
@@ -2830,7 +2817,7 @@ def test_sympy__tensor__tensor__TensorHead():
 
 
 def test_sympy__tensor__tensor__TensorIndex():
-    from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    from sympy.tensor.tensor import TensorIndexType, TensorIndex
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     assert _test_args(TensorIndex('i', Lorentz))
 
@@ -2851,7 +2838,6 @@ def test_sympy__tensor__tensor__TensAdd():
 
 
 def test_sympy__tensor__tensor__TensMul():
-    from sympy.core import S
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul, TIDS
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
@@ -2976,7 +2962,7 @@ def test_sympy__diffgeom__diffgeom__Differential():
 
 
 def test_sympy__diffgeom__diffgeom__Commutator():
-    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, BaseVectorField, Commutator
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, Commutator
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
     cs1 = CoordSystem('name1', Patch('name', Manifold('name', 3)))
     v = BaseVectorField(cs, 0)
@@ -3058,7 +3044,7 @@ def test_sympy__categories__baseclasses__CompositeMorphism():
 
 
 def test_sympy__categories__baseclasses__Diagram():
-    from sympy.categories import Object, NamedMorphism, Diagram, Category
+    from sympy.categories import Object, NamedMorphism, Diagram
     A = Object("A")
     B = Object("B")
     C = Object("C")

@@ -1,11 +1,12 @@
 """Gosper's algorithm for hypergeometric summation. """
 from __future__ import print_function, division
 
-from sympy.core import S, Dummy, symbols
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, symbols
 from sympy.core.compatibility import is_sequence, xrange
-from sympy.polys import Poly, parallel_poly_from_expr, factor
-from sympy.solvers import solve
-from sympy.simplify import hypersimp
+from sympy.polys.polytools import Poly, parallel_poly_from_expr, factor
+from sympy.solvers.solvers import solve
+from sympy.simplify.simplify import hypersimp
 
 
 def gosper_normal(f, g, n, polys=True):

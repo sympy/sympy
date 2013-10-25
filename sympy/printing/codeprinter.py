@@ -1,6 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import C, Add, Mul, Pow, S
+from sympy.core.core import C
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence

@@ -13,10 +13,10 @@ from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.pytest import XFAIL, slow
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf, exp_polar)
+                   gamma, sqrt, pi, erf)
 
 
 def test_branch_bug():
@@ -41,7 +41,6 @@ def test_hyperexpand():
 
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
-    from sympy import exp_polar, exp
     r = hyperexpand(hyper(ap, bq, z))
     if r.has(hyper):
         return False
@@ -503,7 +502,7 @@ def test_meijerg_shift_operators():
 
 def test_meijerg_confluence():
     def t(m, a, b):
-        from sympy import sympify, Piecewise
+        from sympy import sympify
         a, b = sympify([a, b])
         m_ = m
         m = hyperexpand(m)
@@ -542,7 +541,7 @@ def test_meijerg_confluence():
 
 
 def test_lerchphi():
-    from sympy import combsimp, exp_polar, polylog, log, lerchphi
+    from sympy import combsimp, polylog, lerchphi
     assert hyperexpand(hyper([1, a], [a + 1], z)/a) == lerchphi(z, 1, a)
     assert hyperexpand(
         hyper([1, a, a], [a + 1, a + 1], z)/a**2) == lerchphi(z, 2, a)
@@ -629,7 +628,7 @@ def test_hyperexpand_special():
 
 
 def test_Mod1_behavior():
-    from sympy import Symbol, simplify, lowergamma
+    from sympy import Symbol, simplify
     n = Symbol('n', integer=True)
     # Note: this should not hang.
     assert simplify(hyperexpand(meijerg([1], [], [n + 1], [0], z))) == \

@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr
-from .matexpr import ShapeError
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.matrices.matrices import ShapeError
 
 
 class Trace(Expr):

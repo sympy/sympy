@@ -7,7 +7,7 @@ from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
 from sympy.mpmath import mpf
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, raises
 from sympy import mpmath
 
 
@@ -1360,8 +1360,7 @@ def test_int_NumberSymbols():
 
 
 def test_3541():
-    from sympy.mpmath.libmp.libmpf import (
-        _normalize as mpf_normalize, finf, fninf, fzero)
+    from sympy.mpmath.libmp.libmpf import finf, fninf
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False

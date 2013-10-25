@@ -9,7 +9,7 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 class AlgebraicField(Field, CharacteristicZero, SimpleDomain):

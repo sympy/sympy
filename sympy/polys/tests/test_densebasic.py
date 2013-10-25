@@ -32,12 +32,11 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms, dmp_apply_pairs,
-    dup_slice, dmp_slice, dmp_slice_in,
+    dup_slice,
     dup_random,
 )
 
 from sympy.polys.specialpolys import f_polys
-from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.rings import ring
 

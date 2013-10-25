@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Symbol, Dict, Tuple
+from sympy.core import Basic
 
 
 class CartanType_generator(Basic):

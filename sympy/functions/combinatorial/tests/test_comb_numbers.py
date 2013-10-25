@@ -2,7 +2,7 @@ import string
 
 from sympy import (bernoulli, Symbol, symbols, Dummy, Sum, harmonic, Rational, oo,
     zoo, pi, I, bell, fibonacci, lucas, euler, catalan, binomial, gamma, sqrt,
-    hyper, log, digamma, trigamma, polygamma, diff, Expr, sympify, expand_func,
+    hyper, log, digamma, trigamma, polygamma, diff, expand_func,
     EulerGamma, factorial)
 
 from sympy.utilities.pytest import XFAIL, raises
@@ -183,7 +183,6 @@ def test_nC_nP_nT():
     from sympy.functions.combinatorial.numbers import (
         nP, nC, nT, stirling, _multiset_histogram, _AOP_product)
     from sympy.combinatorics.permutations import Permutation
-    from sympy.core.numbers import oo
     from random import choice
 
     c = string.ascii_lowercase

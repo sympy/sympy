@@ -1,9 +1,9 @@
 """Tests for OO layer of several polynomial representations. """
 
 from sympy.polys.polyclasses import (
-    DMP, init_normal_DMP,
-    DMF, init_normal_DMF,
-    ANP, init_normal_ANP,
+    DMP,
+    DMF,
+    ANP,
 )
 
 from sympy.polys.domains import ZZ, QQ

@@ -1,8 +1,7 @@
 from sympy import S
-from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorIndex,\
+from sympy.tensor.tensor import TensorIndexType,\
                                 TensMul, TensorHead, tensorsymmetry, TensorType, TIDS, TensAdd, tensor_mul
 from sympy.core.containers import Tuple
-import collections
 
 
 class _LorentzContainer(object):

@@ -1,5 +1,5 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-        LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
+        LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
         sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
 
 

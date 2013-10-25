@@ -1,21 +1,24 @@
 from __future__ import print_function, division
 
-from sympy import ask, Q
-from sympy.core import Tuple, Basic, Add
-from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
+from sympy.assumptions.ask import ask, Q
+from sympy.core.basic import Basic
+from sympy.core.add import Add
+from sympy.strategies.tools import typed
+from sympy.strategies.core import exhaust, condition, do_one
+from sympy.strategies.rl import unpack
 from sympy.strategies.traverse import bottom_up
-from sympy.utilities import sift
+from sympy.utilities.iterables import sift
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
-from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose, transpose
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, eye, ShapeError
+from sympy.matrices.dense import Matrix
+from sympy.matrices.matrices import ShapeError
 
 
 class BlockMatrix(MatrixExpr):
@@ -385,7 +388,6 @@ def deblock(B):
     wrap = lambda x: x if isinstance(x, BlockMatrix) else BlockMatrix([[x]])
     bb = B.blocks.applyfunc(wrap)  # everything is a block
 
-    from sympy import Matrix
     try:
         MM = Matrix(0, sum(bb[0, i].blocks.shape[1] for i in range(bb.shape[1])), [])
         for row in range(0, bb.shape[0]):

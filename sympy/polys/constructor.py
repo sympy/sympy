@@ -6,9 +6,10 @@ from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.assumptions import ask, Q
-from sympy.utilities import public
-from sympy.core import sympify, Symbol
+from sympy.assumptions.ask import ask, Q
+from sympy.utilities.decorator import public
+from sympy.core.sympify import sympify
+from sympy.core.symbol import Symbol
 
 
 def _construct_simple(coeffs, opt):

@@ -33,7 +33,6 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # arithmetic.
 from __future__ import print_function, division
 
-from sympy.external import import_module
 from sympy.simplify.simplify import nsimplify
 
 
@@ -331,8 +330,8 @@ class interval(object):
             elif other.is_valid is None or self.is_valid is None:
                 return interval(-float('inf'), float('inf'), is_valid=None)
             else:
-               # denominator contains both signs, i.e. being divided by zero
-               # return the whole real line with is_valid = None
+                # denominator contains both signs, i.e. being divided by zero
+                # return the whole real line with is_valid = None
                 if 0 in other:
                     return interval(-float('inf'), float('inf'), is_valid=None)
 
@@ -384,7 +383,7 @@ class interval(object):
                     return interval(-float('inf'), float('inf'), is_valid=False)
                 else:
                     power_rational = nsimplify(self.start)
-                    num, denom = power_rational.as_numer_denom()
+                    _, denom = power_rational.as_numer_denom()
                     if denom % 2 == 0:
                         return interval(-float('inf'), float('inf'),
                                         is_valid=False)

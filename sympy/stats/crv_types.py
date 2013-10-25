@@ -41,11 +41,11 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
+from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Symbol, log, besseli, Lambda, Basic)
+                   Symbol, besseli, Lambda, Basic)
 from sympy import beta as beta_fn
-from sympy import cos, exp, besseli
+from sympy import cos
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
 from sympy.stats.rv import _value_check
@@ -2151,7 +2151,7 @@ class UniformDistribution(SingleContinuousDistribution):
             (S.Zero, True))
 
     def compute_cdf(self, **kwargs):
-        from sympy import Lambda, Min
+        from sympy import Min
         z = Dummy('z', real=True, bounded=True)
         result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
         result = result(z).subs({Min(z, self.right): z,

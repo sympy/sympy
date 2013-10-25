@@ -5,7 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
-from sympy.external import import_module
+from sympy.external.importtools import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 
 import inspect

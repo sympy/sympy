@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import C, sympify
+from sympy.core.core import C
+from sympy.core.sympify import sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
@@ -9,7 +10,7 @@ from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.ntheory import multiplicity, perfect_power
+from sympy.ntheory.factor_ import multiplicity, perfect_power
 from sympy.core.compatibility import xrange
 
 # NOTE IMPORTANT
@@ -489,7 +490,7 @@ class log(Function):
 
     @classmethod
     def eval(cls, arg, base=None):
-        from sympy import unpolarify
+        from sympy.simplify.simplify import unpolarify
         arg = sympify(arg)
 
         if base is not None:

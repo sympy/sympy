@@ -1,7 +1,7 @@
-from sympy import cos, expand, Matrix, Poly, simplify, sin, solve, sqrt
-from sympy import symbols, tan, trigsimp, zeros
+from sympy import cos, Matrix, simplify, sin, solve
+from sympy import symbols, trigsimp, zeros
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
-                                     inertia, inertia_of_point_mass, Particle,
+                                     inertia, inertia_of_point_mass,
                                      Point, ReferenceFrame, RigidBody)
 
 
@@ -195,8 +195,7 @@ def test_mat_inv_mul():
     # intended. Uses SymPy generated primes as matrix entries, so each entry in
     # each matrix should be symbolic and unique, allowing proper comparison.
     # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
-    from sympy import Matrix, prime
-    from sympy.physics.mechanics import ReferenceFrame, KanesMethod
+    from sympy import prime
 
     # Just need to create an instance of KanesMethod to get to _mat_inv_mul
     mat_inv_mul = KanesMethod(ReferenceFrame('N'), [1], [1])._mat_inv_mul

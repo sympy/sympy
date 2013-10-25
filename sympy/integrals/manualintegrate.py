@@ -22,9 +22,8 @@ import sympy
 
 from sympy.core.compatibility import reduce
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.simplify import fraction
-from sympy.strategies.core import (switch, identity, do_one, null_safe,
-                                   condition, tryit)
+from sympy.simplify.simplify import fraction
+from sympy.strategies.core import switch, do_one, null_safe, condition
 
 def Rule(name, props=""):
     # GOTCHA: namedtuple class name not considered!

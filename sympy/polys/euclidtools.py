@@ -50,7 +50,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyconfig import query
 
-from sympy.ntheory import nextprime
+from sympy.ntheory.generate import nextprime
 
 from sympy.core.compatibility import xrange
 

@@ -15,7 +15,6 @@ from sympy.core.compatibility import reduce, xrange
 from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
-from sympy.core.compatibility import reduce
 from sympy.utilities.iterables import has_dups
 from sympy.utilities import default_sort_key
 

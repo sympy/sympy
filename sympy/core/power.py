@@ -980,7 +980,6 @@ class Pow(Expr):
                     x, n=nuse, logx=logx)).expand() + order)
 
             if bs.is_Add:
-                from sympy import O
                 # So, bs + O() == terms
                 c = Dummy('c')
                 res = []

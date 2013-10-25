@@ -7,7 +7,9 @@ from __future__ import print_function, division
 
 import operator
 from collections import defaultdict
-from sympy.external import import_module
+from sympy.external.importtools import import_module
+
+import sys
 
 
 """
@@ -54,11 +56,9 @@ Metaclasses:
             pass
 """
 
-import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
-    import collections
 
     class_types = type,
     integer_types = (int,)
@@ -479,7 +479,8 @@ def default_sort_key(item, order=None):
 
     """
 
-    from sympy.core import S, Basic
+    from sympy.core.singleton import S
+    from sympy.core.basic import Basic
     from sympy.core.sympify import sympify, SympifyError
     from sympy.core.compatibility import iterable
 
@@ -697,8 +698,6 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-
-import sys
 
 if sys.version_info[0] == 2:
     SYMPY_INTS = (int, long)

@@ -28,11 +28,14 @@ from __future__ import print_function, division
 
 from .plot import BaseSeries, Plot
 from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
-from .intervalmath import interval
+from .intervalmath.interval_arithmetic import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Dummy
-from sympy.external import import_module
+from sympy.core.relational import Eq
+from sympy.core.containers import Tuple
+from sympy.core.sympify import sympify
+from sympy.core.symbol import Dummy
+from sympy.external.importtools import import_module
 from sympy.logic.boolalg import BooleanFunction
 from sympy.utilities.decorator import doctest_depends_on
 import warnings

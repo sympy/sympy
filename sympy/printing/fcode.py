@@ -21,7 +21,10 @@ from __future__ import print_function, division
 
 import string
 
-from sympy.core import S, C, Add, N
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.add import Add
+from sympy.core.evalf import N
 from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence

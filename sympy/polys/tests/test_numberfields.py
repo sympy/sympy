@@ -1,7 +1,7 @@
 """Tests for computational algebraic number field theory. """
 
 from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
-    Add, Mul, pi, cos, sin, exp)
+    Add, pi, cos, exp)
 
 from sympy.utilities.pytest import raises, slow
 
@@ -26,9 +26,6 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
 from sympy.polys.rootoftools import RootOf
 from sympy.polys.polytools import degree
-from sympy.solvers import solve
-
-from sympy.utilities.pytest import skip
 
 from sympy.abc import x, y, z
 
@@ -153,7 +150,7 @@ def test_minimal_polynomial_hi_prec():
 
 
 def test_minimal_polynomial_sq():
-    from sympy import Add, expand_multinomial
+    from sympy import expand_multinomial
     p = expand_multinomial((1 + 5*sqrt(2) + 2*sqrt(3))**3)
     mp = minimal_polynomial(p**Rational(1, 3), x)
     assert mp == x**4 - 4*x**3 - 118*x**2 + 244*x + 1321

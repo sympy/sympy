@@ -2,16 +2,17 @@
 """
 from __future__ import print_function, division
 
-import difflib
-
-from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from sympy.core.add import Add
+from sympy.core.power import Pow
+from sympy.core.sympify import sympify
 from sympy.core.singleton import S
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
 from sympy.core.compatibility import iterable, xrange
-from sympy.utilities.iterables import numbered_symbols, \
-    sift, topological_sort, ordered
+from sympy.utilities.iterables import numbered_symbols, sift, topological_sort
+from sympy.core.compatibility import ordered
 
 from . import cse_opts
 

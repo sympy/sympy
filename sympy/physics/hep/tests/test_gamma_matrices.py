@@ -1,5 +1,5 @@
-from sympy.tensor.tensor import tensor_indices, TensorIndexType, tensorhead, TensorManager, TensMul, TensAdd
-from sympy import simplify, trace
+from sympy.tensor.tensor import tensor_indices, tensorhead, TensMul, TensAdd
+from sympy import simplify
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, GammaMatrixHead
 
 

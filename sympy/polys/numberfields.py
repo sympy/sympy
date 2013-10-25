@@ -2,10 +2,19 @@
 
 from __future__ import print_function, division
 
-from sympy import (
-    S, C, Expr, Rational,
-    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi
-)
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.expr import Expr
+from sympy.core.numbers import Rational
+from sympy.core.symbol import Symbol
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.sympify import sympify
+from sympy.assumptions.ask import Q, ask
+from sympy.core.symbol import Dummy
+from sympy.core.containers import Tuple
+from sympy.core.function import expand_mul
+from sympy.core.numbers import I, pi
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
@@ -27,20 +36,18 @@ from sympy.polys.rootoftools import RootOf
 
 from sympy.polys.specialpolys import cyclotomic_poly
 
-from sympy.polys.polyutils import dict_from_expr, expr_from_dict
-
 from sympy.polys.domains import ZZ, QQ
 
 from sympy.polys.orthopolys import dup_chebyshevt
 
 from sympy.printing.lambdarepr import LambdaPrinter
 
-from sympy.utilities import (
-    numbered_symbols, variations, lambdify, public,
-)
+from sympy.utilities.iterables import numbered_symbols, variations
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.decorator import public
 
 from sympy.simplify.simplify import _mexpand, _is_sum_surds
-from sympy.ntheory import sieve
+from sympy.ntheory.generate import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
@@ -111,7 +118,7 @@ def _separate_sq(p):
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
     """
-    from sympy.simplify.simplify import _split_gcd, _mexpand
+    from sympy.simplify.simplify import _split_gcd
     from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
@@ -174,8 +181,6 @@ def _minimal_polynomial_sq(p, n, x):
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
-    from sympy.simplify.simplify import _is_sum_surds
-
     p = sympify(p)
     n = sympify(n)
     r = _is_sum_surds(p)
@@ -597,7 +602,6 @@ def minimal_polynomial(ex, x=None, **args):
     x**2 - y
 
     """
-    from sympy.polys.polytools import degree
     from sympy.polys.domains import FractionField
     from sympy.core.basic import preorder_traversal
 
@@ -650,7 +654,6 @@ def _minpoly_groebner(ex, x, cls):
     x**2 - 2*x - 1
 
     """
-    from sympy.polys.polytools import degree
     from sympy.core.function import expand_multinomial
 
     generator = numbered_symbols('a', cls=Dummy)

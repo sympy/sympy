@@ -1,9 +1,8 @@
 from sympy.core import S, Rational, Symbol, Basic
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
-  tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
+  tensor_mul, TensAdd, riemann_cyclic_replace, riemann_cyclic,
   tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
   TensorManager, TensExpr, TIDS)
 from sympy.utilities.pytest import raises
@@ -323,7 +322,6 @@ def test_canonicalize1():
 def test_bug_correction_tensor_indices():
     # to make sure that tensor_indices does not return a list if creating
     # only one index:
-    from sympy.tensor.tensor import tensor_indices, TensorIndexType, TensorIndex
     A = TensorIndexType("A")
     i = tensor_indices('i', A)
     assert not isinstance(i, (tuple, list))

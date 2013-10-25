@@ -1,6 +1,6 @@
 import itertools
 
-from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
+from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, cse,
     Matrix, S, cos, sin, Eq, Function, Tuple, RootOf)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg

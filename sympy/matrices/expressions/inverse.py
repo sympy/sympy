@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.core.sympify import _sympify
-from sympy.core import S, Basic
+from sympy.core.singleton import S
+from sympy.core.basic import Basic
 
-from sympy.matrices.expressions.matexpr import ShapeError
+from sympy.matrices.matrices import ShapeError
 from sympy.matrices.expressions.matpow import MatPow
 
 

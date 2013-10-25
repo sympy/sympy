@@ -50,12 +50,27 @@ from .parsing import *
 # from combinatorics import *
 # This module is slow to import:
 #from physics import units
-from .plotting import plot, Plot, textplot, plot_backends, plot_implicit
-from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
-    pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import ccode, fcode, jscode, latex, preview
-from .printing import python, print_python, srepr, sstr, sstrrepr
-from .interactive import init_session, init_printing
+from .plotting.plot import plot
+from .plotting.proxy_pyglet import Plot
+from .plotting.textplot import textplot
+from .plotting.plot import plot_backends
+from .plotting.plot_implicit import plot_implicit
+from .printing.pretty.pretty import pretty, pretty_print, pprint
+from .printing.pretty.pretty import pprint_use_unicode,  pprint_try_use_unicode
+from .printing.gtk import print_gtk
+from .printing.tree import print_tree
+from .printing.pretty.pretty import pager_print
+from .printing.tableform import TableForm
+from .printing.ccode import ccode
+from .printing.fcode import fcode
+from .printing.jscode import jscode
+from .printing.latex import latex
+from .printing.preview import preview
+from .printing.python import python, print_python
+from .printing.repr import srepr
+from .printing.str import sstr, sstrrepr
+from .interactive.session import init_session
+from .interactive.printing import init_printing
 
 evalf._create_evalf_table()
 

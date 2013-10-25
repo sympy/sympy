@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
+    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
 )
@@ -530,8 +530,8 @@ def test_derivatives_issue1658():
 
 
 def test_periodic_argument():
-    from sympy import (periodic_argument, unbranched_argument, oo,
-                       principal_branch, polar_lift, pi)
+    from sympy import (periodic_argument, unbranched_argument,
+                       principal_branch, polar_lift)
     x = Symbol('x')
     p = Symbol('p', positive=True)
 
@@ -565,7 +565,7 @@ def test_principal_branch_fail():
 
 
 def test_principal_branch():
-    from sympy import principal_branch, polar_lift, exp_polar
+    from sympy import principal_branch, polar_lift
     p = Symbol('p', positive=True)
     x = Symbol('x')
     neg = Symbol('x', negative=True)

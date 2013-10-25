@@ -118,11 +118,16 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
-from sympy.functions import log, exp
+from sympy.core.basic import Basic
+from sympy.core.singleton import S
+from sympy.core.numbers import oo
+from sympy.core.symbol import Symbol
+from sympy.core.numbers import I
+from sympy.core.symbol import Dummy, Wild
+from sympy.functions.elementary.exponential import log, exp
 from sympy.series.order import Order
-from sympy.simplify import powsimp
-from sympy import cacheit
+from sympy.simplify.simplify import powsimp
+from sympy.core.cache import cacheit
 
 from sympy.core.compatibility import reduce
 
