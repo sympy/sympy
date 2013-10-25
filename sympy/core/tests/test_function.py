@@ -92,6 +92,19 @@ def test_diff_symbols():
         Derivative(f(x, y, z), x, y, z)
 
 
+def test_Function():
+    class myfunc(Function):
+        nargs = 1
+
+        @classmethod
+        def eval(cls, x):
+            return
+
+    assert myfunc.nargs == (1,)
+    assert myfunc(x).nargs == (1,)
+    raises(TypeError, lambda: myfunc(x, y).nargs)
+
+
 def test_Lambda():
     e = Lambda(x, x**2)
     assert e(4) == 16
