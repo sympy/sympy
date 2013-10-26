@@ -21,9 +21,13 @@ class Boolean(Basic):
         """Overloading for & operator"""
         return And(self, other)
 
+    __rand__ = __and__
+
     def __or__(self, other):
         """Overloading for |"""
         return Or(self, other)
+
+    __ror__ = __or__
 
     def __invert__(self):
         """Overloading for ~"""
@@ -37,9 +41,13 @@ class Boolean(Basic):
         """Overloading for <<"""
         return Implies(other, self)
 
+    __rrshift__ = __lshift__
+    __rlshift__ = __rshift__
+
     def __xor__(self, other):
         return Xor(self, other)
 
+    __rxor__ = __xor__
 
 class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
