@@ -1153,6 +1153,9 @@ def test_sympy__functions__elementary__piecewise__Piecewise():
 def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
     pass
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__ReciprocalTrigonometricFunction():
+    pass
 
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos

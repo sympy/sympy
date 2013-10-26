@@ -714,10 +714,74 @@ class cos(TrigonometricFunction):
         return sage.cos(self.args[0]._sage_())
 
 
-class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. see cos, sin, tan.
+class ReciprocalTrigonometricFunction(TrigonometricFunction):
+    nargs = 1
+    _inverse_of = None  # to be defined in subclass
+
+    def _reciprocal(self, method_name, *args, **kwargs):
+        if kwargs:
+            t = getattr(self._inverse_of(self.args[0]), method_name)(**kwargs)
+        else:
+            o = self._inverse_of(self.args[0])
+            t = getattr(o, method_name)(*args)
+        return 1/t if t else t
+
+    def fdiff(self, argindex=1):
+        return self._reciprocal("fdiff", argindex)
+
+    def _eval_rewrite_as_exp(self, arg):
+        return self._reciprocal("_eval_rewrite_as_exp", arg)
+
+    def _eval_rewrite_as_Pow(self, arg):
+        return self._reciprocal("_eval_rewrite_as_Pow", arg)
+
+    def _eval_rewrite_as_sin(self, arg):
+        return self._reciprocal("_eval_rewrite_as_sin", arg)
+
+    def _eval_rewrite_as_cos(self, arg):
+        return self._reciprocal("_eval_rewrite_as_cos", arg)
+
+    def _eval_rewrite_as_tan(self, arg):
+        return self._reciprocal("_eval_rewrite_as_tan", arg)
+
+    def _eval_rewrite_as_pow(self, arg):
+        return self._reciprocal("_eval_rewrite_as_pow", arg)
+
+    def _eval_rewrite_as_sqrt(self, arg):
+        return self._reciprocal("_eval_rewrite_as_sqrt", arg)
+
+    def _eval_conjugate(self):
+        return self._reciprocal("_eval_conjugate")
+
+    def as_real_imag(self, deep=True, **hints):
+        return (1/self._inverse_of(self.args[0])).as_real_imag(deep, **hints)
+
+    def _eval_expand_trig(self, **hints):
+        return self._reciprocal("_eval_expand_trig", **hints)
+
+    def _eval_is_real(self):
+        return (self._inverse_of(self.args[0])._eval_is_real())
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
+            return 1/arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_bounded(self):
+        return (1/self._inverse_of(self.args[0])).is_bounded
+
+
+class sec(ReciprocalTrigonometricFunction):
+    _inverse_of = cos
 
     def _eval_rewrite_as_cos(self, arg):
         return (1/cos(arg))
+
+    def _eval_rewrite_as_sin(self, arg):
+        pass
 
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/(cos(arg)*sin(arg))
@@ -728,8 +792,91 @@ class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. 
         else:
             raise ArgumentIndexError(self, argindex)
 
+    # TODO def taylor_term(n, x, *previous_terms):
 
-class csc(TrigonometricFunction):  # TODO implement other functions for csc as in cos, sin, tan.
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Zero:
+                return S.One
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                return
+
+        if arg.could_extract_minus_sign():
+            return cls(-arg)
+
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return 1/C.cosh(i_coeff)
+
+        pi_coeff = _pi_coeff(arg)
+        if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return 1/(S.NegativeOne)**pi_coeff
+
+            if (2*pi_coeff).is_integer:
+                return S.Infinity
+
+            if not pi_coeff.is_Rational:
+                narg = pi_coeff*S.Pi
+                if narg != arg:
+                    return cls(narg)
+                return None
+
+            # cosine formula #####################
+            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # explicit calculations are preformed for
+            # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
+            # Some other exact values like cos(k pi/15) can be
+            # calculated using a partial-fraction decomposition
+            # by calling cos( X ).rewrite(sqrt)
+            cst_table_some = {
+                3: S.Half,
+                5: (sqrt(5) + 1)/4,
+            }
+            if pi_coeff.is_Rational:
+                q = pi_coeff.q
+                p = pi_coeff.p % (2*q)
+                if p > q:
+                    narg = (pi_coeff - 1)*S.Pi
+                    return -cls(narg)
+                if 2*p > q:
+                    narg = (1 - pi_coeff)*S.Pi
+                    return -cls(narg)
+
+                # If nested sqrt's are worse than un-evaluation
+                # you can require q in (1, 2, 3, 4, 6)
+                # q <= 12 returns expressions with 2 or fewer nestings.
+                if q > 12:
+                    return None
+
+                if q in cst_table_some:
+                    cts = cst_table_some[pi_coeff.q]
+                    return 1/C.chebyshevt(pi_coeff.p, cts).expand()
+
+                if 0 == q % 2:
+                    narg = (pi_coeff*2)*S.Pi
+                    nval = cls(narg)
+                    if None == nval:
+                        return None
+                    x = (2*pi_coeff + 1)/2
+                    sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
+                    return 1/sign_cos*sqrt( (1 + nval)/2 )
+            return None
+
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sec(self.args[0]._sage_())
+
+
+class csc(ReciprocalTrigonometricFunction):
+    _inverse_of = sin
+
+    def _eval_rewrite_as_cos(self, arg):
+        pass
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
@@ -737,11 +884,78 @@ class csc(TrigonometricFunction):  # TODO implement other functions for csc as i
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/(sin(arg)*cos(arg))
 
+
+    def _eval_rewrite_as_pow(self, arg):
+        # Added to workaround problem:
+        # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
+        # https://code.google.com/p/sympy/issues/detail?id=4072
+        pass
+
+    def _eval_rewrite_as_sqrt(self, arg):
+        # Added to workaround problem:
+        # sin(x).rewrite(sqrt) raises RuntimeError: maximum recursion depth
+        # https://code.google.com/p/sympy/issues/detail?id=4072
+        pass
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return -cot(self.args[0])*csc(self.args[0])
         else:
-            raise ArgumentIndexError(self, argindex)
+            raise ArgumentIndexError(self, argindex)#
+
+    # TODO def taylor_term(n, x, *previous_terms):
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Zero:
+                return S.Infinity
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                return
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
+
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return -S.ImaginaryUnit/C.sinh(i_coeff)
+
+        pi_coeff = _pi_coeff(arg)
+        if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return S.Infinity
+
+            if (2*pi_coeff).is_integer:
+                return 1/S.NegativeOne**(pi_coeff - S.Half)
+
+            if not pi_coeff.is_Rational:
+                narg = pi_coeff*S.Pi
+                if narg != arg:
+                    return cls(narg)
+                return None
+
+            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # transform a sine to a cosine, to avoid redundant code
+            if pi_coeff.is_Rational:
+                x = pi_coeff % 2
+                if x > 1:
+                    return -cls((x % 1)*S.Pi)
+                if 2*x > 1:
+                    return cls((1 - x)*S.Pi)
+                narg = ((pi_coeff + C.Rational(3, 2)) % 2)*S.Pi
+                result = cos(narg)
+                if not isinstance(result, cos):
+                    return result
+                if pi_coeff*S.Pi != arg:
+                    return cls(pi_coeff*S.Pi)
+                return None
+
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.csc(self.args[0]._sage_())
 
 
 class tan(TrigonometricFunction):
