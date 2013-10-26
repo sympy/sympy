@@ -3133,7 +3133,7 @@ def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
 
     assert pretty(expr) == "Not(x)"
-    assert upretty(expr) == u("¬ x")
+    assert upretty(expr) == u("¬x")
 
     expr = And(x, y)
 

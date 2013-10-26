@@ -47,7 +47,7 @@ EOF
     else
         cat << EOF | python
 import sympy
-if not sympy.test():
+if not sympy.test(split='${SPLIT}'):
     raise Exception('Tests failed')
 EOF
         fi

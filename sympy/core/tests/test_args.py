@@ -83,7 +83,6 @@ def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)
 
 
-@XFAIL
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
@@ -159,6 +158,27 @@ def test_sympy__concrete__products__Product():
     from sympy.concrete.products import Product
     assert _test_args(Product(x, (x, 0, 10)))
     assert _test_args(Product(x, (x, 0, y), (y, 0, 10)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_limits__ExprWithLimits():
+    from sympy.concrete.expr_with_limits import ExprWithLimits
+    assert _test_args(ExprWithLimits(x, (x, 0, 10)))
+    assert _test_args(ExprWithLimits(x*y, (x, 0, 10.),(y,1.,3)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_limits__AddWithLimits():
+    from sympy.concrete.expr_with_limits import AddWithLimits
+    assert _test_args(AddWithLimits(x, (x, 0, 10)))
+    assert _test_args(AddWithLimits(x*y, (x, 0, 10),(y,1,3)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_intlimits__ExprWithIntLimits():
+    from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+    assert _test_args(ExprWithIntLimits(x, (x, 0, 10)))
+    assert _test_args(ExprWithIntLimits(x*y, (x, 0, 10),(y,1,3)))
 
 
 def test_sympy__concrete__summations__Sum():
