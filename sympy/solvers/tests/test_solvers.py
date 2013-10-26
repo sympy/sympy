@@ -1085,6 +1085,8 @@ def test_check_assumptions():
 
 def test_solve_abs():
     assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
+    r = symbols('r', real=True)
+    raises(NotImplementedError, lambda: solve(2*abs(r) - abs(r - 1)))
 
 
 def test_issue_2957():
