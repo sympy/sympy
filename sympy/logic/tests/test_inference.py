@@ -197,3 +197,7 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+
+def test_satisfiable_bool():
+    assert satisfiable(True) == {}
+    assert satisfiable(False) == False
