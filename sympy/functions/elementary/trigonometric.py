@@ -901,7 +901,7 @@ class csc(ReciprocalTrigonometricFunction):
         if argindex == 1:
             return -cot(self.args[0])*csc(self.args[0])
         else:
-            raise ArgumentIndexError(self, argindex)#
+            raise ArgumentIndexError(self, argindex)
 
     # TODO def taylor_term(n, x, *previous_terms):
 
