@@ -258,11 +258,14 @@ def compute_known_facts(known_facts, known_facts_keys):
     cnf = to_cnf(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
     mapping = single_fact_lookup(known_facts_keys, cnf)
+    items = sorted(mapping.items(), key=str)
+    keys = [str(i[0]) for i in items]
+    values = ['set(%s)' % sorted(i[1], key=str) for i in items]
     m = LINE.join(['\n'.join(
-        wrap("%s: %s" % item,
+        wrap("%s: %s" % (k, v),
             subsequent_indent=HANG,
             break_long_words=False))
-        for item in sorted(mapping.items(), key=str)]) + ','
+        for k, v in zip(keys, values)]) + ','
     return fact_string % (c, m)
 
 # handlers tells us what ask handler we should use
