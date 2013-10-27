@@ -847,10 +847,6 @@ class Pow(Expr):
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
 
-                if rest == 0:
-                    # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
-                    # factor the w**4 out using collect:
-                    return 1/collect(prefactor, x)
                 if rest.is_Order:
                     return 1/prefactor + rest/prefactor + O(x**n, x)
                 n2 = rest.getn()
@@ -864,6 +860,14 @@ class Pow(Expr):
                     pass
                 elif l.is_number and l > 0:
                     l = l.evalf()
+                elif l == 0:
+                    k = k.simplify()
+                    if k == 0:
+                        # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
+                        # factor the w**4 out using collect:
+                        return 1/collect(prefactor, x)
+                    else:
+                        raise NotImplementedError()
                 else:
                     raise NotImplementedError()
 
