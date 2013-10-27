@@ -793,10 +793,10 @@ def integral_steps(integrand, symbol, **options):
         })),
         null_safe(
             alternatives(
+                substitution_rule,
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     partial_fractions_rule),
-                substitution_rule,
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.log, sympy.atan, sympy.asin, sympy.acos),
                     parts_rule),
