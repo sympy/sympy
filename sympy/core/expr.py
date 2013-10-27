@@ -2411,7 +2411,7 @@ class Expr(Basic, EvalfMixin):
                 rep = x + x0
                 rep2 = x
                 rep2b = -x0
-            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+')
+            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
             if n is None:  # lseries...
                 return (si.subs(x, rep2 + rep2b) for si in s)
             # nseries...
@@ -2426,7 +2426,7 @@ class Expr(Basic, EvalfMixin):
         if x.is_positive is x.is_negative is None:
             # replace x with an x that has a positive assumption
             xpos = C.Dummy('x', positive=True, bounded=True)
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir)
+            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
             else:
