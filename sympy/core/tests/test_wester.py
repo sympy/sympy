@@ -2785,4 +2785,3 @@ def test_Y3():
     s = symbols('s')
     F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s)
     assert F == w/(s**2 - 4*w**2)
-    
