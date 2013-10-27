@@ -1165,7 +1165,6 @@ def test_hash():
     assert check_all(tsymmetry)
 
 
-
 ### TEST VALUED TENSORS ###
 
 numpy = import_module('numpy')
@@ -1251,7 +1250,6 @@ def test_valued_tensor_covariant_contravariant_elements():
     if numpy is None:
         skip("numpy not installed.")
 
-    # TODO: handle metric with covariant/contravariant indices!
     assert A(-i0)[0] == A(i0)[0]
     assert A(-i0)[1] == -A(i0)[1]
 
@@ -1280,8 +1278,6 @@ def test_valued_tensor_get_matrix():
     # covariant and contravariant forms:
     assert A(i0).get_matrix() == Matrix([E, px, py, pz])
     assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
-    # VTensorHead should also be endowed with a get_matrix method?
-    # VTensMul
 
 
 def test_valued_tensor_contraction():
@@ -1289,7 +1285,6 @@ def test_valued_tensor_contraction():
     if numpy is None:
         skip("numpy not installed.")
 
-    # TODO: decide how contract indices should work.
     assert A(i0) * A(-i0) == E ** 2 - px ** 2 - py ** 2 - pz ** 2
     assert A(i0) * A(-i0) == A ** 2
     assert A(i0) * A(-i0) == A(i0) ** 2
@@ -1328,7 +1323,6 @@ def test_valued_tensor_pow():
     assert C**1 == sqrt(-E**2 + px**2 + py**2 + pz**2)
     assert C(mu0)**2 == C**2
     assert C(mu0)**1 == C**1
-    # TODO: test both TensorHead and TensExpr
 
 
 def test_valued_tensor_expressions():
@@ -1369,9 +1363,7 @@ def test_valued_tensor_expressions():
     assert expr4 * 2 == expr3
     expr5 = expr4 * BA(-i1, -i0)
 
-    # TODO: check numerically that this value is correct:
     assert expr5 == (-2*x1 * (-20*E + 44*px - 8*py - 32*pz) + 136*x2 + 3*x3).expand()
-    # test contraction in more steps, verify that _vmetric is still there.
 
 
 def test_noncommuting_components():
@@ -1394,7 +1386,6 @@ def test_noncommuting_components():
     assert vtp == a ** 2 + b * c + c * b + d ** 2
     assert vtp != a**2 + 2*b*c + d**2
 
-    # TODO: test non-commutative scalar coefficients in Mul, Add, subtractions...
     Vc = b * V1(i1, -i1)
     assert Vc.expand() == b * a + b * d
 
@@ -1406,8 +1397,6 @@ def test_valued_non_diagonal_metric():
 
     mmatrix = Matrix(ndm_matrix)
     assert NA(n0)*NA(-n0) == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
-    # TODO: fix this test:
-    # assert NA(n0)*NB(n1, -n0)*NA(-n1) == (NA._ndarray.get_matrix().T * mmatrix * NB._ndarray.get_matrix().T * mmatrix * NA._ndarray.get_matrix())[0, 0]
 
 
 def test_valued_tensor_strip():
@@ -1458,3 +1447,22 @@ def test_valued_tensor_applyfunc():
         [33, 33, 32, 33],
         [33, 33, 33, 32],
     ])
+
+def test_valued_canon_bp_swapaxes():
+    numpy = import_module("numpy")
+    if numpy is None:
+        return
+
+    e1 = A(i1)*A(i0)
+    e1.data[0, 1] = 44
+    e2 = e1.canon_bp()
+    assert e2 == A(i0)*A(i1)
+    for i in range(4):
+        for j in range(4):
+            assert e1[i, j] == e2[j, i]
+    o1 = B(i2)*A(i1)*B(i0)
+    o2 = o1.canon_bp()
+    for i in range(4):
+        for j in range(4):
+            for k in range(4):
+                assert o1[i, j, k] == o2[j, i, k]

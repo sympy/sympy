@@ -455,7 +455,7 @@ class TIDS(object):
         """
         Returns a `TIDS` instance corresponding to the permutation ``g``
 
-        ``g``  permutation corrisponding to the tensor in the representation
+        ``g``  permutation corresponding to the tensor in the representation
         used in canonicalization
 
         ``canon_bp``   if True, then ``g`` is the permutation
@@ -586,12 +586,39 @@ class VTIDS(TIDS):
     def parse_data(data):
         numpy = import_module('numpy')
 
-        if not isinstance(data, numpy.ndarray):
+        if (numpy is not None) and (not isinstance(data, numpy.ndarray)):
             if len(data) == 2 and hasattr(data[0], '__call__'):
                 data = numpy.fromfunction(data[0], data[1])
             else:
                 data = numpy.array(data)
         return data
+
+    def _sort_data_axes(self, ret):
+        numpy = import_module('numpy')
+
+        new_data = self.data.copy()
+
+        old_free = [i[0] for i in self.free]
+        new_free = [i[0] for i in ret.free]
+
+        for i in range(len(new_free)):
+            for j in range(i, len(old_free)):
+                if old_free[j] == new_free[i]:
+                    old_free[i], old_free[j] = old_free[j], old_free[i]
+                    new_data = numpy.swapaxes(new_data, i, j)
+                    break
+        return new_data
+
+    def sorted_components(self):
+        ret, sign = TIDS.sorted_components(self)
+        new_data = self._sort_data_axes(ret)
+        vtids = VTIDS(ret.components, ret.free, ret.dum, new_data)
+        return vtids, sign
+
+    def perm2tensor(self, g, canon_bp=False):
+        ret = TIDS.perm2tensor(self, g, canon_bp)
+        new_data = self._sort_data_axes(ret)
+        return VTIDS(ret.components, ret.free, ret.dum, new_data)
 
     def __str__(self):
         return "VTIDS(%s, %s, %s, %s)" % (self.components, self.free, self.dum, self.data)
@@ -684,7 +711,7 @@ class _TensorManager(object):
         For the remaining cases, use this method to set the commutation rules;
         by default ``c=None``.
 
-        The group commutation number ``c`` is assigned in corrispondence
+        The group commutation number ``c`` is assigned in correspondence
         to the group commutation symbols; it can be
 
         0        commuting
@@ -840,14 +867,17 @@ class TensorIndexType(Basic):
 
     Examples with metric data added, this means it is working on a fixed basis:
 
-    >>> Lorentz.data = [1, -1, -1, -1]
-    >>> Lorentz
+    >>> # Lorentz.data = [1, -1, -1, -1]
+    >>> # Lorentz
+
     TensorIndexType(Lorentz, 0)
-    >>> Lorentz.data
-    [[1 0 0 0]
+
+    If ``numpy`` is installed, ``Lorentz.data`` would yield
+
+    ``[[1 0 0 0]
     [0 -1 0 0]
     [0 0 -1 0]
-    [0 0 0 -1]]
+    [0 0 0 -1]]``
     """
 
     def __new__(cls, name, metric=False, dim=None, eps_dim=None,
@@ -1688,19 +1718,25 @@ class TensAdd(TensExpr):
 
     Examples with data added to the tensor expression:
 
-    >>> from sympy import eye
-    >>> Lorentz.data = [1, -1, -1, -1]
-    >>> a, b = tensor_indices('a, b', Lorentz)
-    >>> p.data = [2, 3, -2, 7]
-    >>> q.data = [2, 3, -2, 7]
-    >>> t = p(a) + q(a); t
+    >>> # from sympy import eye
+    >>> # Lorentz.data = [1, -1, -1, -1]
+    >>> # a, b = tensor_indices('a, b', Lorentz)
+    >>> # p.data = [2, 3, -2, 7]
+    >>> # q.data = [2, 3, -2, 7]
+    >>> # t = p(a) + q(a); t
+
     p(a) + q(a)
-    >>> t(b)
+
+    >>> # t(b)
+
     p(b) + q(b)
     >>> # The following are: 2**2 - 3**2 - 2**2 - 7**2 ==> -58
-    >>> p(a)*p(-a)
+    >>> # p(a)*p(-a)
+
     -58
-    >>> p(a)**2
+
+    >>> # p(a)**2
+
     -58
     """
 
