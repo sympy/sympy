@@ -723,20 +723,22 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     _is_reciprocal_odd = None   # optional, to be defined in subclass
 
     def _call_reciprocal(self, method_name, *args, **kwargs):
+        # Calls method_name on _reciprocal_of
         o = self._reciprocal_of(self.args[0])
         if kwargs:
             return getattr(o, method_name)(**kwargs)
         else:
             return getattr(o, method_name)(*args)
 
-    def _reciprocal(self, method_name, *args, **kwargs):
+    def _calculate_reciprocal(self, method_name, *args, **kwargs):
+        # If calling method_name on _reciprocal_of returns a value != None
+        # then return the reciprocal of that value
         t = self._call_reciprocal(method_name, *args, **kwargs)
-        if t != None:
-            return 1/t
-        else:
-            return
+        return 1/t if t != None else t
 
     def _rewrite_reciprocal(self, method_name, arg):
+        # Special handling for rewrite functions. If reciprocal rewrite returns
+        # unmodified expression, then return None
         t = self._call_reciprocal(method_name, arg)
         if t != None and t != self._reciprocal_of(arg):
             return 1/t
@@ -744,7 +746,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
             return
 
     def fdiff(self, argindex=1):
-        return self._reciprocal("fdiff", argindex)
+        return self._calculate_reciprocal("fdiff", argindex)
 
     def _eval_rewrite_as_exp(self, arg):
         return self._rewrite_reciprocal("_eval_rewrite_as_exp", arg)
@@ -768,28 +770,26 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         return self._rewrite_reciprocal("_eval_rewrite_as_sqrt", arg)
 
     def _eval_conjugate(self):
-        return self._reciprocal("_eval_conjugate")
+        return self._calculate_reciprocal("_eval_conjugate")
 
     def as_real_imag(self, deep=True, **hints):
         return (1/self._reciprocal_of(self.args[0])).as_real_imag(deep,
                                                                   **hints)
 
     def _eval_expand_trig(self, **hints):
-        return self._reciprocal("_eval_expand_trig", **hints)
+        return self._calculate_reciprocal("_eval_expand_trig", **hints)
 
     def _eval_is_real(self):
-        return (self._reciprocal_of(self.args[0])._eval_is_real())
+        return self._reciprocal_of(self.args[0])._eval_is_real()
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return 1/arg
-        else:
-            return self.func(arg)
+        return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_bounded(self):
         return (1/self._reciprocal_of(self.args[0])).is_bounded
+
+    def _eval_nseries(self, x, n, logx):
+        return (1/self._reciprocal_of(self.args[0]))._eval_nseries( x, n, logx)
 
     @classmethod
     def eval(cls, arg):

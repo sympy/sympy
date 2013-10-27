@@ -1016,12 +1016,25 @@ def test_sec():
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
+    # https://code.google.com/p/sympy/issues/detail?id=4067
+    assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
+
+    # https://code.google.com/p/sympy/issues/detail?id=4068
+    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
+            1/sqrt(x) +x**(S(3)/2)/12 + x**(S(7)/2)/160 + O(x**4))
+
     assert sec(x).diff(x) == tan(x)*sec(x)
 
 
 def test_csc():
     x = symbols('x', real=True)
     z = symbols('z')
+
+    # https://code.google.com/p/sympy/issues/detail?id=3608
+    cosecant = csc('x')
+    alternate = 1/sin('x')
+    assert cosecant.equals(alternate) == True
+    assert alternate.equals(cosecant) == True
 
     assert csc.nargs == 1
 
@@ -1066,11 +1079,7 @@ def test_csc():
     assert csc(pi/2).is_bounded == True
 
     assert series(csc(x), x, x0=pi/2, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+    assert (series(csc(x), x, x0=0, n=6) ==
+            1/x + x/6 + 7*x**3/360 - 13*x**5/5040 + O(x**6))
 
     assert csc(x).diff(x) == -cot(x)*csc(x)
-
-@XFAIL
-def test_csc_series():
-    # returns nan, maybe an error in series()?
-    assert (series(csc(x), x, x0=0, n=6) == 1/x + x/6 + 7*x**3/360 -
-            13*x**5/5040 + O(x**6))
