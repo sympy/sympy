@@ -1878,7 +1878,7 @@ def test_composite_proposition():
     assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
 
 
-def test_composite_assomption():
+def test_composite_assumptions():
     assert ask(Q.positive(x), Q.positive(x) | Q.positive(y)) is None
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
 
