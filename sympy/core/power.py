@@ -865,8 +865,7 @@ class Pow(Expr):
                 elif l.is_number and l > 0:
                     l = l.evalf()
                 else:
-                    # XXX is it correct?
-                    l = 1
+                    raise NotImplementedError()
 
                 if cf < 0:
                     cf = S.One/abs(cf)
