@@ -148,7 +148,7 @@ class PrettyPrinter(Printer):
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
-            return prettyForm(*pform.left(u("\u00ac ")))
+            return prettyForm(*pform.left(u("\u00ac")))
         else:
             return self._print_Function(e)
 
