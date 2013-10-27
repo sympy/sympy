@@ -48,6 +48,8 @@ TrigRule = Rule("TrigRule", "func arg")
 ExpRule = Rule("ExpRule", "base exp")
 ReciprocalRule = Rule("ReciprocalRule", "func")
 ArctanRule = Rule("ArctanRule")
+ArcsinRule = Rule("ArcsinRule")
+InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
 DerivativeRule = Rule("DerivativeRule")
@@ -242,57 +244,73 @@ def exp_rule(integral):
     if isinstance(integrand.args[0], sympy.Symbol):
         return ExpRule(sympy.E, integrand.args[0], integrand, symbol)
 
-def arctan_rule(integral):
+def inverse_trig_rule(integral):
     integrand, symbol = integral
     base, exp = integrand.as_base_exp()
+    a = sympy.Wild('a', exclude=[symbol])
+    b = sympy.Wild('b', exclude=[symbol])
+    match = base.match(a + b*symbol**2)
 
-    if sympy.simplify(exp + 1) == 0:
-        a = sympy.Wild('a', exclude=[symbol])
-        b = sympy.Wild('b', exclude=[symbol])
-        match = base.match(a + b*symbol**2)
-        if match:
-            a, b = match[a], match[b]
+    if not match:
+        return
 
-            if ((isinstance(a, sympy.Number) and a < 0) or
-                (isinstance(b, sympy.Number) and b < 0)):
-                return
-            if (sympy.ask(sympy.Q.negative(a) | sympy.Q.negative(b) |
-                          sympy.Q.is_true(a <= 0) | sympy.Q.is_true(b <= 0))):
-                return
+    def negative(x):
+        return sympy.ask(sympy.Q.negative(x)) or x.is_negative or x.could_extract_minus_sign()
 
-            if a != 1 or b != 1:
-                b_condition = b >= 0
-                u_var = sympy.Dummy("u")
-                rewritten = (sympy.Integer(1) / a) * (base / a) ** (-1)
-                u_func = sympy.sqrt(sympy.sympify(b) / a) * symbol
-                constant = 1 / sympy.sqrt(sympy.sympify(b) / a)
-                substituted = rewritten.subs(u_func, u_var)
+    def ArcsinhRule(integrand, symbol):
+        return InverseHyperbolicRule(sympy.asinh, integrand, symbol)
 
-                if a == b:
-                    substep = ArctanRule(integrand, symbol)
-                else:
-                    subrule = ArctanRule(substituted, u_var)
-                    if constant != 1:
-                        b_condition = b > 0
-                        subrule = ConstantTimesRule(
-                            constant, substituted, subrule,
-                            substituted, symbol)
+    def ArccoshRule(integrand, symbol):
+        return InverseHyperbolicRule(sympy.acosh, integrand, symbol)
 
-                    substep = URule(u_var, u_func, constant,
-                                    subrule,
-                                    integrand, symbol)
+    def make_inverse_trig(RuleClass, base_exp, a, sign_a, b, sign_b):
+        u_var = sympy.Dummy("u")
+        current_base = base
+        current_symbol = symbol
+        constant = u_func = u_constant = substep = None
+        factored = integrand
+        if a != 1:
+            constant = a**base_exp
+            current_base = sign_a + sign_b * (b/a) * current_symbol**2
+            factored = current_base ** base_exp
+        if (b/a) != 1:
+            u_func = sympy.sqrt(b/a) * symbol
+            u_constant = sympy.sqrt(a/b)
+            current_symbol = u_var
+            current_base = sign_a + sign_b * current_symbol**2
 
-                if a != 1:
-                    other = (base / a) ** (-1)
-                    substep = ConstantTimesRule(
-                        sympy.Integer(1) / a, other, substep,
-                        integrand, symbol)
+        substep = RuleClass(current_base ** base_exp, current_symbol)
+        if u_func is not None:
+            if u_constant != 1:
+                substep = ConstantTimesRule(
+                    u_constant, current_base ** base_exp, substep,
+                    u_constant * current_base ** base_exp, symbol)
+            substep = URule(u_var, u_func, u_constant, substep, factored, symbol)
+        if constant is not None:
+            substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
+        return substep
 
-                return PiecewiseRule([
-                    (substep, sympy.And(a > 0, b_condition))
-                ], integrand, symbol)
+    a, b = match[a], match[b]
 
-            return ArctanRule(integrand, symbol)
+    # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
+    possibilities = []
+
+    if sympy.simplify(exp + 1) == 0 and not (negative(a) or negative(b)):
+        possibilities.append((ArctanRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
+    elif sympy.simplify(2*exp + 1) == 0:
+        possibilities.append((ArcsinRule, exp, a, 1, -b, -1, sympy.And(a > 0, b < 0)))
+        possibilities.append((ArcsinhRule, exp, a, 1, b, 1, sympy.And(a > 0, b > 0)))
+        possibilities.append((ArccoshRule, exp, -a, -1, b, 1, sympy.And(a < 0, b > 0)))
+
+    possibilities = [p for p in possibilities if p[-1] is not sympy.false]
+    if a.is_number and b.is_number:
+        possibility = [p for p in possibilities if p[-1] is sympy.true]
+        if len(possibility) == 1:
+            return make_inverse_trig(*possibility[0][:-1])
+    elif possibilities:
+        return PiecewiseRule(
+            [(make_inverse_trig(*p[:-1]), p[-1]) for p in possibilities],
+            integrand, symbol)
 
 def add_rule(integral):
     integrand, symbol = integral
@@ -663,9 +681,6 @@ def trig_substitution_rule(integral):
 
                     substep = integral_steps(replaced, theta)
                     return TrigSubstitutionRule(theta, x_func, replaced, substep, integrand, symbol)
-                    # return PiecewiseRule([
-                    #     (TrigSubstitutionRule(theta, x_func, replaced, substep, integrand, symbol), sympy.And(a > 0, b > 0))
-                    # ], integrand, symbol)
 
 def substitution_rule(integral):
     integrand, symbol = integral
@@ -834,7 +849,7 @@ def integral_steps(integrand, symbol, **options):
 
     result = do_one(
         null_safe(switch(key, {
-            sympy.Pow: do_one(null_safe(power_rule), null_safe(arctan_rule)),
+            sympy.Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule)),
             sympy.Symbol: power_rule,
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
@@ -925,6 +940,14 @@ def eval_reciprocal(func, integrand, symbol):
 def eval_arctan(integrand, symbol):
     return sympy.atan(symbol)
 
+@evaluates(ArcsinRule)
+def eval_arcsin(integrand, symbol):
+    return sympy.asin(symbol)
+
+@evaluates(InverseHyperbolicRule)
+def eval_inversehyperbolic(func, integrand, symbol):
+    return func(symbol)
+
 @evaluates(AlternativeRule)
 def eval_alternative(alternatives, integrand, symbol):
     return _manualintegrate(alternatives[0])
@@ -942,8 +965,7 @@ def eval_piecewise(substeps, integrand, symbol):
 def eval_trigsubstitution(theta, func, rewritten, substep, integrand, symbol):
     func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
     inverse = sympy.solve(symbol - func, theta)[0]
-    print('\t', _manualintegrate(substep), rewritten)
-    return _manualintegrate(substep).subs(theta, inverse)
+    return _manualintegrate(substep).subs(theta, inverse).trigsimp()
 
 @evaluates(DerivativeRule)
 def eval_derivativerule(integrand, symbol):
