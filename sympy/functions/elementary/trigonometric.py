@@ -789,7 +789,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         return (1/self._reciprocal_of(self.args[0])).is_bounded
 
     def _eval_nseries(self, x, n, logx):
-        return (1/self._reciprocal_of(self.args[0]))._eval_nseries( x, n, logx)
+        return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)
 
     @classmethod
     def eval(cls, arg):
