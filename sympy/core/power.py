@@ -846,11 +846,6 @@ class Pow(Expr):
 
                 if rest.is_Order:
                     return 1/prefactor + rest/prefactor + O(x**n, x)
-                n2 = rest.getn()
-                if n2 is not None:
-                    # remove the O - powering this is slow
-                    if logx is not None:
-                        rest = rest.removeO()
 
                 k, l = rest.leadterm(x)
                 if l.is_Rational and l > 0:
@@ -881,10 +876,6 @@ class Pow(Expr):
                         new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
                 terms.append(O(x**n, x))
-
-                # Append O(...), we know the order.
-                if n2 is None or logx is not None:
-                    terms.append(O(x**n))
                 return powsimp(Add(*terms), deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for
