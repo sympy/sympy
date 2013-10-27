@@ -715,6 +715,8 @@ class cos(TrigonometricFunction):
 
 
 class ReciprocalTrigonometricFunction(TrigonometricFunction):
+    """Base class for reciprocal functions of trigonometric functions. """
+
     nargs = 1
     _reciprocal_of = None       # mandatory, to be defined in subclass
     _is_reciprocal_even = None  # optional, to be defined in subclass
@@ -769,7 +771,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         return self._reciprocal("_eval_conjugate")
 
     def as_real_imag(self, deep=True, **hints):
-        return (1/self._reciprocal_of(self.args[0])).as_real_imag(deep, **hints)
+        return (1/self._reciprocal_of(self.args[0])).as_real_imag(deep,
+                                                                  **hints)
 
     def _eval_expand_trig(self, **hints):
         return self._reciprocal("_eval_expand_trig", **hints)
