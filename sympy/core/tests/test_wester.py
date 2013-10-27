@@ -37,6 +37,8 @@ from sympy.polys.solvers import solve_lin_sys
 from sympy.concrete import Sum
 from sympy.concrete.products import Product
 from sympy.integrals import integrate
+from sympy.integrals.transforms import laplace_transform,\
+    inverse_laplace_transform
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -2758,3 +2760,29 @@ def test_X22():
     #                       2                 2
     #                    %pi
     raise NotImplementedError("Fourier series not supported")
+
+
+def test_Y1():
+    t = symbols('t', real=True, positive=True)
+    w = symbols('w', real=True)
+    s = symbols('s')
+    F, _, _ = laplace_transform(cos((w - 1)*t), t, s)
+    assert F == s/(s**2 + (w - 1)**2)
+
+
+def test_Y2():
+    t = symbols('t', real=True, positive=True)
+    w = symbols('w', real=True)
+    s = symbols('s')
+    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
+    assert f == cos(t*abs(w - 1))
+
+
+@XFAIL
+def test_Y3():
+    t = symbols('t', real=True, positive=True)
+    w = symbols('w', real=True)
+    s = symbols('s')
+    F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s)
+    assert F == w/(s**2 - 4*w**2)
+    
