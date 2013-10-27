@@ -835,10 +835,7 @@ class Pow(Expr):
                 except NotImplementedError:
                     pass
 
-                b_orig = b
-                b = b_orig._eval_nseries(x, n=nuse, logx=logx)
-                prefactor = b.as_leading_term(x)
-
+                b_orig, prefactor = b, O(1)
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
