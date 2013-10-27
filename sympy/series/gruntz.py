@@ -450,7 +450,7 @@ def calculate_series(e, x, logx=None):
     """
     from sympy.polys import cancel
 
-    for t in e.series(x, n=None, logx=logx):
+    for t in e.lseries(x, logx=logx):
         t = cancel(t)
 
         if t:
