@@ -979,10 +979,13 @@ def test_sec():
     assert sec(pi) == -1
     assert sec(pi/2) == oo
     assert sec(-pi/2) == oo
+    assert sec(pi/6) == 2*sqrt(3)/3
+    assert sec(pi/3) == 2
     assert sec(5*pi/2) == oo
     assert sec(9*pi/7) == -sec(2*pi/7)
     assert sec(I) == 1/cosh(1)
     assert sec(x*I) == 1/cosh(x)
+    assert sec(-x) == sec(x)
 
     assert sec(x).rewrite(exp) == 1/(exp(I*x)/2 + exp(-I*x)/2)
     assert sec(x).rewrite(sin) == sec(x)
@@ -1019,16 +1022,21 @@ def test_sec():
 def test_csc():
     x = symbols('x', real=True)
     z = symbols('z')
+
     assert csc.nargs == 1
 
     assert csc(0) == oo
     assert csc(pi) == oo
-    assert csc(-pi/2) == -1
+
     assert csc(pi/2) == 1
+    assert csc(-pi/2) == -1
+    assert csc(pi/6) == 2
+    assert csc(pi/3) == 2*sqrt(3)/3
     assert csc(5*pi/2) == 1
     assert csc(9*pi/7) == -csc(2*pi/7)
     assert csc(I) == -I/sinh(1)
     assert csc(x*I) == -I/sinh(x)
+    assert csc(-x) == -csc(x)
 
     assert csc(x).rewrite(exp) == 2*I/(exp(I*x) - exp(-I*x))
     assert csc(x).rewrite(sin) == 1/sin(x)
