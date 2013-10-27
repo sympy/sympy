@@ -2244,7 +2244,8 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
-    from sympy.core import Pow
+    from sympy.core.power import Pow
+    from sympy.polys.rootoftools import RootOf
 
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
@@ -2263,6 +2264,11 @@ def nfloat(expr, n=15, exponent=False):
         else:
             pass  # pure_complex(rv) is likely True
         return rv
+
+    # watch out for RootOf instances that don't like to have
+    # their exponents replaced with Dummies and also sometimes have
+    # problems with evaluating at low precision (issue 3294)
+    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]

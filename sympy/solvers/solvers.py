@@ -749,6 +749,18 @@ def solve(f, *symbols, **flags):
         _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
         fi = f[i] = fi.xreplace(dict(list(zip(_abs,
             [sqrt(a.args[0]**2) for a in _abs]))))
+        if fi.has(*_abs):
+            if any(s.assumptions0 for a in
+                    _abs for s in a.free_symbols):
+                raise NotImplementedError(filldedent('''
+                All absolute
+                values were not removed from %s. In order to solve
+                this equation, try replacing your symbols with
+                Dummy symbols (or other symbols without assumptions).
+                ''' % fi))
+            else:
+                raise NotImplementedError(filldedent('''
+                Removal of absolute values from %s failed.''' % fi))
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
         f[i] = fi.xreplace(dict(list(zip(_arg,
             [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
