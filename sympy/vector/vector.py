@@ -243,11 +243,12 @@ def grad(expr, coord_sys=None):
         return ZeroVector
 
     coord_list = _coord_sys_scalar_list(expr)
-    if not coord_sys and not len(coord_list) == 1:
-        raise ValueError("Coordinate system for output not provided")
-
     if not coord_sys:
-        coord_sys = coord_list[0]
+        if len(coord_list) == 1:
+            coord_sys = coord_list[0]
+        else:
+            raise TypeError("Coordinate system to express the vector in not known")
+
 
     # We are using the _express_scalar method to just express the given
     # sympy expression in the given coord_sys
@@ -329,9 +330,7 @@ def cross(vect_a, vect_b, coord_sys=None):
     return ret
 
 def _cross_same(vect_a, vect_b):
-    """
-    Cross product between two vectors of same coordinate system.
-    """
+    """Cross product between two vectors of same coordinate system."""
     coord_a = _all_coordinate_systems(vect_a)
     coord_b = _all_coordinate_systems(vect_b)
 
@@ -363,19 +362,31 @@ def div(vect, coord_sys=None):
     coord_sys : CoordSys
         The coordinate system to express the results in.
 
-    # TODO : Add examples once testing is done.
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, CoordSysSph, div
+    >>> c0 = CoordSysRect('c0')
+    >>> cs = CoordSysSph('cs')
+    >>> v = c0.y**2*c0.z*c0.e_x + c0.y**3*c0.e_y + c0.x*c0.z*c0.e_z
+    >>> div(v)
+    c0.x + 3*c0.y**2
+    >>> v = cs.r**2 * cs.e_r
+    >>> div(v)
+    4*cs.r
+
     """
     coord_list = _all_coordinate_systems(vect)
-    if not coord_sys and len(coord_list) == 1:
-        coord_sys = coord_list[0]
-    else:
-        raise TypeError("Coordinate system to express the vector in not known")
+    if not coord_sys:
+        if len(coord_list) == 1:
+            coord_sys = coord_list[0]
+        else:
+            raise TypeError("Coordinate system to express the result in not known")
 
     if coord_sys.dim > 3:
         raise NotImplementedError
 
     vect = vect.express(coord_sys)
-    # TODO : This is never used. Why?
     base_scalars = coord_sys.base_scalars
     vect_comp = vect.components
 
@@ -391,7 +402,7 @@ def div(vect, coord_sys=None):
     return ret.factor()
 
 
-def curl(vect, coord_sys):
+def curl(vect, coord_sys=None):
     """
     Calculate the curl of a vector field.
 
@@ -403,14 +414,30 @@ def curl(vect, coord_sys):
     coord_sys : CoordSys
         The coordinate system to express the results in.
 
-    # TODO : Add examples once testing is done.
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, CoordSysSph, div
+    >>> c0 = CoordSysRect('c0')
+    >>> cs = CoordSysSph('cs')
+    >>> v = c0.y*c0.e_x - c0.x * c0.e_y
+    >>> div(v)
+    -2 * c0.e_z
+    >>> v = (1/cs.r**2) * cs.e_r
+    >>> res = div(v)
+    >>> res
+    0
+    >>> type(res)
+    sympy.vector.vector.ZeroVectorClass
+
     """
 
-    coord_list = _all_coordinate_systems(coord_sys)
-    if not coord_sys and len(coord_list) == 1:
-        coord_sys = coord_list[0]
-    else:
-        raise TypeError("Coordinate system to express the vector in not known")
+    coord_list = _all_coordinate_systems(vect)
+    if not coord_sys:
+        if len(coord_list) == 1:
+            coord_sys = coord_list[0]
+        else:
+            raise TypeError("Coordinate system to express the vector in not known")
 
     if coord_sys.dim > 3:
         raise NotImplementedError
@@ -428,7 +455,9 @@ def curl(vect, coord_sys):
         diff_2 = h[index[1]] * comp[index[1]]
         l = ((diff(diff_1, bs[index[1]]) - diff(diff_2, bs[index[0]])) *
             (h[i] * bv[i]))
-        ret = ret + l.expand().factor_vect()
+        # add if l in non zero
+        if l:
+            ret = ret + l.expand().factor_vect()
     return ret.factor_vect()
 
 def laplacian(expr, coord_sys=None):
