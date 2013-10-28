@@ -155,12 +155,18 @@ class ExactlyOneArg(UnevaluatedOnFree):
     def apply(self):
         expr = self.expr
         pred = self.pred
+        pred_args = [pred.rcall(arg) for arg in expr.args]
         # Technically this is xor, but if one term in the disjunction is true,
         # it is not possible for the remainder to be true, so regular or is
         # fine in this case.
-        return Or(*[And(pred.rcall(expr.args[i]), *map(lambda j:
-            Not(pred.rcall(j)), expr.args[:i] + expr.args[i+1:])) for i in
-            range(len(expr.args))])
+        return Or(*[And(pred_args[i], *map(Not, pred_args[:i] +
+            pred_args[i+1:])) for i in range(len(pred_args))])
+        # Note: this is the equivalent cnf form. The above is more efficient
+        # as the first argument of an implication, since p >> q is the same as
+        # q | ~p, so the the ~ will convert the Or to and, and one just needs
+        # to distribute the q across it to get to cnf.
+
+        # return And(*[Or(*map(Not, c)) for c in combinations(pred_args, 2)]) & Or(*pred_args)
 
 def _old_assump_replacer(obj):
     # Things to be careful of:
