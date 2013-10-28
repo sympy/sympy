@@ -223,7 +223,7 @@ class Piecewise(Function):
                 intervals = self._sort_expr_cond(
                     sym, S.NegativeInfinity, S.Infinity, c)
                 values = []
-                for lower, upper in intervals:
+                for lower, upper, expr in intervals:
                     if (a < lower) is True:
                         mid = lower
                         rep = b
@@ -370,10 +370,10 @@ class Piecewise(Function):
             if self.__eval_cond(lower >= upper) is not True:  # Is it still an interval?
                 int_expr.append([lower, upper, expr])
             if cond is targetcond:
-                return [(lower, upper)]
+                return [(lower, upper, None)]
             elif isinstance(targetcond, Or) and cond in targetcond.args:
                 or_cond = Or(or_cond, cond)
-                or_intervals.append((lower, upper))
+                or_intervals.append((lower, upper, None))
                 if or_cond == targetcond:
                     or_intervals.sort(key=lambda x: x[0])
                     return or_intervals
@@ -414,7 +414,7 @@ class Piecewise(Function):
         if holes and default is not None:
             int_expr.extend(holes)
             if targetcond is True:
-                return [(h[0], h[1]) for h in holes]
+                return [(h[0], h[1], None) for h in holes]
         elif holes and default is None:
             raise ValueError("Called interval evaluation over piecewise "
                              "function on undefined intervals %s" %
