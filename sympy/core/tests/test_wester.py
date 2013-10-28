@@ -38,7 +38,9 @@ from sympy.concrete import Sum
 from sympy.concrete.products import Product
 from sympy.integrals import integrate
 from sympy.integrals.transforms import laplace_transform,\
-    inverse_laplace_transform
+    inverse_laplace_transform, LaplaceTransform, fourier_transform
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.delta_functions import Heaviside
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -2785,3 +2787,67 @@ def test_Y3():
     s = symbols('s')
     F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s)
     assert F == w/(s**2 - 4*w**2)
+
+
+def test_Y4():
+    t = symbols('t', real=True, positive=True)
+    s = symbols('s')
+    F, _, _ = laplace_transform(erf(3/sqrt(t)), t, s)
+    assert F == (1 - exp(-6*sqrt(s)))/s
+
+
+@XFAIL
+def test_Y5_Y6():
+# Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
+# Heaviside (unit step) function (the RHS describes a pulse of magnitude 4 and
+# duration 1).  See David A. Sanchez, Richard C. Allen, Jr. and Walter T.
+# Kyner, _Differential Equations: An Introduction_, Addison-Wesley Publishing
+# Company, 1983, p. 211.  First, take the Laplace transform of the ODE
+# => s^2 Y(s) - s + Y(s) = 4/s [e^(-s) - e^(-2 s)]
+# where Y(s) is the Laplace transform of y(t)
+    t = symbols('t', real=True, positive=True)
+    s = symbols('s')
+    y = Function('y')
+    F, _, _ = laplace_transform(diff(y(t), t, 2)
+                                + y(t)
+                                - 4*(Heaviside(t - 1)
+                                - Heaviside(t - 2)), t, s)
+    # Laplace transform for diff() not calculated
+    # https://code.google.com/p/sympy/issues/detail?id=4077
+    assert (F == s**2*LaplaceTransform(y(t), t, s) - s
+            + LaplaceTransform(y(t), t, s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
+# TODO implement second part of test case
+# Now, solve for Y(s) and then take the inverse Laplace transform
+#   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]
+#   => y(t) = cos t + 4 {[1 - cos(t - 1)] H(t - 1) - [1 - cos(t - 2)] H(t - 2)}
+
+
+@XFAIL
+def test_Y7():
+    # What is the Laplace transform of an infinite square wave?
+    # => 1/s + 2 sum( (-1)^n e^(- s n a)/s, n = 1..infinity )
+    #    [Sanchez, Allen and Kyner, p. 213]
+    t = symbols('t', real=True, positive=True)
+    a = symbols('a', real=True)
+    s = symbols('s')
+    F, _, _ = laplace_transform(1 + 2*Sum((-1)**n*Heaviside(t - n*a),
+                                          (n, 1, oo)), t, s)
+    # returns 2*LaplaceTransform(Sum((-1)**n*Heaviside(-a*n + t),
+    #                                (n, 1, oo)), t, s) + 1/s
+    # https://code.google.com/p/sympy/issues/detail?id=4078
+    assert F == 2*Sum((-1)**n*exp(-a*n*s)/s, (n, 1, oo)) + 1/s
+
+
+@XFAIL
+def test_Y8():
+    assert fourier_transform(1, x, z) == DiracDelta(z)
+
+
+def test_Y9():
+    assert (fourier_transform(exp(-9*x**2), x, z) ==
+            sqrt(pi)*exp(-pi**2*z**2/9)/3)
+
+
+def test_Y10():
+    assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z) ==
+            (-8*pi**2*z**2 + 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81))
