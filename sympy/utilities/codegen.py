@@ -751,7 +751,7 @@ class FCodeGen(CodeGen):
                 # look for first whitespace, starting from the right
 
                 if (line_idx == -1) or (line_idx > line_end):
-                    raise IOError(
+                    raise CodeGenError(
                         "Cannot split the arguments of your function into"
                         " 78 length lines")
                 
