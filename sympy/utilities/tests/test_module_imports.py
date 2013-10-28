@@ -56,9 +56,19 @@ if __name__ == '__main__':
         return what == where or what != None and what.startswith(where + '.')
 
     def relevant(module):
+        """Is module relevant for import checking?
+
+        Only imports between relevant modules will be checked."""
         return in_module(module, "sympy") and not in_module(module, "sympy.mpmath")
 
     def tracking_import(module, globals=globals(), locals=[], fromlist=None, level=-1):
+        """__import__ wrapper that keeps track of imported names, and reports an
+        error whenever the same name with the same definition is imported a
+        second time (this will happen exactly for all indirect imports, because
+        these always cause a direct import and the direct import will always
+        be finished first).
+
+        Keeps the semantics of __import__ unchanged."""
         caller_frame = inspect.getframeinfo(sys._getframe(1))
         importer_filename = caller_frame.filename
         importer_module = globals['__name__']
