@@ -271,6 +271,43 @@ def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_v') ) == u('Fᵥ')
     assert upretty( Symbol('F_x') ) == u('Fₓ')
 
+def test_upretty_modifiers():
+    # Accents
+    assert upretty( Symbol('Fmathring') ) == u('F̊')
+    assert upretty( Symbol('Fddddot') ) == u('F̈̈')
+    assert upretty( Symbol('Fdddot') ) == u('F̈̇')
+    assert upretty( Symbol('Fddot') ) == u('F̈')
+    assert upretty( Symbol('Fdot') ) == u('Ḟ')
+    assert upretty( Symbol('Fcheck') ) == u('F̌')
+    assert upretty( Symbol('Fbreve') ) == u('F̆')
+    assert upretty( Symbol('Facute') ) == u('F́')
+    assert upretty( Symbol('Fgrave') ) == u('F̀')
+    assert upretty( Symbol('Ftilde') ) == u('F̃')
+    assert upretty( Symbol('Fhat') ) == u('F̂')
+    assert upretty( Symbol('Fbar') ) == u('F̅')
+    assert upretty( Symbol('Fvec') ) == u('F⃗')
+    assert upretty( Symbol('Fprime') ) == u('F ̍')
+    assert upretty( Symbol('Fprm') ) == u('F ̍')
+    # No faces are actually implemented, but test to make sure the modifiers are stripped
+    assert upretty( Symbol('Fbold') ) == u('Fbold')
+    assert upretty( Symbol('Fbm') ) == u('Fbm')
+    assert upretty( Symbol('Fcal') ) == u('Fcal')
+    assert upretty( Symbol('Fscr') ) == u('Fscr')
+    assert upretty( Symbol('Ffrak') ) == u('Ffrak')
+    # Brackets
+    assert upretty( Symbol('Fnorm') ) == u('‖F‖')
+    assert upretty( Symbol('Favg') ) == u('⟨F⟩')
+    assert upretty( Symbol('Fabs') ) == u('|F|')
+    assert upretty( Symbol('Fmag') ) == u('|F|')
+    # Combinations
+    assert upretty( Symbol('xvecdot') ) == u('x⃗̇')
+    assert upretty( Symbol('xDotVec') ) == u('ẋ⃗')
+    assert upretty( Symbol('xHATNorm') ) == u('‖x̂‖')
+    assert upretty( Symbol('xMathring_yCheckPRM__zbreveAbs') ) == u('x̊_y̌ ̍__|z̆|')
+    assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃ ̍')
+    assert upretty( Symbol('x_dot') ) == u('x_dot')
+    assert upretty( Symbol('x__dot') ) == u('x__dot')
+
 
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
@@ -3096,7 +3133,7 @@ def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
 
     assert pretty(expr) == "Not(x)"
-    assert upretty(expr) == u("¬ x")
+    assert upretty(expr) == u("¬x")
 
     expr = And(x, y)
 

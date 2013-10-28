@@ -1657,7 +1657,11 @@ class MatrixBase(object):
         return self._new([row._mat for row in reversed(x)])
 
     def cross(self, b):
-        """Calculate the cross product of ``self`` and ``b``.
+        """Return the cross product of `self` and `b` relaxing the condition
+        of compatible dimensions: if each has 3 elements, a matrix of the
+        same type and shape as `self` will be returned. If `b` has the same
+        shape as `self` then common identities for the cross product (like
+        `a x b = - b x a`) will hold.
 
         See Also
         ========
@@ -1669,15 +1673,13 @@ class MatrixBase(object):
         if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        if not ((self.rows == 1 and self.cols == 3 or
-                self.rows == 3 and self.cols == 1) and \
-                (b.rows == 1 and b.cols == 3 or
-                b.rows == 3 and b.cols == 1)):
+        if not (self.rows * self.cols == b.rows * b.cols == 3):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
-            return self._new(1, 3, ((self[1]*b[2] - self[2]*b[1]),
-                               (self[2]*b[0] - self[0]*b[2]),
-                               (self[0]*b[1] - self[1]*b[0])))
+            return self._new(self.rows, self.cols, (
+                (self[1]*b[2] - self[2]*b[1]),
+                (self[2]*b[0] - self[0]*b[2]),
+                (self[0]*b[1] - self[1]*b[0])))
 
     def dot(self, b):
         """Return the dot product of Matrix self and b relaxing the condition

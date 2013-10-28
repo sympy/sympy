@@ -77,6 +77,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
@@ -87,20 +88,19 @@ modules = [
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
-    'sympy.strategies',
-    'sympy.strategies.branch',
     'sympy.series',
     'sympy.sets',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
     'sympy.stats',
+    'sympy.strategies',
+    'sympy.strategies.branch',
     'sympy.tensor',
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
 ]
-
 
 class audit(Command):
     """Audits SymPy's source code for following issues:

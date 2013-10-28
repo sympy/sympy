@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core.add import Add
+from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.core.basic import C
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -16,7 +17,7 @@ from sympy.solvers import solve
 from sympy.core.compatibility import xrange
 
 
-class Sum(Expr):
+class Sum(AddWithLimits,ExprWithIntLimits):
     """Represents unevaluated summation.
 
     ``Sum`` represents a finite or infinite series, with the first argument
@@ -136,59 +137,13 @@ class Sum(Expr):
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
-        from sympy.integrals.integrals import _process_limits
-
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        function = piecewise_fold(sympify(function))
-
-        if function is S.NaN:
-            return S.NaN
-
-        if not symbols:
-            raise ValueError("Summation variables must be given")
-
-        limits, sign = _process_limits(*symbols)
-
-        # Only limits with lower and upper bounds are supported; the indefinite Sum
-        # is not supported
-        if any(len(l) != 3 or None in l for l in limits):
+        obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
+        if not hasattr(obj, 'limits'):
+            return obj
+        if any(len(l) != 3 or None in l for l in obj.limits):
             raise ValueError('Sum requires values for lower and upper bounds.')
 
-        obj = Expr.__new__(cls, **assumptions)
-        arglist = [sign*function]
-        arglist.extend(limits)
-        obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative  # limits already checked
-
         return obj
-
-    @property
-    def function(self):
-        return self._args[0]
-
-    @property
-    def limits(self):
-        return self._args[1:]
-
-    @property
-    def variables(self):
-        """Return a list of the summation variables
-
-        >>> from sympy import Sum
-        >>> from sympy.abc import x, i
-        >>> Sum(x**i, (i, 1, 3)).variables
-        [i]
-        """
-        return [l[0] for l in self.limits]
-
-    @property
-    def free_symbols(self):
-        from sympy.integrals.integrals import _free_symbols
-        if self.function.is_zero:
-            return set()
-        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -203,9 +158,9 @@ class Sum(Expr):
         Return True if the Sum will result in a number, else False.
 
         Sums are a special case since they contain symbols that can
-        be replaced with numbers. Whether the integral can be done or not is
-        another issue. But answering whether the final result is a number is
-        not difficult.
+        be replaced with numbers. Whether the sum can be done or not in
+        closed form is another issue. But answering whether the final
+        result is a number is not difficult.
 
         Examples
         ========
@@ -229,10 +184,6 @@ class Sum(Expr):
         """
 
         return self.function.is_zero or not self.free_symbols
-
-    def as_dummy(self):
-        from sympy.integrals.integrals import _as_dummy
-        return _as_dummy(self)
 
     def doit(self, **hints):
         if hints.get('deep', True):
@@ -263,12 +214,6 @@ class Sum(Expr):
                 return f.doit(**hints)
 
         return f
-
-    def _eval_adjoint(self):
-        return self.func(self.function.adjoint(), *self.limits)
-
-    def _eval_conjugate(self):
-        return self.func(self.function.conjugate(), *self.limits)
 
     def _eval_derivative(self, x):
         """
@@ -309,9 +254,6 @@ class Sum(Expr):
 
     def _eval_summation(self, f, x):
         return None
-
-    def _eval_transpose(self):
-        return self.func(self.function.transpose(), *self.limits)
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
@@ -414,10 +356,84 @@ class Sum(Expr):
             g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new):
-        from sympy.integrals.integrals import _eval_subs
-        return _eval_subs(self, old, new)
 
+    def reverse_order(self, *indices):
+        """
+        Reverse the order of a limit in a Sum.
+
+        Usage
+        =====
+
+        ``reverse_order(self, *indices)`` reverses some limits in the expression
+        ``self`` which can be either a ``Sum`` or a ``Product``. The selectors in
+        the argument ``indices`` specify some indices whose limits get reversed.
+        These selectors are either variable names or numerical indices counted
+        starting from the inner-most limit tuple.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, y, a, b, c, d
+
+        >>> Sum(x, (x, 0, 3)).reverse_order(x)
+        Sum(-x, (x, 4, -1))
+        >>> Sum(x*y, (x, 1, 5), (y, 0, 6)).reverse_order(x, y)
+        Sum(x*y, (x, 6, 0), (y, 7, -1))
+        >>> Sum(x, (x, a, b)).reverse_order(x)
+        Sum(-x, (x, b + 1, a - 1))
+        >>> Sum(x, (x, a, b)).reverse_order(0)
+        Sum(-x, (x, b + 1, a - 1))
+
+        While one should prefer variable names when specifying which limits
+        to reverse, the index counting notation comes in handy in case there
+        are several symbols with the same name.
+
+        >>> S = Sum(x**2, (x, a, b), (x, c, d))
+        >>> S
+        Sum(x**2, (x, a, b), (x, c, d))
+        >>> S0 = S.reverse_order( 0)
+        >>> S0
+        Sum(-x**2, (x, b + 1, a - 1), (x, c, d))
+        >>> S1 = S0.reverse_order( 1)
+        >>> S1
+        Sum(x**2, (x, b + 1, a - 1), (x, d + 1, c - 1))
+
+        Of course we can mix both notations:
+
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( x, 1)
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( y, x)
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+        See Also
+        ========
+
+        index, reorder_limit, reorder
+
+        References
+        ==========
+
+        .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
+               Volume 28 Issue 2, April 1981, Pages 305-350
+               http://dl.acm.org/citation.cfm?doid=322248.322255
+        """
+        l_indices = list(indices)
+
+        for i, indx in enumerate(l_indices):
+            if not isinstance(indx, int):
+                l_indices[i] = self.index(indx)
+
+        e = 1
+        limits = []
+        for i, limit in enumerate(self.limits):
+            l = limit
+            if i in l_indices:
+                e = -e
+                l = (limit[0], limit[2] + 1 , limit[1] - 1)
+            limits.append(l)
+
+        return Sum(e * self.function, *limits)
 
 def summation(f, *symbols, **kwargs):
     r"""
@@ -579,7 +595,7 @@ def eval_sum_direct(expr, limits):
     (i, a, b) = limits
 
     dif = b - a
-    return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
+    return C.Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
 
 
 def eval_sum_symbolic(f, limits):
