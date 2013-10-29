@@ -38,9 +38,11 @@ from sympy.concrete import Sum
 from sympy.concrete.products import Product
 from sympy.integrals import integrate
 from sympy.integrals.transforms import laplace_transform,\
-    inverse_laplace_transform, LaplaceTransform, fourier_transform
+    inverse_laplace_transform, LaplaceTransform, fourier_transform,\
+    mellin_transform
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.solvers.recurr import rsolve
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -2851,3 +2853,75 @@ def test_Y9():
 def test_Y10():
     assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z) ==
             (-8*pi**2*z**2 + 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81))
+
+
+@XFAIL
+@slow
+def test_Y11():
+    # => pi cot(pi s)   (0 < Re s < 1)   [Gradshteyn and Ryzhik 17.43(5)]
+    x, s = symbols('x s')
+    # raises RuntimeError: maximum recursion depth exceeded
+    # https://code.google.com/p/sympy/issues/detail?id=4082
+    F, _, _ =  mellin_transform(1/(1 - x), x, s)
+    assert F == pi*cot(pi*s)
+
+
+@XFAIL
+def test_Y12():
+    # => 2^(s - 4) gamma(s/2)/gamma(4 - s/2)   (0 < Re s < 1)
+    # [Gradshteyn and Ryzhik 17.43(16)]
+    x, s = symbols('x s')
+    # returns Wrong value -2**(s - 4)*gamma(s/2 - 3)/gamma(-s/2 + 1)
+    # https://code.google.com/p/sympy/issues/detail?id=4083
+    F, _, _ = mellin_transform(besselj(3, x)/x**3, x, s)
+    assert F == -2**(s - 4)*gamma(s/2)/gamma(-s/2 + 4)
+
+
+@XFAIL
+def test_Y13():
+# Z[H(t - m T)] => z/[z^m (z - 1)]   (H is the Heaviside (unit step) function)                                                 z
+    raise NotImplementedError("z-transform not supported")
+
+
+@XFAIL
+def test_Y14():
+# Z[H(t - m T)] => z/[z^m (z - 1)]   (H is the Heaviside (unit step) function)
+    raise NotImplementedError("z-transform not supported")
+
+
+def test_Z1():
+    r = Function('r')
+    assert (rsolve(r(n + 2) - 2*r(n + 1) + r(n) - 2, r(n),
+                   {r(0): 1, r(1): m}).simplify() == n**2 + n*(m - 2) + 1)
+
+
+def test_Z2():
+    r = Function('r')
+    assert (rsolve(r(n) - (5*r(n - 1) - 6*r(n - 2)), r(n), {r(0): 0, r(1): 1})
+            == -2**n + 3**n)
+
+
+def test_Z3():
+    # => r(n) = Fibonacci[n + 1]   [Cohen, p. 83]
+    r = Function('r')
+    # recurrence solution is correct, Wester expects it to be simplified to
+    # fibonacci(n+1), but that is quite hard
+    assert (rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n),
+                   {r(1): 1, r(2): 2}).simplify()
+            == 2**(-n)*((1 + sqrt(5))**n*(sqrt(5) + 5) +
+                        (-sqrt(5) + 1)**n*(-sqrt(5) + 5))/10)
+
+
+@XFAIL
+def test_Z4():
+# => [c^(n+1) [c^(n+1) - 2 c - 2] + (n+1) c^2 + 2 c - n] / [(c-1)^3 (c+1)]
+#    [Joan Z. Yu and Robert Israel in sci.math.symbolic]
+    r = Function('r')
+    c = symbols('c')
+    # raises ValueError: Polynomial or rational function expected,
+    #     got '(c**2 - c**n)/(c - c**n)
+    s = rsolve(r(n) - ((1 + c - c**(n-1) - c**(n+1))/(1 - c**n)*r(n - 1)
+                   - c*(1 - c**(n-2))/(1 - c**(n-1))*r(n - 2) + 1),
+           r(n), {r(1): 1, r(2): (2 + 2*c + c**2)/(1 + c)})
+    assert (s - (c*(n + 1)*(c*(n + 1) - 2*c - 2) +
+             (n + 1)*c**2 + 2*c - n)/((c-1)**3*(c+1)) == 0)
