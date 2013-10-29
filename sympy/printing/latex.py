@@ -61,6 +61,37 @@ tex_greek_dictionary = {
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
                      'hslash', 'mho', 'wp', ])
 
+# Variable name modifiers
+modifier_dict = {
+    # Accents
+    'mathring': lambda s: r'\mathring{'+s+r'}',
+    'ddddot': lambda s: r'\ddddot{'+s+r'}',
+    'dddot': lambda s: r'\dddot{'+s+r'}',
+    'ddot': lambda s: r'\ddot{'+s+r'}',
+    'dot': lambda s: r'\dot{'+s+r'}',
+    'check': lambda s: r'\check{'+s+r'}',
+    'breve': lambda s: r'\breve{'+s+r'}',
+    'acute': lambda s: r'\acute{'+s+r'}',
+    'grave': lambda s: r'\grave{'+s+r'}',
+    'tilde': lambda s: r'\tilde{'+s+r'}',
+    'hat': lambda s: r'\hat{'+s+r'}',
+    'bar': lambda s: r'\bar{'+s+r'}',
+    'vec': lambda s: r'\vec{'+s+r'}',
+    'prime': lambda s: "{"+s+"}'",
+    'prm': lambda s: "{"+s+"}'",
+    # Faces
+    'bold': lambda s: r'\boldsymbol{'+s+r'}',
+    'bm': lambda s: r'\boldsymbol{'+s+r'}',
+    'cal': lambda s: r'\mathcal{'+s+r'}',
+    'scr': lambda s: r'\mathscr{'+s+r'}',
+    'frak': lambda s: r'\mathfrak{'+s+r'}',
+    # Brackets
+    'norm': lambda s: r'\left\lVert{'+s+r'}\right\rVert',
+    'avg': lambda s: r'\left\langle{'+s+r'}\right\rangle',
+    'abs': lambda s: r'\left\lvert{'+s+r'}\right\rvert',
+    'mag': lambda s: r'\left\lvert{'+s+r'}\right\rvert',
+}
+
 greek_letters_set = frozenset(greeks)
 
 class LatexPrinter(Printer):
@@ -1622,18 +1653,30 @@ class LatexPrinter(Printer):
 
 
 def translate(s):
-    '''
-    Given a description of a Greek letter or other special character,
-    return the appropriate latex
+    r'''
+    Check for a modifier ending the string.  If present, convert the
+    modifier to latex and translate the rest recursively.
 
-    let everything else pass as given
+    Given a description of a Greek letter or other special character,
+    return the appropriate latex.
+
+    Let everything else pass as given.
+
+    >>> from sympy.printing.latex import translate
+    >>> translate('alphahatdotprime')
+    "{\\dot{\\hat{\\alpha}}}'"
     '''
+    # Process the rest
     tex = tex_greek_dictionary.get(s)
     if tex:
         return tex
     elif s.lower() in greek_letters_set or s in other_symbols:
         return "\\" + s
     else:
+        # Process modifiers, if any, and recurse
+        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True):
+            if s.lower().endswith(key) and len(s)>len(key):
+                return modifier_dict[key](translate(s[:-len(key)]))
         return s
 
 def latex(expr, **settings):

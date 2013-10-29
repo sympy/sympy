@@ -11,7 +11,6 @@ from .compatibility import reduce, as_int, default_sort_key, xrange
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
-from inspect import getmro
 
 
 class Expr(Basic, EvalfMixin):
@@ -75,42 +74,6 @@ class Expr(Basic, EvalfMixin):
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
-
-    def rcall(self, *args):
-        """Apply on the argument recursively through the expression tree.
-
-        This method is used to simulate a common abuse of notation for
-        operators. For instance in SymPy the the following will not work:
-
-        ``(x+Lambda(y, 2*y))(z) == x+2*z``,
-
-        however you can use
-
-        >>> from sympy import Lambda
-        >>> from sympy.abc import x,y,z
-        >>> (x + Lambda(y, 2*y)).rcall(z)
-        x + 2*z
-        """
-        return Expr._recursive_call(self, args)
-
-    @staticmethod
-    def _recursive_call(expr_to_call, on_args):
-        def the_call_method_is_overridden(expr):
-            for cls in getmro(type(expr)):
-                if '__call__' in cls.__dict__:
-                    return cls != Expr
-
-        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
-            if isinstance(expr_to_call, C.Symbol):  # XXX When you call a Symbol it is
-                return expr_to_call               # transformed into an UndefFunction
-            else:
-                return expr_to_call(*on_args)
-        elif expr_to_call.args:
-            args = [Expr._recursive_call(
-                sub, on_args) for sub in expr_to_call.args]
-            return type(expr_to_call)(*args)
-        else:
-            return expr_to_call
 
     # ***************
     # * Arithmetics *

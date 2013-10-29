@@ -8,7 +8,6 @@ from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
-from sympy.concrete.simplification import change_index, reorder, reverse_order
 
 n = Symbol('n', integer=True)
 
@@ -468,6 +467,17 @@ def test_limit_subs():
             F(a, (a, c, 4))
         assert F(x, (x, 1, x + y)).subs(x, 1) == F(x, (x, 1, y + 1))
 
+def test_function_subs():
+    f = Function("f")
+    S = Sum(x*f(y),(x,0,oo),(y,0,oo))
+    assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
+    assert S.subs(f(x),x) == S
+    raises(ValueError, lambda: S.subs(f(y),x+y) )
+    S = Sum(x*log(y),(x,0,oo),(y,0,oo))
+    assert S.subs(log(y),y) == S
+    f = Symbol('f')
+    S = Sum(x*f(y),(x,0,oo),(y,0,oo))
+    assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
 
 def test_equality():
     # if this fails remove special handling below
@@ -675,61 +685,89 @@ def test_simplify():
 def test_change_index():
     b, v = symbols('b, v', integer = True)
 
-    assert change_index(Sum(x, (x, a, b)), x, x + 1, y) == \
+    assert Sum(x, (x, a, b)).change_index(x, x + 1, y) == \
         Sum(y - 1, (y, a + 1, b + 1))
-    assert change_index(Sum(x**2, (x, a, b)), x, x - 1) == \
+    assert Sum(x**2, (x, a, b)).change_index( x, x - 1) == \
         Sum((x+1)**2, (x, a - 1, b - 1))
-    assert change_index(Sum(x**2, (x, a, b)), x, -x, y) == \
+    assert Sum(x**2, (x, a, b)).change_index( x, -x, y) == \
         Sum((-y)**2, (y, -b, -a))
-    assert change_index(Sum(x, (x, a, b)), x, -x - 1) == \
+    assert Sum(x, (x, a, b)).change_index( x, -x - 1) == \
         Sum(-x - 1, (x, -b - 1, -a - 1))
-    assert change_index(Sum(x*y, (x, a, b), (y, c, d)), x, x - 1, z) == \
+    assert Sum(x*y, (x, a, b), (y, c, d)).change_index( x, x - 1, z) == \
         Sum((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
-    assert change_index(Sum(x, (x, a, b)), x, x + v) == \
+    assert Sum(x, (x, a, b)).change_index( x, x + v) == \
         Sum(-v + x, (x, a + v, b + v))
-    assert change_index(Sum(x, (x, a, b)), x, -x - v) == \
+    assert Sum(x, (x, a, b)).change_index( x, -x - v) == \
         Sum(-v - x, (x, -b - v, -a - v))
 
 
 def test_reorder():
     b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
-    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (0, 1)) == \
+    assert Sum(x*y, (x, a, b), (y, c, d)).reorder((0, 1)) == \
         Sum(x*y, (y, c, d), (x, a, b))
-    assert reorder(Sum(x, (x, a, b), (x, c, d)), (0, 1)) == \
+    assert Sum(x, (x, a, b), (x, c, d)).reorder((0, 1)) == \
         Sum(x, (x, c, d), (x, a, b))
-    assert reorder(Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
+    assert Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)).reorder(\
         (2, 0), (0, 1)) == Sum(x*y + z, (z, m, n), (y, c, d), (x, a, b))
-    assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+    assert Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)).reorder(\
         (0, 1), (1, 2), (0, 2)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
-    assert reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+    assert Sum(x*y*z, (x, a, b), (y, c, d), (z, m, n)).reorder(\
         (x, y), (y, z), (x, z)) == Sum(x*y*z, (x, a, b), (z, m, n), (y, c, d))
-    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (x, 1)) == \
+    assert Sum(x*y, (x, a, b), (y, c, d)).reorder((x, 1)) == \
         Sum(x*y, (y, c, d), (x, a, b))
-    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), (y, x)) == \
+    assert Sum(x*y, (x, a, b), (y, c, d)).reorder((y, x)) == \
         Sum(x*y, (y, c, d), (x, a, b))
 
 
 def test_reverse_order():
-    assert reverse_order(Sum(x, (x, 0, 3)), 0) == Sum(-x, (x, 4, -1))
-    assert reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), 0, 1) == \
+    assert Sum(x, (x, 0, 3)).reverse_order(0) == Sum(-x, (x, 4, -1))
+    assert Sum(x*y, (x, 1, 5), (y, 0, 6)).reverse_order(0, 1) == \
            Sum(x*y, (x, 6, 0), (y, 7, -1))
-    assert reverse_order(Sum(x, (x, 1, 2)), 0) == Sum(-x, (x, 3, 0))
-    assert reverse_order(Sum(x, (x, 1, 3)), 0) == Sum(-x, (x, 4, 0))
-    assert reverse_order(Sum(x, (x, 1, a)), 0) == Sum(-x, (x, a + 1, 0))
-    assert reverse_order(Sum(x, (x, a, 5)), 0) == Sum(-x, (x, 6, a - 1))
-    assert reverse_order(Sum(x, (x, a + 1, a + 5)), 0) == \
+    assert Sum(x, (x, 1, 2)).reverse_order(0) == Sum(-x, (x, 3, 0))
+    assert Sum(x, (x, 1, 3)).reverse_order(0) == Sum(-x, (x, 4, 0))
+    assert Sum(x, (x, 1, a)).reverse_order(0) == Sum(-x, (x, a + 1, 0))
+    assert Sum(x, (x, a, 5)).reverse_order(0) == Sum(-x, (x, 6, a - 1))
+    assert Sum(x, (x, a + 1, a + 5)).reverse_order(0) == \
                          Sum(-x, (x, a + 6, a))
-    assert reverse_order(Sum(x, (x, a + 1, a + 2)), 0) == \
+    assert Sum(x, (x, a + 1, a + 2)).reverse_order(0) == \
            Sum(-x, (x, a + 3, a))
-    assert reverse_order(Sum(x, (x, a + 1, a + 1)), 0) == \
+    assert Sum(x, (x, a + 1, a + 1)).reverse_order(0) == \
            Sum(-x, (x, a + 2, a))
-    assert reverse_order(Sum(x, (x, a, b)), 0) == Sum(-x, (x, b + 1, a - 1))
-    assert reverse_order(Sum(x, (x, a, b)), x) == Sum(-x, (x, b + 1, a - 1))
-    assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), x, 1) == \
+    assert Sum(x, (x, a, b)).reverse_order(0) == Sum(-x, (x, b + 1, a - 1))
+    assert Sum(x, (x, a, b)).reverse_order(x) == Sum(-x, (x, b + 1, a - 1))
+    assert Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(x, 1) == \
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
-    assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), y, x) == \
+    assert Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
 def test_issue_3998():
     assert sum(x**n/n for n in range(1, 401)) == summation(x**n/n, (n, 1, 400))
+
+def test_factor_expand_subs():
+    # test factoring
+    assert Sum(4 * x, (x, 1, y)).factor() == 4 * Sum(x, (x, 1, y))
+    assert Sum(x * a, (x, 1, y)).factor() == a * Sum(x, (x, 1, y))
+    assert Sum(4 * x * a, (x, 1, y)).factor() == 4 * a * Sum(x, (x, 1, y))
+    assert Sum(4 * x * y, (x, 1, y)).factor() == 4 * y * Sum(x, (x, 1, y))
+
+    # test expand
+    assert Sum(x+1,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(1,(x,1,y))
+    assert Sum(x+a*x**2,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(a*x**2,(x,1,y))
+    assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand() \
+        == Sum(x*x**n, (n, -1, oo)) + Sum(n*x*x**n, (n, -1, oo))
+    assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(power_exp=False) \
+        == Sum(n*x**(n+1), (n, -1, oo)) + Sum(x**(n+1), (n, -1, oo))
+    assert Sum(a*n+a*n**2,(n,0,4)).expand() \
+        == Sum(a*n,(n,0,4)) + Sum(a*n**2,(n,0,4))
+    assert Sum(x**a*x**n,(x,0,3)) \
+        == Sum(x**(a+n),(x,0,3)).expand(power_exp=True)
+    assert Sum(x**(a+n),(x,0,3)) \
+        == Sum(x**(a+n),(x,0,3)).expand(power_exp=False)
+
+    # test subs
+    assert Sum(1/(1+a*x**2),(x,0,3)).subs([(a,3)]) == Sum(1/(1+3*x**2),(x,0,3))
+    assert Sum(x*y,(x,0,y),(y,0,x)).subs([(x,3)]) == Sum(x*y,(x,0,y),(y,0,3))
+    assert Sum(x,(x,1,10)).subs([(x,y-2)]) == Sum(x,(x,1,10))
+    assert Sum(1/x,(x,1,10)).subs([(x,(3+n)**3)]) == Sum(1/x,(x,1,10))
+    assert Sum(1/x,(x,1,10)).subs([(x,3*x-2)]) == Sum(1/x,(x,1,10))
