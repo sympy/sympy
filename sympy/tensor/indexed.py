@@ -108,7 +108,11 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Expr, Tuple, Symbol, sympify, S
+from sympy.core.expr import Expr
+from sympy.core.containers import Tuple
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.core.singleton import S
 from sympy.core.compatibility import is_sequence, string_types
 
 

@@ -1,11 +1,9 @@
 from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
     cos, sin, Mul, Pow, cse, O)
 from sympy.simplify.simplify import expand_numer, expand
-from sympy.core.function import (
-    expand_power_base, expand_multinomial)
+from sympy.core.function import expand_power_base, expand_multinomial
 
 from sympy.utilities.pytest import raises
-from sympy.core.function import expand_power_base
 from sympy.utilities.randtest import test_numerically
 
 from sympy.abc import x, y, z

@@ -233,31 +233,48 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import islice
 
-from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.core.add import Add
+from sympy.core.core import C
+from sympy.core.singleton import S
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.numbers import oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.exprtools import factor_terms, gcd_terms
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational, NaN, zoo
+from sympy.core.numbers import NaN, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
+from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.trigonometric import sin, tan
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import sign
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
-from sympy.polys.polytools import cancel, degree, div
-from sympy.series import Order
+from sympy.matrices.dense import wronskian
+from sympy.polys.polytools import Poly
+from sympy.polys.rootoftools import RootOf
+from sympy.polys.polytools import terms_gcd
+from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polytools import cancel, div
+from sympy.series.order import Order
 from sympy.series.series import series
-from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, fraction, posify
+from sympy.simplify.simplify import collect, logcombine, powsimp, separatevars
+from sympy.simplify.simplify import simplify, trigsimp, denom, posify
 from sympy.simplify.simplify import _mexpand
-from sympy.solvers import solve
+from sympy.solvers.solvers import solve
 
-from sympy.utilities import numbered_symbols, default_sort_key, sift
+from sympy.utilities.iterables import numbered_symbols
+from sympy.core.compatibility import default_sort_key
+from sympy.utilities.iterables import sift
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 #: This is a list of hints in the order that they should be preferred by
@@ -707,7 +724,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     """
     prep = kwargs.pop('prep', True)
-    from sympy import expand
 
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
@@ -2403,8 +2419,6 @@ def homogeneous_order(eq, *symbols):
     True
 
     """
-    from sympy.simplify.simplify import separatevars
-
     if not symbols:
         raise ValueError("homogeneous_order: no symbols were given.")
     symset = set(symbols)
@@ -3928,7 +3942,6 @@ def _undetermined_coefficients_match(expr, x):
     {'test': False}
 
     """
-    from sympy import S
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
     expr = powsimp(expr, combine='exp')  # exp(x)*exp(2*x + 1) => exp(3*x + 1)

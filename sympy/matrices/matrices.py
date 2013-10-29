@@ -2,7 +2,9 @@ from __future__ import print_function, division
 
 import collections
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C, Atom
+from sympy.core.basic import Basic
+from sympy.core.core import C
+from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
@@ -12,12 +14,15 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, xrange
 
-from sympy.polys import PurePoly, roots, cancel, gcd
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+from sympy.polys.polytools import PurePoly
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import cancel, gcd
+from sympy.simplify.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import exp, factorial
-from sympy.printing import sstr
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.printing.str import sstr
 from sympy.core.compatibility import reduce, as_int
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 

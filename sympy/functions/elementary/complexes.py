@@ -1,13 +1,15 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core.singleton import S
+from sympy.core.core import C
 from sympy.core.compatibility import u
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core import Add, Mul
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -734,7 +736,7 @@ class periodic_argument(Function):
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
         # period != 2*pi and non-polar numbers.
-        from sympy import ceiling, oo, atan2, atan, polar_lift, pi, Mul
+        from sympy import ceiling, oo, atan, polar_lift, pi
         if not period.is_positive:
             return None
         if period == oo and isinstance(ar, principal_branch):
@@ -806,7 +808,7 @@ class principal_branch(Function):
 
     @classmethod
     def eval(self, x, period):
-        from sympy import oo, exp_polar, I, Mul, polar_lift, Symbol
+        from sympy import oo, exp_polar, I, polar_lift, Symbol
         if isinstance(x, polar_lift):
             return principal_branch(x.args[0], period)
         if period == oo:

@@ -24,7 +24,6 @@ from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .core import C
 from .singleton import S
-from .containers import Tuple
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -377,7 +376,6 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
-    from sympy.core.core import C
 
     terms = [t for t in terms if not iszero(t)]
     if not terms:
@@ -482,8 +480,7 @@ def evalf_add(v, prec, options):
 
 
 def evalf_mul(v, prec, options):
-    from sympy.core.core import C
-
+    from numbers import Float
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -498,7 +495,7 @@ def evalf_mul(v, prec, options):
         arg = evalf(arg, prec, options)
         if arg[0] is None:
             continue
-        arg = C.Float._new(arg[0], 1)
+        arg = Float._new(arg[0], 1)
         if arg is S.NaN or arg.is_unbounded:
             special.append(arg)
     if special:
@@ -1176,7 +1173,7 @@ def _create_evalf_table():
 
 
 def evalf(x, prec, options):
-    from sympy import re as re_, im as im_
+    from sympy.functions.elementary.complexes import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
         r = rf(x, prec, options)

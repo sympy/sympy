@@ -69,7 +69,8 @@ Some more information how the single concepts work and who should use which:
 
 from __future__ import print_function, division
 
-from sympy import Basic, Add
+from sympy.core.basic import Basic
+from sympy.core.add import Add
 
 from sympy.core.core import BasicMeta
 

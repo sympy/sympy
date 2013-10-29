@@ -11,7 +11,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify import simplify as _simplify
+from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
@@ -1551,8 +1551,6 @@ def wronskian(functions, var, method='bareis'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from .dense import Matrix
-
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
     n = len(functions)
@@ -1592,8 +1590,6 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from .dense import Matrix
-
     seqs = list(map(sympify, seqs))
 
     if not zero:

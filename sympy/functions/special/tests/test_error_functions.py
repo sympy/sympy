@@ -297,7 +297,6 @@ def mytd(expr1, expr2, x):
 
 
 def tn_branch(func, s=None):
-    from sympy import I, pi, exp_polar
     from random import uniform
 
     def fn(x):
@@ -552,7 +551,6 @@ def test_ci():
     assert tn_arg(Ci)
     assert tn_arg(Chi)
 
-    from sympy import O, EulerGamma, log, limit
     assert Ci(x).nseries(x, n=4) == \
         EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
     assert Chi(x).nseries(x, n=4) == \

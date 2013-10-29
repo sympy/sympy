@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from .str import StrPrinter
-from sympy.utilities import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 
 def _find_first_symbol(expr):

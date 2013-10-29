@@ -4,14 +4,16 @@ from __future__ import print_function, division
 
 from sympy.polys.domains.domainelement import DomainElement
 
-from sympy.core import Basic, sympify
-from sympy.core.compatibility import SYMPY_INTS, HAS_GMPY, integer_types, is_sequence
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
+from sympy.core.compatibility import HAS_GMPY, integer_types, is_sequence
 
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.orderings import lex
 from sympy.polys.polyutils import _unify_gens
 
-from sympy.utilities import default_sort_key, public
+from sympy.core.compatibility import default_sort_key
+from sympy.utilities.decorator import public
 
 @public
 class Domain(object):

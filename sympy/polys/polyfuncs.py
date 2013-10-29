@@ -13,9 +13,13 @@ from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError)
 
-from sympy.utilities import numbered_symbols, take, public
+from sympy.utilities.iterables import numbered_symbols, take
+from sympy.utilities.decorator import public
 
-from sympy.core import S, Basic, Add, Mul
+from sympy.core.singleton import S
+from sympy.core.basic import Basic
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 
 from sympy.core.compatibility import xrange
 

@@ -6,7 +6,7 @@ from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 class PolynomialRing(Ring, CompositeDomain):

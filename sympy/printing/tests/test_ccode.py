@@ -143,8 +143,6 @@ def test_ccode_settings():
 
 
 def test_ccode_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     i, j, k, n, m, o = symbols('i j k n m o', integer=True)
 
     p = CCodePrinter()
@@ -201,8 +199,6 @@ def test_dummy_loops():
 
 
 def test_ccode_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -226,8 +222,6 @@ def test_ccode_loops_add():
 
 
 def test_ccode_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -256,8 +250,6 @@ def test_ccode_loops_multiple_contractions():
 
 
 def test_ccode_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -287,8 +279,6 @@ def test_ccode_loops_addfactor():
 
 
 def test_ccode_loops_multiple_terms():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')

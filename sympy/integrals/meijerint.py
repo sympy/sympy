@@ -27,20 +27,25 @@ The main references for this are:
 """
 from __future__ import print_function, division
 
-from sympy.core import oo, S, pi, Expr
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
+from sympy.core.numbers import pi
+from sympy.core.expr import Expr
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
-from sympy.simplify import hyperexpand, powdenest
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.simplify import powdenest
 from sympy.logic.boolalg import And, Or
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
-from sympy.utilities.iterables import multiset_partitions, ordered
+from sympy.utilities.iterables import multiset_partitions
+from sympy.core.compatibility import ordered
 from sympy.utilities.misc import debug as _debug
-from sympy.utilities import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -81,7 +86,7 @@ def _create_lookup_table(table):
                 return arg <= 0
 
     # Section 8.4.2
-    from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
+    from sympy import (gamma, cos, exp, re, sin, sqrt, sinh, cosh,
                        factorial, log, erf, erfc, erfi, polar_lift)
     # TODO this needs more polar_lift (c/f entry for exp)
     add(Heaviside(t - b)*(t - b)**(a - 1), [a], [], [], [0], t/b,
@@ -560,7 +565,7 @@ def _dummy_(name, token, **kwargs):
 def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
-    from sympy import Heaviside, Abs
+    from sympy import Abs
     return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
@@ -580,8 +585,8 @@ def _condsimp(cond):
     x <= y
     """
     from sympy import (
-        symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
-        periodic_argument, oo, polar_lift)
+        symbols, Eq, unbranched_argument, exp_polar, I,
+        periodic_argument, polar_lift)
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
@@ -1261,7 +1266,7 @@ def _rewrite_inversion(fac, po, g, x):
 
 def _check_antecedents_inversion(g, x):
     """ Check antecedents for the laplace inversion integral. """
-    from sympy import re, im, Or, And, Eq, exp, I, Add, nan, Ne
+    from sympy import re, im, Eq, exp, I, nan, Ne
     _debug('Checking antecedents for inversion:')
     z = g.argument
     _, e = _get_coeff_exp(z, x)
@@ -1407,7 +1412,7 @@ def _rewrite_single(f, x, recursive=True):
     Returns a list of tuples (C, s, G) and a condition cond.
     Returns None on failure.
     """
-    from sympy import polarify, unpolarify, oo, zoo, Tuple
+    from sympy import polarify, unpolarify, zoo, Tuple
     global _lookup_table
     if not _lookup_table:
         _lookup_table = {}
@@ -1472,7 +1477,7 @@ def _rewrite_single(f, x, recursive=True):
     from sympy.integrals.transforms import (mellin_transform,
                                     inverse_mellin_transform, IntegralTransformError,
                                     MellinTransformStripError)
-    from sympy import oo, nan, zoo, simplify, cancel
+    from sympy import nan, simplify, cancel
 
     def my_imt(F, s, x, strip):
         """ Calling simplify() all the time is slow and not helpful, since
@@ -1491,7 +1496,7 @@ def _rewrite_single(f, x, recursive=True):
     # to avoid infinite recursion, we have to force the two g functions case
 
     def my_integrator(f, x):
-        from sympy import Integral, hyperexpand
+        from sympy import Integral
         r = _meijerint_definite_4(f, x, only_double=True)
         if r is not None:
             res, cond = r
@@ -1591,7 +1596,7 @@ def meijerint_indefinite(f, x):
     >>> meijerint_indefinite(sin(x), x)
     -cos(x)
     """
-    from sympy import hyper, meijerg, count_ops
+    from sympy import hyper, count_ops
     results = []
     for a in list(_find_splitting_points(f, x)) + [S(0)]:
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
@@ -1714,7 +1719,7 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    from sympy import Integral, arg, exp, I, And, DiracDelta, count_ops
+    from sympy import Integral, arg, exp, I, DiracDelta, count_ops
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
 
     if f.has(DiracDelta):
@@ -1959,7 +1964,7 @@ def meijerint_inversion(f, x, t):
     >>> meijerint_inversion(1/x, x, t)
     Heaviside(t)
     """
-    from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
+    from sympy import I, Integral, exp, log
     f_ = f
     t_ = t
     t = Dummy('t', polar=True)  # We don't want sqrt(t**2) = abs(t) etc

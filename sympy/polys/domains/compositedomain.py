@@ -5,8 +5,7 @@ from __future__ import print_function, division
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import GeneratorsError
 
-from sympy.utilities import public
-from sympy.utilities.magic import pollute
+from sympy.utilities.decorator import public
 
 @public
 class CompositeDomain(Domain):

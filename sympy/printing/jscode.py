@@ -9,7 +9,8 @@ Math object where possible.
 
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core.singleton import S
+from sympy.core.core import C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.core.compatibility import default_sort_key, string_types

@@ -1,8 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.add import Add
+from sympy.core.sympify import sympify
+from sympy.core.expr import Expr
+from sympy.core.function import PoleError
+from sympy.core.mul import Mul
+from sympy.core.core import C
 from sympy.core.compatibility import string_types
-from sympy.functions import tan, cot, factorial, gamma
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.special.gamma_functions import gamma
 from .gruntz import gruntz
 
 

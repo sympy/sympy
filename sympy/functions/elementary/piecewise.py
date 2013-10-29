@@ -1,6 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, Function, diff, Tuple, Expr
+from sympy.core.basic import Basic
+from sympy.core.singleton import S
+from sympy.core.function import Function, diff
+from sympy.core.containers import Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min

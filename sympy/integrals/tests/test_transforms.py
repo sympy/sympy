@@ -19,7 +19,7 @@ nu, beta, rho = symbols('nu beta rho')
 
 
 def test_undefined_function():
-    from sympy import Function, MellinTransform
+    from sympy import MellinTransform
     f = Function('f')
     assert mellin_transform(f(x), x, s) == MellinTransform(f(x), x, s)
     assert mellin_transform(f(x) + exp(-x), x, s) == \
@@ -30,14 +30,13 @@ def test_undefined_function():
 
 
 def test_free_symbols():
-    from sympy import Function
     f = Function('f')
     assert mellin_transform(f(x), x, s).free_symbols == set([s])
     assert mellin_transform(f(x)*a, x, s).free_symbols == set([s, a])
 
 
 def test_as_integral():
-    from sympy import Function, Integral
+    from sympy import Integral
     f = Function('f')
     assert mellin_transform(f(x), x, s).rewrite('Integral') == \
         Integral(x**(s - 1)*f(x), (x, 0, oo))
@@ -162,7 +161,7 @@ def test_mellin_transform():
 
 
 def test_mellin_transform_bessel():
-    from sympy import Max, Min, hyper, meijerg
+    from sympy import Max, Min, hyper
     MT = mellin_transform
 
     # 8.4.19
@@ -258,7 +257,7 @@ def test_mellin_transform_bessel():
 
 
 def test_expint():
-    from sympy import E1, expint, Max, re, lerchphi, Symbol, simplify, Si, Ci, Ei
+    from sympy import E1, Max, lerchphi, simplify, Si, Ci, Ei
     aneg = Symbol('a', negative=True)
     u = Symbol('u', polar=True)
 
@@ -304,8 +303,8 @@ def test_expint():
 
 
 def test_inverse_mellin_transform():
-    from sympy import (sin, simplify, expand_func, powsimp, Max, Min, expand,
-                       powdenest, powsimp, exp_polar, combsimp, cos, cot)
+    from sympy import (simplify, expand_func, powsimp, Max, Min, expand,
+                       powdenest, cot)
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -376,7 +375,7 @@ def test_inverse_mellin_transform():
 
     # TODO
     def mysimp(expr):
-        from sympy import expand, logcombine, powsimp
+        from sympy import logcombine
         return expand(
             powsimp(logcombine(expr, force=True), force=True, deep=True),
             force=True).replace(exp_polar, exp)
@@ -438,7 +437,7 @@ def test_inverse_mellin_transform():
 
 
 def test_laplace_transform():
-    from sympy import (fresnels, fresnelc, hyper)
+    from sympy import fresnels, fresnelc, hyper
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -505,8 +504,7 @@ def test_laplace_transform():
 
 
 def test_inverse_laplace_transform():
-    from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
-                       unpolarify, simplify, factor_terms)
+    from sympy import expand, sinh, cosh, simplify, factor_terms
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -605,7 +603,7 @@ def test_fourier_transform():
 
 
 def test_sine_transform():
-    from sympy import sinh, cosh, EulerGamma
+    from sympy import sinh, cosh
 
     t = symbols("t")
     w = symbols("w")
@@ -685,7 +683,7 @@ def test_cosine_transform():
 
 
 def test_hankel_transform():
-    from sympy import sinh, cosh, gamma, sqrt, exp
+    from sympy import sinh, cosh
 
     r = Symbol("r")
     k = Symbol("k")

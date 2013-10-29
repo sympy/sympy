@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from .basic import S
+from .singleton import S
 from .expr import Expr
 from .evalf import EvalfMixin
 from .symbol import Symbol

@@ -13,8 +13,8 @@
 from __future__ import print_function, division
 
 from sympy.tensor.indexed import Idx, Indexed
-from sympy.functions import exp
-from sympy.core import C
+from sympy.functions.elementary.exponential import exp
+from sympy.core.core import C
 
 from sympy.core.compatibility import reduce
 

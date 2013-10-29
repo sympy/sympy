@@ -4,7 +4,8 @@ from collections import defaultdict
 import operator
 
 from sympy.core.sympify import sympify
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic
+from sympy.core.core import C
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit

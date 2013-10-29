@@ -2,12 +2,18 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.core.containers import Tuple
+from sympy.core.numbers import Integer
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.decorators import call_highest_priority
-from sympy.core.sympify import SympifyError, sympify
-from sympy.functions import conjugate, adjoint
-from sympy.matrices import ShapeError
-from sympy.simplify import simplify
+from sympy.core.sympify import SympifyError
+from sympy.functions.elementary.complexes import conjugate, adjoint
+from sympy.matrices.matrices import ShapeError
+from sympy.simplify.simplify import simplify
 
 
 def _sympifyit(arg, retval=None):

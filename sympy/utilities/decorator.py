@@ -11,8 +11,8 @@ from sympy.core.compatibility import class_types, get_function_globals, get_func
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
-    from sympy.core import sympify
-    from sympy.matrices import Matrix
+    from sympy.core.sympify import sympify
+    from sympy.matrices.dense import Matrix
 
     @wraps(func)
     def threaded_func(expr, *args, **kwargs):

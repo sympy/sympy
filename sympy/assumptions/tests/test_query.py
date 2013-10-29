@@ -1,7 +1,7 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
-from sympy.assumptions.assume import global_assumptions
+from sympy.assumptions.assume import global_assumptions, assuming
 from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict, single_fact_lookup)
 from sympy.assumptions.handlers import AskHandler
@@ -9,9 +9,8 @@ from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
 from sympy.core.compatibility import exec_
 from sympy.functions import (Abs, cos, exp, im, log, re, sign, sin, sqrt,
         tan, atan, acos, asin, cot, acot)
-from sympy.logic import Equivalent, Implies, Xor, And, to_cnf, Not
+from sympy.logic import Equivalent, Implies, Xor, And, to_cnf
 from sympy.utilities.pytest import raises, XFAIL, slow
-from sympy.assumptions.assume import assuming
 
 
 def test_int_1():

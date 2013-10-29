@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, pi, I
+from sympy.core.singleton import S
+from sympy.core.numbers import pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.trigonometric import sin, tan

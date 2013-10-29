@@ -191,8 +191,8 @@ from itertools import combinations
 from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
     _mexpand, bottom_up)
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt)
+from sympy.functions.elementary.trigonometric import cos, sin, tan, cot, sec, csc
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh, coth
 from sympy.core.compatibility import ordered
 from sympy.core.core import C
@@ -203,7 +203,7 @@ from sympy.core.add import Add
 from sympy.core.symbol import Dummy
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.rules import Transform
-from sympy.core.basic import S
+from sympy.core.singleton import S
 from sympy.core.numbers import Integer, pi, I
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
@@ -1071,7 +1071,7 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor, fraction, factor_terms
+    from sympy import fraction, factor_terms
 
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):

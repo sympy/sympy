@@ -12,8 +12,8 @@ from __future__ import print_function, division
 from sympy.core.compatibility import is_sequence
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
-from sympy.functions import cos, sin
-from sympy.matrices import eye
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.matrices.dense import eye
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -159,7 +159,7 @@ class GeometryEntity(Basic):
         return self.func(*newargs)
 
     def reflect(self, line):
-        from sympy import atan, Line, Point, Dummy, oo
+        from sympy import atan, Point, Dummy, oo
 
         g = self
         l = line

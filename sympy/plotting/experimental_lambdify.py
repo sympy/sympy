@@ -13,7 +13,8 @@ and so on).
 from __future__ import print_function, division
 
 import re
-from sympy import Symbol, NumberSymbol, I, zoo, oo
+from sympy.core.symbol import Symbol
+from sympy.core.numbers import NumberSymbol, I, zoo, oo
 from sympy.core.compatibility import exec_
 
 #  We parse the expression string into a tree that identifies functions. Then
@@ -72,7 +73,7 @@ from sympy.core.compatibility import exec_
 # args) tree and creating the namespace at the same time. That actually sounds
 # good.
 
-from sympy.external import import_module
+from sympy.external.importtools import import_module
 import warnings
 
 #TODO debuging output

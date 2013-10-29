@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import igcd
+from sympy.core.numbers import igcd
 
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key

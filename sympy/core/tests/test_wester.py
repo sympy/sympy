@@ -9,11 +9,11 @@ tested system.
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
-    I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
+    I, trigsimp, tan, sin, cos, diff, nan, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
-    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
+    LambertW, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
+    Poly, expand_func, E, Q, And, Or, Lt, ask, refine, AlgebraicNumber,
     elliptic_e, elliptic_f, powsimp)
 
 from sympy.functions.combinatorial.numbers import stirling

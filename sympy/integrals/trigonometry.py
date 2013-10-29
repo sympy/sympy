@@ -2,8 +2,15 @@
 
 from __future__ import print_function, division
 
-from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
+from sympy.core.cache import cacheit
+from sympy.core.symbol import Dummy
+from sympy.core.relational import Eq
+from sympy.core.numbers import Integer, Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import Wild
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.functions.elementary.piecewise import Piecewise
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 

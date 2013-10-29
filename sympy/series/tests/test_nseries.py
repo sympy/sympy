@@ -273,7 +273,7 @@ def test_issue125():
 
 
 def test_issue364():
-    from sympy import summation, symbols
+    from sympy import summation
     w, i = symbols('w,i')
     r = log(5)/log(3)
     p = w**(-1 + r)

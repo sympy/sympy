@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 from sympy.core.compatibility import xrange
 
-from sympy.core import Basic
+from sympy.core.basic import Basic
 
 
 class EPath(object):

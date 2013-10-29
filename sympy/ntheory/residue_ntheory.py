@@ -368,7 +368,6 @@ def _sqrt_mod_prime_power(a, p, k):
     >>> _sqrt_mod_prime_power(11, 43, 1)
     [21, 22]
     """
-    from sympy.core.numbers import igcdex
     from sympy.polys.domains import ZZ
 
     pk = p**k
@@ -704,7 +703,6 @@ def nthroot_mod(a, n, p, all_roots=False):
     >>> nthroot_mod(68, 3, 109)
     23
     """
-    from sympy.core.numbers import igcdex
     if n == 2:
         return sqrt_mod(a, p , all_roots)
     f = totient(p)

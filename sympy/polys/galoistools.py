@@ -11,7 +11,7 @@ from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 
-from sympy.ntheory import factorint
+from sympy.ntheory.factor_ import factorint
 
 def gf_crt(U, M, K=None):
     """

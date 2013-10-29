@@ -2,7 +2,7 @@ from sympy import (
     acos, Add, atan, besselsimp, binomial, collect, collect_const, combsimp,
     cos, cosh, cot, coth, count_ops, Derivative, diff, Dummy, E, Eq, erf, exp,
     exp_polar, expand, exptrigsimp, factor, factorial, FallingFactorial, Float,
-    fraction, Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I,
+    fraction, Function, gamma, GoldenRatio, hyper, hypersimp, I,
     Integer, Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
     oo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
     radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
@@ -407,7 +407,6 @@ def test_trigsimp_groebner():
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
     # ensure that simplify() calls factorial_simplify correctly
-    from sympy.specfun.factorials import factorial
     x = Symbol('x')
     assert simplify(factorial(x)/x) == factorial(x - 1)
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
@@ -692,7 +691,6 @@ def test_issue_3341():
 
 
 def test_powsimp_polar():
-    from sympy import polar_lift, exp_polar
     x, y, z = symbols('x y z')
     p, q, r = symbols('p q r', polar=True)
 
@@ -1174,7 +1172,6 @@ def test_posify():
 
 
 def test_powdenest():
-    from sympy import powdenest
     from sympy.abc import x, y, z, a, b
     p, q = symbols('p q', positive=True)
     i, j = symbols('i,j', integer=True)
@@ -1538,7 +1535,7 @@ def test_collect_const():
 
 
 def test_issue2834():
-    from sympy import Polygon, RegularPolygon, denom
+    from sympy import Polygon, RegularPolygon
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12
     assert abs(denom(radsimp(x))) > 1e-12  # in case simplify didn't handle it
@@ -1551,7 +1548,6 @@ def test_fraction_expand():
 
 
 def test_combsimp_gamma():
-    from sympy.abc import x, y
     R = Rational
 
     assert combsimp(gamma(x)) == gamma(x)
@@ -1614,7 +1610,6 @@ def test_combsimp_gamma():
 
 
 def test_polarify():
-    from sympy import polar_lift, polarify
     x = Symbol('x')
     z = Symbol('z', polar=True)
     f = Function('f')
@@ -1649,9 +1644,7 @@ def test_polarify():
 
 
 def test_unpolarify():
-    from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
-                       principal_branch)
-    from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
+    from sympy import unpolarify, principal_branch, uppergamma, Ne
     from sympy.abc import x
     p = exp_polar(7*I) + 1
     u = exp(7*I) + 1
@@ -1704,7 +1697,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh, cosine_transform
+    from sympy import besselj, besseli, besselk, bessely, jn, yn, cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \

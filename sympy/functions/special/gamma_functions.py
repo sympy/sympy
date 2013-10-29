@@ -1,10 +1,15 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, C, sympify, oo, pi
+from sympy.core.add import Add
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.sympify import sympify
+from sympy.core.numbers import oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from .zeta_functions import zeta
 from .error_functions import erf
-from sympy.core import Dummy, Rational
+from sympy.core.symbol import Dummy
+from sympy.core.numbers import Rational
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt

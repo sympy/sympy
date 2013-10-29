@@ -4,33 +4,56 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 
-from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
-    Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial, FunctionClass, expand_power_base, symbols, igcd,
-    expand_power_exp, expand_log)
+from sympy.core.basic import Basic
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.numbers import Rational, Integer
+from sympy.core.function import Derivative
+from sympy.core.symbol import Wild, Symbol
+from sympy.core.sympify import sympify
+from sympy.core.function import expand, expand_mul, expand_func, Function
+from sympy.core.symbol import Dummy
+from sympy.core.basic import Atom
+from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import expand_multinomial, FunctionClass, expand_power_base
+from sympy.core.symbol import symbols
+from sympy.core.numbers import igcd
+from sympy.core.function import expand_power_exp
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered, xrange
 from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.numbers import Float, Number, I
+from sympy.core.numbers import Float, I
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
-from sympy.functions import (
-    gamma, exp, sqrt, log, root, exp_polar,
-    sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import root
+from sympy.functions.elementary.exponential import exp_polar
+from sympy.functions.elementary.trigonometric import sin, cos, tan, cot
+from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh, coth
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.functions.elementary.integers import ceiling
 
-from sympy.utilities.iterables import flatten, has_variety, sift
+from sympy.utilities.iterables import has_variety, sift
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.ntheory.factor_ import multiplicity
 
-from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, lcm, gcd)
+from sympy.polys.polytools import Poly
+from sympy.polys.rationaltools import together
+from sympy.polys.polytools import reduced, cancel, factor
+from sympy.polys.polyerrors import ComputationFailed
+from sympy.polys.polytools import lcm, gcd
 
 import sympy.mpmath as mpmath
 
@@ -1119,7 +1142,6 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # preserved by the same argument as before.
 
     from sympy.utilities.misc import debug
-    from sympy import symbols
     from sympy.polys import parallel_poly_from_expr, groebner, ZZ
     from sympy.polys.polyerrors import PolificationFailed
 
@@ -1872,7 +1894,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
     """
     from sympy.core.mul import _unevaluated_Mul as _umul
-    from sympy.core.exprtools import Factors
 
     syms = symbols("a:d A:D")
     def _num(rterms):
@@ -2153,7 +2174,7 @@ def polarify(eq, subs=True, lift=False):
 
 
 def _unpolarify(eq, exponents_only, pause=False):
-    from sympy import polar_lift, exp, principal_branch, pi
+    from sympy import polar_lift, principal_branch, pi
 
     if isinstance(eq, bool) or eq.is_Atom:
         return eq
@@ -2200,7 +2221,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
     >>> unpolarify(sin(polar_lift(I + 7)))
     sin(7 + I)
     """
-    from sympy import exp_polar, polar_lift
+    from sympy import polar_lift
     if isinstance(eq, bool):
         return eq
 
@@ -3413,7 +3434,6 @@ def combsimp(expr):
             inv = {}
 
             def compute_ST(expr):
-                from sympy import Function, Pow
                 if expr in inv:
                     return inv[expr]
                 return (expr.free_symbols, expr.atoms(Function).union(
@@ -3653,8 +3673,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     except AttributeError:
         pass
 
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product
 
     if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
@@ -3716,7 +3734,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         short = exptrigsimp(short, simplify=False)
 
     # get rid of hollow 2-arg Mul factorization
-    from sympy.core.rules import Transform
     hollow_mul = Transform(
         lambda x: Mul(*x.args),
         lambda x:
@@ -4081,7 +4098,7 @@ def besselsimp(expr):
     >>> besselsimp(z*besseli(0, z) + z*(besseli(2, z))/2 + besseli(1, z))
     3*z*besseli(0, z)/2
     """
-    from sympy import besselj, bessely, besseli, besselk, jn, I, pi, Dummy
+    from sympy import besselj, bessely, besseli, besselk, jn, pi
     # TODO
     # - better algorithm?
     # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
@@ -4287,9 +4304,9 @@ def _futrig(e, **kwargs):
     from sympy.strategies.core import identity
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
-        TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, TR14, TR22,
+        TR8, TR6, TR15, TR16, TR111, TRmorrie, TR11, TR22,
         TR12)
-    from sympy.core.compatibility import ordered, _nodes
+    from sympy.core.compatibility import _nodes
 
     if not e.has(C.TrigonometricFunction):
         return e
@@ -4547,7 +4564,6 @@ def trigsimp_old(expr, **opts):
     cot(x)**(-2)
 
     """
-    from sympy import tan
     from sympy.simplify.fu import fu
 
     old = expr

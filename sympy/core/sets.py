@@ -7,13 +7,11 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass
+from sympy.core.compatibility import iterable, with_metaclass, default_sort_key
 
 from sympy.mpmath import mpi, mpf
-from sympy.assumptions import ask
+from sympy.assumptions.ask import ask
 from sympy.logic.boolalg import And, Or
-
-from sympy.utilities import default_sort_key
 
 
 class Set(Basic):
@@ -979,7 +977,6 @@ class Intersection(Set):
         return Intersection(imageset(f, arg) for arg in self.args)
 
     def _contains(self, other):
-        from sympy.logic.boolalg import And
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
@@ -1311,7 +1308,6 @@ class FiniteSet(Set, EvalfMixin):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
 
 def imageset(*args):

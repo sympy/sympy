@@ -1,9 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core import Mul, Basic, sympify
-from sympy.strategies import unpack, flatten, sort, condition, exhaust, do_one
+from sympy.core.mul import Mul
+from sympy.core.sympify import sympify
+from sympy.strategies.rl import unpack, flatten
+from sympy.strategies.core import condition, exhaust, do_one
 
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.matrices import ShapeError
 
 def hadamard_product(*matrices):
     """

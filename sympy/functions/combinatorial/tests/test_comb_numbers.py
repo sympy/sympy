@@ -183,7 +183,6 @@ def test_nC_nP_nT():
     from sympy.functions.combinatorial.numbers import (
         nP, nC, nT, stirling, _multiset_histogram, _AOP_product)
     from sympy.combinatorics.permutations import Permutation
-    from sympy.core.numbers import oo
     from random import choice
 
     c = string.ascii_lowercase

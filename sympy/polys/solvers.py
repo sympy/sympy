@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.matrices import Matrix, zeros
+from sympy.matrices.dense import Matrix, zeros
 
 class RawMatrix(Matrix):
     _sympify = staticmethod(lambda x: x)
