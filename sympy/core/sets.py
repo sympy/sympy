@@ -202,9 +202,9 @@ class Set(Basic):
 
         >>> from sympy import Interval
 
-        >>> Interval(0, 1).contains(0)
+        >>> Interval(0, 1).subset(Interval(0, 0.5))
         True
-        >>> Interval(0, 1, left_open=True).contains(0)
+        >>> Interval(0, 1, left_open=True).subset(Interval(0, 1))
         False
 
         """
