@@ -23,8 +23,22 @@ from .immutable import ImmutableMatrix, ImmutableSparseMatrix
 MutableSparseMatrix = SparseMatrix
 ImmutableDenseMatrix = ImmutableMatrix
 
-from .expressions import (MatrixSlice, BlockDiagMatrix, BlockMatrix,
-        FunctionMatrix, Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr,
-        MatrixSymbol, Trace, Transpose, ZeroMatrix, blockcut, block_collapse,
-        matrix_symbols, Adjoint, hadamard_product, HadamardProduct,
-        Determinant, det, DiagonalMatrix, DiagonalOf, trace)
+from .expressions.slice import MatrixSlice
+from .expressions.blockmatrix import BlockDiagMatrix, BlockMatrix
+from .expressions.funcmatrix import FunctionMatrix
+from .expressions.matexpr import Identity
+from .expressions.inverse import Inverse
+from .expressions.matadd import MatAdd
+from .expressions.matmul import MatMul
+from .expressions.matpow import MatPow
+from .expressions.matexpr import MatrixExpr, MatrixSymbol
+from .expressions.trace import Trace
+from .expressions.transpose import Transpose
+from .expressions.matexpr import ZeroMatrix
+from .expressions.blockmatrix import blockcut, block_collapse
+from .expressions.matexpr import matrix_symbols
+from .expressions.adjoint import Adjoint
+from .expressions.hadamard import hadamard_product, HadamardProduct
+from .expressions.determinant import Determinant, det
+from .expressions.diagonal import DiagonalMatrix, DiagonalOf
+from .expressions.trace import trace

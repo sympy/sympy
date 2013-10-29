@@ -1,7 +1,11 @@
 """ Riemann zeta and related function. """
 from __future__ import print_function, division
 
-from sympy.core import Function, S, C, sympify, pi
+from sympy.core.function import Function
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.sympify import sympify
+from sympy.core.numbers import pi
 from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import xrange
 

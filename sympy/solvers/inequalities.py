@@ -2,14 +2,19 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Symbol, Interval
+from sympy.core.symbol import Symbol
+from sympy.core.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
 
-from sympy.assumptions import ask, AppliedPredicate, Q
-from sympy.functions import re, im, Abs
-from sympy.logic import And
-from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
+from sympy.assumptions.ask import ask
+from sympy.assumptions.assume import AppliedPredicate
+from sympy.assumptions.ask import Q
+from sympy.functions.elementary.complexes import re, im, Abs
+from sympy.logic.boolalg import And
+from sympy.polys.polytools import Poly
+from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polytools import parallel_poly_from_expr
 
 
 def solve_poly_inequality(poly, rel):

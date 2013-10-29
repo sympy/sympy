@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, diff
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.core.function import diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
 from sympy.polys.polyerrors import PolynomialError

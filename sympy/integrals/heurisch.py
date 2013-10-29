@@ -1,27 +1,31 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
 from itertools import permutations
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, Wild, Dummy
-from sympy.core.basic import C, sympify
-from sympy.core.numbers import Rational, I, pi
+from sympy.core.core import C
+from sympy.core.sympify import sympify
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 
-from sympy.functions import exp, sin, cos, tan, cot, asin, atan
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
-from sympy.functions import sqrt, erf, erfi, li, Ei
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import sin, cos, tan, cot, asin, atan
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.error_functions import erf, erfi, li, Ei
 from sympy.functions.elementary.piecewise import Piecewise
 
 from sympy.logic.boolalg import And
 from sympy.solvers.solvers import solve, denoms
 from sympy.utilities.iterables import uniq
 
-from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys.polytools import quo, gcd, lcm, factor, cancel
+from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 

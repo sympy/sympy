@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.polys.domains.domain import Domain
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 class SimpleDomain(Domain):

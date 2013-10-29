@@ -4,9 +4,14 @@ from __future__ import print_function, division
 
 import sys
 
-from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
-)
+from sympy.core.singleton import S
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.numbers import I, Integer
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.symbol import Dummy
+from sympy.core.containers import Tuple
 
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
@@ -44,7 +49,8 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group, sift, public
+from sympy.utilities.iterables import group, sift
+from sympy.utilities.decorator import public
 
 import sympy.polys
 import sympy.mpmath
@@ -6571,4 +6577,4 @@ def poly(expr, *gens, **args):
 
     return _poly(expr, opt)
 
-from sympy.functions import Piecewise
+from sympy.functions.elementary.piecewise import Piecewise

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.matrices.expressions import MatrixExpr
-from sympy.core import S
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.core.singleton import S
 
 class DiagonalMatrix(MatrixExpr):
     arg = property(lambda self: self.args[0])

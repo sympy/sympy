@@ -1,6 +1,6 @@
 """Printing subsystem"""
 
-from .pretty import pager_print, pretty, pretty_print, pprint, \
+from .pretty.pretty import pager_print, pretty, pretty_print, pprint, \
     pprint_use_unicode, pprint_try_use_unicode
 from .latex import latex, print_latex
 from .mathml import mathml, print_mathml

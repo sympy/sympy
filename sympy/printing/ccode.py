@@ -11,7 +11,8 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core.singleton import S
+from sympy.core.core import C
 from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence

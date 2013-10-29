@@ -1,12 +1,18 @@
 from __future__ import print_function, division
 
-from sympy.core import Mul, Basic, sympify, Add
-from sympy.functions import transpose, adjoint
-from sympy.matrices.expressions.transpose import transpose
-from sympy.strategies import (rm_id, unpack, typed, debug, flatten, exhaust,
-        do_one, new)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix)
+from sympy.core.mul import Mul
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
+from sympy.core.add import Add
+from sympy.functions.elementary.complexes import transpose, adjoint
+from sympy.strategies.rl import rm_id, unpack
+from sympy.strategies.tools import typed
+from sympy.strategies.rl import flatten
+from sympy.strategies.core import exhaust, do_one
+from sympy.strategies.util import new
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.matrices import ShapeError
+from sympy.matrices.expressions.matexpr import Identity, ZeroMatrix
 
 
 class MatMul(MatrixExpr):

@@ -1,14 +1,15 @@
 from __future__ import print_function, division
 
-from sympy import (Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q, Min,
-        Max)
+from sympy.core.singleton import S
+from sympy.core.basic import Basic
+from sympy.assumptions.ask import ask, Q
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.integers import floor, ceiling
-from sympy.functions.elementary.complexes import sign
-from sympy.core.compatibility import iterable, as_int, with_metaclass
-from sympy.core.sets import Set, Interval, FiniteSet, Intersection
-from sympy.core.singleton import Singleton, S
+from sympy.core.compatibility import as_int, with_metaclass
+from sympy.core.sets import Set, Interval, Intersection
+from sympy.core.singleton import Singleton
 from sympy.core.decorators import deprecated
-from sympy.solvers import solve
+from sympy.solvers.solvers import solve
 
 oo = S.Infinity
 

@@ -36,7 +36,7 @@ from sympy.polys.polyerrors import (
     DomainError
 )
 
-from sympy.utilities import variations
+from sympy.utilities.iterables import variations
 
 from math import ceil as _ceil, log as _log
 from sympy.core.compatibility import xrange

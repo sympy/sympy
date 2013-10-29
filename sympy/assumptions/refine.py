@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Expr
-from sympy.assumptions import Q, ask
+from sympy.core.singleton import S
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.assumptions.ask import Q, ask
 from sympy.core.logic import fuzzy_not
 
 

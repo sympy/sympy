@@ -4,9 +4,12 @@ from __future__ import print_function, division
 
 __all__ = ["Options"]
 
-from sympy.core import S, Basic, sympify
+from sympy.core.singleton import S
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify
 from sympy.core.compatibility import string_types, with_metaclass
-from sympy.utilities import numbered_symbols, topological_sort, public
+from sympy.utilities.iterables import numbered_symbols, topological_sort
+from sympy.utilities.decorator import public
 from sympy.utilities.iterables import has_dups
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 

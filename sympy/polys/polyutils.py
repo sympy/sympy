@@ -7,8 +7,12 @@ from sympy.polys.polyoptions import build_options
 
 from sympy.core.exprtools import decompose_power
 
-from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
-from sympy.assumptions import ask, Q
+from sympy.core.singleton import S
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.function import expand_mul, expand_multinomial
+from sympy.assumptions.ask import ask, Q
 
 from sympy.core.compatibility import xrange
 

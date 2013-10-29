@@ -1,12 +1,16 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, Basic, sympify
-from sympy.functions import adjoint
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.functions.elementary.complexes import adjoint
 from sympy.matrices.expressions.transpose import transpose
-from sympy.strategies import (rm_id, unpack, flatten, sort, condition, debug,
-        exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
-from sympy.utilities import default_sort_key
+from sympy.strategies.rl import rm_id, unpack, flatten, sort
+from sympy.strategies.core import condition, exhaust, do_one
+from sympy.strategies.rl import glom
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.matrices import ShapeError
+from sympy.matrices.expressions.matexpr import ZeroMatrix
+from sympy.core.compatibility import default_sort_key
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions

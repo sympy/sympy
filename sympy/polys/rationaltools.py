@@ -2,9 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Basic, Add, sympify
+from sympy.core.basic import Basic
+from sympy.core.add import Add
+from sympy.core.sympify import sympify
 from sympy.core.exprtools import gcd_terms
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 def together(expr, deep=False):

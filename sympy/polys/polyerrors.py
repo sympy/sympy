@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 class BasePolynomialError(Exception):

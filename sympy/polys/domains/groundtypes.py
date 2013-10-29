@@ -18,7 +18,7 @@ from sympy.core.numbers import (
     ilcm as python_lcm,
 )
 
-from sympy import (
+from sympy.core.numbers import (
     Float as SymPyReal,
     Integer as SymPyInteger,
     Rational as SymPyRational,

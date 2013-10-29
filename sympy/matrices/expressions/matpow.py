@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
-from .matexpr import MatrixExpr, ShapeError, Identity
-from sympy import Pow, S, Basic
+from .matexpr import MatrixExpr
 from sympy.core.sympify import _sympify
 
 

@@ -36,16 +36,16 @@ from __future__ import print_function, division
 
 from copy import deepcopy
 
-from sympy.simplify import simplify
-from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.simplify.simplify import simplify
+from sympy.core.add import Add
+from sympy.core.core import C
+from sympy.core.singleton import S
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
     is_sequence)
-from sympy.core.function import (Function, Derivative,
-    expand, diff, AppliedUndef, Subs)
-from sympy.core.numbers import Rational
+from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
-from sympy.core.symbol import Symbol, Wild, Dummy, symbols
-from sympy.functions import exp
+from sympy.core.symbol import Symbol, Wild, symbols
+from sympy.functions.elementary.exponential import exp
 from sympy.utilities.iterables import has_dups
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve

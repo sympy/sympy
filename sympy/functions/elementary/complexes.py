@@ -1,13 +1,15 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C
+from sympy.core.singleton import S
+from sympy.core.core import C
 from sympy.core.compatibility import u
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core import Add, Mul
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import atan, atan2
+from sympy.functions.elementary.trigonometric import atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################

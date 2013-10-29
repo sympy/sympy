@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.basic import C
+from sympy.core.core import C
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative
@@ -12,8 +12,9 @@ from sympy.core.symbol import (Dummy, Wild)
 from sympy.core.sympify import sympify
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
-from sympy.polys import apart, PolynomialError
-from sympy.solvers import solve
+from sympy.polys.partfrac import apart
+from sympy.polys.polyerrors import PolynomialError
+from sympy.solvers.solvers import solve
 from sympy.core.compatibility import xrange
 
 

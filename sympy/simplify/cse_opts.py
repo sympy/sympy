@@ -3,10 +3,12 @@ opportunities.
 """
 from __future__ import print_function, division
 
-from sympy.core import Add, Basic, Expr, Mul
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
 from sympy.core.basic import preorder_traversal
 from sympy.core.singleton import S
-from sympy.utilities.iterables import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 
 def sub_pre(e):

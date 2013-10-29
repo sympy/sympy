@@ -1,7 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
-from sympy.core import Add, Mul, expand_power_base, expand_log
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.core.expr import Expr
+from sympy.core.numbers import Rational
+from sympy.core.symbol import Symbol
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.function import expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key
 
