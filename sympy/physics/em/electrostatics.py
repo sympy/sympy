@@ -1,5 +1,6 @@
 from sympy import pi, sympify, S
-from sympy.physics.mechanics import Vector, Particle, _check_frame
+from sympy.physics.mechanics import Vector, Particle, _check_frame, \
+     get_motion_params
 from sympy.physics.em import gradient, scalar_potential, divergence, laplacian
 
 #The electromagnetic 'k' constant = 1/(4*pi*eo)
@@ -16,6 +17,9 @@ class ParticleCharge(Particle):
     name : string
         The name for the ParticleCharge instance
 
+    point : Point
+        The Point instance corresponding to this ParticleCharge
+
     mass : sympyfiable
         The mass of the charged particle
 
@@ -24,17 +28,28 @@ class ParticleCharge(Particle):
 
     """
 
-    def __init__(self, name, mass, charge=S(0)):
-        super(ParticleCharge, self).__init__(name, mass)
+    def __init__(self, name, point, mass, charge=S(0)):
+        super(ParticleCharge, self).__init__(name, point, mass)
         self._charge = charge
 
     @property
     def charge(self):
+        """ Charge of this particle """
         return self._charge
 
     def set_motion(self, frame, **kwargs):
-        super(ParticleCharge, self).set_motion(frame, **kwargs)
-        pos_vector = frame.express(self.pos_vector_wrt(frame))
+        """
+        Set motion of this ParticleCharge according to given parameters,
+        in the user-specified frame.
+
+        See the docs of functions.get_motion_params for more info-
+
+        """
+        params = get_motion_params(frame, **kwargs)
+        self._point.set_pos(frame, params[2])
+        self._point.set_vel(frame, params[1])
+        self._point.set_acc(frame, params[0])
+        pos_vector = frame.express(params[2], variables=True)
         pos_vector = frame[0]*frame.x + frame[1]*frame.y + frame[2]*frame.z -\
                      pos_vector
         self._pot_func = k*self.charge / \
@@ -43,11 +58,12 @@ class ParticleCharge(Particle):
                          frame.z.dot(pos_vector)**2)**0.5
         self._field = electrostatic_field(self._pot_func, frame)
 
+    set_motion.__doc__ = get_motion_params.__doc__
+
     def electrostatic_potential(self, frame, point=None):
         """
         Scalar potential function of the particle in given field.
-        If a point(position vector) is provided, the potential at that
-        point is returned.
+        If a Point is provided, the potential at that position is returned.
 
         Parameters
         ==========
@@ -55,17 +71,14 @@ class ParticleCharge(Particle):
         frame : ReferenceFrame
             The field to express the potential function in
 
-        point(optional) : Vector
-            Position vector of the point to calculate the potential at
+        point : Point
+            Point to calculate the potential at
 
         Examples
         ========
         
         """
 
-        if self._frame is None:
-            raise ValueError("Motion has not been set for Particle- "+\
-                             str(self))
         _check_frame(frame)
         if point is None:
             return frame.express(self._pot_func)
@@ -88,8 +101,8 @@ class ParticleCharge(Particle):
         frame : ReferenceFrame
             The field to express the potential function in
 
-        point(optional) : Vector
-            Position vector of the point to calculate the field at
+        point(optional) : Point
+            Point to calculate the field at
 
         Examples
         ========
@@ -112,7 +125,7 @@ class ParticleCharge(Particle):
     def electrostatic_force(self, *efields):
         """
         The force experience by this particle under the influence of given
-        electrostatic forces
+        electrostatic fields
 
         Parameters
         ==========
@@ -124,7 +137,7 @@ class ParticleCharge(Particle):
         ========
 
         """
-        
+
         total_force = 0
         for x in efields:
             if not isinstance(x, Vector):
