@@ -1572,6 +1572,12 @@ def test_zero():
     assert ask(Q.zero(Abs(x))) is None
     assert ask(Q.zero(Abs(x)), Q.zero(x)) is True
 
+    assert ask(Q.integer(x), Q.zero(x)) is True
+    assert ask(Q.even(x), Q.zero(x)) is True
+    assert ask(Q.odd(x), Q.zero(x)) is False
+    assert ask(Q.zero(x), Q.even(x)) is None
+    assert ask(Q.zero(x), Q.odd(x)) is False
+
 @XFAIL
 def test_zero_doesnt_work():
     # This requires moving logic from the handler to the deduction system
@@ -1872,7 +1878,7 @@ def test_composite_proposition():
     assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
 
 
-def test_composite_assomption():
+def test_composite_assumptions():
     assert ask(Q.positive(x), Q.positive(x) | Q.positive(y)) is None
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
 
