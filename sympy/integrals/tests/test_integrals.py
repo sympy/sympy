@@ -466,6 +466,8 @@ def test_integrate_returns_piecewise():
         (0, Eq(n, 0)), ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, True))
     assert integrate(x*sin(n*x), x) == Piecewise(
         (0, Eq(n, 0)), (-x*cos(n*x)/n + sin(n*x)/n**2, True))
+    assert integrate(exp(x*y),(x,0,z)) == Piecewise( \
+        (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
 
 
 def test_subs1():
