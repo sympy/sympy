@@ -9,7 +9,11 @@ from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
 class BasicBase(object):
-    # To be overridden with True in the appropriate subclasses
+    """
+    Basic base class for all objects in Sympy
+
+    To be overridden with True in the appropriate subclasses
+    """
     is_Atom = False
     is_Symbol = False
     is_Dummy = False
