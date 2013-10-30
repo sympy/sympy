@@ -507,6 +507,7 @@ def _distribute(info):
 def to_cnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
+    If simplify is True, the expr is evaluated to its simplest CNF form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
 
     Examples
@@ -523,11 +524,7 @@ def to_cnf(expr, simplify=False):
         return expr
 
     if simplify:
-        simplified_expr = distribute_and_over_or(simplify_logic(expr))
-        if len(simplified_expr.args) < len(to_cnf(expr).args):
-            return simplified_expr
-        else:
-            return to_cnf(expr)
+        return _simplest_form(expr, 'cnf', True)
 
     # Don't convert unless we have to
     if is_cnf(expr):
@@ -540,6 +537,7 @@ def to_cnf(expr, simplify=False):
 def to_dnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to disjunctive normal form.
+    If simplify is True, the expr is evaluated to its simplest DNF form.
     That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
 
     Examples
@@ -556,11 +554,7 @@ def to_dnf(expr, simplify=False):
         return expr
 
     if simplify:
-        simplified_expr = distribute_or_over_and(simplify_logic(expr))
-        if len(simplified_expr.args) < len(to_dnf(expr).args):
-            return simplified_expr
-        else:
-            return to_dnf(expr)
+        return _simplest_form(expr, 'dnf', True)
 
     # Don't convert unless we have to
     if is_dnf(expr):
@@ -962,12 +956,17 @@ def _find_predicates(expr):
     return set.union(*(_find_predicates(i) for i in expr.args))
 
 
-def simplify_logic(expr, simplify=True):
+def simplify_logic(expr, form=None, simplify=True):
     """
     This function simplifies a boolean function to its
     simplified version in SOP or POS form. The return type is an
     Or or And object in SymPy. The input can be a string or a boolean
-    expression.  The optional parameter simplify indicates whether to
+    expression.
+    form can be 'cnf' or 'dnf' or None. If its 'cnf'/'dnf' the simplest
+    expression in the corresponding normal form is returned. If form is
+    None, the answer is returned according to the form with lesser number
+    of args (CNF by default)
+    The optional parameter simplify indicates whether to
     recursively simplify any non-boolean-functions contained within the
     input.
 
@@ -987,6 +986,21 @@ def simplify_logic(expr, simplify=True):
     And(Not(x), Not(y))
 
     """
+
+    if form == 'cnf' or form == 'dnf' or form is None:
+        return _simplest_form(expr, form, simplify)
+    else:
+        raise ValueError("form can be cnf or dnf only")
+
+
+def _simplest_form(expr, form=None, simplify=True):
+    """
+    Converts expr to simplest CNF(POS)/DNF(SOP) form.
+    form should be 'cnf' or 'dnf'.
+    simplify indicates whether to recursively simplify any
+    non-boolean-functions contained within the input.
+    """
+
     expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
         return expr
@@ -999,9 +1013,10 @@ def simplify_logic(expr, simplify=True):
     if simplify:
         from sympy.simplify.simplify import simplify
         variables = [simplify(v) for v in variables]
-    if (len(truthtable) >= (2 ** (len(variables) - 1))):
+    if form == 'dnf' or \
+       (form is None and len(truthtable) >= (2 ** (len(variables) - 1))):
         return SOPform(variables, truthtable)
-    else:
+    elif form == 'cnf' and form is None:
         return POSform(variables, truthtable)
 
 
