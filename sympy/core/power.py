@@ -134,6 +134,7 @@ class Pow(Expr):
     @classmethod
     def class_key(cls):
         return 3, 2, cls.__name__
+    
 
     def _eval_power(self, other):
         from sympy.functions.elementary.exponential import log
@@ -256,6 +257,16 @@ class Pow(Expr):
                 ok = (c*C.log(self.base)/S.Pi).is_Integer
                 if ok is not None:
                     return ok
+
+    def _eval_is_imaginary(self):
+        if self.exp.is_even:
+            if self.base.is_imaginary:
+                return True
+        from sympy import numer, denom
+        if numer(self.exp) == 1 and denom(self.exp) == 2: #i.e. sqrt()
+            if self.base.is_real:
+                if self.base.is_negative:
+                    return True
 
     def _eval_is_odd(self):
         if self.exp.is_integer:
