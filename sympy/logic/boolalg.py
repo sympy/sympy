@@ -92,14 +92,14 @@ class BooleanTrue(with_metaclass(Singleton, Boolean)):
     """
     SymPy version of True.
 
+    The instances of this class are singletonized and can be accessed via
+    S.true.
+
     This is the SymPy version of True, for use in the logic module. The
     primary advantage of using true instead of True is that shorthand boolean
     operations like ~ and >> will work as expected on this class, whereas with
     True they act bitwise on 1. Functions in the logic module will return this
     class when they evaluate to true.
-
-    The instances of this class are singletonized and can be accessed via
-    S.true.
 
     Examples
     ========
@@ -136,14 +136,14 @@ class BooleanFalse(with_metaclass(Singleton, Boolean)):
     """
     SymPy version of False.
 
+    The instances of this class are singletonized and can be accessed via
+    S.false.
+
     This is the SymPy version of False, for use in the logic module. The
     primary advantage of using false instead of False is that shorthand boolean
     operations like ~ and >> will work as expected on this class, whereas with
     False they act bitwise on 0. Functions in the logic module will return this
     class when they evaluate to false.
-
-    The instances of this class are singletonized and can be accessed via
-    S.false.
 
     Examples
     ========
