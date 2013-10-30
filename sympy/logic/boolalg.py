@@ -563,13 +563,11 @@ class Equivalent(BooleanFunction):
         argset = set(newargs)
         if len(argset) <= 1:
             return true
-        if True in argset or true in argset:
+        if True in argset:
             argset.discard(True)
-            argset.discard(true)
             return And(*argset)
-        if False in argset or false in argset:
+        if False in argset:
             argset.discard(False)
-            argset.discard(false)
             return Nor(*argset)
         return Basic.__new__(cls, *set(args))
 
