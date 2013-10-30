@@ -1593,7 +1593,7 @@ def meijerint_indefinite(f, x):
     """
     from sympy import hyper, meijerg, count_ops
     results = []
-    for a in list(_find_splitting_points(f, x)) + [S(0)]:
+    for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if res is None:
             continue
