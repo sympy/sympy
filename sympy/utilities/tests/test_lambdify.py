@@ -403,5 +403,6 @@ def test_special_printers():
     assert isinstance(func2(), mpi)
 
 def test_true_false():
+    # We want exact is comparison here, not just ==
     assert lambdify([], true)() is True
     assert lambdify([], false)() is False

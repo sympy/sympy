@@ -133,7 +133,7 @@ class FCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args) - 1 and c is true:
+                elif i == len(expr.args) - 1 and c == true:
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))

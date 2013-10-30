@@ -92,14 +92,14 @@ class Piecewise(Function):
         for ec in args:
             pair = ExprCondPair(*ec)
             cond = pair.cond
-            if cond is false:
+            if cond == false:
                 continue
             if not isinstance(cond, (bool, Relational, Boolean)):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a Relational,"
                     " Boolean, or a built-in bool." % (cond, type(cond)))
             newargs.append(pair)
-            if cond is True or cond is true:
+            if cond == True:
                 break
 
         if options.pop('evaluate', True):
@@ -121,7 +121,7 @@ class Piecewise(Function):
         all_conds_evaled = True    # Do all conds eval to a bool?
         piecewise_again = False    # Should we pass args to Piecewise again?
         non_false_ecpairs = []
-        or1 = Or(*[cond for (_, cond) in args if cond is not true])
+        or1 = Or(*[cond for (_, cond) in args if cond != true])
         for expr, cond in args:
             # Check here if expr is a Piecewise and collapse if one of
             # the conds in expr matches cond. This allows the collapsing
@@ -132,11 +132,11 @@ class Piecewise(Function):
             # having different intervals, but this will probably require
             # using the new assumptions.
             if isinstance(expr, Piecewise):
-                or2 = Or(*[c for (_, c) in expr.args if c is not true])
+                or2 = Or(*[c for (_, c) in expr.args if c != true])
                 for e, c in expr.args:
                     # Don't collapse if cond is "True" as this leads to
                     # incorrect simplifications with nested Piecewises.
-                    if c == cond and (or1 == or2 or cond is not true):
+                    if c == cond and (or1 == or2 or cond != true):
                         expr = e
                         piecewise_again = True
             cond_eval = cls.__eval_cond(cond)
@@ -434,10 +434,10 @@ class Piecewise(Function):
                 pass
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
-            if not c is False:
+            if c != False:
                 e = e._subs(old, new)
             args[i] = e, c
-            if c is true:
+            if c == true:
                 return self.func(*args)
 
         return self.func(*args)

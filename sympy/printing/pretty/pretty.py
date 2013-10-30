@@ -747,7 +747,7 @@ class PrettyPrinter(Printer):
         P = {}
         for n, ec in enumerate(pexpr.args):
             P[n, 0] = self._print(ec.expr)
-            if ec.cond is true:
+            if ec.cond == true:
                 P[n, 1] = prettyForm('otherwise')
             else:
                 P[n, 1] = prettyForm(
