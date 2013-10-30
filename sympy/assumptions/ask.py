@@ -2,7 +2,8 @@
 from __future__ import print_function, division
 
 from sympy.core import sympify
-from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent, BooleanFunction
+from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
+    BooleanFunction, true, false)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -110,10 +111,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
-    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool)):
+    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool,
+        type(true), type(false))):
         raise TypeError("proposition must be a valid logical expression")
 
-    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool)):
+    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool,
+        type(true), type(false))):
         raise TypeError("assumptions must be a valid logical expression")
 
     if isinstance(proposition, AppliedPredicate):
@@ -132,7 +135,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    if assumptions is True:
+    if assumptions == True:
         return
 
     if local_facts in (None, True):

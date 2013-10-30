@@ -15,6 +15,8 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.polyutils import (
@@ -6066,7 +6068,8 @@ def cancel(f, *gens, **args):
             pot = preorder_traversal(f)
             next(pot)
             for e in pot:
-                if isinstance(e, (tuple, Tuple)):
+                # XXX: This should really skip anything that's not Expr.
+                if isinstance(e, (tuple, Tuple, BooleanTrue, BooleanFalse)):
                     continue
                 try:
                     reps.append((e, cancel(e)))

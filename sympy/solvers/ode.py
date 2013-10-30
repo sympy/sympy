@@ -1518,7 +1518,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     ode_or_bool = Eq(lhs, rhs)
                     ode_or_bool = simplify(ode_or_bool)
 
-                    if isinstance(ode_or_bool, bool):
+                    if ode_or_bool in [True, False]:
                         if ode_or_bool:
                             lhs = rhs = S.Zero
                     else:

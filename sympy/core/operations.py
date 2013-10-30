@@ -416,9 +416,9 @@ class LatticeOp(AssocOp):
         try:
             _args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
-            return cls.zero
+            return sympify(cls.zero)
         if not _args:
-            return cls.identity
+            return sympify(cls.identity)
         elif len(_args) == 1:
             return set(_args).pop()
         else:

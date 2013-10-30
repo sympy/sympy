@@ -16,6 +16,7 @@ from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.core.compatibility import default_sort_key
+from sympy.logic.boolalg import true
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
@@ -80,7 +81,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c is true:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -168,7 +169,7 @@ class CCodePrinter(CodePrinter):
         ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond is true:
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) ? (\n%s\n" %

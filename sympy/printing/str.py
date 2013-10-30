@@ -67,6 +67,12 @@ class StrPrinter(Printer):
             sign = ""
         return sign + ' '.join(l)
 
+    def _print_BooleanTrue(self, expr):
+        return "true"
+
+    def _print_BooleanFalse(self, expr):
+        return "false"
+
     def _print_And(self, expr):
         return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
             expr.args)))

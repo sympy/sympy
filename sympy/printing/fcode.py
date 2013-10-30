@@ -25,6 +25,7 @@ from sympy.core import S, C, Add, N
 from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
+from sympy.logic.boolalg import true
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
@@ -120,7 +121,7 @@ class FCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c is true:
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))

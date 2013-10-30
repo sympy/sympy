@@ -6,6 +6,7 @@ from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
 from sympy.core.compatibility import u, xrange
+from sympy.logic.boolalg import true
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -746,7 +747,7 @@ class PrettyPrinter(Printer):
         P = {}
         for n, ec in enumerate(pexpr.args):
             P[n, 0] = self._print(ec.expr)
-            if ec.cond is True:
+            if ec.cond is true:
                 P[n, 1] = prettyForm('otherwise')
             else:
                 P[n, 1] = prettyForm(
