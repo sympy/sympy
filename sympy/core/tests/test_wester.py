@@ -43,6 +43,8 @@ from sympy.integrals.transforms import laplace_transform,\
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.solvers.recurr import rsolve
+from sympy.solvers.ode import dsolve
+from sympy.core.relational import Equality
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -2925,3 +2927,39 @@ def test_Z4():
            r(n), {r(1): 1, r(2): (2 + 2*c + c**2)/(1 + c)})
     assert (s - (c*(n + 1)*(c*(n + 1) - 2*c - 2) +
              (n + 1)*c**2 + 2*c - n)/((c-1)**3*(c+1)) == 0)
+
+
+@XFAIL
+def test_Z5():
+    # Second order ODE with initial conditions---solve directly
+    # transform: f(t) = sin(2 t)/8 - t cos(2 t)/4
+    C1, C2 = symbols('C1 C2')
+    # initial conditions not supported, this is a manual workaround
+    # https://code.google.com/p/sympy/issues/detail?id=1621
+    eq = Derivative(f(x), x, 2) + 4*f(x) - sin(2*x)
+    sol = dsolve(eq, f(x))
+    f0 = Lambda(x, sol.rhs)
+    assert f0(x) == C2*sin(2*x) + (C1 - x/4)*cos(2*x)
+    f1 = Lambda(x, diff(f0(x), x))
+    const_dict = solve((f0(0), f1(0)))
+    result = f0(x).subs(C1, const_dict[C1]).subs(C2, const_dict[C2])
+    assert result == -x*cos(2*x)/4 + sin(2*x)/8
+    # Result is OK, but ODE solving with initial conditions should be
+    # supported without all this manual work
+    raise NotImplementedError('ODE solving with initial conditions \
+not supported')
+
+
+@XFAIL
+def test_Z6():
+    # Second order ODE with initial conditions---solve  using Laplace
+    # transform: f(t) = sin(2 t)/8 - t cos(2 t)/4
+    t = symbols('t', real=True, positive=True)
+    s = symbols('s')
+    eq = Derivative(f(t), t, 2) + 4*f(t) - sin(2*t)
+    F, _, _ = laplace_transform(eq, t, s)
+    # Laplace transform for diff() not calculated
+    # https://code.google.com/p/sympy/issues/detail?id=4077
+    assert (F == s**2*LaplaceTransform(f(t), t, s) +
+            4*LaplaceTransform(f(t), t, s) - 2/(s**2 + 4))
+    # rest of test case not implemented
