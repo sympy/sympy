@@ -34,7 +34,7 @@ from sympy.core.mul import Mul
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
@@ -1443,7 +1443,7 @@ def _rewrite_single(f, x, recursive=True):
                     hint = hint.subs(subs)
                 if hint == False:
                     continue
-                if cond not in [True, False]:
+                if not isinstance(cond, (bool, BooleanAtom)):
                     cond = unpolarify(cond.subs(subs))
                 if _eval_cond(cond) == False:
                     continue

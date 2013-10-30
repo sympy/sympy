@@ -3,7 +3,7 @@ from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_cnf, is_dnf,
-    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_equal, true, false
+    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_equal, true, false, BooleanAtom
 )
 from sympy.utilities.pytest import raises
 from sympy.utilities import cartes
@@ -429,6 +429,9 @@ def test_true_false():
     assert hash(true) == hash(True)
     assert hash(false) == hash(False)
     assert len(set([true, True])) == len(set([false, False])) == 1
+
+    assert isinstance(true, BooleanAtom)
+    assert isinstance(false, BooleanAtom)
 
     # Note: using 'is' comparison is important here. We want these to return
     # true and false, not True and False

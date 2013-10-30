@@ -15,7 +15,7 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 
-from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+from sympy.logic.boolalg import BooleanAtom
 
 from sympy.polys.polyclasses import DMP
 
@@ -6069,7 +6069,7 @@ def cancel(f, *gens, **args):
             next(pot)
             for e in pot:
                 # XXX: This should really skip anything that's not Expr.
-                if isinstance(e, (tuple, Tuple, BooleanTrue, BooleanFalse)):
+                if isinstance(e, (tuple, Tuple, BooleanAtom)):
                     continue
                 try:
                     reps.append((e, cancel(e)))

@@ -88,7 +88,12 @@ class Boolean(Basic):
 #       No:    if greeting == True:
 #       Worse: if greeting is True:
 
-class BooleanTrue(with_metaclass(Singleton, Boolean)):
+class BooleanAtom(Boolean):
+    """
+    Base class of BooleanTrue and BooleanFalse.
+    """
+
+class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     """
     SymPy version of True.
 
@@ -132,7 +137,7 @@ class BooleanTrue(with_metaclass(Singleton, Boolean)):
     def __hash__(self):
         return hash(True)
 
-class BooleanFalse(with_metaclass(Singleton, Boolean)):
+class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     """
     SymPy version of False.
 
