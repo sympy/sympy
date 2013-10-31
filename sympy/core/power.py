@@ -134,7 +134,6 @@ class Pow(Expr):
     @classmethod
     def class_key(cls):
         return 3, 2, cls.__name__
-    
 
     def _eval_power(self, other):
         from sympy.functions.elementary.exponential import log
