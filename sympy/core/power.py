@@ -257,6 +257,13 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
+        from sympy import numer, denom
+        if numer(self.exp) == 1 and denom(self.exp) == 2: #i.e. sqrt()
+            if self.base.is_real:
+                if self.base.is_nonnegative:
+                    return True
+
+
     def _eval_is_imaginary(self):
         if self.exp.is_even:
             if self.base.is_imaginary:
