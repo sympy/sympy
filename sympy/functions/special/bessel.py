@@ -75,6 +75,11 @@ class BesselBase(Function):
         from sympy.simplify.simplify import besselsimp
         return besselsimp(self)
 
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_real and z.is_real:
+            return True
+
 
 class besselj(BesselBase):
     r"""
