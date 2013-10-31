@@ -71,6 +71,11 @@ class BesselBase(Function):
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
 
+    def _eval_is_real(self):
+        nu,z = self.args
+        if nu.is_real and z.is_real:
+            return True
+
 
 
 class besselj(BesselBase):
