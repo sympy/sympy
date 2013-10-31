@@ -178,7 +178,7 @@ def test_simplification():
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
            == And(Equality(A, 3), Or(B, C))
     assert simplify_logic(And(A, x**2-x)) == And(A, x*(x-1))
-    assert simplify_logic(And(A, x**2-x), simplify=False) == And(A, x**2-x)
+    assert simplify_logic(And(A, x**2-x), deep=False) == And(A, x**2-x)
 
     # check input
     ans = SOPform('xy', [[1, 0]])
