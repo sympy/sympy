@@ -2953,7 +2953,7 @@ not supported')
 @XFAIL
 def test_Z6():
     # Second order ODE with initial conditions---solve  using Laplace
-    # transform: f(t) = sin(2 t)/8 - t cos(2 t)/4
+    # transform:  f(t) = sin(2 t)/8 - t cos(2 t)/4
     t = symbols('t', real=True, positive=True)
     s = symbols('s')
     eq = Derivative(f(t), t, 2) + 4*f(t) - sin(2*t)
