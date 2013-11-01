@@ -267,7 +267,7 @@ class Pow(Expr):
         if self.base.is_imaginary:
             if self.exp.is_odd:
                 return True
-            else:
+            elif self.exp.is_even:
                 return False
 
         if self.exp is S.Half:
