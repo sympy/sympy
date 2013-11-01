@@ -257,8 +257,7 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
-        from sympy import numer, denom
-        if numer(self.exp) == 1 and denom(self.exp) == 2: #i.e. sqrt()
+        if self.exp is S.Half:
             if self.base.is_real:
                 if self.base.is_nonnegative:
                     return True
