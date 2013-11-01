@@ -293,7 +293,7 @@ class Pow(Expr):
         if real_e is None:
             return
         if real_b and real_e:
-            if self.base.is_positive:
+            if self.base.is_nonnegative:
                 return True
             else:   # negative or zero (or positive)
                 if self.exp.is_integer:
