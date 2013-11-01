@@ -268,8 +268,7 @@ class Pow(Expr):
         if self.exp.is_even:
             if self.base.is_imaginary:
                 return True
-        from sympy import numer, denom
-        if numer(self.exp) == 1 and denom(self.exp) == 2: #i.e. sqrt()
+        if self.exp is S.Half:
             if self.base.is_real:
                 if self.base.is_negative:
                     return True
