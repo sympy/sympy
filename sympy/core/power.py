@@ -264,9 +264,12 @@ class Pow(Expr):
 
 
     def _eval_is_imaginary(self):
-        if self.exp.is_even:
-            if self.base.is_imaginary:
+        if self.base.is_imaginary:
+            if self.exp.is_odd:
                 return True
+            else:
+                return False
+
         if self.exp is S.Half:
             if self.base.is_real:
                 if self.base.is_negative:
