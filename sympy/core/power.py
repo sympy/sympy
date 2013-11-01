@@ -623,7 +623,7 @@ class Pow(Expr):
     def as_real_imag(self, deep=True, **hints):
         from sympy.polys.polytools import poly
 
-        if self.base.is_real and self.exp.is_real:
+        if self.base.is_real and self.base.is_nonnegative and self.exp.is_real:
             return (self,S.Zero)
 
         if self.exp.is_Integer:
