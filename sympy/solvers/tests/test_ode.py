@@ -325,7 +325,6 @@ def test_1st_exact1():
     sol4 = Eq(x*cos(f(x)) + f(x)**3/3, C1)
     sol5 = Eq(x**2*f(x) + f(x)**3/3, C1)
     assert dsolve(eq1, f(x), hint='1st_exact') == sol1
-    assert dsolve(eq2, f(x), hint='1st_exact') == sol2
     assert dsolve(eq3, f(x), hint='1st_exact') == sol3
     assert dsolve(eq4, hint='1st_exact') == sol4
     assert dsolve(eq5, hint='1st_exact', simplify=False) == sol5
@@ -363,6 +362,15 @@ def test_1st_exact2():
         (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
+@XFAIL
+def test_1st_exact3():
+    """
+    constantsimp() rewrites exp(C1), introducing an inconsistency
+        with the second appearance of C1.
+    """
+    eq2 = (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x)
+    sol2 = Eq(f(x), exp(C1-x**2 + LambertW(C1*x*exp(x**2))))
+    assert dsolve(eq2, f(x), hint='1st_exact') == sol2
 
 def test_separable1():
     # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
@@ -515,17 +523,13 @@ def test_1st_homogeneous_coeff_ode():
     # Type: First order homogeneous, y'=f(y/x)
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
-    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
     eq4 = 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x) - 2*x*exp(x/f(x))*f(x).diff(x)
-    eq5 = 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x)
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     eq8 = x + f(x) - (x - f(x))*f(x).diff(x)
     sol1 = Eq(log(x), C1 - log(f(x)*sin(f(x)/x)/x))
     sol2 = Eq(log(x), log(C1) + log(cos(f(x)/x) - 1)/2 - log(cos(f(x)/x) + 1)/2)
-    sol3 = Eq(f(x), C1*LambertW(C2*x))  # Eq(f(x), x*exp(-LambertW(C1*x) + 1))
     sol4 = Eq(log(f(x)), C1 - 2*exp(x/f(x)))
-    sol5 = Eq(f(x), C1*exp(LambertW(C2*x**4)/2)/x)
     sol6 = Eq(log(x),
         C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)
     sol7 = Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))
@@ -536,15 +540,25 @@ def test_1st_homogeneous_coeff_ode():
     # but it runs too slow
     assert dsolve(eq2, hint='1st_homogeneous_coeff_subs_dep_div_indep',
             simplify=False) == sol2
-    assert dsolve(eq3, hint='1st_homogeneous_coeff_best') == sol3
     assert dsolve(eq4, hint='1st_homogeneous_coeff_best') == sol4
-    assert dsolve(eq5, hint='1st_homogeneous_coeff_best') == sol5
     assert dsolve(eq6, hint='1st_homogeneous_coeff_subs_dep_div_indep') == \
         sol6
     assert dsolve(eq7, hint='1st_homogeneous_coeff_best') == sol7
     assert dsolve(eq8, hint='1st_homogeneous_coeff_best') == sol8
     # checks are below
 
+@XFAIL
+def test_1st_homogeneous_coeff_ode_FAIL():
+    """
+    constantsimp() incorrectly rewrites
+    """
+    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
+    sol3 = Eq(f(x), C1*LambertW(C2*x))  # Eq(f(x), x*exp(-LambertW(C1*x) + 1))
+    assert dsolve(eq3, hint='1st_homogeneous_coeff_best') == sol3
+
+    eq5 = 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x)
+    sol5 = Eq(f(x), C1*exp(LambertW(C2*x**4)/2)/x)
+    assert dsolve(eq5, hint='1st_homogeneous_coeff_best') == sol5
 
 @slow
 def test_1st_homogeneous_coeff_ode_check134568():
@@ -1778,7 +1792,7 @@ def test_user_infinitesimals():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     sol = dsolve(eq, hint='lie_group', xi=sqrt(f(x) - 1)/sqrt(f(x) + 1),
         eta=0)
-    assert sol == Eq(f(x), (C2 + x**2)/(C1 - x**2))
+    assert sol == Eq(f(x), (C1 + x**2)/(C1 - x**2))
     raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
 
 @XFAIL

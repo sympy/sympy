@@ -509,7 +509,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
     >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
     >>> dsolve(eq, hint='separable_reduced')
-    f(x) == C1/(C2*x - 1)
+    f(x) == C1/(C1*x - 1)
     >>> dsolve(eq, hint='1st_exact')
     [f(x) == -acos(C1/cos(x)) + 2*pi, f(x) == acos(C1/cos(x))]
     >>> dsolve(eq, hint='almost_linear')
@@ -924,10 +924,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r:
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
-            num, den = r[d], r[e]  # ODE = d/e + df
             r['d'] = d
             r['e'] = e
             r['y'] = y
+            num, den = r[d], r[e]  # ODE = d/e + df
             r[d] = num.subs(f(x), y)
             r[e] = den.subs(f(x), y)
 
@@ -1294,7 +1294,7 @@ def odesimp(eq, func, order, hint):
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
-    # We cleaned up the costants before solving to help the solve engine with
+    # We cleaned up the constants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
@@ -1916,6 +1916,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     r"""
     Renumber arbitrary constants in ``expr`` to have numbers 1 through `N`
     where `N` is ``endnumber - startnumber + 1`` at most.
+    In the process, this reorders expression terms in a standard way.
 
     This is a simple function that goes through and renumbers any
     :py:class:`~sympy.core.symbol.Symbol` with a name in the form ``symbolname
@@ -1961,24 +1962,29 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         )
     global newstartnumber
     newstartnumber = 1
+    constants_found = [None]*(endnumber+2)
+    constantsymbols = [Symbol(
+        symbolname + "%d" % t) for t in range(startnumber,
+    endnumber + 1)]
 
-    def _constant_renumber(expr, symbolname, startnumber, endnumber):
+    # make a mapping to send all constantsymbols to S.One and use
+    # that to make sure that term ordering is not dependent on
+    # the indexed value of C
+    C_1 = [(ci, S.One) for ci in constantsymbols]
+    sort_key=lambda arg: default_sort_key(arg.subs(C_1))
+
+    def _constant_renumber(expr):
         r"""
         We need to have an internal recursive function so that
         newstartnumber maintains its values throughout recursive calls.
 
         """
-        constantsymbols = [Symbol(
-            symbolname + "%d" % t) for t in range(startnumber,
-        endnumber + 1)]
         global newstartnumber
 
         if isinstance(expr, Equality):
             return Eq(
-                _constant_renumber(
-                    expr.lhs, symbolname, startnumber, endnumber),
-                _constant_renumber(
-                    expr.rhs, symbolname, startnumber, endnumber))
+                _constant_renumber( expr.lhs),
+                _constant_renumber( expr.rhs))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and \
                 not expr.has(*constantsymbols):
@@ -1988,30 +1994,23 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         elif expr.is_Piecewise:
             return expr
         elif expr in constantsymbols:
-            # Renumbering happens here
-            newconst = Symbol(symbolname + str(newstartnumber))
-            newstartnumber += 1
-            return newconst
+            if expr not in constants_found:
+                constants_found[newstartnumber] = expr
+                newstartnumber += 1
+            return expr
         else:
-            from sympy.core.containers import Tuple
-            if expr.is_Function or expr.is_Pow or isinstance(expr, Tuple):
+            if expr.is_Function or expr.is_Pow or isinstance(expr, C.Tuple):
                 return expr.func(
-                    *[_constant_renumber(x, symbolname, startnumber,
-                endnumber) for x in expr.args])
+                    *[_constant_renumber(x) for x in expr.args])
             else:
                 sortedargs = list(expr.args)
-                # make a mapping to send all constantsymbols to S.One and use
-                # that to make sure that term ordering is not dependent on
-                # the indexed value of C
-                C_1 = [(ci, S.One) for ci in constantsymbols]
-                sortedargs.sort(
-                    key=lambda arg: default_sort_key(arg.subs(C_1)))
-                return expr.func(
-                    *[_constant_renumber(x, symbolname, startnumber,
-                    endnumber) for x in sortedargs])
-
-    return _constant_renumber(expr, symbolname, startnumber, endnumber)
-
+                sortedargs.sort( key=sort_key )
+                return expr.func(*[_constant_renumber(x) for x in sortedargs])
+    expr = _constant_renumber(expr)
+    # Renumbering happens here
+    newconsts = symbols('C1:%d'%newstartnumber)
+    expr = expr.subs( zip(constants_found[1:],newconsts), simultaneous=True)
+    return expr
 
 def _handle_Integral(expr, func, order, hint):
     r"""
