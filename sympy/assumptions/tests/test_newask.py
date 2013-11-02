@@ -58,6 +58,9 @@ def test_zero_positive():
     # This one requires several levels of forward chaining
     assert newask(Q.zero(x*(x + y)), Q.positive(x) & Q.positive(y)) is False
 
+    assert newask(Q.positive(pi*x*y + 1), Q.positive(x) & Q.positive(y)) is True
+    assert newask(Q.positive(pi*x*y - 5), Q.positive(x) & Q.positive(y)) is None
+
 def test_zero_pow():
     assert newask(Q.zero(x**y), Q.zero(x) & Q.positive(y)) is True
     assert newask(Q.zero(x**y), Q.nonzero(x) & Q.zero(y)) is False
