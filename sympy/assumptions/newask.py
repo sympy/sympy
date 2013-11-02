@@ -37,27 +37,33 @@ def newask(proposition, assumptions=True, context=global_assumptions,
         raise ValueError("Inconsistent assumptions")
 
 def get_relevant_facts(proposition, assumptions=True,
-    context=global_assumptions, use_known_facts=True):
-    keys = proposition.atoms(AppliedPredicate)
-    # XXX: We need this since True/False are not Basic
-    keys |= Tuple(*assumptions).atoms(AppliedPredicate)
-    if context:
-        keys |= And(*context).atoms(AppliedPredicate)
+    context=global_assumptions, use_known_facts=True, exprs=None, relevant_facts=None):
 
-    predicates = set([i.args[0] for i in keys])
+    newexprs = set()
+    if not exprs:
+        keys = proposition.atoms(AppliedPredicate)
+        # XXX: We need this since True/False are not Basic
+        keys |= Tuple(*assumptions).atoms(AppliedPredicate)
+        if context:
+            keys |= And(*context).atoms(AppliedPredicate)
 
-    relevant_facts = set([])
+        exprs = set([key.args[0] for key in keys])
+
+    if not relevant_facts:
+        relevant_facts = set([])
 
     if use_known_facts:
-        for predicate in predicates:
-            relevant_facts.add(known_facts_cnf.rcall(predicate))
+        for expr in exprs:
+            relevant_facts.add(known_facts_cnf.rcall(expr))
 
-    for key in keys:
-        expr = key.args[0]
+    for expr in exprs:
         for fact in fact_registry[expr.func]:
-            relevant_facts.add(fact.rcall(expr))
+            newfact = fact.rcall(expr)
+            relevant_facts.add(newfact)
+            newexprs |= set([key.args[0] for key in
+                newfact.atoms(AppliedPredicate)])
 
-    return relevant_facts
+    return relevant_facts, newexprs - exprs
 
 def get_all_relevant_facts(proposition, assumptions=True,
     context=global_assumptions, use_known_facts=True, iterations=oo):
@@ -66,12 +72,11 @@ def get_all_relevant_facts(proposition, assumptions=True,
     # we stop getting new things.  Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
-    relevant_facts = set([])
-    old_relevant_facts = [False]
-    while relevant_facts != old_relevant_facts:
-        old_relevant_facts, relevant_facts = (relevant_facts,
-            get_relevant_facts(proposition, And.make_args(assumptions) | relevant_facts,
-                context, use_known_facts=use_known_facts))
+    relevant_facts = set()
+    exprs = None
+    while exprs != set():
+        (relevant_facts, exprs) = get_relevant_facts(proposition, And.make_args(assumptions),
+                context, use_known_facts=use_known_facts, exprs=exprs, relevant_facts=relevant_facts)
         i += 1
         if i >= iterations:
             return And(*relevant_facts)
