@@ -27,3 +27,16 @@ def test_error_definition():
 
     # non-number with named argument
     raises(TypeError, lambda: Dimension(length=(1, 2)))
+
+
+def test_str():
+    assert str(Dimension(length=1)) == "{length: 1}"
+    assert str(Dimension(length=1, symbol="L")) == "L"
+    assert str(Dimension(length=1, name="length")) == "length"
+    assert str(Dimension(length=1, symbol="L", name="length")) == 'L'
+
+
+def test_properties():
+    assert Dimension(length=1).is_dimensionless is False
+    assert Dimension().is_dimensionless is True
+    assert Dimension(length=0).is_dimensionless is True

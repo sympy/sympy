@@ -90,3 +90,33 @@ class Dimension(Dict):
         new.symbol = symbol
 
         return new
+
+    def __str__(self):
+        """
+        Display the string representation of the dimension.
+
+        Usually one will always use a symbol to denote the dimension. If no
+        symbol is defined then it uses the name or, if there is no name, the
+        default dict representation.
+        """
+
+        if self.symbol is not None:
+            return self.symbol
+        elif self.name is not None:
+            return self.name
+        else:
+            return repr(self)
+
+    @property
+    def is_dimensionless(self):
+        """
+        Check if the dimension object really has a dimension.
+
+        A dimension should have at least one component with non-zero power.
+        """
+
+        for key in self:
+            if self[key] != 0:
+                return False
+        else:
+            return True
