@@ -2726,8 +2726,8 @@ def test_sympy__physics__units__Unit():
     assert _test_args(Unit("meter", "m"))
 
 
-def test_sympy__physics__unitsystems__dimensions_Dimension():
-    from sympy.physics.unitsystems.dimension import Dimension
+def test_sympy__physics__unitsystems__dimensions__Dimension():
+    from sympy.physics.unitsystems.dimensions import Dimension
     assert _test_args(Dimension(name="length", symbol="L", length=1))
 
 

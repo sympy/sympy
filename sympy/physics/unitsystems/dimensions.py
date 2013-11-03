@@ -217,3 +217,35 @@ class Dimension(Dict):
         return other * pow(self, -1)
 
     __rtruediv__ = __rdiv__
+
+
+class DimensionSystem(object):
+    """
+    DimensionSystem represents a coherent set of dimensions.
+
+    In a system dimensions are of two types:
+
+    - base dimensions;
+    - derived dimensions: these are defined in terms of the base dimensions
+      (for example velocity is defined from the division of length by time).
+    """
+
+    def __init__(self, base, dims=(), name="", descr=""):
+
+        self.name = name
+        self.descr = descr
+
+        self._base_dims = self._sort_dims(base)
+        self._dims = self._sort_dims(list(dims) + [d for d in base
+                                                   if d not in dims])
+
+    @staticmethod
+    def _sort_dims(dims):
+        """
+        Sort dimensions given in argument using their str function.
+
+        This function will ensure that we get always the same tuple for a given
+        set of dimensions.
+        """
+
+        return tuple(sorted(dims, key=str))
