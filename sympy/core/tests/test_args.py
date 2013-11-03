@@ -2726,6 +2726,11 @@ def test_sympy__physics__units__Unit():
     assert _test_args(Unit("meter", "m"))
 
 
+def test_sympy__physics__unitsystems__dimensions_Dimension():
+    from sympy.physics.unitsystems.dimension import Dimension
+    assert _test_args(Dimension(name="length", symbol="L", length=1))
+
+
 def test_sympy__polys__numberfields__AlgebraicNumber():
     from sympy.polys.numberfields import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))
