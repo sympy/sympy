@@ -487,7 +487,13 @@ class KanesMethod(object):
         for i, v in enumerate(bl):
             if isinstance(v, RigidBody):
                 M = v.mass.subs(uaz).doit()
+                vel = v.masscenter.vel(N).subs(uaz).doit()
+                acc = v.masscenter.acc(N).subs(udotzero).subs(uaz).doit()
+                omega = v.frame.ang_vel_in(N).subs(uaz).doit()
                 I = v.central_inertia.subs(uaz).doit()
+                ang_vel = (I.dt(v.frame) & omega).subs(uaz).doit()
+                ang_acc = (I & v.frame.ang_acc_in(N)).subs(udotzero).subs(uaz).doit()
+                ang_acc2 = (omega ^ (I & omega)).subs(uaz).doit()
                 for j in range(o):
                     for k in range(o):
                         # translational
@@ -498,33 +504,23 @@ class KanesMethod(object):
                         MM[j, k] += (temp &
                                      partials[i][1][k])
                     # translational components
-                    nonMM[j] += ( (M.diff(t) *
-                                   v.masscenter.vel(N)).subs(uaz).doit() &
-                                 partials[i][0][j])
-                    nonMM[j] += (M *
-                            v.masscenter.acc(N).subs(udotzero).subs(uaz).doit()
-                            & partials[i][0][j])
+                    nonMM[j] += M.diff(t) * (vel & partials[i][0][j])
+                    nonMM[j] += M * (acc & partials[i][0][j])
                     # rotational components
-                    omega = v.frame.ang_vel_in(N).subs(uaz).doit()
-                    nonMM[j] += ((I.dt(v.frame) & omega).subs(uaz).doit() &
-                                 partials[i][1][j])
-                    nonMM[j] += ((I &
-                        v.frame.ang_acc_in(N)).subs(udotzero).subs(uaz).doit()
-                        & partials[i][1][j])
-                    nonMM[j] += ((omega ^ (I & omega)).subs(uaz).doit() &
-                                 partials[i][1][j])
+                    nonMM[j] += ang_vel & partials[i][1][j]
+                    nonMM[j] += ang_acc & partials[i][1][j]
+                    nonMM[j] += ang_acc2 & partials[i][1][j]
 
             if isinstance(v, Particle):
                 M = v.mass.subs(uaz).doit()
+                vel = v.point.vel(N).subs(uaz).doit()
+                acc = v.point.acc(N).subs(udotzero).subs(uaz).doit()
                 for j in range(o):
                     for k in range(o):
                         MM[j, k] += M * (partials[i][0][j].subs(uaz).doit() &
                                          partials[i][0][k])
-                    nonMM[j] += M.diff(t) * (v.point.vel(N).subs(uaz).doit() &
-                                             partials[i][0][j])
-                    nonMM[j] += (M *
-                            v.point.acc(N).subs(udotzero).subs(uaz).doit() &
-                            partials[i][0][j])
+                    nonMM[j] += M.diff(t) * (vel & partials[i][0][j])
+                    nonMM[j] += M * (acc & partials[i][0][j])
         # Negate FRSTAR since Kane defines the inertia forces/torques
         # to be negative and we didn't do so above.
         MM = MM.subs(qdots).subs(uaz).doit()
