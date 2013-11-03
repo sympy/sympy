@@ -1747,6 +1747,10 @@ def test_sympy__logic__boolalg__BooleanFunction():
     from sympy.logic.boolalg import BooleanFunction
     assert _test_args(BooleanFunction(1, 2, 3))
 
+@SKIP("abstract class")
+def test_sympy__logic__boolalg__BooleanAtom():
+    pass
+
 def test_sympy__logic__boolalg__BooleanTrue():
     from sympy.logic.boolalg import true
     assert _test_args(true)
