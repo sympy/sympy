@@ -4,6 +4,12 @@
 Definition of physical dimensions.
 
 Unit systems will be constructed on top of these dimensions.
+
+Most of the examples below used MKS system and are presented from the computer
+point of view: from a human point, adding length to time is not legal in MKS
+but it is in natural system; for a computer in natural system there is no time
+dimension (but a velocity dimension instead) so the question of adding time
+to length has no meaning.
 """
 
 from __future__ import division
@@ -24,6 +30,12 @@ class Dimension(Dict):
     mechanics) we know that time is different from temperature, and dimensions
     make this difference (but they do not provide any measure of these
     quantites).
+
+        >>> from sympy.physics.unitsystems.dimensions import Dimension
+        >>> length = Dimension(length=1)
+        >>> length
+        {length: 1}
+        >>> time = Dimension(time=1)
     """
 
     def __new__(cls, *args, **kwargs):
@@ -61,15 +73,17 @@ class Dimension(Dict):
                 #      e.g. [("length", 1), ("time", -1)] has also length = 2
 
                 for p in arg:
+                    #TODO: check that p is a tuple
                     if len(p) != 2:
-                        raise ValueError("length of iterable has to be 2.")
+                        raise ValueError("Length of iterable has to be 2; "
+                                         "'%d' found" % len(p))
 
                 # construction with [("length", 1), ...]
                 pairs.extend(arg)
             else:
             # error if the arg is not of previous types
-                raise TypeError("positional arguments can only be: "
-                                "dict, tuple, list.")
+                raise TypeError("Positional arguments can only be: "
+                                "dict, tuple, list; '%s' found" % type(arg))
 
         pairs.extend(kwargs.items())
 
@@ -78,7 +92,7 @@ class Dimension(Dict):
             #if not isinstance(p[0], str):
             #    raise TypeError("key %s is not a string." % p[0])
             if not isinstance(pair[1], (numbers.Real, Number)):
-                raise TypeError("power corresponding to %s is not a number."
+                raise TypeError("Power corresponding to '%s' is not a number"
                                 % pair[0])
 
         # filter dimensions set to zero; this avoid the following odd result:
