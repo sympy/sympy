@@ -17,7 +17,7 @@ from copy import copy
 import numbers
 
 from sympy.core.containers import Dict, Tuple
-from sympy import Number
+from sympy import Number, sympify
 
 
 class Dimension(Dict):
@@ -134,3 +134,86 @@ class Dimension(Dict):
                 return False
         else:
             return True
+
+    def __neg__(self):
+        return self
+
+    def __add__(self, other):
+        """
+        Define the addition for Dimension.
+
+        Addition of dimension has a sense only if the second object is the same
+        dimension (we don't add length to time).
+        """
+
+        if not isinstance(other, Dimension):
+            raise TypeError("Only dimension can be added; '%s' is not valid"
+                            % type(other))
+        elif isinstance(other, Dimension) and self != other:
+            raise ValueError("Only dimension which are equal can be added; "
+                             "'%s' and '%s' are different" % (self, other))
+
+        return self
+
+    def __sub__(self, other):
+        # there is no notion of ordering (or magnitude) among dimension,
+        # subtraction is equivalent to addition when the operation is legal
+        return self + other
+
+    def __pow__(self, other):
+        #TODO: be sure that it works with rational numbers (e.g. when dealing
+        #      with dimension under a fraction)
+
+        other = sympify(other)
+        if isinstance(other, (numbers.Real, Number)):
+            return Dimension([(x, y*other) for x, y in self.items()])
+        else:
+            raise TypeError("Dimensions can be exponentiated only with "
+                            "numbers; '%s' is not valid" % type(other))
+
+    def __mul__(self, other):
+        if not isinstance(other, Dimension):
+            #TODO: improve to not raise error: 2*L could be a legal operation
+            #      (the same comment apply for __div__)
+            raise TypeError("Only dimension can be multiplied; '%s' is not "
+                            "valid" % type(other))
+
+        d = dict(self)
+        for key in other:
+            try:
+                d[key] += other[key]
+            except KeyError:
+                d[key] = other[key]
+        d = Dimension(d)
+
+        # if all dimensions are zero, then return 1 so that there is no more
+        # dimensions
+        if d.is_dimensionless:
+            return 1
+        else:
+            return d
+
+    def __div__(self, other):
+        if not isinstance(other, Dimension):
+            raise TypeError("Only dimension can be divided; '%s' is not valid"
+                            % type(other))
+
+        d = dict(self)
+        for key in other:
+            try:
+                d[key] -= other[key]
+            except KeyError:
+                d[key] = -other[key]
+        d = Dimension(d)
+
+        if d.is_dimensionless:
+            return 1
+        else:
+            return d
+
+    __truediv__ = __div__
+
+    def __rdiv__(self, other):
+        return other * pow(self, -1)
+
+    __rtruediv__ = __rdiv__

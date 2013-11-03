@@ -40,3 +40,29 @@ def test_properties():
     assert Dimension(length=1).is_dimensionless is False
     assert Dimension().is_dimensionless is True
     assert Dimension(length=0).is_dimensionless is True
+
+def test_add_sub():
+    length = Dimension(length=1)
+
+    assert length + length == length
+    assert length - length == length
+    assert -length == length
+
+    raises(TypeError, lambda: length + 1)
+    raises(TypeError, lambda: length - 1)
+    raises(ValueError, lambda: length + Dimension(time=1))
+    raises(ValueError, lambda: length - Dimension(time=1))
+
+
+def test_mul_div_exp():
+    length = Dimension(length=1)
+    time = Dimension(time=1)
+    velocity = length / time
+
+    assert length**2 == Dimension(length=2)
+    assert length*length == length**2
+    assert length * time == Dimension(length=1, time=1)
+    assert velocity == Dimension(length=1, time=-1)
+    assert velocity**2 == Dimension(length=2, time=-2)
+
+    raises(TypeError, lambda: length**"a")
