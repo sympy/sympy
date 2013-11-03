@@ -24,3 +24,4 @@ Contents
     hep/index.rst
     mechanics/index.rst
     quantum/index.rst
+    unitsystems/index.rst
