@@ -7,7 +7,6 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     MatrixSymbol, subfactorial)
 from sympy.core import Expr
-from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
@@ -538,9 +537,8 @@ def test_tuple():
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 def test_Unit():
-    assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 2461
-
+    from sympy.physics.unitsystems.mks import s
+    assert str(s) == "s"
 
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion
