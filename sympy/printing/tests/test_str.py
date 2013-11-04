@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial, true, false)
+    MatrixSymbol, subfactorial, true, false, Equivalent)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -696,3 +696,6 @@ def test_MatrixSlice():
 def test_true_false():
     assert str(true) == repr(true) == sstr(true) == "true"
     assert str(false) == repr(false) == sstr(false) == "false"
+
+def test_Equivalent():
+    assert str(Equivalent(x, y)) == "Equivalent(x, y)"

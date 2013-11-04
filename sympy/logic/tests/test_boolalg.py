@@ -143,6 +143,7 @@ def test_Equivalent():
     assert Equivalent(A, B, False) == ~A & ~B
     assert Equivalent(1, A) == A
     assert Equivalent(0, A) == Not(A)
+    assert Equivalent(A, Equivalent(B, C)) != Equivalent(Equivalent(A, B), C)
 
 
 def test_simplification():

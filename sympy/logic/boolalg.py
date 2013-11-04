@@ -5,12 +5,13 @@ from collections import defaultdict
 from itertools import product
 
 from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
-from sympy.core.operations import LatticeOp
-from sympy.core.function import Application, sympify
+from sympy.core.operations import LatticeOp, AssocOp
+from sympy.core.function import Application
 from sympy.core.compatibility import ordered, xrange, with_metaclass
-from sympy.core.sympify import converter
+from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 
 
@@ -557,15 +558,14 @@ class Equivalent(BooleanFunction):
     >>> Equivalent(x, And(x, True))
     true
     """
-    @classmethod
-    def eval(cls, *args):
-        newargs = []
+    def __new__(cls, *args, **options):
+        args = [_sympify(arg) for arg in args]
+
+        argset = set(args)
         for x in args:
-            if isinstance(x, Number) or x in (0, 1, true, false):
-                newargs.append(True if x else False)
-            else:
-                newargs.append(x)
-        argset = set(newargs)
+            if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
+                argset.discard(x)
+                argset.add(True if x else False)
         if len(argset) <= 1:
             return true
         if True in argset:
@@ -574,8 +574,16 @@ class Equivalent(BooleanFunction):
         if False in argset:
             argset.discard(False)
             return Nor(*argset)
-        return Basic.__new__(cls, *set(args))
+        _args = frozenset(argset)
+        obj = super(Equivalent, cls).__new__(cls, _args)
+        obj._argset = _args
+        return obj
 
+
+    @property
+    @cacheit
+    def args(self):
+        return tuple(ordered(self._argset))
 
 class ITE(BooleanFunction):
     """
