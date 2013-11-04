@@ -38,6 +38,8 @@ def test_negative_real():
 def test_expand():
     x = Symbol('x')
     assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
+
+def test_pow_is_real():
     x = Symbol("x",nonnegative=True)
     y = Symbol("y",real=True)
     from sympy import im
