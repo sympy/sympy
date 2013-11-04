@@ -110,7 +110,8 @@ An example
 
 In order to illustrate all this formalism, we end this section with a specific
 example, the MKS system (m, kg, s) with dimensions (L: length, M: mass,
-T: time). Their are represented as
+T: time). Their are represented as (we will always sort the vectors in
+alphabetic order)
 
 .. math::
 
@@ -143,21 +144,21 @@ Other dimensions can be derived, for example velocity :math:`V` or action
     2 \\ 1 \\ -2
     \end{pmatrix}.
 
-We can change the basis to go to the natural system (m, c, :math:`\hbar`) with
+We can change the basis to go to the natural system :math:`(m, c, \hbar)` with
 dimension (L: length, V: velocity, A: action) [#]_. In this basis the
 generators are
 
 .. math::
 
-    L =
+    A =
     \begin{pmatrix}
     1 \\ 0 \\ 0
     \end{pmatrix}, \qquad
-    V =
+    L =
     \begin{pmatrix}
     0 \\ 1 \\ 0
     \end{pmatrix}, \qquad
-    A =
+    V =
     \begin{pmatrix}
     0 \\ 0 \\ 1
     \end{pmatrix},
@@ -170,22 +171,34 @@ whereas the mass and time are given by
     M = A V^{-2},\\
     T =
     \begin{pmatrix}
-    1 \\ -1 \\ 0
+    0 \\ 1 \\ -1
     \end{pmatrix}, \qquad
     M =
     \begin{pmatrix}
-    0 \\ -2 \\ 1
+    1 \\ 0 \\ -2
     \end{pmatrix}.
 
-Finally the change of basis matrix is
+Finally the inverse change of basis matrix :math:`P^{-1}` is obtained by
+gluing the vectors expressed in the old basis:
 
 .. math::
 
     P^{-1} =
     \begin{pmatrix}
-    1 & 1 & 2 \\
-    0 & 0 & 1 \\
-    0 & -1 & -2
+    2 & 1 & 1 \\
+    1 & 0 & 0 \\
+    -2 & 0 & -1
+    \end{pmatrix}.
+
+To find the change of basis matrix we just have to take the inverse
+
+.. math::
+
+    P =
+    \begin{pmatrix}
+    0 & 1 & 0 \\
+    1 & 0 & 1 \\
+    0 & -2 & -1
     \end{pmatrix}.
 
 Literature

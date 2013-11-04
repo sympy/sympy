@@ -17,7 +17,7 @@ from copy import copy
 import numbers
 
 from sympy.core.containers import Dict, Tuple
-from sympy import Number, sympify
+from sympy import sympify, Number, Matrix
 
 
 class Dimension(Dict):
@@ -112,6 +112,12 @@ class Dimension(Dict):
         Usually one will always use a symbol to denote the dimension. If no
         symbol is defined then it uses the name or, if there is no name, the
         default dict representation.
+
+        We do *not* want to use the dimension system to find the string
+        representation of a dimension because it would imply some magic in
+        order to guess the "best" form. It is better to do as if we do not
+        have a system, and then to design a specific function to take it into
+        account.
         """
 
         if self.symbol is not None:
@@ -223,21 +229,42 @@ class DimensionSystem(object):
     """
     DimensionSystem represents a coherent set of dimensions.
 
-    In a system dimensions are of two types:
+    In a system dimensions are of three types:
 
     - base dimensions;
     - derived dimensions: these are defined in terms of the base dimensions
-      (for example velocity is defined from the division of length by time).
+      (for example velocity is defined from the division of length by time);
+    - canonical dimensions: these are used to define systems because one has
+      to start somewhere: we can not build ex nihilo a system (see the
+      discussion in the documentation for more details).
+
+    All intermediate computations will use the canonical basis, but at the end
+    one can choose to print result in some other basis.
+
+    In a system dimensions can be represented as a vector, where the components
+    represent the powers associated to each base dimension.
     """
 
     def __init__(self, base, dims=(), name="", descr=""):
+        """
+        Initialize the dimension system.
+
+        It is important that base units have a name or a symbol such that
+        one can sort them in a unique way to define the vector basis.
+        """
 
         self.name = name
         self.descr = descr
 
+        if (None, None) in [(d.name, d.symbol) for d in base]:
+            raise ValueError("Base dimensions must have a symbol or a name")
+
         self._base_dims = self._sort_dims(base)
         self._dims = self._sort_dims(list(dims) + [d for d in base
                                                    if d not in dims])
+
+        self._can_transf_matrix = None
+        self._list_can_dims = None
 
     @staticmethod
     def _sort_dims(dims):
@@ -249,3 +276,50 @@ class DimensionSystem(object):
         """
 
         return tuple(sorted(dims, key=str))
+
+    @property
+    def list_can_dims(self):
+        """
+        List all canonical dimension names.
+        """
+
+        if self._list_can_dims is None:
+            gen = reduce(lambda x, y: x*y, self._base_dims)
+            self._list_can_dims = tuple(sorted(map(str, gen.keys())))
+
+        return self._list_can_dims
+
+    @property
+    def can_transf_matrix(self):
+        """
+        Compute the canonical transformation matrix from the canonical to the
+        base dimension basis.
+
+        It's simply the inverse of matrix where columns are the vector of base
+        dimensions in canonical basis.
+        """
+
+        if self._can_transf_matrix is None:
+            self._can_transf_matrix = reduce(lambda x, y: x.row_join(y),
+                                             [self.dim_can_vector(d)
+                                              for d in self._base_dims]).inv()
+
+        return self._can_transf_matrix
+
+    def dim_can_vector(self, dim):
+        """
+        Vector representation in terms of the canonical base dimensions.
+        """
+
+        vec = []
+        for d in self.list_can_dims:
+            vec.append(dim.get(d, 0))
+
+        return Matrix(vec)
+
+    def dim_vector(self, dim):
+        """
+        Vector representation in terms of the base dimensions.
+        """
+
+        return self.can_transf_matrix * self.dim_can_vector(dim)
