@@ -266,6 +266,77 @@ class DimensionSystem(object):
         self._can_transf_matrix = None
         self._list_can_dims = None
 
+    def __str__(self):
+        """
+        Return the name of the system.
+
+        If it does not exist, then it makes a list of symbols (or names) of
+        the base dimensions.
+        """
+
+        if self.name != "":
+            return self.name
+        else:
+            return "(%s)" % ", ".join(d.symbol or d.name
+                                      for d in self._base_dims)
+
+    def __repr__(self):
+        return '<DimensionSystem: %s>' % repr(self._base_dims)
+
+    def __getitem__(self, key):
+        """
+        Shortcut to the get_unit method, using key access.
+        """
+
+        u = self.get_dim(key)
+
+        #TODO: really want to raise an error?
+        if u is None:
+            raise KeyError(key)
+
+        return u
+
+    def get_dim(self, dim):
+        """
+        Find a specific dimension which is part of the system.
+
+        unit can be a string or a dimension object. If not dimension is found,
+        then return None.
+        """
+
+        #TODO: if the argument is a list, return a list of all matching dims
+
+        found_dim = None
+
+        #TODO: use copy instead of direct assignment for found_dim?
+        if isinstance(dim, str):
+            for d in self._dims:
+                if dim in (d.name, d.symbol):
+                    found_dim = d
+                    break
+        elif isinstance(dim, Dimension):
+            try:
+                i = self._dims.index(dim)
+                found_dim = self._dims[i]
+            except ValueError:
+                pass
+
+        return found_dim
+
+    def extend(self, base, dims=(), name='', description=''):
+        """
+        Extend the current system into a new one.
+
+        Take the base and normal units of the current system to merge
+        them to the base and normal units given in argument.
+        If not provided, name and description are overriden by empty strings.
+        """
+
+        base = self._base_dims + tuple(base)
+        dims = self._dims + tuple(dims)
+
+        return DimensionSystem(base, dims, name, description)
+
     @staticmethod
     def _sort_dims(dims):
         """
@@ -323,3 +394,21 @@ class DimensionSystem(object):
         """
 
         return self.can_transf_matrix * self.dim_can_vector(dim)
+
+    def is_consistent(self):
+        """
+        Check if the system is well defined.
+        """
+
+        #TODO: check redundancy between base units, i.e. if we can invert the
+        #      matrices; currently it is not possible because the transfer
+        #      matrix is not defined if the base has two identical dimensions
+        #if self._transf_matrix.det() == 0:
+
+        # not enough or too many base dimensions compared to independent
+        # dimensions
+        # in vector language: the set of vectors do not form a basis
+        if self._can_transf_matrix.is_square is False:
+            return False
+
+        return True

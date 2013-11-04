@@ -34,6 +34,42 @@ def test_error_definition():
                                     Dimension(current=1))))
 
 
+def test_str_repr():
+    assert str(DimensionSystem((length, time), name="MS")) == "MS"
+    dimsys = DimensionSystem((Dimension(length=1, symbol="L"),
+                              Dimension(time=1, symbol="T")))
+    assert str(dimsys) == "(L, T)"
+    dimsys = DimensionSystem((Dimension(length=1, name="length", symbol="L"),
+                              Dimension(time=1, name="time")))
+    assert str(dimsys) == "(L, time)"
+
+    assert (repr(DimensionSystem((length, time), name="MS"))
+            == "<DimensionSystem: ({length: 1}, {time: 1})>")
+
+
+def test_get_dim():
+    ms = DimensionSystem((length, time), (velocity,))
+
+    assert ms.get_dim("L") == length
+    assert ms.get_dim("length") == length
+    assert ms.get_dim(length) == length
+    assert ms.get_dim(Dimension(length=1)) == length
+
+    assert ms["L"] == ms.get_dim("L")
+    raises(KeyError, lambda: ms["M"])
+
+
+def test_extend():
+    ms = DimensionSystem((length, time), (velocity,))
+
+    mks = ms.extend((mass,), (acceleration,))
+
+    assert mks._base_dims == DimensionSystem((length, time, mass),
+                                        (velocity, acceleration))._base_dims
+    assert mks._dims == DimensionSystem((length, time, mass),
+                                        (velocity, acceleration))._dims
+
+
 def test_sort_dims():
 
     assert (DimensionSystem._sort_dims((length, velocity, time))
