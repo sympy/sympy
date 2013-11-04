@@ -224,6 +224,9 @@ class Pow(Expr):
         if real_e is None:
             return
         if real_b and real_e:
+            if self.base.is_nonnegative:
+                if self.exp is S.Half:
+                    return True
             if self.base.is_positive:
                 return True
             else:   # negative or zero (or positive)
@@ -623,7 +626,7 @@ class Pow(Expr):
     def as_real_imag(self, deep=True, **hints):
         from sympy.polys.polytools import poly
 
-        if self.base.is_real and self.base.is_nonnegative and self.exp.is_real:
+        if self.base.is_nonnegative and self.exp.is_real:
             return (self,S.Zero)
 
         if self.exp.is_Integer:
