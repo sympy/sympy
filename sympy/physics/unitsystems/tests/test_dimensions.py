@@ -41,6 +41,7 @@ def test_properties():
     assert Dimension().is_dimensionless is True
     assert Dimension(length=0).is_dimensionless is True
 
+
 def test_add_sub():
     length = Dimension(length=1)
 

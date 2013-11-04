@@ -117,3 +117,10 @@ def test_can_transf_matrix():
     dimsys = DimensionSystem((length, velocity, acceleration))
     assert dimsys.can_transf_matrix == Matrix(((0, 1, 0), (1, 0, 1),
                                                (0, -2, -1)))
+
+
+def test_is_consistent():
+    assert DimensionSystem((length, time)).is_consistent is True
+    #assert DimensionSystem((length, time, velocity)).is_consistent is False
+
+

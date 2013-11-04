@@ -36,6 +36,29 @@ class Dimension(Dict):
         >>> length
         {length: 1}
         >>> time = Dimension(time=1)
+
+    Dimensions can be composed using multiplication, division and
+    exponentiation (by a number) to give new dimensions. Addition and
+    subtraction is defined only when the two objects are the same dimension.
+
+        >>> velocity = length / time
+        >>> velocity
+        {length: 1, time: -1}
+        >>> length + length
+        {length: 1}
+        >>> length**2
+        {length: 2}
+
+    Note that two dimensions are equal if they have the same powers, even if
+    their names and/or symbols differ.
+
+        >>> Dimension(length=1) == Dimension(length=1, name="length")
+        True
+        >>> Dimension(length=1) == Dimension(length=1, symbol="L")
+        True
+        >>> Dimension(length=1) == Dimension(length=1, name="length",
+        ...                                  symbol="L")
+        True
     """
 
     def __new__(cls, *args, **kwargs):
@@ -277,8 +300,7 @@ class DimensionSystem(object):
         if self.name != "":
             return self.name
         else:
-            return "(%s)" % ", ".join(d.symbol or d.name
-                                      for d in self._base_dims)
+            return "(%s)" % ", ".join(str(d) for d in self._base_dims)
 
     def __repr__(self):
         return '<DimensionSystem: %s>' % repr(self._base_dims)
@@ -370,6 +392,8 @@ class DimensionSystem(object):
         dimensions in canonical basis.
         """
 
+        #TODO: the inversion will fail if the system is inconsistent, for
+        #      example if the matrix is not a square
         if self._can_transf_matrix is None:
             self._can_transf_matrix = reduce(lambda x, y: x.row_join(y),
                                              [self.dim_can_vector(d)
@@ -395,20 +419,33 @@ class DimensionSystem(object):
 
         return self.can_transf_matrix * self.dim_can_vector(dim)
 
+    def print_dim(self, dim):
+        """
+        Give the string expression of a dimension in term of the basis.
+        """
+
+        res = ""
+
+        for (d, p) in zip(self._base_dims, self.dim_vector(dim)):
+            if p == 0:
+                continue
+            elif p == 1:
+                res += "%s " % str(d)
+            else:
+                res += "%s^%d " % (str(d), p)
+
+        return res.strip()
+
+    @property
     def is_consistent(self):
         """
         Check if the system is well defined.
         """
 
-        #TODO: check redundancy between base units, i.e. if we can invert the
-        #      matrices; currently it is not possible because the transfer
-        #      matrix is not defined if the base has two identical dimensions
-        #if self._transf_matrix.det() == 0:
-
         # not enough or too many base dimensions compared to independent
         # dimensions
         # in vector language: the set of vectors do not form a basis
-        if self._can_transf_matrix.is_square is False:
+        if self.can_transf_matrix.is_square is False:
             return False
 
         return True
