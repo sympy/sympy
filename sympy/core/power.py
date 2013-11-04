@@ -271,9 +271,8 @@ class Pow(Expr):
                 return False
 
         if self.exp is S.Half:
-            if self.base.is_real:
-                if self.base.is_negative:
-                    return True
+            if self.base.is_negative:
+                return True
 
     def _eval_is_odd(self):
         if self.exp.is_integer:
