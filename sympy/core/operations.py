@@ -412,7 +412,7 @@ class LatticeOp(AssocOp):
     is_commutative = True
 
     def __new__(cls, *args, **options):
-        args = (sympify(arg) for arg in args)
+        args = (_sympify(arg) for arg in args)
         try:
             _args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
