@@ -3989,6 +3989,16 @@ class MatrixBase(object):
         If the matrix is invertible, the pseudoinverse is the same as the
         inverse.
 
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
+        Matrix([
+        [-17/18,  4/9],
+        [  -1/9,  1/9],
+        [ 13/18, -2/9]])
+
         See Also
         ========
 
@@ -4036,9 +4046,9 @@ class MatrixBase(object):
             matrix.  This parameter may be set to a specific matrix to use
             for that purpose; if so, it must be the same shape as x, with as
             many rows as matrix A has columns, and as many columns as matrix
-            B.  If left as None, an appropriate matrix containing symbols in
-            the form of ``wn_m`` will be used, with n and m being row and
-            column of each symbol.
+            B.  If left as None, an appropriate matrix containing dummy
+            symbols in the form of ``wn_m`` will be used, with n and m being
+            row and column position of each symbol.
 
         Returns
         =======
@@ -4046,6 +4056,23 @@ class MatrixBase(object):
         x : Matrix
             The matrix that will satisfy Ax = B.  Will have as many rows as
             matrix A has columns, and as many columns as matrix B.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> B = Matrix([7, 8])
+        >>> A.pinv_solve(B)
+        Matrix([
+        [ _w0_0/6 - _w1_0/3 + _w2_0/6 - 55/18],
+        [-_w0_0/3 + 2*_w1_0/3 - _w2_0/3 + 1/9],
+        [ _w0_0/6 - _w1_0/3 + _w2_0/6 + 59/18]])
+        >>> A.pinv_solve(B, arbitrary_matrix=Matrix([0, 0, 0]))
+        Matrix([
+        [-55/18],
+        [   1/9],
+        [ 59/18]])
 
         See Also
         ========
@@ -4080,7 +4107,7 @@ class MatrixBase(object):
         A_pinv = self.pinv()
         if arbitrary_matrix is None:
             rows, cols = A.cols, B.cols
-            w = symbols('w:{0}_:{1}'.format(rows, cols))
+            w = symbols('w:{0}_:{1}'.format(rows, cols), cls=Dummy)
             arbitrary_matrix = self.__class__(cols, rows, w).T
         return A_pinv * B + (eye(A.cols) - A_pinv*A) * arbitrary_matrix
 

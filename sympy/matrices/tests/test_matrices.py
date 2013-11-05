@@ -2264,10 +2264,14 @@ def test_pinv_solve():
     # Underdetermined system (infinite results).
     A = Matrix([[1, 0, 1], [0, 1, 1]])
     B = Matrix([5, 7])
-    w0, w1, w2 = symbols('w:3_0')
-    assert A.pinv_solve(B) == Matrix([[w0/3 + w1/3 - w2/3 + 1],
-                                      [w0/3 + w1/3 - w2/3 + 3],
-                                      [-w0/3 - w1/3 + w2/3 + 4]])
+    solution = A.pinv_solve(B)
+    w = {}
+    for s in solution.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert solution == Matrix([[w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 1],
+                               [w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 3],
+                               [-w['w0_0']/3 - w['w1_0']/3 + w['w2_0']/3 + 4]])
     # Overdetermined system (least squares results).
     A = Matrix([[1, 0], [0, 0], [0, 1]])
     B = Matrix([3, 2, 1])
