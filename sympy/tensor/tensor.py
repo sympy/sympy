@@ -39,6 +39,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_
 from sympy.core.containers import Tuple
 from sympy import Matrix, Rational
 from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class TIDS(object):
@@ -497,6 +498,7 @@ class TIDS(object):
         return TIDS(components, free, dum)
 
 
+@doctest_depends_on(modules=('numpy',))
 class VTIDS(TIDS):
     """
     This class handles a ``VTIDS`` object, which is a ``TIDS`` object with an
@@ -513,6 +515,20 @@ class VTIDS(TIDS):
     ``dum``         Dummy indices in their internal representation.
 
     ``data``        Data as a ``numpy`` ``ndarray``.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, VTIDS, tensorhead
+    >>> import numpy
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+    >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
+    >>> data = numpy.array([2,9,6,-5]).reshape(2, 2)
+    >>> VTIDS([T], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)], data)
+    VTIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)], [[ 2  9]
+     [ 6 -5]])
+
     """
 
     def __init__(self, components, free, dum, data):
@@ -555,6 +571,12 @@ class VTIDS(TIDS):
         return VTIDS(*VTIDS.mul(f, g))
 
     def correct_signature_from_indices(self, data, indices, free, dum):
+        """
+        Utility function to correct the values inside the data ndarray
+        according to whether indices are covariant or contravariant.
+
+        It uses the metric matrix to lower values of covariant indices.
+        """
         numpy = import_module('numpy')
         # change the ndarray values according covariantness/contravariantness of the indices
         # use the metric
@@ -584,6 +606,20 @@ class VTIDS(TIDS):
 
     @staticmethod
     def parse_data(data):
+        """
+        Transform data to a numpy ndarray.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import VTIDS
+        >>> VTIDS.parse_data([1, 3, -6, 12])
+        [ 1  3 -6 12]
+
+        >>> VTIDS.parse_data([[1, 2], [4, 7]])
+        [[1 2]
+         [4 7]]
+        """
         numpy = import_module('numpy')
 
         if (numpy is not None) and (not isinstance(data, numpy.ndarray)):
@@ -791,6 +827,8 @@ class _TensorManager(object):
 
 TensorManager = _TensorManager()
 
+
+@doctest_depends_on(modules=('numpy',))
 class TensorIndexType(Basic):
     """
     A TensorIndexType is characterized by its name and its metric.
@@ -867,17 +905,14 @@ class TensorIndexType(Basic):
 
     Examples with metric data added, this means it is working on a fixed basis:
 
-    >>> # Lorentz.data = [1, -1, -1, -1]
-    >>> # Lorentz
-
+    >>> Lorentz.data = [1, -1, -1, -1]
+    >>> Lorentz
     TensorIndexType(Lorentz, 0)
-
-    If ``numpy`` is installed, ``Lorentz.data`` would yield
-
-    ``[[1 0 0 0]
+    >>> Lorentz.data
+    [[1 0 0 0]
     [0 -1 0 0]
     [0 0 -1 0]
-    [0 0 0 -1]]``
+    [0 0 0 -1]]
     """
 
     def __new__(cls, name, metric=False, dim=None, eps_dim=None,
@@ -993,6 +1028,8 @@ class TensorIndexType(Basic):
 
     __repr__ = __str__
 
+
+@doctest_depends_on(modules=('numpy',))
 class TensorIndex(Basic):
     """
     Represents an abstract tensor index.
@@ -1104,6 +1141,7 @@ def tensor_indices(s, typ):
     return tilist
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensorSymmetry(Basic):
     """
     Monoterm symmetry of a tensor
@@ -1254,6 +1292,7 @@ def tensorsymmetry(*args):
     return TensorSymmetry(Tuple(base, sgs))
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensorType(Basic):
     """
     Class of tensor types.
@@ -1374,6 +1413,7 @@ def tensorhead(name, typ, sym, comm=0):
     return S(name, comm)
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensorHead(Basic):
     """
     Tensor head of the tensor
@@ -1413,6 +1453,64 @@ class TensorHead(Basic):
     >>> sym2 = tensorsymmetry([1]*2)
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> A = S2('A')
+
+    Examples with ndarray values:
+
+    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
+    >>> Lorentz.data = [1, -1, -1, -1]
+    >>> i0, i1 = tensor_indices('i0:2', Lorentz)
+    >>> A.data = [[j+2*i for j in range(4)] for i in range(4)]
+
+    in order to retrieve data, it is also necessary to specify abstract indices
+    enclosed by round brackets, then numerical indices inside square brackets.
+
+    >>> A(i0, i1)[0, 0]
+    0
+    >>> A(i0, i1)[2, 3] == 3+2*2
+    True
+
+    Notice that square brackets create a valued tensor expression instance:
+
+    >>> A(i0, i1)
+    A(i0, i1)
+
+    To view the data, just type:
+
+    >>> A.data
+    [[0 1 2 3]
+     [2 3 4 5]
+     [4 5 6 7]
+     [6 7 8 9]]
+
+    Turning to a tensor expression, covariant indices get the corresponding
+    data corrected by the metric:
+
+    >>> A(i0, -i1).data
+    [[0 -1 -2 -3]
+     [2 -3 -4 -5]
+     [4 -5 -6 -7]
+     [6 -7 -8 -9]]
+
+    >>> A(-i0, -i1).data
+    [[0 -1 -2 -3]
+     [-2 3 4 5]
+     [-4 5 6 7]
+     [-6 7 8 9]]
+
+    while if all indices are contravariant, the ``ndarray`` remains the same
+
+    >>> A(i0, i1).data
+     [[0 1 2 3]
+     [2 3 4 5]
+     [4 5 6 7]
+     [6 7 8 9]]
+
+    When all indices are contracted and data are added to the tensor,
+    it will return a scalar resulting from all contractions:
+
+    >>> A(i0, -i0)
+    -18
+
     """
     is_commutative = False
 
@@ -1555,6 +1653,7 @@ class TensorHead(Basic):
         return TensorHead(*self.args)
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensExpr(Basic):
     """
     Abstract base class for tensor expressions
@@ -1584,7 +1683,6 @@ class TensExpr(Basic):
 
     _op_priority = 11.0
     is_commutative = False
-
 
     def __neg__(self):
         return self*S.NegativeOne
@@ -1643,6 +1741,41 @@ class TensExpr(Basic):
     __rtruediv__ = __rdiv__
 
     def get_matrix(self):
+        """
+        Returns ndarray data as a matrix, if data are available and ndarray
+        dimension does not exceed 2.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
+        >>> from sympy import ones
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> sym2 = tensorsymmetry([1]*2)
+        >>> S2 = TensorType([Lorentz]*2, sym2)
+        >>> A = S2('A')
+
+        >>> from sympy.tensor.tensor import tensor_indices, tensorhead
+        >>> Lorentz.data = [1, -1, -1, -1]
+        >>> i0, i1 = tensor_indices('i0:2', Lorentz)
+        >>> A.data = [[j+2*i for j in range(4)] for i in range(4)]
+        >>> A(i0, i1).get_matrix()
+         Matrix([
+        [0, 1, 2, 3],
+        [2, 3, 4, 5],
+        [4, 5, 6, 7],
+        [6, 7, 8, 9]])
+
+        It is possible to perform usual operation on matrices, such as the
+        matrix multiplication:
+
+        >>> A(i0, i1).get_matrix()*ones(4, 1)
+        Matrix([
+        [ 6],
+        [14],
+        [22],
+        [30]])
+        """
         if 0 < self.rank <= 2:
             rows = self.data.shape[0]
             columns = self.data.shape[1] if self.rank == 2 else 1
@@ -1683,6 +1816,7 @@ class TensExpr(Basic):
         return self.func(*self.args)
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensAdd(TensExpr):
     """
     Sum of tensors
@@ -1718,25 +1852,23 @@ class TensAdd(TensExpr):
 
     Examples with data added to the tensor expression:
 
-    >>> # from sympy import eye
-    >>> # Lorentz.data = [1, -1, -1, -1]
-    >>> # a, b = tensor_indices('a, b', Lorentz)
-    >>> # p.data = [2, 3, -2, 7]
-    >>> # q.data = [2, 3, -2, 7]
-    >>> # t = p(a) + q(a); t
-
+    >>> from sympy import eye
+    >>> Lorentz.data = [1, -1, -1, -1]
+    >>> a, b = tensor_indices('a, b', Lorentz)
+    >>> p.data = [2, 3, -2, 7]
+    >>> q.data = [2, 3, -2, 7]
+    >>> t = p(a) + q(a); t
     p(a) + q(a)
 
-    >>> # t(b)
-
+    >>> t(b)
     p(b) + q(b)
-    >>> # The following are: 2**2 - 3**2 - 2**2 - 7**2 ==> -58
-    >>> # p(a)*p(-a)
 
+    The following are: 2**2 - 3**2 - 2**2 - 7**2 ==> -58
+
+    >>> p(a)*p(-a)
     -58
 
-    >>> # p(a)**2
-
+    >>> p(a)**2
     -58
     """
 
@@ -2179,6 +2311,7 @@ class TensAdd(TensExpr):
         return self.data.flatten().__iter__()
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensMul(TensExpr):
     """
     Product of tensors
@@ -2239,7 +2372,6 @@ class TensMul(TensExpr):
         t_components = Tuple(*components)
         t_indices = Tuple(*indices)
 
-
         obj = Basic.__new__(cls, coeff, t_components, t_indices)
         obj._types = []
         for t in tids.components:
@@ -2262,7 +2394,7 @@ class TensMul(TensExpr):
     @staticmethod
     def from_TIDS(coeff, tids, **kw_args):
         # t_indices = tids.to_indices()
-        if isinstance(tids, VTIDS) and len(tids.free) == 0:  # TODO: and autodrop condition
+        if isinstance(tids, VTIDS) and len(tids.free) == 0:  # autodrop point
             return coeff * tids.data[()]
         return TensMul(coeff, tids, **kw_args)
 
