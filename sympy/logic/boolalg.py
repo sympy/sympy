@@ -341,7 +341,7 @@ class Not(BooleanFunction):
 
     @classmethod
     def eval(cls, arg):
-        if isinstance(arg, Number) or arg in (0, 1, true, false):
+        if isinstance(arg, Number) or arg in (True, False):
             return false if arg else true
         # apply De Morgan Rules
         if arg.func is And:

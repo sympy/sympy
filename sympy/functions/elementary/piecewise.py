@@ -176,7 +176,7 @@ class Piecewise(Function):
 
     def _eval_as_leading_term(self, x):
         for e, c in self.args:
-            if c == true or c.subs(x, 0) == true:
+            if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
 
     def _eval_adjoint(self):
@@ -259,7 +259,7 @@ class Piecewise(Function):
                     newargs.append((e, c))
                 else:
                     for i in range(len(values)):
-                        newargs.append((values[i], (c is true and i == len(values) - 1) or
+                        newargs.append((values[i], (c == True and i == len(values) - 1) or
                             And(rep >= intervals[i][0], rep <= intervals[i][1])))
             return self.func(*newargs)
 
@@ -305,10 +305,10 @@ class Piecewise(Function):
                     expr_cond.append((expr, cond2))
             else:
                 expr_cond.append((expr, cond))
-            if cond is true:
+            if cond == True:
                 break
         for expr, cond in expr_cond:
-            if cond is true:
+            if cond == True:
                 independent_expr_cond.append((expr, cond))
                 default = self.func(*independent_expr_cond)
                 break
@@ -437,7 +437,7 @@ class Piecewise(Function):
             if c != False:
                 e = e._subs(old, new)
             args[i] = e, c
-            if c == true:
+            if c == True:
                 return self.func(*args)
 
         return self.func(*args)
@@ -484,7 +484,7 @@ class Piecewise(Function):
     def __eval_cond(cls, cond):
         """Return the truth value of the condition."""
         from sympy.solvers.solvers import checksol
-        if cond == true:
+        if cond == True:
             return True
         if isinstance(cond, Equality):
             if checksol(cond, {}, minimal=True):
