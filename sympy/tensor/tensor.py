@@ -32,7 +32,7 @@ lowered when the tensor is put in canonical form.
 from __future__ import print_function, division
 
 from collections import defaultdict
-from sympy.core import Basic, sympify, Add, Mul, S
+from sympy.core import Basic, sympify, Add, S
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.compatibility import string_types
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
@@ -614,7 +614,7 @@ class VTIDS(TIDS):
 
         >>> from sympy.tensor.tensor import VTIDS
         >>> VTIDS.parse_data([1, 3, -6, 12])
-        [ 1  3 -6 12]
+        [1 3 -6 12]
 
         >>> VTIDS.parse_data([[1, 2], [4, 7]])
         [[1 2]
@@ -624,9 +624,14 @@ class VTIDS(TIDS):
 
         if (numpy is not None) and (not isinstance(data, numpy.ndarray)):
             if len(data) == 2 and hasattr(data[0], '__call__'):
-                data = numpy.fromfunction(data[0], data[1])
+
+                def fromfunction_sympify(*x):
+                    return sympify(data[0](*x))
+
+                data = numpy.fromfunction(fromfunction_sympify, data[1])
             else:
-                data = numpy.array(data)
+                vsympify = numpy.vectorize(sympify)
+                data = vsympify(numpy.array(data))
         return data
 
     def _sort_data_axes(self, ret):
@@ -1614,9 +1619,8 @@ class TensorHead(Basic):
         metrics = [_.data for _ in self.args[1].args[0]]
 
         marray = self.data
-        for i, metric in enumerate(metrics):
+        for metric in metrics:
             marray = numpy.tensordot(marray, numpy.tensordot(metric, marray, (1, 0)), (0, 0))
-            # marray = marray.self_contract(i, metric)
         pow2 = marray[()]
         return pow2 ** (Rational(1, 2) * other)
 
@@ -1715,7 +1719,7 @@ class TensExpr(Basic):
         free = self.free
 
         marray = self.data
-        for i, metric in enumerate(free):
+        for metric in free:
             marray = numpy.tensordot(
                 marray,
                 numpy.tensordot(
@@ -1781,13 +1785,13 @@ class TensExpr(Basic):
             columns = self.data.shape[1] if self.rank == 2 else 1
             if self.rank == 2:
                 mat_list = [] * rows
-                for i in xrange(rows):
+                for i in range(rows):
                     mat_list.append([])
-                    for j in xrange(columns):
+                    for j in range(columns):
                         mat_list[i].append(self[i, j])
             else:
                 mat_list = [None] * rows
-                for i in xrange(rows):
+                for i in range(rows):
                     mat_list[i] = self[i]
             return Matrix(mat_list)
         else:
@@ -1974,7 +1978,6 @@ class TensAdd(TensExpr):
     def _tensAdd_collect_terms(args):
         # collect TensMul terms differing at most by their coefficient
         a = []
-        pprev = None
         prev = args[0]
         prev_coeff = prev._coeff
         changed = False
@@ -2899,7 +2902,6 @@ def tensor_mul(*a):
     for tx in a[1:]:
         t = t*tx
     return t
-
 
 
 def riemann_cyclic_replace(t_r):
