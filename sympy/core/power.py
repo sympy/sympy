@@ -225,9 +225,6 @@ class Pow(Expr):
             return
         if real_b and real_e:
             if self.base.is_nonnegative:
-                if self.exp.is_real:
-                    return True
-            if self.base.is_positive:
                 return True
             else:   # negative or zero (or positive)
                 if self.exp.is_integer:
@@ -627,7 +624,7 @@ class Pow(Expr):
         from sympy.polys.polytools import poly
 
         if self.base.is_nonnegative and self.exp.is_real:
-            return (self,S.Zero)
+            return (self, S.Zero)
 
         if self.exp.is_Integer:
             exp = self.exp
