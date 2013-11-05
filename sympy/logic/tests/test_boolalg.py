@@ -419,8 +419,6 @@ def test_true_false():
     assert false is not False
     assert true
     assert not false
-    assert not isinstance(true, bool)
-    assert not isinstance(false, bool)
     assert true == True
     assert false == False
     assert not (true == False)
@@ -433,6 +431,12 @@ def test_true_false():
 
     assert isinstance(true, BooleanAtom)
     assert isinstance(false, BooleanAtom)
+    # We don't want to subclass from bool, because bool subclasses from
+    # int. But operators like &, |, ^, <<, >>, and ~ act differently on 0 and
+    # 1 then we want them to on true and false.  See the docstrings of the
+    # various And, Or, etc. functions for examples.
+    assert not isinstance(true, bool)
+    assert not isinstance(false, bool)
 
     # Note: using 'is' comparison is important here. We want these to return
     # true and false, not True and False
