@@ -828,8 +828,8 @@ class Pow(Expr):
                 try:
                     ord = b.as_leading_term(x)
                     cf = C.Order(ord, x).getn()
-                    if cf and cf.is_Integer:
-                        nuse = n + 2*cf
+                    if cf and cf.is_Number:
+                        nuse = n + 2*ceiling(cf)
                     else:
                         cf = 1
                 except NotImplementedError:
