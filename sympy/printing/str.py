@@ -23,6 +23,8 @@ class StrPrinter(Printer):
         "full_prec": "auto",
     }
 
+    _relationals = dict()
+
     def parenthesize(self, item, level):
         if precedence(item) <= level:
             return "(%s)" % self._print(item)
@@ -547,7 +549,7 @@ class StrPrinter(Printer):
 
     def _print_Relational(self, expr):
         return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
-                           expr.rel_op,
+                           self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_RootOf(self, expr):

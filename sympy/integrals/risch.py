@@ -1688,7 +1688,9 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             DE.decrement_level()
             fa, fd = frac_in(i, DE.t)
         else:
-            result, i = result.subs(DE.backsubs), i.subs(DE.backsubs)
+            result = result.subs(DE.backsubs)
+            if not i.is_zero:
+                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
             if not separate_integral:
                 result += i
                 return result
