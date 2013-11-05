@@ -138,11 +138,11 @@ def test_expand():
     assert expand_func(besselj(n + S(1)/2, z).rewrite(jn)) == \
         sqrt(2)*sqrt(z)*jn(n, z)/sqrt(pi)
 
-    n = Symbol('n', real = True)
-    zz = Symbol('zz', real = True)
+    real1 = Symbol('real1', real = True)
+    real2 = Symbol('real2', real = True)
     
     for besselx in [besselj, bessely, besseli, besselk]:
-        assert besselx(n, zz).is_real
+        assert besselx(real1, real2).is_real
 
 def test_fn():
     x, z = symbols("x z")

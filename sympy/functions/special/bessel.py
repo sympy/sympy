@@ -72,7 +72,7 @@ class BesselBase(Function):
         return self
 
     def _eval_is_real(self):
-        nu,z = self.args
+        nu, z = self.args
         if nu.is_real and z.is_real:
             return True
 
@@ -194,7 +194,7 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
     
-    def as_real_imag(self, deep = True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real and self.args[1].is_real:
             return (self, S.Zero)
 
