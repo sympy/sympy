@@ -234,8 +234,8 @@ class And(LatticeOp, BooleanFunction):
     y
 
     """
-    zero = False
-    identity = True
+    zero = false
+    identity = true
 
     @classmethod
     def _new_args_filter(cls, args):
@@ -276,8 +276,8 @@ class Or(LatticeOp, BooleanFunction):
     y
 
     """
-    zero = True
-    identity = False
+    zero = true
+    identity = false
 
     @classmethod
     def _new_args_filter(cls, args):
