@@ -40,10 +40,10 @@ def test_expand():
     assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
 
 def test_pow_is_real_or_imaginary():
-    x = Symbol("x",imaginary=True)
-    y = Symbol("y",odd=True)
+    x = Symbol("x", imaginary=True)
+    y = Symbol("y", odd=True)
     assert (x**y).is_imaginary
-    y = Symbol("y",even=True)
+    y = Symbol("y", even=True)
     assert (x**y).is_real
 
 def test_issue350():
