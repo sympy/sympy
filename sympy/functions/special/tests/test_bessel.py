@@ -140,7 +140,7 @@ def test_expand():
 
     real1 = Symbol('real1', real = True)
     real2 = Symbol('real2', real = True)
-    
+
     for besselx in [besselj, bessely, besseli, besselk]:
         assert besselx(real1, real2).is_real
 
