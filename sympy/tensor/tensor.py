@@ -1575,9 +1575,10 @@ class TensorHead(Basic):
 #        return r
 
     def commutes_with(self, other):
-        """Returns 0 (1) if ``self`` and ``other`` (anti)commute.
+        """
+        Returns ``0`` if ``self`` and ``other`` commute, ``1`` if they anticommute..
 
-        Returns ``None`` if ``self`` and ``other`` do not (anti)commute.
+        Returns ``None`` if ``self`` and ``other`` neither commute nor anticommute.
         """
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
@@ -1652,7 +1653,7 @@ class TensorHead(Basic):
 
     def strip(self):
         """
-        Return an identical ``TensorHead``, just with ``ndarray``data removed.
+        Return an identical ``TensorHead``, just with ``ndarray`` data removed.
         """
         return TensorHead(*self.args)
 
