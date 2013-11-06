@@ -605,6 +605,7 @@ class VTIDS(TIDS):
         self.data = data
 
     @staticmethod
+    @doctest_depends_on(modules=('numpy',))
     def parse_data(data):
         """
         Transform data to a numpy ndarray.
@@ -1574,10 +1575,9 @@ class TensorHead(Basic):
 #        return r
 
     def commutes_with(self, other):
-        """
-        Returns 0 (1) if self and other (anti)commute.
+        """Returns 0 (1) if ``self`` and ``other`` (anti)commute.
 
-        Returns None if self and other do not (anti)commute.
+        Returns ``None`` if ``self`` and ``other`` do not (anti)commute.
         """
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
@@ -1744,6 +1744,7 @@ class TensExpr(Basic):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+    @doctest_depends_on(modules=('numpy',))
     def get_matrix(self):
         """
         Returns ndarray data as a matrix, if data are available and ndarray
