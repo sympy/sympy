@@ -1066,7 +1066,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**2).is_nonnegative is True
     assert (k**(-2)).is_nonnegative is True
 
-    assert (k**x).is_nonnegative is None    # NOTE (0**x).is_real = U
+    assert (k**x).is_nonnegative is True    # NOTE (0**x).is_real = U
     assert (l**x).is_nonnegative is True
     assert (l**x).is_positive is True
     assert ((-k)**x).is_nonnegative is None
