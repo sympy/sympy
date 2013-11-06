@@ -15,7 +15,10 @@ class CombinatorialFunction(Function):
 
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import combsimp
-        return combsimp(self)
+        expr = combsimp(self)
+        if measure(expr) <= ratio*measure(self):
+            return expr
+        return self
 
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################

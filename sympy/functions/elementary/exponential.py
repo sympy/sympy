@@ -620,6 +620,12 @@ class log(Function):
 
         return self.func(arg)
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import expand_log, logcombine, simplify
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+        expr = expand_log(expr, deep=True)
+        return min([expr, self], key=measure)
+
     def as_real_imag(self, deep=True, **hints):
         """
         Returns this function as a complex coordinate.
