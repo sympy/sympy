@@ -595,7 +595,10 @@ class log(Function):
             expr = []
             nonpos = []
             for x in arg.args:
-                if force or x.is_positive or x.is_polar:
+                if force or x.is_positive or x.is_polar or x.is_negative:
+                    if x.is_negative:
+                        x *= S.NegativeOne
+                        nonpos.append(S.NegativeOne)
                     a = self.func(x)
                     if isinstance(a, log):
                         expr.append(self.func(x)._eval_expand_log(**hints))
