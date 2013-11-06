@@ -1576,7 +1576,7 @@ class TensorHead(Basic):
 
     def commutes_with(self, other):
         """
-        Returns ``0`` if ``self`` and ``other`` commute, ``1`` if they anticommute..
+        Returns ``0`` if ``self`` and ``other`` commute, ``1`` if they anticommute.
 
         Returns ``None`` if ``self`` and ``other`` neither commute nor anticommute.
         """
@@ -1817,7 +1817,7 @@ class TensExpr(Basic):
 
     def strip(self):
         """
-        Return an identical tensor expression, just with ``ndarray``data removed.
+        Return an identical tensor expression, just with ``ndarray`` data removed.
         """
         return self.func(*self.args)
 
