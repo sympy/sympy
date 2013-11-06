@@ -13,6 +13,10 @@ from sympy.core.cache import cacheit
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import combsimp
+        return combsimp(self)
+
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
