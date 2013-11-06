@@ -3660,7 +3660,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
         return expr
 
-    if not isinstance(expr, (Add, Mul, Pow)):
+    if not isinstance(expr, (Add, Mul, Pow, exp)):
         return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
                          for x in expr.args])
 
