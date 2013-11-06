@@ -429,11 +429,6 @@ class Piecewise(Function):
     def _eval_power(self, s):
         return self.func(*[(e**s, c) for e, c in self.args])
 
-    def _eval_simplify(self, ratio, measure):
-        from sympy.simplify.simplify import simplify
-        return self.func(*[simplify(x, ratio=ratio, measure=measure)
-                           for x in self.args])
-
     def _eval_subs(self, old, new):
         """
         Piecewise conditions may contain bool which are not of Basic type.
