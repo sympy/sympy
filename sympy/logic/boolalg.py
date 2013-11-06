@@ -112,13 +112,13 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
     >>> from sympy import sympify, true, Or
     >>> sympify(True)
-    true
+    True
     >>> ~true
-    false
+    False
     >>> ~True
     -2
     >>> Or(True, False)
-    true
+    True
 
     See Also
     ========
@@ -129,11 +129,6 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
         return True
 
     __bool__ = __nonzero__
-
-    def __repr__(self):
-        return "true"
-
-    __str__ = __repr__
 
     def __hash__(self):
         return hash(True)
@@ -156,13 +151,13 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
     >>> from sympy import sympify, false, Or, true
     >>> sympify(False)
-    false
+    False
     >>> false >> false
-    true
+    True
     >>> False >> False
     0
     >>> Or(True, False)
-    true
+    True
 
     See Also
     ========
@@ -173,11 +168,6 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
         return False
 
     __bool__ = __nonzero__
-
-    def __repr__(self):
-        return "false"
-
-    __str__ = __repr__
 
     def __hash__(self):
         return hash(False)
@@ -304,13 +294,13 @@ class Not(BooleanFunction):
     >>> from sympy.logic.boolalg import Not, And, Or
     >>> from sympy.abc import x
     >>> Not(True)
-    false
+    False
     >>> Not(False)
-    true
+    True
     >>> Not(And(True, False))
-    true
+    True
     >>> Not(Or(True, False))
-    false
+    False
     >>> Not(And(And(True, x), Or(x, False)))
     Not(x)
     >>> ~x
@@ -333,7 +323,7 @@ class Not(BooleanFunction):
     >>> ~True
     -2
     >>> ~true
-    false
+    False
 
     """
 
@@ -370,14 +360,14 @@ class Xor(BooleanFunction):
     >>> from sympy import symbols
     >>> x, y = symbols('x y')
     >>> Xor(True, False)
-    true
+    True
     >>> Xor(True, True)
-    false
+    False
 
     >>> Xor(True, False, True, True, False)
-    true
+    True
     >>> Xor(True, False, True, False)
-    false
+    False
 
     >>> x ^ y
     Or(And(Not(x), y), And(Not(y), x))
@@ -423,9 +413,9 @@ class Nand(BooleanFunction):
     >>> from sympy import symbols
     >>> x, y = symbols('x y')
     >>> Nand(False, True)
-    true
+    True
     >>> Nand(True, True)
-    false
+    False
     >>> Nand(x, y)
     Or(Not(x), Not(y))
 
@@ -453,13 +443,13 @@ class Nor(BooleanFunction):
     >>> x, y = symbols('x y')
 
     >>> Nor(True, False)
-    false
+    False
     >>> Nor(True, True)
-    false
+    False
     >>> Nor(False, True)
-    false
+    False
     >>> Nor(False, False)
-    true
+    True
     >>> Nor(x, y)
     And(Not(x), Not(y))
 
@@ -487,13 +477,13 @@ class Implies(BooleanFunction):
     >>> x, y = symbols('x y')
 
     >>> Implies(True, False)
-    false
+    False
     >>> Implies(False, False)
-    true
+    True
     >>> Implies(True, True)
-    true
+    True
     >>> Implies(False, True)
-    true
+    True
     >>> x >> y
     Implies(x, y)
     >>> y << x
@@ -514,7 +504,7 @@ class Implies(BooleanFunction):
     >>> True >> False
     1
     >>> true >> false
-    false
+    False
 
     """
     @classmethod
@@ -552,11 +542,11 @@ class Equivalent(BooleanFunction):
     >>> from sympy.logic.boolalg import Equivalent, And
     >>> from sympy.abc import x, y
     >>> Equivalent(False, False, False)
-    true
+    True
     >>> Equivalent(True, False, False)
-    false
+    False
     >>> Equivalent(x, And(x, True))
-    true
+    True
     """
     def __new__(cls, *args, **options):
         args = [_sympify(arg) for arg in args]
@@ -598,9 +588,9 @@ class ITE(BooleanFunction):
     >>> from sympy.logic.boolalg import ITE, And, Xor, Or
     >>> from sympy.abc import x, y, z
     >>> ITE(True, False, True)
-    false
+    False
     >>> ITE(Or(True, False), And(True, True), Xor(True, True))
-    true
+    True
     >>> ITE(x, y, z)
     Or(And(Not(x), z), And(x, y))
     """

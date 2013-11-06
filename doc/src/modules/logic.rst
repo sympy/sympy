@@ -34,7 +34,7 @@ You can also form implications with ``>>`` and ``<<``::
 Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
 
     >>> (y & x).subs({x: True, y: True})
-    true
+    True
     >>> (x | y).atoms()
     set([x, y])
 

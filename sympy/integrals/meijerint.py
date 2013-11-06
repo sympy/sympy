@@ -1699,7 +1699,7 @@ def meijerint_definite(f, x, a, b):
     >>> from sympy import exp, oo
     >>> from sympy.abc import x
     >>> meijerint_definite(exp(-x**2), x, -oo, oo)
-    (sqrt(pi), true)
+    (sqrt(pi), True)
 
     This function is implemented as a succession of functions
     meijerint_definite, _meijerint_definite_2, _meijerint_definite_3,

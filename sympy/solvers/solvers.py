@@ -575,7 +575,7 @@ def solve(f, *symbols, **flags):
             >>> solve([x < 3, x - 2])
             And(im(x) == 0, re(x) == 2)
             >>> solve([x > 3, x - 2])
-            false
+            False
 
         * when the system is linear
 

@@ -694,8 +694,8 @@ def test_MatrixSlice():
     assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
 
 def test_true_false():
-    assert str(true) == repr(true) == sstr(true) == "true"
-    assert str(false) == repr(false) == sstr(false) == "false"
+    assert str(true) == repr(true) == sstr(true) == "True"
+    assert str(false) == repr(false) == sstr(false) == "False"
 
 def test_Equivalent():
     assert str(Equivalent(x, y)) == "Equivalent(x, y)"
