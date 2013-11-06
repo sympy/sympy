@@ -252,6 +252,10 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         else:
             return NotImplementedError('Lower and upper bound expected.')
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import sum_simplify
+        return sum_simplify(self)
+
     def _eval_summation(self, f, x):
         return None
 
