@@ -221,10 +221,10 @@ class Function(Application, Expr):
     >>> from sympy import Function, S, oo, I, sin
     >>> class my_func(Function):
     ...
-    ...     nargs = 1
+    ...     nargs = 1  # if 1 or 2 args are acceptable, change 1 to (1, 2)
     ...
     ...     @classmethod
-    ...     def eval(cls, x):
+    ...     def eval(cls, x):  # if more than 1 arg is ok, change x to *x
     ...         if x.is_Number:
     ...             if x is S.Zero:
     ...                 return S.One
@@ -276,16 +276,18 @@ class Function(Application, Expr):
             n = len(args)
 
             if n not in cls.nargs:
-                # XXX: exception message must be in exactly this format to make
-                # it work with NumPy's functions like vectorize(). The ideal
-                # solution would be just to attach metadata to the exception
-                # and change NumPy to take advantage of this.
-                temp = ('%(name)s takes at least %(args)s '
+                # XXX: exception message must be in exactly this format to
+                # make it work with NumPy's functions like vectorize(). See,
+                # for example, https://github.com/numpy/numpy/issues/1697.
+                # The ideal solution would be just to attach metadata to
+                # the exception and change NumPy to take advantage of this.
+                temp = ('%(name)s takes %(qual)s %(args)s '
                        'argument%(plural)s (%(given)s given)')
                 raise TypeError(temp % {
                     'name': cls,
+                    'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
                     'args': min(cls.nargs),
-                    'plural': 's'*(n != 1),
+                    'plural': 's'*(min(cls.nargs) != 1),
                     'given': n})
 
         evaluate = options.get('evaluate', True)
@@ -1286,9 +1288,14 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         n = len(args)
-        if n not in self.nargs:
-            raise TypeError('%s takes %s arguments (%d given)' %
-                    (self, str(self.nargs), n))
+        if n != self.nargs[0]:
+            temp = ('%(name)s takes exactly %(args)s '
+                   'argument%(plural)s (%(given)s given)')
+            raise TypeError(temp % {
+                'name': self,
+                'args': self.nargs[0],
+                'plural': 's'*(self.nargs[0] != 1),
+                'given': n})
         return self.expr.xreplace(dict(list(zip(self.variables, args))))
 
     def __eq__(self, other):
