@@ -201,6 +201,9 @@ class Dimension(Dict):
         #TODO: be sure that it works with rational numbers (e.g. when dealing
         #      with dimension under a fraction)
 
+        #TODO: allow exponentiation with expression, like x
+        #      (if x.is_number is True)
+
         other = sympify(other)
         if isinstance(other, (numbers.Real, Number)):
             return Dimension([(x, y*other) for x, y in self.items()])
