@@ -16,7 +16,7 @@ def test_definition():
     base = (length, time)
     ms = DimensionSystem(base, (velocity,), "MS", "MS system")
 
-    assert ms._base_dims == base
+    assert ms._base_dims == DimensionSystem._sort_dims(base)
     assert ms._dims == DimensionSystem._sort_dims(base + (velocity,))
     assert ms.name == "MS"
     assert ms.descr == "MS system"

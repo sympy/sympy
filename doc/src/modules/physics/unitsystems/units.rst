@@ -6,3 +6,6 @@ Units and unit systems
 
 .. autoclass:: Unit
    :members:
+
+.. autoclass:: UnitSystem
+   :members:

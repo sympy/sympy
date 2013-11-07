@@ -8,7 +8,7 @@ from __future__ import division
 import numbers
 
 from sympy import sympify, AtomicExpr, Number, Pow, Mul
-from .dimensions import Dimension
+from .dimensions import Dimension, DimensionSystem
 
 
 class Unit(AtomicExpr):
@@ -228,3 +228,34 @@ class Unit(AtomicExpr):
         return self**-1 * other
 
     __rtruediv__ = __rdiv__
+
+
+class UnitSystem(object):
+    """
+    UnitSystem represents a coherent set of units.
+
+    A unit system is basically a dimension system with notions of scales. Many
+    of the methods are defined in the same way.
+
+    It is much better if all base units have a symbol.
+    """
+
+    def __init__(self, base, units=(), name="", descr=""):
+        self.name = name
+        self.descr = descr
+
+
+        self._base_units = base
+        self._units = tuple(list(units) + [u for u in base if u not in units])
+
+        # construct the associated dimension system
+        self._system = DimensionSystem([u.dim for u in base],
+                                       [u.dim for u in units])
+
+        if self.is_consistent is False:
+            raise ValueError("The system with basis '%s' is not consistent"
+                             % str(self._base_units))
+
+    @property
+    def is_consistent(self):
+        return self._system.is_consistent

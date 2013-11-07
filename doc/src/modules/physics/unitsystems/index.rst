@@ -25,3 +25,4 @@ Ideas and future developments can be found on the `Github wiki
     philosophy.rst
     dimensions.rst
     prefixes.rst
+    units.rst

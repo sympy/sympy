@@ -11,8 +11,8 @@ in MKS but it is in natural system; for a computer in natural system there is
 no time dimension (but a velocity dimension instead) - in the basis - so the
 question of adding time to length has no meaning.
 
-We refer the reader to the :doc:`documentation for detailed explanations about
-the philosophy <src/modules/physics/unitsystems/philosophy.rst>`.
+We refer the reader to the documentation for detailed explanations about the
+philosophy.
 """
 
 from __future__ import division

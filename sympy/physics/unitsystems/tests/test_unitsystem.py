@@ -1,0 +1,34 @@
+# -*- coding: utf-8 -*-
+
+from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
+from sympy.physics.unitsystems.units import Unit, UnitSystem
+from sympy.utilities.pytest import raises
+
+length = Dimension(name="length", symbol="L", length=1)
+mass = Dimension(name="mass", symbol="M", mass=1)
+time = Dimension(name="time", symbol="T", time=1)
+velocity = Dimension(name="velocity", symbol="V", length=1, time=-1)
+action = Dimension(name="action", symbol="A", length=2, mass=1, time=-2)
+
+m = Unit(length, abbrev="m")
+s = Unit(time, abbrev="s")
+c = Unit(velocity, abbrev="c")
+
+
+def test_definition():
+    base = (m, s)
+    base_dim = (length, time)
+    ms = UnitSystem(base, (c,), "MS", "MS system")
+
+    assert ms._base_units == (m, s)
+    #assert ms._units == DimensionSystem._sort_dims(base + (velocity,))
+    assert ms.name == "MS"
+    assert ms.descr == "MS system"
+
+    assert ms._system._base_dims == DimensionSystem._sort_dims(base_dim)
+    assert ms._system._dims == DimensionSystem._sort_dims(base_dim +
+                                                          (velocity,))
+
+
+def test_error_definition():
+    raises(ValueError, lambda: UnitSystem((m, s, c)))
