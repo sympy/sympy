@@ -729,7 +729,12 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         if as_meijerg:
             h = G
         else:
-            h = hyperexpand(G)
+            try:
+                h = hyperexpand(G)
+            except NotImplementedError as detail:
+                raise IntegralTransformError(
+                    'Inverse Mellin', F, 'Could not calculate integral')
+
             if h.is_Piecewise and len(h.args) == 3:
                 # XXX we break modularity here!
                 h = Heaviside(x - abs(C))*h.args[0].args[0] \
