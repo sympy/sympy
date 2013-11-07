@@ -6035,7 +6035,7 @@ def cancel(f, *gens, **args):
     f = sympify(f)
 
     if not isinstance(f, (tuple, Tuple)):
-        if f.is_Number or isinstance(f, Relational):
+        if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
             return f
         f = factor_terms(f, radical=True)
         p, q = f.as_numer_denom()
