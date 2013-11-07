@@ -5,11 +5,11 @@ Definition of physical dimensions.
 
 Unit systems will be constructed on top of these dimensions.
 
-Most of the examples below used MKS system and are presented from the computer
-point of view: from a human point, adding length to time is not legal in MKS
-but it is in natural system; for a computer in natural system there is no time
-dimension (but a velocity dimension instead) so the question of adding time
-to length has no meaning.
+Most of the examples in the doc used MKS system and are presented from the
+computer point of view: from a human point, adding length to time is not legal
+in MKS but it is in natural system; for a computer in natural system there is
+no time dimension (but a velocity dimension instead) - in the basis - so the
+question of adding time to length has no meaning.
 """
 
 from __future__ import division
@@ -60,6 +60,11 @@ class Dimension(Dict):
         ...                                  symbol="L")
         True
     """
+
+    is_commutative = True
+    is_number = False
+    # make sqrt(M**2) --> M
+    is_positive = True
 
     def __new__(cls, *args, **kwargs):
         """

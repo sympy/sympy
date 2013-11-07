@@ -14,7 +14,7 @@ are largely sufficient for our purposes.
 
 A dimension will be defined as a property which is measurable and assigned to
 a specific phenomenom. In this sense dimensions are different from pure numbers
-because they carry some extra-sense and for this reason two different
+because they carry some extra-sense, and for this reason two different
 dimensions can not be added. For example time or length are dimensions, but
 also any other things which has some sense for us, like angle, number of
 particles (moles...) or information (bits...).
@@ -201,6 +201,24 @@ To find the change of basis matrix we just have to take the inverse
     0 & -2 & -1
     \end{pmatrix}.
 
+
+Units
+=====
+
+Units are constructed above dimensions: they give them an ordering, or
+equivalently a magnitude. First one has to choose some origin, usually based
+on some physical measurement. Then the other units of the same dimensions
+follow by simple rescaling (we omit for now the case of unit with offset, such
+as the temperature).
+
+For example consider the length dimension. We start by choosing the origin
+to be the meter m, and we define the other units from it: the kilometer is
+:math:`10^3` m, the foot is :math:`0.3048` m, etc.
+
+After defining several units of different dimensions we can form a unit system,
+which basically a dimension system with a notion of scale.
+
+
 Literature
 ==========
 
@@ -223,6 +241,7 @@ Literature
 
 .. [NIST] `NIST reference on constants, units and uncertainties
     <http://physics.nist.gov/cuu/Units/introduction.html>`_.
+
 
 .. rubric:: Footnotes
 
