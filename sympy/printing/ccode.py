@@ -15,7 +15,6 @@ from sympy.core import S, C
 from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.logic.boolalg import true
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)

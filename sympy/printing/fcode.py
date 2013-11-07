@@ -25,7 +25,6 @@ from sympy.core import S, C, Add, N
 from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.logic.boolalg import true
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""

@@ -12,8 +12,7 @@ from __future__ import print_function, division
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core.compatibility import default_sort_key, string_types
-from sympy.logic.boolalg import true
+from sympy.core.compatibility import string_types
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
