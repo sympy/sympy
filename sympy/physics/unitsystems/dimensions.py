@@ -10,6 +10,9 @@ computer point of view: from a human point, adding length to time is not legal
 in MKS but it is in natural system; for a computer in natural system there is
 no time dimension (but a velocity dimension instead) - in the basis - so the
 question of adding time to length has no meaning.
+
+We refer the reader to the :doc:`documentation for detailed explanations about
+the philosophy <src/modules/physics/unitsystems/philosophy.rst>`.
 """
 
 from __future__ import division
