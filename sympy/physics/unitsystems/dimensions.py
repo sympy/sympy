@@ -419,14 +419,17 @@ class DimensionSystem(object):
 
         return self.can_transf_matrix * self.dim_can_vector(dim)
 
-    def print_dim(self, dim):
+    def print_dim_base(self, dim):
         """
         Give the string expression of a dimension in term of the basis.
+
+        Dimensions are displayed by decreasing power.
         """
 
         res = ""
 
-        for (d, p) in zip(self._base_dims, self.dim_vector(dim)):
+        for (d, p) in sorted(zip(self._base_dims, self.dim_vector(dim)),
+                             lambda x, y: x[1] > y[1]):
             if p == 0:
                 continue
             elif p == 1:
