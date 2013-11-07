@@ -49,6 +49,7 @@ class Boolean(Basic):
 
     __rxor__ = __xor__
 
+
 class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
     It is used as base class for And, Or, Not, etc.
@@ -526,7 +527,7 @@ def to_cnf(expr, simplify=False):
         return expr
 
     if simplify:
-        return _simplest_form(expr, 'cnf', True)
+        return simplify_logic(expr, 'cnf', True)
 
     # Don't convert unless we have to
     if is_cnf(expr):
@@ -558,7 +559,7 @@ def to_dnf(expr, simplify=False):
         return expr
 
     if simplify:
-        return _simplest_form(expr, 'dnf', True)
+        return simplify_logic(expr, 'dnf', True)
 
     # Don't convert unless we have to
     if is_dnf(expr):
@@ -992,36 +993,25 @@ def simplify_logic(expr, form=None, deep=True):
     """
 
     if form == 'cnf' or form == 'dnf' or form is None:
-        return _simplest_form(expr, form, deep)
+        expr = sympify(expr)
+        if not isinstance(expr, BooleanFunction):
+            return expr
+        variables = _find_predicates(expr)
+        truthtable = []
+        for t in product([0, 1], repeat=len(variables)):
+            t = list(t)
+            if expr.xreplace(dict(zip(variables, t))) == True:
+                truthtable.append(t)
+        if deep:
+            from sympy.simplify.simplify import simplify
+            variables = [simplify(v) for v in variables]
+        if form == 'dnf' or \
+           (form is None and len(truthtable) >= (2 ** (len(variables) - 1))):
+            return SOPform(variables, truthtable)
+        elif form == 'cnf' or form is None:
+            return POSform(variables, truthtable)
     else:
         raise ValueError("form can be cnf or dnf only")
-
-
-def _simplest_form(expr, form=None, deep=True):
-    """
-    Converts expr to simplest CNF(POS)/DNF(SOP) form.
-    form should be 'cnf' or 'dnf'.
-    The parameter deep indicates whether to recursively simplify any
-    non-boolean-functions contained within the input.
-    """
-
-    expr = sympify(expr)
-    if not isinstance(expr, BooleanFunction):
-        return expr
-    variables = _find_predicates(expr)
-    truthtable = []
-    for t in product([0, 1], repeat=len(variables)):
-        t = list(t)
-        if expr.xreplace(dict(zip(variables, t))) == True:
-            truthtable.append(t)
-    if deep:
-        from sympy.simplify.simplify import simplify
-        variables = [simplify(v) for v in variables]
-    if form == 'dnf' or \
-       (form is None and len(truthtable) >= (2 ** (len(variables) - 1))):
-        return SOPform(variables, truthtable)
-    elif form == 'cnf' or form is None:
-        return POSform(variables, truthtable)
 
 
 def _finger(eq):
@@ -1067,23 +1057,26 @@ def _finger(eq):
     return inv
 
 
-def bool_equal(bool1, bool2, info=False):
-    """Return True if the two expressions represent the same logical
-    behavior for some correspondence between the variables of each
-    (which may be different). For example, And(x, y) is logically
-    equivalent to And(a, b) for {x: a, y: b} (or vice versa). If the
-    mapping is desired, then set ``info`` to True and the simplified
-    form of the functions and the mapping of variables will be
-    returned.
+def bool_map(bool1, bool2):
+    """
+    Return the simplified version of bool1, and the mapping of variables
+    that makes the two expressions bool1 and bool2 represent the same
+    logical behaviour for some correspondence between the variables
+    of each.
+    If more than one mappings of this sort exist, one of them
+    is returned.
+    For example, And(x, y) is logically equivalent to And(a, b) for
+    the mapping {x: a, y:b} or {x: b, y:a}.
+    If no such mapping exists, return False.
 
     Examples
     ========
 
-    >>> from sympy import SOPform, bool_equal, Or, And, Not, Xor
+    >>> from sympy import SOPform, bool_map, Or, And, Not, Xor
     >>> from sympy.abc import w, x, y, z, a, b, c, d
     >>> function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
     >>> function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
-    >>> bool_equal(function1, function2, info=True)
+    >>> bool_map(function1, function2)
     (And(Not(z), y), {y: a, z: b})
 
     The results are not necessarily unique, but they are canonical. Here,
@@ -1091,12 +1084,10 @@ def bool_equal(bool1, bool2, info=False):
 
     >>> eq =  Or(And(Not(y), w), And(Not(y), z), And(x, y))
     >>> eq2 = Or(And(Not(c), a), And(Not(c), d), And(b, c))
-    >>> bool_equal(eq, eq2)
-    True
-    >>> bool_equal(eq, eq2, info=True)
+    >>> bool_map(eq, eq2)
     (Or(And(Not(y), w), And(Not(y), z), And(x, y)), {w: a, x: b, y: c, z: d})
     >>> eq = And(Xor(a, b), c, And(c,d))
-    >>> bool_equal(eq, eq.subs(c, x), info=True)
+    >>> bool_map(eq, eq.subs(c, x))
     (And(Or(Not(a), Not(b)), Or(a, b), c, d), {a: a, b: b, c: d, d: x})
 
     """
@@ -1145,6 +1136,25 @@ def bool_equal(bool1, bool2, info=False):
     a = simplify_logic(bool1)
     b = simplify_logic(bool2)
     m = match(a, b)
-    if m and info:
+    if m:
         return a, m
     return m is not None
+
+
+@deprecated(
+    useinstead="bool_map", issue=4098, deprecated_since_version="0.7.4")
+def bool_equal(bool1, bool2, info=False):
+    """Return True if the two expressions represent the same logical
+    behaviour for some correspondence between the variables of each
+    (which may be different). For example, And(x, y) is logically
+    equivalent to And(a, b) for {x: a, y: b} (or vice versa). If the
+    mapping is desired, then set ``info`` to True and the simplified
+    form of the functions and mapping of variables will be returned.
+    """
+
+    mapping = bool_map(bool1, bool2)
+    if not mapping:
+        return False
+    if info:
+        return mapping
+    return True
