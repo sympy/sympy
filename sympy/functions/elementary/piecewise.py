@@ -210,7 +210,8 @@ class Piecewise(Function):
 
         if a is None or b is None:
             # In this case, it is just simple substitution
-            return super(Piecewise, self)._eval_interval(sym, a, b)
+            return piecewise_fold(
+                super(Piecewise, self)._eval_interval(sym, a, b))
 
         mul = 1
         if (a == b) is True:
@@ -227,29 +228,29 @@ class Piecewise(Function):
                     if (a < lower) is True:
                         mid = lower
                         rep = b
-                        val = e.subs(sym, b) - e.subs(sym, mid)
+                        val = e._eval_interval(sym, mid, b)
                         val += self._eval_interval(sym, a, mid)
                     elif (a > upper) is True:
                         mid = upper
                         rep = b
-                        val = e.subs(sym, b) - e.subs(sym, mid)
+                        val = e._eval_interval(sym, mid, b)
                         val += self._eval_interval(sym, a, mid)
                     elif (a >= lower) is True and (a <= upper) is True:
                         rep = b
-                        val = e.subs(sym, b) - e.subs(sym, a)
+                        val = e._eval_interval(sym, a, b)
                     elif (b < lower) is True:
                         mid = lower
                         rep = a
-                        val = e.subs(sym, mid) - e.subs(sym, a)
+                        val = e._eval_interval(sym, a, mid)
                         val += self._eval_interval(sym, mid, b)
                     elif (b > upper) is True:
                         mid = upper
                         rep = a
-                        val = e.subs(sym, mid) - e.subs(sym, a)
+                        val = e._eval_interval(sym, a, mid)
                         val += self._eval_interval(sym, mid, b)
                     elif ((b >= lower) is True) and ((b <= upper) is True):
                         rep = a
-                        val = e.subs(sym, b) - e.subs(sym, a)
+                        val = e._eval_interval(sym, a, b)
                     else:
                         raise NotImplementedError(
                             """The evaluation of a Piecewise interval when both the lower
@@ -279,7 +280,7 @@ class Piecewise(Function):
                 # already have determined that its conditions are independent
                 # of the integration variable, thus we just use substitution.
                 ret_fun += piecewise_fold(
-                    expr.subs(sym, Min(b, int_b)) - expr.subs(sym, Max(a, int_a)))
+                    super(Piecewise, expr)._eval_interval(sym, Max(a, int_a), Min(b, int_b)))
             else:
                 ret_fun += expr._eval_interval(sym, Max(a, int_a), Min(b, int_b))
         return mul * ret_fun
