@@ -2,7 +2,7 @@
 Dimensions and dimension systems
 ================================
 
-.. module:: sympy.physics.unitsystems.dimensions
+.. automodule:: sympy.physics.unitsystems.dimensions
 
 .. autoclass:: Dimension
    :members:

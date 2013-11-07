@@ -22,7 +22,6 @@ def test_definition():
     assert ms.descr == "MS system"
 
     assert ms._can_transf_matrix is None
-    assert ms._list_can_dims is None
 
 
 def test_error_definition():
@@ -31,6 +30,8 @@ def test_error_definition():
                                     Dimension(length=1, symbol="L"),
                                     Dimension(mass=1, name="mass"),
                                     Dimension(current=1))))
+
+    raises(ValueError, lambda: DimensionSystem((length, time, velocity)))
 
 
 def test_str_repr():
@@ -106,6 +107,16 @@ def test_dim_vector():
     assert dimsys.dim_vector(time) == Matrix([0, 1, -1])
 
 
+def test_inv_can_transf_matrix():
+    dimsys = DimensionSystem((length, mass, time))
+
+    assert dimsys.inv_can_transf_matrix == eye(3)
+
+    dimsys = DimensionSystem((length, velocity, action))
+    assert dimsys.inv_can_transf_matrix == Matrix(((2, 1, 1), (1, 0, 0),
+                                                   (-2, 0, -1)))
+
+
 def test_can_transf_matrix():
     dimsys = DimensionSystem((length, mass, time))
 
@@ -127,3 +138,8 @@ def test_print_dim_base():
     current = Dimension(name="current", symbol="I", current=1)
     mksa = DimensionSystem((length, time, mass, current), (action,))
     assert mksa.print_dim_base(action) == "L^2 M T^-2"
+
+
+def test_dim():
+    dimsys = DimensionSystem((length, mass, time), (velocity, action))
+    assert dimsys.dim == 3

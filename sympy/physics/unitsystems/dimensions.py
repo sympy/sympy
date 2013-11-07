@@ -289,6 +289,10 @@ class DimensionSystem(object):
         self._can_transf_matrix = None
         self._list_can_dims = None
 
+        if self.is_consistent is False:
+            raise ValueError("The system with basis '%s' is not consistent"
+                             % str(self._base_dims))
+
     def __str__(self):
         """
         Return the name of the system.
@@ -383,13 +387,32 @@ class DimensionSystem(object):
         return self._list_can_dims
 
     @property
+    def inv_can_transf_matrix(self):
+        """
+        Compute the inverse transformation matrix from the base to the
+        canonical dimension basis.
+
+        It corresponds to the matrix where columns are the vector of base
+        dimensions in canonical basis.
+
+        This matrix will almost never be used because dimensions are always
+        define with respect to the canonical basis, so no work has to be done
+        to get them in this basis. Nonetheless if this matrix is not square
+        (or not invertible) it means that we have chosen a bad basis.
+        """
+
+        matrix = reduce(lambda x, y: x.row_join(y),
+                        [self.dim_can_vector(d) for d in self._base_dims])
+
+        return matrix
+
+    @property
     def can_transf_matrix(self):
         """
         Compute the canonical transformation matrix from the canonical to the
         base dimension basis.
 
-        It's simply the inverse of matrix where columns are the vector of base
-        dimensions in canonical basis.
+        It is the inverse of the matrix computed with inv_can_transf_matrix().
         """
 
         #TODO: the inversion will fail if the system is inconsistent, for
@@ -440,6 +463,16 @@ class DimensionSystem(object):
         return res.strip()
 
     @property
+    def dim(self):
+        """
+        Give the dimension of the system.
+
+        That is return the number of dimensions forming the basis.
+        """
+
+        return len(self._base_dims)
+
+    @property
     def is_consistent(self):
         """
         Check if the system is well defined.
@@ -448,7 +481,7 @@ class DimensionSystem(object):
         # not enough or too many base dimensions compared to independent
         # dimensions
         # in vector language: the set of vectors do not form a basis
-        if self.can_transf_matrix.is_square is False:
+        if self.inv_can_transf_matrix.is_square is False:
             return False
 
         return True
