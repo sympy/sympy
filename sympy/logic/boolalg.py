@@ -1,4 +1,6 @@
-"""Boolean algebra module for SymPy"""
+"""
+Boolean algebra module for SymPy
+"""
 from __future__ import print_function, division
 
 from collections import defaultdict
