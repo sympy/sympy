@@ -85,7 +85,7 @@ Simplification and equivalence-testing
 SymPy's simplify() function can also be used to simplify logic expressions to their
 simplest forms.
 
-.. autofunction:: sympy.logic.boolalg.bool_equal
+.. autofunction:: sympy.logic.boolalg.bool_map
 
 Inference
 ---------

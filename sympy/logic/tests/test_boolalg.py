@@ -3,7 +3,7 @@ from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_cnf, is_dnf,
-    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_equal
+    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_map
 )
 from sympy.utilities.pytest import raises
 
@@ -178,7 +178,7 @@ def test_simplification():
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
            == And(Equality(A, 3), Or(B, C))
     assert simplify_logic(And(A, x**2-x)) == And(A, x*(x-1))
-    assert simplify_logic(And(A, x**2-x), simplify=False) == And(A, x**2-x)
+    assert simplify_logic(And(A, x**2-x), deep=False) == And(A, x**2-x)
 
     # check input
     ans = SOPform('xy', [[1, 0]])
@@ -201,22 +201,23 @@ def test_simplification():
     assert simplify(Or(x, Not(x))) == True
 
 
-def test_bool_equal():
+def test_bool_map():
     """
-    Test working of bool_equal function.
+    Test working of bool_map function.
     """
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
-    from sympy.abc import a, b, c, x, y, z
-    assert bool_equal(Not(Not(a)), a)
-    assert bool_equal(SOPform(['w', 'x', 'y', 'z'], minterms),
-        POSform(['w', 'x', 'y', 'z'], minterms))
-    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]),
+    from sympy.abc import a, b, c, w, x, y, z
+    assert bool_map(Not(Not(a)), a) == (a, {a: a})
+    assert bool_map(SOPform(['w', 'x', 'y', 'z'], minterms),
+        POSform(['w', 'x', 'y', 'z'], minterms)) == \
+        (And(Or(Not(w), y), Or(Not(x), y), z), {x: x, w: w, z: z, y: y})
+    assert bool_map(SOPform(['x', 'z', 'y'],[[1, 0, 1]]),
         SOPform(['a', 'b', 'c'],[[1, 0, 1]])) != False
     function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
     function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
-    assert bool_equal(function1, function2, info=True) == \
+    assert bool_map(function1, function2) == \
         (function1, {y: a, z: b})
 
 
