@@ -258,10 +258,8 @@ class Pow(Expr):
                     return ok
 
         if self.exp is S.Half:
-            if self.base.is_real:
-                if self.base.is_nonnegative:
-                    return True
-
+            if self.base.is_nonnegative:
+                return True
 
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:
