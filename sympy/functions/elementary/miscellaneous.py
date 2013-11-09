@@ -210,7 +210,7 @@ def root(arg, n):
     come back as -2:
 
     >>> root(-8, 3)
-    2*(-1)**(1/3)
+    2*cbrt(-1)
 
     The real_root function can be used to either make such a result
     real or simply return the real root in the first place:
@@ -255,7 +255,7 @@ def real_root(arg, n=None):
     >>> real_root(-8, 3)
     -2
     >>> root(-8, 3)
-    2*(-1)**(1/3)
+    2*cbrt(-1)
     >>> real_root(_)
     -2
 

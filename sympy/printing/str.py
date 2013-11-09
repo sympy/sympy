@@ -473,7 +473,7 @@ class StrPrinter(Printer):
 
         if expr.exp is S.Half and not rational:
             return "sqrt(%s)" % self._print(expr.base)
-        elif expr.exp is Rational(1, 3) and not rational:
+        elif expr.exp == Rational(1, 3) and not rational:
             return "cbrt(%s)" % self._print(expr.base)
 
         if expr.is_commutative:
