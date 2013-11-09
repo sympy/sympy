@@ -5,6 +5,7 @@ from sympy import (
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
     sympify, tan, tanh, root, simplify, atan2, arg)
 from sympy.core.function import nfloat
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow
@@ -195,7 +196,7 @@ def test_solve_polynomial_cv_1a():
 
 def test_solve_polynomial_cv_1b():
     assert set(solve(4*x*(1 - a*sqrt(x)), x)) == set([S(0), 1/a**2])
-    assert set(solve(x * (x**(S(1)/3) - 3), x)) == set([S(0), S(27)])
+    assert set(solve(x * (cbrt(x) - 3), x)) == set([S(0), S(27)])
 
 
 def test_solve_polynomial_cv_2():
@@ -329,7 +330,7 @@ def test_tsolve():
     assert solve(x + 2**x, x) == [-LambertW(log(2))/log(2)]
     ans = solve(3*x + 5 + 2**(-5*x + 3), x)
     assert len(ans) == 1 and ans[0].expand() == \
-        -Rational(5, 3) + LambertW(-10240*2**(S(1)/3)*log(2)/3)/(5*log(2))
+        -Rational(5, 3) + LambertW(-10240*cbrt(2)*log(2)/3)/(5*log(2))
     assert solve(5*x - 1 + 3*exp(2 - 7*x), x) == \
         [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve(2*x + 5 + log(3*x - 2), x) == \
@@ -814,7 +815,7 @@ def test_unrad():
         unrad(sqrt(x) + (x + 1)**Rational(1, 3) + 2*sqrt(y)))
     # same as last but consider only y
     assert check(unrad(sqrt(x) + (x + 1)**Rational(1, 3) + 2*sqrt(y), y),
-           (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
+           (4*y - (sqrt(x) + cbrt(x + 1))**2, [], []))
     assert check(unrad(sqrt(x/(1 - x)) + (x + 1)**Rational(1, 3)),
                 (x**3/(-x + 1)**3 - (x + 1)**2, [], [(-x + 1)**3]))
     # same as last but consider only y; no y-containing denominators now
@@ -1302,8 +1303,8 @@ def test_lambert_multivariate():
         -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]  # tested numerically
     p = symbols('p', positive=True)
     assert solve(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == [
-        log((-3**(S(1)/3) - 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
-        log((-3**(S(1)/3) + 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
+        log((-cbrt(3) - 3**(S(5)/6)*I)*cbrt(LambertW(S(1)/3))/(2*p**(S(5)/3)))/log(p),
+        log((-cbrt(3) + 3**(S(5)/6)*I)*cbrt(LambertW(S(1)/3))/(2*p**(S(5)/3)))/log(p),
         log((3*LambertW(S(1)/3)/p**5)**(1/(3*log(p)))),]  # checked numerically
     # check collection
     assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
@@ -1315,7 +1316,7 @@ def test_lambert_multivariate():
 
     # issue 1172
     assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
-        6*LambertW((-1)**(S(1)/3)*a**(S(1)/3)/3)]
+        6*LambertW(cbrt(-1)*cbrt(a)/3)]
 
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]

@@ -1,6 +1,7 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
                    exp_polar, polar_lift, polygamma, hyper, log, expand_func)
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
@@ -606,7 +607,7 @@ def test_3023():
 
 
 def test_3153():
-    expr = 1/x/(a + b*x)**(S(1)/3)
+    expr = 1/x/cbrt(a + b*x)
     anti = integrate(expr, x, meijerg=True)
     assert not expr.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and

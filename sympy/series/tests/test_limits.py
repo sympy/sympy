@@ -4,6 +4,7 @@ from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
                    tan, cot, integrate, Sum, sign)
 
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.abc import x, y, z
@@ -47,8 +48,8 @@ def test_basic1():
     assert limit(1/sin(x), x, pi, dir="-") == oo
     assert limit(1/cos(x), x, pi/2, dir="+") == -oo
     assert limit(1/cos(x), x, pi/2, dir="-") == oo
-    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="+") == oo
-    assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="-") == -oo
+    assert limit(1/tan(x**3), x, cbrt(2*pi), dir="+") == oo
+    assert limit(1/tan(x**3), x, cbrt(2*pi), dir="-") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 

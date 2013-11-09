@@ -7,6 +7,7 @@ from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc)
 from sympy.core.mul import _keep_coeff as _keep_coeff
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.simplify.cse_opts import sub_pre
 
 from sympy.utilities.pytest import raises
@@ -61,7 +62,7 @@ def test_Factors():
     # coverage
     # /!\ things break if this is not True
     assert Factors({S(-1): S(3)/2}) == Factors({I: S.One, S(-1): S.One})
-    assert Factors({I: S(1), S(-1): S(1)/3}).as_expr() == I*(-1)**(S(1)/3)
+    assert Factors({I: S(1), S(-1): S(1)/3}).as_expr() == I*cbrt(-1)
 
     assert Factors(-1.) == Factors({S(-1): S(1), S(1.): 1})
     assert Factors(-2.) == Factors({S(-1): S(1), S(2.): 1})
@@ -242,7 +243,7 @@ def test_factor_terms():
     assert factor_terms(eq) == eq
     assert factor_terms(eq, radical=True) == sqrt(2)*(1 + sqrt(5))
     eq = root(-6, 3) + root(6, 3)
-    assert factor_terms(eq, radical=True) == 6**(S(1)/3)*(1 + (-1)**(S(1)/3))
+    assert factor_terms(eq, radical=True) == cbrt(6)*(1 + cbrt(-1))
 
     eq = [x + x*y]
     ans = [x*(y + 1)]
