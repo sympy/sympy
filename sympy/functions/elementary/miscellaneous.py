@@ -179,7 +179,7 @@ def root(arg, n):
     sqrt(x)
 
     >>> root(x, 3)
-    x**(1/3)
+    cbrt(x)
 
     >>> root(x, n)
     x**(1/n)
