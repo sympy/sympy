@@ -111,6 +111,58 @@ def sqrt(arg):
     return C.Pow(arg, S.Half)
 
 
+
+def cbrt(arg):
+    """This function computes the principial
+    cube root of `x`, `x^{1/3}`.
+
+    Examples
+    ========
+
+    >>> from sympy import cbrt, Symbol
+    >>> x = Symbol('x')
+
+    >>> cbrt(x)
+    cbrt(x)
+
+    >>> cbrt(x)**3
+    x
+
+    Note that cbrt(x**3) does not simplify to x.
+
+    >>> cbrt(x**3)
+    cbrt(x**3)
+
+    This is because the two are not equal to each other in general.
+    For example, consider `x == -1`:
+
+    >>> cbrt(x**3).subs(x, -1).expand(complex=True)
+    1/2 + sqrt(3)*I/2
+    >>> x.subs(x, -1)
+    -1
+
+    This is because cbrt computes the principal cube root, this
+    identity does hold if `x` is positive:
+
+    >>> y = Symbol('y', positive=True)
+    >>> cbrt(y**3)
+    y
+
+    See Also
+    ========
+
+    sympy.polys.rootoftools.RootOf, root
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Cube_root
+    * http://en.wikipedia.org/wiki/Principal_value
+
+    """
+    return C.Pow(arg, C.Rational(1, 3))
+
+
 def root(arg, n):
     """The n-th root function (a shortcut for ``arg**(1/n)``)
 
