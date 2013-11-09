@@ -44,7 +44,10 @@ class CodePrinter(StrPrinter):
 
         # terms with no summations first
         if None in d:
-            text = CodePrinter.doprint(self, Add(*d[None]))
+            if isinstance(d[None], set):
+                text = CodePrinter.doprint(self, Add(*d[None]))
+            else:
+                text = CodePrinter.doprint(self, d[None])
         else:
             # If all terms have summations we must initialize array to Zero
             text = CodePrinter.doprint(self, 0)

@@ -82,6 +82,7 @@ import os
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
 from sympy.core.compatibility import is_sequence, StringIO, string_types
+from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -153,6 +154,9 @@ class Routine(object):
 
         # symbols that should be arguments
         symbols = expressions.atoms(Symbol) - local_vars
+
+        # Remove _True possibly coming from Piecewise()
+        symbols = symbols - set([ExprCondPair.true_sentinel])
 
         # Decide whether to use output argument or return value
         return_val = []

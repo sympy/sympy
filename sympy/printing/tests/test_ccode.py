@@ -1,5 +1,6 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
-from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+        piecewise_fold)
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -114,12 +115,12 @@ def test_ccode_Piecewise():
     p = ccode(Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-if (x < 1) {
+((x < 1) ? (
    x
-}
-else {
+)
+: (
    pow(x, 2)
-}\
+) )\
 """
     assert p == s
 
@@ -128,12 +129,26 @@ def test_ccode_Piecewise_deep():
     p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-2*((x < 1) ? (
-   x
+((x < 1) ? (
+   2*x
 )
 : (
-   pow(x, 2)
+   2*pow(x, 2)
 ) )\
+"""
+    assert p == s
+
+def test_ccode_Piecewise3():
+    t = symbols("t")
+    e = t*x*y + x**2 + y**2 + Piecewise((0, x < 0.5), (1, x >= 0.5)) + cos(t) - 1
+    p = ccode(e)
+    s = """\
+((x < 0.5) ? (
+   t*x*y + pow(x, 2) + pow(y, 2) + cos(t) - 1
+)
+: (x >= 0.5) ? (
+   t*x*y + pow(x, 2) + pow(y, 2) + cos(t)
+)\
 """
     assert p == s
 
