@@ -13,7 +13,7 @@ from sympy import (
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild)
+    elliptic_e, elliptic_pi, cos, tan, Wild, true, false)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -116,7 +116,8 @@ def test_latex_builtins():
     assert latex(True) == r"\mathrm{True}"
     assert latex(False) == r"\mathrm{False}"
     assert latex(None) == r"\mathrm{None}"
-
+    assert latex(true) == r"\mathrm{True}"
+    assert latex(false) == r'\mathrm{False}'
 
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"

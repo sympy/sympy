@@ -26,7 +26,6 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
-    assert Piecewise((1, Eq(x + 1/x, (x**2 + 1)/x)), (2, True)) == 1
     raises(TypeError, lambda: Piecewise(x))
     raises(TypeError, lambda: Piecewise((x, x**2)))
 

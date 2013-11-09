@@ -776,7 +776,7 @@ def eval_sum_hyper(f, i_a_b):
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
         r, c = res
-        if c is False:
+        if c == False:
             if r.is_number:
                 f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:
