@@ -446,7 +446,7 @@ class Polygon(GeometryEntity):
             ba = b - a
             ca = c - a
             t_area = simplify(ba.x*ca.y - ca.x*ba.y)
-            return bool(t_area <= 0)
+            return bool(t_area.is_negative)
 
         # Determine orientation of points
         args = self.vertices
