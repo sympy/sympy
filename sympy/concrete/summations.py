@@ -252,6 +252,10 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         else:
             return NotImplementedError('Lower and upper bound expected.')
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import sum_simplify
+        return sum_simplify(self)
+
     def _eval_summation(self, f, x):
         return None
 
@@ -772,7 +776,7 @@ def eval_sum_hyper(f, i_a_b):
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
         r, c = res
-        if c is False:
+        if c == False:
             if r.is_number:
                 f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:

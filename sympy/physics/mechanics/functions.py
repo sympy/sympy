@@ -464,8 +464,8 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
 
 def get_motion_params(frame, **kwargs):
     """
-    Calculates the three motion parameters - position, velocity and
-    acceleration as vectorial functions of time in the given frame.
+    Returns the three motion parameters - (acceleration, velocity, and
+    position) as vectorial functions of time in the given frame.
 
     If a higher order differential function is provided, the lower order
     functions are used as boundary conditions. For example, given the
@@ -532,23 +532,12 @@ def get_motion_params(frame, **kwargs):
 
     ##Helper functions
 
-    def _integrate_boundary(expr, var, valueofvar, value):
-        """
-        Returns indefinite integral of expr wrt var, using the boundary
-        condition of expr's value being 'value' at var = valueofvar.
-        """
-        CoI = Symbol('CoI')
-        expr = integrate(expr, var) + CoI
-        n = expr.subs({CoI: solve(expr.subs({var: valueofvar}) -\
-                                  value.subs({var: valueofvar}), CoI)[0]})
-        return n
-
     def _process_vector_differential(vectdiff, condition, \
-                                     variable, valueofvar, frame):
+                                     variable, ordinate, frame):
         """
         Helper function for get_motion methods. Finds derivative of vectdiff wrt
         variable, and its integral using the specified boundary condition at
-        value of variable = valueofvar.
+        value of variable = ordinate.
         Returns a tuple of - (derivative, function and integral) wrt vectdiff
 
         """
@@ -565,11 +554,14 @@ def get_motion_params(frame, **kwargs):
         vectdiff2 = frame.dt(vectdiff)
         #Integrate and use boundary condition
         vectdiff0 = Vector(0)
+        lims = (variable, ordinate, variable)
         for dim in frame:
             function1 = vectdiff1.dot(dim)
-            vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
-                                             dim.dot(condition)) * dim
-        #Return list
+            abscissa = dim.dot(condition).subs({variable:ordinate})
+            # Indefinite integral of 'function1' wrt 'variable', using
+            # the given initial condition (ordinate, abscissa).
+            vectdiff0 += (integrate(function1, lims) + abscissa)*dim
+        #Return tuple
         return (vectdiff2, vectdiff, vectdiff0)
 
     ##Function body

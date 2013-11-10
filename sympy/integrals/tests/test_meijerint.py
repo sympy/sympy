@@ -92,17 +92,18 @@ def test_inflate():
 def test_recursive():
     from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
-    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))
+    r = exp(-(x - a)**2)*exp(-(x - b)**2)
+    e = integrate(r, (x, 0, oo), meijerg=True)
     assert simplify(e.expand()) == (
         sqrt(2)*sqrt(pi)*(
         (erf(sqrt(2)*(a + b)/2) + 1)*exp(-a**2/2 + a*b - b**2/2))/4)
-    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo))
+    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo), meijerg=True)
     assert simplify(e) == (
         sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(2*a + 2*b + c)/4) + 1)*exp(-a**2 - b**2
         + (2*a + 2*b + c)**2/8)/4)
-    assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo))) == \
+    assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
-    assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo))) == \
+    assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 - erf(a + b + c))
 
 
@@ -136,7 +137,7 @@ def test_meijerint():
     sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
     assert simplify(i) == sqrt(pi)*sigma*(erf(mu/(2*sigma)) + 1)
-    assert c is True
+    assert c == True
 
     i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
     # TODO it would be nice to test the condition

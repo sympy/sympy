@@ -20,6 +20,7 @@ from sympy.core.rules import Transform
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
     sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
+from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.integers import ceiling
 
 from sympy.utilities.iterables import flatten, has_variety, sift
@@ -3657,8 +3658,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product
 
-    if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
+    if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
+
+    if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                         for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...

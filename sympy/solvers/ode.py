@@ -245,6 +245,7 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
+from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
@@ -1518,7 +1519,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     ode_or_bool = Eq(lhs, rhs)
                     ode_or_bool = simplify(ode_or_bool)
 
-                    if isinstance(ode_or_bool, bool):
+                    if isinstance(ode_or_bool, (bool, BooleanAtom)):
                         if ode_or_bool:
                             lhs = rhs = S.Zero
                     else:
