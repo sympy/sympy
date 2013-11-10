@@ -1050,12 +1050,12 @@ def _check_antecedents(g1, g2, x):
         # Hence the following seems correct:
         c14 = Or(c14, c14_alt)
 
-    tmp = [lambda_c.is_positive is True,
+    tmp = [lambda_c > 0,
            And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
            And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
     c15 = Or(*tmp)
-    if _eval_cond(lambda_c.is_positive is True) != False:
-        c15 = (lambda_c.is_positive is True)
+    if _eval_cond(lambda_c > 0) != False:
+        c15 = (lambda_c > 0)
 
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
                     (c7, 7), (c8, 8), (c9, 9), (c10, 10), (c11, 11),
