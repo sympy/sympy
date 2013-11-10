@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Unit system for physical quantities.
+Unit system for physical quantities; include definition of constants.
 """
 
 from __future__ import division
@@ -230,6 +230,20 @@ class Unit(AtomicExpr):
     __rtruediv__ = __rdiv__
 
 
+class Constant(Unit):
+    """
+    Physical constant.
+
+    In our framework a constant is considered as a unit, to which humans givesa
+    special sense, because we believe that they give us a special information
+    on nature; but it is just a demonstration of our ignorance.
+    """
+
+    #TODO: to begin nothing more is needed, but we prepare a dedicated class
+    #      for further developments
+    pass
+
+
 class UnitSystem(object):
     """
     UnitSystem represents a coherent set of units.
@@ -243,7 +257,6 @@ class UnitSystem(object):
     def __init__(self, base, units=(), name="", descr=""):
         self.name = name
         self.descr = descr
-
 
         self._base_units = base
         self._units = tuple(list(units) + [u for u in base if u not in units])
