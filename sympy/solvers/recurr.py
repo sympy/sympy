@@ -44,7 +44,7 @@ For the sake of completeness, `f(n)` can be:
 
     [1] a polynomial              -> rsolve_poly
     [2] a rational function       -> rsolve_ratio
-    [3] a hypergeometric function  -> rsolve_hyper
+    [3] a hypergeometric function -> rsolve_hyper
 """
 from __future__ import print_function, division
 
