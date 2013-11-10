@@ -32,3 +32,22 @@ def test_definition():
 
 def test_error_definition():
     raises(ValueError, lambda: UnitSystem((m, s, c)))
+
+
+def test_str_repr():
+    assert str(UnitSystem((m, s), name="MS")) == "MS"
+    assert str(UnitSystem((m, s))) == "(m, s)"
+
+    assert (repr(UnitSystem((m, s))) == "<UnitSystem: (%s, %s)>"
+                                        % (m.abbrev_dim, s.abbrev_dim))
+
+
+def test_get_unit():
+    ms = UnitSystem((m, s), (c,))
+
+    assert ms.get_unit("s") == s
+    assert ms.get_unit(s) == s
+    assert ms.get_unit(Unit(time)) == s
+
+    assert ms["s"] == ms.get_unit("s")
+    raises(KeyError, lambda: ms["g"])

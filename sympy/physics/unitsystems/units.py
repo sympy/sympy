@@ -259,3 +259,74 @@ class UnitSystem(object):
     @property
     def is_consistent(self):
         return self._system.is_consistent
+
+    def __str__(self):
+        """
+        Return the name of the system.
+
+        If it does not exist, then it makes a list of symbols (or names) of
+        the base dimensions.
+        """
+
+        if self.name != "":
+            return self.name
+        else:
+            return "(%s)" % ", ".join(str(d) for d in self._base_units)
+
+    def __repr__(self):
+        return '<UnitSystem: %s>' % repr(self._base_units)
+
+    def __getitem__(self, key):
+        """
+        Shortcut to the get_unit method, using key access.
+        """
+
+        u = self.get_unit(key)
+
+        #TODO: really want to raise an error?
+        if u is None:
+            raise KeyError(key)
+
+        return u
+
+    def get_unit(self, unit):
+        """
+        Find a specific unit which is part of the system.
+
+        unit can be a string or a dimension object. If no unit is found, then
+        return None.
+        """
+
+        #TODO: if the argument is a list, return a list of all matching dims
+
+        found_unit = None
+
+        #TODO: use copy instead of direct assignment for found_dim?
+        if isinstance(unit, str):
+            for u in self._units:
+                #TODO: verify not only abbrev
+                if unit in (u.abbrev,):
+                    found_unit = u
+                    break
+        elif isinstance(unit, Unit):
+            try:
+                i = self._units.index(unit)
+                found_unit = self._units[i]
+            except ValueError:
+                pass
+
+        return found_unit
+
+    def extend(self, base, units=(), name="", description=""):
+        """
+        Extend the current system into a new one.
+
+        Take the base and normal units of the current system to merge
+        them to the base and normal units given in argument.
+        If not provided, name and description are overriden by empty strings.
+        """
+
+        base = self._base_units + tuple(base)
+        units = self._units + tuple(units)
+
+        return UnitSystem(base, units, name, description)

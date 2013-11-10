@@ -322,22 +322,22 @@ class DimensionSystem(object):
 
     def __getitem__(self, key):
         """
-        Shortcut to the get_unit method, using key access.
+        Shortcut to the get_dim method, using key access.
         """
 
-        u = self.get_dim(key)
+        d = self.get_dim(key)
 
         #TODO: really want to raise an error?
-        if u is None:
+        if d is None:
             raise KeyError(key)
 
-        return u
+        return d
 
     def get_dim(self, dim):
         """
         Find a specific dimension which is part of the system.
 
-        unit can be a string or a dimension object. If not dimension is found,
+        dim can be a string or a dimension object. If no dimension is found,
         then return None.
         """
 
