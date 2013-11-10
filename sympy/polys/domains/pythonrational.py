@@ -80,7 +80,10 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
             return hash((self.p, self.q))
 
     def __int__(self):
-        return int(float(self.p)/self.q)
+        p, q = self.p, self.q
+        if p < 0:
+            return -(-p//q)
+        return p//q
 
     def __float__(self):
         return float(self.p)/self.q

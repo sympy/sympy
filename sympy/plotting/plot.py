@@ -438,7 +438,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
                     if any(y is not None for y in yarray):
-                        for i in len(yarray) - 1:
+                        for i in range(len(yarray) - 1):
                             if yarray[i] is not None or yarray[i + 1] is not None:
                                 sample([xarray[i], yarray[i]],
                                     [xarray[i + 1], yarray[i + 1]], depth + 1)
@@ -560,7 +560,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                 y_array = list(map(f_y, param_array))
                 if any(x is not None and y is not None
                         for x, y in zip(x_array, y_array)):
-                    for i in len(y_array) - 1:
+                    for i in range(len(y_array) - 1):
                         if ((x_array[i] is not None and y_array[i] is not None) or
                                 (x_array[i + 1] is not None and y_array[i + 1] is not None)):
                             point_a = [x_array[i], y_array[i]]

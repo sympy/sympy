@@ -8,6 +8,7 @@ from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
+from sympy.logic.boolalg import true
 
 ## sympy.printing imports
 from .printer import Printer
@@ -221,6 +222,9 @@ class LatexPrinter(Printer):
 
     def _print_bool(self, e):
         return r"\mathrm{%s}" % e
+
+    _print_BooleanTrue = _print_bool
+    _print_BooleanFalse = _print_bool
 
     def _print_NoneType(self, e):
         return r"\mathrm{%s}" % e
@@ -1146,7 +1150,7 @@ class LatexPrinter(Printer):
     def _print_Piecewise(self, expr):
         ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
                    for e, c in expr.args[:-1]]
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond == true:
             ecpairs.append(r"%s & \text{otherwise}" %
                            self._print(expr.args[-1].expr))
         else:

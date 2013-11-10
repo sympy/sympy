@@ -2,7 +2,8 @@
 from __future__ import print_function, division
 
 from sympy.core import sympify
-from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent, BooleanFunction
+from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
+    BooleanFunction, true, false, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -110,10 +111,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
-    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool)):
+    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("proposition must be a valid logical expression")
 
-    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool)):
+    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("assumptions must be a valid logical expression")
 
     if isinstance(proposition, AppliedPredicate):
@@ -132,7 +133,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    if assumptions is True:
+    if assumptions == True:
         return
 
     if local_facts in (None, True):
@@ -258,11 +259,14 @@ def compute_known_facts(known_facts, known_facts_keys):
     cnf = to_cnf(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
     mapping = single_fact_lookup(known_facts_keys, cnf)
+    items = sorted(mapping.items(), key=str)
+    keys = [str(i[0]) for i in items]
+    values = ['set(%s)' % sorted(i[1], key=str) for i in items]
     m = LINE.join(['\n'.join(
-        wrap("%s: %s" % item,
+        wrap("%s: %s" % (k, v),
             subsequent_indent=HANG,
             break_long_words=False))
-        for item in mapping.items()]) + ','
+        for k, v in zip(keys, values)]) + ','
     return fact_string % (c, m)
 
 # handlers tells us what ask handler we should use
@@ -335,6 +339,7 @@ known_facts = And(
     Equivalent(Q.nonpositive, ~Q.positive & Q.real),
     Equivalent(Q.nonnegative, ~Q.negative & Q.real),
     Equivalent(Q.zero, Q.real & ~Q.nonzero),
+    Implies(Q.zero, Q.even),
 
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),

@@ -547,6 +547,8 @@ def test_inverse_laplace_transform():
     assert ILT(1/(s*sqrt(s + 1)), s, t) == Heaviside(t)*erf(sqrt(t))
     # TODO can we make erf(t) work?
 
+    assert ILT(1/(s**2*(s**2 + 1)),s,t) == (t - sin(t))*Heaviside(t)
+
 
 def test_fourier_transform():
     from sympy import simplify, expand, expand_complex, factor, expand_trig

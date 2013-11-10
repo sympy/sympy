@@ -10,6 +10,7 @@ from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
+from inspect import getmro
 
 class Basic(with_metaclass(ManagedProperties)):
     """
@@ -583,6 +584,43 @@ class Basic(with_metaclass(ManagedProperties)):
         V = self.variables
         return dict(list(zip(V, [C.Symbol(name % i, **v.assumptions0)
             for i, v in enumerate(V)])))
+
+
+    def rcall(self, *args):
+        """Apply on the argument recursively through the expression tree.
+
+        This method is used to simulate a common abuse of notation for
+        operators. For instance in SymPy the the following will not work:
+
+        ``(x+Lambda(y, 2*y))(z) == x+2*z``,
+
+        however you can use
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x,y,z
+        >>> (x + Lambda(y, 2*y)).rcall(z)
+        x + 2*z
+        """
+        return Basic._recursive_call(self, args)
+
+    @staticmethod
+    def _recursive_call(expr_to_call, on_args):
+        def the_call_method_is_overridden(expr):
+            for cls in getmro(type(expr)):
+                if '__call__' in cls.__dict__:
+                    return cls != Basic
+
+        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
+            if isinstance(expr_to_call, C.Symbol):  # XXX When you call a Symbol it is
+                return expr_to_call               # transformed into an UndefFunction
+            else:
+                return expr_to_call(*on_args)
+        elif expr_to_call.args:
+            args = [Basic._recursive_call(
+                sub, on_args) for sub in expr_to_call.args]
+            return type(expr_to_call)(*args)
+        else:
+            return expr_to_call
 
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
@@ -1785,7 +1823,12 @@ class preorder_traversal(Iterator):
             self._skip_flag = False
             return
         if isinstance(node, Basic):
-            args = node.args
+            if not keys and hasattr(node, '_argset'):
+                # LatticeOp keeps args as a set. We should use this if we
+                # don't care about the order, to prevent unnecessary sorting.
+                args = node._argset
+            else:
+                args = node.args
             if keys:
                 if keys != True:
                     args = ordered(args, keys, default=False)
