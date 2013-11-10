@@ -14,6 +14,28 @@ def solve_general_linear(M, v):
     columns and arbitrary rank :math:`r`. Returned are a matrix
     of shape :math:`(n,1)` containing the solutions and a second
     matrix of shape :math:`(m-r,1)` with all free parameters.
+
+    Example
+    =======
+
+    >>> from sympy import Matrix
+    >>> from sympy.solvers.linear import solve_general_linear
+    >>> M = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+
+    >>> M.det()
+    0
+
+    >>> v = Matrix([3,6,9])
+
+    >>> sol, params = solve_general_linear(M, v)
+    >>> sol
+    Matrix([
+    [   _tau0 - 1],
+    [-2*_tau0 + 2],
+    [       _tau0]])
+
+    >>> params
+    Matrix([[_tau0]])
     """
     R, C = M.shape
     U = M.hstack(M.copy(), v.copy())
