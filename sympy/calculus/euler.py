@@ -4,24 +4,26 @@ from itertools import combinations_with_replacement
 def euler_equations(L, funcs=(), vars=()):
     """Find the Euler-Lagrange equations for a given Lagrangian.
 
-    For the case of two functions (f(x,y), g(x,y)), two independent variables
-    (x,y) the Lagrangian would have the form::
-
-        L(f(x,y),g(x,y),df/dx,df/dy,dg/dx,dg/dy,x,y)
-
     Parameters
     ==========
     L : Expr
         The Lagrangian that should be a function of the functions listed
         in the second argument and their first derivatives.
+
+        For example, in the case of two functions (f(x,y), g(x,y)) and
+        two independent variables (x,y) the Lagrangian would have the form::
+
+            L(f(x,y),g(x,y),df/dx,df/dy,dg/dx,dg/dy,x,y)
+
     funcs : Function or list/tuple of Functions
         The functions that the Lagrangian depends on. The Euler equations
         are differential equations for each of these functions.
+
     vars : Symbol or list/tuple of Symbols
         The Symbols that are the independent variables of the functions.
 
     In many cases it is not necessary to provide anything, except the
-    Lagrangian, it will be autodetected (and an error raised if it
+    Lagrangian, it will be autodetected (and an error raised if this
     couldn't be done).
 
     Returns
