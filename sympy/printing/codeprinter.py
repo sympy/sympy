@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import C, Add, Mul, Pow, S
+from sympy.core.compatibility import default_sort_key
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
@@ -17,6 +18,12 @@ class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
     """
+
+    _operators = {
+        'and': '&&',
+        'or': '||',
+        'not': '!',
+    }
 
     def _doprint_a_piece(self, expr, assign_to=None):
         # Here we print an expression that may contain Indexed objects, they
@@ -143,6 +150,34 @@ class CodePrinter(StrPrinter):
     _print_Catalan = _print_NumberSymbol
     _print_EulerGamma = _print_NumberSymbol
     _print_GoldenRatio = _print_NumberSymbol
+
+    def _print_And(self, expr):
+        PREC = precedence(expr)
+        return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
+
+    def _print_Or(self, expr):
+        PREC = precedence(expr)
+        return (" %s " % self._operators['or']).join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
+
+    def _print_Xor(self, expr):
+        if self._operators.get('xor') is None:
+            return self._print_not_supported(expr)
+        PREC = precedence(expr)
+        return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
+
+    def _print_Equivalent(self, expr):
+        if self._operators.get('equivalent') is None:
+            return self._print_not_supported(expr)
+        PREC = precedence(expr)
+        return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
+
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
     def _print_Mul(self, expr):
 

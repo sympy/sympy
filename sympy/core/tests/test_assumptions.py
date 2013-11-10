@@ -675,6 +675,13 @@ def test_issue_3176():
         assert (b*0).is_zero is None
 
 
+def test_sanitize_assumptions():
+    # issue 3567
+    x = Symbol('x', real=1, positive=0)
+    assert x.is_real is True
+    assert x.is_positive is False
+
+
 def test_special_assumptions():
     x = Symbol('x')
     z2 = z = Symbol('z', zero=True)

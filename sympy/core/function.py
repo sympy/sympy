@@ -513,14 +513,16 @@ class Function(Application, Expr):
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
+                _x = Dummy('x')
+                e = e.subs(x, _x)
                 for i in range(n - 1):
                     i += 1
                     fact *= Rational(i)
-                    e = e.diff(x)
-                    subs = e.subs(x, S.Zero)
+                    e = e.diff(_x)
+                    subs = e.subs(_x, S.Zero)
                     if subs is S.NaN:
                         # try to evaluate a limit if we have to
-                        subs = e.limit(x, S.Zero)
+                        subs = e.limit(_x, S.Zero)
                     if subs.is_bounded is False:
                         raise PoleError("Cannot expand %s around 0" % (self))
                     term = subs*(x**i)/fact
@@ -2242,7 +2244,8 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
-    from sympy.core import Pow
+    from sympy.core.power import Pow
+    from sympy.polys.rootoftools import RootOf
 
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
@@ -2261,6 +2264,11 @@ def nfloat(expr, n=15, exponent=False):
         else:
             pass  # pure_complex(rv) is likely True
         return rv
+
+    # watch out for RootOf instances that don't like to have
+    # their exponents replaced with Dummies and also sometimes have
+    # problems with evaluating at low precision (issue 3294)
+    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]

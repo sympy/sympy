@@ -114,6 +114,8 @@ def roots_cubic(f):
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
+    elif q.is_real and q < 0:
+        u1 = -(-q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
     else:
         u1 = (q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
 

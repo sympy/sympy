@@ -245,6 +245,7 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
+from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
@@ -400,6 +401,20 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             nothing is specified, ``xi`` and ``eta`` are calculated using
             :py:meth:`~sympy.solvers.ode.infinitesimals` with the help of various
             heuristics.
+
+        ``ics`` is the set of boundary conditions for the differential equation.
+          It should be given in the form of ``{f(x0): x1, f(x).diff(x).subs(x, x2):
+          x3}`` and so on. For now initial conditions are implemented only for
+          power series solutions of first-order differential equations which should
+          be given in the form of ``{f(x0): x1}`` (See Issue 1621). If nothing is
+          specified for this case ``f(0)`` is assumed to be ``C0`` and the power
+          series solution is calculated about 0.
+
+        ``x0`` is the point about which the power series solution of a differential
+          equation is to be evaluated.
+
+        ``n`` gives the exponent of the dependent variable up to which the power series
+          solution of a differential equation is to be evaluated.
 
     **Hints**
 
@@ -1504,7 +1519,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     ode_or_bool = Eq(lhs, rhs)
                     ode_or_bool = simplify(ode_or_bool)
 
-                    if isinstance(ode_or_bool, bool):
+                    if isinstance(ode_or_bool, (bool, BooleanAtom)):
                         if ode_or_bool:
                             lhs = rhs = S.Zero
                     else:

@@ -124,7 +124,7 @@ def test_issue_3219():
 
 def test_x_is_base_detection():
     eq = (x**2)**(S(2)/3)
-    assert eq.series() == eq
+    assert eq.series() == x**(S(4)/3)
 
 def test_sin_power():
     e = sin(x)**1.2
