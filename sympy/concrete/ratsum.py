@@ -1,4 +1,4 @@
-"""This module implements tools for summation of rational functions. """
+from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Dummy, S
 from sympy.core.sympify import sympify
@@ -37,8 +37,7 @@ def integer_roots(p):
 def dispersion(p, x):
     r"""Compute the 'dispersion' of a polynomial.
 
-    For a polynomial `f(x)` with `deg f > 0` we define the dispersion
-    as
+    For a polynomial `f(x)` with `deg f > 0` the dispersion is defined as
 
     :math:`dis f(x) := max\{a \in Z^{+} \cup \{0\} | deg(gcd(f(x),f(x+a))) \geq 1\}`
 
@@ -187,7 +186,7 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
         #eqn = Poly(eqn, gens=[x]).as_expr()
 
     #print("Equation:")
-    #pprint(eqn)
+    #print(eqn)
 
     sol = solve(eqn, ci, dict=True)
 
@@ -220,7 +219,7 @@ def step_5(l, x, alpha, g1, g2, ci, sol):
             solution = None
         else:
             #solution = None
-            ##print("Not summable in F or E ?")
+            #print("Not summable in F or E ?")
             raise ValueError("Not summable in F or E   (1)")
 
     #print("Soluion:")
