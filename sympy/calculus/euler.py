@@ -40,6 +40,12 @@ def euler_equations(L, funcs, vars):
         >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
         >>> euler_equations(L, u(t, x), [t, x])
         set([-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0])
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
+
     """
 
     if not isinstance(funcs, (tuple, list)):
