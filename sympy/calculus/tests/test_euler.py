@@ -39,3 +39,24 @@ def test_euler_sineg():
     assert euler_equations(L, psi(t, x), [t, x]) == \
         set([Eq(-sin(psi(t, x)) - Derivative(psi(t, x), t, t) + \
              Derivative(psi(t, x), x, x), 0)])
+
+
+def test_euler_high_order():
+    # an example from hep-th/0309038
+    m = Symbol('m')
+    k = Symbol('k')
+    x = Function('x')
+    y = Function('y')
+    t = Symbol('t')
+    L = m*Derivative(x(t), t)**2/2 + m*Derivative(y(t), t)**2/2 - \
+        k*Derivative(x(t), t)*Derivative(y(t), t, t) + \
+        k*Derivative(y(t), t)*Derivative(x(t), t, t)
+    assert euler_equations(L, [x(t), y(t)]) == \
+        set([Eq(-2*k*Derivative(x(t), t, t, t) - \
+        m*Derivative(y(t), t, t), 0), Eq(2*k*Derivative(y(t), t, t, t) - \
+        m*Derivative(x(t), t, t), 0)])
+
+    w = Symbol('w')
+    L = x(t, w).diff(t, w)**2/2
+    assert euler_equations(L) == \
+        set([Eq(Derivative(x(t, w), t, t, w, w), 0)])
