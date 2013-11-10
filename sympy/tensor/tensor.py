@@ -32,11 +32,14 @@ lowered when the tensor is put in canonical form.
 from __future__ import print_function, division
 
 from collections import defaultdict
-from sympy.core import Basic, sympify, Add, Mul, S
+from sympy.core import Basic, sympify, Add, S
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.compatibility import string_types
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core.containers import Tuple
+from sympy import Matrix, Rational
+from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class TIDS(object):
@@ -339,10 +342,10 @@ class TIDS(object):
             else:
                 new_dummy = (ipos2, ipos1, cpos2, cpos1)
             dum.append(new_dummy)
-        return TIDS(f.components + g.components, free, dum)
+        return (f.components + g.components, free, dum)
 
     def __mul__(self, other):
-        return self.mul(self, other)
+        return TIDS(*self.mul(self, other))
 
     def __str__(self):
         return "TIDS({0}, {1}, {2})".format(self.components, self.free, self.dum)
@@ -453,7 +456,7 @@ class TIDS(object):
         """
         Returns a `TIDS` instance corresponding to the permutation ``g``
 
-        ``g``  permutation corrisponding to the tensor in the representation
+        ``g``  permutation corresponding to the tensor in the representation
         used in canonicalization
 
         ``canon_bp``   if True, then ``g`` is the permutation
@@ -493,6 +496,177 @@ class TIDS(object):
         dum = [tuple(x) for x in dum]
 
         return TIDS(components, free, dum)
+
+
+@doctest_depends_on(modules=('numpy',))
+class VTIDS(TIDS):
+    """
+    This class handles a ``VTIDS`` object, which is a ``TIDS`` object with an
+    attached ``numpy`` ``ndarray``.
+
+    To create a `TIDS` object via the standard constructor, the required
+    arguments are
+
+    ``components``  `TensorHead` objects representing the components
+                    of the tensor expression.
+
+    ``free``        Free indices in their internal representation.
+
+    ``dum``         Dummy indices in their internal representation.
+
+    ``data``        Data as a ``numpy`` ``ndarray``.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, VTIDS, tensorhead
+    >>> import numpy
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+    >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
+    >>> data = numpy.array([2,9,6,-5]).reshape(2, 2)
+    >>> VTIDS([T], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)], data)
+    VTIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)], [[ 2  9]
+     [ 6 -5]])
+
+    """
+
+    def __init__(self, components, free, dum, data):
+        super(VTIDS, self).__init__(components, free, dum)
+        self.data = data
+
+    @staticmethod
+    def _contract_ndarray(free1, free2, ndarray1, ndarray2):
+        numpy = import_module('numpy')
+        self_free = [_[0] for _ in free1]
+        axes1 = []
+        axes2 = []
+        for jpos, jindex in enumerate(free2):
+            if -jindex[0] in self_free:
+                nidx = self_free.index(-jindex[0])
+            else:
+                continue
+            axes1.append(nidx)
+            axes2.append(nidx)
+
+        contracted_ndarray = numpy.tensordot(
+            ndarray1,
+            ndarray2,
+            (axes1, axes2)
+        )
+        return contracted_ndarray
+
+    @staticmethod
+    def mul(f, g):
+        """
+        Multiplies two ``VTIDS`` objects, it first calls its super method
+        on ``TIDS``, then creates a new ``VTIDS`` object, adding ``ndarray``
+        data according to the metric contractions of indices.
+        """
+        components, free, dum = TIDS.mul(f, g)
+        data = VTIDS._contract_ndarray(f.free, g.free, f.data, g.data)
+        return components, free, dum, data
+
+    def __mul__(f, g):
+        return VTIDS(*VTIDS.mul(f, g))
+
+    def correct_signature_from_indices(self, data, indices, free, dum):
+        """
+        Utility function to correct the values inside the data ndarray
+        according to whether indices are covariant or contravariant.
+
+        It uses the metric matrix to lower values of covariant indices.
+        """
+        numpy = import_module('numpy')
+        # change the ndarray values according covariantness/contravariantness of the indices
+        # use the metric
+        for i, indx in enumerate(indices):
+            if not indx.is_up:
+                data = numpy.tensordot(
+                        indx._tensortype.data,
+                        data,
+                        (1, i))
+                data = numpy.rollaxis(data, i)
+
+        if len(dum) > 0:
+            ### perform contractions ###
+            axes1 = []
+            axes2 = []
+            for i, indx1 in enumerate(indices):
+                try:
+                    nd = indices[:i].index(-indx1)
+                except ValueError:
+                    continue
+                axes1.append(nd)
+                axes2.append(i)
+
+            for ax1, ax2 in zip(axes1, axes2):
+                data = numpy.trace(data, axis1=ax1, axis2=ax2)
+        self.data = data
+
+    @staticmethod
+    @doctest_depends_on(modules=('numpy',))
+    def parse_data(data):
+        """
+        Transform data to a numpy ndarray.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import VTIDS
+        >>> VTIDS.parse_data([1, 3, -6, 12])
+        [1 3 -6 12]
+
+        >>> VTIDS.parse_data([[1, 2], [4, 7]])
+        [[1 2]
+         [4 7]]
+        """
+        numpy = import_module('numpy')
+
+        if (numpy is not None) and (not isinstance(data, numpy.ndarray)):
+            if len(data) == 2 and hasattr(data[0], '__call__'):
+
+                def fromfunction_sympify(*x):
+                    return sympify(data[0](*x))
+
+                data = numpy.fromfunction(fromfunction_sympify, data[1])
+            else:
+                vsympify = numpy.vectorize(sympify)
+                data = vsympify(numpy.array(data))
+        return data
+
+    def _sort_data_axes(self, ret):
+        numpy = import_module('numpy')
+
+        new_data = self.data.copy()
+
+        old_free = [i[0] for i in self.free]
+        new_free = [i[0] for i in ret.free]
+
+        for i in range(len(new_free)):
+            for j in range(i, len(old_free)):
+                if old_free[j] == new_free[i]:
+                    old_free[i], old_free[j] = old_free[j], old_free[i]
+                    new_data = numpy.swapaxes(new_data, i, j)
+                    break
+        return new_data
+
+    def sorted_components(self):
+        ret, sign = TIDS.sorted_components(self)
+        new_data = self._sort_data_axes(ret)
+        vtids = VTIDS(ret.components, ret.free, ret.dum, new_data)
+        return vtids, sign
+
+    def perm2tensor(self, g, canon_bp=False):
+        ret = TIDS.perm2tensor(self, g, canon_bp)
+        new_data = self._sort_data_axes(ret)
+        return VTIDS(ret.components, ret.free, ret.dum, new_data)
+
+    def __str__(self):
+        return "VTIDS(%s, %s, %s, %s)" % (self.components, self.free, self.dum, self.data)
+
+    def __repr__(self):
+        return str(self)
 
 
 class _TensorManager(object):
@@ -579,7 +753,7 @@ class _TensorManager(object):
         For the remaining cases, use this method to set the commutation rules;
         by default ``c=None``.
 
-        The group commutation number ``c`` is assigned in corrispondence
+        The group commutation number ``c`` is assigned in correspondence
         to the group commutation symbols; it can be
 
         0        commuting
@@ -659,6 +833,8 @@ class _TensorManager(object):
 
 TensorManager = _TensorManager()
 
+
+@doctest_depends_on(modules=('numpy',))
 class TensorIndexType(Basic):
     """
     A TensorIndexType is characterized by its name and its metric.
@@ -689,6 +865,7 @@ class TensorIndexType(Basic):
     ``dim``
     ``dim_eps``
     ``dummy_fmt``
+    ``data`` : a property to add ``ndarray`` values, to work in a specified basis.
 
     Notes
     =====
@@ -731,6 +908,17 @@ class TensorIndexType(Basic):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> Lorentz.metric
     metric(Lorentz,Lorentz)
+
+    Examples with metric data added, this means it is working on a fixed basis:
+
+    >>> Lorentz.data = [1, -1, -1, -1]
+    >>> Lorentz
+    TensorIndexType(Lorentz, 0)
+    >>> Lorentz.data
+    [[1 0 0 0]
+    [0 -1 0 0]
+    [0 0 -1 0]
+    [0 0 0 -1]]
     """
 
     def __new__(cls, name, metric=False, dim=None, eps_dim=None,
@@ -762,7 +950,43 @@ class TensorIndexType(Basic):
         obj._delta = obj.get_kronecker_delta()
         obj._eps_dim = eps_dim if eps_dim else dim
         obj._epsilon = obj.get_epsilon()
+        obj._data = None
         return obj
+
+    @property
+    def data(self):
+            return self._data
+
+    @data.setter
+    def data(self, data):
+        numpy = import_module('numpy')
+        data = VTIDS.parse_data(data)
+        if data.ndim > 2:
+            raise ValueError("data have to be of rank 1 (diagonal metric) or 2.")
+        if data.ndim == 1:
+            if self.dim is not None:
+                nda_dim = data.shape[0]
+                if nda_dim != self.dim:
+                    raise ValueError("Dimension mismatch")
+
+            dim = data.shape[0]
+            newndarray = numpy.zeros((dim, dim), dtype=object)
+            for i, val in enumerate(data):
+                newndarray[i, i] = val
+            data = newndarray
+        dim1, dim2 = data.shape
+        if dim1 != dim2:
+            raise ValueError("Non-square matrix tensor.")
+        if self.dim is not None:
+            if self.dim != dim1:
+                raise ValueError("Dimension mismatch")
+        self._data = data
+        self.metric.data = data
+
+    @data.deleter
+    def data(self):
+        del self._data
+        del self.metric.data
 
     @property
     def name(self):
@@ -810,6 +1034,8 @@ class TensorIndexType(Basic):
 
     __repr__ = __str__
 
+
+@doctest_depends_on(modules=('numpy',))
 class TensorIndex(Basic):
     """
     Represents an abstract tensor index.
@@ -921,6 +1147,7 @@ def tensor_indices(s, typ):
     return tilist
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensorSymmetry(Basic):
     """
     Monoterm symmetry of a tensor
@@ -1071,6 +1298,7 @@ def tensorsymmetry(*args):
     return TensorSymmetry(Tuple(base, sgs))
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensorType(Basic):
     """
     Class of tensor types.
@@ -1191,6 +1419,7 @@ def tensorhead(name, typ, sym, comm=0):
     return S(name, comm)
 
 
+@doctest_depends_on(modules=('numpy',))
 class TensorHead(Basic):
     """
     Tensor head of the tensor
@@ -1230,6 +1459,64 @@ class TensorHead(Basic):
     >>> sym2 = tensorsymmetry([1]*2)
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> A = S2('A')
+
+    Examples with ndarray values:
+
+    >>> from sympy.tensor.tensor import tensor_indices, tensorhead
+    >>> Lorentz.data = [1, -1, -1, -1]
+    >>> i0, i1 = tensor_indices('i0:2', Lorentz)
+    >>> A.data = [[j+2*i for j in range(4)] for i in range(4)]
+
+    in order to retrieve data, it is also necessary to specify abstract indices
+    enclosed by round brackets, then numerical indices inside square brackets.
+
+    >>> A(i0, i1)[0, 0]
+    0
+    >>> A(i0, i1)[2, 3] == 3+2*2
+    True
+
+    Notice that square brackets create a valued tensor expression instance:
+
+    >>> A(i0, i1)
+    A(i0, i1)
+
+    To view the data, just type:
+
+    >>> A.data
+    [[0 1 2 3]
+     [2 3 4 5]
+     [4 5 6 7]
+     [6 7 8 9]]
+
+    Turning to a tensor expression, covariant indices get the corresponding
+    data corrected by the metric:
+
+    >>> A(i0, -i1).data
+    [[0 -1 -2 -3]
+     [2 -3 -4 -5]
+     [4 -5 -6 -7]
+     [6 -7 -8 -9]]
+
+    >>> A(-i0, -i1).data
+    [[0 -1 -2 -3]
+     [-2 3 4 5]
+     [-4 5 6 7]
+     [-6 7 8 9]]
+
+    while if all indices are contravariant, the ``ndarray`` remains the same
+
+    >>> A(i0, i1).data
+     [[0 1 2 3]
+     [2 3 4 5]
+     [4 5 6 7]
+     [6 7 8 9]]
+
+    When all indices are contracted and data are added to the tensor,
+    it will return a scalar resulting from all contractions:
+
+    >>> A(i0, -i0)
+    -18
+
     """
     is_commutative = False
 
@@ -1249,6 +1536,7 @@ class TensorHead(Basic):
         obj._types = typ.types
         obj._symmetry = typ.symmetry
         obj._comm = comm2i
+        obj._data = None
         return obj
 
     @property
@@ -1288,9 +1576,9 @@ class TensorHead(Basic):
 
     def commutes_with(self, other):
         """
-        Returns 0 (1) if self and other (anti)commute.
+        Returns ``0`` if ``self`` and ``other`` commute, ``1`` if they anticommute.
 
-        Returns None if self and other do not (anti)commute.
+        Returns ``None`` if ``self`` and ``other`` neither commute nor anticommute.
         """
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
@@ -1315,9 +1603,62 @@ class TensorHead(Basic):
             raise ValueError('wrong index type')
         components = [self]
         tids = TIDS.from_components_and_indices(components, indices)
+
+        if self.data is not None:
+            tids = VTIDS(tids.components, tids.free, tids.dum, self.data)
+            tids.correct_signature_from_indices(self.data, indices, tids.free, tids.dum)
+            numpy = import_module('numpy')
+            if not isinstance(tids.data, numpy.ndarray):
+                return tids.data
+
         return TensMul.from_TIDS(S.One, tids)
 
+    def __pow__(self, other):
+        if self.data is None:
+            raise ValueError("No power on abstract tensors.")
+        numpy = import_module('numpy')
+        metrics = [_.data for _ in self.args[1].args[0]]
 
+        marray = self.data
+        for metric in metrics:
+            marray = numpy.tensordot(marray, numpy.tensordot(metric, marray, (1, 0)), (0, 0))
+        pow2 = marray[()]
+        return pow2 ** (Rational(1, 2) * other)
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, data):
+        data = VTIDS.parse_data(data)
+        for dim, indextype in zip(data.shape, self.index_types):
+            if indextype.dim is None:
+                continue
+            if dim != indextype.dim:
+                raise ValueError("wrong dimension of ndarray")
+        self._data = data
+
+    @data.deleter
+    def data(self):
+        del self._data
+
+    def applyfunc(self, func):
+        th = TensorHead(*self.args)
+        th.data = func(self.data)
+        return th
+
+    def __iter__(self):
+        return self.data.flatten().__iter__()
+
+    def strip(self):
+        """
+        Return an identical ``TensorHead``, just with ``ndarray`` data removed.
+        """
+        return TensorHead(*self.args)
+
+
+@doctest_depends_on(modules=('numpy',))
 class TensExpr(Basic):
     """
     Abstract base class for tensor expressions
@@ -1370,10 +1711,27 @@ class TensExpr(Basic):
         raise NotImplementedError
 
     def __rmul__(self, other):
-        return self*other
+        raise NotImplementedError
 
     def __pow__(self, other):
-        raise NotImplementedError
+        if self.data is None:
+            raise ValueError("No power without ndarray data.")
+        numpy = import_module('numpy')
+        free = self.free
+
+        marray = self.data
+        for metric in free:
+            marray = numpy.tensordot(
+                marray,
+                numpy.tensordot(
+                    metric[0]._tensortype.data,
+                    marray,
+                    (1, 0)
+                ),
+                (0, 0)
+            )
+        pow2 = marray[()]
+        return pow2 ** (Rational(1, 2) * other)
 
     def __rpow__(self, other):
         raise NotImplementedError
@@ -1386,6 +1744,61 @@ class TensExpr(Basic):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
+
+    @doctest_depends_on(modules=('numpy',))
+    def get_matrix(self):
+        """
+        Returns ndarray data as a matrix, if data are available and ndarray
+        dimension does not exceed 2.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
+        >>> from sympy import ones
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> sym2 = tensorsymmetry([1]*2)
+        >>> S2 = TensorType([Lorentz]*2, sym2)
+        >>> A = S2('A')
+
+        >>> from sympy.tensor.tensor import tensor_indices, tensorhead
+        >>> Lorentz.data = [1, -1, -1, -1]
+        >>> i0, i1 = tensor_indices('i0:2', Lorentz)
+        >>> A.data = [[j+2*i for j in range(4)] for i in range(4)]
+        >>> A(i0, i1).get_matrix()
+         Matrix([
+        [0, 1, 2, 3],
+        [2, 3, 4, 5],
+        [4, 5, 6, 7],
+        [6, 7, 8, 9]])
+
+        It is possible to perform usual operation on matrices, such as the
+        matrix multiplication:
+
+        >>> A(i0, i1).get_matrix()*ones(4, 1)
+        Matrix([
+        [ 6],
+        [14],
+        [22],
+        [30]])
+        """
+        if 0 < self.rank <= 2:
+            rows = self.data.shape[0]
+            columns = self.data.shape[1] if self.rank == 2 else 1
+            if self.rank == 2:
+                mat_list = [] * rows
+                for i in range(rows):
+                    mat_list.append([])
+                    for j in range(columns):
+                        mat_list[i].append(self[i, j])
+            else:
+                mat_list = [None] * rows
+                for i in range(rows):
+                    mat_list[i] = self[i]
+            return Matrix(mat_list)
+        else:
+            raise NotImplementedError(
+                "missing multidimensional reduction to matrix.")
 
     def _eval_simplify(self, ratio, measure):
         # this is a way to simplify a tensor expression.
@@ -1402,34 +1815,14 @@ class TensExpr(Basic):
 
         return expr
 
+    def strip(self):
+        """
+        Return an identical tensor expression, just with ``ndarray`` data removed.
+        """
+        return self.func(*self.args)
 
 
-def _tensAdd_flatten(args):
-    """
-    flatten TensAdd, coerce terms which are not tensors to tensors
-    """
-    if not all(isinstance(x, TensExpr) for x in args):
-        args1 = []
-        for x in args:
-            if isinstance(x, TensExpr):
-                if isinstance(x, TensAdd):
-                    args1.extend(list(x.args))
-                else:
-                    args1.append(x)
-        args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
-        args2 = [x for x in args if not isinstance(x, TensExpr)]
-        t1 = TensMul.from_data(Add(*args2), [], [], [])
-        args = [t1] + args1
-    a = []
-    for x in args:
-        if isinstance(x, TensAdd):
-            a.extend(list(x.args))
-        else:
-            a.append(x)
-    args = [x for x in a if x._coeff]
-    return args
-
-
+@doctest_depends_on(modules=('numpy',))
 class TensAdd(TensExpr):
     """
     Sum of tensors
@@ -1462,12 +1855,34 @@ class TensAdd(TensExpr):
     p(a) + q(a)
     >>> t(b)
     p(b) + q(b)
+
+    Examples with data added to the tensor expression:
+
+    >>> from sympy import eye
+    >>> Lorentz.data = [1, -1, -1, -1]
+    >>> a, b = tensor_indices('a, b', Lorentz)
+    >>> p.data = [2, 3, -2, 7]
+    >>> q.data = [2, 3, -2, 7]
+    >>> t = p(a) + q(a); t
+    p(a) + q(a)
+
+    >>> t(b)
+    p(b) + q(b)
+
+    The following are: 2**2 - 3**2 - 2**2 - 7**2 ==> -58
+
+    >>> p(a)*p(-a)
+    -58
+
+    >>> p(a)**2
+    -58
     """
 
     def __new__(cls, *args, **kw_args):
         old_args = args[:]
         args = [sympify(x) for x in args if x]
-        args = _tensAdd_flatten(args)
+        args, data = TensAdd._tensAdd_flatten(args)
+
         if not args:
             return S.Zero
 
@@ -1477,6 +1892,7 @@ class TensAdd(TensExpr):
         # if TensAdd has only 1 TensMul element in its `args`:
         if len(args) == 1 and isinstance(args[0], TensMul):
             obj = Basic.__new__(cls, *args, **kw_args)
+            obj._data = data
     #        obj._args = tuple(a)
             return obj
 
@@ -1496,12 +1912,61 @@ class TensAdd(TensExpr):
             return S.Zero
         # it there is only a component tensor return it
         if len(a) == 1:
+            if data is not None:
+                a[0].data = old_args[0].data
             return a[0]
 
         args = Tuple(*args)
         obj = Basic.__new__(cls, *args, **kw_args)
         obj._args = tuple(a)
+        obj._data = data
         return obj
+
+    @staticmethod
+    def _tensAdd_flatten(args):
+        """
+        flatten TensAdd, coerce terms which are not tensors to tensors
+        """
+        data_list = []
+
+        if not all(isinstance(x, TensExpr) for x in args):
+            args1 = []
+            for x in args:
+                if isinstance(x, TensExpr):
+                    if isinstance(x, TensAdd):
+                        args1.extend(list(x.args))
+                    else:
+                        args1.append(x)
+            args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
+            args2 = [x for x in args if not isinstance(x, TensExpr)]
+            t1 = TensMul.from_data(Add(*args2), [], [], [])
+            args = [t1] + args1
+        a = []
+        for x in args:
+            data_list.append(x.data)
+            if isinstance(x, TensAdd):
+                a.extend(list(x.args))
+            else:
+                a.append(x)
+
+        data_p = [_ is None for _ in data_list]
+        data = None
+        if data_p:
+            if any(data_p) != all(data_p):
+                raise ValueError("attempting to mix tensors with data and tensors without data")
+
+            if not any(data_p):
+                data = S.Zero
+                for i in args:
+                    if isinstance(i, TensAdd):
+                        data += i.data
+                    else:
+                        data += i.coeff * i.data
+                if not args[0].rank:  # autodrop point
+                    return data
+
+        args = [x for x in a if x._coeff]
+        return args, data
 
     @staticmethod
     def _tensAdd_check(args):
@@ -1515,7 +1980,6 @@ class TensAdd(TensExpr):
     def _tensAdd_collect_terms(args):
         # collect TensMul terms differing at most by their coefficient
         a = []
-        pprev = None
         prev = args[0]
         prev_coeff = prev._coeff
         changed = False
@@ -1640,16 +2104,48 @@ class TensAdd(TensExpr):
         return TensAdd(other, -self)
 
     def __mul__(self, other):
-        return TensAdd(*(x*other for x in self.args))
+        tadd = TensAdd(*(x*other for x in self.args))
+        if not isinstance(tadd, TensExpr):
+            if (self.data is not None):
+                tadd.data = self.data * other
+            return tadd
+        if self.data is not None:
+            if isinstance(other, TensExpr):
+                if other.data is None:
+                    raise ValueError("Cannot multiply abstract and valued tensors.")
+                data = VTIDS._contract_ndarray(self.args[0].free,
+                                            other.free,
+                                            self.data,
+                                            other.data)
+                if data.ndim == 0:
+                    return data[()]
+            else:
+                data = self.data * other
+        else:
+            data = None
+        tadd.data = data
+        return tadd
+
+    def __rmul__(self, other):
+        tadd = self*other
+        if self.data is not None:
+            tadd.data = other*self.data
+        return tadd
 
     def __div__(self, other):
         other = sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
-        return TensAdd(*(x/other for x in self.args))
+        tadd = TensAdd(*(x/other for x in self.args))
+        if self.data is not None:
+            tadd.data = self.data / other
+        return tadd
 
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
+
+    def __getitem__(self, item):
+        return self.data[item]
 
     __truediv__ = __div__
     __truerdiv__ = __rdiv__
@@ -1790,7 +2286,37 @@ class TensAdd(TensExpr):
         tensmul_list = [TensMul.from_TIDS(c, t) for c, t in zip(coeff, tids_list)]
         return TensAdd(*tensmul_list)
 
+    def applyfunc(self, func):
+        """
+        Return a new ``TensAdd`` object, whose data ndarray will be the elementwise
+        map of the current data ndarray by function ``func``.
+        """
+        new_tadd = TensAdd(*self.args)
+        new_tadd.data = func(self.data)
+        return new_tadd
 
+    @property
+    def data(self):
+        if hasattr(self, "_data"):
+            return self._data
+        return None
+
+    @data.setter
+    def data(self, data):
+        # TODO: check data compatibility with properties of tensor.
+        self._data = data
+
+    @data.deleter
+    def data(self):
+        del self._data
+
+    def __iter__(self):
+        if not self.data:
+            raise ValueError("No iteration on abstract tensors")
+        return self.data.flatten().__iter__()
+
+
+@doctest_depends_on(modules=('numpy',))
 class TensMul(TensExpr):
     """
     Product of tensors
@@ -1851,7 +2377,6 @@ class TensMul(TensExpr):
         t_components = Tuple(*components)
         t_indices = Tuple(*indices)
 
-
         obj = Basic.__new__(cls, coeff, t_components, t_indices)
         obj._types = []
         for t in tids.components:
@@ -1864,12 +2389,18 @@ class TensMul(TensExpr):
         return obj
 
     @staticmethod
-    def from_data(coeff, components, free, dum, **kw_args):
-        return TensMul.from_TIDS(coeff, TIDS(components, free, dum), **kw_args)
+    def from_data(coeff, components, free, dum, data=None, **kw_args):
+        if data is None:
+            tids = TIDS(components, free, dum)
+        else:
+            tids = VTIDS(components, free, dum, data)
+        return TensMul.from_TIDS(coeff, tids, **kw_args)
 
     @staticmethod
     def from_TIDS(coeff, tids, **kw_args):
         # t_indices = tids.to_indices()
+        if isinstance(tids, VTIDS) and len(tids.free) == 0:  # autodrop point
+            return coeff * tids.data[()]
         return TensMul(coeff, tids, **kw_args)
 
     @property
@@ -2071,6 +2602,9 @@ class TensMul(TensExpr):
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
 
+    def __getitem__(self, item):
+        return self.coeff * self.data[item]
+
     __truediv__ = __div__
     __truerdiv__ = __rdiv__
 
@@ -2241,7 +2775,7 @@ class TensMul(TensExpr):
             else:
                 free1.append((j, ipos, cpos))
 
-        return TensMul.from_data(self._coeff, self.components, free1, self.dum)
+        return TensMul.from_data(self._coeff, self.components, free1, self.dum, self.data)
 
     def fun_eval(self, *index_tuples):
         """
@@ -2321,6 +2855,36 @@ class TensMul(TensExpr):
         else:
             return '(%s)*%s' %(self._coeff, res)
 
+    def applyfunc(self, func):
+        """
+        Return a new ``TensAdd`` object, whose data ndarray will be the elementwise
+        map of the current data ndarray by function ``func``.
+        """
+        new_tmul = TensMul(*self.args)
+        tids = new_tmul._tids
+        new_tmul._tids = VTIDS(tids.components, tids.free, tids.dum, func(self.data))
+        return new_tmul
+
+    @property
+    def data(self):
+        if isinstance(self._tids, VTIDS):
+            return self._tids.data
+        return None
+
+    @data.setter
+    def data(self, data):
+        # TODO: check data compatibility with properties of tensor.
+        self._tids = VTIDS(self.components, self.free, self.dum, data)
+
+    @data.deleter
+    def data(self):
+        self._tids = TIDS(self._tids.components, self._tids.free, self._tids.dum)
+
+    def __iter__(self):
+        if self.data is None:
+            raise ValueError("No iteration on abstract tensors")
+        return (self.coeff * self.data.flatten()).__iter__()
+
 
 def canon_bp(p):
     """
@@ -2340,7 +2904,6 @@ def tensor_mul(*a):
     for tx in a[1:]:
         t = t*tx
     return t
-
 
 
 def riemann_cyclic_replace(t_r):

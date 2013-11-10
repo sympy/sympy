@@ -15,6 +15,8 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 
+from sympy.logic.boolalg import BooleanAtom
+
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.polyutils import (
@@ -5417,6 +5419,8 @@ def _symbolic_factor_list(expr, opt, method):
 def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
     if isinstance(expr, Expr) and not expr.is_Relational:
+        if hasattr(expr,'_eval_factor'):
+            return expr._eval_factor()
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
@@ -6031,7 +6035,7 @@ def cancel(f, *gens, **args):
     f = sympify(f)
 
     if not isinstance(f, (tuple, Tuple)):
-        if f.is_Number or isinstance(f, Relational):
+        if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
             return f
         f = factor_terms(f, radical=True)
         p, q = f.as_numer_denom()
@@ -6064,7 +6068,8 @@ def cancel(f, *gens, **args):
             pot = preorder_traversal(f)
             next(pot)
             for e in pot:
-                if isinstance(e, (tuple, Tuple)):
+                # XXX: This should really skip anything that's not Expr.
+                if isinstance(e, (tuple, Tuple, BooleanAtom)):
                     continue
                 try:
                     reps.append((e, cancel(e)))

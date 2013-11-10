@@ -405,6 +405,7 @@ def generate_tokens(readline):
                         token = line[start:pos]
                         yield (STRING, token, spos, (lnum, pos), line)
                     else:
+                        strstart = (lnum, start)           # multiple lines
                         contstr = line[start:]
                         contline = line
                         break
@@ -412,6 +413,7 @@ def generate_tokens(readline):
                     token[:2] in single_quoted or \
                         token[:3] in single_quoted:
                     if token[-1] == '\n':                  # continued string
+                        strstart = (lnum, start)
                         endprog = (endprogs[initial] or endprogs[token[1]] or
                                    endprogs[token[2]])
                         contstr, needcont = line[start:], 1

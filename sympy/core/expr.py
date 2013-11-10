@@ -11,7 +11,6 @@ from .compatibility import reduce, as_int, default_sort_key, xrange
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
-from inspect import getmro
 
 
 class Expr(Basic, EvalfMixin):
@@ -75,42 +74,6 @@ class Expr(Basic, EvalfMixin):
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
-
-    def rcall(self, *args):
-        """Apply on the argument recursively through the expression tree.
-
-        This method is used to simulate a common abuse of notation for
-        operators. For instance in SymPy the the following will not work:
-
-        ``(x+Lambda(y, 2*y))(z) == x+2*z``,
-
-        however you can use
-
-        >>> from sympy import Lambda
-        >>> from sympy.abc import x,y,z
-        >>> (x + Lambda(y, 2*y)).rcall(z)
-        x + 2*z
-        """
-        return Expr._recursive_call(self, args)
-
-    @staticmethod
-    def _recursive_call(expr_to_call, on_args):
-        def the_call_method_is_overridden(expr):
-            for cls in getmro(type(expr)):
-                if '__call__' in cls.__dict__:
-                    return cls != Expr
-
-        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
-            if isinstance(expr_to_call, C.Symbol):  # XXX When you call a Symbol it is
-                return expr_to_call               # transformed into an UndefFunction
-            else:
-                return expr_to_call(*on_args)
-        elif expr_to_call.args:
-            args = [Expr._recursive_call(
-                sub, on_args) for sub in expr_to_call.args]
-            return type(expr_to_call)(*args)
-        else:
-            return expr_to_call
 
     # ***************
     # * Arithmetics *
@@ -542,7 +505,9 @@ class Expr(Basic, EvalfMixin):
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
         for w in wrt:
-            deriv = self.diff(w).simplify()
+            deriv = self.diff(w)
+            if simplify:
+                deriv = deriv.simplify()
             if deriv != 0:
                 if not (deriv.is_Number or pure_complex(deriv)):
                     if flags.get('failing_number', False):
@@ -672,7 +637,7 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
                 if n2._prec == 1:  # no significance
                     raise AttributeError
-            except AttributeError:
+            except (AttributeError, ValueError):
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
@@ -696,7 +661,7 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
                 if n2._prec == 1:  # no significance
                     raise AttributeError
-            except AttributeError:
+            except (AttributeError, ValueError):
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
@@ -729,7 +694,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN):
+            if A.has(S.NaN) or A.has(S.Infinity):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
@@ -738,7 +703,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN):
+            if B.has(S.NaN) or B.has(S.Infinity):
                 B = limit(self, x, b)
 
         return B - A
@@ -2655,16 +2620,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.series.limits import limit
         return limit(self, x, xlim, dir)
 
-    def compute_leading_term(self, x, skip_abs=False, logx=None):
+    def compute_leading_term(self, x, logx=None):
         """
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
-        If skip_abs is true, the absolute term is assumed to be zero.
-        (This is necessary because sometimes it cannot be simplified
-        to zero without a lot of work, but is still known to be zero.
-        See log._eval_nseries for an example.)
-        If skip_log is true, log(x) is treated as an independent symbol.
-        (This is needed for the gruntz algorithm.)
         """
         from sympy.series.gruntz import calculate_series
         from sympy import cancel
@@ -2672,12 +2631,10 @@ class Expr(Basic, EvalfMixin):
             return self
         if logx is None:
             d = C.Dummy('logx')
-            s = calculate_series(self, x, skip_abs, d).subs(d, C.log(x))
+            s = calculate_series(self, x, d).subs(d, C.log(x))
         else:
-            s = calculate_series(self, x, skip_abs, logx)
+            s = calculate_series(self, x, logx)
         s = cancel(s)
-        if skip_abs:
-            s = expand_mul(s).as_independent(x)[1]
         return s.as_leading_term(x)
 
     @cacheit
