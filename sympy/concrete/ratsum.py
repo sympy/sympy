@@ -8,7 +8,7 @@ from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import polygamma
-from sympy.polys.monomialtools import monomials
+from sympy.polys.monomials import itermonomials
 from sympy.polys.polytools import Poly, quo, rem, resultant, cancel
 from sympy.polys.partfrac import apart_list
 from sympy.polys.rootoftools import RootSum
@@ -165,7 +165,7 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
     # Set up a candidate and try to solve for unknown coefficients
     from sympy.integrals.heurisch import _symbols
     ci = _symbols("c", boundn+1)
-    mons = monomials([x], boundn)
+    mons = itermonomials([x], boundn)
 
     #print("********")
     #print(ci)
