@@ -2300,14 +2300,14 @@ def test_pinv_rank_deficient():
     # Exact, non-unique solution.
     B = Matrix([3, 0])
     solution = A.pinv_solve(B)
-    w1 = solution.atoms(Symbol)[0]
+    w1 = solution.atoms(Symbol).pop()
     assert w1.name == 'w1_0'
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B == B
     # Least squares, non-unique solution.
     B = Matrix([3, 1])
     solution = A.pinv_solve(B)
-    w1 = solution.atoms(Symbol)[0]
+    w1 = solution.atoms(Symbol).pop()
     assert w1.name == 'w1_0'
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
