@@ -30,8 +30,8 @@ class Unit(AtomicExpr):
 
     Additionnaly one can add a prefix and an abbreviation. The only utility of
     the former is to provide a shorthand for some units, but it is never used
-    among computations; it appears only when defining and priting units. The
-    same reamrl applies to the abbreviation.
+    among computations; it appears only when defining and printing units. The
+    same remark applies to the abbreviation.
 
     All operations (pow, mul, etc.) are defined as the corresponding ones
     acting on the factor (a number) and the dimension.

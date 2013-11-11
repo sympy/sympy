@@ -12,6 +12,8 @@ time. Moreover instead of mass we use energy.
 from __future__ import division
 
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
+from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
+from sympy.physics.unitsystems.prefixes import PREFIXES
 
 # base dimensions
 action = Dimension(name="action", symbol="A", length=2, mass=1, time=-1)
@@ -29,5 +31,15 @@ power = Dimension(name="power", length=2, mass=1, time=-3)
 frequency = Dimension(name="frequency", symbol="f", time=-1)
 
 dims = (length, mass, time, momentum, force, energy, power, frequency)
+
+# dimension system
 natural_dim = DimensionSystem(base=(action, energy, velocity), dims=dims,
-                              name='Natural system')
+                              name="Natural system")
+
+# base units
+hbar = Constant(action, factor=1.05457266e-34, abbrev="hbar")
+eV = Unit(energy, factor=1.60219e-19, abbrev="eV")
+c = Constant(velocity, factor=299792458, abbrev="c")
+
+# unit system
+natural = UnitSystem(base=(hbar, eV, c), name="Natural system")
