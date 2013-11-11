@@ -3,25 +3,21 @@ from __future__ import print_function, division
 from os.path import join
 import tempfile
 import shutil
-
-try:
-    from subprocess import STDOUT, CalledProcessError
-    from sympy.core.compatibility import check_output
-except ImportError:
-    pass
+from subprocess import STDOUT, CalledProcessError
 
 from sympy.core.compatibility import cStringIO as StringIO
+from sympy.core.compatibility import check_output
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
+from sympy.utilities.decorator import doctest_depends_on
 from .latex import latex
 
-from sympy.utilities.decorator import doctest_depends_on
 
-@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
+@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet', 'matplotlib'),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
-            outputTexFile=None, **latex_settings):
+            outputtexfile=None, **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -45,7 +41,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     >>> preview(x + y, output='png')
 
-    This will choose 'pyglet' by default. To select a different one, do
+    This will choose 'matplotlib' by default. To select a different one, do
 
     >>> preview(x + y, output='png', viewer='gimp')
 
@@ -98,28 +94,42 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
 
     For post-processing the generated TeX File can be written to a file by
-    passing the desired filename to the 'outputTexFile' keyword
+    passing the desired filename to the 'outputtexfile' keyword
     argument. To write the TeX code to a file named
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x + y, outputTexFile="sample.tex")
-
+    >>> preview(x + y, outputtexfile="sample.tex")
 
     """
-    special = [ 'pyglet' ]
 
-    if viewer is None:
+    if viewer == "file" and filename is None:
+        SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
+            "specified filename", deprecated_since_version="0.7.3",
+            useinstead="viewer=\"file\" and filename=\"desiredname\"",
+            issue=3919).warn()
+    if viewer == "StringIO" and outputbuffer is None:
+        raise ValueError("outputbuffer has to be a StringIO "
+                         "compatible object if viewer=\"StringIO\"")
+    use_matplotlib = False
+    if viewer is None or viewer in ('file', 'StringIO', 'matplotlib'):
         if output == "png":
-            viewer = "pyglet"
+            try:
+                import matplotlib.pyplot as plt
+                use_matplotlib = True
+                if viewer is None:
+                    viewer = 'matplotlib'
+            except ImportError:
+                if viewer == 'matplotlib':
+                    raise ImportError("matplotlib is not installed.\n visit http://www.matplotlib.org/")
+                viewer = "pyglet"
         else:
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
-            # TODO add candidates for windows to list
             candidates = {
-                "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
-                "ps": [ "evince", "okular", "gsview", "gv" ],
-                "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
+                "dvi": ["evince", "okular", "kdvi", "xdvi"],
+                "ps": ["evince", "okular", "gsview", "gv"],
+                "pdf": ["evince", "okular", "kpdf", "acroread", "xpdf", "gv"],
             }
 
             try:
@@ -133,109 +143,42 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                         "No viewers found for '%s' output format." % output)
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
-    else:
-        if viewer == "file":
-            if filename is None:
-                SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
-                    "specified filename", deprecated_since_version="0.7.3",
-                    useinstead="viewer=\"file\" and filename=\"desiredname\"",
-                    issue=3919).warn()
-        elif viewer == "StringIO":
-            if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a StringIO "
-                                 "compatible object if viewer=\"StringIO\"")
-        elif viewer not in special and not find_executable(viewer):
-            raise SystemError("Unrecognized viewer: %s" % viewer)
-
-
-    if preamble is None:
-        actual_packages = packages + ("amsmath", "amsfonts")
-        if euler:
-            actual_packages += ("euler",)
-        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
-                                             for p in actual_packages])
-
-        preamble = r"""\documentclass[12pt]{article}
-\pagestyle{empty}
-%s
-
-\begin{document}
-""" % (package_includes)
-    else:
-        if len(packages) > 0:
-            raise ValueError("The \"packages\" keyword must not be set if a "
-                             "custom LaTeX preamble was specified")
-    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
+    elif viewer != 'pyglet' and not find_executable(viewer):
+        raise SystemError("Unrecognized viewer: %s" % viewer)
 
     if isinstance(expr, str):
         latex_string = expr
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
 
+    workdir = tempfile.mkdtemp()
     try:
-        workdir = tempfile.mkdtemp()
-
-        with open(join(workdir, 'texput.tex'), 'w') as fh:
-            fh.write(latex_main % latex_string)
-
-        if outputTexFile is not None:
-            shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
-
-        if not find_executable('latex'):
-            raise RuntimeError("latex program is not installed")
-
-        try:
-            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'], cwd=workdir, stderr=STDOUT)
-        except CalledProcessError as e:
-            raise RuntimeError(
-                "'latex' exited abnormally with the following output:\n%s" %
-                e.output)
-
-        if output != "dvi":
-            defaultoptions = {
-                "ps": [],
-                "pdf": [],
-                "png": ["-T", "tight", "-z", "9", "--truecolor"]
-            }
-
-            commandend = {
-                "ps": ["-o", "texput.ps", "texput.dvi"],
-                "pdf": ["texput.dvi", "texput.pdf"],
-                "png": ["-o", "texput.png", "texput.dvi"]
-            }
-
-            cmd = ["dvi" + output]
-            if not find_executable(cmd[0]):
-                raise RuntimeError("%s is not installed" % cmd[0])
-            try:
-                if dvioptions is not None:
-                    cmd.extend(dvioptions)
-                else:
-                    cmd.extend(defaultoptions[output])
-                cmd.extend(commandend[output])
-            except KeyError:
-                raise SystemError("Invalid output format: %s" % output)
-
-            try:
-                check_output(cmd, cwd=workdir, stderr=STDOUT)
-            except CalledProcessError as e:
-                raise RuntimeError(
-                    "'%s' exited abnormally with the following output:\n%s" %
-                    (' '.join(cmd), e.output))
-
         src = "texput.%s" % (output)
-
+        if use_matplotlib:
+            plt.figure(figsize=(1, 1), frameon=False, dpi=50)
+            plt.axes(frameon=0)
+            plt.text(0.01, 0.8, latex_string, fontsize=50)
+            plt.xticks(())
+            plt.yticks(())
+            if viewer == 'matplotlib':
+                plt.show()
+                return
+            plt.savefig(join(workdir, src), bbox_inches='tight')
+            plt.close()
+        else:
+            _render_with_latex(latex_string, output, workdir, preamble,
+                               packages, euler, outputtexfile, dvioptions)
+        fullpath = join(workdir, src)
         if viewer == "file":
             if filename is None:
                 buffer = StringIO()
-                with open(join(workdir, src), 'rb') as fh:
+                with open(fullpath, 'rb') as fh:
                     buffer.write(fh.read())
                 return buffer
             else:
-                shutil.move(join(workdir,src), filename)
+                shutil.move(fullpath, filename)
         elif viewer == "StringIO":
-            with open(join(workdir, src), 'rb') as fh:
+            with open(fullpath, 'rb') as fh:
                 outputbuffer.write(fh.read())
         elif viewer == "pyglet":
             try:
@@ -251,14 +194,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise SystemError("pyglet preview works only for 'png' files.")
 
             offset = 25
-
             win = window.Window(
                 width=img.width + 2*offset,
                 height=img.height + 2*offset,
                 caption="sympy",
                 resizable=False
             )
-
             win.set_vsync(False)
 
             try:
@@ -300,7 +241,77 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     (viewer, src, e.output))
     finally:
         try:
-            shutil.rmtree(workdir) # delete directory
+            shutil.rmtree(workdir)  # delete directory
         except OSError as e:
-            if e.errno != 2: # code 2 - no such file or directory
+            if e.errno != 2:  # code 2 - no such file or directory
                 raise
+
+
+def _render_with_latex(latex_string, output, workdir, preamble, packages, euler,
+                       outputtexfile, dvioptions):
+    if preamble is None:
+        actual_packages = packages + ("amsmath", "amsfonts")
+        if euler:
+            actual_packages += ("euler",)
+        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
+                                             for p in actual_packages])
+
+        preamble = r"""\documentclass[12pt]{article}
+\pagestyle{empty}
+%s
+
+\begin{document}
+""" % (package_includes)
+    else:
+        if len(packages) > 0:
+            raise ValueError("The \"packages\" keyword must not be set if a "
+                             "custom LaTeX preamble was specified")
+    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
+
+    with open(join(workdir, 'texput.tex'), 'w') as fh:
+        fh.write(latex_main % latex_string)
+
+    if outputtexfile is not None:
+        shutil.copyfile(join(workdir, 'texput.tex'), outputtexfile)
+    if not find_executable('latex'):
+        raise RuntimeError("latex program is not installed")
+
+    try:
+        check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                      'texput.tex'], cwd=workdir, stderr=STDOUT)
+    except CalledProcessError as e:
+        raise RuntimeError(
+            "'latex' exited abnormally with the following output:\n%s" %
+            e.output)
+
+    if output != "dvi":
+        defaultoptions = {
+            "ps": [],
+            "pdf": [],
+            "png": ["-T", "tight", "-z", "9", "--truecolor"]
+        }
+
+        commandend = {
+            "ps": ["-o", "texput.ps", "texput.dvi"],
+            "pdf": ["texput.dvi", "texput.pdf"],
+            "png": ["-o", "texput.png", "texput.dvi"]
+        }
+
+        cmd = ["dvi" + output]
+        if not find_executable(cmd[0]):
+            raise RuntimeError("%s is not installed" % cmd[0])
+        try:
+            if dvioptions is not None:
+                cmd.extend(dvioptions)
+            else:
+                cmd.extend(defaultoptions[output])
+            cmd.extend(commandend[output])
+        except KeyError:
+            raise SystemError("Invalid output format: %s" % output)
+
+        try:
+            check_output(cmd, cwd=workdir, stderr=STDOUT)
+        except CalledProcessError as e:
+            raise RuntimeError(
+                "'%s' exited abnormally with the following output:\n%s" %
+                (' '.join(cmd), e.output))
