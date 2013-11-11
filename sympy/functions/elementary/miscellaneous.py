@@ -66,10 +66,9 @@ def sqrt(arg):
     This is because the two are not equal to each other in general.
     For example, consider x == -1:
 
-    >>> sqrt(x**2).subs(x, -1)
-    1
-    >>> x.subs(x, -1)
-    -1
+    >>> from sympy import Eq
+    >>> Eq(sqrt(x**2), x).subs(x, -1)
+    False
 
     This is because sqrt computes the principal square root, so the square may
     put the argument in a different branch.  This identity does hold if x is
@@ -136,10 +135,9 @@ def cbrt(arg):
     This is because the two are not equal to each other in general.
     For example, consider `x == -1`:
 
-    >>> cbrt(x**3).subs(x, -1).expand(complex=True)
-    1/2 + sqrt(3)*I/2
-    >>> x.subs(x, -1)
-    -1
+    >>> from sympy import Eq
+    >>> Eq(cbrt(x**3), x).subs(x, -1)
+    False
 
     This is because cbrt computes the principal cube root, this
     identity does hold if `x` is positive:
