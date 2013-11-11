@@ -273,3 +273,24 @@ def _mr_safe_helper(_s):
 
     _r = [int(_x) for _x in _s.split('[')[1].split(']')[0].split(',')]
     return _info(_r)
+
+def modular_exponent(x, e, m):
+    """
+    Evaluates the expression (x ** e) % m
+    with the algorithm used here: www.math.umn.edu/~garrett/coding/Overheads/09_fastmod_prim.pdf‎
+    
+    Works for integer x, integer m and non-negative integer e
+    
+    e.g.
+    >>> modular_exponent(5, 65, 11) # (5 ** 65) % 11 = 1
+    1
+    """
+	(X, E, Y) = (x, e, 1)
+	while E > 0:
+		if E & 1:
+			E -= 1
+			Y = (X * Y) % m
+		else:
+			E = E >> 1
+			X = (X * X) % m
+	return Y
