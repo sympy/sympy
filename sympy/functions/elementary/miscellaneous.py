@@ -98,7 +98,7 @@ def sqrt(arg):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf, root
+    sympy.polys.rootoftools.RootOf, root, real_root
 
     References
     ==========
@@ -151,7 +151,7 @@ def cbrt(arg):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf, root
+    sympy.polys.rootoftools.RootOf, root, real_root
 
     References
     ==========
