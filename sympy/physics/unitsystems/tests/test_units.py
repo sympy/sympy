@@ -87,6 +87,7 @@ def test_eq():
     v = Unit(length, factor=1, abbrev="dm")
     assert (u == v) is False
 
+
 def test_add_sub():
     u = Unit(length, factor=10)
     v = Unit(length, factor=5)
@@ -109,6 +110,7 @@ def test_pow():
     assert u**2 == Unit(length**2, factor=100)
     assert u**-1 == Unit(length**-1, factor=0.1)
 
+
 def test_mul():
     u = Unit(length, factor=10)
 
@@ -120,6 +122,7 @@ def test_mul():
 
     # test rmul with something different from Unit
     assert 2*u == u*2
+
 
 def test_div():
     u = Unit(length, factor=10)

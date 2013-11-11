@@ -2731,6 +2731,12 @@ def test_sympy__physics__unitsystems__dimensions__Dimension():
     assert _test_args(Dimension(name="length", symbol="L", length=1))
 
 
+def test_sympy__physics__unitsystems__quantities__Quantity():
+    from sympy.physics.unitsystems.quantities import Quantity
+    from sympy.physics.unitsystems.systems import mks
+    assert _test_args(Quantity(10, mks["m"]))
+
+
 def test_sympy__physics__unitsystems__units__Constant():
     from sympy.physics.unitsystems.units import Constant
     from sympy.physics.unitsystems.dimensions import Dimension

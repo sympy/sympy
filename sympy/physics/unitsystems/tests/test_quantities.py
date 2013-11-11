@@ -3,11 +3,13 @@
 from __future__ import division
 
 from sympy.physics.unitsystems.quantities import Quantity
+from sympy.physics.unitsystems.units import Unit
+from sympy.physics.unitsystems.prefixes import PREFIXES
 from sympy.physics.unitsystems.systems import mks
 from sympy.utilities.pytest import raises
 
 m, s, c = mks["m"], mks["s"], mks["c"]
-
+k = PREFIXES["k"]
 
 def test_definition():
     q = Quantity(10, s)
@@ -28,3 +30,44 @@ def test_str_repr():
 
     assert str(q) == "%g %s" % (10, str(m))
     assert repr(q) == "%g %s" % (10, repr(m))
+
+
+def test_eq():
+    # stupid test
+    assert (Quantity(10, m) == Quantity(10, m)) is True
+    assert (Quantity(10, m) == Quantity(10, s)) is False
+
+
+def test_operations():
+    q = Quantity(10, m)
+    p = Quantity(5, s)
+
+    assert -q == Quantity(-10, m)
+
+    assert q + Quantity(20, m) == Quantity(30, m)
+    assert q + Quantity(20, Unit(m.dim, 10)) == Quantity(30, Unit(m.dim, 11))
+
+    assert q - Quantity(20, m) == Quantity(-10, m)
+    assert q - Quantity(20, Unit(m.dim, 10)) == Quantity(-10, Unit(m.dim, -9))
+
+    assert q**2 == Quantity(10**2, m**2)
+
+    assert q * p == Quantity(5*10, m*s)
+
+    assert q / p == Quantity(10/5, m/s)
+
+
+def test_error_operations():
+    q = Quantity(10, m)
+    p = Quantity(5, s)
+
+    raises(ValueError, lambda: q + p)
+    raises(TypeError, lambda: q + 1)
+
+    raises(ValueError, lambda: q - p)
+    raises(TypeError, lambda: q - 1)
+
+
+def test_convert_to():
+    q = Quantity(5, Unit(m.dim, prefix=k))
+    assert q.convert_to(m) == Quantity(5000, m)
