@@ -258,8 +258,9 @@ class UnitSystem(object):
         self.name = name
         self.descr = descr
 
-        self._base_units = base
-        self._units = tuple(list(units) + [u for u in base if u not in units])
+        self._base_units = self.sort_units(base)
+        self._units = self.sort_units(list(units) + [u for u in base
+                                                     if u not in units])
 
         # construct the associated dimension system
         self._system = DimensionSystem([u.dim for u in base],
@@ -268,10 +269,6 @@ class UnitSystem(object):
         if self.is_consistent is False:
             raise ValueError("The system with basis '%s' is not consistent"
                              % str(self._base_units))
-
-    @property
-    def is_consistent(self):
-        return self._system.is_consistent
 
     def __str__(self):
         """
@@ -343,3 +340,63 @@ class UnitSystem(object):
         units = self._units + tuple(units)
 
         return UnitSystem(base, units, name, description)
+
+    @staticmethod
+    def sort_units(units):
+        """
+        Sort units according to the str of their dimensions.
+
+        This function will ensure that we get always the same tuple for a given
+        set of dimensions.
+        """
+
+        from .dimensions import DimensionSystem
+
+        units = dict((u.dim, u) for u in units)
+        sorted_dims = DimensionSystem.sort_dims(units.keys())
+
+        sorted_units = []
+
+        for dim in sorted_dims:
+            sorted_units.append(units[dim])
+
+        return tuple(sorted_units)
+
+    def print_unit_base(self, unit):
+        """
+        Give the string expression of a unit in term of the basis.
+
+        Units are displayed by decreasing power.
+        """
+
+        res = ""
+
+        factor = unit.factor
+        vec = self._system.dim_vector(unit.dim)
+
+        for (u, p) in sorted(zip(self._base_units, vec),
+                             lambda x, y: x[1] > y[1]):
+
+            factor /= u.factor**p
+            if p == 0:
+                continue
+            elif p == 1:
+                res += "%s " % str(u)
+            else:
+                res += "%s^%d " % (str(u), p)
+
+        return "%g %s" % (factor, res.strip())
+
+    @property
+    def dim(self):
+        """
+        Give the dimension of the system.
+
+        That is return the number of units forming the basis.
+        """
+
+        return self._system.dim
+
+    @property
+    def is_consistent(self):
+        return self._system.is_consistent

@@ -293,8 +293,8 @@ class DimensionSystem(object):
         if (None, None) in [(d.name, d.symbol) for d in base]:
             raise ValueError("Base dimensions must have a symbol or a name")
 
-        self._base_dims = self._sort_dims(base)
-        self._dims = self._sort_dims(list(dims) + [d for d in base
+        self._base_dims = self.sort_dims(base)
+        self._dims = self.sort_dims(list(dims) + [d for d in base
                                                    if d not in dims])
 
         self._can_transf_matrix = None
@@ -375,7 +375,7 @@ class DimensionSystem(object):
         return DimensionSystem(base, dims, name, description)
 
     @staticmethod
-    def _sort_dims(dims):
+    def sort_dims(dims):
         """
         Sort dimensions given in argument using their str function.
 

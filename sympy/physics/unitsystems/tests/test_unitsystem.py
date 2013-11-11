@@ -7,11 +7,13 @@ from sympy.utilities.pytest import raises
 length = Dimension(name="length", symbol="L", length=1)
 mass = Dimension(name="mass", symbol="M", mass=1)
 time = Dimension(name="time", symbol="T", time=1)
+current = Dimension(name="current", symbol="I", current=1)
 velocity = Dimension(name="velocity", symbol="V", length=1, time=-1)
 action = Dimension(name="action", symbol="A", length=2, mass=1, time=-2)
 
 m = Unit(length, abbrev="m")
 s = Unit(time, abbrev="s")
+kg = Unit(mass, factor=10**3, abbrev="kg")
 c = Unit(velocity, abbrev="c")
 
 
@@ -25,9 +27,9 @@ def test_definition():
     assert ms.name == "MS"
     assert ms.descr == "MS system"
 
-    assert ms._system._base_dims == DimensionSystem._sort_dims(base_dim)
-    assert ms._system._dims == DimensionSystem._sort_dims(base_dim +
-                                                          (velocity,))
+    assert ms._system._base_dims == DimensionSystem.sort_dims(base_dim)
+    assert ms._system._dims == DimensionSystem.sort_dims(base_dim +
+                                                         (velocity,))
 
 
 def test_error_definition():
@@ -51,3 +53,15 @@ def test_get_unit():
 
     assert ms["s"] == ms.get_unit("s")
     raises(KeyError, lambda: ms["g"])
+
+
+def test_sort_units():
+    assert UnitSystem.sort_units((m, c, s)) == (m, s, c)
+
+
+def test_print_unit_base():
+    A = Unit(current)
+    Js = Unit(action)
+    mksa = UnitSystem((m, kg, s, A), (Js,))
+
+    assert mksa.print_unit_base(Js) == "0.001 m^2 kg s^-2"

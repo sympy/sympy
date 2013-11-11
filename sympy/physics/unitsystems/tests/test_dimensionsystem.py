@@ -16,8 +16,8 @@ def test_definition():
     base = (length, time)
     ms = DimensionSystem(base, (velocity,), "MS", "MS system")
 
-    assert ms._base_dims == DimensionSystem._sort_dims(base)
-    assert ms._dims == DimensionSystem._sort_dims(base + (velocity,))
+    assert ms._base_dims == DimensionSystem.sort_dims(base)
+    assert ms._dims == DimensionSystem.sort_dims(base + (velocity,))
     assert ms.name == "MS"
     assert ms.descr == "MS system"
 
@@ -72,8 +72,8 @@ def test_extend():
 
 def test_sort_dims():
 
-    assert (DimensionSystem._sort_dims((length, velocity, time))
-                                       == (length, time, velocity))
+    assert (DimensionSystem.sort_dims((length, velocity, time))
+                                      == (length, time, velocity))
 
 
 def test_list_dims():
