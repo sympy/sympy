@@ -65,3 +65,22 @@ def test_print_unit_base():
     mksa = UnitSystem((m, kg, s, A), (Js,))
 
     assert mksa.print_unit_base(Js) == "0.001 m^2 kg s^-2"
+
+
+def test_extend():
+    ms = UnitSystem((m, s), (c,))
+    Js = Unit(action)
+    mks = ms.extend((kg,), (Js,))
+
+    res = UnitSystem((m, s, kg), (c, Js))
+    assert mks._base_units == res._base_units
+    assert mks._units == res._units
+
+
+def test_dim():
+    dimsys = UnitSystem((m, kg, s), (c,))
+    assert dimsys.dim == 3
+
+
+def test_is_consistent():
+    assert UnitSystem((m, s)).is_consistent is True

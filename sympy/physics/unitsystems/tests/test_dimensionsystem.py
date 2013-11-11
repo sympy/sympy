@@ -64,10 +64,9 @@ def test_extend():
 
     mks = ms.extend((mass,), (action,))
 
-    assert mks._base_dims == DimensionSystem((length, time, mass),
-                                        (velocity, action))._base_dims
-    assert mks._dims == DimensionSystem((length, time, mass),
-                                        (velocity, action))._dims
+    res = DimensionSystem((length, time, mass), (velocity, action))
+    assert mks._base_dims == res._base_dims
+    assert mks._dims == res._dims
 
 
 def test_sort_dims():
