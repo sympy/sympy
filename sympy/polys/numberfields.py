@@ -45,6 +45,7 @@ from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
+from sympy.core.compatibility import reduce
 from sympy.core.compatibility import xrange
 
 
