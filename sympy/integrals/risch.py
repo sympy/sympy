@@ -1518,7 +1518,7 @@ def integrate_hypertangent(fa, fd, DE, z=None):
     over k(t) if b = 0
     """
     z = z or Dummy(z)
-    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
     g1, h, r = hermite_reduce(fa, fd, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
