@@ -153,6 +153,7 @@ def checksol(f, symbol, sol=None, **flags):
            make positive all symbols without assumptions regarding sign.
 
     """
+    minimal = flags.get('minimal', False)
 
     if sol is not None:
         sol = {symbol: sol}
@@ -205,13 +206,13 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if val.free_symbols:
-                if not val.is_constant(*list(sol.keys())):
+                if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
                 val = expand_mul(expand_multinomial(val))
         elif attempt == 2:
-            if flags.get('minimal', False):
+            if minimal:
                 return
             if flags.get('simplify', True):
                 for k in sol:
@@ -749,6 +750,18 @@ def solve(f, *symbols, **flags):
         _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
         fi = f[i] = fi.xreplace(dict(list(zip(_abs,
             [sqrt(a.args[0]**2) for a in _abs]))))
+        if fi.has(*_abs):
+            if any(s.assumptions0 for a in
+                    _abs for s in a.free_symbols):
+                raise NotImplementedError(filldedent('''
+                All absolute
+                values were not removed from %s. In order to solve
+                this equation, try replacing your symbols with
+                Dummy symbols (or other symbols without assumptions).
+                ''' % fi))
+            else:
+                raise NotImplementedError(filldedent('''
+                Removal of absolute values from %s failed.''' % fi))
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
         f[i] = fi.xreplace(dict(list(zip(_arg,
             [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))

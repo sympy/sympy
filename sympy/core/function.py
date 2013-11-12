@@ -513,14 +513,16 @@ class Function(Application, Expr):
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
+                _x = Dummy('x')
+                e = e.subs(x, _x)
                 for i in range(n - 1):
                     i += 1
                     fact *= Rational(i)
-                    e = e.diff(x)
-                    subs = e.subs(x, S.Zero)
+                    e = e.diff(_x)
+                    subs = e.subs(_x, S.Zero)
                     if subs is S.NaN:
                         # try to evaluate a limit if we have to
-                        subs = e.limit(x, S.Zero)
+                        subs = e.limit(_x, S.Zero)
                     if subs.is_bounded is False:
                         raise PoleError("Cannot expand %s around 0" % (self))
                     term = subs*(x**i)/fact
@@ -1034,7 +1036,7 @@ class Derivative(Expr):
 
         * Derivative wrt different symbols commute.
         * Derivative wrt different non-symbols commute.
-        * Derivatives wrt symbols and non-symbols dont' commute.
+        * Derivatives wrt symbols and non-symbols don't commute.
 
         Examples
         --------
@@ -1158,7 +1160,36 @@ class Derivative(Expr):
         if old in self.variables and not new.is_Symbol:
             # Issue 1620
             return Subs(self, old, new)
-        return self.func(*list(map(lambda x: x._subs(old, new), self.args)))
+        # If both are Derivatives with the same expr, check if old is
+        # equivalent to self or if old is a subderivative of self.
+        if old.is_Derivative and old.expr == self.args[0]:
+            # Check if canonnical order of variables is equal.
+            old_vars = Derivative._sort_variables(old.variables)
+            self_vars = Derivative._sort_variables(self.args[1:])
+            if old_vars == self_vars:
+                return new
+
+            # Check if olf is a subderivative of self.
+            if len(old_vars) < len(self_vars):
+                self_vars_front = []
+                match = True
+                while old_vars and self_vars and match:
+                    if old_vars[0] == self_vars[0]:
+                        old_vars.pop(0)
+                        self_vars.pop(0)
+                    else:
+                        # If self_v does not match old_v, we need to check if
+                        # the types are the same (symbol vs non-symbol). If
+                        # they are, we can continue checking self_vars for a
+                        # match.
+                        if old_vars[0].is_Symbol != self_vars[0].is_Symbol:
+                            match = False
+                        else:
+                            self_vars_front.append(self_vars.pop(0))
+                if match:
+                    variables = self_vars_front + self_vars
+                    return Derivative(new, *variables)
+        return Derivative(*map(lambda x: x._subs(old, new), self.args))
 
     def _eval_lseries(self, x):
         dx = self.args[1:]
@@ -2213,7 +2244,8 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
-    from sympy.core import Pow
+    from sympy.core.power import Pow
+    from sympy.polys.rootoftools import RootOf
 
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
@@ -2232,6 +2264,11 @@ def nfloat(expr, n=15, exponent=False):
         else:
             pass  # pure_complex(rv) is likely True
         return rv
+
+    # watch out for RootOf instances that don't like to have
+    # their exponents replaced with Dummies and also sometimes have
+    # problems with evaluating at low precision (issue 3294)
+    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]

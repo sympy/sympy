@@ -289,6 +289,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. QuaBoo: Optimizations in ntheory
 #. Stefan van der Walt: Fixes to mechanics module
 #. David Joyner: Cryptography module
+#. Vinit Ravishankar: fix iterables documentation
+#. Mike Boyle: Additions to the printing system
+#. Heiner Kirchhoffer: PythonRational int conversion fix
+#. James Fiedler: Bug fix
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

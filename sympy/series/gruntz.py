@@ -443,7 +443,7 @@ def moveup(l, x):
 
 @debug
 @timeit
-def calculate_series(e, x, skip_abs=False, logx=None):
+def calculate_series(e, x, logx=None):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
@@ -459,7 +459,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
 
         series = series.removeO()
         series = factor_terms(series, fraction=True)
-        if series and ((not skip_abs) or series.has(x)):
+        if series:
             return series
         n *= 2
 
@@ -562,13 +562,14 @@ def rewrite(e, Omega, x, wsym):
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
-    g, _ = Omega[-1]
-        # g is going to be the "w" - the simplest one in the mrv set
-    sig = sign(g.args[0], x)
+    # make sure we know the sign of each exp() term; after the loop,
+    # g is going to be the "w" - the simplest one in the mrv set
+    for g, _ in Omega:
+        sig = sign(g.args[0], x)
+        if sig != 1 and sig != -1:
+            raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w
-    elif sig != -1:
-        raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
     denominators = []

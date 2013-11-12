@@ -26,7 +26,6 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
-    assert Piecewise((1, Eq(x + 1/x, (x**2 + 1)/x)), (2, True)) == 1
     raises(TypeError, lambda: Piecewise(x))
     raises(TypeError, lambda: Piecewise((x, x**2)))
 
@@ -245,6 +244,13 @@ def test_piecewise_integrate_independent_conditions():
     p = Piecewise((0, Eq(y, 0)), (x*y, True))
     assert integrate(p, (x, 1, 3)) == \
         Piecewise((0, Eq(y, 0)), (4*y, True))
+
+
+def test_piecewise_simplify():
+    p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
+                  ((-1)**x*(-1), True))
+    assert p.simplify() == \
+        Piecewise((1 + 1/x**2, Eq(x, 0)), ((-1)**(x + 1), True))
 
 
 def test_piecewise_solve():

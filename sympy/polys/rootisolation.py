@@ -111,7 +111,7 @@ def dup_root_upper_bound(f, K):
     if not P:
         return None
     else:
-        return 2.0**(max(P) + 1)
+        return K.get_field()(2)**(max(P) + 1)
 
 def dup_root_lower_bound(f, K):
     """Compute LMQ lower bound for `f`'s positive roots.
@@ -125,7 +125,7 @@ def dup_root_lower_bound(f, K):
     bound = dup_root_upper_bound(dup_reverse(f), K)
 
     if bound is not None:
-        return 1.0 / bound
+        return 1/bound
     else:
         return None
 

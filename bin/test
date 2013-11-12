@@ -12,6 +12,7 @@ from __future__ import print_function
 import sys
 import os
 from optparse import OptionParser
+import re
 
 from get_sympy import path_hack
 path_hack()
@@ -50,6 +51,8 @@ parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
                   "subprocess.  This may prevent hash randomization from being enabled.")
 parser.add_option("-E", "--enhance-asserts", action="store_true", dest="enhance_asserts",
                   default=False, help="Rewrite assert statements to give more useful error messages.")
+parser.add_option('--split', action="store", type='str', default=None,
+    help="Only run part of the tests. Should be of the form a/b, e.g., 1/2")
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
@@ -57,6 +60,13 @@ tests to run. If no test arguments are given, all tests will be run.\
 """
 
 options, args = parser.parse_args()
+
+# Check this again here to give a better error message
+if options.split:
+    sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+    if not sp.match(options.split):
+        parser.error("option --split: must be of the form a/b where a and b "
+            "are integers, not %r" % options.split)
 
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
@@ -69,7 +79,8 @@ ok = sympy.test(*args, verbose=options.verbose, kw=options.kw,
     tb=options.tb, pdb=options.pdb, colors=options.colors,
     force_colors=options.force_colors, sort=options.sort,
     seed=options.seed, slow=options.slow, timeout=options.timeout,
-    subprocess=options.subprocess, enhance_asserts=options.enhance_asserts)
+    subprocess=options.subprocess, enhance_asserts=options.enhance_asserts,
+    split=options.split)
 
 if ok:
     sys.exit(0)
