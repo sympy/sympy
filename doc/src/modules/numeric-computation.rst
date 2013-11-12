@@ -28,7 +28,7 @@ for a symbolic one and then evaluate the result within SymPy.
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
     >>> expr.subs(x, 3.14).evalf()
-    2.53654331239400e-6
+    0.000507214304613640
 
 This method is slow.  You should use this method production only if performance is not an issue.  You can expect ``.subs`` to take tens of microseconds.  
 It can be useful while prototyping or if you just want to see a value once.
@@ -45,7 +45,7 @@ leveraging a variety of numerical libraries.  It is used as follows:
     >>> expr = sin(x)/x
     >>> f = lambdify(x, expr)
     >>> f(3.14)
-    2.53654331239e-06
+    0.000507214304614
 
 Here lambdify makes a function that computes ``f(x) = sin(x)/x``.  By default
 lambdify relies on implementations in the ``math`` standard library.  This
@@ -66,8 +66,8 @@ powerful vectorized ufuncs that are backed by compiled C code.
     >>> import numpy
     >>> data = numpy.linspace(1, 10, 10000)
     >>> f(data)
-    array([ 0.84147098,  0.84119981,  0.84092844, ..., -0.05426074,
-           -0.05433146, -0.05440211])
+    [ 0.84147098  0.84119981  0.84092844 ..., -0.05426074 -0.05433146
+                               -0.05440211]
 
 If you have array-based data this can confer a considerable speedup, on the
 order of 10 nano-seconds per element.  Unfortunately numpy incurs some start-up
@@ -80,7 +80,7 @@ While NumPy operations are very efficient for vectorized data they sometimes
 incur unnecessary costs when chained together.  Consider the following
 operation
 
-    >>> x = get_numpy_array(...)
+    >>> x = get_numpy_array(...) # doctest: +SKIP
     >>> y = sin(x) / x
 
 The operators ``sin`` and ``/`` call routines that execute tight for loops in
