@@ -24,8 +24,6 @@ from __future__ import print_function, division
 
 from operator import mul
 
-from sympy import im, sqrt, re
-
 from sympy.core import oo
 from sympy.core.compatibility import reduce
 from sympy.core.symbol import Dummy
@@ -703,7 +701,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
-                    "cases are not yet implemented (%s)." % case)
+                    "cases are not yet implemented (%s)." % DE.case)
 
         if parametric:
             raise NotImplementedError("Remaining cases for Poly PRDE not yet "

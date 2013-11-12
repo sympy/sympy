@@ -31,7 +31,7 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered, xrange
@@ -40,9 +40,7 @@ from sympy.integrals.heurisch import _symbols
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
 
-from sympy import collect, factor, sqrt
-
-from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
+from sympy.functions import sinh, cosh, tanh, coth
 from sympy.integrals import Integral, integrate
 
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
@@ -253,7 +251,6 @@ class DifferentialExtension(object):
         symlogs = set()
 
         while True:
-            restart = False
             if self.newf.is_rational_function(*self.T):
                 break
 
@@ -1604,8 +1601,6 @@ def is_deriv(a, d, DE, z=None):
     i = Dv + cDt where v, c are in k; Output -> tuple (q, v, c) if there
     exists a derivative for given function in k(t) else returns None
     """
-
-    from sympy.integrals.prde import limited_integrate
     z = z or Dummy("z")
     case = DE.case
     g1, h, r = hermite_reduce(a, d, DE)

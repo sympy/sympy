@@ -24,6 +24,7 @@ from sympy.integrals.risch import (NonElementaryIntegralException,
 from sympy.integrals.rde import (weak_normalizer,
     bound_degree, spde, normal_denom, special_denom)
 from sympy.integrals.prde import (real_imag, is_log_deriv_k_t_radical_in_field)
+
 def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     """
     Cancellation - primitive case
@@ -51,6 +52,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     b2a, b2d = frac_in(b2, DE.t)
     A1 = is_log_deriv_k_t_radical_in_field(b1a, b1d, DE)
     A2 = is_log_deriv_k_t_radical_in_field(b2a, b2d, DE)
+
     if A1 and A2:
         n1, u1 = A1
         n2, u2 = A2
@@ -68,6 +70,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
                 return (cancel(num1/denom), cancel(num2/denom))
             else:
                 raise NonElementaryIntegralException
+
     if c1 == 0 and c2 == 0:
         return (Poly(0, t), Poly(0, t))
     c1a, c1d = frac_in(c1, DE.t)
@@ -75,12 +78,14 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     if n < max(c1a.degree(t) - c1d.degree(t), c2a.degree(t) - c2d.degree(t)):
         raise NonElementaryIntegralException
     q1, q2 = (Poly(0, t), Poly(0, t))
+
     while c1 or c2:
         c1a, c1d = frac_in(c1, DE.t)
         c2a, c2d = frac_in(c2, DE.t)
         m = max(c1a.degree(t) - c1d.degree(t), c2a.degree(t) - c2d.degree(t))
         if n < m:
             raise NonElementaryIntegralException
+
         c1k = as_poly_1t(c1, t, k).as_poly(t).nth(m)
         c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
         with DecrementLevel(DE):
@@ -119,12 +124,14 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     t = DE.t
     Dt = derivation(t, DE)
     wa, wd = frac_in(DE.d.quo(Poly(t, t)), t)
+
     with DecrementLevel(DE):
         wa, wd = frac_in(DE.d.quo(Poly(t, t)), DE.t)
         b1a, b1d = frac_in(b1, DE.t)
         b2a, b2d = frac_in(b2, DE.t)
         A1 = parametric_log_deriv(b1a, b1d, wa, wd, DE)
         A2 = parametric_log_deriv(b2a, b2d, wa, wd, DE)
+
     if A1 and A2:
         n1, m1, u1 = A1
         n2, m2, u2 = A2
@@ -133,6 +140,7 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         z2a, z2d = frac_in(cancel((u2.as_expr()*c1.as_expr() + u1.as_expr()*c2.as_expr())*t**m), t)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
+
         if P1 and P2:
             p1, i1 = P1
             p2, i2 = P2
@@ -140,17 +148,21 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
             q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 + u2**2))
             q1a, q1d = frac_in(q1, t)
             q2a, q2d = frac_in(q2, t)
+
             if q1d == Poly(1, DE.t) and q2d == Poly(2, t) and Poly(p1).degree(t) <= n and Poly(p2).degree(t) <= n:
                 return (q1, q2)
             else:
                 raise NonElementaryIntegralException
+
     if c1 == 0 and c2 == 0:
         return (Poly(0, t), Poly(0, t))
     c1a, c1d = frac_in(c1, DE.t)
     c2a, c2d = frac_in(c2, DE.t)
+
     if n < max(c1a.degree(t) - c1d.degree(t), c2a.degree(t) - c2d.degree(t)):
         raise NonElementaryIntegralException
     q1, q2 = (Poly(0, t), Poly(0, t))
+
     while c1 or c2:
         c1a, c1d = frac_in(c1, DE.t)
         c2a, c2d = frac_in(c2, DE.t)
@@ -195,6 +207,7 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
             A = coupled_DE_system(b0, b2, c1, c2)
         else:
             raise NonElementaryIntegralException
+
     p = t - sqrt(-1)
     eta = DE.d.exquo(Poly(t**2 + 1, t))
     #u1 + u2*I = c1(I) + c2(I)*I
@@ -222,6 +235,7 @@ def non_cancellation_algo(alpha, beta, hn, hs, b, c, n, DE):
     from sympy.integrals.rde import (no_cancel_b_large,
         no_cancel_b_small, no_cancel_equal)
     k = Dummy('k')
+
     if not b.is_zero and (DE.case == 'base' or \
         b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
         q = no_cancel_b_large(b, c, n, DE)
@@ -286,10 +300,12 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
     _, (fa, fd) = weak_normalizer(fa, fd, DE)
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
+
     try:
        n = bound_degree(A, B, C, DE)
     except NotImplementedError:
        n = oo
+
     try:
        B, C, m, alpha, beta = spde(A, B, C, n, DE)
     except NonElementaryIntegralException:

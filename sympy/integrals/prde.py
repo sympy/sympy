@@ -20,7 +20,7 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
 
-from sympy import im, sqrt, re
+from sympy import sqrt
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
@@ -755,7 +755,6 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     To handle the case where we are given Df, not f, use
     is_log_deriv_k_t_radical_in_field().
     """
-    H = []
     if Df:
         dfa, dfd = (fd*derivation(fa, DE) - fa*derivation(fd, DE)).cancel(fd**2,
             include=True)
