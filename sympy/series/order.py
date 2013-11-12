@@ -54,7 +54,7 @@ class Order(Expr):
     Examples
     ========
 
-    >>> from sympy import O, oo
+    >>> from sympy import O, oo, cos, pi
     >>> from sympy.abc import x, y
 
     >>> O(x + x**2)
@@ -84,6 +84,10 @@ class Order(Expr):
     O(x**2)
     >>> O(x) - O(x)
     O(x)
+    >>> O(cos(x))
+    O(1)
+    >>> O(cos(x), (x, pi/2))
+    O(x - pi/2, (x, pi/2))
 
     References
     ==========
