@@ -110,7 +110,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
-        accordingly to return such relevent attributes.
+        accordingly to return such relevant attributes.
 
         Defining more than _hashable_content is necessary if __eq__ has
         been defined by a class. See note about this in Basic.__eq__."""

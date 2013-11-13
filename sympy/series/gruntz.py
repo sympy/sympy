@@ -448,20 +448,15 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.core.exprtools import factor_terms
+    from sympy.polys import cancel
 
-    n = 1
-    while 1:
-        series = e.nseries(x, n=n, logx=logx)
-        if not series.has(Order):
-            # The series expansion is locally exact.
-            return series
+    for t in e.lseries(x, logx=logx):
+        t = cancel(t)
 
-        series = series.removeO()
-        series = factor_terms(series, fraction=True)
-        if series:
-            return series
-        n *= 2
+        if t:
+            break
+
+    return t
 
 
 @debug
@@ -499,7 +494,6 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True, bounded=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
 

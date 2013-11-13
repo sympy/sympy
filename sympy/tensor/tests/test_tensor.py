@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
+  TensMul, tensorsymmetry, tensorhead,
   TensorManager, TensExpr, TIDS)
 from sympy.utilities.pytest import raises
 from sympy.core.containers import Tuple
@@ -768,7 +768,6 @@ def test_contract_metric1():
 
     t1 = A(a,b)*B(-b,-c)*g(c, d)*g(-a, -d)
     t2 = t1.contract_metric(g)
-    t2 = t2.contract_metric(g)
     assert t2 == A(a,b)*B(-b,-a)
 
     t1 = A(a,b)*g(-a,-b)
@@ -791,7 +790,6 @@ def test_contract_metric2():
     t2 = 3*g(-a,-b)*q(c)*q(-c)
     t = t1*t2
     t = t.contract_metric(g)
-    t = t.contract_metric(g)
     assert t == 3*D*p(a)*p(-a)*q(b)*q(-b)
     t1 = g(a,b)*p(c)*p(-c)
     t2 = 3*q(-a)*q(-b)
@@ -804,9 +802,7 @@ def test_contract_metric2():
     t2 = - 3*g(-a,-b)*q(c)*q(-c)
     t = t1*t2
     t = t.contract_metric(g)
-    t = t.contract_metric(g)
     t = 6*g(a,b)*g(-a,-b)*p(c)*p(-c)*q(d)*q(-d)
-    t = t.contract_metric(g)
     t = t.contract_metric(g)
 
     t1 = 2*g(a,b)*p(c)*p(-c)
@@ -824,24 +820,13 @@ def test_contract_metric2():
 
     t = g(a,b)*g(c,d)*g(-b,-c)
     t1 = t.contract_metric(g)
-    t1 = t1.canon_bp()
-    assert t1 == g(a,c)*g(d,-c)
-
-    t2 = t1.contract_metric(g)
-    assert t2 == g(a, d)
-
-    t1 = t.contract_metric(g, True)
     assert t1 == g(a, d)
 
     t1 = g(a,b)*g(c,d) + g(a,c)*g(b,d) + g(a,d)*g(b,c)
     t2 = t1.substitute_indices((a,-a),(b,-b),(c,-c),(d,-d))
     t = t1*t2
-    t3 = t.contract_metric(g)
-    t3 = t3.contract_metric(g)
-    t3 = t3.contract_metric(g)
-    assert t3.equals(3*D**2 + 6*D)
-    t = t.contract_metric(g, True)
-    assert t3.equals(3*D**2 + 6*D)
+    t = t.contract_metric(g)
+    assert t.equals(3*D**2 + 6*D)
 
     t = 2*p(a)*g(b,-b)
     t1 = t.contract_metric(g)
@@ -855,13 +840,6 @@ def test_contract_metric2():
     t = (p(a)*p(b) + g(a, b)*M**2)*g(-a, -b) - D*M**2
     t1 = t.contract_metric(g)
     assert t1 == p(a)*p(-a)
-
-    v = [p(a), q(b), p(c)]
-    v1 = tensorlist_contract_metric(v, g(-a, -b))
-    assert v1 == [p(-b), q(b), p(c)]
-    v = [p(a), q(b), p(c)]
-    v1 = tensorlist_contract_metric(v, g(d, e))
-    assert v1 == [p(a), q(b), p(c), g(d, e)]
 
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     t = A(a, b)*p(L_0)*g(-a, -b)
@@ -1065,7 +1043,7 @@ def test_fun():
     gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
     # t = g_{a b; c}
     t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
-    t = t.contract_metric(g, True)
+    t = t.contract_metric(g)
     assert t == 0
     t = q(c)*p(a)*q(b)
     assert t(b,c,d) == q(d)*p(b)*q(c)
@@ -1163,6 +1141,79 @@ def test_hash():
     assert tsymmetry.func(*tsymmetry.args) == tsymmetry
     assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
     assert check_all(tsymmetry)
+
+
+def test_hidden_indices_for_matrix_multiplication():
+    L = TensorIndexType('Lorentz')
+    S = TensorIndexType('Matind')
+
+    m0, m1, m2, m3, m4, m5 = tensor_indices('m0:6', L)
+    s0, s1, s2 = tensor_indices('s0:3', S)
+
+    A = tensorhead('A', [L, S, S], [[1], [1], [1]], matrix_behavior=True)
+    B = tensorhead('B', [L, S], [[1], [1]], matrix_behavior=True)
+    D = tensorhead('D', [L, L, S, S], [[1, 1], [1, 1]], matrix_behavior=True)
+    E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]], matrix_behavior=True)
+    F = tensorhead('F', [L], [[1]], matrix_behavior=True)
+
+    assert (A(m0)) == A(m0, S.auto_left, S.auto_right)
+    assert (B(-m1)) == B(-m1, S.auto_left)
+
+    A0 = A(m0)
+    B0 = B(-m0)
+    B1 = B(m1)
+
+    assert (B1*A0*B0) == B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1)
+    assert (B0*A0) == B(-m0, s0)*A(m0, -s0, S.auto_right)
+    assert (A0*B0) == A(m0, S.auto_left, s0)*B(-m0, -s0)
+
+    C = tensorhead('C', [L, L], [[1]*2])
+
+    assert (C(True, True)) == C(L.auto_left, L.auto_right)
+
+    assert (A(m0)*C(m1, -m0)) == A(m2, S.auto_left, S.auto_right)*C(m1, -m2)
+
+    assert (C(True, True)*C(True, True)) == C(L.auto_left, m0)*C(-m0, L.auto_right)
+
+    assert A(m0) == A(m0)
+    assert B(-m1) == B(-m1)
+
+    assert A(m0) - A(m0) == 0
+    ts1 = A(m0)*A(m1) + A(m1)*A(m0)
+    ts2 = A(m1)*A(m0) + A(m0)*A(m1)
+    assert ts1 == ts2
+    assert A(m0)*A(m1) + A(m1)*A(m0) == A(m1)*A(m0) + A(m0)*A(m1)
+
+    assert A(m0) == (2*A(m0))/2
+    assert A(m0) == -(-A(m0))
+    assert 2*A(m0) - 3*A(m0) == -A(m0)
+    assert 2*D(m0, m1) - 5*D(m1, m0) == -3*D(m0, m1)
+
+    D0 = D(True, True, True, True)
+    Aa = A(True, True, True)
+
+    assert D0 * Aa == D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, S.auto_right)
+    assert D(m0, m1) == D(m0, m1, S.auto_left, S.auto_right)
+
+    raises(ValueError, lambda: C(True))
+    raises(ValueError, lambda: C())
+
+    raises(ValueError, lambda: E(True, True, True, True))
+
+    # test that a delta is automatically added on missing auto-matrix indices in TensAdd
+    assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4) == \
+        E(m1, m2, m3, m4)*S.delta(S.auto_left, S.auto_right) +\
+        F(m2)*F(m3)*F(m4)*A(m1, S.auto_left, S.auto_right)
+    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(L.auto_left, L.auto_right)
+    assert E(m1, m2)*A(m3) + F(m1)*F(m2)*F(m3) == \
+        E(m1, m2, L.auto_left, L.auto_right)*A(m3, S.auto_left, S.auto_right) +\
+        F(m1)*F(m2)*F(m3)*L.delta(L.auto_left, L.auto_right)*S.delta(S.auto_left, S.auto_right)
+
+    assert L.delta() == L.delta(L.auto_left, L.auto_right)
+    assert S.delta() == S.delta(S.auto_left, S.auto_right)
+
+    assert L.metric() == L.metric(L.auto_left, L.auto_right)
+    assert S.metric() == S.metric(S.auto_left, S.auto_right)
 
 
 ### TEST VALUED TENSORS ###
