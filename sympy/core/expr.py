@@ -2655,11 +2655,11 @@ class Expr(Basic, EvalfMixin):
         In the following example, the expansion works, but only with logx you
         get a useful result:
 
-        >>> e = x**(1 - log(y)/(log(2) + log(y)))
+        >>> e = x**y
         >>> e.nseries(x, 0, 2)
         O(log(x)**2)
         >>> e.nseries(x, 0, 2, logx=l)
-        exp(l - l*log(y)/(log(y) + log(2)))
+        exp(l*y)
 
         """
         if x and not x in self.free_symbols:
