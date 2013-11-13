@@ -28,7 +28,7 @@ from __future__ import print_function, division
 from sympy import real_roots
 from sympy.abc import z
 from sympy.core.function import Lambda
-from sympy.core.numbers import ilcm
+from sympy.core.numbers import ilcm, oo
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
@@ -754,7 +754,7 @@ def as_poly_1t(p, t, z):
     # (...)*exp(-x).
     pa, pd = frac_in(p, t, cancel=True)
     if not pd.is_monomial:
-        # XXX: Is there a better Poly exception that we could raise here
+        # XXX: Is there a better Poly exception that we could raise here?
         # Either way, if you see this (from the Risch Algorithm) it indicates
         # a bug.
         raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
@@ -767,10 +767,10 @@ def as_poly_1t(p, t, z):
     except DomainError as e:
         # Issue 1851
         raise NotImplementedError(e)
-    # Compute the negative degree parts.  Also requires polys11.
+    # Compute the negative degree parts.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
         domain=one_t_part.domain)
-    if r > 0:
+    if 0 < r < oo:
         one_t_part *= Poly(t**r, t)
 
     one_t_part = one_t_part.replace(t, z)  # z will be 1/t
@@ -1352,6 +1352,9 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     qa = Poly(0, DE.t)
     qd = Poly(1, DE.t)
     b = True
+
+    if p.is_zero:
+        return(qa, qd, b)
 
     with DecrementLevel(DE):
         for i in xrange(-p.degree(z), p.degree(t1) + 1):

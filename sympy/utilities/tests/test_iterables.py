@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
-    factorial)
+    factorial, true)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
@@ -30,7 +30,7 @@ def test_postorder_traversal():
     expr = Piecewise((x, x < 1), (x**2, True))
     expected = [
         x, 1, x, x < 1, ExprCondPair(x, x < 1),
-        ExprCondPair.true_sentinel, 2, x, x**2,
+        2, x, x**2, true,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
     ]
     assert list(postorder_traversal(expr, keys=default_sort_key)) == expected

@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import raises
 from sympy import symbols, Function, Integer, Matrix, Abs, \
-    Rational, Float, S, WildFunction, ImmutableMatrix, sin
+    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -145,3 +145,7 @@ def test_PolyElement():
 def test_FracElement():
     F, x, y = field("x,y", ZZ)
     assert srepr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
+
+def test_BooleanAtom():
+    assert srepr(true) == "S.true"
+    assert srepr(false) == "S.false"

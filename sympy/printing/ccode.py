@@ -79,7 +79,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -167,7 +167,7 @@ class CCodePrinter(CodePrinter):
         ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond == True:
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) ? (\n%s\n" %
