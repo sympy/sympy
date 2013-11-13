@@ -1191,9 +1191,9 @@ class Derivative(Expr):
                     return Derivative(new, *variables)
         return Derivative(*map(lambda x: x._subs(old, new), self.args))
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, logx):
         dx = self.args[1:]
-        for term in self.args[0].lseries(x):
+        for term in self.args[0].lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
