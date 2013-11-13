@@ -4,6 +4,7 @@ from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL, skip
+from sympy.functions import sign as fns_sign
 
 """
 This test suite is testing the limit algorithm using the bottom up approach.
@@ -393,7 +394,7 @@ def test_I():
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo) == fns_sign(-3*I*y + 3*I*y*exp(2))*oo
 
 
 def test_issue1715():
