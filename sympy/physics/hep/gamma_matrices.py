@@ -1,19 +1,18 @@
 from sympy import S
-from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorIndex,\
+from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensorHead, tensorsymmetry, TensorType,\
-    TIDS, TensAdd, tensor_mul, TensExpr, get_lines
+    TensAdd, tensor_mul, get_lines
 from sympy.core.containers import Tuple
-import collections
 
 
-DiracSpinor = TensorIndexType('DiracSpinor', dim=4, dummy_fmt="S")
+DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
 
 
 class _LorentzContainer(object):
     """
-    Helper to collect Lorentz indices in various dimensions.
+    Helper to collect LorentzIndex indices in various dimensions.
 
-    It collects Lorentz TensorIndexType that have been implemented in the code,
+    It collects LorentzIndex TensorIndexType that have been implemented in the code,
     and stores them in a dict()
     """
     lorentz_types = dict()
@@ -22,7 +21,7 @@ class _LorentzContainer(object):
         if (dim, eps_dim) in _LorentzContainer.lorentz_types:
             return _LorentzContainer.lorentz_types[(dim, eps_dim)]
 
-        new_L = TensorIndexType("Lorentz", dim=dim, eps_dim=eps_dim, dummy_fmt=dummy_fmt)
+        new_L = TensorIndexType("LorentzIndex", dim=dim, eps_dim=eps_dim, dummy_fmt=dummy_fmt)
         _LorentzContainer.lorentz_types[(dim, eps_dim)] = new_L
         return new_L
 
@@ -40,7 +39,7 @@ class GammaMatrixHead(TensorHead):
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrixHead
     >>> from sympy.tensor.tensor import tensor_indices
     >>> G = GammaMatrixHead()
-    >>> i = tensor_indices('i', G.Lorentz)
+    >>> i = tensor_indices('i', G.LorentzIndex)
     >>> G(i)
     gamma(i, auto_left, auto_right)
 
@@ -51,14 +50,14 @@ class GammaMatrixHead(TensorHead):
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix
     >>> from sympy.tensor.tensor import tensor_indices
-    >>> i = tensor_indices('i', GammaMatrix.Lorentz)
+    >>> i = tensor_indices('i', GammaMatrix.LorentzIndex)
     >>> GammaMatrix(i)
     gamma(i, auto_left, auto_right)
 
     To access the metric tensor
 
-    >>> GammaMatrix.Lorentz.metric
-    metric(Lorentz,Lorentz)
+    >>> GammaMatrix.LorentzIndex.metric
+    metric(LorentzIndex,LorentzIndex)
 
     """
     _gmhd = dict()
@@ -70,9 +69,9 @@ class GammaMatrixHead(TensorHead):
 
         lorentz = _LorentzContainer(*key)
 
-        gmh = TensorHead.__new__(cls, "gamma", TensorType(Tuple(lorentz, DiracSpinor, DiracSpinor), tensorsymmetry([1], [1], [1])), comm=2, matrix_behavior=True)
+        gmh = TensorHead.__new__(cls, "gamma", TensorType(Tuple(lorentz, DiracSpinorIndex, DiracSpinorIndex), tensorsymmetry([1], [1], [1])), comm=2, matrix_behavior=True)
         GammaMatrixHead._gmhd[key] = gmh
-        gmh.Lorentz = lorentz
+        gmh.LorentzIndex = lorentz
         return gmh
 
     @staticmethod
@@ -115,8 +114,8 @@ class GammaMatrixHead(TensorHead):
 
         >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-        >>> p, q = tensorhead('p, q', [G.Lorentz], [[1]])
-        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', G.Lorentz)
+        >>> p, q = tensorhead('p, q', [G.LorentzIndex], [[1]])
+        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', G.LorentzIndex)
         >>> ps = p(i0)*G(-i0)
         >>> qs = q(i0)*G(-i0)
         >>> G.simplify_gpgp(ps*qs*qs)
@@ -162,22 +161,21 @@ class GammaMatrixHead(TensorHead):
                     elim.add(a[i + 1][1])
                     if not ta:
                         ta = ex.split()
-                        mu = TensorIndex('mu', GammaMatrix.Lorentz)
+                        mu = TensorIndex('mu', GammaMatrix.LorentzIndex)
                     ind1 = ta[ai[0]].args[-1][1]
                     ind2 = ta[ai[0] + 1].args[-1][2]
                     hit = True
                     if i == 0:
                         coeff = ex.coeff
                     tx = components[ai[1]](mu)*components[ai[1]](-mu)
-                    tv.append(tx*DiracSpinor.delta(ind1, ind2))
+                    tv.append(tx*DiracSpinorIndex.delta(ind1, ind2))
                     break
-
 
             if tv:
                 a = [x for j, x in enumerate(ta) if j not in elim]
                 a.extend(tv)
                 t = tensor_mul(*a)*coeff
-                t = t.contract_metric(DiracSpinor.delta)
+                t = t.contract_metric(DiracSpinorIndex.delta)
                 return t
             else:
                 return ex
@@ -191,8 +189,6 @@ class GammaMatrixHead(TensorHead):
             else:
                 return t
 
-
-
     @staticmethod
     def simplify_lines(ex):
         """
@@ -200,18 +196,17 @@ class GammaMatrixHead(TensorHead):
 
         Examples
         ========
-        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix, DiracSpinor
+        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix, DiracSpinorIndex
         >>> from sympy.tensor.tensor import tensor_indices
-        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', GammaMatrix.Lorentz)
-        >>> s0,s1,s2,s3,s4,s5,s6,s7 = tensor_indices('s0:8', DiracSpinor)
+        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', GammaMatrix.LorentzIndex)
+        >>> s0,s1,s2,s3,s4,s5,s6,s7 = tensor_indices('s0:8', DiracSpinorIndex)
         >>> G = GammaMatrix
         >>> t = G(i1,s1,-s2)*G(i4,s7,-s6)*G(i2,s2,-s3)*G(i3,s4,-s5)*G(i5,s6,-s7)
         >>> G.simplify_lines(t)
         4*gamma(i3, s4, -s5)*gamma(i1, s1, -S_0)*gamma(i2, S_0, -s3)*metric(i4, i5)
 
         """
-        tids = ex._tids
-        lines, traces, rest = get_lines(ex, DiracSpinor)
+        lines, traces, rest = get_lines(ex, DiracSpinorIndex)
         a = ex.split()
         trest = tensor_mul(*[x for i, x in enumerate(a) if i in rest])
         tlines = []
@@ -236,8 +231,8 @@ class GammaMatrixHead(TensorHead):
 
         >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-        >>> p, q = tensorhead('p, q', [G.Lorentz], [[1]])
-        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', G.Lorentz)
+        >>> p, q = tensorhead('p, q', [G.LorentzIndex], [[1]])
+        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', G.LorentzIndex)
         >>> ps = p(i0)*G(-i0)
         >>> qs = q(i0)*G(-i0)
         >>> G.gamma_trace(G(i0)*G(i1))
@@ -248,7 +243,7 @@ class GammaMatrixHead(TensorHead):
         0
 
         """
-        #assert any(x == DiracSpinor.auto_right for x, p, c, in t._tids.free)
+        #assert any(x == DiracSpinorIndex.auto_right for x, p, c, in t._tids.free)
         if isinstance(t, TensAdd):
             res = TensAdd(*[self._trace_single_line(x) for x in t.args])
             return res
@@ -264,10 +259,10 @@ class GammaMatrixHead(TensorHead):
         Examples
         ========
 
-        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, DiracSpinor as DS
+        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, DiracSpinorIndex as DS
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-        >>> p = tensorhead('p', [G.Lorentz], [[1]])
-        >>> i0,i1 = tensor_indices('i0:2', G.Lorentz)
+        >>> p = tensorhead('p', [G.LorentzIndex], [[1]])
+        >>> i0,i1 = tensor_indices('i0:2', G.LorentzIndex)
         >>> G._simplify_single_line(G(i0)*G(i1)*p(-i1)*G(-i0)) + 2*G(i0)*p(-i0)
         0
 
@@ -278,8 +273,6 @@ class GammaMatrixHead(TensorHead):
         res = t1*t2
         return res
 
-
-
     def _trace_single_line(self, t):
         """
         Evaluate the trace of a single gamma matrix line inside a ``TensExpr``.
@@ -287,7 +280,7 @@ class GammaMatrixHead(TensorHead):
         Notes
         =====
 
-        If there are ``DiracSpinor.auto_left`` and ``DiracSpinor.auto_right``
+        If there are ``DiracSpinorIndex.auto_left`` and ``DiracSpinorIndex.auto_right``
         indices trace over them; otherwise traces are not implied (explain)
 
 
@@ -296,8 +289,8 @@ class GammaMatrixHead(TensorHead):
 
         >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead
-        >>> p = tensorhead('p', [G.Lorentz], [[1]])
-        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', G.Lorentz)
+        >>> p = tensorhead('p', [G.LorentzIndex], [[1]])
+        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', G.LorentzIndex)
         >>> G._trace_single_line(G(i0)*G(i1))
         4*metric(i0, i1)
         >>> G._trace_single_line(G(i0)*p(-i0)*G(i1)*p(-i1)) - 4*p(i0)*p(-i0)
@@ -305,13 +298,11 @@ class GammaMatrixHead(TensorHead):
 
         """
         def _trace_single_line1(t):
-            Lorentz = self.Lorentz
-            D = Lorentz.dim
             t = t.sorted_components()
             components = t.components
             ncomps = len(components)
-            g = self.Lorentz.metric
-            sg = DiracSpinor.delta
+            g = self.LorentzIndex.metric
+            sg = DiracSpinorIndex.delta
             # gamma matirices are in a[i:j]
             hit = 0
             for i in range(ncomps):
@@ -326,10 +317,10 @@ class GammaMatrixHead(TensorHead):
                 j = ncomps
             numG = j - i
             if numG == 0:
-                spinor_free = [_[0] for _ in t._tids.free if _[0].tensortype is DiracSpinor]
+                spinor_free = [_[0] for _ in t._tids.free if _[0].tensortype is DiracSpinorIndex]
                 tcoeff = t.coeff
-                if spinor_free == [DiracSpinor.auto_left, DiracSpinor.auto_right]:
-                    t = t*DiracSpinor.delta(-DiracSpinor.auto_left, -DiracSpinor.auto_right)
+                if spinor_free == [DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right]:
+                    t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right)
                     t = t.contract_metric(sg)
                     return t/tcoeff if tcoeff else t
                 else:
@@ -337,7 +328,7 @@ class GammaMatrixHead(TensorHead):
             if numG % 2 == 1:
                 return TensMul.from_data(S.Zero, [], [], [])
             elif numG > 4:
-                t = t.substitute_indices((DiracSpinor.auto_right, -DiracSpinor.auto_index), (DiracSpinor.auto_left, DiracSpinor.auto_index))
+                t = t.substitute_indices((DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_index), (DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_index))
                 a = t.split()
                 ind1, lind1, rind1 = a[i].args[-1]
                 ind2, lind2, rind2 = a[i + 1].args[-1]
@@ -366,8 +357,8 @@ class GammaMatrixHead(TensorHead):
             else:
                 a = t.split()
                 if len(t.components) == 1:
-                    if t.components[0] is DiracSpinor.delta:
-                        return 4 # FIXME only for D=4
+                    if t.components[0] is DiracSpinorIndex.delta:
+                        return 4  # FIXME only for D=4
                 t1 = self._gamma_trace1(*a[i:j])
                 a2 = a[:i] + a[j:]
                 t2 = tensor_mul(*a2)
@@ -386,10 +377,9 @@ class GammaMatrixHead(TensorHead):
         else:
             return t
 
-
     def _gamma_trace1(self, *a):
-        gctr = 4 # FIXME specific for d=4
-        g = self.Lorentz.metric
+        gctr = 4  # FIXME specific for d=4
+        g = self.LorentzIndex.metric
         if not a:
             return gctr
         n = len(a)
@@ -450,9 +440,9 @@ class GammaMatrixHead(TensorHead):
         When using, always remember that the original expression coefficient
         has to be handled separately
 
-        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, DiracSpinor as DS
+        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, DiracSpinorIndex as DS
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead, TensMul, TensAdd
-        >>> i0, i1, i2 = tensor_indices('i0:3', G.Lorentz)
+        >>> i0, i1, i2 = tensor_indices('i0:3', G.LorentzIndex)
         >>> s0,s1,s2,s3,s4,s5 = tensor_indices('s0:6', DS)
         >>> ta = G(i0)*G(-i0)
         >>> G._kahane_simplify(ta.coeff, ta._tids) - 4*DS.delta(DS.auto_left, DS.auto_right)
@@ -500,7 +490,7 @@ class GammaMatrixHead(TensorHead):
 
         dum = sorted([_ for _ in tids.dum if _[0] == 0 and _[1] == 0])
 
-        if len(dum) == 0: # or GammaMatrixHead:
+        if len(dum) == 0:  # or GammaMatrixHead:
             # no contractions in `expression`, just return it.
             return TensMul.from_TIDS(coeff, tids)
 
@@ -538,7 +528,6 @@ class GammaMatrixHead(TensorHead):
 
         # `cum_sign` is a step variable to mark the sign of every index, see paper.
         cum_sign = -1
-        last_cum_sign = 1
         # `cum_sign_list` keeps storage for all `cum_sign` (every index).
         cum_sign_list = [None]*total_number
         block_free_count = 0
@@ -596,7 +585,6 @@ class GammaMatrixHead(TensorHead):
                             if index_is_free[i - cum_sign]:
                                 links[i - cum_sign].append(i)
                 block_free_count = 0
-                last_cum_sign = cum_sign
 
             cum_sign_list[i] = cum_sign
 
@@ -767,19 +755,19 @@ class GammaMatrixHead(TensorHead):
             spinor_free1 = [_ for _ in t1._tids.free if _[1] != 0]
             if spinor_free1:
                 if spinor_free:
-                    t = t.substitute_indices((DiracSpinor.auto_left, spinor_free[0][0]), (DiracSpinor.auto_right, spinor_free[-1][0]))
+                    t = t.substitute_indices((DiracSpinorIndex.auto_left, spinor_free[0][0]), (DiracSpinorIndex.auto_right, spinor_free[-1][0]))
                 else:
                     # FIXME trace
-                    t = t*DiracSpinor.delta(-DiracSpinor.auto_right, -DiracSpinor.auto_left)
+                    t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_left)
                     t = GammaMatrix.simplify_lines(t)
             else:
                 if spinor_free:
-                    t = t*DiracSpinor.delta(spinor_free[0][0], spinor_free[-1][0])
+                    t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
                 else:
                     t = t*4
         else:
             if spinor_free:
-                t = t*DiracSpinor.delta(spinor_free[0][0], spinor_free[-1][0])
+                t = t*DiracSpinorIndex.delta(spinor_free[0][0], spinor_free[-1][0])
             else:
                 t = t*4
         return t
