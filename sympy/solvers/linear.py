@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Dummy
+from sympy.utilities.iterables import numbered_symbols
 from sympy.matrices import Matrix, zeros
 
 
@@ -39,7 +40,8 @@ def solve_general_linear(M, v):
 
     # Free parameters
     # The double List and T operation are a hack to get the shapes correct
-    tau = Matrix([[ Dummy("t_" + str(k)) for k in xrange(C - rank) ]]).T
+    tau = numbered_symbols("tau", Dummy)
+    tau = Matrix([[ tau.next() for k in xrange(C - rank) ]]).T
 
     # Full parametric solution
     V = U[:rank,rank:]
