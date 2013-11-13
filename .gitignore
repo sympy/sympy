@@ -61,3 +61,14 @@ doc/src/modules/physics/mechanics/*.pdf
 
 # Backup files
 *~
+/.project
+/.pydevproject
+/dgamma_test.py
+/kennedy_cvitanovic_algorithm.py
+/matches.py
+/old_ld.old_py
+/test_gamma_matrix.py
+/test_pernici_dgamma.py
+/test_tensor.py
+/TIDSExpr.py.dump
+/.gitignore
