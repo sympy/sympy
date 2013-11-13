@@ -796,7 +796,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     reduced_eq = None
     if eq.is_Add:
         deriv_coef = eq.coeff(f(x).diff(x, order))
-        if deriv_coef != 1:
+        if deriv_coef not in (1, 0):
             r = deriv_coef.match(a*f(x)**c1)
             if r and r[c1]:
                 den = f(x)**r[c1]
