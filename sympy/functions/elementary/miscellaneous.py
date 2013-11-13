@@ -122,7 +122,7 @@ def cbrt(arg):
     >>> x = Symbol('x')
 
     >>> cbrt(x)
-    cbrt(x)
+    x**(1/3)
 
     >>> cbrt(x)**3
     x
@@ -130,7 +130,7 @@ def cbrt(arg):
     Note that cbrt(x**3) does not simplify to x.
 
     >>> cbrt(x**3)
-    cbrt(x**3)
+    (x**3)**(1/3)
 
     This is because the two are not equal to each other in general.
     For example, consider `x == -1`:
@@ -208,7 +208,7 @@ def root(arg, n):
     come back as -2:
 
     >>> root(-8, 3)
-    2*cbrt(-1)
+    2*(-1)**(1/3)
 
     The real_root function can be used to either make such a result
     real or simply return the real root in the first place:
@@ -253,7 +253,7 @@ def real_root(arg, n=None):
     >>> real_root(-8, 3)
     -2
     >>> root(-8, 3)
-    2*cbrt(-1)
+    2*(-1)**(1/3)
     >>> real_root(_)
     -2
 
