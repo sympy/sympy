@@ -60,6 +60,7 @@ before_install:
       pip install "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
+      pip install "numpy==1.7.1";
       pip install --no-deps https://github.com/Theano/Theano/archive/master.zip;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
