@@ -47,7 +47,12 @@ def textplot(expr, a, b, W=55, H=18):
         s = [' '] * W
         for x in range(W):
             if y[x] == h:
-                s[x] = '.'
+                if (x == 0 or y[x - 1] == h - 1) and (x == W - 1 or y[x + 1] == h + 1):
+                    s[x] = '/'
+                elif (x == 0 or y[x - 1] == h + 1) and (x == W - 1 or y[x + 1] == h - 1):
+                    s[x] = '\\'
+                else:
+                    s[x] = '.'
 
         # Print y values
         if h == H - 1:
