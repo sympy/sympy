@@ -986,14 +986,14 @@ class Integral(AddWithLimits):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, logx):
         self = self.as_dummy()
         symb = x
         for l in self.limits:
             if x in l[1:]:
                 symb = l[0]
                 break
-        for term in self.function.lseries(symb):
+        for term in self.function.lseries(symb, logx):
             yield integrate(term, *self.limits)
 
     def _eval_nseries(self, x, n, logx):
