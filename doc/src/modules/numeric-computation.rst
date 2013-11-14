@@ -18,18 +18,19 @@ Subs/evalf
 ----------
 
 Subs is the slowest but simplest option.  It runs at SymPy speeds.
-The ``.subs(...).evalf()`` method can substitute a numeric value 
+The ``.subs(...).evalf()`` method can substitute a numeric value
 for a symbolic one and then evaluate the result within SymPy.
 
-    
+
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
     >>> expr.subs(x, 3.14).evalf()
     0.000507214304613640
 
-This method is slow.  You should use this method production only if performance is not an issue.  You can expect ``.subs`` to take tens of microseconds.  
-It can be useful while prototyping or if you just want to see a value once.
+This method is slow.  You should use this method production only if performance
+is not an issue.  You can expect ``.subs`` to take tens of microseconds.  It
+can be useful while prototyping or if you just want to see a value once.
 
 
 Lambdify
@@ -54,13 +55,13 @@ difference between SymPy and raw Python.
 Lambdify can leverage a variety of numerical backends.  By default it uses the
 ``math`` library.  However it also supports ``mpmath`` and most notably,
 ``numpy``.  Using the ``numpy`` library gives the generated function access to
-powerful vectorized ufuncs that are backed by compiled C code. 
+powerful vectorized ufuncs that are backed by compiled C code.
 
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
     >>> f = lambdify(x, expr, "numpy")
-    
+
     >>> import numpy
     >>> data = numpy.linspace(1, 10, 10000)
     >>> f(data)
@@ -94,8 +95,8 @@ The operators ``sin`` and ``/`` call routines that execute tight for loops in
     {
         y[i] = temp[i] / x[i];
     }
-        
-This is slightly sub-optimal because 
+
+This is slightly sub-optimal because
 
 1.  We allocate an extra ``temp`` array
 2.  We walk over ``x`` memory twice when once would have been sufficient
@@ -123,12 +124,19 @@ should call the ``ufuncify`` function
     >>> from sympy.utilities.autowrap import ufuncify
     >>> f = ufuncify([x], expr)
 
-This function ``f`` consumes and returns a NumPy array.  Generally ``ufuncify`` performs at least as well as ``lambdify``.  If the expression is complicated then ``ufuncify`` often significantly outperforms the NumPy backed solution.  Jensen has a good blogpost on this topic  http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
+This function ``f`` consumes and returns a NumPy array.  Generally ``ufuncify``
+performs at least as well as ``lambdify``.  If the expression is complicated
+then ``ufuncify`` often significantly outperforms the NumPy backed solution.
+Jensen has a good blogpost on this topic
+http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
 
 Theano
 ------
 
-SymPy has a strong connection with [Theano](http://deeplearning.net/software/theano/), a mathematical array compiler.  SymPy expressions can be easily translated to Theano graphs and then compiled using the Theano compiler chain.
+SymPy has a strong connection with
+[Theano](http://deeplearning.net/software/theano/), a mathematical array
+compiler.  SymPy expressions can be easily translated to Theano graphs and then
+compiled using the Theano compiler chain.
 
     >>> from sympy import *
     >>> from sympy.abc import x
@@ -169,4 +177,3 @@ that will often be the best choice.  If you don't have Theano but do have
 +-----------------+-------+-----------------------------+---------------+
 | Theano          | 10ns  | Many outputs, CSE, GPUs     | Theano        |
 +-----------------+-------+-----------------------------+---------------+
-
