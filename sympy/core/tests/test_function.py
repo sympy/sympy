@@ -2,6 +2,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat)
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
@@ -561,8 +562,8 @@ def test_nfloat():
     from sympy.polys.rootoftools import RootOf
 
     x = Symbol("x")
-    eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
-    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
+    eq = x**(S(4)/3) + 4*cbrt(x)/3
+    assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*cbrt(x))
     assert _aresame(nfloat(eq, exponent=True), x**(4.0/3) + (4.0/3)*x**(1.0/3))
     eq = x**(S(4)/3) + 4*x**(x/3)/3
     assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))

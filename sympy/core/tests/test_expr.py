@@ -8,6 +8,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
     exp_polar, Lambda, expand, diff, O)
 from sympy.core.function import AppliedUndef
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 from sympy.core.compatibility import xrange
@@ -419,7 +420,7 @@ def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True
     assert sqrt(3).is_algebraic_expr() is True
 
-    eq = ((1 + x**2)/(1 - y**2))**(S(1)/3)
+    eq = cbrt((1 + x**2)/(1 - y**2))
     assert eq.is_algebraic_expr(x) is True
     assert eq.is_algebraic_expr(y) is True
 
@@ -1487,21 +1488,21 @@ def test_equals():
     # eq = q*x + q/4 + x**4 + x**3 + 2*x**2 - S(1)/3
     # z = eq.subs(x, solve(eq, x)[0])
     q = symbols('q')
-    z = (q*(-sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
-    S(13)/12)/2 - sqrt((2*q - S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
-    S(2197)/13824)**(S(1)/3) - S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 -
-    S(2197)/13824)**(S(1)/3) - S(13)/6)/2 - S(1)/4) + q/4 + (-sqrt(-2*(-(q
-    - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q
-    - S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
-    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
-    S(13)/6)/2 - S(1)/4)**4 + (-sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
-    S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q -
-    S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
-    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
-    S(13)/6)/2 - S(1)/4)**3 + 2*(-sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
-    S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q -
-    S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
-    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    z = (q*(-sqrt(-2*cbrt(-(q - S(7)/8)**S(2)/8 - S(2197)/13824) -
+    S(13)/12)/2 - sqrt((2*q - S(7)/4)/sqrt(-2*cbrt(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824) - S(13)/12) + 2*cbrt(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824) - S(13)/6)/2 - S(1)/4) + q/4 + (-sqrt(-2*cbrt(-(q
+    - S(7)/8)**S(2)/8 - S(2197)/13824) - S(13)/12)/2 - sqrt((2*q
+    - S(7)/4)/sqrt(-2*cbrt(-(q - S(7)/8)**S(2)/8 - S(2197)/13824) -
+    S(13)/12) + 2*cbrt(-(q - S(7)/8)**S(2)/8 - S(2197)/13824) -
+    S(13)/6)/2 - S(1)/4)**4 + (-sqrt(-2*cbrt(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824) - S(13)/12)/2 - sqrt((2*q -
+    S(7)/4)/sqrt(-2*cbrt(-(q - S(7)/8)**S(2)/8 - S(2197)/13824) -
+    S(13)/12) + 2*cbrt(-(q - S(7)/8)**S(2)/8 - S(2197)/13824) -
+    S(13)/6)/2 - S(1)/4)**3 + 2*(-sqrt(-2*cbrt(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824) - S(13)/12)/2 - sqrt((2*q -
+    S(7)/4)/sqrt(-2*cbrt(-(q - S(7)/8)**S(2)/8 - S(2197)/13824) -
+    S(13)/12) + 2*cbrt(-(q - S(7)/8)**S(2)/8 - S(2197)/13824) -
     S(13)/6)/2 - S(1)/4)**2 - S(1)/3)
     assert z.equals(0)
 
