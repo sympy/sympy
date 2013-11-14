@@ -1,5 +1,3 @@
-.. _evalf-label:
-
 Numeric Computation
 ===================
 
