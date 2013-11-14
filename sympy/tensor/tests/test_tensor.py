@@ -1,21 +1,19 @@
 from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.tensor_can import bsgs_direct_product, riemann_bsgs
 from sympy.core import S, Rational, Symbol, Basic
-from sympy.core.symbol import symbols
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
-  TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
-  tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  TensMul, tensorsymmetry, tensorhead,
-  TensorManager, TensExpr, TIDS)
-from sympy.utilities.pytest import raises
 from sympy.core.containers import Tuple
+from sympy.core.symbol import symbols
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.printing.pretty.pretty import pretty
+from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
+    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
+    riemann_cyclic_replace, riemann_cyclic, TensMul, \
+    tensorsymmetry, tensorhead, TensorManager, TensExpr, TIDS
+from sympy.utilities.pytest import raises, skip
+
 
 #################### Tests from tensor_can.py #######################
-
 def test_canonicalize_no_slot_sym():
     # A_d0 * B^d0; T_c = A^d0*B_d0
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -1517,3 +1515,12 @@ def test_valued_canon_bp_swapaxes():
         for j in range(4):
             for k in range(4):
                 assert o1[i, j, k] == o2[j, i, k]
+
+
+def test_pprint():
+    Lorentz = TensorIndexType('Lorentz')
+    i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
+    A = tensorhead('A', [Lorentz], [[1]])
+
+    assert pretty(A) == "A(Lorentz)"
+    assert pretty(A(i0)) == "A(i0)"

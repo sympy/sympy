@@ -1147,7 +1147,7 @@ class TensorIndex(Basic):
     def is_up(self):
         return self._is_up
 
-    def _pretty(self):
+    def _print(self):
         s = self._name
         if not self._is_up:
             s = '-%s' % s
@@ -1623,7 +1623,7 @@ class TensorHead(Basic):
         r = TensorManager.get_comm(self._comm, other._comm)
         return r
 
-    def _pretty(self):
+    def _print(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
     def __call__(self, *indices):
@@ -2422,7 +2422,7 @@ class TensAdd(TensExpr):
             args1.append(y)
         return TensAdd(*args1)
 
-    def _pretty(self):
+    def _print(self):
         a = []
         args = self.args
         for x in args:
@@ -3131,7 +3131,7 @@ class TensMul(TensExpr):
         t = self.fun_eval(*list(zip(free_args, indices)))
         return t
 
-    def _pretty(self):
+    def _print(self):
         if len(self.components) == 0:
             return str(self._coeff)
         indices = [str(ind) for ind in self.get_indices()]
