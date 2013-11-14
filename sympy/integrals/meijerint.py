@@ -34,7 +34,7 @@ from sympy.core.mul import Mul
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
@@ -1054,7 +1054,7 @@ def _check_antecedents(g1, g2, x):
            And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
            And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
     c15 = Or(*tmp)
-    if _eval_cond(lambda_c > 0) is not False:
+    if _eval_cond(lambda_c > 0) != False:
         c15 = (lambda_c > 0)
 
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
@@ -1155,7 +1155,7 @@ def _check_antecedents(g1, g2, x):
     # Let's short-circuit if this worked ...
     # the rest is corner-cases and terrible to read.
     r = Or(*conds)
-    if _eval_cond(r) is not False:
+    if _eval_cond(r) != False:
         return r
 
     conds += [And(m + n > p, Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0, cstar < 0,
@@ -1441,11 +1441,11 @@ def _rewrite_single(f, x, recursive=True):
                 subs = subs_
                 if not isinstance(hint, bool):
                     hint = hint.subs(subs)
-                if hint is False:
+                if hint == False:
                     continue
-                if not isinstance(cond, bool):
+                if not isinstance(cond, (bool, BooleanAtom)):
                     cond = unpolarify(cond.subs(subs))
-                if _eval_cond(cond) is False:
+                if _eval_cond(cond) == False:
                     continue
                 if not isinstance(terms, list):
                     terms = terms(subs)
@@ -1577,7 +1577,7 @@ def _rewrite2(f, x):
             g2 = _rewrite_single(fac2, x, recursive)
             if g1 and g2:
                 cond = And(g1[1], g2[1])
-                if cond is not False:
+                if cond != False:
                     return fac, po, g1[0], g2[0], cond
 
 
@@ -1593,7 +1593,7 @@ def meijerint_indefinite(f, x):
     """
     from sympy import hyper, meijerg, count_ops
     results = []
-    for a in list(_find_splitting_points(f, x)) + [S(0)]:
+    for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if res is None:
             continue
@@ -1752,7 +1752,7 @@ def meijerint_definite(f, x, a, b):
             res1, cond1 = res1
             res2, cond2 = res2
             cond = _condsimp(And(cond1, cond2))
-            if cond is False:
+            if cond == False:
                 _debug('  But combined condition is always false.')
                 continue
             res = res1 + res2
@@ -1851,7 +1851,7 @@ def _meijerint_definite_2(f, x):
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)
         res = _meijerint_definite_3(g, x)
-        if res is not None and res[1] is not False:
+        if res is not None and res[1] != False:
             return res
 
 
@@ -1863,7 +1863,7 @@ def _meijerint_definite_3(f, x):
     integral. If this fails, it tries using linearity.
     """
     res = _meijerint_definite_4(f, x)
-    if res is not None and res[1] is not False:
+    if res is not None and res[1] != False:
         return res
     if f.is_Add:
         _debug('Expanding and evaluating all terms.')
@@ -1875,7 +1875,7 @@ def _meijerint_definite_3(f, x):
                 res += r
                 conds += [c]
             c = And(*conds)
-            if c is not False:
+            if c != False:
                 return res, c
 
 
@@ -1912,7 +1912,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                 cond = And(cond, _check_antecedents_1(f, x))
             cond = _my_unpolarify(cond)
             _debug('Result before branch substitutions is:', res)
-            if cond is False:
+            if cond == False:
                 _debug('But cond is always False.')
             else:
                 return _my_unpolarify(hyperexpand(res)), cond
@@ -1937,7 +1937,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                     res += C*_int0oo(f1_, f2_, x)
             _debug('Result before branch substitutions is:', res)
             cond = _my_unpolarify(cond)
-            if cond is False:
+            if cond == False:
                 _debug('But cond is always False (full_pb=%s).' % full_pb)
             else:
                 if only_double:
@@ -2019,7 +2019,7 @@ def meijerint_inversion(f, x, t):
             res += C*_int_inversion(f, x, t)
             cond = And(cond, _check_antecedents_inversion(f, x))
         cond = _my_unpolarify(cond)
-        if cond is False:
+        if cond == False:
             _debug('But cond is always False.')
         else:
             _debug('Result before branch substitution:', res)

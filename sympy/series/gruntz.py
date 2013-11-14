@@ -448,20 +448,15 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.core.exprtools import factor_terms
+    from sympy.polys import cancel
 
-    n = 1
-    while 1:
-        series = e.nseries(x, n=n, logx=logx)
-        if not series.has(Order):
-            # The series expansion is locally exact.
-            return series
+    for t in e.lseries(x, logx=logx):
+        t = cancel(t)
 
-        series = series.removeO()
-        series = factor_terms(series, fraction=True)
-        if series:
-            return series
-        n *= 2
+        if t:
+            break
+
+    return t
 
 
 @debug
@@ -499,7 +494,6 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True, bounded=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
 
@@ -562,13 +556,14 @@ def rewrite(e, Omega, x, wsym):
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
-    g, _ = Omega[-1]
-        # g is going to be the "w" - the simplest one in the mrv set
-    sig = sign(g.args[0], x)
+    # make sure we know the sign of each exp() term; after the loop,
+    # g is going to be the "w" - the simplest one in the mrv set
+    for g, _ in Omega:
+        sig = sign(g.args[0], x)
+        if sig != 1 and sig != -1:
+            raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w
-    elif sig != -1:
-        raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
     denominators = []

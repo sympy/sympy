@@ -357,12 +357,16 @@ def test_get_motion_methods():
     assert get_motion_params(N, velocity=v1) == (0, v1, v1 * t)
     assert get_motion_params(N, velocity=v1, position=v0, timevalue1=t1) == \
            (0, v1, v0 + v1*(t - t1))
-    assert get_motion_params(N, velocity=v1, position=v2, timevalue1=t1) == \
-           (0, v1, v1*t - v1*t1 + v2.subs(t, t1))
-    integral_vector = Integral(a, t)*N.x + Integral(b, t)*N.y + Integral(c, t)*N.z
-    assert get_motion_params(N, velocity=v2, position=v0, timevalue1=t1) == (v2d, v2,
-                                             v0 + integral_vector -
-                                             integral_vector.subs(t, t1))
+    answer = get_motion_params(N, velocity=v1, position=v2, timevalue1=t1)
+    answer_expected = (0, v1, v1*t - v1*t1 + v2.subs(t, t1))
+    assert answer == answer_expected
+
+    answer = get_motion_params(N, velocity=v2, position=v0, timevalue1=t1)
+    integral_vector = Integral(a, (t, t1, t))*N.x + Integral(b, (t, t1, t))*N.y \
+            + Integral(c, (t, t1, t))*N.z
+    answer_expected = (v2d, v2, v0 + integral_vector)
+    assert answer == answer_expected
+
     #Test acceleration parameter
     assert get_motion_params(N, acceleration=v1) == (v1, v1 * t, v1 * t**2/2)
     assert get_motion_params(N, acceleration=v1, velocity=v0,
@@ -377,16 +381,12 @@ def test_get_motion_methods():
             -v0*t1 + v01 + v1*t**2/2 + \
             v1*t2*t1 - v1*t1**2/2 + \
             t*(v0 - v1*t2))
-    i = Integral(a, t)
-    i_sub = i.subs(t, t2)
-    # This test currently fails (gh-2543)
-    #assert get_motion_params(N, acceleration=a*N.x, velocity=S1*N.x,
-    #                      position=S2*N.x, timevalue1=t1, timevalue2=t2) == \
-    #                      (a*N.x,
-    #                       (S1 + i - i_sub)*N.x,
-    #                       (S2 + Integral(S1 - t*(a.subs(t, t2)) + i, t) - \
-    #                        Integral(S1 - t1*(a.subs(t, t2)) + \
-    #                                 i.subs(t, t1), t))*N.x)
+    answer = get_motion_params(N, acceleration=a*N.x, velocity=S1*N.x,
+                          position=S2*N.x, timevalue1=t1, timevalue2=t2)
+    i1 = Integral(a, (t, t2, t))
+    answer_expected = (a*N.x, (S1 + i1)*N.x, \
+        (S2 + Integral(S1 + i1, (t, t1, t)))*N.x)
+    assert answer == answer_expected
 
 
 def test_inertia():

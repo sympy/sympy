@@ -178,7 +178,7 @@ class lowergamma(Function):
         elif argindex == 1:
             a, z = self.args
             return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
-                + meijerg([], [1, 1], [0, 0, a], [], z)
+                - meijerg([], [1, 1], [0, 0, a], [], z)
 
         else:
             raise ArgumentIndexError(self, argindex)

@@ -1,8 +1,6 @@
-from sympy import (
-    Symbol, Set, Union, Interval, oo, S, sympify, nan,
+from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset
-)
+    FiniteSet, Intersection, imageset, true, false)
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
@@ -324,11 +322,11 @@ def test_union_contains():
     raises(TypeError, lambda: x in i3)
     e = i3.contains(x)
     assert e == Or(And(0 <= x, x <= 1), And(2 <= x, x <= 3))
-    assert e.subs(x, -0.5) is False
-    assert e.subs(x, 0.5) is True
-    assert e.subs(x, 1.5) is False
-    assert e.subs(x, 2.5) is True
-    assert e.subs(x, 3.5) is False
+    assert e.subs(x, -0.5) is false
+    assert e.subs(x, 0.5) is true
+    assert e.subs(x, 1.5) is false
+    assert e.subs(x, 2.5) is true
+    assert e.subs(x, 3.5) is false
 
     U = Interval(0, 2, True, True) + Interval(10, oo) + FiniteSet(-1, 2, 5, 6)
     assert all(el not in U for el in [0, 4, -oo])

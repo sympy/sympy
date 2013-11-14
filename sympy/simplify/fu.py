@@ -33,7 +33,7 @@ docstrings for examples.
     TR22 - tan-cot powers to negative powers of sec-csc functions
     TR111 - negative sin-cos-tan powers to csc-sec-cot
 
-There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
+There are 4 combination transforms (CTR1 - CTR4) in which a sequence of
 transformations are applied and the simplest expression is selected from
 a few options.
 

@@ -1,5 +1,6 @@
 from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
     atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
+from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL, skip
@@ -138,6 +139,21 @@ def test_gruntz_eval_special_fail():
         exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) == -log(2)
 
     # TODO 8.35 - 8.37 (bessel, max-min)
+
+
+def test_gruntz_hyperbolic():
+    assert gruntz(cosh(x), x, oo) == oo
+    assert gruntz(cosh(x), x, -oo) == oo
+    assert gruntz(sinh(x), x, oo) == oo
+    assert gruntz(sinh(x), x, -oo) == -oo
+    assert gruntz(2*cosh(x)*exp(x), x, oo) == oo
+    assert gruntz(2*cosh(x)*exp(x), x, -oo) == 1
+    assert gruntz(2*sinh(x)*exp(x), x, oo) == oo
+    assert gruntz(2*sinh(x)*exp(x), x, -oo) == -1
+    assert gruntz(tanh(x), x, oo) == 1
+    assert gruntz(tanh(x), x, -oo) == -1
+    assert gruntz(coth(x), x, oo) == 1
+    assert gruntz(coth(x), x, -oo) == -1
 
 
 def test_compare1():
@@ -373,11 +389,12 @@ def test_MrvTestCase_page47_ex3_21():
 
 
 def test_I():
+    from sympy.functions import sign as sgn
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo).simplify() == sgn(y)*I*oo
 
 
 def test_issue1715():
