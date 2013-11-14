@@ -4,7 +4,8 @@ from __future__ import print_function
 
 from sympy import Symbol, symbols, sin, cos, Rational, expand, simplify, collect, S
 from sympy.galgebra import enhance_print, Get_Program, Print_Function
-from sympy.galgebra import MV, Format, Com, Nga, ga_print_on, ga_print_off
+from sympy.galgebra import MV, Format, Com, Nga
+from sympy.galgebra.printing import GA_Printer
 
 def basic_multivector_operations():
     Print_Function()
@@ -439,20 +440,18 @@ def dummy():
 
 def main():
     Get_Program(True)
-    ga_print_on()
-    enhance_print()
-    basic_multivector_operations()
-    check_generalized_BAC_CAB_formulas()
-    derivatives_in_rectangular_coordinates()
-    derivatives_in_spherical_coordinates()
-    rounding_numerical_components()
-    noneuclidian_distance_calculation()
-    conformal_representations_of_circles_lines_spheres_and_planes()
-    properties_of_geometric_objects()
-    extracting_vectors_from_conformal_2_blade()
-    reciprocal_frame_test()
-
-    ga_print_off()
+    with GA_Printer():
+        enhance_print()
+        basic_multivector_operations()
+        check_generalized_BAC_CAB_formulas()
+        derivatives_in_rectangular_coordinates()
+        derivatives_in_spherical_coordinates()
+        rounding_numerical_components()
+        noneuclidian_distance_calculation()
+        conformal_representations_of_circles_lines_spheres_and_planes()
+        properties_of_geometric_objects()
+        extracting_vectors_from_conformal_2_blade()
+        reciprocal_frame_test()
     return
 
 if __name__ == "__main__":

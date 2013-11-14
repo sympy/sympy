@@ -1239,6 +1239,17 @@ class expint(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
+    def _eval_nseries(self, x, n, logx):
+        if not self.args[0].has(x):
+            nu = self.args[0]
+            if nu == 1:
+                f = self._eval_rewrite_as_Si(*self.args)
+                return f._eval_nseries(x, n, logx)
+            elif nu.is_Integer and nu > 1:
+                f = self._eval_rewrite_as_Ei(*self.args)
+                return f._eval_nseries(x, n, logx)
+        return super(expint, self)._eval_nseries(x, n, logx)
+
 
 def E1(z):
     """

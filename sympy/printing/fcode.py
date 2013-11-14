@@ -45,6 +45,18 @@ class FCodePrinter(CodePrinter):
         "cosh", "tanh", "sqrt", "log", "exp", "erf", "Abs", "sign", "conjugate",
     ])
 
+    _operators = {
+        'and': '.and.',
+        'or': '.or.',
+        'xor': '.neqv.',
+        'equivalent': '.eqv.',
+        'not': '.not. ',
+    }
+
+    _relationals = {
+        '!=': '/=',
+    }
+
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
@@ -120,7 +132,7 @@ class FCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))

@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
-    Matrix, Lambda, exp, Integral, oo, I, Abs, Function)
+    Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
@@ -401,3 +401,8 @@ def test_special_printers():
     assert isinstance(func0(), mpi)
     assert isinstance(func1(), mpi)
     assert isinstance(func2(), mpi)
+
+def test_true_false():
+    # We want exact is comparison here, not just ==
+    assert lambdify([], true)() is True
+    assert lambdify([], false)() is False

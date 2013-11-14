@@ -11,7 +11,6 @@ from .compatibility import reduce, as_int, default_sort_key, xrange
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
-from inspect import getmro
 
 
 class Expr(Basic, EvalfMixin):
@@ -75,42 +74,6 @@ class Expr(Basic, EvalfMixin):
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
-
-    def rcall(self, *args):
-        """Apply on the argument recursively through the expression tree.
-
-        This method is used to simulate a common abuse of notation for
-        operators. For instance in SymPy the the following will not work:
-
-        ``(x+Lambda(y, 2*y))(z) == x+2*z``,
-
-        however you can use
-
-        >>> from sympy import Lambda
-        >>> from sympy.abc import x,y,z
-        >>> (x + Lambda(y, 2*y)).rcall(z)
-        x + 2*z
-        """
-        return Expr._recursive_call(self, args)
-
-    @staticmethod
-    def _recursive_call(expr_to_call, on_args):
-        def the_call_method_is_overridden(expr):
-            for cls in getmro(type(expr)):
-                if '__call__' in cls.__dict__:
-                    return cls != Expr
-
-        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
-            if isinstance(expr_to_call, C.Symbol):  # XXX When you call a Symbol it is
-                return expr_to_call               # transformed into an UndefFunction
-            else:
-                return expr_to_call(*on_args)
-        elif expr_to_call.args:
-            args = [Expr._recursive_call(
-                sub, on_args) for sub in expr_to_call.args]
-            return type(expr_to_call)(*args)
-        else:
-            return expr_to_call
 
     # ***************
     # * Arithmetics *
@@ -542,7 +505,9 @@ class Expr(Basic, EvalfMixin):
         # not sufficient for all expressions, however, so we don't return
         # False if we get a derivative other than 0 with free symbols.
         for w in wrt:
-            deriv = self.diff(w).simplify()
+            deriv = self.diff(w)
+            if simplify:
+                deriv = deriv.simplify()
             if deriv != 0:
                 if not (deriv.is_Number or pure_complex(deriv)):
                     if flags.get('failing_number', False):
@@ -672,7 +637,7 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
                 if n2._prec == 1:  # no significance
                     raise AttributeError
-            except AttributeError:
+            except (AttributeError, ValueError):
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
@@ -696,7 +661,7 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
                 if n2._prec == 1:  # no significance
                     raise AttributeError
-            except AttributeError:
+            except (AttributeError, ValueError):
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
@@ -729,7 +694,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A.has(S.NaN):
+            if A.has(S.NaN) or A.has(S.Infinity):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
@@ -738,7 +703,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B.has(S.NaN):
+            if B.has(S.NaN) or B.has(S.Infinity):
                 B = limit(self, x, b)
 
         return B - A
@@ -2339,7 +2304,7 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x=None, x0=0, n=6, dir="+"):
+    def series(self, x=None, x0=0, n=6, dir="+", logx=None):
         """
         Series expansion of "self" around ``x = x0`` yielding either terms of
         the series one by one (the lazy series given when n=None), else
@@ -2448,7 +2413,7 @@ class Expr(Basic, EvalfMixin):
                 rep = x + x0
                 rep2 = x
                 rep2b = -x0
-            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+')
+            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
             if n is None:  # lseries...
                 return (si.subs(x, rep2 + rep2b) for si in s)
             # nseries...
@@ -2463,14 +2428,14 @@ class Expr(Basic, EvalfMixin):
         if x.is_positive is x.is_negative is None:
             # replace x with an x that has a positive assumption
             xpos = C.Dummy('x', positive=True, bounded=True)
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir)
+            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
             else:
                 return rv.subs(xpos, x)
 
         if n is not None:  # nseries handling
-            s1 = self._eval_nseries(x, n=n, logx=None)
+            s1 = self._eval_nseries(x, n=n, logx=logx)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned
@@ -2488,23 +2453,23 @@ class Expr(Basic, EvalfMixin):
                     # is different than the original order and then predict how
                     # many additional terms are needed
                     for more in range(1, 9):
-                        s1 = self._eval_nseries(x, n=n + more, logx=None)
+                        s1 = self._eval_nseries(x, n=n + more, logx=logx)
                         newn = s1.getn()
                         if newn != ngot:
                             ndo = n + (n - ngot)*more/(newn - ngot)
-                            s1 = self._eval_nseries(x, n=ndo, logx=None)
+                            s1 = self._eval_nseries(x, n=ndo, logx=logx)
                             while s1.getn() < n:
-                                s1 = self._eval_nseries(x, n=ndo, logx=None)
+                                s1 = self._eval_nseries(x, n=ndo, logx=logx)
                                 ndo += 1
                             break
                     else:
                         raise ValueError('Could not calculate %s terms for %s'
                                          % (str(n), self))
-                    s1 += C.Order(x**n)
+                    s1 += C.Order(x**n, x)
                 o = s1.getO()
                 s1 = s1.removeO()
             else:
-                o = C.Order(x**n)
+                o = C.Order(x**n, x)
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
@@ -2524,7 +2489,7 @@ class Expr(Basic, EvalfMixin):
                     # by increasing order until all the
                     # terms have been returned
                     yielded = 0
-                    o = C.Order(si)*x
+                    o = C.Order(si, x)*x
                     ndid = 0
                     ndo = len(si.args)
                     while 1:
@@ -2541,7 +2506,7 @@ class Expr(Basic, EvalfMixin):
                             break
                         yielded += do
 
-            return yield_lseries(self.removeO()._eval_lseries(x))
+            return yield_lseries(self.removeO()._eval_lseries(x, logx=logx))
 
     def taylor_term(self, n, x, *previous_terms):
         """General method for the taylor term.
@@ -2553,7 +2518,7 @@ class Expr(Basic, EvalfMixin):
         _x = C.Dummy('x')
         return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
 
-    def lseries(self, x=None, x0=0, dir='+'):
+    def lseries(self, x=None, x0=0, dir='+', logx=None):
         """
         Wrapper for series yielding an iterator of the terms of the series.
 
@@ -2571,16 +2536,16 @@ class Expr(Basic, EvalfMixin):
 
         See also nseries().
         """
-        return self.series(x, x0, n=None, dir=dir)
+        return self.series(x, x0, n=None, dir=dir, logx=logx)
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, logx=None):
         # default implementation of lseries is using nseries(), and adaptively
         # increasing the "n". As you can see, it is not very efficient, because
         # we are calculating the series over and over again. Subclasses should
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        series = self._eval_nseries(x, n=n, logx=None)
+        series = self._eval_nseries(x, n=n, logx=logx)
         if not series.is_Order:
             if series.is_Add:
                 yield series.removeO()
@@ -2590,13 +2555,13 @@ class Expr(Basic, EvalfMixin):
 
         while series.is_Order:
             n += 1
-            series = self._eval_nseries(x, n=n, logx=None)
+            series = self._eval_nseries(x, n=n, logx=logx)
         e = series.removeO()
         yield e
         while 1:
             while 1:
                 n += 1
-                series = self._eval_nseries(x, n=n, logx=None).removeO()
+                series = self._eval_nseries(x, n=n, logx=logx).removeO()
                 if e != series:
                     break
             yield series - e
@@ -2661,15 +2626,16 @@ class Expr(Basic, EvalfMixin):
         This is a wrapper to compute a series first.
         """
         from sympy.series.gruntz import calculate_series
-        from sympy import cancel
+
         if self.removeO() == 0:
             return self
+
         if logx is None:
             d = C.Dummy('logx')
             s = calculate_series(self, x, d).subs(d, C.log(x))
         else:
             s = calculate_series(self, x, logx)
-        s = cancel(s)
+
         return s.as_leading_term(x)
 
     @cacheit
