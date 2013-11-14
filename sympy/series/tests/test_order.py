@@ -289,7 +289,7 @@ def test_issue_1180():
 def test_issue_1756():
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
-    assert 1/O(x, x, oo) != O(1/x, x, oo)
+    assert 1/O(x, (x, oo)) != O(1/x, (x, oo))
 
     f = Function('f')
     assert 1/O(f(x)) != O(1/x)
@@ -323,61 +323,61 @@ def test_issue_3654():
 
 
 def test_order_at_infinity():
-    assert Order(1 + x, x, oo) == Order(x, x, oo)
-    assert Order(3*x, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo)*3 == Order(x, x, oo)
-    assert -28*Order(x, x, oo) == Order(x, x, oo)
-    assert Order(Order(x, x, oo), oo) == Order(x, x, oo)
-    assert Order(Order(x, x, oo), y, oo) == Order(Order(x, x, oo), x, y, oo)
-    assert Order(3, x, oo) == Order(1, x, oo)
-    assert Order(x**2 + x + y, x, oo) == O(x**2, x, oo)
-    assert Order(x**2 + x + y, y, oo) == O(y, y, oo)
+    assert Order(1 + x, (x, oo)) == Order(x, (x, oo))
+    assert Order(3*x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo))*3 == Order(x, (x, oo))
+    assert -28*Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(Order(x, (x, oo)), (x, oo)) == Order(x, (x, oo))
+    assert Order(Order(x, (x, oo)), (y, oo)) == Order(x, (x, oo), (y, oo))
+    assert Order(3, (x, oo)) == Order(1, (x, oo))
+    assert Order(x**2 + x + y, (x, oo)) == O(x**2, (x, oo))
+    assert Order(x**2 + x + y, (y, oo)) == O(y, (y, oo))
 
-    assert Order(2*x, x, oo)*x == Order(x**2, x, oo)
-    assert Order(2*x, x, oo)/x == Order(1, x, oo)
-    assert Order(2*x, x, oo)*x*exp(1/x) == Order(x**2*exp(1/x), x, oo)
-    assert Order(2*x, x, oo)*x*exp(1/x)/ln(x)**3 == Order(x**2*exp(1/x)*ln(x)**-3, x, oo)
+    assert Order(2*x, (x, oo))*x == Order(x**2, (x, oo))
+    assert Order(2*x, (x, oo))/x == Order(1, (x, oo))
+    assert Order(2*x, (x, oo))*x*exp(1/x) == Order(x**2*exp(1/x), (x, oo))
+    assert Order(2*x, (x, oo))*x*exp(1/x)/ln(x)**3 == Order(x**2*exp(1/x)*ln(x)**-3, (x, oo))
 
-    assert Order(x, x, oo) + 1/x == 1/x + Order(x, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo) + 1 == 1 + Order(x, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo) + x == x + Order(x, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo) + x**2 == x**2 + Order(x, x, oo)
-    assert Order(1/x, x, oo) + 1/x**2 == 1/x**2 + Order(1/x, x, oo) == Order(1/x, x, oo)
-    assert Order(x, x, oo) + exp(1/x) == exp(1/x) + Order(x, x, oo)
+    assert Order(x, (x, oo)) + 1/x == 1/x + Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + 1 == 1 + Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + x == x + Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + x**2 == x**2 + Order(x, (x, oo))
+    assert Order(1/x, (x, oo)) + 1/x**2 == 1/x**2 + Order(1/x, (x, oo)) == Order(1/x, (x, oo))
+    assert Order(x, (x, oo)) + exp(1/x) == exp(1/x) + Order(x, (x, oo))
 
-    assert Order(x, x, oo)**2 == Order(x**2, x, oo)
+    assert Order(x, (x, oo))**2 == Order(x**2, (x, oo))
 
-    assert Order(x, x, oo) + Order(x**2, x, oo) == Order(x**2, x, oo)
-    assert Order(x, x, oo) + Order(x**-2, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo) + Order(1/x, x, oo) == Order(x, x, oo)
+    assert Order(x, (x, oo)) + Order(x**2, (x, oo)) == Order(x**2, (x, oo))
+    assert Order(x, (x, oo)) + Order(x**-2, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + Order(1/x, (x, oo)) == Order(x, (x, oo))
 
-    assert Order(x, x, oo) - Order(x, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo) + Order(1, x, oo) == Order(x, x, oo)
-    assert Order(x, x, oo) + Order(x**2, x, oo) == Order(x**2, x, oo)
-    assert Order(1/x, x, oo) + Order(1, x, oo) == Order(1, x, oo)
-    assert Order(x, x, oo) + Order(exp(1/x), x, oo) == Order(x, x, oo)
-    assert Order(x**3, x, oo) + Order(exp(2/x), x, oo) == Order(x**3, x, oo)
-    assert Order(x**-3, x, oo) + Order(exp(2/x), x, oo) == Order(exp(2/x), x, oo)
+    assert Order(x, (x, oo)) - Order(x, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + Order(1, (x, oo)) == Order(x, (x, oo))
+    assert Order(x, (x, oo)) + Order(x**2, (x, oo)) == Order(x**2, (x, oo))
+    assert Order(1/x, (x, oo)) + Order(1, (x, oo)) == Order(1, (x, oo))
+    assert Order(x, (x, oo)) + Order(exp(1/x), (x, oo)) == Order(x, (x, oo))
+    assert Order(x**3, (x, oo)) + Order(exp(2/x), (x, oo)) == Order(x**3, (x, oo))
+    assert Order(x**-3, (x, oo)) + Order(exp(2/x), (x, oo)) == Order(exp(2/x), (x, oo))
 
     # issue 4108
-    assert Order(exp(x), x, oo).expr == Order(2*exp(x), x, oo).expr == exp(x)
-    assert Order(y**x, x, oo).expr == Order(2*y**x, x, oo).expr == y**x
+    assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
+    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == y**x
 
 
 def test_mixing_order_at_zero_and_infinity():
-    assert (Order(x, x, 0) + Order(x, x, oo)).is_Add
-    assert Order(x, x, 0) + Order(x, x, oo) == Order(x, x, oo) + Order(x, x, 0)
+    assert (Order(x, (x, 0)) + Order(x, (x, oo))).is_Add
+    assert Order(x, (x, 0)) + Order(x, (x, oo)) == Order(x, (x, oo)) + Order(x, (x, 0))
 
     # not supported (yet)
-    raises(NotImplementedError, lambda: Order(x, x, 0)*Order(x, x, oo))
-    raises(NotImplementedError, lambda: Order(x, x, oo)*Order(x, x, 0))
-    raises(NotImplementedError, lambda: Order(Order(x, x, oo)))
-    raises(NotImplementedError, lambda: Order(Order(x, x, oo), y))
+    raises(NotImplementedError, lambda: Order(x, (x, 0))*Order(x, (x, oo)))
+    raises(NotImplementedError, lambda: Order(x, (x, oo))*Order(x, (x, 0)))
+    raises(NotImplementedError, lambda: Order(Order(x, (x, oo))))
+    raises(NotImplementedError, lambda: Order(Order(x, (x, oo)), y))
 
 
 def test_order_subs_limits():
     # issue 234
-    assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, oo)
+    assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, (x, oo))
     assert (1 + Order(x)).limit(x, 0) == 1
     # issue 2670
     assert ((x + Order(x**2))/x).limit(x, 0) == 1
