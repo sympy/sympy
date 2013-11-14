@@ -1,6 +1,7 @@
 from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
         expand_complex)
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.utilities.pytest import XFAIL
 
 
@@ -194,7 +195,7 @@ def test_real_imag():
 
 
 def test_pow_issue_1724():
-    e = ((-1)**(S(1)/3))
+    e = cbrt(-1)
     assert e.conjugate().n() == e.n().conjugate()
     e = S('-2/3 - (-29/54 + sqrt(93)/18)**(1/3) - 1/(9*(-29/54 + sqrt(93)/18)**(1/3))')
     assert e.conjugate().n() == e.n().conjugate()

@@ -3,6 +3,8 @@
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
     powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ)
 
+from sympy.functions.elementary.miscellaneous import cbrt
+
 from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
     PolynomialError)
 
@@ -126,14 +128,14 @@ def test_roots_cyclotomic():
         cyclotomic_poly(2, x, polys=True), factor=True) == [-1]
 
     assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True), factor=True) == \
-        [-(-1)**(S(1)/3), -1 + (-1)**(S(1)/3)]
+        [-cbrt(-1), -1 + cbrt(-1)]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True), factor=True) == \
         [-I, I]
     assert roots_cyclotomic(cyclotomic_poly(5, x, polys=True), factor=True) == \
         [-(-1)**(S(1)/5), (-1)**(S(2)/5), -(-1)**(S(3)/5),
          -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5)]
     assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True), factor=True) == \
-        [(-1)**(S(1)/3), 1 - (-1)**(S(1)/3)]
+        [cbrt(-1), 1 - cbrt(-1)]
 
 
 def test_roots_binomial():
@@ -358,8 +360,8 @@ def test_roots():
 
     r = roots(x**3 + 40*x + 64)
     real_root = [rx for rx in r if rx.is_real][0]
-    cr = 4 + 2*sqrt(1074)/9
-    assert real_root == -2*cr**(S(1)/3) + 20/(3*cr**(S(1)/3))
+    cr = cbrt(4 + 2*sqrt(1074)/9)
+    assert real_root == -2*cr + 20/(3*cr)
 
     eq = Poly((7 + 5*sqrt(2))*x**3 + (-6 - 4*sqrt(2))*x**2 + (-sqrt(2) - 1)*x + 2, x, domain='EX')
     assert roots(eq) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}
@@ -375,9 +377,9 @@ def test_roots():
     assert roots(eq) == {-2*sqrt(2) + 2: 1, -2*sqrt(2) + 1: 1, -2*sqrt(2) - 1: 1}
 
     assert roots(Poly((x + sqrt(2))**3 - 7, x, domain='EX')) == \
-        {-sqrt(2) - 7**(S(1)/3)/2 - sqrt(3)*7**(S(1)/3)*I/2: 1,
-         -sqrt(2) - 7**(S(1)/3)/2 + sqrt(3)*7**(S(1)/3)*I/2: 1,
-         -sqrt(2) + 7**(S(1)/3): 1}
+        {-sqrt(2) - cbrt(7)/2 - sqrt(3)*cbrt(7)*I/2: 1,
+         -sqrt(2) - cbrt(7)/2 + sqrt(3)*cbrt(7)*I/2: 1,
+         -sqrt(2) + cbrt(7): 1}
 
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """

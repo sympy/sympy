@@ -10,6 +10,7 @@ from sympy import (
     Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
     expand_multinomial, denom)
 from sympy.core.mul import _keep_coeff
+from sympy.functions.elementary.miscellaneous import cbrt
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
 from sympy.utilities.pytest import XFAIL, slow
@@ -1751,8 +1752,7 @@ def test_issue_from_PR1599():
     assert (powsimp(sqrt(n1)*sqrt(n2)*sqrt(n3)) ==
         -I*sqrt(-n1)*sqrt(-n2)*sqrt(-n3))
     assert (powsimp(root(n1, 3)*root(n2, 3)*root(n3, 3)*root(n4, 3)) ==
-        -(-1)**(S(1)/3)*
-        (-n1)**(S(1)/3)*(-n2)**(S(1)/3)*(-n3)**(S(1)/3)*(-n4)**(S(1)/3))
+        -cbrt(-1)*cbrt(-n1)*cbrt(-n2)*cbrt(-n3)*cbrt(-n4))
 
 
 def test_3712():

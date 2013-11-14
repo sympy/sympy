@@ -2,6 +2,7 @@ from sympy import Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.miscellaneous import cbrt
 
 
 def test_Abs():
@@ -24,10 +25,10 @@ def test_pow():
     assert refine(sqrt(x**2), Q.complex(x)) != Abs(x)
     assert refine(sqrt(x**2), Q.real(x)) == Abs(x)
     assert refine(sqrt(x**2), Q.positive(x)) == x
-    assert refine((x**3)**(S(1)/3)) != x
+    assert refine(cbrt(x**3)) != x
 
-    assert refine((x**3)**(S(1)/3), Q.real(x)) != x
-    assert refine((x**3)**(S(1)/3), Q.positive(x)) == x
+    assert refine(cbrt(x**3), Q.real(x)) != x
+    assert refine(cbrt(x**3), Q.positive(x)) == x
 
     assert refine(sqrt(1/x), Q.real(x)) != 1/sqrt(x)
     assert refine(sqrt(1/x), Q.positive(x)) == 1/sqrt(x)
