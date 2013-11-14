@@ -2774,7 +2774,7 @@ def test_sympy__series__limits__Limit():
 
 def test_sympy__series__order__Order():
     from sympy.series.order import Order
-    assert _test_args(Order(1, x, y))
+    assert _test_args(Order(1, (x, y)))
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():
