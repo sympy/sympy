@@ -1,14 +1,13 @@
 from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.tensor_can import bsgs_direct_product, riemann_bsgs
 from sympy.core import S, Rational, Symbol, Basic
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.printing.pretty.pretty import pprint
+from sympy.printing.pretty.pretty import pretty
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
-    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, canon_bp, TensAdd, \
+    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, tensorlist_contract_metric, TensMul, \
     tensorsymmetry, tensorhead, TensorManager, TensExpr, TIDS
 from sympy.utilities.pytest import raises, skip
@@ -1468,13 +1467,5 @@ def test_valued_canon_bp_swapaxes():
 
 
 def test_pprint():
-    from StringIO import StringIO
-    import sys
-    old_out = sys.stdout
-    sys.stdout = string_io = StringIO()
-    pprint(A)
-    assert string_io.buflist[0] == "A(Lorentz)"
-    sys.stdout = string_io = StringIO()
-    pprint(A(i0))
-    assert string_io.buflist[0] == "A(i0)"
-    sys.stdout = old_out
+    assert pretty(A) == "A(Lorentz)"
+    assert pretty(A(i0)) == "A(i0)"
