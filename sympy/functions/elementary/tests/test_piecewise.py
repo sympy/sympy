@@ -159,7 +159,9 @@ def test_piecewise_integrate():
     assert integrate(g, (x, -1, 1)) == 0
 
     g = Piecewise((1, x - y < 0), (0, True))
-    assert integrate(g, (y, -oo, oo)) == oo
+    assert integrate(g, (y, -oo, 0)) == -Min(0, x)
+    assert integrate(g, (y, 0, oo)) == oo - Max(0, x)
+    assert integrate(g, (y, -oo, oo)) == oo - x
 
     g = Piecewise((0, x < 0), (x, x <= 1), (1, True))
     assert integrate(g, (x, -5, 1)) == Rational(1, 2)
@@ -201,6 +203,21 @@ def test_piecewise_integrate():
         (-y**2/2 + y + 0.5, y > 0), (y**2/2 + y + 0.5, True))
     assert integrate(g, (x, y, 1)) == Piecewise((1, y <= -1), (0, y >= 1),
         (y**2/2 - y + 0.5, y > 0), (-y**2/2 - y + 0.5, True))
+
+
+def test_piecewise_integrate_inequality_conditions():
+    c1, c2 = symbols("c1 c2", positive=True)
+    g = Piecewise((0, c1*x > 1), (1, c1*x > 0), (0, True))
+    assert integrate(g, (x, -oo, 0)) == 0
+    assert integrate(g, (x, -5, 0)) == 0
+    assert integrate(g, (x, 0, 5)) == Min(5, 1/c1)
+    assert integrate(g, (x, 0, oo)) == 1/c1
+
+    g = Piecewise((0, c1*x + c2*y > 1), (1, c1*x + c2*y > 0), (0, True))
+    assert integrate(g, (x, -oo, 0)).subs(y, 0) == 0
+    assert integrate(g, (x, -5, 0)).subs(y, 0) == 0
+    assert integrate(g, (x, 0, 5)).subs(y, 0) == Min(5, 1/c1)
+    assert integrate(g, (x, 0, oo)).subs(y, 0) == 1/c1
 
 
 def test_piecewise_integrate_symbolic_conditions():

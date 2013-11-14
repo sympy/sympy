@@ -386,6 +386,31 @@ class Xor(BooleanFunction):
     x
 
     """
+    def __new__(cls, *args, **options):
+        args = [_sympify(arg) for arg in args]
+
+        argset = set(args)
+        truecount = 0
+        for x in args:
+            if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
+                argset.discard(x)
+                if x:
+                    truecount += 1
+        if len(argset) < 1:
+            return true if truecount % 2 != 0 else false
+        if truecount % 2 != 0:
+            return Not(Xor(*argset))
+        _args = frozenset(argset)
+        obj = super(Xor, cls).__new__(cls, *_args, **options)
+        if isinstance(obj, Xor):
+            obj._argset = _args
+        return obj
+
+    @property
+    @cacheit
+    def args(self):
+        return tuple(ordered(self._argset))
+
     @classmethod
     def eval(cls, *args):
         if not args:

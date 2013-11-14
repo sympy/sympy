@@ -436,9 +436,13 @@ def test_integrate_DiracDelta():
         integrate(p*DiracDelta(10*x - y), (x, -oo, oo), (y, -oo, oo)) == \
         integrate(p*DiracDelta(10*x - y), (y, -oo, oo), (x, -oo, oo)) == \
         1/sqrt(101*pi)
+
+
+@XFAIL
+def test_integrate_DiracDelta_fails():
     # issue 3328
     assert integrate(integrate(integrate(
-        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == 1
+        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S(1)/2
 
 
 def test_integrate_returns_piecewise():

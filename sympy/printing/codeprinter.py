@@ -166,14 +166,14 @@ class CodePrinter(StrPrinter):
             return self._print_not_supported(expr)
         PREC = precedence(expr)
         return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
+                for a in expr.args)
 
     def _print_Equivalent(self, expr):
         if self._operators.get('equivalent') is None:
             return self._print_not_supported(expr)
         PREC = precedence(expr)
         return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
+                for a in expr.args)
 
     def _print_Not(self, expr):
         PREC = precedence(expr)

@@ -294,6 +294,7 @@ class Piecewise(Function):
         along the real axis corresponding to the symbol sym.  If targetcond
         is given, we return a list of (lowerbound, upperbound) pairs for
         this condition."""
+        from sympy.solvers.inequalities import _solve_inequality
         default = None
         int_expr = []
         expr_cond = []
@@ -313,6 +314,7 @@ class Piecewise(Function):
                 independent_expr_cond.append((expr, cond))
                 default = self.func(*independent_expr_cond)
                 break
+            orig_cond = cond
             if sym not in cond.free_symbols:
                 independent_expr_cond.append((expr, cond))
                 continue
@@ -322,15 +324,22 @@ class Piecewise(Function):
                 lower = S.NegativeInfinity
                 upper = S.Infinity
                 for cond2 in cond.args:
-                    if cond2.lts.has(sym):
+                    if sym not in [cond2.lts, cond2.gts]:
+                        cond2 = _solve_inequality(cond2, sym)
+                    if cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
-                    elif cond2.gts.has(sym):
+                    elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
+                    else:
+                        raise NotImplementedError(
+                            "Unable to handle interval evaluation of expression.")
             else:
+                if sym not in [cond.lts, cond.gts]:
+                    cond = _solve_inequality(cond, sym)
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
-                if cond.lts.has(sym):     # part 1a: expand the side ...
+                if cond.lts == sym:                # part 1a: expand the side ...
                     lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
-                elif cond.gts.has(sym):   # part 1a: ... that can be expanded
+                elif cond.gts == sym:            # part 1a: ... that can be expanded
                     upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
                 else:
                     raise NotImplementedError(
@@ -352,6 +361,9 @@ class Piecewise(Function):
                         lower = int_expr[n][1]
                     else:
                         int_expr[n][1] = Min(lower, int_expr[n][1])
+                elif len(int_expr[n][0].free_symbols) and \
+                        self.__eval_cond(upper == int_expr[n][1]):
+                    upper = Min(upper, int_expr[n][0])
                 elif len(int_expr[n][1].free_symbols) and \
                         (lower >= int_expr[n][0]) is not True and \
                         (int_expr[n][1] == Min(lower, upper)) is not True:
@@ -365,7 +377,7 @@ class Piecewise(Function):
 
             if self.__eval_cond(lower >= upper) is not True:  # Is it still an interval?
                 int_expr.append([lower, upper, expr])
-            if cond is targetcond:
+            if orig_cond == targetcond:
                 return [(lower, upper, None)]
             elif isinstance(targetcond, Or) and cond in targetcond.args:
                 or_cond = Or(or_cond, cond)
@@ -378,7 +390,7 @@ class Piecewise(Function):
         ) if x[1].is_number else S.NegativeInfinity.sort_key())
         int_expr.sort(key=lambda x: x[0].sort_key(
         ) if x[0].is_number else S.Infinity.sort_key())
-        from sympy.functions.elementary.miscellaneous import MinMaxBase
+
         for n in xrange(len(int_expr)):
             if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
                 if isinstance(int_expr[n][1], Min) or int_expr[n][1] == b:

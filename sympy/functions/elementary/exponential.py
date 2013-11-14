@@ -395,15 +395,6 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_lseries(self, x):
-        s = self.args[0]
-        yield exp(s.subs(x, 0))
-        from sympy import integrate
-        t = Dummy("t")
-        f = s.subs(x, t)
-        for term in (exp(f)*f.diff(t)).lseries(t):
-            yield integrate(term, (t, 0, x))
-
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.

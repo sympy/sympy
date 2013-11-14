@@ -406,11 +406,11 @@ def solve(f, *symbols, **flags):
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
             like cos, exp, ....
-        'minimal=True (default is False)'
+        'particular=True (default is False)'
             instructs solve to try to find a particular solution to a linear
             system with as many zeros as possible; this is very expensive
         'quick=True (default is False)'
-            when using minimal=True, use a fast heuristic instead to find a
+            when using particular=True, use a fast heuristic instead to find a
             solution with many zeros (instead of using the very slow method
             guaranteed to find the largest number of zeros possible)
 
@@ -1461,7 +1461,7 @@ def _solve_system(exprs, symbols, **flags):
                         matrix[i, m] = -coeff
 
             # returns a dictionary ({symbols: values}) or None
-            if flags.pop('minimal', False):
+            if flags.pop('particular', False):
                 result = minsolve_linear_system(matrix, *symbols, **flags)
             else:
                 result = solve_linear_system(matrix, *symbols, **flags)
