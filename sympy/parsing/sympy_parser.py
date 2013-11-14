@@ -12,7 +12,7 @@ import ast
 import re
 import unicodedata
 
-from sympy.core.compatibility import exec_, StringIO
+from sympy.core.compatibility import exec_, StringIO, integer_types
 from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
@@ -35,6 +35,22 @@ def _token_splittable(token):
     if len(token) > 1:
         return True
     return False
+
+
+_re_token_splitter = re.compile(r"\d+|\D")
+
+def _token_splitter(name):
+    """
+    Splits a token name into new tokens.
+
+    The splitting is done on character and number boundaries, so ``x33y``
+    would become ``[x, 33, y]``.
+    """
+    for new_name in _re_token_splitter.findall(name):
+        try:
+            yield int(new_name)
+        except ValueError:
+            yield new_name
 
 
 def _token_callable(token, local_dict, global_dict, nextToken=None):
@@ -352,11 +368,17 @@ def function_exponentiation(tokens, local_dict, global_dict):
         result.extend(exponent)
     return result
 
+numeric_types = integer_types + (float,)
 
-def split_symbols_custom(predicate):
+def split_symbols_custom(predicate, splitter=_token_splitter):
     """Creates a transformation that splits symbol names.
 
     ``predicate`` should return True if the symbol name is to be split.
+
+    ``splitter`` (optional) should, given the original symbol name, yield a
+    list of the new names. The new name can be a number, in which case
+    numeric tokens will be inserted.  See ``_token_splitter`` for an example
+    implementation.
 
     For instance, to retain the default behavior but avoid splitting certain
     symbol names, a predicate like this would work:
@@ -378,30 +400,33 @@ def split_symbols_custom(predicate):
     def _split_symbols(tokens, local_dict, global_dict):
         result = []
         split = False
+        skip = 0
         for tok in tokens:
             if tok[0] == NAME and tok[1] == 'Symbol':
                 split = True
             elif split and tok[0] == NAME:
                 symbol = tok[1][1:-1]
                 if predicate(symbol):
-                    for char in symbol:
-                        if char in local_dict or char in global_dict:
-                            # Get rid of the call to Symbol
-                            del result[-2:]
-                            result.extend([(OP, '('), (NAME, "%s" % char), (OP, ')'),
-                                           (NAME, 'Symbol'), (OP, '(')])
+                    # Get rid of the call to Symbol
+                    del result[-2:]
+                    # Skip is to get rid of the ending parenthesis left over
+                    skip += 1
+                    for new_name in splitter(symbol):
+                        if isinstance(new_name, numeric_types):
+                            result.extend(auto_number([(NUMBER, "'%s'" % str(new_name))], local_dict, global_dict))
+                        elif new_name in local_dict or new_name in global_dict:
+                            result.append((NAME, new_name))
                         else:
-                            result.extend([(NAME, "'%s'" % char), (OP, ')'),
-                                           (NAME, 'Symbol'), (OP, '(')])
-                    # Delete the last three tokens: get rid of the extraneous
-                    # Symbol( we just added, and also get rid of the last )
-                    # because the closing parenthesis of the original Symbol is
-                    # still there
-                    del result[-3:]
+                            result.extend([(NAME, 'Symbol'), (OP, '('),
+                                           (NAME, "'%s'" % new_name), (OP, ')'),])
                     split = False
                     continue
                 else:
                     split = False
+
+            if skip > 0:
+                skip -= 1
+                continue
             result.append(tok)
         return result
     return _split_symbols

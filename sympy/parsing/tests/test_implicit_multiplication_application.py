@@ -112,6 +112,8 @@ def test_symbol_splitting():
         'xe': 'E*x',
         'Iy': 'I*y',
         'ee': 'E*E',
+        'e23': 'E*23',
+        'I23yabc1x': 'I*23*y*a*b*c*1*x',
     }
     for case, expected in cases.items():
         assert(parse_expr(case, local_dict=local_dict,
