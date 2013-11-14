@@ -178,7 +178,7 @@ class lowergamma(Function):
         elif argindex == 1:
             a, z = self.args
             return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
-                + meijerg([], [1, 1], [0, 0, a], [], z)
+                - meijerg([], [1, 1], [0, 0, a], [], z)
 
         else:
             raise ArgumentIndexError(self, argindex)
@@ -593,6 +593,13 @@ class loggamma(Function):
     """
 
     nargs = 1
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(loggamma, self)._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != oo:

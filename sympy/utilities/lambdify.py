@@ -157,6 +157,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
      - lists that contain a mix of the arguments above, with higher priority
        given to entries appearing first.
 
+    The default behavior is to substitute all arguments in the provided
+    expression with dummy symbols. This allows for applied functions (e.g.
+    f(t)) to be supplied as arguments. Call the function with dummify=False if
+    dummy substitution is unwanted.
+    If you want to view the lambdified function or provide "sympy" as the
+    module, you should probably set dummify=False.
+
     Usage
     =====
 
@@ -276,20 +283,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         for term in syms:
             namespace.update({str(term): term})
 
-    # check if being used for numerical translations
-    dummify = False
-    if not module_provided:
-        if ((modules[1] == "numpy") or (modules[1] == "math") or
-                                        (modules[1] == "mpmath")):
-            dummify = True
-    else:
-        if isinstance(module_provided, str):
-            if ((modules == "numpy") or (modules == "math") or
-                                        (modules == "mpmath")):
-                dummify = True
-
     # Create lambda function.
-    lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
+    lstr = lambdastr(args, expr, printer=printer, dummify=True)
     return eval(lstr, namespace)
 
 
@@ -347,7 +342,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            if isinstance(args, (Symbol, Function)):
+            if isinstance(args, Function):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)

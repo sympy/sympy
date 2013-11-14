@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.polys.densebasic import (
+    dup_slice,
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
     dup_normal,
@@ -758,17 +759,38 @@ def dup_mul(f, g, K):
     df = dup_degree(f)
     dg = dup_degree(g)
 
-    h = []
+    n = max(df, dg) + 1
 
-    for i in xrange(0, df + dg + 1):
-        coeff = K.zero
+    if n < 100:
+        h = []
 
-        for j in xrange(max(0, i - dg), min(df, i) + 1):
-            coeff += f[j]*g[i - j]
+        for i in xrange(0, df + dg + 1):
+            coeff = K.zero
 
-        h.append(coeff)
+            for j in xrange(max(0, i - dg), min(df, i) + 1):
+                coeff += f[j]*g[i - j]
 
-    return dup_strip(h)
+            h.append(coeff)
+
+        return dup_strip(h)
+    else:
+        # Use Karatsuba's algorithm (divide and conquer), see e.g.:
+        # Joris van der Hoeven, Relax But Don't Be Too Lazy,
+        # J. Symbolic Computation, 11 (2002), section 3.1.1.
+        n2 = n//2
+
+        fl, gl = dup_slice(f, 0, n2, K), dup_slice(g, 0, n2, K)
+
+        fh = dup_rshift(dup_slice(f, n2, n, K), n2, K)
+        gh = dup_rshift(dup_slice(g, n2, n, K), n2, K)
+
+        lo, hi = dup_mul(fl, gl, K), dup_mul(fh, gh, K)
+
+        mid = dup_mul(dup_add(fl, fh, K), dup_add(gl, gh, K), K)
+        mid = dup_sub(mid, dup_add(lo, hi, K), K)
+
+        return dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
+                       dup_lshift(hi, 2*n2, K), K)
 
 
 def dmp_mul(f, g, u, K):
@@ -828,7 +850,7 @@ def dup_sqr(f, K):
     x**4 + 2*x**2 + 1
 
     """
-    df, h = dup_degree(f), []
+    df, h = len(f) - 1, []
 
     for i in xrange(0, 2*df + 1):
         c = K.zero

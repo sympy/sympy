@@ -120,11 +120,6 @@ RealNumber
 .. autoclass:: RealNumber
    :members:
 
-Real
-^^^^
-.. autoclass:: Real
-   :members:
-
 igcd
 ^^^^
 .. autofunction:: igcd

@@ -15,6 +15,8 @@ from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
 
+from sympy.logic.boolalg import BooleanAtom
+
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.polyutils import (
@@ -1687,6 +1689,8 @@ class Poly(Expr):
         """
         Returns degree of ``f`` in ``x_j``.
 
+        The degree of 0 is negative infinity.
+
         Examples
         ========
 
@@ -1697,6 +1701,8 @@ class Poly(Expr):
         2
         >>> Poly(x**2 + y*x + y, x, y).degree(y)
         1
+        >>> Poly(0, x).degree()
+        -oo
 
         """
         j = f._gen_to_level(gen)
@@ -2941,6 +2947,16 @@ class Poly(Expr):
         """
         Compute isolating intervals for roots of ``f``.
 
+        For real roots the Vincent-Akritas-Strzebonski (VAS) continued fractions method is used.
+
+        References:
+        ===========
+           1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
+           Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+           2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
+           Performance of the Continued Fractions Method Using new Bounds of Positive Roots. Nonlinear
+           Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+
         Examples
         ========
 
@@ -4051,6 +4067,8 @@ def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
 
+    The degree of 0 is negative infinity.
+
     Examples
     ========
 
@@ -4061,6 +4079,8 @@ def degree(f, *gens, **args):
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
+    >>> degree(0, x)
+    -oo
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
@@ -4070,7 +4090,7 @@ def degree(f, *gens, **args):
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    return Integer(F.degree(opt.gen))
+    return sympify(F.degree(opt.gen))
 
 
 @public
@@ -5407,6 +5427,8 @@ def _symbolic_factor_list(expr, opt, method):
 def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
     if isinstance(expr, Expr) and not expr.is_Relational:
+        if hasattr(expr,'_eval_factor'):
+            return expr._eval_factor()
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
@@ -6021,7 +6043,7 @@ def cancel(f, *gens, **args):
     f = sympify(f)
 
     if not isinstance(f, (tuple, Tuple)):
-        if f.is_Number or isinstance(f, Relational):
+        if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
             return f
         f = factor_terms(f, radical=True)
         p, q = f.as_numer_denom()
@@ -6054,7 +6076,8 @@ def cancel(f, *gens, **args):
             pot = preorder_traversal(f)
             next(pot)
             for e in pot:
-                if isinstance(e, (tuple, Tuple)):
+                # XXX: This should really skip anything that's not Expr.
+                if isinstance(e, (tuple, Tuple, BooleanAtom)):
                     continue
                 try:
                     reps.append((e, cancel(e)))

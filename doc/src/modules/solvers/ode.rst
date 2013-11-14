@@ -124,6 +124,22 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
+:obj:`lie_group`
+^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_lie_group
+
+:obj:`1st_power_series`
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_1st_power_series
+
+:obj:`2nd_power_series_ordinary`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_power_series_ordinary
+
+:obj:`2nd_power_series_regular`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_power_series_regular
+
 Lie heuristics
 --------------
 These functions are intended for internal use of the Lie Group Solver.

@@ -436,9 +436,13 @@ def test_integrate_DiracDelta():
         integrate(p*DiracDelta(10*x - y), (x, -oo, oo), (y, -oo, oo)) == \
         integrate(p*DiracDelta(10*x - y), (y, -oo, oo), (x, -oo, oo)) == \
         1/sqrt(101*pi)
+
+
+@XFAIL
+def test_integrate_DiracDelta_fails():
     # issue 3328
     assert integrate(integrate(integrate(
-        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == 1
+        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S(1)/2
 
 
 def test_integrate_returns_piecewise():
@@ -466,6 +470,8 @@ def test_integrate_returns_piecewise():
         (0, Eq(n, 0)), ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, True))
     assert integrate(x*sin(n*x), x) == Piecewise(
         (0, Eq(n, 0)), (-x*cos(n*x)/n + sin(n*x)/n**2, True))
+    assert integrate(exp(x*y),(x,0,z)) == Piecewise( \
+        (z, Eq(y,0)), (exp(y*z)/y - 1/y, True))
 
 
 def test_subs1():
@@ -505,21 +511,21 @@ def test_subs4():
 
 
 def test_subs5():
-    e = Integral(exp(-x**2), x)
-    assert e.subs(x, 5) == Integral(exp(-25), x)
-    e = Integral(exp(-x**2), (x, x))
-    assert e.subs(x, 5) == Integral(exp(-x**2), (x, 5))
     e = Integral(exp(-x**2), (x, -oo, oo))
     assert e.subs(x, 5) == e
     e = Integral(exp(-x**2 + y), x)
-    assert e.subs(x, 5) == Integral(exp(y - 25), x)
     assert e.subs(y, 5) == Integral(exp(-x**2 + 5), x)
     e = Integral(exp(-x**2 + y), (x, x))
     assert e.subs(x, 5) == Integral(exp(y - x**2), (x, 5))
-    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), (x, x))
+    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), x)
     e = Integral(exp(-x**2 + y), (y, -oo, oo), (x, -oo, oo))
     assert e.subs(x, 5) == e
     assert e.subs(y, 5) == e
+    # Test evaluation of antiderivatives
+    e = Integral(exp(-x**2), (x, x))
+    assert e.subs(x, 5) == Integral(exp(-x**2), (x, 5))
+    e = Integral(exp(x), x)
+    assert (e.subs(x,1)-e.subs(x,0) - Integral(exp(x),(x,0,1))).doit().is_zero
 
 
 def test_subs6():
@@ -543,6 +549,9 @@ def test_subs7():
     assert e.subs(sin(x), 1) == Integral(sin(x) + sin(y), (x, 1, sin(y)),
                                          (y, 1, 2))
 
+def test_expand():
+    e = Integral(f(x)+f(x**2), (x, 1, y))
+    assert e.expand() == Integral(f(x), (x, 1, y)) + Integral(f(x**2), (x, 1, y))
 
 def test_integration_variable():
     raises(ValueError, lambda: Integral(exp(-x**2), 3))
@@ -551,9 +560,11 @@ def test_integration_variable():
 
 def test_expand_integral():
     assert Integral(cos(x**2)*(sin(x**2) + 1), (x, 0, 1)).expand() == \
-        Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
+        Integral(cos(x**2)*sin(x**2), (x, 0, 1)) + \
+        Integral(cos(x**2), (x, 0, 1))
     assert Integral(cos(x**2)*(sin(x**2) + 1), x).expand() == \
-        Integral(cos(x**2)*sin(x**2) + cos(x**2), x)
+        Integral(cos(x**2)*sin(x**2), x) + \
+        Integral(cos(x**2), x)
 
 
 def test_as_sum_midpoint1():
@@ -701,7 +712,7 @@ def test_is_zero():
 
 def test_series():
     from sympy.abc import x
-    i = Integral(cos(x))
+    i = Integral(cos(x), (x, x))
     e = i.lseries(x)
     assert i.nseries(x, n=8).removeO() == Add(*[next(e) for j in range(4)])
 

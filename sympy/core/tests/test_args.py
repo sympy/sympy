@@ -83,7 +83,6 @@ def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)
 
 
-@XFAIL
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
@@ -159,6 +158,27 @@ def test_sympy__concrete__products__Product():
     from sympy.concrete.products import Product
     assert _test_args(Product(x, (x, 0, 10)))
     assert _test_args(Product(x, (x, 0, y), (y, 0, 10)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_limits__ExprWithLimits():
+    from sympy.concrete.expr_with_limits import ExprWithLimits
+    assert _test_args(ExprWithLimits(x, (x, 0, 10)))
+    assert _test_args(ExprWithLimits(x*y, (x, 0, 10.),(y,1.,3)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_limits__AddWithLimits():
+    from sympy.concrete.expr_with_limits import AddWithLimits
+    assert _test_args(AddWithLimits(x, (x, 0, 10)))
+    assert _test_args(AddWithLimits(x*y, (x, 0, 10),(y,1,3)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_intlimits__ExprWithIntLimits():
+    from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+    assert _test_args(ExprWithIntLimits(x, (x, 0, 10)))
+    assert _test_args(ExprWithIntLimits(x*y, (x, 0, 10),(y,1,3)))
 
 
 def test_sympy__concrete__summations__Sum():
@@ -1665,7 +1685,17 @@ def test_sympy__liealgebras__cartan_type__CartanType_generator():
 @XFAIL
 def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     from sympy.liealgebras.cartan_type import Standard_Cartan
-    assert _test_args(Standard_Cartan(A, 2))
+    assert _test_args(Standard_Cartan("A", 2))
+
+@XFAIL
+def test_sympy__liealgebras__weyl_group__WeylGroup():
+    from sympy.liealgebras.weyl_group import WeylGroup
+    assert _test_args(WeylGroup("B4"))
+
+@XFAIL
+def test_sympy__liealgebras__root_system__RootSystem():
+    from sympy.liealgebras.root_system import RootSyStem
+    assert _test_args(RootSystem("A2"))
 
 @XFAIL
 def test_sympy__liealgebras__type_a__TypeA():
@@ -1717,6 +1747,17 @@ def test_sympy__logic__boolalg__BooleanFunction():
     from sympy.logic.boolalg import BooleanFunction
     assert _test_args(BooleanFunction(1, 2, 3))
 
+@SKIP("abstract class")
+def test_sympy__logic__boolalg__BooleanAtom():
+    pass
+
+def test_sympy__logic__boolalg__BooleanTrue():
+    from sympy.logic.boolalg import true
+    assert _test_args(true)
+
+def test_sympy__logic__boolalg__BooleanFalse():
+    from sympy.logic.boolalg import false
+    assert _test_args(false)
 
 def test_sympy__logic__boolalg__Equivalent():
     from sympy.logic.boolalg import Equivalent
@@ -1967,6 +2008,11 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
+
+def test_sympy__physics__mechanics__essential__CoordinateSym():
+    from sympy.physics.mechanics import CoordinateSym
+    from sympy.physics.mechanics import ReferenceFrame
+    assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
@@ -2263,6 +2309,7 @@ def test_sympy__physics__quantum__piab__PIABHamiltonian():
 def test_sympy__physics__quantum__piab__PIABKet():
     from sympy.physics.quantum.piab import PIABKet
     assert _test_args(PIABKet('K'))
+
 
 def test_sympy__physics__quantum__qexpr__QExpr():
     from sympy.physics.quantum.qexpr import QExpr
@@ -2757,26 +2804,34 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
 
+
 @XFAIL
+def test_sympy__physics__hep__gamma_matrices__GammaMatrixHead():
+    # This test fails, this class can be reconstructed from the *args
+    # of an instance using `TensorHead(*args)`
+    from sympy.physics.hep.gamma_matrices import GammaMatrixHead, Lorentz
+    from sympy.tensor.tensor import tensor_indices
+    i = tensor_indices('i', Lorentz)
+    assert _test_args(GammaMatrixHead())
+
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
     from sympy import Symbol
     assert _test_args(TensorIndexType('Lorentz', metric=False))
 
-@XFAIL
+
 def test_sympy__tensor__tensor__TensorSymmetry():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
     assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
 
 
-@XFAIL
 def test_sympy__tensor__tensor__TensorType():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorType
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     assert _test_args(TensorType([Lorentz], sym))
 
-@XFAIL
+
 def test_sympy__tensor__tensor__TensorHead():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, TensorHead
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -2784,7 +2839,7 @@ def test_sympy__tensor__tensor__TensorHead():
     S1 = TensorType([Lorentz], sym)
     assert _test_args(TensorHead('p', S1, 0))
 
-@XFAIL
+
 def test_sympy__tensor__tensor__TensorIndex():
     from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -2808,14 +2863,14 @@ def test_sympy__tensor__tensor__TensAdd():
 
 def test_sympy__tensor__tensor__TensMul():
     from sympy.core import S
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul, TIDS
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     S1 = TensorType([Lorentz], sym)
     p = S1('p')
-    free, dum =  TensMul.from_indices(a)
-    assert _test_args(TensMul(S.One, [p], free, dum))
+    free, dum = TIDS.free_dum_from_indices(a)
+    assert _test_args(TensMul.from_data(S.One, [p], free, dum))
 
 
 

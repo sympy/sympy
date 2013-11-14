@@ -42,6 +42,7 @@ def test_as_poly_1t():
         Poly(2/(exp(2) + 1)*z, t, z), Poly(2/(exp(2) + 1)*z, z, t)]
     assert as_poly_1t(2/((exp(2) + 1)*t) + t, t, z) in [
         Poly(t + 2/(exp(2) + 1)*z, t, z), Poly(t + 2/(exp(2) + 1)*z, z, t)]
+    assert as_poly_1t(S(0), t, z) == Poly(0, t, z)
 
 
 def test_derivation():
@@ -320,6 +321,10 @@ def test_integrate_hyperexponential_polynomial():
         Poly((x - t0)*t1**2 + (-2*t0 + 2*x)*t1, t1), Poly(-2*x*t0 + x**2 +
         t0**2, t1), True)
 
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t0, t0)]})
+    assert integrate_hyperexponential_polynomial(Poly(0, t0), DE, z) == (
+        Poly(0, t0), Poly(1, t0), True)
+
 
 def test_integrate_hyperexponential_returns_piecewise():
     a, b = symbols('a b')
@@ -339,7 +344,15 @@ def test_integrate_hyperexponential_returns_piecewise():
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
         (x**3/3, Eq(a**6, 0)),
         ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, True)), 0, True)
-
+    DE = DifferentialExtension(x**y + z, y)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((y,
+        Eq(log(x), 0)), (exp(log(x)*y)/log(x), True)), z, True)
+    DE = DifferentialExtension(x**y + z + x**(2*y), y)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((2*y,
+        Eq(2*log(x)**2, 0)), ((exp(2*log(x)*y)*log(x) +
+            2*exp(log(x)*y)*log(x))/(2*log(x)**2), True)), z, True)
+    # TODO: Add a test where two different parts of the extension use a
+    # Piecewise, like y**x + z**x.
 
 def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
