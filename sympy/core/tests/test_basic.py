@@ -58,6 +58,9 @@ def test_has():
 
 
 def test_subs():
+    from sympy.abc import x
+    from sympy.core.numbers import oo
+
     assert b21.subs(b2, b1) == Basic(b1, b1)
     assert b21.subs(b2, b21) == Basic(b21, b1)
     assert b3.subs(b2, b1) == b2
@@ -65,6 +68,8 @@ def test_subs():
     assert b21.subs([(b2, b1), (b1, b2)]) == Basic(b2, b2)
 
     assert b21.subs({b1: b2, b2: b1}) == Basic(b2, b2)
+
+    assert (exp(x)/factorial(x),x,oo) == 0
 
     raises(ValueError, lambda: b21.subs('bad arg'))
     raises(ValueError, lambda: b21.subs(b1, b2, b3))
