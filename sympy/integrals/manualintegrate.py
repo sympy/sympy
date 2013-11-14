@@ -54,6 +54,7 @@ DerivativeRule = Rule("DerivativeRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "func")
+TrigSubstitutionRule = Rule("TrigSubstitutionRule", "theta func rewritten substep")
 
 IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
 
@@ -98,6 +99,9 @@ def manual_diff(f, symbol):
             return -arg.diff(symbol) * sympy.csc(arg) * sympy.cot(arg)
         elif isinstance(f, sympy.Add):
             return sum([manual_diff(arg, symbol) for arg in f.args])
+        elif isinstance(f, sympy.Mul):
+            if len(f.args) == 2 and isinstance(f.args[0], sympy.Number):
+                return f.args[0] * manual_diff(f.args[1], symbol)
     return f.diff(symbol)
 
 # Method based on that on SIN, described in "Symbolic Integration: The
@@ -582,7 +586,7 @@ def trig_powers_products_rule(integral):
         match = integrand.match(pattern)
 
         if match:
-            a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
+            a, b, m, n = match.get(a, 0), match.get(b, 0), match.get(m, 0), match.get(n, 0)
             return multiplexer({
                 sincos_botheven_condition: sincos_botheven,
                 sincos_sinodd_condition: sincos_sinodd,
@@ -620,6 +624,48 @@ def trig_powers_products_rule(integral):
                 cotcsc_cotodd_condition: cotcsc_cotodd,
                 cotcsc_csceven_condition: cotcsc_csceven
             })((a, b, m, n, integrand, symbol))
+
+def trig_substitution_rule(integral):
+    integrand, symbol = integral
+    a = sympy.Wild('a', exclude=[0, symbol])
+    b = sympy.Wild('b', exclude=[0, symbol])
+    theta = sympy.Dummy("theta")
+
+    matches = integrand.find(a + b*symbol**2)
+    if matches:
+        for expr in matches:
+            match = expr.match(a + b*symbol**2)
+            a = match[a]
+            b = match[b]
+
+            a_positive = ((a.is_number and a > 0) or a.is_positive)
+            b_positive = ((b.is_number and b > 0) or b.is_positive)
+            x_func = None
+            if a_positive and b_positive:
+                # a**2 + b*x**2
+                x_func = (sympy.sqrt(a)/sympy.sqrt(b)) * sympy.tan(theta)
+            elif a_positive and not b_positive:
+                # a**2 - b*x**2
+                x_func = (sympy.sqrt(a)/sympy.sqrt(-b)) * sympy.sin(theta)
+            elif not a_positive and b_positive:
+                # b*x**2 - a**2
+                x_func = (sympy.sqrt(-a)/sympy.sqrt(b)) * sympy.sec(theta)
+            if x_func:
+                replaced = integrand.subs(symbol, x_func).trigsimp()
+                if not replaced.has(symbol):
+                    replaced *= manual_diff(x_func, theta)
+                    replaced = replaced.trigsimp()
+                    secants = replaced.find(1/sympy.cos(theta))
+                    if secants:
+                        replaced = replaced.xreplace({
+                            1/sympy.cos(theta): sympy.sec(theta)
+                        })
+
+                    substep = integral_steps(replaced, theta)
+                    return TrigSubstitutionRule(theta, x_func, replaced, substep, integrand, symbol)
+                    # return PiecewiseRule([
+                    #     (TrigSubstitutionRule(theta, x_func, replaced, substep, integrand, symbol), sympy.And(a > 0, b > 0))
+                    # ], integrand, symbol)
 
 def substitution_rule(integral):
     integrand, symbol = integral
@@ -696,6 +742,13 @@ def derivative_rule(integral):
         return DerivativeRule(*integral)
     else:
         return ConstantRule(integral.integrand, *integral)
+
+def rewrites_rule(integral):
+    integrand, symbol = integral
+
+    if integrand.match(1/sympy.cos(symbol)):
+        rewritten = integrand.subs(1/sympy.cos(symbol), sympy.sec(symbol))
+        return RewriteRule(rewritten, integral_steps(rewritten, symbol), integrand, symbol)
 
 def fallback_rule(integral):
     return DontKnowRule(*integral)
@@ -793,6 +846,7 @@ def integral_steps(integrand, symbol, **options):
         })),
         null_safe(
             alternatives(
+                rewrites_rule,
                 substitution_rule,
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
@@ -884,6 +938,13 @@ def eval_piecewise(substeps, integrand, symbol):
     return sympy.Piecewise(*[(_manualintegrate(substep), cond)
                              for substep, cond in substeps])
 
+@evaluates(TrigSubstitutionRule)
+def eval_trigsubstitution(theta, func, rewritten, substep, integrand, symbol):
+    func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
+    inverse = sympy.solve(symbol - func, theta)[0]
+    print('\t', _manualintegrate(substep), rewritten)
+    return _manualintegrate(substep).subs(theta, inverse)
+
 @evaluates(DerivativeRule)
 def eval_derivativerule(integrand, symbol):
     # isinstance(integrand, Derivative) should be True
@@ -904,7 +965,7 @@ def eval_dontknowrule(integrand, symbol):
 def _manualintegrate(rule):
     evaluator = evaluators.get(rule.__class__)
     if not evaluator:
-        raise ValueError("Cannot evaluate rule %s" % rule)
+        raise ValueError("Cannot evaluate rule %s" % repr(rule))
     return evaluator(*rule)
 
 def manualintegrate(f, var):
