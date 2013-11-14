@@ -2255,11 +2255,13 @@ def test_pinv_solve():
     assert A.pinv_solve(B) == A.cholesky_solve(B)
     assert A.pinv_solve(B) == A.LDLsolve(B)
     assert A.pinv_solve(B) == Matrix([sympify('-43/26'), sympify('71/26')])
+    assert A * A.pinv() * B == B
     # Fully determined, with two-dimensional B matrix.
     B = Matrix([[12, 13, 14], [15, 16, 17]])
     assert A.pinv_solve(B) == A.cholesky_solve(B)
     assert A.pinv_solve(B) == A.LDLsolve(B)
     assert A.pinv_solve(B) == Matrix([[-33, -37, -41], [69, 75, 81]]) / 26
+    assert A * A.pinv() * B == B
     # Underdetermined system (infinite results).
     A = Matrix([[1, 0, 1], [0, 1, 1]])
     B = Matrix([5, 7])
@@ -2271,6 +2273,7 @@ def test_pinv_solve():
     assert solution == Matrix([[w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 1],
                                [w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 3],
                                [-w['w0_0']/3 - w['w1_0']/3 + w['w2_0']/3 + 4]])
+    assert A * A.pinv() * B == B
     # Overdetermined system (least squares results).
     A = Matrix([[1, 0], [0, 0], [0, 1]])
     B = Matrix([3, 2, 1])
@@ -2279,8 +2282,31 @@ def test_pinv_solve():
     assert A * A.pinv() * B != B
 
 @XFAIL
-def test_pinv_solve_rank_deficient():
+def test_pinv_rank_deficient():
+    # Test the four properties of the pseudoinverse for various matrices.
+    As = [Matrix([[1, 1, 1], [2, 2, 2]]),
+          Matrix([[1, 0], [0, 0]])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+    # Test solving with rank-deficient matrices.
     A = Matrix([[1, 0], [0, 0]])
+    # Exact, non-unique solution.
     B = Matrix([3, 0])
-    w1 = symbols('w1')
-    assert A.pinv_solve(B) == Matrix([3, w1])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B == B
+    # Least squares, non-unique solution.
+    B = Matrix([3, 1])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B != B
