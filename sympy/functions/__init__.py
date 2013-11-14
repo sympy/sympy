@@ -10,7 +10,7 @@ from sympy.functions.combinatorial.factorials import (factorial, factorial2,
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas, harmonic,
         bernoulli, bell, euler, catalan)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
-        Id, real_root)
+        Id, real_root, cbrt)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
         conjugate, arg, polar_lift, periodic_argument, unbranched_argument,
         principal_branch, transpose, adjoint)
