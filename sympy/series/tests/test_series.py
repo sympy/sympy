@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs
+    Function, log, sqrt, Symbol, Subs, pi
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -134,3 +134,8 @@ def test_x_is_base_detection():
 def test_sin_power():
     e = sin(x)**1.2
     assert calculate_series(e, x) == x**1.2
+
+
+def test_issue_7203():
+    assert series(cos(x), x, pi, 3) == \
+        -1 + (x - pi)**2/2 + O((x - pi)**3, (x, pi))
