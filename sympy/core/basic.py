@@ -1063,7 +1063,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         rv = self._eval_subs(old, new)
         if rv is None:
-            if new is oo or new is -oo:
+            if new is oo :
                 rv = limit(self,old,new)
             else:
                 rv = fallback(self, old, new)
