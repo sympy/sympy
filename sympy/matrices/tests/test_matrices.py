@@ -2310,3 +2310,7 @@ def test_pinv_rank_deficient():
     assert w1.name == 'w1_0'
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
+
+def test_issue4102():
+    assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
+    assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])
