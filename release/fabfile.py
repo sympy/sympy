@@ -152,7 +152,7 @@ def checkout_cache():
     run("git clone --bare https://github.com/sympy/sympy.git sympy-cache.git")
 
 @task
-def gitrepos(branch=None):
+def gitrepos(branch=None, fork='sympy'):
     """
     Clone the repo
 
@@ -160,6 +160,9 @@ def gitrepos(branch=None):
     default, the branch checked out is the same one as the one checked out
     locally. The master branch is not allowed--use a release branch (see the
     README). No naming convention is put on the release branch.
+
+    To test the release, create a branch in your fork, and set the fork
+    option.
     """
     with cd("/home/vagrant"):
         if not exists("sympy-cache.git"):
@@ -171,7 +174,7 @@ def gitrepos(branch=None):
         raise Exception("Cannot release from master")
     run("mkdir -p repos")
     with cd("/home/vagrant/repos"):
-        run("git clone --reference ../sympy-cache.git https://github.com/sympy/sympy.git")
+        run("git clone --reference ../sympy-cache.git https://github.com/{fork}/sympy.git".format(fork=fork))
         with cd("/home/vagrant/repos/sympy"):
             run("git checkout -t origin/%s" % branch)
 
@@ -236,7 +239,7 @@ def test_tarball(release='2'):
                 run('python -c "import sympy; print(sympy.__version__)"')
 
 @task
-def release(branch=None):
+def release(branch=None, fork='sympy'):
     """
     Perform all the steps required for the release, except uploading
 
@@ -244,9 +247,12 @@ def release(branch=None):
     release/ directory in the same directory as this one.  At the end, it
     prints some things that need to be pasted into various places as part of
     the release.
+
+    To test the release, push a branch to your fork on GitHub and set the fork
+    option to your username.
     """
     remove_userspace()
-    gitrepos(branch)
+    gitrepos(branch, fork)
     # This has to be run locally because it itself uses fabric. I split it out
     # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
