@@ -17,8 +17,8 @@ fab vagrant func
 Even those functions that do not use vagrant must be run this way, because of
 the vagrant configuration at the bottom of this file.
 
-Give internal functions names that start with _, so that they don't show up in
-the fab list of available commands (fab -l).
+Any function that should be made avaiable from the command line needs to have
+the @task decorator.
 
 Save any files that should be reset between runs somewhere in the repos
 directory, so that the remove_userspace() function will clear it.  It's best
@@ -38,7 +38,7 @@ from collections import defaultdict, OrderedDict
 
 from contextlib import contextmanager
 
-from fabric.api import env, local, run, sudo, cd, hide
+from fabric.api import env, local, run, sudo, cd, hide, task
 from fabric.contrib.files import exists
 from fabric.colors import blue
 from fabric.utils import error
@@ -67,7 +67,7 @@ try:
 except AttributeError:
     pass
 
-def _full_path_split(path):
+def full_path_split(path):
     """
     Function to do a full split on a path.
     """
@@ -75,7 +75,7 @@ def _full_path_split(path):
     rest, tail = os.path.split(path)
     if not rest or rest == os.path.sep:
         return (tail,)
-    return _full_path_split(rest) + (tail,)
+    return full_path_split(rest) + (tail,)
 
 @contextmanager
 def use_venv(pyversion):
@@ -95,6 +95,7 @@ def use_venv(pyversion):
     else:
         raise ValueError("pyversion must be one of '2' or '3', not %s" % pyversion)
 
+@task
 def prepare():
     """
     Setup the VM
@@ -107,6 +108,7 @@ def prepare():
     prepare_apt()
     checkout_cache()
 
+@task
 def prepare_apt():
     """
     Download software from apt
@@ -125,6 +127,7 @@ def prepare_apt():
     sudo("apt-get -y update")
     sudo("apt-get -y install python3.3")
 
+@task
 def remove_userspace():
     """
     Deletes (!) the SymPy changes. Use with great care.
@@ -133,6 +136,7 @@ def remove_userspace():
     """
     run("rm -rf repos")
 
+@task
 def checkout_cache():
     """
     Checkout a cache of SymPy
@@ -144,6 +148,7 @@ def checkout_cache():
     run("rm -rf sympy-cache.git")
     run("git clone --bare https://github.com/sympy/sympy.git sympy-cache.git")
 
+@task
 def gitrepos(branch=None):
     """
     Clone the repo
@@ -167,6 +172,7 @@ def gitrepos(branch=None):
         with cd("/home/vagrant/repos/sympy"):
             run("git checkout -t origin/%s" % branch)
 
+@task
 def get_sympy_version(version_cache=[]):
     """
     Get the full version of SymPy being released (like 0.7.3.rc1)
@@ -183,6 +189,7 @@ def get_sympy_version(version_cache=[]):
     version_cache.append(version)
     return version
 
+@task
 def get_sympy_short_version():
     """
     Get the short version of SymPy being released, not including any rc tags
@@ -191,6 +198,7 @@ def get_sympy_short_version():
     version = get_sympy_version()
     return '.'.join(version.split('.')[:3]) # Remove any rc tags
 
+@task
 def test_sympy():
     """
     Run the SymPy test suite
@@ -198,6 +206,7 @@ def test_sympy():
     with cd("/home/vagrant/repos/sympy"):
         run("./setup.py test")
 
+@task
 def test_tarball(release='2'):
     """
     Test that the tarball can be unpacked and installed, and that sympy
@@ -210,7 +219,7 @@ def test_tarball(release='2'):
 
     # We have to run this outside the virtualenv to make sure the version
     # check runs in Python 2
-    tarball_formatter_dict = _tarball_formatter()
+    tarball_formatter_dict = tarball_formatter()
     with use_venv(release):
         make_virtualenv(venv)
         with virtualenv(venv):
@@ -223,6 +232,7 @@ def test_tarball(release='2'):
                 run("python setup.py install")
                 run('python -c "import sympy; print(sympy.__version__)"')
 
+@task
 def release(branch=None):
     """
     Perform all the steps required for the release, except uploading
@@ -247,6 +257,7 @@ def release(branch=None):
     print_authors()
     GitHub_release()
 
+@task
 def python2_tarball():
     """
     Build the Python 2 tarball
@@ -256,8 +267,9 @@ def python2_tarball():
         run("./setup.py clean")
         run("./setup.py sdist")
         run("./setup.py bdist_wininst")
-        run("mv dist/{2win32-orig} dist/{2win32}".format(**_tarball_formatter()))
+        run("mv dist/{2win32-orig} dist/{2win32}".format(**tarball_formatter()))
 
+@task
 def build_docs():
     """
     Build the html and pdf docs
@@ -271,15 +283,16 @@ def build_docs():
                 run("make clean")
                 run("make html-errors")
                 with cd("/home/vagrant/repos/sympy/doc/_build"):
-                    run("mv html {html-nozip}".format(**_tarball_formatter()))
-                    run("zip -9lr {html} {html-nozip}".format(**_tarball_formatter()))
-                    run("cp {html} ../../dist/".format(**_tarball_formatter()))
+                    run("mv html {html-nozip}".format(**tarball_formatter()))
+                    run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))
+                    run("cp {html} ../../dist/".format(**tarball_formatter()))
                 run("make clean")
                 run("make latex")
                 with cd("/home/vagrant/repos/sympy/doc/_build/latex"):
                     run("make")
-                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**_tarball_formatter()))
+                    run("cp {pdf-orig} ../../../dist/{pdf}".format(**tarball_formatter()))
 
+@task
 def copy_release_files():
     """
     Move the release files from the VM to release/ locally
@@ -288,6 +301,7 @@ def copy_release_files():
         run("mkdir -p /vagrant/release")
         run("cp dist/* /vagrant/release/")
 
+@task
 def show_files(file, print_=True):
     """
     Show the contents of a tarball.
@@ -304,16 +318,16 @@ def show_files(file, print_=True):
     """
     # TODO: Windows
     if file == '2':
-        ret = local("tar tf release/{py2}".format(**_tarball_formatter()), capture=True)
+        ret = local("tar tf release/{py2}".format(**tarball_formatter()), capture=True)
     elif file == '3':
-        py32 = "{py32}".format(**_tarball_formatter())
-        py33 = "{py33}".format(**_tarball_formatter())
+        py32 = "{py32}".format(**tarball_formatter())
+        py33 = "{py33}".format(**tarball_formatter())
         assert md5(py32, print_=False).split()[0] == md5(py33, print_=False).split()[0]
         ret = local("tar tf release/" + py32, capture=True)
     elif file in {'2win', '3win'}:
         raise NotImplementedError("Windows installers")
     elif file == 'html':
-        ret = local("unzip -l release/{html}".format(**_tarball_formatter()), capture=True)
+        ret = local("unzip -l release/{html}".format(**tarball_formatter()), capture=True)
     else:
         raise ValueError(file + " is not valid")
     if print_:
@@ -461,6 +475,7 @@ tarball_whitelist = {
     "PKG-INFO", # Generated by setup.py. Contains metadata for PyPI.
     }
 
+@task
 def compare_tar_against_git(release):
     """
     Compare the contents of the tarball against git ls-files
@@ -475,7 +490,7 @@ def compare_tar_against_git(release):
     for file in tar_output_orig:
         # The tar files are like sympy-0.7.3/sympy/__init__.py, and the git
         # files are like sympy/__init__.py.
-        split_path = _full_path_split(file)
+        split_path = full_path_split(file)
         if split_path[-1]:
             # Exclude directories, as git ls-files does not include them
             tar_output.add(os.path.join(*split_path[1:]))
@@ -509,6 +524,7 @@ def compare_tar_against_git(release):
     if fail:
         error("Non-whitelisted files found or not found in the tarball")
 
+@task
 def md5(file='*', print_=True):
     """
     Print the md5 sums of the release files
@@ -534,13 +550,14 @@ the <a href="http://docs.sympy.org/0.7.3/index.html">online documentation</a>.''
     ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/0.7.3/index.html"> html documentation</a>.''',),
     ])
 
+@task
 def table():
     """
     Make an html table of the downloads.
 
     This is for pasting into the GitHub releases page. See GitHub_release().
     """
-    tarball_formatter_dict = _tarball_formatter()
+    tarball_formatter_dict = tarball_formatter()
     shortversion = get_sympy_short_version()
 
     tarball_formatter_dict['version'] = shortversion
@@ -580,6 +597,7 @@ def table():
     out = ' '.join(table)
     return out
 
+@task
 def GitHub_release():
     """
     Generate text to put in the GitHub release Markdown box
@@ -601,6 +619,7 @@ files below.
     print(out)
     return out
 
+@task
 def get_tarball_name(file):
     """
     Get the name of a tarball
@@ -660,10 +679,11 @@ tarball_name_types = {
     }
 
 # This has to be a function, because you cannot call any function here at
-# import time (before the vagrant() function is fun).
-def _tarball_formatter():
+# import time (before the vagrant() function is run).
+def tarball_formatter():
     return {name: get_tarball_name(name) for name in tarball_name_types}
 
+@task
 def get_previous_version_tag():
     """
     Get the version of the previous release
@@ -698,6 +718,7 @@ def get_previous_version_tag():
                 return curtag
         error("Could not find the tag for the previous release.")
 
+@task
 def get_authors():
     """
     Get the list of authors since the previous release
@@ -741,6 +762,7 @@ def get_authors():
         authors = releaseauthors - newauthors | starred_newauthors
         return (sorted(authors, key=lastnamekey), len(releaseauthors), len(newauthors))
 
+@task
 def print_authors():
     """
     Print authors text to put at the bottom of the release notes
@@ -768,6 +790,7 @@ Thanks to everyone who contributed to this release!
 # ------------------------------------------------
 # PyPI
 
+@task
 def upload():
     """
     Upload the files everywhere
@@ -779,6 +802,7 @@ def upload():
     #pypi_register()
     pypi_upload()
 
+@task
 def distutils_check():
     """
     Runs setup.py check
@@ -787,6 +811,7 @@ def distutils_check():
         run("python setup.py check")
         run("python3 setup.py check")
 
+@task
 def pypi_register():
     """
     Register a release with PyPI
@@ -797,6 +822,7 @@ def pypi_register():
     with cd("/home/vagrant/repos/sympy"):
         run("python setup.py register")
 
+@task
 def pypi_upload():
     """
     Upload files to PyPI
@@ -808,11 +834,12 @@ def pypi_upload():
 # ------------------------------------------------
 # Vagrant related configuration
 
+@task
 def vagrant():
     """
     Run commands using vagrant
     """
-    vc = _get_vagrant_config()
+    vc = get_vagrant_config()
     # change from the default user to 'vagrant'
     env.user = vc['User']
     # connect to the port-forwarded ssh
@@ -822,7 +849,7 @@ def vagrant():
     # Forward the agent if specified:
     env.forward_agent = vc.get('ForwardAgent', 'no') == 'yes'
 
-def _get_vagrant_config():
+def get_vagrant_config():
     """
     Parses vagrant configuration and returns it as dict of ssh parameters
     and their values
@@ -834,6 +861,7 @@ def _get_vagrant_config():
         conf[parts[0]] = ' '.join(parts[1:])
     return conf
 
+@task
 def restart_network():
     """
     Do this if the VM won't connect to the internet.
@@ -843,6 +871,7 @@ def restart_network():
 # ---------------------------------------
 # Just a simple testing command:
 
+@task
 def uname():
     """
     Get the uname in Vagrant. Useful for testing that Vagrant works.
