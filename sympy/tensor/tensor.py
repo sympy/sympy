@@ -540,6 +540,14 @@ class VTIDS(TIDS):
     @staticmethod
     def _contract_ndarray(free1, free2, ndarray1, ndarray2):
         numpy = import_module('numpy')
+
+        def ikey(x):
+            return x[1:]
+
+        free1 = free1[:]
+        free2 = free2[:]
+        free1.sort(key=ikey)
+        free2.sort(key=ikey)
         self_free = [_[0] for _ in free1]
         axes1 = []
         axes2 = []
@@ -549,7 +557,7 @@ class VTIDS(TIDS):
             else:
                 continue
             axes1.append(nidx)
-            axes2.append(nidx)
+            axes2.append(jpos)
 
         contracted_ndarray = numpy.tensordot(
             ndarray1,
@@ -572,6 +580,16 @@ class VTIDS(TIDS):
     def __mul__(f, g):
         return VTIDS(*VTIDS.mul(f, g))
 
+    @staticmethod
+    def flip_index_by_metric(data, metric, pos):
+        numpy = import_module('numpy')
+
+        data = numpy.tensordot(
+                metric,
+                data,
+                (1, pos))
+        return numpy.rollaxis(data, 0, pos+1)
+
     def correct_signature_from_indices(self, data, indices, free, dum):
         """
         Utility function to correct the values inside the data ndarray
@@ -584,11 +602,7 @@ class VTIDS(TIDS):
         # use the metric
         for i, indx in enumerate(indices):
             if not indx.is_up:
-                data = numpy.tensordot(
-                        indx._tensortype.data,
-                        data,
-                        (1, i))
-                data = numpy.rollaxis(data, i)
+                data = VTIDS.flip_index_by_metric(data, indx._tensortype.data, i)
 
         if len(dum) > 0:
             ### perform contractions ###
@@ -1008,6 +1022,7 @@ class TensorIndexType(Basic):
     @data.deleter
     def data(self):
         del self._data
+        self._data = None
         del self.metric.data
 
     @property
@@ -1654,7 +1669,7 @@ class TensorHead(Basic):
 
         >>> r = A(True, True)
         >>> r
-        A(auto_left, auto_right)
+        A(auto_left, -auto_right)
 
         Here ``auto_left`` and ``auto_right`` are automatically generated
         tensor indices, they are only two for every ``TensorIndexType`` and
@@ -1667,7 +1682,7 @@ class TensorHead(Basic):
         >>> B = tensorhead('B', [Lorentz, Lorentz, Spinor, Spinor], [[1]*4])
         >>> s = B(True, True, True, True)
         >>> s
-        B(auto_left, auto_right, auto_left, auto_right)
+        B(auto_left, -auto_right, auto_left, -auto_right)
 
         Here, ``auto_left`` and ``auto_right`` are repeated twice, but they are
         not the same indices, as they refer to different ``TensorIndexType``s.
@@ -1675,7 +1690,7 @@ class TensorHead(Basic):
         Auto-matrix indices are automatically contracted upon multiplication,
 
         >>> r*s
-        A(auto_left, L_0)*B(-L_0, auto_right, auto_left, auto_right)
+        A(auto_left, -L_0)*B(L_0, -auto_right, auto_left, -auto_right)
 
         The multiplication algorithm has found an ``auto_right`` index in ``A``
         and an ``auto_left`` index in ``B`` referring to the same
@@ -1696,7 +1711,7 @@ class TensorHead(Basic):
 
         >>> C = tensorhead('C', [Lorentz, Lorentz], [[1]*2], matrix_behavior=True)
         >>> C()
-        C(auto_left, auto_right)
+        C(auto_left, -auto_right)
 
         """
 
@@ -1735,7 +1750,7 @@ class TensorHead(Basic):
             for el in mat_ind:
                 eltyp = self.index_types[el]
                 if eltyp in matrix_behavior_kinds:
-                    elind = self.index_types[el].auto_right
+                    elind = -self.index_types[el].auto_right
                     matrix_behavior_kinds[eltyp].append(elind)
                 else:
                     elind = self.index_types[el].auto_left
@@ -1776,6 +1791,8 @@ class TensorHead(Basic):
     def data(self, data):
         data = VTIDS.parse_data(data)
         for dim, indextype in zip(data.shape, self.index_types):
+            if indextype.data is None:
+                raise ValueError("index type {} has no data associated (needed to raise/lower index)".format(indextype))
             if indextype.dim is None:
                 continue
             if dim != indextype.dim:
@@ -1785,6 +1802,7 @@ class TensorHead(Basic):
     @data.deleter
     def data(self):
         del self._data
+        self._data = None
 
     def applyfunc(self, func):
         th = TensorHead(*self.args)
@@ -2130,10 +2148,10 @@ class TensAdd(TensExpr):
             arg_auto_right_types = set([])
             for index in arg.get_indices():
                 # @type index: TensorIndex
-                if index == index._tensortype.auto_left:
+                if index in (index._tensortype.auto_left, -index._tensortype.auto_left):
                     auto_left_types.add(index._tensortype)
                     arg_auto_left_types.add(index._tensortype)
-                if index == index._tensortype.auto_right:
+                if index in (index._tensortype.auto_right, -index._tensortype.auto_right):
                     auto_right_types.add(index._tensortype)
                     arg_auto_right_types.add(index._tensortype)
             args_auto_left_types.append(arg_auto_left_types)
@@ -2143,7 +2161,7 @@ class TensAdd(TensExpr):
             missing_right = auto_right_types - aas_right
             missing_intersection = missing_left & missing_right
             for j in missing_intersection:
-                args[i] *= j.delta(j.auto_left, j.auto_right)
+                args[i] *= j.delta(j.auto_left, -j.auto_right)
             if missing_left != missing_right:
                 raise ValueError("cannot determine how to add auto-matrix indices on some args")
 
@@ -2490,6 +2508,7 @@ class TensAdd(TensExpr):
     @data.deleter
     def data(self):
         del self._data
+        self._data = None
 
     def __iter__(self):
         if not self.data:
@@ -2782,8 +2801,8 @@ class TensMul(TensExpr):
                         matrix_behavior_kinds[key] = (v2[1],)
                 elif len(v1) == 2:
                     auto_index = v1[1]._tensortype.auto_index
-                    self = self.substitute_indices((v1[1], auto_index))
-                    other = other.substitute_indices((v2[0], -auto_index))
+                    self = self.substitute_indices((v1[1], -auto_index))
+                    other = other.substitute_indices((v2[0], auto_index))
                     if len(v2) == 1:
                         matrix_behavior_kinds[key] = (v1[0],)
                     elif len(v2) == 2:
@@ -3048,6 +3067,8 @@ class TensMul(TensExpr):
 
         ``index_types`` list of tuples ``(old_index, new_index)``
 
+        Note: this method will neither raise or lower the indices, it will just replace their symbol.
+
         Examples
         ========
 
@@ -3177,6 +3198,7 @@ class TensMul(TensExpr):
     @data.deleter
     def data(self):
         self._tids = TIDS(self._tids.components, self._tids.free, self._tids.dum)
+        self._data = None
 
     def __iter__(self):
         if self.data is None:

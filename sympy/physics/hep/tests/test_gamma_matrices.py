@@ -44,7 +44,7 @@ def execute_gamma_simplify_tests_for_function(tfunc, D):
     # Fully G.Lorentz-contracted expressions, these return scalars:
 
     def add_delta(ne):
-        return ne * DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
+        return ne * DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right)
 
     t = (G(mu)*G(-mu))
     ts = add_delta(D)
@@ -210,7 +210,7 @@ def test_kahane_simplify1():
     assert r.equals(t)
     t = G(i0)*G(-i0)
     r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(4*KD(sl, sr))
+    assert r.equals(4*KD(sl, -sr))
     t = G(i0,s0,-s1)*G(-i0,s1,-s2)
     r = G._kahane_simplify(t.coeff, t._tids)
     assert r.equals(4*KD(s0, -s2))
@@ -222,7 +222,7 @@ def test_kahane_simplify1():
     assert r.equals(-2*G(i1))
     t = G(i0)*G(i1)*G(-i0)*G(-i1)
     r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((2*D - D**2)*KD(sl, sr))
+    assert r.equals((2*D - D**2)*KD(sl, -sr))
     t = G(i0,s0,-s1)*G(i1,s1,-s2)*G(-i0,s2,-s3)*G(-i1,s3,-s0)
     r = G._kahane_simplify(t.coeff, t._tids)
     assert r.equals(4*(2*D - D**2))
@@ -230,7 +230,7 @@ def test_kahane_simplify1():
     raises(ValueError, lambda: G._kahane_simplify(t.coeff, t._tids))
     t = (G(mu)*G(nu)*G(-nu)*G(-mu))
     r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals(D**2*KD(sl, sr))
+    assert r.equals(D**2*KD(sl, -sr))
     t = (G(mu,s0,-s1)*G(nu,s1,-s2)*G(-nu,s2,-s3)*G(-mu,s3,-s4))
     r = G._kahane_simplify(t.coeff, t._tids)
     assert r.equals(D**2*KD(s0, -s4))
@@ -239,13 +239,13 @@ def test_kahane_simplify1():
     assert r.equals(4*D**2)
     t = (G(mu)*G(nu)*G(-rho)*G(-nu)*G(-mu)*G(rho))
     r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((4*D - 4*D**2 + D**3)*KD(sl, sr))
+    assert r.equals((4*D - 4*D**2 + D**3)*KD(sl, -sr))
     t = (G(-mu)*G(-nu)*G(-rho)*G(-sigma)*G(nu)*G(mu)*G(sigma)*G(rho))
     r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((-16*D + 24*D**2 - 8*D**3 + D**4)*KD(sl, sr))
+    assert r.equals((-16*D + 24*D**2 - 8*D**3 + D**4)*KD(sl, -sr))
     t = (G(-mu)*G(nu)*G(-rho)*G(sigma)*G(rho)*G(-nu)*G(mu)*G(-sigma))
     r = G._kahane_simplify(t.coeff, t._tids)
-    assert r.equals((8*D - 12*D**2 + 6*D**3 - D**4)*KD(sl, sr))
+    assert r.equals((8*D - 12*D**2 + 6*D**3 - D**4)*KD(sl, -sr))
 
     # Expressions with free indices:
     t = (G(mu)*G(nu)*G(rho)*G(sigma)*G(-mu))
@@ -264,7 +264,7 @@ def test_gamma_matrix_class():
 
     t = A(k)*G(i)*G(-i)
     ts = simplify(t)
-    assert ts == 4*A(k)*DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
+    assert ts == 4*A(k)*DiracSpinorIndex.delta(DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right)
 
     t = G(i)*A(k)*G(j)
     ts = simplify(t)
