@@ -294,6 +294,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vinit Ravishankar: fix iterables documentation
 #. Mike Boyle: Additions to the printing system
 #. Heiner Kirchhoffer: PythonRational int conversion fix
+#. Pablo Puente: Test cases from Wester paper
 #. James Fiedler: Bug fix
 #. Harsh Gupta: Bug fix
 
