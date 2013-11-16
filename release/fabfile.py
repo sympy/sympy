@@ -47,10 +47,13 @@ import unicodedata
 
 import os.path
 
-# https://pypi.python.org/pypi/fabric-virtualenv/
-from fabvenv import virtualenv, make_virtualenv
-# Note, according to fabvenv docs, always use an absolute path with
-# virtualenv().
+try:
+    # https://pypi.python.org/pypi/fabric-virtualenv/
+    from fabvenv import virtualenv, make_virtualenv
+    # Note, according to fabvenv docs, always use an absolute path with
+    # virtualenv().
+except ImportError:
+    error("fabvenv is required. See https://github.com/sympy/sympy/pull/2333")
 
 # Note, it's actually good practice to use absolute paths
 # everywhere. Otherwise, you will get surprising results if you call one
