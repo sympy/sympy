@@ -33,9 +33,33 @@ def solve_general_linear(M, v, dummygen=None):
     [   _tau0 - 1],
     [-2*_tau0 + 2],
     [       _tau0]])
-
     >>> params
     Matrix([[_tau0]])
+
+    It is possible to provide in the third argument a generator
+    from which the free variables if any will be taken.
+
+    >>> from sympy import Symbol
+    >>> x = Symbol("x")
+    >>> y = Symbol("y")
+    >>> z = Symbol("z")
+
+    >>> M = Matrix([[1,2,3],[2,4,6],[3,6,9]])
+    >>> v = Matrix([0,0,0])
+
+    >>> sol, params = solve_general_linear(M, v, (s for s in (x,y,z)))
+    >>> sol
+    Matrix([
+    [-2*x - 3*y],
+    [         x],
+    [         y]])
+    >>> params
+    Matrix([
+    [x],
+    [y]])
+
+    The solver will raise a ValueError exception in case the
+    linear system has no solution.
     """
     R, C = M.shape
     U = M.hstack(M.copy(), v.copy())
