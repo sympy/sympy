@@ -48,7 +48,7 @@ import unicodedata
 import os.path
 
 # https://pypi.python.org/pypi/fabric-virtualenv/
-#from fabvenv import virtualenv, make_virtualenv
+from fabvenv import virtualenv, make_virtualenv
 # Note, according to fabvenv docs, always use an absolute path with
 # virtualenv().
 
