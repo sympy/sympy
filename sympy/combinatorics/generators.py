@@ -4,6 +4,7 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import variations, rotate_left
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
+from sympy.core.compatibility import xrange
 
 
 def symmetric(n):
@@ -43,7 +44,7 @@ def cyclic(n):
     dihedral
     """
     gen = list(range(n))
-    for i in range(n):
+    for i in xrange(n):
         yield Permutation(gen)
         gen = rotate_left(gen, 1)
 
@@ -99,7 +100,7 @@ def dihedral(n):
         yield Permutation([3, 2, 1, 0])
     else:
         gen = list(range(n))
-        for i in range(n):
+        for i in xrange(n):
             yield Permutation(gen)
             yield Permutation(gen[::-1])
             gen = rotate_left(gen, 1)

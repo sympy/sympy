@@ -65,7 +65,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, xrange
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
@@ -527,7 +527,7 @@ class Hyper_Function(Expr):
         def tr(bucket):
             bucket = list(bucket.items())
             if not any(isinstance(x[0], Mod) for x in bucket):
-                bucket.sort(key=lambda x: x[0])
+                bucket.sort(key=lambda x: default_sort_key(x[0]))
             bucket = tuple([(mod, len(values)) for mod, values in bucket if
                     values])
             return bucket
@@ -572,7 +572,7 @@ class Hyper_Function(Expr):
         """
         for a in self.ap:
             for b in self.bq:
-                if (a - b).is_integer and not a < b:
+                if (a - b).is_integer and (a < b) is False:
                     return False
         for a in self.ap:
             if a == 0:
@@ -677,7 +677,7 @@ class Formula(object):
 
         n = poly.degree() - 1
         b = [closed_form]
-        for _ in range(n):
+        for _ in xrange(n):
             b.append(self.z*b[-1].diff(self.z))
 
         self.B = Matrix(b)
@@ -1354,7 +1354,7 @@ class ReduceOrder(Operator):
         self = Operator.__new__(cls)
 
         p = S(1)
-        for k in range(n):
+        for k in xrange(n):
             p *= (_x + bj + k)/(bj + k)
 
         self._poly = Poly(p, _x)
@@ -1370,13 +1370,13 @@ class ReduceOrder(Operator):
         b = sympify(b)
         a = sympify(a)
         n = b - a
-        if n < 0 or not n.is_Integer:
+        if (n < 0) is True or not n.is_Integer:
             return None
 
         self = Operator.__new__(cls)
 
         p = S(1)
-        for k in range(n):
+        for k in xrange(n):
             p *= (sign*_x + a + k)
 
         self._poly = Poly(p, _x)
@@ -1415,7 +1415,7 @@ def _reduce_order(ap, bq, gen, key):
     operators = []
     for a in ap:
         op = None
-        for i in range(len(bq)):
+        for i in xrange(len(bq)):
             op = gen(a, bq[i])
             if op is not None:
                 bq.pop(i)
@@ -1448,7 +1448,7 @@ def reduce_order(func):
     (Hyper_Function((2,), (3,)), [<Reduce order by cancelling
     upper 4 with lower 3.>])
     """
-    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, lambda x: x)
+    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, default_sort_key)
 
     return Hyper_Function(Tuple(*nap), Tuple(*nbq)), operators
 
@@ -1476,9 +1476,9 @@ def reduce_order_meijer(func):
     """
 
     nan, nbq, ops1 = _reduce_order(func.an, func.bq, ReduceOrder.meijer_plus,
-                                   lambda x: -x)
+                                   lambda x: default_sort_key(-x))
     nbm, nap, ops2 = _reduce_order(func.bm, func.ap, ReduceOrder.meijer_minus,
-                                   lambda x: x)
+                                   default_sort_key)
 
     return G_Function(nan, nap, nbm, nbq), ops1 + ops2
 
@@ -1557,7 +1557,7 @@ def devise_plan(target, origin, z):
 
     def do_shifts(fro, to, inc, dec):
         ops = []
-        for i in range(len(fro)):
+        for i in xrange(len(fro)):
             if to[i] - fro[i] > 0:
                 sh = inc
                 ch = 1
@@ -1662,7 +1662,7 @@ def try_shifted_sum(func, z):
     nbq = [x - k for x in nbq]
 
     ops = []
-    for n in range(r - 1):
+    for n in xrange(r - 1):
         ops.append(ShiftA(n + 1))
     ops.reverse()
 
@@ -1675,7 +1675,7 @@ def try_shifted_sum(func, z):
     ops += [MultOperator(fac)]
 
     p = 0
-    for n in range(k):
+    for n in xrange(k):
         m = z**n/factorial(n)
         for a in nap:
             m *= rf(a, n)
@@ -1867,7 +1867,7 @@ def build_hypergeometric_formula(func):
         n = poly.degree()
         basis = []
         M = zeros(n)
-        for k in range(n):
+        for k in xrange(n):
             a = func.ap[0] + k
             basis += [hyper([a] + list(func.ap[1:]), func.bq, z)]
             if k < n - 1:
@@ -1876,7 +1876,7 @@ def build_hypergeometric_formula(func):
         B = Matrix(basis)
         C = Matrix([[1] + [0]*(n - 1)])
         derivs = [eye(n)]
-        for k in range(n):
+        for k in xrange(n):
             derivs.append(M*derivs[k])
         l = poly.all_coeffs()
         l.reverse()
@@ -1922,7 +1922,7 @@ def hyperexpand_special(ap, bq, z):
     z_ = z
     z = unpolarify(z)
     if z == 0:
-        return S.Zero
+        return S.One
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -1955,6 +1955,10 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
+
+    if z is S.Zero:
+        return S.One
+
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'

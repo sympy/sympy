@@ -39,6 +39,7 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import variations
 
 from math import ceil as _ceil, log as _log
+from sympy.core.compatibility import xrange
 
 def dup_integrate(f, m, K):
     """
@@ -64,7 +65,7 @@ def dup_integrate(f, m, K):
     for i, c in enumerate(reversed(f)):
         n = i + 1
 
-        for j in range(1, m):
+        for j in xrange(1, m):
             n *= i + j + 1
 
         g.insert(0, K.exquo(c, K(n)))
@@ -99,7 +100,7 @@ def dmp_integrate(f, m, u, K):
     for i, c in enumerate(reversed(f)):
         n = i + 1
 
-        for j in range(1, m):
+        for j in xrange(1, m):
             n *= i + j + 1
 
         g.insert(0, dmp_quo_ground(c, K(n), v, K))
@@ -173,7 +174,7 @@ def dup_diff(f, m, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in range(n - 1, n - m, -1):
+            for i in xrange(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(K(k)*coeff)
@@ -220,7 +221,7 @@ def dmp_diff(f, m, u, K):
         for coeff in f[:-m]:
             k = n
 
-            for i in range(n - 1, n - m, -1):
+            for i in xrange(n - 1, n - m, -1):
                 k *= i
 
             deriv.append(dmp_mul_ground(coeff, K(k), v, K))
@@ -841,9 +842,9 @@ def dup_mirror(f, K):
     -x**3 + 2*x**2 + 4*x + 2
 
     """
-    f, n, a = list(f), dup_degree(f), -K.one
+    f, n, a = list(f), len(f) - 1, -K.one
 
-    for i in range(n - 1, -1, -1):
+    for i in xrange(n - 1, -1, -1):
         f[i], a = a*f[i], -a
 
     return f
@@ -863,9 +864,9 @@ def dup_scale(f, a, K):
     4*x**2 - 4*x + 1
 
     """
-    f, n, b = list(f), dup_degree(f), a
+    f, n, b = list(f), len(f) - 1, a
 
-    for i in range(n - 1, -1, -1):
+    for i in xrange(n - 1, -1, -1):
         f[i], b = b*f[i], b*a
 
     return f
@@ -885,10 +886,10 @@ def dup_shift(f, a, K):
     x**2 + 2*x + 1
 
     """
-    f, n = list(f), dup_degree(f)
+    f, n = list(f), len(f) - 1
 
-    for i in range(n, 0, -1):
-        for j in range(0, i):
+    for i in xrange(n, 0, -1):
+        for j in xrange(0, i):
             f[j + 1] += a*f[j]
 
     return f
@@ -911,10 +912,10 @@ def dup_transform(f, p, q, K):
     if not f:
         return []
 
-    n = dup_degree(f)
+    n = len(f) - 1
     h, Q = [f[0]], [[K.one]]
 
-    for i in range(0, n):
+    for i in xrange(0, n):
         Q.append(dup_mul(Q[-1], q, K))
 
     for c, q in zip(f[1:], Q[1:]):
@@ -985,7 +986,7 @@ def dmp_compose(f, g, u, K):
 
 def _dup_right_decompose(f, s, K):
     """Helper function for :func:`_dup_decompose`."""
-    n = dup_degree(f)
+    n = len(f) - 1
     lc = dup_LC(f, K)
 
     f = dup_to_raw_dict(f)
@@ -993,10 +994,10 @@ def _dup_right_decompose(f, s, K):
 
     r = n // s
 
-    for i in range(1, s):
+    for i in xrange(1, s):
         coeff = K.zero
 
-        for j in range(0, i):
+        for j in xrange(0, i):
             if not n + j - i in f:
                 continue
 
@@ -1029,9 +1030,9 @@ def _dup_left_decompose(f, h, K):
 
 def _dup_decompose(f, K):
     """Helper function for :func:`dup_decompose`."""
-    df = dup_degree(f)
+    df = len(f) - 1
 
-    for s in range(2, df):
+    for s in xrange(2, df):
         if df % s != 0:
             continue
 
@@ -1282,7 +1283,7 @@ def dup_revert(f, n, K):
 
     N = int(_ceil(_log(n, 2)))
 
-    for i in range(1, N + 1):
+    for i in xrange(1, N + 1):
         a = dup_mul_ground(g, K(2), K)
         b = dup_mul(f, dup_sqr(g, K), K)
         g = dup_rem(dup_sub(a, b, K), h, K)

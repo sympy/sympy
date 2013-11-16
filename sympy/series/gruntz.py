@@ -118,89 +118,18 @@ debug this function to figure out the exact problem.
 """
 from __future__ import print_function, division
 
-from sympy import SYMPY_DEBUG
 from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
 from sympy import cacheit
 
-from sympy.core.compatibility import get_function_name, reduce
-
-
-def debug(func):
-    """Only for debugging purposes: prints a tree
-
-    It will print a nice execution tree with arguments and results
-    of all decorated functions.
-    """
-    if not SYMPY_DEBUG:
-        #normal mode - do nothing
-        return func
-
-    #debug mode
-    def decorated(*args, **kwargs):
-        #r = func(*args, **kwargs)
-        r = maketree(func, *args, **kwargs)
-        #print "%s = %s(%s, %s)" % (r, func.__name__, args, kwargs)
-        return r
-
-    return decorated
+from sympy.core.compatibility import reduce
 
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
-
-def tree(subtrees):
-    """Only debugging purposes: prints a tree"""
-    def indent(s, type=1):
-        x = s.split("\n")
-        r = "+-%s\n" % x[0]
-        for a in x[1:]:
-            if a == "":
-                continue
-            if type == 1:
-                r += "| %s\n" % a
-            else:
-                r += "  %s\n" % a
-        return r
-    if len(subtrees) == 0:
-        return ""
-    f = []
-    for a in subtrees[:-1]:
-        f.append(indent(a))
-    f.append(indent(subtrees[-1], 2))
-    return ''.join(f)
-
-tmp = []
-iter = 0
-
-
-def maketree(f, *args, **kw):
-    """Only debugging purposes: prints a tree"""
-    global tmp
-    global iter
-    oldtmp = tmp
-    tmp = []
-    iter += 1
-
-    # If there is a bug and the algorithm enters an infinite loop, enable the
-    # following line. It will print the names and parameters of all major functions
-    # that are called, *before* they are called
-    #print "%s%s %s%s" % (iter, reduce(lambda x, y: x + y,map(lambda x: '-',range(1,2+iter))), f.func_name, args)
-
-    r = f(*args, **kw)
-
-    iter -= 1
-    s = "%s%s = %s\n" % (get_function_name(f), args, r)
-    if tmp != []:
-        s += tree(tmp)
-    tmp = oldtmp
-    tmp.append(s)
-    if iter == 0:
-        print((tmp[0]))
-        tmp = []
-    return r
+from sympy.utilities.misc import debug_decorator as debug
 
 
 def compare(a, b, x):
@@ -514,22 +443,20 @@ def moveup(l, x):
 
 @debug
 @timeit
-def calculate_series(e, x, skip_abs=False, logx=None):
+def calculate_series(e, x, logx=None):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
     """
-    n = 1
-    while 1:
-        series = e.nseries(x, n=n, logx=logx)
-        if not series.has(Order):
-            # The series expansion is locally exact.
-            return series
+    from sympy.polys import cancel
 
-        series = series.removeO()
-        if series and ((not skip_abs) or series.has(x)):
-            return series
-        n *= 2
+    for t in e.lseries(x, logx=logx):
+        t = cancel(t)
+
+        if t:
+            break
+
+    return t
 
 
 @debug
@@ -567,7 +494,6 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True, bounded=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
 
@@ -630,13 +556,14 @@ def rewrite(e, Omega, x, wsym):
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
-    g, _ = Omega[-1]
-        # g is going to be the "w" - the simplest one in the mrv set
-    sig = sign(g.args[0], x)
+    # make sure we know the sign of each exp() term; after the loop,
+    # g is going to be the "w" - the simplest one in the mrv set
+    for g, _ in Omega:
+        sig = sign(g.args[0], x)
+        if sig != 1 and sig != -1:
+            raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w
-    elif sig != -1:
-        raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2 = []
     denominators = []

@@ -10,6 +10,7 @@ from sympy.core.mul import Mul
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.core.compatibility import xrange
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -113,7 +114,7 @@ class ExpBase(Function):
         if be.is_polar:
             return rv
         besmall = abs(be) <= S.Pi
-        if besmall:
+        if besmall is True:
             return rv
         elif besmall is False and e.is_Rational and e.q == 2:
             return -rv
@@ -394,15 +395,6 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_lseries(self, x):
-        s = self.args[0]
-        yield exp(s.subs(x, 0))
-        from sympy import integrate
-        t = Dummy("t")
-        f = s.subs(x, t)
-        for term in (exp(f)*f.diff(t)).lseries(t):
-            yield integrate(term, (t, 0, x))
-
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
@@ -426,7 +418,7 @@ class exp(ExpBase):
     def _taylor(self, x, n):
         l = []
         g = None
-        for i in range(n):
+        for i in xrange(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
             l.append(g)
@@ -600,6 +592,10 @@ class log(Function):
                         expr.append(self.func(x)._eval_expand_log(**hints))
                     else:
                         expr.append(a)
+                elif x.is_negative:
+                    a = self.func(-x)
+                    expr.append(a)
+                    nonpos.append(S.NegativeOne)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
@@ -618,6 +614,12 @@ class log(Function):
                 return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
+
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import expand_log, logcombine, simplify
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+        expr = expand_log(expr, deep=True)
+        return min([expr, self], key=measure)
 
     def as_real_imag(self, deep=True, **hints):
         """
@@ -716,7 +718,7 @@ class log(Function):
         p = cancel(s/(a*x**b) - 1)
         g = None
         l = []
-        for i in range(n + 2):
+        for i in xrange(n + 2):
             g = log.taylor_term(i, p, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)

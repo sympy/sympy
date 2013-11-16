@@ -58,9 +58,6 @@ release = version
 # Else, today_fmt is used as the format for a strftime call.
 today_fmt = '%B %d, %Y'
 
-# Translations:
-locale_dirs = ["../_build/i18n/"]
-
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
 
@@ -162,6 +159,7 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+\usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}

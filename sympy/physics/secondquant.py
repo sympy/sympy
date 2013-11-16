@@ -11,7 +11,7 @@ from collections import defaultdict
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, xrange
 from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
@@ -2040,7 +2040,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = range(len(ops) - 1, -1, -1)
+        iter = xrange(len(ops) - 1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2070,7 +2070,7 @@ class NO(Expr):
         """
 
         ops = self.args[0].args
-        iter = range(0, len(ops))
+        iter = xrange(0, len(ops))
         for i in iter:
             if ops[i].is_q_creator:
                 yield i
@@ -2937,11 +2937,8 @@ class PermutationOperator(Expr):
     is_commutative = True
 
     def __new__(cls, i, j):
-        i, j = list(map(sympify, (i, j)))
-        if (i > j):
-            obj = Basic.__new__(cls, j, i)
-        else:
-            obj = Basic.__new__(cls, i, j)
+        i, j = sorted(map(sympify, (i, j)), key=default_sort_key)
+        obj = Basic.__new__(cls, i, j)
         return obj
 
     def get_permuted(self, expr):
@@ -3018,10 +3015,7 @@ def simplify_index_permutations(expr, permutation_operators):
 
     def _choose_one_to_keep(a, b, ind):
         # we keep the one where indices in ind are in order ind[0] < ind[1]
-        if _get_indices(a, ind) < _get_indices(b, ind):
-            return a
-        else:
-            return b
+        return min(a, b, key=lambda x: default_sort_key(_get_indices(x, ind)))
 
     expr = expr.expand()
     if isinstance(expr, Add):

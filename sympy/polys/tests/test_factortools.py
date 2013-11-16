@@ -11,6 +11,8 @@ from sympy.polys.specialpolys import f_polys, w_polys
 from sympy import nextprime, sin, sqrt, I
 from sympy.utilities.pytest import raises
 
+from sympy.core.compatibility import xrange
+
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 w_1, w_2 = w_polys()
 
@@ -157,7 +159,7 @@ def test_dup_zz_factor():
 
     f = x**4 + x + 1
 
-    for i in range(0, 20):
+    for i in xrange(0, 20):
         assert R.dup_zz_factor(f) == (1, [(f, 1)])
 
     assert R.dup_zz_factor(x**2 + 2*x + 2) == \
@@ -532,8 +534,7 @@ def test_dup_factor_list():
     f = 4*t*x**2 + 4*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (4, [(t, 1),
-             (x, 1),
+        (4*t, [(x, 1),
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
@@ -542,8 +543,7 @@ def test_dup_factor_list():
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (QQ(1, 2), [(t, 1),
-                    (x, 1),
+        (QQ(1, 2)*t, [(x, 1),
                     (x + t, 1)])
 
     R, x = ring("x", QQ.algebraic_field(I))
@@ -638,8 +638,7 @@ def test_dmp_factor_list():
     f = 4*t*x**2 + 4*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (4, [(t, 1),
-             (x, 1),
+        (4*t, [(x, 1),
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
@@ -647,8 +646,7 @@ def test_dmp_factor_list():
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (QQ(1, 2), [(t, 1),
-                    (x, 1),
+        (QQ(1, 2)*t, [(x, 1),
                     (x + t, 1)])
 
     R, x, y = ring("x,y", FF(2))

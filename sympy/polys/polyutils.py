@@ -10,6 +10,8 @@ from sympy.core.exprtools import decompose_power
 from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
 from sympy.assumptions import ask, Q
 
+from sympy.core.compatibility import xrange
+
 import re
 
 _gens_order = {
@@ -359,7 +361,7 @@ def _dict_reorder(rep, gens, new_gens):
     monoms = rep.keys()
     coeffs = rep.values()
 
-    new_monoms = [ [] for _ in range(len(rep)) ]
+    new_monoms = [ [] for _ in xrange(len(rep)) ]
     used_indices = set()
 
     for gen in new_gens:

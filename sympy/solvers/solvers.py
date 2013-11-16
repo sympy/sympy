@@ -15,7 +15,7 @@ This module contain solvers for all kinds of equations:
 from __future__ import print_function, division
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, reduce)
+    default_sort_key, reduce, xrange)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
@@ -153,6 +153,7 @@ def checksol(f, symbol, sol=None, **flags):
            make positive all symbols without assumptions regarding sign.
 
     """
+    minimal = flags.get('minimal', False)
 
     if sol is not None:
         sol = {symbol: sol}
@@ -205,13 +206,13 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if val.free_symbols:
-                if not val.is_constant(*list(sol.keys())):
+                if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
                 val = expand_mul(expand_multinomial(val))
         elif attempt == 2:
-            if flags.get('minimal', False):
+            if minimal:
                 return
             if flags.get('simplify', True):
                 for k in sol:
@@ -405,11 +406,11 @@ def solve(f, *symbols, **flags):
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
             like cos, exp, ....
-        'minimal=True (default is False)'
+        'particular=True (default is False)'
             instructs solve to try to find a particular solution to a linear
             system with as many zeros as possible; this is very expensive
         'quick=True (default is False)'
-            when using minimal=True, use a fast heuristic instead to find a
+            when using particular=True, use a fast heuristic instead to find a
             solution with many zeros (instead of using the very slow method
             guaranteed to find the largest number of zeros possible)
 
@@ -749,6 +750,18 @@ def solve(f, *symbols, **flags):
         _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
         fi = f[i] = fi.xreplace(dict(list(zip(_abs,
             [sqrt(a.args[0]**2) for a in _abs]))))
+        if fi.has(*_abs):
+            if any(s.assumptions0 for a in
+                    _abs for s in a.free_symbols):
+                raise NotImplementedError(filldedent('''
+                All absolute
+                values were not removed from %s. In order to solve
+                this equation, try replacing your symbols with
+                Dummy symbols (or other symbols without assumptions).
+                ''' % fi))
+            else:
+                raise NotImplementedError(filldedent('''
+                Removal of absolute values from %s failed.''' % fi))
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
         f[i] = fi.xreplace(dict(list(zip(_arg,
             [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
@@ -1448,7 +1461,7 @@ def _solve_system(exprs, symbols, **flags):
                         matrix[i, m] = -coeff
 
             # returns a dictionary ({symbols: values}) or None
-            if flags.pop('minimal', False):
+            if flags.pop('particular', False):
                 result = minsolve_linear_system(matrix, *symbols, **flags)
             else:
                 result = solve_linear_system(matrix, *symbols, **flags)
@@ -1892,7 +1905,7 @@ def solve_linear_system(system, *symbols, **flags):
         if not matrix[i, i]:
             # there is no pivot in current column
             # so try to find one in other columns
-            for k in range(i + 1, m):
+            for k in xrange(i + 1, m):
                 if matrix[i, k]:
                     break
             else:
@@ -1952,7 +1965,7 @@ def solve_linear_system(system, *symbols, **flags):
         # divide all elements in the current row by the pivot
         matrix.row_op(i, lambda x, _: x * pivot_inv)
 
-        for k in range(i + 1, matrix.rows):
+        for k in xrange(i + 1, matrix.rows):
             if matrix[k, i]:
                 coeff = matrix[k, i]
 
@@ -1977,7 +1990,7 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in range(k + 1, m):
+            for j in xrange(k + 1, m):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             if do_simplify:
@@ -1997,11 +2010,11 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in range(k + 1, i):
+            for j in xrange(k + 1, i):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             # run back-substitution for parameters
-            for j in range(i, m):
+            for j in xrange(i, m):
                 content -= matrix[k, j]*syms[j]
 
             if do_simplify:
@@ -2581,7 +2594,7 @@ def unrad(eq, *syms, **flags):
         # make sign canonical
         free = eq.free_symbols
         if len(free) == 1:
-            if eq.coeff(free.pop()**degree(eq)) < 0:
+            if (eq.coeff(free.pop()**degree(eq)) < 0) is True:
                 eq = -eq
         elif eq.could_extract_minus_sign():
             eq = -eq

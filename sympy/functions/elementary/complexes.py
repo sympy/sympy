@@ -318,6 +318,9 @@ class sign(Function):
         if arg.is_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
+    def _eval_simplify(self, ratio, measure):
+        return self.func(self.args[0].factor())
+
 
 class Abs(Function):
     """
@@ -418,6 +421,8 @@ class Abs(Function):
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
                 return arg
+            if exponent.is_integer and base is S.NegativeOne:
+                return S.One
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero

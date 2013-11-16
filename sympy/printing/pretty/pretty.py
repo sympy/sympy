@@ -5,7 +5,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.utilities import group
 from sympy.utilities.iterables import has_variety
 from sympy.core.sympify import SympifyError
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u, xrange
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
@@ -148,7 +148,7 @@ class PrettyPrinter(Printer):
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
-            return prettyForm(*pform.left(u("\u00ac ")))
+            return prettyForm(*pform.left(u("\u00ac")))
         else:
             return self._print_Function(e)
 
@@ -746,7 +746,7 @@ class PrettyPrinter(Printer):
         P = {}
         for n, ec in enumerate(pexpr.args):
             P[n, 0] = self._print(ec.expr)
-            if ec.cond is True:
+            if ec.cond == True:
                 P[n, 1] = prettyForm('otherwise')
             else:
                 P[n, 1] = prettyForm(
@@ -756,14 +756,14 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i, j].width() for i in range(len_args)])
+        maxw = [max([P[i, j].width() for i in xrange(len_args)])
                 for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
         # drawing result
         D = None
 
-        for i in range(len_args):
+        for i in xrange(len_args):
             D_row = None
             for j in range(2):
                 p = P[i, j]
@@ -1205,14 +1205,14 @@ class PrettyPrinter(Printer):
 
         # Convert to pretty forms. Add parens to Add instances if there
         # is more than one term in the numer/denom
-        for i in range(0, len(a)):
+        for i in xrange(0, len(a)):
             if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
                     isinstance(a[i], (Integral, Piecewise, Product, Sum))):
                 a[i] = prettyForm(*self._print(a[i]).parens())
             else:
                 a[i] = self._print(a[i])
 
-        for i in range(0, len(b)):
+        for i in xrange(0, len(b)):
             if (b[i].is_Add and len(b) > 1) or (i != len(b) - 1 and
                     isinstance(b[i], (Integral, Piecewise, Product, Sum))):
                 b[i] = prettyForm(*self._print(b[i]).parens())
@@ -1373,7 +1373,7 @@ class PrettyPrinter(Printer):
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
 
-    def _print_TransformationSet(self, ts):
+    def _print_ImageSet(self, ts):
         if self._use_unicode:
             inn = u("\u220a")
         else:
@@ -1722,8 +1722,8 @@ class PrettyPrinter(Printer):
         from sympy.matrices import Matrix
         from sympy import Symbol
         matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
-                          for j in range(grid.width)]
-                         for i in range(grid.height)])
+                          for j in xrange(grid.width)]
+                         for i in xrange(grid.height)])
         return self._print_matrix_contents(matrix)
 
     def _print_FreeModuleElement(self, m):
@@ -1815,7 +1815,7 @@ def pretty_print(expr, **settings):
         the expression to print
     wrap_line : bool, optional
         line wrapping enabled/disabled, defaults to True
-    num_columns : bool, optional
+    num_columns : int or None, optional
         number of columns before line breaking (default to None which reads
         the terminal width), useful when using SymPy without terminal.
     use_unicode : bool or None, optional

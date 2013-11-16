@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass
+from sympy.core.compatibility import string_types, with_metaclass, xrange
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -418,6 +418,9 @@ class Function(Application, Expr):
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 
+    def _eval_is_complex(self):
+        return fuzzy_and(a.is_complex for a in self.args)
+
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).
@@ -510,14 +513,16 @@ class Function(Application, Expr):
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
+                _x = Dummy('x')
+                e = e.subs(x, _x)
                 for i in range(n - 1):
                     i += 1
                     fact *= Rational(i)
-                    e = e.diff(x)
-                    subs = e.subs(x, S.Zero)
+                    e = e.diff(_x)
+                    subs = e.subs(_x, S.Zero)
                     if subs is S.NaN:
                         # try to evaluate a limit if we have to
-                        subs = e.limit(x, S.Zero)
+                        subs = e.limit(_x, S.Zero)
                     if subs.is_bounded is False:
                         raise PoleError("Cannot expand %s around 0" % (self))
                     term = subs*(x**i)/fact
@@ -533,7 +538,7 @@ class Function(Application, Expr):
         cf = C.Order(arg.as_leading_term(x), x).getn()
         if cf != 0:
             nterms = int(nterms / cf)
-        for i in range(nterms):
+        for i in xrange(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -568,6 +573,7 @@ class Function(Application, Expr):
         if not self.args[argindex - 1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
+            arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
                 self.subs(self.args[argindex - 1], arg_dummy),
                 arg_dummy), arg_dummy, self.args[argindex - 1])
@@ -600,17 +606,6 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
-    @classmethod
-    def taylor_term(cls, n, x, *previous_terms):
-        """General method for the taylor term.
-
-        This method is slow, because it differentiates n-times. Subclasses can
-        redefine it to make it faster by using the "previous_terms".
-        """
-        x = sympify(x)
-        _x = Dummy('x')
-        return cls(_x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
-
 
 class AppliedUndef(Function):
     """
@@ -623,6 +618,9 @@ class AppliedUndef(Function):
         result.nargs = len(args)
         return result
 
+    def _eval_as_leading_term(self, x):
+        return self
+
 
 class UndefinedFunction(FunctionClass):
     """
@@ -633,6 +631,8 @@ class UndefinedFunction(FunctionClass):
         ret.__module__ = None
         return ret
 
+UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
+                                         (s.class_key() == o.class_key()))
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -951,7 +951,7 @@ class Derivative(Expr):
         # We make a generator so as to only generate a variable when necessary.
         # If a high order of derivative is requested and the expr becomes 0
         # after a few differentiations, then we won't need the other variables.
-        variablegen = (v for v, count in variable_count for i in range(count))
+        variablegen = (v for v, count in variable_count for i in xrange(count))
 
         # If we can't compute the derivative of expr (but we wanted to) and
         # expr is itself not a Derivative, finish building an unevaluated
@@ -991,6 +991,7 @@ class Derivative(Expr):
             else:
                 if not is_symbol:
                     new_v = C.Dummy('xi_%i' % i)
+                    new_v.dummy_index = hash(v)
                     expr = expr.subs(v, new_v)
                     old_v = v
                     v = new_v
@@ -1035,7 +1036,7 @@ class Derivative(Expr):
 
         * Derivative wrt different symbols commute.
         * Derivative wrt different non-symbols commute.
-        * Derivatives wrt symbols and non-symbols dont' commute.
+        * Derivatives wrt symbols and non-symbols don't commute.
 
         Examples
         --------
@@ -1159,11 +1160,40 @@ class Derivative(Expr):
         if old in self.variables and not new.is_Symbol:
             # Issue 1620
             return Subs(self, old, new)
-        return self.func(*list(map(lambda x: x._subs(old, new), self.args)))
+        # If both are Derivatives with the same expr, check if old is
+        # equivalent to self or if old is a subderivative of self.
+        if old.is_Derivative and old.expr == self.args[0]:
+            # Check if canonnical order of variables is equal.
+            old_vars = Derivative._sort_variables(old.variables)
+            self_vars = Derivative._sort_variables(self.args[1:])
+            if old_vars == self_vars:
+                return new
 
-    def _eval_lseries(self, x):
+            # Check if olf is a subderivative of self.
+            if len(old_vars) < len(self_vars):
+                self_vars_front = []
+                match = True
+                while old_vars and self_vars and match:
+                    if old_vars[0] == self_vars[0]:
+                        old_vars.pop(0)
+                        self_vars.pop(0)
+                    else:
+                        # If self_v does not match old_v, we need to check if
+                        # the types are the same (symbol vs non-symbol). If
+                        # they are, we can continue checking self_vars for a
+                        # match.
+                        if old_vars[0].is_Symbol != self_vars[0].is_Symbol:
+                            match = False
+                        else:
+                            self_vars_front.append(self_vars.pop(0))
+                if match:
+                    variables = self_vars_front + self_vars
+                    return Derivative(new, *variables)
+        return Derivative(*map(lambda x: x._subs(old, new), self.args))
+
+    def _eval_lseries(self, x, logx):
         dx = self.args[1:]
-        for term in self.args[0].lseries(x):
+        for term in self.args[0].lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
@@ -2214,7 +2244,8 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
-    from sympy.core import Pow
+    from sympy.core.power import Pow
+    from sympy.polys.rootoftools import RootOf
 
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
@@ -2233,6 +2264,11 @@ def nfloat(expr, n=15, exponent=False):
         else:
             pass  # pure_complex(rv) is likely True
         return rv
+
+    # watch out for RootOf instances that don't like to have
+    # their exponents replaced with Dummies and also sometimes have
+    # problems with evaluating at low precision (issue 3294)
+    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]

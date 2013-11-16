@@ -10,7 +10,8 @@ from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int, with_metaclass
+from sympy.core.compatibility import as_int, with_metaclass, xrange
+from sympy.core.logic import fuzzy_and
 
 
 class IdentityFunction(with_metaclass(Singleton, Lambda)):
@@ -65,10 +66,9 @@ def sqrt(arg):
     This is because the two are not equal to each other in general.
     For example, consider x == -1:
 
-    >>> sqrt(x**2).subs(x, -1)
-    1
-    >>> x.subs(x, -1)
-    -1
+    >>> from sympy import Eq
+    >>> Eq(sqrt(x**2), x).subs(x, -1)
+    False
 
     This is because sqrt computes the principal square root, so the square may
     put the argument in a different branch.  This identity does hold if x is
@@ -97,7 +97,7 @@ def sqrt(arg):
     See Also
     ========
 
-    sympy.polys.rootoftools.RootOf, root
+    sympy.polys.rootoftools.RootOf, root, real_root
 
     References
     ==========
@@ -108,6 +108,57 @@ def sqrt(arg):
     """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
+
+
+
+def cbrt(arg):
+    """This function computes the principial cube root of `arg`, so
+    it's just a shortcut for `arg**Rational(1, 3)`.
+
+    Examples
+    ========
+
+    >>> from sympy import cbrt, Symbol
+    >>> x = Symbol('x')
+
+    >>> cbrt(x)
+    x**(1/3)
+
+    >>> cbrt(x)**3
+    x
+
+    Note that cbrt(x**3) does not simplify to x.
+
+    >>> cbrt(x**3)
+    (x**3)**(1/3)
+
+    This is because the two are not equal to each other in general.
+    For example, consider `x == -1`:
+
+    >>> from sympy import Eq
+    >>> Eq(cbrt(x**3), x).subs(x, -1)
+    False
+
+    This is because cbrt computes the principal cube root, this
+    identity does hold if `x` is positive:
+
+    >>> y = Symbol('y', positive=True)
+    >>> cbrt(y**3)
+    y
+
+    See Also
+    ========
+
+    sympy.polys.rootoftools.RootOf, root, real_root
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Cube_root
+    * http://en.wikipedia.org/wiki/Principal_value
+
+    """
+    return C.Pow(arg, C.Rational(1, 3))
 
 
 def root(arg, n):
@@ -369,6 +420,10 @@ class MinMaxBase(Expr, LatticeOp):
             l.append(df * da)
         return Add(*l)
 
+    @property
+    def is_real(self):
+        return fuzzy_and(arg.is_real for arg in self.args)
+
 class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
@@ -481,7 +536,7 @@ class Max(MinMaxBase, Application):
             argindex -= 1
             if n == 2:
                 return Heaviside( self.args[argindex] - self.args[1-argindex] )
-            newargs = tuple([self.args[i] for i in range(n) if i != argindex])
+            newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
             return Heaviside( self.args[argindex] - Max(*newargs) )
         else:
             raise ArgumentIndexError(self, argindex)
@@ -543,7 +598,7 @@ class Min(MinMaxBase, Application):
             argindex -= 1
             if n == 2:
                 return Heaviside( self.args[1-argindex] - self.args[argindex] )
-            newargs = tuple([ self.args[i] for i in range(n) if i != argindex])
+            newargs = tuple([ self.args[i] for i in xrange(n) if i != argindex])
             return Heaviside( Min(*newargs) - self.args[argindex] )
         else:
             raise ArgumentIndexError(self, argindex)

@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
 from contextlib import contextmanager
@@ -55,6 +56,9 @@ class AppliedPredicate(Boolean):
     __slots__ = []
 
     def __new__(cls, predicate, arg):
+        if not isinstance(arg, bool):
+            # XXX: There is not yet a Basic type for True and False
+            arg = _sympify(arg)
         return Boolean.__new__(cls, predicate, arg)
 
     is_Atom = True  # do not attempt to decompose this

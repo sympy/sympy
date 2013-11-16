@@ -10,6 +10,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
+from sympy.core.compatibility import xrange
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -229,12 +230,12 @@ def test_basic_nostr():
 
 
 def test_series_expansion_for_uniform_order():
-    assert (1/x + y + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + y + x).series(x, 0, 0) == 1/x + O(1, x)
     assert (1/x + y + x).series(x, 0, 1) == 1/x + y + O(x)
-    assert (1/x + 1 + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + 1 + x).series(x, 0, 0) == 1/x + O(1, x)
     assert (1/x + 1 + x).series(x, 0, 1) == 1/x + 1 + O(x)
-    assert (1/x + x).series(x, 0, 0) == 1/x + O(1)
-    assert (1/x + y + y*x + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + x).series(x, 0, 0) == 1/x + O(1, x)
+    assert (1/x + y + y*x + x).series(x, 0, 0) == 1/x + O(1, x)
     assert (1/x + y + y*x + x).series(x, 0, 1) == 1/x + y + O(x)
 
 def test_leadterm():
@@ -280,6 +281,15 @@ def test_as_leading_term3():
     assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
 
 
+def test_as_leading_term4():
+    # see issue 3744
+    n = Symbol('n', integer=True, positive=True)
+    r = -n**3/(2*n**2 + 4*n + 2) - n**2/(n**2 + 2*n + 1) + \
+        n**2/(n + 1) - n/(2*n**2 + 4*n + 2) + n/(n*x + x) + 2*n/(n + 1) - \
+        1 + 1/(n*x + x) + 1/(n + 1) - 1/x
+    assert r.as_leading_term(x).cancel() == n/2
+
+
 def test_as_leading_term_stub():
     class foo(Function):
         pass
@@ -289,32 +299,31 @@ def test_as_leading_term_stub():
 
 
 def test_atoms():
-    assert sorted(list(x.atoms())) == [x]
-    assert sorted(list((1 + x).atoms())) == sorted([1, x])
+    assert x.atoms() == set([x])
+    assert (1 + x).atoms() == set([x, S(1)])
 
-    assert sorted(list((1 + 2*cos(x)).atoms(Symbol))) == [x]
-    assert sorted(
-        list((1 + 2*cos(x)).atoms(Symbol, Number))) == sorted([1, 2, x])
+    assert (1 + 2*cos(x)).atoms(Symbol) == set([x])
+    assert (1 + 2*cos(x)).atoms(Symbol, Number) == set([S(1), S(2), x])
 
-    assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
+    assert (2*(x**(y**x))).atoms() == set([S(2), x, y])
 
-    assert sorted(list(Rational(1, 2).atoms())) == [S.Half]
-    assert sorted(list(Rational(1, 2).atoms(Symbol))) == []
+    assert Rational(1, 2).atoms() == set([S.Half])
+    assert Rational(1, 2).atoms(Symbol) == set([])
 
-    assert sorted(list(sin(oo).atoms(oo))) == [oo]
+    assert sin(oo).atoms(oo) == set([oo])
 
-    assert sorted(list(Poly(0, x).atoms())) == [S.Zero]
-    assert sorted(list(Poly(1, x).atoms())) == [S.One]
+    assert Poly(0, x).atoms() == set([S.Zero])
+    assert Poly(1, x).atoms() == set([S.One])
 
-    assert sorted(list(Poly(x, x).atoms())) == [x]
-    assert sorted(list(Poly(x, x, y).atoms())) == [x]
-    assert sorted(list(Poly(x + y, x, y).atoms())) == sorted([x, y])
-    assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([x, y])
-    assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == sorted([t, x, y])
+    assert Poly(x, x).atoms() == set([x])
+    assert Poly(x, x, y).atoms() == set([x])
+    assert Poly(x + y, x, y).atoms() == set([x, y])
+    assert Poly(x + y, x, y, z).atoms() == set([x, y])
+    assert Poly(x + y*t, x, y, z).atoms() == set([t, x, y])
 
-    assert list((I*pi).atoms(NumberSymbol)) == [pi]
-    assert sorted((I*pi).atoms(NumberSymbol, I)) == \
-        sorted((I*pi).atoms(I, NumberSymbol)) == [pi, I]
+    assert (I*pi).atoms(NumberSymbol) == set([pi])
+    assert (I*pi).atoms(NumberSymbol, I) == \
+        (I*pi).atoms(I, NumberSymbol) == set([pi, I])
 
     assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
     assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == \
@@ -532,7 +541,7 @@ def test_as_numer_denom():
     assert (a/x + b/2/x + c/.5/x).as_numer_denom() == \
         (2*a + b + 4.0*c, 2*x)
     # this should take no more than a few seconds
-    assert int(log(Add(*[Dummy()/i/x for i in range(1, 705)]
+    assert int(log(Add(*[Dummy()/i/x for i in xrange(1, 705)]
                        ).as_numer_denom()[1]/x).n(4)) == 705
     for i in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
         assert (i + x/3).as_numer_denom() == \
@@ -599,25 +608,6 @@ def test_as_independent():
     # issue 2685
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
-
-
-def test_call():
-    # See the long history of this in issues 1927 and 2006.
-
-    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
-    raises(TypeError, lambda: sin(x)(1))
-
-    # No effect as there are no callables
-    assert sin(x).rcall(1) == sin(x)
-    assert (1 + sin(x)).rcall(1) == 1 + sin(x)
-
-    # Effect in the pressence of callables
-    l = Lambda(x, 2*x)
-    assert (l + x).rcall(y) == 2*y + x
-    assert (x**l).rcall(2) == x**4
-    # TODO UndefinedFunction does not subclass Expr
-    #f = Function('f')
-    #assert (2*f)(x) == 2*f(x)
 
 
 def test_replace():

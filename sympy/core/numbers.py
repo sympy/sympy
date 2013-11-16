@@ -7,6 +7,7 @@ import sys
 from collections import defaultdict
 
 from .core import C
+from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
@@ -342,6 +343,8 @@ class Number(AtomicExpr):
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
+        elif isinstance(other, Tuple):
+            return NotImplemented
         return AtomicExpr.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -917,12 +920,6 @@ converter[float] = converter[decimal.Decimal] = Float
 
 # this is here to work nicely in Sage
 RealNumber = Float
-
-
-@deprecated(useinstead="Float", issue=1721, deprecated_since_version="0.7.0")
-def Real(*args, **kwargs):  # pragma: no cover
-    """Deprecated alias for the Float constructor."""
-    return Float(*args, **kwargs)
 
 
 class Rational(Number):

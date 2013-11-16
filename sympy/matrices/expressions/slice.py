@@ -19,13 +19,13 @@ def normalize(i, parentsize):
     start = start or 0
     if stop == None:
         stop = parentsize
-    if start < 0:
+    if (start < 0) is True:
         start += parentsize
-    if stop < 0:
+    if (stop < 0) is True:
         stop += parentsize
     step = step or 1
 
-    if (stop - start) * step < 1:
+    if ((stop - start) * step < 1) is True:
         raise IndexError()
 
     return (start, stop, step)

@@ -11,7 +11,7 @@ from bisect import bisect
 from array import array as _array
 
 from .primetest import isprime
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 
 
 def _arange(a, b):
@@ -77,7 +77,7 @@ class Sieve:
             # Start counting at a multiple of p, offsetting
             # the index to account for the new sieve's base index
             startindex = (-begin) % p
-            for i in range(startindex, len(newsieve), p):
+            for i in xrange(startindex, len(newsieve), p):
                 newsieve[i] = 0
 
         # Merge the sieves
@@ -358,7 +358,7 @@ def primerange(a, b):
 
         If the range exists in the default sieve, the values will
         be returned from there; otherwise values will be returned
-        but will not modifiy the sieve.
+        but will not modify the sieve.
 
         Notes
         =====

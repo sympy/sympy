@@ -26,8 +26,8 @@ rather than using a body-three orientation. ::
   >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
   >>> L = Y.orientnew('L', 'Axis', [q2, Y.x])
   >>> R = L.orientnew('R', 'Axis', [q3, L.y])
+  >>> w_R_N_qd = R.ang_vel_in(N)
   >>> R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-  >>> R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
 This is the translational kinematics. We create a point with no velocity
 in N; this is the contact point between the disc and ground. Next we form
@@ -39,8 +39,6 @@ Finally we form the velocity and acceleration of the disc. ::
   >>> Dmc = C.locatenew('Dmc', r * L.z)
   >>> Dmc.v2pt_theory(C, N, R)
   r*u2*L.x - r*u1*L.y
-  >>> Dmc.a2pt_theory(C, N, R)
-  (r*u1*u3 + r*u2')*L.x + (-r*(-u3*q3' + u1') + r*u2*u3)*L.y + (-r*u1**2 - r*u2**2)*L.z
 
 This is a simple way to form the inertia dyadic. The inertia of the disc does
 not change within the lean frame as the disc rolls; this will make for simpler
@@ -51,9 +49,9 @@ equations in the end. ::
   m*r**2/4*(L.x|L.x) + m*r**2/2*(L.y|L.y) + m*r**2/4*(L.z|L.z)
 
 Kinematic differential equations; how the generalized coordinate time
-derivatives relate to generalized speeds. Here these were computed by hand. ::
+derivatives relate to generalized speeds. ::
 
-  >>> kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
+  >>> kd = [dot(R.ang_vel_in(N) - w_R_N_qd, uv) for uv in L]
 
 Creation of the force list; it is the gravitational force at the center of mass of
 the disc. Then we create the disc by assigning a Point to the center of mass
@@ -80,8 +78,7 @@ for the u dots (time derivatives of the generalized speeds). ::
   >>> rhs.simplify()
   >>> mprint(rhs)
   Matrix([
-  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)],
-  [                                 -2*u1*u3/3],
-  [                    (-2*u2 + u3*tan(q2))*u1]])
-
+  [(4*g*sin(q2) + 6*r*u2*u3 - r*u3**2*tan(q2))/(5*r)],
+  [                                       -2*u1*u3/3],
+  [                          (-2*u2 + u3*tan(q2))*u1]])
 

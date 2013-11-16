@@ -91,6 +91,16 @@ Ntheory Functions Reference
 
 .. autofunction:: is_primitive_root
 
+.. autofunction:: primitive_root
+
+.. autofunction:: sqrt_mod
+
+.. autofunction:: quadratic_residues
+
+.. autofunction:: nthroot_mod
+
+.. autofunction:: is_nthpow_residue
+
 .. autofunction:: is_quad_residue
 
 .. autofunction:: legendre_symbol
