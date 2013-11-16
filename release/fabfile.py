@@ -53,7 +53,7 @@ try:
     # Note, according to fabvenv docs, always use an absolute path with
     # virtualenv().
 except ImportError:
-    error("fabvenv is required. See https://github.com/sympy/sympy/pull/2333")
+    error("fabvenv is required. See https://pypi.python.org/pypi/fabric-virtualenv/")
 
 # Note, it's actually good practice to use absolute paths
 # everywhere. Otherwise, you will get surprising results if you call one
