@@ -39,7 +39,11 @@ If you want to test the release process without pushing a branch to the
 official repo, you can push a branch to your fork and use `fab vagrant
 release:fork='username'`, where `username` is your GitHub username.  Note that
 once you do the actual release, you should do it in a branch in the official
-GitHub repo.
+GitHub repo.  **NOTE**: If your fork does not have all the tags of the
+official repo, then the code that finds the previous version will not work
+correctly.  Hence, you may see things like more authors in the authors list
+than you should.  To remedy this, be sure to do `git fetch origin --tags` and
+`git push github --tags`.
 
 Once you have done these things, execute:
 

@@ -680,7 +680,8 @@ def get_previous_version_tag():
     curcommit = "HEAD"
     with cd("/home/vagrant/repos/sympy"):
         while True:
-            curtag = run("git describe --abbrev=0 --tags " + curcommit).strip()
+            curtag = run("git describe --abbrev=0 --tags " +
+                curcommit).strip()
             if shortversion in curtag:
                 # If the tagged commit is a merge commit, we cannot be sure
                 # that it will go back in the right direction. This almost
