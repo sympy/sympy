@@ -5,7 +5,7 @@ from sympy.utilities.iterables import numbered_symbols
 from sympy.matrices import Matrix, zeros
 
 
-def solve_general_linear(M, v):
+def solve_general_linear(M, v, dummygen=None):
     r"""This function solves the general linear equation
 
     .. math:: A x = b
@@ -62,8 +62,9 @@ def solve_general_linear(M, v):
 
     # Free parameters
     # The double List and T operation are a hack to get the shapes correct
-    tau = numbered_symbols("tau", Dummy)
-    tau = Matrix([[ tau.next() for k in xrange(C - rank) ]]).T
+    if dummygen is None:
+        dummygen = numbered_symbols("tau", Dummy)
+    tau = Matrix([[ dummygen.next() for k in xrange(C - rank) ]]).T
 
     # Full parametric solution
     V = U[:rank,rank:]
