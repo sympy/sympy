@@ -290,6 +290,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. QuaBoo: Optimizations in ntheory
 #. Stefan van der Walt: Fixes to mechanics module
 #. David Joyner: Cryptography module
+#. Lars Buitinck: Bug fix
 #. Vinit Ravishankar: fix iterables documentation
 #. Mike Boyle: Additions to the printing system
 #. Heiner Kirchhoffer: PythonRational int conversion fix
