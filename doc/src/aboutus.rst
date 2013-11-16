@@ -286,6 +286,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Manish Gill: Fix infinite loop in Matrix constructor
 #. Markus Müller: Add Jordan form for matrices
 #. Amit Saha: Fixes to documentation
+#. Jeremy: Bug fix
 #. QuaBoo: Optimizations in ntheory
 #. Stefan van der Walt: Fixes to mechanics module
 #. David Joyner: Cryptography module
