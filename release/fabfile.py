@@ -222,17 +222,12 @@ def test_tarball(release='2'):
         raise ValueError("release must be one of '2', '3', not %s" % release)
 
     venv = "/home/vagrant/repos/test-{release}-virtualenv".format(release=release)
-
-    # We have to run this outside the virtualenv to make sure the version
-    # check runs in Python 2
     tarball_formatter_dict = tarball_formatter()
+
     with use_venv(release):
         make_virtualenv(venv)
         with virtualenv(venv):
-            if release == '2':
-                run("cp /vagrant/release/{py2} releasetar.tar".format(**tarball_formatter_dict))
-            if release == '3':
-                run("cp /vagrant/release/{py33} releasetar.tar".format(**tarball_formatter_dict))
+            run("cp /vagrant/release/{source} releasetar.tar".format(**tarball_formatter_dict))
             run("tar xvf releasetar.tar")
             with cd("/home/vagrant/{source-orig-notar}".format(**tarball_formatter_dict)):
                 run("python setup.py install")
@@ -256,27 +251,26 @@ def release(branch=None, fork='sympy'):
     # This has to be run locally because it itself uses fabric. I split it out
     # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
-    python2_tarball()
+    source_tarball()
     build_docs()
     copy_release_files()
     test_tarball('2')
     test_tarball('3')
-    compare_tar_against_git('2')
-    compare_tar_against_git('3')
+    compare_tar_against_git()
     print_authors()
     GitHub_release()
 
 @task
-def python2_tarball():
+def source_tarball():
     """
-    Build the Python 2 tarball
+    Build the source tarball
     """
     with cd("/home/vagrant/repos/sympy"):
         run("git clean -dfx")
         run("./setup.py clean")
         run("./setup.py sdist")
         run("./setup.py bdist_wininst")
-        run("mv dist/{2win32-orig} dist/{2win32}".format(**tarball_formatter()))
+        run("mv dist/{win32-orig} dist/{win32}".format(**tarball_formatter()))
 
 @task
 def build_docs():
@@ -317,23 +311,18 @@ def show_files(file, print_=True):
 
     The current options for file are
 
-    2: The Python 2 tarball
-    3: The Python 3 tarball
-    2win: The Python 2 Windows installer (Not yet implemented!)
-    3win: The Python 3 Windows installer (Not yet implemented!)
+    source: The source tarball
+    win: The Python 2 Windows installer (Not yet implemented!)
     html: The html docs zip
 
     Note, this runs locally, not in vagrant.
     """
-    # TODO: Windows
-    if file == '2':
-        ret = local("tar tf release/{py2}".format(**tarball_formatter()), capture=True)
-    elif file == '3':
-        py32 = "{py32}".format(**tarball_formatter())
-        py33 = "{py33}".format(**tarball_formatter())
-        assert md5(py32, print_=False).split()[0] == md5(py33, print_=False).split()[0]
-        ret = local("tar tf release/" + py32, capture=True)
-    elif file in {'2win', '3win'}:
+    # TODO: Test the unarchived name. See
+    # https://code.google.com/p/sympy/issues/detail?id=3988.
+    if file == 'source':
+        ret = local("tar tf release/{source}".format(**tarball_formatter()), capture=True)
+    elif file == 'win':
+        # TODO: Windows
         raise NotImplementedError("Windows installers")
     elif file == 'html':
         ret = local("unzip -l release/{html}".format(**tarball_formatter()), capture=True)
@@ -385,7 +374,6 @@ git_whitelist = {
     'bin/test_import.py',
     'bin/test_isolated',
     'bin/test_travis.sh',
-    'bin/use2to3',
     # This is also related to Cythonization
     'build.py',
     # The notebooks are not ready for shipping yet. They need to be cleaned
@@ -465,8 +453,6 @@ git_whitelist = {
     'sympy/logic/benchmarks/run-solvers.py',
     'sympy/logic/benchmarks/test-solver.py',
     'sympy/matrices/benchmarks/bench_matrix.py',
-    # Won't be there in Python 3
-    'sympy/parsing/ast_parser_python25.py',
     # More benchmarks...
     'sympy/polys/benchmarks/__init__.py',
     'sympy/polys/benchmarks/bench_galoispolys.py',
@@ -485,16 +471,14 @@ tarball_whitelist = {
     }
 
 @task
-def compare_tar_against_git(release):
+def compare_tar_against_git():
     """
     Compare the contents of the tarball against git ls-files
-
-    release should be one of '2' or '3'.
     """
     with hide("commands"):
         with cd("/home/vagrant/repos/sympy"):
             git_lsfiles = set([i.strip() for i in run("git ls-files").split("\n")])
-        tar_output_orig = set(show_files(release, print_=False).split("\n"))
+        tar_output_orig = set(show_files('source', print_=False).split("\n"))
         tar_output = set()
     for file in tar_output_orig:
         # The tar files are like sympy-0.7.3/sympy/__init__.py, and the git
@@ -511,10 +495,6 @@ def compare_tar_against_git(release):
         bold=True))
     print()
     for line in sorted(tar_output.intersection(git_whitelist)):
-        # Just special case this for now, since this file will be removed. It
-        # is only in the Python 2 source, not Python 3.
-        if line == 'sympy/parsing/ast_parser_python25.py':
-            continue
         fail = True
         print(line)
     print()
@@ -548,15 +528,11 @@ def md5(file='*', print_=True):
     return out
 
 descriptions = OrderedDict([
-    ('py2', "Python 2 sources (works Python 2.5, 2.6, and 2.7).",),
-    ('py32', "Python 3 sources (works in Python 3.2 and 3.3).",),
-    ('py33', '''The same file as <code>{py32}</code>, the reason we have separate filenames is a
-    workaround for a behavior of pip (<a href="https://github.com/pypa/pip/issues/701">pip#701</a>), so that it
-installs Python 3 sources instead of Python 2.''',),
-    ('2win32', "Python 2 Windows 32-bit installer.",),
+    ('source', "The SymPy source installer.",),
+    ('win32', "Python Windows 32-bit installer.",),
     ('html', '''Html documentation for the Python 2 version. This is the same as
-the <a href="http://docs.sympy.org/0.7.3/index.html">online documentation</a>.''',),
-    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/0.7.3/index.html"> html documentation</a>.''',),
+the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.''',),
+    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
     ])
 
 @task
@@ -637,11 +613,9 @@ def get_tarball_name(file):
 
     source-orig:       The original name of the source tarball
     source-orig-notar: The name of the untarred directory
-    py2:               The Python 2 tarball (after renaming)
-    py32:              The Python 3.2 tarball (after renaming)
-    py33:              The Python 3.3 tarball (after renaming)
-    2win32-orig:       The original name of the Python 2 win32 installer
-    2win32:            The name of the Python 2 win32 installer (after renaming)
+    source:            The source tarball (after renaming)
+    win32-orig:        The original name of the win32 installer
+    win32:             The name of the win32 installer (after renaming)
     html:              The name of the html zip
     html-nozip:        The name of the html, without ".zip"
     pdf-orig:          The original name of the pdf file
@@ -649,16 +623,13 @@ def get_tarball_name(file):
     """
     version = get_sympy_version()
     doctypename = defaultdict(str, {'html': 'zip', 'pdf': 'pdf'})
-    winos = defaultdict(str, {'2win32': 'win32', '2win32-orig': 'linux-i686'})
-    pyversions = defaultdict(str, {'py32': "3.2", 'py33': "3.3"})
+    winos = defaultdict(str, {'win32': 'win32', 'win32-orig': 'linux-i686'})
 
-    if file in {'source-orig', 'py2'}:
+    if file in {'source-orig', 'source'}:
         name = 'sympy-{version}.tar.gz'
     elif file == 'source-orig-notar':
         name = "sympy-{version}"
-    elif file in {'py32', 'py33'}:
-        name = "sympy-{version}-py{pyversion}.tar.gz"
-    elif file in {'2win32', '2win32-orig'}:
+    elif file in {'win32', 'win32-orig'}:
         name = "sympy-{version}.{wintype}.exe"
     elif file in {'html', 'pdf', 'html-nozip'}:
         name = "sympy-docs-{type}-{version}"
@@ -669,18 +640,16 @@ def get_tarball_name(file):
     else:
         raise ValueError(file + " is not a recognized argument")
 
-    ret = name.format(version=version, pyversion=pyversions[file], type=file,
+    ret = name.format(version=version, type=file,
         extension=doctypename[file], wintype=winos[file])
     return ret
 
 tarball_name_types = {
     'source-orig',
     'source-orig-notar',
-    'py2',
-    'py32',
-    'py33',
-    '2win32-orig',
-    '2win32',
+    'source',
+    'win32-orig',
+    'win32',
     'html',
     'html-nozip',
     'pdf-orig',
