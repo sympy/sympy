@@ -67,7 +67,7 @@ def solve_general_linear(M, v, dummygen=None):
     # Gauss Jordan elimination to produce a row echelon form
     U, pivots = U.rref()
     U, v = U[:,:-1], U[:,-1]
-    pivots = filter(lambda p: p < C, pivots)
+    pivots = list(filter(lambda p: p < C, pivots))
     rank = len(pivots)
 
     # Bring to block form
@@ -88,7 +88,7 @@ def solve_general_linear(M, v, dummygen=None):
     # The double List and T operation are a hack to get the shapes correct
     if dummygen is None:
         dummygen = numbered_symbols("tau", Dummy)
-    tau = Matrix([[ dummygen.next() for k in xrange(C - rank) ]]).T
+    tau = Matrix([[ next(dummygen) for k in range(C - rank) ]]).T
 
     # Full parametric solution
     V = U[:rank,rank:]
