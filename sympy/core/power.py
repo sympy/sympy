@@ -98,9 +98,12 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            elif S.NaN in (b, e):
-                if b is S.One:  # already handled e == 0 above
+            elif b is S.One:
+                if e not in ( S.NaN, S.Infinity, -S.Infinity):
                     return S.One
+                else:
+                    return S.NaN
+            elif S.NaN in (b, e):
                 return S.NaN
             else:
                 # recognize base as E
