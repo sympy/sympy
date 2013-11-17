@@ -605,7 +605,7 @@ def _doctest(*paths, **kwargs):
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('theano') is None:
-        blacklist.extend("doc/src/modules/numeric-computation.rst")
+        blacklist.extend(["doc/src/modules/numeric-computation.rst"])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
