@@ -201,7 +201,7 @@ def time_derivative(expr, frame, order=1):
 
     t = dynamicsymbols._t
     _check_frame(frame)
-    
+
     if order == 0:
         return expr
     if order%1 != 0 or order < 0:
@@ -728,10 +728,10 @@ def get_motion_params(frame, **kwargs):
         lims = (variable, ordinate, variable)
         for dim in frame:
             function1 = vectdiff1.dot(dim)
-            abscissa = dim.dot(condition).subs({variable:ordinate})
+            abscissa = dim.dot(condition).subs({variable : ordinate})
             # Indefinite integral of 'function1' wrt 'variable', using
             # the given initial condition (ordinate, abscissa).
-            vectdiff0 += (integrate(function1, lims) + abscissa)*dim
+            vectdiff0 += (integrate(function1, lims) + abscissa) * dim
         #Return tuple
         return (vectdiff2, vectdiff, vectdiff0)
 

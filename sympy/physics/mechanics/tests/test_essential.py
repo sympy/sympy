@@ -245,10 +245,10 @@ def test_Vector_diffs():
     v4 = v2.dt(B)
     v5 = q1*A.x + q2*A.y + q3*A.z
 
-    assert v1.dt(N) == time_derivative(v1, N) == q2d * A.x + q2 * q3d * A.y + q3d * N.y
-    assert v1.dt(A) == time_derivative(v1, A) == q2d * A.x + q3 * q3d * N.x + q3d * N.y
-    assert v1.dt(B) == time_derivative(v1, B) == (q2d * A.x + q3 * q3d * N.x + q3d *
-                                    N.y - q3 * cos(q3) * q2d * N.z)
+    assert v1.dt(N) == q2d * A.x + q2 * q3d * A.y + q3d * N.y
+    assert v1.dt(A) == q2d * A.x + q3 * q3d * N.x + q3d * N.y
+    assert v1.dt(B) == (q2d * A.x + q3 * q3d * N.x + q3d *\
+                        N.y - q3 * cos(q3) * q2d * N.z)
     assert v2.dt(N) == (q2d * A.x + (q2 + q3) * q3d * A.y + q3d * B.x + q3d *
                         N.y)
     assert v2.dt(A) == q2d * A.x + q3d * B.x + q3 * q3d * N.x + q3d * N.y
@@ -276,9 +276,9 @@ def test_Vector_diffs():
                         (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
                         N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
                         q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
-    assert time_derivative(v5, B) == v5.dt(B) == q1d*A.x + (q3*q2d + q2d)*A.y + (-q2*q2d + q3d)*A.z
-    assert time_derivative(v5, A) == v5.dt(A) == q1d*A.x + q2d*A.y + q3d*A.z
-    assert time_derivative(v5, N) == v5.dt(N) == (-q2*q3d + q1d)*A.x + (q1*q3d + q2d)*A.y + q3d*A.z
+    assert v5.dt(B) == q1d*A.x + (q3*q2d + q2d)*A.y + (-q2*q2d + q3d)*A.z
+    assert v5.dt(A) == q1d*A.x + q2d*A.y + q3d*A.z
+    assert v5.dt(N) == (-q2*q3d + q1d)*A.x + (q1*q3d + q2d)*A.y + q3d*A.z
     assert v3.diff(q1d, N) == 0
     assert v3.diff(q2d, N) == A.x - q3 * cos(q3) * N.z
     assert v3.diff(q3d, N) == q3 * N.x + N.y

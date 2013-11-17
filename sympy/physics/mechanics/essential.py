@@ -2012,6 +2012,7 @@ class MechanicsTypeError(TypeError):
                 "instead received an object '%s' of type %s." % (
                     type_str, other, type(other)))
 
+
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):
         raise TypeError('A Dyadic must be supplied')
