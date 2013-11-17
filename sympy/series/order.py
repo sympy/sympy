@@ -118,6 +118,9 @@ class Order(Expr):
             raise ValueError('Number of point values must be the same as '
                              'the number of variables.')
 
+        if any(p in variables for p in point):
+            raise ValueError('Point contains variables')
+
         if not all(p is S.Zero for p in point) and \
            not all(p is S.Infinity for p in point):
             raise NotImplementedError('Order at points other than 0 '
