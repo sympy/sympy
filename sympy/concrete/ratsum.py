@@ -168,7 +168,10 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
         chi = cmonp.coeff_monomial(1)
         rhs[r,0] = -chi
 
-    solution = solve_general_linear(M, rhs)
+    try:
+        solution = solve_general_linear(M, rhs)
+    except ValueError:
+        solution = (None, None)
 
     return (g1, ci, solution)
 
@@ -180,7 +183,7 @@ def step_5(l, x, alpha, g1, g2, ci, linsol):
     sol, params = flatten(sol.tolist()), flatten(params.tolist())
     vals = [(var,val) for var, val in zip(ci, sol)]
 
-    if len(params) <= 1:
+    if params is not None and len(params) <= 1:
         # System was solvable
         if alpha == 0:
             solution = l**x * g1.subs(vals)
