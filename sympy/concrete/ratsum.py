@@ -66,22 +66,11 @@ def step_1(p, q, l, x, dp, dq):
         # p = h*q + r
         h = quo(p, q)
         r = rem(p, q)
-
-        #print("Parts:")
-        #print(h)
-        #print(r)
-
         dr = r.degree()
 
-        #print("Degree remainder:")
-        #print(dr)
-
         if dr >= 0 and dr < dq:
-            #print("SPLIT")
-
             s1 = fsum(h, l, x)
             s2 = fsum(r/q, l, x)
-
             return s1 + s2
 
     return None
@@ -94,10 +83,6 @@ def step_2(p, q, l, x, dp, dq):
     else:
         ds = dispersion(q, x)
         alpha = ds
-
-    #print("Dispersion (alpha):")
-    #print(alpha)
-
     return alpha
 
 
@@ -134,14 +119,9 @@ def step_3(p, q, lam, x, dp, dq, alpha):
 
         p2 = cancel(p * g2 * g2.shift(1) / q)
         p2 = Poly(p2, gens=[x])
-        #print("p2")
-        #print(p2)
 
         l = p2.degree()
         m = g2.degree()
-
-        #print("l:"+str(l))
-        #print("m:"+str(m))
 
         if Abs(lam) == 1:
             if l > m-2:
@@ -153,12 +133,6 @@ def step_3(p, q, lam, x, dp, dq, alpha):
     else:
         raise ValueError("What to do for alpha=1 ?")
 
-    #print("g2:")
-    #print(g2)
-
-    #print("Degree bound:")
-    #print(boundn)
-
     return boundn, g2, p2
 
 
@@ -168,16 +142,8 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
     ci = _symbols("c", boundn+1)
     mons = itermonomials([x], boundn)
 
-    #print("********")
-    #print(ci)
-    #print(mons)
-
     g1 = Add(*[cii*mon for cii,mon in zip(ci,mons)])
     g1 = Poly(g1, gens=[x])
-
-    #print("Candidate g1:")
-    #print(g1)
-    #print(g1.degree())
 
     if alpha == 0:
         # l*g1(x+1) - g1(x) = f(x)
@@ -185,7 +151,6 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
     else:
         # p(x) = l*g1(x+1)*g2(x) - g2(x+1)*g1(x)
         eqn = l * g1.shift(1).as_expr()*g2.as_expr() - g2.shift(1).as_expr()*g1.as_expr() - p2.as_expr()
-        #eqn = Poly(eqn, gens=[x]).as_expr()
 
     P = Poly(eqn, gens=[x])
 
@@ -193,19 +158,14 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
     rhs = zeros(len(mons), 1)
 
     for r, mon in enumerate(mons):
-        print("-")
-        print(mon)
         cmon = P.coeff_monomial(mon)
         cmonp = Poly(cmon, gens=ci)
-        print((r, mon, cmonp))
         # Fill in matrix elements
         for c, coe in enumerate(ci):
             xi = cmonp.coeff_monomial(coe)
-            print((mon, coe, xi))
             M[r,c] = xi
         # Put constants in the RHS
         chi = cmonp.coeff_monomial(1)
-        print((r,chi))
         rhs[r,0] = -chi
 
     solution = solve_general_linear(M, rhs)
@@ -239,9 +199,6 @@ def step_6(f, l, x):
     # Try for a closed form in an extension E of F
     cpfd = apart_list(f)
 
-    #print("Common factor:")
-    #print(cpfd[0])
-
     # Polynomial part
     f0 = cpfd[1]
 
@@ -249,9 +206,6 @@ def step_6(f, l, x):
         g0 = cpfd[0] * fsum(f0, l, x)
     else:
         g0 = 0
-
-    #print("Polynomial part:")
-    #print(g0)
 
     # Rational part
     # TODO: Handling of l wrong here!
@@ -264,9 +218,6 @@ def step_6(f, l, x):
         func = Lambda(alpha, term)
         rp.append(RootSum(r, func, auto=False))
 
-    #print("Rational part:")
-    #print(rp)
-
     return g0 + cpfd[0]*Add(*rp)
 
 
@@ -274,22 +225,12 @@ def preprocess(f, x):
     # Preprocess f to split off lambda
     f = sympify(f)
 
-    #print(50*"=")
-    #print("Entering preprocessor with:")
-    #print("f: "+str(f))
-
     from sympy.integrals.heurisch import components
     monoms = components(f, x)
-
-    #print("Monomials")
-    #print(monoms)
     monoms = monoms - set([x])
 
     exppart = Mul(*list(monoms))
     exppart = simplify(exppart)
-
-    #print("Exp-part")
-    #print(exppart)
 
     apow = exppart.as_powers_dict()
     exps = apow.values()[0]
@@ -297,10 +238,6 @@ def preprocess(f, x):
     tobase = cancel(exps / x)
 
     l = apow.keys()[0] ** tobase
-
-    #print("lambda")
-    #print(l)
-
     f = cancel(f / l**x)
 
     return f, l
@@ -313,53 +250,30 @@ def fsum(f, l, x):
     doi : "10.1006/jsco.1993.1053"
     """
     # The actual fsum algorithm
-    #print(50*"=")
-    #print("Entering fsum with:")
-    #print("f: "+str(f))
-    #print("l: "+str(l))
-    #print(20*"-")
-
-    # Split f
-    #print(f)
-
     p, q = f.as_numer_denom()
-    #print("p / q")
-    #print(p)
-    #print(q)
-
     p = Poly(p, gens=[x])
     q = Poly(q, gens=[x])
 
     dp = p.degree()
     dq = q.degree()
 
-    #print("degrees")
-    #print(dp)
-    #print(dq)
-
-    #
     result = step_1(p, q, l, x, dp, dq)
 
     if result is not None:
         return result
 
-    #
     alpha = step_2(p, q, l, x, dp, dq)
 
     if dq > 0 and alpha == 0:
         if Abs(l) == 1:
-            #print("Go to step S6")
             return step_6(f, l, x)
         else:
-            ##print("Not summable in F and E ?")
+            #print("Not summable in F and E ?")
             raise ValueError("Not summable in F and E   (2)")
             #return step_6(f, l, x)
 
-    #
     bound, g2, p2 = step_3(p, q, l, x, dp, dq, alpha)
-    #
     g1, coeffs, vals = step_4(f, p, q, l, x, alpha, bound, g2, p2)
-    #
     solution = step_5(l, x, alpha, g1, g2, coeffs, vals)
 
     if solution is None:
