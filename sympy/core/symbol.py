@@ -184,7 +184,8 @@ class Dummy(Symbol):
 
 class Wild(Symbol):
     """
-    A Wild symbol matches anything.
+    A Wild symbol matches anything, or anything
+    without whatever is explicitly excluded.
 
     Examples
     ========
@@ -192,17 +193,18 @@ class Wild(Symbol):
     >>> from sympy import Wild, WildFunction, cos, pi
     >>> from sympy.abc import x
     >>> a = Wild('a')
-    >>> b = Wild('b')
-    >>> b.match(a)
-    {a_: b_}
     >>> x.match(a)
     {a_: x}
     >>> pi.match(a)
     {a_: pi}
-    >>> (x**2).match(a)
-    {a_: x**2}
+    >>> (3*x**2).match(a*x)
+    {a_: 3*x}
     >>> cos(x).match(a)
     {a_: cos(x)}
+    >>> b = Wild('b',exclude=[x])
+    >>> (3*x**2).match(b*x)
+    >>> b.match(a)
+    {a_: b_}
     >>> A = WildFunction('A')
     >>> A.match(a)
     {a_: A_}
