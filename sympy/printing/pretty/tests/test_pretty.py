@@ -1927,13 +1927,13 @@ O⎜─⎟\n\
     expr = O(x**2 + y**2)
     ascii_str = \
 """\
- / 2    2             \\\n\
-O\\x  + y ; (x, y) -> 0/\
+ / 2    2                  \\\n\
+O\\x  + y ; (x, y) -> (0, 0)/\
 """
     ucode_str = \
 u("""\
- ⎛ 2    2            ⎞\n\
-O⎝x  + y ; (x, y) → 0⎠\
+ ⎛ 2    2                 ⎞\n\
+O⎝x  + y ; (x, y) → (0, 0)⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1966,16 +1966,16 @@ O⎜─; x → ∞⎟\n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = O(x**2 + y**2, x, y, oo)
+    expr = O(x**2 + y**2, (x, y), (oo, oo))
     ascii_str = \
 """\
- / 2    2              \\\n\
-O\\x  + y ; (x, y) -> oo/\
+ / 2    2                    \\\n\
+O\\x  + y ; (x, y) -> (oo, oo)/\
 """
     ucode_str = \
 u("""\
- ⎛ 2    2            ⎞\n\
-O⎝x  + y ; (x, y) → ∞⎠\
+ ⎛ 2    2                 ⎞\n\
+O⎝x  + y ; (x, y) → (∞, ∞)⎠\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
