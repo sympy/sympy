@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import Add, Mul, Dummy, S
 from sympy.core.sympify import sympify
 from sympy.core.function import Lambda
+from sympy.utilities import flatten
 from sympy.simplify.simplify import simplify
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.complexes import Abs
@@ -12,7 +13,8 @@ from sympy.polys.monomials import itermonomials
 from sympy.polys.polytools import Poly, quo, rem, resultant, cancel
 from sympy.polys.partfrac import apart_list
 from sympy.polys.rootoftools import RootSum
-from sympy.solvers.solvers import solve
+from sympy.matrices import zeros
+from sympy.solvers.linear import solve_general_linear
 from sympy.series import gruntz
 
 
@@ -53,7 +55,7 @@ def dispersion(p, x):
     r = Poly(resultant(p, q), gens=[a])
 
     iroots = integer_roots(r)
-    rmax = max([0] + [ r[0] for r in iroots ])
+    rmax = max([0] + [ root[0] for root in iroots ])
 
     return rmax
 
@@ -185,45 +187,50 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
         eqn = l * g1.shift(1).as_expr()*g2.as_expr() - g2.shift(1).as_expr()*g1.as_expr() - p2.as_expr()
         #eqn = Poly(eqn, gens=[x]).as_expr()
 
-    #print("Equation:")
-    #print(eqn)
+    P = Poly(eqn, gens=[x])
 
-    sol = solve(eqn, ci, dict=True)
+    M = zeros(len(mons), len(ci))
+    rhs = zeros(len(mons), 1)
 
-    # Hack for unhandy return format of solve:
-    if type(sol) == list and len(sol) > 0:
-        sol = sol[0]
+    for r, mon in enumerate(mons):
+        print("-")
+        print(mon)
+        cmon = P.coeff_monomial(mon)
+        cmonp = Poly(cmon, gens=ci)
+        print((r, mon, cmonp))
+        # Fill in matrix elements
+        for c, coe in enumerate(ci):
+            xi = cmonp.coeff_monomial(coe)
+            print((mon, coe, xi))
+            M[r,c] = xi
+        # Put constants in the RHS
+        chi = cmonp.coeff_monomial(1)
+        print((r,chi))
+        rhs[r,0] = -chi
 
-    #print("Values:")
-    #print(sol)
+    solution = solve_general_linear(M, rhs)
 
-    return (g1, ci, sol)
+    return (g1, ci, solution)
 
 
-def step_5(l, x, alpha, g1, g2, ci, sol):
+def step_5(l, x, alpha, g1, g2, ci, linsol):
     # Try to find a closed form in F
     # This is possible only if all ci got values
-    # TODO: improve using linalg and solvability criteria
-    unresolved = set(ci) - set(sol.keys())
-    #print("Unresolved symbols:")
-    #print(unresolved)
+    sol, params = linsol
+    sol, params = flatten(sol.tolist()), flatten(params.tolist())
+    vals = [(var,val) for var, val in zip(ci, sol)]
 
-    if len(unresolved) <= 1:
+    if len(params) <= 1:
         # System was solvable
         if alpha == 0:
-            solution = l**x * g1.subs(sol)
+            solution = l**x * g1.subs(vals)
         else:
-            solution = l**x * g1.subs(sol) / g2.as_expr()
+            solution = l**x * g1.subs(vals) / g2.as_expr()
     else:
         if Abs(l) == 1:
             solution = None
         else:
-            #solution = None
-            #print("Not summable in F or E ?")
             raise ValueError("Not summable in F or E   (1)")
-
-    #print("Soluion:")
-    #print(solution)
 
     return solution
 
