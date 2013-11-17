@@ -165,6 +165,10 @@ class Dyadic(object):
     def __neg__(self):
         return self * -1
 
+    def _repr_latex_(self):
+        """Returns a representation for rich display with IPython."""
+        return r'${}$'.format(self._latex())
+
     def _latex(self, printer=None):
         ar = self.args  # just to shorten things
         if len(ar) == 0:
@@ -1524,6 +1528,10 @@ class Vector(object):
                 ol += Dyadic([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
                 ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
+
+    def _repr_latex_(self):
+        """Returns a representation for rich display with IPython."""
+        return r'${}$'.format(self._latex())
 
     def _latex(self, printer=None):
         """Latex Printing method. """
