@@ -83,10 +83,10 @@ def test_simple_8():
 
 
 def test_as_expr_variables():
-    assert Order(x).as_expr_variables(None) == (x, (x, 0))
-    assert Order(x).as_expr_variables((x, 0)) == (x, (x, 0))
-    assert Order(y).as_expr_variables((x, 0)) == (y, (y, x, 0))
-    assert Order(y).as_expr_variables((x, y, 0)) == (y, (x, y, 0))
+    assert Order(x).as_expr_variables(None) == (x, ((x,), (0,)))
+    assert Order(x).as_expr_variables(((x,), (0,))) == (x, ((x,), (0,)))
+    assert Order(y).as_expr_variables(((x,), (0,))) == (y, ((y, x), (0, 0)))
+    assert Order(y).as_expr_variables(((x, y), (0, 0))) == (y, ((x, y), (0, 0)))
 
 
 def test_contains_0():
