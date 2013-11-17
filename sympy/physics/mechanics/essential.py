@@ -1691,7 +1691,7 @@ class Vector(object):
         Parameters
         ==========
 
-        otherframe: ReferenceFrame
+        otherframe : ReferenceFrame
             The frame for this Vector to be described in
 
         variables : boolean
