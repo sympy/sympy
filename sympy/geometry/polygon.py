@@ -224,6 +224,16 @@ class Polygon(GeometryEntity):
             area += x1*y2 - x2*y1
         return simplify(area) / 2
 
+    @staticmethod
+    def _isright(a, b, c):
+        ba = b - a
+        ca = c - a
+        t_area = simplify(ba.x*ca.y - ca.x*ba.y)
+        res = t_area.is_nonpositive
+        if res is None:
+            raise ValueError("Can't determine orientation")
+        return res
+
     @property
     def angles(self):
         """The internal angle at each vertex.
@@ -254,21 +264,15 @@ class Polygon(GeometryEntity):
 
         """
 
-        def _isright(a, b, c):
-            ba = b - a
-            ca = c - a
-            t_area = ba.x*ca.y - ca.x*ba.y
-            return bool(t_area <= 0)
-
         # Determine orientation of points
         args = self.vertices
-        cw = _isright(args[-1], args[0], args[1])
+        cw = self._isright(args[-1], args[0], args[1])
 
         ret = {}
         for i in xrange(len(args)):
             a, b, c = args[i - 2], args[i - 1], args[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
-            if cw ^ _isright(a, b, c):
+            if cw ^ self._isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
             else:
                 ret[b] = ang
@@ -442,17 +446,11 @@ class Polygon(GeometryEntity):
 
         """
 
-        def _isright(a, b, c):
-            ba = b - a
-            ca = c - a
-            t_area = simplify(ba.x*ca.y - ca.x*ba.y)
-            return bool(t_area <= 0)
-
         # Determine orientation of points
         args = self.vertices
-        cw = _isright(args[-2], args[-1], args[0])
+        cw = self._isright(args[-2], args[-1], args[0])
         for i in xrange(1, len(args)):
-            if cw ^ _isright(args[i - 2], args[i - 1], args[i]):
+            if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
                 return False
 
         return True
