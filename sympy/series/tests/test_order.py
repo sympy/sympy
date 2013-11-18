@@ -29,6 +29,7 @@ def test_simple_1():
     assert Order(x**2 + x + y, y) == O(1, y)
     raises(ValueError, lambda: Order(exp(x), x, x))
     raises(TypeError, lambda: Order(x, 2 - x))
+    raises(ValueError, lambda: Order(Order(x), x, oo))
 
 
 def test_simple_2():
@@ -322,13 +323,18 @@ def test_issue_3654():
     assert (1 + x**2)**10000*O(x) == O(x)
 
 
+@XFAIL
+def test_order_at_infinity_XFAILed():
+    assert Order(Order(x, x, oo), y) == Order(x, (x, y), (oo, 0))
+
 def test_order_at_infinity():
     assert Order(1 + x, x, oo) == Order(x, x, oo)
     assert Order(3*x, x, oo) == Order(x, x, oo)
     assert Order(x, x, oo)*3 == Order(x, x, oo)
     assert -28*Order(x, x, oo) == Order(x, x, oo)
     assert Order(Order(x, x, oo)) == Order(x, x, oo)
-    assert Order(Order(x, x, oo), y) == Order(Order(x, x, oo), (x, y))
+    #assert Order(Order(x, x, oo), y) == Order(x, (x, y), (oo, 0)) # see above
+    assert Order(Order(x, x, oo), y, oo) == Order(x, (x, y), (oo, oo))
     assert Order(3, x, oo) == Order(1, x, oo)
     assert Order(x**2 + x + y, x, oo) == O(x**2, x, oo)
     assert Order(x**2 + x + y, y, oo) == O(y, y, oo)

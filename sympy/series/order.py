@@ -101,7 +101,11 @@ class Order(Expr):
         expr = sympify(expr)
 
         if not variables:
-            variables = list(expr.free_symbols)
+            if expr.is_Order:
+                variables = expr.variables
+                point = expr.point
+            else:
+                variables = list(expr.free_symbols)
         else:
             variables = list(variables if is_sequence(variables) else [variables])
 
@@ -130,12 +134,20 @@ class Order(Expr):
             return S.NaN
 
         if expr.is_Order:
-            v = set(expr.variables)
-            variables = v | set(variables)
-            if variables == v:
+            expr_vp = dict(zip(expr.variables, expr.point))
+            new_vp = dict(expr_vp)
+            vp = dict(zip(variables, point))
+            for v, p in vp.items():
+                if v in new_vp.keys():
+                    if p != new_vp[v]:
+                        raise ValueError('Points are different')
+                else:
+                    new_vp[v] = p
+            if set(expr_vp.keys()) == set(new_vp.keys()):
                 return expr
-            variables = list(variables)
-            point = [0]*len(variables) # FIXME
+            else:
+                variables = list(new_vp.keys())
+                point = [new_vp[v] for v in variables]
 
         elif variables:
 
