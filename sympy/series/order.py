@@ -112,7 +112,7 @@ class Order(Expr):
             point = [S.Zero]*len(variables)
         else:
             point = list(point if is_sequence(point) else [point])
-            point = map(sympify, point)
+            point = list(map(sympify, point))
 
         if len(point) != len(variables):
             raise ValueError('Number of point values must be the same as '
