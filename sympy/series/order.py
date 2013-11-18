@@ -15,6 +15,16 @@ class Order(Expr):
     point to be 0 or positive infinity is currently supported. This is
     expressed in big O notation [1]_.
 
+    ``Order(expr, variables, point)`` receives at most 3 arguments:
+    an expression, a variable or list of distinct variables and a
+    point or list of limiting points corresponding to those variables.
+
+    If point is omitted, it's taken to be 0 (or list of zeros).
+
+    If both variables and points are omitted, variables are
+    taken from `expr.free_symbols` or from expr.variables property
+    if expr is an Order instance (in that case point is taken to be expr.point).
+
     The formal definition for the order of a function `g(x)` about a point `a`
     is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if for any
     `\delta > 0` there exists a `M > 0` such that `|g(x)| \leq M|f(x)|` for
@@ -87,8 +97,6 @@ class Order(Expr):
 
     In the multivariate case, it is assumed the limits w.r.t. the various
     symbols commute.
-
-    If no symbols are passed then all symbols in the expression are used.
 
     """
 
