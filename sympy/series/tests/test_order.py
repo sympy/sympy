@@ -359,6 +359,10 @@ def test_order_at_infinity():
     assert Order(x**3, x, oo) + Order(exp(2/x), x, oo) == Order(x**3, x, oo)
     assert Order(x**-3, x, oo) + Order(exp(2/x), x, oo) == Order(exp(2/x), x, oo)
 
+    # issue 4108
+    assert Order(exp(x), x, oo).expr == Order(2*exp(x), x, oo).expr == exp(x)
+    assert Order(y**x, x, oo).expr == Order(2*y**x, x, oo).expr == y**x
+
 
 def test_mixing_order_at_zero_and_infinity():
     assert (Order(x, x, 0) + Order(x, x, oo)).is_Add

@@ -141,7 +141,8 @@ class Order(Expr):
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
-                expr = expr.as_leading_term(*symbols)
+                if point == S.Zero:
+                    expr = expr.as_leading_term(*symbols)
                 expr = expr.as_independent(*symbols, as_Add=False)[1]
 
                 expr = expand_power_base(expr)
