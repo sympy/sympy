@@ -13,6 +13,7 @@ import xml.dom.minidom
 import os.path
 import logging
 import subprocess
+import sys
 
 
 default_source_dir = os.path.join(os.path.dirname(__file__), "src/logo")
@@ -141,7 +142,7 @@ def convert_to_png(fn_source, output_dir, sizes):
     p.communicate()
     if p.returncode == 127:
         logging.error("%s: command not found" % cmd)
-        return
+        sys.exit(p.returncode)
 
     for ver in svgs:
         if ver == '':
@@ -163,8 +164,9 @@ def convert_to_png(fn_source, output_dir, sizes):
                 stderr=subprocess.STDOUT)
             p.communicate()
             if p.returncode != 0:
-                logging.warning("Return code is not 0: Command: %s" % cmd)
-                logging.warning("return code: %s" % p.returncode)
+                logging.error("Return code is not 0: Command: %s" % cmd)
+                logging.error("return code: %s" % p.returncode)
+                sys.exit(p.returncode)
             else:
                 logging.debug("command: %s" % cmd)
                 logging.debug("return code: %s" % p.returncode)
@@ -183,7 +185,7 @@ def convert_to_ico(fn_source, output_dir, sizes):
     p.communicate()
     if p.returncode == 127:
         logging.error("%s: command not found" % cmd)
-        return
+        sys.exit(p.returncode)
 
     for ver in svgs:
         if ver == '':
@@ -211,8 +213,9 @@ def convert_to_ico(fn_source, output_dir, sizes):
             stderr=subprocess.STDOUT)
         p.communicate()
         if p.returncode != 0:
-            logging.warning("Return code is not 0: Command: %s" % cmd)
-            logging.warning("return code: %s" % p.returncode)
+            logging.error("Return code is not 0: Command: %s" % cmd)
+            logging.error("return code: %s" % p.returncode)
+            sys.exit(p.returncode)
         else:
             logging.debug("command: %s" % cmd)
             logging.debug("return code: %s" % p.returncode)
