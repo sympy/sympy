@@ -241,6 +241,10 @@ def preprocess(f, x):
     tobase = cancel(exps / x)
 
     l = apow.keys()[0] ** tobase
+
+    if x in l.free_symbols:
+        raise ValueError("Base of exponential part not free of "+str(x)+".")
+
     f = cancel(f / l**x)
 
     return f, l
