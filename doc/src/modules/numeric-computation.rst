@@ -25,7 +25,7 @@ for a symbolic one and then evaluate the result within SymPy.
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
-    >>> expr.subs(x, 3.14).evalf()
+    >>> expr.evalf(subs={x: 3.14})
     0.000507214304613640
 
 This method is slow.  You should use this method production only if performance
