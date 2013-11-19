@@ -134,6 +134,6 @@ info:
 logo: src/logo/sympy.svg
 	rm -rf _build/logo
 	mkdir -p _build/logo
-	./generate_logos.py -d
+	$(PYTHON) ./generate_logos.py -d
 	@echo
 	@echo "Logo generated."
