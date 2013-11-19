@@ -41,7 +41,7 @@ class GammaMatrixHead(TensorHead):
     >>> G = GammaMatrixHead()
     >>> i = tensor_indices('i', G.LorentzIndex)
     >>> G(i)
-    gamma(i, auto_left, auto_right)
+    gamma(i, auto_left, -auto_right)
 
     Note that there is already an instance of GammaMatrixHead in four dimensions:
     GammaMatrix, which is simply declare as
@@ -52,7 +52,7 @@ class GammaMatrixHead(TensorHead):
     >>> from sympy.tensor.tensor import tensor_indices
     >>> i = tensor_indices('i', GammaMatrix.LorentzIndex)
     >>> GammaMatrix(i)
-    gamma(i, auto_left, auto_right)
+    gamma(i, auto_left, -auto_right)
 
     To access the metric tensor
 
@@ -119,7 +119,7 @@ class GammaMatrixHead(TensorHead):
         >>> ps = p(i0)*G(-i0)
         >>> qs = q(i0)*G(-i0)
         >>> G.simplify_gpgp(ps*qs*qs)
-        gamma(-L_0, auto_left, auto_right)*p(L_0)*q(L_1)*q(-L_1)
+        gamma(-L_0, auto_left, -auto_right)*p(L_0)*q(L_1)*q(-L_1)
         """
         def _simplify_gpgp(ex):
             tids = ex._tids
@@ -319,8 +319,8 @@ class GammaMatrixHead(TensorHead):
             if numG == 0:
                 spinor_free = [_[0] for _ in t._tids.free if _[0].tensortype is DiracSpinorIndex]
                 tcoeff = t.coeff
-                if spinor_free == [DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right]:
-                    t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right)
+                if spinor_free == [DiracSpinorIndex.auto_left, -DiracSpinorIndex.auto_right]:
+                    t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_right)
                     t = t.contract_metric(sg)
                     return t/tcoeff if tcoeff else t
                 else:
@@ -328,7 +328,7 @@ class GammaMatrixHead(TensorHead):
             if numG % 2 == 1:
                 return TensMul.from_data(S.Zero, [], [], [])
             elif numG > 4:
-                t = t.substitute_indices((DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_index), (DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_index))
+                t = t.substitute_indices((-DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_index), (DiracSpinorIndex.auto_left, DiracSpinorIndex.auto_index))
                 a = t.split()
                 ind1, lind1, rind1 = a[i].args[-1]
                 ind2, lind2, rind2 = a[i + 1].args[-1]
@@ -445,11 +445,11 @@ class GammaMatrixHead(TensorHead):
         >>> i0, i1, i2 = tensor_indices('i0:3', G.LorentzIndex)
         >>> s0,s1,s2,s3,s4,s5 = tensor_indices('s0:6', DS)
         >>> ta = G(i0)*G(-i0)
-        >>> G._kahane_simplify(ta.coeff, ta._tids) - 4*DS.delta(DS.auto_left, DS.auto_right)
+        >>> G._kahane_simplify(ta.coeff, ta._tids) - 4*DS.delta(DS.auto_left, -DS.auto_right)
         0
         >>> tb = G(i0)*G(i1)*G(-i0)
         >>> G._kahane_simplify(tb.coeff, tb._tids)
-        -2*gamma(i1, auto_left, auto_right)
+        -2*gamma(i1, auto_left, -auto_right)
         >>> t = G(i0, s0, -s1)*G(-i0,s1,-s2)
         >>> G._kahane_simplify(t.coeff, t._tids) - 4*DS.delta(s0, -s2)
         0
@@ -461,7 +461,7 @@ class GammaMatrixHead(TensorHead):
 
         >>> tc = 3*G(i0)*G(i1)
         >>> G._kahane_simplify(tc.coeff, tc._tids)
-        3*gamma(i0, auto_left, S_0)*gamma(i1, -S_0, auto_right)
+        3*gamma(i0, auto_left, -S_0)*gamma(i1, S_0, -auto_right)
 
         References
         ==========
@@ -755,10 +755,10 @@ class GammaMatrixHead(TensorHead):
             spinor_free1 = [_ for _ in t1._tids.free if _[1] != 0]
             if spinor_free1:
                 if spinor_free:
-                    t = t.substitute_indices((DiracSpinorIndex.auto_left, spinor_free[0][0]), (DiracSpinorIndex.auto_right, spinor_free[-1][0]))
+                    t = t.substitute_indices((DiracSpinorIndex.auto_left, spinor_free[0][0]), (-DiracSpinorIndex.auto_right, spinor_free[-1][0]))
                 else:
                     # FIXME trace
-                    t = t*DiracSpinorIndex.delta(-DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_left)
+                    t = t*DiracSpinorIndex.delta(DiracSpinorIndex.auto_right, -DiracSpinorIndex.auto_left)
                     t = GammaMatrix.simplify_lines(t)
             else:
                 if spinor_free:

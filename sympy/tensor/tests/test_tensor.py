@@ -1154,7 +1154,7 @@ def test_hidden_indices_for_matrix_multiplication():
     E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]], matrix_behavior=True)
     F = tensorhead('F', [L], [[1]], matrix_behavior=True)
 
-    assert (A(m0)) == A(m0, S.auto_left, S.auto_right)
+    assert (A(m0)) == A(m0, S.auto_left, -S.auto_right)
     assert (B(-m1)) == B(-m1, S.auto_left)
 
     A0 = A(m0)
@@ -1162,16 +1162,16 @@ def test_hidden_indices_for_matrix_multiplication():
     B1 = B(m1)
 
     assert (B1*A0*B0) == B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1)
-    assert (B0*A0) == B(-m0, s0)*A(m0, -s0, S.auto_right)
+    assert (B0*A0) == B(-m0, s0)*A(m0, -s0, -S.auto_right)
     assert (A0*B0) == A(m0, S.auto_left, s0)*B(-m0, -s0)
 
     C = tensorhead('C', [L, L], [[1]*2])
 
-    assert (C(True, True)) == C(L.auto_left, L.auto_right)
+    assert (C(True, True)) == C(L.auto_left, -L.auto_right)
 
-    assert (A(m0)*C(m1, -m0)) == A(m2, S.auto_left, S.auto_right)*C(m1, -m2)
+    assert (A(m0)*C(m1, -m0)) == A(m2, S.auto_left, -S.auto_right)*C(m1, -m2)
 
-    assert (C(True, True)*C(True, True)) == C(L.auto_left, m0)*C(-m0, L.auto_right)
+    assert (C(True, True)*C(True, True)) == C(L.auto_left, m0)*C(-m0, -L.auto_right)
 
     assert A(m0) == A(m0)
     assert B(-m1) == B(-m1)
@@ -1190,8 +1190,8 @@ def test_hidden_indices_for_matrix_multiplication():
     D0 = D(True, True, True, True)
     Aa = A(True, True, True)
 
-    assert D0 * Aa == D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, S.auto_right)
-    assert D(m0, m1) == D(m0, m1, S.auto_left, S.auto_right)
+    assert D0 * Aa == D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, -S.auto_right)
+    assert D(m0, m1) == D(m0, m1, S.auto_left, -S.auto_right)
 
     raises(ValueError, lambda: C(True))
     raises(ValueError, lambda: C())
@@ -1200,18 +1200,18 @@ def test_hidden_indices_for_matrix_multiplication():
 
     # test that a delta is automatically added on missing auto-matrix indices in TensAdd
     assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4) == \
-        E(m1, m2, m3, m4)*S.delta(S.auto_left, S.auto_right) +\
-        F(m2)*F(m3)*F(m4)*A(m1, S.auto_left, S.auto_right)
-    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(L.auto_left, L.auto_right)
+        E(m1, m2, m3, m4)*S.delta(S.auto_left, -S.auto_right) +\
+        F(m2)*F(m3)*F(m4)*A(m1, S.auto_left, -S.auto_right)
+    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(L.auto_left, -L.auto_right)
     assert E(m1, m2)*A(m3) + F(m1)*F(m2)*F(m3) == \
-        E(m1, m2, L.auto_left, L.auto_right)*A(m3, S.auto_left, S.auto_right) +\
-        F(m1)*F(m2)*F(m3)*L.delta(L.auto_left, L.auto_right)*S.delta(S.auto_left, S.auto_right)
+        E(m1, m2, L.auto_left, -L.auto_right)*A(m3, S.auto_left, -S.auto_right) +\
+        F(m1)*F(m2)*F(m3)*L.delta(L.auto_left, -L.auto_right)*S.delta(S.auto_left, -S.auto_right)
 
-    assert L.delta() == L.delta(L.auto_left, L.auto_right)
-    assert S.delta() == S.delta(S.auto_left, S.auto_right)
+    assert L.delta() == L.delta(L.auto_left, -L.auto_right)
+    assert S.delta() == S.delta(S.auto_left, -S.auto_right)
 
-    assert L.metric() == L.metric(L.auto_left, L.auto_right)
-    assert S.metric() == S.metric(S.auto_left, S.auto_right)
+    assert L.metric() == L.metric(L.auto_left, -L.auto_right)
+    assert S.metric() == S.metric(S.auto_left, -S.auto_right)
 
 
 ### TEST VALUED TENSORS ###
@@ -1412,7 +1412,7 @@ def test_valued_tensor_expressions():
     assert expr4 * 2 == expr3
     expr5 = expr4 * BA(-i1, -i0)
 
-    assert expr5 == (-2*x1 * (-20*E + 44*px - 8*py - 32*pz) + 136*x2 + 3*x3).expand()
+    assert expr5 == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
 
 
 def test_noncommuting_components():
@@ -1432,7 +1432,7 @@ def test_noncommuting_components():
 
     vtp = V1(i1, i2) * V2(-i2, -i1)
 
-    assert vtp == a ** 2 + b * c + c * b + d ** 2
+    assert vtp == a**2 + b**2 + c**2 + d**2
     assert vtp != a**2 + 2*b*c + d**2
 
     Vc = b * V1(i1, -i1)
@@ -1524,3 +1524,50 @@ def test_pprint():
 
     assert pretty(A) == "A(Lorentz)"
     assert pretty(A(i0)) == "A(i0)"
+
+
+def test_contract_automatrix_and_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    L = TensorIndexType('L')
+    S = TensorIndexType('S')
+    G = tensorhead('G', [L, S, S], [[1] * 3], matrix_behavior=True)
+
+    def G_data():
+        G.data = [[[1]]]
+    raises(ValueError, G_data)
+    L.data = [1, -1]
+    raises(ValueError, G_data)
+    S.data = [[1, 0], [0, 2]]
+    G.data = [
+        [[1, 2],
+         [3, 4]],
+        [[5, 6],
+         [7, 8]]
+    ]
+    m0, m1, m2 = tensor_indices('m0:3', L)
+    s0, s1, s2 = tensor_indices('s0:3', S)
+
+    assert (G(-m0).data == numpy.array([
+       [[1, 4],
+        [3, 8]],
+       [[-5, -12],
+        [-7, -16]]
+    ])).all()
+
+    (G(m0) * G(-m0)).data
+    G(m0, s0, -s1).data
+
+    c1 = G(m0, s0, -s1)*G(-m0, s1, -s2)
+    c2 = G(m0) * G(-m0)
+
+    assert (c1.data == c2.data).all()
+
+    del L.data
+    del S.data
+    del G.data
+    assert L.data is None
+    assert S.data is None
+    assert G.data is None
