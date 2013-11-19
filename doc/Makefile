@@ -45,7 +45,7 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-html:
+html: _build/logo/sympy-notailtext-favicon.ico
 	mkdir -p src/.static
 	mkdir -p _build/html
 	mkdir -p _build/doctrees
@@ -130,6 +130,8 @@ info:
 	@echo "Running Texinfo files through makeinfo..."
 	make -C _build/texinfo info
 	@echo "makeinfo finished; the Info files are in _build/texinfo."
+
+_build/logo/sympy-notailtext-favicon.ico: logo
 
 logo: src/logo/sympy.svg
 	rm -rf _build/logo
