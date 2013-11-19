@@ -2,8 +2,6 @@
 
 # Exit on error
 set -e
-# Echo each command
-set -x
 
 # Find out whether the commit to test is at the head of the branch to test
 if [ x`git rev-list --max-count=1 $TRAVIS_BRANCH` != x$TRAVIS_COMMIT ]; then
@@ -14,6 +12,9 @@ if [ x`git rev-list --max-count=1 $TRAVIS_BRANCH` != x$TRAVIS_COMMIT ]; then
     echo 'and push it to github.)'
     exit 1
 fi
+
+# Echo each command
+set -x
 
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     cd doc
