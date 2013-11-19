@@ -157,25 +157,20 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             debug("init_printing: using png formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)
-            png_formatter.enabled = True
         elif use_latex == 'matplotlib':
             debug("init_printing: using matplotlib formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_matplotlib)
-            png_formatter.enabled = True
         else:
             debug("init_printing: not using any png formatter")
-            png_formatter.enabled = False
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         if use_latex in (True, 'mathjax'):
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
-            latex_formatter.enabled = True
         else:
             debug("init_printing: not using mathjax formatter")
-            latex_formatter.enabled = False
     else:
         ip.set_hook('result_display', _result_display)
 
