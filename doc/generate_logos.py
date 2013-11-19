@@ -137,8 +137,9 @@ def convert_to_png(fn_source, output_dir, sizes):
     svgs.insert(0, '')
 
     cmd = "rsvg-convert"
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
+    p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
     p.communicate()
     if p.returncode == 127:
         logging.error("%s: command not found" % cmd)
@@ -160,8 +161,9 @@ def convert_to_png(fn_source, output_dir, sizes):
             cmd = "rsvg-convert %s -f png -o %s -h %d -w %d" % (fn_svg, fn_out,
                 size, size)
 
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
+            p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT)
             p.communicate()
             if p.returncode != 0:
                 logging.error("Return code is not 0: Command: %s" % cmd)
@@ -180,8 +182,9 @@ def convert_to_ico(fn_source, output_dir, sizes):
     svgs.insert(0, '')
 
     cmd = "convert"
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
+    p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
     p.communicate()
     if p.returncode == 127:
         logging.error("%s: command not found" % cmd)
@@ -209,8 +212,9 @@ def convert_to_ico(fn_source, output_dir, sizes):
 
         cmd = "convert %s %s" % (" ".join(pngs), fn_out)
 
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+        p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
         p.communicate()
         if p.returncode != 0:
             logging.error("Return code is not 0: Command: %s" % cmd)
