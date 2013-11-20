@@ -785,7 +785,7 @@ def test_powers_Integer():
     assert S(0) ** S.Infinity == 0
 
     # check Nan
-    assert S(1) ** S.NaN == S.One
+    assert S(1) ** S.NaN == S.NaN
     assert S(-1) ** S.NaN == S.NaN
 
     # check for exact roots
