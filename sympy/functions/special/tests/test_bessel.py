@@ -143,6 +143,10 @@ def test_expand():
 
     for besselx in [besselj, bessely, besseli, besselk]:
         assert besselx(real1, real2).is_real
+        assert besselx(real1, real2).is_real
+        assert besselx(real1, real2).as_real_imag() == \
+               (besselx(real1, real2), S.Zero)
+
 
 def test_fn():
     x, z = symbols("x z")
