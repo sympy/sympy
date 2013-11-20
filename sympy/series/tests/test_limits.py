@@ -274,6 +274,9 @@ def test_issue2085():
     assert limit(cos(x)/x, x, oo) == 0
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
+    r = Symbol('r', real=True, bounded=True)
+    assert limit(r*sin(1/r), r, 0) == 0
+
 
 def test_issue2130():
     assert limit((1 + y)**(1/y) - S.Exp1, y, 0) == 0
@@ -412,3 +415,9 @@ def test_issue_2073():
 def test_issue_3989():
     a = Symbol('a')
     assert limit(sqrt(x/(x + a)), x, oo) == 1
+
+
+def test_issue_3265():
+    a = Symbol('a')
+    e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
+    assert limit(e, z, 0).simplify() == 2/cos(2*a)

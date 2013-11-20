@@ -318,6 +318,9 @@ class sign(Function):
         if arg.is_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
+    def _eval_simplify(self, ratio, measure):
+        return self.func(self.args[0].factor())
+
 
 class Abs(Function):
     """

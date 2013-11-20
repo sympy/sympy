@@ -1,16 +1,19 @@
-from sympy.core import S, Rational, Symbol, Basic
+from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
-from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
-  TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
-  tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
-  TensorManager, TensExpr, TIDS)
-from sympy.utilities.pytest import raises
+from sympy.core import S, Rational, Symbol, Basic
 from sympy.core.containers import Tuple
+from sympy.core.symbol import symbols
+from sympy.external import import_module
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.printing.pretty.pretty import pretty
+from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
+    get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
+    riemann_cyclic_replace, riemann_cyclic, TensMul, \
+    tensorsymmetry, tensorhead, TensorManager, TensExpr, TIDS
+from sympy.utilities.pytest import raises, skip
+
 
 #################### Tests from tensor_can.py #######################
-
 def test_canonicalize_no_slot_sym():
     # A_d0 * B^d0; T_c = A^d0*B_d0
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -507,7 +510,7 @@ def test_TensExpr():
     raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
     raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
     raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
-    raises(NotImplementedError, lambda: A(a, b)**2)
+    raises(ValueError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
     raises(NotImplementedError, lambda: abs(A(a, b)))
 
@@ -763,7 +766,6 @@ def test_contract_metric1():
 
     t1 = A(a,b)*B(-b,-c)*g(c, d)*g(-a, -d)
     t2 = t1.contract_metric(g)
-    t2 = t2.contract_metric(g)
     assert t2 == A(a,b)*B(-b,-a)
 
     t1 = A(a,b)*g(-a,-b)
@@ -786,7 +788,6 @@ def test_contract_metric2():
     t2 = 3*g(-a,-b)*q(c)*q(-c)
     t = t1*t2
     t = t.contract_metric(g)
-    t = t.contract_metric(g)
     assert t == 3*D*p(a)*p(-a)*q(b)*q(-b)
     t1 = g(a,b)*p(c)*p(-c)
     t2 = 3*q(-a)*q(-b)
@@ -799,9 +800,7 @@ def test_contract_metric2():
     t2 = - 3*g(-a,-b)*q(c)*q(-c)
     t = t1*t2
     t = t.contract_metric(g)
-    t = t.contract_metric(g)
     t = 6*g(a,b)*g(-a,-b)*p(c)*p(-c)*q(d)*q(-d)
-    t = t.contract_metric(g)
     t = t.contract_metric(g)
 
     t1 = 2*g(a,b)*p(c)*p(-c)
@@ -819,24 +818,13 @@ def test_contract_metric2():
 
     t = g(a,b)*g(c,d)*g(-b,-c)
     t1 = t.contract_metric(g)
-    t1 = t1.canon_bp()
-    assert t1 == g(a,c)*g(d,-c)
-
-    t2 = t1.contract_metric(g)
-    assert t2 == g(a, d)
-
-    t1 = t.contract_metric(g, True)
     assert t1 == g(a, d)
 
     t1 = g(a,b)*g(c,d) + g(a,c)*g(b,d) + g(a,d)*g(b,c)
     t2 = t1.substitute_indices((a,-a),(b,-b),(c,-c),(d,-d))
     t = t1*t2
-    t3 = t.contract_metric(g)
-    t3 = t3.contract_metric(g)
-    t3 = t3.contract_metric(g)
-    assert t3.equals(3*D**2 + 6*D)
-    t = t.contract_metric(g, True)
-    assert t3.equals(3*D**2 + 6*D)
+    t = t.contract_metric(g)
+    assert t.equals(3*D**2 + 6*D)
 
     t = 2*p(a)*g(b,-b)
     t1 = t.contract_metric(g)
@@ -850,13 +838,6 @@ def test_contract_metric2():
     t = (p(a)*p(b) + g(a, b)*M**2)*g(-a, -b) - D*M**2
     t1 = t.contract_metric(g)
     assert t1 == p(a)*p(-a)
-
-    v = [p(a), q(b), p(c)]
-    v1 = tensorlist_contract_metric(v, g(-a, -b))
-    assert v1 == [p(-b), q(b), p(c)]
-    v = [p(a), q(b), p(c)]
-    v1 = tensorlist_contract_metric(v, g(d, e))
-    assert v1 == [p(a), q(b), p(c), g(d, e)]
 
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     t = A(a, b)*p(L_0)*g(-a, -b)
@@ -1060,7 +1041,7 @@ def test_fun():
     gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
     # t = g_{a b; c}
     t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
-    t = t.contract_metric(g, True)
+    t = t.contract_metric(g)
     assert t == 0
     t = q(c)*p(a)*q(b)
     assert t(b,c,d) == q(d)*p(b)*q(c)
@@ -1158,3 +1139,435 @@ def test_hash():
     assert tsymmetry.func(*tsymmetry.args) == tsymmetry
     assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
     assert check_all(tsymmetry)
+
+
+def test_hidden_indices_for_matrix_multiplication():
+    L = TensorIndexType('Lorentz')
+    S = TensorIndexType('Matind')
+
+    m0, m1, m2, m3, m4, m5 = tensor_indices('m0:6', L)
+    s0, s1, s2 = tensor_indices('s0:3', S)
+
+    A = tensorhead('A', [L, S, S], [[1], [1], [1]], matrix_behavior=True)
+    B = tensorhead('B', [L, S], [[1], [1]], matrix_behavior=True)
+    D = tensorhead('D', [L, L, S, S], [[1, 1], [1, 1]], matrix_behavior=True)
+    E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]], matrix_behavior=True)
+    F = tensorhead('F', [L], [[1]], matrix_behavior=True)
+
+    assert (A(m0)) == A(m0, S.auto_left, -S.auto_right)
+    assert (B(-m1)) == B(-m1, S.auto_left)
+
+    A0 = A(m0)
+    B0 = B(-m0)
+    B1 = B(m1)
+
+    assert (B1*A0*B0) == B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1)
+    assert (B0*A0) == B(-m0, s0)*A(m0, -s0, -S.auto_right)
+    assert (A0*B0) == A(m0, S.auto_left, s0)*B(-m0, -s0)
+
+    C = tensorhead('C', [L, L], [[1]*2])
+
+    assert (C(True, True)) == C(L.auto_left, -L.auto_right)
+
+    assert (A(m0)*C(m1, -m0)) == A(m2, S.auto_left, -S.auto_right)*C(m1, -m2)
+
+    assert (C(True, True)*C(True, True)) == C(L.auto_left, m0)*C(-m0, -L.auto_right)
+
+    assert A(m0) == A(m0)
+    assert B(-m1) == B(-m1)
+
+    assert A(m0) - A(m0) == 0
+    ts1 = A(m0)*A(m1) + A(m1)*A(m0)
+    ts2 = A(m1)*A(m0) + A(m0)*A(m1)
+    assert ts1 == ts2
+    assert A(m0)*A(m1) + A(m1)*A(m0) == A(m1)*A(m0) + A(m0)*A(m1)
+
+    assert A(m0) == (2*A(m0))/2
+    assert A(m0) == -(-A(m0))
+    assert 2*A(m0) - 3*A(m0) == -A(m0)
+    assert 2*D(m0, m1) - 5*D(m1, m0) == -3*D(m0, m1)
+
+    D0 = D(True, True, True, True)
+    Aa = A(True, True, True)
+
+    assert D0 * Aa == D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, -S.auto_right)
+    assert D(m0, m1) == D(m0, m1, S.auto_left, -S.auto_right)
+
+    raises(ValueError, lambda: C(True))
+    raises(ValueError, lambda: C())
+
+    raises(ValueError, lambda: E(True, True, True, True))
+
+    # test that a delta is automatically added on missing auto-matrix indices in TensAdd
+    assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4) == \
+        E(m1, m2, m3, m4)*S.delta(S.auto_left, -S.auto_right) +\
+        F(m2)*F(m3)*F(m4)*A(m1, S.auto_left, -S.auto_right)
+    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(L.auto_left, -L.auto_right)
+    assert E(m1, m2)*A(m3) + F(m1)*F(m2)*F(m3) == \
+        E(m1, m2, L.auto_left, -L.auto_right)*A(m3, S.auto_left, -S.auto_right) +\
+        F(m1)*F(m2)*F(m3)*L.delta(L.auto_left, -L.auto_right)*S.delta(S.auto_left, -S.auto_right)
+
+    assert L.delta() == L.delta(L.auto_left, -L.auto_right)
+    assert S.delta() == S.delta(S.auto_left, -S.auto_right)
+
+    assert L.metric() == L.metric(L.auto_left, -L.auto_right)
+    assert S.metric() == S.metric(S.auto_left, -S.auto_right)
+
+
+### TEST VALUED TENSORS ###
+
+numpy = import_module('numpy')
+
+if numpy:
+    minkowski = Matrix((
+        (1, 0, 0, 0),
+        (0, -1, 0, 0),
+        (0, 0, -1, 0),
+        (0, 0, 0, -1),
+    ))
+    Lorentz = TensorIndexType('Lorentz', dim=4)
+    Lorentz.data = minkowski
+
+    i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
+
+    E, px, py, pz = symbols('E px py pz')
+    A = tensorhead('A', [Lorentz], [[1]])
+    A.data = [E, px, py, pz]
+    B = tensorhead('B', [Lorentz], [[1]], 'Gcomm')
+    B.data = range(4)
+    AB = tensorhead("AB", [Lorentz] * 2, [[1]]*2)
+    AB.data = minkowski
+
+    ba_matrix = Matrix((
+        (1, 2, 3, 4),
+        (5, 6, 7, 8),
+        (9, 0, -1, -2),
+        (-3, -4, -5, -6),
+    ))
+
+    BA = tensorhead("BA", [Lorentz] * 2, [[1]]*2)
+    BA.data = ba_matrix
+
+    BA(i0, i1)*A(-i0)*B(-i1)
+
+    # Let's test the diagonal metric, with inverted Minkowski metric:
+    LorentzD = TensorIndexType('LorentzD')
+    LorentzD.data = [-1, 1, 1, 1]
+    mu0, mu1, mu2 = tensor_indices('mu0:3', LorentzD)
+    C = tensorhead('C', [LorentzD], [[1]])
+    C.data = [E, px, py, pz]
+
+    ### non-diagonal metric ###
+    ndm_matrix = (
+        (0, 1, 0,),
+        (1, 0, 1),
+        (0, 1, 0,),
+    )
+    ndm = TensorIndexType("ndm")
+    ndm.data = ndm_matrix
+    n0, n1, n2 = tensor_indices('n0:3', ndm)
+    NA = tensorhead('NA', [ndm], [[1]])
+    NA.data = range(10, 13)
+    NB = tensorhead('NB', [ndm]*2, [[1]]*2)
+    NB.data = [[i+j for j in range(10, 13)] for i in range(10, 13)]
+    NC = tensorhead('NC', [ndm]*3, [[1]]*3)
+    NC.data = [[[i+j+k for k in range(4, 7)] for j in range(1, 4)] for i in range(2, 5)]
+
+def test_valued_tensor_iter():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+    # iteration on VTensorHead
+    assert list(A) == [E, px, py, pz]
+    assert list(ba_matrix) == list(BA)
+
+    # iteration on VTensMul
+    assert list(A(i1)) == [E, px, py, pz]
+    assert list(BA(i1, i2)) == list(ba_matrix)
+    assert list(3 * BA(i1, i2)) == [3 * i for i in list(ba_matrix)]
+    assert list(-5 * BA(i1, i2)) == [-5 * i for i in list(ba_matrix)]
+
+    # iteration on VTensAdd
+    # A(i1) + A(i1)
+    assert list(A(i1) + A(i1)) == [2*E, 2*px, 2*py, 2*pz]
+    assert BA(i1, i2) - BA(i1, i2) == 0
+    assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list(ba_matrix)]
+
+
+def test_valued_tensor_covariant_contravariant_elements():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    assert A(-i0)[0] == A(i0)[0]
+    assert A(-i0)[1] == -A(i0)[1]
+
+    assert AB(i0, i1)[1, 1] == -1
+    assert AB(i0, -i1)[1, 1] == 1
+    assert AB(-i0, -i1)[1, 1] == -1
+    assert AB(-i0, i1)[1, 1] == 1
+
+
+def test_valued_tensor_get_matrix():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    matab = AB(i0, i1).get_matrix()
+    assert matab == Matrix([
+                            [1,  0,  0,  0],
+                            [0, -1,  0,  0],
+                            [0,  0, -1,  0],
+                            [0,  0,  0, -1],
+                            ])
+    # when alternating contravariant/covariant with [1, -1, -1, -1] metric
+    # it becomes the identity matrix:
+    assert AB(i0, -i1).get_matrix() == eye(4)
+
+    # covariant and contravariant forms:
+    assert A(i0).get_matrix() == Matrix([E, px, py, pz])
+    assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
+
+
+def test_valued_tensor_contraction():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    assert A(i0) * A(-i0) == E ** 2 - px ** 2 - py ** 2 - pz ** 2
+    assert A(i0) * A(-i0) == A ** 2
+    assert A(i0) * A(-i0) == A(i0) ** 2
+    assert (A(i0) * B(-i0)) == -px - 2 * py - 3 * pz
+
+    for i in range(4):
+        for j in range(4):
+            assert (A(i0) * B(-i1))[i, j] == [E, px, py, pz][i] * [0, -1, -2, -3][j]
+
+    # test contraction on the alternative Minkowski metric: [-1, 1, 1, 1]
+    assert C(mu0) * C(-mu0) == -E ** 2 + px ** 2 + py ** 2 + pz ** 2
+
+    contrexp = A(i0) * AB(i1, -i0)
+    assert A(i0).rank == 1
+    assert AB(i1, -i0).rank == 2
+    assert contrexp.rank == 1
+    for i in range(4):
+        assert contrexp[i] == [E, px, py, pz][i]
+
+
+def test_valued_tensor_self_contraction():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    assert AB(i0, -i0) == 4
+    assert BA(i0, -i0) == 2
+
+
+def test_valued_tensor_pow():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    assert C**2 == -E**2 + px**2 + py**2 + pz**2
+    assert C**1 == sqrt(-E**2 + px**2 + py**2 + pz**2)
+    assert C(mu0)**2 == C**2
+    assert C(mu0)**1 == C**1
+
+
+def test_valued_tensor_expressions():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    x1, x2, x3 = symbols('x1:4')
+
+    # test coefficient in contraction:
+    rank2coeff = x1 * A(i3) * B(i2)
+    assert rank2coeff[1, 1] == x1 * px
+    assert rank2coeff[3, 3] == 3 * pz * x1
+    coeff_expr = (x1 * A(i4)) * (B(-i4) / x2)
+
+    assert coeff_expr.expand() == -px*x1/x2 - 2*py*x1/x2 - 3*pz*x1/x2
+
+    add_expr = A(i0) + B(i0)
+
+    assert add_expr[0] == E
+    assert add_expr[1] == px + 1
+    assert add_expr[2] == py + 2
+    assert add_expr[3] == pz + 3
+
+    sub_expr = A(i0) - B(i0)
+
+    assert sub_expr[0] == E
+    assert sub_expr[1] == px - 1
+    assert sub_expr[2] == py - 2
+    assert sub_expr[3] == pz - 3
+
+    assert add_expr * B(-i0) == -px - 2*py - 3*pz - 14
+
+    expr1 = x1*A(i0) + x2*B(i0)
+    expr2 = expr1 * B(i1) * (-4)
+    expr3 = expr2 + 3*x3*AB(i0, i1)
+    expr4 = expr3 / 2
+    assert expr4 * 2 == expr3
+    expr5 = expr4 * BA(-i1, -i0)
+
+    assert expr5 == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
+
+
+def test_noncommuting_components():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    euclid = TensorIndexType('Euclidean')
+    euclid.data = [1, 1]
+    i1, i2, i3 = tensor_indices('i1:4', euclid)
+
+    a, b, c, d = symbols('a b c d', commutative=False)
+    V1 = tensorhead('V1', [euclid] * 2, [[1]]*2)
+    V1.data = [[a, b], (c, d)]
+    V2 = tensorhead('V2', [euclid] * 2, [[1]]*2)
+    V2.data = [[a, c], [b, d]]
+
+    vtp = V1(i1, i2) * V2(-i2, -i1)
+
+    assert vtp == a**2 + b**2 + c**2 + d**2
+    assert vtp != a**2 + 2*b*c + d**2
+
+    Vc = b * V1(i1, -i1)
+    assert Vc.expand() == b * a + b * d
+
+
+def test_valued_non_diagonal_metric():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    mmatrix = Matrix(ndm_matrix)
+    assert NA(n0)*NA(-n0) == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
+
+
+def test_valued_tensor_strip():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    sA = A(i0).strip()
+    sB = B(-i0).strip()
+    sAB = AB(i0, i1).strip()
+
+    assert sA.data is None
+    assert sB.data is None
+    assert sAB.data is None
+
+    sthA = A.strip()
+    sthB = B.strip()
+    sthAB = AB.strip()
+
+    assert sA.data is None
+    assert sB.data is None
+    assert sAB.data is None
+
+
+def test_valued_tensor_applyfunc():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
+    aA = A(i0).applyfunc(lambda x: x**2)
+    aB = B(i0).applyfunc(lambda x: x**3)
+    aB2 = B(-i0).applyfunc(lambda x: x**3)
+
+    for i in range(4):
+        assert aA[i] == A(i0)[i]**2
+        assert aB[i] == B(i1)[i]**3
+    assert aB*aB2 == -794
+
+    tA = A.applyfunc(lambda x: x + 33)
+    tB = B.applyfunc(lambda x: x + 33)
+    tAB = AB.applyfunc(lambda x: x + 33)
+
+    assert (tA(i0)*tA(-i0)).expand() == ((E + 33)**2 - (px + 33)**2 - (py + 33)**2 - (pz + 33)**2).expand()
+    assert tB(i0).get_matrix() == Matrix([33, 34, 35, 36])
+    assert tAB(i0, i1).get_matrix() == Matrix([
+        [34, 33, 33, 33],
+        [33, 32, 33, 33],
+        [33, 33, 32, 33],
+        [33, 33, 33, 32],
+    ])
+
+def test_valued_canon_bp_swapaxes():
+    numpy = import_module("numpy")
+    if numpy is None:
+        return
+
+    e1 = A(i1)*A(i0)
+    e1.data[0, 1] = 44
+    e2 = e1.canon_bp()
+    assert e2 == A(i0)*A(i1)
+    for i in range(4):
+        for j in range(4):
+            assert e1[i, j] == e2[j, i]
+    o1 = B(i2)*A(i1)*B(i0)
+    o2 = o1.canon_bp()
+    for i in range(4):
+        for j in range(4):
+            for k in range(4):
+                assert o1[i, j, k] == o2[j, i, k]
+
+
+def test_pprint():
+    Lorentz = TensorIndexType('Lorentz')
+    i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
+    A = tensorhead('A', [Lorentz], [[1]])
+
+    assert pretty(A) == "A(Lorentz)"
+    assert pretty(A(i0)) == "A(i0)"
+
+
+def test_contract_automatrix_and_data():
+    numpy = import_module('numpy')
+    if numpy is None:
+        return
+
+    L = TensorIndexType('L')
+    S = TensorIndexType('S')
+    G = tensorhead('G', [L, S, S], [[1] * 3], matrix_behavior=True)
+
+    def G_data():
+        G.data = [[[1]]]
+    raises(ValueError, G_data)
+    L.data = [1, -1]
+    raises(ValueError, G_data)
+    S.data = [[1, 0], [0, 2]]
+    G.data = [
+        [[1, 2],
+         [3, 4]],
+        [[5, 6],
+         [7, 8]]
+    ]
+    m0, m1, m2 = tensor_indices('m0:3', L)
+    s0, s1, s2 = tensor_indices('s0:3', S)
+
+    assert (G(-m0).data == numpy.array([
+       [[1, 4],
+        [3, 8]],
+       [[-5, -12],
+        [-7, -16]]
+    ])).all()
+
+    (G(m0) * G(-m0)).data
+    G(m0, s0, -s1).data
+
+    c1 = G(m0, s0, -s1)*G(-m0, s1, -s2)
+    c2 = G(m0) * G(-m0)
+
+    assert (c1.data == c2.data).all()
+
+    del L.data
+    del S.data
+    del G.data
+    assert L.data is None
+    assert S.data is None
+    assert G.data is None

@@ -71,6 +71,9 @@ class BesselBase(Function):
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import besselsimp
+        return besselsimp(self)
 
 
 class besselj(BesselBase):

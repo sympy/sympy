@@ -286,11 +286,18 @@ want to be mentioned here, so see our repository history for a full list).
 #. Manish Gill: Fix infinite loop in Matrix constructor
 #. Markus Müller: Add Jordan form for matrices
 #. Amit Saha: Fixes to documentation
+#. Jeremy: Bug fix
 #. QuaBoo: Optimizations in ntheory
 #. Stefan van der Walt: Fixes to mechanics module
 #. David Joyner: Cryptography module
+#. Lars Buitinck: Bug fix
+#. Alkiviadis G. Akritas: Add a reference
 #. Vinit Ravishankar: fix iterables documentation
 #. Mike Boyle: Additions to the printing system
+#. Heiner Kirchhoffer: PythonRational int conversion fix
+#. Pablo Puente: Test cases from Wester paper
+#. James Fiedler: Bug fix
+#. Harsh Gupta: Bug fix
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

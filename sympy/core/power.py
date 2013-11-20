@@ -693,7 +693,7 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if (exp < 0) is True and base.is_number and base.is_real is False:
+        if exp.is_negative and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
             return self.func(base, exp).expand()
@@ -828,17 +828,14 @@ class Pow(Expr):
                 try:
                     ord = b.as_leading_term(x)
                     cf = C.Order(ord, x).getn()
-                    if cf:
-                        nuse = n + 2*cf
+                    if cf and cf.is_Number:
+                        nuse = n + 2*ceiling(cf)
                     else:
-                       cf = 1
+                        cf = 1
                 except NotImplementedError:
                     pass
 
-                b_orig = b
-                b = b_orig._eval_nseries(x, n=nuse, logx=logx)
-                prefactor = b.as_leading_term(x)
-
+                b_orig, prefactor = b, O(1, x)
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
@@ -847,23 +844,22 @@ class Pow(Expr):
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
 
-                if rest == 0:
-                    # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
-                    # factor the w**4 out using collect:
-                    return 1/collect(prefactor, x)
                 if rest.is_Order:
                     return 1/prefactor + rest/prefactor + O(x**n, x)
-                n2 = rest.getn()
-                if n2 is not None:
-                    # remove the O - powering this is slow
-                    if logx is not None:
-                        rest = rest.removeO()
 
                 k, l = rest.leadterm(x)
                 if l.is_Rational and l > 0:
                     pass
                 elif l.is_number and l > 0:
                     l = l.evalf()
+                elif l == 0:
+                    k = k.simplify()
+                    if k == 0:
+                        # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
+                        # factor the w**4 out using collect:
+                        return 1/collect(prefactor, x)
+                    else:
+                        raise NotImplementedError()
                 else:
                     raise NotImplementedError()
 
@@ -880,10 +876,6 @@ class Pow(Expr):
                         new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
                 terms.append(O(x**n, x))
-
-                # Append O(...), we know the order.
-                if n2 is None or logx is not None:
-                    terms.append(O(x**n))
                 return powsimp(Add(*terms), deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for

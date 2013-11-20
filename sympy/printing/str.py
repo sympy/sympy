@@ -23,6 +23,8 @@ class StrPrinter(Printer):
         "full_prec": "auto",
     }
 
+    _relationals = dict()
+
     def parenthesize(self, item, level):
         if precedence(item) <= level:
             return "(%s)" % self._print(item)
@@ -66,6 +68,12 @@ class StrPrinter(Printer):
         if sign == '+':
             sign = ""
         return sign + ' '.join(l)
+
+    def _print_BooleanTrue(self, expr):
+        return "True"
+
+    def _print_BooleanFalse(self, expr):
+        return "False"
 
     def _print_And(self, expr):
         return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
@@ -354,16 +362,16 @@ class StrPrinter(Printer):
             return 'Permutation(%s)' % use
 
     def _print_TensorIndex(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensorHead(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensMul(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensAdd(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % str(a) for a in expr.args]
@@ -547,7 +555,7 @@ class StrPrinter(Printer):
 
     def _print_Relational(self, expr):
         return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
-                           expr.rel_op,
+                           self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_RootOf(self, expr):

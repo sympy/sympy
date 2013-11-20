@@ -15,7 +15,6 @@ from sympy.core import S, C
 from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core.compatibility import default_sort_key
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
@@ -80,7 +79,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -168,7 +167,7 @@ class CCodePrinter(CodePrinter):
         ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond == True:
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) ? (\n%s\n" %
@@ -176,20 +175,6 @@ class CCodePrinter(CodePrinter):
                             self._print(expr.args[-1].expr)))
         code = "%s" + last_line
         return code % ": ".join(ecpairs) + " )"
-
-    def _print_And(self, expr):
-        PREC = precedence(expr)
-        return ' && '.join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Or(self, expr):
-        PREC = precedence(expr)
-        return ' || '.join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return '!' + self.parenthesize(expr.args[0], PREC)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:

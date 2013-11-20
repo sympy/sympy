@@ -1122,19 +1122,19 @@ def test_Poly__gen_to_level():
 
 
 def test_Poly_degree():
-    assert Poly(0, x).degree() == -1
+    assert Poly(0, x).degree() == -oo
     assert Poly(1, x).degree() == 0
     assert Poly(x, x).degree() == 1
 
-    assert Poly(0, x).degree(gen=0) == -1
+    assert Poly(0, x).degree(gen=0) == -oo
     assert Poly(1, x).degree(gen=0) == 0
     assert Poly(x, x).degree(gen=0) == 1
 
-    assert Poly(0, x).degree(gen=x) == -1
+    assert Poly(0, x).degree(gen=x) == -oo
     assert Poly(1, x).degree(gen=x) == 0
     assert Poly(x, x).degree(gen=x) == 1
 
-    assert Poly(0, x).degree(gen='x') == -1
+    assert Poly(0, x).degree(gen='x') == -oo
     assert Poly(1, x).degree(gen='x') == 0
     assert Poly(x, x).degree(gen='x') == 1
 
@@ -1167,9 +1167,9 @@ def test_Poly_degree():
 
 
 def test_Poly_degree_list():
-    assert Poly(0, x).degree_list() == (-1,)
-    assert Poly(0, x, y).degree_list() == (-1, -1)
-    assert Poly(0, x, y, z).degree_list() == (-1, -1, -1)
+    assert Poly(0, x).degree_list() == (-oo,)
+    assert Poly(0, x, y).degree_list() == (-oo, -oo)
+    assert Poly(0, x, y, z).degree_list() == (-oo, -oo, -oo)
 
     assert Poly(1, x).degree_list() == (0,)
     assert Poly(1, x, y).degree_list() == (0, 0)
@@ -1199,7 +1199,7 @@ def test_Poly_homogenize():
 
 
 def test_Poly_homogeneous_order():
-    assert Poly(0, x, y).homogeneous_order() == -1
+    assert Poly(0, x, y).homogeneous_order() == -oo
     assert Poly(1, x, y).homogeneous_order() == 0
     assert Poly(x, x, y).homogeneous_order() == 1
     assert Poly(x*y, x, y).homogeneous_order() == 2

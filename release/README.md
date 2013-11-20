@@ -15,7 +15,7 @@ it before, because it has to download a lot of stuff.
 First, make sure that you have done the following things
 
 - Create a release branch. Usually this branch is the same name as the release
-(e.g., "0.7.3"), although no naming convention is enforced on it.
+  (e.g., "0.7.3"), although no naming convention is enforced on it.
 
 - Change the version in the release branch in sympy/__init__.py.  If you want
   to do a release candidate, change it to something like 0.7.3.rc1.
@@ -34,6 +34,16 @@ branch by just looking at what branch you have checked out locally, so make
 sure you are on the release branch when you release). It is important to
 change the version number because it uses that in naming the tarballs it
 creates.
+
+If you want to test the release process without pushing a branch to the
+official repo, you can push a branch to your fork and use `fab vagrant
+release:fork='username'`, where `username` is your GitHub username.  Note that
+once you do the actual release, you should do it in a branch in the official
+GitHub repo.  **NOTE**: If your fork does not have all the tags of the
+official repo, then the code that finds the previous version will not work
+correctly.  Hence, you may see things like more authors in the authors list
+than you should.  To remedy this, be sure to do `git fetch origin --tags` and
+`git push github --tags`.
 
 Once you have done these things, execute:
 
@@ -55,9 +65,9 @@ Run
 
     fab vagrant show_files:arg
 
-to show the files in the tarball, where `arg` is one of `2`, `3`, or `html`.
-You'll probably want to pipe the output of this into less, so that you can
-inspect it.
+to show the files in the tarball, where `arg` is `source` or `html`.  You'll
+probably want to pipe the output of this into `less`, so that you can inspect
+it.
 
 You should also open the pdf and make sure that it has built correctly, and
 open the html docs and make sure that they have built correctly.
@@ -81,7 +91,8 @@ Then, push up the tag, with
     git push origin sympy-VERSION
 
 Note, once a tag is pushed, that's it. It can't be changed. If you need to
-change the tag, you must bump the release number.
+change the tag, you must bump the release number.  So double check that
+everything is right before pushing.
 
 # Uploading
 
@@ -101,9 +112,9 @@ To list the files in the tarball use
 
     fab vagrant show_files:arg
 
-where `arg` is one of `2`, `3`, and `html`, for the Python 2 or 3 sources and
-the html docs, respectively. Note that the source code is already checked
-automatically against the files in git and a whitelist.
+where `arg` is `source` or `html`, for the Python sources and the html docs,
+respectively. Note that the source code is already checked automatically
+against the files in git and a whitelist.
 
 You can obtain all available commands by:
 

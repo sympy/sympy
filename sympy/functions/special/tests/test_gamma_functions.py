@@ -91,9 +91,10 @@ def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
+    assert td(lowergamma(x, randcplx()), x)
     assert lowergamma(x, y).diff(x) == \
         gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
-        + meijerg([], [1, 1], [0, 0, x], [], y)
+        - meijerg([], [1, 1], [0, 0, x], [], y)
 
     assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
     assert not lowergamma(S.Half - 3, x).has(lowergamma)
@@ -304,7 +305,7 @@ def test_loggamma():
     assert loggamma(z).is_real is False
 
     def tN(N, M):
-        assert loggamma(1/x)._eval_nseries(x, n=N, logx=None).getn() == M
+        assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
     tN(0, 0)
     tN(1, 1)
     tN(2, 3)

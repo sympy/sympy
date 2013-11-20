@@ -42,6 +42,7 @@ def test_as_poly_1t():
         Poly(2/(exp(2) + 1)*z, t, z), Poly(2/(exp(2) + 1)*z, z, t)]
     assert as_poly_1t(2/((exp(2) + 1)*t) + t, t, z) in [
         Poly(t + 2/(exp(2) + 1)*z, t, z), Poly(t + 2/(exp(2) + 1)*z, z, t)]
+    assert as_poly_1t(S(0), t, z) == Poly(0, t, z)
 
 
 def test_derivation():
@@ -319,6 +320,10 @@ def test_integrate_hyperexponential_polynomial():
     assert integrate_hyperexponential_polynomial(p, DE, z) == (
         Poly((x - t0)*t1**2 + (-2*t0 + 2*x)*t1, t1), Poly(-2*x*t0 + x**2 +
         t0**2, t1), True)
+
+    DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(t0, t0)]})
+    assert integrate_hyperexponential_polynomial(Poly(0, t0), DE, z) == (
+        Poly(0, t0), Poly(1, t0), True)
 
 
 def test_integrate_hyperexponential_returns_piecewise():

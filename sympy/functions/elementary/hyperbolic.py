@@ -150,6 +150,9 @@ class sinh(HyperbolicFunction):
             return (sinh(x)*cosh(y) + sinh(y)*cosh(x)).expand(trig=True)
         return sinh(arg)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        return (C.exp(arg) - C.exp(-arg)) / 2
+
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) - C.exp(-arg)) / 2
 
@@ -296,6 +299,9 @@ class cosh(HyperbolicFunction):
             return (cosh(x)*cosh(y) + sinh(x)*sinh(y)).expand(trig=True)
         return cosh(arg)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        return (C.exp(arg) + C.exp(-arg)) / 2
+
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) + C.exp(-arg)) / 2
 
@@ -431,6 +437,10 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + C.cos(im)**2
         return (sinh(re)*cosh(re)/denom, C.sin(im)*C.cos(im)/denom)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        return (pos_exp - neg_exp)/(pos_exp + neg_exp)
+
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
@@ -559,6 +569,10 @@ class coth(HyperbolicFunction):
             re, im = self.args[0].as_real_imag()
         denom = sinh(re)**2 + C.sin(im)**2
         return (sinh(re)*cosh(re)/denom, -C.sin(im)*C.cos(im)/denom)
+
+    def _eval_rewrite_as_tractable(self, arg):
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)

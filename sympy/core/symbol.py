@@ -72,6 +72,8 @@ class Symbol(AtomicExpr, Boolean):
             raise ValueError(
                 '''Symbol commutativity must be True or False.''')
         assumptions['commutative'] = is_commutative
+        for key in assumptions.keys():
+            assumptions[key] = bool(assumptions[key])
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):

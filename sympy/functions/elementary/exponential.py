@@ -395,15 +395,6 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_lseries(self, x):
-        s = self.args[0]
-        yield exp(s.subs(x, 0))
-        from sympy import integrate
-        t = Dummy("t")
-        f = s.subs(x, t)
-        for term in (exp(f)*f.diff(t)).lseries(t):
-            yield integrate(term, (t, 0, x))
-
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
@@ -601,6 +592,10 @@ class log(Function):
                         expr.append(self.func(x)._eval_expand_log(**hints))
                     else:
                         expr.append(a)
+                elif x.is_negative:
+                    a = self.func(-x)
+                    expr.append(a)
+                    nonpos.append(S.NegativeOne)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
@@ -619,6 +614,12 @@ class log(Function):
                 return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
+
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import expand_log, logcombine, simplify
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+        expr = expand_log(expr, deep=True)
+        return min([expr, self], key=measure)
 
     def as_real_imag(self, deep=True, **hints):
         """

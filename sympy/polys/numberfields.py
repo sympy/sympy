@@ -9,7 +9,7 @@ from sympy import (
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
-    degree, poly_from_expr, parallel_poly_from_expr
+    degree, poly_from_expr, parallel_poly_from_expr, lcm
 )
 
 from sympy.polys.polyclasses import (
@@ -36,14 +36,16 @@ from sympy.polys.orthopolys import dup_chebyshevt
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
-    numbered_symbols, variations, lambdify, public,
+    numbered_symbols, variations, lambdify, public, sift
 )
 
+from sympy.core.exprtools import Factors
 from sympy.simplify.simplify import _mexpand, _is_sum_surds
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
+from sympy.core.compatibility import reduce
 from sympy.core.compatibility import xrange
 
 
@@ -210,7 +212,7 @@ def _minimal_polynomial_sq(p, n, x):
 
 def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     """
-    return the minimal polinomial for ``op(ex1, ex2)``
+    return the minimal polynomial for ``op(ex1, ex2)``
 
     Parameters
     ==========
@@ -534,7 +536,25 @@ def _minpoly_compose(ex, x, dom):
     if ex.is_Add:
         res = _minpoly_add(x, dom, *ex.args)
     elif ex.is_Mul:
-        res = _minpoly_mul(x, dom, *ex.args)
+        f = Factors(ex).factors
+        r = sift(f.items(), lambda itx: itx[0].is_rational and itx[1].is_rational)
+        if r[True] and dom == QQ:
+            ex1 = Mul(*[bx**ex for bx, ex in r[False] + r[None]])
+            r1 = r[True]
+            dens = [y.q for _, y in r1]
+            lcmdens = reduce(lcm, dens, 1)
+            nums = [base**(y.p*lcmdens // y.q) for base, y in r1]
+            ex2 = Mul(*nums)
+            mp1 = minimal_polynomial(ex1, x)
+            # use the fact that in SymPy canonicalization products of integers
+            # raised to rational powers are organized in relatively prime
+            # bases, and that in ``base**(n/d)`` a perfect power is
+            # simplified with the root
+            mp2 = ex2.q*x**lcmdens - ex2.p
+            ex2 = ex2**Rational(1, lcmdens)
+            res = _minpoly_op_algebraic_element(Mul, ex1, ex2, x, dom, mp1=mp1, mp2=mp2)
+        else:
+            res = _minpoly_mul(x, dom, *ex.args)
     elif ex.is_Pow:
         res = _minpoly_pow(ex.base, ex.exp, x, dom)
     elif ex.__class__ is C.sin:

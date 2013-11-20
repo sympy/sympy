@@ -245,6 +245,7 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
+from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
@@ -795,7 +796,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     reduced_eq = None
     if eq.is_Add:
         deriv_coef = eq.coeff(f(x).diff(x, order))
-        if deriv_coef != 1:
+        if deriv_coef not in (1, 0):
             r = deriv_coef.match(a*f(x)**c1)
             if r and r[c1]:
                 den = f(x)**r[c1]
@@ -1518,7 +1519,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     ode_or_bool = Eq(lhs, rhs)
                     ode_or_bool = simplify(ode_or_bool)
 
-                    if isinstance(ode_or_bool, bool):
+                    if isinstance(ode_or_bool, (bool, BooleanAtom)):
                         if ode_or_bool:
                             lhs = rhs = S.Zero
                     else:
