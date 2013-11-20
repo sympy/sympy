@@ -994,7 +994,7 @@ def test_sec():
     assert sec(x).rewrite(pow) == sec(x)
     assert sec(x).rewrite(sqrt) == sec(x)
 
-    assert sec(z).conjugate() == 1/cos(conjugate(z))
+    assert sec(z).conjugate() == sec(conjugate(z))
 
     assert (sec(z).as_real_imag() ==
     (cos(re(z))*cosh(im(z))/(sin(re(z))**2*sinh(im(z))**2 +
@@ -1055,10 +1055,8 @@ def test_csc():
     assert csc(x).rewrite(sin) == 1/sin(x)
     assert csc(x).rewrite(cos) == csc(x)
     assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
-    assert csc(x).rewrite(pow) == csc(x)
-    assert csc(x).rewrite(sqrt) == csc(x)
 
-    assert csc(z).conjugate() == 1/sin(conjugate(z))
+    assert csc(z).conjugate() == csc(conjugate(z))
 
     assert (csc(z).as_real_imag() ==
             (sin(re(z))*cosh(im(z))/(sin(re(z))**2*cosh(im(z))**2 +
@@ -1083,3 +1081,13 @@ def test_csc():
             1/x + x/6 + 7*x**3/360 - 13*x**5/5040 + O(x**6))
 
     assert csc(x).diff(x) == -cot(x)*csc(x)
+
+
+@XFAIL
+@slow
+def test_csc_rewrite_failing():
+    # Move these 2 tests to test_csc() once bugs fixed
+    # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
+    # https://code.google.com/p/sympy/issues/detail?id=4072
+    assert csc(x).rewrite(pow) == csc(x)
+    assert csc(x).rewrite(sqrt) == csc(x)

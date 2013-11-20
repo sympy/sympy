@@ -770,7 +770,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         return self._rewrite_reciprocal("_eval_rewrite_as_sqrt", arg)
 
     def _eval_conjugate(self):
-        return self._calculate_reciprocal("_eval_conjugate")
+        return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
         return (1/self._reciprocal_of(self.args[0])).as_real_imag(deep,
@@ -847,18 +847,6 @@ class csc(ReciprocalTrigonometricFunction):
 
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/(sin(arg)*cos(arg))
-
-    def _eval_rewrite_as_pow(self, arg):
-        # Added to workaround problem:
-        # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
-        # https://code.google.com/p/sympy/issues/detail?id=4072
-        pass
-
-    def _eval_rewrite_as_sqrt(self, arg):
-        # Added to workaround problem:
-        # sin(x).rewrite(sqrt) raises RuntimeError: maximum recursion depth
-        # https://code.google.com/p/sympy/issues/detail?id=4072
-        pass
 
     def fdiff(self, argindex=1):
         if argindex == 1:
