@@ -310,7 +310,9 @@ class LatexPrinter(Printer):
                 return _tex
 
         if denom is S.One:
-            tex += convert(numer)
+            # use the original expression here, since fraction() may have
+            # altered it when producing numer and denom
+            tex += convert(expr)
         else:
             snumer = convert(numer)
             sdenom = convert(denom)
