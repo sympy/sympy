@@ -882,7 +882,7 @@ class Pow(Expr):
                 # example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                nuse, denominator = n, O(1)
+                nuse, denominator = n, O(1, x)
                 while denominator.is_Order:
                     denominator = (b**(-e))._eval_nseries(x, n=nuse, logx=logx)
                     nuse += 1
@@ -981,7 +981,7 @@ class Pow(Expr):
                         arg = c*arg.expr
                     res.append(arg)
                 bs = Add(*res)
-                rv = (bs**e).series(x).subs(c, O(1))
+                rv = (bs**e).series(x).subs(c, O(1, x))
                 rv += order
                 return rv
 

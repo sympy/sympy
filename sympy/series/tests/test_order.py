@@ -18,7 +18,7 @@ def test_simple_1():
     assert Order(x)*3 == Order(x)
     assert -28*Order(x) == Order(x)
     assert Order(Order(x)) == Order(x)
-    assert Order(Order(x), y) == Order(Order(x), x, y)
+    assert Order(Order(x), y) == Order(Order(x), (x, y))
     assert Order(-23) == Order(1)
     assert Order(exp(x)) == Order(1, x)
     assert Order(exp(1/x)).expr == exp(1/x)
@@ -27,8 +27,9 @@ def test_simple_1():
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
-    assert Order(exp(x), x, x) == Order(1, x)
-    raises(NotImplementedError, lambda: Order(x, 2 - x))
+    raises(ValueError, lambda: Order(exp(x), x, x))
+    raises(TypeError, lambda: Order(x, 2 - x))
+    raises(ValueError, lambda: Order(Order(x), x, oo))
 
 
 def test_simple_2():
@@ -83,10 +84,10 @@ def test_simple_8():
 
 
 def test_as_expr_variables():
-    assert Order(x).as_expr_variables(None) == (x, (x, 0))
-    assert Order(x).as_expr_variables((x, 0)) == (x, (x, 0))
-    assert Order(y).as_expr_variables((x, 0)) == (y, (y, x, 0))
-    assert Order(y).as_expr_variables((x, y, 0)) == (y, (x, y, 0))
+    assert Order(x).as_expr_variables(None) == (x, ((x,), (0,)))
+    assert Order(x).as_expr_variables(((x,), (0,))) == (x, ((x,), (0,)))
+    assert Order(y).as_expr_variables(((x,), (0,))) == (y, ((y, x), (0, 0)))
+    assert Order(y).as_expr_variables(((x, y), (0, 0))) == (y, ((x, y), (0, 0)))
 
 
 def test_contains_0():
@@ -164,11 +165,11 @@ def test_multivar_1():
 
 
 def test_multivar_2():
-    assert Order(x**2*y + y**2*x, x, y).expr == x**2*y + y**2*x
+    assert Order(x**2*y + y**2*x, (x, y)).expr == x**2*y + y**2*x
 
 
 def test_multivar_mul_1():
-    assert Order(x + y)*x == Order(x**2 + y*x, x, y)
+    assert Order(x + y)*x == Order(x**2 + y*x, (x, y))
 
 
 def test_multivar_3():
@@ -222,7 +223,7 @@ def test_order_leadterm():
 
 def test_order_symbols():
     e = x*y*sin(x)*Integral(x, (x, 1, 2))
-    assert O(e) == O(x**2*y, x, y)
+    assert O(e) == O(x**2*y, (x, y))
     assert O(e, x) == O(x**2)
 
 
@@ -278,12 +279,12 @@ def test_oseries():
 
 def test_issue_1180():
     a, b = symbols('a b')
-    assert O(a, a, b) + O(1, a, b) == O(1, a, b)
-    assert O(b, a, b) + O(1, a, b) == O(1, a, b)
-    assert O(a + b, a, b) + O(1, a, b) == O(1, a, b)
-    assert O(1, a, b) + O(a, a, b) == O(1, a, b)
-    assert O(1, a, b) + O(b, a, b) == O(1, a, b)
-    assert O(1, a, b) + O(a + b, a, b) == O(1, a, b)
+    assert O(a, (a, b)) + O(1, (a, b)) == O(1, (a, b))
+    assert O(b, (a, b)) + O(1, (a, b)) == O(1, (a, b))
+    assert O(a + b, (a, b)) + O(1, (a, b)) == O(1, (a, b))
+    assert O(1, (a, b)) + O(a, (a, b)) == O(1, (a, b))
+    assert O(1, (a, b)) + O(b, (a, b)) == O(1, (a, b))
+    assert O(1, (a, b)) + O(a + b, (a, b)) == O(1, (a, b))
 
 
 def test_issue_1756():
@@ -322,13 +323,18 @@ def test_issue_3654():
     assert (1 + x**2)**10000*O(x) == O(x)
 
 
+@XFAIL
+def test_order_at_infinity_XFAILed():
+    assert Order(Order(x, x, oo), y) == Order(x, (x, y), (oo, 0))
+
 def test_order_at_infinity():
     assert Order(1 + x, x, oo) == Order(x, x, oo)
     assert Order(3*x, x, oo) == Order(x, x, oo)
     assert Order(x, x, oo)*3 == Order(x, x, oo)
     assert -28*Order(x, x, oo) == Order(x, x, oo)
     assert Order(Order(x, x, oo)) == Order(x, x, oo)
-    assert Order(Order(x, x, oo), y) == Order(Order(x, x, oo), x, y)
+    #assert Order(Order(x, x, oo), y) == Order(x, (x, y), (oo, 0)) # see above
+    assert Order(Order(x, x, oo), y, oo) == Order(x, (x, y), (oo, oo))
     assert Order(3, x, oo) == Order(1, x, oo)
     assert Order(x**2 + x + y, x, oo) == O(x**2, x, oo)
     assert Order(x**2 + x + y, y, oo) == O(y, y, oo)
@@ -362,7 +368,7 @@ def test_order_at_infinity():
 
 def test_order_subs_limits():
     # issue 234
-    assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, oo)
+    assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, x, oo)
     assert (1 + Order(x)).limit(x, 0) == 1
     # issue 2670
     assert ((x + Order(x**2))/x).limit(x, 0) == 1
