@@ -75,11 +75,6 @@ class BesselBase(Function):
         from sympy.simplify.simplify import besselsimp
         return besselsimp(self)
 
-    def _eval_is_real(self):
-        nu, z = self.args
-        if nu.is_real and z.is_real:
-            return True
-
 
 class besselj(BesselBase):
     r"""
@@ -197,6 +192,11 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_real:
+            return True
+
 
 class bessely(BesselBase):
     r"""
@@ -266,6 +266,11 @@ class bessely(BesselBase):
 
     def _eval_rewrite_as_yn(self, nu, z):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
+
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_positive:
+            return True
 
 
 class besseli(BesselBase):
@@ -358,6 +363,11 @@ class besseli(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z):
         return self._eval_rewrite_as_besselj(*self.args).rewrite(jn)
 
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_real:
+            return True
+
 
 class besselk(BesselBase):
     r"""
@@ -432,6 +442,11 @@ class besselk(BesselBase):
         ay = self._eval_rewrite_as_bessely(*self.args)
         if ay:
             return ay.rewrite(yn)
+
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_positive:
+            return True
 
 
 class hankel1(BesselBase):
