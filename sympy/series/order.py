@@ -5,6 +5,7 @@ from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
+from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):
@@ -117,6 +118,9 @@ class Order(Expr):
 
         if not all(isinstance(v, Symbol) for v in variables):
            raise TypeError('Variables are not symbols, got %s' % variables)
+
+        if len(list(uniq(variables))) != len(variables):
+            raise ValueError('Variables are supposed to be unique symbols, got %s' % variables)
 
         if expr.is_Order:
             expr_vp = dict(expr.args[1:])
