@@ -1,4 +1,6 @@
-from function import Function
+from __future__ import print_function, division
+
+from .function import Function
 
 
 class Mod(Function):
@@ -49,16 +51,16 @@ class Mod(Function):
             else:
                 if type(d) is int:
                     rv = p - d*q
-                    if rv*q < 0:
+                    if (rv*q < 0) is True:
                         rv += q
                     return rv
 
             # by differencec
             d = p - q
-            if (d < 0) is True:
-                if (q < 0) is True:
+            if d.is_negative:
+                if q.is_negative:
                     return d
-                elif (q > 0) is True:
+                elif q.is_positive:
                     return p
 
         rv = doit(p, q)

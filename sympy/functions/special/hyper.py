@@ -1,8 +1,11 @@
 """Hypergeometric and Meijer G-functions"""
 
+from __future__ import print_function, division
+
 from sympy.core import S, I, pi, oo, ilcm, Mod, C
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import reduce
 from sympy.core.mul import Mul
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
@@ -165,9 +168,9 @@ class hyper(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
     nargs = 3
@@ -251,9 +254,9 @@ class hyper(TupleParametersBase):
         >>> hyper((1, 2), (3, 4), z).radius_of_convergence
         oo
         """
-        if any(a.is_integer and a <= 0 for a in self.ap + self.bq):
-            aints = [a for a in self.ap if a.is_Integer and a <= 0]
-            bints = [a for a in self.bq if a.is_Integer and a <= 0]
+        if any(a.is_integer and (a <= 0) is True for a in self.ap + self.bq):
+            aints = [a for a in self.ap if a.is_Integer and (a <= 0) is True]
+            bints = [a for a in self.bq if a.is_Integer and (a <= 0) is True]
             if len(aints) < len(bints):
                 return S(0)
             popped = False
@@ -294,6 +297,10 @@ class hyper(TupleParametersBase):
         c2 = And(0 <= re(e), re(e) < 1, abs(z) <= 1, Ne(z, 1))
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
+
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.hyperexpand import hyperexpand
+        return hyperexpand(self)
 
 
 class meijerg(TupleParametersBase):
@@ -418,9 +425,9 @@ class meijerg(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Meijer_G-function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Meijer_G-function
 
     """
 

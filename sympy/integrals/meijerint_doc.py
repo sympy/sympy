@@ -1,6 +1,8 @@
 """ This module cooks up a docstring when imported. Its only purpose is to
     be displayed in the sphinx documentation. """
 
+from __future__ import print_function, division
+
 from sympy.integrals.meijerint import _create_lookup_table
 from sympy import latex, Eq, meijerg, Add, Symbol
 

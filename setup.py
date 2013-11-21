@@ -29,16 +29,18 @@ sympy@googlegroups.com and ask for help.
 
 from distutils.core import setup
 from distutils.core import Command
+from distutils.command.build_scripts import build_scripts
 import sys
 import subprocess
 import os
 
 import sympy
 
+PY3 = sys.version_info[0] > 2
+
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2, 5):
-    print("SymPy requires Python 2.5 or newer. Python %d.%d detected" %
-          sys.version_info[:2])
+if sys.version_info[:2] < (2, 6):
+    print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
@@ -50,6 +52,7 @@ modules = [
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
+    'sympy.crypto',
     'sympy.diffgeom',
     'sympy.external',
     'sympy.functions',
@@ -60,6 +63,7 @@ modules = [
     'sympy.geometry',
     'sympy.integrals',
     'sympy.interactive',
+    'sympy.liealgebras',
     'sympy.logic',
     'sympy.logic.algorithms',
     'sympy.logic.utilities',
@@ -73,6 +77,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
@@ -83,20 +88,19 @@ modules = [
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
-    'sympy.strategies',
-    'sympy.strategies.branch',
     'sympy.series',
     'sympy.sets',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
     'sympy.stats',
+    'sympy.strategies',
+    'sympy.strategies.branch',
     'sympy.tensor',
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
 ]
-
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -130,7 +134,7 @@ class audit(Command):
                 if filename.endswith('.py') and filename != '__init__.py':
                     warns += flakes.checkPath(os.path.join(dir, filename))
         if warns > 0:
-            print ("Audit finished with total %d warnings" % warns)
+            print("Audit finished with total %d warnings" % warns)
 
 
 class clean(Command):
@@ -205,6 +209,10 @@ class run_benchmarks(Command):
         from sympy.utilities import benchmarking
         benchmarking.main(['sympy'])
 
+cmdclass = {'test': test_sympy,
+            'bench': run_benchmarks,
+            'clean': clean,
+            'audit': audit}
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
@@ -214,6 +222,7 @@ tests = [
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
+    'sympy.crypto.tests',
     'sympy.diffgeom.tests',
     'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
@@ -223,6 +232,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
+    'sympy.liealgebras.tests',
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
@@ -236,21 +246,22 @@ tests = [
     'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',
     'sympy.polys.agca.tests',
+    'sympy.polys.domains.tests',
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
-    'sympy.strategies.branch.tests',
-    'sympy.strategies.tests',
     'sympy.series.tests',
     'sympy.sets.tests',
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.stats.tests',
+    'sympy.strategies.branch.tests',
+    'sympy.strategies.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
-]
+    ]
 
 classifiers = [
     'License :: OSI Approved :: BSD License',
@@ -260,11 +271,11 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Mathematics',
     'Topic :: Scientific/Engineering :: Physics',
     'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.5',
     'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
 ]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
@@ -272,25 +283,23 @@ to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.
 SymPy is written entirely in Python and does not require any external libraries.'''
 
-setup(
-    name='sympy',
-    version=sympy.__version__,
-    description='Computer algebra system (CAS) in Python',
-    long_description=long_description,
-    author='SymPy development team',
-    author_email='sympy@googlegroups.com',
-    license='BSD',
-    keywords="Math CAS",
-    url='http://code.google.com/p/sympy',
-    packages=['sympy'] + modules + tests,
-    scripts=['bin/isympy'],
-    ext_modules=[],
-    package_data={ 'sympy.utilities.mathml': ['data/*.xsl'] },
-    data_files=[('share/man/man1', ['doc/man/isympy.1'])],
-    cmdclass={'test': test_sympy,
-              'bench': run_benchmarks,
-              'clean': clean,
-              'audit': audit,
-                     },
-    classifiers=classifiers,
-)
+setup_args = {
+    "name": 'sympy',
+    "version": sympy.__version__,
+    "description": 'Computer algebra system (CAS) in Python',
+    "long_description": long_description,
+    "author": 'SymPy development team',
+    "author_email": 'sympy@googlegroups.com',
+    "license": 'BSD',
+    "keywords": "Math CAS",
+    "url": 'http://code.google.com/p/sympy',
+    "packages": ['sympy'] + modules + tests,
+    "scripts": ['bin/isympy'],
+    "ext_modules": [],
+    "package_data": { 'sympy.utilities.mathml': ['data/*.xsl'] },
+    "data_files": [('share/man/man1', ['doc/man/isympy.1'])],
+    "cmdclass": cmdclass,
+    "classifiers": classifiers,
+}
+
+setup(**setup_args)

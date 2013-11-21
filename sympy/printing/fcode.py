@@ -17,8 +17,12 @@ SymPy is case sensitive. The implementation below does not care and leaves
 the responsibility for generating properly cased Fortran code to the user.
 """
 
+from __future__ import print_function, division
+
+import string
 
 from sympy.core import S, C, Add, N
+from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -41,11 +45,23 @@ class FCodePrinter(CodePrinter):
         "cosh", "tanh", "sqrt", "log", "exp", "erf", "Abs", "sign", "conjugate",
     ])
 
+    _operators = {
+        'and': '.and.',
+        'or': '.or.',
+        'xor': '.neqv.',
+        'equivalent': '.eqv.',
+        'not': '.not. ',
+    }
+
+    _relationals = {
+        '!=': '/=',
+    }
+
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
         assign_to = self._settings['assign_to']
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             self._settings['assign_to'] = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("FCodePrinter cannot assign to object of type %s" %
@@ -116,7 +132,7 @@ class FCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
@@ -275,7 +291,7 @@ class FCodePrinter(CodePrinter):
            complex rule to give nice results.
         """
         # routine to find split point in a code line
-        my_alnum = set("_+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_alnum = set("_+-." + string.digits + string.ascii_letters)
         my_white = set(" \t()")
 
         def split_pos_code(line, endpos):
@@ -338,7 +354,7 @@ class FCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -422,7 +438,7 @@ def fcode(expr, **settings):
        '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
        >>> fcode(sin(x), assign_to="s")
        '      s = sin(x)'
-       >>> print fcode(pi)
+       >>> print(fcode(pi))
              parameter (pi = 3.14159265358979d0)
              pi
 
@@ -437,4 +453,4 @@ def print_fcode(expr, **settings):
 
        See fcode for the meaning of the optional arguments.
     """
-    print fcode(expr, **settings)
+    print(fcode(expr, **settings))

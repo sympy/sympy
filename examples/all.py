@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 DESCRIPTION = """
 Runs all the examples for testing purposes and reports successes and failures
@@ -71,6 +72,13 @@ TERMINAL_EXAMPLES = [
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
+    "galgebra.eval_check",
+    "galgebra.exp_check",
+    "galgebra.manifold_check",
+    "galgebra.mv_setup_options",
+    "galgebra.prob_not_solenoidal",
+    "galgebra.simple_check",
+    "galgebra.terminal_check",
 ]
 
 WINDOWED_EXAMPLES = [
@@ -81,6 +89,14 @@ WINDOWED_EXAMPLES = [
     "advanced.autowrap_integrators",
     "advanced.autowrap_ufuncify",
     "advanced.pyglet_plotting",
+    "galgebra.latex_check",
+    "galgebra.manifold_check_latex",
+    "galgebra.matrix_latex",
+    "galgebra.physics_check_latex",
+    "galgebra.print_check_latex",
+    "galgebra.products_latex",
+    "galgebra.simple_check_latex",
+    "galgebra.spherical_latex",
 ]
 
 EXAMPLE_DIR = os.path.dirname(__file__)
@@ -159,8 +175,8 @@ def run_example(example, reporter=None):
     if reporter:
         reporter.write(example)
     else:
-        print "=" * 79
-        print "Running: ", example
+        print("=" * 79)
+        print("Running: ", example)
 
     try:
         mod = load_example_module(example)
@@ -204,18 +220,18 @@ def show_summary(successes, failures, reporter=None):
             reporter.write("ALL EXAMPLES PASSED\n", "Green")
     else:
         if successes:
-            print >> sys.stderr, "SUCCESSFUL: "
+            print("SUCCESSFUL: ", file=sys.stderr)
             for example in successes:
-                print >> sys.stderr, "  -", example
+                print("  -", example, file=sys.stderr)
         else:
-            print >> sys.stderr, "NO SUCCESSFUL EXAMPLES"
+            print("NO SUCCESSFUL EXAMPLES", file=sys.stderr)
 
         if failures:
-            print >> sys.stderr, "FAILED: "
+            print("FAILED: ", file=sys.stderr)
             for example in failures:
-                print >> sys.stderr, "  -", example
+                print("  -", example, file=sys.stderr)
         else:
-            print >> sys.stderr, "NO FAILED EXAMPLES"
+            print("NO FAILED EXAMPLES", file=sys.stderr)
 
 
 def main(*args, **kws):

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from collections import deque
 from random import randint
 
@@ -26,7 +28,7 @@ __all__ = [
     'is_reducible',
 ]
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 

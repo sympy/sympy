@@ -1,14 +1,18 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from sympy_tokenize import \
+from __future__ import print_function, division
+
+from .sympy_tokenize import \
     generate_tokens, untokenize, TokenError, \
     NUMBER, STRING, NAME, OP, ENDMARKER
 
 from keyword import iskeyword
-from StringIO import StringIO
+
+import ast
 import re
 import unicodedata
 
+from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
@@ -36,16 +40,14 @@ def _token_splittable(token):
 def _token_callable(token, local_dict, global_dict, nextToken=None):
     """
     Predicate for whether a token name represents a callable function.
+
+    Essentially wraps ``callable``, but looks up the token name in the
+    locals and globals.
     """
     func = local_dict.get(token[1])
     if not func:
         func = global_dict.get(token[1])
-    is_Function = getattr(func, 'is_Function', False)
-    if (is_Function or
-        (callable(func) and not hasattr(func, 'is_Function')) or
-            isinstance(nextToken, AppliedFunction)):
-        return True
-    return False
+    return callable(func)
 
 
 def _add_factorial_tokens(name, result):
@@ -176,7 +178,7 @@ def _apply_functions(tokens, local_dict, global_dict):
             symbol = tok
             result.append(tok)
         elif isinstance(tok, ParenthesisGroup):
-            if symbol:
+            if symbol and _token_callable(symbol, local_dict, global_dict):
                 result[-1] = AppliedFunction(symbol, tok)
                 symbol = None
             else:
@@ -207,7 +209,7 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (isinstance(tok, AppliedFunction) and
-                isinstance(nextTok, AppliedFunction)):
+              isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
         elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
@@ -228,7 +230,24 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
         elif (isinstance(tok, AppliedFunction) and nextTok[0] == NAME):
             # Applied function followed by implicitly applied function
             result.append((OP, '*'))
-    result.append(tokens[-1])
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              nextTok[0] == OP and nextTok[1] == '('):
+            # Constant followed by parenthesis
+            result.append((OP, '*'))
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              nextTok[0] == NAME and
+              not _token_callable(nextTok, local_dict, global_dict)):
+            # Constant followed by constant
+            result.append((OP, '*'))
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              (isinstance(nextTok, AppliedFunction) or nextTok[0] == NAME)):
+            # Constant followed by (implicitly applied) function
+            result.append((OP, '*'))
+    if tokens:
+        result.append(tokens[-1])
     return result
 
 
@@ -243,8 +262,8 @@ def _implicit_application(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and
-            nextTok[0] != OP and
-            nextTok[0] != ENDMARKER):
+              nextTok[0] != OP and
+              nextTok[0] != ENDMARKER):
             if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
@@ -277,7 +296,8 @@ def _implicit_application(tokens, local_dict, global_dict):
             result.append((OP, ')'))
             appendParen -= 1
 
-    result.append(tokens[-1])
+    if tokens:
+        result.append(tokens[-1])
 
     if appendParen:
         result.extend([(OP, ')')] * appendParen)
@@ -326,7 +346,8 @@ def function_exponentiation(tokens, local_dict, global_dict):
                 exponent = []
                 continue
         result.append(tok)
-    result.append(tokens[-1])
+    if tokens:
+        result.append(tokens[-1])
     if exponent:
         result.extend(exponent)
     return result
@@ -364,8 +385,14 @@ def split_symbols_custom(predicate):
                 symbol = tok[1][1:-1]
                 if predicate(symbol):
                     for char in symbol:
-                        result.extend([(NAME, "'%s'" % char), (OP, ')'),
-                                       (NAME, 'Symbol'), (OP, '(')])
+                        if char in local_dict or char in global_dict:
+                            # Get rid of the call to Symbol
+                            del result[-2:]
+                            result.extend([(OP, '('), (NAME, "%s" % char), (OP, ')'),
+                                           (NAME, 'Symbol'), (OP, '(')])
+                        else:
+                            result.extend([(NAME, "'%s'" % char), (OP, ')'),
+                                           (NAME, 'Symbol'), (OP, '(')])
                     # Delete the last three tokens: get rid of the extraneous
                     # Symbol( we just added, and also get rid of the last )
                     # because the closing parenthesis of the original Symbol is
@@ -666,7 +693,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None):
+               global_dict=None, evaluate=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -719,7 +746,76 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if global_dict is None:
         global_dict = {}
-        exec 'from sympy import *' in global_dict
+        exec_('from sympy import *', global_dict)
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
+
+    if evaluate is False:
+        code = compile(evaluateFalse(code), '<string>', 'eval')
+
     return eval_expr(code, local_dict, global_dict)
+
+
+def evaluateFalse(s):
+    """
+    Replaces operators with the SymPy equivalent and sets evaluate=False.
+    """
+    node = ast.parse(s)
+    node = EvaluateFalseTransformer().visit(node)
+    # node is a Module, we want an Expression
+    node = ast.Expression(node.body[0].value)
+
+    return ast.fix_missing_locations(node)
+
+
+class EvaluateFalseTransformer(ast.NodeTransformer):
+    operators = {
+        ast.Add: 'Add',
+        ast.Mult: 'Mul',
+        ast.Pow: 'Pow',
+        ast.Sub: 'Add',
+        ast.Div: 'Mul',
+        ast.BitOr: 'Or',
+        ast.BitAnd: 'And',
+        ast.BitXor: 'Not',
+    }
+
+    def flatten(self, args, func):
+        result = []
+        for arg in args:
+            if isinstance(arg, ast.Call) and arg.func.id == func:
+                result.extend(self.flatten(arg.args, func))
+            else:
+                result.append(arg)
+        return result
+
+    def visit_BinOp(self, node):
+        if node.op.__class__ in self.operators:
+            sympy_class = self.operators[node.op.__class__]
+            right = self.visit(node.right)
+
+            if isinstance(node.op, ast.Sub):
+                right = ast.UnaryOp(op=ast.USub(), operand=right)
+            elif isinstance(node.op, ast.Div):
+                right = ast.Call(
+                    func=ast.Name(id='Pow', ctx=ast.Load()),
+                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    starargs=None,
+                    kwargs=None
+                )
+
+            new_node = ast.Call(
+                func=ast.Name(id=sympy_class, ctx=ast.Load()),
+                args=[self.visit(node.left), right],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                starargs=None,
+                kwargs=None
+            )
+
+            if sympy_class in ('Add', 'Mul'):
+                # Denest Add or Mul as appropriate
+                new_node.args = self.flatten(new_node.args, sympy_class)
+
+            return new_node
+        return node

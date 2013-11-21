@@ -1,4 +1,6 @@
 """Inference in propositional logic"""
+from __future__ import print_function, division
+
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
     conjuncts, to_cnf
 from sympy.core.basic import C
@@ -76,6 +78,10 @@ def satisfiable(expr, algorithm="dpll2"):
     False
 
     """
+    if expr is True:
+        return {}
+    if expr is False:
+        return False
     expr = to_cnf(expr)
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable

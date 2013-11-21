@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import raises, XFAIL
 from sympy import I, sqrt, log, exp, sin, asin
@@ -674,6 +673,13 @@ def test_issue_3176():
     if 0*S.Infinity is S.NaN:
         b = Symbol('b', bounded=None)
         assert (b*0).is_zero is None
+
+
+def test_sanitize_assumptions():
+    # issue 3567
+    x = Symbol('x', real=1, positive=0)
+    assert x.is_real is True
+    assert x.is_positive is False
 
 
 def test_special_assumptions():

@@ -4,7 +4,9 @@ of Basic or Atom."""
 from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, with_metaclass
+
+from sympy import sin, Lambda, Q
 
 from sympy.utilities.pytest import raises
 
@@ -97,26 +99,24 @@ def test_xreplace():
 
 
 def test_Singleton():
-    global instanciated
-    instanciated = 0
+    global instantiated
+    instantiated = 0
 
-    class MySingleton(Basic):
-        __metaclass__ = Singleton
-
+    class MySingleton(with_metaclass(Singleton, Basic)):
         def __new__(cls):
-            global instanciated
-            instanciated += 1
+            global instantiated
+            instantiated += 1
             return Basic.__new__(cls)
 
-    assert instanciated == 1
+    assert instantiated == 1
     assert MySingleton() is not Basic()
     assert MySingleton() is MySingleton()
     assert S.MySingleton is MySingleton()
-    assert instanciated == 1
+    assert instantiated == 1
 
     class MySingleton_sub(MySingleton):
         pass
-    assert instanciated == 2
+    assert instantiated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
 
@@ -148,3 +148,24 @@ def test_sorted_args():
     x = symbols('x')
     assert b21._sorted_args == b21.args
     raises(AttributeError, lambda: x._sorted_args)
+
+def test_call():
+    x, y = symbols('x y')
+    # See the long history of this in issues 1927 and 2006.
+
+    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
+    raises(TypeError, lambda: sin(x)(1))
+
+    # No effect as there are no callables
+    assert sin(x).rcall(1) == sin(x)
+    assert (1 + sin(x)).rcall(1) == 1 + sin(x)
+
+    # Effect in the pressence of callables
+    l = Lambda(x, 2*x)
+    assert (l + x).rcall(y) == 2*y + x
+    assert (x**l).rcall(2) == x**4
+    # TODO UndefinedFunction does not subclass Expr
+    #f = Function('f')
+    #assert (2*f)(x) == 2*f(x)
+
+    assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)

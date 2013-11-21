@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from plot_rotation import get_spherical_rotatation
 from util import get_model_matrix

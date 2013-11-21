@@ -20,11 +20,12 @@ k[t].
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
-from __future__ import with_statement
+from __future__ import print_function, division
 
 from operator import mul
 
 from sympy.core import oo
+from sympy.core.compatibility import reduce
 from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
@@ -213,19 +214,21 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                     a, m, z = A
                     if a == 1:
                         n = min(n, m)
-        else:
-            raise NotImplementedError("Tangent case not implemented yet for "
-                "RDE special_denom().")
-        #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        # elif case == 'tan':
-        #     alpha*sqrt(-1) + beta = (-b/a).rem(p) == -b(sqrt(-1))/a(sqrt(-1))
-        #     eta = derivation(t, DE).quo(Poly(t**2 + 1, t)) # eta in k
-        #     if 2*beta == Dv/v for some v in k* (see pg. 176) and \
-        #     alpha*sqrt(-1) + beta == 2*m*eta*sqrt(-1) + Dz/z:
-        #     # parametric logarithmic derivative problem
-        #         n = min(n, m)
 
+        elif case == 'tan':
+            dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
+            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                      # because case != 'base'.
+                alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                etaa, etad = frac_in(dcoeff, DE.t)
+
+                if recognize_log_derivative(2*betaa, betad, DE):
+                    A = parametric_log_deriv(alphaa*sqrt(-1)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
+                    if A is not None:
+                       a, m, z = A
+                       if a == 1:
+                           n = min(n, m)
     N = max(0, -nb, n - nc)
     pN = p**N
     pn = p**-n
@@ -371,7 +374,7 @@ def spde(a, b, c, n, DE):
     pow_a = 0
 
     while True:
-        if n < 0:
+        if (n < 0) is True:
             if c.is_zero:
                 return (zero, zero, 0, zero, beta)
             raise NonElementaryIntegralException

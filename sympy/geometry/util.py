@@ -7,7 +7,10 @@ convex_hull
 are_similar
 
 """
+from __future__ import print_function, division
+
 from sympy import Symbol, Function, solve
+from sympy.core.compatibility import string_types
 
 
 def idiff(eq, y, x, dep=None):
@@ -39,7 +42,7 @@ def idiff(eq, y, x, dep=None):
         s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
     dydx = Function(y.name)(x).diff(x)
     return solve(eq.subs(f).diff(x), dydx)[0].subs(
-        [(b, a) for a, b in f.iteritems()])
+        [(b, a) for a, b in f.items()])
 
 
 def _symbol(s, matching_symbol=None):
@@ -73,7 +76,7 @@ def _symbol(s, matching_symbol=None):
     sympy.core.symbol.Symbol
 
     """
-    if isinstance(s, basestring):
+    if isinstance(s, string_types):
         if matching_symbol and matching_symbol.name == s:
             return matching_symbol
         return Symbol(s, real=True)
@@ -140,8 +143,8 @@ def intersection(*entities):
      Point(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]
 
     """
-    from entity import GeometryEntity
-    from point import Point
+    from .entity import GeometryEntity
+    from .point import Point
 
     if len(entities) <= 1:
         return []
@@ -204,10 +207,10 @@ def convex_hull(*args):
     Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))
 
     """
-    from entity import GeometryEntity
-    from point import Point
-    from line import Segment
-    from polygon import Polygon
+    from .entity import GeometryEntity
+    from .point import Point
+    from .line import Segment
+    from .polygon import Polygon
 
     p = set()
     for e in args:
@@ -302,7 +305,7 @@ def are_similar(e1, e2):
     False
 
     """
-    from exceptions import GeometryError
+    from .exceptions import GeometryError
 
     if e1 == e2:
         return True

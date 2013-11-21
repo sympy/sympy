@@ -5,7 +5,7 @@ Term rewriting is a very general class of functionalities which are used to
 convert expressions of one type in terms of expressions of different kind. For
 example expanding, combining and converting expressions apply to term
 rewriting, and also simplification routines can be included here. Currently
-!SymPy has several functions and Basic built-in methods for performing various
+SymPy has several functions and basic built-in methods for performing various
 types of rewriting.
 
 Expanding
@@ -84,8 +84,23 @@ in the ``cse`` function. Examples::
     ⎝[(x₀, sin(x + 1) + cos(y))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
+    ⎛                                     ⎡  ____     ⎤⎞
+    ⎝[(x₀, -y), (x₁, (x + x₀)⋅(x₀ + z))], ⎣╲╱ x₁  + x₁⎦⎠
+
+Optimizations to be performed before and after common subexpressions
+elimination can be passed in the``optimizations`` optional argument. A set of
+predefined basic optimizations can be applied by passing
+``optimizations='basic'``::
+
+    >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y)), optimizations='basic'),
+    ...     use_unicode=True)
     ⎛                          ⎡  ____     ⎤⎞
     ⎝[(x₀, -(x - y)⋅(y - z))], ⎣╲╱ x₀  + x₀⎦⎠
+
+However, these optimizations can be very slow for large expressions. Moreover,
+if speed is a concern, one can pass the option ``order='none'``. Order of
+terms will then be dependent on hashing algorithm implementation, but speed
+will be greatly improved.
 
 More information:
 

@@ -21,8 +21,7 @@
 # incorporation in various projects. The tests below assume that the binary cc
 # is somewhere in the path and that it can compile ANSI C code.
 
-
-from __future__ import with_statement
+from __future__ import print_function
 
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import skip
@@ -213,7 +212,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         os.chdir(oldwork)
         os.rmdir(work)
     else:
-        print >> sys.stderr, "TEST NOT REMOVED: %s" % work
+        print("TEST NOT REMOVED: %s" % work, file=sys.stderr)
         os.chdir(oldwork)
 
     # 7) Do the assertions in the end

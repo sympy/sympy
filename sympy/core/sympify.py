@@ -1,9 +1,11 @@
 """sympify -- convert objects SymPy internal format"""
 
+from __future__ import print_function, division
+
 from inspect import getmro
 
-from core import all_classes as sympy_classes
-from sympy.core.compatibility import iterable
+from .core import all_classes as sympy_classes
+from .compatibility import iterable, string_types
 
 
 class SympifyError(ValueError):
@@ -47,9 +49,8 @@ class CantSympify(object):
     """
     pass
 
-def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
-    """
-    Converts an arbitrary expression to a type that can be used inside SymPy.
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, evaluate=True):
+    """Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instance of sympy.Rational,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
@@ -60,7 +61,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - any object defined in sympy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
-       - booleans, including ``None`` (will leave them unchanged)
+       - booleans, including ``None`` (will leave ``None`` unchanged)
        - lists, sets or tuples containing any of the above
 
     If the argument is already a type that SymPy understands, it will do
@@ -111,8 +112,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     In order to have ``bitcount`` be recognized it can be imported into a
     namespace dictionary and passed as locals:
 
+    >>> from sympy.core.compatibility import exec_
     >>> ns = {}
-    >>> exec 'from sympy.core.evalf import bitcount' in ns
+    >>> exec_('from sympy.core.evalf import bitcount', ns)
     >>> sympify(s, locals=ns)
     6
 
@@ -122,7 +124,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     >>> from sympy import Symbol
     >>> ns["O"] = Symbol("O")  # method 1
-    >>> exec 'from sympy.abc import O' in ns  # method 2
+    >>> exec_('from sympy.abc import O', ns)  # method 2
     >>> ns.update(dict(O=Symbol("O")))  # method 3
     >>> sympify("O + 1", locals=ns)
     O + 1
@@ -146,12 +148,27 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     explicit conversion has been defined are converted. In the other
     cases, a SympifyError is raised.
 
-    >>> sympify(True)
-    True
-    >>> sympify(True, strict=True)
+    >>> print(sympify(None))
+    None
+    >>> sympify(None, strict=True)
     Traceback (most recent call last):
     ...
-    SympifyError: SympifyError: True
+    SympifyError: SympifyError: None
+
+    Evaluation
+    ----------
+
+    If the option ``evaluate`` is set to ``False``, then arithmetic and
+    operators will be converted into their SymPy equivalents and the
+    ``evaluate=False`` option will be added. Nested ``Add`` or ``Mul`` will
+    be denested first. This is done via an AST transformation that replaces
+    operators with their SymPy equivalents, so if an operand redefines any
+    of those operations, the redefined operators will not be used.
+
+    >>> sympify('2**2 / 3 + 5')
+    19/3
+    >>> sympify('2**2 / 3 + 5', evaluate=False)
+    2**2/3 + 5
 
     Extending
     ---------
@@ -217,7 +234,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         cls = type(a)
     if cls in sympy_classes:
         return a
-    if cls in (bool, type(None)):
+    if cls is type(None):
         if strict:
             raise SympifyError(a)
         else:
@@ -240,7 +257,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     except AttributeError:
         pass
 
-    if not isinstance(a, basestring):
+    if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
                 return sympify(coerce(a))
@@ -260,7 +277,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if isinstance(a, dict):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a.iteritems()])
+                rational=rational) for x in a.items()])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
@@ -274,8 +291,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     # and try to parse it. If it fails, then we have no luck and
     # return an exception
     try:
-        a = unicode(a)
-    except Exception, exc:
+        import sys
+        if sys.version_info[0] >= 3:
+            a = str(a)
+        else:
+            a = unicode(a)
+    except Exception as exc:
         raise SympifyError(a, exc)
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
@@ -292,8 +313,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, local_dict=locals, transformations=transformations)
-    except (TokenError, SyntaxError), exc:
+        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
+    except (TokenError, SyntaxError) as exc:
         raise SympifyError('could not parse %r' % a, exc)
 
     return expr

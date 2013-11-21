@@ -1,6 +1,5 @@
-from StringIO import StringIO
-
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
+from sympy.core.compatibility import StringIO
 from sympy import erf
 from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
@@ -1119,6 +1118,6 @@ def test_check_case_false_positive():
     x2 = symbols('x', my_assumption=True)
     try:
         codegen(('test', x1*x2), 'f95', 'prefix')
-    except CodeGenError, e:
+    except CodeGenError as e:
         if e.args[0].startswith("Fortran ignores case."):
             raise AssertionError("This exception should not be raised!")

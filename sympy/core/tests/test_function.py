@@ -310,6 +310,22 @@ def test_function_non_commutative():
     assert sin(x).is_commutative is False
     assert exp(x).is_commutative is False
     assert log(x).is_commutative is False
+    assert f(x).is_complex is False
+    assert sin(x).is_complex is False
+    assert exp(x).is_complex is False
+    assert log(x).is_complex is False
+
+
+def test_function_complex():
+    x = Symbol('x', complex=True)
+    assert f(x).is_commutative is True
+    assert sin(x).is_commutative is True
+    assert exp(x).is_commutative is True
+    assert log(x).is_commutative is True
+    assert f(x).is_complex is True
+    assert sin(x).is_complex is True
+    assert exp(x).is_complex is True
+    assert log(x).is_complex is True
 
 
 def test_function__eval_nseries():
@@ -535,7 +551,6 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-@XFAIL
 def test_issue_1612():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)
@@ -543,6 +558,8 @@ def test_issue_1612():
 
 def test_nfloat():
     from sympy.core.basic import _aresame
+    from sympy.polys.rootoftools import RootOf
+
     x = Symbol("x")
     eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
     assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
@@ -558,10 +575,14 @@ def test_nfloat():
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
-    # issues 3243
+    # issue 3243
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
     assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
 
     # issue 3533
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
         9.99999999800000e-11
+
+    # issue 4023
+    eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
+    assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'

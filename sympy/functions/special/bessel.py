@@ -1,10 +1,13 @@
 """Bessel type functions"""
 
+from __future__ import print_function, division
+
 from sympy import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError, expand_func
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import re, im
+from sympy.core.compatibility import xrange
 
 # TODO
 # o Airy Ai and Bi functions
@@ -24,14 +27,14 @@ class BesselBase(Function):
     Abstract base class for bessel-type functions.
 
     This class is meant to reduce code duplication.
-    All bessel type functions can 1) be differentiated, and the derivatives
+    All Bessel type functions can 1) be differentiated, and the derivatives
     expressed in terms of similar functions and 2) be rewritten in terms
     of other bessel-type functions.
 
     Here "bessel-type functions" are assumed to have one complex parameter.
 
     To use this base class, define class attributes ``_a`` and ``_b`` such that
-    ``2*F_n' = -_a*F_{n+1} b*F_{n-1}``.
+    ``2*F_n' = -_a*F_{n+1} + b*F_{n-1}``.
     """
 
     nargs = 2
@@ -68,13 +71,16 @@ class BesselBase(Function):
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import besselsimp
+        return besselsimp(self)
 
 
 class besselj(BesselBase):
     r"""
     Bessel function of the first kind.
 
-    The Bessel J function of order :math:`\nu` is defined to be the function
+    The Bessel `J` function of order `\nu` is defined to be the function
     satisfying Bessel's differential equation
 
     .. math ::
@@ -95,7 +101,7 @@ class besselj(BesselBase):
     Examples
     ========
 
-    Create a bessel function object:
+    Create a Bessel function object:
 
     >>> from sympy import besselj, jn
     >>> from sympy.abc import z, n
@@ -106,7 +112,7 @@ class besselj(BesselBase):
     >>> b.diff(z)
     besselj(n - 1, z)/2 - besselj(n + 1, z)/2
 
-    Rewrite in terms of spherical bessel functions:
+    Rewrite in terms of spherical Bessel functions:
 
     >>> b.rewrite(jn)
     sqrt(2)*sqrt(z)*jn(n - 1/2, z)/sqrt(pi)
@@ -191,7 +197,7 @@ class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
 
-    The Bessel Y function of order :math:`\nu` is defined as
+    The Bessel `Y` function of order `\nu` is defined as
 
     .. math ::
         Y_\nu(z) = \lim_{\mu \to \nu} \frac{J_\mu(z) \cos(\pi \mu)
@@ -272,7 +278,7 @@ class besseli(BesselBase):
     .. math ::
         I_\nu(z) = i^{-\nu} J_\nu(iz),
 
-    where :math:`J_\mu(z)` is the Bessel function of the first kind.
+    where :math:`J_\nu(z)` is the Bessel function of the first kind.
 
     Examples
     ========
@@ -514,13 +520,13 @@ from sympy.polys.orthopolys import spherical_bessel_fn as fn
 
 class SphericalBesselBase(BesselBase):
     """
-    Base class for spherical bessel functions.
+    Base class for spherical Bessel functions.
 
-    These are thin wrappers around ordinary bessel functions,
-    since spherical bessel functions differ from the ordinary
+    These are thin wrappers around ordinary Bessel functions,
+    since spherical Bessel functions differ from the ordinary
     ones just by a slight change in order.
 
-    To use this class, define the _rewrite and _expand methods.
+    To use this class, define the ``_rewrite`` and ``_expand`` methods.
     """
 
     def _expand(self, **hints):
@@ -528,7 +534,7 @@ class SphericalBesselBase(BesselBase):
         raise NotImplementedError('expansion')
 
     def _rewrite(self):
-        """ Rewrite self in terms of ordinary bessel functions. """
+        """ Rewrite self in terms of ordinary Bessel functions. """
         raise NotImplementedError('rewriting')
 
     def _eval_expand_func(self, **hints):
@@ -551,7 +557,7 @@ class jn(SphericalBesselBase):
     r"""
     Spherical Bessel function of the first kind.
 
-    This function is a solution to the spherical bessel equation
+    This function is a solution to the spherical Bessel equation
 
     .. math ::
         z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}
@@ -569,7 +575,7 @@ class jn(SphericalBesselBase):
 
     >>> from sympy import Symbol, jn, sin, cos, expand_func
     >>> z = Symbol("z")
-    >>> print jn(0, z).expand(func=True)
+    >>> print(jn(0, z).expand(func=True))
     sin(z)/z
     >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
     True
@@ -607,7 +613,7 @@ class yn(SphericalBesselBase):
     r"""
     Spherical Bessel function of the second kind.
 
-    This function is another solution to the spherical bessel equation, and
+    This function is another solution to the spherical Bessel equation, and
     linearly independent from :math:`j_n`. It can be defined as
 
     .. math ::
@@ -620,7 +626,7 @@ class yn(SphericalBesselBase):
 
     >>> from sympy import Symbol, yn, sin, cos, expand_func
     >>> z = Symbol("z")
-    >>> print expand_func(yn(0, z))
+    >>> print(expand_func(yn(0, z)))
     -cos(z)/z
     >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
     True
@@ -655,13 +661,17 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     This returns an array of zeros of jn up to the k-th zero.
 
-    * method = "sympy": uses mpmath besseljzero
-    * method = "scipy": uses the SciPy's sph_jn and newton to find all
+    * method = "sympy": uses :func:`mpmath.besseljzero`
+    * method = "scipy": uses the
+      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn.html>`_
+      and
+      `newton <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
+      to find all
       roots, which is faster than computing the zeros using a general
       numerical solver, but it requires SciPy and only works with low
-      precision floating point numbers.  [the function used with
+      precision floating point numbers.  [The function used with
       method="sympy" is a recent addition to mpmath, before that a general
-      solver was used]
+      solver was used.]
 
     Examples
     ========

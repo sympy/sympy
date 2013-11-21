@@ -1,6 +1,5 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from __future__ import with_statement
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
         Or, Q, re, S, sin, sqrt, Union)
 from sympy.assumptions import assuming
@@ -111,7 +110,7 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_rational_inequalities(
         [[Le(x**2, 0)]], x, relational=True) == And(Eq(re(x), 0), cond)
     assert reduce_rational_inequalities(
-        [[Lt(x**2, 0)]], x, relational=True) is False
+        [[Lt(x**2, 0)]], x, relational=True) == False
     assert reduce_rational_inequalities(
         [[Ge(x**2, 0)]], x, relational=True) == cond
     assert reduce_rational_inequalities([[Gt(x**2, 0)]], x, relational=True) == \

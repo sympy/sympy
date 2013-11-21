@@ -14,7 +14,7 @@ should also inspect the /tmp/x that all the changes generated are actually
 correct.
 """
 
-from __future__ import with_statement
+from __future__ import print_function
 
 from glob import glob
 import re
@@ -38,7 +38,7 @@ def fix_file(filename):
         fromfile=filename, tofile=filename + ".new", lineterm="")
     import sys
     for l in d:
-        print l
+        print(l)
 
 
 for x in get_files_mpmath():

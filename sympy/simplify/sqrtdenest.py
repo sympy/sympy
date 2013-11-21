@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.functions import sqrt, sign, root
 from sympy.core import S, Wild, sympify, Mul, Add, Expr
 from sympy.core.function import expand_multinomial, expand_mul
@@ -39,7 +41,7 @@ def sqrt_depth(p):
     if p.is_Atom:
         return 0
     elif p.is_Add or p.is_Mul:
-        return max([sqrt_depth(x) for x in p.args])
+        return max([sqrt_depth(x) for x in p.args], key=default_sort_key)
     elif is_sqrt(p):
         return sqrt_depth(p.base) + 1
     else:
@@ -162,7 +164,7 @@ def _sqrt_match(p):
         # so when the max is selected, it will be the largest arg having a
         # given depth
         v = [(sqrt_depth(x), x, i) for i, x in enumerate(pargs)]
-        nmax = max(v)
+        nmax = max(v, key=default_sort_key)
         if nmax[0] == 0:
             res = []
         else:
@@ -554,7 +556,7 @@ def _denester(nested, av0, h, max_depth_level):
             nested2 = [av0[3], R]
             av0[0] = None
         else:
-            values = filter(None, [_sqrt_match(expr) for expr in nested])
+            values = list(filter(None, [_sqrt_match(expr) for expr in nested]))
             for v in values:
                 if v[2]:  # Since if b=0, r is not defined
                     if R is not None:

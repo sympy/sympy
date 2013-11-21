@@ -7,10 +7,12 @@ Math object where possible.
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import string_types
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
@@ -72,7 +74,7 @@ class JavascriptCodePrinter(CodePrinter):
         Actually format the expression as Javascript code.
         """
 
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("JavascriptCodePrinter cannot assign to object of type %s" %
@@ -89,7 +91,7 @@ class JavascriptCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -177,7 +179,7 @@ class JavascriptCodePrinter(CodePrinter):
         ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond == True:
             last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) {\n%s\n" %
@@ -185,20 +187,6 @@ class JavascriptCodePrinter(CodePrinter):
                             self._print(expr.args[-1].expr)))
         code = "if %s" + last_line
         return code % "else if ".join(ecpairs)
-
-    def _print_And(self, expr):
-        PREC = precedence(expr)
-        return ' && '.join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Or(self, expr):
-        PREC = precedence(expr)
-        return ' || '.join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return '!' + self.parenthesize(expr.args[0], PREC)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -217,7 +205,7 @@ class JavascriptCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -283,4 +271,4 @@ def print_jscode(expr, **settings):
 
        See jscode for the meaning of the optional arguments.
     """
-    print jscode(expr, **settings)
+    print(jscode(expr, **settings))

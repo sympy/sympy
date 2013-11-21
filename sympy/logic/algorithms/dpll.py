@@ -7,10 +7,12 @@ References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
   - http://bioinformatics.louisville.edu/ouyang/MingOuyangThesis.pdf
 """
-from sympy.core import Symbol
-from sympy import Predicate
+from __future__ import print_function, division
+
+from sympy import default_sort_key
+from sympy.core.compatibility import reduce
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
-    to_int_repr
+    to_int_repr, _find_predicates
 from sympy.logic.inference import pl_true, literal_symbol
 
 
@@ -18,7 +20,7 @@ def dpll_satisfiable(expr):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds
-    >>> from sympy import symbols
+
     >>> from sympy.abc import A, B
     >>> from sympy.logic.algorithms.dpll import dpll_satisfiable
     >>> dpll_satisfiable(A & ~B)
@@ -27,7 +29,7 @@ def dpll_satisfiable(expr):
     False
 
     """
-    symbols = list(expr.atoms(Symbol, Predicate))
+    symbols = sorted(_find_predicates(expr), key=default_sort_key)
     symbols_int_repr = set(range(1, len(symbols) + 1))
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)

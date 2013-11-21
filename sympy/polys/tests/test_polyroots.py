@@ -1,7 +1,7 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
-    powsimp, Lambda, sin, cos, pi, I, Interval, re, im)
+    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ)
 
 from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
     PolynomialError)
@@ -25,15 +25,12 @@ def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
     assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
     assert roots_quadratic(Poly(2*x**2 + 3, x)) == [-I*sqrt(6)/2, I*sqrt(6)/2]
-    assert roots_quadratic(
-        Poly(2*x**2 + 4*x + 3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
+    assert roots_quadratic(Poly(2*x**2 + 4*x + 3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
 
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(
-            a + c)/(
-                a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
+        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
          -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
 
 
@@ -43,6 +40,8 @@ def test_roots_cubic():
 
     assert roots_cubic(Poly(x**3 + 1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
+    assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
+         S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
 
 
 def test_roots_quartic():
@@ -208,16 +207,19 @@ def test_roots_preprocessing():
 
     assert coeff == 20*E*J/(F*L**2)
     assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
-        809735812500*x**3 - 10673859375000*x**2 + 63529101562500* \
-        x - 135006591796875
+        809735812500*x**3 - 10673859375000*x**2 + 63529101562500*x - 135006591796875
+
+    f = Poly(-y**2 + x**2*exp(x), y, domain=ZZ[x, exp(x)])
+    g = Poly(-y**2 + exp(x), y, domain=ZZ[exp(x)])
+
+    assert preprocess_roots(f) == (x, g)
 
 
 def test_roots():
     assert roots(1, x) == {}
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}
-    assert roots(
-        ((x - 2)*(x + 3)*(x - 4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
+    assert roots(((x - 2)*(x + 3)*(x - 4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
 
     assert roots(2*x + 1, x) == {-S.Half: 1}
     assert roots((2*x + 1)**2, x) == {-S.Half: 2}
@@ -255,8 +257,7 @@ def test_roots():
     f = -2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 - \
         224*x**7 - 384*x**8 - 64*x**9
 
-    assert roots(f) == {S(0): 2, -S(
-        2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
+    assert roots(f) == {S(0): 2, -S(2): 2, S(2): 1, -S(7)/2: 1, -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
 
     assert roots((a + b + c)*x - (a + b + c + d), x) == {(a + b + c + d)/(a + b + c): 1}
 
@@ -385,18 +386,18 @@ def test_roots_slow():
     f1 = x**2*c + (a/b) + x*c*d - a
     f2 = x**2*(a + b*(c - d)*a) + x*a*b*c/(b*d - d) + (a*d - c/d)
 
-    assert roots(f1, x).values() == [1, 1]
-    assert roots(f2, x).values() == [1, 1]
+    assert list(roots(f1, x).values()) == [1, 1]
+    assert list(roots(f2, x).values()) == [1, 1]
 
     (zz, yy, xx, zy, zx, yx, k) = symbols("zz,yy,xx,zy,zx,yx,k")
 
     e1 = (zz - k)*(yy - k)*(xx - k) + zy*yx*zx + zx - zy - yx
     e2 = (zz - k)*yx*yx + zx*(yy - k)*zx + zy*zy*(xx - k)
 
-    assert roots(e1 - e2, k).values() == [1, 1, 1]
+    assert list(roots(e1 - e2, k).values()) == [1, 1, 1]
 
     f = x**3 + 2*x**2 + 8
-    R = roots(f).keys()
+    R = list(roots(f).keys())
 
     assert f.subs(x, R[0]).simplify() == 0
     assert f.subs(x, R[1]).simplify() == 0
@@ -404,18 +405,18 @@ def test_roots_slow():
 
 
 def test_roots_inexact():
-    R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1, x) ])
-    R2 = sorted([ r for r in roots(x**2 + x + 1.0, x) ])
+    R1 = roots(x**2 + x + 1, x, multiple=True)
+    R2 = roots(x**2 + x + 1.0, x, multiple=True)
 
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-12
 
-    f = x**4 + 3.0*sqrt(
-        2.0)*x**3 - (78.0 + 24.0*sqrt(3.0))*x**2 + 144.0*(2*sqrt(3.0) + 9.0)
+    f = x**4 + 3.0*sqrt(2.0)*x**3 - (78.0 + 24.0*sqrt(3.0))*x**2 \
+        + 144.0*(2*sqrt(3.0) + 9.0)
 
-    R1 = sorted(roots(f, multiple=True))
-    R2 = sorted([-12.7530479110482, -3.85012393732929,
-                4.89897948556636, 7.46155167569183])
+    R1 = roots(f, multiple=True)
+    R2 = (-12.7530479110482, -3.85012393732929,
+          4.89897948556636, 7.46155167569183)
 
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-10

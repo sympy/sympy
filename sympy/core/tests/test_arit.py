@@ -4,6 +4,7 @@ from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
         sign, im
 )
+from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
 
@@ -213,34 +214,34 @@ def test_pow_im():
     args = [I, I, I, I, 2]
     e = Rational(1, 3)
     ans = 2**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args = [I, I, I, 2]
     e = Rational(1, 3)
     ans = 2**e*(-I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-3)
     ans = (6*I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-1)
     ans = (-6*I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
 
     args = [I, I, 2]
     e = Rational(1, 3)
     ans = (-2)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-3)
     ans = (6)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-1)
     ans = (-6)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     assert Mul(Pow(-1, Rational(3, 2), evaluate=False), I, I) == I
     assert Mul(I*Pow(I, S.Half, evaluate=False)) == (-1)**Rational(3, 4)
@@ -373,6 +374,7 @@ def test_Add_Mul_is_bounded():
 
 def test_Mul_is_even_odd():
     x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
 
     k = Symbol('k', odd=True)
     n = Symbol('n', odd=True)
@@ -414,6 +416,20 @@ def test_Mul_is_even_odd():
     assert (k/2).is_integer is False
     assert (m/2).is_integer is True
 
+    assert (x*y).is_even is None
+    assert (x*x).is_even is None
+    assert (x*(x + k)).is_even is True
+    assert (x*(x + m)).is_even is None
+    assert (x*y*(y + k)).is_even is True
+    assert (x*y*(y + m)).is_even is None
+
+    assert (x*y).is_odd is None
+    assert (x*x).is_odd is None
+    assert (x*(x + k)).is_odd is False
+    assert (x*(x + m)).is_odd is None
+    assert (x*y*(y + k)).is_odd is False
+    assert (x*y*(y + m)).is_odd is None
+
 
 def test_Mul_is_rational():
     x = Symbol('x')
@@ -424,6 +440,17 @@ def test_Mul_is_rational():
     assert (x/pi).is_rational is None
     assert (x/n).is_rational is None
     assert (n/pi).is_rational is False
+
+
+def test_Add_is_rational():
+    x = Symbol('x')
+    n = Symbol('n', rational=True)
+    m = Symbol('m', rational=True)
+
+    assert (n + m).is_rational is True
+    assert (x + pi).is_rational is None
+    assert (x + n).is_rational is None
+    assert (n + pi).is_rational is False
 
 
 def test_Add_is_even_odd():
@@ -875,6 +902,8 @@ def test_Pow_is_integer():
     assert Pow(4, S.Half, evaluate=False).is_integer is True
     assert Pow(S.Half, -2, evaluate=False).is_integer is True
 
+    assert ((-1)**k).is_integer
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -908,12 +937,7 @@ def test_Pow_is_real():
     assert (i**k).is_real is None
 
 
-@XFAIL
 def test_real_Pow():
-    """
-    This test fails perhaps because (pi/log(x)).is_real is True even with
-    no assumptions on x. See issue 2322.
-    """
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
 
@@ -942,6 +966,10 @@ def test_Pow_is_even_odd():
     n = Symbol('n', odd=True)
     m = Symbol('m', integer=True, nonnegative=True)
     p = Symbol('p', integer=True, positive=True)
+
+    assert ((-1)**n).is_odd
+    assert ((-1)**k).is_odd
+    assert ((-1)**(m - p)).is_odd
 
     assert (k**2).is_even is True
     assert (n**2).is_even is False
@@ -1474,9 +1502,9 @@ def test_float_int():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
-        112345678901234567890L
+        long(112345678901234567890)
     assert int(Float('1.123456789012345678901234567890e25', '')) == \
-        11234567890123456789012345L
+        long(11234567890123456789012345)
     # decimal forces float so it's not an exact integer ending in 000000
     assert int(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000192

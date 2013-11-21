@@ -5,8 +5,10 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
+from __future__ import print_function, division
+
 from sympy.core.function import AppliedUndef
-from printer import Printer
+from .printer import Printer
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps, repr_dps
 
@@ -93,6 +95,12 @@ class ReprPrinter(Printer):
         _print_ImmutableMatrix = \
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
+
+    def _print_BooleanTrue(self, expr):
+        return "S.true"
+
+    def _print_BooleanFalse(self, expr):
+        return "S.false"
 
     def _print_NaN(self, expr):
         return "nan"

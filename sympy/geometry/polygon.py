@@ -1,19 +1,23 @@
+from __future__ import print_function, division
+
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
-from sympy.core.compatibility import as_int
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.compatibility import as_int, xrange
 from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
-from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.logic import And
 from sympy.matrices import Matrix
+from sympy.simplify import simplify
 from sympy.solvers import solve
+from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety, has_dups
 
-from entity import GeometryEntity
-from point import Point
-from ellipse import Circle
-from line import Line, Segment
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .ellipse import Circle
+from .line import Line, Segment
+from .util import _symbol
 
 import warnings
 
@@ -141,14 +145,15 @@ class Polygon(GeometryEntity):
                 got.add(p)
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            a, b, c = sorted(
+                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
             if b not in shared and Point.is_collinear(a, b, c):
                 nodup[i] = a
                 nodup[i + 1] = None
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -219,6 +224,16 @@ class Polygon(GeometryEntity):
             area += x1*y2 - x2*y1
         return simplify(area) / 2
 
+    @staticmethod
+    def _isright(a, b, c):
+        ba = b - a
+        ca = c - a
+        t_area = simplify(ba.x*ca.y - ca.x*ba.y)
+        res = t_area.is_nonpositive
+        if res is None:
+            raise ValueError("Can't determine orientation")
+        return res
+
     @property
     def angles(self):
         """The internal angle at each vertex.
@@ -249,21 +264,15 @@ class Polygon(GeometryEntity):
 
         """
 
-        def _isright(a, b, c):
-            ba = b - a
-            ca = c - a
-            t_area = ba.x*ca.y - ca.x*ba.y
-            return bool(t_area <= 0)
-
         # Determine orientation of points
         args = self.vertices
-        cw = _isright(args[-1], args[0], args[1])
+        cw = self._isright(args[-1], args[0], args[1])
 
         ret = {}
         for i in xrange(len(args)):
             a, b, c = args[i - 2], args[i - 1], args[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
-            if cw ^ _isright(a, b, c):
+            if cw ^ self._isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
             else:
                 ret[b] = ang
@@ -437,17 +446,11 @@ class Polygon(GeometryEntity):
 
         """
 
-        def _isright(a, b, c):
-            ba = b - a
-            ca = c - a
-            t_area = simplify(ba.x*ca.y - ca.x*ba.y)
-            return bool(t_area <= 0)
-
         # Determine orientation of points
         args = self.vertices
-        cw = _isright(args[-2], args[-1], args[0])
+        cw = self._isright(args[-2], args[-1], args[0])
         for i in xrange(1, len(args)):
-            if cw ^ _isright(args[i - 2], args[i - 1], args[i]):
+            if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
                 return False
 
         return True
@@ -594,7 +597,7 @@ class Polygon(GeometryEntity):
             pt = s.arbitrary_point(parameter).subs(
                 t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append(
-                (pt, (perim_fraction_start <= t < perim_fraction_end)))
+                (pt, (And(perim_fraction_start <= t, t < perim_fraction_end))))
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
@@ -838,7 +841,7 @@ class Polygon(GeometryEntity):
             e2_angle = pi - support_line.angle_between(Line(
                 e2_current, e2_next))
 
-            if e1_angle < e2_angle:
+            if (e1_angle < e2_angle) is True:
                 support_line = Line(e1_current, e1_next)
                 e1_segment = Segment(e1_current, e1_next)
                 min_dist_current = e1_segment.distance(e2_current)
@@ -852,7 +855,7 @@ class Polygon(GeometryEntity):
                 else:
                     e1_current = e1_next
                     e1_next = e1_connections[e1_next][1]
-            elif e1_angle > e2_angle:
+            elif (e1_angle > e2_angle) is True:
                 support_line = Line(e2_next, e2_current)
                 e2_segment = Segment(e2_current, e2_next)
                 min_dist_current = e2_segment.distance(e1_current)
@@ -1657,14 +1660,15 @@ class Triangle(Polygon):
         # remove collinear points
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            a, b, c = sorted(
+                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
             if Point.is_collinear(a, b, c):
                 nodup[i] = a
                 nodup[i + 1] = None
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -2166,9 +2170,9 @@ class Triangle(Polygon):
         """
         s = self.sides
         v = self.vertices
-        return {v[0]: Segment(s[1].midpoint, v[0]),
-                v[1]: Segment(s[2].midpoint, v[1]),
-                v[2]: Segment(s[0].midpoint, v[2])}
+        return {v[0]: Segment(v[0], s[1].midpoint),
+                v[1]: Segment(v[1], s[2].midpoint),
+                v[2]: Segment(v[2], s[0].midpoint)}
 
     @property
     def medial(self):

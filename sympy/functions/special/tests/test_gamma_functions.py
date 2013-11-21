@@ -91,9 +91,10 @@ def test_lowergamma():
     from sympy import meijerg, exp_polar, I, expint
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
+    assert td(lowergamma(x, randcplx()), x)
     assert lowergamma(x, y).diff(x) == \
         gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
-        + meijerg([], [1, 1], [0, 0, x], [], y)
+        - meijerg([], [1, 1], [0, 0, x], [], y)
 
     assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
     assert not lowergamma(S.Half - 3, x).has(lowergamma)
@@ -283,7 +284,8 @@ def test_loggamma():
     raises(ArgumentIndexError, lambda: loggamma(x).fdiff(2))
     assert loggamma(x).diff(x) == polygamma(0, x)
     s1 = loggamma(1/(x + sin(x)) + cos(x)).nseries(x, n=4)
-    s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2)
+    s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2) + \
+        log(x)*x**2/2
     assert (s1 - s2).expand(force=True).removeO() == 0
     s1 = loggamma(1/x).series(x)
     s2 = (1/x - S(1)/2)*log(1/x) - 1/x + log(2*pi)/2 + \
@@ -292,13 +294,18 @@ def test_loggamma():
 
     assert loggamma(x).rewrite('intractable') == log(gamma(x))
 
+    s1 = loggamma(x).series(x)
+    assert s1 == -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + \
+        pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
+    assert s1 == loggamma(x).rewrite('intractable').series(x)
+
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real
     assert loggamma(z).is_real is False
 
     def tN(N, M):
-        assert loggamma(1/x)._eval_nseries(x, n=N, logx=None).getn() == M
+        assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
     tN(0, 0)
     tN(1, 1)
     tN(2, 3)
@@ -313,7 +320,7 @@ def test_polygamma_expansion():
         -log(x) - x/2 - x**2/12 + O(x**4)
     assert polygamma(1, 1/x).series(x, n=5) == \
         x + x**2/2 + x**3/6 + O(x**5)
-    assert polygamma(3, 1/x).nseries(x, n=8) == \
+    assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
 
 

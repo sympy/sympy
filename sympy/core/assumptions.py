@@ -43,9 +43,11 @@ Examples
     x
 
 """
+from __future__ import print_function, division
 
 from sympy.core.facts import FactRules, FactKB
 from sympy.core.core import BasicMeta
+from sympy.core.compatibility import integer_types, with_metaclass
 
 # This are the rules under which our assumptions function
 #
@@ -203,10 +205,8 @@ def _ask(fact, obj):
     return None
 
 
-class ManagedProperties(BasicMeta):
+class ManagedProperties(with_metaclass(BasicMeta, BasicMeta)):
     """Metaclass for classes with old-style assumptions"""
-    __metaclass__ = BasicMeta
-
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
@@ -214,7 +214,7 @@ class ManagedProperties(BasicMeta):
         for k in _assume_defined:
             attrname = as_property(k)
             v = cls.__dict__.get(attrname, '')
-            if isinstance(v, (bool, int, long, type(None))):
+            if isinstance(v, (bool, integer_types, type(None))):
                 if v is not None:
                     v = bool(v)
                 local_defs[k] = v
@@ -238,7 +238,7 @@ class ManagedProperties(BasicMeta):
                 pass
 
         # Put definite results directly into the class dict, for speed
-        for k, v in cls.default_assumptions.iteritems():
+        for k, v in cls.default_assumptions.items():
             setattr(cls, as_property(k), v)
 
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
