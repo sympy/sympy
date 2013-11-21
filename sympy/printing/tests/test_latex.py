@@ -3,7 +3,7 @@ from sympy import (
     Float, FourierTransform, Function, Integral, Interval,
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
-    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
+    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
@@ -1182,3 +1182,7 @@ def test_builtin_no_args():
 def test_issue_3754():
     p = Function('Pi')
     assert latex(p(x)) == r"\Pi{\left (x \right )}"
+
+def test_Mul():
+    e = Mul(-2, x + 1, evaluate=False)
+    assert latex(e)  == r'-2 x - 2', latex(e)
