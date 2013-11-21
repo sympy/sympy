@@ -373,6 +373,7 @@ def test_mixing_order_at_zero_and_infinity():
     raises(NotImplementedError, lambda: Order(x, (x, oo))*Order(x, (x, 0)))
     raises(NotImplementedError, lambda: Order(Order(x, (x, oo))))
     raises(NotImplementedError, lambda: Order(Order(x, (x, oo)), y))
+    raises(NotImplementedError, lambda: Order(Order(x), (x, oo)))
 
 
 def test_order_subs_limits():
