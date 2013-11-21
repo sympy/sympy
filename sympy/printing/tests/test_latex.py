@@ -1185,4 +1185,16 @@ def test_issue_3754():
 
 def test_Mul():
     e = Mul(-2, x + 1, evaluate=False)
-    assert latex(e)  == r'-2 x - 2', latex(e)
+    assert latex(e)  == r'- 2 \left(x + 1\right)'
+    e = Mul(2, x + 1, evaluate=False)
+    assert latex(e)  == r'2 \left(x + 1\right)'
+    e = Mul(S.One/2, x + 1, evaluate=False)
+    assert latex(e)  == r'\frac{1}{2} \left(x + 1\right)'
+    e = Mul(y, x + 1, evaluate=False)
+    assert latex(e)  == r'y \left(x + 1\right)'
+    e = Mul(-y, x + 1, evaluate=False)
+    assert latex(e)  == r'- y \left(x + 1\right)'
+    e = Mul(-2, x + 1)
+    assert latex(e)  == r'- 2 x - 2'
+    e = Mul(2, x + 1)
+    assert latex(e)  == r'2 x + 2'
