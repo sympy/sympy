@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from collections import Counter
-from sympy import diff, Matrix, trace
+from sympy import Basic, diff, Matrix, trace
 
 __all__ = ["Index", "Tensor", "Metric", "partial_diff"]
 
@@ -13,6 +13,7 @@ def map_n(f, *nested_list):
 
     Examples
     ========
+    
     >>> print(map_n(lambda x: x+2, 3))
     5
     >>> print(map_n(lambda x: x+2, [3,[4,5]]))
@@ -34,6 +35,7 @@ def map_on_matrix(f, nested_list):
 
     Examples
     ========
+    
     >>> map_on_matrix(trace, [[1,2],[3,4]])
     5
     >>> map_on_matrix(trace, [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
@@ -47,6 +49,7 @@ def transpose(rank2_list):
 
     Examples
     ========
+    
     >>> transpose([[1,2],[3,4]])
     [[1, 3], [2, 4]]
     """
@@ -55,10 +58,11 @@ def transpose(rank2_list):
 def transpose_to_outer_level(nested_list, level):
     """The generic form of transpose a list
 
-    Note: the outerest list have level 0
+    Note: the outermost list have level 0
     
     Examples
     ========
+    
     >>> transpose_to_outer_level([[[1, 2], [3, 4]], [[5, 6], [7, 8]]], 0)
     [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
     >>> transpose_to_outer_level([[[1, 2], [3, 4]], [[5, 6], [7, 8]]], 1)
@@ -75,6 +79,7 @@ def nested_list_depth(nested_list):
 
     Examples
     ========
+    
     >>> nested_list_depth([[1,2],[3,4]])
     2
     >>> nested_list_depth([[1,2],3])
@@ -88,12 +93,14 @@ def nested_list_depth(nested_list):
  
 # Tensor calculation related codes
 
-class Index:
+
+class Index(Basic):
     """Tensor index with the choice of either
     contravariant or covariant and a symbol
 
     Examples
     ========
+    
     >>> i = Index("^", "i") # contravariant index
     >>> i
     ^i
@@ -103,37 +110,49 @@ class Index:
     """
     contravariant = "^"
     covariant = "_"
-    def __init__(self, contravariant_or_covariant, symbol):
-        self.cc = contravariant_or_covariant
-        self.symbol = symbol
+    
+    def __new__(cls, contravariant_or_covariant, symbol):
+        obj = Basic.__new__(cls)
+        obj.cc = contravariant_or_covariant
+        obj.symbol = symbol
+        return obj
+    
     def __eq__(self, other):
         return self.cc == other.cc and self.symbol == other.symbol
+    
     def __repr__(self):
         return str(self.cc) + str(self.symbol)
+    
     def raising(self):
         """Raising index
 
         Examples
         ========
+        
         >>> Index("_", "i").contravariant()
         ^i
         """
         return Index(self.contravariant, self.symbol)
+    
     def is_contravariant(self):
         return self.cc == self.contravariant
+    
     def lowering(self):
         """Lowering index
 
         Examples
         ========
+        
         >>> Index('^', 'i').covariant()
         _i
         """
         return Index(self.covariant, self.symbol)
+    
     def is_covariant(self):
         return self.cc == self.covariant
 
-class Tensor:
+
+class Tensor(Basic):
     """Tensor in a component form
 
     Note: indices on the left for outer level of components, while
@@ -141,6 +160,7 @@ class Tensor:
 
     Examples
     ========
+    
     >>> Tensor([Index("_", "i"), Index("_", "j")], [[1,2],[3,4]])
     Tensor[_i, _j] = [[1, 2], [3, 4]]
     >>> Tensor([Index("_", "i")], [[1, 2], [3, 4]])
@@ -152,14 +172,17 @@ class Tensor:
         else:
             self.idx = indices
             self.ele = elements
+            
     def __repr__(self):
         return "Tensor" + str(self.idx) + " = " + str(self.ele)
+    
     def __add__(self, other):
         """Operator Overloading of + for class Tensor.
         Add two tensors elment by element
 
         Examples
         ========
+        
         >>> t1 = Tensor([Index("_", "i"), Index("_", "j")], [[1,2],[3,4]])
         >>> t2 = Tensor([Index("_", "i"), Index("_", "j")], [[5,6],[7,8]])
         >>> t1 + t2
@@ -170,12 +193,14 @@ class Tensor:
         """
         if self.idx != other.idx: raise ValueError("Tensor forms don't match")
         else: return Tensor(self.idx, map_n(lambda x,y: x+y, self.ele, other.ele))
+
     def __sub__(self, other):
         """Operator Overloading of - for class Tensor.
         Substract two tensors elment by element
 
         Examples
         ========
+        
         >>> t1 = Tensor([Index("_", "i"), Index("_", "j")], [[1,2],[3,4]])
         >>> t2 = Tensor([Index("_", "i"), Index("_", "j")], [[5,6],[7,8]])
         >>> t1 - t2
@@ -186,8 +211,10 @@ class Tensor:
         """
         if self.idx != other.idx: raise ValueError("Tensor forms don't match")
         else: return Tensor(self.idx, map_n(lambda x,y: x-y, self.ele, other.ele))
+
     def scalar_multiplication(self, k):
         return Tensor(self.idx, map_n(lambda x: k * x, self.ele))
+
     def __mul__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.idx + other.idx,
@@ -197,6 +224,7 @@ class Tensor:
 
         Examples
         ========
+        
         >>> t1 = Tensor([Index("_", "i"), Index("_", "j")], [[1,2],[3,4]])
         >>> t1*2 # Note: 2*t1 is not working
         Tensor[_i, _j] = [[2, 4], [6, 8]]
@@ -204,15 +232,19 @@ class Tensor:
         >>> t1*t2
         Tensor[_i, _j, ^k] = [[[5, 6], [10, 12]], [[15, 18], [20, 24]]]
         """
+
     def partial_diff_by_scalar(self, scalar):
         return Tensor(self.idx, map_n(lambda x: diff(x, scalar), self.ele))
+
     def partial_diff_on_scalar(self, scalar):
         return Tensor(self.idx, map_n(lambda x: diff(scalar, x), self.ele))
+    
     def partial_diff(self, other):
         """Partial derivative for tensors
 
         Examples
         ========
+        
         >>> from sympy import symbols
         >>> x, y, z = symbols("x y z")
         >>> t1 = Tensor([Index("_", "i"), Index("_", "j")], [[x,y],[z,2]])
@@ -226,22 +258,26 @@ class Tensor:
             return Tensor(self.idx + other.idx,
                           map_n(lambda y: other.partial_diff_on_scalar(y).ele, self.ele))
         else: return self.partial_diff_by_scalar(other)
+        
     def change_indices(self, indices):
         """Change the indices of a tensor, but keep its elements unchanged
 
         Examples
         ========
+        
         >>> t = Tensor([Index("_", "i"), Index("_", "j")], [[1,2],[3,4]])
         >>> t.change_indices([Index("_", "k"), Index("^", "l")])
         Tensor[_k, ^l] = [[1, 2], [3, 4]]
         """
         return Tensor(indices, self.ele)
+    
     def switch_indices(self, indices):
         """Switch the indices of a tensor, and change the order of its
         components at the same time
 
         Examples
         ========
+        
         >>> t = Tensor([Index("_", "i"), Index("_", "j"), Index("^", "k")], [[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
         t.switch_indices([Index("^", "k"), Index("_", "j"), Index("_", "i")])
         Tensor[^k, _j, _i] = [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
@@ -251,11 +287,13 @@ class Tensor:
         else: return Tensor(indices,
                             list(map(lambda x: Tensor(self.idx[:i]+self.idx[(i+1):], x).switch_indices(indices[1:]).ele,
                                      transpose_to_outer_level(self.ele, i))))
+        
     def einstein_summation(self):
         """Einstein Summation of dummy indices
 
         Examples
         ========
+        
         >>> t = Tensor([Index("_", "i"), Index("^", "i")], [[1, 2], [3, 4]])
         >>> t.einstein_summation()
         5
@@ -279,6 +317,7 @@ def partial_diff(t1, t2):
 
     Examples
     ========
+    
     >>> from sympy import symbols
     >>> x, y, z = symbols("x y z")
     >>> partial_diff(2*x, x)
@@ -295,11 +334,13 @@ def partial_diff(t1, t2):
     elif isinstance(t2, Tensor): return t2.partial_diff_on_scalar(t1)
     else: return diff(t1, t2)
 
+
 class Metric(Tensor):
     """Define the metric as a rank-2 tensor
 
     Examples
     ========
+    
     >>> Metric([Index("_", "i"), Index("_", "j")], [[1, 3], [3, 4]])
     Metric[_i, _j] = [[1, 3], [3, 4]]
     >>> Metric([Index("_", "i")], [1, 2])
@@ -312,24 +353,29 @@ class Metric(Tensor):
             raise ValueError("Tensor form is not a metric")
         elif indices[0].cc != indices[1].cc:
             raise ValueError("Metric indices should be either both covariant or both contravariant")
-        else: Tensor.__init__(self, indices, elements)
+        else:Tensor.__init__(self, indices, elements)
+        
     def __repr__(self):
         return "Metric" + str(self.idx) + " = " + str(self.ele)
+    
     def change_indices(self, indices):
         """Change the indices of the metric, but keep its elements unchanged
 
         Examples
         ========
+        
         >>> m = Metric([Index("_", "i"), Index("_", "j")], [[1, 3], [3, 4]])
         >>> m.change_indices([Index("_", "j"), Index("_", "i")])
         Metric[_j, _i] = [[1, 3], [3, 4]]
         """
         return Metric(indices, self.ele)
+    
     def upperupper(self):
         """Raising the metric indices
 
         Examples
         ========
+        
         >>> Metric([Index("^", "i"), Index("^", "j")], [[1, 3], [3, 4]]).upperupper()
         Metric[^i, ^j] = [[1, 3], [3, 4]]
         >>> Metric([Index("_", "i"), Index("_", "j")], [[1, 3], [3, 4]]).upperupper()
@@ -342,11 +388,13 @@ class Metric(Tensor):
         if self.idx[0].cc == Index.contravariant: return self
         else:
             return Metric(list(map(lambda x: x.raising(), self.idx)), (Matrix(self.ele)**-1).tolist())
+        
     def lowerlower(self):
         """Lowering the metric indices
 
         Examples
         ========
+        
         >>> Metric([Index("_", "i"), Index("_", "j")], [[1, 3], [3, 4]]).lowerlower()
         Metric[^i, ^j] = [[1, 3], [3, 4]]
         >>> Metric([Index("^", "i"), Index("^", "j")], [[1, 3], [3, 4]]).lowerlower()

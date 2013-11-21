@@ -10,6 +10,7 @@ def christoffel(indices, metric, coordinate_list):
 
     Examples
     ========
+    
     >>> from sympy import symbols, sin, cos
     >>> r, theta, phi = symbols("r theta phi")
     >>> g = Metric([Index("_", "i"), Index("_", "j")], [[r**2, 0], [0, r**2 * sin(theta)**2]])
@@ -37,6 +38,7 @@ def riemann_tensor(indices, christoffel, coordinate_list):
 
     Examples
     ========
+    
     >>> from sympy import symbols, sin, cos
     >>> r, theta, phi = symbols("r theta phi")
     >>> g = Metric([Index("_", "i"), Index("_", "j")], [[r**2, 0], [0, r**2 * sin(theta)**2]])
@@ -63,6 +65,7 @@ def ricci_curvature_tensor(indices, riemann):
 
     Examples
     ========
+    
     >>> from sympy import symbols, sin, cos
     >>> r, theta, phi = symbols("r theta phi")
     >>> g = Metric([Index("_", "i"), Index("_", "j")], [[r**2, 0], [0, r**2 * sin(theta)**2]])
@@ -84,6 +87,7 @@ def ricci_scalar(metric, ricci_tensor):
 
     Examples
     ========
+    
     >>> from sympy import symbols, sin, cos
     >>> r, theta, phi = symbols("r theta phi")
     >>> g = Metric([Index("_", "i"), Index("_", "j")], [[r**2, 0], [0, r**2 * sin(theta)**2]])
