@@ -138,14 +138,19 @@ def test_expand():
     assert expand_func(besselj(n + S(1)/2, z).rewrite(jn)) == \
         sqrt(2)*sqrt(z)*jn(n, z)/sqrt(pi)
 
-    real1 = Symbol('real1', real = True)
-    real2 = Symbol('real2', real = True)
+    r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
+    i = Symbol('i', integer=True)
 
     for besselx in [besselj, bessely, besseli, besselk]:
-        assert besselx(real1, real2).is_real
-        assert besselx(real1, real2).is_real
-        assert besselx(real1, real2).as_real_imag() == \
-               (besselx(real1, real2), S.Zero)
+        assert besselx(i, p).is_real
+        assert besselx(i, x).is_real is None
+        assert besselx(x, z).is_real is None
+
+    for besselx in [besselj, besseli]:
+        assert besselx(i, r).is_real
+    for besselx in [bessely, besselk]:
+        assert besselx(i, r).is_real is None
 
 
 def test_fn():
