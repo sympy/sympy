@@ -4,7 +4,7 @@ from sympy import (
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
-    Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
+    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
@@ -1198,3 +1198,7 @@ def test_Mul():
     assert latex(e)  == r'- 2 x - 2'
     e = Mul(2, x + 1)
     assert latex(e)  == r'2 x + 2'
+
+def test_Pow():
+    e = Pow(2, 2, evaluate=False)
+    assert latex(e)  == r'2^{2}'
