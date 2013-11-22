@@ -273,16 +273,16 @@ def _mr_safe_helper(_s):
 
         _r = [int(_x) for _x in _s.split('[')[1].split(']')[0].split(',')]
         return _info(_r)
-        
+
 def modular_exponent(x, e, m):
     """
     Evaluates the expression (x ** e) % m
     Works for integer x, integer m and non-negative integer e
-    
+
     References
     ===========
     .. [1] http://www.math.umn.edu/~garrett/coding/Overheads/09_fastmod_prim.pdf
-        
+
     Examples
     =========
     >>> import sympy.ntheory.primetest as pt
@@ -291,7 +291,7 @@ def modular_exponent(x, e, m):
     >>> pt.modular_exponent(5, 3, 11)
     4
     """
-    
+
     (X, E, Y) = (x, e, 1)
     while E > 0:
         if E & 1:
