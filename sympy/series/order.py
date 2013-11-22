@@ -247,7 +247,7 @@ class Order(Expr):
 
     @property
     def free_symbols(self):
-        return self.expr.free_symbols
+        return self.expr.free_symbols | set(self.variables)
 
     def _eval_power(b, e):
         if e.is_Number and e.is_nonnegative:
