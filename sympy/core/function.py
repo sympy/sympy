@@ -1520,6 +1520,7 @@ def diff(f, *symbols, **kwargs):
     ========
 
     Derivative
+    sympy.geometry.util.idiff: computes the derivative implicitly
 
     """
     kwargs.setdefault('evaluate', True)
