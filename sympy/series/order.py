@@ -286,6 +286,12 @@ class Order(Expr):
         obj = Order(expr, *newargs)
         return self.contains(obj)
 
+    def __contains__(self, other):
+        result = self.contains(other)
+        if result is None:
+            raise TypeError('contains did not evaluate to a bool')
+        return result
+
     def _eval_subs(self, old, new):
         if old.is_Symbol and old in self.variables:
             i = self.variables.index(old)
