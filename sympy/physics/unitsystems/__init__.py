@@ -1,5 +1,25 @@
 # -*- coding: utf-8 -*-
 
+"""
+Dimensional analysis and unit systems.
+
+This module defines dimension/unit systems and physical quantities. It is
+based on a group-theoretical construction where dimensions are represented as
+vectors (coefficient being the exponents), and units are defined as a dimension
+to which we added a scale.
+
+Quantities are built from a factor and a unit, and are the basic objects that
+one will use when doing computations.
+
+All objects except systems and prefixes can be used in sympy expressions.
+
+Details about the implementation can be found in the documentation, and we
+will not repeat all the explanations we gave there concerning our approach.
+Ideas about future developments can be found on the `Github wiki
+<https://github.com/sympy/sympy/wiki/Unit-systems>`_, and you should consult
+this page if you are willing to help.
+"""
+
 from __future__ import division
 
 from sympy import Add, Mul, Pow
@@ -56,6 +76,7 @@ def qsimplify(expr):
         if isinstance(arg, Quantity):
             q_args.append(arg)
         elif isinstance(arg, Unit):
+            # replace unit by a quantity to make the simplification
             q_args.append(arg.as_quantity)
         else:
             o_args.append(arg)

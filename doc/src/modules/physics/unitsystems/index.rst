@@ -16,7 +16,7 @@ divides the units in unit systems, so that the user can decide which units
 to use, instead of having all in the name space. Moreover it allows a better
 control over the dimensions and conversions.
 
-Ideas and future developments can be found on the `Github wiki
+Ideas about future developments can be found on the `Github wiki
 <https://github.com/sympy/sympy/wiki/Unit-systems>`_.
 
 .. toctree::
@@ -27,3 +27,4 @@ Ideas and future developments can be found on the `Github wiki
     dimensions.rst
     prefixes.rst
     units.rst
+    quantities.rst

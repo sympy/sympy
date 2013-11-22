@@ -30,6 +30,14 @@ def test_error_definition():
     raises(TypeError, lambda: Unit("m"))
 
 
+def test_factor():
+    u = Unit(length, factor=10, abbrev="dm")
+    assert u.factor == 10
+
+    u = Unit(length, factor=5, prefix=k)
+    assert u.factor == 5000
+
+
 def test_abbrev():
     u = Unit(length)
     assert u.abbrev == ""
@@ -57,22 +65,6 @@ def test_str():
 def test_repr():
     u = Unit(length, factor=10, abbrev="m")
     assert repr(u) == u.abbrev_dim
-
-
-def test_factor():
-    u = Unit(length, factor=10, abbrev="dm")
-    assert u.factor == 10
-
-    u = Unit(length, factor=5, prefix=k)
-    assert u.factor == 5000
-
-
-def test_is_compatible():
-    u = Unit(length, factor=10)
-
-    assert u.is_compatible(Unit(length)) is True
-    assert u.is_compatible(Unit(time)) is False
-    assert u.is_compatible(2) is False
 
 
 def test_eq():
@@ -134,3 +126,19 @@ def test_div():
     assert u / Unit(length, factor=2) == 5
 
     assert 2/u == 2 * u**-1
+
+
+def test_is_compatible():
+    u = Unit(length, factor=10)
+
+    assert u.is_compatible(Unit(length)) is True
+    assert u.is_compatible(Unit(time)) is False
+    assert u.is_compatible(2) is False
+
+def test_as_quantity():
+    from sympy.physics.unitsystems.quantities import Quantity
+
+    u = Unit(length, factor=10)
+    q = Quantity(10, Unit(length))
+
+    assert u.as_quantity == q

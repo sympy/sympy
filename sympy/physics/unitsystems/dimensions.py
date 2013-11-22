@@ -5,14 +5,11 @@ Definition of physical dimensions.
 
 Unit systems will be constructed on top of these dimensions.
 
-Most of the examples in the doc used MKS system and are presented from the
+Most of the examples in the doc use MKS system and are presented from the
 computer point of view: from a human point, adding length to time is not legal
 in MKS but it is in natural system; for a computer in natural system there is
 no time dimension (but a velocity dimension instead) - in the basis - so the
 question of adding time to length has no meaning.
-
-We refer the reader to the documentation for detailed explanations about the
-philosophy.
 """
 
 from __future__ import division
@@ -40,6 +37,9 @@ class Dimension(AtomicExpr):
         {'length': 1}
         >>> time = Dimension(time=1)
 
+    Dimensions behave like a dictionary where the key is the name and the value
+    corresponds to the exponent.
+
     Dimensions can be composed using multiplication, division and
     exponentiation (by a number) to give new dimensions. Addition and
     subtraction is defined only when the two objects are the same dimension.
@@ -51,6 +51,8 @@ class Dimension(AtomicExpr):
         {'length': 1}
         >>> length**2
         {'length': 2}
+
+    Defining addition-like operations will help when doing dimension analysis.
 
     Note that two dimensions are equal if they have the same powers, even if
     their names and/or symbols differ.
@@ -369,7 +371,7 @@ class DimensionSystem(object):
             return "(%s)" % ", ".join(str(d) for d in self._base_dims)
 
     def __repr__(self):
-        return '<DimensionSystem: %s>' % repr(self._base_dims)
+        return "<DimensionSystem: %s>" % repr(self._base_dims)
 
     def __getitem__(self, key):
         """

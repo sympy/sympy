@@ -219,6 +219,16 @@ After defining several units of different dimensions we can form a unit system,
 which basically a dimension system with a notion of scale.
 
 
+Quantities
+==========
+
+A quantity is defined from a factor and a unit. According to this construction,
+they are very similar to unit since a the last end a quantity is just a scale
+(made from the quantity and unit factors) and a dimension. What distinguish
+units is that they play the role of some fixed references, and we always have
+a definite number of them.
+
+
 Literature
 ==========
 

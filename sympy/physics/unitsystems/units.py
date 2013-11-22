@@ -72,6 +72,17 @@ class Unit(AtomicExpr):
         return obj
 
     @property
+    def factor(self):
+        """
+        Overall magnitude of the unit.
+        """
+
+        if self.prefix is not None:
+            return self.prefix.factor * self._factor
+        else:
+            return self._factor
+
+    @property
     def abbrev(self):
         """
         Symbol representing the unit name.
@@ -102,30 +113,6 @@ class Unit(AtomicExpr):
 
     def __repr__(self):
         return self.abbrev_dim
-
-    @property
-    def factor(self):
-        """
-        Overall magnitude of the unit.
-        """
-
-        if self.prefix is not None:
-            return self.prefix.factor * self._factor
-        else:
-            return self._factor
-
-    def is_compatible(self, other):
-        """
-        Test if argument is a unit and has the same dimension as self.
-
-        This function is used to verify that some operations can be done.
-        """
-
-        if isinstance(other, Unit):
-            if self.dim == other.dim:
-                return True
-
-        return False
 
     def __eq__(self, other):
         return (isinstance(other, Unit) and self.factor == other.factor
@@ -228,6 +215,19 @@ class Unit(AtomicExpr):
         return self**-1 * other
 
     __rtruediv__ = __rdiv__
+
+    def is_compatible(self, other):
+        """
+        Test if argument is a unit and has the same dimension as self.
+
+        This function is used to verify that some operations can be done.
+        """
+
+        if isinstance(other, Unit):
+            if self.dim == other.dim:
+                return True
+
+        return False
 
     @property
     def as_quantity(self):
@@ -421,4 +421,8 @@ class UnitSystem(object):
 
     @property
     def is_consistent(self):
+        """
+        Check if the underlying dimension system is consistent.
+        """
+
         return self._system.is_consistent

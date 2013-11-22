@@ -14,6 +14,11 @@ from .units import Unit
 
 
 class Quantity(AtomicExpr):
+    """
+    Physical quantity.
+
+    A quantity is defined from a factor and a unit.
+    """
 
     is_commutative = True
 
@@ -57,6 +62,14 @@ class Quantity(AtomicExpr):
         return Quantity(-self.factor, self.unit)
 
     def __add__(self, other):
+        """
+        Add two quantities.
+
+        If the other object is not a quantity, raise an error.
+        Two quantities can be added only if they have the same unit: so we
+        convert first the other quantity to the same unit and, if it succedded,
+        then we add the factors.
+        """
 
         if isinstance(other, Quantity):
             return Quantity(self.factor + other.convert_to(self.unit).factor,
