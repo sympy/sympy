@@ -75,6 +75,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             raise
         return exprbuffer.getvalue()
 
+    def _matplotlib_wrapper(o):
+        # mathtext does not understand centain latex flags, so we try to
+        # replace them with suitable subs
+        o = o.replace(r'\operatorname', '')
+        o = o.replace(r'\overline', r'\bar')
+        return latex_to_png(o)
+
+
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
@@ -94,11 +102,18 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
 
     def _print_latex_png(o):
         """
-        A function that returns a png rendered by an external latex distribution
+        A function that returns a png rendered by an external latex
+        distribution, falling back to matplotlib rendering
         """
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode)
-            return _preview_wrapper(s)
+            try:
+                return _preview_wrapper(s)
+            except RuntimeError:
+                if latex_mode != 'inline':
+                    s = latex(o, mode='inline')
+                return _matplotlib_wrapper(s)
+
 
     def _print_latex_matplotlib(o):
         """
@@ -106,11 +121,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         """
         if _can_print_latex(o):
             s = latex(o, mode='inline')
-            # mathtext does not understand centain latex flags, so we try to
-            # replace them with suitable subs
-            s = s.replace(r'\operatorname', '')
-            s = s.replace(r'\overline', r'\bar')
-            return latex_to_png(s)
+            return _matplotlib_wrapper(s)
 
     def _print_latex_text(o):
         """
@@ -214,7 +225,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         If True, use default latex rendering in GUI interfaces (png and
         mathjax);
         if False, do not use latex rendering;
-        if 'png', enable latex rendering with an external latex compiler;
+        if 'png', enable latex rendering with an external latex compiler,
+        falling back to matplotlib if external compilation fails;
         if 'matplotlib', enable latex rendering with matplotlib;
         if 'mathjax', enable latex text generation, for example MathJax
         rendering in IPython notebook or text rendering in LaTeX documents
