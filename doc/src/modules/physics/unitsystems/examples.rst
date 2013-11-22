@@ -49,3 +49,35 @@ should be :math:`L^3 M^{-1} T^{-2}`.
     >>> const = dim_simplify(sol.subs({m: mass, M: mass, r: length, F: force}))
     >>> const
     {'length': 3, 'mass': -1, 'time': -2}
+
+Note that one should first solve the equation, and then substitute with the
+dimensions.
+
+
+Equation with quantities
+========================
+
+Using Kepler's third law
+
+.. math::
+    \frac{T^2}{a^3} = \frac{4 \pi^2}{GM}
+
+we can find the Venus orbital period using the known values for the other
+variables (taken from Wikipedia). The result should be 224.701 days.
+
+    >>> from __future__ import division
+    >>> from sympy import solve, Symbol, symbols, pi
+    >>> from sympy.physics.unitsystems import qsimplify, Unit, Quantity as Q
+    >>> from sympy.physics.unitsystems.systems import mks
+    >>> m, kg, s = mks["m"], mks["kg"], mks["s"]
+    >>> T = Symbol("T")
+    >>> venus_a = Q(108208000e3, m)
+    >>> solar_mass = Q(1.9891e30, kg)
+    >>> Tr = solve(T**2/venus_a**3 - 4*pi**2 / mks["G"] / solar_mass, T)[1]
+    >>> q = qsimplify(Tr)
+    >>> day = Unit(s.dim, abbrev="day", factor=86400)
+    >>> q.convert_to(day)
+    224.667 day
+
+We could also have the solar mass and the day as units coming from the
+astrophysical system, but I wanted to show how to create a unit that one needs.

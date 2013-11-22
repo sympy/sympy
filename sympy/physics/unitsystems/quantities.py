@@ -43,10 +43,10 @@ class Quantity(AtomicExpr):
         return obj
 
     def __str__(self):
-        return '%g %s' % (self.factor, self.unit)
+        return "%g %s" % (self.factor, self.unit)
 
     def __repr__(self):
-        return '%g %s' % (self.factor, repr(self.unit))
+        return "%g %s" % (self.factor, repr(self.unit))
 
     def __eq__(self, other):
 
@@ -121,7 +121,10 @@ class Quantity(AtomicExpr):
 
         other = sympify(other)
         if isinstance(other, (Number, numbers.Real)):
-            return Quantity(self.factor**other, self.unit**other)
+            f = self.factor**other
+            # without evalf a Pow instance is returned, and it can not be
+            # handled by Quantity.__new__
+            return Quantity(f.evalf(), self.unit**other)
         else:
             return Pow(self, other)
 

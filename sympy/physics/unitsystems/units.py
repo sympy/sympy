@@ -229,6 +229,28 @@ class Unit(AtomicExpr):
 
     __rtruediv__ = __rdiv__
 
+    @property
+    def as_quantity(self):
+        """
+        Convert the unit to a quantity.
+
+        The quantity unit is given by the unit of factor 1 and with identical
+        dimension.
+
+            >>> from sympy.physics.unitsystems.dimensions import Dimension
+            >>> from sympy.physics.unitsystems.units import Unit
+            >>> length = Dimension(length=1)
+            >>> u = Unit(length, factor=10)
+            >>> q = u.as_quantity
+            >>> q.factor
+            10
+            >>> q.unit == Unit(length)
+            True
+        """
+
+        from .quantities import Quantity
+        return Quantity(self.factor, Unit(self.dim))
+
 
 class Constant(Unit):
     """

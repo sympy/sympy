@@ -4,6 +4,8 @@ from __future__ import division
 
 from sympy import Add, Mul, Pow
 from sympy.physics.unitsystems.dimensions import Dimension
+from sympy.physics.unitsystems.units import Unit
+from sympy.physics.unitsystems.quantities import Quantity
 
 
 def dim_simplify(expr):
@@ -29,5 +31,49 @@ def dim_simplify(expr):
     elif isinstance(expr, Mul):
         args = [arg for arg in args if isinstance(arg, Dimension)]
         return reduce(lambda x, y: x*y, args)
+    else:
+        return expr
+
+
+def qsimplify(expr):
+    """
+    Simplify expression by recursively evaluating the quantity arguments.
+
+    If units are encountered, as it can be when using Constant, they are
+    converted to quantity.
+    """
+
+    args = []
+    for arg in expr.args:
+        arg = arg.evalf()
+        if isinstance(arg, (Mul, Pow, Add)):
+            arg = qsimplify(arg)
+        args.append(arg)
+
+    q_args, o_args = [], []
+
+    for arg in args:
+        if isinstance(arg, Quantity):
+            q_args.append(arg)
+        elif isinstance(arg, Unit):
+            q_args.append(arg.as_quantity)
+        else:
+            o_args.append(arg)
+
+
+    if isinstance(expr, Pow):
+        return args[0]**args[1]
+    elif isinstance(expr, Add):
+        if q_args != []:
+            quantities = reduce(lambda x, y: x+y, q_args)
+        else:
+            quantities = []
+        return reduce(lambda x, y: x+y, o_args, quantities)
+    elif isinstance(expr, Mul):
+        if q_args != []:
+            quantities = reduce(lambda x, y: x*y, q_args)
+        else:
+            quantities = []
+        return reduce(lambda x, y: x*y, o_args, quantities)
     else:
         return expr

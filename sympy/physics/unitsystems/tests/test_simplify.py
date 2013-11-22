@@ -4,8 +4,9 @@ from __future__ import division
 
 from sympy import Add, Pow, Mul
 
-from sympy.physics.unitsystems import dim_simplify
-from sympy.physics.unitsystems.systems import mks_dim
+from sympy.physics.unitsystems import dim_simplify, qsimplify
+from sympy.physics.unitsystems.quantities import Quantity as Q
+from sympy.physics.unitsystems.systems import mks, mks_dim
 
 L, T = mks_dim["length"], mks_dim["time"]
 
@@ -24,3 +25,30 @@ def test_dim_simplify_pow():
 
 def test_dim_simplify_rec():
     assert dim_simplify(Mul(Add(L, L), T)) == L * T
+
+
+m, s = mks["m"], mks["s"]
+
+q1 = Q(10, m)
+q2 = Q(5, m)
+
+
+def test_qsimplify_add():
+    assert qsimplify(Add(q1, q2)) == q1 + q2
+
+
+def test_qsimplify_mul():
+    q3 = Q(2, s)
+
+    assert qsimplify(Mul(q1, q2)) == q1 * q2
+    assert qsimplify(Mul(q1, q3)) == q1 * q3
+
+
+def test_qsimplify_pow():
+    assert qsimplify(Pow(q1, 2)) == q1**2
+
+
+def test_qsimplify_rec():
+    q3 = Q(2, s)
+
+    assert qsimplify(Mul(Add(q1, q2), q3)) == (q1 + q2) * q3
