@@ -23,6 +23,7 @@ Ideas and future developments can be found on the `Github wiki
     :maxdepth: 2
 
     philosophy.rst
+    examples.rst
     dimensions.rst
     prefixes.rst
     units.rst
