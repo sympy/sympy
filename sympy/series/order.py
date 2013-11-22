@@ -116,7 +116,7 @@ class Order(Expr):
 
         if expr.is_Order:
             if expr.point != point:
-                raise(NotImplementedError("Mixing Order at 0 and oo is not supported."))
+                raise NotImplementedError("Mixing Order at 0 and oo is not supported.")
             v = set(expr.variables)
             symbols = v | set(symbols)
             if symbols == v:
@@ -226,7 +226,7 @@ class Order(Expr):
             order_symbols = self.args[1:]
         else:
             if order_symbols[-1] != self.point:
-                raise(NotImplementedError("Multiplying Order at 0 and oo is not supported."))
+                raise NotImplementedError("Multiplying Order at 0 and oo is not supported.")
             for s in self.variables:
                 if s not in order_symbols:
                     order_symbols = (s,) + order_symbols
