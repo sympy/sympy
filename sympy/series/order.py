@@ -102,8 +102,12 @@ class Order(Expr):
         expr = sympify(expr)
 
         if not args:
-            variables = list(expr.free_symbols)
-            point = [S.Zero]*len(variables)
+            if expr.is_Order:
+                variables = expr.variables
+                point = expr.point
+            else:
+                variables = list(expr.free_symbols)
+                point = [S.Zero]*len(variables)
         else:
             args = list(args if is_sequence(args) else [args])
             variables, point = [], []
