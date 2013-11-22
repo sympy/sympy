@@ -1,5 +1,16 @@
 from sympy import (Symbol, Function, Derivative, Eq, cos, sin)
+from sympy.utilities.pytest import raises
 from sympy.calculus.euler import euler_equations
+
+def test_euler_interface():
+    x = Function('x')
+    y = Symbol('y')
+    t = Symbol('t')
+    raises(TypeError, lambda: euler_equations())
+    raises(TypeError, lambda: euler_equations(x(t).diff(t)*y(t), [x(t), y]))
+    raises(ValueError, lambda: euler_equations(x(t).diff(t)*x(y), [x(t), x(y)]))
+    raises(TypeError, lambda: euler_equations(x(t).diff(t)**2, x(0)))
+
 
 def test_euler_pendulum():
     x = Function('x')
