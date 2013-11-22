@@ -163,6 +163,11 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
                 png_formatter.for_type(cls, _print_latex_matplotlib)
         else:
             debug("init_printing: not using any png formatter")
+            for cls in printable_types:
+                # Better way to set this, but currently does not work in IPython
+                #png_formatter.for_type(cls, None)
+                if cls in png_formatter.type_printers:
+                    png_formatter.type_printers.pop(cls)
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         if use_latex in (True, 'mathjax'):
@@ -170,7 +175,13 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
         else:
-            debug("init_printing: not using mathjax formatter")
+            debug("init_printing: not using text/latex formatter")
+            for cls in printable_types:
+                # Better way to set this, but currently does not work in IPython
+                #latex_formatter.for_type(cls, None)
+                if cls in latex_formatter.type_printers:
+                    latex_formatter.type_printers.pop(cls)
+
     else:
         ip.set_hook('result_display', _result_display)
 
@@ -200,11 +211,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         If True, use unicode characters;
         if False, do not use unicode characters.
     use_latex: string, boolean, or None
-        If True, use default latex rendering in GUI interfaces (png and mathjax);
+        If True, use default latex rendering in GUI interfaces (png and
+        mathjax);
         if False, do not use latex rendering;
         if 'png', enable latex rendering with an external latex compiler;
         if 'matplotlib', enable latex rendering with matplotlib;
-        if 'mathjax', enable latex text generation for MathJax rendering (in IPython notebook).
+        if 'mathjax', enable latex text generation, for example MathJax
+        rendering in IPython notebook or text rendering in LaTeX documents
     wrap_line: boolean
         If True, lines will wrap at the end;
         if False, they will not wrap but continue as one line.
