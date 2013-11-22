@@ -44,7 +44,7 @@ def test_str_repr():
     assert str(dimsys) == "(L, time)"
 
     assert (repr(DimensionSystem((length, time), name="MS"))
-            == "<DimensionSystem: ({length: 1}, {time: 1})>")
+            == "<DimensionSystem: ({'length': 1}, {'time': 1})>")
 
 
 def test_get_dim():

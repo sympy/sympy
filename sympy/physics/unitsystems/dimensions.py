@@ -19,11 +19,11 @@ from __future__ import division
 from copy import copy
 import numbers
 
-from sympy.core.containers import Dict, Tuple
-from sympy import sympify, Number, Matrix
+from sympy.core.containers import Tuple
+from sympy import sympify, Number, Matrix, AtomicExpr
 
 
-class Dimension(Dict):
+class Dimension(AtomicExpr):
     """
     This class represent the dimension of a physical quantities.
 
@@ -37,7 +37,7 @@ class Dimension(Dict):
         >>> from sympy.physics.unitsystems.dimensions import Dimension
         >>> length = Dimension(length=1)
         >>> length
-        {length: 1}
+        {'length': 1}
         >>> time = Dimension(time=1)
 
     Dimensions can be composed using multiplication, division and
@@ -45,12 +45,12 @@ class Dimension(Dict):
     subtraction is defined only when the two objects are the same dimension.
 
         >>> velocity = length / time
-        >>> velocity
-        {length: 1, time: -1}
+        >>> velocity  #doctest: +SKIP
+        {'length': 1, 'time': -1}
         >>> length + length
-        {length: 1}
+        {'length': 1}
         >>> length**2
-        {length: 2}
+        {'length': 2}
 
     Note that two dimensions are equal if they have the same powers, even if
     their names and/or symbols differ.
@@ -78,11 +78,12 @@ class Dimension(Dict):
 
             >>> from sympy.physics.unitsystems.dimensions import Dimension
             >>> Dimension(length=1)
-            {length: 1}
+            {'length': 1}
             >>> Dimension({"length": 1})
-            {length: 1}
-            >>> Dimension([("length", 1), ("time", -1)])
-            {length: 1, time: -1}
+            {'length': 1}
+            >>> Dimension([("length", 1), ("time", -1)])  #doctest: +SKIP
+            {'length': 1, 'time': -1}
+
         """
 
         # before setting the dict, check if a name and/or a symbol are defined
@@ -129,12 +130,58 @@ class Dimension(Dict):
         # filter dimensions set to zero; this avoid the following odd result:
         # Dimension(length=1) == Dimension(length=1, mass=0) => False
         pairs = [pair for pair in pairs if pair[1] != 0]
+        pairs.sort(key=str)
 
-        new = Dict.__new__(cls, *pairs)
+        new = AtomicExpr.__new__(cls, *pairs)
         new.name = name
         new.symbol = symbol
 
+        new._dict = dict(pairs)
+        new._pairs = tuple(pairs)
+
         return new
+
+    def __getitem__(self, key):
+        """x.__getitem__(y) <==> x[y]"""
+        return self._dict[key]
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError("Dimension are Immutable")
+
+    @property
+    def args(self):
+        return self._pairs
+
+    def items(self):
+        """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
+        return self._dict.items()
+
+    def keys(self):
+        """D.keys() -> list of D's keys"""
+        return self._dict.keys()
+
+    def values(self):
+        """D.values() -> list of D's values"""
+        return self._dict.values()
+
+    def __iter__(self):
+        """x.__iter__() <==> iter(x)"""
+        return iter(self._dict)
+
+    def __len__(self):
+        """x.__len__() <==> len(x)"""
+        return self._dict.__len__()
+
+    def get(self, key, default=None):
+        """D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None."""
+        return self._dict.get(key, default)
+
+    def __contains__(self, key):
+        """D.__contains__(k) -> True if D has a key k, else False"""
+        return key in self._dict
+
+    def __lt__(self, other):
+        return self.args < other.args
 
     def __str__(self):
         """
@@ -158,19 +205,9 @@ class Dimension(Dict):
         else:
             return repr(self)
 
-    @property
-    def is_dimensionless(self):
-        """
-        Check if the dimension object really has a dimension.
+    def __repr__(self):
 
-        A dimension should have at least one component with non-zero power.
-        """
-
-        for key in self:
-            if self[key] != 0:
-                return False
-        else:
-            return True
+        return repr(self._dict)
 
     def __neg__(self):
         return self
@@ -257,6 +294,20 @@ class Dimension(Dict):
         return other * pow(self, -1)
 
     __rtruediv__ = __rdiv__
+
+    @property
+    def is_dimensionless(self):
+        """
+        Check if the dimension object really has a dimension.
+
+        A dimension should have at least one component with non-zero power.
+        """
+
+        for key in self:
+            if self[key] != 0:
+                return False
+        else:
+            return True
 
 
 class DimensionSystem(object):

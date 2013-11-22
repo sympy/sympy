@@ -14,6 +14,27 @@ def test_definition():
     assert length.symbol == "L"
 
 
+def test_dict_properties():
+    dic = {"length": 1, "time": -2}
+    d = Dimension(dic)
+
+    assert d["length"] == 1
+
+    assert d.args == (("length", 1), ("time", -2))
+
+    assert d.items() == dic.items()
+    assert d.keys() == dic.keys()
+    assert d.values() == dic.values()
+
+    assert len(d) == 2
+
+    assert d.get("length") == 1
+    assert d.get("mass") is None
+
+    assert ("length" in d) is True
+    assert ("mass" in d) is False
+
+
 def test_error_definition():
     # tuple with more or less than two entries
     raises(ValueError, lambda: Dimension(("length", 1, 2)))
@@ -28,9 +49,8 @@ def test_error_definition():
     # non-number with named argument
     raises(TypeError, lambda: Dimension(length=(1, 2)))
 
-
 def test_str():
-    assert str(Dimension(length=1)) == "{length: 1}"
+    assert str(Dimension(length=1)) == "{'length': 1}"
     assert str(Dimension(length=1, symbol="L")) == "L"
     assert str(Dimension(length=1, name="length")) == "length"
     assert str(Dimension(length=1, symbol="L", name="length")) == 'L'
