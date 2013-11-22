@@ -44,6 +44,12 @@ import sympy
 if not sympy.test('*theano*'):
     raise Exception('Tests failed')
 EOF
+    elif [[ "${TEST_PYPY}" == "true" ]]; then
+        cat << EOF | pypy --jit off
+import sympy
+if not sympy.test(split='${SPLIT}'):
+    raise Exception('Tests failed')
+EOF
     else
         cat << EOF | python
 import sympy
