@@ -80,7 +80,48 @@ def integer_nthroot(y, n):
 
 
 class Pow(Expr):
+    """
+    Defines the expression x**y as "x raised to a power y"
 
+
+    Singleton definitions involving (nan,0,1,-1,oo,-oo):
+        z**nan      = nan
+        z**0        = 1  although arguments over 0**0 exist
+        z**1        = z
+        (-oo)**(-1) = 0
+        (-1)**-1    = -1
+        S.Zero**-1  = oo  -- this is not strictly true,
+                        as 0**-1 may be undefined, but is convenient
+                        is some contexts where the base is assumed
+                        to be positive.
+        1**-1       = 1
+        oo**-1      = 0
+        nan**-1     = nan
+        nan**oo     = nan
+        nan**-oo    = nan
+        0**oo       = 0 because for all complex numbers z near 0, z**oo -> 0
+        0**-oo      = oo  -- this is strictly true, as
+                        as 0**oo may be oscillating between positive and
+                        negative values or rotating in the complex plane.
+                        It is convenient, however, when the base
+                        is positive.
+        1**oo       = nan because there are various cases where
+                        lim(x(t),t)=1, lim(y(t),t)=oo, but
+                        lim( x(t)**y(t), t) != 1
+        1**-oo      = nan for the same reason
+        (-1)**oo    = nan because of oscillations in the limit
+        (-1)**(-oo) = nan because of oscillations in the limit
+        oo**oo      = oo
+        oo**-oo     = 0
+        (-oo)**oo   = nan
+        (-oo)**-oo  = nan
+
+    Because symbolic computations are more flexible that floating point
+    calculations and we prefer to never return an incorrect answer,
+    we choose not to conform to all IEEE 754 conventions.  This helps
+    us avoid extra test-case code in the calculation of limits.
+
+    """
     is_Pow = True
 
     __slots__ = ['is_commutative']
@@ -99,10 +140,9 @@ class Pow(Expr):
             elif e is S.One:
                 return b
             elif b is S.One:
-                if e not in ( S.NaN, S.Infinity, -S.Infinity):
-                    return S.One
-                else:
+                if e in ( S.NaN, S.Infinity, -S.Infinity):
                     return S.NaN
+                return S.One
             elif S.NaN in (b, e):
                 return S.NaN
             else:
