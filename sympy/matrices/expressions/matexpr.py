@@ -27,16 +27,26 @@ def _sympifyit(arg, retval=None):
 
 
 class MatrixExpr(Basic):
-    """ Matrix Expression Class
-    Matrix Expressions subclass SymPy Expr's so that
-    MatAdd inherits from Add
-    MatMul inherits from Mul
-    MatPow inherits from Pow
+    """ Superclass for Matrix Expressions
 
-    They use _op_priority to gain control with binary operations (+, *, -, **)
-    are used
+    MatrixExprs represent abstract matrices, linear transformations represented
+    within a particular basis.
 
-    They implement operations specific to Matrix Algebra.
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> A = MatrixSymbol('A', 3, 3)
+    >>> y = MatrixSymbol('y', 3, 1)
+    >>> x = (A.T*A).I * A * y
+
+    See Also
+    ========
+        MatrixSymbol
+        MatAdd
+        MatMul
+        Transpose
+        Inverse
     """
 
     _op_priority = 11.0
