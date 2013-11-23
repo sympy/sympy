@@ -32,12 +32,16 @@ class MatrixExpr(Basic):
     MatrixExprs represent abstract matrices, linear transformations represented
     within a particular basis.
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol
     >>> A = MatrixSymbol('A', 3, 3)
     >>> y = MatrixSymbol('y', 3, 1)
     >>> x = (A.T*A).I * A * y
 
-    See Also:
+    See Also
+    ========
         MatrixSymbol
         MatAdd
         MatMul
