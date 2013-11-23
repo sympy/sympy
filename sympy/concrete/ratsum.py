@@ -189,6 +189,9 @@ def step_5(l, x, alpha, g1, g2, ci, linsol):
             solution = l**x * g1.subs(vals)
         else:
             solution = l**x * g1.subs(vals) / g2.as_expr()
+        # Remove constant of summation
+        if len(params) == 1:
+            solution = solution.subs(params[0], 0)
     else:
         if Abs(l) == 1:
             solution = None
