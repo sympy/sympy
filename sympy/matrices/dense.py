@@ -68,19 +68,19 @@ class DenseMatrix(MatrixBase):
         >>> m[::2]
         [1, 3]
         """
-        if type(key) is tuple:
+        if isinstance(key, tuple):
             i, j = key
             try:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
             except (TypeError, IndexError):
-                if type(i) is slice:
+                if isinstance(i, slice):
                     i = range(self.rows)[i]
                 elif is_sequence(i):
                     pass
                 else:
                     i = [i]
-                if type(j) is slice:
+                if isinstance(j, slice):
                     j = range(self.cols)[j]
                 elif is_sequence(j):
                     pass
@@ -89,7 +89,7 @@ class DenseMatrix(MatrixBase):
                 return self.extract(i, j)
         else:
             # row-wise decomposition of matrix
-            if type(key) is slice:
+            if isinstance(key, slice):
                 return self._mat[key]
             return self._mat[a2idx(key)]
 
