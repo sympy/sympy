@@ -375,6 +375,10 @@ def test_evalf_symbolic():
     assert expr.evalf() == expr
 
 
+def test_evalf_issue_3273():
+    assert Sum(0, (k, 1, oo)).evalf() == 0
+
+
 def test_simple_products():
     assert Product(S.NaN, (x, 1, 3)) is S.NaN
     assert product(S.NaN, (x, 1, 3)) is S.NaN

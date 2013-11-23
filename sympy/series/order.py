@@ -115,6 +115,8 @@ class Order(Expr):
             symbols = list(expr.free_symbols)
 
         if expr.is_Order:
+            if expr.point != point:
+                raise NotImplementedError("Mixing Order at 0 and oo is not supported.")
             v = set(expr.variables)
             symbols = v | set(symbols)
             if symbols == v:
@@ -139,7 +141,8 @@ class Order(Expr):
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
-                expr = expr.as_leading_term(*symbols)
+                if point == S.Zero:
+                    expr = expr.as_leading_term(*symbols)
                 expr = expr.as_independent(*symbols, as_Add=False)[1]
 
                 expr = expand_power_base(expr)
@@ -222,6 +225,8 @@ class Order(Expr):
         if order_symbols is None:
             order_symbols = self.args[1:]
         else:
+            if order_symbols[-1] != self.point:
+                raise NotImplementedError("Multiplying Order at 0 and oo is not supported.")
             for s in self.variables:
                 if s not in order_symbols:
                     order_symbols = (s,) + order_symbols
@@ -280,6 +285,12 @@ class Order(Expr):
         newargs = self.args[1:]
         obj = Order(expr, *newargs)
         return self.contains(obj)
+
+    def __contains__(self, other):
+        result = self.contains(other)
+        if result is None:
+            raise TypeError('contains did not evaluate to a bool')
+        return result
 
     def _eval_subs(self, old, new):
         if old.is_Symbol and old in self.variables:

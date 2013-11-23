@@ -59,7 +59,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     if len(factors) == 1:
         return factors[0]
 
-    points = {}
+    points = {x:v}
     symbols = dom.symbols if hasattr(dom, 'symbols') else []
     t = QQ(1, 10)
 
@@ -74,7 +74,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
             candidates = []
             eps = t**(prec1 // 2)
             for f in factors:
-                if abs(f.as_expr().subs(x, v).subs(points).evalf(prec1)) < eps:
+                if abs(f.as_expr().evalf(prec1, points)) < eps:
                     candidates.append(f)
             if candidates:
                 factors = candidates
