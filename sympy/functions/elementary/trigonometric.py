@@ -719,8 +719,12 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     nargs = 1
     _reciprocal_of = None       # mandatory, to be defined in subclass
-    _is_reciprocal_even = None  # optional, to be defined in subclass
-    _is_reciprocal_odd = None   # optional, to be defined in subclass
+
+    # _is_even and _is_odd are used for correct evaluation of csc(-x), sec(-x)
+    # TODO refactor into TrigonometricFunction common parts of
+    # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
+    _is_even = None  # optional, to be defined in subclass
+    _is_odd = None   # optional, to be defined in subclass
 
     def _call_reciprocal(self, method_name, *args, **kwargs):
         # Calls method_name on _reciprocal_of
@@ -794,9 +798,9 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     @classmethod
     def eval(cls, arg):
         if arg.could_extract_minus_sign():
-            if cls._is_reciprocal_even:
+            if cls._is_even:
                 return cls(-arg)
-            if cls._is_reciprocal_odd:
+            if cls._is_odd:
                 return -cls(-arg)
 
         pi_coeff = _pi_coeff(arg)
@@ -817,7 +821,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
 class sec(ReciprocalTrigonometricFunction):
     _reciprocal_of = cos
-    _is_reciprocal_even = True
+    _is_even = True
 
     def _eval_rewrite_as_cos(self, arg):
         return (1/cos(arg))
@@ -840,7 +844,7 @@ class sec(ReciprocalTrigonometricFunction):
 
 class csc(ReciprocalTrigonometricFunction):
     _reciprocal_of = sin
-    _is_reciprocal_odd = True
+    _is_odd = True
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
