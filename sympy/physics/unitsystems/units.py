@@ -280,10 +280,6 @@ class UnitSystem(object):
         self.name = name
         self.descr = descr
 
-        self._base_units = self.sort_units(base)
-        self._units = self.sort_units(list(units) + [u for u in base
-                                                     if u not in units])
-
         # construct the associated dimension system
         self._system = DimensionSystem([u.dim for u in base],
                                        [u.dim for u in units])
@@ -291,6 +287,11 @@ class UnitSystem(object):
         if self.is_consistent is False:
             raise ValueError("The system with basis '%s' is not consistent"
                              % str(self._base_units))
+
+        self._units = tuple(list(units) + [u for u in base if u not in units])
+
+        base_dict = dict((u.dim, u) for u in base)
+        self._base_units = tuple(base_dict[d] for d in self._system._base_dims)
 
     def __str__(self):
         """
@@ -362,27 +363,6 @@ class UnitSystem(object):
         units = self._units + tuple(units)
 
         return UnitSystem(base, units, name, description)
-
-    @staticmethod
-    def sort_units(units):
-        """
-        Sort units according to the str of their dimensions.
-
-        This function will ensure that we get always the same tuple for a given
-        set of dimensions.
-        """
-
-        from .dimensions import DimensionSystem
-
-        units = dict((u.dim, u) for u in units)
-        sorted_dims = DimensionSystem.sort_dims(units.keys())
-
-        sorted_units = []
-
-        for dim in sorted_dims:
-            sorted_units.append(units[dim])
-
-        return tuple(sorted_units)
 
     def print_unit_base(self, unit):
         """

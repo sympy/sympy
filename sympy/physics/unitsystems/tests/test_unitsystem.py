@@ -18,11 +18,15 @@ c = Unit(velocity, abbrev="c")
 
 
 def test_definition():
-    base = (m, s)
-    base_dim = (length, time)
-    ms = UnitSystem(base, (c,), "MS", "MS system")
+    # want to test if the system can have several units of the same dimension
+    dm = Unit(m, factor=0.1)
 
-    assert ms._base_units == (m, s)
+    base = (m, s)
+    base_dim = (m.dim, s.dim)
+    ms = UnitSystem(base, (c, dm), "MS", "MS system")
+
+    assert set(ms._base_units) == set(base)
+    assert set(ms._units) == set((m, s, c, dm))
     #assert ms._units == DimensionSystem._sort_dims(base + (velocity,))
     assert ms.name == "MS"
     assert ms.descr == "MS system"
@@ -55,10 +59,6 @@ def test_get_unit():
     raises(KeyError, lambda: ms["g"])
 
 
-def test_sort_units():
-    assert UnitSystem.sort_units((m, c, s)) == (m, s, c)
-
-
 def test_print_unit_base():
     A = Unit(current)
     Js = Unit(action)
@@ -73,8 +73,8 @@ def test_extend():
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))
-    assert mks._base_units == res._base_units
-    assert mks._units == res._units
+    assert set(mks._base_units) == set(res._base_units)
+    assert set(mks._units) == set(res._units)
 
 
 def test_dim():

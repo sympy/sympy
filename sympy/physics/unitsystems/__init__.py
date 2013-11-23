@@ -24,7 +24,7 @@ from __future__ import division
 
 from sympy import Add, Mul, Pow
 from sympy.physics.unitsystems.dimensions import Dimension
-from sympy.physics.unitsystems.units import Unit
+from sympy.physics.unitsystems.units import Unit, Constant
 from sympy.physics.unitsystems.quantities import Quantity
 
 
