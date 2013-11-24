@@ -453,7 +453,7 @@ def implicit_application(result, local_dict, global_dict):
     ... standard_transformations, implicit_application)
     >>> transformations = standard_transformations + (implicit_application,)
     >>> parse_expr('cot z + csc z', transformations=transformations)
-    csc(z) + cot(z)
+    cot(z) + csc(z)
     """
     for step in (_group_parentheses(implicit_application),
                  _apply_functions,

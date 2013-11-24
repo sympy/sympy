@@ -1,7 +1,8 @@
-from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
-        acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
+from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
+        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg, conjugate)
+        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
+        conjugate, series)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.core.compatibility import xrange
@@ -969,7 +970,124 @@ def test_tancot_rewrite_sqrt():
                         assert 1e-3 > abs( cot(x.evalf(7)) - c1.evalf(4) ), "fails for %d*pi/%d" % (i, n)
 
 def test_sec():
+    x = symbols('x', real=True)
+    z = symbols('z')
+
+    assert sec.nargs == 1
+
+    assert sec(0) == 1
+    assert sec(pi) == -1
+    assert sec(pi/2) == oo
+    assert sec(-pi/2) == oo
+    assert sec(pi/6) == 2*sqrt(3)/3
+    assert sec(pi/3) == 2
+    assert sec(5*pi/2) == oo
+    assert sec(9*pi/7) == -sec(2*pi/7)
+    assert sec(I) == 1/cosh(1)
+    assert sec(x*I) == 1/cosh(x)
+    assert sec(-x) == sec(x)
+
+    assert sec(x).rewrite(exp) == 1/(exp(I*x)/2 + exp(-I*x)/2)
+    assert sec(x).rewrite(sin) == sec(x)
+    assert sec(x).rewrite(cos) == 1/cos(x)
+    assert sec(x).rewrite(tan) == (tan(x/2)**2 + 1)/(-tan(x/2)**2 + 1)
+    assert sec(x).rewrite(pow) == sec(x)
+    assert sec(x).rewrite(sqrt) == sec(x)
+
+    assert sec(z).conjugate() == sec(conjugate(z))
+
+    assert (sec(z).as_real_imag() ==
+    (cos(re(z))*cosh(im(z))/(sin(re(z))**2*sinh(im(z))**2 +
+                             cos(re(z))**2*cosh(im(z))**2),
+     sin(re(z))*sinh(im(z))/(sin(re(z))**2*sinh(im(z))**2 +
+                             cos(re(z))**2*cosh(im(z))**2)))
+
+    assert sec(x).expand(trig=True) == 1/cos(x)
+    assert sec(2*x).expand(trig=True) == 1/(2*cos(x)**2 - 1)
+
+    assert sec(x).is_real == True
+    assert sec(z).is_real == None
+
+    assert sec(x).as_leading_term() == sec(x)
+
+    assert sec(0).is_bounded == True
+    assert sec(x).is_bounded == None
+    assert sec(pi/2).is_bounded == False
+
+    assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+
+    # https://code.google.com/p/sympy/issues/detail?id=4067
+    assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
+
+    # https://code.google.com/p/sympy/issues/detail?id=4068
+    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
+            1/sqrt(x) +x**(S(3)/2)/12 + x**(S(7)/2)/160 + O(x**4))
+
     assert sec(x).diff(x) == tan(x)*sec(x)
 
+
 def test_csc():
+    x = symbols('x', real=True)
+    z = symbols('z')
+
+    # https://code.google.com/p/sympy/issues/detail?id=3608
+    cosecant = csc('x')
+    alternate = 1/sin('x')
+    assert cosecant.equals(alternate) == True
+    assert alternate.equals(cosecant) == True
+
+    assert csc.nargs == 1
+
+    assert csc(0) == oo
+    assert csc(pi) == oo
+
+    assert csc(pi/2) == 1
+    assert csc(-pi/2) == -1
+    assert csc(pi/6) == 2
+    assert csc(pi/3) == 2*sqrt(3)/3
+    assert csc(5*pi/2) == 1
+    assert csc(9*pi/7) == -csc(2*pi/7)
+    assert csc(I) == -I/sinh(1)
+    assert csc(x*I) == -I/sinh(x)
+    assert csc(-x) == -csc(x)
+
+    assert csc(x).rewrite(exp) == 2*I/(exp(I*x) - exp(-I*x))
+    assert csc(x).rewrite(sin) == 1/sin(x)
+    assert csc(x).rewrite(cos) == csc(x)
+    assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
+
+    assert csc(z).conjugate() == csc(conjugate(z))
+
+    assert (csc(z).as_real_imag() ==
+            (sin(re(z))*cosh(im(z))/(sin(re(z))**2*cosh(im(z))**2 +
+                                     cos(re(z))**2*sinh(im(z))**2),
+             -cos(re(z))*sinh(im(z))/(sin(re(z))**2*cosh(im(z))**2 +
+                          cos(re(z))**2*sinh(im(z))**2)))
+
+    assert csc(x).expand(trig=True) == 1/sin(x)
+    assert csc(2*x).expand(trig=True) == 1/(2*sin(x)*cos(x))
+
+    assert csc(x).is_real == True
+    assert csc(z).is_real == None
+
+    assert csc(x).as_leading_term() == csc(x)
+
+    assert csc(0).is_bounded == False
+    assert csc(x).is_bounded == None
+    assert csc(pi/2).is_bounded == True
+
+    assert series(csc(x), x, x0=pi/2, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+    assert (series(csc(x), x, x0=0, n=6) ==
+            1/x + x/6 + 7*x**3/360 - 13*x**5/5040 + O(x**6))
+
     assert csc(x).diff(x) == -cot(x)*csc(x)
+
+
+@XFAIL
+@slow
+def test_csc_rewrite_failing():
+    # Move these 2 tests to test_csc() once bugs fixed
+    # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
+    # https://code.google.com/p/sympy/issues/detail?id=4072
+    assert csc(x).rewrite(pow) == csc(x)
+    assert csc(x).rewrite(sqrt) == csc(x)
