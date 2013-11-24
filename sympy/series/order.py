@@ -54,8 +54,8 @@ class Order(Expr):
     Examples
     ========
 
-    >>> from sympy import O
-    >>> from sympy.abc import x
+    >>> from sympy import O, oo
+    >>> from sympy.abc import x, y
 
     >>> O(x + x**2)
     O(x)
