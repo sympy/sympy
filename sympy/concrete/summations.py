@@ -575,6 +575,10 @@ def eval_sum(f, limits):
                     return None
                 newargs.append((newexpr, arg.cond))
             return f.func(*newargs)
+        # else
+        if (b - a < 100) == True:
+            return eval_sum_direct(f, (i, a, b))
+        return None
 
     if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
         return deltasummation(f, limits)
