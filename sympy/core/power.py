@@ -159,7 +159,7 @@ class Pow(Expr):
             elif e is S.One:
                 return b
             elif b is S.One:
-                if e in ( S.NaN, S.Infinity, -S.Infinity):
+                if e in (S.NaN, S.Infinity, -S.Infinity):
                     return S.NaN
                 return S.One
             elif S.NaN in (b, e):
