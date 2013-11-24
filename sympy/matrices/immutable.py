@@ -139,3 +139,5 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     def __hash__(self):
         return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
+
+    _eval_Eq = MatrixExpr._eval_Eq

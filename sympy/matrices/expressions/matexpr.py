@@ -4,9 +4,11 @@ from functools import wraps
 
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
+from sympy.core.relational import Equality
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
-from sympy.matrices import ShapeError
+from sympy.logic.boolalg import And
+from sympy.matrices import ShapeError, MatrixBase
 from sympy.simplify import simplify
 
 
@@ -293,6 +295,11 @@ class MatrixExpr(Basic):
 
     def as_coeff_mmul(self):
         return 1, MatMul(self)
+
+    def _eval_Eq(self, other):
+        if not hasattr(other, 'shape') or self.shape != other.shape:
+            return False
+        return And(*(Equality(i, j) for i, j in zip(self, other)))
 
 
 class MatrixElement(Expr):
