@@ -56,11 +56,33 @@ class Order(Expr):
 
     >>> from sympy import O
     >>> from sympy.abc import x
-    >>> O(x)
+
+    >>> O(x + x**2)
     O(x)
+    >>> O(x + x**2, (x, 0))
+    O(x)
+    >>> O(x + x**2, (x, oo))
+    O(x**2, (x, oo))
+
+    >>> O(1 + x*y)
+    O(1, x, y)
+    >>> O(1 + x*y, (x, 0), (y, 0))
+    O(1, x, y)
+    >>> O(1 + x*y, (x, oo), (y, oo))
+    O(x*y, (x, oo), (y, oo))
+
+    >>> O(1) in O(1, x)
+    True
+    >>> O(1, x) in O(1)
+    False
+    >>> O(x) in O(1, x)
+    True
+    >>> O(x**2) in O(x)
+    True
+
     >>> O(x)*x
     O(x**2)
-    >>> O(x)-O(x)
+    >>> O(x) - O(x)
     O(x)
 
     References
