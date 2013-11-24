@@ -472,7 +472,7 @@ def extended_euclid(a, b):
     Usage
     =====
 
-    ``extended_euclid(a, b)``: returns `x`, `y` and `gcd(a, b)`.
+    ``extended_euclid(a, b)``: returns `x`, `y` and `\gcd(a, b)`.
 
     Details
     =======
@@ -979,10 +979,10 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
 
 def cornacchia(a, b, m):
     """
-    Solves `ax^2 + by^2 = m` where `gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
+    Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
     Uses the algorithm due to Cornacchia. The method only finds primitive
-    solutions, i.e. ones with `gcd(x, y) = 1`. So this method can't be used to
+    solutions, i.e. ones with `\gcd(x, y) = 1`. So this method can't be used to
     find the solutions of `x^2 + y^2 = 20` since the only solution to former is
     `(x,y) = (4, 2)` and it is not primitive. When ` a = b = 1`, only the
     solutions with `x \geq y` are found. For more details, see the References.
@@ -1984,7 +1984,7 @@ def pairwise_prime(a, b, c):
     `a'x^2 + b'y^2 + c'z^2 = 0` where `a', b', c'` are pairwise relatively
     prime.
 
-    Returns a tuple containing `a', b', c'`. `gcd(a, b, c)` should equal `1`
+    Returns a tuple containing `a', b', c'`. `\gcd(a, b, c)` should equal `1`
     for this to work. The solutions for `ax^2 + by^2 + cz^2 = 0` can be
     recovered from the solutions of `a'x^2 + b'y^2 + c'z^2 = 0`.
 
@@ -2010,10 +2010,10 @@ def pairwise_prime(a, b, c):
 def make_prime(a, b, c):
     """
     Transform the equation `ax^2 + by^2 + cz^2 = 0` to an equivalent equation
-    `a'x^2 + b'y^2 + c'z^2 = 0` with `gcd(a', b') = 1`.
+    `a'x^2 + b'y^2 + c'z^2 = 0` with `\gcd(a', b') = 1`.
 
     Returns a tuple `(a', b', c')` which satisfies above conditions. Note that
-    in the returned tuple `gcd(a', c')` and `gcd(b', c')` can take any value.
+    in the returned tuple `\gcd(a', c')` and `\gcd(b', c')` can take any value.
 
     Examples
     ========
