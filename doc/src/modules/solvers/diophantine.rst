@@ -131,6 +131,9 @@ passing a customized parameter. Consider the following example.
 >>> diop_solve(2*x + 3*y - 5, m)
 (3*m - 5, -2*m + 5)
 
+Please note that for the moment, parsing the parameter only works for linear 
+Diophantine equations and binary quadratic equations.
+
 Let's try solving a binary quadratic equation which is an equation with two
 variables and has a degree of two. Before trying to solve these equations, an
 idea about various cases associated with the equation would help a lot. Please
@@ -162,14 +165,20 @@ solutions. Consider the below cases where `\Delta = 8`.
 >>> diophantine(x**2 - 4*x*y + 2*y**2 - 3*x + 7*y - 5)
 set()
 >>> from sympy import expand
->>> s = diophantine(x**2 -  2*y**2 - 2*x - 4*y)
+>>> n = symbols("n", Integer=True)
+>>> s = diophantine(x**2 -  2*y**2 - 2*x - 4*y, n)
 >>> x_n, y_n = s.pop()
 >>> expand(x_n)
 -(-2*sqrt(2) + 3)**n/2 + sqrt(2)*(-2*sqrt(2) + 3)**n/2 - sqrt(2)*(2*sqrt(2) + 3)**n/2 - (2*sqrt(2) + 3)**n/2 + 1
 >>> expand(y_n)
 -sqrt(2)*(-2*sqrt(2) + 3)**n/4 + (-2*sqrt(2) + 3)**n/2 + sqrt(2)*(2*sqrt(2) + 3)**n/4 + (2*sqrt(2) + 3)**n/2 - 1
 
-Here `n` is an any non-negative integer.
+Here `n` is an any non-negative integer. Although x_y and y_n may not look like
+integers, substituting in specific values for n (and simplifying) shows that they
+are. For example consider the following example where we set n equal to 9.
+
+>>simplify(x_n.subs({n: 9}))
+-9369318
 
 Any binary quadratic of the form `ax^2 + bxy + cy^2 + dx + ey + f = 0` can be
 transformed to an equivalent form `X^2 - DY^2 = N`.

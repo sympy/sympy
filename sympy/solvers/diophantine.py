@@ -701,7 +701,7 @@ def _diop_quadratic(var, coeff, t):
 
         else:
             # In this case equation can be transformed into a Pell equation
-            n = symbols("n", integer=True)
+            #n = symbols("n", integer=True)
 
             a = diop_DN(D, 1)
             T = a[0][0]
@@ -714,8 +714,8 @@ def _diop_quadratic(var, coeff, t):
 
                     r = sol[0]
                     s = sol[1]
-                    x_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n + (r - s*sqrt(D))*(T - U*sqrt(D))**n)/2
-                    y_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n - (r - s*sqrt(D))*(T - U*sqrt(D))**n)/(2*sqrt(D))
+                    x_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**t + (r - s*sqrt(D))*(T - U*sqrt(D))**t)/2
+                    y_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**t - (r - s*sqrt(D))*(T - U*sqrt(D))**t)/(2*sqrt(D))
 
                     x_n = simplify(x_n)
                     y_n = simplify(y_n)
@@ -758,8 +758,8 @@ def _diop_quadratic(var, coeff, t):
                             done = True
 
 
-                            x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ 2
-                            y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ (2*sqrt(D))
+                            x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ 2
+                            y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(t*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(t*L) )/ (2*sqrt(D))
 
                             x_n = simplify(x_n)
                             y_n = simplify(y_n)
