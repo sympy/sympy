@@ -1,4 +1,4 @@
-from sympy import ImmutableMatrix, Matrix, eye, zeros
+from sympy import ImmutableMatrix, Matrix, eye, zeros, Equality
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises
 
@@ -86,3 +86,13 @@ def test_immutable_evaluation():
     assert isinstance(X * 2, ImmutableMatrix)
     assert isinstance(2 * X, ImmutableMatrix)
     assert isinstance(A**2, ImmutableMatrix)
+
+
+def test_Equality():
+    assert Equality(IM, IM) == True
+    assert Equality(IM, IM.subs(1, 2)) == False
+    assert Equality(IM, 2) == False
+    M = ImmutableMatrix([x, y])
+    assert Equality(M, IM) == False
+    assert Equality(M, M.subs(x, 2)).subs(x, 2) == True
+    assert Equality(M, M.subs(x, 2)).subs(x, 3) == False
