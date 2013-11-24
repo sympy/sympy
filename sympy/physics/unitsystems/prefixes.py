@@ -82,6 +82,21 @@ class Prefix(object):
 
 
 def prefixe_unit(unit, prefixes):
+    """
+    Return a list of all units formed by unit and the given prefixes.
+
+    You can use the predefined PREFIXES or BIN_PREFIXES, but you can also
+    pass as argument a subdict of them if you don't want all prefixed units.
+
+        >>> from sympy.physics.unitsystems.prefixes import (PREFIXES,
+        ...                                                 prefixe_unit)
+        >>> from sympy.physics.unitsystems.systems import mks
+        >>> m = mks["m"]
+        >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
+        >>> set(prefixe_unit(m, pref))
+        set([cm, dm, mm])
+    """
+
     from sympy.physics.unitsystems.units import Unit
 
     prefixed_units = []

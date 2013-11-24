@@ -13,8 +13,10 @@ system.
 
 The main advantage of this implementation over the old unit module is that it
 divides the units in unit systems, so that the user can decide which units
-to use, instead of having all in the name space. Moreover it allows a better
-control over the dimensions and conversions.
+to use, instead of having all in the name space (for example astrophysicists
+can only use units with ua, Earth or Sun masses, the theoricists will use
+natural system, etc.). Moreover it allows a better control over the dimensions
+and conversions.
 
 Ideas about future developments can be found on the `Github wiki
 <https://github.com/sympy/sympy/wiki/Unit-systems>`_.
