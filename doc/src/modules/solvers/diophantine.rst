@@ -131,7 +131,7 @@ passing a customized parameter. Consider the following example.
 >>> diop_solve(2*x + 3*y - 5, m)
 (3*m - 5, -2*m + 5)
 
-Please note that for the moment, parsing the parameter only works for linear 
+Please note that for the moment, user can set the parameter only for linear 
 Diophantine equations and binary quadratic equations.
 
 Let's try solving a binary quadratic equation which is an equation with two
@@ -173,7 +173,7 @@ set()
 >>> expand(y_n)
 -sqrt(2)*(-2*sqrt(2) + 3)**n/4 + (-2*sqrt(2) + 3)**n/2 + sqrt(2)*(2*sqrt(2) + 3)**n/4 + (2*sqrt(2) + 3)**n/2 - 1
 
-Here `n` is an any non-negative integer. Although x_y and y_n may not look like
+Here `n` is a non-negative integer. Although x_n and y_n may not look like
 integers, substituting in specific values for n (and simplifying) shows that they
 are. For example consider the following example where we set n equal to 9.
 
