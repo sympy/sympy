@@ -131,6 +131,12 @@ def test_contains_3():
     assert Order(x**2*y).contains(Order(x*y**2)) is None
 
 
+def test_contains():
+    assert Order(1, x) not in Order(1)
+    assert Order(1) in Order(1, x)
+    raises(TypeError, lambda: Order(x*y**2) in Order(x**2*y))
+
+
 def test_add_1():
     assert Order(x + x) == Order(x)
     assert Order(3*x - 2*x**2) == Order(x)
