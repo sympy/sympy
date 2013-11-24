@@ -12,8 +12,8 @@ class Order(Expr):
     r""" Represents the limiting behavior of some function
 
     The order of a function characterizes the function based on the limiting
-    behavior of the function as it goes to some limit. Only taking the limit
-    point to be 0 or positive infinity is currently supported. This is
+    behavior of the function as it goes to some limit. Only taking all limit
+    points to be 0 or positive infinity is currently supported. This is
     expressed in big O notation [1]_.
 
     The formal definition for the order of a function `g(x)` about a point `a`
