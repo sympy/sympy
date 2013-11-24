@@ -139,7 +139,7 @@ class Dimension(AtomicExpr):
         new.symbol = symbol
 
         new._dict = dict(pairs)
-        new._pairs = tuple(pairs)
+        new._pairs = tuple(Tuple(*pair) for pair in pairs)
 
         return new
 
