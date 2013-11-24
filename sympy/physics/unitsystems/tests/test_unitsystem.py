@@ -32,8 +32,7 @@ def test_definition():
     assert ms.descr == "MS system"
 
     assert ms._system._base_dims == DimensionSystem.sort_dims(base_dim)
-    assert ms._system._dims == DimensionSystem.sort_dims(base_dim +
-                                                         (velocity,))
+    assert set(ms._system._dims) == set(base_dim + (velocity,))
 
 
 def test_error_definition():

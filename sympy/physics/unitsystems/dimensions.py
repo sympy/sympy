@@ -347,8 +347,8 @@ class DimensionSystem(object):
             raise ValueError("Base dimensions must have a symbol or a name")
 
         self._base_dims = self.sort_dims(base)
-        self._dims = self.sort_dims(list(dims) + [d for d in base
-                                                   if d not in dims])
+        # base is first such that named dimension are keeped
+        self._dims = tuple(set(base) | set(dims))
 
         self._can_transf_matrix = None
         self._list_can_dims = None

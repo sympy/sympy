@@ -17,11 +17,17 @@ def test_definition():
     ms = DimensionSystem(base, (velocity,), "MS", "MS system")
 
     assert ms._base_dims == DimensionSystem.sort_dims(base)
-    assert ms._dims == DimensionSystem.sort_dims(base + (velocity,))
+    assert set(ms._dims) == set(base + (velocity,))
     assert ms.name == "MS"
     assert ms.descr == "MS system"
 
     assert ms._can_transf_matrix is None
+
+    # be sure that there is no duplicates in ms._dims
+    dims = (Dimension(length=1), Dimension(length=1, symbol="l"))
+    ms = DimensionSystem(base, dims)
+
+    assert set(ms._dims) == set(base)
 
 
 def test_error_definition():
@@ -66,7 +72,7 @@ def test_extend():
 
     res = DimensionSystem((length, time, mass), (velocity, action))
     assert mks._base_dims == res._base_dims
-    assert mks._dims == res._dims
+    assert set(mks._dims) == set(res._dims)
 
 
 def test_sort_dims():
