@@ -846,9 +846,47 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
 
 class sec(ReciprocalTrigonometricFunction):
+    """
+    The secant function.
+
+    Returns the secant of x (measured in radians).
+
+    Notes
+    =====
+
+    sec(x) will evaluate automatically in the case x is a
+    multiple of pi.
+
+    Examples
+    ========
+
+    >>> from sympy import sec
+    >>> from sympy.abc import x
+    >>> sec(x**2).diff(x)
+    2*x*tan(x**2)*sec(x**2)
+    >>> sec(1).diff(x)
+    0
+
+    See Also
+    ========
+
+    sin, csc, cos, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/Sec
+
+    """
+
     _reciprocal_of = cos
     _is_even = True
 
+    def _eval_rewrite_as_cot(self, arg):
+        cot_half_sq = cot(arg/2)**2
+        return (cot_half_sq + 1)/(cot_half_sq - 1)
 
     def _eval_rewrite_as_cos(self, arg):
         return (1/cos(arg))
@@ -871,13 +909,18 @@ class sec(ReciprocalTrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
+            k = n//2
+            return (-1)**k*C.euler(2*k)/C.factorial(2*k)*x**(2*k)
 
-            a = n//2
-
-            E = C.euler(n)
-            F = C.factorial(n)
-
-            return (-1)**a * E/F * x**n
+    def _eval_aseries(self, n, args0, x, logx):
+        if C.im(args0[0]).is_positive:
+            return (2*C.exp(S.ImaginaryUnit*x)*
+                    C.hyper([1], [], -C.exp(2*S.ImaginaryUnit*x)))
+        elif C.im(args0[0]).is_negative:
+            return (2*C.exp(-S.ImaginaryUnit*x)*
+                    C.hyper([1], [], -C.exp(-2*S.ImaginaryUnit*x)))
+        else:
+            return super(sec, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):
         import sage.all as sage
