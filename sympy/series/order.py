@@ -152,9 +152,6 @@ class Order(Expr):
                 'or oo not supported, got %s as a point.' % point)
 
         if variables:
-
-            variables = list(set(variables))
-
             if len(variables) > 1:
                 # XXX: better way?  We need this expand() to
                 # workaround e.g: expr = x*(x + y).
