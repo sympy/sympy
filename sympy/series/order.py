@@ -19,8 +19,8 @@ class Order(Expr):
     The formal definition for the order of a function `g(x)` about a point `a`
     is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if for any
     `\delta > 0` there exists a `M > 0` such that `|g(x)| \leq M|f(x)|` for
-    `|x-a| < \delta`. This is equivalent to `\lim_{x \rightarrow a}
-    |g(x)/f(x)| < \infty`.
+    `|x-a| < \delta`.  This is equivalent to `\lim_{x \rightarrow a}
+    \sup |g(x)/f(x)| < \infty`.
 
     Let's illustrate it on the following example by taking the expansion of
     `\sin(x)` about 0:
