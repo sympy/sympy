@@ -48,7 +48,7 @@ class Unit(AtomicExpr):
 
         ``dim`` can be a Dimension or Unit object. The latter allows to
         construct derived units and constants. Note that the argument prefix
-        is ignored if ``dim`` is a Unit instance.
+        is ignored if ``dim`` is a Unit instance and already has a prefix.
         """
 
         factor = sympify(factor)
@@ -61,10 +61,14 @@ class Unit(AtomicExpr):
             obj.dim = dim
             obj.prefix = prefix
         elif isinstance(dim, Unit):
-            obj._abbrev = abbrev or dim.abbrev
+            obj._abbrev = abbrev
             obj._factor = factor * dim.factor
             obj.dim = dim.dim
-            obj.prefix = None
+            #TODO: find a better handling when dim has already a prefix
+            if dim.prefix is None and prefix is not None:
+                obj.prefix = prefix
+            else:
+                obj.prefix = None
         else:
             raise TypeError("'dim' object should be Unit or Dimension "
                             "instance; found %s" % type(dim))

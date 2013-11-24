@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sympy.physics.unitsystems.prefixes import PREFIXES
+from sympy.physics.unitsystems.prefixes import PREFIXES, prefixe_unit
 
 
 def test_prefix_operations():
@@ -12,3 +12,18 @@ def test_prefix_operations():
     assert k * k == M
     assert 1 / m == k
     assert k / m == M
+
+
+def test_prefixe_unit():
+    from sympy.physics.unitsystems import Unit, Dimension
+
+    length = Dimension(length=1)
+    m = Unit(length, abbrev="m")
+
+    pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
+
+    res = [Unit(length, abbrev="m", prefix=PREFIXES["m"]),
+           Unit(length, abbrev="m", prefix=PREFIXES["c"]),
+           Unit(length, abbrev="m", prefix=PREFIXES["d"])]
+
+    assert set(prefixe_unit(m, pref)) == set(res)

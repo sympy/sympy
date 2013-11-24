@@ -81,6 +81,18 @@ class Prefix(object):
     __rtruediv__ = __rdiv__
 
 
+def prefixe_unit(unit, prefixes):
+    from sympy.physics.unitsystems.units import Unit
+
+    prefixed_units = []
+
+    for prefix in prefixes:
+        prefixed_units.append(Unit(unit, abbrev=unit.abbrev,
+                                   prefix=prefixes[prefix]))
+
+    return prefixed_units
+
+
 # http://physics.nist.gov/cuu/Units/prefixes.html
 PREFIXES = {
     'Y': Prefix('yotta', 'Y', 24),

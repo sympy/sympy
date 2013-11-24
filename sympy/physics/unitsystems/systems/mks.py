@@ -10,7 +10,7 @@ from __future__ import division
 
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
 from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
-from sympy.physics.unitsystems.prefixes import PREFIXES
+from sympy.physics.unitsystems.prefixes import PREFIXES, prefixe_unit
 
 # base dimensions
 length = Dimension(name="length", symbol="L", length=1)
@@ -39,6 +39,9 @@ m = Unit(length, abbrev="m")
 kg = Unit(mass, abbrev="g", prefix=PREFIXES["k"])
 s = Unit(time, abbrev="s")
 
+# gram; used to define its prefixed units
+g = Unit(mass, abbrev="g")
+
 # derived units
 v = Unit(velocity)
 a = Unit(acceleration)
@@ -55,7 +58,11 @@ G = Constant(m**3*kg**-1*s**-2, factor=6.67384e-11, abbrev="G")
 # speed of light
 c = Constant(velocity, factor=299792458, abbrev="c")
 
-units = (v, a, p, J, N, W, Pa, Hz, G, c)
+units = [m, g, s, J, N, W, Pa, Hz]
+all_units = []
+for u in units:
+    all_units.extend(prefixe_unit(u, PREFIXES))
+all_units.extend([v, a, p, G, c])
 
 # unit system
-mks = UnitSystem(base=(m, kg, s), units=units, name="MKS")
+mks = UnitSystem(base=(m, kg, s), units=all_units, name="MKS")

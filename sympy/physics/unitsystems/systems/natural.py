@@ -13,7 +13,7 @@ from __future__ import division
 
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
 from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
-from sympy.physics.unitsystems.prefixes import PREFIXES
+from sympy.physics.unitsystems.prefixes import PREFIXES, prefixe_unit
 
 # base dimensions
 action = Dimension(name="action", symbol="A", length=2, mass=1, time=-1)
@@ -41,5 +41,7 @@ hbar = Constant(action, factor=1.05457266e-34, abbrev="hbar")
 eV = Unit(energy, factor=1.60219e-19, abbrev="eV")
 c = Constant(velocity, factor=299792458, abbrev="c")
 
+units = prefixe_unit(eV, PREFIXES)
+
 # unit system
-natural = UnitSystem(base=(hbar, eV, c), name="Natural system")
+natural = UnitSystem(base=(hbar, eV, c), units=units, name="Natural system")
