@@ -60,8 +60,13 @@ def dispersion(p, x):
     return rmax
 
 
-def step_1(p, q, l, x, dp, dq):
+def split_division(p, q, l, x):
+    r"""
+    """
     # Split l**x * f1(x)/f2(x) into two parts h(x)*l**x and r(x)*l**x/f2(x)
+    dp = p.degree()
+    dq = q.degree()
+
     if dp >= dq:
         # p = h*q + r
         h = quo(p, q)
@@ -76,8 +81,13 @@ def step_1(p, q, l, x, dp, dq):
     return None
 
 
-def step_2(p, q, l, x, dp, dq):
+def compute_dispersion(p, q, l, x):
+    r"""
+    """
     # Determine dispersion and alpha
+    dp = p.degree()
+    dq = q.degree()
+
     if dq == 0:
         alpha = 0
     else:
@@ -86,8 +96,13 @@ def step_2(p, q, l, x, dp, dq):
     return alpha
 
 
-def step_3(p, q, lam, x, dp, dq, alpha):
+def degree_bound(p, q, lam, x, alpha):
+    r"""
+    """
     # Find a degree bound
+    dp = p.degree()
+    dq = q.degree()
+
     if alpha == 0:
         if not Abs(lam) == 1:
             boundn = dp
@@ -136,7 +151,9 @@ def step_3(p, q, lam, x, dp, dq, alpha):
     return boundn, g2, p2
 
 
-def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
+def find_relation(f, p, q, l, x, alpha, boundn, g2, p2):
+    r"""
+    """
     # Set up a candidate and try to solve for unknown coefficients
     from sympy.integrals.heurisch import _symbols
     ci = _symbols("c", boundn+1)
@@ -176,7 +193,7 @@ def step_4(f, p, q, l, x, alpha, boundn, g2, p2):
     return (g1, ci, solution)
 
 
-def step_5(l, x, alpha, g1, g2, ci, linsol):
+def closed_form_base_field(l, x, alpha, g1, g2, ci, linsol):
     # Try to find a closed form in F
     # This is possible only if all ci got values
     sol, params = linsol
@@ -201,7 +218,7 @@ def step_5(l, x, alpha, g1, g2, ci, linsol):
     return solution
 
 
-def step_6(f, l, x):
+def closed_form_field_extension(f, l, x):
     # Try for a closed form in an extension E of F
     cpfd = apart_list(f)
 
@@ -264,30 +281,28 @@ def fsum(f, l, x):
     p = Poly(p, gens=[x])
     q = Poly(q, gens=[x])
 
-    dp = p.degree()
-    dq = q.degree()
-
-    result = step_1(p, q, l, x, dp, dq)
+    result = split_division(p, q, l, x)
 
     if result is not None:
         return result
 
-    alpha = step_2(p, q, l, x, dp, dq)
+    dq = q.degree()
+    alpha = compute_dispersion(p, q, l, x)
 
     if dq > 0 and alpha == 0:
         if Abs(l) == 1:
-            return step_6(f, l, x)
+            return closed_form_field_extension(f, l, x)
         else:
             #print("Not summable in F and E ?")
             raise ValueError("Not summable in F and E   (2)")
-            #return step_6(f, l, x)
+            #return closed_form_field_extension(f, l, x)
 
-    bound, g2, p2 = step_3(p, q, l, x, dp, dq, alpha)
-    g1, coeffs, vals = step_4(f, p, q, l, x, alpha, bound, g2, p2)
-    solution = step_5(l, x, alpha, g1, g2, coeffs, vals)
+    bound, g2, p2 = degree_bound(p, q, l, x, alpha)
+    g1, coeffs, vals = find_relation(f, p, q, l, x, alpha, bound, g2, p2)
+    solution = closed_form_base_field(l, x, alpha, g1, g2, coeffs, vals)
 
     if solution is None:
-        solution = step_6(f, l, x)
+        solution = closed_form_field_extension(f, l, x)
 
     # Do not call expand_func() here to resolve polygamma function if possible
 
@@ -295,11 +310,15 @@ def fsum(f, l, x):
 
 
 def ratsum(f, x):
+    r"""
+    """
     f, l = preprocess(f, x)
     return fsum(f, l, x)
 
 
 def ratsum_def(f, bounds):
+    r"""
+    """
     x, a, b = bounds
     x = sympify(x)
     a = sympify(a)
