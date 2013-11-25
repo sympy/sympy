@@ -69,6 +69,12 @@ class StrPrinter(Printer):
             sign = ""
         return sign + ' '.join(l)
 
+    def _print_BooleanTrue(self, expr):
+        return "True"
+
+    def _print_BooleanFalse(self, expr):
+        return "False"
+
     def _print_And(self, expr):
         return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
             expr.args)))
@@ -356,16 +362,16 @@ class StrPrinter(Printer):
             return 'Permutation(%s)' % use
 
     def _print_TensorIndex(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensorHead(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensMul(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensAdd(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % str(a) for a in expr.args]

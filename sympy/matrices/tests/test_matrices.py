@@ -13,7 +13,7 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros)
 from sympy.core.compatibility import long
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 from sympy.abc import x, y, z
 
@@ -2061,7 +2061,6 @@ def test_issue_860():
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
 
 
-@XFAIL
 def test_issue_2865():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
 
@@ -2229,3 +2228,89 @@ def test_atoms():
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.atoms() == set([S(1),S(2),S(-1), x])
     assert m.atoms(Symbol) == set([x])
+
+@slow
+def test_pinv():
+    from sympy.abc import a, b, c, d, e, f
+    # Pseudoinverse of an invertible matrix is the inverse.
+    A1 = Matrix([[a, b], [c, d]])
+    assert simplify(A1.pinv()) == simplify(A1.inv())
+    # Test the four properties of the pseudoinverse for various matrices.
+    As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
+          Matrix([[1, 7, 9], [11, 17, 19]]),
+          Matrix([a, b])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+def test_pinv_solve():
+    # Fully determined system (unique result, identical to other solvers).
+    A = Matrix([[1, 5], [7, 9]])
+    B = Matrix([12, 13])
+    assert A.pinv_solve(B) == A.cholesky_solve(B)
+    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == Matrix([sympify('-43/26'), sympify('71/26')])
+    assert A * A.pinv() * B == B
+    # Fully determined, with two-dimensional B matrix.
+    B = Matrix([[12, 13, 14], [15, 16, 17]])
+    assert A.pinv_solve(B) == A.cholesky_solve(B)
+    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == Matrix([[-33, -37, -41], [69, 75, 81]]) / 26
+    assert A * A.pinv() * B == B
+    # Underdetermined system (infinite results).
+    A = Matrix([[1, 0, 1], [0, 1, 1]])
+    B = Matrix([5, 7])
+    solution = A.pinv_solve(B)
+    w = {}
+    for s in solution.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert solution == Matrix([[w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 1],
+                               [w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 3],
+                               [-w['w0_0']/3 - w['w1_0']/3 + w['w2_0']/3 + 4]])
+    assert A * A.pinv() * B == B
+    # Overdetermined system (least squares results).
+    A = Matrix([[1, 0], [0, 0], [0, 1]])
+    B = Matrix([3, 2, 1])
+    assert A.pinv_solve(B) == Matrix([3, 1])
+    # Proof the solution is not exact.
+    assert A * A.pinv() * B != B
+
+@XFAIL
+def test_pinv_rank_deficient():
+    # Test the four properties of the pseudoinverse for various matrices.
+    As = [Matrix([[1, 1, 1], [2, 2, 2]]),
+          Matrix([[1, 0], [0, 0]])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+    # Test solving with rank-deficient matrices.
+    A = Matrix([[1, 0], [0, 0]])
+    # Exact, non-unique solution.
+    B = Matrix([3, 0])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B == B
+    # Least squares, non-unique solution.
+    B = Matrix([3, 1])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B != B
+
+def test_issue4102():
+    assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
+    assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])

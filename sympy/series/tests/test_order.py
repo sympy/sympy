@@ -123,6 +123,12 @@ def test_contains_3():
     assert Order(x**2*y).contains(Order(x*y**2)) is None
 
 
+def test_contains():
+    assert Order(1, x) not in Order(1)
+    assert Order(1) in Order(1, x)
+    raises(TypeError, lambda: Order(x*y**2) in Order(x**2*y))
+
+
 def test_add_1():
     assert Order(x + x) == Order(x)
     assert Order(3*x - 2*x**2) == Order(x)
@@ -327,8 +333,8 @@ def test_order_at_infinity():
     assert Order(3*x, x, oo) == Order(x, x, oo)
     assert Order(x, x, oo)*3 == Order(x, x, oo)
     assert -28*Order(x, x, oo) == Order(x, x, oo)
-    assert Order(Order(x, x, oo)) == Order(x, x, oo)
-    assert Order(Order(x, x, oo), y) == Order(Order(x, x, oo), x, y)
+    assert Order(Order(x, x, oo), oo) == Order(x, x, oo)
+    assert Order(Order(x, x, oo), y, oo) == Order(Order(x, x, oo), x, y, oo)
     assert Order(3, x, oo) == Order(1, x, oo)
     assert Order(x**2 + x + y, x, oo) == O(x**2, x, oo)
     assert Order(x**2 + x + y, y, oo) == O(y, y, oo)
@@ -358,6 +364,21 @@ def test_order_at_infinity():
     assert Order(x, x, oo) + Order(exp(1/x), x, oo) == Order(x, x, oo)
     assert Order(x**3, x, oo) + Order(exp(2/x), x, oo) == Order(x**3, x, oo)
     assert Order(x**-3, x, oo) + Order(exp(2/x), x, oo) == Order(exp(2/x), x, oo)
+
+    # issue 4108
+    assert Order(exp(x), x, oo).expr == Order(2*exp(x), x, oo).expr == exp(x)
+    assert Order(y**x, x, oo).expr == Order(2*y**x, x, oo).expr == y**x
+
+
+def test_mixing_order_at_zero_and_infinity():
+    assert (Order(x, x, 0) + Order(x, x, oo)).is_Add
+    assert Order(x, x, 0) + Order(x, x, oo) == Order(x, x, oo) + Order(x, x, 0)
+
+    # not supported (yet)
+    raises(NotImplementedError, lambda: Order(x, x, 0)*Order(x, x, oo))
+    raises(NotImplementedError, lambda: Order(x, x, oo)*Order(x, x, 0))
+    raises(NotImplementedError, lambda: Order(Order(x, x, oo)))
+    raises(NotImplementedError, lambda: Order(Order(x, x, oo), y))
 
 
 def test_order_subs_limits():

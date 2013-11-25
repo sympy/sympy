@@ -884,7 +884,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
                         order=opt.order, polys=True)[1]
 
             S = Poly(r, gens=opt.gens).coeffs()
-            sol = solve(S, Cs + Ds, minimal=True, quick=True)
+            sol = solve(S, Cs + Ds, particular=True, quick=True)
 
             if sol and not all([s == 0 for s in sol.values()]):
                 c = c_hat.subs(sol)
@@ -931,7 +931,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
-            sol = solve(S, ng, minimal=True, quick=False)
+            sol = solve(S, ng, particular=True, quick=False)
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 
@@ -3658,7 +3658,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product
 
-    if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
+    if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
 
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):

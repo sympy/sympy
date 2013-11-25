@@ -1183,12 +1183,12 @@ def test_high_order_roots():
 def test_minsolve_linear_system():
     def count(dic):
         return len([x for x in dic.values() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) \
+    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=True)) \
         == 3
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) \
+    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=False)) \
         == 3
-    assert count(solve([x + y + z, y + z + a], minimal=True, quick=True)) == 1
-    assert count(solve([x + y + z, y + z + a], minimal=True, quick=False)) == 2
+    assert count(solve([x + y + z, y + z + a], particular=True, quick=True)) == 1
+    assert count(solve([x + y + z, y + z + a], particular=True, quick=False)) == 2
 
 
 def test_real_roots():

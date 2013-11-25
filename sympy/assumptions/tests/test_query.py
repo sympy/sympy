@@ -1862,6 +1862,7 @@ def test_composite_ask():
 
 def test_composite_proposition():
     assert ask(True) is True
+    assert ask(False) is False
     assert ask(~Q.negative(x), Q.positive(x)) is True
     assert ask(~Q.real(x), Q.commutative(x)) is None
     assert ask(Q.negative(x) & Q.integer(x), Q.positive(x)) is False
@@ -1879,8 +1880,10 @@ def test_composite_proposition():
 
 
 def test_composite_assumptions():
+    assert ask(Q.real(x), Q.real(x) & Q.real(y)) is True
     assert ask(Q.positive(x), Q.positive(x) | Q.positive(y)) is None
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
+    assert ask(Q.real(x), ~(Q.real(x) >> Q.real(y))) is True
 
 
 def test_incompatible_resolutors():

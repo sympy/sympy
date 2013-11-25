@@ -1824,75 +1824,64 @@ __________ __________      \n\
 
 
 def test_pretty_lambda():
-    expr = Lambda(x, x)
-    ascii_str = \
-"""\
-Lambda(x, x)\
-"""
-    ucode_str = \
-u("""\
-Λ(x, x)\
-""")
+    # S.IdentityFunction is a special case
+    expr = Lambda(y, y)
+    assert pretty(expr) == "x -> x"
+    assert upretty(expr) == u("x ↦ x")
 
-    assert pretty(expr) == ascii_str
-    assert upretty(expr) == ucode_str
+    expr = Lambda(x, x+1)
+    assert pretty(expr) == "x -> x + 1"
+    assert upretty(expr) == u("x ↦ x + 1")
 
     expr = Lambda(x, x**2)
     ascii_str = \
 """\
-      /    2\\\n\
-Lambda\\x, x /\
+      2\n\
+x -> x \
 """
     ucode_str = \
 u("""\
- ⎛    2⎞\n\
-Λ⎝x, x ⎠\
+     2\n\
+x ↦ x \
 """)
-
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
     expr = Lambda(x, x**2)**2
     ascii_str = \
 """\
-      2/    2\\\n\
-Lambda \\x, x /\
+         2
+/      2\\ \n\
+\\x -> x / \
 """
     ucode_str = \
 u("""\
- 2⎛    2⎞\n\
-Λ ⎝x, x ⎠\
+        2
+⎛     2⎞ \n\
+⎝x ↦ x ⎠ \
 """)
-
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
     expr = Lambda((x, y), x)
-    ascii_str = \
-"""\
-Lambda((x, y), x)\
-"""
-    ucode_str = \
-u("""\
-Λ((x, y), x)\
-""")
-
+    ascii_str = "(x, y) -> x"
+    ucode_str = u("(x, y) ↦ x")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
     expr = Lambda((x, y), x**2)
     ascii_str = \
 """\
-      /         2\\\n\
-Lambda\\(x, y), x /\
+           2\n\
+(x, y) -> x \
 """
     ucode_str = \
 u("""\
- ⎛         2⎞\n\
-Λ⎝(x, y), x ⎠\
+          2\n\
+(x, y) ↦ x \
 """)
-
     assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 
 def test_pretty_order():
@@ -3067,13 +3056,13 @@ RootSum⎝x  + 11⋅x - 2⎠\
     expr = RootSum(x**5 + 11*x - 2, Lambda(z, exp(z)))
     ascii_str = \
 """\
-       / 5                   /    z\\\\\n\
-RootSum\\x  + 11*x - 2, Lambda\\z, e //\
+       / 5                   z\\\n\
+RootSum\\x  + 11*x - 2, z -> e /\
 """
     ucode_str = \
 u("""\
-       ⎛ 5              ⎛    z⎞⎞\n\
-RootSum⎝x  + 11⋅x - 2, Λ⎝z, ℯ ⎠⎠\
+       ⎛ 5                  z⎞\n\
+RootSum⎝x  + 11⋅x - 2, z ↦ ℯ ⎠\
 """)
 
     assert pretty(expr) == ascii_str

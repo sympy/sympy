@@ -153,6 +153,7 @@ def checksol(f, symbol, sol=None, **flags):
            make positive all symbols without assumptions regarding sign.
 
     """
+    minimal = flags.get('minimal', False)
 
     if sol is not None:
         sol = {symbol: sol}
@@ -205,13 +206,13 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if val.free_symbols:
-                if not val.is_constant(*list(sol.keys())):
+                if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
                 val = expand_mul(expand_multinomial(val))
         elif attempt == 2:
-            if flags.get('minimal', False):
+            if minimal:
                 return
             if flags.get('simplify', True):
                 for k in sol:
@@ -405,11 +406,11 @@ def solve(f, *symbols, **flags):
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
             like cos, exp, ....
-        'minimal=True (default is False)'
+        'particular=True (default is False)'
             instructs solve to try to find a particular solution to a linear
             system with as many zeros as possible; this is very expensive
         'quick=True (default is False)'
-            when using minimal=True, use a fast heuristic instead to find a
+            when using particular=True, use a fast heuristic instead to find a
             solution with many zeros (instead of using the very slow method
             guaranteed to find the largest number of zeros possible)
 
@@ -1460,7 +1461,7 @@ def _solve_system(exprs, symbols, **flags):
                         matrix[i, m] = -coeff
 
             # returns a dictionary ({symbols: values}) or None
-            if flags.pop('minimal', False):
+            if flags.pop('particular', False):
                 result = minsolve_linear_system(matrix, *symbols, **flags)
             else:
                 result = solve_linear_system(matrix, *symbols, **flags)

@@ -587,7 +587,8 @@ def _doctest(*paths, **kwargs):
             "examples/advanced/autowrap_ufuncify.py",
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
-            "examples/intermediate/mplot3d.py"
+            "examples/intermediate/mplot3d.py",
+            "doc/src/modules/numeric-computation.rst"
         ])
     else:
         if import_module('matplotlib') is None:
@@ -602,6 +603,9 @@ def _doctest(*paths, **kwargs):
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
+
+    if import_module('theano') is None:
+        blacklist.extend(["doc/src/modules/numeric-computation.rst"])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([

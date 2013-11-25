@@ -1,6 +1,6 @@
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,\
-    Pow, And, Or, Xor, Not
+    Pow, And, Or, Xor, Not, true, false
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
@@ -144,10 +144,8 @@ def test_sympify_float():
 
 
 def test_sympify_bool():
-    """Test that sympify accepts boolean values
-    and that output leaves them unchanged"""
-    assert sympify(True) is True
-    assert sympify(False) is False
+    assert sympify(True) is true
+    assert sympify(False) is false
 
 
 def test_sympyify_iterables():

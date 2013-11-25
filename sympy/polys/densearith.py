@@ -850,7 +850,7 @@ def dup_sqr(f, K):
     x**4 + 2*x**2 + 1
 
     """
-    df, h = dup_degree(f), []
+    df, h = len(f) - 1, []
 
     for i in xrange(0, 2*df + 1):
         c = K.zero

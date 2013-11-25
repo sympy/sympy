@@ -11,7 +11,7 @@ from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, true, false
 
 from sympy.utilities import default_sort_key
 
@@ -191,7 +191,11 @@ class Set(Basic):
         True
 
         """
-        return self._contains(sympify(other, strict=True))
+        c = self._contains(sympify(other, strict=True))
+        if c in (true, false):
+            # TODO: would we want to return the Basic type here?
+            return bool(c)
+        return c
 
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
@@ -202,9 +206,9 @@ class Set(Basic):
 
         >>> from sympy import Interval
 
-        >>> Interval(0, 1).contains(0)
+        >>> Interval(0, 1).subset(Interval(0, 0.5))
         True
-        >>> Interval(0, 1, left_open=True).contains(0)
+        >>> Interval(0, 1, left_open=True).subset(Interval(0, 1))
         False
 
         """

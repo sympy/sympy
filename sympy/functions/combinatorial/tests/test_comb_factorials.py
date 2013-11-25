@@ -77,6 +77,8 @@ def test_factorial():
     assert factorial(n).is_positive is None
     assert factorial(k).is_positive
 
+    assert factorial(oo) == oo
+
 
 def test_factorial_diff():
     n = Symbol('n', integer=True)

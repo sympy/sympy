@@ -83,6 +83,10 @@ before_install:
       pip install "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
+      sudo apt-get update;
+      sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran;
+      pip install "numpy==1.7.1";
+      pip install "scipy==0.12.0";
       pip install --no-deps https://github.com/Theano/Theano/archive/master.zip;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
