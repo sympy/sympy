@@ -291,11 +291,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     # and try to parse it. If it fails, then we have no luck and
     # return an exception
     try:
-        import sys
-        if sys.version_info[0] >= 3:
-            a = str(a)
-        else:
-            a = unicode(a)
+        from .compatibility import unicode
+        a = unicode(a)
     except Exception as exc:
         raise SympifyError(a, exc)
 

@@ -10,10 +10,7 @@ if __name__ == "__main__":
 
     import sys
     import inspect
-    if sys.version_info[0] < 3:
-        import __builtin__ as builtins
-    else:
-        import builtins
+    from sympy.core.compatibility import builtins
 
     import optparse
 

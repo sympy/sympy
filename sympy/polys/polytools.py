@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-import sys
-
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
@@ -3791,12 +3789,10 @@ class Poly(Expr):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    if sys.version_info[0] >= 3:
-        def __bool__(f):
-            return not f.is_zero
-    else:
-        def __nonzero__(f):
-            return not f.is_zero
+    def __nonzero__(f):
+        return not f.is_zero
+
+    __bool__ = __nonzero__
 
     def eq(f, g, strict=False):
         if not strict:

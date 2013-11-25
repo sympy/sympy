@@ -40,7 +40,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 # Use sys.stdout encoding for ouput.
 pdoctest._encoding = sys.__stdout__.encoding
 
-IS_PYTHON_3 = (sys.version_info[0] == 3)
 IS_WINDOWS = (os.name == 'nt')
 
 
@@ -59,7 +58,7 @@ def _indent(s, indent=4):
     encoding and the ``backslashreplace`` error handler.
     """
     # After a 2to3 run the below code is bogus, so wrap it with a version check
-    if sys.version_info[0] < 3:
+    if not PY3:
         if isinstance(s, unicode):
             s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
@@ -78,7 +77,7 @@ def _report_failure(self, out, test, example, got):
     s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
     out(self._failure_header(test, example) + s)
 
-if IS_PYTHON_3 and IS_WINDOWS:
+if PY3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
 
 
@@ -277,7 +276,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or sys.version_info[0] == 3):
+        if not (sys.platform == "win32" or PY3):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
@@ -872,7 +871,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if not IS_PYTHON_3:
+    if not PY3:
         text, filename = pdoctest._load_testfile(
             filename, package, module_relative)
         if encoding is not None:
@@ -990,7 +989,7 @@ class SymPyTests(object):
             gl = {'__file__': filename}
             random.seed(self._seed)
             try:
-                if IS_PYTHON_3:
+                if PY3:
                     open_file = lambda: open(filename, encoding="utf8")
                 else:
                     open_file = lambda: open(filename)
@@ -1787,7 +1786,7 @@ class PyTestReporter(Reporter):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
-                if sys.version_info[0] > 2:
+                if PY3:
                     stdout = stdout.decode("utf-8")
             except (OSError, IOError):
                 pass
@@ -1890,9 +1889,9 @@ class PyTestReporter(Reporter):
                 sys.stdout.write("\n")
 
         # Avoid UnicodeEncodeError when printing out test failures
-        if IS_PYTHON_3 and IS_WINDOWS:
+        if PY3 and IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
-        elif IS_PYTHON_3 and not sys.stdout.encoding.lower().startswith('utf'):
+        elif PY3 and not sys.stdout.encoding.lower().startswith('utf'):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
                               ).decode(sys.stdout.encoding)
 
