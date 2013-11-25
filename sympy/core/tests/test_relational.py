@@ -1,5 +1,3 @@
-import sys
-
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies, Xor
 from sympy.core.relational import ( Relational, Equality, Unequality,
@@ -245,12 +243,10 @@ def test_new_relational():
 
     # finally, some fuzz testing
     from random import randint
+    from sympy.core.compatibility import unichr
     for i in range(100):
         while 1:
-            if sys.version_info[0] >= 3:
-                strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)
-            else:
-                strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
+            strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
             relation_type = strtype( randint(0, length) )
             if randint(0, 1):
                 relation_type += strtype( randint(0, length) )

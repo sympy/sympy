@@ -3,7 +3,6 @@ from __future__ import print_function, division
 import decimal
 import math
 import re as regex
-import sys
 from collections import defaultdict
 
 from .core import C
@@ -1869,12 +1868,10 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         # Order(0,x) -> 0
         return self
 
-    if sys.version_info[0] >= 3:
-        def __bool__(self):
-            return False
-    else:
-        def __nonzero__(self):
-            return False
+    def __nonzero__(self):
+        return False
+
+    __bool__ = __nonzero__
 
 
 class One(with_metaclass(Singleton, IntegerConstant)):

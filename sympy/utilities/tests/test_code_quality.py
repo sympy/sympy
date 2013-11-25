@@ -3,7 +3,8 @@ from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
-import sys
+
+from sympy.core.compatibility import PY3
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -19,8 +20,6 @@ assert exists(SYMPY_PATH)
 TOP_PATH = abspath(join(SYMPY_PATH, pardir))
 BIN_PATH = join(TOP_PATH, "bin")
 EXAMPLES_PATH = join(TOP_PATH, "examples")
-
-IS_PYTHON_3 = (sys.version_info[0] == 3)
 
 # Error messages
 message_space = "File contains trailing whitespace: %s, line %s."
@@ -96,7 +95,7 @@ def test_files():
     """
 
     def test(fname):
-        if IS_PYTHON_3:
+        if PY3:
             with open(fname, "rt", encoding="utf8") as test_file:
                 test_this_file(fname, test_file)
         else:
