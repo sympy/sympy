@@ -63,7 +63,7 @@ def test_2124():
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)
 
-    assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3) + O(x**(-5), x, oo)
+    assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3) + O(x**(-5), (x, oo))
     assert abs(x).series(x, oo, n=5, dir='+') == x
     assert abs(x).series(x, -oo, n=5, dir='-') == -x
     assert abs(-x).series(x, oo, n=5, dir='+') == x

@@ -999,7 +999,8 @@ class PrettyPrinter(Printer):
 
     def _print_Order(self, expr):
         pform = self._print(expr.expr)
-        if expr.point != S.Zero or len(expr.variables) > 1:
+        if (expr.point and any(p != S.Zero for p in expr.point)) or \
+           len(expr.variables) > 1:
             pform = prettyForm(*pform.right("; "))
             if len(expr.variables) > 1:
                 pform = prettyForm(*pform.right(self._print(expr.variables)))
@@ -1009,7 +1010,10 @@ class PrettyPrinter(Printer):
                 pform = prettyForm(*pform.right(u(" \u2192 ")))
             else:
                 pform = prettyForm(*pform.right(" -> "))
-            pform = prettyForm(*pform.right(self._print(expr.point)))
+            if len(expr.point) > 1:
+                pform = prettyForm(*pform.right(self._print(expr.point)))
+            else:
+                pform = prettyForm(*pform.right(self._print(expr.point[0])))
         pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.left("O"))
         return pform

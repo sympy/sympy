@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core.core import C
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, is_sequence
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
@@ -626,7 +626,7 @@ class Add(Expr, AssocOp):
             return self._new_rawargs(*args)
 
     @cacheit
-    def extract_leading_order(self, *symbols):
+    def extract_leading_order(self, symbols, point=None):
         """
         Returns the leading term and it's order.
 
@@ -643,7 +643,10 @@ class Add(Expr, AssocOp):
 
         """
         lst = []
-        seq = [(f, C.Order(f, *symbols)) for f in self.args]
+        symbols = list(symbols if is_sequence(symbols) else [symbols])
+        if not point:
+            point = [0]*len(symbols)
+        seq = [(f, C.Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
                 if o.contains(of) and o != of:
