@@ -945,10 +945,10 @@ def test_real_imag():
             z).as_real_imag(deep=deep) == (sin(a)*cosh(b), cos(a)*sinh(b))
         assert cos(
             z).as_real_imag(deep=deep) == (cos(a)*cosh(b), -sin(a)*sinh(b))
-        assert tan(z).as_real_imag(deep=deep) == (sin(a)*cos(
-            a)/(cos(a)**2 + sinh(b)**2), sinh(b)*cosh(b)/(cos(a)**2 + sinh(b)**2))
-        assert cot(z).as_real_imag(deep=deep) == (sin(a)*cos(a)/(
-            sin(a)**2 + sinh(b)**2), -sinh(b)*cosh(b)/(sin(a)**2 + sinh(b)**2))
+        assert tan(z).as_real_imag(deep=deep) == (sin(2*a)/(cos(2*a) +
+            cosh(2*b)), sinh(2*b)/(cos(2*a) + cosh(2*b)))
+        assert cot(z).as_real_imag(deep=deep) == (-sin(2*a)/(cos(2*a) -
+            cosh(2*b)), -sinh(2*b)/(cos(2*a) - cosh(2*b)))
         assert sin(a).as_real_imag(deep=deep) == (sin(a), 0)
         assert cos(a).as_real_imag(deep=deep) == (cos(a), 0)
         assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)
