@@ -1286,7 +1286,7 @@ class cot(TrigonometricFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -csc(self.args[0])**2
+            return S.NegativeOne - self**2
         else:
             raise ArgumentIndexError(self, argindex)
 
