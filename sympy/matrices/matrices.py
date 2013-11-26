@@ -4150,8 +4150,6 @@ def classof(A, B):
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
-    if isinstance(j, slice):
-        return j
     if type(j) is not int:
         try:
             j = j.__index__()
