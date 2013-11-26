@@ -1077,8 +1077,8 @@ def test_csc():
     assert csc(pi/2).is_bounded == True
 
     assert series(csc(x), x, x0=pi/2, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
-    assert (series(csc(x), x, x0=0, n=6) ==
-            1/x + x/6 + 7*x**3/360 - 13*x**5/5040 + O(x**6))
+    assert series(csc(x), x, x0=0, n=6) == \
+            1/x + x/6 + 7*x**3/360 + 31*x**5/15120 + O(x**6)
 
     assert csc(x).diff(x) == -cot(x)*csc(x)
 
