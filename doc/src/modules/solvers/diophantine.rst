@@ -173,7 +173,7 @@ set()
 >>> expand(y_n)
 -sqrt(2)*(-2*sqrt(2) + 3)**n/4 + (-2*sqrt(2) + 3)**n/2 + sqrt(2)*(2*sqrt(2) + 3)**n/4 + (2*sqrt(2) + 3)**n/2 - 1
 
-Here `n` is a non-negative integer. Although x_n and y_n may not look like
+Here `n` is an integer. Although x_n and y_n may not look like
 integers, substituting in specific values for n (and simplifying) shows that they
 are. For example consider the following example where we set n equal to 9.
 
