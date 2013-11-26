@@ -698,8 +698,8 @@ def test_K4():
 
 def test_K5():
     x, y = symbols('x, y', real=True)
-    assert tan(x + I*y).expand(complex=True) == sin(x)*cos(x) / (cos(x)**2 +
-    sinh(y)**2) + I*sinh(y)*cosh(y) / (cos(x)**2 + sinh(y)**2)
+    assert tan(x + I*y).expand(complex=True) == (sin(2*x)/(cos(2*x) +
+        cosh(2*y)) + I*sinh(2*y)/(cos(2*x) + cosh(2*y)))
 
 
 def test_K6():
