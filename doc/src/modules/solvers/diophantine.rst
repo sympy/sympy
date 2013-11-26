@@ -177,7 +177,7 @@ Here `n` is an integer. Although x_n and y_n may not look like
 integers, substituting in specific values for n (and simplifying) shows that they
 are. For example consider the following example where we set n equal to 9.
 
->>simplify(x_n.subs({n: 9}))
+>>>simplify(x_n.subs({n: 9}))
 -9369318
 
 Any binary quadratic of the form `ax^2 + bxy + cy^2 + dx + ey + f = 0` can be
