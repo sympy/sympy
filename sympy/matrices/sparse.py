@@ -504,7 +504,6 @@ class SparseMatrix(MatrixBase):
         return M
 
     def extract(self, rowsList, colsList):
-        """see sympy.matrices.matrices.extract for details"""
         urow = list(uniq(rowsList))
         ucol = list(uniq(colsList))
         smat = {}
@@ -534,6 +533,7 @@ class SparseMatrix(MatrixBase):
                 if i_previous != i:
                     rv = rv.col_insert(i, rv.col(i_previous))
         return rv
+    extract.__doc__ = MatrixBase.extract.__doc__
 
     def submatrix(self, keys):
         rlo, rhi, clo, chi = self.key2bounds(keys)
@@ -554,6 +554,7 @@ class SparseMatrix(MatrixBase):
                 if rlo <= rk < rhi and clo <= ck < chi:
                     smat[(rk-rlo, ck-clo)] = self._smat[(rk, ck)]
             return self._new(r, c, smat)
+    submatrix.__doc__ = MatrixBase.submatrix.__doc__
 
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
