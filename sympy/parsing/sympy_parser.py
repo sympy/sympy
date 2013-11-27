@@ -12,6 +12,7 @@ import ast
 import re
 import unicodedata
 
+import sympy
 from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic, C
 
@@ -47,7 +48,7 @@ def _token_callable(token, local_dict, global_dict, nextToken=None):
     func = local_dict.get(token[1])
     if not func:
         func = global_dict.get(token[1])
-    return callable(func)
+    return callable(func) and not isinstance(func, sympy.Symbol)
 
 
 def _add_factorial_tokens(name, result):
