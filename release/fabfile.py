@@ -49,7 +49,8 @@ import json
 import base64
 from getpass import getpass
 
-import os.path
+import os
+import stat
 
 try:
     # https://pypi.python.org/pypi/fabric-virtualenv/
@@ -807,19 +808,16 @@ files below.
     return out
 
 @task
-def GitHub_release(username=None, user='sympy', token=None):
+def GitHub_release(username=None, user='sympy', token=None, token_file_path="~/.sympy/release-token"):
     release_text = GitHub_release_text()
     version = get_sympy_version()
     tag = 'sympy-' + version
     urls = URLs(user=user, repo="sympy")
     if not username:
         username = raw_input("GitHub username: ")
-    username, password, token = GitHub_authenticate(urls, username, token)
-    # TODO: Save the token to a file
-    print("Your token is", token)
-    print("Use this token from now on as GitHub_release:token=" + token +
-        ",username=" + username)
-    print(red("DO NOT share this token with anyone"))
+    token = load_token_file(token_file_path)
+    if not token:
+        username, password, token = GitHub_authenticate(urls, username, token)
     print(query_GitHub(urls.releases_url, username, password=None, token=token))
 
 
@@ -872,6 +870,13 @@ https to authenticate with GitHub, otherwise not saved anywhere else:\
             if name == "":
                 name = "SymPy Release"
             token = generate_token(urls, username, password, name=name)
+            print("Your token is", token)
+            print("Use this token from now on as GitHub_release:token=" + token +
+                ",username=" + username)
+            print(red("DO NOT share this token with anyone"))
+            save = raw_input("Do you want to save this token to a file [yes]? ")
+            if save.lower().strip() in ['y', 'yes', 'ye', '']:
+                save_token_file(token)
 
     return username, password, token
 
@@ -884,8 +889,51 @@ def generate_token(urls, username, password, OTP=None, name="SymPy Bot"):
     )
 
     url = urls.authorize_url
-    rep = query_GitHub(url, username=username, password=password, data=enc_data)
+    rep = query_GitHub(url, username=username, password=password,
+        data=enc_data)
     return rep["token"]
+
+def save_token_file(token):
+    token_file = raw_input("> Enter token file location [~/.sympy/release-token] ")
+    token_file = token_file or "~/.sympy/release-token"
+
+    token_file_expand = os.path.expanduser(token_file)
+    token_file_expand = os.path.abspath(token_file_expand)
+    token_folder, _ = os.path.split(token_file_expand)
+
+    try:
+        if not os.path.isdir(token_folder):
+            os.mkdir(token_folder, 0o700)
+        with open(token_file_expand, 'w') as f:
+            f.write(token + '\n')
+        os.chmod(token_file_expand, stat.S_IREAD | stat.S_IWRITE)
+    except OSError as e:
+        print("> Unable to create folder for token file: ", e)
+        return
+    except IOError as e:
+        print("> Unable to save token file: ", e)
+        return
+
+    return token_file
+
+def load_token_file(path="~/.sympy/release-token"):
+    print("> Using token file %s" % path)
+
+    path = os.path.expanduser(path)
+    path = os.path.abspath(path)
+
+    if os.path.isfile(path):
+        try:
+            with open(path) as f:
+                token = f.readline()
+        except IOError:
+            print("> Unable to read token file")
+            return
+    else:
+        print("> Token file does not exist")
+        return
+
+    return token.strip()
 
 class URLs(object):
     """
