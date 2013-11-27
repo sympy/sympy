@@ -116,7 +116,7 @@ def degree_bound(p, q, lam, x, alpha):
     #elif alpha > 1:
     elif alpha > 0:
         adds = []
-        for i in xrange(0, alpha):
+        for i in range(0, alpha):
             tmp = p.shift(i)*lam**i / q.shift(i)
             adds.append(tmp)
 
@@ -256,11 +256,11 @@ def preprocess(f, x):
     exppart = simplify(exppart)
 
     apow = exppart.as_powers_dict()
-    exps = apow.values()[0]
+    exps = list(apow.values())[0]
 
     tobase = cancel(exps / x)
 
-    l = apow.keys()[0] ** tobase
+    l = list(apow.keys())[0] ** tobase
 
     if x in l.free_symbols:
         raise ValueError("Base of exponential part not free of "+str(x)+".")
