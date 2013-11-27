@@ -268,7 +268,7 @@ def source_tarball():
     with cd("/home/vagrant/repos/sympy"):
         run("git clean -dfx")
         run("./setup.py clean")
-        run("./setup.py sdist")
+        run("./setup.py sdist --keep-temp")
         run("./setup.py bdist_wininst")
         run("mv dist/{win32-orig} dist/{win32}".format(**tarball_formatter()))
 
@@ -799,11 +799,11 @@ def pypi_register():
 @task
 def pypi_upload():
     """
-    Upload files to PyPI
+    Upload files to PyPI. You will need to enter a password.
     """
     with cd("/home/vagrant/repos/sympy"):
-        # XXX: Doesn't actually work yet
-        run("python setupegg.py upload")
+        # See http://stackoverflow.com/a/17657183/161801
+        run("python setup.py sdist --dry-run upload")
 
 # ------------------------------------------------
 # Vagrant related configuration
