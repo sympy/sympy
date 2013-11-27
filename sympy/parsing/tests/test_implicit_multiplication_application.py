@@ -91,6 +91,9 @@ def test_function_exponentiation():
         raises(SyntaxError,
                lambda: parse_expr(case, transformations=transformations2))
 
+    assert parse_expr('x**2', local_dict={ 'x': sympy.Symbol('x') },
+                      transformations=transformations2) == parse_expr('x**2')
+
 
 def test_symbol_splitting():
     # By default Greek letter names should not be split (lambda is a keyword
