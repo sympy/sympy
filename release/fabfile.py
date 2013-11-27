@@ -40,10 +40,14 @@ from contextlib import contextmanager
 
 from fabric.api import env, local, run, sudo, cd, hide, task
 from fabric.contrib.files import exists
-from fabric.colors import blue
+from fabric.colors import blue, red
 from fabric.utils import error
 
+import urllib2
 import unicodedata
+import json
+import base64
+from getpass import getpass
 
 import os.path
 
@@ -258,7 +262,6 @@ def release(branch=None, fork='sympy'):
     test_tarball('3')
     compare_tar_against_git()
     print_authors()
-    GitHub_release()
 
 @task
 def source_tarball():
@@ -578,28 +581,6 @@ def table():
     return out
 
 @task
-def GitHub_release():
-    """
-    Generate text to put in the GitHub release Markdown box
-    """
-    shortversion = get_sympy_short_version()
-    htmltable = table()
-    out = """\
-See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the release notes.
-
-{htmltable}
-
-**Note**: Do not download the `Source code (zip)` or the `Source code (tar.gz)`
-files below.
-"""
-    out = out.format(shortversion=shortversion, htmltable=htmltable)
-    print(blue("Here are the release notes to copy into the GitHub release "
-        "Markdown form:", bold=True))
-    print()
-    print(out)
-    return out
-
-@task
 def get_tarball_name(file):
     """
     Get the name of a tarball
@@ -762,18 +743,16 @@ Thanks to everyone who contributed to this release!
     print()
 
 # ------------------------------------------------
-# PyPI
+# Uploading
 
 @task
 def upload():
     """
-    Upload the files everywhere
-
-    For now, it is just PyPI, because GitHub doesn't seem to have an API.
+    Upload the files everywhere (PyPI and GitHub)
 
     """
     distutils_check()
-    #pypi_register()
+    pypi_register()
     pypi_upload()
 
 @task
@@ -804,6 +783,217 @@ def pypi_upload():
     with cd("/home/vagrant/repos/sympy"):
         # See http://stackoverflow.com/a/17657183/161801
         run("python setup.py sdist --dry-run upload")
+
+@task
+def GitHub_release_text():
+    """
+    Generate text to put in the GitHub release Markdown box
+    """
+    shortversion = get_sympy_short_version()
+    htmltable = table()
+    out = """\
+See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the release notes.
+
+{htmltable}
+
+**Note**: Do not download the `Source code (zip)` or the `Source code (tar.gz)`
+files below.
+"""
+    out = out.format(shortversion=shortversion, htmltable=htmltable)
+    print(blue("Here are the release notes to copy into the GitHub release "
+        "Markdown form:", bold=True))
+    print()
+    print(out)
+    return out
+
+@task
+def GitHub_release(username=None, user='sympy', token=None):
+    release_text = GitHub_release_text()
+    version = get_sympy_version()
+    tag = 'sympy-' + version
+    urls = URLs(user=user, repo="sympy")
+    if not username:
+        username = raw_input("GitHub username: ")
+    username, password, token = GitHub_authenticate(urls, username, token)
+    # TODO: Save the token to a file
+    print("Your token is", token)
+    print("Use this token from now on as GitHub_release:token=" + token +
+        ",username=" + username)
+    print(red("DO NOT share this token with anyone"))
+    print(query_GitHub(urls.releases_url, username, password=None, token=token))
+
+
+def GitHub_check_authentication(urls, username, password, token):
+    """
+    Checks that username & password is valid.
+    """
+    query_GitHub(urls.api_url, username, password, token)
+
+def GitHub_authenticate(urls, username, token=None):
+    _login_message = """\
+Enter your GitHub username & password or press ^C to quit. The password
+will be kept as a Python variable as long as this script is running and
+https to authenticate with GitHub, otherwise not saved anywhere else:\
+"""
+    if username:
+        print("> Authenticating as %s" % username)
+    else:
+        print(_login_message)
+        username = raw_input("Username: ")
+
+    authenticated = False
+
+    if token:
+        print("> Authenticating using token")
+        try:
+            GitHub_check_authentication(urls, username, None, token)
+        except AuthenticationFailed:
+            print(">     Authentication failed")
+        else:
+            print(">     OK")
+            password = None
+            authenticated = True
+
+    while not authenticated:
+        password = getpass("Password: ")
+        try:
+            print("> Checking username and password ...")
+            GitHub_check_authentication(urls, username, password, None)
+        except AuthenticationFailed:
+            print(">     Authentication failed")
+        else:
+            print(">     OK.")
+            authenticated = True
+
+    if password:
+        generate = raw_input("> Generate API token? [Y/n] ")
+        if generate.lower() in ["y", "ye", "yes", ""]:
+            name = raw_input("> Name of token on GitHub? [SymPy Release] ")
+            if name == "":
+                name = "SymPy Release"
+            token = generate_token(urls, username, password, name=name)
+
+    return username, password, token
+
+def generate_token(urls, username, password, OTP=None, name="SymPy Bot"):
+    enc_data = json.dumps(
+        {
+            "scopes": ["public_repo"],
+            "note": name
+        }
+    )
+
+    url = urls.authorize_url
+    rep = query_GitHub(url, username=username, password=password, data=enc_data)
+    return rep["token"]
+
+class URLs(object):
+    """
+    This class contains URLs and templates which used in requests to GitHub API
+    """
+
+    def __init__(self, user="sympy", repo="sympy", api_url="https://api.github.com", authorize_url="https://api.github.com/authorizations"):
+        """ Generates all URLs and templates """
+
+        self.user = user
+        self.repo = repo
+        self.api_url = api_url
+        self.authorize_url = authorize_url
+
+        self.pull_list_url = api_url + "/repos" + "/" + user + "/" + repo + "/pulls"
+        self.issue_list_url = api_url + "/repos/" + user + "/" + repo + "/issues"
+        self.releases_url = api_url + "/repos/" + user + "/" + repo + "/releases"
+        self.single_issue_template = self.issue_list_url + "/%d"
+        self.single_pull_template = self.pull_list_url + "/%d"
+        self.user_info_template = api_url + "/users/%s"
+        self.user_repos_template = api_url + "/users/%s/repos"
+        self.issue_comment_template = \
+            api_url + "/repos" + "/" + user + "/" + repo + "/issues/%d" + "/comments"
+
+class AuthenticationFailed(Exception):
+    pass
+
+def GitHub_link2dict(l):
+    """
+    Converts the GitHub Link header to a dict:
+
+    Example::
+
+    >>> GitHub_link2dict('<https://api.github.com/repos/sympy/sympy/pulls?page=2&state=closed>; rel="next",  <https://api.github.com/repos/sympy/sympy/pulls?page=21&state=closed>; rel="last"')
+    {'last': 'https://api.github.com/repos/sympy/sympy/pulls?page=21&state=closed',  'next': 'https://api.github.com/repos/sympy/sympy/pulls?page=2&state=closed'}
+
+    Borrowed from SymPy-bot
+    """
+    d = {}
+    while True:
+        i = l.find(";")
+        assert i != -1
+        assert l[0] == "<"
+        url = l[1:i - 1]
+        assert l[i - 1] == ">"
+        assert l[i + 1:i + 7] == ' rel="'
+        j = l.find('"', i + 7)
+        assert j != -1
+        param = l[i + 7:j]
+        d[param] = url
+
+        if len(l) == j + 1:
+            break
+        assert l[j + 1] == ","
+        j += 2
+        l = l[j + 1:]
+    return d
+
+def query_GitHub(url, username=None, password=None, token=None, data="", OTP=None):
+    """
+    Query GitHub API.
+
+    In case of a multipage result, query the next page and return all results.
+
+    Borrowed from SymPy-bot
+    """
+    request = urllib2.Request(url)
+    # Add authentication headers to request, if username and password presented
+    if username:
+        if token:
+            request.add_header("Authorization", "bearer %s" % token)
+        elif password:
+            base64string = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
+            request.add_header("Authorization", "Basic %s" % base64string)
+
+        if OTP:
+            request.add_header("X-GitHub-OTP", OTP)
+
+    if data is not "":
+        request.add_data(data)
+    try:
+        http_response = urllib2.urlopen(request)
+        response_body = json.load(http_response)
+    except urllib2.HTTPError as e:
+        # Auth exception
+        if e.code == 401:
+            two_factor = e.headers.getheaders('X-GitHub-OTP')
+            if two_factor:
+                print("A two-factor authentication code is required: ", two_factor[0].split(';')[1].strip())
+                OTP = raw_input("Authentication code: ")
+                return query_GitHub(url, username=username, password=password,
+                    token=token, data=data, OTP=OTP)
+            raise AuthenticationFailed("invalid username or password")
+        # Other exceptions
+        raise urllib2.HTTPError(e.filename, e.code, e.msg, None, None)
+    except ValueError as e:
+        # If auth was successful
+        if http_response.code in (204, 302):
+            return []
+        # else return original error
+        raise ValueError(e)
+
+    link = http_response.headers.get("Link")
+    nexturl = GitHub_link2dict(link).get("next") if link else None
+    if nexturl:
+        response_body.extend(query_GitHub(nexturl, username, password, token, data))
+
+    return response_body
 
 # ------------------------------------------------
 # Vagrant related configuration
