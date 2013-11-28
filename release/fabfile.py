@@ -257,11 +257,11 @@ def release(branch=None, fork='sympy'):
     # into a separate script so that it can be used without vagrant.
     local("../bin/mailmap_update.py")
     source_tarball()
+    build_docs()
+    copy_release_files()
     test_tarball('2')
     test_tarball('3')
     compare_tar_against_git()
-    build_docs()
-    copy_release_files()
     print_authors()
 
 @task
