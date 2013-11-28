@@ -1033,7 +1033,7 @@ def query_GitHub(url, username=None, password=None, token=None, data="", OTP=Non
                     token=token, data=data, OTP=OTP)
             raise AuthenticationFailed("invalid username or password")
         # Other exceptions
-        raise urllib2.HTTPError(e.filename, e.code, e.msg, None, None)
+        raise
     except ValueError as e:
         # If auth was successful
         if http_response.code in (204, 302):
