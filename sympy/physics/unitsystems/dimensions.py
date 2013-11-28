@@ -16,6 +16,7 @@ from __future__ import division
 from copy import copy
 import numbers
 
+from sympy.core.compatibility import reduce
 from sympy.core.containers import Tuple
 from sympy import sympify, Number, Matrix, AtomicExpr
 

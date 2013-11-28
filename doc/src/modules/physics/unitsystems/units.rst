@@ -7,5 +7,8 @@ Units and unit systems
 .. autoclass:: Unit
    :members:
 
+.. autoclass:: Constant
+   :members:
+
 .. autoclass:: UnitSystem
    :members:

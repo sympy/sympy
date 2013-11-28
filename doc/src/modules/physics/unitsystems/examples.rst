@@ -76,7 +76,7 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     >>> Tr = solve(T**2/venus_a**3 - 4*pi**2 / mks["G"] / solar_mass, T)[1]
     >>> q = qsimplify(Tr)
     >>> day = Unit(s.dim, abbrev="day", factor=86400)
-    >>> q.convert_to(day)
+    >>> print(q.convert_to(day))
     224.667 day
 
 We could also have the solar mass and the day as units coming from the

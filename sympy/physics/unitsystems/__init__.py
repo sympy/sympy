@@ -23,6 +23,7 @@ this page if you are willing to help.
 from __future__ import division
 
 from sympy import Add, Mul, Pow
+from sympy.core.compatibility import reduce
 from sympy.physics.unitsystems.dimensions import Dimension
 from sympy.physics.unitsystems.units import Unit, Constant
 from sympy.physics.unitsystems.quantities import Quantity
