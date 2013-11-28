@@ -610,7 +610,11 @@ def get_tarball_name(file):
         name = "sympy-{version}.{wintype}.exe"
     elif file in {'html', 'pdf', 'html-nozip'}:
         name = "sympy-docs-{type}-{version}"
-        if not file.endswith('nozip'):
+        if file == 'html-nozip':
+            # zip files keep the name of the original zipped directory. See
+            # https://code.google.com/p/sympy/issues/detail?id=3988.
+            file = 'html'
+        else:
             name += ".{extension}"
     elif file == 'pdf-orig':
         name = "sympy-{version}.pdf"
