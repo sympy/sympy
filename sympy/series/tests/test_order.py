@@ -377,7 +377,7 @@ def test_order_at_infinity():
 
     # issue 7207
     assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
-    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == y**x
+    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == exp(log(y)*x)
 
 
 def test_mixing_order_at_zero_and_infinity():
