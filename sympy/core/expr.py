@@ -69,26 +69,41 @@ class Expr(Basic, EvalfMixin):
     def repr(self):
         if self._repr:
             return self._repr
-        else:
+        elif self.is_Float or self.is_Integer:
             return self.__str__()
+        else:
+            return (self.__str__(),)
 
-    def setRepr(self, r):
+    def set_repr(self, r):
         self._repr = r
 
-    def makeRepr(self, op, other, res):
+    def clear_repr(self):
+        if self.is_Float or self.is_Integer:
+            self.set_repr(self.__str__())
+        else:
+            self.set_repr((self.__str__(),))
+
+    def make_repr(self, op, other, res):
         if res == self:
-            res.setRepr(self.repr())
+            res.set_repr(self.repr())
         elif res == other:
-            res.setRepr(other.repr())
+            if isinstance(other, Expr):
+                res.set_repr(other.repr())
+            else:
+                res.set_repr((repr(other),))
         else:
             if op == "*":
                 if self == -1:
-                    res.setRepr(other.__neg__().repr())
+                    res.set_repr(other.__neg__().repr())
                     return
                 elif other == -1:
-                    res.setRepr(self.__neg__().repr())
+                    res.set_repr(self.__neg__().repr())
                     return
-            res.setRepr((self.repr(), op, other.repr()))
+            if op == "/":
+                if other == -1:
+                    res.set_repr(self.__neg__().repr())
+                    return
+            res.set_repr((self.repr(), op, other.repr()))
         
 
     @cacheit
@@ -138,7 +153,14 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def __neg__(self):
-        return Mul(S.NegativeOne, self)
+        res = Mul(S.NegativeOne, self)
+        rr = self.repr()
+        if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
+            rr = rr[1]
+        else:
+            rr = ("-", rr)
+        res.set_repr(rr)
+        return res
 
     def __abs__(self):
         return C.Abs(self)
@@ -146,52 +168,72 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return Add(self, other)
+        res = Add(self, other)
+        self.make_repr("+", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return Add(other, self)
+        res = Add(other, self)
+        other.make_repr("+", self, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return Add(self, -other)
+        res = Add(self, -other)
+        self.make_repr("-", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return Add(other, -self)
+        res = Add(other, -self)
+        other.make_repr("-", self, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return Mul(self, other)
+        res = Mul(self, other)
+        self.make_repr("*", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return Mul(other, self)
+        res = Mul(other, self)
+        other.make_repr("*", self, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        return Pow(self, other)
+        res = Pow(self, other)
+        self.make_repr("**", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        return Pow(other, self)
+        res = Pow(other, self)
+        other.make_repr("**", self, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return Mul(self, Pow(other, S.NegativeOne))
+        res = Mul(self, Pow(other, S.NegativeOne))
+        self.make_repr("/", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
-        return Mul(other, Pow(self, S.NegativeOne))
+        res = Mul(other, Pow(self, S.NegativeOne))
+        other.make_repr("/", self, res)
+        return res
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__

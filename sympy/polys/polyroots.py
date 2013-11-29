@@ -55,8 +55,8 @@ def roots_quadratic(f):
 
     if c is S.Zero:
         r0, r1 = S.Zero, -b/a
-        add_eq("r0", r0)
-        add_eq("r1", r1)
+        add_step(r0)
+        add_step(r1)
 
         if not dom.is_Numerical:
             r1 = _simplify(r1)
@@ -76,6 +76,7 @@ def roots_quadratic(f):
     else:
         d = b**2 - 4*a*c
         add_step(d)
+        d.clear_repr()
 
         if dom.is_Numerical:
             D = sqrt(d)
@@ -91,8 +92,9 @@ def roots_quadratic(f):
 
             r0 = E + F
             r1 = E - F
-        #add_step(r0)
-        #add_step(r1)
+        
+        add_step(r0)
+        add_step(r1)
 
     return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
 

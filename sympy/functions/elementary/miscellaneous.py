@@ -107,7 +107,15 @@ def sqrt(arg):
 
     """
     # arg = sympify(arg) is handled by Pow
-    return C.Pow(arg, S.Half)
+    res = C.Pow(arg, S.Half)
+    if isinstance(arg, Expr):
+        r = arg.repr()
+        if not isinstance(r, tuple):
+            r = (r,)
+    else:
+        r = (str(arg),)
+    res.set_repr(("sqrt", r))
+    return res
 
 
 

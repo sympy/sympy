@@ -4,6 +4,8 @@ from sympy.core.symbol import Symbol
 from sympy.core.relational import Eq
 import gc, sys
 
+solution_list = []
+
 def find_names(obj):
     frame = sys._getframe()
     for frame in iter(lambda: frame.f_back, None):
@@ -30,20 +32,30 @@ def find_name(obj):
 def add_step(variable):
     """Add a variable and its value into solution"""
     var = find_name(variable)
-    var = Symbol(var)
-    print "->", var, "=", repr(variable)
+    r = repr(variable)
+    print "->", var, "=", r
+    solution_list.append(var + " = " + r)
+    v = str(variable)
+    if v != r:
+        print "->", var, "=", v
+        solution_list.append(var + " = " + v)
     
 def add_eq(l, r):
     """Add an equality into solution"""
-    print "->", repr(l), "=",  repr(r)
+    r = repr(l) + " = " + repr(r)
+    print "->", r
+    solution_list.append(r)
 
 def add_exp(exp):
     """Add an expression into solution"""
-    print "-> ", repr(exp)
+    r = repr(exp)
+    print "-> ", r
+    solution_list.append(r)
 
 def reset_solution():
     """Clear previos solution"""
     print("New solution")
+    solution_list = []
 
 def start_subroutine(name):
     """Start add soubroutine steps"""
@@ -57,3 +69,5 @@ def commit_subroutine():
     """Finish current subroutine"""
     print("Finish subroutine")
 
+def last_solution():
+    return solution_list

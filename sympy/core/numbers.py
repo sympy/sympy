@@ -724,35 +724,54 @@ class Float(Number):
     __bool__ = __nonzero__
 
     def __neg__(self):
-        return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
+        res = Float._new(mlib.mpf_neg(self._mpf_), self._prec)
+        rr = self.repr()
+        if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
+            rr = rr[1]
+        else:
+            rr = ("-", rr)
+        res.set_repr(rr)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__add__(self, other)
+            res = Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
+        else:
+            res = Number.__add__(self, other)
+        self.make_repr("+", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__sub__(self, other)
+            res = Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
+        else:
+            res = Number.__sub__(self, other)
+        self.make_repr("-", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__mul__(self, other)
+            res = Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
+        else:
+            res = Number.__mul__(self, other)
+        self.make_repr("*", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Number) and other != 0:
             rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__div__(self, other)
+            res = Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
+        else:
+            res = Number.__div__(self, other)
+        self.make_repr("/", other, res)
+        return res
 
     __truediv__ = __div__
 
@@ -783,6 +802,12 @@ class Float(Number):
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
+        res = self.__eval_power(expt)
+        if isinstance(res, Expr):
+            self.make_repr("**", expt, res)
+        return res
+        
+    def __eval_power(self, expt):
         """
         expt is symbolic object but not equal to 0, 1
 
@@ -1158,43 +1183,58 @@ class Rational(Number):
         return self.p == 0
 
     def __neg__(self):
-        return Rational(-self.p, self.q)
+        res = Rational(-self.p, self.q)
+        rr = self.repr()
+        if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
+            rr = rr[1]
+        else:
+            rr = ("-", rr)
+        res.set_repr(rr)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
+            res = Rational(self.p*other.q + self.q*other.p, self.q*other.q)
         elif isinstance(other, Float):
-            return other + self
+            res = other + self
         else:
-            return Number.__add__(self, other)
+            res = Number.__add__(self, other)
+        self.make_repr("+", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
+            res = Rational(self.p*other.q - self.q*other.p, self.q*other.q)
         elif isinstance(other, Float):
-            return -other + self
+            res = -other + self
         else:
-            return Number.__sub__(self, other)
+            res = Number.__sub__(self, other)
+        self.make_repr("-", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.p, self.q*other.q)
+            res = Rational(self.p*other.p, self.q*other.q)
         elif isinstance(other, Float):
-            return other*self
+            res = other*self
         else:
-            return Number.__mul__(self, other)
+            res = Number.__mul__(self, other)
+        self.make_repr("*", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.q, self.q*other.p)
+            res = Rational(self.p*other.q, self.q*other.p)
         elif isinstance(other, Float):
-            return self*(1/other)
+            res = self*(1/other)
         else:
-            return Number.__div__(self, other)
+            res = Number.__div__(self, other)
+        self.make_repr("/", other, res)
+        return res
 
     __truediv__ = __div__
 
@@ -1216,6 +1256,12 @@ class Rational(Number):
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
+        res = self.__eval_power(expt)
+        if isinstance(res, Expr):
+            self.make_repr("**", expt, res)
+        return res
+
+    def __eval_power(self, expt):
         if isinstance(expt, Number):
             if isinstance(expt, Float):
                 return self._eval_evalf(expt._prec)**expt
@@ -1560,7 +1606,7 @@ class Integer(Rational):
             rr = rr[1]
         else:
             rr = ("-", rr)
-        res.setRepr(rr)
+        res.set_repr(rr)
         return res
 
     def __abs__(self):
@@ -1593,10 +1639,13 @@ class Integer(Rational):
     # TODO make it decorator + bytecodehacks?
     def __add__(self, other):
         if isinstance(other, integer_types):
-            return Integer(self.p + other)
+            res = Integer(self.p + other)
         elif isinstance(other, Integer):
-            return Integer(self.p + other.p)
-        return Rational.__add__(self, other)
+            res = Integer(self.p + other.p)
+        else:
+            res = Rational.__add__(self, other)
+        self.make_repr("+", other, res)
+        return res
 
     def __radd__(self, other):
         if isinstance(other, integer_types):
@@ -1610,7 +1659,7 @@ class Integer(Rational):
             res = Integer(self.p - other.p)
         else:
             res = Rational.__sub__(self, other)
-        self.makeRepr("-", other, res)
+        self.make_repr("-", other, res)
         return res
 
     def __rsub__(self, other):
@@ -1625,7 +1674,7 @@ class Integer(Rational):
             res = Integer(self.p*other.p)
         else:
             res = Rational.__mul__(self, other)
-        self.makeRepr("*", other, res)
+        self.make_repr("*", other, res)
         return res
 
     def __rmul__(self, other):
@@ -1699,7 +1748,7 @@ class Integer(Rational):
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
         if isinstance(res, Expr):
-            self.makeRepr("**", expt, res)
+            self.make_repr("**", expt, res)
         return res
         
     def __eval_power(self, expt):
