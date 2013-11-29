@@ -1554,7 +1554,14 @@ class Integer(Rational):
     __long__ = __int__
 
     def __neg__(self):
-        return Integer(-self.p)
+        res = Integer(-self.p)
+        rr = self.repr()
+        if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
+            rr = rr[1]
+        else:
+            rr = ("-", rr)
+        res.setRepr(rr)
+        return res
 
     def __abs__(self):
         if self.p >= 0:
@@ -1598,10 +1605,13 @@ class Integer(Rational):
 
     def __sub__(self, other):
         if isinstance(other, integer_types):
-            return Integer(self.p - other)
+            res = Integer(self.p - other)
         elif isinstance(other, Integer):
-            return Integer(self.p - other.p)
-        return Rational.__sub__(self, other)
+            res = Integer(self.p - other.p)
+        else:
+            res = Rational.__sub__(self, other)
+        self.makeRepr("-", other, res)
+        return res
 
     def __rsub__(self, other):
         if isinstance(other, integer_types):
@@ -1610,10 +1620,13 @@ class Integer(Rational):
 
     def __mul__(self, other):
         if isinstance(other, integer_types):
-            return Integer(self.p*other)
+            res = Integer(self.p*other)
         elif isinstance(other, Integer):
-            return Integer(self.p*other.p)
-        return Rational.__mul__(self, other)
+            res = Integer(self.p*other.p)
+        else:
+            res = Rational.__mul__(self, other)
+        self.makeRepr("*", other, res)
+        return res
 
     def __rmul__(self, other):
         if isinstance(other, integer_types):
@@ -1684,6 +1697,12 @@ class Integer(Rational):
         return bool(self.p % 2)
 
     def _eval_power(self, expt):
+        res = self.__eval_power(expt)
+        if isinstance(res, Expr):
+            self.makeRepr("**", expt, res)
+        return res
+        
+    def __eval_power(self, expt):
         """
         Tries to do some simplifications on self**expt
 

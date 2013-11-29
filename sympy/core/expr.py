@@ -12,9 +12,16 @@ from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
+def represent(v):
+    if isinstance(v, basestring):
+        return v
+    else:
+        l = "".join(map(represent, v))
+        r = ["(", l, ")"]
+        return "".join(r)
 
 class Expr(Basic, EvalfMixin):
-    __slots__ = []
+    #__slots__ = []
 
     @property
     def _diff_wrt(self):
@@ -46,6 +53,43 @@ class Expr(Basic, EvalfMixin):
         2
         """
         return False
+
+    def __getattr__(self, attr):
+        if attr == "_repr":
+            self._repr = None
+            return None
+        return super(Expr, self).__getattr__(attr)
+
+    def __repr__(self):
+        if self._repr:
+            return "".join(map(represent,self._repr))
+        else:
+            return self.__str__()
+
+    def repr(self):
+        if self._repr:
+            return self._repr
+        else:
+            return self.__str__()
+
+    def setRepr(self, r):
+        self._repr = r
+
+    def makeRepr(self, op, other, res):
+        if res == self:
+            res.setRepr(self.repr())
+        elif res == other:
+            res.setRepr(other.repr())
+        else:
+            if op == "*":
+                if self == -1:
+                    res.setRepr(other.__neg__().repr())
+                    return
+                elif other == -1:
+                    res.setRepr(self.__neg__().repr())
+                    return
+            res.setRepr((self.repr(), op, other.repr()))
+        
 
     @cacheit
     def sort_key(self, order=None):
@@ -3080,6 +3124,7 @@ class AtomicExpr(Atom, Expr):
     is_Atom = True
 
     __slots__ = []
+    #__slots__ = ("_repr", )
 
     def _eval_derivative(self, s):
         if self == s:

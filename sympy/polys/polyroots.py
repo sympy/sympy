@@ -23,7 +23,7 @@ from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key, public
 
 from sympy.core.compatibility import reduce, xrange
-
+from sympy.utilities.solution import add_exp, add_eq, add_step
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
@@ -43,20 +43,26 @@ def roots_quadratic(f):
     """Returns a list of roots of a quadratic polynomial."""
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
+    add_eq(f.as_expr(), 0)
 
     def _simplify(expr):
         if dom.is_Composite:
-            return factor(expr)
+            s = factor(expr)
         else:
-            return simplify(expr)
+            s = simplify(expr)
+        add_step(s)
+        return s
 
     if c is S.Zero:
         r0, r1 = S.Zero, -b/a
+        add_eq("r0", r0)
+        add_eq("r1", r1)
 
         if not dom.is_Numerical:
             r1 = _simplify(r1)
     elif b is S.Zero:
         r = -c/a
+        add_step(r)
 
         if not dom.is_Numerical:
             R = sqrt(_simplify(r))
@@ -65,8 +71,11 @@ def roots_quadratic(f):
 
         r0 = R
         r1 = -R
+        add_step(r0)
+        add_step(r1)
     else:
         d = b**2 - 4*a*c
+        add_step(d)
 
         if dom.is_Numerical:
             D = sqrt(d)
@@ -82,6 +91,8 @@ def roots_quadratic(f):
 
             r0 = E + F
             r1 = E - F
+        #add_step(r0)
+        #add_step(r1)
 
     return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
 
