@@ -85,7 +85,6 @@ def compute_dispersion(p, q, l, x):
     r"""
     """
     # Determine dispersion and alpha
-    dp = p.degree()
     dq = q.degree()
 
     if dq == 0:
@@ -101,7 +100,6 @@ def degree_bound(p, q, lam, x, alpha):
     """
     # Find a degree bound
     dp = p.degree()
-    dq = q.degree()
 
     if alpha == 0:
         if not Abs(lam) == 1:
