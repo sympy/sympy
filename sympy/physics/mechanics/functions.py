@@ -3,6 +3,7 @@ from __future__ import print_function, division
 __all__ = ['cross',
            'dot',
            'express',
+           'time_derivative',
            'outer',
            'inertia',
            'mechanics_printing',
@@ -21,6 +22,7 @@ __all__ = ['cross',
            'Lagrangian']
 
 from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
+                                               CoordinateSym,
                                                MechanicsStrPrinter,
                                                MechanicsPrettyPrinter,
                                                MechanicsLatexPrinter,
@@ -29,7 +31,8 @@ from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.point import Point
-from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate
+from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate, \
+     trigsimp
 from sympy.core.basic import S
 
 
@@ -49,14 +52,182 @@ def dot(vec1, vec2):
 dot.__doc__ += Vector.dot.__doc__
 
 
-def express(vec, frame, frame2=None):
-    """Express convenience wrapper"""
-    if isinstance(vec, Dyadic):
-        return vec.express(frame, frame2)
-    else:
-        return frame.express(vec)
+def express(expr, frame, frame2=None, variables=False):
+    """
+    Global function for 'express' functionality.
 
-express.__doc__ += Vector.express.__doc__
+    Re-expresses a Vector, scalar(sympyfiable) or Dyadic in given frame.
+
+    Refer to the local methods of Vector and Dyadic for details.
+    If 'variables' is True, then the coordinate variables (CoordinateSym
+    instances) of other frames present in the vector/scalar field or
+    dyadic expression are also substituted in terms of the base scalars of
+    this frame.
+
+    Parameters
+    ==========
+
+    expr : Vector/Dyadic/scalar(sympyfiable)
+        The expression to re-express in ReferenceFrame 'frame'
+
+    frame: ReferenceFrame
+        The reference frame to express expr in
+
+    frame2 : ReferenceFrame
+        The other frame required for re-expression(only for Dyadic expr)
+
+    variables : boolean
+        Specifies whether to substitute the coordinate variables present
+        in expr, in terms of those of frame
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> B = N.orientnew('B', 'Axis', [q, N.z])
+    >>> d = outer(N.x, N.x)
+    >>> from sympy.physics.mechanics import express
+    >>> express(d, B, N)
+    cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
+    >>> express(B.x, N)
+    cos(q)*N.x + sin(q)*N.y
+    >>> express(N[0], B, variables=True)
+    B_x*cos(q(t)) - B_y*sin(q(t))
+
+    """
+
+    _check_frame(frame)
+
+    if expr == 0:
+        return S(0)
+
+    if isinstance(expr, Vector):
+        #Given expr is a Vector
+        if variables:
+            #If variables attribute is True, substitute
+            #the coordinate variables in the Vector
+            frame_list = [x[-1] for x in expr.args]
+            subs_dict = {}
+            for f in frame_list:
+                subs_dict.update(f.variable_map(frame))
+            expr = expr.subs(subs_dict)
+        #Re-express in this frame
+        outvec = Vector([])
+        for i, v in enumerate(expr.args):
+            if v[1] != frame:
+                temp = frame.dcm(v[1]) * v[0]
+                if Vector.simp:
+                    temp = temp.applyfunc(lambda x: \
+                                          trigsimp(x, method='fu'))
+                outvec += Vector([(temp, frame)])
+            else:
+                outvec += Vector([v])
+        return outvec
+
+    if isinstance(expr, Dyadic):
+        if frame2 is None:
+            frame2 = frame
+        _check_frame(frame2)
+        ol = Dyadic(0)
+        for i, v in enumerate(expr.args):
+            ol += express(v[0], frame, variables=variables) * \
+                  (express(v[1], frame, variables=variables) | \
+                   express(v[2], frame2, variables=variables))
+        return ol
+
+    else:
+        if variables:
+            #Given expr is a scalar field
+            frame_set = set([])
+            expr = sympify(expr)
+            #Subsitute all the coordinate variables
+            for x in expr.atoms():
+                if isinstance(x, CoordinateSym)and x.frame != frame:
+                    frame_set.add(x.frame)
+            subs_dict = {}
+            for f in frame_set:
+                subs_dict.update(f.variable_map(frame))
+            return expr.subs(subs_dict)
+        return expr
+
+
+def time_derivative(expr, frame, order=1):
+    """
+    Calculate the time derivative of a vector/scalar field function
+    or dyadic expression in given frame.
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Rotating_reference_frame#Time_derivatives_in_the_two_frames
+
+    Parameters
+    ==========
+
+    expr : Vector/Dyadic/sympifyable
+        The expression whose time derivative is to be calculated
+
+    frame : ReferenceFrame
+        The reference frame to calculate the time derivative in
+
+    order : integer
+        The order of the derivative to be calculated
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
+    >>> from sympy import Symbol
+    >>> q1 = Symbol('q1')
+    >>> u1 = dynamicsymbols('u1')
+    >>> N = ReferenceFrame('N')
+    >>> A = N.orientnew('A', 'Axis', [q1, N.x])
+    >>> v = u1 * N.x
+    >>> A.set_ang_vel(N, 10*A.x)
+    >>> from sympy.physics.mechanics import time_derivative
+    >>> time_derivative(v, N)
+    u1'*N.x
+    >>> time_derivative(u1*A[0], N)
+    N_x*Derivative(u1(t), t)
+    >>> B = N.orientnew('B', 'Axis', [u1, N.z])
+    >>> from sympy.physics.mechanics import outer
+    >>> d = outer(N.x, N.x)
+    >>> time_derivative(d, B)
+    - u1'*(N.y|N.x) - u1'*(N.x|N.y)
+
+    """
+
+    t = dynamicsymbols._t
+    _check_frame(frame)
+
+    if order == 0:
+        return expr
+    if order%1 != 0 or order < 0:
+        raise ValueError("Unsupported value of order entered")
+
+    if isinstance(expr, Vector):
+        outvec = Vector(0)
+        for i, v in enumerate(expr.args):
+            if v[1] == frame:
+                outvec += Vector([(express(v[0], frame, \
+                                           variables=True).diff(t), frame)])
+            else:
+                outvec += time_derivative(Vector([v]), v[1]) + \
+                          (v[1].ang_vel_in(frame) ^ Vector([v]))
+        return time_derivative(outvec, frame, order - 1)
+
+    if isinstance(expr, Dyadic):
+        ol = Dyadic(0)
+        for i, v in enumerate(expr.args):
+            ol += (v[0].diff(t) * (v[1] | v[2]))
+            ol += (v[0] * (time_derivative(v[1], frame) | v[2]))
+            ol += (v[0] * (v[1] | time_derivative(v[2], frame)))
+        return time_derivative(ol, frame, order - 1)
+
+    else:
+        return diff(express(expr, frame, variables=True), t, order)
 
 
 def outer(vec1, vec2):
@@ -544,23 +715,23 @@ def get_motion_params(frame, **kwargs):
 
         #Make sure boundary condition is independent of 'variable'
         if condition != 0:
-            condition = frame.express(condition)
+            condition = express(condition, frame, variables=True)
         #Special case of vectdiff == 0
         if vectdiff == Vector(0):
             return (0, 0, condition)
         #Express vectdiff completely in condition's frame to give vectdiff1
-        vectdiff1 = frame.express(vectdiff)
+        vectdiff1 = express(vectdiff, frame)
         #Find derivative of vectdiff
-        vectdiff2 = frame.dt(vectdiff)
+        vectdiff2 = time_derivative(vectdiff, frame)
         #Integrate and use boundary condition
         vectdiff0 = Vector(0)
         lims = (variable, ordinate, variable)
         for dim in frame:
             function1 = vectdiff1.dot(dim)
-            abscissa = dim.dot(condition).subs({variable:ordinate})
+            abscissa = dim.dot(condition).subs({variable : ordinate})
             # Indefinite integral of 'function1' wrt 'variable', using
             # the given initial condition (ordinate, abscissa).
-            vectdiff0 += (integrate(function1, lims) + abscissa)*dim
+            vectdiff0 += (integrate(function1, lims) + abscissa) * dim
         #Return tuple
         return (vectdiff2, vectdiff, vectdiff0)
 
@@ -605,8 +776,8 @@ def get_motion_params(frame, **kwargs):
                                             dynamicsymbols._t,
                                             kwargs['timevalue1'], frame)
     else:
-        vel = frame.dt(kwargs['position'])
-        acc = frame.dt(vel)
+        vel = time_derivative(kwargs['position'], frame)
+        acc = time_derivative(vel, frame)
         return (acc, vel, kwargs['position'])
 
 

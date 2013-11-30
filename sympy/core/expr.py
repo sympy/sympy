@@ -214,6 +214,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is False:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
             return dif.is_nonnegative
@@ -222,6 +224,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is False:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
             return dif.is_nonpositive
@@ -230,6 +234,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is False:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
             return dif.is_positive
@@ -238,6 +244,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is False:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
             return dif.is_negative
@@ -2576,6 +2584,10 @@ class Expr(Basic, EvalfMixin):
         then builds up the final series just by "cross-multiplying" everything
         out.
 
+        The optional ``logx`` parameter can be used to replace any log(x) in the
+        returned series with a symbolic value to avoid evaluating log(x) at 0. A
+        symbol to use in place of log(x) should be provided.
+
         Advantage -- it's fast, because we don't have to determine how many
         terms we need to calculate in advance.
 
@@ -2588,11 +2600,44 @@ class Expr(Basic, EvalfMixin):
         number of terms.
 
         See also lseries().
+
+        Examples
+        ========
+
+        >>> from sympy import sin, log, Symbol
+        >>> from sympy.abc import x, y
+        >>> sin(x).nseries(x, 0, 6)
+        x - x**3/6 + x**5/120 + O(x**6)
+        >>> log(x+1).nseries(x, 0, 5)
+        x - x**2/2 + x**3/3 - x**4/4 + O(x**5)
+
+        Handling of the ``logx`` parameter --- in the following example the
+        expansion fails since ``sin`` does not have an asymptotic expansion
+        at -oo (the limit of log(x) as x approaches 0):
+
+        >>> e = sin(log(x))
+        >>> e.nseries(x, 0, 6)
+        Traceback (most recent call last):
+        ...
+        PoleError: ...
+        ...
+        >>> logx = Symbol('logx')
+        >>> e.nseries(x, 0, 6, logx=logx)
+        sin(logx)
+
+        In the following example, the expansion works but gives only an Order term
+        unless the ``logx`` parameter is used:
+
+        >>> e = x**y
+        >>> e.nseries(x, 0, 2)
+        O(log(x)**2)
+        >>> e.nseries(x, 0, 2, logx=logx)
+        exp(logx*y)
+
         """
         if x and not x in self.free_symbols:
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
-            assert logx is None
             return self.series(x, x0, n, dir)
         else:
             return self._eval_nseries(x, n=n, logx=logx)

@@ -32,6 +32,12 @@ express
 .. autofunction:: sympy.physics.mechanics.functions.express
 
 
+time_derivative
+---------------
+
+.. autofunction:: sympy.physics.mechanics.functions.time_derivative
+
+
 get_motion_params
 -----------------
 

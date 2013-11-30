@@ -3,8 +3,8 @@ from sympy import (
     Float, FourierTransform, Function, Integral, Interval,
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
-    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
-    Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
+    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
+    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
@@ -224,11 +224,11 @@ def test_latex_functions():
     assert latex(gamma(w)) == r"\Gamma{\left(w \right)}"
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(Order(x, x)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, x, 0)) == r"\mathcal{O}\left(x\right)"
-    assert latex(Order(x, x, oo)) == r"\mathcal{O}\left(x; x\rightarrow\infty\right)"
-    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow0\right)"
-    assert latex(Order(x, x, y, 0)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow0\right)"
-    assert latex(Order(x, x, y, oo)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow\infty\right)"
+    assert latex(Order(x, (x, 0))) == r"\mathcal{O}\left(x\right)"
+    assert latex(Order(x, (x, oo))) == r"\mathcal{O}\left(x; x\rightarrow\infty\right)"
+    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow\begin{pmatrix}0, & 0\end{pmatrix}\right)"
+    assert latex(Order(x, x, y)) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow\begin{pmatrix}0, & 0\end{pmatrix}\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"\mathcal{O}\left(x; \begin{pmatrix}x, & y\end{pmatrix}\rightarrow\begin{pmatrix}\infty, & \infty\end{pmatrix}\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
@@ -1182,3 +1182,23 @@ def test_builtin_no_args():
 def test_issue_3754():
     p = Function('Pi')
     assert latex(p(x)) == r"\Pi{\left (x \right )}"
+
+def test_Mul():
+    e = Mul(-2, x + 1, evaluate=False)
+    assert latex(e)  == r'- 2 \left(x + 1\right)'
+    e = Mul(2, x + 1, evaluate=False)
+    assert latex(e)  == r'2 \left(x + 1\right)'
+    e = Mul(S.One/2, x + 1, evaluate=False)
+    assert latex(e)  == r'\frac{1}{2} \left(x + 1\right)'
+    e = Mul(y, x + 1, evaluate=False)
+    assert latex(e)  == r'y \left(x + 1\right)'
+    e = Mul(-y, x + 1, evaluate=False)
+    assert latex(e)  == r'- y \left(x + 1\right)'
+    e = Mul(-2, x + 1)
+    assert latex(e)  == r'- 2 x - 2'
+    e = Mul(2, x + 1)
+    assert latex(e)  == r'2 x + 2'
+
+def test_Pow():
+    e = Pow(2, 2, evaluate=False)
+    assert latex(e)  == r'2^{2}'

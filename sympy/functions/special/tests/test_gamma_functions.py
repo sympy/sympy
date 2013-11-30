@@ -305,7 +305,7 @@ def test_loggamma():
     assert loggamma(z).is_real is False
 
     def tN(N, M):
-        assert loggamma(1/x)._eval_nseries(x, n=N, logx=None).getn() == M
+        assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
     tN(0, 0)
     tN(1, 1)
     tN(2, 3)

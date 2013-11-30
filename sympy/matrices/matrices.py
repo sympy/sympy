@@ -568,13 +568,16 @@ class MatrixBase(object):
             A = self
             B = other
             if A.shape != B.shape:
-                raise ShapeError("Matrices size mismatch.")
+                raise ShapeError("Matrix size mismatch.")
             alst = A.tolist()
             blst = B.tolist()
             ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
                 ret[i] = list(map(lambda j, k: j + k, alst[i], blst[i]))
-            return classof(A, B)._new(ret)
+            rv = classof(A, B)._new(ret)
+            if not A.rows:
+                rv = rv.reshape(*A.shape)
+            return rv
         raise TypeError('cannot add matrix and %s' % type(other))
 
     def __radd__(self, other):

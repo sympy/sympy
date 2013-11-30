@@ -2574,7 +2574,7 @@ def test_X7():
     #    = 1/x^2 - 1/(2 x) + 1/12 - x^2/720 + x^4/30240 + O(x^6)
     #    [Levinson and Redheffer, p. 173]
     assert (series(1/(x*(exp(x) - 1)), x, 0, 7) == x**(-2) - 1/(2*x) +
-            S(1)/12 - x**2/720 + x**4/30240 - 2363*x**6/604800 + O(x**7))
+            S(1)/12 - x**2/720 + x**4/30240 - x**6/1209600 + O(x**7))
 
 
 @XFAIL
@@ -2617,14 +2617,14 @@ def test_X12():
 
 
 def test_X13():
-    assert series(sqrt(2*x**2 + 1), x, x0=oo, n=1) == sqrt(2)*x + O(1/x, x, oo)
+    assert series(sqrt(2*x**2 + 1), x, x0=oo, n=1) == sqrt(2)*x + O(1/x, (x, oo))
 
 
 @XFAIL
 def test_X14():
     # Wallis' product => 1/sqrt(pi n) + ...   [Knopp, p. 385]
     assert series(1/2**(2*n)*binomial(2*n, n),
-                  n, x==oo, n=1) == 1/(sqrt(pi)*sqrt(n)) + O(1/x, x, oo)
+                  n, x==oo, n=1) == 1/(sqrt(pi)*sqrt(n)) + O(1/x, (x, oo))
 
 
 @XFAIL
@@ -2635,7 +2635,7 @@ def test_X15():
     # https://code.google.com/p/sympy/issues/detail?id=4065
     e1 = integrate(exp(-t)/t, (t, x, oo))
     assert (series(e1, x, x0=oo, n=5) ==
-            6/x**4 + 2/x**3 - 1/x**2 + 1/x + O(x**(-5), x, oo))
+            6/x**4 + 2/x**3 - 1/x**2 + 1/x + O(x**(-5), (x, oo)))
 
 
 def test_X16():

@@ -693,7 +693,7 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if (exp < 0) is True and base.is_number and base.is_real is False:
+        if exp.is_negative and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
             return self.func(base, exp).expand()
@@ -835,10 +835,7 @@ class Pow(Expr):
                 except NotImplementedError:
                     pass
 
-                b_orig = b
-                b = b_orig._eval_nseries(x, n=nuse, logx=logx)
-                prefactor = b.as_leading_term(x)
-
+                b_orig, prefactor = b, O(1, x)
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
@@ -847,31 +844,39 @@ class Pow(Expr):
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
 
-                if rest == 0:
-                    # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
-                    # factor the w**4 out using collect:
-                    return 1/collect(prefactor, x)
                 if rest.is_Order:
                     return 1/prefactor + rest/prefactor + O(x**n, x)
-                n2 = rest.getn()
-                if n2 is not None:
-                    # remove the O - powering this is slow
-                    if logx is not None:
-                        rest = rest.removeO()
 
                 k, l = rest.leadterm(x)
                 if l.is_Rational and l > 0:
                     pass
                 elif l.is_number and l > 0:
                     l = l.evalf()
+                elif l == 0:
+                    k = k.simplify()
+                    if k == 0:
+                        # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
+                        # factor the w**4 out using collect:
+                        return 1/collect(prefactor, x)
+                    else:
+                        raise NotImplementedError()
                 else:
                     raise NotImplementedError()
 
                 if cf < 0:
                     cf = S.One/abs(cf)
 
+                try:
+                    dn = C.Order(1/prefactor, x).getn()
+                    if dn and dn < 0:
+                        pass
+                    else:
+                        dn = 0
+                except NotImplementedError:
+                    dn = 0
+
                 terms = [1/prefactor]
-                for m in xrange(1, ceiling(n/l*cf)):
+                for m in xrange(1, ceiling((n - dn)/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -880,17 +885,13 @@ class Pow(Expr):
                         new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
                 terms.append(O(x**n, x))
-
-                # Append O(...), we know the order.
-                if n2 is None or logx is not None:
-                    terms.append(O(x**n))
                 return powsimp(Add(*terms), deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for
                 # example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                nuse, denominator = n, O(1)
+                nuse, denominator = n, O(1, x)
                 while denominator.is_Order:
                     denominator = (b**(-e))._eval_nseries(x, n=nuse, logx=logx)
                     nuse += 1
@@ -989,7 +990,7 @@ class Pow(Expr):
                         arg = c*arg.expr
                     res.append(arg)
                 bs = Add(*res)
-                rv = (bs**e).series(x).subs(c, O(1))
+                rv = (bs**e).series(x).subs(c, O(1, x))
                 rv += order
                 return rv
 

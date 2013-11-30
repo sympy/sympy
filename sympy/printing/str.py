@@ -316,11 +316,11 @@ class StrPrinter(Printer):
         return "Normal(%s, %s)" % (expr.mu, expr.sigma)
 
     def _print_Order(self, expr):
-        if expr.point == S.Zero or not len(expr.variables):
+        if all(p is S.Zero for p in expr.point) or not len(expr.variables):
             if len(expr.variables) <= 1:
                 return 'O(%s)' % self._print(expr.expr)
             else:
-                return 'O(%s)' % self.stringify(expr.args[:-1], ', ', 0)
+                return 'O(%s)' % self.stringify((expr.expr,) + expr.variables, ', ', 0)
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
@@ -362,16 +362,16 @@ class StrPrinter(Printer):
             return 'Permutation(%s)' % use
 
     def _print_TensorIndex(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensorHead(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensMul(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensAdd(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % str(a) for a in expr.args]

@@ -2,6 +2,12 @@
 Essential Components (Docstrings)
 =================================
 
+CoordinateSym
+=============
+
+.. autoclass:: sympy.physics.mechanics.essential.CoordinateSym
+
+
 ReferenceFrame
 ==============
 

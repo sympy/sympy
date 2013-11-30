@@ -136,6 +136,8 @@ class factorial(CombinatorialFunction):
         if n.is_Number:
             if n is S.Zero:
                 return S.One
+            elif n is S.Infinity:
+                return S.Infinity
             elif n.is_Integer:
                 if n.is_negative:
                     return S.Zero

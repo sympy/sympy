@@ -232,6 +232,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
+    'sympy.liealgebras.tests',
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
