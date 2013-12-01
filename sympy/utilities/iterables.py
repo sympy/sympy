@@ -1255,11 +1255,7 @@ def multiset_partitions(multiset, m=None):
         # Split the information of the multiset into two lists -
         # one of the elements themselves, and one (of the same length)
         # giving the number of repeats for the corresponding element.
-        multiplicities = []
-        elements = []
-        for elem, ct in group(multiset, False):
-            elements.append(elem)
-            multiplicities.append(ct)
+        elements, multiplicities = zip(*group(multiset, False))
 
         if len(elements) < len(multiset):
             # General case - multiset with more than one distinct element
@@ -1275,7 +1271,7 @@ def multiset_partitions(multiset, m=None):
             # Set partitions case - no repeated elements. Pretty much
             # same as int argument case above, with same possible, but
             # currently unimplemented optimization for some cases when
-            # m not None
+            # m is not None
             for nc, q in _set_partitions(n):
                 if m is None or nc == m:
                     rv = [[] for i in range(nc)]

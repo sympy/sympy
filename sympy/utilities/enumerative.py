@@ -29,7 +29,8 @@ from sympy.core.compatibility import xrange
 # corresponds to the multiplicity of the first component in that
 # part. Thus, aaabc can be represented by the vector [3, 1, 1].  We
 # can also define an ordering on parts, based on the lexicographic
-# ordering of the vector (leftmost vector element is the most
+# ordering of the vector (leftmost vector element, i.e., the element with
+# the smallest component number, is the most
 # significant), so that [3, 1, 1] > [3, 1, 0] and [3, 1, 1] > [2, 1,
 # 4].  The ordering on parts can be extended to an ordering on
 # partitions: First, sort the parts in each partition, left-to-right
@@ -53,8 +54,9 @@ from sympy.core.compatibility import xrange
 
 # Knuth's algorithm uses two main operations on parts:
 
-# Decrement - find the next part that lower in the (vector)
-#   lexicographic order.  For example, if the multiset has vector [5,
+# Decrement - change the part so that it is smaller in the
+#   (vector) lexicographic order, but reduced by the smallest amount possible.
+#   For example, if the multiset has vector [5,
 #   3, 1], and the bottom/greatest part is [4, 2, 1], this part would
 #   decrement to [4, 2, 0], while [4, 0, 0] would decrement to [3, 3,
 #   1].  A singleton part is never decremented -- [1, 0, 0] is not
@@ -63,18 +65,21 @@ from sympy.core.compatibility import xrange
 #   operator is step m5.
 
 # Spread unallocated multiplicity - Once a part has been decremented,
-#   it can not be the rightmost part in the partition.  There is some
+#   it cannot be the rightmost part in the partition.  There is some
 #   multiplicity that has not been allocated, and new parts must be
 #   created above it in the stack to use up this multiplicity.  To
 #   maintain the invariant that the parts on the stack are in
 #   decreasing order, these new parts must be less than or equal to
-#   the decremented part.  For example, if the multiset is [5, 3, 1],
-#   and its leftmost part is [5, 3, 0], after the spread operation, the
-#   stack is [[5, 3, 0], [0, 0, 1]].  If the leftmost part (for the same
-#   multiset) is [2, 0, 0] the stack becomes [[2, 0, 0], [2, 0, 0],
-#   [1, 3, 1]].  In the psuedocode, the spread operation for one part is
-#   step m2.  The complete spread operation is a loop of steps m2 and
-#   m3.
+#   the decremented part.
+
+#   For example, if the multiset is [5, 3, 1], and its most
+#   significant part has just been decremented to [5, 3, 0], the
+#   spread operation will add a new part so that the stack becomes
+#   [[5, 3, 0], [0, 0, 1]].  If the most significant part (for the
+#   same multiset) has been decremented to [2, 0, 0] the stack becomes
+#   [[2, 0, 0], [2, 0, 0], [1, 3, 1]].  In the psuedocode, the spread
+#   operation for one part is step m2.  The complete spread operation
+#   is a loop of steps m2 and m3.
 
 # In order to facilitate the spread operation, Knuth stores, for each
 # component of each part, not just the multiplicity of that component
@@ -308,7 +313,7 @@ def factoring_visitor(state, primes):
     Examples
     ========
 
-    To enumerate the factorings of a number we can think of the elements to
+    To enumerate the factorings of a number we can think of the elements of the
     partition as being the prime factors and the multiplicities as being their
     exponents.
 
