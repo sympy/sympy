@@ -1677,11 +1677,11 @@ def _meijerint_indefinite_1(f, x):
 
     res = piecewise_fold(res)
     if res.is_Piecewise:
-        nargs = []
+        newargs = []
         for expr, cond in res.args:
             expr = _my_unpolarify(_clean(expr))
-            nargs += [(expr, cond)]
-        res = Piecewise(*nargs)
+            newargs += [(expr, cond)]
+        res = Piecewise(*newargs)
     else:
         res = _my_unpolarify(_clean(res))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))

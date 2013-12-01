@@ -105,6 +105,16 @@ def test_Function():
     raises(TypeError, lambda: myfunc(x, y).nargs)
 
 
+def test_nargs():
+    f = Function('f')
+    assert f.nargs == tuple()
+    assert f(2).nargs == tuple()
+    assert sin.nargs == (1,)
+    assert sin(2).nargs == (1,)
+    assert log.nargs == (1, 2)
+    assert log(2).nargs == (1, 2)
+
+
 def test_Lambda():
     e = Lambda(x, x**2)
     assert e(4) == 16

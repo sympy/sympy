@@ -216,7 +216,7 @@ def test_derivative1():
     x, y = map(Symbol, 'xy')
     p, q = map(Wild, 'pq')
 
-    f = Function('f', nargs=1)
+    f = Function('f')
     fd = Derivative(f(x), x)
 
     assert fd.match(p) == {p: fd}

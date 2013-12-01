@@ -1,5 +1,5 @@
 """
-There are two types of functions:
+There are three types of functions:
 1) defined function like exp or sin that has a name and body
    (in the sense that function can be evaluated).
     e = exp
@@ -7,12 +7,10 @@ There are two types of functions:
    functions can be defined using a Function class as follows:
        f = Function('f')
    (the result will be a Function instance)
-3) this isn't implemented yet: anonymous function or lambda function that has
-   no name but has body with dummy variables. Examples of anonymous function
-   creation:
+3) anonymous function or lambda function that has no name but has a
+   body with dummy variables. Example of anonymous function creation:
        f = Lambda(x, exp(x)*x)
-       f = Lambda(exp(x)*x) # free symbols of expr define the number of args
-       f = exp * Lambda(x, x)
+       f = Lambda((x, y), exp(x)*y)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
 
@@ -36,7 +34,7 @@ from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence
+from .compatibility import iterable, is_sequence, as_int, ordered
 from .core import BasicMeta, C
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
@@ -98,23 +96,59 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     """
     _new = type.__new__
 
-    _nargs = None
+    _nargs = tuple()
 
-    def __init__(cls, *args, **kw_args):
-        super(FunctionClass, cls).__init__(args, kw_args)
+    def __init__(cls, *args, **kwargs):
+        super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here:
-        try:
-            nargs = cls.__dict__['nargs']
-            if isinstance(nargs, tuple):
-                cls._nargs = nargs
-            else:
-                cls._nargs = (nargs,)
-        except KeyError:
-            pass
+        nargs = kwargs.get('nargs', cls.__dict__.get('nargs', tuple()))
+        if is_sequence(nargs):
+            cls._nargs = tuple(ordered(set(nargs)))
+        elif nargs is None:
+            cls._nargs = tuple()
+        else:
+            cls._nargs = (as_int(nargs),)
 
     @property
     def nargs(self):
+        """Return a tuple giving the number of arguments that the function will accept.
+
+        Examples
+        ========
+
+        >>> from sympy.core.function import Function
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+
+        If the function can take any number of arguments, an empty tuple is returned.
+
+        >>> f=Function('f')
+        >>> f.nargs
+        ()
+        >>> f(1).nargs
+        ()
+        >>> f(1, 2).nargs
+        ()
+
+        If the function was initialized to accept a single argument, then a
+        tuple will contain that number:
+
+        >>> f = Function('f', nargs=1)
+        >>> f.nargs
+        (1,)
+        >>> f(1).nargs
+        (1,)
+
+        If the function was initialized to accept more than one argument, then a
+        tuple will contain all those valid numbers:
+
+        >>> g = Function('g', nargs=(2, 1))
+        >>> g.nargs  # TODO make sure it's sorted
+        (1, 2)
+
+        """
+
         return self._nargs
 
     def __repr__(cls):
@@ -143,7 +177,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
             if evaluated is not None:
                 return evaluated
 
-        obj = super(Application, cls).__new__(cls, *args)
+        obj = super(Application, cls).__new__(cls, *args, **options)
         obj.nargs = cls.nargs
         return obj
 
@@ -181,7 +215,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
     def _eval_subs(self, old, new):
         if (old.is_Function and new.is_Function and old == self.func and
-            (not new.nargs or len(self.args) in new.nargs)):
+            (new.nargs is None or len(self.args) in new.nargs)):
             return new(*self.args)
 
 
@@ -270,11 +304,10 @@ class Function(Application, Expr):
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
         if cls is Function:
-            return UndefinedFunction(*args)
+            return UndefinedFunction(*args, **options)
 
-        if cls.nargs is not None:
+        if cls.nargs:
             n = len(args)
-
             if n not in cls.nargs:
                 # XXX: exception message must be in exactly this format to
                 # make it work with NumPy's functions like vectorize(). See,
@@ -576,10 +609,8 @@ class Function(Application, Expr):
         """
         Returns the first derivative of the function.
         """
-        if self.nargs is not None:
-            nargs = self.nargs[-1]
-            if not (1 <= argindex <= nargs):
-                raise ArgumentIndexError(self, argindex)
+        if not (1 <= argindex <= len(self.args)):
+            raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
@@ -622,11 +653,11 @@ class AppliedUndef(Function):
     Base class for expressions resulting from the application of an undefined
     function.
     """
+
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
-        result = super(AppliedUndef, cls).__new__(cls, *args, **options)
-        result.nargs = (len(args),)
-        return result
+        obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
+        return obj
 
     def _eval_as_leading_term(self, x):
         return self
@@ -636,8 +667,8 @@ class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name):
-        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+    def __new__(mcl, name, **kwargs):
+        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), kwargs)
         ret.__module__ = None
         return ret
 
@@ -663,28 +694,51 @@ class WildFunction(Function, AtomicExpr):
     >>> cos(x).match(F)
     {F_: cos(x)}
     >>> f(x, y).match(F)
+    {F_: f(x, y)}
 
-    To match functions with more than 1 arguments, set ``nargs`` to the
-    desired value:
+    To match functions with a given number of arguments, set ``nargs`` to the
+    desired value at instantiation:
 
-    >>> F.nargs = (2,)
+    >>> F = WildFunction('F', nargs=2)
+    >>> f(x).match(F)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
 
+    To match functions with a range of arguments, set ``nargs`` to a tuple
+    containing the desired number of arguments, e.g. if ``nargs = (1, 2)``
+    then functions with 1 or 2 arguments will be matched.
+
+    >>> F = WildFunction('F', nargs=(1, 2))
+    >>> f(x).match(F)
+    {F_: f(x)}
+    >>> f(x, y).match(F)
+    {F_: f(x, y)}
+    >>> f(x, y, 1).match(F)
+
     """
 
-    nargs = 1
     include = set()
 
     def __new__(cls, name, **assumptions):
+        # Canonicalize nargs here:
+        nargs = assumptions.pop('nargs', tuple())
+        if is_sequence(nargs):
+            nargs = tuple(ordered(set(nargs)))
+        elif nargs is None:
+            nargs = tuple()
+        else:
+            nargs = (as_int(nargs),)
+
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
+        obj.nargs = nargs
         return obj
 
     def matches(self, expr, repl_dict={}, old=False):
-        if self.nargs is not None:
-            if not hasattr(expr, 'nargs') or self.nargs != expr.nargs:
-                return None
+        if not isinstance(expr, (AppliedUndef, Function)):
+            return None
+        if self.nargs and len(expr.args) not in self.nargs:
+            return None
 
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
@@ -1365,9 +1419,9 @@ class Subs(Expr):
     An example with several variables:
 
     >>> Subs(f(x)*sin(y) + z, (x, y), (0, 1))
-    Subs(z + f(x)*sin(y), (x, y), (0, 1))
+    Subs(z + sin(y)*f(x), (x, y), (0, 1))
     >>> _.doit()
-    z + f(0)*sin(1)
+    z + sin(1)*f(0)
 
     """
     def __new__(cls, expr, variables, point, **assumptions):

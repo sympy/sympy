@@ -712,9 +712,9 @@ class HyperRep(Function):
     @classmethod
     def eval(cls, *args):
         from sympy import unpolarify
-        nargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
-        if args != nargs:
-            return cls(*nargs)
+        newargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
+        if args != newargs:
+            return cls(*newargs)
 
     @classmethod
     def _expr_small(cls, x):
@@ -740,17 +740,17 @@ class HyperRep(Function):
         from sympy import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
-        nargs = self.args[:-1] + (x,)
+        newargs = self.args[:-1] + (x,)
         if not n.is_Integer:
             minus = True
             n -= S(1)/2
-        nnargs = nargs + (n,)
+        newerargs = newargs + (n,)
         if minus:
-            small = self._expr_small_minus(*nargs)
-            big = self._expr_big_minus(*nnargs)
+            small = self._expr_small_minus(*newargs)
+            big = self._expr_big_minus(*newerargs)
         else:
-            small = self._expr_small(*nargs)
-            big = self._expr_big(*nnargs)
+            small = self._expr_small(*newargs)
+            big = self._expr_big(*newerargs)
 
         if big == small:
             return small
