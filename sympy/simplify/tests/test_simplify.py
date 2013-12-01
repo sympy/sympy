@@ -1079,6 +1079,8 @@ def test_nsimplify():
     assert nsimplify(-.2, tolerance=0) == -S.One/5
     assert nsimplify(.2222, tolerance=0) == S(1111)/5000
     assert nsimplify(-.2222, tolerance=0) == -S(1111)/5000
+    # issues 4112
+    assert nsimplify(S(2e-8)) == S(1)/50000000
 
 
 def test_extract_minus_sign():
