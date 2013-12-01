@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import items, xrange
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -582,7 +582,7 @@ class cos(TrigonometricFunction):
                 return r.q
 
             if None == factors:
-                a = [n//x**y for x, y in factorint(r.q).iteritems()]
+                a = [n//x**y for x, y in items(factorint(r.q))]
             else:
                 a = [n//x for x in factors]
             if len(a) == 1:
