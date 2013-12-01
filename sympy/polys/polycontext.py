@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import items
 from sympy.utilities.iterables import dict_merge
 from sympy.polys.polyutils import PicklableWithSlots
 
@@ -40,7 +41,7 @@ class Context(PicklableWithSlots):
 
     def __str__(self):
         return 'Context(%s)' % ', '.join(
-            [ '%s=%r' % (key, value) for key, value in self.__options__.iteritems() ])
+            ['%s=%r' % (key, value) for key, value in items(self.__options__)])
 
     def __and__(self, other):
         if isinstance(other, Context):

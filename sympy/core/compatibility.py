@@ -48,6 +48,8 @@ Moved modules:
 Iterator/list changes:
     * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
       iterator version of range
+    * `.iteritems()` method of dict removed in Python 3.  Import function
+      `items()` for a stable name across Python versions.
 
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
@@ -94,6 +96,10 @@ if PY3:
     exec_ = getattr(builtins, "exec")
 
     xrange = range
+
+    def items(d):
+        """return an iterator over the items of dict `d`"""
+        return d.items()
 else:
     import codecs
     import types
@@ -138,6 +144,10 @@ else:
         exec("exec _code_ in _globs_, _locs_")
 
     xrange = xrange
+
+    def items(d):
+        """return an iterator over the items of dict `d`"""
+        return d.iteritems()
 
 def with_metaclass(meta, *bases):
     """
@@ -548,7 +558,7 @@ def _nodes(e):
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
     elif isinstance(e, dict):
-        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.iteritems())
+        return 1 + sum(_nodes(k) + _nodes(v) for k, v in items(e))
     else:
         return 1
 
