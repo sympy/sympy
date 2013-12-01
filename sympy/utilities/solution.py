@@ -55,7 +55,7 @@ def add_exp(exp):
 def reset_solution():
     """Clear previos solution"""
     print("New solution")
-    solution_list = []
+    del solution_list[:]
 
 def start_subroutine(name):
     """Start add soubroutine steps"""
