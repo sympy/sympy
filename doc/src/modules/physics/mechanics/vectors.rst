@@ -188,7 +188,7 @@ Multiplication operations are now defined as:
   \mathbf{a} \cdot \mathbf{b} &= a_x b_x + a_y b_y + a_z b_z\\
   \mathbf{a} \times \mathbf{b} &=
   \textrm{det }\begin{bmatrix} \mathbf{\hat{n}_x} & \mathbf{\hat{n}_y} &
-  \mathbf{\hat{n}_z} \\ a_x & a_y & a_z \\ a_x & a_y & a_z \end{bmatrix}\\
+  \mathbf{\hat{n}_z} \\ a_x & a_y & a_z \\ b_x & b_y & b_z \end{bmatrix}\\
   (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &=
   \textrm{det }\begin{bmatrix} a_x & a_y & a_z \\ b_x & b_y & b_z \\ c_x & c_y
   & c_z \end{bmatrix}\\
