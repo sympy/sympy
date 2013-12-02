@@ -9,7 +9,7 @@ from .core import C
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
-from .expr import Expr, AtomicExpr
+from .expr import Expr, AtomicExpr, make_repr
 from .decorators import _sympifyit, deprecated
 from .cache import cacheit, clear_cache
 from sympy.core.compatibility import (
@@ -303,57 +303,72 @@ class Number(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
+        res = None
         if isinstance(other, Number):
             if other is S.NaN:
-                return S.NaN
+                res = S.NaN
             elif other is S.Infinity:
-                return S.Infinity
+                res = S.Infinity
             elif other is S.NegativeInfinity:
-                return S.NegativeInfinity
-        return AtomicExpr.__add__(self, other)
+                res = S.NegativeInfinity
+        if res is None:
+            res = AtomicExpr.__add__(self, other)
+        make_repr(self, "+", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
+        res = None
         if isinstance(other, Number):
             if other is S.NaN:
-                return S.NaN
+                res = S.NaN
             elif other is S.Infinity:
-                return S.NegativeInfinity
+                res = S.NegativeInfinity
             elif other is S.NegativeInfinity:
-                return S.Infinity
-        return AtomicExpr.__sub__(self, other)
+                res = S.Infinity
+        if res is None:
+            res = AtomicExpr.__sub__(self, other)
+        make_repr(self, "-", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
+        res = None
         if isinstance(other, Number):
             if other is S.NaN:
-                return S.NaN
+                res = S.NaN
             elif other is S.Infinity:
                 if self.is_zero:
-                    return S.NaN
+                    res = S.NaN
                 elif self.is_positive:
-                    return S.Infinity
+                    res = S.Infinity
                 else:
-                    return S.NegativeInfinity
+                    res = S.NegativeInfinity
             elif other is S.NegativeInfinity:
                 if self.is_zero:
-                    return S.NaN
+                    res = S.NaN
                 elif self.is_positive:
-                    return S.NegativeInfinity
+                    res = S.NegativeInfinity
                 else:
-                    return S.Infinity
+                    res = S.Infinity
         elif isinstance(other, Tuple):
-            return NotImplemented
-        return AtomicExpr.__mul__(self, other)
+            res = NotImplemented
+        if res is None:
+            res = AtomicExpr.__mul__(self, other)
+        make_repr(self, "*", other, res)
+        return res
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Number):
             if other is S.NaN:
-                return S.NaN
+                res = S.NaN
             elif other is S.Infinity or other is S.NegativeInfinity:
-                return S.Zero
-        return AtomicExpr.__div__(self, other)
+                res = S.Zero
+        if res is None:
+            res = AtomicExpr.__div__(self, other)
+        make_repr(self, "/", other, res)
+        return res
 
     __truediv__ = __div__
 
@@ -725,12 +740,7 @@ class Float(Number):
 
     def __neg__(self):
         res = Float._new(mlib.mpf_neg(self._mpf_), self._prec)
-        rr = self.repr()
-        if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
-            rr = rr[1]
-        else:
-            rr = ("-", rr)
-        res.set_repr(rr)
+        self.make_repr1("-", res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -740,7 +750,7 @@ class Float(Number):
             res = Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         else:
             res = Number.__add__(self, other)
-        self.make_repr("+", other, res)
+        make_repr(self, "+", other, res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -750,7 +760,7 @@ class Float(Number):
             res = Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
         else:
             res = Number.__sub__(self, other)
-        self.make_repr("-", other, res)
+        make_repr(self, "-", other, res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -760,7 +770,7 @@ class Float(Number):
             res = Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         else:
             res = Number.__mul__(self, other)
-        self.make_repr("*", other, res)
+        make_repr(self, "*", other, res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -770,7 +780,7 @@ class Float(Number):
             res = Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
         else:
             res = Number.__div__(self, other)
-        self.make_repr("/", other, res)
+        make_repr(self, "/", other, res)
         return res
 
     __truediv__ = __div__
@@ -804,7 +814,7 @@ class Float(Number):
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
         if isinstance(res, Expr):
-            self.make_repr("**", expt, res)
+            make_repr(self, "**", expt, res)
         return res
         
     def __eval_power(self, expt):
@@ -836,7 +846,9 @@ class Float(Number):
                     Float._new(im, prec)*S.ImaginaryUnit
 
     def __abs__(self):
-        return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
+        res = Float._new(mlib.mpf_abs(self._mpf_), self._prec)
+        self.make_repr1("abs", res)
+        return res
 
     def __int__(self):
         if self._mpf_ == _mpf_zero:
@@ -1184,12 +1196,7 @@ class Rational(Number):
 
     def __neg__(self):
         res = Rational(-self.p, self.q)
-        rr = self.repr()
-        if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
-            rr = rr[1]
-        else:
-            rr = ("-", rr)
-        res.set_repr(rr)
+        self.make_repr1("-", res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -1200,7 +1207,7 @@ class Rational(Number):
             res = other + self
         else:
             res = Number.__add__(self, other)
-        self.make_repr("+", other, res)
+        make_repr(self, "+", other, res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -1211,7 +1218,7 @@ class Rational(Number):
             res = -other + self
         else:
             res = Number.__sub__(self, other)
-        self.make_repr("-", other, res)
+        make_repr(self, "-", other, res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -1222,7 +1229,7 @@ class Rational(Number):
             res = other*self
         else:
             res = Number.__mul__(self, other)
-        self.make_repr("*", other, res)
+        make_repr(self, "*", other, res)
         return res
 
     @_sympifyit('other', NotImplemented)
@@ -1233,7 +1240,7 @@ class Rational(Number):
             res = self*(1/other)
         else:
             res = Number.__div__(self, other)
-        self.make_repr("/", other, res)
+        make_repr(self, "/", other, res)
         return res
 
     __truediv__ = __div__
@@ -1258,7 +1265,7 @@ class Rational(Number):
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
         if isinstance(res, Expr):
-            self.make_repr("**", expt, res)
+            make_repr(self, "**", expt, res)
         return res
 
     def __eval_power(self, expt):
@@ -1310,7 +1317,9 @@ class Rational(Number):
         return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
-        return Rational(abs(self.p), self.q)
+        res = Rational(abs(self.p), self.q)
+        self.make_repr1("abs", res)
+        return res
 
     def __int__(self):
         p, q = self.p, self.q
@@ -1601,19 +1610,17 @@ class Integer(Rational):
 
     def __neg__(self):
         res = Integer(-self.p)
-        rr = self.repr()
-        if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
-            rr = rr[1]
-        else:
-            rr = ("-", rr)
-        res.set_repr(rr)
+        self.make_repr1("-", res)
         return res
 
     def __abs__(self):
+        r = self.repr()
         if self.p >= 0:
-            return self
+            res = self
         else:
-            return Integer(-self.p)
+            res = Integer(-self.p)
+        res.set_repr(("abs", r))
+        return res
 
     def __divmod__(self, other):
         from .containers import Tuple
@@ -1644,13 +1651,16 @@ class Integer(Rational):
             res = Integer(self.p + other.p)
         else:
             res = Rational.__add__(self, other)
-        self.make_repr("+", other, res)
+        make_repr(self, "+", other, res)
         return res
 
     def __radd__(self, other):
         if isinstance(other, integer_types):
-            return Integer(other + self.p)
-        return Rational.__add__(self, other)
+            res = Integer(other + self.p)
+        else:
+            res = Rational.__add__(self, other)
+        make_repr(other, "+", self, res)
+        return res
 
     def __sub__(self, other):
         if isinstance(other, integer_types):
@@ -1659,13 +1669,16 @@ class Integer(Rational):
             res = Integer(self.p - other.p)
         else:
             res = Rational.__sub__(self, other)
-        self.make_repr("-", other, res)
+        make_repr(self, "-", other, res)
         return res
 
     def __rsub__(self, other):
         if isinstance(other, integer_types):
-            return Integer(other - self.p)
-        return Rational.__rsub__(self, other)
+            res = Integer(other - self.p)
+        else:
+            res = Rational.__rsub__(self, other)
+        make_repr(other, "-", self, res)
+        return res
 
     def __mul__(self, other):
         if isinstance(other, integer_types):
@@ -1674,13 +1687,16 @@ class Integer(Rational):
             res = Integer(self.p*other.p)
         else:
             res = Rational.__mul__(self, other)
-        self.make_repr("*", other, res)
+        make_repr(self, "*", other, res)
         return res
 
     def __rmul__(self, other):
         if isinstance(other, integer_types):
-            return Integer(other*self.p)
-        return Rational.__mul__(self, other)
+            res = Integer(other*self.p)
+        else:
+            res = Rational.__mul__(self, other)
+        make_repr(other, "*", self, res)
+        return res
 
     def __mod__(self, other):
         if isinstance(other, integer_types):
@@ -1748,7 +1764,7 @@ class Integer(Rational):
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
         if isinstance(res, Expr):
-            self.make_repr("**", expt, res)
+            make_repr(self, "**", expt, res)
         return res
         
     def __eval_power(self, expt):
@@ -1907,16 +1923,24 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 
     __slots__ = []
 
-    @staticmethod
-    def __abs__():
-        return S.Zero
+    #@staticmethod
+    def __abs__(self):
+        res = S.Zero
+        self.make_repr1("abs", res)
+        return res
 
-    @staticmethod
-    def __neg__():
-        return S.Zero
-
+    #@staticmethod
+    def __neg__(self):
+        res = S.Zero
+        self.make_repr1("-", res)
+        return res
 
     def _eval_power(self, expt):
+        res = self.__eval_power(expt)
+        make_repr(self, "**", expt, res)
+        return res
+
+    def __eval_power(self, expt):
         if expt.is_positive:
             return self
         if expt.is_negative:
@@ -1951,7 +1975,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
     #@staticmethod
     def __abs__(self):
         res = S.One
-        self.make_repr(""
+        self.make_repr1("abs", res)
         return res
 
     #@staticmethod
@@ -1961,7 +1985,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
         return res
 
     def _eval_power(self, expt):
-        self.make_repr("**", expt, self)
+        make_repr(self, "**", expt, self)
         return self
 
     def _eval_order(self, *symbols):
@@ -1995,7 +2019,7 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
 
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
-        self.make_repr("**", expt, res)
+        make_repr(self, "**", expt, res)
         return res
 
     def __eval_power(self, expt):
@@ -2474,7 +2498,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
 
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
-        self.make_repr("**", expt, res)
+        make_repr(self, "**", expt, res)
         return res
     
     def __eval_power(self, expt):
@@ -2611,7 +2635,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
 
     def _eval_power(self, expt):
         res = C.exp(expt)
-        self.make_repr("**", expt, res)
+        make_repr(self, "**", expt, res)
         return res
 
     def _eval_rewrite_as_sin(self):
@@ -2778,7 +2802,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
 
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
-        self.make_repr("**", expt, res)
+        make_repr(self, "**", expt, res)
         return res
 
     def __eval_power(self, expt):
