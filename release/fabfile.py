@@ -887,7 +887,7 @@ def GitHub_release(username=None, user='sympy', token=None,
     post['tag_name'] = tag
     post['name'] = "SymPy " + version
     post['body'] = release_text
-    post['draft'] = False # Revert this when we are sure this works
+    post['draft'] = False
     post['prerelease'] = prerelease
 
     print("Creating release for tag", tag, end=' ')
