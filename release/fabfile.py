@@ -40,7 +40,7 @@ from contextlib import contextmanager
 
 from fabric.api import env, local, run, sudo, cd, hide, task
 from fabric.contrib.files import exists
-from fabric.colors import blue, red
+from fabric.colors import blue, red, green
 from fabric.utils import error, warn
 
 try:
@@ -63,6 +63,7 @@ from getpass import getpass
 
 import os
 import stat
+import sys
 
 try:
     # https://pypi.python.org/pypi/fabric-virtualenv/
@@ -548,6 +549,7 @@ def table():
 
     This is for pasting into the GitHub releases page. See GitHub_release().
     """
+    # TODO: Add the file size
     tarball_formatter_dict = tarball_formatter()
     shortversion = get_sympy_short_version()
 
@@ -754,6 +756,17 @@ Thanks to everyone who contributed to this release!
         print("- " + name)
     print()
 
+@task
+def check_tag_exists():
+    """
+    Check if the tag for this release has been uploaded yet.
+    """
+    version = get_sympy_version()
+    tag = 'sympy-' + version
+    with cd("/home/vagrant/repos/sympy"):
+        all_tags = run("git ls-remote --tags origin")
+    return tag in all_tags
+
 # ------------------------------------------------
 # Uploading
 
@@ -820,21 +833,80 @@ files below.
 
 @task
 def GitHub_release(username=None, user='sympy', token=None,
-    token_file_path="~/.sympy/release-token"):
+    token_file_path="~/.sympy/release-token", repo='sympy'):
+    """
+    Upload the release files to GitHub.
+
+    The tag must be pushed up first. You can test on another repo by changing
+    user and repo.
+    """
     if not requests:
         error("requests and requests-oauthlib must be installed to upload to GitHub")
 
     release_text = GitHub_release_text()
     version = get_sympy_version()
+    short_version = get_sympy_short_version()
     tag = 'sympy-' + version
-    urls = URLs(user=user, repo="sympy")
+    prerelease = short_version != version
+
+    urls = URLs(user=user, repo=repo)
     if not username:
         username = raw_input("GitHub username: ")
     token = load_token_file(token_file_path)
     if not token:
         username, password, token = GitHub_authenticate(urls, username, token)
-    print(query_GitHub(urls.releases_url, username, password=None, token=token))
 
+    # If the tag in question is not pushed up yet, then GitHub will just
+    # create it off of master automatically, which is not what we want.  We
+    # could make it create it off the release branch, but even then, we would
+    # not be sure that the correct commit is tagged.  So we require that the
+    # tag exist first.
+    if not check_tag_exists():
+        error("The tag for this version has not been pushed yet. Cannot upload the release.")
+
+    # See http://developer.github.com/v3/repos/releases/#create-a-release
+    # First, create the release
+    post = {}
+    post['tag_name'] = tag
+    post['name'] = "SymPy " + version
+    post['body'] = release_text
+    post['draft'] = False # Revert this when we are sure this works
+    post['prerelease'] = prerelease
+
+    print("Creating release for tag", tag, end=' ')
+
+    result = query_GitHub(urls.releases_url, username, password=None,
+        token=token, data=json.dumps(post)).json()
+    release_id = result['id']
+
+    print(green("Done"))
+
+    # Then, upload all the files to it.
+    for key in descriptions:
+        tarball = get_tarball_name(key)
+
+        params = {}
+        params['name'] = tarball
+
+        if tarball.endswith('gz'):
+            headers = {'Content-Type':'application/gzip'}
+        elif tarball.endswith('pdf'):
+            headers = {'Content-Type':'application/pdf'}
+        elif tarball.endswith('zip'):
+            headers = {'Content-Type':'application/zip'}
+        else:
+            headers = {'Content-Type':'application/octet-stream'}
+
+        print("Uploading", tarball, end=' ')
+        sys.stdout.flush()
+        with open(os.path.join("release", tarball), 'rb') as f:
+            result = query_GitHub(urls.release_uploads_url % release_id, username,
+                password=None, token=token, data=f, params=params,
+                headers=headers).json()
+
+        print(green("Done"))
+
+    # TODO: download the files and check that they have the right md5 sum
 
 def GitHub_check_authentication(urls, username, password, token):
     """
@@ -905,7 +977,7 @@ def generate_token(urls, username, password, OTP=None, name="SymPy Release"):
 
     url = urls.authorize_url
     rep = query_GitHub(url, username=username, password=password,
-        data=enc_data)
+        data=enc_data).json()
     return rep["token"]
 
 def save_token_file(token):
@@ -955,13 +1027,19 @@ class URLs(object):
     This class contains URLs and templates which used in requests to GitHub API
     """
 
-    def __init__(self, user="sympy", repo="sympy", api_url="https://api.github.com", authorize_url="https://api.github.com/authorizations"):
-        """ Generates all URLs and templates """
+    def __init__(self, user="sympy", repo="sympy",
+        api_url="https://api.github.com",
+        authorize_url="https://api.github.com/authorizations",
+        uploads_url='https://uploads.github.com',
+        main_url='https://github.com'):
+        """Generates all URLs and templates"""
 
         self.user = user
         self.repo = repo
         self.api_url = api_url
         self.authorize_url = authorize_url
+        self.uploads_url = uploads_url
+        self.main_url = main_url
 
         self.pull_list_url = api_url + "/repos" + "/" + user + "/" + repo + "/pulls"
         self.issue_list_url = api_url + "/repos/" + user + "/" + repo + "/issues"
@@ -970,20 +1048,26 @@ class URLs(object):
         self.single_pull_template = self.pull_list_url + "/%d"
         self.user_info_template = api_url + "/users/%s"
         self.user_repos_template = api_url + "/users/%s/repos"
-        self.issue_comment_template = \
-            api_url + "/repos" + "/" + user + "/" + repo + "/issues/%d" + "/comments"
+        self.issue_comment_template = (api_url + "/repos" + "/" + user + "/" + repo + "/issues/%d" +
+            "/comments")
+        self.release_uploads_url = (uploads_url + "/repos/" + user + "/" +
+            repo + "/releases/%d" + "/assets")
+        self.release_download_url = (main_url + "/" + user + "/" + repo +
+            "/releases/download/%s/%s")
+
 
 class AuthenticationFailed(Exception):
     pass
 
-def query_GitHub(url, username=None, password=None, token=None, data=None, OTP=None):
+def query_GitHub(url, username=None, password=None, token=None, data=None,
+    OTP=None, headers=None, params=None, files=None):
     """
     Query GitHub API.
 
     In case of a multipage result, DOES NOT query the next page.
 
     """
-    headers = {}
+    headers = headers or {}
 
     if OTP:
         headers['X-GitHub-OTP'] = OTP
@@ -994,9 +1078,10 @@ def query_GitHub(url, username=None, password=None, token=None, data=None, OTP=N
     else:
         auth = HTTPBasicAuth(username, password)
     if data:
-        r = requests.post(url, auth=auth, data=data, headers=headers)
+        r = requests.post(url, auth=auth, data=data, headers=headers,
+            params=params, files=files)
     else:
-        r = requests.get(url, auth=auth, headers=headers)
+        r = requests.get(url, auth=auth, headers=headers, params=params, stream=True)
 
     if r.status_code == 401:
         two_factor = r.headers.get('X-GitHub-OTP')
@@ -1009,7 +1094,7 @@ def query_GitHub(url, username=None, password=None, token=None, data=None, OTP=N
         raise AuthenticationFailed("invalid username or password")
 
     r.raise_for_status()
-    return r.json()
+    return r
 
 # ------------------------------------------------
 # Vagrant related configuration
