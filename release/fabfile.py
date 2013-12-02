@@ -41,11 +41,21 @@ from contextlib import contextmanager
 from fabric.api import env, local, run, sudo, cd, hide, task
 from fabric.contrib.files import exists
 from fabric.colors import blue, red
-from fabric.utils import error
+from fabric.utils import error, warn
 
-import requests
-from requests.auth import HTTPBasicAuth
-from requests_oauthlib import OAuth2
+try:
+    # Only works in newer versions of fabric
+    env.colorize_errors = True
+except AttributeError:
+    pass
+
+try:
+    import requests
+    from requests.auth import HTTPBasicAuth
+    from requests_oauthlib import OAuth2
+except ImportError:
+    warn("requests and requests-oauthlib must be installed to upload to GitHub")
+    requests = False
 
 import unicodedata
 import json
@@ -70,12 +80,6 @@ except ImportError:
 # to explicitly write out /home/vagrant/
 
 env.use_ssh_config = True
-
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
 
 def full_path_split(path):
     """
@@ -815,7 +819,11 @@ files below.
     return out
 
 @task
-def GitHub_release(username=None, user='sympy', token=None, token_file_path="~/.sympy/release-token"):
+def GitHub_release(username=None, user='sympy', token=None,
+    token_file_path="~/.sympy/release-token"):
+    if not requests:
+        error("requests and requests-oauthlib must be installed to upload to GitHub")
+
     release_text = GitHub_release_text()
     version = get_sympy_version()
     tag = 'sympy-' + version
