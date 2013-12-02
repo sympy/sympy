@@ -43,10 +43,12 @@ from fabric.contrib.files import exists
 from fabric.colors import blue, red
 from fabric.utils import error
 
-import urllib2
+import requests
+from requests.auth import HTTPBasicAuth
+from requests_oauthlib import OAuth2
+
 import unicodedata
 import json
-import base64
 from getpass import getpass
 
 import os
@@ -885,7 +887,7 @@ https to authenticate with GitHub, otherwise not saved anywhere else:\
 
     return username, password, token
 
-def generate_token(urls, username, password, OTP=None, name="SymPy Bot"):
+def generate_token(urls, username, password, OTP=None, name="SymPy Release"):
     enc_data = json.dumps(
         {
             "scopes": ["public_repo"],
@@ -966,87 +968,40 @@ class URLs(object):
 class AuthenticationFailed(Exception):
     pass
 
-def GitHub_link2dict(l):
-    """
-    Converts the GitHub Link header to a dict:
-
-    Example::
-
-    >>> GitHub_link2dict('<https://api.github.com/repos/sympy/sympy/pulls?page=2&state=closed>; rel="next",  <https://api.github.com/repos/sympy/sympy/pulls?page=21&state=closed>; rel="last"')
-    {'last': 'https://api.github.com/repos/sympy/sympy/pulls?page=21&state=closed',  'next': 'https://api.github.com/repos/sympy/sympy/pulls?page=2&state=closed'}
-
-    Borrowed from SymPy-bot
-    """
-    d = {}
-    while True:
-        i = l.find(";")
-        assert i != -1
-        assert l[0] == "<"
-        url = l[1:i - 1]
-        assert l[i - 1] == ">"
-        assert l[i + 1:i + 7] == ' rel="'
-        j = l.find('"', i + 7)
-        assert j != -1
-        param = l[i + 7:j]
-        d[param] = url
-
-        if len(l) == j + 1:
-            break
-        assert l[j + 1] == ","
-        j += 2
-        l = l[j + 1:]
-    return d
-
-def query_GitHub(url, username=None, password=None, token=None, data="", OTP=None):
+def query_GitHub(url, username=None, password=None, token=None, data=None, OTP=None):
     """
     Query GitHub API.
 
-    In case of a multipage result, query the next page and return all results.
+    In case of a multipage result, DOES NOT query the next page.
 
-    Borrowed from SymPy-bot
     """
-    request = urllib2.Request(url)
-    # Add authentication headers to request, if username and password presented
-    if username:
-        if token:
-            request.add_header("Authorization", "bearer %s" % token)
-        elif password:
-            base64string = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
-            request.add_header("Authorization", "Basic %s" % base64string)
+    headers = {}
 
-        if OTP:
-            request.add_header("X-GitHub-OTP", OTP)
+    if OTP:
+        headers['X-GitHub-OTP'] = OTP
 
-    if data is not "":
-        request.add_data(data)
-    try:
-        http_response = urllib2.urlopen(request)
-        response_body = json.load(http_response)
-    except urllib2.HTTPError as e:
-        # Auth exception
-        if e.code == 401:
-            two_factor = e.headers.getheaders('X-GitHub-OTP')
-            if two_factor:
-                print("A two-factor authentication code is required: ", two_factor[0].split(';')[1].strip())
-                OTP = raw_input("Authentication code: ")
-                return query_GitHub(url, username=username, password=password,
-                    token=token, data=data, OTP=OTP)
-            raise AuthenticationFailed("invalid username or password")
-        # Other exceptions
-        raise
-    except ValueError as e:
-        # If auth was successful
-        if http_response.code in (204, 302):
-            return []
-        # else return original error
-        raise ValueError(e)
+    if token:
+        auth = OAuth2(client_id=username, token=dict(access_token=token,
+            token_type='bearer'))
+    else:
+        auth = HTTPBasicAuth(username, password)
+    if data:
+        r = requests.post(url, auth=auth, data=data, headers=headers)
+    else:
+        r = requests.get(url, auth=auth, headers=headers)
 
-    link = http_response.headers.get("Link")
-    nexturl = GitHub_link2dict(link).get("next") if link else None
-    if nexturl:
-        response_body.extend(query_GitHub(nexturl, username, password, token, data))
+    if r.status_code == 401:
+        two_factor = r.headers.get('X-GitHub-OTP')
+        if two_factor:
+            print("A two-factor authentication code is required:", two_factor.split(';')[1].strip())
+            OTP = raw_input("Authentication code: ")
+            return query_GitHub(url, username=username, password=password,
+                token=token, data=data, OTP=OTP)
 
-    return response_body
+        raise AuthenticationFailed("invalid username or password")
+
+    r.raise_for_status()
+    return r.json()
 
 # ------------------------------------------------
 # Vagrant related configuration
