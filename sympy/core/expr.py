@@ -21,16 +21,18 @@ def represent(v):
         return "".join(r)
 
 def make_repr(v1, op, v2, res):
+    if isinstance(v1, Expr):
+        r1 = v1.repr()
+    else:
+        r1 = (repr(v1),)
+    if isinstance(v2, Expr):
+        r2 = v2.repr()
+    else:
+        r2 = (repr(v2),)
     if res == v1:
-        if isinstance(v1, Expr):
-            res.set_repr(v1.repr())
-        else:
-            res.set_repr((repr(v1),))
+        res.set_repr(r1)
     elif res == v2:
-        if isinstance(v2, Expr):
-            res.set_repr(v2.repr())
-        else:
-            res.set_repr((repr(v2),))
+        res.set_repr(r2)
     else:
         if op == "*":
             if v1 == -1:
@@ -43,7 +45,7 @@ def make_repr(v1, op, v2, res):
             if v2 == -1:
                 res.set_repr(v1.__neg__().repr())
                 return
-        res.set_repr((v1.repr(), op, v2.repr()))
+        res.set_repr((r1, op, r2))
         
 class Expr(Basic, EvalfMixin):
     #__slots__ = []

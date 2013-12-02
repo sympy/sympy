@@ -360,6 +360,7 @@ class Number(AtomicExpr):
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
+        res = None
         if isinstance(other, Number):
             if other is S.NaN:
                 res = S.NaN

@@ -1,7 +1,5 @@
 """Make step-by-step solution. """
 
-from sympy.core.symbol import Symbol
-from sympy.core.relational import Eq
 import gc, sys
 
 solution_list = []
@@ -28,6 +26,10 @@ def find_name(obj):
                 if v is obj and k != "variable":
                     return k
     return None
+
+def add_comment(cm):
+    print "->", cm
+    solution_list.append(cm)
     
 def add_step(variable):
     """Add a variable and its value into solution"""
@@ -42,9 +44,13 @@ def add_step(variable):
     
 def add_eq(l, r):
     """Add an equality into solution"""
-    r = repr(l) + " = " + repr(r)
-    print "->", r
-    solution_list.append(r)
+    rr = repr(l) + " = " + repr(r)
+    print "->", rr
+    solution_list.append(rr)
+    v = str(r)
+    if v != rr:
+        print "->", repr(l), "=", v
+        solution_list.append(repr(l) + " = " + v)
 
 def add_exp(exp):
     """Add an expression into solution"""

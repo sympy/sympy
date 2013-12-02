@@ -23,7 +23,7 @@ from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key, public
 
 from sympy.core.compatibility import reduce, xrange
-from sympy.utilities.solution import add_exp, add_eq, add_step
+from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
@@ -112,6 +112,10 @@ def roots_cubic(f):
 
     pon3 = p/3
     aon3 = a/3
+
+    add_comment("test comment")
+    add_eq("pon", pon3)
+    add_eq("aon", aon3)
 
     if p is S.Zero:
         if q is S.Zero:

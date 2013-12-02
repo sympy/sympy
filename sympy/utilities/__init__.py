@@ -15,3 +15,5 @@ from .decorator import threaded, xthreaded, public
 from .runtests import test, doctest
 
 from .timeutils import timed
+
+from .solution import add_step, add_comment, add_eq, add_exp, reset_solution, last_solution, start_subroutine, cancel_subroutine, commit_subroutine
