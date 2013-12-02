@@ -1948,15 +1948,20 @@ class One(with_metaclass(Singleton, IntegerConstant)):
 
     __slots__ = []
 
-    @staticmethod
-    def __abs__():
-        return S.One
+    #@staticmethod
+    def __abs__(self):
+        res = S.One
+        self.make_repr(""
+        return res
 
-    @staticmethod
-    def __neg__():
-        return S.NegativeOne
+    #@staticmethod
+    def __neg__(self):
+        res = S.NegativeOne
+        self.make_repr1("-", res)
+        return res
 
     def _eval_power(self, expt):
+        self.make_repr("**", expt, self)
         return self
 
     def _eval_order(self, *symbols):
@@ -1976,15 +1981,24 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
 
     __slots__ = []
 
-    @staticmethod
-    def __abs__():
-        return S.One
+    #@staticmethod
+    def __abs__(self):
+        res = S.One
+        self.make_repr1("abs", res)
+        return res
 
-    @staticmethod
-    def __neg__():
-        return S.One
+    #@staticmethod
+    def __neg__(self):
+        res = S.One
+        self.make_repr1("-", res)
+        return res
 
     def _eval_power(self, expt):
+        res = self.__eval_power(expt)
+        self.make_repr("**", expt, res)
+        return res
+
+    def __eval_power(self, expt):
         if expt.is_odd:
             return S.NegativeOne
         if expt.is_even:
@@ -2013,9 +2027,12 @@ class Half(with_metaclass(Singleton, RationalConstant)):
 
     __slots__ = []
 
-    @staticmethod
-    def __abs__():
-        return S.Half
+    #@staticmethod
+    def __abs__(self):
+        repr = self._repr
+        res = S.Half
+        res.set_repr(("abs", repr))
+        return res
 
 
 
@@ -2456,6 +2473,11 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
         return S.ComplexInfinity
 
     def _eval_power(self, expt):
+        res = self.__eval_power(expt)
+        self.make_repr("**", expt, res)
+        return res
+    
+    def __eval_power(self, expt):
         if expt is S.ComplexInfinity:
             return S.NaN
 
@@ -2588,7 +2610,9 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
             pass
 
     def _eval_power(self, expt):
-        return C.exp(expt)
+        res = C.exp(expt)
+        self.make_repr("**", expt, res)
+        return res
 
     def _eval_rewrite_as_sin(self):
         I = S.ImaginaryUnit
@@ -2753,6 +2777,11 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
         return -S.ImaginaryUnit
 
     def _eval_power(self, expt):
+        res = self.__eval_power(expt)
+        self.make_repr("**", expt, res)
+        return res
+
+    def __eval_power(self, expt):
         """
         b is I = sqrt(-1)
         e is symbolic object but not equal to 0, 1

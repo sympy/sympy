@@ -108,6 +108,20 @@ class Expr(Basic, EvalfMixin):
                     res.set_repr(self.__neg__().repr())
                     return
             res.set_repr((self.repr(), op, other.repr()))
+
+    def make_repr1(self, op, res):
+        r = self.repr()
+        if op == "-":
+            if isinstance(rr, tuple) and rr[0] == "-" and len(rr) == 2:
+                r = r[1]
+            else:
+                r = ("-", r)
+            res.set_repr(r)
+        else:
+            if isinstance(r, basestring):
+                res.set_repr((op, (r,)))
+            else:
+                res.set_repr((op, r))
         
 
     @cacheit
