@@ -54,6 +54,10 @@ class Expr(Basic, EvalfMixin):
         """
         return False
 
+    def __init__(self, *args):
+        self._repr = None
+        super(Expr, self).__init__(*args)
+        
     def __getattr__(self, attr):
         if attr == "_repr":
             self._repr = None

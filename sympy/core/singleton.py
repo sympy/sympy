@@ -70,6 +70,7 @@ class Singleton(ManagedProperties):
         the_instance = ctor(cls)
 
         def __new__(cls):
+            the_instance.__init__()
             return the_instance
         cls.__new__ = staticmethod(__new__)
 
