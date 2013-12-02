@@ -187,6 +187,28 @@ class Wild(Symbol):
     A Wild symbol matches anything, or anything
     without whatever is explicitly excluded.
 
+    **Tips**
+
+		When using Wild, be sure to use the exclude
+		keyword to make the pattern deterministic.
+		Without the exclude pattern, you may get matches
+		that are technically correct, but not what you
+		wanted. This is especially likely if the
+		expression you are matching doesn't actually match
+		your pattern. For example, using the above without
+		exclude:
+
+		>>> (2 + 3*y).match(a*x + b*y)
+		{a: 2/x, b: 3}
+
+		This is technically correct, because
+		(2/x)*x + 3*y == 2 + 3*y, but you probably
+		wanted it to not match at all. The issue is that
+		you really didn't want a and b to include x and y,
+		and the exclude parameter lets you specify exactly
+		this.  With the exclude parameter, the above match
+		gives None, meaning it did not match.
+
     Examples
     ========
 
@@ -208,6 +230,12 @@ class Wild(Symbol):
     >>> A = WildFunction('A')
     >>> A.match(a)
     {a_: A_}
+
+    References
+    ==========
+
+    https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#antipatterns
+
     """
 
     __slots__ = ['exclude', 'properties']
