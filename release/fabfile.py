@@ -543,6 +543,18 @@ the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.'
     ])
 
 @task
+def size(file='*', print_=True):
+    """
+    Print the sizes of the release files
+    """
+    out = local("du -h release/" + file, capture=True)
+    out = [i.split() for i in out.strip().split('\n')]
+    out = '\n'.join(["%s\t%s" % (i, os.path.split(j)[1]) for i, j in out])
+    if print_:
+        print(out)
+    return out
+
+@task
 def table():
     """
     Make an html table of the downloads.
@@ -558,6 +570,9 @@ def table():
     md5s = [i.split('\t') for i in md5(print_=False).split('\n')]
     md5s_dict = {name: md5 for md5, name in md5s}
 
+    sizes = [i.split('\t') for i in size(print_=False).split('\n')]
+    sizes_dict = {name: size for size, name in sizes}
+
     table = []
 
     # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
@@ -571,7 +586,7 @@ def table():
 
     with tag('table'):
         with tag('tr'):
-            for headname in ["Filename", "Description", "md5"]:
+            for headname in ["Filename", "Description", "size", "md5"]:
                 with tag("th"):
                     table.append(headname)
 
@@ -584,6 +599,8 @@ def table():
                         table.append(name)
                 with tag('td'):
                     table.append(descriptions[key].format(**tarball_formatter_dict))
+                with tag('td'):
+                    table.append(sizes_dict[name])
                 with tag('td'):
                     table.append(md5s_dict[name])
 
