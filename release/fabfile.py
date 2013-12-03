@@ -794,6 +794,7 @@ def upload():
 
     """
     distutils_check()
+    GitHub_release()
     pypi_register()
     pypi_upload()
 
