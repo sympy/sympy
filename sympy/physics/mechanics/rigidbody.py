@@ -2,9 +2,10 @@ from __future__ import print_function, division
 
 __all__ = ['RigidBody']
 
-from sympy import sympify
+from sympy import sympify,ln
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.essential import ReferenceFrame, Dyadic
+#from sympy.mpmath import *
 
 
 class RigidBody(object):
@@ -29,6 +30,8 @@ class RigidBody(object):
         The body's mass.
     inertia : (Dyadic, Point)
         The body's inertia about a point; stored in a tuple as shown above.
+    fmass : Sympifyable
+    	The body's final mass.
 
     Examples
     ========
@@ -48,7 +51,7 @@ class RigidBody(object):
 
     """
 
-    def __init__(self, name, masscenter, frame, mass, inertia):
+    def __init__(self, name, masscenter, frame, mass,inertia):
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
@@ -57,6 +60,10 @@ class RigidBody(object):
         self.set_frame(frame)
         self.set_inertia(inertia)
         self._pe = sympify(0)
+        self._thrust = sympify(0)
+        #self.set_fmass(fmass)
+        self._fmass = sympify(0)
+        self._m0 = sympify(0)
 
     def __str__(self):
         return self._name
@@ -91,6 +98,7 @@ class RigidBody(object):
 
     mass = property(get_mass, set_mass)
 
+   
     def get_inertia(self):
         return (self._inertia, self._inertia_point)
 
@@ -294,3 +302,168 @@ class RigidBody(object):
         """
 
         return self._pe
+
+    def set_thrust(self, scalar):
+        """ thrust obtained from the engine
+ 
+        Examples :
+
+        ============
+
+           >>from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+           >>from sympy import symbols
+           >>M, g, h ,t  = symbols('M g h t')
+           >>b = ReferenceFrame('b')
+           >>P = Point('P')
+           >>I = outer (b.x, b.x)
+           >>Inertia_tuple = (I, P)
+           >>B = RigidBody('B', P, b, M, Inertia_tuple)
+           >>B.set_thrust(t)
+
+
+
+        """
+        self._thrust = sympify(scalar)
+    
+    def set_fmass(self,scalar):
+        """ final total mass
+
+        Examples :
+
+        =============
+
+           >>from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+           >>from sympy import symbols
+           >>M, g, h ,fm  = symbols('M g h fm')
+           >>b = ReferenceFrame('b')
+           >>P = Point('P')
+           >>I = outer (b.x, b.x)
+           >>Inertia_tuple = (I, P)
+           >>B = RigidBody('B', P, b, M, Inertia_tuple)
+           >>B.set_fmass(fm)
+
+             """
+
+        self._fmass=sympify(scalar)
+
+    def set_m0(self,scalar):
+        """ mass flow rate (rate of decrease of vehicles mass)
+
+        Examples :
+
+        ==================
+
+           >>from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+           >>from sympy import symbols
+           >>M, g, h ,m1  = symbols('M g h m1')
+           >>b = ReferenceFrame('b')
+           >>P = Point('P')
+           >>I = outer (b.x, b.x)
+           >>Inertia_tuple = (I, P)
+           >>B = RigidBody('B', P, b, M, Inertia_tuple)
+           >>B.set_m0(m1)
+
+              """
+
+        self._m0=sympify(scalar)
+
+
+    @property
+    def specific_impulse(self):
+        """Specific impulse in seconds can be defined by following equation
+           F= I*m'*g
+           where
+           I = specific impulse measured in seconds
+           F= thrust obtained from the engine, in newtons 
+           m'= mass flow rate in kg/s (lb/s)
+           g = acceleration at the Earth's surface
+        
+        Examples :
+           
+        =============
+
+           >>from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+           >>from sympy import symbols
+           >>M, g, h ,fm ,t ,m1 = symbols('M g h fm t m1')
+           >>b = ReferenceFrame('b')
+           >>P = Point('P')
+           >>I = outer (b.x, b.x)
+           >>Inertia_tuple = (I, P)
+           >>B = RigidBody('B', P, b, M, Inertia_tuple)
+           >>B.set_thrust(t)
+           >>B.set_fmass(fm)
+           >>B.set_m0(m1)
+           >>B.specif_impulse
+           0.102040816326531*t/m1
+
+             """
+        
+        return self._thrust/(self._m0*9.8)
+
+    @property
+    def eff_exhaust_vel(self):
+         """effective exhaust velocity is defined as :
+              F=v*g
+              where
+              F= thrust
+              v= effective exhaust velocity
+              g= acceleration at earths surface
+
+         Examples :
+
+           ===============
+
+           >>from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+           >>from sympy import symbols
+           >>M, g, h ,fm ,t ,m1 = symbols('M g h fm t m1')
+           >>b = ReferenceFrame('b')
+           >>P = Point('P')
+           >>I = outer (b.x, b.x)
+           >>Inertia_tuple = (I, P)
+           >>B = RigidBody('B', P, b, M, Inertia_tuple)
+           >>B.set_thrust(t)
+           >>B.set_fmass(fm)
+           >>B.set_m0(m1)
+           >>B.eff_exhaust_vel
+           t/m1
+
+            """
+
+         return self._thrust/self._m0
+
+    @property
+    def rocket_eqn(self):
+        """ The Tsiolkovsky rocket equation, or ideal rocket equation, describes the motion
+            of vehicles that follow the basic principle of a rocket: a device that can apply
+             acceleration to itself (a thrust) by expelling part of its mass with high speed and move 
+            due to the conservation of momentum. The equation relates the delta-v (the maximum change of
+             speed of the rocket if no other external forces act) with the effective exhaust velocity 
+            and the initial and final mass of a rocket (or other reaction engine).
+          
+         Examples :
+
+           =================== 
+ 
+           >>from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+           >>from sympy import symbols
+           >>M, g, h ,fm ,t ,m1 = symbols('M g h fm t m1')
+           >>b = ReferenceFrame('b')
+           >>P = Point('P')
+           >>I = outer (b.x, b.x)
+           >>Inertia_tuple = (I, P)
+           >>B = RigidBody('B', P, b, M, Inertia_tuple)
+           >>B.set_thrust(t)
+           >>B.set_fmass(fm)
+           >>B.set_m0(m1) 
+           >>B.rocket_eqn
+           t*log(M/fm)/m1
+ 
+               """
+        return (self.eff_exhaust_vel)*ln(self.mass/self._fmass)
+
+
+
+
+
+        
+
