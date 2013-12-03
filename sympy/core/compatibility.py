@@ -548,7 +548,7 @@ def _nodes(e):
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
     elif isinstance(e, dict):
-        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.iteritems())
+        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.items())
     else:
         return 1
 

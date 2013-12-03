@@ -582,7 +582,7 @@ class cos(TrigonometricFunction):
                 return r.q
 
             if None == factors:
-                a = [n//x**y for x, y in factorint(r.q).iteritems()]
+                a = [n//x**y for x, y in factorint(r.q).items()]
             else:
                 a = [n//x for x in factors]
             if len(a) == 1:
