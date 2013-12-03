@@ -850,7 +850,7 @@ files below.
 
 @task
 def GitHub_release(username=None, user='sympy', token=None,
-    token_file_path="~/.sympy/release-token", repo='sympy'):
+    token_file_path="~/.sympy/release-token", repo='sympy', draft=False):
     """
     Upload the release files to GitHub.
 
@@ -887,7 +887,7 @@ def GitHub_release(username=None, user='sympy', token=None,
     post['tag_name'] = tag
     post['name'] = "SymPy " + version
     post['body'] = release_text
-    post['draft'] = False
+    post['draft'] = draft
     post['prerelease'] = prerelease
 
     print("Creating release for tag", tag, end=' ')
