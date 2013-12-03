@@ -81,9 +81,9 @@ class Expr(Basic, EvalfMixin):
         """
         return False
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         self._repr = None
-        super(Expr, self).__init__(*args)
+        super(Expr, self).__init__(*args, **kwargs)
         
     def __getattr__(self, attr):
         if attr == "_repr":
