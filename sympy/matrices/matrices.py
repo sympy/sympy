@@ -999,7 +999,10 @@ class MatrixBase(object):
 
     def submatrix(self, keys):
         """
-        Get a slice/submatrix of the matrix using the given slice.
+        Get a slice/submatrix of the matrix using the given slice. This is
+        used by the __getitem__ method and its functionality should
+        generally be accessed that way, e.g. M[:2, :3] is equivalent to
+        M.submatrix((slice(None, 2), slice(None, 3))).
 
         Examples
         ========
@@ -1012,13 +1015,13 @@ class MatrixBase(object):
         [1, 2, 3, 4],
         [2, 3, 4, 5],
         [3, 4, 5, 6]])
-        >>> m[:1, 1]
+        >>> m.submatrix((slice(None, 1), 1))
         Matrix([[1]])
-        >>> m[:2, :1]
+        >>> m.submatrix((slice(None, 2), slice(None, 1)))
         Matrix([
         [0],
         [1]])
-        >>> m[2:4, 2:4]
+        >>> m.submatrix((slice(2, 4), slice(2, 4)))
         Matrix([
         [4, 5],
         [5, 6]])
@@ -4150,8 +4153,6 @@ def classof(A, B):
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
-    if isinstance(j, slice):
-        return j
     if type(j) is not int:
         try:
             j = j.__index__()
