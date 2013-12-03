@@ -281,7 +281,7 @@ def test_bicycle():
 
 
     # Actual eigenvalue comparison
+    eps = 1.e-12
     for i in range(6):
-        eps = 1.e-12
         error = Res.subs(v, i) - A.subs(v, i)
-        assert all(bool(abs(x) < eps) for x in error)
+        assert all(abs(x) < eps for x in error)
