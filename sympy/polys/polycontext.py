@@ -40,7 +40,7 @@ class Context(PicklableWithSlots):
 
     def __str__(self):
         return 'Context(%s)' % ', '.join(
-            [ '%s=%r' % (key, value) for key, value in self.__options__.iteritems() ])
+            [ '%s=%r' % (key, value) for key, value in self.__options__.items() ])
 
     def __and__(self, other):
         if isinstance(other, Context):
