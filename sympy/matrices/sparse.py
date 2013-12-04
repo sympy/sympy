@@ -99,12 +99,16 @@ class SparseMatrix(MatrixBase):
                 elif is_sequence(i):
                     pass
                 else:
+                    if i >= self.rows:
+                        raise IndexError('Row index out of bounds')
                     i = [i]
                 if isinstance(j, slice):
                     j = range(self.cols)[j]
                 elif is_sequence(j):
                     pass
                 else:
+                    if j >= self.cols:
+                        raise IndexError('Col index out of bounds')
                     j = [j]
                 return self.extract(i, j)
 
