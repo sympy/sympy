@@ -535,27 +535,6 @@ class SparseMatrix(MatrixBase):
         return rv
     extract.__doc__ = MatrixBase.extract.__doc__
 
-    def submatrix(self, keys):
-        rlo, rhi, clo, chi = self.key2bounds(keys)
-        r, c = rhi - rlo, chi - clo
-        if r*c < len(self._smat):
-            # the subregion is smaller than the number of elements in self
-            if r == 1:
-                getter = lambda i, j: self[rlo, j + clo]
-            elif c == 1:
-                getter = lambda i, j: self[i + rlo, clo]
-            else:
-                getter = lambda i, j: self[i + rlo, j + clo]
-            return self._new(r, c, getter)
-        else:
-            # the number of non-zero elements is smaller than the subregion
-            smat = {}
-            for rk, ck in self._smat:
-                if rlo <= rk < rhi and clo <= ck < chi:
-                    smat[(rk-rlo, ck-clo)] = self._smat[(rk, ck)]
-            return self._new(r, c, smat)
-    submatrix.__doc__ = MatrixBase.submatrix.__doc__
-
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.
 
