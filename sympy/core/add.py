@@ -181,6 +181,9 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
+                if terms[s] is S.NaN:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
             else:
                 terms[s] = c
 

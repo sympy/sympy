@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im
+        sign, im, nan
 )
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
@@ -1481,6 +1481,15 @@ def test_mul_flatten_oo():
     assert n*m*oo == oo
     assert p*oo == oo
     assert x_im*oo != I*oo  # i could be +/- 3*I -> +/-oo
+
+
+def test_add_flatten():
+    # see https://github.com/sympy/sympy/issues/2633#issuecomment-29545524
+    a = oo + I*oo
+    b = oo - I*oo
+    assert a + b == nan
+    assert a - b == nan
+    assert (1/a).simplify() == (1/b).simplify() == 0
 
 
 def test_issue_2061_2988_2990_2991():
