@@ -27,6 +27,10 @@ from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
+    
+    add_comment('linear polynomial')
+    add_eq(f.as_expr(), 0)
+
     r = -f.nth(0)/f.nth(1)
     dom = f.get_domain()
 
@@ -35,12 +39,15 @@ def roots_linear(f):
             r = factor(r)
         else:
             r = simplify(r)
-
+    add_step(r)
     return [r]
 
 
 def roots_quadratic(f):
     """Returns a list of roots of a quadratic polynomial."""
+   
+    add_comment('quadratic polynomial')
+
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
     add_eq(f.as_expr(), 0)
@@ -112,10 +119,6 @@ def roots_cubic(f):
 
     pon3 = p/3
     aon3 = a/3
-
-    add_comment("test comment")
-    add_eq("pon", pon3)
-    add_eq("aon", aon3)
 
     if p is S.Zero:
         if q is S.Zero:
@@ -323,6 +326,10 @@ def roots_quartic(f):
 
 def roots_binomial(f):
     """Returns a list of roots of a binomial polynomial."""
+
+    add_comment('binomial polynomial')
+    add_eq(f.as_expr(), 0)
+
     n = f.degree()
 
     a, b = f.nth(n), f.nth(0)
@@ -331,14 +338,21 @@ def roots_binomial(f):
     if alpha.is_number:
         alpha = alpha.expand(complex=True)
 
+    add_comment('first coefficient = ' + str(a))
+    add_comment('second coefficient = ' + str(b))
+    add_step(alpha)
+
     roots, I = [], S.ImaginaryUnit
 
     for k in xrange(n):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    return sorted(roots, key=default_sort_key)
+    roots = sorted(roots, key=default_sort_key)
 
+    add_step(roots)
+
+    return roots
 
 def _inv_totient_estimate(m):
     """
@@ -759,6 +773,8 @@ def roots(f, *gens, **flags):
     from sympy.polys.polytools import to_rational_coeffs
     flags = dict(flags)
 
+    add_eq(f.as_expr(), 0)
+
     auto = flags.pop('auto', True)
     cubics = flags.pop('cubics', True)
     quartics = flags.pop('quartics', True)
@@ -792,6 +808,7 @@ def roots(f, *gens, **flags):
             raise PolynomialError('multivariate polynomials are not supported')
 
     def _update_dict(result, root, k):
+        add_comment('add root: ' + str(root))
         if root in result:
             result[root] += k
         else:
@@ -901,7 +918,9 @@ def roots(f, *gens, **flags):
                     for root in _try_decompose(f):
                         _update_dict(result, root, 1)
             else:
+                add_comment('Factorization')
                 for factor, k in factors:
+                    add_eq(factor.as_expr(), 0)
                     for r in _try_heuristics(Poly(factor, f.gen, field=True)):
                         _update_dict(result, r, k)
 

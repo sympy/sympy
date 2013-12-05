@@ -48,9 +48,9 @@ def add_eq(l, r):
     print "->", rr
     solution_list.append(rr)
     v = str(r)
-    if v != rr:
-        print "->", repr(l), "=", v
-        solution_list.append(repr(l) + " = " + v)
+    # if v != rr:
+        # print "->", repr(l), "=", v
+        # solution_list.append(repr(l) + " = " + v)
 
 def add_exp(exp):
     """Add an expression into solution"""
