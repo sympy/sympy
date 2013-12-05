@@ -349,7 +349,22 @@ Dense representations quickly require infeasible amounts of storage and
 computation time if the number of variables increases. For this reason,
 there is code to manipulate polynomials in a *sparse* representation.
 
-.. TODO: write documentation for new sparse polynomials
+
+
+.. currentmodule:: sympy.polys.rings
+
+Sparse polynomials are represented as dictionaries.
+
+.. autofunction:: ring
+.. autofunction:: xring
+.. autofunction:: vring
+.. autofunction:: sring
+
+.. autoclass:: PolyRing
+   :members:
+
+.. autoclass:: PolyElement
+   :members:
 
 In commutative algebra, one often studies not only polynomials, but also
 *modules* over polynomial rings. The polynomial manipulation module provides
@@ -513,6 +528,29 @@ Modular GCD
 .. autoclass:: modgcd_bivariate
 .. autoclass:: modgcd_multivariate
 .. autoclass:: func_field_modgcd
+
+Manipulation of power series
+****************************************************************************
+.. currentmodule:: sympy.polys.ring_series
+
+Functions in this module carry the prefix ``rs_``, standing for "ring series".
+They manipulate finite power series in the sparse representation provided
+by ``polys.ring.ring``.
+
+
+.. autofunction:: rs_trunc
+.. autofunction:: rs_mul
+.. autofunction:: rs_square
+.. autofunction:: rs_pow
+.. autofunction:: rs_series_inversion
+.. autofunction:: rs_series_from_list
+.. autofunction:: rs_integrate
+.. autofunction:: rs_log
+.. autofunction:: rs_exp
+.. autofunction:: rs_newton
+.. autofunction:: rs_hadamard_exp
+.. autofunction:: rs_compose_add
+
 
 Undocumented
 ============
