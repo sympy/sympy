@@ -11,7 +11,7 @@ from __future__ import division
 from sympy import pi
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
 from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
-from sympy.physics.unitsystems.prefixes import PREFIXES, prefixe_unit
+from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
 from sympy.physics.unitsystems.systems.mks import mks_dim, mks
 
 # base dimensions
@@ -64,7 +64,7 @@ Z0 = Constant(impedance, factor=119.9169832*pi, abbrev='Z_0')
 units = [A, V, ohm, S, F, H, C, T, Wb]
 all_units = []
 for u in units:
-    all_units.extend(prefixe_unit(u, PREFIXES))
+    all_units.extend(prefix_unit(u, PREFIXES))
 
 all_units.extend([Z0])
 

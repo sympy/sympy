@@ -81,7 +81,7 @@ class Prefix(object):
     __rtruediv__ = __rdiv__
 
 
-def prefixe_unit(unit, prefixes):
+def prefix_unit(unit, prefixes):
     """
     Return a list of all units formed by unit and the given prefixes.
 
@@ -89,11 +89,11 @@ def prefixe_unit(unit, prefixes):
     pass as argument a subdict of them if you don't want all prefixed units.
 
         >>> from sympy.physics.unitsystems.prefixes import (PREFIXES,
-        ...                                                 prefixe_unit)
+        ...                                                 prefix_unit)
         >>> from sympy.physics.unitsystems.systems import mks
         >>> m = mks["m"]
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
-        >>> set(prefixe_unit(m, pref))
+        >>> set(prefix_unit(m, pref))
         set([cm, dm, mm])
     """
 

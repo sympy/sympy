@@ -10,7 +10,7 @@ from __future__ import division
 
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
 from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
-from sympy.physics.unitsystems.prefixes import PREFIXES, prefixe_unit
+from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
 
 # base dimensions
 length = Dimension(name="length", symbol="L", length=1)
@@ -61,7 +61,7 @@ c = Constant(velocity, factor=299792458, abbrev="c")
 units = [m, g, s, J, N, W, Pa, Hz]
 all_units = []
 for u in units:
-    all_units.extend(prefixe_unit(u, PREFIXES))
+    all_units.extend(prefix_unit(u, PREFIXES))
 all_units.extend([v, a, p, G, c])
 
 # unit system
