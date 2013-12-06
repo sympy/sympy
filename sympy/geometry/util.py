@@ -14,11 +14,14 @@ from sympy.core.compatibility import string_types, is_sequence
 
 
 def idiff(eq, y, x, n=1):
-    """Return ``dy/dx`` assuming that ``eq == 0``. Higher order derivatives
-    can be selected by using a larger value of ``n``. If variables other
-    than ``y`` appear in ``eq`` and have an implicit dependence on ``x``
-    then list them after ``y`` in a sequence and pass that as the second
-    argument instead of ``y``.
+    """Return ``dy/dx`` assuming that ``eq == 0``.
+
+    Parameters
+    ==========
+
+    y : the dependent variable or a list of dependent variables (with y first)
+    x : the variable that the derivative is being taken with respect to
+    n : the order of the derivative (default is 1)
 
     Examples
     ========
