@@ -11,6 +11,7 @@ from sympy.utilities.pytest import raises
 m, s, c = mks["m"], mks["s"], mks["c"]
 k = PREFIXES["k"]
 
+
 def test_definition():
     q = Quantity(10, s)
 

@@ -21,11 +21,7 @@ def test_dict_properties():
 
     assert d["length"] == 1
 
-    assert d.args == (Tuple("length", 1), Tuple("time", -2))
-
-    assert d.items() == dic.items()
-    assert d.keys() == dic.keys()
-    assert d.values() == dic.values()
+    assert set(d.items()) == set(dic.items())
 
     assert len(d) == 2
 

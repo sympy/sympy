@@ -7,13 +7,13 @@ Physical quantities.
 from __future__ import division
 import numbers
 
-from sympy import sympify, AtomicExpr, Number, Mul, Pow
+from sympy import sympify, Expr, Number, Mul, Pow
 from .units import Unit
 
 #TODO: in operations, interpret a Unit as a quantity with factor 1?
 
 
-class Quantity(AtomicExpr):
+class Quantity(Expr):
     """
     Physical quantity.
 
@@ -33,17 +33,16 @@ class Quantity(AtomicExpr):
                     and isinstance(factor, (Number, numbers.Real))):
             return factor * (unit or 1)
 
-        obj = AtomicExpr.__new__(cls, **assumptions)
-
         #TODO: if factor is of the form "1 m", parse the factor and the unit
         if isinstance(factor, (Number, numbers.Real)):
-            if isinstance(unit, Unit):
-                obj.factor, obj.unit = factor, unit
-            else:
+            if not isinstance(unit, Unit):
                 raise TypeError("'unit' should be a Unit instance; %s found"
                                 % type(unit))
         else:
             raise NotImplementedError
+
+        obj = Expr.__new__(cls, factor, unit, **assumptions)
+        obj.factor, obj.unit = factor, unit
 
         return obj
 
@@ -52,11 +51,6 @@ class Quantity(AtomicExpr):
 
     def __repr__(self):
         return "%g %s" % (self.factor, repr(self.unit))
-
-    def __eq__(self, other):
-
-        return (isinstance(other, Quantity) and self.factor == other.factor
-                and self.unit == other.unit)
 
     def __neg__(self):
         return Quantity(-self.factor, self.unit)

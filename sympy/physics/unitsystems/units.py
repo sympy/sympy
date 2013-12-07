@@ -7,11 +7,11 @@ Unit system for physical quantities; include definition of constants.
 from __future__ import division
 import numbers
 
-from sympy import sympify, AtomicExpr, Number, Pow, Mul
+from sympy import sympify, Expr, Number, Pow, Mul
 from .dimensions import Dimension, DimensionSystem
 
 
-class Unit(AtomicExpr):
+class Unit(Expr):
     """
     Class for the units.
 
@@ -53,25 +53,39 @@ class Unit(AtomicExpr):
 
         factor = sympify(factor)
 
-        obj = AtomicExpr.__new__(cls, **assumptions)
+        obj_abbrev = abbrev
+        obj_factor = factor
+        obj_dim = dim
+        obj_prefix = prefix
 
-        if isinstance(dim, Dimension):
-            obj._abbrev = abbrev
-            obj._factor = factor
-            obj.dim = dim
-            obj.prefix = prefix
-        elif isinstance(dim, Unit):
-            obj._abbrev = abbrev
-            obj._factor = factor * dim.factor
-            obj.dim = dim.dim
+        if isinstance(dim, Unit):
+            obj_factor = factor * dim.factor
+            obj_dim = dim.dim
             #TODO: find a better handling when dim has already a prefix
             if dim.prefix is None and prefix is not None:
-                obj.prefix = prefix
+                obj_prefix = prefix
             else:
-                obj.prefix = None
+                obj_prefix = None
         else:
-            raise TypeError("'dim' object should be Unit or Dimension "
-                            "instance; found %s" % type(dim))
+            if not isinstance(dim, Dimension):
+                raise TypeError("'dim' object should be Unit or Dimension "
+                                "instance; found %s" % type(dim))
+
+        # compute the total factor - including the prefix - to pass to Expr
+        if obj_prefix is not None:
+            arg_factor = obj_prefix.factor * obj_factor
+        else:
+            arg_factor = obj_factor
+
+        # we can not define obj at the beginning and define its attributes
+        # in the previous conditions because one needs to compute the total
+        # factor and pass it in args
+        obj = Expr.__new__(cls, arg_factor, obj_dim, **assumptions)
+
+        obj._abbrev = obj_abbrev
+        obj._factor = obj_factor
+        obj.dim = obj_dim
+        obj.prefix = obj_prefix
 
         return obj
 
@@ -117,10 +131,6 @@ class Unit(AtomicExpr):
 
     def __repr__(self):
         return self.abbrev_dim
-
-    def __eq__(self, other):
-        return (isinstance(other, Unit) and self.factor == other.factor
-                and self.dim == other.dim)
 
     def __add__(self, other):
         if not isinstance(other, Unit):
@@ -292,9 +302,14 @@ class UnitSystem(object):
             raise ValueError("The system with basis '%s' is not consistent"
                              % str(self._base_units))
 
-        self._units = tuple(list(units) + [u for u in base if u not in units])
+        self._units = tuple(set(base) | set(units))
 
+        # create a dict linkin
+        # this is possible since we have already verified that the base units
+        # form a coherent system
         base_dict = dict((u.dim, u) for u in base)
+        # order the base units in the same order than the dimensions in the
+        # associated system, in order to ensure that we get always the same
         self._base_units = tuple(base_dict[d] for d in self._system._base_dims)
 
     def __str__(self):
@@ -380,8 +395,8 @@ class UnitSystem(object):
         factor = unit.factor
         vec = self._system.dim_vector(unit.dim)
 
-        for (u, p) in sorted(zip(self._base_units, vec),
-                             lambda x, y: x[1] > y[1]):
+        for (u, p) in sorted(zip(self._base_units, vec), key=lambda x: x[1],
+                             reverse=True):
 
             factor /= u.factor**p
             if p == 0:

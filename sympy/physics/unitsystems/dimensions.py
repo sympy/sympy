@@ -17,11 +17,11 @@ from copy import copy
 import numbers
 
 from sympy.core.compatibility import reduce
-from sympy.core.containers import Tuple
-from sympy import sympify, Number, Matrix, AtomicExpr
+from sympy.core.containers import Tuple, Dict
+from sympy import sympify, Number, Matrix, Expr
 
 
-class Dimension(AtomicExpr):
+class Dimension(Expr):
     """
     This class represent the dimension of a physical quantities.
 
@@ -135,12 +135,11 @@ class Dimension(AtomicExpr):
         pairs = [pair for pair in pairs if pair[1] != 0]
         pairs.sort(key=str)
 
-        new = AtomicExpr.__new__(cls, *pairs)
+        new = Expr.__new__(cls, *pairs)
         new.name = name
         new.symbol = symbol
 
         new._dict = dict(pairs)
-        new._pairs = tuple(Tuple(*pair) for pair in pairs)
 
         return new
 
@@ -150,10 +149,6 @@ class Dimension(AtomicExpr):
 
     def __setitem__(self, key, value):
         raise NotImplementedError("Dimension are Immutable")
-
-    @property
-    def args(self):
-        return self._pairs
 
     def items(self):
         """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
@@ -517,7 +512,7 @@ class DimensionSystem(object):
         res = ""
 
         for (d, p) in sorted(zip(self._base_dims, self.dim_vector(dim)),
-                             lambda x, y: x[1] > y[1]):
+                             key=lambda x: x[1], reverse=True):
             if p == 0:
                 continue
             elif p == 1:
