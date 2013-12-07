@@ -14,7 +14,7 @@ from sympy.printing.conventions import requires_partial
 from .stringpict import prettyForm, stringPict
 from .pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
     pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
-    annotated
+    annotated, default_symbol_modifiers
 
 from sympy.utilities import default_sort_key
 
@@ -33,6 +33,7 @@ class PrettyPrinter(Printer):
         "use_unicode": None,
         "wrap_line": True,
         "num_columns": None,
+        "symbol_modifiers": default_symbol_modifiers
     }
 
     def __init__(self, settings=None):
@@ -62,7 +63,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Symbol(self, e):
-        symb = pretty_symbol(e.name)
+        symb = pretty_symbol(e.name, self._settings['symbol_modifiers'])
         return prettyForm(symb)
     _print_RandomSymbol = _print_Symbol
 
@@ -1496,7 +1497,7 @@ class PrettyPrinter(Printer):
         else:
             form = 'GF(%d)'
 
-        return prettyForm(pretty_symbol(form % expr.mod))
+        return prettyForm(pretty_symbol(form % expr.mod), self._settings['symbol_modifiers'])
 
     def _print_IntegerRing(self, expr):
         if self._use_unicode:
@@ -1519,7 +1520,7 @@ class PrettyPrinter(Printer):
         if domain.has_default_precision:
             return prettyForm(prefix)
         else:
-            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision), self._settings['symbol_modifiers']))
 
     def _print_ComplexField(self, domain):
         if self._use_unicode:
@@ -1530,7 +1531,7 @@ class PrettyPrinter(Printer):
         if domain.has_default_precision:
             return prettyForm(prefix)
         else:
-            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision), self._settings['symbol_modifiers']))
 
     def _print_PolynomialRing(self, expr):
         args = list(expr.symbols)
@@ -1622,7 +1623,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right((prettyForm(','))))
         pform = prettyForm(*pform.right((self._print(e.args[1]))))
         if self._use_unicode:
-            a = stringPict(pretty_symbol('delta'))
+            a = stringPict(pretty_symbol('delta', self._settings['symbol_modifiers']))
         else:
             a = stringPict('d')
         b = pform
@@ -1659,7 +1660,7 @@ class PrettyPrinter(Printer):
         return self._print_DMP(p)
 
     def _print_Object(self, object):
-        return self._print(pretty_symbol(object.name))
+        return self._print(pretty_symbol(object.name, self._settings['symbol_modifiers']))
 
     def _print_Morphism(self, morphism):
         arrow = xsym("-->")
@@ -1671,7 +1672,7 @@ class PrettyPrinter(Printer):
         return prettyForm(tail)
 
     def _print_NamedMorphism(self, morphism):
-        pretty_name = self._print(pretty_symbol(morphism.name))
+        pretty_name = self._print(pretty_symbol(morphism.name, self._settings['symbol_modifiers']))
         pretty_morphism = self._print_Morphism(morphism)
         return prettyForm(pretty_name.right(":", pretty_morphism)[0])
 
@@ -1686,7 +1687,7 @@ class PrettyPrinter(Printer):
 
         # All components of the morphism have names and it is thus
         # possible to build the name of the composite.
-        component_names_list = [pretty_symbol(component.name) for
+        component_names_list = [pretty_symbol(component.name, self._settings['symbol_modifiers']) for
                                 component in morphism.components]
         component_names_list.reverse()
         component_names = circle.join(component_names_list) + ":"
@@ -1696,7 +1697,7 @@ class PrettyPrinter(Printer):
         return prettyForm(pretty_name.right(pretty_morphism)[0])
 
     def _print_Category(self, category):
-        return self._print(pretty_symbol(category.name))
+        return self._print(pretty_symbol(category.name, self._settings['symbol_modifiers']))
 
     def _print_Diagram(self, diagram):
         if not diagram.premises:
@@ -1755,17 +1756,17 @@ class PrettyPrinter(Printer):
 
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
-        return self._print(pretty_symbol(string))
+        return self._print(pretty_symbol(string, self._settings['symbol_modifiers']))
 
     def _print_BaseVectorField(self, field):
         s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys._names[field._index]
-        return self._print(pretty_symbol(s))
+        return self._print(pretty_symbol(s, self._settings['symbol_modifiers']))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return self._print(u('\u2146 ') + pretty_symbol(string))
+            return self._print(u('\u2146 ') + pretty_symbol(string, self._settings['symbol_modifiers']))
         else:
             pform = self._print(field)
             pform = prettyForm(*pform.parens())
