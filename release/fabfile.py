@@ -189,8 +189,8 @@ def get_sympy_version(version_cache=[]):
         gitrepos()
     with cd("/home/vagrant/repos/sympy"):
         version = run('python -c "import sympy;print(sympy.__version__)"')
-    if '\n' in version or ' ' in version or'\t' in version:
-	raise ValueError("Version returned has space or escape sequences")
+    if not all(c.strip() for c in version):
+        raise ValueError('unexpected whitespace characters in version string.')
     version_cache.append(version)
     return version
 
