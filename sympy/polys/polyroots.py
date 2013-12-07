@@ -39,7 +39,7 @@ def roots_linear(f):
             r = factor(r)
         else:
             r = simplify(r)
-    add_step(r)
+    add_comment('root = ' + str(r))
     return [r]
 
 
@@ -108,6 +108,9 @@ def roots_quadratic(f):
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
+
+    add_comment('cubic polynomial')
+
     _, a, b, c = f.monic().all_coeffs()
 
     if c is S.Zero:
@@ -120,40 +123,62 @@ def roots_cubic(f):
     pon3 = p/3
     aon3 = a/3
 
+    add_step(p);
+    add_step(q);
+
     if p is S.Zero:
+        add_comment('p is zero')
         if q is S.Zero:
+            add_comment('q is zero')
+            root = [-aon3]*3
+            add_step(root)
             return [-aon3]*3
         else:
+            add_comment('q is not zero')
             if q.is_real:
+                add_comment('q is real')
                 if (q > 0) is True:
                     u1 = -q**Rational(1, 3)
+                    add_step(u1)
                 else:
                     u1 = (-q)**Rational(1, 3)
+                    add_step(u1)
             else:
+                add_comment('q is not real')
                 u1 = (-q)**Rational(1, 3)
+                add_step(u1)
     elif q is S.Zero:
+        add_comment('q is zero')
         y1, y2 = roots([1, 0, p], multiple=True)
-        return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
+        roots = [tmp - aon3 for tmp in [y1, S.Zero, y2]]
+        add_step(roots)
+        return roots
     elif q.is_real and q < 0:
+        add_comment('q is real and q < 0')
         u1 = -(-q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
+        add_step(u1)
     else:
         u1 = (q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
-
+        add_step(u1)
     coeff = S.ImaginaryUnit*sqrt(3)/2
 
     u2 = u1*(-S.Half + coeff)
     u3 = u1*(-S.Half - coeff)
-
+    add_step(u2)
+    add_step(u3)
     if p is S.Zero:
-        return [u1 - aon3, u2 - aon3, u3 - aon3]
+        add_comment('p is zero')
+        roots = [u1 - aon3, u2 - aon3, u3 - aon3]
+        add_step(roots)
+        return roots
 
-    soln = [
+    roots = [
         -u1 + pon3/u1 - aon3,
         -u2 + pon3/u2 - aon3,
         -u3 + pon3/u3 - aon3
     ]
-
-    return soln
+    add_step(roots)
+    return roots
 
 def _roots_quartic_euler(p, q, r, a):
     """
@@ -197,11 +222,18 @@ def _roots_quartic_euler(p, q, r, a):
     """
     from sympy.solvers import solve
     # solve the resolvent equation
+
+    add_comment('quartic euler polynomial')
+
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
     xsols = list(roots(Poly(eq, x), cubics=False).keys())
     xsols = [sol for sol in xsols if sol.is_rational]
+    add_step(eq)
+    add_step(xsols)
     if not xsols:
+        add_comment('not xsols')
+        add_comment('return none')
         return None
     R = max(xsols)
     c1 = sqrt(R)
@@ -209,6 +241,10 @@ def _roots_quartic_euler(p, q, r, a):
     A = -R - p/2
     c2 = sqrt(A + B)
     c3 = sqrt(A - B)
+    add_step(a)
+    add_step(c1)
+    add_step(c2)
+    add_step(c3)
     return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
 
 
@@ -816,6 +852,9 @@ def roots(f, *gens, **flags):
 
     def _try_decompose(f):
         """Find roots using functional decomposition. """
+        
+        add_comment('try decompose')
+
         factors, roots = f.decompose(), []
 
         for root in _try_heuristics(factors[0]):
@@ -829,20 +868,33 @@ def roots(f, *gens, **flags):
 
                 for root in _try_heuristics(g):
                     roots.append(root)
-
+        add_step(factors)
+        add_step(roots)
         return roots
 
     def _try_heuristics(f):
         """Find roots using formulas and some tricks. """
+        
+        add_comment('try heuristics')
+        add_eq(f.as_expr(), 0)
         if f.is_ground:
+            add_comment('Polinomial is ground')
             return []
         if f.is_monomial:
-            return [S(0)]*f.degree()
+            add_comment('Polinomial is monomial')
+            rr = [S(0)]*f.degree()
+            add_step(rr)
+            return rr
 
         if f.length() == 2:
+            add_comment('length = 2')
             if f.degree() == 1:
-                return list(map(cancel, roots_linear(f)))
+                add_comment('degree == 1')
+                rr = list(map(cancel, roots_linear(f)))
+                add_step(rr)
+                return rr
             else:
+                add_comment('degree != 1')
                 return roots_binomial(f)
 
         result = []
@@ -854,7 +906,7 @@ def roots(f, *gens, **flags):
                 break
 
         n = f.degree()
-
+        add_comment('degree == ' + str(n))
         if n == 1:
             result += list(map(cancel, roots_linear(f)))
         elif n == 2:
@@ -921,6 +973,8 @@ def roots(f, *gens, **flags):
                 add_comment('Factorization')
                 for factor, k in factors:
                     add_eq(factor.as_expr(), 0)
+                for factor, k in factors:
+                    # add_eq(factor.as_expr(), 0)
                     for r in _try_heuristics(Poly(factor, f.gen, field=True)):
                         _update_dict(result, r, k)
 
