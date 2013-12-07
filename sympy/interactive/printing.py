@@ -242,6 +242,16 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     ip: An interactive console
         This can either be an instance of IPython,
         or a class that derives from code.InteractiveConsole.
+    euler: boolean
+        IPython only: If true, use the 'euler' package
+    forecolor: string
+        IPython only: Foreground color of font; default is 'Black'
+    backcolor: string
+        IPython only: Background color of font; default is 'Transparent'.
+    fontsize: string
+        IPython only: Default is '10pt'.
+    latex_mode: string
+        IPython only: Default is 'equation*'.
 
     Examples
     ========
