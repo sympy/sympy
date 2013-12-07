@@ -411,7 +411,8 @@ class Add(Expr, AssocOp):
         # put infinity in the numerator
         if S.Zero in nd:
             n = nd.pop(S.Zero)
-            assert len(n) == 1
+            if len(n) != 1:
+		raise ValueError("Length of S.Zero more than 1")
             n = n[0]
             nd[S.One].append(n/S.Zero)
 

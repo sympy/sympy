@@ -57,10 +57,11 @@ def __sympifyit(func, arg, retval=None):
     """
 
     # we support f(a,b) only
-    assert get_function_code(func).co_argcount
+    if not get_function_code(func).co_argcount:
+	raise LookupError("func not found")
     # only b is _sympified
-    assert get_function_code(func).co_varnames[1] == arg
-
+    if get_function_code(func).co_varnames[1] != arg:
+	raise ValueError("arg cannot be sympified")
     if retval is None:
         @wraps(func)
         def __sympifyit_wrapper(a, b):

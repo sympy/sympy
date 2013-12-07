@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Fab file for releasing
 
@@ -189,9 +189,8 @@ def get_sympy_version(version_cache=[]):
         gitrepos()
     with cd("/home/vagrant/repos/sympy"):
         version = run('python -c "import sympy;print(sympy.__version__)"')
-    assert '\n' not in version
-    assert ' ' not in version
-    assert '\t' not in version
+    if '\n' in version or ' ' in version or'\t' in version:
+		raise ValueError("Version returned has space or escape sequences")
     version_cache.append(version)
     return version
 
