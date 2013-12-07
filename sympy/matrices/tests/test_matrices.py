@@ -391,7 +391,7 @@ def test_berkowitz_minors():
     assert B.berkowitz_minors() == (1, -3)
 
 
-def test_submatrix():
+def test_slicing():
     m0 = eye(4)
     assert m0[:3, :3] == eye(3)
     assert m0[2:4, 0:2] == zeros(2)
