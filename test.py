@@ -1,6 +1,9 @@
 from sympy import Poly, roots, Symbol
-from sympy.utilities.solution import reset_solution
+from sympy.utilities.solution import reset_solution, last_solution
 
 x = Symbol('x')
 reset_solution()
-roots(Poly((x - 2) * (x**2 + 3) * (x - 6), x))
+print roots(Poly(6 * x ** 3 - 11 * x ** 2 - 2 * x + 8, x))
+R = last_solution()
+for i in R:
+	print i
