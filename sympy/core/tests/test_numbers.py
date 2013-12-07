@@ -333,6 +333,11 @@ def test_Rational_cmp():
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
 
+    assert (n1 < S.NaN) is False
+    assert (n1 <= S.NaN) is False
+    assert (n1 > S.NaN) is False
+    assert (n1 <= S.NaN) is False
+
 
 def test_Float():
     def eq(a, b):
