@@ -167,7 +167,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
 
         for bcond, bimpl in beta_rules:
             if not isinstance(bcond, And):
-		raise TypeError("Cond is not And")
+	        raise TypeError("Cond is not And")
             bargs = set(bcond.args)
             for x, (ximpls, bb) in x_impl.items():
                 x_all = ximpls | set([x])

@@ -39,7 +39,7 @@ m = Symbol("m", real=True)
 def u(p, r):
     """ p = (p1, p2, p3); r = 0,1 """
     if r not in [1, 2]:
-		raise ValueError("Function called for incorrect value")
+        raise ValueError("Function called for incorrect value")
     p1, p2, p3 = p
     if r == 1:
         ksi = Matrix([[1], [0]])
@@ -54,7 +54,7 @@ def u(p, r):
 def v(p, r):
     """ p = (p1, p2, p3); r = 0,1 """
     if r not in [1, 2]:
-		raise ValueError("Function called for incorrect value")
+        raise ValueError("Function called for incorrect value")
     p1, p2, p3 = p
     if r == 1:
         ksi = Matrix([[1], [0]])
@@ -116,7 +116,7 @@ def main():
     M = M0[0] + M0[1] + M0[2] + M0[3]
     M = M[0]
     if not isinstance(M, Basic):
-		raise TypeError("Invalid type of variable")
+        raise TypeError("Invalid type of variable")
     #print M
     #print simplify(M)
 

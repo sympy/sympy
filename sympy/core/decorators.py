@@ -58,7 +58,7 @@ def __sympifyit(func, arg, retval=None):
 
     # we support f(a,b) only
     if not get_function_code(func).co_argcount:
-	raise LookupError("func not found")
+        raise LookupError("func not found")
     # only b is _sympified
     if get_function_code(func).co_varnames[1] != arg:
 	raise ValueError("arg cannot be sympified")

@@ -1245,7 +1245,7 @@ class Lambda(Expr):
         try:
             for v in variables if iterable(variables) else [variables]:
                 if not v.is_Symbol:
-			raise TypeError("v is not a symbol")
+		    raise TypeError("v is not a symbol")
         except (AssertionError, AttributeError):
             raise ValueError('variable is not a Symbol: %s' % v)
         try:
@@ -2211,7 +2211,7 @@ def count_ops(expr, visual=False):
         ops = []
     else:  # it's Basic not isinstance(expr, Expr):
         if not isinstance(expr, Basic):
-		raise TypeError("Invalid type of expr")
+	    raise TypeError("Invalid type of expr")
         ops = [count_ops(a, visual=visual) for a in expr.args]
 
     if not ops:
