@@ -201,7 +201,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
-                  latex_mode='equation*'):
+                  latex_mode='equation*', **printer_settings):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -252,6 +252,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         IPython only: Default is '10pt'.
     latex_mode: string
         IPython only: Default is 'equation*'.
+
+    Remaining keyword arguments are passed as global settings to the Printer.
 
     Examples
     ========
@@ -329,7 +331,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
 
     if not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
-                                    wrap_line=wrap_line, num_columns=num_columns)
+                                    wrap_line=wrap_line, num_columns=num_columns,
+                                    **printer_settings)
     else:
         _stringify_func = stringify_func
 
