@@ -464,7 +464,7 @@ class Pow(Expr):
             # that now we are doing it for an arbitrary exponent for which
             # no automatic expansion is done
 
-             assert not e.is_Integer
+            assert not e.is_Integer
 
             # handle negatives by making them all positive and putting
             # the residual -1 in other
