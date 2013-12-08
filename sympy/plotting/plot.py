@@ -33,6 +33,7 @@ from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -140,9 +141,17 @@ class Plot(object):
 
     - surface_color : function which returns a float.
     """
-
+   
     def __init__(self, *args, **kwargs):
+	
+
         super(Plot, self).__init__()
+	SymPyDeprecationWarning(
+		    feature="Plot()",
+		    useinstead="",
+		    issue=2987,
+		    deprecated_since_version="",
+	).warn()
 
         #  Options for the graph as a whole.
         #  The possible values for each option are described in the docstring of
