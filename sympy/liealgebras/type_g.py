@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 from sympy.core import Set, Dict, Tuple
 from .cartan_type import Standard_Cartan
@@ -7,7 +7,8 @@ from sympy.matrices import Matrix
 class TypeG(Standard_Cartan):
 
     def __new__(cls, n):
-        assert n == 2
+        if n != 2:
+            raise ValueError("n should be 2")
         return Standard_Cartan.__new__(cls, "G", 2)
 
 

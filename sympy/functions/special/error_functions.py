@@ -1910,7 +1910,8 @@ class Chi(TrigonometricIntegral):
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
     def _latex(self, printer, exp=None):
-        assert len(self.args) == 1
+        if len(self.args) != 1:
+            raise ValueError("Arg length should be 1")
         if exp:
             return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
                 % (printer._print(exp), printer._print(self.args[0]))

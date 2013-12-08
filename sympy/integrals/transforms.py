@@ -668,7 +668,8 @@ def _rewrite_gamma(f, s, a, b):
                 p = abs(S(a))
                 newa = a/p
                 newc = c/p
-                assert a.is_Integer
+                if not a.is_Integer:
+                    raise TypeError("a is not an integer")
                 for k in range(p):
                     gammas += [(newa, newc + k/p)]
                 if is_numer:

@@ -1279,7 +1279,8 @@ def integrate_primitive_polynomial(p, DE):
 
             try:
                 (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-                assert len(c) == 1
+                if len(c) != 1:
+                    raise ValueError("Length of c should  be 1")
             except NonElementaryIntegralException:
                 return (q, p, False)
 
