@@ -300,6 +300,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Harsh Gupta: Bug fix
 #. Tuomas Airaksinen: is_real for besselx
 #. Paul Strickland: documentation fix
+#. James Goppert: correct code in form_lagranges_equations
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
