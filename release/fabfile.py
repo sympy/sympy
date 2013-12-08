@@ -150,6 +150,8 @@ def remove_userspace():
     This should be run between runs to reset everything.
     """
     run("rm -rf repos")
+    if os.path.exists("release"):
+        error("release directory already exists locally. Remove it to continue.")
 
 @task
 def checkout_cache():
