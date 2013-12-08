@@ -60,8 +60,7 @@ def __sympifyit(func, arg, retval=None):
     if not get_function_code(func).co_argcount:
         raise LookupError("func not found")
     # only b is _sympified
-    if get_function_code(func).co_varnames[1] != arg:
-	raise ValueError("arg cannot be sympified")
+    assert get_function_code(func).co_varnames[1] == arg
     if retval is None:
         @wraps(func)
         def __sympifyit_wrapper(a, b):
