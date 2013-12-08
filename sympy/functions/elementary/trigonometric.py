@@ -614,7 +614,7 @@ class cos(TrigonometricFunction):
         def fermatCoords(n):
             if not isinstance(n, int):
                 raise TypeError("n is not an integer")
-	    if n<=0:
+            if n<=0:
                 raise ValueError("n has to be greater than 0")
             if n == 1 or 0 == n % 2:
                 return False
