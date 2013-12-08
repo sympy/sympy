@@ -614,7 +614,7 @@ class cos(TrigonometricFunction):
         def fermatCoords(n):
             if not isinstance(n, int):
                 raise TypeError("n is not an integer")
-            if n<=0:
+            if n <= 0:
                 raise ValueError("n has to be greater than 0")
             if n == 1 or 0 == n % 2:
                 return False
@@ -1218,8 +1218,7 @@ class cot(TrigonometricFunction):
         return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx)
 
     def _eval_conjugate(self):
-        if len(self.args) != 1:
-            raise ValueError("Args of length more than 1")
+        assert len(self.args) == 1
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
