@@ -1056,8 +1056,8 @@ def nC(n, k=None, replacement=False):
             if not replacement:
                 return 2**n
             return sum(nC(n, i, replacement) for i in range(n + 1))
-	if k<0:
-	    raise ValueError("Value of k can not be negative")
+        if k<0:
+            raise ValueError("Value of k can not be negative")
         if replacement:
             return binomial(n + k - 1, k)
         return binomial(n, k)

@@ -465,7 +465,7 @@ class Pow(Expr):
             # no automatic expansion is done
 
             if e.is_Integer:
-		raise TypeError("e should not be integer")
+                raise TypeError("e should not be integer")
 
             # handle negatives by making them all positive and putting
             # the residual -1 in other

@@ -94,7 +94,7 @@ class vectorize:
         """
         for a in mdargs:
             if not isinstance(a, (int, str)):
-		raise TypeError("a is of invalid type")
+                raise TypeError("a is of invalid type")
         self.mdargs = mdargs
 
     def __call__(self, f):

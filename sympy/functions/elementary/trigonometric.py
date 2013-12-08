@@ -577,7 +577,7 @@ class cos(TrigonometricFunction):
             if isinstance(r, int):
                 return r
             if not isinstance(r, C.Rational):
-		raise TypeError("r is not rational")
+                raise TypeError("r is not rational")
             n = r.q
             if 2 > r.q*r.q:
                 return r.q
@@ -613,9 +613,9 @@ class cos(TrigonometricFunction):
 
         def fermatCoords(n):
             if not isinstance(n, int):
-		raise TypeError("n is not an integer")
+                raise TypeError("n is not an integer")
 	    if n<=0:
-		raise ValueError("n has to be greater than 0")
+                raise ValueError("n has to be greater than 0")
             if n == 1 or 0 == n % 2:
                 return False
             primes = dict( [(p, 0) for p in cst_table_some ] )
@@ -1219,7 +1219,7 @@ class cot(TrigonometricFunction):
 
     def _eval_conjugate(self):
         if len(self.args) != 1:
-	    raise ValueError("Args of length more than 1")
+            raise ValueError("Args of length more than 1")
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
