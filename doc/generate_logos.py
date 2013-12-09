@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-This script create logos of different formats from the source "sympy.svg"
+This script creates logos of different formats from the source "sympy.svg"
 
 Requirements:
     rsvg-convert    - for converting to *.png format (librsvg2-bin deb package)
