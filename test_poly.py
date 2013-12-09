@@ -3,7 +3,7 @@ from sympy import symbols
 from sympy import solve
 from sympy import Poly
 
-x, y = symbols('x,y')
+x, y = symbols('x, y')
 
 # 169 - 175 are pages in Vilenkin
 # Here are some tests

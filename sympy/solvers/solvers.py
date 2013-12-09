@@ -1894,7 +1894,7 @@ def solve_linear_system(system, *symbols, **flags):
 
     """
 
-    add_comment('matrix solution')
+    add_comment('Gauss solution')
 
     matrix = system[:, :]
     

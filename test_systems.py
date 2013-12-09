@@ -3,18 +3,19 @@ from sympy import symbols
 from sympy import solve
 from sympy import Poly
 
-x, y = symbols('x,y')
+x, y, z = symbols('x, y, z')
 
 
 # 186 - 189 are pages in Vilenkin
 # Here are some tests
 # just change the value on "n"
-n = 0 # number of the test
+n = 5 # number of the test
 # 0 - my small e.g.
 # 1 - 186
 # 2 - 187 (1)
 # 3 - 187 (2)
 # 4 - 189 (# 59 (1))
+# 5 - my e.g. (Gauss solution)
 
 if (n == 0):
 	reset_solution()
@@ -67,6 +68,18 @@ elif (n == 3):
 elif (n == 4):
 	reset_solution()
 	res = (solve([x - 2 * y - 6, 5 * x + 1], [x, y], dict = True))
+	for i in res:
+		for j in i:
+			print j, i[j]
+		print
+	print
+	R = last_solution()
+	for i in R:
+		print i
+	print
+elif (n == 5):
+	reset_solution()
+	res = (solve([x + y + z - 6, x - y - z + 4, x + y + 2 * z - 9], [x, y, z], dict = True))
 	for i in res:
 		for j in i:
 			print j, i[j]
