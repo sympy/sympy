@@ -1,6 +1,6 @@
-1.1) Системы уравнений (solved but not checked)
+1.1) Системы уравнений (solved but not checked) test_system.py
 
-1.2) Многочлены c целыми степенями (solved but not checked)
+1.2) Многочлены c целыми степенями (solved but not checked) test_poly.py
 
 ===========================================================================
 

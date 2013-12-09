@@ -10,6 +10,7 @@ from sympy.polys.polyerrors import (ComputationFailed,
 from sympy.simplify import rcollect
 from sympy.utilities import default_sort_key, postfixes
 
+from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment
 
 class SolveFailed(Exception):
     """Raised when solver's conditions weren't met. """
@@ -33,7 +34,7 @@ def solve_poly_system(seq, *gens, **args):
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
     except PolificationFailed as exc:
         raise ComputationFailed('solve_poly_system', len(seq), exc)
-
+    
     if len(polys) == len(opt.gens) == 2:
         f, g = polys
 
@@ -177,6 +178,7 @@ def solve_generic(polys, opt):
 
     def _solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
+        print (system)
         if len(system) == len(gens) == 1:
             zeros = list(roots(system[0], gens[-1]).keys())
             return [ (zero,) for zero in zeros ]
@@ -224,8 +226,14 @@ def solve_generic(polys, opt):
 
         return solutions
 
+    add_comment('solve poly system')
+    for i in polys:
+        add_eq(i.as_expr(), 0)
+
     try:
+        add_comment('Recursive solving...')
         result = _solve_reduced_system(polys, opt.gens, entry=True)
+        add_step(result)
     except CoercionFailed:
         raise NotImplementedError
 

@@ -1,13 +1,11 @@
-from sympy.utilities.solution import reset_solution, last_solution
-from sympy import symbols
-from sympy import solve
+from sympy import reset_solution, last_solution, symbols, solve
 
 x, y, z = symbols('x, y, z')
 
 # 186 - 189 are pages in Vilenkin
 # Here are some tests
 # just change the value on "n"
-n = 5 # number of the test
+n = 6 # number of the test
 # 0 - my small e. g.
 # 1 - 186
 # 2 - 187 (1)
@@ -78,6 +76,18 @@ elif (n == 4):
 elif (n == 5):
 	reset_solution()
 	res = (solve([x + y + z - 6, x - y - z + 4, x + y + 2 * z - 9], [x, y, z], dict = True))
+	for i in res:
+		for j in i:
+			print j, i[j]
+		print
+	print
+	R = last_solution()
+	for i in R:
+		print i
+	print
+elif (n == 6):
+	reset_solution()
+	res = (solve([x*y - 2*y, 2*y**2 - x**2], [x, y], dict = True))
 	for i in res:
 		for j in i:
 			print j, i[j]
