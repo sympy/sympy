@@ -65,6 +65,7 @@ import os
 import stat
 import sys
 
+import time
 import ConfigParser
 
 try:
@@ -792,26 +793,45 @@ def check_tag_exists():
 # Updating websites
 
 @task
-def update_docs(docs_location=None):
-    if not docs_location:
-        locations_file = os.path.expanduser('~/.sympy/sympy-locations')
-        config = ConfigParser.SafeConfigParser()
-        config.read(locations_file)
-        docs_location = config.has_option("Locations", "docs") and config.get("Locations", "docs")
-        if not docs_location:
-            docs_location = raw_input("Where is the SymPy docs directory? ")
-            if not config.has_section("Locations"):
-                config.add_section("Locations")
-            config.set("Locations", "docs", docs_location)
-            save = raw_input("Save this to file [yes]? ")
-            if save.lower().strip() in ['', 'y', 'yes']:
-                print("saving to ", locations_file)
-                with open(locations_file, 'w') as f:
-                    config.write(f)
-        else:
-            print("Reading docs location from config")
+def update_websites():
+    """
+    Update various websites owned by SymPy.
 
-    docs_location = os.path.abspath(os.path.expanduser(docs_location))
+    So far, supports the docs and sympy.org
+    """
+    update_docs()
+    update_sympy_org()
+
+def get_location(location):
+    """
+    Read/save a location from the configuration file.
+    """
+    locations_file = os.path.expanduser('~/.sympy/sympy-locations')
+    config = ConfigParser.SafeConfigParser()
+    config.read(locations_file)
+    the_location = config.has_option("Locations", location) and config.get("Locations", location)
+    if not the_location:
+        the_location = raw_input("Where is the SymPy {location} directory? ".format(location=location))
+        if not config.has_section("Locations"):
+            config.add_section("Locations")
+        config.set("Locations", location, the_location)
+        save = raw_input("Save this to file [yes]? ")
+        if save.lower().strip() in ['', 'y', 'yes']:
+            print("saving to ", locations_file)
+            with open(locations_file, 'w') as f:
+                config.write(f)
+    else:
+        print("Reading {location} location from config".format(location=location))
+
+    return os.path.abspath(os.path.expanduser(the_location))
+
+@task
+def update_docs(docs_location=None):
+    """
+    Update the docs hosted at docs.sympy.org
+    """
+    docs_location = docs_location or get_location("docs")
+
     print("Docs location:", docs_location)
 
     # Check that the docs directory is clean
@@ -859,6 +879,51 @@ def update_docs(docs_location=None):
     print("Pushing")
     local("cd {docs_location} && git push origin".format(docs_location=docs_location))
 
+@task
+def update_sympy_org(website_location=None):
+    """
+    Update sympy.org
+
+    This just means adding an entry to the news section.
+    """
+    website_location = website_location or get_location("sympy.github.com")
+
+    # Check that the website directory is clean
+    local("cd {website_location} && git diff --exit-code > /dev/null".format(website_location=website_location))
+    local("cd {website_location} && git diff --cached --exit-code > /dev/null".format(website_location=website_location))
+
+    release_date = time.gmtime(os.path.getctime(os.path.join("release",
+        tarball_formatter()['source'])))
+    release_year = str(release_date.tm_year)
+    release_month = str(release_date.tm_mon)
+    release_day = str(release_date.tm_mday)
+    version = get_sympy_version()
+
+    with open(os.path.join(website_location, "templates", "index.html"), 'r') as f:
+        lines = f.read().split('\n')
+        # We could try to use some html parser, but this way is easier
+        try:
+            news = lines.index(r"    <h3>{% trans %}News{% endtrans %}</h3>")
+        except ValueError:
+            error("index.html format not as expected")
+        lines.insert(news + 2,  # There is a <p> after the news line. Put it
+            # after that.
+            r"""        <span class="date">{{ datetime(""" + release_year + """, """ + release_month + """, """ + release_day + """) }}</span> {% trans v='""" + version + """' %}Version {{ v }} released{% endtrans %} (<a href="https://github.com/sympy/sympy/wiki/Release-Notes-for-""" + version + """">{% trans %}changes{% endtrans %}</a>)<br/>
+    </p><p>""")
+
+    with open(os.path.join(website_location, "templates", "index.html"), 'w') as f:
+        print("Updating index.html template")
+        f.write('\n'.join(lines))
+
+    print("Generating website pages")
+    local("cd {website_location} && ./generate".format(website_location=website_location))
+
+    print("Committing")
+    local("cd {website_location} && git commit -a -m \'Add {version} to the news\'".format(website_location=website_location,
+        version=version))
+
+    print("Pushing")
+    local("cd {website_location} && git push origin".format(website_location=website_location))
 
 # ------------------------------------------------
 # Uploading
