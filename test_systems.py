@@ -5,13 +5,14 @@ x, y, z = symbols('x, y, z')
 # 186 - 189 are pages in Vilenkin
 # Here are some tests
 # just change the value on "n"
-n = 6 # number of the test
+n = 5 # number of the test
 # 0 - my small e. g.
 # 1 - 186
 # 2 - 187 (1)
 # 3 - 187 (2)
 # 4 - 189 (# 59 (1))
 # 5 - my e.g. (Gauss solution)
+# 6 - your test
 
 if (n == 0):
 	reset_solution()
@@ -87,7 +88,7 @@ elif (n == 5):
 	print
 elif (n == 6):
 	reset_solution()
-	res = (solve([x*y - 2*y, 2*y**2 - x**2], [x, y], dict = True))
+	res = (solve([], [], dict = True))
 	for i in res:
 		for j in i:
 			print j, i[j]
