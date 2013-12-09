@@ -8,6 +8,7 @@ x, y = symbols('x,y')
 
 # 186 - 189 are pages in Vilenkin
 # Here are some tests
+# just change the value on "n"
 n = 0 # number of the test
 # 0 - my small e.g.
 # 1 - 186
