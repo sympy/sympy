@@ -221,7 +221,7 @@ class LagrangesMethod(object):
                     if isinstance(w[0], ReferenceFrame):
                         speed = w[0].ang_vel_in(N)
                         self._term4[i] += speed.diff(v, N) & w[1]
-                    if isinstance(w[0], Point):
+                    elif isinstance(w[0], Point):
                         speed = w[0].vel(N)
                         self._term4[i] += speed.diff(v, N) & w[1]
                     else:

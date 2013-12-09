@@ -7,6 +7,7 @@ from sympy.core.containers import Dict
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.utilities.iterables import uniq
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .matrices import MatrixBase, ShapeError, a2idx
@@ -87,14 +88,29 @@ class SparseMatrix(MatrixBase):
 
     def __getitem__(self, key):
 
-        if type(key) is tuple:
+        if isinstance(key, tuple):
             i, j = key
-            if isinstance(i, int) and isinstance(j, int):
+            try:
                 i, j = self.key2ij(key)
-                rv = self._smat.get((i, j), S.Zero)
-                return rv
-            elif isinstance(i, slice) or isinstance(j, slice):
-                return self.submatrix(key)
+                return self._smat.get((i, j), S.Zero)
+            except (TypeError, IndexError):
+                if isinstance(i, slice):
+                    i = range(self.rows)[i]
+                elif is_sequence(i):
+                    pass
+                else:
+                    if i >= self.rows:
+                        raise IndexError('Row index out of bounds')
+                    i = [i]
+                if isinstance(j, slice):
+                    j = range(self.cols)[j]
+                elif is_sequence(j):
+                    pass
+                else:
+                    if j >= self.cols:
+                        raise IndexError('Col index out of bounds')
+                    j = [j]
+                return self.extract(i, j)
 
         # check for single arg, like M[:] or M[3]
         if isinstance(key, slice):
@@ -491,25 +507,37 @@ class SparseMatrix(MatrixBase):
                 M._smat.pop(i, None)
         return M
 
-    def submatrix(self, keys):
-        rlo, rhi, clo, chi = self.key2bounds(keys)
-        r, c = rhi - rlo, chi - clo
-        if r*c < len(self._smat):
-            # the subregion is smaller than the number of elements in self
-            if r == 1:
-                getter = lambda i, j: self[rlo, j + clo]
-            elif c == 1:
-                getter = lambda i, j: self[i + rlo, clo]
-            else:
-                getter = lambda i, j: self[i + rlo, j + clo]
-            return self._new(r, c, getter)
+    def extract(self, rowsList, colsList):
+        urow = list(uniq(rowsList))
+        ucol = list(uniq(colsList))
+        smat = {}
+        if len(urow)*len(ucol) < len(self._smat):
+            # there are fewer elements requested than there are elements in the matrix
+            for i, r in enumerate(urow):
+                for j, c in enumerate(ucol):
+                    smat[i, j] = self._smat.get((r, c), 0)
         else:
-            # the number of non-zero elements is smaller than the subregion
-            smat = {}
+            # most of the request will be zeros so check all of self's entries,
+            # keeping only the ones that are desired
             for rk, ck in self._smat:
-                if rlo <= rk < rhi and clo <= ck < chi:
-                    smat[(rk-rlo, ck-clo)] = self._smat[(rk, ck)]
-            return self._new(r, c, smat)
+                if rk in urow and ck in ucol:
+                    smat[(urow.index(rk), ucol.index(ck))] = self._smat[(rk, ck)]
+
+        rv = self._new(len(urow), len(ucol), smat)
+        # rv is nominally correct but there might be rows/cols
+        # which require duplication
+        if len(rowsList) != len(urow):
+            for i, r in enumerate(rowsList):
+                i_previous = rowsList.index(r)
+                if i_previous != i:
+                    rv = rv.row_insert(i, rv.row(i_previous))
+        if len(colsList) != len(ucol):
+            for i, c in enumerate(colsList):
+                i_previous = colsList.index(c)
+                if i_previous != i:
+                    rv = rv.col_insert(i, rv.col(i_previous))
+        return rv
+    extract.__doc__ = MatrixBase.extract.__doc__
 
     def is_symmetric(self, simplify=True):
         """Return True if self is symmetric.

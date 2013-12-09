@@ -997,45 +997,6 @@ class MatrixBase(object):
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def submatrix(self, keys):
-        """
-        Get a slice/submatrix of the matrix using the given slice.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(4, 4, lambda i, j: i+j)
-        >>> m
-        Matrix([
-        [0, 1, 2, 3],
-        [1, 2, 3, 4],
-        [2, 3, 4, 5],
-        [3, 4, 5, 6]])
-        >>> m[:1, 1]
-        Matrix([[1]])
-        >>> m[:2, :1]
-        Matrix([
-        [0],
-        [1]])
-        >>> m[2:4, 2:4]
-        Matrix([
-        [4, 5],
-        [5, 6]])
-
-        See Also
-        ========
-
-        extract
-        """
-        rlo, rhi, clo, chi = self.key2bounds(keys)
-        rows, cols = rhi - rlo, chi - clo
-        mat = [S.Zero]*rows*cols
-        for i in range(rows):
-            mat[i*cols:(i + 1)*cols] = \
-                self._mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
-        return self._new(rows, cols, mat)
-
     def extract(self, rowsList, colsList):
         """Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
@@ -1073,10 +1034,6 @@ class MatrixBase(object):
         [2],
         [8]])
 
-        See Also
-        ========
-
-        submatrix
         """
         cols = self.cols
         flat_list = self._mat
@@ -4150,8 +4107,6 @@ def classof(A, B):
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
-    if isinstance(j, slice):
-        return j
     if type(j) is not int:
         try:
             j = j.__index__()
