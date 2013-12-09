@@ -8,7 +8,7 @@ x, y, z = symbols('x, y, z')
 # Here are some tests
 # just change the value on "n"
 n = 5 # number of the test
-# 0 - my small e.g.
+# 0 - my small e. g.
 # 1 - 186
 # 2 - 187 (1)
 # 3 - 187 (2)
