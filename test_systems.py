@@ -1,10 +1,8 @@
 from sympy.utilities.solution import reset_solution, last_solution
 from sympy import symbols
 from sympy import solve
-from sympy import Poly
 
 x, y, z = symbols('x, y, z')
-
 
 # 186 - 189 are pages in Vilenkin
 # Here are some tests
