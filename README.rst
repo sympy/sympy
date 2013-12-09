@@ -1,4 +1,4 @@
-1.1) Системы уравнений (solved but not <h>checked<h>)
+1.1) Системы уравнений (solved but not checked)
 
 1.2) Многочлены c целыми степенями (solved but not checked)
 
