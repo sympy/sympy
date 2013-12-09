@@ -131,6 +131,19 @@ Note that if either of these commands fails for some reason, you will very
 likely need to go into the web interface and clean some things up before you
 can upload again.
 
+# Updating websites
+
+You should now update the websites. The command
+
+    fab vagrant update_websites
+
+will update docs.sympy.org and sympy.org.  You will need to have local clones
+of these repos, and push access to them (obviously).  **Note, this command
+will commit and push the changes automatically.**
+
+The other website that needs to be updated is SymPy Live. You should make this
+as a pull request to the Live repo.
+
 # Other
 
 You can run all the SymPy tests by running:
