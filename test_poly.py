@@ -16,6 +16,7 @@ n = 0 # number of the test
 # 4 - 174 (e. g. 7)
 # 5 - 174 (# 33 (2))
 # 6 - 175 (# 43 (5))
+# 7 - your test
 
 if (n == 0):
 	reset_solution()
@@ -80,6 +81,16 @@ elif (n == 5):
 elif (n == 6):
 	reset_solution()
 	res = (solve(Poly((8 * x + 7) ** 2 * (4 * x + 3) * (x + 1) - 9 / 2), x))
+	for i in res:
+		print (i)
+	print
+	R = last_solution()
+	for i in R:
+		print i
+	print
+elif (n == 7):
+	reset_solution()
+	res = (solve(Poly(2 * x ** 2 + 4 * x - 11), x))
 	for i in res:
 		print (i)
 	print
