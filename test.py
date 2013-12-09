@@ -4,6 +4,8 @@ from sympy import symbols
 from sympy.solvers.solvers import solve
 from sympy.polys import Poly
 
+#test
+
 reset_solution()
 x, y = symbols('x,y')
 print solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
