@@ -4,7 +4,6 @@ from sympy.solvers.solvers import solve
 
 reset_solution()
 x, y = symbols('x,y')
-# print solve([x**2 + y**2 + 10], [x, y])
 solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
 R = last_solution()
 for i in R:

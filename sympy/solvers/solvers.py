@@ -1466,12 +1466,6 @@ def _solve_system(exprs, symbols, **flags):
                         matrix[i, j] = coeff
                     except ValueError:
                         matrix[i, m] = -coeff
-            # add_comment('matrix solution')
-            # for i in range(n):
-                # tmp = ''
-                # for j in range(m + 1):
-                    # tmp += str(matrix[i, j]) + ' '
-                # add_comment(tmp)
             # returns a dictionary ({symbols: values}) or None
             if flags.pop('particular', False):
                 result = minsolve_linear_system(matrix, *symbols, **flags)
