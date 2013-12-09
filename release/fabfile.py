@@ -799,6 +799,8 @@ def upload():
     GitHub_release()
     pypi_register()
     pypi_upload()
+    test_pypi(2)
+    test_pypi(3)
 
 @task
 def distutils_check():
@@ -828,6 +830,27 @@ def pypi_upload():
     with cd("/home/vagrant/repos/sympy"):
         # See http://stackoverflow.com/a/17657183/161801
         run("python setup.py sdist --dry-run upload")
+
+@task
+def test_pypi(release='2'):
+    """
+    Test that the sympy can be pip installed, and that sympy imports in the
+    install.
+    """
+    # This function is similar to test_tarball()
+
+    version = get_sympy_version()
+
+    if release not in {'2', '3'}: # TODO: Add win32
+        raise ValueError("release must be one of '2', '3', not %s" % release)
+
+    venv = "/home/vagrant/repos/test-{release}-pip-virtualenv".format(release=release)
+
+    with use_venv(release):
+        make_virtualenv(venv)
+        with virtualenv(venv):
+            run("pip install sympy")
+            run('python -c "import sympy; assert sympy.__version__ == \'{version}\'"'.format(version=version))
 
 @task
 def GitHub_release_text():
