@@ -219,6 +219,7 @@ cmdclass = {'test': test_sympy,
 # $ python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
+    'sympy.calculus.tests',
     'sympy.categories.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
