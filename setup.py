@@ -216,6 +216,7 @@ cmdclass = {'test': test_sympy,
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
+
 tests = [
     'sympy.assumptions.tests',
     'sympy.categories.tests',
@@ -239,6 +240,7 @@ tests = [
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
