@@ -48,6 +48,7 @@ if sys.version_info[:2] < (2, 6):
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.calculus',
     'sympy.categories',
     'sympy.combinatorics',
     'sympy.concrete',
@@ -219,6 +220,7 @@ cmdclass = {'test': test_sympy,
 
 tests = [
     'sympy.assumptions.tests',
+    'sympy.calculus.tests',
     'sympy.categories.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
