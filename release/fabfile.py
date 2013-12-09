@@ -65,6 +65,8 @@ import os
 import stat
 import sys
 
+import ConfigParser
+
 try:
     # https://pypi.python.org/pypi/fabric-virtualenv/
     from fabvenv import virtualenv, make_virtualenv
@@ -785,6 +787,76 @@ def check_tag_exists():
     with cd("/home/vagrant/repos/sympy"):
         all_tags = run("git ls-remote --tags origin")
     return tag in all_tags
+
+# ------------------------------------------------
+# Updating websites
+
+@task
+def update_docs(docs_location=None):
+    if not docs_location:
+        locations_file = os.path.expanduser('~/.sympy/sympy-locations')
+        config = ConfigParser.SafeConfigParser()
+        config.read(locations_file)
+        docs_location = config.has_option("Locations", "docs") and config.get("Locations", "docs")
+        if not docs_location:
+            docs_location = raw_input("Where is the SymPy docs directory? ")
+            if not config.has_section("Locations"):
+                config.add_section("Locations")
+            config.set("Locations", "docs", docs_location)
+            save = raw_input("Save this to file [yes]? ")
+            if save.lower().strip() in ['', 'y', 'yes']:
+                print("saving to ", locations_file)
+                with open(locations_file, 'w') as f:
+                    config.write(f)
+        else:
+            print("Reading docs location from config")
+
+    docs_location = os.path.abspath(os.path.expanduser(docs_location))
+    print("Docs location:", docs_location)
+
+    # Check that the docs directory is clean
+    local("cd {docs_location} && git diff --exit-code > /dev/null".format(docs_location=docs_location))
+    local("cd {docs_location} && git diff --cached --exit-code > /dev/null".format(docs_location=docs_location))
+
+    # See the README of the docs repo. We have to remove the old redirects,
+    # move in the new docs, and create redirects.
+    current_version = get_sympy_version()
+    previous_version = get_previous_version_tag().lstrip('sympy-')
+    print("Removing redirects from previous version")
+    local("cd {docs_location} && rm -r {previous_version}".format(docs_location=docs_location,
+        previous_version=previous_version))
+    print("Moving previous latest docs to old version")
+    local("cd {docs_location} && mv latest {previous_version}".format(docs_location=docs_location,
+        previous_version=previous_version))
+
+    print("Unzipping docs into repo")
+    release_dir = os.path.abspath(os.path.expanduser(os.path.join(os.path.curdir, 'release')))
+    docs_zip = os.path.abspath(os.path.join(release_dir, get_tarball_name('html')))
+    local("cd {docs_location} && unzip {docs_zip} > /dev/null".format(docs_location=docs_location,
+        docs_zip=docs_zip))
+    local("cd {docs_location} && mv {docs_zip_name} {version}".format(docs_location=docs_location,
+        docs_zip_name=get_tarball_name("html-nozip"), version=current_version))
+
+    print("Writing new version to releases.txt")
+    with open(os.path.join(docs_location, "releases.txt"), 'a') as f:
+        f.write("{version}:SymPy {version}".format(version=current_version))
+
+    print("Generating indexes")
+    local("cd {docs_location} && ./generate_indexes.py".format(docs_location=docs_location))
+    local("cd {docs_location} && mv {version} latest".format(docs_location=docs_location,
+        version=current_version))
+
+    print("Generating redirects")
+    local("cd {docs_location} && ./generate_redirects.py latest {version} ".format(docs_location=docs_location,
+        version=current_version))
+
+    print("Commiting")
+    local("cd {docs_location} && git commit -a -m \'Updating docs to {version}\'".format(docs_location=docs_location,
+        version=current_version))
+
+    print("Pushing")
+    local("cd {docs_location} && git push origin".format(docs_location=docs_location))
+
 
 # ------------------------------------------------
 # Uploading
