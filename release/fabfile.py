@@ -850,7 +850,9 @@ def update_docs(docs_location=None):
     local("cd {docs_location} && ./generate_redirects.py latest {version} ".format(docs_location=docs_location,
         version=current_version))
 
-    print("Commiting")
+    print("Committing")
+    local("cd {docs_location} && git add -A {version} latest".format(docs_location=docs_location,
+        version=current_version))
     local("cd {docs_location} && git commit -a -m \'Updating docs to {version}\'".format(docs_location=docs_location,
         version=current_version))
 
