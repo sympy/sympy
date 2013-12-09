@@ -48,6 +48,7 @@ if sys.version_info[:2] < (2, 6):
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.calculus',
     'sympy.categories',
     'sympy.combinatorics',
     'sympy.concrete',
