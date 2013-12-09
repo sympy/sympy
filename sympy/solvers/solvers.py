@@ -58,6 +58,8 @@ from types import GeneratorType
 from collections import defaultdict
 import warnings
 
+from sympy.printing.str import StrPrinter
+from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
@@ -1420,6 +1422,10 @@ def _solve(f, *symbols, **flags):
 
 
 def _solve_system(exprs, symbols, **flags):
+    add_comment('solve system')
+    for i in exprs:
+        add_eq(i.as_expr(), 0)
+
     check = flags.get('check', True)
     if not exprs:
         return []
@@ -1449,6 +1455,7 @@ def _solve_system(exprs, symbols, **flags):
         solved_syms = []
     else:
         if all(p.is_linear for p in polys):
+            add_comment('linear system')
             n, m = len(polys), len(symbols)
             matrix = zeros(n, m + 1)
 
@@ -1459,7 +1466,12 @@ def _solve_system(exprs, symbols, **flags):
                         matrix[i, j] = coeff
                     except ValueError:
                         matrix[i, m] = -coeff
-
+            # add_comment('matrix solution')
+            # for i in range(n):
+                # tmp = ''
+                # for j in range(m + 1):
+                    # tmp += str(matrix[i, j]) + ' '
+                # add_comment(tmp)
             # returns a dictionary ({symbols: values}) or None
             if flags.pop('particular', False):
                 result = minsolve_linear_system(matrix, *symbols, **flags)
@@ -1887,7 +1899,15 @@ def solve_linear_system(system, *symbols, **flags):
     {}
 
     """
+
+    add_comment('matrix solution')
+
     matrix = system[:, :]
+    
+    add_comment('initial matrix')
+    printer = StrPrinter()
+    add_comment(matrix.table(printer))
+
     syms = list(symbols)
 
     i, m = 0, matrix.cols - 1  # don't count augmentation
@@ -1978,6 +1998,9 @@ def solve_linear_system(system, *symbols, **flags):
     # if there weren't any problems, augmented matrix is now
     # in row-echelon form so we can check how many solutions
     # there are and extract them using back substitution
+    
+    add_comment('transformed matrix')
+    add_comment(matrix.table(printer))
 
     do_simplify = flags.get('simplify', True)
 
@@ -1988,7 +2011,6 @@ def solve_linear_system(system, *symbols, **flags):
 
         while k >= 0:
             content = matrix[k, m]
-
             # run back-substitution for variables
             for j in xrange(k + 1, m):
                 content -= matrix[k, j]*solutions[syms[j]]
@@ -1999,7 +2021,7 @@ def solve_linear_system(system, *symbols, **flags):
                 solutions[syms[k]] = content
 
             k -= 1
-
+        add_step(solutions)
         return solutions
     elif len(syms) > matrix.rows:
         # this system will have infinite number of solutions
@@ -2023,7 +2045,7 @@ def solve_linear_system(system, *symbols, **flags):
                 solutions[syms[k]] = content
 
             k -= 1
-
+        add_step(solutions)
         return solutions
     else:
         return []   # no solutions

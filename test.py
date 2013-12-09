@@ -1,15 +1,11 @@
-# from sympy import Poly, roots, Symbol
 from sympy.utilities.solution import reset_solution, last_solution
 from sympy import symbols
 from sympy.solvers.solvers import solve
-from sympy.polys import Poly
-
-#test
 
 reset_solution()
 x, y = symbols('x,y')
-print solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
-# print solve(Poly((x - 2) * (x**2 + 3) * (x - 6), x))
+# print solve([x**2 + y**2 + 10], [x, y])
+solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
 R = last_solution()
 for i in R:
 	print i
