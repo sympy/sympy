@@ -6,10 +6,10 @@ from sympy import Poly
 x, y = symbols('x,y')
 
 
-# 185 - 189 are pages in Vilenkin
+# 186 - 189 are pages in Vilenkin
 # Here are some tests
 n = 0 # number of the test
-# 0 - 185
+# 0 - my small e.g.
 # 1 - 186
 # 2 - 187 (1)
 # 3 - 187 (2)
@@ -17,7 +17,7 @@ n = 0 # number of the test
 
 if (n == 0):
 	reset_solution()
-	res = (solve([2 * x ** 2 + y - 4, x ** 4 + y ** 2 - 16], [x, y], dict = True))
+	res = (solve([x + y - 10, x * y + 100], [x, y], dict = True))
 	for i in res:
 		for j in i:
 			print j, i[j]
