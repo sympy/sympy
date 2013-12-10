@@ -50,6 +50,7 @@ def roots_quadratic(f):
 
     a, b, c = f.all_coeffs()
     dom = f.get_domain()
+    add_comment('a * x ** 2 + b * x + c = 0')
     add_eq(f.as_expr(), 0)
 
     def _simplify(expr):
@@ -60,12 +61,17 @@ def roots_quadratic(f):
         return s
 
     if c is S.Zero:
+        add_comment('c = 0')
+        add_comment('r0 = 0')
+        add_comment('r1 = -b/a')
         r0, r1 = S.Zero, -b/a
 
         if not dom.is_Numerical:
             r1 = _simplify(r1)
     elif b is S.Zero:
+        add_comment('b = 0')
         r = -c/a
+        add_comment('r = +-sqrt(-c/a)')
         if not dom.is_Numerical:
             R = sqrt(_simplify(r))
         else:
@@ -77,7 +83,7 @@ def roots_quadratic(f):
         d = b**2 - 4*a*c
         add_comment('d = b ** 2 - 4 * a * c')
         add_step(d)
-        add_comment('roots = (-b +- sqrt(d) / 2 * a')
+        add_comment('roots = (-b +- sqrt(d)) / (2 * a)')
         d.clear_repr()
         
         if dom.is_Numerical:
