@@ -4,6 +4,8 @@ import decimal
 import math
 import re as regex
 from collections import defaultdict
+from fractions import gcd
+
 
 from .core import C
 from .containers import Tuple
@@ -1361,7 +1363,77 @@ class Rational(Number):
 
     def __hash__(self):
         return super(Rational, self).__hash__()
+    
+    """ Greedy algorithm for Egyptian fraction expansion
+    Also called the Fibonacci-Sylvester algorithm
+    At each step, extract the largest unit fraction less
+    than the target and replace the target with the remainder
+    Inputs: x/y is the target fraction, not necessarily in lowest terms
+         y is any natural number
+         x is any integer strictly between 0 and y"""
 
+    def egypt_greedy(self):
+        x,y=self.p,self.q
+        div=gcd(x,y)
+        x,y=int(x/div),int(y/div)
+        if (x==1):
+            print (y)
+            return [y] 
+        else:
+            a=(-y)%(x)
+            b=y * (int(y/x) + 1)
+            c=gcd(a,b)
+            if c>1:
+                num,denom=int(a/c),int(b/c)
+            else:
+                num,denom=a,b
+            return [int(y/x) + 1] + (Rational(num,denom).egypt_greedy())
+
+    """ The algorithm suggested by the result of Graham and Jewett.
+    Note that this has a tendency to blow up: the length of the resulting expansion
+    is always 2**(x/gcd(x,y)) - 1,
+    Same arguments as Rational(x,y).egypt_greedy()."""
+
+    def egypt_graham_jewett(self):
+        div=gcd(self.p,self.q)
+        x,y=int(self.p/div),int(self.q/div)
+        l=[y]*x
+    	""" l is now a list of integers whose reciprocals sum to x/y.
+     	We shall now proceed to manipulate the elements of l without
+     	changing the reciprocated sum until all elements are unique."""
+        while len(l) != len(set(l)):
+            """So the list has duplicates. Find a smallest pair"""
+            l.sort()
+            for i in range(len(l)-1):
+                if l[i]==l[i+1]:
+                    break
+            """ We have now identified a pair of identical elements: l[i] and l[i+1].
+            Now comes the application of the result of Graham and Jewett:"""
+            l[i+1]=l[i+1]+1
+            l.append(l[i]*(l[i]+1))
+       	    """And we just iterate that until the list has no duplicates.  Ta da!"""        
+	return l
+
+    """The algorithm suggested by Takenouchi (1921).
+    Differs from the Graham-Jewett algorithm only in the handling of duplicates."""
+
+    def egypt_takenouchi(self):
+        div=gcd(self.p,self.q)
+        x,y=int(self.p/div),int(self.q/div)
+        l=[y]*x
+        while len(l) != len(set(l)):
+            l.sort()
+            for i in range(len(l)-1):
+                if l[i]==l[i+1]:
+                    break
+            k=l[i]
+            if k%2==0:
+                l[i]=int(l[i]/2)
+                del l[i+1]
+            else:
+                l[i],l[i+1]=int((k+1)/2),int(k*(k+1)/2)
+        return l
+     
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
         """A wrapper to factorint which return factors of self that are
