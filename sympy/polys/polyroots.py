@@ -66,7 +66,6 @@ def roots_quadratic(f):
             r1 = _simplify(r1)
     elif b is S.Zero:
         r = -c/a
-
         if not dom.is_Numerical:
             R = sqrt(_simplify(r))
         else:

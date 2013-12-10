@@ -87,7 +87,7 @@ elif (n == 6):
 	print
 elif (n == 7):
 	reset_solution()
-	res = (roots(Poly(x ** 2 - x + 5), x))
+	res = (roots(Poly(x ** 2 - 3 * x ** 2 + 1), x))
 	for i in res:
 		print (i)
 	print
