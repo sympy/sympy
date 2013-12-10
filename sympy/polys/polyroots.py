@@ -940,13 +940,19 @@ def roots(f, *gens, **flags):
     result = {}
 
     if not f.is_ground:
+        add_comment('Poly is not ground')
         if not f.get_domain().is_Exact:
             for r in f.nroots():
                 _update_dict(result, r, 1)
         elif f.degree() == 1:
-            result[roots_linear(f)[0]] = 1
+            tmp = roots_linear(f)[0]
+            add_comment('degree == 1')
+            add_comment('add root: ' + str(tmp))
+            result[tmp] = 1
         elif f.degree() == 2:
+            add_comment('degree == 2')
             for r in roots_quadratic(f):
+                add_comment('add root: ' + str(r))
                 _update_dict(result, r, 1)
         elif f.length() == 2:
             for r in roots_binomial(f):
