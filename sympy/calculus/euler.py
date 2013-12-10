@@ -1,5 +1,5 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
-from itertools import combinations_with_replacement
+from sympy.core.compatibility import combinations_with_replacement
 
 def euler_equations(L, funcs=(), vars=()):
     """Find the Euler-Lagrange equations for a given Lagrangian.
