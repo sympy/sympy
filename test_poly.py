@@ -1,4 +1,4 @@
-from sympy import reset_solution, last_solution, symbols, solve, Poly
+from sympy import reset_solution, last_solution, symbols, roots, Poly, roots
 
 x, y = symbols('x, y')
 
@@ -17,7 +17,7 @@ n = 0 # number of the test
 
 if (n == 0):
 	reset_solution()
-	res = (solve(Poly(x ** 4 + x ** 3 - 11 * x ** 2 - 5 * x + 30), x))
+	res = (roots(Poly(x ** 4 + x ** 3 - 11 * x ** 2 - 5 * x + 30), x))
 	for i in res:
 		print (i)
 	print
@@ -27,7 +27,7 @@ if (n == 0):
 	print
 elif (n == 1):
 	reset_solution()
-	res = (solve(Poly(6 * x ** 3 - 11 * x ** 2 - 2 * x + 8), x))
+	res = (roots(Poly(6 * x ** 3 - 11 * x ** 2 - 2 * x + 8), x))
 	for i in res:
 		print (i)
 	print
@@ -37,7 +37,7 @@ elif (n == 1):
 	print
 elif (n == 2):
 	reset_solution()
-	res = (solve(Poly((3 * x + 2) ** 4 - 13 * (3 * x + 2) ** 2 + 36), x))
+	res = (roots(Poly((3 * x + 2) ** 4 - 13 * (3 * x + 2) ** 2 + 36), x))
 	for i in res:
 		print (i)
 	print
@@ -47,7 +47,7 @@ elif (n == 2):
 	print
 elif (n == 3):
 	reset_solution()
-	res = (solve(Poly((x + 1) * (x + 2) * (x + 3) * (x + 4) - 24), x))
+	res = (roots(Poly((x + 1) * (x + 2) * (x + 3) * (x + 4) - 24), x))
 	for i in res:
 		print (i)
 	print
@@ -57,7 +57,7 @@ elif (n == 3):
 	print
 elif (n == 4):
 	reset_solution()
-	res = (solve(Poly((x ** 2 - x + 1) ** 3) + 2 * x ** 4 * (x **2 - x + 1) - 3 * x ** 6, x))
+	res = (roots(Poly((x ** 2 - x + 1) ** 3) + 2 * x ** 4 * (x **2 - x + 1) - 3 * x ** 6, x))
 	for i in res:
 		print (i)
 	print
@@ -67,7 +67,7 @@ elif (n == 4):
 	print
 elif (n == 5):
 	reset_solution()
-	res = (solve(Poly(36 * x ** 4 - 13 * x ** 2 + 1), x))
+	res = (roots(Poly(36 * x ** 4 - 13 * x ** 2 + 1), x))
 	for i in res:
 		print (i)
 	print
@@ -77,7 +77,7 @@ elif (n == 5):
 	print
 elif (n == 6):
 	reset_solution()
-	res = (solve(Poly((8 * x + 7) ** 2 * (4 * x + 3) * (x + 1) - 9 / 2), x))
+	res = (roots(Poly((8 * x + 7) ** 2 * (4 * x + 3) * (x + 1) - 9 / 2), x))
 	for i in res:
 		print (i)
 	print
@@ -87,7 +87,7 @@ elif (n == 6):
 	print
 elif (n == 7):
 	reset_solution()
-	res = (solve(Poly(), x))
+	res = (roots(Poly(x - 5), x))
 	for i in res:
 		print (i)
 	print

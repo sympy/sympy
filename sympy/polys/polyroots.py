@@ -57,19 +57,15 @@ def roots_quadratic(f):
             s = factor(expr)
         else:
             s = simplify(expr)
-        add_step(s)
         return s
 
     if c is S.Zero:
         r0, r1 = S.Zero, -b/a
-        add_step(r0)
-        add_step(r1)
 
         if not dom.is_Numerical:
             r1 = _simplify(r1)
     elif b is S.Zero:
         r = -c/a
-        add_step(r)
 
         if not dom.is_Numerical:
             R = sqrt(_simplify(r))
@@ -78,11 +74,11 @@ def roots_quadratic(f):
 
         r0 = R
         r1 = -R
-        add_step(r0)
-        add_step(r1)
     else:
         d = b**2 - 4*a*c
+        add_comment('d = b ** 2 - 4 * a * c')
         add_step(d)
+        add_comment('roots = (-b +- sqrt(d) / 2 * a')
         d.clear_repr()
 
         if dom.is_Numerical:
@@ -99,12 +95,10 @@ def roots_quadratic(f):
 
             r0 = E + F
             r1 = E - F
-        
-        add_step(r0)
-        add_step(r1)
 
-    return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
-
+    Roots = sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
+    add_step(Roots)
+    return Roots
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -229,7 +223,7 @@ def _roots_quartic_euler(p, q, r, a):
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
     xsols = list(roots(Poly(eq, x), cubics=False).keys())
     xsols = [sol for sol in xsols if sol.is_rational]
-    add_step(eq)
+    add_eq(eq.as_expr(), 0)
     add_step(xsols)
     if not xsols:
         add_comment('not xsols')
@@ -242,11 +236,9 @@ def _roots_quartic_euler(p, q, r, a):
     c2 = sqrt(A + B)
     c3 = sqrt(A - B)
     add_step(a)
-    add_step(c1)
-    add_step(c2)
-    add_step(c3)
-    return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
-
+    Roots = [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
+    add_step(Roots)
+    return Roots
 
 def roots_quartic(f):
     r"""
@@ -690,6 +682,7 @@ def _integer_basis(poly):
 
 def preprocess_roots(poly):
     """Try to get rid of symbolic coefficients from ``poly``. """
+    # print (poly)
     coeff = S.One
 
     try:
@@ -742,7 +735,7 @@ def preprocess_roots(poly):
 
         if gens:
             poly = poly.eject(*gens)
-
+    # print (poly)
     if poly.is_univariate and poly.get_domain().is_ZZ:
         basis = _integer_basis(poly)
 
@@ -754,7 +747,8 @@ def preprocess_roots(poly):
 
             poly = poly.termwise(func)
             coeff *= basis
-
+    # print (poly)
+    # print (coeff)
     return coeff, poly
 
 
@@ -922,8 +916,12 @@ def roots(f, *gens, **flags):
 
         return result
 
+    # print (f.as_expr())
+    tmp = f
     (k,), f = f.terms_gcd()
-
+    if (tmp != f):
+        add_eq(f.as_expr(), 0)
+    # print (f.as_expr(), 'lol')
     if not k:
         zeros = {}
     else:
@@ -931,6 +929,10 @@ def roots(f, *gens, **flags):
 
     coeff, f = preprocess_roots(f)
 
+    if (coeff is not S.One):
+        add_step(coeff)
+
+    # print (f.as_expr())
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
 
@@ -939,6 +941,7 @@ def roots(f, *gens, **flags):
 
     result = {}
 
+    # print (f.as_expr())
     if not f.is_ground:
         if not f.get_domain().is_Exact:
             for r in f.nroots():
