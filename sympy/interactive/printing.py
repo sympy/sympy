@@ -293,7 +293,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         except NameError:
             pass
 
-    if ip and pretty_print:
+    if ip and ip.__module__.startswith('IPython') and pretty_print:
         try:
             import IPython
             # IPython 1.0 deprecates the frontend module, so we import directly
