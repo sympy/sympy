@@ -5,7 +5,7 @@ x, y = symbols('x, y')
 # 169 - 175 are pages in Vilenkin
 # Here are some tests
 # just change the value on "n"
-n = 7 # number of the test
+n = 0 # number of the test
 # 0 - 169 (1)
 # 1 - 169 (2)
 # 2 - 170 (1)
