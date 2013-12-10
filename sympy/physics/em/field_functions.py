@@ -74,11 +74,11 @@ def divergence(vect, frame):
 
     _check_vector(vect)
     if vect == 0:
-        return Vector(0)
+        return S(0)
     vectx = vect.dot(frame.x)
     vecty = vect.dot(frame.y)
     vectz = vect.dot(frame.z)
-    out = 0
+    out = S(0)
     out += diff(vectx, frame[0])
     out += diff(vecty, frame[1])
     out += diff(vectz, frame[2])
@@ -133,7 +133,8 @@ def is_conservative(field):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import ReferenceFrame, is_conservative
+    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> from sympy.physics.em import is_conservative
     >>> R = ReferenceFrame('R')
     >>> is_conservative(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z)
     True
@@ -164,7 +165,8 @@ def is_solenoidal(field):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import ReferenceFrame, is_solenoidal
+    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> from sympy.physics.em import is_solenoidal
     >>> R = ReferenceFrame('R')
     >>> is_solenoidal(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z)
     True
@@ -208,7 +210,7 @@ def scalar_potential(field, frame):
     >>> scalar_field = 2*R[0]**2*R[1]*R[2]
     >>> grad_field = gradient(scalar_field, R)
     >>> scalar_potential(grad_field, R)
-    2*R[0]**2*R[1]*R[2]
+    2*R_x**2*R_y*R_z
 
     """
 

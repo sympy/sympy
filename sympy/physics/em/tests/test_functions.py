@@ -1,5 +1,7 @@
+from sympy import S, Symbol, sin, cos
 from sympy.physics.mechanics import ReferenceFrame, Vector
-from sympy.physics.em import divergence, gradient, curl, is_conservative
+from sympy.physics.em import divergence, gradient, curl, is_conservative, \
+     is_solenoidal, scalar_potential, scalar_potential_difference
 from sympy.utilities.pytest import raises
 
 R = ReferenceFrame('R')
@@ -16,8 +18,8 @@ def test_curl():
 
 
 def test_divergence():
-    assert divergence(Vector(0), R) == Vector(0)
-    assert divergence(R.x, R) == Vector(0)
+    assert divergence(Vector(0), R) == S(0)
+    assert divergence(R.x, R) == S(0)
     assert divergence(R[0]**2*R.x, R) == 2*R[0]
     assert divergence(R[0]*R[1]*R[2] * (R.x+R.y+R.z), R) == \
            R[0]*R[1] + R[0]*R[2] + R[1]*R[2]
@@ -26,9 +28,9 @@ def test_divergence():
 
 
 def test_gradient():
-    from sympy import Symbol, sin
+    a = Symbol('a')
     assert gradient(0, R) == Vector(0)
-    assert gradient(R[0], R) = R.x
+    assert gradient(R[0], R) == R.x
     assert gradient(R[0]*R[1]*R[2], R) == \
            R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z
     assert gradient(2*R[0]**2, R) == 4*R[0]*R.x
@@ -57,14 +59,14 @@ def test_conservative():
 
 def test_solenoidal():
     assert is_solenoidal(0) is True
-    assert is_solenidal(R.x) is True
+    assert is_solenoidal(R.x) is True
     assert is_solenoidal(2 * R.x + 3 * R.y + 4 * R.z) is True
     assert is_solenoidal(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z) is \
            True
     assert is_solenoidal(R[1] * R.y) is False
     assert is_solenoidal(grad_field) is False
     assert is_solenoidal(curl_field) is True
-    assert is_solenoidal((-2*R[1] + 3)*R.z) is False
+    assert is_solenoidal((-2*R[1] + 3)*R.z) is True
 
 
 def test_scalar_potential():
@@ -75,7 +77,6 @@ def test_scalar_potential():
     assert scalar_potential(R[1]*R[2]*R.x + R[0]*R[2]*R.y + \
                             R[0]*R[1]*R.z, R) == R[0]*R[1]*R[2]
     assert scalar_potential(grad_field, R) == scalar_field
-    assert raises(ValueError, scalar_potential(curl_field))
 
 
 def test_scalar_potential_difference():
@@ -83,15 +84,13 @@ def test_scalar_potential_difference():
     point1 = 1*R.x + 2*R.y + 3*R.z
     point2 = 4*R.x + 5*R.y + 6*R.z
     pos_vect = R[0]*R.x + R[1]*R.y + R[2]*R.z
-    assert scalar_potential_difference(0, R, point1, point2) == 0
-    assert scalar_potential_difference(scalar_field, R, 0, pos_vect) == \
+    assert scalar_potential_difference(S(0), R, point1, point2) == 0
+    assert scalar_potential_difference(scalar_field, R, Vector(0), pos_vect) == \
                                               scalar_field
-    assert scalar_potential_difference(grad_field, R, 0, pos_vect) == \
+    assert scalar_potential_difference(grad_field, R, Vector(0), pos_vect) == \
                                               scalar_field
     assert scalar_potential_difference(grad_field, R, point1, point2) == \
                                               948
     assert scalar_potential_difference(R[1]*R[2]*R.x + R[0]*R[2]*R.y + \
                                        R[0]*R[1]*R.z, R, point1, pos_vect) == \
                                        R[0]*R[1]*R[2] - 6
-    assert raises(ValueError, scalar_potential_difference(curl_field, \
-                                                          R, point1, point2))
