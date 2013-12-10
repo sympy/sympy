@@ -682,6 +682,15 @@ def test_Infinity_inequations():
     assert Float('+inf') > pi
     assert not (Float('+inf') < pi)
     assert exp(-3) < Float('+inf')
+    raises(TypeError, lambda: oo < I)
+    raises(TypeError, lambda: oo <= I)
+    raises(TypeError, lambda: oo > I)
+    raises(TypeError, lambda: oo >= I)
+    raises(TypeError, lambda: -oo < I)
+    raises(TypeError, lambda: -oo <= I)
+    raises(TypeError, lambda: -oo > I)
+    raises(TypeError, lambda: -oo >= I)
+
 
 
 def test_NaN():
