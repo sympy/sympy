@@ -2062,6 +2062,12 @@ class Infinity(with_metaclass(Singleton, Number)):
         ``oo ** -p``     ``0``   ``p`` is number, ``oo``
         ================ ======= ==============================
 
+        See Also
+        ========
+        Pow
+        NaN
+        NegativeInfinity
+
         """
         if expt.is_positive:
             return S.Infinity
@@ -2221,6 +2227,13 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         ``(-oo) ** o``   ``-oo`` ``o`` is positive odd integer
         ================ ======= ==============================
 
+        See Also
+        ========
+
+        Infinity
+        Pow
+        NaN
+
         """
         if isinstance(expt, Number):
             if expt is S.NaN or \
@@ -2273,11 +2286,11 @@ class NaN(with_metaclass(Singleton, Number)):
     is defined in the IEEE 754 floating point standard, and corresponds to the
     Python ``float('nan')``.
 
-    NaN serves as a place holder for numeric values that are indeterminate,
-    but not infinite.  Most operations on nan, produce another nan.  Most
-    indeterminate forms, such as ``0/0`` or ``oo - oo` produce nan.  Three
-    exceptions are ``0**0``, ``1**oo``, and ``oo**0``, which all produce ``1``
-    (this is consistent with Python's float).
+    NaN serves as a place holder for numeric values that are indeterminate.
+    Most operations on nan, produce another nan.  Most indeterminate forms,
+    such as ``0/0`` or ``oo - oo` produce nan.  Two exceptions are ``0**0``
+    and ``oo**0``, which all produce ``1`` (this is consistent with Python's
+    float).
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.

@@ -133,6 +133,13 @@ class Pow(Expr):
     we choose not to conform to all IEEE 754 conventions.  This helps
     us avoid extra test-case code in the calculation of limits.
 
+    See Also
+    ========
+
+    Infinity
+    NegativeInfinity
+    NaN
+
     References
     ==========
 
