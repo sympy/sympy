@@ -131,7 +131,7 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
 
     n = len(x)
     if n < 2:
-    raise ValueError("n cannot be less than 2")
+        raise ValueError("n cannot be less than 2")
 
     # At too low precision, the algorithm becomes meaningless
     prec = ctx.prec
