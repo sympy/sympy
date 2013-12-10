@@ -262,6 +262,15 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
     assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+    # Nonlinear equations with exponents
+    assert solve(3**(x**2 - 3*x) - 81, x) == [{x: -1}, {x: 4}]
+    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [{x: -3/2}, {x: 1/2}]
+    assert solve(5**(x+1) + 5**(2-x) - 126, x) == [{x: -1}, {x: 2}]
+    # Nonlinear equations with logarithm
+    assert solve(5**x - 212, x) == [{x: log(212)/log(5)}]
+    assert solve(x*log(x) - x, x) == [{x: E}]
+    assert solve(log(x+1, 2) + log(x-3, 2) - 5, x) == [{x: 7}]
+
 
 
 def test_linear_system():
