@@ -5,7 +5,7 @@ x, y = symbols('x, y')
 # 169 - 175 are pages in Vilenkin
 # Here are some tests
 # just change the value on "n"
-n = 0 # number of the test
+n = 7 # number of the test
 # 0 - 169 (1)
 # 1 - 169 (2)
 # 2 - 170 (1)
@@ -87,7 +87,7 @@ elif (n == 6):
 	print
 elif (n == 7):
 	reset_solution()
-	res = (roots(Poly(x ** 3 - 3 * x ** 2), x))
+	res = (roots(Poly(179 * x ** 5 - 12351 * x ** 4 + 22557 * x ** 3 + 95737 * x ** 2 + 378 * x + 1608), x))
 	for i in res:
 		print (i)
 	print
