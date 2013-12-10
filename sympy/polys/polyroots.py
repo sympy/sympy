@@ -80,7 +80,7 @@ def roots_quadratic(f):
         add_step(d)
         add_comment('roots = (-b +- sqrt(d) / 2 * a')
         d.clear_repr()
-
+        
         if dom.is_Numerical:
             D = sqrt(d)
 
@@ -682,7 +682,6 @@ def _integer_basis(poly):
 
 def preprocess_roots(poly):
     """Try to get rid of symbolic coefficients from ``poly``. """
-    # print (poly)
     coeff = S.One
 
     try:
@@ -735,7 +734,6 @@ def preprocess_roots(poly):
 
         if gens:
             poly = poly.eject(*gens)
-    # print (poly)
     if poly.is_univariate and poly.get_domain().is_ZZ:
         basis = _integer_basis(poly)
 
@@ -747,8 +745,6 @@ def preprocess_roots(poly):
 
             poly = poly.termwise(func)
             coeff *= basis
-    # print (poly)
-    # print (coeff)
     return coeff, poly
 
 
@@ -916,12 +912,10 @@ def roots(f, *gens, **flags):
 
         return result
 
-    # print (f.as_expr())
     tmp = f
     (k,), f = f.terms_gcd()
     if (tmp != f):
         add_eq(f.as_expr(), 0)
-    # print (f.as_expr(), 'lol')
     if not k:
         zeros = {}
     else:
@@ -932,7 +926,6 @@ def roots(f, *gens, **flags):
     if (coeff is not S.One):
         add_step(coeff)
 
-    # print (f.as_expr())
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
 
@@ -941,7 +934,6 @@ def roots(f, *gens, **flags):
 
     result = {}
 
-    # print (f.as_expr())
     if not f.is_ground:
         if not f.get_domain().is_Exact:
             for r in f.nroots():
