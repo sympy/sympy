@@ -563,8 +563,7 @@ def eval_sum(f, limits):
     if a == b:
         return f.subs(i, a)
     if isinstance(f, Piecewise):
-        from sympy.utilities.iterables import flatten
-        if i not in flatten([arg.args[1].free_symbols for arg in f.args]):
+        if not any(i in arg.args[1].free_symbols for arg in f.args):
             # Piecewise conditions do not depend on the dummy summation variable,
             # therefore we can fold:     Sum(Piecewise((e, c), ...), limits)
             #                        --> Piecewise((Sum(e, limits), c), ...)
@@ -584,6 +583,8 @@ def eval_sum(f, limits):
     # Doing it directly may be faster if there are very few terms.
     if definite and (dif < 100):
         return eval_sum_direct(f, (i, a, b))
+    if isinstance(f, Piecewise):
+        return None
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
     # We should try to transform to partial fractions
