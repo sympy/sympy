@@ -1,8 +1,8 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
-    factorial as fac, Rational, pi, GoldenRatio as phi
-from sympy.core.numbers import Integer, igcd
+    factorial as fac, pi, GoldenRatio as phi
+from sympy.core.numbers import Integer, igcd, Rational
 from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -22,13 +22,18 @@ from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 from sympy.ntheory.continued_fraction import \
     (continued_fraction_periodic as cf_p,
      continued_fraction_iterator as cf_i)
+from sympy.ntheory.egyptian_fraction import egyptian_fraction
+
+from fractions import Fraction
+
+from sympy.core.add import Add
 
 from sympy.polys.domains import ZZ
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
+from sympy.utilities.randtest import random_complex_number
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
-
 
 def test_trailing():
     assert trailing(0) == 0
@@ -780,3 +785,22 @@ def test_continued_fraction():
 
     assert take(phi) == [1, 1, 1, 1, 1, 1, 1]
     assert take(pi) == [3, 7, 15, 1, 292, 1, 1]
+
+
+def test_egyptian_fraction():
+    def test_equality(r, alg="Greedy"):
+        return r == Add(*[Rational(1, i) for i in egyptian_fraction(r, alg)])
+
+    r = random_complex_number(a=0, c=1, b=0, d=0, rational=True)
+    assert test_equality(r)
+
+    assert egyptian_fraction(Rational(4, 17)) == [5, 29, 1233, 3039345]
+    assert egyptian_fraction(Rational(7, 13), "Greedy") == [2, 26]
+    assert egyptian_fraction(Rational(23, 101), "Greedy") == \
+        [5, 37, 1438, 2985448, 40108045937720]
+    assert egyptian_fraction(Rational(18, 23), "Takenouchi") == \
+        [2, 6, 12, 35, 276, 2415]
+    assert egyptian_fraction(Rational(5, 6), "Graham Jewett") == \
+        [6, 7, 8, 9, 10, 42, 43, 44, 45, 56, 57, 58, 72, 73, 90, 1806, 1807,
+         1808, 1892, 1893, 1980, 3192, 3193, 3306, 5256, 3263442, 3263443,
+         3267056, 3581556, 10192056, 10650056950806]
