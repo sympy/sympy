@@ -94,7 +94,7 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
-html_favicon = '../logo/SymPy-Favicon.ico'
+html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 # See http://sphinx-doc.org/theming.html#builtin-themes.
 html_theme_options = {
     'collapsiblesidebar': True,
