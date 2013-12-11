@@ -280,7 +280,8 @@ class PlotMode(PlotObject):
         for i in range(cls.i_var_count):
             # default intervals must be given [min,max,steps]
             # (no var, but they must be in the same order as i_vars)
-            assert len(di[i]) == 3
+            if len(di[i]) != 3:
+                raise ValueError("length should be equal to 3")
 
             # Initialize an incomplete interval,
             # to later be filled with a var when
@@ -343,7 +344,8 @@ class PlotMode(PlotObject):
         for i in range(len(self.intervals)):
             if self.intervals[i].v is None:
                 u = [v for v in self.i_vars if v not in v_used]
-                assert len(u) != 0
+                if len(u) == 0:
+                    raise ValueError("length should not be equal to 0")
                 self.intervals[i].v = u[0]
                 v_used.append(u[0])
 

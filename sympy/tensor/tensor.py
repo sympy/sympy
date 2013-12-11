@@ -2572,7 +2572,8 @@ class TensMul(TensExpr):
             raise TypeError("wrong construction")
 
         for i in indices:
-            assert isinstance(i, TensorIndex)
+            if not isinstance(i, TensorIndex):
+                raise TypeError("i should be of type TensorIndex")
 
         t_components = Tuple(*components)
         t_indices = Tuple(*indices)

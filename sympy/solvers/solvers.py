@@ -1026,7 +1026,8 @@ def solve(f, *symbols, **flags):
                     got_None.append(solution)
 
         elif isinstance(solution, (Relational, And, Or)):
-            assert len(symbols) == 1
+            if len(symbols) != 1:
+                raise ValueError("Length should be 1")
             if warning and symbols[0].assumptions0:
                 warnings.warn(filldedent("""
                     \tWarning: assumptions about variable '%s' are
@@ -1068,7 +1069,8 @@ def solve(f, *symbols, **flags):
         elif isinstance(solution[0], dict):
             pass
         else:
-            assert len(symbols) == 1
+            if len(symbols) != 1:
+                raise ValueError("Length should be 1")
             solution = [{symbols[0]: s} for s in solution]
     if as_dict:
         return solution
@@ -2095,7 +2097,8 @@ def solve_linear_system_LU(matrix, syms):
     sympy.matrices.LUsolve
 
     """
-    assert matrix.rows == matrix.cols - 1
+    if matrix.rows != matrix.cols - 1:
+        raise ValueError("Rows should be equal to columns - 1")
     A = matrix[:matrix.rows, :matrix.rows]
     b = matrix[:, matrix.cols - 1:]
     soln = A.LUsolve(b)

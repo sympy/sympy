@@ -1368,8 +1368,10 @@ class InnerProduct(Basic):
     is_commutative = True
 
     def __new__(cls, bra, ket):
-        assert isinstance(bra, FockStateBra), 'must be a bra'
-        assert isinstance(ket, FockStateKet), 'must be a key'
+        if not isinstance(bra, FockStateBra):
+            raise TypeError("must be a bra")
+        if not isinstance(ket, FockStateKet):
+            raise TypeError("must be a key")
         return cls.eval(bra, ket)
 
     @classmethod

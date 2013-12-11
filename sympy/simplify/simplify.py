@@ -699,7 +699,8 @@ def _separatevars(expr, force):
 
 def _separatevars_dict(expr, symbols):
     if symbols:
-        assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
+        if not all((t.is_Atom for t in symbols)):
+            raise ValueError("symbols must be Atoms.")
         symbols = list(symbols)
     elif symbols is None:
         return {'coeff': expr}
