@@ -2412,7 +2412,7 @@ class NaN(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/NaN
+    .. [1] http://en.wikipedia.org/wiki/NaN
 
     """
     is_commutative = True
