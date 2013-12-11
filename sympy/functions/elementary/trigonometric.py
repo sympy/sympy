@@ -918,6 +918,8 @@ class tan(TrigonometricFunction):
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                return S.NaN
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -1127,8 +1129,10 @@ class cot(TrigonometricFunction):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            if arg is S.Zero:
+            elif arg is S.Zero:
                 return S.ComplexInfinity
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                return S.NaN
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)

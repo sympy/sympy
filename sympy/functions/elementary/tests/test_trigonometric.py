@@ -316,6 +316,9 @@ def test_cos_expansion():
 def test_tan():
     assert tan(nan) == nan
 
+    assert tan(oo) == nan
+    assert tan(-oo) == nan
+
     assert tan(oo*I) == I
     assert tan(-oo*I) == -I
 
@@ -420,6 +423,9 @@ def test_tan_expansion():
 
 def test_cot():
     assert cot(nan) == nan
+
+    assert cot(oo) == nan
+    assert cot(-oo) == nan
 
     assert cot(oo*I) == -I
     assert cot(-oo*I) == I
