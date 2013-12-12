@@ -256,21 +256,29 @@ def test_quintics_2():
 def test_solve_rational():
     """Test solve for rational functions"""
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
+    assert solve( ( x**2 - y**2 )/( (y**3)*(x - y) ), x) == [-y]
+    assert len(solve(1/x + 1/sqrt(1-x**2) - 35/12, x)) == 3
 
 
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
     assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
-    # Nonlinear equations with exponents
-    assert solve(3**(x**2 - 3*x) - 81, x) == [{x: -1}, {x: 4}]
-    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [{x: -3/2}, {x: 1/2}]
-    assert solve(5**(x+1) + 5**(2-x) - 126, x) == [{x: -1}, {x: 2}]
-    # Nonlinear equations with logarithm
-    assert solve(5**x - 212, x) == [{x: log(212)/log(5)}]
-    assert solve(x*log(x) - x, x) == [{x: E}]
-    assert solve(log(x+1, 2) + log(x-3, 2) - 5, x) == [{x: 7}]
 
+    f = x**2 + 2*x*y + 2*(y**2) + 2*x + 2
+    solution = solve(f, x)
+    for sol in solution:
+        assert f.subs(x, sol).simplify() == 0
+
+    assert solve(sqrt(5*(x**2) - 8*x + 3) - sqrt(5*(x**2) - 9*x + 4) - sqrt(2*(x**2) - 2*x) + sqrt(2*(x**2) - 3*x + 1), x) == [1]
+    assert solve(x**2 - 2 - sqrt(y**2 - 4*y + 4), x, y) == [{x: -sqrt(y)}, {x: sqrt(y)}, {x: -sqrt(-y + 4)}, {x: sqrt(-y + 4)}]
+
+
+@XFAIL
+def test_issue4129():
+    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-3/2, 1/2]
+    assert solve(16**(2*(x**2) + 2*x) - 1024, x) == [-1/2 + sqrt(6)/2, -sqrt(6)/2 - 1/2]
+    assert solve(9**(2*(x**2) - 2*x) - 27, x) == [-1/2, 3/2]
 
 
 def test_linear_system():
