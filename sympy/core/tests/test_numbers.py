@@ -715,7 +715,7 @@ def test_NaN():
     assert nan + S.One == nan
     assert nan/S.One == nan
     assert nan**0 == 1  # as per IEEE 754
-    assert 1**nan == 1  # as per IEEE 754
+    assert 1**nan == nan # IEEE 754 is not the best choice for symbolic work
 
 
 def test_special_numbers():
@@ -783,14 +783,14 @@ def test_integer_nthroot_overflow():
 def test_powers_Integer():
     """Test Integer._eval_power"""
     # check infinity
-    assert S(1) ** S.Infinity == 1
+    assert S(1) ** S.Infinity == S.NaN
     assert S(-1)** S.Infinity == S.NaN
     assert S(2) ** S.Infinity == S.Infinity
     assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
     assert S(0) ** S.Infinity == 0
 
     # check Nan
-    assert S(1) ** S.NaN == S.One
+    assert S(1) ** S.NaN == S.NaN
     assert S(-1) ** S.NaN == S.NaN
 
     # check for exact roots

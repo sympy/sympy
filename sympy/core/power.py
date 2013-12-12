@@ -80,7 +80,74 @@ def integer_nthroot(y, n):
 
 
 class Pow(Expr):
+    """
+    Defines the expression x**y as "x raised to a power y"
 
+    Singleton definitions involving (0, 1, -1, oo, -oo):
+
+    +--------------+---------+-----------------------------------------------+
+    | expr         | value   | reason                                        |
+    +==============+=========+===============================================+
+    | z**0         | 1       | Although arguments over 0**0 exist, see [2].  |
+    +--------------+---------+-----------------------------------------------+
+    | z**1         | z       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | (-oo)**(-1)  | 0       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | (-1)**-1     | -1      |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | S.Zero**-1   | oo      | This is not strictly true, as 0**-1 may be    |
+    |              |         | undefined, but is convenient is some contexts |
+    |              |         | where the base is assumed to be positive.     |
+    +--------------+---------+-----------------------------------------------+
+    | 1**-1        | 1       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | oo**-1       | 0       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | 0**oo        | 0       | Because for all complex numbers z near        |
+    |              |         | 0, z**oo -> 0.                                |
+    +--------------+---------+-----------------------------------------------+
+    | 0**-oo       | oo      | This is strictly true, as 0**oo may be        |
+    |              |         | oscillating between positive and negative     |
+    |              |         | values or rotating in the complex plane.      |
+    |              |         | It is convenient, however, when the base      |
+    |              |         | is positive.                                  |
+    +--------------+---------+-----------------------------------------------+
+    | 1**oo        | nan     | Because there are various cases where         |
+    | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
+    |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    +--------------+---------+-----------------------------------------------+
+    | (-1)**oo     | nan     | Because of oscillations in the limit.         |
+    | (-1)**(-oo)  |         |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | oo**oo       | oo      |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | oo**-oo      | 0       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | (-oo)**oo    | nan     |                                               |
+    | (-oo)**-oo   |         |                                               |
+    +--------------+---------+-----------------------------------------------+
+
+    Because symbolic computations are more flexible that floating point
+    calculations and we prefer to never return an incorrect answer,
+    we choose not to conform to all IEEE 754 conventions.  This helps
+    us avoid extra test-case code in the calculation of limits.
+
+    See Also
+    ========
+
+    Infinity
+    NegativeInfinity
+    NaN
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Exponentiation
+    .. [2] http://en.wikipedia.org/wiki/Exponentiation#Zero_to_the_power_of_zero
+    .. [3] http://en.wikipedia.org/wiki/Indeterminate_forms
+
+    """
     is_Pow = True
 
     __slots__ = ['is_commutative']
@@ -98,9 +165,11 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
+            elif b is S.One:
+                if e in (S.NaN, S.Infinity, -S.Infinity):
+                    return S.NaN
+                return S.One
             elif S.NaN in (b, e):
-                if b is S.One:  # already handled e == 0 above
-                    return S.One
                 return S.NaN
             else:
                 # recognize base as E
