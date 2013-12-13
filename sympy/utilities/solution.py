@@ -1,6 +1,8 @@
 """Make step-by-step solution. """
 
 import gc, sys
+from sympy.printing import latex
+from sympy.core import sympify
 
 solution_list = []
 
@@ -28,36 +30,40 @@ def find_name(obj):
     return None
 
 def add_comment(cm):
-    # print "->", cm
     solution_list.append(cm)
     
 def add_step(variable):
     """Add a variable and its value into solution"""
     var = find_name(variable)
     r = repr(variable)
-    v = str(variable)
-    if v != r:
-        # print "->", var, "=", v
-        solution_list.append(var + " = " + v)
-    else:
-        # print "->", var, "=", r
-        solution_list.append(var + " = " + r)
+    try:
+        r = latex(sympify(r))
+    except:
+        print r
+    solution_list.append(var + " = " + r)
 
 def add_eq(l, r):
     """Add an equality into solution"""
-    rr = repr(l) + " = " + repr(r)
-    v = str(r)
-    if v != rr:
-        # print "->", repr(l), "=", v
-        solution_list.append(repr(l) + " = " + v)
-    else:
-        # print "->", rr
-        solution_list.append(rr)
+    l = repr(l)
+    try:
+        l = latex(sympify(l))
+    except:
+        print l
+    r = repr(r)
+    try:
+        r = latex(sympify(r))
+    except:
+        print r
+    solution_list.append(l + " = " + r)
+
     
 def add_exp(exp):
     """Add an expression into solution"""
     r = repr(exp)
-    # print "-> ", r
+    try:
+        r = latex(sympify(r))
+    except:
+        print r
     solution_list.append(r)
 
 def reset_solution():
