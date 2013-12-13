@@ -30,7 +30,7 @@ def find_name(obj):
     return None
 
 def add_comment(cm):
-    solution_list.append(cm)
+    solution_list.append('_'+cm)
     
 def add_step(variable):
     """Add a variable and its value into solution"""
