@@ -377,7 +377,7 @@ class Function(Application, Expr):
         except KeyError:
             nargs = cls.nargs
 
-            i = 0 if nargs is None else 10000
+            i = 0 if nargs is tuple() else 10000
 
         return 4, i, name
 

@@ -26,7 +26,6 @@ from sympy.core.compatibility import xrange
 
 class ExpBase(Function):
 
-    nargs = 1
     unbranched = True
 
     def inverse(self, argindex=1):
@@ -163,6 +162,7 @@ class exp_polar(ExpBase):
 
     is_polar = True
     is_comparable = False  # cannot be evalf'd
+    nargs = 1
 
     def _eval_Abs(self):
         from sympy import expand_mul
@@ -200,6 +200,8 @@ class exp(ExpBase):
 
     log
     """
+
+    nargs = 1
 
     def fdiff(self, argindex=1):
         """
