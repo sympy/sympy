@@ -99,7 +99,7 @@ def _af_rmuln(*abc):
         a, b = a
         return [a[i] for i in b]
     if m == 0:
-        raise ValueError("String is too small")
+        raise ValueError("String must not be empty")
     p0 = _af_rmuln(*a[:m//2])
     p1 = _af_rmuln(*a[m//2:])
     return [p0[i] for i in p1]

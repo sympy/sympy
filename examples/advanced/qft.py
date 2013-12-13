@@ -54,7 +54,7 @@ def u(p, r):
 def v(p, r):
     """ p = (p1, p2, p3); r = 0,1 """
     if r not in [1, 2]:
-        raise ValueError("Function called for incorrect value")
+        raise ValueError("Value of r should lie between 1 and 2")
     p1, p2, p3 = p
     if r == 1:
         ksi = Matrix([[1], [0]])
