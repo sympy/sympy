@@ -90,6 +90,9 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __neg__ = MatrixBase.__neg__
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
+# This is included after the class definition as a workaround for issue 4114.
+# See http://code.google.com/p/sympy/issues/detail?id=4114
+ImmutableMatrix.is_zero = DenseMatrix.is_zero
 
 
 class ImmutableSparseMatrix(Basic, SparseMatrix):

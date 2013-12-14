@@ -1962,16 +1962,19 @@ class MatrixBase(object):
 
         A matrix is zero if every element is zero.  A matrix need not be square
         to be considered zero.  The empty matrix is zero by the principle of
-        vacuous truth.
+        vacuous truth.  For a matrix that may or may not be zero (e.g.
+        contains a symbol), this will be None
 
         Examples
         ========
 
         >>> from sympy import Matrix, zeros
+        >>> from sympy.abc import x
         >>> a = Matrix([[0, 0], [0, 0]])
         >>> b = zeros(3, 4)
         >>> c = Matrix([[0, 1], [0, 0]])
         >>> d = Matrix([])
+        >>> e = Matrix([[x, 0], [0, 0]])
         >>> a.is_zero
         True
         >>> b.is_zero
@@ -1980,8 +1983,13 @@ class MatrixBase(object):
         False
         >>> d.is_zero
         True
+        >>> e.is_zero
         """
-        return not list(self.values())
+        if any(i.is_zero == False for i in self):
+            return False
+        if any(i.is_zero == None for i in self):
+            return None
+        return True
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
