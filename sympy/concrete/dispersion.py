@@ -99,5 +99,10 @@ def dispersion(p, q=None):
     ..[3]: "Hypergeometric Summation: An Algorithmic Approach to Summationand Special Function Identities.
     ..[4]: "Fast Polynomial Dispersion Computation and its Application to Indefinite Summation"
     """
-    J = dispersionset(p, q, gen)
-    return max(J)
+    J = dispersionset(p, q)
+    if len(J) == 0:
+        # Definition for maximum of empty set
+        j = S.NegativeInfinity
+    else:
+        j = max(J)
+    return j
