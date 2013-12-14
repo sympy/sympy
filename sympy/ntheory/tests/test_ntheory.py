@@ -2,7 +2,7 @@ from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
     factorial as fac, Rational
-from sympy.core.numbers import Integer, igcd
+from sympy.core.numbers import Integer, igcd, Rational
 from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -19,13 +19,15 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy.ntheory.egyptian_fraction import egyptian
+
+from fractions import Fraction
 
 from sympy.polys.domains import ZZ
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
-
 
 def test_trailing():
     assert trailing(0) == 0
@@ -727,3 +729,22 @@ def test_search():
     assert 1 not in sieve
     assert 2**1000 not in sieve
     raises(ValueError, lambda: sieve.search(1))
+
+
+def test_egyptian_fraction():
+    def add(x, y):
+        return x + y
+    assert Fraction(18, 77) == reduce(add, [Rational(1, i) for i in egyptian(Rational(18, 77), "Greedy")])
+    assert Fraction(7, 13) == reduce(add, [Rational(1, i) for i in egyptian(Rational(7, 13), "Greedy")])
+    assert Fraction(23, 101) == reduce(add, [Rational(1, i) for i in egyptian(Rational(23, 101), "Greedy")])
+    assert Fraction(18, 77) == reduce(add, [Rational(1, i) for i in egyptian(Rational(18, 77), "Takenouchi")])
+    assert Fraction(7, 13) == reduce(add, [Rational(1, i) for i in egyptian(Rational(7, 13), "Takenouchi")])
+    assert Fraction(23, 101) == reduce(add, [Rational(1, i) for i in egyptian(Rational(23, 101), "Takenouchi")])
+    assert Fraction(2, 3) == reduce(add, [Rational(1, i) for i in egyptian(Rational(2, 3), "Graham Jewett")])
+    assert Fraction(3, 7) == reduce(add, [Rational(1, i) for i in egyptian(Rational(3, 7), "Graham Jewett")])
+    assert Fraction(7, 13) == reduce(add, [Rational(1, i) for i in egyptian(Rational(7, 13), "Graham Jewett")])
+
+
+
+
+
