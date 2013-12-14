@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 
+from sympy.core import S
 from sympy.polys.polytools import factor_list
 
 
-def dispersionset(p, q=None, gen=None):
+def dispersionset(p, q=None):
     r"""Compute the 'dispersion set' of two polynomials.
 
     For two polynomials `f(x)` and `g(x)` with `deg f > 0`
@@ -33,17 +34,22 @@ def dispersionset(p, q=None, gen=None):
         q = p
     if not p.is_univariate or not q.is_univariate:
         raise ValueError("Polynomials need to be univariate")
+
     # We define the dispersion of constant polynomials to be zero
     if p.degree() < 1 or q.degree() < 1:
         return set([0])
+
     # The generator
-    if gen is None:
-        gen = p.gens[0]
+    if not p.gens[0] == q.gens[0]:
+        raise ValueError("Polynomials must have the same generator")
+    gen = p.gens[0]
+
     # Factor p and q over the rationals
-    fp = factor_list(p)
-    fq = factor_list(q)
-    J = set([])
+    fp = factor_list(p, gen)
+    fq = factor_list(q, gen)
+
     # Iterate over all pairs of factors
+    J = set([])
     for s, unused in fp[1]:
         for t, unused in fq[1]:
             m = s.degree()
@@ -64,10 +70,11 @@ def dispersionset(p, q=None, gen=None):
                     else:
                         D = []
             J = J.union(D)
+
     return J
 
 
-def dispersion(p, q=None, gen=None):
+def dispersion(p, q=None):
     r"""Compute the 'dispersion' of a polynomial.
 
     For two polynomials `f(x)` and `g(x)` with `deg f > 0`
