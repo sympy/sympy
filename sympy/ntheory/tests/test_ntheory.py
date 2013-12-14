@@ -743,8 +743,3 @@ def test_egyptian_fraction():
     assert Fraction(2, 3) == reduce(add, [Rational(1, i) for i in egyptian(Rational(2, 3), "Graham Jewett")])
     assert Fraction(3, 7) == reduce(add, [Rational(1, i) for i in egyptian(Rational(3, 7), "Graham Jewett")])
     assert Fraction(7, 13) == reduce(add, [Rational(1, i) for i in egyptian(Rational(7, 13), "Graham Jewett")])
-
-
-
-
-
