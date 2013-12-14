@@ -1872,6 +1872,8 @@ class IntegerConstant(Integer):
 class Zero(with_metaclass(Singleton, IntegerConstant)):
     """The number zero.
 
+    Zero is a singleton, and can be accessed by ``S.Zero``
+
     References
     ==========
 
@@ -1925,6 +1927,8 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 class One(with_metaclass(Singleton, IntegerConstant)):
     """The number one.
 
+    One is a singleton, and can be accessed by ``S.One``.
+
     References
     ==========
 
@@ -1960,6 +1964,8 @@ class One(with_metaclass(Singleton, IntegerConstant)):
 
 class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     """The number negative one.
+
+    NegativeOne is a singleton, and can be accessed by ``S.NegativeOne``.
 
     See Also
     ========
@@ -2010,7 +2016,9 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
 
 
 class Half(with_metaclass(Singleton, RationalConstant)):
-    """The number one half.
+    """The rational number 1/2.
+
+    Half is a singleton, and can be accessed by ``S.Half``.
 
     References
     ==========
@@ -2029,15 +2037,19 @@ class Half(with_metaclass(Singleton, RationalConstant)):
 
 
 class Infinity(with_metaclass(Singleton, Number)):
-    r"""Positive infinite quantity.  In real analysis
-    the symbol `\infty` denotes an unbounded limit: `x\to\infty`
-    means that `x` grows without bound.
+    r"""Positive infinite quantity.
+
+    In real analysis the symbol `\infty` denotes an unbounded
+    limit: `x\to\infty` means that `x` grows without bound.
 
     Infinity is often used not only to define a limit but as a value
     in the affinely extended real number system.  Points labeled `+\infty`
     and `-\infty` can be added to the topological space of the real numbers,
     producing the two-point compactification of the real numbers.  Adding
     algebraic properties to this gives us the extended real numbers.
+
+    Infinity is a singleton, and can be accessed by ``S.Infinity``,
+    or can be imported as ``oo``.
 
     See Also
     ========
@@ -2212,6 +2224,9 @@ oo = S.Infinity
 
 class NegativeInfinity(with_metaclass(Singleton, Number)):
     """Negative infinite quantity.
+
+    NegativeInfinity is a singleton, and can be accessed
+    by ``S.NegativeInfinity``.
 
     See Also
     ========
@@ -2485,9 +2500,14 @@ nan = S.NaN
 
 
 class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
-    r"""In complex analysis the symbol `\tilde\infty`, called "complex
+    r"""Complex infinity.
+
+    In complex analysis the symbol `\tilde\infty`, called "complex
     infinity", represents a quantity with infinite magnitude, but
     undetermined complex phase.
+
+    ComplexInfinity is a singleton, and can be accessed by
+    ``S.ComplexInfinity``, or can be imported as ``zoo``.
 
     See Also
     ========
@@ -2622,8 +2642,14 @@ class NumberSymbol(AtomicExpr):
 
 
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
-    r"""The transcendental number `e = 2.718281828\dots` is the base of the
-    natural logarithm and of the exponential function.
+    r"""The `e` constant.
+
+    The transcendental number `e = 2.718281828\dots` is the base of the
+    natural logarithm and of the exponential function, `e = \exp(1)`.
+    Sometimes called Euler's number or Napier's constant.
+
+    Exp1 is a singleton, and can be accessed by ``S.Exp1``,
+    or can be imported as ``E``.
 
     Examples
     ========
@@ -2684,9 +2710,15 @@ E = S.Exp1
 
 
 class Pi(with_metaclass(Singleton, NumberSymbol)):
-    r"""The transcendental number `\pi = 3.141592654\dots` represents
-    the area of the unit circle, the half-period of trigonometric functions,
-    and many other things in mathematics.
+    r"""The `\pi` constant.
+
+    The transcendental number `\pi = 3.141592654\dots` represents the ratio
+    of a circle's circumference to its diameter, the area of the unit circle,
+    the half-period of trigonometric functions, and many other things
+    in mathematics.
+
+    Pi is a singleton, and can be accessed by ``S.Pi``, or can
+    be imported as ``pi``.
 
     References
     ==========
@@ -2727,10 +2759,13 @@ pi = S.Pi
 
 
 class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
-    r"""The algebraic number `phi = \frac{1 + \sqrt{5}}{2}` is
-    the golden ratio.  Two quantities are in the golden ratio if their
-    ratio is the same as the ratio of their sum to the larger
-    of the two quantities, i.e. their maximum.
+    r"""The golden ratio, `\phi`.
+
+    `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
+    are in the golden ratio if their ratio is the same as the ratio of
+    their sum to the larger of the two quantities, i.e. their maximum.
+
+    GoldenRatio is a singleton, and can be accessed by ``S.GoldenRatio``.
 
     References
     ==========
@@ -2772,13 +2807,17 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
-    r"""The Euler-Mascheroni constant (also called Euler's
-    constant) `\gamma = 0.5772157\dots` is a mathematical constant recurring
-    in analysis and number theory.  It is defined as the limiting difference
-    between the harmonic series and the natural logarithm:
+    r"""The Euler-Mascheroni constant.
+
+    `\gamma = 0.5772157\dots` (also called Euler's constant) is a mathematical
+    constant recurring in analysis and number theory.  It is defined as the
+    limiting difference between the harmonic series and the
+    natural logarithm:
 
     .. math:: \gamma = \lim\limits_{n\to\infty}
               \left(\sum\limits_{k=1}^n\frac{1}{k} - \ln n\right)
+
+    EulerGamma is a singleton, and can be accessed by ``S.EulerGamma``.
 
     References
     ==========
@@ -2817,10 +2856,13 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
 
 class Catalan(with_metaclass(Singleton, NumberSymbol)):
-    r"""Catalan's constant `K = 0.91596559\dots` is given by the
-    infinite series
+    r"""Catalan's constant.
+
+    `K = 0.91596559\dots` is given by the infinite series
 
     .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+
+    Catalan is a singleton, and can be accessed by ``S.Catalan``.
 
     References
     ==========
@@ -2857,6 +2899,9 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
 class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     r"""The imaginary unit, `i = \sqrt{-1}`.
+
+    I is a singleton, and can be accessed by ``S.I``, or can be
+    imported as ``I``.
 
     References
     ==========
