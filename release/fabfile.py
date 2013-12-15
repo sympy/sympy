@@ -219,7 +219,9 @@ def get_sympy_short_version():
     (like 0.7.3)
     """
     version = get_sympy_version()
-    return '.'.join(version.split('.')[:3]) # Remove any rc tags
+    parts = version.split('.')
+    non_rc_parts = [i for i in parts if i.isdigit()]
+    return '.'.join(non_rc_parts) # Remove any rc tags
 
 @task
 def test_sympy():
