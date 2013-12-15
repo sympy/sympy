@@ -94,6 +94,7 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
+        from sympy.core import Interval
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -139,6 +140,10 @@ class Add(Expr, AssocOp):
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
+                continue
+
+            elif isinstance(o, Interval):
+                coeff += o
                 continue
 
             elif o is S.ComplexInfinity:
