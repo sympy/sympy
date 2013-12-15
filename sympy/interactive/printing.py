@@ -233,11 +233,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         if 'mathjax', enable latex text generation, for example MathJax
         rendering in IPython notebook or text rendering in LaTeX documents
     wrap_line: boolean
-        If True, lines will wrap at the end;
-        if False, they will not wrap but continue as one line.
+        If True, lines will wrap at the end; if False, they will not wrap
+        but continue as one line. This is only relevant if `pretty_print` is
+        True.
     num_columns: int or None
-        If int, number of columns before wrapping is set to num_columns;
-        if None, number of columns before wrapping is set to terminal width.
+        If int, number of columns before wrapping is set to num_columns; if
+        None, number of columns before wrapping is set to terminal width.
+        This is only relevant if `pretty_print` is True.
     no_global: boolean
         If True, the settings become system wide;
         if False, use just for this console/session.
