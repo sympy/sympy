@@ -1,0 +1,5 @@
+========
+Calculus
+========
+
+.. automodule:: sympy.calculus

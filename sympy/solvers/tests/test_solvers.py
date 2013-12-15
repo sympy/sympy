@@ -1262,6 +1262,8 @@ def test_issues_3720_3721_3722_3149():
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
+    # github issue 2642
+    assert solve(x*(1 + I)) == [0]
     x, y = symbols('x y', imaginary=True)
     assert solve(x + y*I + 3 + 2*I) == {x: -2*I, y: 3*I}
     x = symbols('x', real=True)

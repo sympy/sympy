@@ -1284,10 +1284,12 @@ class Rational(Number):
                 return False
             return other.__eq__(self)
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                # a Rational is always in reduced form so will never be 2/4
+                # so we can just check equivalence of args
+                return self.p == other.p and self.q == other.q
             if isinstance(other, Float):
                 return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
-            elif isinstance(other, Rational):
-                return self.p == other.p and self.q == other.q
         return False
 
     def __ne__(self, other):
@@ -1303,10 +1305,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                return bool(self.p*other.q > self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_gt(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q > self.q*other.p)
+            if other is S.NaN:
+                return other.__le__(self)
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1319,10 +1324,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                 return bool(self.p*other.q >= self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q >= self.q*other.p)
+            if other is S.NaN:
+                return other.__lt__(self)
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
@@ -1335,10 +1343,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                return bool(self.p*other.q < self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_lt(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q < self.q*other.p)
+            if other is S.NaN:
+                return other.__ge__(self)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1351,12 +1362,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
-            if other is S.NaN:
-                return None
+            if isinstance(other, Rational):
+                return bool(self.p*other.q <= self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q <= self.q*other.p)
+            if other is S.NaN:
+                return other.__gt__(self)
         return Expr.__le__(self, other)
 
     def __hash__(self):
