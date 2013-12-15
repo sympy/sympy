@@ -17,11 +17,11 @@ def test_dispatch_on_sympy_objects():
 
     @dispatch(int)
     def f(b):
-        return "integer value: {}".format(b)
+        return "integer value: {0}".format(b)
 
     @dispatch(int, int)
     def f(a, b):
-        return "two integers: {}, {}".format(a, b)
+        return "two integers: {0}, {1}".format(a, b)
 
     @dispatch(Basic)
     def g(a):
@@ -124,5 +124,17 @@ def test_dispatch_class_methods():
     b = B()
     assert b.method(x+y) == (B, Add)
 
-test_intertwined_inheritances()
-test_dispatch_class_methods()
+def test_dispatch_with_varargs():
+    @dispatch(varargs=Mul)
+    def fvarargs(*args):
+        return len(args), Mul
+
+    @dispatch(Add, varargs=Mul)
+    def fvarargs(addel, *args):
+        return (Add, len(args), Mul)
+
+    x, y = symbols('x, y')
+    assert fvarargs(x+y, x*y) == (Add, 1, Mul)
+    assert fvarargs(x*y) == (1, Mul)
+    assert fvarargs(*[x*y**i for i in range(1, 16)]) == (15, Mul)
+    assert fvarargs(2*x+3*x**4, *[x*y**i for i in range(1, 10)]) == (Add, 9, Mul)

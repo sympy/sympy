@@ -11,6 +11,11 @@ class DispatchedFunction(object):
     __slots__ = ("_ftypes_", "_ftypes_with_varargs_", "_fcache_", "_last_added_function_",)
 
     def __new__(cls, types, func, prefix="", varargs=None):
+        if varargs is None:
+            ftypes = "_ftypes_"
+        else:
+            ftypes = "_ftypes_with_varargs_"
+            types = types + (varargs,)
         if prefix:
             func_name = prefix + "." + func.__name__
         else:
@@ -18,7 +23,7 @@ class DispatchedFunction(object):
 
         if func_name in cls._fnames_:
             obj = DispatchedFunction._fnames_[func_name]
-            obj._ftypes_[types] = func
+            getattr(obj, ftypes)[types] = func
             # destroy any previous cache when add a new dispatching rule,
             # otherwise errors with subtypes may occur.
             obj._fcache_ = dict()
@@ -27,33 +32,26 @@ class DispatchedFunction(object):
 
         obj = super(DispatchedFunction, cls).__new__(cls)
         obj._ftypes_ = dict()
-        obj._ftypes_[types] = func
+        obj._ftypes_with_varargs_ = dict()
+        setattr(obj, ftypes, dict({types: func}))
         obj._fcache_ = dict()
         obj._last_added_function_ = func
         DispatchedFunction._fnames_[func_name] = obj
         return obj
 
     def __call__(self, *args, **kw_args):
-        arg_types = tuple(type(_) for _ in args)
+        arg_types = tuple(type(arg) for arg in args)
         # check if such argument types are already stored in the cache,
         # in that case, retrieve the function call there, in order to avoid
         # to perform the whole search-algorithm:
         if arg_types in self._fcache_:
             return self._fcache_[arg_types](*args, **kw_args)
 
-        mfunc = None
-        mtypes = None
-        for types, func in self._ftypes_.items():
-            if len(types) != len(args):
-                continue
-            if not all(map(lambda x: isinstance(*x), zip(args, types))):
-                # incompatible types, skip to next.
-                continue
-
-            if mtypes is not None:
+        def check_match(types, func):
+            if check_match.mtypes is not None:
                 # this means that a match has already been found,
                 # select the one with the most specific subclasses.
-                for arg_type, _type, m_type in zip(arg_types, types, mtypes):
+                for arg_type, _type, m_type in zip(arg_types, types, check_match.mtypes):
                     if _type not in arg_type.__mro__:
                         _type = object
                     if m_type not in arg_type.__mro__:
@@ -63,23 +61,47 @@ class DispatchedFunction(object):
                     if ord1 == ord2:
                         continue
                     elif ord1 < ord2:
-                        mtypes = types
-                        mfunc = func
+                        check_match.mtypes = types
+                        check_match.mfunc = func
                         break
                     else:
                         break
             else:
-                mtypes = types
-                mfunc = func
+                check_match.mtypes = types
+                check_match.mfunc = func
 
-        if mfunc is None:
-            raise TypeError("no match found for signature {}".format(types))
+        check_match.mtypes = None
+        check_match.mfunc = None
+
+        for types, func in self._ftypes_.items():
+            if len(types) != len(args):
+                continue
+            if not all(map(lambda x: isinstance(*x), zip(args, types))):
+                # incompatible types, skip to next.
+                continue
+            check_match(types, func)
+
+        for types, func in self._ftypes_with_varargs_.items():
+            vararg_type = types[-1]
+            fixed_types = types[:-1]
+
+            number_of_varargs = len(args) - len(types[:-1])
+
+            if number_of_varargs < 0:
+                # too few arguments, impossible to match
+                continue
+
+            types_to_match = fixed_types + (vararg_type,)*number_of_varargs
+            check_match(types_to_match, func)
+
+        if check_match.mfunc is None:
+            raise TypeError("no match found for signature {0}".format(types))
 
         # store the result into _fcache_, so next time it will be
         # faster to retrieve it:
-        self._fcache_[arg_types] = mfunc
+        self._fcache_[arg_types] = check_match.mfunc
 
-        return mfunc(*args, **kw_args)
+        return check_match.mfunc(*args, **kw_args)
 
     @property
     def methods(self):

@@ -2863,6 +2863,14 @@ def test_sympy__tensor__tensor__TensAdd():
     t2 = q(a)
     assert _test_args(TensAdd(t1, t2))
 
+@XFAIL
+def test_sympy__tensor__tensor__ATensAdd():
+    pass
+
+@XFAIL
+def test_sympy__tensor__tensor__VTensAdd():
+    pass
+
 
 def test_sympy__tensor__tensor__TensMul():
     from sympy.core import S
@@ -2875,6 +2883,13 @@ def test_sympy__tensor__tensor__TensMul():
     free, dum = TIDS.free_dum_from_indices(a)
     assert _test_args(TensMul.from_data(S.One, [p], free, dum))
 
+@XFAIL
+def test_sympy__tensor__tensor__ATensMul():
+    pass
+
+@XFAIL
+def test_sympy__tensor__tensor__VTensMul():
+    pass
 
 
 @XFAIL

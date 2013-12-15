@@ -2052,7 +2052,7 @@ class TensAdd(TensExpr):
     def __new__(cls):
         return ATensAdd()
 
-    @dispatch(type, object, prefix="TensAdd")
+    @dispatch(type, varargs=object, prefix="TensAdd")
     def __new__(cls, *args, **kw_args):
         args = [sympify(x) for x in args if x]
         if args and (args[0].data is not None):
@@ -3176,7 +3176,7 @@ class ATensAdd(TensAdd):
     def __new__(cls):
         return TensAdd._new_prepare([])
 
-    @dispatch(type, object, prefix="ATensAdd")
+    @dispatch(type, varargs=object, prefix="ATensAdd")
     def __new__(cls, *addends, **kw_args):
         obj = TensAdd._new_prepare(cls, *addends, **kw_args)
         return obj
@@ -3207,7 +3207,7 @@ class VTensAdd(TensAdd):
         obj = TensAdd._new_prepare(cls, **kw_args)
         return obj
 
-    @dispatch(type, object, prefix="VTensAdd")
+    @dispatch(type, varargs=object, prefix="VTensAdd")
     def __new__(cls, addenda, **kw_args):
         obj = TensAdd._new_prepare(cls, *addenda, **kw_args)
         return obj
