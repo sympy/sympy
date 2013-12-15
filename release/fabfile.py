@@ -982,6 +982,8 @@ def test_pypi(release='2'):
 
     version = get_sympy_version()
 
+    release = str(release)
+
     if release not in {'2', '3'}: # TODO: Add win32
         raise ValueError("release must be one of '2', '3', not %s" % release)
 
