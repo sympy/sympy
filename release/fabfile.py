@@ -861,7 +861,7 @@ def update_docs(docs_location=None):
 
     print("Writing new version to releases.txt")
     with open(os.path.join(docs_location, "releases.txt"), 'a') as f:
-        f.write("{version}:SymPy {version}".format(version=current_version))
+        f.write("{version}:SymPy {version}\n".format(version=current_version))
 
     print("Generating indexes")
     local("cd {docs_location} && ./generate_indexes.py".format(docs_location=docs_location))
