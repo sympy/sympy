@@ -179,7 +179,7 @@ canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):
     """ factor matrices only if they are square """
-    if not matrices[0].rows == matrices[-1].cols:
+    if matrices[0].rows != matrices[-1].cols:
         raise RuntimeError("Invalid matrices being multiplied")
     out = []
     start = 0

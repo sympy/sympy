@@ -77,7 +77,7 @@ def richardson(ctx, seq):
     1. [BenderOrszag]_ pp. 375-376
 
     """
-    if not len(seq) >= 3:
+    if len(seq) < 3:
         raise ValueError("seq should be of minimum length 3")
     if ctx.sign(seq[-1]-seq[-2]) != ctx.sign(seq[-2]-seq[-3]):
         seq = seq[::2]
@@ -224,7 +224,7 @@ def shanks(ctx, seq, table=None, randomized=False):
     2. [BenderOrszag]_ pp. 368-375
 
     """
-    if not len(seq) >= 2:
+    if len(seq) < 2:
         raise ValueError("seq should be of minimum length 2")
     if table:
         START = len(table)

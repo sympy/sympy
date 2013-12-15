@@ -10,7 +10,7 @@ class MatPow(MatrixExpr):
     def __new__(cls, base, exp):
         base = _sympify(base)
         if not base.is_Matrix:
-            raise TypeError("Function parameter should be a parameter")
+            raise TypeError("Function parameter should be a matrix")
         exp = _sympify(exp)
         return super(MatPow, cls).__new__(cls, base, exp)
 

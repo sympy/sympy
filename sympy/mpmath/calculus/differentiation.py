@@ -617,7 +617,7 @@ def pade(ctx, a, L, M):
     """
     # To determine L+1 coefficients of P and M coefficients of Q
     # L+M+1 coefficients of A must be provided
-    if not (len(a) >= L+M+1):
+    if len(a) < L+M+1:
         raise ValueError("L+M+1 Coefficients should be provided") 
 
     if M == 0:
