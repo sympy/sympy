@@ -1,6 +1,6 @@
-from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
+from sympy import (Symbol, Set, Union, Interval, IV, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false
+    FiniteSet, Intersection, imageset, I, true, false, Rational
 )
 from sympy.mpmath import mpi
 
@@ -262,6 +262,9 @@ def test_subset():
     assert Interval(0, 2).subset(Interval(0, 1)) is True
     assert Interval(0, 2).subset(Interval(0, 3)) is False
 
+    assert IV(0, 2).subset(IV(0, 1)) is True
+    assert IV(0, 2).subset(IV(0, 3)) is False
+
     assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(1, 2))
     assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(4, 5)) is False
     assert Interval(0, 2).subset(FiniteSet(1))
@@ -269,14 +272,20 @@ def test_subset():
     assert (Interval(0, 2, False, True) + FiniteSet(2, 3)).subset(
         Interval(1, 2) + FiniteSet(3))
 
+    assert IV(0, 2, True, True).subset(FiniteSet(1, 2)) is False
+
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) is True
     assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) is False
 
     assert Interval(0, 5).subset(FiniteSet(1, 2, 3, 4)) is True
     assert FiniteSet(1, 2, 3).subset(S.EmptySet) is True
 
+    assert IV(0, 5).subset(FiniteSet(1, 2, 3, 4)) is True
+
     assert S.EmptySet.subset(Interval(0, 1)) is False
     assert S.EmptySet.subset(S.EmptySet) is True
+
+    assert S.EmptySet.subset(IV(0, 1)) is False
 
     raises(ValueError, lambda: S.EmptySet.subset(1))
 
