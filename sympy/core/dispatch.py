@@ -48,6 +48,8 @@ class DispatchedFunction(object):
             return self._fcache_[arg_types](*args, **kw_args)
 
         def check_match(types, func):
+            # this function checks if the types have already been matched,
+            # in such a case, determine which one to match.
             if check_match.mtypes is not None:
                 # this means that a match has already been found,
                 # select the one with the most specific subclasses.
@@ -74,6 +76,7 @@ class DispatchedFunction(object):
         check_match.mfunc = None
 
         for types, func in self._ftypes_.items():
+            # for-loop to match types without varargs
             if len(types) != len(args):
                 continue
             if not all(map(lambda x: isinstance(*x), zip(args, types))):
@@ -82,6 +85,9 @@ class DispatchedFunction(object):
             check_match(types, func)
 
         for types, func in self._ftypes_with_varargs_.items():
+            # for-loop to match types with varargs, last type
+            # in `types` is repeated as many times as the number
+            # of missing arguments.
             vararg_type = types[-1]
             fixed_types = types[:-1]
 
@@ -95,6 +101,7 @@ class DispatchedFunction(object):
             check_match(types_to_match, func)
 
         if check_match.mfunc is None:
+            # no matches have been found, raise an error
             raise TypeError("no match found for signature {0}".format(types))
 
         # store the result into _fcache_, so next time it will be
