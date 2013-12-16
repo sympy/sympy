@@ -193,7 +193,7 @@ class Dyadic(object):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + r" " +
+                ol.append(str_start + arg_str + r"\cdot" +
                           mlp.doprint(ar[i][1]) +
                           r"\otimes " +
                           mlp.doprint(ar[i][2]))
@@ -1479,7 +1479,7 @@ class Vector(object):
                         str_start = ' - '
                     else:
                         str_start = ' + '
-                    ol.append(str_start + arg_str + '*' +
+                    ol.append(str_start + arg_str + '\cdot' +
                               ar[i][1].latex_vecs[j])
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
