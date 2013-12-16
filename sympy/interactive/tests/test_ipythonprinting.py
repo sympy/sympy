@@ -43,3 +43,40 @@ def test_ipythonprinting():
     else:
         assert app.user_ns['a'][0]['text/plain'] in (u('\u03c0'), 'pi')
         assert app.user_ns['a2'][0]['text/plain'] in (u(' 2\n\u03c0 '), '  2\npi ')
+
+def test_print_builtin_option():
+    # Initialize and setup IPython session
+    app = init_ipython_session()
+    app.run_cell("ip = get_ipython()")
+    app.run_cell("inst = ip.instance()")
+    app.run_cell("format = inst.display_formatter.format")
+    app.run_cell("from sympy import Symbol")
+    app.run_cell("from sympy import init_printing")
+
+    app.run_cell("a = format({Symbol('pi'): 3.14, Symbol('n_i'): 3})")
+    # Deal with API change starting at IPython 1.0
+    if int(ipython.__version__.split(".")[0]) < 1:
+        text = app.user_ns['a']['text/plain']
+    else:
+        text = app.user_ns['a'][0]['text/plain']
+    assert text == "{pi: 3.14, n_i: 3}"
+
+    # If we enable the default printing, then the dictionary's should render
+    # as a LaTeX version of the whole dict: ${\pi: 3.14, n_i: 3}$
+    app.run_cell("init_printing()")
+    app.run_cell("a = format({Symbol('pi'): 3.14, Symbol('n_i'): 3})")
+    # Deal with API change starting at IPython 1.0
+    if int(ipython.__version__.split(".")[0]) < 1:
+        text = app.user_ns['a']['text/plain']
+    else:
+        text = app.user_ns['a'][0]['text/plain']
+    assert text == u('{n\u1d62: 3, \u03c0: 3.14}')
+
+    app.run_cell("init_printing(print_builtin=False)")
+    app.run_cell("a = format({Symbol('pi'): 3.14, Symbol('n_i'): 3})")
+    # Deal with API change starting at IPython 1.0
+    if int(ipython.__version__.split(".")[0]) < 1:
+        text = app.user_ns['a']['text/plain']
+    else:
+        text = app.user_ns['a'][0]['text/plain']
+    assert text == "{pi: 3.14, n_i: 3}"
