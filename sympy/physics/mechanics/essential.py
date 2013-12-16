@@ -448,9 +448,9 @@ class Dyadic(object):
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
         >>> inertia_dyadic.to_matrix(A)
         Matrix([
-        [                           Ixx,                                                           Ixy*cos(beta) + Ixz*sin(beta),                                                           -Ixy*sin(beta) + Ixz*cos(beta)],
-        [ Ixy*cos(beta) + Ixz*sin(beta),   (Iyy*cos(beta) + Iyz*sin(beta))*cos(beta) + (Iyz*cos(beta) + Izz*sin(beta))*sin(beta),   -(Iyy*cos(beta) + Iyz*sin(beta))*sin(beta) + (Iyz*cos(beta) + Izz*sin(beta))*cos(beta)],
-        [-Ixy*sin(beta) + Ixz*cos(beta), (-Iyy*sin(beta) + Iyz*cos(beta))*cos(beta) + (-Iyz*sin(beta) + Izz*cos(beta))*sin(beta), -(-Iyy*sin(beta) + Iyz*cos(beta))*sin(beta) + (-Iyz*sin(beta) + Izz*cos(beta))*cos(beta)]])
+        [                           Ixx,                                           Ixy*cos(beta) + Ixz*sin(beta),                                           -Ixy*sin(beta) + Ixz*cos(beta)],
+        [ Ixy*cos(beta) + Ixz*sin(beta), Iyy*cos(2*beta)/2 + Iyy/2 + Iyz*sin(2*beta) - Izz*cos(2*beta)/2 + Izz/2,                 -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2],
+        [-Ixy*sin(beta) + Ixz*cos(beta),                -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2, -Iyy*cos(2*beta)/2 + Iyy/2 - Iyz*sin(2*beta) + Izz*cos(2*beta)/2 + Izz/2]])
 
         """
 
