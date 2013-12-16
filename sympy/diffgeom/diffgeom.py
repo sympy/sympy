@@ -801,7 +801,7 @@ class TensorProduct(Expr):
     >>> metric.rcall(R2.e_y, None)
     3*dy
 
-    Or automatically pad the args with ``None``s.
+    Or automatically pad the args with ``None`` s.
 
     >>> metric.rcall(R2.e_y)
     3*dy
