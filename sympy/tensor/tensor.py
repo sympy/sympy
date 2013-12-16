@@ -46,7 +46,7 @@ from sympy.core.dispatch import dispatch
 try:
     numpy = import_module('numpy')
     numpy_ndarray = numpy.ndarray
-except ImportError:
+except (ImportError, AttributeError):
     numpy = None
     numpy_ndarray = None
 
