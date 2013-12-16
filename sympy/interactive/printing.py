@@ -8,6 +8,7 @@ from sympy import latex
 from sympy import preview
 from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
+from sympy.physics.mechanics import Vector, Dyadic
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
@@ -96,7 +97,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o, bool):
             return False
-        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase)):
+        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, Vector, Dyadic)):
             return True
         elif isinstance(o, (float, integer_types)) and print_builtin:
             return True
@@ -158,7 +159,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict] + list(integer_types)
+                frozenset, dict, Vector, Dyadic] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
