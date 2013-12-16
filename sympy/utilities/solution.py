@@ -37,7 +37,7 @@ def add_step(variable):
     var = find_name(variable)
     r = repr(variable)
     try:
-        r = latex(sympify(r))
+        r = latex(sympify(r, evaluate=False))
     except:
         print r
     solution_list.append(var + " = " + r)
@@ -46,12 +46,12 @@ def add_eq(l, r):
     """Add an equality into solution"""
     l = repr(l)
     try:
-        l = latex(sympify(l))
+        l = latex(sympify(l, evaluate=False))
     except:
         print l
     r = repr(r)
     try:
-        r = latex(sympify(r))
+        r = latex(sympify(r, evaluate=False))
     except:
         print r
     solution_list.append(l + " = " + r)
@@ -61,10 +61,10 @@ def add_exp(exp):
     """Add an expression into solution"""
     r = repr(exp)
     try:
-        r = latex(sympify(r))
+        r = latex(sympify(r, evaluate=False))
     except:
         print r
-    solution_list.append(r)
+    solution_list.append(r, evaluate=False)
 
 def reset_solution():
     """Clear previos solution"""
@@ -85,3 +85,13 @@ def commit_subroutine():
 
 def last_solution():
     return solution_list
+
+def expr_to_str(expr):
+    """Get a text representation of the expression"""
+    r = repr(expr)
+    try:
+        r = latex(sympify(r, evaluate=False))
+        return r
+    except:
+        return r
+

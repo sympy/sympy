@@ -23,8 +23,8 @@ from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops, Function, expand_power_exp)
-from sympy.core.numbers import ilcm, Float
+                          count_ops, Function, expand_power_exp, expand)
+from sympy.core.numbers import ilcm, Float, pi
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 from sympy.core.basic import preorder_traversal
@@ -59,7 +59,7 @@ from collections import defaultdict
 import warnings
 
 from sympy.printing.str import StrPrinter
-from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment
+from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment, expr_to_str
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
@@ -1368,24 +1368,137 @@ def _solve(f, *symbols, **flags):
                             flags['simplify'] = flags.get('simplify', False)
 
                         # TODO: Just pass composite=True to roots()
+                        # Now we should solve polynomial equations.
+                        # If equation is trivial (y = m), then let's write nothing,
+                        # else we write the substitution and the equation.
+                        
+                        add_comment('Solve the equation')
                         poly = Poly(poly.as_expr(), poly.gen, composite=True)
-                        soln = list(roots(poly, cubics=True, quartics=True,
-                                                             quintics=True).keys())
-
-                        if len(soln) < deg:
-                            try:
-                                # get all_roots if possible
-                                soln = list(ordered(uniq(poly.all_roots())))
-                            except NotImplementedError:
-                                pass
+                        if poly.is_linear:
+                            add_eq(poly.gen, -poly.nth(0) / poly.nth(1))
+                            soln = [-poly.nth(0) / poly.nth(1)]
+                        else:
+                            add_eq(poly.as_expr(), 0)
+                            soln = list(roots(poly, cubics=True, quartics=True,
+                                                                 quintics=True).keys())
+                            # Here is some magic. I believe that we don't go to 
+                            # this 'if' in case of "school" equations. 
+                            if len(soln) < deg:
+                                try:
+                                    # get all_roots if possible
+                                    soln = list(ordered(uniq(poly.all_roots())))
+                                except NotImplementedError:
+                                    pass
+         
                         gen = poly.gen
-                        if gen != symbol:
-                            u = Dummy()
-                            inversion = _solve(gen - u, symbol, **flags)
-                            soln = list(ordered(set([i.subs(u, s) for i in
-                                        inversion for s in soln])))
-                        result = soln
+                        if len(gen.args) == 1 and Poly(gen.args[0], symbol).is_linear and \
+                                gen.func in [sin, cos, tan, cot]:
+                            # if we are here, then equation has the form trig(ax + b) = m
+                            flags['simplify'] = False # We return the general solution therefore we cannot 
+                            check = False             #   simplify and check it
+                            result = []
+                            arg = Poly(gen.args[0], symbol)
+                            k = Symbol('k') # Possible it should be k = Dummy('k')
+                            a = arg.nth(1)
+                            b = arg.nth(0) 
+                            can_be_simplified = a != 1 or b != 0
+                            if gen.func == sin: # sin
+                                there_are_real_roots = False
+                                for s in soln:
+                                    if s >= -1 and s <= 1:
+                                        there_are_real_roots = True
+                                if there_are_real_roots:
+                                    add_comment('We get')
+                                    for s in soln:
+                                        if s == 1: # use another form for the general solution in this case
+                                            r = pi / 2 + 2 * pi * k 
+                                            result.append((r - b) / a)
+                                            add_eq(arg.as_expr(), r)
+                                        elif s == -1: # also use another form
+                                            r = -pi / 2 + 2 * pi * k 
+                                            result.append((r - b) / a)
+                                            add_eq(arg.as_expr(), r)
+                                        elif s == 0:
+                                            r = pi * k
+                                            result.append((r - b) / a)
+                                            add_eq(arg.as_expr(), r)
+                                        elif s >= -1 and s <= 1:
+                                            #  print solution without simplification
+                                            add_eq(arg.as_expr(), asin(s, evaluate=False) + 2 * pi * k)
+                                            add_eq(arg.as_expr(), pi - asin(s, evaluate=False) + 2 * pi * k)
+                                            if asin(s, evaluate = False) != asin(s):
+                                                can_be_simplified = True
+                                            result.append((asin(s) + 2 * pi * k - b) / a)
+                                            result.append((pi - asin(s) + 2 * pi * k - b) / a)
+                                    add_comment('where ' + expr_to_str(k) + ' can be any integer')
+                                else:
+                                    add_comment('There are no real roots')
+    
+                            elif gen.func == cos: # cos
+                                there_are_real_roots = False 
+                                for s in soln: 
+                                    if s >= -1 and s <= 1:
+                                        there_are_real_roots = True
+                                if there_are_real_roots:
+                                    add_comment('We get')
+                                    can_be_simplified = a != 1 or b != 0
+                                    for s in soln: 
+                                        if s == 1:
+                                            r = 2 * pi * k 
+                                            add_eq(arg.as_expr(), r)
+                                            result.append((r - b) / a)
+                                        elif s == -1:
+                                            r = pi + 2 * pi * k 
+                                            add_eq(arg.as_expr(), r)
+                                            result.append((r - b) / a)
+                                        elif s == 0:
+                                            r = pi / 2 + pi * k
+                                            add_eq(arg.as_expr(), r)
+                                            result.append((r - b) / a)
+                                        elif s >= -1 and s <= 1:
+                                            add_eq(arg.as_expr(), acos(s, evaluate=False) + 2 * pi * k)
+                                            add_eq(arg.as_expr(), -acos(s, evaluate=False) + 2 * pi * k)
+                                            result.append((acos(s) + 2 * pi * k - b) / a)
+                                            result.append((-acos(s) + 2 * pi * k - b) / a)
+                                            if acos(s, evaluate=False) != acos(s):
+                                                can_be_simplified = True
+                                    add_comment('where ' + expr_to_str(k) + ' can be any integer')
+                                else:
+                                    add_comment('There are no real roots')
+    
+                            elif gen.func == tan: #tan
+                                add_comment('We get')
+                                for s in soln: 
+                                    add_eq(arg.as_expr(), atan(s, evaluate=False) + pi * k)
+                                    result.append((atan(s) + pi * k - b) / a)
+                                    if atan(s, evaluate=False) != atan(s):
+                                        can_be_simplified = True
+                                add_comment('where ' + expr_to_str(k) + ' can be any integer')
+    
+                            elif gen.func == cot: # cot
+                                add_comment('We get')
+                                for s in soln: 
+                                    add_eq(arg.as_expr(), acot(s, evaluate=False) + pi * k)
+                                    result.append((acot(s) + pi * k - b) / a)
+                                    if acot(s, evaluate=False) != acot(s):
+                                        can_be_simplified = True
+                                add_comment('where ' + expr_to_str(k) + ' can be any integer')
+                            
+                            result = list(map(simplify, result)) # Possible we don't want to simp the solution
+                            result = list(map(expand, result)) 
+                            if len(result) > 0 and can_be_simplified:
+                                add_comment('Therefore')
+                                for r in result:
+                                    add_eq(symbol, r)
+                                add_comment('where ' + expr_to_str(k) + ' can be any integer')
 
+                        else: # if we are there, then we don't know how to comment the solution
+                            if gen != symbol:
+                                u = Dummy()
+                                inversion = _solve(gen - u, symbol, **flags)
+                                soln = list(ordered(set([i.subs(u, s) for i in
+                                            inversion for s in soln])))
+                            result = soln
 
     # fallback if above fails
     if result is False:
