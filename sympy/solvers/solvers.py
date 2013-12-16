@@ -37,7 +37,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom, logcombine)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
-from sympy.simplify.fu import TR1, hyper_as_trig
+from sympy.simplify.fu import TR1, hyper_as_trig, TR5, TR6
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
     degree, PolynomialError)
@@ -1249,6 +1249,27 @@ def _solve(f, *symbols, **flags):
                 raise ValueError('could not convert %s to Poly' % f_num)
             gens = [g for g in poly.gens if g.has(symbol)]
 
+            def is_sin_cos(gens):
+                for g in gens:
+                    if not g.func in [sin, cos]:
+                        return False
+                return True
+      
+            if len(gens) == 2 and is_sin_cos(gens):
+                tr5_gens = [g for g in Poly(TR5(poly)).gens if g.has(symbol)]
+                if len(tr5_gens) == 1:
+                    add_comment('Rewrite equation')
+                    poly = Poly(TR5(poly))
+                    add_eq(poly.as_expr(), 0)
+                    gens = tr5_gens
+                else:
+                    tr6_gens = [g for g in Poly(TR6(poly)).gens if g.has(symbol)]
+                    if len(tr6_gens) == 1:
+                        add_comment('Rewrite equation')
+                        poly = Poly(TR6(poly))
+                        gens = tr6_gens
+                        add_eq(poly.as_expr(), 0)
+
             if len(gens) > 1:
                 # If there is more than one generator, it could be that the
                 # generators have the same base but different powers, e.g.
@@ -1275,7 +1296,6 @@ def _solve(f, *symbols, **flags):
 
                 bases, qs = list(zip(*[_as_base_q(g) for g in gens]))
                 bases = set(bases)
-
                 if len(bases) > 1:
                     funcs = set(b for b in bases if b.is_Function)
 
@@ -1372,15 +1392,24 @@ def _solve(f, *symbols, **flags):
                         # If equation is trivial (y = m), then let's write nothing,
                         # else we write the substitution and the equation.
                         
-                        add_comment('Solve the equation')
+
+                        gen = poly.gen
                         poly = Poly(poly.as_expr(), poly.gen, composite=True)
                         if poly.is_linear:
+                            add_comment('Solve the equation')
                             add_eq(poly.gen, -poly.nth(0) / poly.nth(1))
                             soln = [-poly.nth(0) / poly.nth(1)]
                         else:
-                            add_eq(poly.as_expr(), 0)
-                            soln = list(roots(poly, cubics=True, quartics=True,
+                            y = Dummy('y')
+                            poly_y = poly.subs(gen, y)
+                            add_comment('Use the substitution')
+                            add_eq(y, gen)
+                            add_comment('HERE WILL BE COMMENTS OF THE SOLUTION OF POLINOMIAL EQUATION')
+                            soln = list(roots(poly_y, cubics=True, quartics=True,
                                                                  quintics=True).keys())
+                            add_comment('END OF COMMENTS')
+                            add_comment('We have the following solutions')
+                            add_exp(soln)                            
                             # Here is some magic. I believe that we don't go to 
                             # this 'if' in case of "school" equations. 
                             if len(soln) < deg:
@@ -1390,7 +1419,6 @@ def _solve(f, *symbols, **flags):
                                 except NotImplementedError:
                                     pass
          
-                        gen = poly.gen
                         if len(gen.args) == 1 and Poly(gen.args[0], symbol).is_linear and \
                                 gen.func in [sin, cos, tan, cot]:
                             # if we are here, then equation has the form trig(ax + b) = m
@@ -1398,99 +1426,90 @@ def _solve(f, *symbols, **flags):
                             check = False             #   simplify and check it
                             result = []
                             arg = Poly(gen.args[0], symbol)
-                            k = Symbol('k') # Possible it should be k = Dummy('k')
+                            k = Dummy('k')
                             a = arg.nth(1)
                             b = arg.nth(0) 
                             can_be_simplified = a != 1 or b != 0
                             if gen.func == sin: # sin
-                                there_are_real_roots = False
+                                add_comment('We get')
                                 for s in soln:
-                                    if s >= -1 and s <= 1:
-                                        there_are_real_roots = True
-                                if there_are_real_roots:
-                                    add_comment('We get')
-                                    for s in soln:
-                                        if s == 1: # use another form for the general solution in this case
-                                            r = pi / 2 + 2 * pi * k 
-                                            result.append((r - b) / a)
-                                            add_eq(arg.as_expr(), r)
-                                        elif s == -1: # also use another form
-                                            r = -pi / 2 + 2 * pi * k 
-                                            result.append((r - b) / a)
-                                            add_eq(arg.as_expr(), r)
-                                        elif s == 0:
-                                            r = pi * k
-                                            result.append((r - b) / a)
-                                            add_eq(arg.as_expr(), r)
-                                        elif s >= -1 and s <= 1:
-                                            #  print solution without simplification
-                                            add_eq(arg.as_expr(), asin(s, evaluate=False) + 2 * pi * k)
-                                            add_eq(arg.as_expr(), pi - asin(s, evaluate=False) + 2 * pi * k)
-                                            if asin(s, evaluate = False) != asin(s):
-                                                can_be_simplified = True
-                                            result.append((asin(s) + 2 * pi * k - b) / a)
-                                            result.append((pi - asin(s) + 2 * pi * k - b) / a)
-                                    add_comment('where ' + expr_to_str(k) + ' can be any integer')
-                                else:
-                                    add_comment('There are no real roots')
-    
+                                    if s == 1: # use another form for the general solution in this case
+                                        r = pi / 2 + 2 * pi * k 
+                                        result.append((r - b) / a)
+                                        add_eq(arg.as_expr(), r)
+                                    elif s == -1: # also use another form
+                                        r = -pi / 2 + 2 * pi * k 
+                                        result.append((r - b) / a)
+                                        add_eq(arg.as_expr(), r)
+                                    elif s == 0:
+                                        r = pi * k
+                                        result.append((r - b) / a)
+                                        add_eq(arg.as_expr(), r)
+                                    elif s >= -1 and s <= 1:
+                                        #  print solution without simplification
+                                        add_eq(arg.as_expr(), asin(s, evaluate=False) + 2 * pi * k)
+                                        add_eq(arg.as_expr(), pi - asin(s, evaluate=False) + 2 * pi * k)
+                                        if asin(s, evaluate = False) != asin(s):
+                                            can_be_simplified = True
+                                        result.append((asin(s) + 2 * pi * k - b) / a)
+                                        result.append((pi - asin(s) + 2 * pi * k - b) / a)
+                                    else:
+                                        add_comment('the root ' + expr_to_str(s) + ' is not in [-1, 1]')
                             elif gen.func == cos: # cos
-                                there_are_real_roots = False 
+                                add_comment('We get')
+                                can_be_simplified = a != 1 or b != 0
                                 for s in soln: 
-                                    if s >= -1 and s <= 1:
-                                        there_are_real_roots = True
-                                if there_are_real_roots:
-                                    add_comment('We get')
-                                    can_be_simplified = a != 1 or b != 0
-                                    for s in soln: 
-                                        if s == 1:
-                                            r = 2 * pi * k 
-                                            add_eq(arg.as_expr(), r)
-                                            result.append((r - b) / a)
-                                        elif s == -1:
-                                            r = pi + 2 * pi * k 
-                                            add_eq(arg.as_expr(), r)
-                                            result.append((r - b) / a)
-                                        elif s == 0:
-                                            r = pi / 2 + pi * k
-                                            add_eq(arg.as_expr(), r)
-                                            result.append((r - b) / a)
-                                        elif s >= -1 and s <= 1:
-                                            add_eq(arg.as_expr(), acos(s, evaluate=False) + 2 * pi * k)
-                                            add_eq(arg.as_expr(), -acos(s, evaluate=False) + 2 * pi * k)
-                                            result.append((acos(s) + 2 * pi * k - b) / a)
-                                            result.append((-acos(s) + 2 * pi * k - b) / a)
-                                            if acos(s, evaluate=False) != acos(s):
-                                                can_be_simplified = True
-                                    add_comment('where ' + expr_to_str(k) + ' can be any integer')
-                                else:
-                                    add_comment('There are no real roots')
-    
+                                    if s == 1:
+                                        r = 2 * pi * k 
+                                        add_eq(arg.as_expr(), r)
+                                        result.append((r - b) / a)
+                                    elif s == -1:
+                                        r = pi + 2 * pi * k 
+                                        add_eq(arg.as_expr(), r)
+                                        result.append((r - b) / a)
+                                    elif s == 0:
+                                        r = pi / 2 + pi * k
+                                        add_eq(arg.as_expr(), r)
+                                        result.append((r - b) / a)
+                                    elif s >= -1 and s <= 1:
+                                        add_eq(arg.as_expr(), acos(s, evaluate=False) + 2 * pi * k)
+                                        add_eq(arg.as_expr(), -acos(s, evaluate=False) + 2 * pi * k)
+                                        result.append((acos(s) + 2 * pi * k - b) / a)
+                                        result.append((-acos(s) + 2 * pi * k - b) / a)
+                                        if acos(s, evaluate=False) != acos(s):
+                                            can_be_simplified = True
+                                    else:
+                                        add_comment('the root ' + expr_to_str(s) + ' is not in [-1, 1]')
                             elif gen.func == tan: #tan
                                 add_comment('We get')
                                 for s in soln: 
-                                    add_eq(arg.as_expr(), atan(s, evaluate=False) + pi * k)
-                                    result.append((atan(s) + pi * k - b) / a)
-                                    if atan(s, evaluate=False) != atan(s):
-                                        can_be_simplified = True
-                                add_comment('where ' + expr_to_str(k) + ' can be any integer')
-    
+                                    if s.is_real:
+                                        add_eq(arg.as_expr(), atan(s, evaluate=False) + pi * k)
+                                        result.append((atan(s) + pi * k - b) / a)
+                                        if atan(s, evaluate=False) != atan(s):
+                                            can_be_simplified = True
+                                    else:
+                                        add_comment('the root ' + expr_to_str(s) + ' is not real')
                             elif gen.func == cot: # cot
                                 add_comment('We get')
-                                for s in soln: 
-                                    add_eq(arg.as_expr(), acot(s, evaluate=False) + pi * k)
-                                    result.append((acot(s) + pi * k - b) / a)
-                                    if acot(s, evaluate=False) != acot(s):
-                                        can_be_simplified = True
-                                add_comment('where ' + expr_to_str(k) + ' can be any integer')
-                            
+                                for s in soln:
+                                    if s.is_real: 
+                                        add_eq(arg.as_expr(), acot(s, evaluate=False) + pi * k)
+                                        result.append((acot(s) + pi * k - b) / a)
+                                        if acot(s, evaluate=False) != acot(s):
+                                            can_be_simplified = True
+                                    else:
+                                        add_comment('the root ' + expr_to_str(s) + ' is not real')
                             result = list(map(simplify, result)) # Possible we don't want to simp the solution
                             result = list(map(expand, result)) 
-                            if len(result) > 0 and can_be_simplified:
-                                add_comment('Therefore')
-                                for r in result:
-                                    add_eq(symbol, r)
+                            if len(result) > 0: 
+                                if can_be_simplified:
+                                    add_comment('Therefore')
+                                    for r in result:
+                                        add_eq(symbol, r)
                                 add_comment('where ' + expr_to_str(k) + ' can be any integer')
+                            else:
+                                add_comment('There are no real roots')
 
                         else: # if we are there, then we don't know how to comment the solution
                             if gen != symbol:

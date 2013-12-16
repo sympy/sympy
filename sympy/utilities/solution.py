@@ -49,7 +49,7 @@ def add_eq(l, r):
         l = latex(sympify(l, evaluate=False))
     except:
         print l
-    r = repr(r)
+    r = str(r)
     try:
         r = latex(sympify(r, evaluate=False))
     except:
@@ -64,7 +64,7 @@ def add_exp(exp):
         r = latex(sympify(r, evaluate=False))
     except:
         print r
-    solution_list.append(r, evaluate=False)
+    solution_list.append(r)
 
 def reset_solution():
     """Clear previos solution"""
