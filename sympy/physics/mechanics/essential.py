@@ -412,6 +412,65 @@ class Dyadic(object):
         from sympy.physics.mechanics import express
         return express(self, frame1, frame2)
 
+    def to_matrix(self, reference_frame, second_reference_frame=None):
+        """Returns the matrix form of the dyadic with respect to one or two
+        reference frames.
+
+        Parameters
+        ----------
+        reference_frame : ReferenceFrame
+            The reference frame that the rows and columns of the matrix
+            correspond to. If a second reference frame is provided, this
+            only corresponds to the rows of the matrix.
+        second_reference_frame : ReferenceFrame, optional, default=None
+            The reference frame that the columns of the matrix correspond
+            to.
+
+        Returns
+        -------
+        matrix : ImmutableMatrix, shape(3,3)
+            The matrix that gives the 2D tensor form.
+
+        Examples
+        --------
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import inertia, ReferenceFrame
+        >>> Ixx, Iyy, Izz, Ixy, Iyz, Ixz = symbols('Ixx, Iyy, Izz, Ixy, Iyz, Ixz')
+        >>> N = ReferenceFrame('N')
+        >>> inertia_dyadic = inertia(N, Ixx, Iyy, Izz, Ixy, Iyz, Ixz)
+        >>> inertia_dyadic.to_matrix(N)
+        Matrix([
+        [Ixx, Ixy, Ixz],
+        [Ixy, Iyy, Iyz],
+        [Ixz, Iyz, Izz]])
+        >>> beta = symbols('beta')
+        >>> A = N.orientnew('A', 'Axis', (beta, N.x))
+        >>> inertia_dyadic.to_matrix(A)
+        Matrix([
+        [                           Ixx,                                                           Ixy*cos(beta) + Ixz*sin(beta),                                                           -Ixy*sin(beta) + Ixz*cos(beta)],
+        [ Ixy*cos(beta) + Ixz*sin(beta),   (Iyy*cos(beta) + Iyz*sin(beta))*cos(beta) + (Iyz*cos(beta) + Izz*sin(beta))*sin(beta),   -(Iyy*cos(beta) + Iyz*sin(beta))*sin(beta) + (Iyz*cos(beta) + Izz*sin(beta))*cos(beta)],
+        [-Ixy*sin(beta) + Ixz*cos(beta), (-Iyy*sin(beta) + Iyz*cos(beta))*cos(beta) + (-Iyz*sin(beta) + Izz*cos(beta))*sin(beta), -(-Iyy*sin(beta) + Iyz*cos(beta))*sin(beta) + (-Iyz*sin(beta) + Izz*cos(beta))*cos(beta)]])
+
+        """
+
+        i_unit_vectors = [getattr(reference_frame, u)
+                          for u in ['x', 'y', 'z']]
+        if second_reference_frame is not None:
+            j_unit_vectors = [getattr(second_reference_frame, u)
+                              for u in ['x', 'y', 'z']]
+        else:
+            j_unit_vectors = i_unit_vectors
+
+        matrix = []
+        for i in i_unit_vectors:
+            row = []
+            for j in j_unit_vectors:
+                row.append(self.dot(j).dot(i))
+            matrix.append(row)
+
+        return Matrix(matrix)
+
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
         return sum([Dyadic([(v[0].doit(**hints), v[1], v[2])])
@@ -1711,6 +1770,52 @@ class Vector(object):
         """
         from sympy.physics.mechanics import express
         return express(self, otherframe, variables=variables)
+
+    def to_matrix(self, reference_frame):
+        """Returns the matrix form of the vector with respect to the given
+        frame.
+
+        Parameters
+        ----------
+        reference_frame : ReferenceFrame
+            The reference frame that the rows of the matrix correspond to.
+
+        Returns
+        -------
+        matrix : ImmutableMatrix, shape(3,1)
+            The matrix that gives the 1D vector.
+
+        Examples
+        --------
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import inertia, ReferenceFrame
+        >>> a, b, c = symbols('a, b, c')
+        >>> N = ReferenceFrame('N')
+        >>> vector = a * N.x + b * N.y + c * N.z
+        >>> vector.to_matrix(N)
+        Matrix([
+        [a],
+        [b],
+        [c]])
+        >>> beta = symbols('beta')
+        >>> A = N.orientnew('A', 'Axis', (beta, N.x))
+        >>> vector.to_matrix(A)
+        Matrix([
+        [                         a],
+        [ b*cos(beta) + c*sin(beta)],
+        [-b*sin(beta) + c*cos(beta)]])
+
+        """
+
+        i_unit_vectors = [getattr(reference_frame, u)
+                          for u in ['x', 'y', 'z']]
+
+        matrix = []
+        for i in i_unit_vectors:
+            matrix.append([self.dot(i)])
+
+        return Matrix(matrix)
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Vector"""

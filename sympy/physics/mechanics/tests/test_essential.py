@@ -45,6 +45,24 @@ def test_dyadic():
     assert d1.express(A, B) == (cos(q)) * (A.x | B.x) + (-sin(q)) * (A.x | B.y)
     assert d1.dt(B) == (-qd) * (A.y | A.x) + (-qd) * (A.x | A.y)
 
+    assert d1.to_matrix(A) == Matrix([[1, 0, 0], [0, 0, 0], [0, 0, 0]])
+    assert d1.to_matrix(A, B) == Matrix([[cos(q), -sin(q), 0],
+                                         [0, 0, 0],
+                                         [0, 0, 0]])
+    assert d3.to_matrix(A) == Matrix([[0, 1, 0], [0, 0, 0], [0, 0, 0]])
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    v1 = a * A.x + b * A.y + c * A.z
+    v2 = d * A.x + e * A.y + f * A.z
+    d4 = v1.outer(v2)
+    assert d4.to_matrix(A) == Matrix([[a * d, a * e, a * f],
+                                      [b * d, b * e, b * f],
+                                      [c * d, c * e, c * f]])
+    d5 = v1.outer(v1)
+    C = A.orientnew('C', 'Axis', [q, A.x])
+    for expected, actual in zip(C.dcm(A) * d5.to_matrix(A) * C.dcm(A).T,
+                                d5.to_matrix(C)):
+        assert (expected - actual).simplify() == 0
+
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
@@ -231,6 +249,12 @@ def test_Vector():
     assert dot(v4, A.y) == y - y**2
     assert dot(v4, A.z) == z - z**2
 
+    assert v1.to_matrix(A) == Matrix([[x], [y], [z]])
+    q = symbols('q')
+    B = A.orientnew('B', 'Axis', (q, A.x))
+    assert v1.to_matrix(B) == Matrix([[x],
+                                      [ y * cos(q) + z * sin(q)],
+                                      [-y * sin(q) + z * cos(q)]])
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
