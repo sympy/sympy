@@ -768,7 +768,7 @@ class TensorProduct(Expr):
     The tensor product permits the creation of multilinear functionals (i.e.
     higher order tensors) out of lower order forms (e.g. 1-forms). However, the
     higher tensors thus created lack the interesting features provided by the
-    other type of product, the wedge product, namely they are not antisymetric
+    other type of product, the wedge product, namely they are not antisymmetric
     and hence are not form fields.
 
     Examples
@@ -801,7 +801,7 @@ class TensorProduct(Expr):
     >>> metric.rcall(R2.e_y, None)
     3*dy
 
-    Or automatically pad the args with ``None``s.
+    Or automatically pad the args with ``None`` s.
 
     >>> metric.rcall(R2.e_y)
     3*dy
@@ -852,7 +852,7 @@ class TensorProduct(Expr):
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.
 
-    In the context of integration only completely antisymetric forms make
+    In the context of integration only completely antisymmetric forms make
     sense. The wedge product permits the creation of such forms.
 
     Examples
