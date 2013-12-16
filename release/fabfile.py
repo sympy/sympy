@@ -219,7 +219,9 @@ def get_sympy_short_version():
     (like 0.7.3)
     """
     version = get_sympy_version()
-    return '.'.join(version.split('.')[:3]) # Remove any rc tags
+    parts = version.split('.')
+    non_rc_parts = [i for i in parts if i.isdigit()]
+    return '.'.join(non_rc_parts) # Remove any rc tags
 
 @task
 def test_sympy():
@@ -859,7 +861,7 @@ def update_docs(docs_location=None):
 
     print("Writing new version to releases.txt")
     with open(os.path.join(docs_location, "releases.txt"), 'a') as f:
-        f.write("{version}:SymPy {version}".format(version=current_version))
+        f.write("{version}:SymPy {version}\n".format(version=current_version))
 
     print("Generating indexes")
     local("cd {docs_location} && ./generate_indexes.py".format(docs_location=docs_location))
@@ -979,6 +981,8 @@ def test_pypi(release='2'):
     # This function is similar to test_tarball()
 
     version = get_sympy_version()
+
+    release = str(release)
 
     if release not in {'2', '3'}: # TODO: Add win32
         raise ValueError("release must be one of '2', '3', not %s" % release)

@@ -37,9 +37,6 @@ from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-# Use sys.stdout encoding for ouput.
-pdoctest._encoding = sys.__stdout__.encoding
-
 IS_WINDOWS = (os.name == 'nt')
 
 
