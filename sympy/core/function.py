@@ -96,17 +96,18 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     """
     _new = type.__new__
 
-    _nargs = tuple()
+    _nargs = None
 
     def __init__(cls, *args, **kwargs):
+        from sympy.sets.fancysets import Naturals0
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here:
-        nargs = kwargs.get('nargs', cls.__dict__.get('nargs', tuple()))
-        if is_sequence(nargs):
+        nargs = kwargs.get('nargs', cls.__dict__.get('nargs', None))
+        if not nargs:
+            cls._nargs = Naturals0()
+        elif is_sequence(nargs):
             cls._nargs = tuple(ordered(set(nargs)))
-        elif nargs is None:
-            cls._nargs = tuple()
         else:
             cls._nargs = (as_int(nargs),)
 
@@ -144,7 +145,7 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         tuple will contain all those valid numbers:
 
         >>> g = Function('g', nargs=(2, 1))
-        >>> g.nargs  # TODO make sure it's sorted
+        >>> g.nargs
         (1, 2)
 
         """
@@ -215,7 +216,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
     def _eval_subs(self, old, new):
         if (old.is_Function and new.is_Function and old == self.func and
-            (new.nargs is None or len(self.args) in new.nargs)):
+            len(self.args) in new.nargs):
             return new(*self.args)
 
 
@@ -354,6 +355,7 @@ class Function(Application, Expr):
 
     @classmethod
     def class_key(cls):
+        from sympy.sets.fancysets import Naturals0
         funcs = {
             'exp': 10,
             'log': 11,
@@ -377,7 +379,7 @@ class Function(Application, Expr):
         except KeyError:
             nargs = cls.nargs
 
-            i = 0 if nargs is tuple() else 10000
+            i = 0 if isinstance(nargs, Naturals0) else 10000
 
         return 4, i, name
 
@@ -720,12 +722,13 @@ class WildFunction(Function, AtomicExpr):
     include = set()
 
     def __new__(cls, name, **assumptions):
+        from sympy.sets.fancysets import Naturals0
         # Canonicalize nargs here:
-        nargs = assumptions.pop('nargs', tuple())
-        if is_sequence(nargs):
+        nargs = assumptions.pop('nargs', None)
+        if not nargs:
+            nargs = Naturals0()
+        elif is_sequence(nargs):
             nargs = tuple(ordered(set(nargs)))
-        elif nargs is None:
-            nargs = tuple()
         else:
             nargs = (as_int(nargs),)
 
@@ -737,7 +740,7 @@ class WildFunction(Function, AtomicExpr):
     def matches(self, expr, repl_dict={}, old=False):
         if not isinstance(expr, (AppliedUndef, Function)):
             return None
-        if self.nargs and len(expr.args) not in self.nargs:
+        if len(expr.args) not in self.nargs:
             return None
 
         repl_dict = repl_dict.copy()
@@ -1342,7 +1345,7 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         n = len(args)
-        if n != self.nargs[0]:
+        if (n,) != self.nargs:
             temp = ('%(name)s takes exactly %(args)s '
                    'argument%(plural)s (%(given)s given)')
             raise TypeError(temp % {
