@@ -964,7 +964,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l, d_type=object):  # pragma: no cover
+def list2numpy(l, dtype=object):  # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -973,13 +973,13 @@ def list2numpy(l, d_type=object):  # pragma: no cover
     matrix2numpy
     """
     from numpy import empty
-    a = empty(len(l), dtype=d_type)
+    a = empty(len(l), dtype)
     for i, s in enumerate(l):
         a[i] = s
     return a
 
 
-def matrix2numpy(m, d_type=object):  # pragma: no cover
+def matrix2numpy(m, dtype=object):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -988,14 +988,14 @@ def matrix2numpy(m, d_type=object):  # pragma: no cover
     list2numpy
     """
     from numpy import empty
-    a = empty(m.shape, dtype=d_type)
+    a = empty(m.shape, dtype)
     for i in range(m.rows):
         for j in range(m.cols):
             a[i, j] = m[i, j]
     return a
 
 @doctest_depends_on(modules=('numpy',))
-def symarray(prefix, shape, d_type=object):  # pragma: no cover
+def symarray(prefix, shape):  # pragma: no cover
     """Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
@@ -1053,7 +1053,7 @@ def symarray(prefix, shape, d_type=object):  # pragma: no cover
 
     """
     from numpy import empty, ndindex
-    arr = empty(shape, dtype=d_type)
+    arr = empty(shape, dtype=object)
     for index in ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
