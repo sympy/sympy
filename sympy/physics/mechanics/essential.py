@@ -454,22 +454,11 @@ class Dyadic(object):
 
         """
 
-        i_unit_vectors = [getattr(reference_frame, u)
-                          for u in ['x', 'y', 'z']]
-        if second_reference_frame is not None:
-            j_unit_vectors = [getattr(second_reference_frame, u)
-                              for u in ['x', 'y', 'z']]
-        else:
-            j_unit_vectors = i_unit_vectors
+        if second_reference_frame is None:
+            second_reference_frame = reference_frame
 
-        matrix = []
-        for i in i_unit_vectors:
-            row = []
-            for j in j_unit_vectors:
-                row.append(self.dot(j).dot(i))
-            matrix.append(row)
-
-        return Matrix(matrix)
+        return Matrix([i.dot(self).dot(j) for i in reference_frame for j in
+                      second_reference_frame]).reshape(3, 3)
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
@@ -1808,14 +1797,8 @@ class Vector(object):
 
         """
 
-        i_unit_vectors = [getattr(reference_frame, u)
-                          for u in ['x', 'y', 'z']]
-
-        matrix = []
-        for i in i_unit_vectors:
-            matrix.append([self.dot(i)])
-
-        return Matrix(matrix)
+        return Matrix([self.dot(unit_vec) for unit_vec in
+                       reference_frame]).reshape(3, 1)
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Vector"""
