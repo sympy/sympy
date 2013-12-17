@@ -1,14 +1,10 @@
 from __future__ import print_function, division
 
-from sympy import (Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q, Min,
-        Max)
-from sympy.functions.elementary.integers import floor, ceiling
-from sympy.functions.elementary.complexes import sign
-from sympy.core.compatibility import iterable, as_int, with_metaclass
-from sympy.core.sets import Set, Interval, FiniteSet, Intersection
+from sympy.core.basic import Basic
+from sympy.core.compatibility import as_int, with_metaclass
+from sympy.core.sets import Set, Interval, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.core.decorators import deprecated
-from sympy.solvers import solve
 
 oo = S.Infinity
 
@@ -45,6 +41,7 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
+        from sympy.assumptions.ask import ask, Q
         if ask(Q.positive(other)) and ask(Q.integer(other)):
             return True
         return False
@@ -64,6 +61,7 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
+        from sympy.assumptions.ask import ask, Q
         if ask(Q.negative(other)) == False and ask(Q.integer(other)):
             return True
         return False
@@ -96,12 +94,14 @@ class Integers(with_metaclass(Singleton, Set)):
     is_iterable = True
 
     def _intersect(self, other):
+        from sympy.functions.elementary.integers import floor, ceiling
         if other.is_Interval and other.measure < oo:
             s = Range(ceiling(other.left), floor(other.right) + 1)
             return s.intersect(other)  # take out endpoints if open interval
         return None
 
     def _contains(self, other):
+        from sympy.assumptions.ask import ask, Q
         if ask(Q.integer(other)):
             return True
         return False
@@ -176,6 +176,7 @@ class ImageSet(Set):
         return len(self.lamda.variables) > 1
 
     def _contains(self, other):
+        from sympy.solvers import solve
         L = self.lamda
         if self._is_multivariate():
             solns = solve([expr - val for val, expr in zip(other, L.expr)],
@@ -225,6 +226,7 @@ class Range(Set):
     is_iterable = True
 
     def __new__(cls, *args):
+        from sympy.functions.elementary.integers import ceiling
         # expand range
         slc = slice(*args)
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
@@ -249,6 +251,8 @@ class Range(Set):
     step = property(lambda self: self.args[2])
 
     def _intersect(self, other):
+        from sympy.functions.elementary.integers import floor, ceiling
+        from sympy.functions.elementary.miscellaneous import Min, Max
         if other.is_Interval:
             osup = other.sup
             oinf = other.inf
@@ -278,6 +282,7 @@ class Range(Set):
         return None
 
     def _contains(self, other):
+        from sympy.assumptions.ask import ask, Q
         return (other >= self.inf and other <= self.sup and
                 ask(Q.integer((self.start - other)/self.step)))
 

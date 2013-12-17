@@ -96,20 +96,11 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     """
     _new = type.__new__
 
-    _nargs = None
-
     def __init__(cls, *args, **kwargs):
-        from sympy.sets.fancysets import Naturals0
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here:
-        nargs = kwargs.get('nargs', cls.__dict__.get('nargs', None))
-        if not nargs:
-            cls._nargs = Naturals0()
-        elif is_sequence(nargs):
-            cls._nargs = tuple(ordered(set(nargs)))
-        else:
-            cls._nargs = (as_int(nargs),)
+        cls._nargs = kwargs.get('nargs', cls.__dict__.get('nargs', None))
 
     @property
     def nargs(self):
@@ -149,8 +140,12 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         (1, 2)
 
         """
-
-        return self._nargs
+        if is_sequence(self._nargs):
+            return tuple(ordered(set(self._nargs)))
+        elif self._nargs is None:
+            return S.Naturals0
+        else:
+            return (as_int(self._nargs),)
 
     def __repr__(cls):
         return cls.__name__

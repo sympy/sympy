@@ -31,6 +31,7 @@ SYMPY_DEBUG = __sympy_debug()
 
 from .core import *
 from .logic import *
+from .sets import *
 from .assumptions import *
 from .polys import *
 from .series import *
@@ -38,7 +39,6 @@ from .functions import *
 from .ntheory import *
 from .concrete import *
 from .simplify import *
-from .sets import *
 from .solvers import *
 from .matrices import *
 from .geometry import *
