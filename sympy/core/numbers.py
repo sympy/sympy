@@ -1874,6 +1874,13 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 
     Zero is a singleton, and can be accessed by ``S.Zero``
 
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(0) is S.Zero
+    True
+
     References
     ==========
 
@@ -1929,6 +1936,13 @@ class One(with_metaclass(Singleton, IntegerConstant)):
 
     One is a singleton, and can be accessed by ``S.One``.
 
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(1) is S.One
+    True
+
     References
     ==========
 
@@ -1966,6 +1980,13 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     """The number negative one.
 
     NegativeOne is a singleton, and can be accessed by ``S.NegativeOne``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(-1) is S.NegativeOne
+    True
 
     See Also
     ========
@@ -2020,6 +2041,13 @@ class Half(with_metaclass(Singleton, RationalConstant)):
 
     Half is a singleton, and can be accessed by ``S.Half``.
 
+    Examples
+    ========
+
+    >>> from sympy import S, Rational
+    >>> Rational(1, 2) is S.Half
+    True
+
     References
     ==========
 
@@ -2051,10 +2079,22 @@ class Infinity(with_metaclass(Singleton, Number)):
     Infinity is a singleton, and can be accessed by ``S.Infinity``,
     or can be imported as ``oo``.
 
+    Examples
+    ========
+
+    >>> from sympy import oo, exp, limit, Symbol
+    >>> 1 + oo
+    oo
+    >>> 42/oo
+    0
+    >>> x = Symbol('x')
+    >>> limit(exp(x), x, oo)
+    oo
+
     See Also
     ========
 
-    NegativeInfinity
+    NegativeInfinity, NaN
 
     References
     ==========
@@ -2509,6 +2549,19 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     ComplexInfinity is a singleton, and can be accessed by
     ``S.ComplexInfinity``, or can be imported as ``zoo``.
 
+    Examples
+    ========
+
+    >>> from sympy import zoo, oo
+    >>> zoo + 42
+    zoo
+    >>> 42/zoo
+    0
+    >>> zoo + zoo
+    nan
+    >>> zoo*zoo
+    zoo
+
     See Also
     ========
 
@@ -2720,6 +2773,22 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     Pi is a singleton, and can be accessed by ``S.Pi``, or can
     be imported as ``pi``.
 
+    Examples
+    ========
+
+    >>> from sympy import S, pi, oo, sin, exp, integrate, Symbol
+    >>> S.Pi
+    pi
+    >>> pi > 3
+    True
+    >>> pi.is_irrational
+    True
+    >>> x = Symbol('x')
+    >>> sin(x + 2*pi)
+    sin(x)
+    >>> integrate(exp(-x**2), (x, -oo, oo))
+    sqrt(pi)
+
     References
     ==========
 
@@ -2766,6 +2835,17 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     their sum to the larger of the two quantities, i.e. their maximum.
 
     GoldenRatio is a singleton, and can be accessed by ``S.GoldenRatio``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.GoldenRatio > 1
+    True
+    >>> S.GoldenRatio.expand(func=True)
+    1/2 + sqrt(5)/2
+    >>> S.GoldenRatio.is_irrational
+    True
 
     References
     ==========
@@ -2819,6 +2899,16 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
     EulerGamma is a singleton, and can be accessed by ``S.EulerGamma``.
 
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.EulerGamma.is_irrational
+    >>> S.EulerGamma > 0
+    True
+    >>> S.EulerGamma > 1
+    False
+
     References
     ==========
 
@@ -2864,6 +2954,16 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
     Catalan is a singleton, and can be accessed by ``S.Catalan``.
 
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.Catalan.is_irrational
+    >>> S.Catalan > 0
+    True
+    >>> S.Catalan > 1
+    False
+
     References
     ==========
 
@@ -2902,6 +3002,17 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
 
     I is a singleton, and can be accessed by ``S.I``, or can be
     imported as ``I``.
+
+    Examples
+    ========
+
+    >>> from sympy import I, sqrt
+    >>> sqrt(-1)
+    I
+    >>> I*I
+    -1
+    >>> 1/I
+    -I
 
     References
     ==========
