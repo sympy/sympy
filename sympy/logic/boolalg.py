@@ -94,6 +94,8 @@ class And(LatticeOp, BooleanFunction):
     zero = False
     identity = True
 
+    nargs = None
+
     @classmethod
     def _new_args_filter(cls, args):
         newargs = []
@@ -158,6 +160,8 @@ class Not(BooleanFunction):
     """
 
     is_Not = True
+
+    nargs = 1
 
     @classmethod
     def eval(cls, arg):
