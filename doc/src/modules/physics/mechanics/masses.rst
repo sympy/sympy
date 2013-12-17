@@ -60,6 +60,18 @@ Notice that the ``inertia`` function returns a dyadic with each component
 represented as two unit vectors separated by a ``|``. Refer to the
 :ref:`Dyadic` section for more information about dyadics.
 
+Inertia is often expressed in a matrix, or tensor, form, especially for
+numerical purposes. Since the matrix form does not contain any information
+about the reference frame(s) the inertia dyadic is defined in, you must provide
+one or two reference frames to extract the measure numbers from the dyadic.
+There is a convenience function to do this::
+
+  >>> inertia(N, 1, 2, 3, 4, 5, 6).to_matrix(N)
+  Matrix([
+  [1, 4, 6],
+  [4, 2, 5],
+  [6, 5, 3]])
+
 Rigid Body
 ==========
 
