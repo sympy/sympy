@@ -570,7 +570,7 @@ def ChiNoncentral(name, k, l):
     >>> X = ChiNoncentral("x", k, l)
 
     >>> density(X)(z)
-    l*z**k*(l*z)**(-k/2)*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)
+    l*z**k*(l*z)**(-k/2)*besseli(k/2 - 1, l*z)*exp(-l**2/2 - z**2/2)
 
     References
     ==========

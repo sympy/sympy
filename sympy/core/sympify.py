@@ -61,7 +61,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
        - any object defined in sympy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
-       - booleans, including ``None`` (will leave them unchanged)
+       - booleans, including ``None`` (will leave ``None`` unchanged)
        - lists, sets or tuples containing any of the above
 
     If the argument is already a type that SymPy understands, it will do
@@ -148,12 +148,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     explicit conversion has been defined are converted. In the other
     cases, a SympifyError is raised.
 
-    >>> sympify(True)
-    True
-    >>> sympify(True, strict=True)
+    >>> print(sympify(None))
+    None
+    >>> sympify(None, strict=True)
     Traceback (most recent call last):
     ...
-    SympifyError: SympifyError: True
+    SympifyError: SympifyError: None
 
     Evaluation
     ----------
@@ -234,7 +234,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
         cls = type(a)
     if cls in sympy_classes:
         return a
-    if cls in (bool, type(None)):
+    if cls is type(None):
         if strict:
             raise SympifyError(a)
         else:
@@ -291,11 +291,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     # and try to parse it. If it fails, then we have no luck and
     # return an exception
     try:
-        import sys
-        if sys.version_info[0] >= 3:
-            a = str(a)
-        else:
-            a = unicode(a)
+        from .compatibility import unicode
+        a = unicode(a)
     except Exception as exc:
         raise SympifyError(a, exc)
 

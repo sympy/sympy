@@ -1183,12 +1183,12 @@ def test_high_order_roots():
 def test_minsolve_linear_system():
     def count(dic):
         return len([x for x in dic.values() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) \
+    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=True)) \
         == 3
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) \
+    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=False)) \
         == 3
-    assert count(solve([x + y + z, y + z + a], minimal=True, quick=True)) == 1
-    assert count(solve([x + y + z, y + z + a], minimal=True, quick=False)) == 2
+    assert count(solve([x + y + z, y + z + a], particular=True, quick=True)) == 1
+    assert count(solve([x + y + z, y + z + a], particular=True, quick=False)) == 2
 
 
 def test_real_roots():
@@ -1262,6 +1262,8 @@ def test_issues_3720_3721_3722_3149():
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
+    # github issue 2642
+    assert solve(x*(1 + I)) == [0]
     x, y = symbols('x y', imaginary=True)
     assert solve(x + y*I + 3 + 2*I) == {x: -2*I, y: 3*I}
     x = symbols('x', real=True)

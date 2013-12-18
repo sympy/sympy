@@ -20,6 +20,7 @@ from sympy.core.rules import Transform
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
     sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
+from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.integers import ceiling
 
 from sympy.utilities.iterables import flatten, has_variety, sift
@@ -883,7 +884,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
                         order=opt.order, polys=True)[1]
 
             S = Poly(r, gens=opt.gens).coeffs()
-            sol = solve(S, Cs + Ds, minimal=True, quick=True)
+            sol = solve(S, Cs + Ds, particular=True, quick=True)
 
             if sol and not all([s == 0 for s in sol.values()]):
                 c = c_hat.subs(sol)
@@ -930,7 +931,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
-            sol = solve(S, ng, minimal=True, quick=False)
+            sol = solve(S, ng, particular=True, quick=False)
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 
@@ -3657,8 +3658,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product
 
-    if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
+    if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
+
+    if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                         for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
@@ -3836,7 +3841,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         tolerance = 10**-min([15] +
              [mpmath.libmp.libmpf.prec_to_dps(n._prec)
              for n in expr.atoms(Float)])
-
+    # XXX should prec be set independent of tolerance or should it be computed
+    # from tolerance?
     prec = 30
     bprec = int(prec*3.33)
 
@@ -3873,6 +3879,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             if full:
                 newexpr = newexpr[0]
             expr = sympify(newexpr)
+            if x and not expr:  # don't let x become 0
+                raise ValueError
             if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
@@ -4073,9 +4081,9 @@ def besselsimp(expr):
     >>> from sympy import besselj, besseli, besselsimp, polar_lift, I, S
     >>> from sympy.abc import z, nu
     >>> besselsimp(besselj(nu, z*polar_lift(-1)))
-    exp(I*pi*nu)*besselj(nu, z)
+    besselj(nu, z)*exp(I*pi*nu)
     >>> besselsimp(besseli(nu, z*polar_lift(-I)))
-    exp(-I*pi*nu/2)*besselj(nu, z)
+    besselj(nu, z)*exp(-I*pi*nu/2)
     >>> besselsimp(besseli(S(-1)/2, z))
     sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     >>> besselsimp(z*besseli(0, z) + z*(besseli(2, z))/2 + besseli(1, z))

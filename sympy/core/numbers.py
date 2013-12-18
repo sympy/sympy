@@ -3,7 +3,6 @@ from __future__ import print_function, division
 import decimal
 import math
 import re as regex
-import sys
 from collections import defaultdict
 
 from .core import C
@@ -86,7 +85,7 @@ def _as_integer_ratio(p):
 
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
-    if not dec.is_finite(): # NOTE: this is_finite is not SymPy's
+    if not dec.is_finite():  # NOTE: this is_finite is not SymPy's
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)
@@ -110,36 +109,65 @@ _gcdcache = {}
 # TODO caching with decorator, but not to degrade performance
 
 
-def igcd(a, b):
-    """Computes positive, integer greatest common divisor of two numbers.
+def igcd(*args):
+    """Computes positive integer greatest common divisor.
 
-       The algorithm is based on the well known Euclid's algorithm. To
-       improve speed, igcd() has its own caching mechanism implemented.
+    The algorithm is based on the well known Euclid's algorithm. To
+    improve speed, igcd() has its own caching mechanism implemented.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import igcd
+    >>> igcd(2, 4)
+    2
+    >>> igcd(5, 10, 15)
+    5
+
     """
-    try:
-        return _gcdcache[(a, b)]
-    except KeyError:
-        a, b = as_int(a), as_int(b)
+    a = args[0]
+    for b in args[1:]:
+        try:
+            a = _gcdcache[(a, b)]
+        except KeyError:
+            a, b = as_int(a), as_int(b)
 
-        if a and b:
-            if b < 0:
-                b = -b
+            if a and b:
+                if b < 0:
+                    b = -b
 
-            while b:
-                a, b = b, a % b
-        else:
-            a = abs(a or b)
+                while b:
+                    a, b = b, a % b
+            else:
+                a = abs(a or b)
 
-        _gcdcache[(a, b)] = a
-        return a
+            _gcdcache[(a, b)] = a
+        if a == 1 or b == 1:
+            return 1
+    return a
 
 
-def ilcm(a, b):
-    """Computes integer least common multiple of two numbers. """
-    if a == 0 and b == 0:
+def ilcm(*args):
+    """Computes integer least common multiple.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import ilcm
+    >>> ilcm(5, 10)
+    10
+    >>> ilcm(7, 3)
+    21
+    >>> ilcm(5, 10, 15)
+    30
+
+    """
+    if 0 in args:
         return 0
-    else:
-        return a*b // igcd(a, b)
+    a = args[0]
+    for b in args[1:]:
+        a = a*b // igcd(a, b)
+    return a
 
 
 def igcdex(a, b):
@@ -1285,10 +1313,12 @@ class Rational(Number):
                 return False
             return other.__eq__(self)
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                # a Rational is always in reduced form so will never be 2/4
+                # so we can just check equivalence of args
+                return self.p == other.p and self.q == other.q
             if isinstance(other, Float):
                 return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
-            elif isinstance(other, Rational):
-                return self.p == other.p and self.q == other.q
         return False
 
     def __ne__(self, other):
@@ -1304,10 +1334,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                return bool(self.p*other.q > self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_gt(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q > self.q*other.p)
+            if other is S.NaN:
+                return other.__le__(self)
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1320,10 +1353,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                 return bool(self.p*other.q >= self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q >= self.q*other.p)
+            if other is S.NaN:
+                return other.__lt__(self)
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
@@ -1336,10 +1372,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                return bool(self.p*other.q < self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_lt(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q < self.q*other.p)
+            if other is S.NaN:
+                return other.__ge__(self)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1352,12 +1391,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
-            if other is S.NaN:
-                return None
+            if isinstance(other, Rational):
+                return bool(self.p*other.q <= self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q <= self.q*other.p)
+            if other is S.NaN:
+                return other.__gt__(self)
         return Expr.__le__(self, other)
 
     def __hash__(self):
@@ -1848,7 +1888,6 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     def __neg__():
         return S.Zero
 
-
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
@@ -1869,12 +1908,10 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         # Order(0,x) -> 0
         return self
 
-    if sys.version_info[0] >= 3:
-        def __bool__(self):
-            return False
-    else:
-        def __nonzero__(self):
-            return False
+    def __nonzero__(self):
+        return False
+
+    __bool__ = __nonzero__
 
 
 class One(with_metaclass(Singleton, IntegerConstant)):
@@ -1951,7 +1988,6 @@ class Half(with_metaclass(Singleton, RationalConstant)):
     @staticmethod
     def __abs__():
         return S.Half
-
 
 
 class Infinity(with_metaclass(Singleton, Number)):
@@ -2061,6 +2097,12 @@ class Infinity(with_metaclass(Singleton, Number)):
         ``oo ** nan``    ``nan``
         ``oo ** -p``     ``0``   ``p`` is number, ``oo``
         ================ ======= ==============================
+
+        See Also
+        ========
+        Pow
+        NaN
+        NegativeInfinity
 
         """
         if expt.is_positive:
@@ -2221,6 +2263,13 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         ``(-oo) ** o``   ``-oo`` ``o`` is positive odd integer
         ================ ======= ==============================
 
+        See Also
+        ========
+
+        Infinity
+        Pow
+        NaN
+
         """
         if isinstance(expt, Number):
             if expt is S.NaN or \
@@ -2273,11 +2322,11 @@ class NaN(with_metaclass(Singleton, Number)):
     is defined in the IEEE 754 floating point standard, and corresponds to the
     Python ``float('nan')``.
 
-    NaN serves as a place holder for numeric values that are indeterminate,
-    but not infinite.  Most operations on nan, produce another nan.  Most
-    indeterminate forms, such as ``0/0`` or ``oo - oo` produce nan.  Three
-    exceptions are ``0**0``, ``1**oo``, and ``oo**0``, which all produce ``1``
-    (this is consistent with Python's float).
+    NaN serves as a place holder for numeric values that are indeterminate.
+    Most operations on nan, produce another nan.  Most indeterminate forms,
+    such as ``0/0`` or ``oo - oo` produce nan.  Two exceptions are ``0**0``
+    and ``oo**0``, which all produce ``1`` (this is consistent with Python's
+    float).
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.

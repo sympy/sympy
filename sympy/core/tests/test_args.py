@@ -1153,6 +1153,9 @@ def test_sympy__functions__elementary__piecewise__Piecewise():
 def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
     pass
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__ReciprocalTrigonometricFunction():
+    pass
 
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
@@ -1747,6 +1750,17 @@ def test_sympy__logic__boolalg__BooleanFunction():
     from sympy.logic.boolalg import BooleanFunction
     assert _test_args(BooleanFunction(1, 2, 3))
 
+@SKIP("abstract class")
+def test_sympy__logic__boolalg__BooleanAtom():
+    pass
+
+def test_sympy__logic__boolalg__BooleanTrue():
+    from sympy.logic.boolalg import true
+    assert _test_args(true)
+
+def test_sympy__logic__boolalg__BooleanFalse():
+    from sympy.logic.boolalg import false
+    assert _test_args(false)
 
 def test_sympy__logic__boolalg__Equivalent():
     from sympy.logic.boolalg import Equivalent

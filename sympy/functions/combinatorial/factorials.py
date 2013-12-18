@@ -13,6 +13,13 @@ from sympy.core.cache import cacheit
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import combsimp
+        expr = combsimp(self)
+        if measure(expr) <= ratio*measure(self):
+            return expr
+        return self
+
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
@@ -129,6 +136,8 @@ class factorial(CombinatorialFunction):
         if n.is_Number:
             if n is S.Zero:
                 return S.One
+            elif n is S.Infinity:
+                return S.Infinity
             elif n.is_Integer:
                 if n.is_negative:
                     return S.Zero

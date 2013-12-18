@@ -1,18 +1,19 @@
 """
-There are three types of functions:
-1) defined function like exp or sin that has a name and body
-   (in the sense that function can be evaluated).
-    e = exp
-2) undefined function with a name but no body. Undefined
-   functions can be defined using a Function class as follows:
-       f = Function('f')
-   (the result will be a Function instance)
-3) anonymous function or lambda function that has no name but has a
-   body with dummy variables. Example of anonymous function creation:
-       f = Lambda(x, exp(x)*x)
-       f = Lambda((x, y), exp(x)*y)
-4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
-   works in sympy core, but needs to be ported back to SymPy.
+There are three types of functions implemented in SymPy:
+
+    1) defined functions (in the sense that they can be evaluated) like
+       exp or sin; they have a name and a body:
+           f = exp
+    2) undefined function which have a name but no body. Undefined
+       functions can be defined using a Function class as follows:
+           f = Function('f')
+       (the result will be a Function instance)
+    3) anonymous function (or lambda function) which have a body (defined
+       with dummy variables) but have no name:
+           f = Lambda(x, exp(x)*x)
+           f = Lambda((x, y), exp(x)*y)
+    The fourth type of functions are composites, like (sin + cos)(x); these work in
+    SymPy core, but are not yet part of SymPy.
 
     Examples
     ========
@@ -117,11 +118,11 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
 
         >>> f=Function('f')
         >>> f.nargs
-        ()
+        Naturals0()
         >>> f(1).nargs
-        ()
+        Naturals0()
         >>> f(1, 2).nargs
-        ()
+        Naturals0()
 
         If the function was initialized to accept a single argument, then a
         tuple will contain that number:
@@ -140,10 +141,11 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         (1, 2)
 
         """
+        from sympy.sets.fancysets import Naturals0
         if is_sequence(self._nargs):
             return tuple(ordered(set(self._nargs)))
         elif self._nargs is None:
-            return S.Naturals0
+            return Naturals0()
         else:
             return (as_int(self._nargs),)
 
@@ -1253,9 +1255,9 @@ class Derivative(Expr):
                     return Derivative(new, *variables)
         return Derivative(*map(lambda x: x._subs(old, new), self.args))
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, logx):
         dx = self.args[1:]
-        for term in self.args[0].lseries(x):
+        for term in self.args[0].lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
@@ -1417,9 +1419,9 @@ class Subs(Expr):
     An example with several variables:
 
     >>> Subs(f(x)*sin(y) + z, (x, y), (0, 1))
-    Subs(z + sin(y)*f(x), (x, y), (0, 1))
+    Subs(z + f(x)*sin(y), (x, y), (0, 1))
     >>> _.doit()
-    z + sin(1)*f(0)
+    z + f(0)*sin(1)
 
     """
     def __new__(cls, expr, variables, point, **assumptions):
@@ -1588,6 +1590,7 @@ def diff(f, *symbols, **kwargs):
     ========
 
     Derivative
+    sympy.geometry.util.idiff: computes the derivative implicitly
 
     """
     kwargs.setdefault('evaluate', True)

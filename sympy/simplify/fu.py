@@ -33,7 +33,7 @@ docstrings for examples.
     TR22 - tan-cot powers to negative powers of sec-csc functions
     TR111 - negative sin-cos-tan powers to csc-sec-cot
 
-There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
+There are 4 combination transforms (CTR1 - CTR4) in which a sequence of
 transformations are applied and the simplest expression is selected from
 a few options.
 
@@ -426,7 +426,7 @@ def TR3(rv):
         if not isinstance(rv, C.TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
-        if (S.Pi/4 < rv.args[0]) is (rv.args[0] < S.Pi/2) is True:
+        if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
             rv = fmap[rv.func](S.Pi/2 - rv.args[0])
         return rv

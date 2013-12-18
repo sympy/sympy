@@ -8,6 +8,7 @@ from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
+from sympy.logic.boolalg import true
 
 ## sympy.printing imports
 from .printer import Printer
@@ -222,6 +223,9 @@ class LatexPrinter(Printer):
     def _print_bool(self, e):
         return r"\mathrm{%s}" % e
 
+    _print_BooleanTrue = _print_bool
+    _print_BooleanFalse = _print_bool
+
     def _print_NoneType(self, e):
         return r"\mathrm{%s}" % e
 
@@ -306,7 +310,9 @@ class LatexPrinter(Printer):
                 return _tex
 
         if denom is S.One:
-            tex += convert(numer)
+            # use the original expression here, since fraction() may have
+            # altered it when producing numer and denom
+            tex += convert(expr)
         else:
             snumer = convert(numer)
             sdenom = convert(denom)
@@ -1093,14 +1099,18 @@ class LatexPrinter(Printer):
 
     def _print_Order(self, expr):
         s = self._print(expr.expr)
-        if expr.point != S.Zero or len(expr.variables) > 1:
+        if expr.point and any(p != S.Zero for p in expr.point) or \
+           len(expr.variables) > 1:
             s += '; '
             if len(expr.variables) > 1:
                 s += self._print(expr.variables)
             elif len(expr.variables):
                 s += self._print(expr.variables[0])
             s += r'\rightarrow'
-            s += self._print(expr.point)
+            if len(expr.point) > 1:
+                s += self._print(expr.point)
+            else:
+                s += self._print(expr.point[0])
         return r"\mathcal{O}\left(%s\right)" % s
 
     def _print_Symbol(self, expr):
@@ -1146,7 +1156,7 @@ class LatexPrinter(Printer):
     def _print_Piecewise(self, expr):
         ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
                    for e, c in expr.args[:-1]]
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond == true:
             ecpairs.append(r"%s & \text{otherwise}" %
                            self._print(expr.args[-1].expr))
         else:

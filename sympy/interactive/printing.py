@@ -2,9 +2,11 @@
 
 from __future__ import print_function, division
 
+from io import BytesIO
+
 from sympy import latex
 from sympy import preview
-from sympy.core.compatibility import cStringIO, integer_types, string_types
+from sympy.core.compatibility import integer_types, string_types
 from sympy.utilities.misc import debug
 
 def _init_python_printing(stringify_func):
@@ -62,9 +64,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             p.text(IPython.lib.pretty.pretty(arg))
 
     def _preview_wrapper(o):
-        exprbuffer = cStringIO()
+        exprbuffer = BytesIO()
         try:
-            preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
+            preview(o, output='png', viewer='BytesIO', outputbuffer=exprbuffer,
                 preamble=preamble, dvioptions=dvioptions)
         except Exception as e:
             # IPython swallows exceptions
@@ -72,6 +74,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
                 repr(e))
             raise
         return exprbuffer.getvalue()
+
+    def _matplotlib_wrapper(o):
+        # mathtext does not understand centain latex flags, so we try to
+        # replace them with suitable subs
+        o = o.replace(r'\operatorname', '')
+        o = o.replace(r'\overline', r'\bar')
+        return latex_to_png(o)
+
 
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
@@ -92,11 +102,18 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
 
     def _print_latex_png(o):
         """
-        A function that returns a png rendered by an external latex distribution
+        A function that returns a png rendered by an external latex
+        distribution, falling back to matplotlib rendering
         """
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode)
-            return _preview_wrapper(s)
+            try:
+                return _preview_wrapper(s)
+            except RuntimeError:
+                if latex_mode != 'inline':
+                    s = latex(o, mode='inline')
+                return _matplotlib_wrapper(s)
+
 
     def _print_latex_matplotlib(o):
         """
@@ -104,11 +121,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         """
         if _can_print_latex(o):
             s = latex(o, mode='inline')
-            # mathtext does not understand centain latex flags, so we try to
-            # replace them with suitable subs
-            s = s.replace(r'\operatorname', '')
-            s = s.replace(r'\overline', r'\bar')
-            return latex_to_png(s)
+            return _matplotlib_wrapper(s)
 
     def _print_latex_text(o):
         """
@@ -155,25 +168,31 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             debug("init_printing: using png formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)
-            png_formatter.enabled = True
         elif use_latex == 'matplotlib':
             debug("init_printing: using matplotlib formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_matplotlib)
-            png_formatter.enabled = True
         else:
             debug("init_printing: not using any png formatter")
-            png_formatter.enabled = False
+            for cls in printable_types:
+                # Better way to set this, but currently does not work in IPython
+                #png_formatter.for_type(cls, None)
+                if cls in png_formatter.type_printers:
+                    png_formatter.type_printers.pop(cls)
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         if use_latex in (True, 'mathjax'):
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
-            latex_formatter.enabled = True
         else:
-            debug("init_printing: not using mathjax formatter")
-            latex_formatter.enabled = False
+            debug("init_printing: not using text/latex formatter")
+            for cls in printable_types:
+                # Better way to set this, but currently does not work in IPython
+                #latex_formatter.for_type(cls, None)
+                if cls in latex_formatter.type_printers:
+                    latex_formatter.type_printers.pop(cls)
+
     else:
         ip.set_hook('result_display', _result_display)
 
@@ -203,11 +222,14 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         If True, use unicode characters;
         if False, do not use unicode characters.
     use_latex: string, boolean, or None
-        If True, use default latex rendering in GUI interfaces (png and mathjax);
+        If True, use default latex rendering in GUI interfaces (png and
+        mathjax);
         if False, do not use latex rendering;
-        if 'png', enable latex rendering with an external latex compiler;
+        if 'png', enable latex rendering with an external latex compiler,
+        falling back to matplotlib if external compilation fails;
         if 'matplotlib', enable latex rendering with matplotlib;
-        if 'mathjax', enable latex text generation for MathJax rendering (in IPython notebook).
+        if 'mathjax', enable latex text generation, for example MathJax
+        rendering in IPython notebook or text rendering in LaTeX documents
     wrap_line: boolean
         If True, lines will wrap at the end;
         if False, they will not wrap but continue as one line.
@@ -271,7 +293,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         except NameError:
             pass
 
-    if ip and pretty_print:
+    if ip and ip.__module__.startswith('IPython') and pretty_print:
         try:
             import IPython
             # IPython 1.0 deprecates the frontend module, so we import directly

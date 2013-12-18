@@ -6,7 +6,7 @@ from sympy.core.basic import Basic, C, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
@@ -568,13 +568,16 @@ class MatrixBase(object):
             A = self
             B = other
             if A.shape != B.shape:
-                raise ShapeError("Matrices size mismatch.")
+                raise ShapeError("Matrix size mismatch.")
             alst = A.tolist()
             blst = B.tolist()
             ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
                 ret[i] = list(map(lambda j, k: j + k, alst[i], blst[i]))
-            return classof(A, B)._new(ret)
+            rv = classof(A, B)._new(ret)
+            if not A.rows:
+                rv = rv.reshape(*A.shape)
+            return rv
         raise TypeError('cannot add matrix and %s' % type(other))
 
     def __radd__(self, other):
@@ -783,6 +786,7 @@ class MatrixBase(object):
         LDLsolve
         LUsolve
         QRsolve
+        pinv_solve
         """
 
         if not self.is_square:
@@ -805,6 +809,7 @@ class MatrixBase(object):
         LDLsolve
         LUsolve
         QRsolve
+        pinv_solve
         """
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
@@ -829,6 +834,7 @@ class MatrixBase(object):
         LDLsolve
         LUsolve
         QRsolve
+        pinv_solve
         """
         if self.is_symmetric():
             L = self._cholesky()
@@ -862,6 +868,7 @@ class MatrixBase(object):
         LDLsolve
         LUsolve
         QRsolve
+        pinv_solve
         """
         if not self.is_diagonal:
             raise TypeError("Matrix should be diagonal")
@@ -895,6 +902,7 @@ class MatrixBase(object):
         diagonal_solve
         LUsolve
         QRsolve
+        pinv_solve
         """
         if self.is_symmetric():
             L, D = self.LDLdecomposition()
@@ -989,45 +997,6 @@ class MatrixBase(object):
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def submatrix(self, keys):
-        """
-        Get a slice/submatrix of the matrix using the given slice.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(4, 4, lambda i, j: i+j)
-        >>> m
-        Matrix([
-        [0, 1, 2, 3],
-        [1, 2, 3, 4],
-        [2, 3, 4, 5],
-        [3, 4, 5, 6]])
-        >>> m[:1, 1]
-        Matrix([[1]])
-        >>> m[:2, :1]
-        Matrix([
-        [0],
-        [1]])
-        >>> m[2:4, 2:4]
-        Matrix([
-        [4, 5],
-        [5, 6]])
-
-        See Also
-        ========
-
-        extract
-        """
-        rlo, rhi, clo, chi = self.key2bounds(keys)
-        rows, cols = rhi - rlo, chi - clo
-        mat = [S.Zero]*rows*cols
-        for i in range(rows):
-            mat[i*cols:(i + 1)*cols] = \
-                self._mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
-        return self._new(rows, cols, mat)
-
     def extract(self, rowsList, colsList):
         """Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
@@ -1065,10 +1034,6 @@ class MatrixBase(object):
         [2],
         [8]])
 
-        See Also
-        ========
-
-        submatrix
         """
         cols = self.cols
         flat_list = self._mat
@@ -1262,6 +1227,7 @@ class MatrixBase(object):
         diagonal_solve
         LDLsolve
         QRsolve
+        pinv_solve
         LUdecomposition
         """
         if rhs.rows != self.rows:
@@ -1638,6 +1604,7 @@ class MatrixBase(object):
         diagonal_solve
         LDLsolve
         LUsolve
+        pinv_solve
         QRdecomposition
         """
 
@@ -1995,16 +1962,19 @@ class MatrixBase(object):
 
         A matrix is zero if every element is zero.  A matrix need not be square
         to be considered zero.  The empty matrix is zero by the principle of
-        vacuous truth.
+        vacuous truth.  For a matrix that may or may not be zero (e.g.
+        contains a symbol), this will be None
 
         Examples
         ========
 
         >>> from sympy import Matrix, zeros
+        >>> from sympy.abc import x
         >>> a = Matrix([[0, 0], [0, 0]])
         >>> b = zeros(3, 4)
         >>> c = Matrix([[0, 1], [0, 0]])
         >>> d = Matrix([])
+        >>> e = Matrix([[x, 0], [0, 0]])
         >>> a.is_zero
         True
         >>> b.is_zero
@@ -2013,8 +1983,13 @@ class MatrixBase(object):
         False
         >>> d.is_zero
         True
+        >>> e.is_zero
         """
-        return not list(self.values())
+        if any(i.is_zero == False for i in self):
+            return False
+        if any(i.is_zero == None for i in self):
+            return None
+        return True
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
@@ -3975,6 +3950,135 @@ class MatrixBase(object):
 
         return M.applyfunc(lambda x: x.replace(F, G, map))
 
+    def pinv(self):
+        """Calculate the Moore-Penrose pseudoinverse of the matrix.
+
+        The Moore-Penrose pseudoinverse exists and is unique for any matrix.
+        If the matrix is invertible, the pseudoinverse is the same as the
+        inverse.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
+        Matrix([
+        [-17/18,  4/9],
+        [  -1/9,  1/9],
+        [ 13/18, -2/9]])
+
+        See Also
+        ========
+
+        inv
+        pinv_solve
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
+
+        """
+        A = self
+        AH = self.H
+        # Trivial case: pseudoinverse of all-zero matrix is its transpose.
+        if A.is_zero:
+            return AH
+        try:
+            if self.rows >= self.cols:
+                return (AH * A).inv() * AH
+            else:
+                return AH * (A * AH).inv()
+        except ValueError:
+            # Matrix is not full rank, so A*AH cannot be inverted.
+            raise NotImplementedError('Rank-deficient matrices are not yet '
+                                      'supported.')
+
+    def pinv_solve(self, B, arbitrary_matrix=None):
+        """Solve Ax = B using the Moore-Penrose pseudoinverse.
+
+        There may be zero, one, or infinite solutions.  If one solution
+        exists, it will be returned.  If infinite solutions exist, one will
+        be returned based on the value of arbitrary_matrix.  If no solutions
+        exist, the least-squares solution is returned.
+
+        Parameters
+        ==========
+
+        B : Matrix
+            The right hand side of the equation to be solved for.  Must have
+            the same number of rows as matrix A.
+        arbitrary_matrix : Matrix
+            If the system is underdetermined (e.g. A has more columns than
+            rows), infinite solutions are possible, in terms of an arbitrary
+            matrix.  This parameter may be set to a specific matrix to use
+            for that purpose; if so, it must be the same shape as x, with as
+            many rows as matrix A has columns, and as many columns as matrix
+            B.  If left as None, an appropriate matrix containing dummy
+            symbols in the form of ``wn_m`` will be used, with n and m being
+            row and column position of each symbol.
+
+        Returns
+        =======
+
+        x : Matrix
+            The matrix that will satisfy Ax = B.  Will have as many rows as
+            matrix A has columns, and as many columns as matrix B.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> B = Matrix([7, 8])
+        >>> A.pinv_solve(B)
+        Matrix([
+        [ _w0_0/6 - _w1_0/3 + _w2_0/6 - 55/18],
+        [-_w0_0/3 + 2*_w1_0/3 - _w2_0/3 + 1/9],
+        [ _w0_0/6 - _w1_0/3 + _w2_0/6 + 59/18]])
+        >>> A.pinv_solve(B, arbitrary_matrix=Matrix([0, 0, 0]))
+        Matrix([
+        [-55/18],
+        [   1/9],
+        [ 59/18]])
+
+        See Also
+        ========
+
+        lower_triangular_solve
+        upper_triangular_solve
+        cholesky_solve
+        diagonal_solve
+        LDLsolve
+        LUsolve
+        QRsolve
+        pinv
+
+        Notes
+        =====
+
+        This may return either exact solutions or least squares solutions.
+        To determine which, check ``A * A.pinv() * B == B``.  It will be
+        True if exact solutions exist, and False if only a least-squares
+        solution exists.  Be aware that the left hand side of that equation
+        may need to be simplified to correctly compare to the right hand
+        side.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse#Obtaining_all_solutions_of_a_linear_system
+
+        """
+        from sympy.matrices import eye
+        A = self
+        A_pinv = self.pinv()
+        if arbitrary_matrix is None:
+            rows, cols = A.cols, B.cols
+            w = symbols('w:{0}_:{1}'.format(rows, cols), cls=Dummy)
+            arbitrary_matrix = self.__class__(cols, rows, w).T
+        return A_pinv * B + (eye(A.cols) - A_pinv*A) * arbitrary_matrix
+
 def classof(A, B):
     """
     Get the type of the result when combining matrices of different types.
@@ -4011,8 +4115,6 @@ def classof(A, B):
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
-    if isinstance(j, slice):
-        return j
     if type(j) is not int:
         try:
             j = j.__index__()

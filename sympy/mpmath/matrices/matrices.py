@@ -405,9 +405,9 @@ class _matrix(object):
     def __get_element(self, key):
         '''
         Fast extraction of the i,j element from the matrix
-            This function is for private use only because is unsafe:
-                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
-                2. Does not check bounds
+            This function is for private use only because it is unsafe:
+                1. it assumes that ``key`` is an integer tuple (i,j)
+                2. it does not check bounds
         '''
         if key in self.__data:
             return self.__data[key]
@@ -418,9 +418,9 @@ class _matrix(object):
         '''
         Fast assignment of the i,j element in the matrix
             This function is unsafe:
-                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
-                2. Does not check bounds
-                3. Does not check the value type
+                1. it assumes that ``key`` is an integer tuple (i,j)
+                2. it does not check bounds
+                3. it does not check the value type
         '''
         if value: # only store non-zeros
             self.__data[key] = value

@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial)
+    MatrixSymbol, subfactorial, true, false, Equivalent, Xor)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -227,11 +227,11 @@ def test_Order():
     assert str(O(x**2)) == "O(x**2)"
     assert str(O(x*y)) == "O(x*y, x, y)"
     assert str(O(x, x)) == "O(x)"
-    assert str(O(x, x, 0)) == "O(x)"
-    assert str(O(x, x, oo)) == "O(x, x, oo)"
+    assert str(O(x, (x, 0))) == "O(x)"
+    assert str(O(x, (x, oo))) == "O(x, (x, oo))"
     assert str(O(x, x, y)) == "O(x, x, y)"
-    assert str(O(x, x, y, 0)) == "O(x, x, y)"
-    assert str(O(x, x, y, oo)) == "O(x, x, y, oo)"
+    assert str(O(x, x, y)) == "O(x, x, y)"
+    assert str(O(x, (x, oo), (y, oo))) == "O(x, (x, oo), (y, oo))"
 
 
 def test_Permutation_Cycle():
@@ -692,3 +692,13 @@ def test_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
     assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
+
+def test_true_false():
+    assert str(true) == repr(true) == sstr(true) == "True"
+    assert str(false) == repr(false) == sstr(false) == "False"
+
+def test_Equivalent():
+    assert str(Equivalent(y, x)) == "Equivalent(x, y)"
+
+def test_Xor():
+    assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"

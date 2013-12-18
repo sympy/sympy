@@ -114,8 +114,14 @@ class TheanoPrinter(Printer):
             return value
 
     def _print_DenseMatrix(self, X, **kwargs):
-        return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
-                                     for L in X.tolist()])
+        try:
+            tt.stacklists
+        except AttributeError:
+            raise NotImplementedError(
+               "Matrix translation not yet supported in this version of Theano")
+        else:
+            return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
+                                         for L in X.tolist()])
     _print_ImmutableMatrix = _print_DenseMatrix
 
     def _print_MatMul(self, expr, **kwargs):

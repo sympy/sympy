@@ -1370,7 +1370,7 @@ class ReduceOrder(Operator):
         b = sympify(b)
         a = sympify(a)
         n = b - a
-        if (n < 0) is True or not n.is_Integer:
+        if n.is_negative or not n.is_Integer:
             return None
 
         self = Operator.__new__(cls)

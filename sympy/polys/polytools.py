@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-import sys
-
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
@@ -14,6 +12,8 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
+
+from sympy.logic.boolalg import BooleanAtom
 
 from sympy.polys.polyclasses import DMP
 
@@ -1687,6 +1687,8 @@ class Poly(Expr):
         """
         Returns degree of ``f`` in ``x_j``.
 
+        The degree of 0 is negative infinity.
+
         Examples
         ========
 
@@ -1697,6 +1699,8 @@ class Poly(Expr):
         2
         >>> Poly(x**2 + y*x + y, x, y).degree(y)
         1
+        >>> Poly(0, x).degree()
+        -oo
 
         """
         j = f._gen_to_level(gen)
@@ -3785,12 +3789,10 @@ class Poly(Expr):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    if sys.version_info[0] >= 3:
-        def __bool__(f):
-            return not f.is_zero
-    else:
-        def __nonzero__(f):
-            return not f.is_zero
+    def __nonzero__(f):
+        return not f.is_zero
+
+    __bool__ = __nonzero__
 
     def eq(f, g, strict=False):
         if not strict:
@@ -4061,6 +4063,8 @@ def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
 
+    The degree of 0 is negative infinity.
+
     Examples
     ========
 
@@ -4071,6 +4075,8 @@ def degree(f, *gens, **args):
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
+    >>> degree(0, x)
+    -oo
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
@@ -4080,7 +4086,7 @@ def degree(f, *gens, **args):
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    return Integer(F.degree(opt.gen))
+    return sympify(F.degree(opt.gen))
 
 
 @public
@@ -6066,7 +6072,8 @@ def cancel(f, *gens, **args):
             pot = preorder_traversal(f)
             next(pot)
             for e in pot:
-                if isinstance(e, (tuple, Tuple)):
+                # XXX: This should really skip anything that's not Expr.
+                if isinstance(e, (tuple, Tuple, BooleanAtom)):
                     continue
                 try:
                     reps.append((e, cancel(e)))

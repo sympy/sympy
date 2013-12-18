@@ -13,7 +13,7 @@ import os
 import sys
 
 from fabric.api import local, env
-from fabric.colors import yellow, blue, green
+from fabric.colors import yellow, blue, green, red
 from fabric.utils import error
 
 mailmap_update_path = os.path.abspath(__file__)
@@ -101,4 +101,6 @@ appear to be up to date. You should now verify that doc/src/aboutus has %s
 people.""" % authors_count)))
 
 if exit1:
+    print()
+    print(red("There were errors. Please fix them."))
     sys.exit(1)

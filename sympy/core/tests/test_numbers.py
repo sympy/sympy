@@ -189,6 +189,7 @@ def test_igcd():
     assert igcd(7, -3) == 1
     assert igcd(-7, 3) == 1
     assert igcd(-7, -3) == 1
+    assert igcd(*[10, 20, 30]) == 10
     raises(ValueError, lambda: igcd(45.1, 30))
     raises(ValueError, lambda: igcd(45, 30.1))
 
@@ -202,6 +203,7 @@ def test_ilcm():
     assert ilcm(8, 2) == 8
     assert ilcm(8, 6) == 24
     assert ilcm(8, 7) == 56
+    assert ilcm(*[10, 20, 30]) == 60
     raises(ValueError, lambda: ilcm(8.1, 7))
     raises(ValueError, lambda: ilcm(8, 7.1))
 
@@ -332,6 +334,11 @@ def test_Rational_cmp():
     assert not n3 < n1
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
+
+    assert (n1 < S.NaN) is False
+    assert (n1 <= S.NaN) is False
+    assert (n1 > S.NaN) is False
+    assert (n1 <= S.NaN) is False
 
 
 def test_Float():
@@ -710,7 +717,7 @@ def test_NaN():
     assert nan + S.One == nan
     assert nan/S.One == nan
     assert nan**0 == 1  # as per IEEE 754
-    assert 1**nan == 1  # as per IEEE 754
+    assert 1**nan == nan # IEEE 754 is not the best choice for symbolic work
 
 
 def test_special_numbers():
@@ -778,14 +785,14 @@ def test_integer_nthroot_overflow():
 def test_powers_Integer():
     """Test Integer._eval_power"""
     # check infinity
-    assert S(1) ** S.Infinity == 1
+    assert S(1) ** S.Infinity == S.NaN
     assert S(-1)** S.Infinity == S.NaN
     assert S(2) ** S.Infinity == S.Infinity
     assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
     assert S(0) ** S.Infinity == 0
 
     # check Nan
-    assert S(1) ** S.NaN == S.One
+    assert S(1) ** S.NaN == S.NaN
     assert S(-1) ** S.NaN == S.NaN
 
     # check for exact roots

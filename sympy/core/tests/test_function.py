@@ -107,12 +107,14 @@ def test_Function():
 
 def test_nargs():
     f = Function('f')
-    assert f.nargs == tuple()
-    assert f(2).nargs == tuple()
+    assert f.nargs == S.Naturals0
+    assert f(2).nargs == S.Naturals0
     assert sin.nargs == (1,)
     assert sin(2).nargs == (1,)
     assert log.nargs == (1, 2)
     assert log(2).nargs == (1, 2)
+    assert Function('f', nargs=2).nargs == (2,)
+    assert Function('f', nargs=0).nargs == (0,)
 
 
 def test_Lambda():
