@@ -54,3 +54,7 @@ __all__.extend(tensorproduct.__all__)
 from . import constants
 from .constants import *
 __all__.extend(constants.__all__)
+
+from . import fieldoperator
+from .fieldoperator import *
+__all__.extend(fieldoperator.__all__)
