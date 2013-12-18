@@ -265,15 +265,7 @@ def test_solve_nonlinear():
 
 
 def test_issue_4129():
-    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-3/2, 1/2]
-    assert solve(9**(2*(x**2) - 2*x) - 27, x) == [-1/2, 3/2]
-
-    f = 4**(x**3 - 5) - 32
-    sols = solve(f, x)
-    for sol in sols:
-        assert f.subs(x, sol).simplify() == 0
-
-    assert solve(4**(2*(x**2) - 4*x + 4) - 32, x) == [1/2, 3/2]
+    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-Rational(3, 2), S.Half]
 
 
 def test_linear_system():
