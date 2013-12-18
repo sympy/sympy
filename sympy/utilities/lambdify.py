@@ -15,7 +15,7 @@ MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
-
+SCIPY = {}
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 # These are separate from the names above because the above names are modified
@@ -24,6 +24,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
+SCIPY_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -83,6 +84,13 @@ NUMPY_TRANSLATIONS = {
     "re": "real",
 }
 
+SCIPY_TRANSLATIONS = {
+    "elliptic_k":"ellipk",
+    "elliptic_f":"ellipeinc",
+    
+
+}
+
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
@@ -92,6 +100,7 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+     "scipy":(SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("from scipy.special import *"))   
 }
 
 
