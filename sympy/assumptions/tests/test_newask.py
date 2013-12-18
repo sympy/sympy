@@ -83,6 +83,9 @@ def test_prime():
     assert newask(Q.prime(6)) is False
     assert newask(Q.prime(-5)) is False
 
+    assert newask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert newask(Q.prime(x*y), Q.prime(x) & Q.prime(y)) is False
+
 def test_old_assump():
     assert newask(Q.positive(1)) is True
     assert newask(Q.positive(-1)) is False

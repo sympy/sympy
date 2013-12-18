@@ -2,8 +2,7 @@ from __future__ import print_function, division
 
 from collections import MutableMapping, defaultdict
 
-from sympy.core import (Add, Mul, Pow, Integer, Lambda, Dummy, Number,
-    NumberSymbol,)
+from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.sympify import _sympify
 from sympy.core.rules import Transform
@@ -12,8 +11,8 @@ from sympy.matrices.expressions import MatMul
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
-from sympy.logic.boolalg import (Equivalent, Implies, And, Or, BooleanFunction,
-    _find_predicates, Not)
+from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
+    BooleanFunction, Not)
 
 # APIs here may be subject to change
 
@@ -278,6 +277,12 @@ for klass, fact in [
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
     (Integer, CheckIsPrime(Q.prime)),
+    # Implicitly assumes Mul has more than one arg
+    # Would be AllArgs(Q.prime | Q.composite) except 1 is composite
+    (Mul, Implies(AllArgs(Q.prime), ~Q.prime)),
+    # More advanced prime assumptions will require inequalities, as 1 provides
+    # a corner case.
+
     (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
         Q.irrational))),
     (Add, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
