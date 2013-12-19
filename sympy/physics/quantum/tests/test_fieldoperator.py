@@ -11,8 +11,8 @@ def test_bosonoperator():
     assert isinstance(a, BosonOperator)
     assert isinstance(Dagger(a), BosonOperator)
 
-    assert a.annihilation
-    assert not Dagger(a).annihilation
+    assert a.is_annihilation
+    assert not Dagger(a).is_annihilation
 
     assert BosonOperator("a") == BosonOperator("a")
     assert BosonOperator("a") != BosonOperator("c")
@@ -30,8 +30,8 @@ def test_fermionoperator():
     assert isinstance(c, FermionOperator)
     assert isinstance(Dagger(c), FermionOperator)
 
-    assert c.annihilation
-    assert not Dagger(c).annihilation
+    assert c.is_annihilation
+    assert not Dagger(c).is_annihilation
 
     assert FermionOperator("c") == FermionOperator("c")
     assert FermionOperator("c") != FermionOperator("d")

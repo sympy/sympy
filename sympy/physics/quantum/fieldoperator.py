@@ -42,7 +42,7 @@ class BosonOperator(Operator):
         return self.args[0]
 
     @property
-    def annihilation(self):
+    def is_annihilation(self):
         return bool(self.args[1])
 
     @classmethod
@@ -66,26 +66,26 @@ class BosonOperator(Operator):
         if isinstance(other, BosonOperator):
             if self.name == other.name:
                 # [a, a^\dagger] = 1
-                if self.annihilation and not other.annihilation:
+                if self.is_annihilation and not other.is_annihilation:
                     return Integer(1)
 
                 # [a^\dagger, a] = -1
-                if not self.annihilation and other.annihilation:
+                if not self.is_annihilation and other.is_annihilation:
                     return Integer(-1)
 
         return None
 
     def _eval_adjoint(self):
-        return BosonOperator(str(self.name), not self.annihilation)
+        return BosonOperator(str(self.name), not self.is_annihilation)
 
     def _print_contents_latex(self, printer, *args):
-        if self.annihilation:
+        if self.is_annihilation:
             return r'{%s}' % str(self.name)
         else:
             return r'{{%s}^\dag}' % str(self.name)
 
     def _print_contents(self, printer, *args):
-        if self.annihilation:
+        if self.is_annihilation:
             return r'%s' % str(self.name)
         else:
             return r'Dagger(%s)' % str(self.name)
@@ -118,7 +118,7 @@ class FermionOperator(Operator):
         return self.args[0]
 
     @property
-    def annihilation(self):
+    def is_annihilation(self):
         return bool(self.args[1])
 
     @classmethod
@@ -142,26 +142,26 @@ class FermionOperator(Operator):
         if isinstance(other, FermionOperator):
             if self.name == other.name:
                 # {a, a^\dagger} = 1
-                if self.annihilation and not other.annihilation:
+                if self.is_annihilation and not other.is_annihilation:
                     return Integer(1)
 
                 # {a^\dagger, a} = 1
-                if not self.annihilation and other.annihilation:
+                if not self.is_annihilation and other.is_annihilation:
                     return Integer(1)
 
         return None
 
     def _eval_adjoint(self):
-        return FermionOperator(str(self.name), not self.annihilation)
+        return FermionOperator(str(self.name), not self.is_annihilation)
 
     def _print_contents_latex(self, printer, *args):
-        if self.annihilation:
+        if self.is_annihilation:
             return r'{%s}' % str(self.name)
         else:
             return r'{{%s}^\dag}' % str(self.name)
 
     def _print_contents(self, printer, *args):
-        if self.annihilation:
+        if self.is_annihilation:
             return r'%s' % str(self.name)
         else:
             return r'Dagger(%s)' % str(self.name)
@@ -190,12 +190,12 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     n = 0
     while n < len(factors) - 1:
 
-        if isinstance(factors[n], BosonOperator) and factors[n].annihilation:
+        if isinstance(factors[n], BosonOperator) and factors[n].is_annihilation:
             # boson
             if not isinstance(factors[n + 1], BosonOperator):
                 new_factors.append(factors[n])
             else:
-                if factors[n + 1].annihilation:
+                if factors[n + 1].is_annihilation:
                     new_factors.append(factors[n])
                 else:
                     if factors[n].args[0] != factors[n + 1].args[0]:
@@ -212,12 +212,12 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                     m += 1
 
         elif (isinstance(factors[n], FermionOperator) and
-              factors[n].annihilation):
+              factors[n].is_annihilation):
             # fermion
             if not isinstance(factors[n + 1], FermionOperator):
                 new_factors.append(factors[n])
             else:
-                if factors[n + 1].annihilation:
+                if factors[n + 1].is_annihilation:
                     new_factors.append(factors[n])
                 else:
                     if factors[n].args[0] != factors[n + 1].args[0]:
@@ -317,12 +317,12 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
     new_factors = []
     while n < len(factors) - 1:
 
-        if isinstance(factors[n], BosonOperator) and factors[n].annihilation:
+        if isinstance(factors[n], BosonOperator) and factors[n].is_annihilation:
             # boson
             if not isinstance(factors[n + 1], BosonOperator):
                 new_factors.append(factors[n])
             else:
-                if factors[n + 1].annihilation:
+                if factors[n + 1].is_annihilation:
                     new_factors.append(factors[n])
                 else:
                     if factors[n].args[0] != factors[n + 1].args[0]:
@@ -333,12 +333,12 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
                     m += 1
 
         elif (isinstance(factors[n], FermionOperator) and
-              factors[n].annihilation):
+              factors[n].is_annihilation):
             # fermion
             if not isinstance(factors[n + 1], FermionOperator):
                 new_factors.append(factors[n])
             else:
-                if factors[n + 1].annihilation:
+                if factors[n + 1].is_annihilation:
                     new_factors.append(factors[n])
                 else:
                     if factors[n].args[0] != factors[n + 1].args[0]:
