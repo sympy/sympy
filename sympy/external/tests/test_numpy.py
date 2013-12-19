@@ -23,8 +23,8 @@ def setup_module(module):
         import pytest
         pytest.skip("numpy isn't available.")
 
-from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
-        symarray, symbols, Integer)
+from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
+        Matrix, lambdify, symarray, symbols, Integer)
 import sympy
 
 from sympy import mpmath
@@ -197,6 +197,28 @@ def test_Matrix_array():
             return array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     matarr = matarray()
     assert Matrix(matarr) == Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+
+def test_matrix2numpy():
+    a = matrix2numpy(Matrix([[1, x**2], [3*sin(x), 0]]))
+    assert isinstance(a, ndarray)
+    assert a.shape == (2, 2)
+    assert a[0, 0] == 1
+    assert a[0, 1] == x**2
+    assert a[1, 0] == 3*sin(x)
+    assert a[1, 1] == 0
+
+
+def test_matrix2numpy_conversion():
+    a = Matrix([[1, 2, sin(x)], [x**2, x, Rational(1, 2)]])
+    b = array([[1, 2, sin(x)], [x**2, x, Rational(1, 2)]])
+    assert (matrix2numpy(a) == b).all()
+    assert matrix2numpy(a).dtype == numpy.dtype('object')
+
+    c = matrix2numpy(Matrix([[1, 2], [10, 20]]), dtype='int8')
+    d = matrix2numpy(Matrix([[1, 2], [10, 20]]), dtype='float64')
+    assert c.dtype == numpy.dtype('int8')
+    assert d.dtype == numpy.dtype('float64')
 
 
 def test_issue629():
