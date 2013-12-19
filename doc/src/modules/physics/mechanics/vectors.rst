@@ -11,7 +11,7 @@ Vector
 ======
 
 A vector is a geometric object that has a magnitude (or length) and a
-direction.  Vectors in 3-space are often represented on paper as:
+direction. Vectors in 3-space are often represented on paper as:
 
 .. image:: vec_rep.*
    :height: 175
@@ -587,12 +587,24 @@ warnings. ::
   - N.y + N.z
 
 Two additional operations can be done with vectors: normalizing the vector to
-length 1, and getting its magnitude. These are done as follows:
+length 1, and getting its magnitude. These are done as follows::
 
   >>> (N.x + N.y).normalize()
   sqrt(2)/2*N.x + sqrt(2)/2*N.y
   >>> (N.x + N.y).magnitude()
   sqrt(2)
+
+Vectors are often expressed in a matrix form, especially for numerical
+purposes. Since the matrix form does not contain any information about the
+reference frame the vector is defined in, you must provide a reference frame to
+extract the measure numbers from the vector. There is a convenience function to
+do this::
+
+  >>> (x * N.x + 2 * x * N.y + 3 * x * N.z).to_matrix(N)
+  Matrix([
+    [  x],
+    [2*x],
+    [3*x]])
 
 Vector Calculus, in Mechanics
 -----------------------------
