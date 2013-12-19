@@ -95,7 +95,7 @@ SCIPY_TRANSLATIONS = {
     #"yn":"sph_yn"
     "gamma":"gamma",
     "loggamma":"gammaln",
-    "polygamma":"polygamma" 
+    "polygamma":"polygamma", 
 }
 
 # Available modules:
