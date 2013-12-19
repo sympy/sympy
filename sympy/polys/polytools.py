@@ -5009,8 +5009,10 @@ def terms_gcd(f, *gens, **args):
         coeff = S.One
 
     term = Mul(*[x**j for x, j in zip(f.gens, J)])
-    if term*coeff == 1:
-        return orig
+    if coeff == 1:
+        coeff = S.One
+        if term == 1:
+            return orig
 
     if clear:
         return _keep_coeff(coeff, term*f.as_expr())

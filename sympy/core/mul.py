@@ -1569,7 +1569,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
             factors, coeff = coeff, factors
         else:
             return coeff*factors
-    if coeff == 1:
+    if coeff is S.One:
         return factors
     elif coeff is S.NegativeOne and not sign:
         return -factors
