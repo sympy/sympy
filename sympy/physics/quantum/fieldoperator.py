@@ -24,7 +24,7 @@ class BosonOperator(Operator):
     name : str
         A string that labels the bosonic mode.
 
-    annihilhation : bool
+    annihilation : bool
         A bool that indicates if the bosonic operator is an annihilation (True,
         default value) or creation operator (False)
 
@@ -100,7 +100,7 @@ class FermionOperator(Operator):
     name : str
         A string that labels the fermionic mode.
 
-    annihilhation : bool
+    annihilation : bool
         A bool that indicates if the fermionic operator is an annihilation
         (True, default value) or creation operator (False)
 
