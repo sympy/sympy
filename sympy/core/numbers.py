@@ -1870,6 +1870,23 @@ class IntegerConstant(Integer):
 
 
 class Zero(with_metaclass(Singleton, IntegerConstant)):
+    """The number zero.
+
+    Zero is a singleton, and can be accessed by ``S.Zero``
+
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(0) is S.Zero
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Zero
+    """
+
     p = 0
     q = 1
     is_positive = False
@@ -1915,6 +1932,23 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
 
 
 class One(with_metaclass(Singleton, IntegerConstant)):
+    """The number one.
+
+    One is a singleton, and can be accessed by ``S.One``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(1) is S.One
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/1_%28number%29
+    """
+
     p = 1
     q = 1
 
@@ -1943,6 +1977,29 @@ class One(with_metaclass(Singleton, IntegerConstant)):
 
 
 class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
+    """The number negative one.
+
+    NegativeOne is a singleton, and can be accessed by ``S.NegativeOne``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(-1) is S.NegativeOne
+    True
+
+    See Also
+    ========
+
+    One
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
+
+    """
+
     p = -1
     q = 1
 
@@ -1980,6 +2037,23 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
 
 
 class Half(with_metaclass(Singleton, RationalConstant)):
+    """The rational number 1/2.
+
+    Half is a singleton, and can be accessed by ``S.Half``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Rational
+    >>> Rational(1, 2) is S.Half
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/One_half
+    """
+
     p = 1
     q = 2
 
@@ -1991,6 +2065,43 @@ class Half(with_metaclass(Singleton, RationalConstant)):
 
 
 class Infinity(with_metaclass(Singleton, Number)):
+    r"""Positive infinite quantity.
+
+    In real analysis the symbol `\infty` denotes an unbounded
+    limit: `x\to\infty` means that `x` grows without bound.
+
+    Infinity is often used not only to define a limit but as a value
+    in the affinely extended real number system.  Points labeled `+\infty`
+    and `-\infty` can be added to the topological space of the real numbers,
+    producing the two-point compactification of the real numbers.  Adding
+    algebraic properties to this gives us the extended real numbers.
+
+    Infinity is a singleton, and can be accessed by ``S.Infinity``,
+    or can be imported as ``oo``.
+
+    Examples
+    ========
+
+    >>> from sympy import oo, exp, limit, Symbol
+    >>> 1 + oo
+    oo
+    >>> 42/oo
+    0
+    >>> x = Symbol('x')
+    >>> limit(exp(x), x, oo)
+    oo
+
+    See Also
+    ========
+
+    NegativeInfinity, NaN
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Infinity
+    """
+
     is_commutative = True
     is_positive = True
     is_bounded = False
@@ -2152,6 +2263,17 @@ oo = S.Infinity
 
 
 class NegativeInfinity(with_metaclass(Singleton, Number)):
+    """Negative infinite quantity.
+
+    NegativeInfinity is a singleton, and can be accessed
+    by ``S.NegativeInfinity``.
+
+    See Also
+    ========
+
+    Infinity
+    """
+
     is_commutative = True
     is_real = True
     is_positive = False
@@ -2345,7 +2467,7 @@ class NaN(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/NaN
+    .. [1] http://en.wikipedia.org/wiki/NaN
 
     """
     is_commutative = True
@@ -2418,6 +2540,34 @@ nan = S.NaN
 
 
 class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
+    r"""Complex infinity.
+
+    In complex analysis the symbol `\tilde\infty`, called "complex
+    infinity", represents a quantity with infinite magnitude, but
+    undetermined complex phase.
+
+    ComplexInfinity is a singleton, and can be accessed by
+    ``S.ComplexInfinity``, or can be imported as ``zoo``.
+
+    Examples
+    ========
+
+    >>> from sympy import zoo, oo
+    >>> zoo + 42
+    zoo
+    >>> 42/zoo
+    0
+    >>> zoo + zoo
+    nan
+    >>> zoo*zoo
+    zoo
+
+    See Also
+    ========
+
+    Infinity
+    """
+
     is_commutative = True
     is_bounded = False
     is_real = None
@@ -2545,6 +2695,30 @@ class NumberSymbol(AtomicExpr):
 
 
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
+    r"""The `e` constant.
+
+    The transcendental number `e = 2.718281828\dots` is the base of the
+    natural logarithm and of the exponential function, `e = \exp(1)`.
+    Sometimes called Euler's number or Napier's constant.
+
+    Exp1 is a singleton, and can be accessed by ``S.Exp1``,
+    or can be imported as ``E``.
+
+    Examples
+    ========
+
+    >>> from sympy import exp, log, E
+    >>> E is exp(1)
+    True
+    >>> log(E)
+    1
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+    """
+
     is_real = True
     is_positive = True
     is_negative = False  # XXX Forces is_negative/is_nonnegative
@@ -2589,6 +2763,38 @@ E = S.Exp1
 
 
 class Pi(with_metaclass(Singleton, NumberSymbol)):
+    r"""The `\pi` constant.
+
+    The transcendental number `\pi = 3.141592654\dots` represents the ratio
+    of a circle's circumference to its diameter, the area of the unit circle,
+    the half-period of trigonometric functions, and many other things
+    in mathematics.
+
+    Pi is a singleton, and can be accessed by ``S.Pi``, or can
+    be imported as ``pi``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, pi, oo, sin, exp, integrate, Symbol
+    >>> S.Pi
+    pi
+    >>> pi > 3
+    True
+    >>> pi.is_irrational
+    True
+    >>> x = Symbol('x')
+    >>> sin(x + 2*pi)
+    sin(x)
+    >>> integrate(exp(-x**2), (x, -oo, oo))
+    sqrt(pi)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Pi
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2622,6 +2828,31 @@ pi = S.Pi
 
 
 class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
+    r"""The golden ratio, `\phi`.
+
+    `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
+    are in the golden ratio if their ratio is the same as the ratio of
+    their sum to the larger of the two quantities, i.e. their maximum.
+
+    GoldenRatio is a singleton, and can be accessed by ``S.GoldenRatio``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.GoldenRatio > 1
+    True
+    >>> S.GoldenRatio.expand(func=True)
+    1/2 + sqrt(5)/2
+    >>> S.GoldenRatio.is_irrational
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Golden_ratio
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2656,6 +2887,34 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
+    r"""The Euler-Mascheroni constant.
+
+    `\gamma = 0.5772157\dots` (also called Euler's constant) is a mathematical
+    constant recurring in analysis and number theory.  It is defined as the
+    limiting difference between the harmonic series and the
+    natural logarithm:
+
+    .. math:: \gamma = \lim\limits_{n\to\infty}
+              \left(\sum\limits_{k=1}^n\frac{1}{k} - \ln n\right)
+
+    EulerGamma is a singleton, and can be accessed by ``S.EulerGamma``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.EulerGamma.is_irrational
+    >>> S.EulerGamma > 0
+    True
+    >>> S.EulerGamma > 1
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2687,6 +2946,30 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
 
 class Catalan(with_metaclass(Singleton, NumberSymbol)):
+    r"""Catalan's constant.
+
+    `K = 0.91596559\dots` is given by the infinite series
+
+    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+
+    Catalan is a singleton, and can be accessed by ``S.Catalan``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.Catalan.is_irrational
+    >>> S.Catalan > 0
+    True
+    >>> S.Catalan > 1
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Catalan%27s_constant
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2715,6 +2998,28 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
 
 class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
+    r"""The imaginary unit, `i = \sqrt{-1}`.
+
+    I is a singleton, and can be accessed by ``S.I``, or can be
+    imported as ``I``.
+
+    Examples
+    ========
+
+    >>> from sympy import I, sqrt
+    >>> sqrt(-1)
+    I
+    >>> I*I
+    -1
+    >>> 1/I
+    -I
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
+    """
+
     is_commutative = True
     is_imaginary = True
     is_bounded = True
