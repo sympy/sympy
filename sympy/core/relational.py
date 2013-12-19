@@ -528,8 +528,8 @@ class GreaterThan(_Greater):
 
            In Python, there is no way to override the ``and`` operator, or to
            control how it short circuits, so it is impossible to make something
-           like ``x > y > z`` work.  There is an open PEP to change this,
-           :pep:`335`, but until that is implemented, this cannot be made to work.
+           like ``x > y > z`` work.  There was a PEP to change this,
+           :pep:`335`, but it was officially closed in March, 2012.
 
     .. [2] For more information, see these two bug reports:
 

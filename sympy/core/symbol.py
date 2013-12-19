@@ -249,12 +249,6 @@ class Wild(Symbol):
     >>> E.match(a*b)
     {a_: 2, b_: x**3*y*z}
 
-
-    References
-    ==========
-
-    https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#antipatterns
-
     """
 
     __slots__ = ['exclude', 'properties']
