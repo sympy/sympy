@@ -1561,23 +1561,30 @@ def generate_bell(n):
     >>> list(permutations(range(4)))[:5]
     [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 2, 3, 1), (0, 3, 1, 2)]
     >>> list(generate_bell(4))[:5]
-    [(0, 1, 2, 3), (1, 0, 2, 3), (1, 2, 0, 3), (1, 2, 3, 0), (2, 1, 3, 0)]
+    [(0, 1, 2, 3), (0, 1, 3, 2), (0, 3, 1, 2), (3, 0, 1, 2), (3, 0, 2, 1)]
 
     Notice how the 2nd and 3rd lexicographical permutations have 3 elements
     out of place whereas each bell permutations always has only two
-    elements out of place relative to the previous permutation.
+    elements out of place relative to the previous permutation. Like the
+    Trotter-Johnson algorithm that is part of Permutation in SymPy, each
+    bell-permutation's signature (a +/-1) is opposite of the previous
+    permutation.
 
     How the position of inversion varies across the elements can be seen
-    by tracing out where the 0 appears in the permutations:
+    by tracing out where the largest number appears in the permutations:
 
     >>> m = zeros(4, 24)
     >>> for i, p in enumerate(generate_bell(4)):
-    ...     m[:, i] = Matrix(list(p))
+    ...     m[:, i] = Matrix([j - 3 for j in list(p)])  # make largest zero
     >>> m.print_nonzero('X')
-    [ XXXXXX  XXXXXX  XXXXXX ]
-    [X XXXX XX XXXX XX XXXX X]
-    [XX XX XXXX XX XXXX XX XX]
     [XXX  XXXXXX  XXXXXX  XXX]
+    [XX XX XXXX XX XXXX XX XX]
+    [X XXXX XX XXXX XX XXXX X]
+    [ XXXXXX  XXXXXX  XXXXXX ]
+
+    See Also
+    ========
+    sympy.combinatorics.Permutation.next_trotterjohnson
 
     References
     ==========
@@ -1591,24 +1598,53 @@ def generate_bell(n):
       Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
     """
-    from sympy.functions.combinatorial.factorials import factorial
-    pos = dir = 1
-    do = factorial(n)
-    p = list(range(n))
-    yield tuple(p)
-    do -= 1
-    while do:
-        if pos >= n:
-            dir = -dir
-            p[0], p[1] = p[1], p[0]
-        elif pos < 1:
-            dir = -dir
-            p[-2], p[-1] = p[-1], p[-2]
+    def walk(l, dir=1):
+        """Starting with ``l``, yield n lists that differ by the position of
+        the first/last element for ``dir`` being 1/-1."""
+        n = len(l)
+        yield l
+        if dir == 1:
+            for i, j in enumerate(range(1, n)):
+                l[i], l[j] = l[j], l[i]
+                yield l
         else:
-            p[pos - 1], p[pos] = p[pos], p[pos - 1]
-        pos += dir
-        yield tuple(p)
-        do -= 1
+            for i in range(-1, -n, -1):
+                j = i - 1
+                l[i], l[j] = l[j], l[i]
+                yield l
+
+    def bell(n):
+        """Yield the permutations for a given ``n``."""
+        if n == 2:
+            yield [0, 1]
+            yield [1, 0]
+        else:
+            m = n - 1
+            r = [m]
+            for i in bell(n - 1):
+              if r[-1] == m:
+                  dir = -1   # send it back
+                  r[:-1] = i # using a new head
+              else:
+                  dir = 1    # send it forward
+                  r[1:] = i  # using a new tail
+              for li in walk(r, dir):
+                  yield li
+
+    n = as_int(n)
+    if n < 0:
+        raise ValueError('n must be nonnegative')
+    elif n == 0:
+        yield ()
+    elif n == 1:
+        yield (0,)
+    elif n == 2:
+        yield (0, 1)
+        yield (1, 0)
+    else:
+        for i in bell(n):
+            yield tuple(i)
+
 
 
 def generate_involutions(n):
