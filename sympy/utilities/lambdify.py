@@ -87,8 +87,15 @@ NUMPY_TRANSLATIONS = {
 SCIPY_TRANSLATIONS = {
     "elliptic_k":"ellipk",
     "elliptic_f":"ellipeinc",
-    
-
+    "besselj":"jv",
+    "bessely":"yv",
+    "hankel1":"hankel1",
+    "hankel1":"hankel2",
+    #"jn":"sph_jn" Check this, since sph_jn returns jn(z) and its derivative for all orders up to and including n.
+    #"yn":"sph_yn"
+    "gamma":"gamma",
+    "loggamma":"gammaln",
+    "polygamma":"polygamma" 
 }
 
 # Available modules:
@@ -160,7 +167,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy"
+     - the strings "math", "mpmath", "numpy", "sympy", "scipy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -259,7 +266,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
-        modules = ["math", "mpmath", "sympy"]
+        modules = ["math", "mpmath", "sympy", "scipy"]
 
         try:
             _import("numpy")
