@@ -171,8 +171,7 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
-        from sympy.core.sets import Interval
-        # added it here and not at the top because sets module import Add and Mul 
+        from sympy.core import IV
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -269,8 +268,8 @@ class Mul(Expr, AssocOp):
                         return [S.NaN], [], None
                 continue
 
-            elif isinstance(o, Interval):
-                coeff *= o
+            elif isinstance(o, IV):
+                coeff = o.__mul__(coeff)
                 continue
 
             elif o is S.ComplexInfinity:

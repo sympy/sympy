@@ -257,6 +257,12 @@ def test_sympy__core__function__WildFunction():
     assert _test_args(WildFunction('f'))
 
 
+@XFAIL
+def test_sympy__core__iv__IV():
+    from sympy.core import IV
+    assert _test_args(IV(0, 1))
+
+
 def test_sympy__core__mod__Mod():
     from sympy.core.mod import Mod
     assert _test_args(Mod(x, 2))

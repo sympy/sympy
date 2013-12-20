@@ -2,12 +2,11 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy.core import Add, Mul
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
-from sympy.core.numbers import Number,Float
+from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
@@ -241,6 +240,9 @@ class Set(Basic):
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
 
+    def __add__(self, other):
+        return self.union(other)
+
     def __or__(self, other):
         return self.union(other)
 
@@ -254,6 +256,12 @@ class Set(Basic):
         if not sympify(exp).is_Integer and exp >= 0:
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
         return ProductSet([self]*exp)
+
+    def __sub__(self, other):
+        return self.intersect(other.complement)
+
+    def __neg__(self):
+        return self.complement
 
     def __invert__(self):
         return self.complement
@@ -405,8 +413,6 @@ class Interval(Set, EvalfMixin):
     Usage:
         Returns an interval with end points "start" and "end".
 
-        { x belongs to Real | start<= x <= end}
-
         For left_open=True (default left_open is False) the interval
         will be open on the left. Similarly, for right_open=True the interval
         will be open on the right.
@@ -436,7 +442,6 @@ class Interval(Set, EvalfMixin):
     ==========
 
     <http://en.wikipedia.org/wiki/Interval_(mathematics)>
-    <https://en.wikipedia.org/wiki/Interval_arithmetic>
     """
     is_Interval = True
     is_real = True
@@ -459,7 +464,6 @@ class Interval(Set, EvalfMixin):
         if end == start and (left_open or right_open):
             return S.EmptySet
         if end == start and not (left_open or right_open):
-            return end # Be careful here, just doing it to test some feature
             return FiniteSet(end)
 
         # Make sure infinite interval end points are open.
@@ -663,12 +667,6 @@ class Interval(Set, EvalfMixin):
         return Interval(self.left.evalf(), self.right.evalf(),
           left_open=self.left_open, right_open=self.right_open)
 
-    # also see to this, review this is before a pr
-    # ask about _eval_power and __pow__
-    def _eval_power(self, other):
-        other = sympify(other)
-        return self.__pow__(other)
-
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
         is_comparable &= self.end.is_comparable
@@ -708,99 +706,6 @@ class Interval(Set, EvalfMixin):
     @property
     def free_symbols(self):
         return self.start.free_symbols | self.end.free_symbols
-
-    def __add__(self, other):
-        other = sympify(other)
-        if isinstance(other, Interval):
-            return Interval(Add(self.start, other.start), Add(self.end, other.end))
-        elif isinstance(other, Number):
-            return Interval(Add(self.start, other), Add(self.end, other))
-        return NotImplemented
-    __radd__ = __add__
-
-    def __neg__(self):
-        return Interval(-self.end, -self.start)
-
-    def __sub__(self, other):
-        other = sympify(other)
-        if isinstance(other, Interval):
-            return Interval(Add(self.start, -other.end), Add(self.end, -other.start))
-        if isinstance(other, Number):
-            return Interval(Add(self.start, -other), Add(self.end, - other))
-        return NotImplemented
-
-    def __rsub__(self, other):
-        return - self.__sub__(other)
-
-    def __mul__(self, other):
-        other = sympify(other)
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if isinstance(other, Interval):
-            return Interval(
-                Min(Mul(self.start,other.start), Mul(self.start,other.end),
-                    Mul(self.end, other.start), Mul(self.end, other.end)),
-                Max(Mul(self.start,other.start), Mul(self.start,other.end),
-                    Mul(self.end, other.start), Mul(self.end, other.end)))
-
-        if isinstance(other, Number):
-            if other > S.Zero:
-                return Interval(Mul(self.start, other), Mul(self.end, other))
-            elif other < S.Zero:
-                return Interval(Mul(self.end, other), Mul(self.start, other))
-            else:
-                if self.start > -oo and self.end < oo:
-                    return FiniteSet(0)
-                else:
-                    return S.EmptySet()
-        return NotImplemented
-
-    __rmul__ = __mul__
-
-    def __div__(self, other):
-        other = sympify(other)
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if isinstance(other, Interval):
-            return Interval(
-                Min(Mul(self.start,1/other.start), Mul(self.start,1/other.end),
-                    Mul(self.end, 1/other.start), Mul(self.end, 1/other.end)),
-                Max(Mul(self.start,1/other.start), Mul(self.start,1/other.end),
-                    Mul(self.end, 1/other.start), Mul(self.end, 1/other.end)))
-        if isinstance(other, Number):
-            if other > S.Zero:
-                return Interval(self.start/other, self.end/other)
-            elif other < S.Zero:
-                return Interval(self.end/other, self.start/other)
-            else:
-                return NotImplemented
-        return NotImplemented
-
-    def __rdiv__(self, other):
-        other = sympify(other)
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if isinstance(other, Number):
-            return Interval(
-                Min(other/self.start, other/self.end),
-                Max(other/self.start, other/self.end)) # notice this is redundant
-
-    # you cannot define pow as repeated multiplication.
-    # [a, b]*[c, d] = { x*y| a<x<b and c<y<d}
-    # [a, b]**2 is { x*x | a<x<b }
-    def __pow__(self, other):
-        other = sympify(other)
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if isinstance(other, Number):
-            if other.is_Integer and other > 0:
-                if other % 2 == 0:
-                    if self.start >= 0:
-                        return Interval(self.start**other, self.end**other)
-                    elif self.end < 0:
-                        return Interval(self.end**other, self.start**other)
-                    else:
-                        return Interval(0,
-                                       Max(self.start**other, self.end**other))
-                else:
-                    return Interval(self.start**other, self.end**other)
-        return NotImplemented
 
 class Union(Set, EvalfMixin):
     """
