@@ -30,8 +30,10 @@ def dispersionset(p, q=None):
     ..[4]: "Fast Polynomial Dispersion Computation and its Application to Indefinite Summation"
     """
     # Check for valid input
-    if q is None:
+    same = False if q is not None else True
+    if same:
         q = p
+
     if not p.is_univariate or not q.is_univariate:
         raise ValueError("Polynomials need to be univariate")
 
@@ -46,7 +48,10 @@ def dispersionset(p, q=None):
 
     # Factor p and q over the rationals
     fp = factor_list(p, gen)
-    fq = factor_list(q, gen)
+    if same:
+        fq = fp
+    else:
+        fq = factor_list(q, gen)
 
     # Iterate over all pairs of factors
     J = set([])
