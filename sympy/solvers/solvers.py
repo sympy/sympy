@@ -2242,8 +2242,8 @@ def _tsolve(eq, sym, **flags):
                         inversion = _tsolve(g - u, sym, **flags)
                         if inversion:
                             sol = _solve(p, u, **flags)
-                            return list(ordered([i.subs(u, s)
-                                for i in inversion for s in sol]))
+                            return list(ordered(set([i.subs(u, s)
+                                for i in inversion for s in sol])))
                     except NotImplementedError:
                         pass
 

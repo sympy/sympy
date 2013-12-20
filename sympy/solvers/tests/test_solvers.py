@@ -264,6 +264,10 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
 
+def test_issue_4129():
+    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-Rational(3, 2), S.Half]
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
