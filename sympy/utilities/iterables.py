@@ -1541,8 +1541,12 @@ def uniq(seq, result=None):
 
 
 def generate_bell(n):
-    """
-    Generates the bell permutations of length ``n``.
+    """Return permutations of [0, 1, ..., n - 1] such that each permutation
+    differs from the last by the exchange of a single pair of neighbors.
+    The ``n!`` permutations are returned as an iterator. In order to obtain
+    the next permutation from a random starting permutation, use the
+    ``next_trotterjohnson`` method of the Permutation class (which generates
+    the same sequence in a different manner).
 
     Examples
     ========
@@ -1564,11 +1568,10 @@ def generate_bell(n):
     [(0, 1, 2, 3), (0, 1, 3, 2), (0, 3, 1, 2), (3, 0, 1, 2), (3, 0, 2, 1)]
 
     Notice how the 2nd and 3rd lexicographical permutations have 3 elements
-    out of place whereas each bell permutations always has only two
-    elements out of place relative to the previous permutation. Like the
-    Trotter-Johnson algorithm that is part of Permutation in SymPy, each
-    bell-permutation's signature (a +/-1) is opposite of the previous
-    permutation.
+    out of place whereas each "bell" permutation always has only two
+    elements out of place relative to the previous permutation (and so the
+    signature (+/-1) of a permutation is opposite of the signature of the
+    previous permutation).
 
     How the position of inversion varies across the elements can be seen
     by tracing out where the largest number appears in the permutations:
@@ -1598,53 +1601,49 @@ def generate_bell(n):
       Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
     """
-    def walk(l, dir=1):
-        """Starting with ``l``, yield n lists that differ by the position of
-        the first/last element for ``dir`` being 1/-1."""
-        n = len(l)
-        yield l
-        if dir == 1:
-            for i, j in enumerate(range(1, n)):
-                l[i], l[j] = l[j], l[i]
-                yield l
-        else:
-            for i in range(-1, -n, -1):
-                j = i - 1
-                l[i], l[j] = l[j], l[i]
-                yield l
-
-    def bell(n):
-        """Yield the permutations for a given ``n``."""
-        if n == 2:
-            yield [0, 1]
-            yield [1, 0]
-        else:
-            m = n - 1
-            r = [m]
-            for i in bell(n - 1):
-              if r[-1] == m:
-                  dir = -1   # send it back
-                  r[:-1] = i # using a new head
-              else:
-                  dir = 1    # send it forward
-                  r[1:] = i  # using a new tail
-              for li in walk(r, dir):
-                  yield li
-
     n = as_int(n)
-    if n < 0:
-        raise ValueError('n must be nonnegative')
-    elif n == 0:
-        yield ()
-    elif n == 1:
+    if n < 1:
+        raise ValueError('n must be a positive integer')
+    if n == 1:
         yield (0,)
     elif n == 2:
         yield (0, 1)
         yield (1, 0)
+    elif n == 3:
+        for li in [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]:
+            yield li
     else:
-        for i in bell(n):
-            yield tuple(i)
-
+        m = n - 1
+        op = [0] + [-1]*m
+        l = list(range(n))
+        while True:
+            yield tuple(l)
+            # find biggest element with op
+            big = None, -1  # idx, value
+            for i in range(n):
+                if op[i] and l[i] > big[1]:
+                    big = i, l[i]
+            i, _ = big
+            # swap it with neighbor in the indicated direction
+            j = i + op[i]
+            l[i], l[j] = l[j], l[i]
+            op[i], op[j] = op[j], op[i]
+            # if it landed at the end or if the neighbor in the same
+            # direction is bigger then turn off op
+            if j == 0 or j == m or l[j + op[j]] > l[j]:
+                op[j] = 0
+            # any element bigger to the left gets +1 op
+            for i in range(j):
+                if l[i] > l[j]:
+                    op[i] = 1
+            # any element bigger to the right gets -1 op
+            for i in range(j + 1, n):
+                if l[i] > l[j]:
+                    op[i] = -1
+            # finish when there are no ops
+            if not any(i for i in op):
+                yield tuple(l)
+                break
 
 
 def generate_involutions(n):
