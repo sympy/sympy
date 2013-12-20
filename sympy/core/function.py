@@ -101,7 +101,12 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here:
-        cls._nargs = kwargs.get('nargs', cls.__dict__.get('nargs', None))
+        nargs = kwargs.get('nargs', cls.__dict__.get('nargs', None))
+        if is_sequence(nargs):
+            nargs = tuple(ordered(set(nargs)))
+        elif nargs is not None:
+            nargs = (as_int(nargs),)
+        cls._nargs = nargs
 
     @property
     def nargs(self):
@@ -129,25 +134,23 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
 
         >>> f = Function('f', nargs=1)
         >>> f.nargs
-        (1,)
+        {1}
         >>> f(1).nargs
-        (1,)
+        {1}
 
         If the function was initialized to accept more than one argument, then a
         tuple will contain all those valid numbers:
 
         >>> g = Function('g', nargs=(2, 1))
         >>> g.nargs
-        (1, 2)
+        {1, 2}
 
         """
         from sympy.sets.fancysets import Naturals0
-        if is_sequence(self._nargs):
-            return tuple(ordered(set(self._nargs)))
-        elif self._nargs is None:
-            return Naturals0()
-        else:
-            return (as_int(self._nargs),)
+        from sympy.core.sets import FiniteSet
+        # it would be nice to handle this in __init__ but there are import
+        # problems with trying to import FiniteSet there
+        return FiniteSet(self._nargs) if self._nargs else Naturals0()
 
     def __repr__(cls):
         return cls.__name__
@@ -507,6 +510,7 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
+        from sympy.core.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded is False for t in args0):
@@ -545,8 +549,8 @@ class Function(Application, Expr):
             s = s.removeO()
             s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
             return s
-        if (self.func.nargs is None
-                or (self.func.nargs == (1,) and args0[0])
+        if (self.func.nargs is S.Naturals0
+                or (self.func.nargs == FiniteSet(1) and args0[0])
                 or any(c > 1 for c in self.func.nargs)):
             e = self
             e1 = e.expand()
@@ -1338,17 +1342,25 @@ class Lambda(Expr):
     @property
     def nargs(self):
         """The number of arguments that this function takes"""
-        return (len(self._args[0]),)
+        from sympy.core.sets import FiniteSet
+        return FiniteSet(len(self._args[0]))
 
     def __call__(self, *args):
+        from sympy.core.sets import FiniteSet
         n = len(args)
-        if (n,) != self.nargs:
+        if FiniteSet(n) != self.nargs:
+            # XXX: exception message must be in exactly this format to
+            # make it work with NumPy's functions like vectorize(). See,
+            # for example, https://github.com/numpy/numpy/issues/1697.
+            # The ideal solution would be just to attach metadata to
+            # the exception and change NumPy to take advantage of this.
+            ## XXX does this apply to Lambda? If not, remove this comment.
             temp = ('%(name)s takes exactly %(args)s '
                    'argument%(plural)s (%(given)s given)')
             raise TypeError(temp % {
                 'name': self,
-                'args': self.nargs[0],
-                'plural': 's'*(self.nargs[0] != 1),
+                'args': list(self.nargs)[0],
+                'plural': 's'*(list(self.nargs)[0] != 1),
                 'given': n})
         return self.expr.xreplace(dict(list(zip(self.variables, args))))
 

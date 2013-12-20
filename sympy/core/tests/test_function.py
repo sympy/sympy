@@ -5,6 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
+from sympy.core.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 
@@ -100,8 +101,8 @@ def test_Function():
         def eval(cls, x):
             return
 
-    assert myfunc.nargs == (1,)
-    assert myfunc(x).nargs == (1,)
+    assert myfunc.nargs == FiniteSet(1)
+    assert myfunc(x).nargs == FiniteSet(1)
     raises(TypeError, lambda: myfunc(x, y).nargs)
 
 
@@ -109,12 +110,12 @@ def test_nargs():
     f = Function('f')
     assert f.nargs == S.Naturals0
     assert f(2).nargs == S.Naturals0
-    assert sin.nargs == (1,)
-    assert sin(2).nargs == (1,)
-    assert log.nargs == (1, 2)
-    assert log(2).nargs == (1, 2)
-    assert Function('f', nargs=2).nargs == (2,)
-    assert Function('f', nargs=0).nargs == (0,)
+    assert sin.nargs == FiniteSet(1)
+    assert sin(2).nargs == FiniteSet(1)
+    assert log.nargs == FiniteSet(1, 2)
+    assert log(2).nargs == FiniteSet(1, 2)
+    assert Function('f', nargs=2).nargs == FiniteSet(2)
+    assert Function('f', nargs=0).nargs == FiniteSet(0)
 
 
 def test_Lambda():
@@ -137,7 +138,7 @@ def test_Lambda():
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
 
-    assert Lambda((x, y), x + y).nargs == (2,)
+    assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
