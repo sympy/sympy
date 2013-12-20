@@ -199,6 +199,8 @@ def test_Mul():
     assert str((x + 1)/(y + 2)) == "(x + 1)/(y + 2)"
     assert str(2*x/3) == '2*x/3'
     assert str(-2*x/3) == '-2*x/3'
+    assert str(-1.0*x) == '-1.0*x'
+    assert str(1.0*x) == '1.0*x'
 
     class CustomClass1(Expr):
         is_commutative = True

@@ -4977,8 +4977,9 @@ def terms_gcd(f, *gens, **args):
     sympy.core.exprtools.gcd_terms, sympy.core.exprtools.factor_terms
 
     """
+    orig = sympify(f)
     if not isinstance(f, Expr) or f.is_Atom:
-        return sympify(f)
+        return orig
 
     if args.get('deep', False):
         new = f.func(*[terms_gcd(a, *gens, **args) for a in f.args])
@@ -5008,6 +5009,10 @@ def terms_gcd(f, *gens, **args):
         coeff = S.One
 
     term = Mul(*[x**j for x, j in zip(f.gens, J)])
+    if coeff == 1:
+        coeff = S.One
+        if term == 1:
+            return orig
 
     if clear:
         return _keep_coeff(coeff, term*f.as_expr())
