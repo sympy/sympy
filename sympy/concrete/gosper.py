@@ -4,6 +4,7 @@ from __future__ import print_function, division
 from sympy.core import S, Dummy, symbols
 from sympy.core.compatibility import is_sequence, xrange
 from sympy.polys import Poly, parallel_poly_from_expr, factor
+from sympy.concrete.dispersion import dispersionset
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
 
@@ -50,18 +51,10 @@ def gosper_normal(f, g, n, polys=True):
     b, B = q.LC(), q.monic()
 
     C, Z = A.one, a/b
-    h = Dummy('h')
 
-    D = Poly(n + h, n, h, domain=opt.domain)
+    J = dispersionset(A, B)
 
-    R = A.resultant(B.compose(D))
-    roots = set(R.ground_roots().keys())
-
-    for r in set(roots):
-        if not r.is_Integer or r < 0:
-            roots.remove(r)
-
-    for i in sorted(roots):
+    for i in sorted(J):
         d = A.gcd(B.shift(+i))
 
         A = A.quo(d)
