@@ -1179,17 +1179,20 @@ def _find_predicates(expr):
 
 def simplify_logic(expr, form=None, deep=True):
     """
-    This function simplifies a boolean function to its
-    simplified version in SOP or POS form. The return type is an
-    Or or And object in SymPy. The input can be a string or a boolean
-    expression.
-    form can be 'cnf' or 'dnf' or None. If its 'cnf' or 'dnf' the simplest
-    expression in the corresponding normal form is returned. If form is
-    None, the answer is returned according to the form with lesser number
-    of args (CNF by default)
-    The optional parameter deep indicates whether to
-    recursively simplify any non-boolean-functions contained within the
-    input.
+    This function simplifies a boolean function to its simplified version
+    in SOP or POS form. The return type is an Or or And object in SymPy.
+
+    Parameters
+    ==========
+
+    expr : string or boolean expression
+    form : string ('cnf' or 'dnf') or None (default).
+        If 'cnf' or 'dnf', the simplest expression in the corresponding
+        normal form is returned; if None, the answer is returned
+        according to the form with fewest args (in CNF by default).
+    deep : boolean (default True)
+        indicates whether to recursively simplify any
+        non-boolean functions contained within the input.
 
     Examples
     ========
