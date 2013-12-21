@@ -57,8 +57,8 @@ def dispersionset(p, q=None):
         return set([0])
 
     # Factor p and q over the rationals
-    fp = factor_list(p, gen)
-    fq = factor_list(q, gen) if not same else fp
+    fp = p.factor_list()
+    fq = q.factor_list() if not same else fp
 
     # Iterate over all pairs of factors
     J = set([])

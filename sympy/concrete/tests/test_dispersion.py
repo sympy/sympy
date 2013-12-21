@@ -1,4 +1,6 @@
 from sympy.core import Symbol, S, oo
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys import poly
 from sympy.concrete.dispersion import *
 
 
@@ -46,6 +48,11 @@ def test_dispersion():
 
     fp = (x*(x+2)*(x-1)).as_poly(x)
     assert sorted(dispersionset(fp)) == [0, 1, 2, 3]
+
+    fp = poly(x**2 + sqrt(5)*x - 1, x, domain='QQ<sqrt(5)>')
+    fq = poly(x**2 + (2 + sqrt(5))*x + sqrt(5), x, domain='QQ<sqrt(5)>')
+    assert sorted(dispersionset(fp, fq)) == [2]
+    assert sorted(dispersionset(fq, fp)) == [1, 4]
 
     # There are some difficulties if we compute over Z[a]
     # and alpha happenes to lie in Z[a] instead of simply Z.
