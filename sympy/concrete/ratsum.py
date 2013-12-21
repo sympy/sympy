@@ -1,63 +1,21 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, Mul, Dummy, S
+from sympy.core import Add, Mul
 from sympy.core.sympify import sympify
 from sympy.core.function import Lambda
 from sympy.utilities import flatten
 from sympy.simplify.simplify import simplify
-from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.special.gamma_functions import polygamma
 from sympy.polys.monomials import itermonomials
-from sympy.polys.polytools import Poly, quo, rem, resultant, cancel
+from sympy.polys.polytools import Poly, quo, rem, cancel
 from sympy.polys.partfrac import apart_list
 from sympy.polys.rootoftools import RootSum
+from sympy.concrete.dispersion import dispersion
 from sympy.matrices import zeros
 from sympy.solvers.linear import solve_general_linear
 from sympy.series import gruntz
-
-
-def integer_roots(p):
-    r"""Compute integer roots of a polynomial.
-    """
-    intervals = p.intervals(eps=S(1)/4)
-    roots = []
-
-    for interval, mul in intervals:
-        lo, hi = interval
-
-        clo = ceiling(lo)
-        fhi = floor(hi)
-
-        if clo == fhi:
-            roots.append((clo, mul))
-
-    return roots
-
-
-def dispersion(p, x):
-    r"""Compute the 'dispersion' of a polynomial.
-
-    For a polynomial `f(x)` with `deg f > 0` the dispersion is defined as
-
-    :math:`dis f(x) := max\{a \in Z^{+} \cup \{0\} | deg(gcd(f(x),f(x+a))) \geq 1\}`
-
-    references: Abramov
-
-    ..[1]: "On the Summation of Rational Functions"
-    ..[2]: "Solutions of linear finite-differences equations with constant coefficients
-            in the fields of rational functions"
-    """
-    a = Dummy("a")
-
-    q = Poly(p.as_expr().subs(x, x+a), gens=[x])
-    r = Poly(resultant(p, q), gens=[a])
-
-    iroots = integer_roots(r)
-    rmax = max([0] + [ root[0] for root in iroots ])
-
-    return rmax
 
 
 def split_division(p, q, l, x):
@@ -84,13 +42,14 @@ def split_division(p, q, l, x):
 def compute_dispersion(p, q, l, x):
     r"""
     """
+    print(q)
     # Determine dispersion and alpha
     dq = q.degree()
 
     if dq == 0:
         alpha = 0
     else:
-        ds = dispersion(q, x)
+        ds = dispersion(q)
         alpha = ds
     return alpha
 
