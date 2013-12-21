@@ -89,13 +89,10 @@ SCIPY_TRANSLATIONS = {
     "elliptic_f":"ellipeinc",
     "besselj":"jv",
     "bessely":"yv",
-    #"hankel1":"hankel1",
-    #"hankel2":"hankel2",
     #"jn":"sph_jn" Check this, since sph_jn returns jn(z) and its derivative for all orders up to and including n.
     #"yn":"sph_yn"
-    #"gamma":"gamma",
     "loggamma":"gammaln",
-    #"polygamma":"polygamma", 
+     
 }
 
 # Available modules:
