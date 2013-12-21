@@ -89,13 +89,13 @@ SCIPY_TRANSLATIONS = {
     "elliptic_f":"ellipeinc",
     "besselj":"jv",
     "bessely":"yv",
-    "hankel1":"hankel1",
-    "hankel1":"hankel2",
+    #"hankel1":"hankel1",
+    #"hankel2":"hankel2",
     #"jn":"sph_jn" Check this, since sph_jn returns jn(z) and its derivative for all orders up to and including n.
     #"yn":"sph_yn"
-    "gamma":"gamma",
+    #"gamma":"gamma",
     "loggamma":"gammaln",
-    "polygamma":"polygamma", 
+    #"polygamma":"polygamma", 
 }
 
 # Available modules:
@@ -116,7 +116,7 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy".
+    "mpmath", "numpy", "sympy","scipy".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
