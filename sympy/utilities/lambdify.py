@@ -263,7 +263,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
-        modules = ["math", "mpmath", "sympy", "scipy"]
+        modules = ["math", "mpmath", "scipy", "sympy"]
 
         try:
             _import("numpy")
