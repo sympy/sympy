@@ -11,8 +11,8 @@ def dispersionset(p, q=None):
     and `deg g > 0` the dispersion set `J(f,g)` is defined as:
 
     .. math::
-        J(f, g) & := \{a \in Z^{+} | gcd(f(x), g(x+a)) \neq 1\} \\
-                &  = \{a \in Z^{+} | deg gcd(f(x), g(x+a)) \geq 1\}
+        J(f, g) & := \{a \in \mathbb{N}_0 | gcd(f(x), g(x+a)) \neq 1\} \\
+                &  = \{a \in \mathbb{N}_0 | deg gcd(f(x), g(x+a)) \geq 1\}
 
     For a single polynomial one defines `J(f) := J(f, f)`.
 
@@ -87,7 +87,7 @@ def dispersion(p, q=None):
 
     .. math::
         dis(f, g) & := max\{ J(f,g) \union \{0\}\} \\
-                  &  = max\{ \{a \in Z^{+} | gcd(f(x), g(x+a)) \neq 1\} \union \{0\}\}
+                  &  = max\{ \{a \in \mathbb{N} | gcd(f(x), g(x+a)) \neq 1\} \union \{0\}\}
 
     and for a single polynomial `dis(f) := dis(f, f)`.
 
