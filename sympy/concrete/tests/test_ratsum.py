@@ -4,6 +4,7 @@ from sympy import ratsum, ratsum_def
 
 x = Symbol("x")
 n = Symbol("n")
+a = Symbol("a")
 
 
 def test_ratsum_abramov():
@@ -113,6 +114,40 @@ def test_ratsum_man():
     r = 2**x * (x**4 - 14*x**2 - 24*x -9) / (x**2 * (x+1)**2 * (x+2)**2 * (x+3)**2)
     R = ratsum(r, x)
     assert R == 2**x/(x**4 + 4*x**3 + 4*x**2)
+
+
+def test_ratsum_man():
+    # Examples taken from
+    # "Fast Polynomial Dispersion Computation and its Application to Indefinite Summation"
+    # by Yiu-Kwong Man and Francis J. Wright
+    # ISAAC 94
+    r = 3**x * (2*x**4 + 4*x**3 - 7*x**2 - x - 4) / (x*(x + 1)*(x**2 + 1)*((x + 1)**2 + 1))
+    R = ratsum(r, x)
+    assert R == 3**x * (x + 2) / (x**3 + x)
+
+    r = 3**x * (4*x**2 - 2*x - 3) / ((2*x + 3)*(2*x + 1)*(x + 1)*x)
+    R = ratsum(r, x)
+    assert R == 3**x / (2*x**2 + x)
+
+    r = 2**x * (2*x**3 + 3*x**2 - 20*x - 15) / ((2*x + 3)*(2*x + 1)*(x + 5)*(x + 4)*(x + 1)*x)
+    R = ratsum(r, x)
+    assert R == 2**x / (2*x**3 + 9*x**2 + 4*x)
+
+    r = -2**x * ((x + 11)**2 * (x + 1)**2 - 2*(x + 10)**2 * x**2) / ((x + 11)**2 * (x + 10)**2 * (x + 1)**2 * x**2)
+    R = ratsum(r, x)
+    assert R == 2**x / (x**4 + 20*x**3 + 100*x**2)
+
+    r = -2**x * ((x + 6)**2 * (x + 1)**2 - 2*(x + 5)**2 * x**2) / ((x + 6)**2 * (x + 5)**2 * (x + 1)**2 * x**2)
+    R = ratsum(r, x)
+    assert R == 2**x / (x**4 + 10*x**3 + 25*x**2)
+
+    r = 2**x * (x**4 - 14*x**2 - 24*x -9) / (x**2 * (x + 1)**2 * (x + 2)**2 * (x + 3)**2)
+    R = ratsum(r, x)
+    assert R == 2**x / (x**4 + 4*x**3 + 4*x**2)
+
+    r = 3**x * (4*x**2 - 2*x*a - 4*x - 2 - a) / ((2*x + 2 + a)*(2*x + a)*(x + 1)*x)
+    R = ratsum(r, x)
+    assert R == 3**x / (a*x + 2*x**2)
 
 
 def test_own():

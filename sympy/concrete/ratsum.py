@@ -42,7 +42,6 @@ def split_division(p, q, l, x):
 def compute_dispersion(p, q, l, x):
     r"""
     """
-    print(q)
     # Determine dispersion and alpha
     dq = q.degree()
 
