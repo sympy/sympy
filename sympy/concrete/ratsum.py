@@ -227,10 +227,19 @@ def preprocess(f, x):
 
 
 def fsum(f, l, x):
-    r"""Implements the algorithm `fsum` from the paper:
-    'On Computing Closed Forms for Indefinite Summations'
-    by Yiu-Kwong Man
-    doi : "10.1006/jsco.1993.1053"
+    r"""Implements the algorithm `fsum`.
+
+    References
+    ==========
+
+    .. [1] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
+           Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
+           http://www.sciencedirect.com/science/article/pii/S0747717183710539
+    .. [2] Yiu-Kwong Man and Francis J. Wright, "Fast Polynomial Dispersion
+           Computation and its Application to Indefinite Summation",
+           Proceedings of the International Symposium on Symbolic and
+           Algebraic Computation, 1994, Pages 175-180
+           http://doi.acm.org/10.1145/190347.190413
     """
     # The actual fsum algorithm
     p, q = f.as_numer_denom()
@@ -267,6 +276,18 @@ def fsum(f, l, x):
 
 def ratsum(f, x):
     r"""
+
+    References
+    ==========
+
+    .. [1] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
+           Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
+           http://www.sciencedirect.com/science/article/pii/S0747717183710539
+    .. [2] Yiu-Kwong Man and Francis J. Wright, "Fast Polynomial Dispersion
+           Computation and its Application to Indefinite Summation",
+           Proceedings of the International Symposium on Symbolic and
+           Algebraic Computation, 1994, Pages 175-180
+           http://doi.acm.org/10.1145/190347.190413
     """
     f, l = preprocess(f, x)
     return fsum(f, l, x)
@@ -274,6 +295,18 @@ def ratsum(f, x):
 
 def ratsum_def(f, bounds):
     r"""
+
+    References
+    ==========
+
+    .. [1] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
+           Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
+           http://www.sciencedirect.com/science/article/pii/S0747717183710539
+    .. [2] Yiu-Kwong Man and Francis J. Wright, "Fast Polynomial Dispersion
+           Computation and its Application to Indefinite Summation",
+           Proceedings of the International Symposium on Symbolic and
+           Algebraic Computation, 1994, Pages 175-180
+           http://doi.acm.org/10.1145/190347.190413
     """
     x, a, b = bounds
     x = sympify(x)
