@@ -302,6 +302,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. rathmann: fix some Python 2/3 issues
 #. Paul Strickland: documentation fix
 #. James Goppert: correct code in form_lagranges_equations
+#. Avichal Dayal: removed duplicate solutions obtained from solve
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
