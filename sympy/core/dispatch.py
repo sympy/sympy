@@ -48,67 +48,103 @@ class DispatchedFunction(object):
             return self._fcache_[arg_types](*args, **kw_args)
 
         def check_match(types, func):
-            # this function checks if the types have already been matched,
-            # in such a case, determine which one to match.
-            if check_match.mtypes is not None:
-                # this means that a match has already been found,
-                # select the one with the most specific subclasses.
-                for arg_type, _type, m_type in zip(arg_types, types, check_match.mtypes):
-                    if _type not in arg_type.__mro__:
-                        _type = object
-                    if m_type not in arg_type.__mro__:
-                        m_type = object
-                    ord1 = arg_type.__mro__.index(_type)
-                    ord2 = arg_type.__mro__.index(m_type)
-                    if ord1 == ord2:
-                        continue
-                    elif ord1 < ord2:
-                        check_match.mtypes = types
-                        check_match.mfunc = func
-                        break
-                    else:
-                        break
-            else:
-                check_match.mtypes = types
-                check_match.mfunc = func
+            # this function first checks that types are indeed instances of the
+            # arguments. After that it performs a for-loop over all
+            # previously-found matches, and checks if it is possible to
+            # determine which match is more specific (i.e. has lowest subclasses
+            # inside its `__mro__`, method resolution order, Python's default
+            # method searching order in classes). If a match is more specific
+            # than another match, the less specific match is dropped.
 
-        check_match.mtypes = None
-        check_match.mfunc = None
+            # Matches are stored as a static variable of this function,
+            # namely, `check_match.mdata`. It is a python `list` instance.
+
+            # In the end, there will be three cases. Either no matches have
+            # been found, or just one, or multiple ones. No matches and more
+            # than ones raise an error, while a single match passes execution
+            # over to the matched function.
+
+            if not all(map(lambda x: isinstance(*x), zip(args, types))):
+                # incompatible types, return so that it will skip to the
+                # next one.
+                return
+
+            # determine the method resolution order index of the current
+            # types inside the `__mro__` field of the function arguments:
+            mroord = []
+            for arg_type, _type in zip(arg_types, types):
+                if _type not in arg_type.__mro__:
+                    _type = object
+                mroord.append(arg_type.__mro__.index(_type))
+            mroord = tuple(mroord)
+
+            # Now compare this with all previous matches, more specific
+            # matches are dropped:
+            pop_list = []
+
+            for indx, comp_data in enumerate(check_match.mdata):
+                comp_types, comp_func, comp_mroord = comp_data
+                if len(comp_types) != len(types):
+                    1/0  # should never be here
+                    continue
+                less_eq_comp = [i <= j for i, j in zip(mroord, comp_mroord)]
+                if all(less_eq_comp):
+                    # the current match is more specific than the previous one,
+                    # drop the previous one:
+                    pop_list.append(indx)
+                    continue
+                if all([i >= j for i, j in zip(mroord, comp_mroord)]):
+                    # a previous match is more specific than the current one,
+                    # drop this match:
+                    return
+
+            for i in reversed(pop_list):
+                check_match.mdata.pop(i)
+            # append data about current match to a static variable:
+            check_match.mdata.append((types, func, mroord))
+
+        check_match.mdata = []
 
         for types, func in self._ftypes_.items():
-            # for-loop to match types without varargs
+            # for-loop to match types without varargs (variable arguments)
             if len(types) != len(args):
-                continue
-            if not all(map(lambda x: isinstance(*x), zip(args, types))):
-                # incompatible types, skip to next.
                 continue
             check_match(types, func)
 
         for types, func in self._ftypes_with_varargs_.items():
-            # for-loop to match types with varargs, last type
-            # in `types` is repeated as many times as the number
+            # for-loop to match types with varargs (variable arguments),
+            # last type in `types` is repeated as many times as the number
             # of missing arguments.
             vararg_type = types[-1]
             fixed_types = types[:-1]
 
             number_of_varargs = len(args) - len(types[:-1])
-
             if number_of_varargs < 0:
                 # too few arguments, impossible to match
                 continue
-
+            # extend the types to match by the vararg type, multiplied by
+            # the number of missing arguments to match the function args:
             types_to_match = fixed_types + (vararg_type,)*number_of_varargs
+
             check_match(types_to_match, func)
 
-        if check_match.mfunc is None:
+        if not check_match.mdata:
             # no matches have been found, raise an error
-            raise TypeError("no match found for signature {0}".format(types))
+            raise TypeError("dispatch: no match found for signature {0}".format(types))
+        elif len(check_match.mdata) > 1:
+            # ambiguous matches, multiple matches have been found, but it was
+            # not possible to determine which one was the more specific, raise
+            # an error:
+            raise TypeError("dispatch: ambiguous type resolution for signature {0}".format(types))
 
-        # store the result into _fcache_, so next time it will be
-        # faster to retrieve it:
-        self._fcache_[arg_types] = check_match.mfunc
+        # store the result into _fcache_, so that next time the dispatched
+        # function is called with the same argument types, it will be
+        # faster to retrieve it (the current function, which has just
+        # determined the match, will not be called anymore):
+        matched_func = check_match.mdata[0][1]
+        self._fcache_[arg_types] = matched_func
 
-        return check_match.mfunc(*args, **kw_args)
+        return matched_func(*args, **kw_args)
 
     @property
     def methods(self):

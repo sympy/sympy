@@ -2311,18 +2311,6 @@ class TensAdd(TensExpr):
     def __eq__(self, other):
         return self.equals(other)
 
-    def __add__(self, other):
-        return ATensAdd(self, other)
-
-    def __radd__(self, other):
-        return ATensAdd(other, self)
-
-    def __sub__(self, other):
-        return ATensAdd(self, -other)
-
-    def __rsub__(self, other):
-        return ATensAdd(other, -self)
-
     def __mul__(self, other):
         return tensor_product(self, other)
 
@@ -2332,14 +2320,6 @@ class TensAdd(TensExpr):
             tadd.data = other*self.data
         return tadd
 
-    def __div__(self, other):
-        other = sympify(other)
-        if isinstance(other, TensExpr):
-            raise ValueError('cannot divide by a tensor')
-        tadd = ATensAdd(*(x/other for x in self.args))
-        if self.data is not None:
-            tadd.data = self.data / other
-        return tadd
 
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -2347,8 +2327,8 @@ class TensAdd(TensExpr):
     def __getitem__(self, item):
         return self.data[item]
 
-    __truediv__ = __div__
-    __truerdiv__ = __rdiv__
+#     __truediv__ = __div__
+#     __truerdiv__ = __rdiv__
 
     def _hashable_content(self):
         return tuple(self.args)
@@ -2761,18 +2741,6 @@ class TensMul(TensExpr):
         res[0] = TensMul.from_data(self._coeff, res[0].components, res[0]._tids.free, res[0]._tids.dum, is_canon_bp=res[0]._is_canon_bp)
         return res
 
-    def __add__(self, other):
-        return ATensAdd(self, other)
-
-    def __radd__(self, other):
-        return ATensAdd(other, self)
-
-    def __sub__(self, other):
-        return ATensAdd(self, -other)
-
-    def __rsub__(self, other):
-        return ATensAdd(other, -self)
-
     def __mul__(self, other):
         """
         Multiply two tensors using Einstein summation convention.
@@ -3181,6 +3149,27 @@ class ATensAdd(TensAdd):
         obj = TensAdd._new_prepare(cls, *addends, **kw_args)
         return obj
 
+    def __add__(self, other):
+        return ATensAdd(self, other)
+
+    def __radd__(self, other):
+        return ATensAdd(other, self)
+
+    def __sub__(self, other):
+        return ATensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return ATensAdd(other, -self)
+
+    def __div__(self, other):
+        other = sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        tadd = ATensAdd(*(x/other for x in self.args))
+        if self.data is not None:
+            tadd.data = self.data / other
+        return tadd
+
 
 class ATensMul(TensMul):
 
@@ -3200,6 +3189,18 @@ class ATensMul(TensMul):
         obj = TensMul._constructor_common(obj, **kw_args)
         return obj
 
+    def __add__(self, other):
+        return ATensAdd(self, other)
+
+    def __radd__(self, other):
+        return ATensAdd(other, self)
+
+    def __sub__(self, other):
+        return ATensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return ATensAdd(other, -self)
+
 
 class VTensAdd(TensAdd):
     @dispatch(type, prefix="VTensAdd")
@@ -3208,7 +3209,7 @@ class VTensAdd(TensAdd):
         return obj
 
     @dispatch(type, varargs=object, prefix="VTensAdd")
-    def __new__(cls, addenda, **kw_args):
+    def __new__(cls, *addenda, **kw_args):
         obj = TensAdd._new_prepare(cls, *addenda, **kw_args)
         return obj
 
@@ -3217,6 +3218,26 @@ class VTensAdd(TensAdd):
         Return an identical tensor expression, just with ``ndarray`` data removed.
         """
         return ATensAdd(*self.args)
+
+    def __add__(self, other):
+        return VTensAdd(self, other)
+
+    def __radd__(self, other):
+        return VTensAdd(other, self)
+
+    def __sub__(self, other):
+        return VTensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return VTensAdd(other, -self)
+
+    def __div__(self, other):
+        other = sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        tadd = VTensAdd(*(x/other for x in self.args))
+        tadd.data = self.data / other
+        return tadd
 
 
 class VTensMul(TensMul):
@@ -3256,6 +3277,18 @@ class VTensMul(TensMul):
         new_vtids = VTIDS(self._tids.components, self._tids.free, self._tids.dum, new_data)
         new_tmul = VTensMul(self.coeff, new_vtids)
         return new_tmul
+
+    def __add__(self, other):
+        return VTensAdd(self, other)
+
+    def __radd__(self, other):
+        return VTensAdd(other, self)
+
+    def __sub__(self, other):
+        return VTensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return VTensAdd(other, -self)
 
 
 @dispatch(ATensMul, object)
@@ -3390,7 +3423,7 @@ def tensor_product(a, b):
 
 @dispatch(VTensAdd, VTensMul)
 def tensor_product(a, b):
-    return tensor_product(a, VTensAdd(Tuple(b)))
+    return tensor_product(a, VTensAdd(*Tuple(b)))
 
 
 @dispatch(VTensAdd, VTensAdd)

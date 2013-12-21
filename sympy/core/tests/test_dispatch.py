@@ -84,9 +84,9 @@ def test_intertwined_inheritances():
         return (DispTestB)
 
     def assert_list1():
-        assert dispfu(DispTestAB1(), DispTestAB1()) == (DispTestAB1, object)
+        raises(TypeError, lambda: dispfu(DispTestAB1(), DispTestAB1()))  # == (DispTestAB1, object)
         assert dispfu(DispTestAB(), DispTestAB()) == (DispTestA, DispTestB)
-        assert dispfu(DispTestAB1(), DispTestAB1()) == (DispTestAB1, object)
+        raises(TypeError, lambda: dispfu(DispTestAB1(), DispTestAB1()))  # == (DispTestAB1, object)
         assert dispfu(DispTestAB()) == (DispTestA)
 
     assert_list1()
@@ -97,6 +97,70 @@ def test_intertwined_inheritances():
 
     assert_list1()
 
+    @dispatch(DispTestAB, DispTestAB)
+    def dispfu(a, b):
+        return (DispTestAB, DispTestAB)
+
+    # this time it won't raise an exception:
+    assert dispfu(DispTestAB(), DispTestAB()) == (DispTestAB, DispTestAB)
+
+
+def test_dispatch_ambiguities():
+    class A1(object):
+        pass
+
+    class A2(A1):
+        pass
+
+    class A3(A2):
+        pass
+
+    class A4(A3):
+        pass
+
+    @dispatch(A1, A1)
+    def tfd(a, b):
+        pass
+
+    @dispatch(A1, A2)
+    def tfd(a, b):
+        pass
+
+    @dispatch(A1, A4)
+    def tfd(a, b):
+        pass
+
+    @dispatch(A2, A1)
+    def tfd(a, b):
+        pass
+
+    @dispatch(A2, A4)
+    def tfd(a, b):
+        pass
+
+    @dispatch(A4, A1)
+    def tfd(a, b):
+        pass
+
+    @dispatch(A4, A4)
+    def tfd(a, b):
+        pass
+
+    raise_table = [
+        [0, 0, 0, 0],
+        [0, 1, 1, 0],
+        [0, 1, 1, 0],
+        [0, 1, 1, 0]
+    ]
+
+    class_list = (A1, A2, A3, A4,)
+
+    for i, c_i in enumerate(class_list):
+        for j, c_j in enumerate(class_list):
+            if raise_table[i][j] == 1:
+                raises(TypeError, lambda: tfd(c_i(), c_j()))
+            else:
+                tfd(c_i(), c_j())
 
 def test_dispatch_class_methods():
     class A(object):
