@@ -48,8 +48,7 @@ class MatMul(MatrixExpr):
 
         head, tail = matrices[0], matrices[1:]
         if len(tail) == 0:
-            raise ValueError("lenth of tail cannot be 0")            
-
+            raise ValueError("lenth of tail cannot be 0")
         X = head
         Y = MatMul(*tail)
 
