@@ -823,6 +823,8 @@ class sec(ReciprocalTrigonometricFunction):
     _reciprocal_of = cos
     _is_even = True
 
+    nargs = 1
+
     def _eval_rewrite_as_cos(self, arg):
         return (1/cos(arg))
 
@@ -845,6 +847,8 @@ class sec(ReciprocalTrigonometricFunction):
 class csc(ReciprocalTrigonometricFunction):
     _reciprocal_of = sin
     _is_odd = True
+
+    nargs = 1
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))

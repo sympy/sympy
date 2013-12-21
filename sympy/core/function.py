@@ -100,17 +100,18 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     def __init__(cls, *args, **kwargs):
         super(FunctionClass, cls).__init__(args, kwargs)
 
-        # Canonicalize nargs here:
+        # Canonicalize nargs here; change to set in nargs.
+        # The same needs to be done for WildFunction.
         nargs = kwargs.get('nargs', cls.__dict__.get('nargs', None))
         if is_sequence(nargs):
             nargs = tuple(ordered(set(nargs)))
         elif nargs is not None:
             nargs = (as_int(nargs),)
-        cls._nargs = nargs
+        cls._nargs = nargs  # convert to set in nargs
 
     @property
     def nargs(self):
-        """Return a tuple giving the number of arguments that the function will accept.
+        """Return a set of the allowed number of arguments for the function.
 
         Examples
         ========
@@ -119,7 +120,8 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         >>> from sympy.abc import x, y
         >>> f = Function('f')
 
-        If the function can take any number of arguments, an empty tuple is returned.
+        If the function can take any number of arguments, the set of whole
+        numbers is returned:
 
         >>> f=Function('f')
         >>> f.nargs
@@ -129,18 +131,14 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         >>> f(1, 2).nargs
         Naturals0()
 
-        If the function was initialized to accept a single argument, then a
-        tuple will contain that number:
+        If the function was initialized to accept one or more arguments, a
+        corresponding set will be returned:
 
         >>> f = Function('f', nargs=1)
         >>> f.nargs
         {1}
         >>> f(1).nargs
         {1}
-
-        If the function was initialized to accept more than one argument, then a
-        tuple will contain all those valid numbers:
-
         >>> g = Function('g', nargs=(2, 1))
         >>> g.nargs
         {1, 2}
@@ -148,7 +146,7 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         """
         from sympy.sets.fancysets import Naturals0
         from sympy.core.sets import FiniteSet
-        # it would be nice to handle this in __init__ but there are import
+        # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
         return FiniteSet(self._nargs) if self._nargs else Naturals0()
 
@@ -724,7 +722,8 @@ class WildFunction(Function, AtomicExpr):
 
     def __new__(cls, name, **assumptions):
         from sympy.sets.fancysets import Naturals0
-        # Canonicalize nargs here:
+        # Canonicalize nargs here; change to set in nargs.
+        # The same needs to be done for FunctionClass.
         nargs = assumptions.pop('nargs', None)
         if not nargs:
             nargs = Naturals0()
@@ -735,7 +734,7 @@ class WildFunction(Function, AtomicExpr):
 
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
-        obj.nargs = nargs
+        obj.nargs = nargs  # XXX make this obj._nargs = nargs and figure out how to make nargs property and convert to set there
         return obj
 
     def matches(self, expr, repl_dict={}, old=False):
@@ -1348,7 +1347,7 @@ class Lambda(Expr):
     def __call__(self, *args):
         from sympy.core.sets import FiniteSet
         n = len(args)
-        if FiniteSet(n) != self.nargs:
+        if n not in self.nargs:  # Lambda only ever has 1 value in nargs
             # XXX: exception message must be in exactly this format to
             # make it work with NumPy's functions like vectorize(). See,
             # for example, https://github.com/numpy/numpy/issues/1697.
