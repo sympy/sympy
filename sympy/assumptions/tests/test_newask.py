@@ -1,6 +1,6 @@
 from sympy.assumptions.newask import newask
 
-from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi
+from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -152,3 +152,61 @@ def test_irrational():
         Q.rational(z)) is False
     assert newask(Q.rational(x + y + z), Q.rational(x) & Q.rational(y) &
         Q.rational(z)) is True
+
+def test_even():
+    assert newask(Q.even(2)) is True
+    assert newask(Q.even(3)) is False
+
+    assert newask(Q.even(x*y), Q.even(x) & Q.odd(y)) is True
+    assert newask(Q.even(x*y), Q.even(x) & Q.integer(y)) is True
+    assert newask(Q.even(x*y), Q.even(x) & Q.even(y)) is True
+    assert newask(Q.even(x*y), Q.odd(x) & Q.odd(y)) is False
+    assert newask(Q.even(x*y), Q.even(x)) is None
+    assert newask(Q.even(x*y), Q.odd(x) & Q.integer(y)) is None
+    assert newask(Q.even(x*y), Q.odd(x) & Q.odd(y)) is False
+
+    assert newask(Q.even(abs(x)), Q.even(x)) is True
+    assert newask(Q.even(abs(x)), Q.odd(x)) is False
+
+def test_odd():
+    assert newask(Q.odd(2)) is False
+    assert newask(Q.odd(3)) is True
+
+    assert newask(Q.odd(x*y), Q.even(x) & Q.odd(y)) is False
+    assert newask(Q.odd(x*y), Q.even(x) & Q.integer(y)) is False
+    assert newask(Q.odd(x*y), Q.even(x) & Q.even(y)) is False
+    assert newask(Q.odd(x*y), Q.odd(x) & Q.odd(y)) is True
+    assert newask(Q.odd(x*y), Q.even(x)) is None
+    assert newask(Q.odd(x*y), Q.odd(x) & Q.integer(y)) is None
+    assert newask(Q.odd(x*y), Q.odd(x) & Q.odd(y)) is True
+
+    assert newask(Q.odd(abs(x)), Q.even(x)) is False
+    assert newask(Q.odd(abs(x)), Q.odd(x)) is True
+
+
+def test_integer():
+    assert newask(Q.integer(1)) is True
+    assert newask(Q.integer(Rational(1, 2))) is False
+
+    assert newask(Q.integer(x + y), Q.integer(x) & Q.integer(y)) is True
+    assert newask(Q.integer(x + y), Q.integer(x)) is None
+
+    assert newask(Q.integer(x + y), Q.integer(x) & ~Q.integer(y)) is False
+    assert newask(Q.integer(x + y + z), Q.integer(x) & Q.integer(y) &
+        ~Q.integer(z)) is False
+    assert newask(Q.integer(x + y + z), Q.integer(x) & ~Q.integer(y) &
+        ~Q.integer(z)) is None
+    assert newask(Q.integer(x + y + z), Q.integer(x) & ~Q.integer(y)) is None
+    assert newask(Q.integer(x + y), Q.integer(x) & Q.irrational(y)) is False
+
+    assert newask(Q.integer(x*y), Q.integer(x) & Q.integer(y)) is True
+    assert newask(Q.integer(x*y), Q.integer(x)) is None
+
+    assert newask(Q.integer(x*y), Q.integer(x) & ~Q.integer(y)) is None
+    assert newask(Q.integer(x*y), Q.integer(x) & ~Q.rational(y)) is False
+    assert newask(Q.integer(x*y*z), Q.integer(x) & Q.integer(y) &
+        ~Q.rational(z)) is False
+    assert newask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y) &
+        ~Q.rational(z)) is None
+    assert newask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y)) is None
+    assert newask(Q.integer(x*y), Q.integer(x) & Q.irrational(y)) is False

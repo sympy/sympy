@@ -9,6 +9,8 @@ from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_or, fuzzy_and
 from sympy.matrices.expressions import MatMul
 
+from sympy.functions.elementary.complexes import Abs
+
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
@@ -189,11 +191,21 @@ def _old_assump_replacer(obj):
     if obj.func == Q.nonzero:
         ret = fuzzy_and([e.is_real, e.is_finite, e.is_nonzero])
     if obj.func == Q.nonnegative:
-        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]), e.is_nonnegative])
+        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]),
+        e.is_nonnegative])
+
     if obj.func == Q.rational:
         ret = e.is_rational
     if obj.func == Q.irrational:
         ret = e.is_irrational
+
+    if obj.func == Q.even:
+        ret = e.is_even
+    if obj.func == Q.odd:
+        ret = e.is_odd
+    if obj.func == Q.integer:
+        ret = e.is_integer
+
     if ret is None:
         return obj
     return ret
@@ -289,6 +301,20 @@ for klass, fact in [
         Q.irrational))),
     (Mul, Implies(AllArgs(Q.rational), Q.rational)),
     (Add, Implies(AllArgs(Q.rational), Q.rational)),
+
+    # Including the integer qualification means we don't need to add any facts
+    # for odd, since the assumptions already know that every integer is
+    # exactly one of even or odd.
+    (Mul, Implies(AllArgs(Q.integer), Equivalent(AnyArgs(Q.even), Q.even))),
+
+    (Abs, Equivalent(AllArgs(Q.even), Q.even)),
+
+    (Add, Implies(AllArgs(Q.integer), Q.integer)),
+    (Add, Implies(ExactlyOneArg(~Q.integer), ~Q.integer)),
+    (Mul, Implies(AllArgs(Q.integer), Q.integer)),
+    (Mul, Implies(ExactlyOneArg(~Q.rational), ~Q.integer)),
+    (Abs, Equivalent(AllArgs(Q.integer), Q.integer)),
+
     (Number, CheckOldAssump(Q.negative)),
     (Number, CheckOldAssump(Q.zero)),
     (Number, CheckOldAssump(Q.positive)),
@@ -297,6 +323,9 @@ for klass, fact in [
     (Number, CheckOldAssump(Q.nonpositive)),
     (Number, CheckOldAssump(Q.rational)),
     (Number, CheckOldAssump(Q.irrational)),
+    (Number, CheckOldAssump(Q.even)),
+    (Number, CheckOldAssump(Q.odd)),
+    (Number, CheckOldAssump(Q.integer)),
     # For some reason NumberSymbol does not subclass Number
     (NumberSymbol, CheckOldAssump(Q.negative)),
     (NumberSymbol, CheckOldAssump(Q.zero)),
