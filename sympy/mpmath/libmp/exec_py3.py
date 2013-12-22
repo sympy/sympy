@@ -1,1 +1,2 @@
-exec_ = exec
+import builtins
+exec_ = getattr(builtins, 'exec')
