@@ -19,14 +19,17 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
-from sympy.ntheory.egyptian_fraction import egyptian
+from sympy.ntheory.egyptian_fraction import egypt_fraction
 
 from fractions import Fraction
+
+from sympy.core.add import Add
 
 from sympy.polys.domains import ZZ
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
+from sympy.utilities.randtest import random_complex_number
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
 
 def test_trailing():
@@ -732,19 +735,19 @@ def test_search():
 
 
 def test_egyptian_fraction():
-    def add(x, y):
-        return x + y
-    assert Fraction(18, 77) == reduce(add, [Rational(1, i) for i in egyptian(Rational(18, 77), "Greedy")])
-    assert Fraction(7, 13) == reduce(add, [Rational(1, i) for i in egyptian(Rational(7, 13), "Greedy")])
-    assert Fraction(23, 101) == reduce(add, [Rational(1, i) for i in egyptian(Rational(23, 101), "Greedy")])
-    assert Fraction(18, 77) == reduce(add, [Rational(1, i) for i in egyptian(Rational(18, 77), "Takenouchi")])
-    assert Fraction(7, 13) == reduce(add, [Rational(1, i) for i in egyptian(Rational(7, 13), "Takenouchi")])
-    assert Fraction(23, 101) == reduce(add, [Rational(1, i) for i in egyptian(Rational(23, 101), "Takenouchi")])
-    assert Fraction(2, 3) == reduce(add, [Rational(1, i) for i in egyptian(Rational(2, 3), "Graham Jewett")])
-    assert Fraction(3, 7) == reduce(add, [Rational(1, i) for i in egyptian(Rational(3, 7), "Graham Jewett")])
-    assert Fraction(7, 13) == reduce(add, [Rational(1, i) for i in egyptian(Rational(7, 13), "Graham Jewett")])
-
-
-
-
-
+    a, b = str(random_complex_number(a=0, c=1, b=0, d=0, rational=True)).split('/')
+    a, b = int(a), int(b)
+    assert Fraction(a, b) == Add(*[Rational(1, i) for i in egypt_fraction(Rational(a, b), "Greedy")])
+    assert Fraction(4, 17) == Add(*[Rational(1, i) for i in egypt_fraction(Rational(4, 17), "Greedy")])
+    assert egypt_fraction(Rational(4, 17)) == [5, 29, 1233, 3039345]
+    assert Fraction(7, 13) == Add(*[Rational(1, i) for i in egypt_fraction(Rational(7, 13), "Greedy")])
+    assert egypt_fraction(Rational(7, 13)) == [2, 26]
+    assert Fraction(23, 101) == Add(*[Rational(1, i) for i in egypt_fraction(Rational(23, 101), "Greedy")])
+    assert egypt_fraction(Rational(23, 101)) == [5, 37, 1438, 2985448, 40108045937720]
+    assert Fraction(18, 23) == Add(*[Rational(1, i) for i in egypt_fraction(Rational(18, 23), "Takenouchi")])
+    assert egypt_fraction(Rational(18, 23), "Takenouchi") == [2, 6, 12, 35, 276, 2415]
+    assert Fraction(5, 6) == Add(*[Rational(1, i) for i in egypt_fraction(Rational(5, 6), "Graham Jewett")])
+    assert egypt_fraction(Rational(5, 6), "Graham Jewett") == [6, 7, 8, 9, \
+            10, 42, 43, 44, 45, 56, 57, 58, 72, 73, 90, 1806, 1807, 1808, \
+        1892, 1893, 1980, 3192, 3193, 3306, 5256, 3263442, 3263443, 3267056, \
+        3581556, 10192056, 10650056950806]

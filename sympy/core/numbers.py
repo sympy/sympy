@@ -4,8 +4,6 @@ import decimal
 import math
 import re as regex
 from collections import defaultdict
-from fractions import gcd
-
 
 from .core import C
 from .containers import Tuple
