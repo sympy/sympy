@@ -98,16 +98,18 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     _new = type.__new__
 
     def __init__(cls, *args, **kwargs):
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', None))
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
-        # The same needs to be done for WildFunction.
-        nargs = kwargs.get('nargs', cls.__dict__.get('nargs', None))
-        if is_sequence(nargs):
-            nargs = tuple(ordered(set(nargs)))
-        elif nargs is not None:
-            nargs = (as_int(nargs),)
-        cls._nargs = nargs  # convert to set in nargs
+        if type(nargs) is not property:
+            if is_sequence(nargs):
+                nargs = tuple(ordered(set(nargs)))
+            elif nargs is not None:
+                nargs = (as_int(nargs),)
+            cls._nargs = nargs  # convert to set in nargs
+        else:
+            pass  # Application and WildFunction pass this way
 
     @property
     def nargs(self):
@@ -166,8 +168,11 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
     @cacheit
     def __new__(cls, *args, **options):
+        from sympy.sets.fancysets import Naturals0
+        from sympy.core.sets import FiniteSet
         args = list(map(sympify, args))
         evaluate = options.pop('evaluate', True)
+        nargs = options.pop('nargs', None)
         if options:
             raise ValueError("Unknown options: %s" % options)
 
@@ -177,8 +182,18 @@ class Application(with_metaclass(FunctionClass, Basic)):
                 return evaluated
 
         obj = super(Application, cls).__new__(cls, *args, **options)
-        obj.nargs = cls.nargs
+        try:
+            obj.nargs = FiniteSet(obj.nargs) if obj.nargs else Naturals0()
+        except AttributeError:
+            obj._nargs = FiniteSet(obj._nargs) if obj._nargs else Naturals0()
         return obj
+
+    @property
+    def nargs(obj):
+        from sympy.core.sets import FiniteSet, Set
+        if isinstance(obj._nargs, Set):
+            return obj._nargs
+        return FiniteSet(obj._nargs)
 
     @classmethod
     def eval(cls, *args):
@@ -687,6 +702,8 @@ class WildFunction(Function, AtomicExpr):
     >>> from sympy.abc import x, y
     >>> F = WildFunction('F')
     >>> f = Function('f')
+    >>> F.nargs
+    Naturals0()
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}
@@ -701,6 +718,8 @@ class WildFunction(Function, AtomicExpr):
     desired value at instantiation:
 
     >>> F = WildFunction('F', nargs=2)
+    >>> F.nargs
+    {2}
     >>> f(x).match(F)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
@@ -710,6 +729,8 @@ class WildFunction(Function, AtomicExpr):
     then functions with 1 or 2 arguments will be matched.
 
     >>> F = WildFunction('F', nargs=(1, 2))
+    >>> F.nargs
+    {1, 2}
     >>> f(x).match(F)
     {F_: f(x)}
     >>> f(x, y).match(F)
@@ -720,22 +741,16 @@ class WildFunction(Function, AtomicExpr):
 
     include = set()
 
-    def __new__(cls, name, **assumptions):
-        from sympy.sets.fancysets import Naturals0
-        # Canonicalize nargs here; change to set in nargs.
-        # The same needs to be done for FunctionClass.
-        nargs = assumptions.pop('nargs', None)
-        if not nargs:
-            nargs = Naturals0()
-        elif is_sequence(nargs):
-            nargs = tuple(ordered(set(nargs)))
-        else:
-            nargs = (as_int(nargs),)
+    def __init__(cls, name, **assumptions):
+        cls.name = name
+        cls._nargs = assumptions.pop('nargs', S.Naturals0)
 
-        obj = Function.__new__(cls, name, **assumptions)
-        obj.name = name
-        obj.nargs = nargs  # XXX make this obj._nargs = nargs and figure out how to make nargs property and convert to set there
-        return obj
+    @property
+    def nargs(self):
+        from sympy.core.sets import Set, FiniteSet
+        if isinstance(self._nargs, Set):
+            return self._nargs
+        return FiniteSet(self._nargs)
 
     def matches(self, expr, repl_dict={}, old=False):
         if not isinstance(expr, (AppliedUndef, Function)):
