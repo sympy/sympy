@@ -170,9 +170,11 @@ class Application(with_metaclass(FunctionClass, Basic)):
     def __new__(cls, *args, **options):
         from sympy.sets.fancysets import Naturals0
         from sympy.core.sets import FiniteSet
+
         args = list(map(sympify, args))
         evaluate = options.pop('evaluate', True)
         nargs = options.pop('nargs', None)
+
         if options:
             raise ValueError("Unknown options: %s" % options)
 
@@ -182,10 +184,16 @@ class Application(with_metaclass(FunctionClass, Basic)):
                 return evaluated
 
         obj = super(Application, cls).__new__(cls, *args, **options)
+
+        # handle nargs
         try:
             obj.nargs = FiniteSet(obj.nargs) if obj.nargs else Naturals0()
         except AttributeError:
-            obj._nargs = FiniteSet(obj._nargs) if obj._nargs else Naturals0()
+            try:
+                obj._nargs = FiniteSet(obj._nargs) if obj._nargs else Naturals0()
+            except AttributeError:
+                obj._nargs = FiniteSet(nargs) if nargs else Naturals0()
+
         return obj
 
     @property
