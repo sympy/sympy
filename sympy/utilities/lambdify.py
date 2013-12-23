@@ -15,6 +15,7 @@ MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
+
 SCIPY = {}
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -100,11 +101,12 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "scipy":(SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("from scipy.special import *")),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
-     "scipy":(SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("from scipy.special import *"))   
+        
 }
 
 
@@ -120,6 +122,7 @@ def _import(module, reload="False"):
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
+         
     except KeyError:
         raise NameError(
             "'%s' module can't be used for lambdification" % module)
@@ -151,8 +154,11 @@ def _import(module, reload="False"):
             "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
+   
     for sympyname, translation in translations.items():
+        
         namespace[sympyname] = namespace[translation]
+        
 
 
 def lambdify(args, expr, modules=None, printer=None, use_imps=True):
