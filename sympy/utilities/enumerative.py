@@ -1002,24 +1002,6 @@ class MultisetPartitionTraverser():
                     return self.pcount
                 self.lpart -= 1
 
-    def counting_decrement(self, part):
-        """Helper for count_partitions -- similar to the decrement
-        methods for the enumerators, but includes code to check if the
-        the resulting part is already in the cache, in which case the
-        subtree is trimmed from the traversal.
-
-        """
-        status = self.decrement_part(part)
-        if status:
-            # Check if decremented part is in the cache -- if so,
-            # increment pcount and treat as failure - we have used up
-            # this part.
-            pkey = part_key(self.top_part())
-            if pkey in self.dp_map:
-                self.pcount += self.dp_map[pkey]
-                status = False
-        return status
-
     def count_partitions(self, multiplicities):
         """Returns the number of partitions of a multiset whose components
         have the multiplicities given in ``multiplicities``.
@@ -1130,7 +1112,7 @@ class MultisetPartitionTraverser():
             self.pcount += 1
 
             # M5 (Decrease v)
-            while not self.counting_decrement(self.top_part()):
+            while not self.decrement_part(self.top_part()):
                 # M6 (Backtrack)
                 for key, oldcount in self.dp_stack.pop():
                     self.dp_map[key] = self.pcount - oldcount
