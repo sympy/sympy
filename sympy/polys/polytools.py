@@ -4081,6 +4081,13 @@ def degree(f, *gens, **args):
     """
     options.allowed_flags(args, ['gen', 'polys'])
 
+    F = sympify(f)
+    if F.is_constant():
+        if F == 0:
+            return -S.Infinity
+        else:
+            return S.Zero
+
     try:
         F, opt = poly_from_expr(f, *gens, **args)
     except PolificationFailed as exc:

@@ -1164,7 +1164,7 @@ def test_Poly_degree():
     assert degree(x*y**2, x, y) == 1
     assert degree(x*y**2, y, x) == 2
 
-    raises(ComputationFailed, lambda: degree(1))
+    assert degree(1) == 0
 
 
 def test_Poly_degree_list():
