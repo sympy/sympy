@@ -88,7 +88,7 @@ class Pow(Expr):
     @cacheit
     def __new__(cls, b, e, evaluate=True):
         from sympy.functions.elementary.exponential import exp_polar
-
+        from sympy.functions import log
         # don't optimize "if e==0; return 1" here; it's better to handle that
         # in the calling routine so this doesn't get called
         b = _sympify(b)
@@ -103,6 +103,22 @@ class Pow(Expr):
                     return S.One
                 return S.NaN
             else:
+                if e.func == log:
+                    if len(e.args) == 2:
+                        lbase = e.args[1]
+                    else:
+                        lbase = S.Exp1
+                    if lbase == b:
+                        return e.args[0]
+
+                if e is Mul and e.args[1].func == log:
+                    if len(e.args[1].args) == 2:
+                        lbase = e.args[1].args[1]
+                    else:
+                        lbase = S.Exp1
+                    if lbase == b:
+                        return e.args[1].args[0] ** e.args[0]
+
                 # recognize base as E
                 if not e.is_Atom and b is not S.Exp1 and b.func is not exp_polar:
                     from sympy import numer, denom, log, sign, im, factor_terms

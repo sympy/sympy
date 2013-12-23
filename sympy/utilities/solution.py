@@ -30,40 +30,36 @@ def find_name(obj):
     return None
 
 def add_comment(cm):
-    solution_list.append('_'+cm)
+    solution_list.append('_' + cm)
     
 def add_step(variable):
     """Add a variable and its value into solution"""
     var = find_name(variable)
-    r = repr(variable)
     try:
-        r = latex(sympify(r, evaluate=False))
+        r = latex(variable)
     except:
-        print r
+        r = repr(variable)
     solution_list.append(var + " = " + r)
 
 def add_eq(l, r):
     """Add an equality into solution"""
-    l = repr(l)
     try:
-        l = latex(sympify(l, evaluate=False))
+        l = latex(l)
     except:
-        print l
-    r = str(r)
+        l = repr(l)
     try:
-        r = latex(sympify(r, evaluate=False))
+        r = latex(r)
     except:
-        print r
+        r = repr(r)
     solution_list.append(l + " = " + r)
 
     
 def add_exp(exp):
     """Add an expression into solution"""
-    r = repr(exp)
     try:
-        r = latex(sympify(r, evaluate=False))
+        r = latex(exp)
     except:
-        print r
+        r = repr(exp)
     solution_list.append(r)
 
 def reset_solution():
@@ -85,13 +81,4 @@ def commit_subroutine():
 
 def last_solution():
     return solution_list
-
-def expr_to_str(expr):
-    """Get a text representation of the expression"""
-    r = repr(expr)
-    try:
-        r = latex(sympify(r, evaluate=False))
-        return r
-    except:
-        return r
 

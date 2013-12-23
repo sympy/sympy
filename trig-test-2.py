@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# vim: set smartindent expandtab shiftwidth=4 softtabstop=4:
 
 # Equations of the form trig(x) = m
 
