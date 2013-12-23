@@ -1624,6 +1624,8 @@ def generate_bell(n):
                 if op[i] and l[i] > big[1]:
                     big = i, l[i]
             i, _ = big
+            if i is None:
+                break  # there are no ops left
             # swap it with neighbor in the indicated direction
             j = i + op[i]
             l[i], l[j] = l[j], l[i]
@@ -1640,10 +1642,6 @@ def generate_bell(n):
             for i in range(j + 1, n):
                 if l[i] > l[j]:
                     op[i] = -1
-            # finish when there are no ops
-            if not any(i for i in op):
-                yield tuple(l)
-                break
 
 
 def generate_involutions(n):
