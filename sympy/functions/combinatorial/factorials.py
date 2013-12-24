@@ -28,7 +28,7 @@ class CombinatorialFunction(Function):
 class factorial(CombinatorialFunction):
     """Implementation of factorial function over nonnegative integers.
        By convention (consistent with the gamma function and the binomial
-       coefficients), factorials of negative integers are infinite.
+       coefficients), factorial of a negative integer is complex infinity.
 
        The factorial is very important in combinatorics where it gives
        the number of ways in which `n` objects can be permuted. It also
@@ -57,7 +57,7 @@ class factorial(CombinatorialFunction):
        5040
 
        >>> factorial(-2)
-       oo
+       zoo
 
        >>> factorial(n)
        factorial(n)
@@ -142,7 +142,7 @@ class factorial(CombinatorialFunction):
                 return S.Infinity
             elif n.is_Integer:
                 if n.is_negative:
-                    return S.Infinity
+                    return S.ComplexInfinity
                 else:
                     n, result = n.p, 1
 
