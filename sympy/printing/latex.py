@@ -603,7 +603,9 @@ class LatexPrinter(Printer):
                 name = r'%s^{%s}' % (self._hprint_Function(func), exp)
             else:
                 name = self._hprint_Function(func)
-
+            if func == 'log' and len(args) == 2:
+                name += "_{ " + args[1] + " }"
+                args.pop(1)
             if can_fold_brackets:
                 if func in accepted_latex_functions:
                     # Wrap argument safely to avoid parse-time conflicts

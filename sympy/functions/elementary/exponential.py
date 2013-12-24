@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import C, sympify
+from sympy.core import C, sympify, Pow
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
@@ -453,6 +453,7 @@ class log(Function):
     a logarithm of a different base ``b``, use ``log(x, b)``,
     which is essentially short-hand for ``log(x)/log(b)``.
 
+
     See Also
     ========
 
@@ -466,9 +467,12 @@ class log(Function):
         Returns the first derivative of the function.
         """
         if argindex == 1:
-            return 1/self.args[0]
-            s = C.Dummy('x')
-            return Lambda(s**(-1), s)
+            if len(self.args) == 1:
+                return 1/self.args[0]
+                s = C.Dummy('x')
+                return Lambda(s**(-1), s)
+            else:
+                return 1 / self.args[0] / log(self.args[1])
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -476,10 +480,16 @@ class log(Function):
         """
         Returns `e^x`, the inverse function of `\log(x)`.
         """
-        return exp
+        if len(self.args) == 2:
+            s = C.Dummy('x')
+            return Lambda(s, Pow(self.args[1], s))
+        else:
+            return exp
 
     @classmethod
     def eval(cls, arg, base=None):
+        # Now we can operate with log_b(x), not only ln(x), where b is positive rational number
+
         from sympy import unpolarify
         arg = sympify(arg)
 
@@ -497,17 +507,20 @@ class log(Function):
                 if n:
                     den = base**n
                     if den.is_Integer:
-                        return n + log(arg // den) / log(base)
+                        return n + log(arg // den, base)
                     else:
-                        return n + log(arg / den) / log(base)
+                        return n + log(arg / den, base)
                 else:
-                    return log(arg)/log(base)
+                    if log(base).is_Rational:
+                        return log(arg) / log(base)
             except ValueError:
                 pass
-            if base is not S.Exp1:
-                return cls(arg)/cls(base)
-            else:
+            if base is S.Exp1:
                 return cls(arg)
+            elif arg.is_positive and not base.is_number:
+                return 1 / log(base, arg)
+            elif not base.is_positive:
+                return cls(arg)/cls(base)
 
         if arg.is_Number:
             if arg is S.Zero:
@@ -521,20 +534,28 @@ class log(Function):
             elif arg is S.NaN:
                 return S.NaN
             elif arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + cls(-arg)
+                if base is None:
+                    return S.Pi * S.ImaginaryUnit + log(-arg)
+                else:
+                    return S.Pi * S.ImaginaryUnit + log(-arg, base)
             elif arg.is_Rational:
                 if arg.q != 1:
-                    return cls(arg.p) - cls(arg.q)
+                    if base is None:
+                        return log(arg.p) - log(arg.q)
+                    else:
+                        return log(arg.p, base) - log(arg.q, base)
         elif arg is S.ComplexInfinity:
             return S.ComplexInfinity
-        elif arg is S.Exp1:
+        elif (base is None and arg is S.Exp1) or (base == arg):
             return S.One
-        elif arg.func is exp and arg.args[0].is_real:
+        elif base is None and arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
-        elif arg.func is exp_polar:
+        elif arg.func is exp and arg.args[0].is_real:
+            return arg.args[0] / log(base)
+        elif base is None and arg.func is exp_polar:
             return unpolarify(arg.exp)
         #don't autoexpand Pow or Mul (see the issue 252):
-        elif not arg.is_Add:
+        elif base is None and not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if coeff is not None:
@@ -577,47 +598,54 @@ class log(Function):
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         arg = self.args[0]
+        if len(self.args) == 2:
+            base = self.args[1]
+        else:
+            base = S.Exp1
         if arg.is_Integer:
             # remove perfect powers
             p = perfect_power(int(arg))
             if p is not False:
-                return p[1]*self.func(p[0])
+                return p[1]*self.func(p[0], base)
         elif arg.is_Mul:
             expr = []
             nonpos = []
             for x in arg.args:
                 if force or x.is_positive or x.is_polar:
-                    a = self.func(x)
+                    a = self.func(x, base)
                     if isinstance(a, log):
-                        expr.append(self.func(x)._eval_expand_log(**hints))
+                        expr.append(self.func(x, base)._eval_expand_log(**hints))
                     else:
                         expr.append(a)
                 elif x.is_negative:
-                    a = self.func(-x)
+                    a = self.func(-x, base)
                     expr.append(a)
                     nonpos.append(S.NegativeOne)
                 else:
                     nonpos.append(x)
-            return Add(*expr) + log(Mul(*nonpos))
+            return Add(*expr) + log(Mul(*nonpos), base)
         elif arg.is_Pow:
             if force or (arg.exp.is_real and arg.base.is_positive) or \
                     arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
-                a = self.func(b)
+                a = self.func(b, base)
                 if isinstance(a, log):
                     return unpolarify(e) * a._eval_expand_log(**hints)
                 else:
                     return unpolarify(e) * a
         elif isinstance(arg, Product):
             if arg.function.is_positive:
-                return Sum(log(arg.function), *arg.limits)
+                return Sum(log(arg.function, base), *arg.limits)
 
-        return self.func(arg)
+        return self.func(arg, base)
 
     def _eval_simplify(self, ratio, measure):
         from sympy.simplify.simplify import expand_log, logcombine, simplify
-        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+        if len(self.args) == 1:
+            expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+        else:
+            expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure), self.args[1])
         expr = expand_log(expr, deep=True)
         return min([expr, self], key=measure)
 
@@ -641,6 +669,8 @@ class log(Function):
         (log(Abs(x)), arg(I*x))
 
         """
+        if len(self.args) != 1:
+            raise NotImplementedError("This method for log(x, b) is not supported")
         if deep:
             abs = C.Abs(self.args[0].expand(deep, **hints))
             arg = C.arg(self.args[0].expand(deep, **hints))
@@ -666,19 +696,30 @@ class log(Function):
 
     def _eval_is_bounded(self):
         arg = self.args[0]
-        if arg.is_infinitesimal:
+        if len(self.args) == 1:
+            base = S.Exp1
+        else:
+            base = self.args[1]
+        if arg.is_infinitesimal or base.is_infinitesimal:
             return False
-        return arg.is_bounded
+        return arg.is_bounded and base.is_bounded and base != 1 and base > 0
 
     def _eval_is_positive(self):
         arg = self.args[0]
+        if len(self.args) == 1:
+            base = S.Exp1
+        else:
+            base = self.args[1]
         if arg.is_positive:
             if arg.is_unbounded:
-                return True
+                    return base > 1
             if arg.is_infinitesimal:
                 return False
             if arg.is_Number:
-                return arg > 1
+                if base > 1:
+                    return arg > 1
+                elif base < 1:
+                    return arg < 1
 
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
@@ -694,6 +735,8 @@ class log(Function):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy import cancel
+        if len(self.args) != 1:
+            raise NotImplementedError("This method for log(x, b) is not supported")
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -725,6 +768,8 @@ class log(Function):
         return log(a) + b*logx + Add(*l) + C.Order(p**n, x)
 
     def _eval_as_leading_term(self, x):
+        if len(self.args) != 1:
+            raise NotImplementedError("This method for log(x, b) is not supported")
         arg = self.args[0].as_leading_term(x)
         if arg is S.One:
             return (self.args[0] - 1).as_leading_term(x)
@@ -732,6 +777,8 @@ class log(Function):
 
     def _sage_(self):
         import sage.all as sage
+        if len(self.args) != 1:
+            raise NotImplementedError("This method for log(x, b) is not supported")
         return sage.log(self.args[0]._sage_())
 
 

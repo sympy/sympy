@@ -16,6 +16,7 @@ from __future__ import print_function, division
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, reduce, xrange)
+from sympy.simplify.simplify import bottom_up
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
@@ -23,8 +24,8 @@ from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops, Function, expand_power_exp)
-from sympy.core.numbers import ilcm, Float
+                          count_ops, Function, expand_power_exp, expand)
+from sympy.core.numbers import ilcm, Float, pi
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 from sympy.core.basic import preorder_traversal
@@ -37,7 +38,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom, logcombine)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
-from sympy.simplify.fu import TR1, hyper_as_trig
+from sympy.simplify.fu import TR1, hyper_as_trig, TR5, TR6
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
     degree, PolynomialError)
@@ -59,7 +60,8 @@ from collections import defaultdict
 import warnings
 
 from sympy.printing.str import StrPrinter
-from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment
+from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment, start_subroutine, cancel_subroutine
+
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
@@ -1084,6 +1086,9 @@ def _solve(f, *symbols, **flags):
     """Return a checked solution for f in terms of one or more of the
     symbols."""
 
+    outputed_f = f
+    add_eq(f, 0)
+
     if len(symbols) != 1:
         soln = None
         free = f.free_symbols
@@ -1249,6 +1254,59 @@ def _solve(f, *symbols, **flags):
                 raise ValueError('could not convert %s to Poly' % f_num)
             gens = [g for g in poly.gens if g.has(symbol)]
 
+            def is_sin_cos(gens):
+                for g in gens:
+                    if not g.func in [sin, cos]:
+                        return False
+                return True
+      
+            if len(gens) == 2 and is_sin_cos(gens):
+                tr5_gens = [g for g in Poly(TR5(poly)).gens if g.has(symbol)]
+                if len(tr5_gens) == 1:
+                    add_comment('Rewrite equation')
+                    poly = Poly(TR5(poly))
+                    add_eq(poly.as_expr(), 0)
+                    gens = tr5_gens
+                else:
+                    tr6_gens = [g for g in Poly(TR6(poly)).gens if g.has(symbol)]
+                    if len(tr6_gens) == 1:
+                        add_comment('Rewrite equation')
+                        poly = Poly(TR6(poly))
+                        gens = tr6_gens
+                        add_eq(poly.as_expr(), 0)
+
+            def is_log(gens):
+                for g in gens:
+                    if g.func != log:
+                        return False
+                return True
+
+            def to_log_fixed_base(e, base):
+                if e.args:
+                    args = tuple([to_log_fixed_base(a, base) for a in e.args])
+                    if e.func is log:
+                        if len(args) == 2:
+                            b = args[1]
+                        else:
+                            b = S.Exp1
+                        e = log(args[0], base) / log(b, base)
+                    else:
+                        e = e.func(*args)
+                return e
+
+            if len(gens) > 1 and is_log(gens):
+                bases = set()
+                for g in gens:
+                    if len(g.args) == 2:
+                        bases.add(g.args[1])
+                    else:
+                        bases.add(S.Exp1)
+                if len(bases) > 1:
+                    bases = list(ordered(bases))
+                    newf = to_log_fixed_base(poly.as_expr(), bases[0])
+                    return _solve(newf, symbol, **flags)
+
+
             if len(gens) > 1:
                 # If there is more than one generator, it could be that the
                 # generators have the same base but different powers, e.g.
@@ -1275,7 +1333,6 @@ def _solve(f, *symbols, **flags):
 
                 bases, qs = list(zip(*[_as_base_q(g) for g in gens]))
                 bases = set(bases)
-
                 if len(bases) > 1:
                     funcs = set(b for b in bases if b.is_Function)
 
@@ -1368,28 +1425,206 @@ def _solve(f, *symbols, **flags):
                             flags['simplify'] = flags.get('simplify', False)
 
                         # TODO: Just pass composite=True to roots()
-                        poly = Poly(poly.as_expr(), poly.gen, composite=True)
-                        soln = list(roots(poly, cubics=True, quartics=True,
-                                                             quintics=True).keys())
+                        # Now we should solve polynomial equations.
+                        # If equation is trivial (y = m), then let's write nothing,
+                        # else we write the substitution and the equation.
+                        
 
-                        if len(soln) < deg:
-                            try:
-                                # get all_roots if possible
-                                soln = list(ordered(uniq(poly.all_roots())))
-                            except NotImplementedError:
-                                pass
                         gen = poly.gen
-                        if gen != symbol:
-                            u = Dummy()
-                            inversion = _solve(gen - u, symbol, **flags)
-                            soln = list(ordered(set([i.subs(u, s) for i in
-                                        inversion for s in soln])))
-                        result = soln
+                        poly = Poly(poly.as_expr(), poly.gen, composite=True)
+                        if poly.is_linear:
+                            add_comment('Solve the equation')
+                            add_eq(poly.gen, -poly.nth(0) / poly.nth(1))
+                            soln = [-poly.nth(0) / poly.nth(1)]
+                        else:
+                            if gen != symbol:
+                                y = Dummy('y')
+                                poly_y = poly.subs(gen, y)
+                                add_comment('Use the substitution')
+                                add_eq(y, gen)
+                            else:
+                                poly_y = poly
+                            soln = list(roots(poly_y, cubics=True, quartics=True,
+                                                                 quintics=True).keys())
+                            add_comment('We have the following solutions')
+                            add_exp(soln)                            
+                            # Here is some magic. I believe that we don't go to
+                            # this 'if' in case of "school" equations. 
+                            if len(soln) < deg:
+                                try:
+                                    # get all_roots if possible
+                                    soln = list(ordered(uniq(poly.all_roots())))
+                                except NotImplementedError:
+                                    pass
 
+                        if gen != symbol and gen.args[0].is_polynomial(symbol) and Poly(gen.args[0], symbol).is_linear and gen.func in [sin, cos, tan, cot]:
+                            # if we are here, then equation has the form trig(ax + b) = m
+                            flags['simplify'] = False  # We return the general solution therefore we cannot
+                            check = False              # simplify and check it
+                            result = []
+                            arg = Poly(gen.args[0], symbol)
+                            k = Dummy('k')
+                            a = arg.nth(1)
+                            b = arg.nth(0) 
+                            can_be_simplified = a != 1 or b != 0
+                            if gen.func == sin: # sin
+                                add_comment('We get')
+                                for s in soln:
+                                    if s == 1: # use another form for the general solution in this case
+                                        r = pi / 2 + 2 * pi * k 
+                                        result.append((r - b) / a)
+                                        add_eq(arg.as_expr(), r)
+                                    elif s == -1: # also use another form
+                                        r = -pi / 2 + 2 * pi * k 
+                                        result.append((r - b) / a)
+                                        add_eq(arg.as_expr(), r)
+                                    elif s == 0:
+                                        r = pi * k
+                                        result.append((r - b) / a)
+                                        add_eq(arg.as_expr(), r)
+                                    elif s >= -1 and s <= 1:
+                                        add_eq(arg.as_expr(), asin(s, evaluate=False) + 2 * pi * k)
+                                        add_eq(arg.as_expr(), pi - asin(s, evaluate=False) + 2 * pi * k)
+                                        if asin(s, evaluate = False) != asin(s):
+                                            can_be_simplified = True
+                                        result.append((asin(s) + 2 * pi * k - b) / a)
+                                        result.append((pi - asin(s) + 2 * pi * k - b) / a)
+                                    else:
+                                        add_comment('the root ' + str(s) + ' is not in [-1, 1]')
+                            elif gen.func == cos: # cos
+                                add_comment('We get')
+                                can_be_simplified = a != 1 or b != 0
+                                for s in soln: 
+                                    if s == 1:
+                                        r = 2 * pi * k 
+                                        add_eq(arg.as_expr(), r)
+                                        result.append((r - b) / a)
+                                    elif s == -1:
+                                        r = pi + 2 * pi * k 
+                                        add_eq(arg.as_expr(), r)
+                                        result.append((r - b) / a)
+                                    elif s == 0:
+                                        r = pi / 2 + pi * k
+                                        add_eq(arg.as_expr(), r)
+                                        result.append((r - b) / a)
+                                    elif s >= -1 and s <= 1:
+                                        add_eq(arg.as_expr(), acos(s, evaluate=False) + 2 * pi * k)
+                                        add_eq(arg.as_expr(), -acos(s, evaluate=False) + 2 * pi * k)
+                                        result.append((acos(s) + 2 * pi * k - b) / a)
+                                        result.append((-acos(s) + 2 * pi * k - b) / a)
+                                        if acos(s, evaluate=False) != acos(s):
+                                            can_be_simplified = True
+                                    else:
+                                        add_comment('the root ' + str(s) + ' is not in [-1, 1]')
+                            elif gen.func == tan: #tan
+                                add_comment('We get')
+                                for s in soln: 
+                                    if s.is_real:
+                                        add_eq(arg.as_expr(), atan(s, evaluate=False) + pi * k)
+                                        result.append((atan(s) + pi * k - b) / a)
+                                        if atan(s, evaluate=False) != atan(s):
+                                            can_be_simplified = True
+                                    else:
+                                        add_comment('the root ' + str(s) + ' is not real')
+                            elif gen.func == cot: # cot
+                                add_comment('We get')
+                                for s in soln:
+                                    if s.is_real: 
+                                        add_eq(arg.as_expr(), acot(s, evaluate=False) + pi * k)
+                                        result.append((acot(s) + pi * k - b) / a)
+                                        if acot(s, evaluate=False) != acot(s):
+                                            can_be_simplified = True
+                                    else:
+                                        add_comment('the root ' + str(s) + ' is not real')
+                            result = list(map(simplify, result)) # Possible we don't want to simp the solution
+                            result = list(map(expand, result)) 
+                            if len(result) > 0: 
+                                if can_be_simplified:
+                                    add_comment('Therefore')
+                                    for r in result:
+                                        add_eq(symbol, r)
+                                add_comment('where ' + str(k) + ' can be any integer')
+                            else:
+                                add_comment('There are no real roots')
+                        elif gen != symbol and gen.args[0].is_polynomial(symbol) and Poly(gen.args[0], symbol).is_linear and gen.func == Pow:
+                            # if we are here, then equation has the form y**(ax + b) = m
+                            flags['simplify'] = False
+                            check = False
+                            result = []
+                            arg = Poly(gen.args[1], symbol)
+                            a = arg.nth(1)
+                            b = arg.nth(0)
+                            can_be_simplified = a != 1 or b != 0
+                            add_comment('We get')
+                            for s in soln:
+                                if s.is_real and s > 0:
+                                    add_eq(gen.args[1].as_expr(), log(s, gen.args[0], evaluate=False))
+                                    result.append((log(s, gen.args[0]) - b) / a)
+                                    if log(s, gen.args[0], evaluate=False) != log(s, gen.args[0]):
+                                        can_be_simplified = True
+                                else:
+                                    add_comment('the root ' + str(s) + ' is not positive')
+                            result = list(map(simplify, result))
+                            result = list(map(expand, result))
+                            if len(result) > 0:
+                                if can_be_simplified:
+                                    add_comment('Therefore')
+                                    for r in result:
+                                        add_eq(symbol, r)
+                            else:
+                                add_comment('There are no real roots')
+                        elif gen != symbol and gen.func == log:
+                            # if we are here, then equation has the form log(ax + b, c) = m
+                            flags['simplify'] = False
+                            check = False
+                            result = []
+                            if len(gen.args) == 2:
+                                base = gen.args[1]
+                            else:
+                                base = S.Exp1
+                            arg = gen.args[0]
+                            can_be_simplified = False
+                            add_comment('We get')
+                            for s in soln:
+                                if s.is_real:
+                                    add_eq(arg.as_expr(), Pow(base, s, evaluate=False))
+                                    if gen.args[0].is_polynomial(symbol) and Poly(gen.args[0], symbol).is_linear:
+                                        arg = Poly(gen.args[0], symbol)
+                                        a = arg.nth(1)
+                                        b = arg.nth(0)
+                                        result.append((Pow(base, s) - b) / a)
+                                        if a != 1 or b != 0 or Pow(base.as_expr(), s, evaluate=False) != Pow(base.as_expr(), s):
+                                            can_be_simplified = True
+                                    else:
+                                        flags['tsolve'] = False
+                                        result += _solve(gen.args[0] - Pow(base, s), symbol, **flags)
+                                else:
+                                    add_comment('the root ' + str(s) + ' is not real')
+
+                            result = list(map(simplify, result))
+                            result = list(map(expand, result))
+                            if len(result) > 0:
+                                if can_be_simplified:
+                                    add_comment('Therefore')
+                                    for r in result:
+                                        add_eq(symbol, r)
+                            else:
+                                add_comment('There are no real roots')
+
+
+                        else: # if we are there, then we don't know how to comment the solution
+                            if gen != symbol:
+                                u = Dummy()
+                                start_subroutine("Find inversion")
+                                inversion = _solve(gen - u, symbol, **flags)
+                                inversion = list(map(simplify, inversion))
+                                cancel_subroutine()
+                                soln = list(ordered(set([i.subs(u, s) for i in
+                                            inversion for s in soln])))
+                            result = soln
 
     # fallback if above fails
     if result is False:
-
         # allow tsolve to be used on next pass if needed
         flags.pop('tsolve', None)
         try:
@@ -1412,12 +1647,17 @@ def _solve(f, *symbols, **flags):
     if check:
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
-        result = [s for s in result if isinstance(s, RootOf) or
+        checked_result = [s for s in result if isinstance(s, RootOf) or
                   all(not checksol(den, {symbol: s}, **flags)
                     for den in dens)]
         # keep only results if the check is not False
-        result = [r for r in result if isinstance(r, RootOf) or
+        checked_result = [r for r in checked_result if isinstance(r, RootOf) or
                   checksol(f_num, {symbol: r}, **flags) is not False]
+        for r in result:
+            if not r in checked_result:
+                add_comment("The following value is not a root")
+                add_exp(r)
+        result = checked_result
     return result
 
 
@@ -2477,36 +2717,48 @@ def _invert(eq, *symbols, **kwargs):
             a, b = ordered(lhs.args)
             ai, ad = a.as_independent(*symbols)
             bi, bd = b.as_independent(*symbols)
-            if any(_ispow(i) for i in (ad, bd)):
-                a_base, a_exp = ad.as_base_exp()
-                b_base, b_exp = bd.as_base_exp()
-                if a_base == b_base:
-                    # a = -b
-                    lhs = powsimp(powdenest(ad/bd))
-                    rhs = -bi/ai
+            if ad.func is log and bd.func is log:
+                if len(ad.args) == 1:
+                    a_base = S.Exp1
                 else:
-                    rat = ad/bd
-                    _lhs = powsimp(ad/bd)
-                    if _lhs != rat:
-                        lhs = _lhs
+                    a_base = ad.args[1]
+                if len(bd.args) == 1:
+                    b_base = S.Exp1
+                else:
+                    b_base = bd.args[1]
+                if a_base == b_base:
+                    lhs = log(ad.args[0] ** ai * bd.args[0] ** bi, a_base)
+            else:
+                if any(_ispow(i) for i in (ad, bd)):
+                    a_base, a_exp = ad.as_base_exp()
+                    b_base, b_exp = bd.as_base_exp()
+                    if a_base == b_base:
+                        # a = -b
+                        lhs = powsimp(powdenest(ad/bd))
                         rhs = -bi/ai
-            if ai*bi is S.NegativeOne:
-                if all(
-                        isinstance(i, Function) for i in (ad, bd)) and \
-                        ad.func == bd.func and ad.nargs == bd.nargs:
-                    if len(ad.args) == 1:
-                        lhs = ad.args[0] - bd.args[0]
                     else:
-                        # should be able to solve
-                        # f(x, y) == f(2, 3) -> x == 2
-                        # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
-                        raise NotImplementedError('equal function with more than 1 argument')
+                        rat = ad/bd
+                        _lhs = powsimp(ad/bd)
+                        if _lhs != rat:
+                            lhs = _lhs
+                            rhs = -bi/ai
 
+                if ai*bi is S.NegativeOne:
+                    if all(
+                            isinstance(i, Function) for i in (ad, bd)) and \
+                            ad.func == bd.func and ad.nargs == bd.nargs:
+                        if len(ad.args) == 1:
+                            lhs = ad.args[0] - bd.args[0]
+                        else:
+                            # should be able to solve
+                            # f(x, y) == f(2, 3) -> x == 2
+                            # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
+                            raise NotImplementedError('equal function with more than 1 argument')
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
         if lhs.is_Function:
-            if hasattr(lhs, 'inverse') and len(lhs.args) == 1:
+            if hasattr(lhs, 'inverse') and (len(lhs.args) == 1 or (lhs.func == log and len(lhs.args) == 2 and lhs.args[1].is_positive)):
                 #                    -1
                 # f(x) = g  ->  x = f  (g)
                 #
