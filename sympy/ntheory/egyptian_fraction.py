@@ -2,9 +2,8 @@ from __future__ import print_function, division
 
 from sympy import Rational
 from fractions import gcd
-from random import randint
 
-def egypt_fraction(rat, algorithm = None):
+def egypt_fraction(rat, algorithm="Greedy"):
     """
     Return the denominators of an Egtyptian fraction expansion of
     the said rational.
@@ -13,20 +12,21 @@ def egypt_fraction(rat, algorithm = None):
     'rat' is of the form Rational(n, d) where n is numerator and
     d is denominator. 'algorithm' denotes the algorithm to be
     used. By default, the 'algorithm' field can be left empty and
-    the greedy algorithm will be used.
+    the greedy algorithm will be used. 'algorithm' supports
+    values : "Greedy", "Graham Jewett", and "Takenouchi"
 
     Currently the following algorithms are supported :
 
     1) Greedy Algorithm :
     Greedy algorithm for Egyptian fraction expansion
-    Also called the Fibonacci-Sylvester algorithm
+    also called the Fibonacci-Sylvester algorithm.
     At each step, extract the largest unit fraction less
-    than the target and replace the target with the remainder
+    than the target and replace the target with the remainder.
 
     2) Graham Jewett Algorithm :
     The algorithm suggested by the result of Graham and Jewett.
     Note that this has a tendency to blow up: the length of the
-    resulting expansion is always 2**(x/gcd(x, y)) - 1
+    resulting expansion is always 2**(x/gcd(x, y)) - 1 .
 
     3) Takenouchi Algorithm :
     The algorithm suggested by Takenouchi (1921).
@@ -56,8 +56,8 @@ def egypt_fraction(rat, algorithm = None):
 
     """
     x, y = rat.as_numer_denom()
-    def egypt_greedy(x, y):
 
+    def egypt_greedy(x, y):
         if x == 1:
             return [y]
         else:
@@ -71,7 +71,6 @@ def egypt_fraction(rat, algorithm = None):
             return [y//x + 1] + egypt_greedy(num, denom)
 
     def egypt_graham_jewett(x, y):
-
         l = [y] * x
 
         # l is now a list of integers whose reciprocals sum to x/y.
@@ -92,7 +91,6 @@ def egypt_fraction(rat, algorithm = None):
         return sorted(l)
 
     def egypt_takenouchi(x, y):
-
         l = [y] * x
         while len(l) != len(set(l)):
             l.sort()
@@ -113,7 +111,5 @@ def egypt_fraction(rat, algorithm = None):
         return egypt_graham_jewett(x, y)
     elif algorithm == "Takenouchi":
         return egypt_takenouchi(x, y)
-    elif algorithm == None:
-        return egypt_greedy(x, y)
-    else :
+    else:
         raise ValueError("Entered Invalid Algorithm")
