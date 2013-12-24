@@ -13,7 +13,7 @@ def egypt_fraction(rat, algorithm="Greedy"):
     d is denominator. 'algorithm' denotes the algorithm to be
     used. By default, the 'algorithm' field can be left empty and
     the greedy algorithm will be used. 'algorithm' supports
-    values : "Greedy", "Graham Jewett", and "Takenouchi"
+    values : "Greedy", "Graham Jewett", and "Takenouchi".
 
     Currently the following algorithms are supported :
 
@@ -52,7 +52,7 @@ def egypt_fraction(rat, algorithm="Greedy"):
     >>> egypt_fraction(Rational(3, 7), "Graham Jewett")
     [7, 8, 9, 56, 57, 72, 3192]
     >>> egypt_fraction(Rational(3, 7), "Takenouchi")
-    [4, 28, 7]
+    [4, 7, 28]
 
     """
     x, y = rat.as_numer_denom()
