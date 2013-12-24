@@ -67,7 +67,7 @@ def test_factorial():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True, positive=True)
 
-    assert factorial(-2) == 0
+    assert factorial(-2) == oo
     assert factorial(0) == 1
     assert factorial(7) == 5040
     assert factorial(n).func == factorial
