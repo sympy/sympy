@@ -64,6 +64,13 @@ class ExprWithLimits(Expr):
         # Any embedded piecewise functions need to be brought out to the
         # top level so that integration can go into piecewise mode at the
         # earliest possible moment.
+
+        if hasattr(function,'func') and function.func is C.Equality:
+            lhs = function.lhs
+            rhs = function.rhs
+            return C.Equality(cls(lhs,*symbols,**assumptions), \
+                cls(rhs,*symbols,**assumptions))
+
         function = piecewise_fold(sympify(function))
 
         if function is S.NaN:
@@ -331,6 +338,13 @@ class AddWithLimits(ExprWithLimits):
         #
         # This constructor only differs from ExprWithLimits
         # in the application of the orientation variable.  Perhaps merge?
+
+        if hasattr(function,'func') and function.func is C.Equality:
+            lhs = function.lhs
+            rhs = function.rhs
+            return C.Equality(cls(lhs,*symbols,**assumptions), \
+                cls(rhs,*symbols,**assumptions))
+
         function = piecewise_fold(sympify(function))
 
         if function is S.NaN:
