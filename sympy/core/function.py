@@ -102,14 +102,11 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
-        if type(nargs) is not property:
-            if is_sequence(nargs):
-                nargs = tuple(ordered(set(nargs)))
-            elif nargs is not None:
-                nargs = (as_int(nargs),)
-            cls._nargs = nargs  # convert to set in nargs
-        else:
-            pass  # Application and WildFunction pass this way
+        if is_sequence(nargs):
+            nargs = tuple(ordered(set(nargs)))
+        elif nargs is not None:
+            nargs = (as_int(nargs),)
+        cls._nargs = nargs
 
     @property
     def nargs(self):
@@ -125,26 +122,26 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         If the function can take any number of arguments, the set of whole
         numbers is returned:
 
-        >>> f=Function('f')
-        >>> f.nargs
-        Naturals0()
-        >>> f(1).nargs
-        Naturals0()
-        >>> f(1, 2).nargs
+        >>> Function('f').nargs
         Naturals0()
 
         If the function was initialized to accept one or more arguments, a
         corresponding set will be returned:
 
-        >>> f = Function('f', nargs=1)
-        >>> f.nargs
+        >>> Function('f', nargs=1).nargs
         {1}
-        >>> f(1).nargs
-        {1}
-        >>> g = Function('g', nargs=(2, 1))
-        >>> g.nargs
+        >>> Function('f', nargs=(2, 1)).nargs
         {1, 2}
 
+        The undefined function, after application, also has the nargs
+        attribute; the actual number of arguments is always available by
+        checking the ``args`` attribute:
+
+        >>> f = Function('f')
+        >>> f(1).nargs
+        Naturals0()
+        >>> len(f(1).args)
+        1
         """
         from sympy.sets.fancysets import Naturals0
         from sympy.core.sets import FiniteSet
@@ -173,7 +170,9 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
         args = list(map(sympify, args))
         evaluate = options.pop('evaluate', True)
-        nargs = options.pop('nargs', None)
+        # WildFunction (and anything else like it) may have nargs defined
+        # and we throw that value away here
+        options.pop('nargs', None)
 
         if options:
             raise ValueError("Unknown options: %s" % options)
@@ -185,23 +184,21 @@ class Application(with_metaclass(FunctionClass, Basic)):
 
         obj = super(Application, cls).__new__(cls, *args, **options)
 
-        # handle nargs
+        # make nargs uniform here
         try:
-            obj.nargs = FiniteSet(obj.nargs) if obj.nargs else Naturals0()
+            # things passing through here:
+            #  - functions subclassed from Function (e.g. myfunc(1).nargs)
+            #  - functions like cos(1).nargs
+            #  - AppliedUndef with given nargs like Function('f', nargs=1)(1)
+            obj.nargs = FiniteSet(obj.nargs) if obj.nargs is not None \
+                else Naturals0()
         except AttributeError:
-            try:
-                obj._nargs = FiniteSet(obj._nargs) if obj._nargs else Naturals0()
-            except AttributeError:
-                obj._nargs = FiniteSet(nargs) if nargs else Naturals0()
-
+            # things passing through here:
+            #  - WildFunction
+            #  - AppliedUndef with no nargs like Function('f')(1)
+            obj.nargs = FiniteSet(obj._nargs) if obj._nargs is not None \
+                else Naturals0()
         return obj
-
-    @property
-    def nargs(obj):
-        from sympy.core.sets import FiniteSet, Set
-        if isinstance(obj._nargs, Set):
-            return obj._nargs
-        return FiniteSet(obj._nargs)
 
     @classmethod
     def eval(cls, *args):
@@ -750,15 +747,12 @@ class WildFunction(Function, AtomicExpr):
     include = set()
 
     def __init__(cls, name, **assumptions):
-        cls.name = name
-        cls._nargs = assumptions.pop('nargs', S.Naturals0)
-
-    @property
-    def nargs(self):
         from sympy.core.sets import Set, FiniteSet
-        if isinstance(self._nargs, Set):
-            return self._nargs
-        return FiniteSet(self._nargs)
+        cls.name = name
+        nargs = assumptions.pop('nargs', S.Naturals0)
+        if not isinstance(nargs, Set):
+            nargs = FiniteSet(nargs)
+        cls.nargs = nargs
 
     def matches(self, expr, repl_dict={}, old=False):
         if not isinstance(expr, (AppliedUndef, Function)):
