@@ -1377,8 +1377,6 @@ class Lambda(Expr):
     def __eq__(self, other):
         if not isinstance(other, Lambda):
             return False
-        if not (hasattr(self, 'nargs') and hasattr(other, 'nargs')):
-            return False
         if self.nargs != other.nargs:
             return False
 
