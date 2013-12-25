@@ -143,11 +143,10 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         >>> len(f(1).args)
         1
         """
-        from sympy.sets.fancysets import Naturals0
         from sympy.core.sets import FiniteSet
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
-        return FiniteSet(self._nargs) if self._nargs else Naturals0()
+        return FiniteSet(self._nargs) if self._nargs else S.Naturals0
 
     def __repr__(cls):
         return cls.__name__
@@ -1323,9 +1322,9 @@ class Lambda(Expr):
 
     """
     is_Function = True
-    __slots__ = []
 
     def __new__(cls, variables, expr):
+        from sympy.core.sets import FiniteSet
         try:
             for v in variables if iterable(variables) else [variables]:
                 assert v.is_Symbol
@@ -1339,6 +1338,7 @@ class Lambda(Expr):
             return S.IdentityFunction
 
         obj = Expr.__new__(cls, Tuple(*variables), S(expr))
+        obj.nargs = FiniteSet(len(variables))
         return obj
 
     @property
@@ -1354,12 +1354,6 @@ class Lambda(Expr):
     @property
     def free_symbols(self):
         return self.expr.free_symbols - set(self.variables)
-
-    @property
-    def nargs(self):
-        """The number of arguments that this function takes"""
-        from sympy.core.sets import FiniteSet
-        return FiniteSet(len(self._args[0]))
 
     def __call__(self, *args):
         from sympy.core.sets import FiniteSet
@@ -1382,6 +1376,8 @@ class Lambda(Expr):
 
     def __eq__(self, other):
         if not isinstance(other, Lambda):
+            return False
+        if not (hasattr(self, 'nargs') and hasattr(other, 'nargs')):
             return False
         if self.nargs != other.nargs:
             return False
