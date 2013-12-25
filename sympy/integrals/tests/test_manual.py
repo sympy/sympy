@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Mul, Integral, integrate, pi, Dummy, Derivative,
                    diff, I, sqrt, erf, Piecewise, Eq, Ne, Q, assuming, symbols,
-                   And, Heaviside, Max, S, asinh, acosh)
+                   And, Heaviside, Max, S, acos, asinh, acosh)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
@@ -62,6 +62,8 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(x) * cos(x), x) in [sin(x) ** 2 / 2, -cos(x)**2 / 2]
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
     assert manualintegrate(csc(x) * cot(x), x) == -csc(x)
+    assert manualintegrate(sec(x)**2, x) == tan(x)
+    assert manualintegrate(csc(x)**2, x) == -cot(x)
 
     assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
@@ -141,6 +143,15 @@ def test_manualintegrate_inversetrig():
                   (sqrt(a/b)*asinh(x*sqrt(b/a))/sqrt(a), And(a > 0, b > 0)),
                   (sqrt(-a/b)*acosh(x*sqrt(-b/a))/sqrt(-a), And(a < 0, b > 0)))
 
+def test_manualintegrate_trig_substitution():
+    assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
+        sqrt(16*x**2 - 9) - 3*acos(3/(4*x))
+    assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
+        -sqrt(-x**2/25 + 1)/(125*x) - (-x**2/25 + 1)**(3*S.Half)/(15*x**3)
+    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
+        ((49*x**2 + 1)**(5*S.Half)/28824005 -
+         (49*x**2 + 1)**(3*S.Half)/5764801 +
+         3*sqrt(49*x**2 + 1)/5764801 + 1/(5764801*sqrt(49*x**2 + 1)))
 
 def test_manualintegrate_rational():
     assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4
