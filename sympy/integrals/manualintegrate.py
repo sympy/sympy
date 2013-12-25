@@ -141,7 +141,11 @@ def find_substitutions(integrand, symbol, u_var):
             elif term.args[0].is_constant(symbol):
                 return [term.args[1]]
         elif isinstance(term, sympy.Add):
-            return term.args
+            r = []
+            for arg in term.args:
+                r.append(arg)
+                r.extend(possible_subterms(arg))
+            return r
         return []
 
     for u in possible_subterms(integrand):
@@ -459,6 +463,11 @@ def trig_rule(integral):
 
         return TrigRule(func, arg, integrand, symbol)
 
+    if integrand == sympy.sec(symbol)**2:
+        return TrigRule('sec**2', symbol, integrand, symbol)
+    elif integrand == sympy.csc(symbol)**2:
+        return TrigRule('csc**2', symbol, integrand, symbol)
+
     if isinstance(integrand, sympy.tan):
         rewritten = sympy.sin(*integrand.args) / sympy.cos(*integrand.args)
     elif isinstance(integrand, sympy.cot):
@@ -471,6 +480,9 @@ def trig_rule(integral):
         arg = integrand.args[0]
         rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) /
                      (sympy.csc(arg) + sympy.cot(arg)))
+    else:
+        return
+
     return RewriteRule(
         rewritten,
         integral_steps(rewritten, symbol),
@@ -552,7 +564,9 @@ def trig_rewriter(rewrite):
                 integrand, symbol)
     return trig_rewriter_rl
 
-sincos_botheven_condition = uncurry(lambda a, b, m, n, i, s: m.is_even and n.is_even)
+sincos_botheven_condition = uncurry(
+    lambda a, b, m, n, i, s: m.is_even and n.is_even and
+    m.is_nonnegative and n.is_nonnegative)
 
 sincos_botheven = trig_rewriter(
     lambda a, b, m, n, i, symbol: ( (((1 - sympy.cos(2*a*symbol)) / 2) ** (m / 2)) *
@@ -584,6 +598,10 @@ tansec_tanodd = trig_rewriter(
                                      sympy.tan(a*symbol) *
                                      sympy.sec(b*symbol) ** n ))
 
+tan_tansquared_condition = uncurry(lambda a, b, m, n, i, s: m == 2 and n == 0)
+tan_tansquared = trig_rewriter(
+    lambda a, b, m, n, i, symbol: ( sympy.sec(a*symbol)**2 - 1))
+
 cotcsc_csceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 cotcsc_csceven = trig_rewriter(
     lambda a, b, m, n, i, symbol: ( (1 + sympy.cot(b*symbol)**2) ** (n/2 - 1) *
@@ -596,7 +614,7 @@ cotcsc_cotodd = trig_rewriter(
                                     sympy.cot(a*symbol) *
                                     sympy.csc(b*symbol) ** n ))
 
-def trig_powers_products_rule(integral):
+def trig_sincos_rule(integral):
     integrand, symbol = integral
 
     if any(integrand.has(f) for f in (sympy.sin, sympy.cos)):
@@ -611,6 +629,9 @@ def trig_powers_products_rule(integral):
                 sincos_cosodd_condition: sincos_cosodd
             })((a, b, m, n, integrand, symbol))
 
+def trig_tansec_rule(integral):
+    integrand, symbol = integral
+
     integrand = integrand.subs({
         1 / sympy.cos(symbol): sympy.sec(symbol)
     })
@@ -623,9 +644,12 @@ def trig_powers_products_rule(integral):
             a, b, m, n = match.get(a, 0),match.get(b, 0), match.get(m, 0), match.get(n, 0)
             return multiplexer({
                 tansec_tanodd_condition: tansec_tanodd,
-                tansec_seceven_condition: tansec_seceven
+                tansec_seceven_condition: tansec_seceven,
+                tan_tansquared_condition: tan_tansquared
             })((a, b, m, n, integrand, symbol))
 
+def trig_cotcsc_rule(integral):
+    integrand, symbol = integral
     integrand = integrand.subs({
         1 / sympy.sin(symbol): sympy.csc(symbol),
         1 / sympy.tan(symbol): sympy.cot(symbol),
@@ -642,6 +666,11 @@ def trig_powers_products_rule(integral):
                 cotcsc_cotodd_condition: cotcsc_cotodd,
                 cotcsc_csceven_condition: cotcsc_csceven
             })((a, b, m, n, integrand, symbol))
+
+def trig_powers_products_rule(integral):
+    return do_one(null_safe(trig_sincos_rule),
+                  null_safe(trig_tansec_rule),
+                  null_safe(trig_cotcsc_rule))(integral)
 
 def trig_substitution_rule(integral):
     integrand, symbol = integral
@@ -859,8 +888,9 @@ def integral_steps(integrand, symbol, **options):
             sympy.Heaviside: heaviside_rule,
             sympy.Number: constant_rule
         })),
-        null_safe(
-            alternatives(
+        do_one(
+            null_safe(trig_rule),
+            null_safe(alternatives(
                 rewrites_rule,
                 substitution_rule,
                 condition(
@@ -873,7 +903,8 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule
-            )
+            )),
+            null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
     del _integral_cache[cachekey]
@@ -931,6 +962,10 @@ def eval_trig(func, arg, integrand, symbol):
         return sympy.sec(arg)
     elif func == 'csc*cot':
         return sympy.csc(arg)
+    elif func == 'sec**2':
+        return sympy.tan(arg)
+    elif func == 'csc**2':
+        return -sympy.cot(arg)
 
 @evaluates(ReciprocalRule)
 def eval_reciprocal(func, integrand, symbol):
@@ -964,8 +999,37 @@ def eval_piecewise(substeps, integrand, symbol):
 @evaluates(TrigSubstitutionRule)
 def eval_trigsubstitution(theta, func, rewritten, substep, integrand, symbol):
     func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
-    inverse = sympy.solve(symbol - func, theta)[0]
-    return _manualintegrate(substep).subs(theta, inverse).trigsimp()
+
+    trig_function = list(func.find(TrigonometricFunction))
+    assert len(trig_function) == 1
+    trig_function = trig_function[0]
+    relation = sympy.solve(symbol - func, trig_function)
+    assert len(relation) == 1
+    numer, denom = sympy.fraction(relation[0])
+
+    if isinstance(trig_function, sympy.sin):
+        opposite = numer
+        hypotenuse = denom
+        adjacent = sympy.sqrt(denom**2 - numer**2)
+        inverse = sympy.asin(relation[0])
+    elif isinstance(trig_function, sympy.cos):
+        adjacent = numer
+        hypotenuse = denom
+        opposite = sympy.sqrt(denom**2 - numer**2)
+        inverse = sympy.acos(relation[0])
+    elif isinstance(trig_function, sympy.tan):
+        opposite = numer
+        adjacent = denom
+        hypotenuse = sympy.sqrt(denom**2 + numer**2)
+        inverse = sympy.atan(relation[0])
+
+    substitution = [
+        (sympy.sin(theta), opposite/hypotenuse),
+        (sympy.cos(theta), adjacent/hypotenuse),
+        (sympy.tan(theta), opposite/adjacent),
+        (theta, inverse)
+    ]
+    return _manualintegrate(substep).subs(substitution).trigsimp()
 
 @evaluates(DerivativeRule)
 def eval_derivativerule(integrand, symbol):
