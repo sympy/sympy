@@ -1,10 +1,10 @@
 from sympy import S, Symbol, sin, cos
-from sympy.physics.mechanics import ReferenceFrame, Vector
-from sympy.physics.em import divergence, gradient, curl, is_conservative, \
+from sympy.physics.mechanics import ReferenceFrame, Vector, Point
+from sympy.physics.fieldfunctions import divergence, gradient, curl, is_conservative, \
      is_solenoidal, scalar_potential, scalar_potential_difference
-from sympy.utilities.pytest import raises
 
 R = ReferenceFrame('R')
+
 
 def test_curl():
     assert curl(Vector(0), R) == Vector(0)
@@ -80,17 +80,17 @@ def test_scalar_potential():
 
 
 def test_scalar_potential_difference():
-    origin = 0
-    point1 = 1*R.x + 2*R.y + 3*R.z
-    point2 = 4*R.x + 5*R.y + 6*R.z
-    pos_vect = R[0]*R.x + R[1]*R.y + R[2]*R.z
-    assert scalar_potential_difference(S(0), R, point1, point2) == 0
-    assert scalar_potential_difference(scalar_field, R, Vector(0), pos_vect) == \
-                                              scalar_field
-    assert scalar_potential_difference(grad_field, R, Vector(0), pos_vect) == \
-                                              scalar_field
-    assert scalar_potential_difference(grad_field, R, point1, point2) == \
-                                              948
+    origin = Point('O')
+    point1 = origin.locatenew('P1', 1*R.x + 2*R.y + 3*R.z)
+    point2 = origin.locatenew('P2', 4*R.x + 5*R.y + 6*R.z)
+    genericpoint = origin.locatenew('P', R[0]*R.x + R[1]*R.y + R[2]*R.z)
+    assert scalar_potential_difference(S(0), R, point1, point2, origin) == 0
+    assert scalar_potential_difference(scalar_field, R, origin, genericpoint,
+                                       origin) == scalar_field
+    assert scalar_potential_difference(grad_field, R, origin, genericpoint,
+                                       origin) == scalar_field
+    assert scalar_potential_difference(grad_field, R, point1, point2,
+                                       origin) == 948
     assert scalar_potential_difference(R[1]*R[2]*R.x + R[0]*R[2]*R.y + \
-                                       R[0]*R[1]*R.z, R, point1, pos_vect) == \
-                                       R[0]*R[1]*R[2] - 6
+                                       R[0]*R[1]*R.z, R, point1,
+                                       genericpoint, origin) == R[0]*R[1]*R[2] - 6

@@ -20,7 +20,7 @@ def curl(vect, frame):
     ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame
-    >>> from sympy.physics.em import curl
+    >>> from sympy.physics.fieldfunctions import curl
     >>> R = ReferenceFrame('R')
     >>> v1 = R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z
     >>> curl(v1, R)
@@ -34,6 +34,7 @@ def curl(vect, frame):
     _check_vector(vect)
     if vect == 0:
         return Vector(0)
+    #A mechanical approach to avoid looping overheads
     vectx = vect.dot(frame.x)
     vecty = vect.dot(frame.y)
     vectz = vect.dot(frame.z)
@@ -61,7 +62,7 @@ def divergence(vect, frame):
     ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame
-    >>> from sympy.physics.em import divergence
+    >>> from sympy.physics.fieldfunctions import divergence
     >>> R = ReferenceFrame('R')
     >>> v1 = R[0]*R[1]*R[2] * (R.x+R.y+R.z)
     >>> divergence(v1, R)
@@ -102,7 +103,7 @@ def gradient(scalar, frame):
     ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame
-    >>> from sympy.physics.em import gradient
+    >>> from sympy.physics.fieldfunctions import gradient
     >>> R = ReferenceFrame('R')
     >>> s1 = R[0]*R[1]*R[2]
     >>> gradient(s1, R)
@@ -134,7 +135,7 @@ def is_conservative(field):
     ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame
-    >>> from sympy.physics.em import is_conservative
+    >>> from sympy.physics.fieldfunctions import is_conservative
     >>> R = ReferenceFrame('R')
     >>> is_conservative(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z)
     True
@@ -146,7 +147,7 @@ def is_conservative(field):
     #Field is conservative irrespective of frame
     #Take the first frame in the result of the
     #separate() method
-    if field == 0:
+    if field == Vector(0):
         return True
     frame = _separate(field).keys()[0]
     return curl(field, frame) == 0
@@ -166,7 +167,7 @@ def is_solenoidal(field):
     ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame
-    >>> from sympy.physics.em import is_solenoidal
+    >>> from sympy.physics.fieldfunctions import is_solenoidal
     >>> R = ReferenceFrame('R')
     >>> is_solenoidal(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z)
     True
@@ -178,7 +179,7 @@ def is_solenoidal(field):
     #Field is solenoidal irrespective of frame
     #Take the first frame in the result of the
     #separate() method
-    if field == 0:
+    if field == Vector(0):
         return True
     frame = _separate(field).keys()[0]
     return divergence(field, frame) == 0
@@ -203,7 +204,7 @@ def scalar_potential(field, frame):
     ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame
-    >>> from sympy.physics.em import scalar_potential, gradient
+    >>> from sympy.physics.fieldfunctions import scalar_potential, gradient
     >>> R = ReferenceFrame('R')
     >>> scalar_potential(R.z, R) == R[2]
     True
@@ -217,8 +218,8 @@ def scalar_potential(field, frame):
     #Check whether field is conservative
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
-    if field == 0:
-        return Vector(0)
+    if field == Vector(0):
+        return S(0)
     #Express the field exntirely in frame
     #Subsitute coordinate variables also
     _check_frame(frame)
@@ -234,7 +235,7 @@ def scalar_potential(field, frame):
     return temp_function
 
 
-def scalar_potential_difference(field, frame, position1, position2):
+def scalar_potential_difference(field, frame, point1, point2, origin):
     """
     The scalar potential difference between two points in a certain
     frame, wrt a given field.
@@ -254,15 +255,31 @@ def scalar_potential_difference(field, frame, position1, position2):
     frame : ReferenceFrame
         The frame to do the calculations in
 
-    position1 : Vector
-        The position vector of the initial point in given frame
+    point1 : Point
+        The initial Point in given frame
 
-    position2 : Vector
-        The position vector of the final point in given frame
+    position2 : Point
+        The second Point in the given frame
+
+    origin : Point
+        The Point to use as reference point for position vector
+        calculation
 
     Examples
     ========
-    
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, Point
+    >>> from sympy.physics.fieldfunctions import scalar_potential_difference
+    >>> R = ReferenceFrame('R')
+    >>> O = Point('O')
+    >>> P = O.locatenew('P', R[0]*R.x + R[1]*R.y + R[2]*R.z)
+    >>> vectfield = 4*R[0]*R[1]*R.x + 2*R[0]**2*R.y
+    >>> scalar_potential_difference(vectfield, R, O, P, O)
+    2*R_x**2*R_y
+    >>> Q = O.locatenew('O', 3*R.x + R.y + 2*R.z)
+    >>> scalar_potential_difference(vectfield, R, P, Q, O)
+    -2*R_x**2*R_y + 18
+
     """
 
     _check_frame(frame)
@@ -273,8 +290,8 @@ def scalar_potential_difference(field, frame, position1, position2):
         #Field is a scalar
         scalar_fn = field
     #Express positions in required frame
-    position1 = express(position1, frame, variables=True)
-    position2 = express(position2, frame, variables=True)
+    position1 = express(point1.pos_from(origin), frame, variables=True)
+    position2 = express(point2.pos_from(origin), frame, variables=True)
     #Get the two positions as substitution dicts for coordinate variables
     subs_dict1 = {}
     subs_dict2 = {}
@@ -293,9 +310,9 @@ def _separate(vect):
     component vector.
     """
     _check_vector(vect)
-    if vect == 0:
-        return {}
     components = {}
+    if vect == 0:
+        return components
     for x in vect.args:
         components[x[1]] = Vector([x])
     return components
