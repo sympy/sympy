@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul)
+        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul, IV)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
@@ -16,6 +16,20 @@ def test_subs():
     assert e == 2*x
     e = e.subs(x, n3)
     assert e == Rational(6)
+
+
+def test_subs_IV():
+    e = x
+    e = e.subs(x, IV(1, 3))
+    assert e == IV(1, 3)
+
+    e = 2*x
+    e = e.subs(x, IV(1, 3))
+    assert e == IV(2, 6)
+
+    e = x + x**2
+    e = e.subs(x, IV(-1, 1))
+    assert e == IV(-1, 2)
 
 
 def test_trigonometric():
