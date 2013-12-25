@@ -7,7 +7,7 @@ from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
-from sympy.core.sets import Interval
+from sympy.core import IV
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
@@ -226,8 +226,8 @@ class exp(ExpBase):
                 return S.Zero
         elif arg.func is log:
             return arg.args[0]
-        elif isinstance(arg, Interval):
-            return Interval(exp(arg.start, arg.end))
+        elif isinstance(arg, IV):
+            return IV(exp(arg.start), exp(arg.end))
         elif arg.is_Mul:
             Ioo = S.ImaginaryUnit*S.Infinity
             if arg in [Ioo, -Ioo]:
@@ -536,11 +536,11 @@ class log(Function):
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        elif isinstance(arg, Interval):
-            if arg.start > 0:
-                return Interval(log(arg.start), log(arg.end))
+        elif isinstance(arg, IV):
+            if arg.start.is_positive:
+                return IV(log(arg.start), log(arg.end))
             else:
-                return NotImplemented # define and raise an error later
+                return  # TODO define and raise a error
         # don't autoexpand Pow or Mul (see the issue 252):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)

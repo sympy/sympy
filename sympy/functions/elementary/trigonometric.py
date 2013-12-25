@@ -3,11 +3,14 @@ from __future__ import print_function, division
 from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
+from sympy.core.sets import FiniteSet, EmptySet
 from sympy.core.numbers import igcdex
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core import IV
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.integers import floor
 from sympy.utilities.iterables import numbered_symbols
 from sympy.core.compatibility import xrange
 
@@ -186,6 +189,23 @@ class sin(TrigonometricFunction):
                 return S.Zero
             elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return
+
+        if isinstance(arg, IV):
+            start, end = arg.start, arg.end
+            if arg.start is not S.NegativeInfinity:
+                start = arg.start - floor(arg.start/(2*S.Pi))*2*S.Pi
+            if arg.end is not S.Infinity:
+                end = arg.end - floor(arg.start/(2*S.Pi))*2*S.Pi
+
+            if IV(start, end).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not EmptySet() \
+               and IV(start, end).intersect(FiniteSet(3*S.Pi/2, 7*S.Pi/2)) is not EmptySet():
+                return IV(-1, 1)
+            elif IV(start, end).intersect(FiniteSet(S.Pi/2, 5*S.Pi/2)) is not EmptySet():
+                return IV(Min(sin(start), sin(end)), 1)
+            elif IV(start, end).intersect(FiniteSet(3*S.Pi/2, 8*S.Pi/2)) is not EmptySet():
+                return IV(-1, Max(sin(start), sin(end)))
+            else:
+                return IV(Min(sin(start), sin(end)), Max(sin(start), sin(end)))
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -425,6 +445,9 @@ class cos(TrigonometricFunction):
                 # http://code.google.com/p/sympy/issues/detail?id=2097
                 # For now, we return un-evaluated.
                 return
+
+        if isinstance(arg, IV):
+            return sin(arg + S.Pi/2)
 
         if arg.could_extract_minus_sign():
             return cls(-arg)
@@ -919,6 +942,19 @@ class tan(TrigonometricFunction):
             elif arg is S.Zero:
                 return S.Zero
 
+        if isinstance(arg, IV):
+            start, end = arg.start, arg.end
+            if arg.start is not S.NegativeInfinity:
+                start = arg.start - floor(arg.start/S.Pi)*S.Pi
+
+            if arg.end is not S.Infinity:
+                end = arg.end - floor(arg.start/S.Pi)*S.Pi
+
+            if IV(start, end).intersect(FiniteSet(S.Pi/2, 3*S.Pi/2)):
+                return IV(S.NegativeInfinity, S.Infinity)
+            else:
+                return IV(tan(start), tan(end))
+
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
@@ -1129,6 +1165,9 @@ class cot(TrigonometricFunction):
                 return S.NaN
             if arg is S.Zero:
                 return S.ComplexInfinity
+
+        if isinstance(arg, IV):
+            return -tan(arg + S.Pi/2)
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, cacheit
+from sympy.core import S, C, sympify, cacheit, IV
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -66,6 +66,8 @@ class sinh(HyperbolicFunction):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
+        elif isinstance(arg, IV):
+            return IV(sinh(arg.start), sinh(arg.end))
         else:
             if arg is S.ComplexInfinity:
                 return S.NaN
@@ -222,6 +224,16 @@ class cosh(HyperbolicFunction):
                 return S.One
             elif arg.is_negative:
                 return cls(-arg)
+        elif isinstance(arg, IV):
+            if arg.start.is_positive:
+                return IV(cosh(arg.start), cosh(arg.end))
+            elif arg.end.is_negative:
+                return IV(cosh(arg.end), cosh(arg.start))
+            else:
+                if abs(arg.start) < arg.end:
+                    return IV(1, cosh(arg.end))
+                else:
+                    return IV(1, cosh(arg.start))
         else:
             if arg is S.ComplexInfinity:
                 return S.NaN
@@ -377,6 +389,8 @@ class tanh(HyperbolicFunction):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
+        elif isinstance(arg, IV):
+            return IV(tanh(arg.start), tanh(arg.end))
         else:
             if arg is S.ComplexInfinity:
                 return S.NaN
@@ -510,6 +524,11 @@ class coth(HyperbolicFunction):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
+        elif isinstance(arg, IV):
+            if arg.start.is_positive or arg.end.is_negative:
+                return IV(coth(arg.end), coth(arg.start))
+            else:
+                return  # TODO raise a error here
         else:
             if arg is S.ComplexInfinity:
                 return S.NaN

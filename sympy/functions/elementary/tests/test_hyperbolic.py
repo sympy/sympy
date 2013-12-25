@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
     coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
-    Integer, O, exp
+    Integer, O, exp, IV
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -66,6 +66,10 @@ def test_sinh():
     assert sinh(17*k*pi*I) == 0
 
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
+
+
+def test_sinh_IV():
+    assert sinh(IV(-1, 1)) == IV(sinh(-1), sinh(1))
 
 
 def test_sinh_series():
@@ -137,6 +141,13 @@ def test_cosh():
     assert cosh(k*pi) == cosh(k*pi)
 
 
+def test_cosh_IV():
+    assert cosh(IV(1, 2)) == IV(cosh(1), cosh(2))
+    assert cosh(IV(-2, -1)) == IV(cosh(1), cosh(2))
+    assert cosh(IV(-1, 2)) == IV(1, cosh(2))
+    assert cosh(IV(-2, 1)) == IV(1, cosh(2))
+
+
 def test_cosh_series():
     x = Symbol('x')
     assert cosh(x).series(x, 0, 10) == \
@@ -206,6 +217,10 @@ def test_tanh():
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
 
 
+def test_tanh_IV():
+    return tanh(IV(1, 2)) == IV(tanh(1), tanh(2))
+
+
 def test_tanh_series():
     x = Symbol('x')
     assert tanh(x).series(x, 0, 10) == \
@@ -273,6 +288,11 @@ def test_coth():
     assert coth(17*k*pi*I) == -cot(17*k*pi)*I
 
     assert coth(k*pi*I) == -cot(k*pi)*I
+
+
+def test_coth_IV():
+    assert coth(IV(1, 2)) == IV(coth(2), coth(1))
+    assert coth(IV(-2, -1)) == IV(coth(-1), coth(-2))
 
 
 def test_coth_series():

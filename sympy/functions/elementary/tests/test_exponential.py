@@ -1,6 +1,6 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-        sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
+        sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq, IV)
 
 
 def test_exp_values():
@@ -233,6 +233,10 @@ def test_exp_assumptions():
         assert e(re(x)).is_imaginary is False
 
 
+def test_exp_IV():
+    assert exp(IV(1, 2)) == IV(E, E**2)
+
+
 def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
@@ -371,3 +375,7 @@ def test_log_product():
 
     expr = log(Product(-2, (n, 0, 4)))
     assert Eq(simplify(expr), expr)
+
+
+def test_log_IV():
+    assert log(IV(1, E)) == IV(0, 1)

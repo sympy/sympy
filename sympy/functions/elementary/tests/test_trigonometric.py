@@ -2,7 +2,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series)
+        conjugate, series, IV)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.core.compatibility import xrange
@@ -146,6 +146,22 @@ def test_sin_expansion():
     assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
     assert sin(2).expand(trig=True) == 2*sin(1)*cos(1)
     assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
+
+
+def test_sin_IV():
+    assert sin(IV(-oo, oo)) == IV(-1, 1)
+    assert sin(IV(0, oo)) == IV(-1, 1)
+    assert sin(IV(-oo, 0)) == IV(-1, 1)
+
+    assert sin(IV(0, 2*S.Pi)) == IV(-1, 1)
+
+    assert sin(IV(0, 3*S.Pi/4)) == IV(0, 1)
+
+    assert sin(IV(3*S.Pi/4, 7*S.Pi/4)) == IV(-1, sin(3*S.Pi/4))
+
+    assert sin(IV(S.Pi/4, S.Pi/3)) == IV(sin(S.Pi/4), sin(S.Pi/3))
+
+    assert sin(IV(3*S.Pi/4, 5*S.Pi/6)) == IV(sin(5*S.Pi/6), sin(3*S.Pi/4))
 
 
 def test_trig_symmetry():
@@ -313,6 +329,22 @@ def test_cos_expansion():
     assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
 
 
+def test_cos_IV():
+    assert cos(IV(-oo, oo)) == IV(-1, 1)
+    assert cos(IV(0, oo)) == IV(-1, 1)
+    assert cos(IV(-oo, 0)) == IV(-1, 1)
+
+    assert cos(IV(0, 2*S.Pi)) == IV(-1, 1)
+
+    assert cos(IV(-S.Pi/3, S.Pi/4)) == IV(cos(-S.Pi/3), 1)
+
+    assert cos(IV(3*S.Pi/4, 5*S.Pi/4)) == IV(-1, cos(3*S.Pi/4))
+
+    assert cos(IV(5*S.Pi/4, 4*S.Pi/3)) == IV(cos(5*S.Pi/4), cos(4*S.Pi/3))
+
+    assert cos(IV(S.Pi/4, S.Pi/3)) == IV(cos(S.Pi/3), cos(S.Pi/4))
+
+
 def test_tan():
     assert tan(nan) == nan
 
@@ -418,6 +450,14 @@ def test_tan_expansion():
     assert 0 == tan(4*x - pi/4).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*239 - 1
 
 
+def test_tan_IV():
+    assert tan(IV(-oo, oo)) == IV(-oo, oo)
+
+    assert tan(IV(S.Pi/3, 2*S.Pi/3)) == IV(-oo, oo)
+
+    assert tan(IV(S.Pi/6, S.Pi/3)) == IV(tan(S.Pi/6), tan(S.Pi/3))
+
+
 def test_cot():
     assert cot(nan) == nan
 
@@ -519,6 +559,14 @@ def test_cot_expansion():
     assert 0 == cot(2*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 3))])*3 + 4
     assert 0 == cot(3*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 5))])*55 - 37
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
+
+
+def test_cot_IV():
+    assert cot(IV(-oo, oo)) == IV(-oo, oo)
+
+    assert cot(IV(-S.Pi/3, S.Pi/3)) == IV(-oo, oo)
+
+    assert cot(IV(S.Pi/6, S.Pi/3)) == IV(cot(S.Pi/3), cot(S.Pi/6))
 
 
 def test_asin():
