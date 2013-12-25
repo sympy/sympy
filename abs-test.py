@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Exponential equations
+# equations contain abs-sign
 
 from sympy import *
 from sympy.utilities.solution import *
@@ -8,13 +8,12 @@ from sympy.utilities.solution import *
 x = Symbol('x')
 
 eqs = [
-    2**(pi*x + E) - 4,
-    2**x - 8,
-    5**(x + 2) - 125,
-    2**(2 * x) - 8**(x + 1),
-    3**(2 * x + 4) - 11 * 9**x - 210,
-    4**x - 3 * 2**x + 2,
-    2**(5 * x - 1) * 3**(3 * x - 1) * 5**(2 * x - 1) - 720**x
+    abs(x) - 5,
+    abs(3 * x + 4) - 7,
+    abs(2 - 5 * x) + 3,
+    abs(2 * x - 5) - abs(4 - x) + 18,
+    abs(abs(x) - 3) - 15,
+    abs(x**2 - 1*x) - 2
 ]
 
 for eq in eqs:

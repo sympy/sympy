@@ -3945,7 +3945,7 @@ def logcombine(expr, force=False):
     posify: replace all symbols with symbols having positive assumptions
 
     """
-
+    # TODO Test this function with log(x, b) where b is not e.
     def f(rv):
         if not (rv.is_Add or rv.is_Mul):
             return rv

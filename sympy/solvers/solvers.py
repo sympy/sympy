@@ -749,26 +749,28 @@ def solve(f, *symbols, **flags):
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
-    # real/imag handling
-    for i, fi in enumerate(f):
-        _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
-        fi = f[i] = fi.xreplace(dict(list(zip(_abs,
-            [sqrt(a.args[0]**2) for a in _abs]))))
-        if fi.has(*_abs):
-            if any(s.assumptions0 for a in
-                    _abs for s in a.free_symbols):
-                raise NotImplementedError(filldedent('''
-                All absolute
-                values were not removed from %s. In order to solve
-                this equation, try replacing your symbols with
-                Dummy symbols (or other symbols without assumptions).
-                ''' % fi))
-            else:
-                raise NotImplementedError(filldedent('''
-                Removal of absolute values from %s failed.''' % fi))
-        _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
-        f[i] = fi.xreplace(dict(list(zip(_arg,
-            [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
+# use "school" methods for solving equations containing abs-symbol
+#    # real/imag handling
+#    for i, fi in enumerate(f):
+#        _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
+#        fi = f[i] = fi.xreplace(dict(list(zip(_abs,
+#            [sqrt(a.args[0]**2) for a in _abs]))))
+#        if fi.has(*_abs):
+#            if any(s.assumptions0 for a in
+#                    _abs for s in a.free_symbols):
+#                raise NotImplementedError(filldedent('''
+#                All absolute
+#                values were not removed from %s. In order to solve
+#                this equation, try replacing your symbols with
+#                Dummy symbols (or other symbols without assumptions).
+#                ''' % fi))
+#            else:
+#                raise NotImplementedError(filldedent('''
+#                Removal of absolute values from %s failed.''' % fi))
+#        _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
+#        f[i] = fi.xreplace(dict(list(zip(_arg,
+#            [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
+
     # see if re(s) or im(s) appear
     irf = []
     for s in symbols:
@@ -1259,7 +1261,43 @@ def _solve(f, *symbols, **flags):
                     if not g.func in [sin, cos]:
                         return False
                 return True
-      
+
+            # Rewrite equations containg abs(f(x)) to two eqs
+            abss = [a for a in f_num.atoms(Abs) if a.has(*symbols)]
+            if len(abss) > 0:
+                f_num_p = f.xreplace({abss[0]: abss[0].args[0]})
+                add_comment('Solve the following two equations')
+                add_eq(f_num_p, 0)
+                add_comment('assuming that')
+                add_exp(abss[0].args[0] > 0)
+                add_comment('and')
+                f_num_m = f.xreplace({abss[0]: -abss[0].args[0]})
+                add_eq(f_num_m, 0)
+                add_comment('assuming that')
+                add_exp(abss[0].args[0] < 0)
+                add_comment('Solve the equations')
+                result_p = _solve(f_num_p, symbol, **flags)
+                result = []
+                for r in result_p:
+                    v = abss[0].args[0].subs(symbol, r)
+                    if v.is_real and v >= 0:
+                        add_comment('The value ' + str(r) + ' is a root')
+                        result.append(r)
+                    else:
+                        add_comment('The value ' + str(r) + ' is an extraneous root')
+                add_comment('Solve the equations')
+                result_m = _solve(f_num_m, symbol, **flags)
+                for r in result_m:
+                    v = abss[0].args[0].subs(symbol, r)
+                    if v.is_real and v <= 0:
+                        add_comment('The value ' + str(r) + ' is a root')
+                        result.append(r)
+                    else:
+                        add_comment('The value ' + str(r) + ' is an extraneous root')
+
+                return result
+
+            # Transform equations of the forms f(cos(x), sin**2(x)) = 0 and f(sin(x), cos**2(x)) = 0
             if len(gens) == 2 and is_sin_cos(gens):
                 tr5_gens = [g for g in Poly(TR5(poly)).gens if g.has(symbol)]
                 if len(tr5_gens) == 1:
@@ -1274,6 +1312,20 @@ def _solve(f, *symbols, **flags):
                         poly = Poly(TR6(poly))
                         gens = tr6_gens
                         add_eq(poly.as_expr(), 0)
+
+            # Transform equations of the forms cos(f(x)) + cos(g(x)) = 0
+            if f_num.func == Add and f_num.args[0].func == cos and f_num.args[1].func == cos:
+                newf = cos((f_num.args[0].args[0] + f_num.args[1].args[0]) / 2) * cos((f_num.args[0].args[0] - f_num.args[1].args[0]) / 2) * 2
+                add_comment('Rewrite equation')
+                add_eq(newf, 0)
+                return _solve(newf, symbol, **flags)
+            # Transform equations of the forms sin(f(x)) + sin(g(x)) = 0
+            if f_num.func == Add and f_num.args[0].func == sin and f_num.args[1].func == sin:
+                newf = sin((f_num.args[0].args[0] + f_num.args[1].args[0]) / 2) * cos((f_num.args[0].args[0] - f_num.args[1].args[0]) / 2) * 2
+                add_comment('Rewrite equation')
+                add_eq(newf, 0)
+                return _solve(newf, symbol, **flags)
+
 
             def is_log(gens):
                 for g in gens:
@@ -1457,168 +1509,144 @@ def _solve(f, *symbols, **flags):
                                 except NotImplementedError:
                                     pass
 
-                        if gen != symbol and gen.args[0].is_polynomial(symbol) and Poly(gen.args[0], symbol).is_linear and gen.func in [sin, cos, tan, cot]:
-                            # if we are here, then equation has the form trig(ax + b) = m
-                            flags['simplify'] = False  # We return the general solution therefore we cannot
-                            check = False              # simplify and check it
-                            result = []
-                            arg = Poly(gen.args[0], symbol)
+                        if gen != symbol and gen.func in [sin, cos, tan, cot, log, Pow, asin, acos, atan, acot]:
+                            inv_f = []
                             k = Dummy('k')
-                            a = arg.nth(1)
-                            b = arg.nth(0) 
-                            can_be_simplified = a != 1 or b != 0
-                            if gen.func == sin: # sin
-                                add_comment('We get')
+                            f = gen.func
+                            f_arg = gen.args[0]
+                            is_trig = False
+                            if f == sin:
+                                # If we are here, then equation has the form sin(f(x)) = s1, s2, ..., sk.
+                                # We return the general solution therefore we cannot simplify and check it
+                                is_trig = True
                                 for s in soln:
-                                    if s == 1: # use another form for the general solution in this case
-                                        r = pi / 2 + 2 * pi * k 
-                                        result.append((r - b) / a)
-                                        add_eq(arg.as_expr(), r)
-                                    elif s == -1: # also use another form
-                                        r = -pi / 2 + 2 * pi * k 
-                                        result.append((r - b) / a)
-                                        add_eq(arg.as_expr(), r)
-                                    elif s == 0:
-                                        r = pi * k
-                                        result.append((r - b) / a)
-                                        add_eq(arg.as_expr(), r)
-                                    elif s >= -1 and s <= 1:
-                                        add_eq(arg.as_expr(), asin(s, evaluate=False) + 2 * pi * k)
-                                        add_eq(arg.as_expr(), pi - asin(s, evaluate=False) + 2 * pi * k)
-                                        if asin(s, evaluate = False) != asin(s):
-                                            can_be_simplified = True
-                                        result.append((asin(s) + 2 * pi * k - b) / a)
-                                        result.append((pi - asin(s) + 2 * pi * k - b) / a)
-                                    else:
-                                        add_comment('the root ' + str(s) + ' is not in [-1, 1]')
-                            elif gen.func == cos: # cos
-                                add_comment('We get')
-                                can_be_simplified = a != 1 or b != 0
-                                for s in soln: 
+                                    # We use another form for the general solution if s = -1, 0, 1
                                     if s == 1:
-                                        r = 2 * pi * k 
-                                        add_eq(arg.as_expr(), r)
-                                        result.append((r - b) / a)
+                                        inv_f.append([s, f_arg, asin(1, evaluate=False) + 2 * pi * k])
                                     elif s == -1:
-                                        r = pi + 2 * pi * k 
-                                        add_eq(arg.as_expr(), r)
-                                        result.append((r - b) / a)
+                                        inv_f.append([s, f_arg, asin(-1, evaluate=False) + 2 * pi * k])
                                     elif s == 0:
-                                        r = pi / 2 + pi * k
-                                        add_eq(arg.as_expr(), r)
-                                        result.append((r - b) / a)
-                                    elif s >= -1 and s <= 1:
-                                        add_eq(arg.as_expr(), acos(s, evaluate=False) + 2 * pi * k)
-                                        add_eq(arg.as_expr(), -acos(s, evaluate=False) + 2 * pi * k)
-                                        result.append((acos(s) + 2 * pi * k - b) / a)
-                                        result.append((-acos(s) + 2 * pi * k - b) / a)
-                                        if acos(s, evaluate=False) != acos(s):
-                                            can_be_simplified = True
+                                        inv_f.append([s, f_arg, asin(0, evaluate=False) + pi * k])
+                                    elif -1 <= s <= 1:
+                                        inv_f.append([s, f_arg, asin(s, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, pi - asin(s, evaluate=False) + 2 * pi * k])
                                     else:
-                                        add_comment('the root ' + str(s) + ' is not in [-1, 1]')
-                            elif gen.func == tan: #tan
-                                add_comment('We get')
-                                for s in soln: 
-                                    if s.is_real:
-                                        add_eq(arg.as_expr(), atan(s, evaluate=False) + pi * k)
-                                        result.append((atan(s) + pi * k - b) / a)
-                                        if atan(s, evaluate=False) != atan(s):
-                                            can_be_simplified = True
-                                    else:
-                                        add_comment('the root ' + str(s) + ' is not real')
-                            elif gen.func == cot: # cot
-                                add_comment('We get')
+                                        # Let's consider only real roots
+                                        inv_f.append([s, f_arg, None])
+                            elif f == cos: # cos
+                                # If we are here, then equation has the form cos(f(x)) = s1, s2, ..., sk.
+                                is_trig = True
                                 for s in soln:
-                                    if s.is_real: 
-                                        add_eq(arg.as_expr(), acot(s, evaluate=False) + pi * k)
-                                        result.append((acot(s) + pi * k - b) / a)
-                                        if acot(s, evaluate=False) != acot(s):
-                                            can_be_simplified = True
+                                    if s == 1:
+                                        inv_f.append([s, f_arg, acos(1, evaluate=False) + 2 * pi * k])
+                                    elif s == -1:
+                                        inv_f.append([s, f_arg, acos(-1, evaluate=False) + 2 * pi * k])
+                                    elif s == 0:
+                                        inv_f.append([s, f_arg, acos(0, evaluate=False) + pi * k])
+                                    elif -1 <= s <= 1:
+                                        inv_f.append([s, f_arg, acos(s, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, -acos(s, evaluate=False) + 2 * pi * k])
                                     else:
-                                        add_comment('the root ' + str(s) + ' is not real')
-                            result = list(map(simplify, result)) # Possible we don't want to simp the solution
-                            result = list(map(expand, result)) 
-                            if len(result) > 0: 
-                                if can_be_simplified:
-                                    add_comment('Therefore')
-                                    for r in result:
-                                        add_eq(symbol, r)
-                                add_comment('where ' + str(k) + ' can be any integer')
-                            else:
-                                add_comment('There are no real roots')
-                        elif gen != symbol and gen.args[0].is_polynomial(symbol) and Poly(gen.args[0], symbol).is_linear and gen.func == Pow:
-                            # if we are here, then equation has the form y**(ax + b) = m
-                            flags['simplify'] = False
-                            check = False
-                            result = []
-                            arg = Poly(gen.args[1], symbol)
-                            a = arg.nth(1)
-                            b = arg.nth(0)
-                            can_be_simplified = a != 1 or b != 0
-                            add_comment('We get')
-                            for s in soln:
-                                if s.is_real and s > 0:
-                                    add_eq(gen.args[1].as_expr(), log(s, gen.args[0], evaluate=False))
-                                    result.append((log(s, gen.args[0]) - b) / a)
-                                    if log(s, gen.args[0], evaluate=False) != log(s, gen.args[0]):
-                                        can_be_simplified = True
+                                        inv_f.append([s, f_arg, None])
+                            elif f == tan:
+                                # If we are here, then equation has the form tan(f(x)) = s1, s2, ..., sk.
+                                is_trig = True
+                                for s in soln:
+                                    if s.is_real:
+                                        inv_f.append([s, f_arg, atan(s, evaluate=False) + pi * k])
+                                    else:
+                                        inv_f.append([s, f_arg, None])
+                            elif f == cot: # cot
+                                # If we are here, then equation has the form cot(f(x)) = s1, s2, ..., sk.
+                                is_trig = True
+                                for s in soln:
+                                    if s.is_real:
+                                        inv_f.append([s, f_arg, acot(s, evaluate=False) + pi * k])
+                                    else:
+                                        inv_f.append([s, f_arg, None])
+                            elif f == Pow:
+                                # if we are here, then equation has the form y**f(x) = s1, s2, ..., sk.
+                                for s in soln:
+                                    if s.is_real and s > 0:
+                                        inv_f.append([s, gen.args[1], log(s, f_arg, evaluate=False)])
+                                    else:
+                                        inv_f.append([s, gen.args[1], None])
+                            elif f == log:
+                                # if we are here, then equation has the form log(f(x), c) = m
+                                if len(gen.args) == 2:
+                                    base = gen.args[1]
                                 else:
-                                    add_comment('the root ' + str(s) + ' is not positive')
-                            result = list(map(simplify, result))
-                            result = list(map(expand, result))
-                            if len(result) > 0:
-                                if can_be_simplified:
-                                    add_comment('Therefore')
-                                    for r in result:
-                                        add_eq(symbol, r)
-                            else:
-                                add_comment('There are no real roots')
-                        elif gen != symbol and gen.func == log:
-                            # if we are here, then equation has the form log(ax + b, c) = m
-                            flags['simplify'] = False
-                            check = False
-                            result = []
-                            if len(gen.args) == 2:
-                                base = gen.args[1]
-                            else:
-                                base = S.Exp1
-                            arg = gen.args[0]
-                            can_be_simplified = False
+                                    base = S.Exp1
+                                for s in soln:
+                                    if s.is_real:
+                                        inv_f.append([s, f_arg,Pow(base, s, evaluate=False)])
+                                    else:
+                                        re.append([s, f_arg, None])
+                            elif f == asin:
+                                # If we are here, then equation has the form asin(f(x)) = s1, s2, ..., sk.
+                                for s in soln:
+                                    if -pi / 2 <= s <= pi / 2:
+                                        inv_f.append([s, f_arg, sin(s, evaluate=False)])
+                                    else:
+                                        inv_f.append([s, f_arg, None])
+                            elif f == acos:
+                                # If we are here, then equation has the form asin(f(x)) = s1, s2, ..., sk.
+                                for s in soln:
+                                    if 0 <= s <= pi:
+                                        inv_f.append([s, f_arg, cos(s, evaluate=False)])
+                                    else:
+                                        inv_f.append([s, f_arg, None])
+                            elif f == atan:
+                                # If we are here, then equation has the form asin(f(x)) = s1, s2, ..., sk.
+                                for s in soln:
+                                    if -pi / 2 <= s <= pi / 2:
+                                        inv_f.append([s, f_arg, tan(s, evaluate=False)])
+                                    else:
+                                        inv_f.append([s, f_arg, None])
+                            elif f == acot:
+                                # If we are here, then equation has the form asin(f(x)) = s1, s2, ..., sk.
+                                for s in soln:
+                                    if 0 <= s <= pi:
+                                        inv_f.append([s, f_arg, sin(s, evaluate=False)])
+                                    else:
+                                        inv_f.append([s, f_arg, None])
+
+
                             add_comment('We get')
-                            for s in soln:
-                                if s.is_real:
-                                    add_eq(arg.as_expr(), Pow(base, s, evaluate=False))
-                                    if gen.args[0].is_polynomial(symbol) and Poly(gen.args[0], symbol).is_linear:
-                                        arg = Poly(gen.args[0], symbol)
-                                        a = arg.nth(1)
-                                        b = arg.nth(0)
-                                        result.append((Pow(base, s) - b) / a)
-                                        if a != 1 or b != 0 or Pow(base.as_expr(), s, evaluate=False) != Pow(base.as_expr(), s):
-                                            can_be_simplified = True
+                            for r in inv_f:
+                                if r[2] is None:
+                                    add_comment("The value " + str(r[0]) + " is an extraneous root")
+                                else:
+                                    add_eq(r[1], r[2])
+
+                            result = []
+                            for r in inv_f:
+                                if r[2] is not None:
+                                    if r[1].is_polynomial(symbol) and Poly(r[1], symbol).is_linear:
+                                        lin = Poly(r[1], symbol)
+                                        a = lin.nth(1)
+                                        b = lin.nth(0)
+                                        result += [(simplify(r[2]) - b) / a]
                                     else:
                                         flags['tsolve'] = False
-                                        result += _solve(gen.args[0] - Pow(base, s), symbol, **flags)
-                                else:
-                                    add_comment('the root ' + str(s) + ' is not real')
+                                        result += _solve(r[1] - simplify(r[2]), symbol, **flags)
 
                             result = list(map(simplify, result))
                             result = list(map(expand, result))
                             if len(result) > 0:
-                                if can_be_simplified:
-                                    add_comment('Therefore')
-                                    for r in result:
-                                        add_eq(symbol, r)
+                                add_comment('Therefore')
+                                for r in result:
+                                    add_eq(symbol, r)
+                                if is_trig:
+                                    add_comment("Where " + str(k) + " can be any integer")
                             else:
                                 add_comment('There are no real roots')
-
-
+                            return result
                         else: # if we are there, then we don't know how to comment the solution
                             if gen != symbol:
                                 u = Dummy()
-                                start_subroutine("Find inversion")
                                 inversion = _solve(gen - u, symbol, **flags)
                                 inversion = list(map(simplify, inversion))
-                                cancel_subroutine()
                                 soln = list(ordered(set([i.subs(u, s) for i in
                                             inversion for s in soln])))
                             result = soln
