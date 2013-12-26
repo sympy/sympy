@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Exponential equations
+# Equations from Vilenkin book
 
 from sympy import *
 from sympy.utilities.solution import *
@@ -8,13 +8,13 @@ from sympy.utilities.solution import *
 x = Symbol('x')
 
 eqs = [
-    2**(pi*x + E) - 4,
-    2**x - 8,
-    5**(x + 2) - 125,
-    2**(2 * x) - 8**(x + 1),
-    3**(2 * x + 4) - 11 * 9**x - 210,
-    4**x - 3 * 2**x + 2,
-    2**(5 * x - 1) * 3**(3 * x - 1) * 5**(2 * x - 1) - 720**x
+    x**sqrt(x) - x**(x/2),
+    4 - log(x, 10) - 3 * sqrt(log(x, 10)),
+    log(x, Rational(1, 2)) + log(x, 3) - 1,
+    x**log(x, 10) - x**100,
+    sin(3*x) * cos(2 * x) * tan(7 * x),
+    cos(x**2) + cos(5*x**2),
+    sqrt(3) * sin(x) + cos(x) - sqrt(2),
 ]
 
 for eq in eqs:

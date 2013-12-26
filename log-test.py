@@ -27,11 +27,13 @@ eqs = [
 
 for eq in eqs:
     print '===================================================='
-    print '=== Equation: ' + str(eq)
+    print '=== Equation: ' + latex(eq)
 
     reset_solution()
     res = solve(eq, x)
     R = last_solution()
     for r in R: 
         print r
-    print '=== Answer: ' + str(res)
+    print '=== Answer:'
+    for r in res:
+        print latex(r)

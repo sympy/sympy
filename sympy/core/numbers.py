@@ -2020,6 +2020,9 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
 
     def _eval_power(self, expt):
         res = self.__eval_power(expt)
+        # There is a problem: we cannot print (-1)^x, maybe the following lines solve this problem.
+        if res is None:
+            res = self
         make_repr(self, "**", expt, res)
         return res
 

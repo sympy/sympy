@@ -544,12 +544,14 @@ class log(Function):
                         return log(arg.p) - log(arg.q)
                     else:
                         return log(arg.p, base) - log(arg.q, base)
-        elif arg is S.ComplexInfinity:
+        if arg is S.ComplexInfinity:
             return S.ComplexInfinity
         elif (base is None and arg is S.Exp1) or (base == arg):
             return S.One
         elif base is None and arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
+        elif not base is None and base.func == Pow and base.args[0].is_positive and base.args[1].is_real:
+            return log(arg, base.args[0]) / base.args[1]
         elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0] / log(base)
         elif base is None and arg.func is exp_polar:
