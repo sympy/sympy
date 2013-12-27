@@ -10,10 +10,75 @@ from sympy.core.singleton import S
 
 class IV(Interval, AtomicExpr):
     """
-    Class Object to used as Interval for interval arithmetics
-    It differs from the ivf of mpmaths in sense that it can handle symbolic
-    objects like `pi`, `E` and `log(2)`. Do not use it for floating point
-    interval arithmetic calculations use mpmath.iv instead.
+    IV represents an interval `[a, b]` that is an arbitary real number greater
+    than equal to `a` and less than equal to `b`
+    `[a,b] = \{x \in \mathbb{R} \,|\, a \le x \le b\}`
+    where `a` and `b` are real numbers.
+
+    Operation on intervals are defined as
+
+    `[a, b] + [c, d] = \{ x+y| a\le x \le b, c \le y \le d}`
+
+    `[a, b] - [c, d] = \{ x-y| a\le x \le b, c \le y \le d}`
+
+    `[a, b] * [c, d] = \{ x*y | a \le x \le b, c \le y \le d\}`
+
+    `[a, b] / [c, d] = \{ x/y | a \le x \le b, c \le y \le d\}`
+
+    `[a, b]^n = \{ x^n | a \le x \le b}`
+
+    Examples
+    ========
+
+    >>> from sympy import IV, sin, exp, log, pi, E
+    >>> from sympy.abc import x
+
+    >>> IV(0, 1) + IV(1, 2)
+    [0, 3]
+
+    >>> IV(0, 1) - IV(0, 2)
+    [-1, 1]
+
+    >>> IV(-2, 3)*IV(-1, 1)
+    [-3, 2]
+
+    >>> IV(1, 2)*IV(3, 5)
+    [1/5, 2/3]
+
+    Note: `[a, b]^2` is not same as `[a, b]*[a, b]`
+
+    >>> IV(-1, 1)**2
+    [0, 1]
+
+    Some elementary functions can also take intervals as input.
+    A function `f` evaluated for some interval `[a, b]` is defined as
+    `f([a, b]) = \{ f(x) | a \le x \le b \}`
+
+    >>> sin(IV(pi/6, pi/3))
+    [1/2, sqrt(3)/2]
+
+    >>> exp(IV(0, 1))
+    [1, E]
+
+    >>> log(IV(1, E))
+    [0, 1]
+
+    Some symbol in an experssion can be substituted for an Interval.
+    But it doesn't necessarily evaluate the Interval for that expression.
+
+    >>> (x**2 + 2*x + 1).subs(x, IV(-1, 1))
+    [-1, 4]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Interval_arithmetic
+
+    Notes
+    =====
+
+    Do not use ``IV`` for floating point interval arithmetic calculations
+    use ``mpmath.iv`` instead.
     """
 
     def _intersect(self, other):
