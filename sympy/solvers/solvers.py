@@ -13,10 +13,10 @@ This module contain solvers for all kinds of equations:
 """
 
 from __future__ import print_function, division
+from gtk.keysyms import infinity
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, reduce, xrange)
-from sympy.simplify.simplify import bottom_up
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
@@ -34,11 +34,10 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
                              asinh, atanh, acoth, Abs, sign, re, im, arg,
                              sqrt, atan2)
-from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom, logcombine)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
-from sympy.simplify.fu import TR1, hyper_as_trig, TR5, TR6
+from sympy.simplify.fu import TR1, TR5, TR6
 from sympy.matrices import Matrix, zeros
 from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
     degree, PolynomialError)
@@ -53,15 +52,17 @@ from sympy.mpmath import findroot
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
 
-from sympy.assumptions import Q, ask
-
 from types import GeneratorType
 from collections import defaultdict
 import warnings
 
+from sympy import lcm
+
 from sympy.printing.str import StrPrinter
 from sympy.utilities.solution import add_exp, add_eq, add_step, add_comment, start_subroutine, cancel_subroutine
 
+# An integer parameter for solutions of trig eqs.
+_k = Dummy('k', integer=True)
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
@@ -96,7 +97,7 @@ def denoms(eq, symbols=None):
     pot = preorder_traversal(eq)
     dens = set()
     for p in pot:
-        den =  denom(p)
+        den = denom(p)
         if den is S.One:
             continue
         for d in Mul.make_args(den):
@@ -109,6 +110,52 @@ def denoms(eq, symbols=None):
         if any(s in free for s in symbols):
             rv.append(d)
     return set(rv)
+
+
+def get_tans(f, symbols):
+    """
+    Returns set of all tans that appear in f
+    """
+    result = set()
+    if f.args:
+        for a in f.args:
+            result |= get_tans(a, symbols)
+        if f.func is tan:
+            free = f.free_symbols
+            if any(s in free for s in symbols):
+                result.add(f)
+    return result
+
+
+def get_cots(f, symbols):
+    """
+    Returns set of all cots that appear in f
+    """
+    result = set()
+    if f.args:
+        for a in f.args:
+            result |= get_cots(a, symbols)
+        if f.func is cot:
+            free = f.free_symbols
+            if any(s in free for s in symbols):
+                result.add(f)
+    return result
+
+
+def contains_trig(f, symbols):
+    """
+    Returns True if f contains sin, cos, tan or cot
+    """
+    result = []
+    if f.args:
+        for a in f.args:
+            if contains_trig(a, symbols):
+                return True
+        if f.func in [sin, cos, tan, cot]:
+            free = f.free_symbols
+            if any(s in free for s in symbols):
+                return True
+    return False
 
 
 def checksol(f, symbol, sol=None, **flags):
@@ -293,6 +340,104 @@ def checksol(f, symbol, sol=None, **flags):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
+
+
+def is_trig_linear(solution):
+    """
+    Retruns true if the solution has the form a*k + b
+    """
+    if not solution.is_polynomial(_k):
+        return False
+    p = Poly(solution, _k)
+    return p.is_linear and p.nth(1) != 0
+
+
+def extract_linear_trig_solutions(solutions):
+    """
+    Returns two lists: the first one contains solutions in the form form a*k + b, the second one contains other solutions
+    """
+    linear_solutions = []
+    other_solutions = []
+
+    for s in solutions:
+        if is_trig_linear(s):
+            p = Poly(s, _k)
+            a = abs(p.nth(1))
+            b = p.nth(0) % a
+            linear_solutions.append((b, a, s))
+        else:
+            other_solutions.append(s)
+    return linear_solutions, other_solutions
+
+
+def merge_trig_solutions(solutions):
+    """
+    Merges trigonometric solutions of the linear form: a_1*k + b_1, a_2*k + b_2, ..., a_n*k  + b_n.
+    If a solution has another form, then don't merge it.
+    """
+    def is_subsolution(s1, s2):
+        """
+        Returns true if the first solution is a subset of the second one.
+        """
+        return s1[0] == s2[0] and (s1[1] / s2[1]).is_integer
+
+    linear_solutions, merged_solutions = extract_linear_trig_solutions(solutions)
+    linear_solutions = sorted(linear_solutions, reverse=True)
+
+    for i in range(len(linear_solutions)):
+        for j in range(i + 1, len(linear_solutions)):
+            if is_subsolution(linear_solutions[i], linear_solutions[j]):
+                add_comment('The solution ')
+                add_exp(linear_solutions[i][2])
+                add_comment('is a subset of the solution')
+                add_exp(linear_solutions[j][2])
+                break
+        else:
+            merged_solutions.append(linear_solutions[i][2])
+    return merged_solutions
+
+
+def sub_trig_solution(solutions, subtrahend):
+    """
+    Subtract the trigonometric solutions of the linear form a*k + b from the set of triginometric solutions
+    of the linear form a_1*k + b_1, a_2*k + b_2, ..., a_n*k + b_n.
+    If a solution has another form, then do nothing.
+    If the intersection of soutions equals a point, then ignore this case. In the future we can handle it.
+    """
+    def are_intersecting(s1, s2):
+        """
+        Returns true if s1 and s2 have a nontrivial intersection.
+        """
+        return s1[0] == s2[0] and (s1[1] / s2[1]).is_rational
+
+    linear_solutions, result_solutions = extract_linear_trig_solutions(solutions)
+    if is_trig_linear(subtrahend):
+        p = Poly(subtrahend, _k)
+        t = (p.nth(0), p.nth(1), subtrahend)
+    for s in linear_solutions:
+        if are_intersecting(s, t):
+            add_comment('The intersection of the general solution')
+            add_exp(s[2])
+            add_comment('and the set of unadmissible values')
+            add_exp(t[2])
+            add_comment('is not emtpy')
+            # We have
+            # difference = {ak + b} \ {ck + b}.
+            difference = []
+            r = s[1] / t[1]
+            d = s[1] * lcm(r.p, r.q) / r.p
+            for i in range(1, lcm(r.p, r.q) / r.p):
+                difference.append(expand(simplify(d * _k + s[0] + i * s[1])))
+            result_solutions += difference
+            if not difference:
+                add_comment('Therefore this is not a solution')
+            else:
+                add_comment('Therefore the solutions are equal to')
+                for s in difference:
+                    add_exp(s)
+        else:
+            result_solutions.append(s[2])
+    return result_solutions
 
 
 def check_assumptions(expr, **assumptions):
@@ -1087,8 +1232,7 @@ def solve(f, *symbols, **flags):
 def _solve(f, *symbols, **flags):
     """Return a checked solution for f in terms of one or more of the
     symbols."""
-
-    outputed_f = f
+    add_comment('Solve the equation')
     add_eq(f, 0)
 
     if len(symbols) != 1:
@@ -1149,17 +1293,69 @@ def _solve(f, *symbols, **flags):
     if f.is_Mul:
         result = set()
         dens = denoms(f, symbols)
+        tans = get_tans(f, symbols)
+        cots = get_cots(f, symbols)
+        eqs = set()
         for m in f.args:
-            soln = _solve(m, symbol, **flags)
-            result.update(set(soln))
-        result = list(result)
-        if check:
-            result = [s for s in result if
-                all(not checksol(den, {symbol: s}, **flags) for den in dens)]
-        # set flags for quick exit at end
-        check = False
-        flags['simplify'] = False
+            # Ignore equations in the form 1/f(x) = 0
+            if m.is_Pow and m.args[1] < 0:
+                continue
+            #ignore eqs of the form c = 0
+            if m.is_Number:
+                continue
+            eqs.add(m)
+        if len(eqs) > 0:
+            add_comment("To solve this equation we find roots of the following equations")
+            for m in f.args:
+                add_eq(m, 0)
 
+            flags['check'] = False
+            unckecked_result = set()
+            for m in f.args:
+                soln = _solve(m, symbol, **flags)
+                unckecked_result |= set(soln)
+            # Check result
+            trig_dens = set()
+            for d in dens:
+                if contains_trig(d, symbols):
+                    trig_dens.add(d)
+            if len(tans) > 0 or len(cots) > 0 or len(trig_dens) > 0:
+                add_comment('Find unadmissible values')
+                unadmissible_values = set()
+                for t in tans:
+                    add_comment('Find the values when the following expression is undefined')
+                    add_exp(t)
+                    vs = _solve(t.args[0] - pi / 2 - pi * _k, symbol, **flags)
+                    add_comment('The following values are unadmissible')
+                    add_exp(vs)
+                    unadmissible_values |= set(vs)
+                for c in cots:
+                    add_comment('Find the values when the following expression is undefined')
+                    add_exp(c)
+                    vs = _solve(c.args[0] - pi * _k, symbol, **flags)
+                    add_comment('The following values are unadmissible')
+                    add_exp(vs)
+                    unadmissible_values |= set(vs)
+                for d in trig_dens:
+                    add_comment('Find the values when the following expression is undefined')
+                    add_exp(1 / d)
+                    vs = _solve(d, symbol, **flags)
+                    add_comment('The following values are unadmissible')
+                    add_exp(vs)
+                    unadmissible_values |= set(vs)
+                for uv in unadmissible_values:
+                    unckecked_result = sub_trig_solution(unckecked_result, uv)
+
+            for s in unckecked_result:
+                for d in dens:
+                    if checksol(d, {symbol: s}, **flags) == False: # checksol can return None
+                        add_comment('The value ' + str(s) + ' is not a root because it is a root of the denominator')
+                        add_exp(d)
+                        break
+                else:
+                    result.add(s)
+            result = merge_trig_solutions(result)
+        return result
     elif f.is_Piecewise:
         result = set()
         for n, (expr, cond) in enumerate(f.args):
@@ -1480,13 +1676,13 @@ def _solve(f, *symbols, **flags):
                         # Now we should solve polynomial equations.
                         # If equation is trivial (y = m), then let's write nothing,
                         # else we write the substitution and the equation.
-                        
 
                         gen = poly.gen
                         poly = Poly(poly.as_expr(), poly.gen, composite=True)
                         if poly.is_linear:
-                            add_comment('Solve the equation')
-                            add_eq(poly.gen, -poly.nth(0) / poly.nth(1))
+                            if f != poly.as_expr():
+                                add_comment('Solve the equation')
+                                add_eq(poly.gen, -poly.nth(0) / poly.nth(1))
                             soln = [-poly.nth(0) / poly.nth(1)]
                         else:
                             if gen != symbol:
@@ -1496,13 +1692,16 @@ def _solve(f, *symbols, **flags):
                                 add_eq(y, gen)
                             else:
                                 poly_y = poly
-                            soln = list(roots(poly_y, cubics=True, quartics=True,
-                                                                 quintics=True).keys())
+                            rts = roots(poly_y, cubics=True, quartics=True, quintics=True)
+                            rts_number = 0
+                            for r in rts:
+                                rts_number += rts[r]
+                            soln = list(rts.keys())
                             add_comment('We have the following solutions')
                             add_exp(soln)                            
                             # Here is some magic. I believe that we don't go to
                             # this 'if' in case of "school" equations. 
-                            if len(soln) < deg:
+                            if rts_number < deg:
                                 try:
                                     # get all_roots if possible
                                     soln = list(ordered(uniq(poly.all_roots())))
@@ -1511,7 +1710,6 @@ def _solve(f, *symbols, **flags):
 
                         if gen != symbol and gen.func in [sin, cos, tan, cot, log, Pow, asin, acos, atan, acot]:
                             inv_f = []
-                            k = Dummy('k')
                             f = gen.func
                             f_arg = gen.args[0]
                             is_trig = False
@@ -1522,14 +1720,14 @@ def _solve(f, *symbols, **flags):
                                 for s in soln:
                                     # We use another form for the general solution if s = -1, 0, 1
                                     if s == 1:
-                                        inv_f.append([s, f_arg, asin(1, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, asin(1, evaluate=False) + 2 * pi * _k])
                                     elif s == -1:
-                                        inv_f.append([s, f_arg, asin(-1, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, asin(-1, evaluate=False) + 2 * pi * _k])
                                     elif s == 0:
-                                        inv_f.append([s, f_arg, asin(0, evaluate=False) + pi * k])
+                                        inv_f.append([s, f_arg, asin(0, evaluate=False) + pi * _k])
                                     elif -1 <= s <= 1:
-                                        inv_f.append([s, f_arg, asin(s, evaluate=False) + 2 * pi * k])
-                                        inv_f.append([s, f_arg, pi - asin(s, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, asin(s, evaluate=False) + 2 * pi * _k])
+                                        inv_f.append([s, f_arg, pi - asin(s, evaluate=False) + 2 * pi * _k])
                                     else:
                                         # Let's consider only real roots
                                         inv_f.append([s, f_arg, None])
@@ -1538,14 +1736,14 @@ def _solve(f, *symbols, **flags):
                                 is_trig = True
                                 for s in soln:
                                     if s == 1:
-                                        inv_f.append([s, f_arg, acos(1, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, acos(1, evaluate=False) + 2 * pi * _k])
                                     elif s == -1:
-                                        inv_f.append([s, f_arg, acos(-1, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, acos(-1, evaluate=False) + 2 * pi * _k])
                                     elif s == 0:
-                                        inv_f.append([s, f_arg, acos(0, evaluate=False) + pi * k])
+                                        inv_f.append([s, f_arg, acos(0, evaluate=False) + pi * _k])
                                     elif -1 <= s <= 1:
-                                        inv_f.append([s, f_arg, acos(s, evaluate=False) + 2 * pi * k])
-                                        inv_f.append([s, f_arg, -acos(s, evaluate=False) + 2 * pi * k])
+                                        inv_f.append([s, f_arg, acos(s, evaluate=False) + 2 * pi * _k])
+                                        inv_f.append([s, f_arg, -acos(s, evaluate=False) + 2 * pi * _k])
                                     else:
                                         inv_f.append([s, f_arg, None])
                             elif f == tan:
@@ -1553,7 +1751,7 @@ def _solve(f, *symbols, **flags):
                                 is_trig = True
                                 for s in soln:
                                     if s.is_real:
-                                        inv_f.append([s, f_arg, atan(s, evaluate=False) + pi * k])
+                                        inv_f.append([s, f_arg, atan(s, evaluate=False) + pi * _k])
                                     else:
                                         inv_f.append([s, f_arg, None])
                             elif f == cot: # cot
@@ -1561,7 +1759,7 @@ def _solve(f, *symbols, **flags):
                                 is_trig = True
                                 for s in soln:
                                     if s.is_real:
-                                        inv_f.append([s, f_arg, acot(s, evaluate=False) + pi * k])
+                                        inv_f.append([s, f_arg, acot(s, evaluate=False) + pi * _k])
                                     else:
                                         inv_f.append([s, f_arg, None])
                             elif f == Pow:
@@ -1611,7 +1809,6 @@ def _solve(f, *symbols, **flags):
                                     else:
                                         inv_f.append([s, f_arg, None])
 
-
                             add_comment('We get')
                             for r in inv_f:
                                 if r[2] is None:
@@ -1638,7 +1835,7 @@ def _solve(f, *symbols, **flags):
                                 for r in result:
                                     add_eq(symbol, r)
                                 if is_trig:
-                                    add_comment("Where " + str(k) + " can be any integer")
+                                    add_comment("Where " + str(_k) + " can be any integer")
                             else:
                                 add_comment('There are no real roots')
                             return result
@@ -1686,6 +1883,7 @@ def _solve(f, *symbols, **flags):
                 add_comment("The following value is not a root")
                 add_exp(r)
         result = checked_result
+    result = merge_trig_solutions(result)
     return result
 
 

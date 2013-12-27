@@ -19,7 +19,7 @@ eqs = [
 
 for eq in eqs:
     print '===================================================='
-    print '=== Equation: ' + latex(eq)
+    print '=== Equation: ' + latex(eq) + ' = 0'
 
     reset_solution()
     res = solve(eq, x)
