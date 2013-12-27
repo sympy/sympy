@@ -1,4 +1,4 @@
-from sympy.mpmath import *
+from mpmath import *
 
 def test_special():
     assert inf == inf

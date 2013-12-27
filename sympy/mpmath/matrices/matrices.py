@@ -404,10 +404,10 @@ class _matrix(object):
 
     def __get_element(self, key):
         '''
-        Fast extraction of the i,j element from the matrix
-            This function is for private use only because it is unsafe:
-                1. it assumes that ``key`` is an integer tuple (i,j)
-                2. it does not check bounds
+        Fast extraction of the i,j element from the matrix   
+            This function is for private use only because is unsafe:
+                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
+                2. Does not check bounds
         '''
         if key in self.__data:
             return self.__data[key]
@@ -418,9 +418,9 @@ class _matrix(object):
         '''
         Fast assignment of the i,j element in the matrix
             This function is unsafe:
-                1. it assumes that ``key`` is an integer tuple (i,j)
-                2. it does not check bounds
-                3. it does not check the value type
+                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
+                2. Does not check bounds
+                3. Does not check the value type
         '''
         if value: # only store non-zeros
             self.__data[key] = value
@@ -429,11 +429,11 @@ class _matrix(object):
 
 
     def __getitem__(self, key):
-        '''
+        ''' 
             Getitem function for mp matrix class with slice index enabled
             it allows the following assingments
             scalar to a slice of the matrix
-         B = A[:,2:6]
+         B = A[:,2:6] 
         '''
         # Convert vector to matrix indexing
         if isinstance(key, int) or isinstance(key,slice):
@@ -444,7 +444,7 @@ class _matrix(object):
                 key = (key, 0)
             else:
                 raise IndexError('insufficient indices for matrix')
-
+            
         if isinstance(key[0],slice) or isinstance(key[1],slice):
 
             #Rows
@@ -459,7 +459,7 @@ class _matrix(object):
             else:
                 # Single row
                 rows = [key[0]]
-
+            
             # Columns
             if isinstance(key[1],slice):
                 # Check bounds
@@ -469,21 +469,21 @@ class _matrix(object):
                     columns = xrange(*key[1].indices(self.__cols))
                 else:
                     raise IndexError('Column index out of bounds')
-
+                
             else:
                 # Single column
                 columns = [key[1]]
 
             # Create matrix slice
-            m = self.ctx.matrix(len(rows),len(columns))
+            m = self.ctx.matrix(len(rows),len(columns)) 
 
             # Assign elements to the output matrix
             for i,x in enumerate(rows):
                 for j,y in enumerate(columns):
                     m.__set_element((i,j),self.__get_element((x,y)))
-
+            
             return m
-
+            
         else:
             # single element extraction
             if key[0] >= self.__rows or key[1] >= self.__cols:
@@ -509,7 +509,7 @@ class _matrix(object):
                 key = (key, 0)
             else:
                 raise IndexError('insufficient indices for matrix')
-        # Slice indexing
+        # Slice indexing            
         if isinstance(key[0],slice) or isinstance(key[1],slice):
             # Rows
             if isinstance(key[0],slice):
@@ -561,11 +561,11 @@ class _matrix(object):
                 self.__data[key] = value
             elif key in self.__data:
                 del self.__data[key]
-
+        
         if self._LU:
             self._LU = None
         return
-
+        
 
     def __iter__(self):
         for i in xrange(self.__rows):
@@ -751,7 +751,7 @@ class MatrixMethods(object):
         """
         Create square diagonal matrix using given list.
 
-        Examples:
+        Example:
         >>> from mpmath import diag, mp
         >>> mp.pretty = False
         >>> diag([1, 2, 3])
@@ -770,7 +770,7 @@ class MatrixMethods(object):
         Create matrix m x n filled with zeros.
         One given dimension will create square matrix n x n.
 
-        Examples:
+        Example:
         >>> from mpmath import zeros, mp
         >>> mp.pretty = False
         >>> zeros(2)
@@ -796,7 +796,7 @@ class MatrixMethods(object):
         Create matrix m x n filled with ones.
         One given dimension will create square matrix n x n.
 
-        Examples:
+        Example:
         >>> from mpmath import ones, mp
         >>> mp.pretty = False
         >>> ones(2)
@@ -840,7 +840,7 @@ class MatrixMethods(object):
         All values are >= min and <max.
         n defaults to m.
 
-        Examples:
+        Example:
         >>> from mpmath import randmatrix
         >>> randmatrix(2) # doctest:+SKIP
         matrix(

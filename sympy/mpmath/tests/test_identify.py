@@ -1,4 +1,4 @@
-from sympy.mpmath import *
+from mpmath import *
 
 def test_pslq():
     mp.dps = 15

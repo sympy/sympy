@@ -2,7 +2,7 @@ from ..libmp.backend import xrange
 
 # TODO: should use diagonalization-based algorithms
 
-class MatrixCalculusMethods:
+class MatrixCalculusMethods(object):
 
     def _exp_pade(ctx, a):
         """
@@ -55,7 +55,7 @@ class MatrixCalculusMethods:
         Computes the matrix exponential of a square matrix `A`, which is defined
         by the power series
 
-        .. math ::
+        .. math :: 
 
             \exp(A) = I + A + \frac{A^2}{2!} + \frac{A^3}{3!} + \ldots
 
@@ -113,9 +113,12 @@ class MatrixCalculusMethods:
         """
         if method == 'pade':
             prec = ctx.prec
-            ctx.prec += 2*A.rows
-            A = ctx.matrix(A)
-            res = ctx._exp_pade(A)
+            try:
+                A = ctx.matrix(A)
+                ctx.prec += 2*A.rows
+                res = ctx._exp_pade(A)
+            finally:
+                ctx.prec = prec
             return res
         A = ctx.matrix(A)
         prec = ctx.prec

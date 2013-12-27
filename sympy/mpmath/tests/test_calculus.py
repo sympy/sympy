@@ -1,4 +1,4 @@
-from sympy.mpmath import *
+from mpmath import *
 
 def test_approximation():
     mp.dps = 15

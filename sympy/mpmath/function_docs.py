@@ -1878,8 +1878,8 @@ Some special values are::
 An example of a sum that can be computed more accurately and
 efficiently via :func:`~mpmath.altzeta` than via numerical summation::
 
-    >>> sum(-(-1)**n / n**2.5 for n in range(1, 100))
-    0.86720495150398402
+    >>> sum(-(-1)**n / mpf(n)**2.5 for n in range(1, 100))
+    0.867204951503984
     >>> altzeta(2.5)
     0.867199889012184
 
@@ -3972,7 +3972,7 @@ hypergeometric function `\,_2F_2`::
    http://functions.wolfram.com/GammaBetaErf/ExpIntegralEi/27/01/
 
 2. Abramowitz & Stegun, section 5:
-   http://www.math.sfu.ca/~cbm/aands/page_228.htm
+   http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
 3. Asymptotic expansion for Ei:
    http://mathworld.wolfram.com/En-Function.html
@@ -4386,10 +4386,10 @@ negative half of the real axis. They can be computed with
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/ai.py
-.. image :: /modules/mpmath/plots/ai.png
-.. literalinclude :: /modules/mpmath/plots/ai_c.py
-.. image :: /modules/mpmath/plots/ai_c.png
+.. literalinclude :: /plots/ai.py
+.. image :: /plots/ai.png
+.. literalinclude :: /plots/ai_c.py
+.. image :: /plots/ai_c.png
 
 **Basic examples**
 
@@ -4579,10 +4579,10 @@ with :func:`~mpmath.airybizero`.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/bi.py
-.. image :: /modules/mpmath/plots/bi.png
-.. literalinclude :: /modules/mpmath/plots/bi_c.py
-.. image :: /modules/mpmath/plots/bi_c.png
+.. literalinclude :: /plots/bi.py
+.. image :: /plots/bi.png
+.. literalinclude :: /plots/bi_c.py
+.. image :: /plots/bi_c.png
 
 **Basic examples**
 
@@ -4881,8 +4881,8 @@ not the modulus `k` which is sometimes used.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/ellipk.py
-.. image :: /modules/mpmath/plots/ellipk.png
+.. literalinclude :: /plots/ellipk.py
+.. image :: /plots/ellipk.png
 
 **Examples**
 
@@ -5121,8 +5121,8 @@ The Laguerre polynomials are orthogonal with respect to the weight
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/laguerre.py
-.. image :: /modules/mpmath/plots/laguerre.png
+.. literalinclude :: /plots/laguerre.py
+.. image :: /plots/laguerre.png
 
 **Examples**
 
@@ -5198,8 +5198,8 @@ for `\Re{z} > 0`, or generally
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/hermite.py
-.. image :: /modules/mpmath/plots/hermite.png
+.. literalinclude :: /plots/hermite.py
+.. image :: /plots/hermite.png
 
 **Examples**
 
@@ -5398,8 +5398,8 @@ A third definition is in terms of the hypergeometric function
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/legendre.py
-.. image :: /modules/mpmath/plots/legendre.png
+.. literalinclude :: /plots/legendre.py
+.. image :: /plots/legendre.png
 
 **Basic evaluation**
 
@@ -5624,8 +5624,8 @@ evaluated for nonintegral `n`.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/chebyt.py
-.. image :: /modules/mpmath/plots/chebyt.png
+.. literalinclude :: /plots/chebyt.py
+.. image :: /plots/chebyt.png
 
 **Basic evaluation**
 
@@ -5674,8 +5674,8 @@ evaluated for nonintegral `n`.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/chebyu.py
-.. image :: /modules/mpmath/plots/chebyu.png
+.. literalinclude :: /plots/chebyu.py
+.. image :: /plots/chebyu.png
 
 **Basic evaluation**
 
@@ -5743,10 +5743,10 @@ is computed.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/besselj.py
-.. image :: /modules/mpmath/plots/besselj.png
-.. literalinclude :: /modules/mpmath/plots/besselj_c.py
-.. image :: /modules/mpmath/plots/besselj_c.png
+.. literalinclude :: /plots/besselj.py
+.. image :: /plots/besselj.png
+.. literalinclude :: /plots/besselj_c.py
+.. image :: /plots/besselj_c.png
 
 **Examples**
 
@@ -5863,10 +5863,10 @@ is computed.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/besseli.py
-.. image :: /modules/mpmath/plots/besseli.png
-.. literalinclude :: /modules/mpmath/plots/besseli_c.py
-.. image :: /modules/mpmath/plots/besseli_c.png
+.. literalinclude :: /plots/besseli.py
+.. image :: /plots/besseli.png
+.. literalinclude :: /plots/besseli_c.py
+.. image :: /plots/besseli_c.png
 
 **Examples**
 
@@ -5938,10 +5938,10 @@ is computed.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/bessely.py
-.. image :: /modules/mpmath/plots/bessely.png
-.. literalinclude :: /modules/mpmath/plots/bessely_c.py
-.. image :: /modules/mpmath/plots/bessely_c.png
+.. literalinclude :: /plots/bessely.py
+.. image :: /plots/bessely.png
+.. literalinclude :: /plots/bessely_c.py
+.. image :: /plots/bessely_c.png
 
 **Examples**
 
@@ -6001,10 +6001,10 @@ limit.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/besselk.py
-.. image :: /modules/mpmath/plots/besselk.png
-.. literalinclude :: /modules/mpmath/plots/besselk_c.py
-.. image :: /modules/mpmath/plots/besselk_c.png
+.. literalinclude :: /plots/besselk.py
+.. image :: /plots/besselk.png
+.. literalinclude :: /plots/besselk_c.py
+.. image :: /plots/besselk_c.png
 
 **Examples**
 
@@ -6063,10 +6063,10 @@ which is the complex combination of Bessel functions given by
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/hankel1.py
-.. image :: /modules/mpmath/plots/hankel1.png
-.. literalinclude :: /modules/mpmath/plots/hankel1_c.py
-.. image :: /modules/mpmath/plots/hankel1_c.png
+.. literalinclude :: /plots/hankel1.py
+.. image :: /plots/hankel1.png
+.. literalinclude :: /plots/hankel1_c.py
+.. image :: /plots/hankel1_c.png
 
 **Examples**
 
@@ -6090,10 +6090,10 @@ which is the complex combination of Bessel functions given by
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/hankel2.py
-.. image :: /modules/mpmath/plots/hankel2.png
-.. literalinclude :: /modules/mpmath/plots/hankel2_c.py
-.. image :: /modules/mpmath/plots/hankel2_c.png
+.. literalinclude :: /plots/hankel2.py
+.. image :: /plots/hankel2.png
+.. literalinclude :: /plots/hankel2_c.py
+.. image :: /plots/hankel2_c.png
 
 **Examples**
 
@@ -6131,10 +6131,10 @@ is based on [Corless]_.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/lambertw.py
-.. image :: /modules/mpmath/plots/lambertw.png
-.. literalinclude :: /modules/mpmath/plots/lambertw_c.py
-.. image :: /modules/mpmath/plots/lambertw_c.png
+.. literalinclude :: /plots/lambertw.py
+.. image :: /plots/lambertw.png
+.. literalinclude :: /plots/lambertw_c.py
+.. image :: /plots/lambertw_c.png
 
 **Basic examples**
 
@@ -6409,7 +6409,7 @@ Evaluation is supported for arbitrary arguments::
 
 **References**
 
-1. http://www.research.att.com/~njas/sequences/A000178
+1. http://oeis.org/A000178
 
 """
 
@@ -6512,7 +6512,7 @@ definition::
 
 **References**
 
-1. http://www.research.att.com/~njas/sequences/A002109
+1. http://oeis.org/A002109
 2. http://mathworld.wolfram.com/Hyperfactorial.html
 
 """
@@ -6776,7 +6776,7 @@ Evaluation is supported for real and complex arguments::
     -0.7363054628673177346778998
     >>> siegelz(3+4j)
     (-0.1852895764366314976003936 - 0.2773099198055652246992479j)
-
+    
 The first four derivatives are supported, using the
 optional *derivative* keyword argument::
 
@@ -6784,7 +6784,7 @@ optional *derivative* keyword argument::
     56.89689348495089294249178
     >>> diff(siegelz, 1234567, n=3)
     56.89689348495089294249178
-
+    
 
 The Z-function has a Maclaurin expansion::
 
@@ -8057,8 +8057,8 @@ The imaginary part is given by :func:`~mpmath.bei`.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/ber.py
-.. image :: /modules/mpmath/plots/ber.png
+.. literalinclude :: /plots/ber.py
+.. image :: /plots/ber.png
 
 **Examples**
 
@@ -8102,8 +8102,8 @@ The imaginary part is given by :func:`~mpmath.kei`.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/ker.py
-.. image :: /modules/mpmath/plots/ker.png
+.. literalinclude :: /plots/ker.py
+.. image :: /plots/ker.png
 
 **Examples**
 
@@ -8506,8 +8506,8 @@ A second solution is given by :func:`~mpmath.lommels2`.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/lommels1.py
-.. image :: /modules/mpmath/plots/lommels1.png
+.. literalinclude :: /plots/lommels1.py
+.. image :: /plots/lommels1.png
 
 **Examples**
 
@@ -8561,8 +8561,8 @@ which solves the same differential equation as
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/lommels2.py
-.. image :: /modules/mpmath/plots/lommels2.png
+.. literalinclude :: /plots/lommels2.py
+.. image :: /plots/lommels2.png
 
 **Examples**
 
@@ -9085,10 +9085,10 @@ to be complex in this implementation (see references).
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/coulombf.py
-.. image :: /modules/mpmath/plots/coulombf.png
-.. literalinclude :: /modules/mpmath/plots/coulombf_c.py
-.. image :: /modules/mpmath/plots/coulombf_c.png
+.. literalinclude :: /plots/coulombf.py
+.. image :: /plots/coulombf.png
+.. literalinclude :: /plots/coulombf_c.py
+.. image :: /plots/coulombf_c.png
 
 **Examples**
 
@@ -9200,10 +9200,10 @@ See :func:`~mpmath.coulombf` for additional information.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/coulombg.py
-.. image :: /modules/mpmath/plots/coulombg.png
-.. literalinclude :: /modules/mpmath/plots/coulombg_c.py
-.. image :: /modules/mpmath/plots/coulombg_c.png
+.. literalinclude :: /plots/coulombg.py
+.. image :: /plots/coulombg.png
+.. literalinclude :: /plots/coulombg_c.py
+.. image :: /plots/coulombg_c.png
 
 **Examples**
 
@@ -9653,27 +9653,27 @@ are permitted to be complex numbers.
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/spherharm40.py
+.. literalinclude :: /plots/spherharm40.py
 
 `Y_{4,0}`:
 
-.. image :: /modules/mpmath/plots/spherharm40.png
+.. image :: /plots/spherharm40.png
 
 `Y_{4,1}`:
 
-.. image :: /modules/mpmath/plots/spherharm41.png
+.. image :: /plots/spherharm41.png
 
 `Y_{4,2}`:
 
-.. image :: /modules/mpmath/plots/spherharm42.png
+.. image :: /plots/spherharm42.png
 
 `Y_{4,3}`:
 
-.. image :: /modules/mpmath/plots/spherharm43.png
+.. image :: /plots/spherharm43.png
 
 `Y_{4,4}`:
 
-.. image :: /modules/mpmath/plots/spherharm44.png
+.. image :: /plots/spherharm44.png
 
 **Examples**
 
@@ -9738,10 +9738,10 @@ particular solution is given by the Scorer Hi-function
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/gi.py
-.. image :: /modules/mpmath/plots/gi.png
-.. literalinclude :: /modules/mpmath/plots/gi_c.py
-.. image :: /modules/mpmath/plots/gi_c.png
+.. literalinclude :: /plots/gi.py
+.. image :: /plots/gi.png
+.. literalinclude :: /plots/gi_c.py
+.. image :: /plots/gi_c.png
 
 **Examples**
 
@@ -9832,10 +9832,10 @@ differential equation `f''(z) - z f(z) = 1/\pi`. See also
 
 **Plots**
 
-.. literalinclude :: /modules/mpmath/plots/hi.py
-.. image :: /modules/mpmath/plots/hi.png
-.. literalinclude :: /modules/mpmath/plots/hi_c.py
-.. image :: /modules/mpmath/plots/hi_c.png
+.. literalinclude :: /plots/hi.py
+.. image :: /plots/hi.png
+.. literalinclude :: /plots/hi_c.py
+.. image :: /plots/hi_c.png
 
 **Examples**
 
@@ -9894,5 +9894,93 @@ Verifying the integral representation::
     >>> Ai,Bi = airyai,airybi
     >>> Bi(z)*(Ai(z,-1)-Ai(-inf,-1)) - Ai(z)*(Bi(z,-1)-Bi(-inf,-1))
     0.6095559998265972956089949
+
+"""
+
+
+stirling1 = r"""
+Gives the Stirling number of the first kind `s(n,k)`, defined by
+
+.. math ::
+
+    x(x-1)(x-2)\cdots(x-n+1) = \sum_{k=0}^n s(n,k) x^k.
+
+The value is computed using an integer recurrence. The implementation
+is not optimized for approximating large values quickly.
+
+**Examples**
+
+Comparing with the generating function::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> taylor(lambda x: ff(x, 5), 0, 5)
+    [0.0, 24.0, -50.0, 35.0, -10.0, 1.0]
+    >>> [stirling1(5, k) for k in range(6)]
+    [0.0, 24.0, -50.0, 35.0, -10.0, 1.0]
+
+Recurrence relation::
+
+    >>> n, k = 5, 3
+    >>> stirling1(n+1,k) + n*stirling1(n,k) - stirling1(n,k-1)
+    0.0
+
+The matrices of Stirling numbers of first and second kind are inverses
+of each other::
+
+    >>> A = matrix(5, 5); B = matrix(5, 5)
+    >>> for n in range(5):
+    ...     for k in range(5):
+    ...         A[n,k] = stirling1(n,k)
+    ...         B[n,k] = stirling2(n,k)
+    ... 
+    >>> A * B
+    [1.0  0.0  0.0  0.0  0.0]
+    [0.0  1.0  0.0  0.0  0.0]
+    [0.0  0.0  1.0  0.0  0.0]
+    [0.0  0.0  0.0  1.0  0.0]
+    [0.0  0.0  0.0  0.0  1.0]
+
+Pass ``exact=True`` to obtain exact values of Stirling numbers as integers::
+
+    >>> stirling1(42, 5)
+    -2.864498971768501633736628e+50
+    >>> print stirling1(42, 5, exact=True)
+    -286449897176850163373662803014001546235808317440000
+
+"""
+
+stirling2 = r"""
+Gives the Stirling number of the second kind `S(n,k)`, defined by
+
+.. math ::
+
+    x^n = \sum_{k=0}^n S(n,k) x(x-1)(x-2)\cdots(x-k+1)
+
+The value is computed using integer arithmetic to evaluate a power sum.
+The implementation is not optimized for approximating large values quickly.
+
+**Examples**
+
+Comparing with the generating function::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> taylor(lambda x: sum(stirling2(5,k) * ff(x,k) for k in range(6)), 0, 5)
+    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+Recurrence relation::
+
+    >>> n, k = 5, 3
+    >>> stirling2(n+1,k) - k*stirling2(n,k) - stirling2(n,k-1)
+    0.0
+
+Pass ``exact=True`` to obtain exact values of Stirling numbers as integers::
+
+    >>> stirling2(52, 10)
+    2.641822121003543906807485e+45
+    >>> print stirling2(52, 10, exact=True)
+    2641822121003543906807485307053638921722527655
+
 
 """

@@ -81,8 +81,8 @@ def pcfd(ctx, n, z, **kwargs):
 
     **Plots**
 
-    .. literalinclude :: /modules/mpmath/plots/pcfd.py
-    .. image :: /modules/mpmath/plots/pcfd.png
+    .. literalinclude :: /plots/pcfd.py
+    .. image :: /plots/pcfd.png
 
     **Examples**
 

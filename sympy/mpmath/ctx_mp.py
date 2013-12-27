@@ -8,7 +8,7 @@ import re
 
 from .ctx_base import StandardBaseContext
 
-from .libmp.backend import basestring
+from .libmp.backend import basestring, BACKEND
 
 from . import libmp
 
@@ -43,9 +43,13 @@ new = object.__new__
 get_complex = re.compile(r'^\(?(?P<re>[\+\-]?\d*\.?\d*(e[\+\-]?\d+)?)??'
                          r'(?P<im>[\+\-]?\d*\.?\d*(e[\+\-]?\d+)?j)?\)?$')
 
-
-from .ctx_mp_python import PythonMPContext as BaseMPContext
-from . import ctx_mp_python as _mpf_module
+if BACKEND == 'sage':
+    from sage.libs.mpmath.ext_main import Context as BaseMPContext
+    # pickle hack
+    import sage.libs.mpmath.ext_main as _mpf_module
+else:
+    from .ctx_mp_python import PythonMPContext as BaseMPContext
+    from . import ctx_mp_python as _mpf_module
 
 from .ctx_mp_python import _mpf, _mpc, mpnumeric
 
@@ -310,6 +314,60 @@ class MPContext(BaseMPContext, StandardBaseContext):
         if hasattr(x, '_mpc_') or type(x) is complex:
             return True
         return False
+
+    def isnan(ctx, x):
+        """
+        Return *True* if *x* is a NaN (not-a-number), or for a complex
+        number, whether either the real or complex part is NaN;
+        otherwise return *False*::
+
+            >>> from mpmath import *
+            >>> isnan(3.14)
+            False
+            >>> isnan(nan)
+            True
+            >>> isnan(mpc(3.14,2.72))
+            False
+            >>> isnan(mpc(3.14,nan))
+            True
+
+        """
+        if hasattr(x, "_mpf_"):
+            return x._mpf_ == fnan
+        if hasattr(x, "_mpc_"):
+            return fnan in x._mpc_
+        if isinstance(x, int_types) or isinstance(x, rational.mpq):
+            return False
+        x = ctx.convert(x)
+        if hasattr(x, '_mpf_') or hasattr(x, '_mpc_'):
+            return ctx.isnan(x)
+        raise TypeError("isnan() needs a number as input")
+
+    def isfinite(ctx, x):
+        """
+        Return *True* if *x* is a finite number, i.e. neither
+        an infinity or a NaN.
+
+            >>> from mpmath import *
+            >>> isfinite(inf)
+            False
+            >>> isfinite(-inf)
+            False
+            >>> isfinite(3)
+            True
+            >>> isfinite(nan)
+            False
+            >>> isfinite(3+4j)
+            True
+            >>> isfinite(mpc(3,inf))
+            False
+            >>> isfinite(mpc(nan,3))
+            False
+
+        """
+        if ctx.isinf(x) or ctx.isnan(x):
+            return False
+        return True
 
     def isnpint(ctx, x):
         """

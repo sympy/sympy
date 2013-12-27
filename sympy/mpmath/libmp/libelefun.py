@@ -783,9 +783,9 @@ def mpf_log_hypot(a, b, prec, rnd):
 
 def atan_newton(x, prec):
     if prec >= 100:
-        r = math.atan((x>>(prec-53))/2.0**53)
+        r = math.atan(int((x>>(prec-53)))/2.0**53)
     else:
-        r = math.atan(x/2.0**prec)
+        r = math.atan(int(x)/2.0**prec)
     prevp = 50
     r = MPZ(int(r * 2.0**53) >> (53-prevp))
     extra_p = 50
@@ -1035,12 +1035,8 @@ def exponential_series(x, prec, type=0):
         s0 = s1 = MPZ_ZERO
         k = 2
         while a:
-            a //= (k-1)*k
-            s0 += a
-            k += 2
-            a //= (k-1)*k
-            s1 += a
-            k += 2
+            a //= (k-1)*k; s0 += a; k += 2
+            a //= (k-1)*k; s1 += a; k += 2
             a = (a*x4) >> wp
         s1 = (x2*s1) >> wp
         if alt:
@@ -1101,12 +1097,8 @@ def exp_basecase(x, prec):
     k = 2
     a = x2 = (x*x) >> prec
     while a:
-        a //= k
-        s0 += a
-        k += 1
-        a //= k
-        s1 += a
-        k += 1
+        a //= k; s0 += a; k += 1
+        a //= k; s1 += a; k += 1
         a = (a*x2) >> prec
     s1 = (s1*x) >> prec
     s = s0 + s1
@@ -1152,14 +1144,8 @@ def cos_sin_basecase(x, prec):
     k = 2
     a = -((x*x) >> prec)
     while a:
-        a //= k
-        cos += a
-        k += 1
-        a = (a*x) >> prec
-        a //= k
-        sin += a
-        k += 1
-        a = -((a*x) >> prec)
+        a //= k; cos += a; k += 1; a = (a*x) >> prec
+        a //= k; sin += a; k += 1; a = -((a*x) >> prec)
     return ((cos*cos_t-sin*sin_t) >> prec), ((sin*cos_t+cos*sin_t) >> prec)
 
 def mpf_exp(x, prec, rnd=round_fast):

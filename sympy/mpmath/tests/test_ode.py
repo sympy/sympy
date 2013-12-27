@@ -1,5 +1,5 @@
-#from sympy.mpmath.calculus import ODE_step_euler, ODE_step_rk4, odeint, arange
-from sympy.mpmath import odefun, cos, sin, mpf, sinc, mp
+#from mpmath.calculus import ODE_step_euler, ODE_step_rk4, odeint, arange
+from mpmath import odefun, cos, sin, mpf, sinc, mp
 
 '''
 solvers = [ODE_step_euler, ODE_step_rk4]

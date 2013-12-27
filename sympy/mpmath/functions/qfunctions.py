@@ -19,7 +19,7 @@ def qp(ctx, a, q=None, n=None, **kwargs):
             \sum_{k=-\infty}^{\infty} (-1)^k q^{(3k^2-k)/2}
 
     is also known as the Euler function, or (up to a factor `q^{-1/24}`)
-    the Dirichlet eta function.
+    the Dedekind eta function.
 
     **Examples**
 
@@ -207,8 +207,8 @@ def qhyper(ctx, a_s, b_s, q, z, **kwargs):
 
     .. math ::
 
-        \,_r\phi_s \left[\begin{matrix}
-            a_1 & a_2 & \ldots & a_r \\
+        \,_r\phi_s \left[\begin{matrix} 
+            a_1 & a_2 & \ldots & a_r \\ 
             b_1 & b_2 & \ldots & b_s
         \end{matrix} ; q,z \right] =
         \sum_{n=0}^\infty

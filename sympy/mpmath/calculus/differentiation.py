@@ -264,7 +264,7 @@ def diffs(ctx, f, x, n=None, **options):
         n = int(n)
     if options.get('method', 'step') != 'step':
         k = 0
-        while k < n:
+        while k < n + 1:
             yield ctx.diff(f, x, k, **options)
             k += 1
         return

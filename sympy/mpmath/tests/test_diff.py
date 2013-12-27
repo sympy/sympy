@@ -1,4 +1,4 @@
-from sympy.mpmath import *
+from mpmath import *
 
 def test_diff():
     mp.dps = 15
@@ -15,6 +15,13 @@ def test_diff():
     assert diff(lambda x: 3+x**5, 3.0, n=2, method='step').ae(540)
     assert diffun(sin)(2).ae(cos(2))
     assert diffun(sin, n=2)(2).ae(-sin(2))
+
+def test_diffs():
+    mp.dps = 15
+    assert [chop(d) for d in diffs(sin, 0, 1)] == [0, 1]
+    assert [chop(d) for d in diffs(sin, 0, 1, method='quad')] == [0, 1]
+    assert [chop(d) for d in diffs(sin, 0, 2)] == [0, 1, 0]
+    assert [chop(d) for d in diffs(sin, 0, 2, method='quad')] == [0, 1, 0]
 
 def test_taylor():
     mp.dps = 15

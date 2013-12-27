@@ -450,9 +450,7 @@ def _hyp2f1(ctx, a_s, b_s, z, **kwargs):
         # Use 1/z transformation
         if absz >= 1.3:
             def h(a,b):
-                t = ctx.mpq_1-c
-                ab = a-b
-                rz = 1/z
+                t = ctx.mpq_1-c; ab = a-b; rz = 1/z
                 T1 = ([-z],[-a], [c,-ab],[b,c-a], [a,t+a],[ctx.mpq_1+ab],  rz)
                 T2 = ([-z],[-b], [c,ab],[a,c-b], [b,t+b],[ctx.mpq_1-ab],  rz)
                 return T1, T2
@@ -461,10 +459,7 @@ def _hyp2f1(ctx, a_s, b_s, z, **kwargs):
         # Use 1-z transformation
         elif abs(1-z) <= 0.75:
             def h(a,b):
-                t = c-a-b
-                ca = c-a
-                cb = c-b
-                rz = 1-z
+                t = c-a-b; ca = c-a; cb = c-b; rz = 1-z
                 T1 = [], [], [c,t], [ca,cb], [a,b], [1-t], rz
                 T2 = [rz], [t], [c,a+b-c], [a,b], [ca,cb], [1+t], rz
                 return T1, T2

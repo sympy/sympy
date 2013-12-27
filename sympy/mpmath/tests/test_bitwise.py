@@ -2,8 +2,8 @@
 Test bit-level integer and mpf operations
 """
 
-from sympy.mpmath import *
-from sympy.mpmath.libmp import *
+from mpmath import *
+from mpmath.libmp import *
 
 def test_bitcount():
     assert bitcount(0) == 0

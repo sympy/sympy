@@ -17,7 +17,8 @@ from .libmp import (
     mpi_from_str,
     mpci_pos, mpci_neg, mpci_add, mpci_sub, mpci_mul, mpci_div, mpci_pow,
     mpci_abs, mpci_pow, mpci_exp, mpci_log,
-    ComplexResult)
+    ComplexResult,
+    mpf_hash, mpc_hash)
 
 mpi_zero = (fzero, fzero)
 
@@ -45,6 +46,13 @@ class ivmpf(object):
         if a == b:
             return int(libmp.to_int(a))
         raise ValueError
+
+    def __hash__(self):
+        a, b = self._mpi_
+        if a == b:
+            return mpf_hash(a)
+        else:
+            return hash(self._mpi_)
 
     @property
     def real(self): return self
@@ -137,6 +145,13 @@ class ivmpc(object):
         y = new(cls)
         y._mpci_ = re._mpi_, im._mpi_
         return y
+
+    def __hash__(self):
+        (a, b), (c,d) = self._mpci_
+        if a == b and c == d:
+            return mpc_hash((a, c))
+        else:
+            return hash(self._mpci_)
 
     def __repr__(s):
         if s.ctx.pretty:
@@ -258,10 +273,8 @@ ivmpf.__mul__, ivmpf.__rmul__, ivmpc.__mul__, ivmpc.__rmul__ = _binary_op(mpi_mu
 ivmpf.__div__, ivmpf.__rdiv__, ivmpc.__div__, ivmpc.__rdiv__ = _binary_op(mpi_div, mpci_div)
 ivmpf.__pow__, ivmpf.__rpow__, ivmpc.__pow__, ivmpc.__rpow__ = _binary_op(mpi_pow, mpci_pow)
 
-ivmpf.__truediv__ = ivmpf.__div__
-ivmpf.__rtruediv__ = ivmpf.__rdiv__
-ivmpc.__truediv__ = ivmpc.__div__
-ivmpc.__rtruediv__ = ivmpc.__rdiv__
+ivmpf.__truediv__ = ivmpf.__div__; ivmpf.__rtruediv__ = ivmpf.__rdiv__
+ivmpc.__truediv__ = ivmpc.__div__; ivmpc.__rtruediv__ = ivmpc.__rdiv__
 
 class ivmpf_constant(ivmpf):
     def __new__(cls, f):
@@ -502,13 +515,24 @@ class MPIntervalContext(StandardBaseContext):
         while 1:
             for i in num: t *= (coeffs[i]+k)
             for i in den: t /= (coeffs[i]+k)
-            k += 1
-            t /= k
-            t *= z
-            s += t
+            k += 1; t /= k; t *= z; s += t
             if t == 0:
                 return s
             #if abs(t) < tol:
             #    return s
             if k > maxterms:
                 raise ctx.NoConvergence
+
+
+# Register with "numbers" ABC
+#     We do not subclass, hence we do not use the @abstractmethod checks. While
+#     this is less invasive it may turn out that we do not actually support
+#     parts of the expected interfaces.  See
+#     http://docs.python.org/2/library/numbers.html for list of abstract
+#     methods.
+try:
+    import numbers
+    numbers.Complex.register(ivmpc)
+    numbers.Real.register(ivmpf)
+except ImportError:
+    pass
