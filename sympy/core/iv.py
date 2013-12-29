@@ -209,9 +209,10 @@ class IV(Interval, AtomicExpr):
         return NotImplemented
 
     def __abs__(self):
+        from sympy.functions.elementary.miscellaneous import Max
         if self.end.is_negative:
             return self.__neg__()
         elif self.start.is_negative:
-            return IV(S.Zero, self.end)
+            return IV(S.Zero, Max(abs(self.start), self.end))
         else:
             return self

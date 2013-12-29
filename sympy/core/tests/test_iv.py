@@ -30,3 +30,8 @@ def test_IV():
 
     assert IV(-1, 1)**2 == IV(0, 1)
     assert IV(1, 2)**2 == IV(1, 4)
+
+    assert abs(IV(1, 2)) == IV(1, 2)
+    assert abs(IV(-2, -1)) == IV(1, 2)
+    assert abs(IV(-2, 1)) == IV(0, 2)
+    assert abs(IV(-1, 2)) == IV(0, 1)
