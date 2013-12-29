@@ -1,7 +1,7 @@
 from sympy.core import Symbol, S, oo
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import poly
-from sympy.concrete.dispersion import *
+from sympy.polys.dispersion import dispersion, dispersionset
 
 
 def test_dispersion():
