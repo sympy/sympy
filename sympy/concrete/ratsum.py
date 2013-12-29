@@ -12,7 +12,7 @@ from sympy.polys.monomials import itermonomials
 from sympy.polys.polytools import Poly, quo, rem, cancel
 from sympy.polys.partfrac import apart_list
 from sympy.polys.rootoftools import RootSum
-from sympy.concrete.dispersion import dispersion
+from sympy.polys.dispersion import dispersion
 from sympy.matrices import zeros
 from sympy.solvers.linear import solve_general_linear
 from sympy.series import gruntz
