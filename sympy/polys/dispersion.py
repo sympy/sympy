@@ -5,16 +5,17 @@ from sympy.polys.polytools import factor_list
 
 
 def dispersionset(p, q=None):
-    r"""Compute the 'dispersion set' of two polynomials.
+    r"""Compute the *dispersion set* of two polynomials.
 
-    For two polynomials `f(x)` and `g(x)` with `deg f > 0`
-    and `deg g > 0` the dispersion set `J(f, g)` is defined as:
+    For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
+    and `\deg g > 0` the dispersion set `\operatorname{J}(f, g)` is defined as:
 
     .. math::
-        J(f, g) & := \{a \in \mathbb{N}_0 | gcd(f(x), g(x+a)) \neq 1\} \\
-                &  = \{a \in \mathbb{N}_0 | deg gcd(f(x), g(x+a)) \geq 1\}
+        \operatorname{J}(f, g)
+        & := \{a \in \mathbb{N}_0 | \gcd(f(x), g(x+a)) \neq 1\} \\
+        &  = \{a \in \mathbb{N}_0 | \deg \gcd(f(x), g(x+a)) \geq 1\}
 
-    For a single polynomial one defines `J(f) := J(f, f)`.
+    For a single polynomial one defines `\operatorname{J}(f) := \operatorname{J}(f, f)`.
 
     See Also
     ========
@@ -24,20 +25,10 @@ def dispersionset(p, q=None):
     References
     ==========
 
-    .. [1] Yiu-Kwong Man and Francis J. Wright, "Fast Polynomial Dispersion
-           Computation and its Application to Indefinite Summation",
-           Proceedings of the International Symposium on Symbolic and
-           Algebraic Computation, 1994, Pages 175-180
-           http://doi.acm.org/10.1145/190347.190413
-    .. [2] Wolfram Koepf, "Hypergeometric Summation: An Algorithmic Approach
-           to Summation and Special Function Identities", Advanced lectures
-           in mathematics, Vieweg, 1998
-    .. [3] S. A. Abramov, "On the Summation of Rational Functions",
-           USSR Computational Mathematics and Mathematical Physics,
-           Volume 11, Issue 4, 1971, Pages 324-330
-    .. [4] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
-           Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
-           http://www.sciencedirect.com/science/article/pii/S0747717183710539
+    1. [ManWright94]_
+    2. [Koepf98]_
+    3. [Abramov71]_
+    4. [Man93]_
     """
     # Check for valid input
     same = False if q is not None else True
@@ -90,16 +81,17 @@ def dispersionset(p, q=None):
 
 
 def dispersion(p, q=None):
-    r"""Compute the 'dispersion' of polynomials.
+    r"""Compute the *dispersion* of polynomials.
 
-    For two polynomials `f(x)` and `g(x)` with `deg f > 0`
-    and `deg g > 0` the dispersion `dis(f, g)` is defined as:
+    For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
+    and `\deg g > 0` the dispersion `\operatorname{dis}(f, g)` is defined as:
 
     .. math::
-        dis(f, g) & := max\{ J(f,g) \union \{0\} \} \\
-                  &  = max\{ \{a \in \mathbb{N} | gcd(f(x), g(x+a)) \neq 1\} \union \{0\} \}
+        \operatorname{dis}(f, g)
+        & := \max\{ J(f,g) \cup \{0\} \} \\
+        &  = \max\{ \{a \in \mathbb{N} | \gcd(f(x), g(x+a)) \neq 1\} \cup \{0\} \}
 
-    and for a single polynomial `dis(f) := dis(f, f)`.
+    and for a single polynomial `\operatorname{dis}(f) := \operatorname{dis}(f, f)`.
 
     See Also
     ========
@@ -109,20 +101,10 @@ def dispersion(p, q=None):
     References
     ==========
 
-    .. [1] Yiu-Kwong Man and Francis J. Wright, "Fast Polynomial Dispersion
-           Computation and its Application to Indefinite Summation",
-           Proceedings of the International Symposium on Symbolic and
-           Algebraic Computation, 1994, Pages 175-180
-           http://doi.acm.org/10.1145/190347.190413
-    .. [2] Wolfram Koepf, "Hypergeometric Summation: An Algorithmic Approach
-           to Summation and Special Function Identities", Advanced lectures
-           in mathematics, Vieweg, 1998
-    .. [3] S. A. Abramov, "On the Summation of Rational Functions",
-           USSR Computational Mathematics and Mathematical Physics,
-           Volume 11, Issue 4, 1971, Pages 324-330
-    .. [4] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
-           Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
-           http://www.sciencedirect.com/science/article/pii/S0747717183710539
+    1. [ManWright94]_
+    2. [Koepf98]_
+    3. [Abramov71]_
+    4. [Man93]_
     """
     J = dispersionset(p, q)
     if len(J) == 0:

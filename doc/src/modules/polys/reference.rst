@@ -177,3 +177,11 @@ Partial fraction decomposition
 .. autofunction:: apart
 .. autofunction:: apart_list
 .. autofunction:: assemble_partfrac_list
+
+Dispersion of Polynomials
+=========================
+
+.. currentmodule:: sympy.polys.dispersion
+
+.. autofunction:: dispersionset
+.. autofunction:: dispersion
