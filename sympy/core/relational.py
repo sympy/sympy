@@ -138,7 +138,9 @@ def Ge(a, b):
 
 
 class Relational(Boolean, Expr, EvalfMixin):
+    """Superclass for all types of symbolic comparisons between objects.
 
+    """
     __slots__ = []
 
     is_Relational = True
@@ -168,6 +170,14 @@ class Relational(Boolean, Expr, EvalfMixin):
             elif know is False:
                 diff = diff.n()
         if rop_cls is Equality:
+            if hasattr(lhs, '_eval_Eq'):
+                res = lhs._eval_Eq(rhs)
+                if res is not None:
+                    return res
+            if hasattr(rhs, '_eval_Eq'):
+                res = rhs._eval_Eq(lhs)
+                if res is not None:
+                    return res
             if (lhs == rhs) is True or (diff == S.Zero) is True:
                 return True
             elif diff is S.NaN:
@@ -229,6 +239,13 @@ class Relational(Boolean, Expr, EvalfMixin):
 
 
 class Equality(Relational):
+    """Equality check between two symbolic expressions.
+
+    If at least one of the two objects defines the method _eval_Eq, that
+    will be called to evaluate the expression.  If the method does not
+    exist or returns None, the standard algorithm will be used.
+
+    """
 
     rel_op = '=='
 
