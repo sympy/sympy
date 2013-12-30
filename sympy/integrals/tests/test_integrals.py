@@ -753,16 +753,16 @@ def test_issue_5167():
     assert Integral(Integral(Integral(f(x), x), y), z).args == \
         (f(x), Tuple(x), Tuple(y), Tuple(z))
     assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
-    assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
-    assert integrate(Integral(f(x), x), y) == Integral(y*f(x), x)
+    assert integrate(Integral(f(x), y), x) == y*Integral(f(x), x)
+    assert integrate(Integral(f(x), x), y) in [ Integral(y*f(x), x), y*Integral(f(x), x)]
     assert integrate(Integral(2, x), x) == x**2
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
     assert Integral(1, x, y).args != Integral(1, y, x).args
     # do as many as possibble
-    assert Integral(f(x), y, x, y, x).doit() == Integral(y**2*f(x)/2, x, x)
+    assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
     assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
-        Integral(-f(x) + y*f(x), (x, 1, 2), (w, 1, x))
+        y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))
 
 
 def test_issue_4890():
@@ -867,7 +867,7 @@ def test_issue_4892b():
 
 def test_issue_5178():
     assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
-        Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))
+        2*Integral(f(y, z), (y, 0, pi), (z, 0, pi))
 
 
 def test_integrate_series():
@@ -1004,7 +1004,6 @@ def test_issue_4803():
     assert integrate(y/pi*exp(-(x_max - x)/cos(a)), x) == \
         y*exp((x - x_max)/cos(a))*cos(a)/pi
 
-
 def test_issue_4234():
     assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x) / sqrt(1 + tan(x)**2)
 
@@ -1015,3 +1014,9 @@ def test_issue_4492():
             (8*sqrt(x**2 - 5)), Abs(x**2)/5 > 1),
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
+
+def test_issue_2708():
+    assert Integral(1/log(x), (x, 2, 3)).doit() == \
+        NonElementaryIntegral(1/log(x), (x,2,3))
+    assert integrate(exp(z)+1/log(z), (z, 2, 3)) == \
+        NonElementaryIntegral(1/log(z), (z, 2, 3)) - exp(2) + exp(3)

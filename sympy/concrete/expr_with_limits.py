@@ -11,6 +11,7 @@ from sympy.core.compatibility import is_sequence, xrange
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities import flatten
+from sympy.utilities.iterables import sift
 
 
 
@@ -199,6 +200,11 @@ class ExprWithLimits(Expr):
                 isyms.update(i.free_symbols)
         return isyms
 
+    def _eval_interval(self, x, a, b):
+        limits = [ ( i if i[0] != x else (x,a,b) ) for i in self.limits ]
+        integrand = self.function
+        return self.func(integrand, *limits)
+
     def _as_dummy(self):
         """
         Replace instances of the given dummy variables with explicit dummy
@@ -386,16 +392,19 @@ class AddWithLimits(ExprWithLimits):
         return None
 
     def _eval_factor(self, **hints):
-        summand = self.function.factor(**hints)
-        keep_inside = []
-        pull_outside = []
-        if summand.is_Mul and summand.is_commutative:
-            for i in summand.args:
-                if not i.atoms(C.Symbol).intersection(self.variables):
-                    pull_outside.append(i)
-                else:
-                    keep_inside.append(i)
-            return C.Mul(*pull_outside) * self.func(C.Mul(*keep_inside), *self.limits)
+        if 1 == len(self.limits):
+            summand = self.function.factor(**hints)
+            if summand.is_Mul:
+                out = sift(summand.args, lambda w: w.is_commutative \
+                    and not w.has(*self.variables))
+                return C.Mul(*out[True])*self.func(C.Mul(*out[False]), \
+                    *self.limits)
+        else:
+            summand = self.func(self.function, self.limits[0:-1]).factor()
+            if not summand.has(self.variables[-1]):
+                return self.func(1, [self.limits[-1]]).doit()*summand
+            elif isinstance(summand, C.Mul):
+                return self.func(summand, self.limits[-1]).factor()
         return self
 
     def _eval_expand_basic(self, **hints):
