@@ -20,6 +20,7 @@ __all__ = [
     'Operator',
     'HermitianOperator',
     'UnitaryOperator',
+    'IdentityOperator',
     'OuterProduct',
     'DifferentialOperator'
 ]
@@ -235,6 +236,48 @@ class UnitaryOperator(Operator):
 
     def _eval_adjoint(self):
         return self._eval_inverse()
+
+
+class IdentityOperator(Operator):
+    """An identity operator I that satisfies op * I == I * op == op for any
+    operator op.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum import IdentityOperator
+    >>> IdenityOperator()
+    IdenityOperator()
+    """
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    @classmethod
+    def default_args(self):
+        return ("I")
+
+    def __new__(cls, *args, **hints):
+        if not len(args) in [0, 1]:
+            raise ValueError('0 or 1 parameters expected, got %s' % args)
+
+        return Operator.__new__(cls, *args)
+
+    def _eval_anticommutator(self, other, **hints):
+        return None
+
+    def _eval_adjoint(self):
+        return self
+
+    def _apply_operator(self, ket, **options):
+        return ket
+
+    def _print_contents_latex(self, printer, *args):
+        return r'{\mathcal{%s}}' % str(self.name)
+ 
+    def _print_contents(self, printer, *args):
+        return r'%s' % str(self.name)
 
 
 class OuterProduct(Operator):
