@@ -63,7 +63,8 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
-    assert text == "{pi: 3.14, n_i: 3}"
+    # Note : In Python 3 the text is unicode, but in 2 it is a string.
+    assert text in ("{pi: 3.14, n_i: 3}", "{nᵢ: 3, π: 3.14}")
 
     # If we enable the default printing, then the dictionary's should render
     # as a LaTeX version of the whole dict: ${\pi: 3.14, n_i: 3}$
@@ -90,4 +91,5 @@ def test_print_builtin_option():
     else:
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
-    assert text == "{pi: 3.14, n_i: 3}"
+    # Note : In Python 3 the text is unicode, but in 2 it is a string.
+    assert text in ("{pi: 3.14, n_i: 3}", "{nᵢ: 3, π: 3.14}")
