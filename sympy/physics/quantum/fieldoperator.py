@@ -4,11 +4,17 @@
 
 from warnings import warn
 
-from sympy import Add, Mul, Pow, Integer
+from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
+from sympy.physics.quantum import HilbertSpace, Ket, Bra
+from sympy.functions.special.tensor_functions import KroneckerDelta
 
 __all__ = [
     'BosonOperator',
+    'BosonFockKet',
+    'BosonFockBra',
+    'BosonCoherentKet',
+    'BosonCoherentBra',
     'FermionOperator',
     'normal_order',
     'normal_ordered_form'
@@ -414,3 +420,147 @@ def normal_order(expr, recursive_limit=10, _recursive_depth=0):
                                     _recursive_depth=_recursive_depth)
     else:
         return expr
+
+class BosonFockKet(Ket):
+    """Fock state ket for a bosonic mode.
+
+    Parameters
+    ==========
+
+    n : Number
+        The Fock state number.
+
+    """
+
+    def __new__(cls, n):
+        return Ket.__new__(cls, n)
+
+    @property
+    def n(self):
+        return self.label[0]
+
+    @classmethod
+    def dual_class(self):
+        return BosonFockBra
+    
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        return HilbertSpace()
+
+    def _eval_innerproduct_BosonFockBra(self, bra, **hints):
+        return KroneckerDelta(self.n, bra.n)
+    
+    def _apply_operator_BosonOperator(self, op, **options):
+        if op.is_annihilation:
+            if self.n > 0:
+                return sqrt(Integer(self.n)) * BosonFockKet(self.n-1)
+            else:
+                return Integer(0)
+        else:
+            return sqrt(Integer(self.n + 1)) * BosonFockKet(self.n+1)
+
+class BosonFockBra(Bra):
+    """Fock state bra for a bosonic mode.
+
+    Parameters
+    ==========
+
+    n : Number
+        The Fock state number.
+
+    """
+
+    def __new__(cls, n):
+        return Bra.__new__(cls, n)
+
+    @property
+    def n(self):
+        return self.label[0]
+
+    @classmethod
+    def dual_class(self):
+        return BosonFockKet
+    
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        return HilbertSpace()
+
+    def _eval_innerproduct_BosonFockKet(self, ket, **hints):
+        return KroneckerDelta(self.n, ket.n)
+    
+    def _apply_operator_BosonOperator(self, op, **options):
+        if not op.is_annihilation:
+            if self.n > 0:
+                return sqrt(Integer(self.n)) * BosonFockBra(self.n - 1)
+            else:
+                return Integer(0)
+        else:
+            return sqrt(Integer(self.n + 1)) * BosonFockBra(self.n+1)
+
+
+class BosonCoherentKet(Ket):
+    """Coherent state ket for a bosonic mode.
+
+    Parameters
+    ==========
+
+    alpha : Number, Symbol
+        The complex amplitude of the coherent state.
+
+    """
+
+    def __new__(cls, alpha):
+        return Ket.__new__(cls, alpha)
+
+    @property
+    def alpha(self):
+        return self.label[0]
+
+    @classmethod
+    def dual_class(self):
+        return BosonCoherentBra
+    
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        return HilbertSpace()
+    
+    def _eval_innerproduct_BosonCoherentBra(self, bra, **hints):
+        if self.alpha == bra.alpha:
+            return Integer(1)
+        else:
+            return exp(-(abs(self.alpha)**2 + abs(bra.alpha)**2 - 2 * conjugate(bra.alpha) * self.alpha)/2)
+    
+    def _apply_operator_BosonOperator(self, op, **options):
+        if op.is_annihilation:
+            return self.alpha * self
+        else:
+            return None
+
+
+class BosonCoherentBra(Bra):
+    """Coherent state bra for a bosonic mode.
+
+    Parameters
+    ==========
+
+    alpha : Number, Symbol
+        The complex amplitude of the coherent state.
+
+    """
+
+    def __new__(cls, alpha):
+        return Bra.__new__(cls, alpha)
+
+    @property
+    def alpha(self):
+        return self.label[0]
+
+    @classmethod
+    def dual_class(self):
+        return BosonCoherentKet
+        
+    def _apply_operator_BosonOperator(self, op, **options):
+        if not op.is_annihilation:
+            return self.alpha * self
+        else:
+            return None
