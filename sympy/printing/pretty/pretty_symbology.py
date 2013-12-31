@@ -184,7 +184,7 @@ for s in '+-=()':
 # Variable modifiers
 # TODO: Is it worth trying to handle faces with, e.g., 'MATHEMATICAL BOLD CAPITAL A'?
 # TODO: Make brackets adjust to height of contents
-modifier_dict = {
+default_symbol_modifiers = {
     # Accents
     'mathring': lambda s: s+u('\u030A'),
     'ddddot': lambda s: s+u('\u0308\u0308'),
@@ -201,7 +201,7 @@ modifier_dict = {
     'vec': lambda s: s+u('\u20D7'),
     'prime': lambda s: s+u(' \u030D'),
     'prm': lambda s: s+u(' \u030D'),
-    # # Faces -- these are here for some compatibility with latex printing
+    # # Faces -- these are used in latex printing...
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
     # 'cal': lambda s: s,
@@ -473,7 +473,7 @@ def pretty_atom(atom_name, default=None):
         raise KeyError('only unicode')  # send it default printer
 
 
-def pretty_symbol(symb_name):
+def pretty_symbol(symb_name, symbol_modifiers=default_symbol_modifiers):
     """return pretty representation of a symbol"""
     # let's split symb_name into symbol + index
     # UC: beta1
@@ -488,9 +488,9 @@ def pretty_symbol(symb_name):
         gG = greek_unicode.get(s)
         if gG is not None:
             return gG
-        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True) :
+        for key in sorted(symbol_modifiers.keys(), key=lambda k:len(k), reverse=True) :
             if s.lower().endswith(key) and len(s)>len(key):
-                return modifier_dict[key](translate(s[:-len(key)]))
+                return symbol_modifiers[key](translate(s[:-len(key)]))
         return s
 
     name = translate(name)

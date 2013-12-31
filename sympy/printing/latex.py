@@ -63,7 +63,7 @@ other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
                      'hslash', 'mho', 'wp', ])
 
 # Variable name modifiers
-modifier_dict = {
+default_symbol_modifiers = {
     # Accents
     'mathring': lambda s: r'\mathring{'+s+r'}',
     'ddddot': lambda s: r'\ddddot{'+s+r'}',
@@ -111,6 +111,7 @@ class LatexPrinter(Printer):
         "mat_str": None,
         "mat_delim": "[",
         "symbol_names": {},
+        "symbol_modifiers": default_symbol_modifiers
     }
 
     def __init__(self, settings=None):
@@ -540,7 +541,7 @@ class LatexPrinter(Printer):
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
-        func = translate(func)
+        func = translate(func, self._settings['symbol_modifiers'])
 
         if func in accepted_latex_functions:
             name = r"\%s" % func
@@ -1119,9 +1120,9 @@ class LatexPrinter(Printer):
 
         name, supers, subs = split_super_sub(expr.name)
 
-        name = translate(name)
-        supers = [translate(sup) for sup in supers]
-        subs = [translate(sub) for sub in subs]
+        name = translate(name, self._settings['symbol_modifiers'])
+        supers = [translate(sup, self._settings['symbol_modifiers']) for sup in supers]
+        subs = [translate(sub, self._settings['symbol_modifiers']) for sub in subs]
 
         # glue all items together:
         if len(supers) > 0:
@@ -1662,7 +1663,7 @@ class LatexPrinter(Printer):
         return r'\phi\left( %s \right)' %  self._print(expr.args[0])
 
 
-def translate(s):
+def translate(s, symbol_modifiers=default_symbol_modifiers):
     r'''
     Check for a modifier ending the string.  If present, convert the
     modifier to latex and translate the rest recursively.
@@ -1684,9 +1685,9 @@ def translate(s):
         return "\\" + s
     else:
         # Process modifiers, if any, and recurse
-        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True):
+        for key in sorted(symbol_modifiers.keys(), key=lambda k:len(k), reverse=True):
             if s.lower().endswith(key) and len(s)>len(key):
-                return modifier_dict[key](translate(s[:-len(key)]))
+                return symbol_modifiers[key](translate(s[:-len(key)], symbol_modifiers))
         return s
 
 def latex(expr, **settings):
