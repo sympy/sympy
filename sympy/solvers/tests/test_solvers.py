@@ -1291,7 +1291,8 @@ def test_issue_3890():
 
 
 def test_lambert_multivariate():
-    from sympy.abc import a, x, y
+    from sympy.abc import x, y
+    a = Symbol("a", positive=True)
     from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert
 
     assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == set([x, exp(x)])
@@ -1307,9 +1308,6 @@ def test_lambert_multivariate():
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
 
-    # if sign is unknown then only this one solution is obtained
-    assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]  # tested numerically
     p = symbols('p', positive=True)
     assert solve(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == [
         log((-3**(S(1)/3) - 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
@@ -1317,8 +1315,9 @@ def test_lambert_multivariate():
         log((3*LambertW(S(1)/3)/p**5)**(1/(3*log(p)))),]  # checked numerically
     # check collection
     assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        -((log(a**5) + LambertW(1/(b + 3)))/(3*log(a)))]
-
+        (-5*log(a)/S(3) + log(((b + 3)*LambertW(1/(b + 3)))**(1/S(3))))/log(a),
+        (-log(a**5)/S(3) + log(((b + 3)*LambertW(1/(b + 3)))**(1/S(3))*(-1 - sqrt(3)*I)/S(2)))/log(a),
+        (-log(8*a**5)/S(3) + log(((b + 3)*LambertW(1/(b + 3)))**(1/S(3))*(-1 + sqrt(3)*I)))/log(a)]
     eq = 4*2**(2*p + 3) - 2*p - 3
     assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
         -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]
@@ -1394,3 +1393,11 @@ def test_misc():
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
+
+
+def test_integral():
+    f = Function("f")
+    eq = y - Integral(f(x), y)
+    assert solve_linear(eq) == (y, 0)
+    eq = x + y - Integral(f(x), y)
+    assert solve_linear(eq) == (y, -x/(-f(x) + 1))

@@ -1529,7 +1529,7 @@ def test_linear_coeff_match():
 def test_linear_coefficients():
     f = Function('f')
     df = f(x).diff(x)
-    sol = Eq(f(x), C1/(x**2 + 6*x + 9) - S(3)/2)
+    sol = Eq(f(x), (C1 - 3*x**2/2 - 9*x)/(x**2 + 6*x + 9))
     # XXX if force is not used in solve, the following is returned which,
     # for C1 = -81/2, will satisfy the original equation. Should there be
     # another free symbol so a family of solutions can be obtained, e.g.
@@ -1700,6 +1700,7 @@ def test_heuristic_abaco2_unique_unknown():
     assert i == [{eta(x, f(x)): x, xi(x, f(x)): -f(x)}]
     assert checkinfsol(eq, i)[0]
 
+    a = Symbol("a", positive=True)
     eq = (x*f(x).diff(x) + f(x) + 2*x)**2 -4*x*f(x) -4*x**2 -4*a
     i = infinitesimals(eq, hint='abaco2_unique_unknown')
     assert checkinfsol(eq, i)[0]
