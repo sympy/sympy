@@ -1339,6 +1339,7 @@ def imageset(*args):
     See Also:
         ImageSet
     """
+    from sympy.sets import ImageSet
     if len(args) == 3:
         from sympy import Lambda
         f = Lambda(*args[:2])
@@ -1346,4 +1347,4 @@ def imageset(*args):
         f = args[0]
     set = args[-1]
 
-    return set._eval_imageset(f)
+    return ImageSet(f, set).doit()

@@ -173,8 +173,7 @@ class ImageSet(Set):
     9
     16
     """
-    def __new__(cls, lamda, base_set):
-        return Basic.__new__(cls, lamda, base_set)
+    __new__ = Basic.__new__
 
     lamda = property(lambda self: self.args[0])
     base_set = property(lambda self: self.args[1])
@@ -212,6 +211,10 @@ class ImageSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+
+
+    def doit(self, **kwargs):
+        return self.base_set._eval_imageset(self.lamda)
 
 
 @deprecated(useinstead="ImageSet", issue=3958, deprecated_since_version="0.7.4")

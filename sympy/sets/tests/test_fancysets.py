@@ -67,6 +67,8 @@ def test_ImageSet():
 
     assert imageset(x, -x, Interval(0, 1)) == Interval(-1, 0)
 
+    assert ImageSet(Lambda(x, x**2), Interval(0, 2)).doit() == Interval(0, 4)
+
 def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
 
