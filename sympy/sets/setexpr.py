@@ -6,6 +6,16 @@ from sympy.core.compatibility import u
 x = Dummy('x')
 
 
+def setexpr(inp):
+    if isinstance(inp, set):
+        return SetExpr(FiniteSet(inp))
+    if isinstance(inp, tuple) and len(inp) == 2:
+        return SetExpr(Interval(inp[0], inp[1], True, True))
+    if isinstance(inp, list) and len(inp) == 2:
+        return SetExpr(Interval(inp[0], inp[1], False, False))
+    return SetExpr(inp)
+
+
 class SetExpr(Expr):
     set = property(lambda self: self.args[0])
 
