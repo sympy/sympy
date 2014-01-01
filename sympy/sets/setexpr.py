@@ -60,8 +60,8 @@ def join(op, setexprs):
     for key, func in join_list:  # Multiple Dispatch
         if (issubclass(op, key[0])
             and len(key[1:]) == len(setexprs)
-            and all(isinstance(se.set, func)
-                    for se, func in zip(setexprs, key[1:]))):
+            and all(isinstance(se.set, typ)
+                    for se, typ in zip(setexprs, key[1:]))):
             return func(op, *setexprs)
 
     # Two args is a common case for join_foo functions.  Lets reduce with join.
@@ -82,7 +82,6 @@ def join_Add_Intervals(_, a, b):
 
 
 def join_Mul_Intervals(_, a, b):
-    bounds = {(a.set.start, a.set.end), (b.set.start, b.set.end)}
     start = Min(*[x * y for x in (a.set.start, a.set.end)
                         for y in (b.set.start, b.set.end)])
     end =   Max(*[x * y for x in (a.set.start, a.set.end)
@@ -91,7 +90,7 @@ def join_Mul_Intervals(_, a, b):
     return SetExpr(Interval(start, end))
 
 
-def join_Add_FiniteSet(op, a, b):
+def join_FiniteSet(op, a, b):
     if isinstance(b.set, FiniteSet):
         a, b = b, a
     return SetExpr(Union(*[simplify(op(x, b)).set for x in a.set]))
@@ -99,5 +98,5 @@ def join_Add_FiniteSet(op, a, b):
 
 join_list = [[(Add, Interval, Interval),    join_Add_Intervals],
              [(Mul, Interval, Interval),    join_Mul_Intervals],
-             [((Add, Mul), FiniteSet, Set), join_Add_FiniteSet],
-             [((Add, Mul), Set, FiniteSet), join_Add_FiniteSet]]
+             [((Add, Mul), FiniteSet, Set), join_FiniteSet],
+             [((Add, Mul), Set, FiniteSet), join_FiniteSet]]
