@@ -17,7 +17,19 @@ def setexpr(inp):
 
 
 class SetExpr(Expr):
-    """ An expression that can take on values of a set """
+    """ An expression that can take on values of a set
+
+    >>> from sympy import Interval, FiniteSet
+    >>> from sympy.sets.setexpr import SetExpr, simplify
+
+    >>> a = SetExpr(Interval(0, 5))
+    >>> b = SetExpr(FiniteSet(1, 10))
+    >>> simplify(a + b).set
+    [1, 6] U [10, 15]
+
+    >>> simplify(2*a + b).set
+    [1, 20]
+    """
     set = property(lambda self: self.args[0])
 
     def _latex(self, printer):
