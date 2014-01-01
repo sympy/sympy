@@ -56,10 +56,12 @@ def simplify(inp):
     # e.g. simplify(x + y) -> simplify(simplify(x) + simplify(y))
     inp = inp.func(*map(simplify, inp.args))
 
-    # Handle cases like exp(...) or sin(...)
     op, args = inp.func, inp.args
 
     # If operation is commutative and we have non-SetExprs then
+    # 1. Simplify op(*SetExprs)
+    # 2. Turn all non-SetExprs into a function, f = x -> op(x, *non-set-exprs)
+    # 3. Apply and simplify, return simplify(f(op(*SetExprs)))
     if (isinstance(inp, (Add, Mul))
             and not all(isinstance(arg, SetExpr) for arg in inp.args)):
         groups = sift(inp.args, lambda x: isinstance(x, SetExpr))
@@ -67,6 +69,9 @@ def simplify(inp):
         se = simplify(op(*setexprs))  # call out to many-setexpr function
         return SetExpr(imageset(x, op(x, *others), se.set))
 
+    # Multiple dispatch to `_simplify_foo` functions defined below
+    # Dispatched on operator, and then type of argument or type of set if
+    # argument is SetExpr
     args2 = [arg.set if isinstance(arg, SetExpr) else arg for arg in args]
     for key, func in join_list:  # Multiple Dispatch
         if (issubclass(op, key[0])
@@ -75,7 +80,8 @@ def simplify(inp):
                     for se, typ in zip(args2, key[1:]))):
             return func(op, *args)
 
-    # Two args is a common case for _simplify_foo functions.  Lets reduce with join.
+    # Two args is a common case for _simplify_foo functions.
+    # Lets try a reduction with join.
     if len(args) > 2:
         result = args[0]
         for se in args[1:]:
