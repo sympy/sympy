@@ -193,10 +193,8 @@ class Dyadic(object):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + r" " +
-                          mlp.doprint(ar[i][1]) +
-                          r"\otimes " +
-                          mlp.doprint(ar[i][2]))
+                ol.append(str_start + arg_str + mlp.doprint(ar[i][1]) +
+                          r"\otimes " + mlp.doprint(ar[i][2]))
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -1479,8 +1477,7 @@ class Vector(object):
                         str_start = ' - '
                     else:
                         str_start = ' + '
-                    ol.append(str_start + arg_str + '*' +
-                              ar[i][1].latex_vecs[j])
+                    ol.append(str_start + arg_str + ar[i][1].latex_vecs[j])
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
