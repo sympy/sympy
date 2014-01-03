@@ -215,9 +215,9 @@ class Pow(Expr):
 
         # Special case for when b is nan. See pull req 1714 for details
         if b is S.NaN:
-            smallarg = (abs(e) <= S.Zero)
+            smallarg = abs(e).is_negative
         else:
-            smallarg = (abs(e) <= abs(S.Pi/log(b)))
+            smallarg = (abs(e) - abs(S.Pi/log(b))).is_negative
         if (other.is_Rational and other.q == 2 and
                 e.is_real is False and smallarg is False):
             return -self.func(b, e*other)
