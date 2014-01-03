@@ -12,6 +12,7 @@ ipython = import_module("IPython", min_module_version="0.11")
 if not ipython:
     disabled = True
 
+
 def test_ipythonprinting():
     # Initialize and setup IPython session
     app = init_ipython_session()
@@ -64,7 +65,7 @@ def test_print_builtin_option():
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
     # Note : In Python 3 the text is unicode, but in 2 it is a string.
-    assert text in ("{pi: 3.14, n_i: 3}", "{nᵢ: 3, π: 3.14}")
+    assert text in ("{pi: 3.14, n_i: 3}", u('{n\u1d62: 3, \u03c0: 3.14}'))
 
     # If we enable the default printing, then the dictionary's should render
     # as a LaTeX version of the whole dict: ${\pi: 3.14, n_i: 3}$
@@ -92,4 +93,7 @@ def test_print_builtin_option():
         text = app.user_ns['a'][0]['text/plain']
         raises(KeyError, lambda: app.user_ns['a'][0]['text/latex'])
     # Note : In Python 3 the text is unicode, but in 2 it is a string.
-    assert text in ("{pi: 3.14, n_i: 3}", "{nᵢ: 3, π: 3.14}")
+    # Python 3.3.3 + IPython 0.13.2 gives: '{n_i: 3, pi: 3.14}'
+    # Python 3.3.3 + IPython 1.1.0 gives: '{n_i: 3, pi: 3.14}'
+    # Python 2.7.5 + IPython 1.1.0 gives: '{pi: 3.14, n_i: 3}'
+    assert text in ("{pi: 3.14, n_i: 3}", "{n_i: 3, pi: 3.14}")
