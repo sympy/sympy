@@ -1,9 +1,12 @@
 from sympy import S, Symbol, sin, cos
 from sympy.physics.mechanics import ReferenceFrame, Vector, Point
-from sympy.physics.fieldfunctions import divergence, gradient, curl, is_conservative, \
-     is_solenoidal, scalar_potential, scalar_potential_difference
+from sympy.physics.fieldfunctions import divergence, gradient, curl, \
+     is_conservative, is_solenoidal, scalar_potential, \
+     scalar_potential_difference
 
 R = ReferenceFrame('R')
+q = dynamicsymbols('q')
+P = R.orientnew('P', 'Axis', [q, R.z])
 
 
 def test_curl():
@@ -15,6 +18,9 @@ def test_curl():
            (-R[0]*R[1] + R[0]*R[2])*R.x + (R[0]*R[1] - R[1]*R[2])*R.y + \
            (-R[0]*R[2] + R[1]*R[2])*R.z
     assert curl(2*R[0]**2*R.y, R) == 4*R[0]*R.z
+    assert curl(P[0]**2*R.x + P.y, R) == \
+           - 2*(R[0]*cos(q) + R[1]*sin(q))*sin(q)*R.z
+    assert curl(P[0]*R.y, P) == cos(q)*P.z
 
 
 def test_divergence():
@@ -24,7 +30,12 @@ def test_divergence():
     assert divergence(R[0]*R[1]*R[2] * (R.x+R.y+R.z), R) == \
            R[0]*R[1] + R[0]*R[2] + R[1]*R[2]
     assert divergence((1/(R[0]*R[1]*R[2])) * (R.x+R.y+R.z), R) == \
-           -1/(R[0]*R[1]*R[2]**2) - 1/(R[0]*R[1]**2*R[2]) - 1/(R[0]**2*R[1]*R[2])
+           -1/(R[0]*R[1]*R[2]**2) - 1/(R[0]*R[1]**2*R[2]) - \
+           1/(R[0]**2*R[1]*R[2])
+    v = P[0]*P.x + P[1]*P.y + P[2]*P.z
+    assert divergence(v, P) == 3
+    assert divergence(v, R).simplify() == 3
+    assert divergence(P[0]*R.x + R[0]*P.x, R) == 2*cos(q)
 
 
 def test_gradient():
@@ -36,6 +47,10 @@ def test_gradient():
     assert gradient(2*R[0]**2, R) == 4*R[0]*R.x
     assert gradient(a*sin(R[1])/R[0], R) == \
            - a*sin(R[1])/R[0]**2*R.x + a*cos(R[1])/R[0]*R.y
+    assert gradient(P[0]*P[1], R) == \
+           (-R[0]*sin(2*q) + R[1]*cos(2*q))*R.x + \
+           (R[0]*cos(2*q) + R[1]*sin(2*q))*R.y
+    assert gradient(P[0]*R[2], P) == P[2]*P.x + P[0]*P.z
 
 
 scalar_field = 2*R[0]**2*R[1]*R[2]
@@ -55,6 +70,7 @@ def test_conservative():
     assert is_conservative(curl_field) is False
     assert is_conservative(4*R[0]*R[1]*R[2]*R.x + 2*R[0]**2*R[2]*R.y) is \
                            False
+    assert is_conservative(R[2]*P.x + P[0]*R.z) is True
 
 
 def test_solenoidal():
@@ -67,6 +83,8 @@ def test_solenoidal():
     assert is_solenoidal(grad_field) is False
     assert is_solenoidal(curl_field) is True
     assert is_solenoidal((-2*R[1] + 3)*R.z) is True
+    assert is_solenoidal(cos(q)*R.x + sin(q)*R.y + cos(q)*P.z) is True
+    assert is_solenoidal(R[2]*P.x + P[0]*R.z) is True
 
 
 def test_scalar_potential():
@@ -77,20 +95,34 @@ def test_scalar_potential():
     assert scalar_potential(R[1]*R[2]*R.x + R[0]*R[2]*R.y + \
                             R[0]*R[1]*R.z, R) == R[0]*R[1]*R[2]
     assert scalar_potential(grad_field, R) == scalar_field
+    assert scalar_potential(R[2]*P.x + P[0]*R.z, R) == \
+           R[0]*R[2]*cos(q) + R[1]*R[2]*sin(q)
+    assert scalar_potential(R[2]*P.x + P[0]*R.z, P) == P[0]*P[2]
 
 
 def test_scalar_potential_difference():
     origin = Point('O')
     point1 = origin.locatenew('P1', 1*R.x + 2*R.y + 3*R.z)
     point2 = origin.locatenew('P2', 4*R.x + 5*R.y + 6*R.z)
-    genericpoint = origin.locatenew('P', R[0]*R.x + R[1]*R.y + R[2]*R.z)
-    assert scalar_potential_difference(S(0), R, point1, point2, origin) == 0
-    assert scalar_potential_difference(scalar_field, R, origin, genericpoint,
-                                       origin) == scalar_field
-    assert scalar_potential_difference(grad_field, R, origin, genericpoint,
-                                       origin) == scalar_field
+    genericpointR = origin.locatenew('RP', R[0]*R.x + R[1]*R.y + R[2]*R.z)
+    genericpointP = origin.locatenew('PP', P[0]*P.x + P[1]*P.y + P[2]*P.z)
+    assert scalar_potential_difference(S(0), R, point1, point2, \
+                                       origin) == 0
+    assert scalar_potential_difference(scalar_field, R, origin, \
+                                       genericpointR, origin) == \
+                                       scalar_field
+    assert scalar_potential_difference(grad_field, R, origin, \
+                                       genericpointR, origin) == \
+                                       scalar_field
     assert scalar_potential_difference(grad_field, R, point1, point2,
                                        origin) == 948
     assert scalar_potential_difference(R[1]*R[2]*R.x + R[0]*R[2]*R.y + \
                                        R[0]*R[1]*R.z, R, point1,
-                                       genericpoint, origin) == R[0]*R[1]*R[2] - 6
+                                       genericpointR, origin) == \
+                                       R[0]*R[1]*R[2] - 6
+    potential_diff_P = 2*P[2]*(P[0]*sin(q) + P[1]*cos(q))*\
+                       (P[0]*cos(q) - P[1]*sin(q))**2
+    assert scalar_potential_difference(grad_field, P, origin, \
+                                       genericpointP, \
+                                       origin).simplify() == \
+                                       potential_diff_P

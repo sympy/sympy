@@ -5,7 +5,8 @@ from sympy.physics.mechanics.essential import _check_frame, _check_vector
 
 def curl(vect, frame):
     """
-    The curl of a vector field in the given frame
+    Returns the curl of a vector field computed wrt the coordinate
+    symbols of the given frame.
 
     Parameters
     ==========
@@ -34,6 +35,7 @@ def curl(vect, frame):
     _check_vector(vect)
     if vect == 0:
         return Vector(0)
+    vect = express(vect, frame, variables=True)
     #A mechanical approach to avoid looping overheads
     vectx = vect.dot(frame.x)
     vecty = vect.dot(frame.y)
@@ -47,7 +49,8 @@ def curl(vect, frame):
 
 def divergence(vect, frame):
     """
-    The divergence of a vector field in the given frame
+    Returns the divergence of a vector field computed wrt the coordinate
+    symbols of the given frame.
 
     Parameters
     ==========
@@ -76,6 +79,7 @@ def divergence(vect, frame):
     _check_vector(vect)
     if vect == 0:
         return S(0)
+    vect = express(vect, frame, variables=True)
     vectx = vect.dot(frame.x)
     vecty = vect.dot(frame.y)
     vectz = vect.dot(frame.z)
@@ -88,7 +92,8 @@ def divergence(vect, frame):
 
 def gradient(scalar, frame):
     """
-    The vector gradient of a scalar field in the given frame
+    Returns the vector gradient of a scalar field computed wrt the
+    coordinate symbols of the given frame.
 
     Parameters
     ==========
@@ -116,6 +121,7 @@ def gradient(scalar, frame):
 
     _check_frame(frame)
     outvec = Vector(0)
+    scalar = express(scalar, frame, variables=True)
     for i, x in enumerate(frame):
         outvec += diff(scalar, frame[i]) * x
     return outvec
@@ -123,7 +129,7 @@ def gradient(scalar, frame):
 
 def is_conservative(field):
     """
-    Checks if a field is conservative
+    Checks if a field is conservative.
 
     Paramaters
     ==========
@@ -146,16 +152,16 @@ def is_conservative(field):
 
     #Field is conservative irrespective of frame
     #Take the first frame in the result of the
-    #separate() method
+    #separate method of Vector
     if field == Vector(0):
         return True
-    frame = _separate(field).keys()[0]
-    return curl(field, frame) == 0
+    frame = field.separate().keys()[0]
+    return curl(field, frame).simplify() == Vector(0)
 
 
 def is_solenoidal(field):
     """
-    Checks if a field is solenoidal
+    Checks if a field is solenoidal.
 
     Paramaters
     ==========
@@ -178,17 +184,17 @@ def is_solenoidal(field):
 
     #Field is solenoidal irrespective of frame
     #Take the first frame in the result of the
-    #separate() method
+    #separate method in Vector
     if field == Vector(0):
         return True
-    frame = _separate(field).keys()[0]
-    return divergence(field, frame) == 0
+    frame = field.separate().keys()[0]
+    return divergence(field, frame).simplify() == S(0)
 
 
 def scalar_potential(field, frame):
     """
-    The scalar potential function of a field in a given frame
-    (without the added integration constant)
+    Returns the scalar potential function of a field in a given frame
+    (without the added integration constant).
 
     Parameters
     ==========
@@ -229,16 +235,16 @@ def scalar_potential(field, frame):
     #Calculate scalar potential function
     temp_function = integrate(field.dot(dimensions[0]), frame[0])
     for i, dim in enumerate(dimensions[1:]):
-        partial_diff = diff(temp_function, frame[i+1])
+        partial_diff = diff(temp_function, frame[i + 1])
         partial_diff = field.dot(dim) - partial_diff
-        temp_function += integrate(partial_diff, frame[i+1])
+        temp_function += integrate(partial_diff, frame[i + 1])
     return temp_function
 
 
 def scalar_potential_difference(field, frame, point1, point2, origin):
     """
-    The scalar potential difference between two points in a certain
-    frame, wrt a given field.
+    Returns the scalar potential difference between two points in a
+    certain frame, wrt a given field.
 
     If a scalar field is provided, its values at the two points are
     considered. If a conservative vector field is provided, the values
@@ -299,20 +305,3 @@ def scalar_potential_difference(field, frame, point1, point2, origin):
         subs_dict1[frame[i]] = x.dot(position1)
         subs_dict2[frame[i]] = x.dot(position2)
     return scalar_fn.subs(subs_dict2) - scalar_fn.subs(subs_dict1)
-
-
-def _separate(vect):
-    """
-    The components of a vector in different reference frames,
-    as per its definition
-
-    Returns a dict mapping each frame to the corresponding
-    component vector.
-    """
-    _check_vector(vect)
-    components = {}
-    if vect == 0:
-        return components
-    for x in vect.args:
-        components[x[1]] = Vector([x])
-    return components
