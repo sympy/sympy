@@ -1673,6 +1673,31 @@ class Vector(object):
     __rand__ = __and__
     __rmul__ = __mul__
 
+    def separate(self):
+        """
+        The components of this vector in different reference frames,
+        as per its definition.
+
+        Returns a dict mapping each frame to the corresponding component
+        Vector.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> R1 = ReferenceFrame('R1')
+        >>> R2 = ReferenceFrame('R2')
+        >>> v = 3*R1.x + 2*R1.y + R2.x
+        >>> v.separate()
+        {R1: 3*R1.x + 2*R1.y, R2: R2.x}
+
+        """
+
+        components = {}
+        for x in self.args:
+            components[x[1]] = Vector([x])
+        return components
+
     def dot(self, other):
         return self & other
     dot.__doc__ = __and__.__doc__
