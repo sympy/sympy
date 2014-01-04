@@ -98,6 +98,25 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     """
     _new = type.__new__
 
+    _nargs = None
+
+    def __init__(cls, *args, **kw_args):
+        super(FunctionClass, cls).__init__(args, kw_args)
+
+        # Canonicalize nargs here:
+        try:
+            nargs = cls.__dict__['nargs']
+            if isinstance(nargs, tuple):
+                cls._nargs = nargs
+            else:
+                cls._nargs = (nargs,)
+        except KeyError:
+            pass
+
+    @property
+    def nargs(self):
+        return self._nargs
+
     def __repr__(cls):
         return cls.__name__
 
@@ -109,11 +128,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
-    __slots__ = []
 
     is_Function = True
-
-    nargs = None
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -126,7 +142,10 @@ class Application(with_metaclass(FunctionClass, Basic)):
             evaluated = cls.eval(*args)
             if evaluated is not None:
                 return evaluated
-        return super(Application, cls).__new__(cls, *args)
+
+        obj = super(Application, cls).__new__(cls, *args)
+        obj.nargs = cls.nargs
+        return obj
 
     @classmethod
     def eval(cls, *args):
@@ -161,10 +180,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and
-            old == self.func and
-            (self.nargs == new.nargs or not new.nargs or
-             isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
+        if (old.is_Function and new.is_Function and old == self.func and
+            (not new.nargs or len(self.args) in new.nargs)):
             return new(*self.args)
 
 
@@ -204,10 +221,10 @@ class Function(Application, Expr):
     >>> from sympy import Function, S, oo, I, sin
     >>> class my_func(Function):
     ...
-    ...     nargs = 1
+    ...     nargs = 1  # if 1 or 2 args are acceptable, change 1 to (1, 2)
     ...
     ...     @classmethod
-    ...     def eval(cls, x):
+    ...     def eval(cls, x):  # if more than 1 arg is ok, change x to *x
     ...         if x.is_Number:
     ...             if x is S.Zero:
     ...                 return S.One
@@ -256,24 +273,21 @@ class Function(Application, Expr):
             return UndefinedFunction(*args)
 
         if cls.nargs is not None:
-            if isinstance(cls.nargs, tuple):
-                nargs = cls.nargs
-            else:
-                nargs = (cls.nargs,)
-
             n = len(args)
 
-            if n not in nargs:
-                # XXX: exception message must be in exactly this format to make
-                # it work with NumPy's functions like vectorize(). The ideal
-                # solution would be just to attach metadata to the exception
-                # and change NumPy to take advantage of this.
-                temp = ('%(name)s takes exactly %(args)s '
+            if n not in cls.nargs:
+                # XXX: exception message must be in exactly this format to
+                # make it work with NumPy's functions like vectorize(). See,
+                # for example, https://github.com/numpy/numpy/issues/1697.
+                # The ideal solution would be just to attach metadata to
+                # the exception and change NumPy to take advantage of this.
+                temp = ('%(name)s takes %(qual)s %(args)s '
                        'argument%(plural)s (%(given)s given)')
                 raise TypeError(temp % {
                     'name': cls,
-                    'args': cls.nargs,
-                    'plural': 's'*(n != 1),
+                    'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
+                    'args': min(cls.nargs),
+                    'plural': 's'*(min(cls.nargs) != 1),
                     'given': n})
 
         evaluate = options.get('evaluate', True)
@@ -500,9 +514,8 @@ class Function(Application, Expr):
             s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
             return s
         if (self.func.nargs is None
-                or (self.func.nargs == 1 and args0[0])
-                or isinstance(self.func.nargs, tuple)
-                or self.func.nargs > 1):
+                or (self.func.nargs == (1,) and args0[0])
+                or any(c > 1 for c in self.func.nargs)):
             e = self
             e1 = e.expand()
             if e == e1:
@@ -564,10 +577,7 @@ class Function(Application, Expr):
         Returns the first derivative of the function.
         """
         if self.nargs is not None:
-            if isinstance(self.nargs, tuple):
-                nargs = self.nargs[-1]
-            else:
-                nargs = self.nargs
+            nargs = self.nargs[-1]
             if not (1 <= argindex <= nargs):
                 raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
@@ -615,7 +625,7 @@ class AppliedUndef(Function):
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
         result = super(AppliedUndef, cls).__new__(cls, *args, **options)
-        result.nargs = len(args)
+        result.nargs = (len(args),)
         return result
 
     def _eval_as_leading_term(self, x):
@@ -657,7 +667,7 @@ class WildFunction(Function, AtomicExpr):
     To match functions with more than 1 arguments, set ``nargs`` to the
     desired value:
 
-    >>> F.nargs = 2
+    >>> F.nargs = (2,)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
 
@@ -1274,12 +1284,18 @@ class Lambda(Expr):
     @property
     def nargs(self):
         """The number of arguments that this function takes"""
-        return len(self._args[0])
+        return (len(self._args[0]),)
 
     def __call__(self, *args):
-        if len(args) != self.nargs:
-            raise TypeError('%s takes %d arguments (%d given)' %
-                    (self, self.nargs, len(args)))
+        n = len(args)
+        if n != self.nargs[0]:
+            temp = ('%(name)s takes exactly %(args)s '
+                   'argument%(plural)s (%(given)s given)')
+            raise TypeError(temp % {
+                'name': self,
+                'args': self.nargs[0],
+                'plural': 's'*(self.nargs[0] != 1),
+                'given': n})
         return self.expr.xreplace(dict(list(zip(self.variables, args))))
 
     def __eq__(self, other):

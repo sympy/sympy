@@ -28,7 +28,6 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
 
     """
     __slots__ = []
-    nargs = 1
 
     def __new__(cls):
         x = C.Dummy('x')
