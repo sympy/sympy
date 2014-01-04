@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify, atan2, arg)
+    sympify, tan, tanh, root, simplify, atan2, arg, Mul)
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -1394,3 +1394,16 @@ def test_misc():
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
+
+
+def test_gh2725():
+    R = Symbol('R')
+    eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
+    sol = solve(eq, R, set=True)[1]
+    assert sol == set([(S(5)/3 + 40/(3*(251 + 3*sqrt(111)*I)**(S(1)/3)) +
+                       (251 + 3*sqrt(111)*I)**(S(1)/3)/3,), ((-160 + (1 +
+                       sqrt(3)*I)*(10 - (1 + sqrt(3)*I)*(251 +
+                       3*sqrt(111)*I)**(S(1)/3))*(251 +
+                       3*sqrt(111)*I)**(S(1)/3))/Mul(6, (1 +
+                       sqrt(3)*I), (251 + 3*sqrt(111)*I)**(S(1)/3),
+                       evaluate=False),)])
