@@ -1,4 +1,4 @@
-from sympy import cos, Matrix, sin, symbols, pi, S, Function, zeros
+from sympy import cos, Matrix, sin, symbols, pi, S, Function, zeros, sqrt
 from sympy.abc import x, y, z
 from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols, \
      express, time_derivative
@@ -255,6 +255,18 @@ def test_Vector():
     assert v1.to_matrix(B) == Matrix([[x],
                                       [ y * cos(q) + z * sin(q)],
                                       [-y * sin(q) + z * cos(q)]])
+
+
+def test_vector_latex():
+
+    a, b, c, d, omega = symbols('a, b, c, d, omega')
+
+    v = (a ** 2 + b / c) * A.x + sqrt(d) * A.y + cos(omega) * A.z
+
+    assert v._latex() == ('(a^{2} + \\frac{b}{c})\\mathbf{\\hat{a}_x} + ' +
+        '\\sqrt{d}\\mathbf{\\hat{a}_y} + ' +
+        '\\operatorname{cos}\\left(\\omega\\right)\\mathbf{\\hat{a}_z}')
+
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
