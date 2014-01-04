@@ -44,21 +44,24 @@ def msigma(i):
 
 def pat_matrix(m, dx, dy, dz):
     """Returns the Parallel Axis Theorem matrix to translate the inertia
-    matrix a distance of (dx, dy, dz) for a body of mass m.
+    matrix a distance of `(dx, dy, dz)` for a body of mass m.
 
     Examples
-    --------
+    ========
+
     If the point we want the inertia about is a distance of 2 units of
     length and 1 unit along the x-axis we get:
+
     >>> from sympy.physics.matrices import pat_matrix
-    >>> pat_matrix(2,1,0,0)
+    >>> pat_matrix(2, 1, 0, 0)
     Matrix([
     [0, 0, 0],
     [0, 2, 0],
     [0, 0, 2]])
 
-    In case we want to find the inertia along a vector of (1,1,1):
-    >>> pat_matrix(2,1,1,1)
+    In case we want to find the inertia along a vector of `(1, 1, 1)` :
+
+    >>> pat_matrix(2, 1, 1, 1)
     Matrix([
     [ 4, -2, -2],
     [-2,  4, -2],
