@@ -59,7 +59,7 @@ def pat_matrix(m, dx, dy, dz):
     [0, 2, 0],
     [0, 0, 2]])
 
-    In case we want to find the inertia along a vector of `(1, 1, 1)` :
+    In case we want to find the inertia along a vector of `(1, 1, 1)`:
 
     >>> pat_matrix(2, 1, 1, 1)
     Matrix([
