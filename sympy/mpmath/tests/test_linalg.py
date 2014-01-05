@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from mpmath import *
+from sympy.mpmath import *
 xrange = libmp.backend.xrange
 
 # XXX: these shouldn't be visible(?)

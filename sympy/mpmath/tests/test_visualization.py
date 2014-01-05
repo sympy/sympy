@@ -4,7 +4,7 @@ sure that passing custom Axes works.
 
 """
 
-from mpmath import mp, fp
+from sympy.mpmath import mp, fp
 
 def test_axes():
     try:

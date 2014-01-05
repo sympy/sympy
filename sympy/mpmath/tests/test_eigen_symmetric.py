@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from mpmath import mp
-from mpmath import libmp
+from sympy.mpmath import mp
+from sympy.mpmath import libmp
 
 xrange = libmp.backend.xrange
 

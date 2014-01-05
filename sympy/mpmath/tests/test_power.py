@@ -1,5 +1,5 @@
-from mpmath import *
-from mpmath.libmp import *
+from sympy.mpmath import *
+from sympy.mpmath.libmp import *
 
 import random
 

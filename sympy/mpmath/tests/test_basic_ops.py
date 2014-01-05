@@ -1,6 +1,6 @@
-import mpmath
-from mpmath import *
-from mpmath.libmp import *
+import sympy.mpmath
+from sympy.mpmath import *
+from sympy.mpmath.libmp import *
 import random
 import sys
 
@@ -140,7 +140,7 @@ def test_hash():
     # Check that overflow doesn't assign equal hashes to large numbers
     assert hash(mpf('1e1000')) != hash('1e10000')
     assert hash(mpc(100,'1e1000')) != hash(mpc(200,'1e1000'))
-    from mpmath.rational import mpq
+    from sympy.mpmath.rational import mpq
     assert hash(mp.mpq(1,3))
     assert hash(mp.mpq(0,1)) == 0
     assert hash(mp.mpq(-1,1)) == hash(-1)
@@ -341,7 +341,7 @@ def test_floor_ceil_nint_frac():
     assert frac(3.25+4.75j) == 0.25+0.75j
 
 def test_isnan_etc():
-    from mpmath.rational import mpq
+    from sympy.mpmath.rational import mpq
     assert isnan(nan) == True
     assert isnan(3) == False
     assert isnan(mpf(3)) == False

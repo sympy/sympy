@@ -1,4 +1,4 @@
-from mpmath import *
+from sympy.mpmath import *
 
 def test_interval_identity():
     iv.dps = 15

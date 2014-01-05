@@ -13,10 +13,10 @@ References:
 
 """
 
-import mpmath
+import sympy.mpmath
 import random
 
-from mpmath import *
+from sympy.mpmath import *
 
 def mpc_ae(a, b, eps=eps):
     res = True
