@@ -5,6 +5,7 @@ from sympy.polys.rings import ring, PolyElement
 from sympy.polys.monomials import monomial_min, monomial_mul
 from sympy.mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
+from sympy.core.compatibility import as_int
 import math
 
 def _invert_monoms(p1):
@@ -194,15 +195,14 @@ def rs_pow(p1, n, x, prec):
     R = p1.ring
     p = R.zero
     if isinstance(n, Rational):
-        raise NotImplementedError
+        raise NotImplementedError('to be implemented')
 
-    assert n == int(n)
-    n = int(n)
+    n = as_int(n)
     if n == 0:
         if p1:
             return R(1)
         else:
-            raise ValueError
+            raise ValueError('0**0 is undefined')
     if n < 0:
         p1 = rs_pow(p1, -n, x, prec)
         return rs_series_inversion(p1, x, prec)
@@ -549,7 +549,7 @@ def rs_hadamard_exp(p1, inverse=False):
 
 def rs_compose_add(p1, p2):
     """
-    compute the composed sum ``prod(p2(x - beta) for beta root of g)``
+    compute the composed sum ``prod(p2(x - beta) for beta root of p1)``
 
     Examples
     ========
@@ -588,7 +588,11 @@ def rs_compose_add(p1, p2):
     dp = p1.degree() * p2.degree() - q.degree()
     # `dp` is the multiplicity of the zeroes of the resultant;
     # these zeroes are missed in this computation so they are put here.
-    # TODO give a better explanation or a reference.
+    # if p1 and p2 are monic irreducible polynomials,
+    # there are zeroes in the resultant
+    # if and only if p1 = p2 ; in fact in that case p1 and p2 have a
+    # root in common, so gcd(p1, p2) != 1; being p1 and p2 irreducible
+    # this means p1 = p2
     if dp:
         q = q*x**dp
     return q
