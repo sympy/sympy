@@ -2136,10 +2136,8 @@ def test_U9():
     assert s3 == 2*(x + y)*Derivative(g(x**2 + y**2), x**2 + y**2)
 
 
-@XFAIL
 def test_U10():
-    z = symbols('z')
-    # returns wrong value-3/4 . problem seems to come from series expansion
+    # see github issue 2519:
     assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9, 4)
 
 
