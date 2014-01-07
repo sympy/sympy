@@ -187,33 +187,11 @@ class Wild(Symbol):
     A Wild symbol matches anything, or anything
     without whatever is explicitly excluded.
 
-    **Tips**
-
-		When using Wild, be sure to use the exclude
-		keyword to make the pattern deterministic.
-		Without the exclude pattern, you may get matches
-		that are technically correct, but not what you
-		wanted. This is especially likely if the
-		expression you are matching doesn't actually match
-		your pattern. For example, using the above without
-		exclude:
-
-		>>> (2 + 3*y).match(a*x + b*y)
-		{a: 2/x, b: 3}
-
-		This is technically correct, because
-		(2/x)*x + 3*y == 2 + 3*y, but you probably
-		wanted it to not match at all. The issue is that
-		you really didn't want a and b to include x and y,
-		and the exclude parameter lets you specify exactly
-		this.  With the exclude parameter, the above match
-		gives None, meaning it did not match.
-
     Examples
     ========
 
     >>> from sympy import Wild, WildFunction, cos, pi
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y, z
     >>> a = Wild('a')
     >>> x.match(a)
     {a_: x}
@@ -223,13 +201,55 @@ class Wild(Symbol):
     {a_: 3*x}
     >>> cos(x).match(a)
     {a_: cos(x)}
-    >>> b = Wild('b',exclude=[x])
+    >>> b = Wild('b', exclude=[x])
     >>> (3*x**2).match(b*x)
     >>> b.match(a)
     {a_: b_}
     >>> A = WildFunction('A')
     >>> A.match(a)
     {a_: A_}
+
+    Tips
+    ====
+
+    When using Wild, be sure to use the exclude
+    keyword to make the pattern more precise.
+    Without the exclude pattern, you may get matches
+    that are technically correct, but not what you
+    wanted. For example, using the above without
+    exclude:
+
+    >>> from sympy import Wild, symbols
+    >>> from sympy.abc import x, y, z
+    >>> a, b = symbols('a b',cls=Wild)
+    >>> (2 + 3*y).match(a*x + b*y)
+    {a_: 2/x, b_: 3}
+
+    This is technically correct, because
+    (2/x)*x + 3*y == 2 + 3*y, but you probably
+    wanted it to not match at all. The issue is that
+    you really didn't want a and b to include x and y,
+    and the exclude parameter lets you specify exactly
+    this.  With the exclude parameter, the pattern will
+    not match.
+
+    >>> a = Wild('a',exclude=[x,y])
+    >>> b = Wild('b',exclude=[x,y])
+    >>> (2 + 3*y).match(a*x + b*y)
+
+    Exclude also helps remove ambiguity from matches.
+
+    >>> E = 2*x**3*y*z
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> E.match(a*b)
+    {a_: 2*y*z, b_: x**3}
+    >>> a = Wild('a', exclude=[x, y])
+    >>> E.match(a*b)
+    {a_: z, b_: 2*x**3*y}
+    >>> a = Wild('a', exclude=[x, y, z])
+    >>> E.match(a*b)
+    {a_: 2, b_: x**3*y*z}
+
 
     References
     ==========

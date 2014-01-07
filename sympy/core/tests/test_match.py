@@ -70,7 +70,32 @@ def test_power():
 
 def test_match_exclude():
     x = Symbol('x')
-    p = Wild('p')
+    y = Symbol('y')
+    p = Wild("p")
+    q = Wild("q")
+    r = Wild("r")
+
+    e = Rational(6)
+    assert e.match(2*p) == {p: 3}
+
+    e = 3/(4*x + 5)
+    assert e.match(3/(p*x + q)) == {p: 4, q: 5}
+
+    e = 3/(4*x + 5)
+    assert e.match(p/(q*x + r)) == {p: 3, q: 4, r: 5}
+
+    e = 2/(x + 1)
+    assert e.match(p/(q*x + r)) == {p: 2, q: 1, r: 1}
+
+    e = 1/(x + 1)
+    assert e.match(p/(q*x + r)) == {p: 1, q: 1, r: 1}
+
+    e = 4*x + 5
+    assert e.match(p*x + q) == {p: 4, q: 5}
+
+    e = 4*x + 5*y + 6
+    assert e.match(p*x + q*y + r) == {p: 4, q: 5, r: 6}
+
     a = Wild('a', exclude=[x])
 
     e = 3*x
@@ -84,29 +109,6 @@ def test_match_exclude():
     e = 3*x + 3 + 6/x
     assert e.match(p*x**2 + p*x + 2*p) == {p: 3/x}
     assert e.match(a*x**2 + a*x + 2*a) is None
-
-
-def test_exclude():
-    x, y, a = map(Symbol, 'xya')
-    p = Wild('p', exclude=[1, x])
-    q = Wild('q')
-    r = Wild('r', exclude=[sin, y])
-
-    assert sin(x).match(r) is None
-    assert cos(y).match(r) is None
-
-    e = 3*x**2 + y*x + a
-    assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
-
-    e = x + 1
-    assert e.match(x + p) is None
-    assert e.match(p + 1) is None
-    assert e.match(x + 1 + p) == {p: 0}
-
-    e = cos(x) + 5*sin(y)
-    assert e.match(r) is None
-    assert e.match(cos(y) + r) is None
-    assert e.match(r + p*sin(q)) == {r: cos(x), p: 5, q: y}
 
 
 def test_mul():
@@ -315,9 +317,6 @@ def test_match_bug6():
     e = x
     assert e.match(3*p*x) == {p: Rational(1)/3}
 
-    e = Rational(6)
-    assert e.match(2*p) == {p: 3}
-
 
 def test_match_polynomial():
     x = Symbol('x')
@@ -332,6 +331,29 @@ def test_match_polynomial():
     assert (eq - 3*x**2).match(pattern) == {a: 4, b: 0, c: 2, d: 1}
     assert (x + sqrt(2) + 3).match(a + b*x + c*x**2) == \
         {b: 1, a: sqrt(2) + 3, c: 0}
+
+
+def test_exclude():
+    x, y, a = map(Symbol, 'xya')
+    p = Wild('p', exclude=[1, x])
+    q = Wild('q')
+    r = Wild('r', exclude=[sin, y])
+
+    assert sin(x).match(r) is None
+    assert cos(y).match(r) is None
+
+    e = 3*x**2 + y*x + a
+    assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
+
+    e = x + 1
+    assert e.match(x + p) is None
+    assert e.match(p + 1) is None
+    assert e.match(x + 1 + p) == {p: 0}
+
+    e = cos(x) + 5*sin(y)
+    assert e.match(r) is None
+    assert e.match(cos(y) + r) is None
+    assert e.match(r + p*sin(q)) == {r: cos(x), p: 5, q: y}
 
 
 def test_floats():
