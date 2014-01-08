@@ -14,12 +14,14 @@ __all__ = ['cross',
            'get_motion_params',
            'partial_velocity']
 
-from sympy.physics.vector import (Vector, ReferenceFrame,
-                                  CoordinateSym, VectorStrPrinter,
-                                  VectorPrettyPrinter,
-                                  VectorLatexPrinter, dynamicsymbols,
-                                  _check_frame, _check_vector, Dyadic)
+from sympy.physics.vector.vector import Vector, _check_vector
+from sympy.physics.vector.frame import CoordinateSym, ReferenceFrame, \
+     _check_frame
+from sympy.physics.vector.dyadic import Dyadic
+from sympy.physics.vector.printers import VectorStrPrinter, \
+     VectorPrettyPrinter, VectorLatexPrinter
 from sympy.physics.vector.point import Point
+from sympy.physics.vector.dynamicsymbols import dynamicsymbols
 from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate, \
      trigsimp
 from sympy.core.basic import S
@@ -260,7 +262,7 @@ def time_derivative_printing():
     """
 
     import sys
-    sys.displayhook = mprint
+    sys.displayhook = vprint
 
 
 def vprint(expr, **settings):
@@ -286,12 +288,12 @@ def vprint(expr, **settings):
     >>> u1 = dynamicsymbols('u1')
     >>> print(u1)
     u1(t)
-    >>> mprint(u1)
+    >>> vprint(u1)
     u1
 
     """
 
-    outstr = msprint(expr, **settings)
+    outstr = vsprint(expr, **settings)
 
     from sympy.core.compatibility import builtins
     if (outstr != 'None'):

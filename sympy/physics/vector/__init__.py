@@ -5,7 +5,6 @@ from printers import VectorStrPrinter, VectorLatexPrinter, \
      VectorPrettyPrinter
 from dynamicsymbols import dynamicsymbols
 from point import Point
-
-#Import all the functions into the namespace
-from functions import __all__ as allfunctions
-__all__.extend(allfunctions)
+from functions import cross, dot, express, time_derivative, outer, \
+     time_derivative_printing, vprint, vsprint, vpprint, vlatex, \
+     kinematic_equations, get_motion_params, partial_velocity

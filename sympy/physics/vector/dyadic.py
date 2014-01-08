@@ -1,5 +1,5 @@
 from sympy import sympify, Add, ImmutableMatrix as Matrix
-from sympy.physics.vector import Vector, vectorLatexPrinter, \
+from sympy.physics.vector.printers import VectorLatexPrinter, \
      VectorPrettyPrinter, VectorStrPrinter
 
 
@@ -81,7 +81,7 @@ class Dyadic(object):
         N.x
 
         """
-
+        from sympy.physics.vector.vector import Vector, _check_vector
         if isinstance(other, Dyadic):
             other = _check_dyadic(other)
             ol = Dyadic(0)
@@ -257,6 +257,7 @@ class Dyadic(object):
 
         """
 
+        from sympy.physics.vector.vector import Vector, _check_vector
         other = _check_vector(other)
         ol = Vector(0)
         for i, v in enumerate(self.args):
@@ -286,6 +287,7 @@ class Dyadic(object):
 
         """
 
+        from sympy.physics.vector.vector import _check_vector
         other = _check_vector(other)
         ol = Dyadic(0)
         for i, v in enumerate(self.args):
@@ -349,6 +351,7 @@ class Dyadic(object):
 
         """
 
+        from sympy.physics.vector.vector import _check_vector
         other = _check_vector(other)
         ol = Dyadic(0)
         for i, v in enumerate(self.args):
@@ -391,7 +394,7 @@ class Dyadic(object):
         cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
 
         """
-        from sympy.physics.vector import express
+        from sympy.physics.vector.functions import express
         return express(self, frame1, frame2)
 
     def to_matrix(self, reference_frame, second_reference_frame=None):
@@ -417,7 +420,8 @@ class Dyadic(object):
         --------
 
         >>> from sympy import symbols
-        >>> from sympy.physics.vector import inertia, ReferenceFrame
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> from sympy.physics.mechanics import inertia
         >>> Ixx, Iyy, Izz, Ixy, Iyz, Ixz = symbols('Ixx, Iyy, Izz, Ixy, Iyz, Ixz')
         >>> N = ReferenceFrame('N')
         >>> inertia_dyadic = inertia(N, Ixx, Iyy, Izz, Ixy, Iyz, Ixz)
@@ -470,7 +474,7 @@ class Dyadic(object):
         - q'*(N.y|N.x) - q'*(N.x|N.y)
 
         """
-        from sympy.physics.vector import time_derivative
+        from sympy.physics.vector.functions import time_derivative
         return time_derivative(self, frame)
 
     def simplify(self):

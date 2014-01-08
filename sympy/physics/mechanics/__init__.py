@@ -31,6 +31,9 @@ from . import point
 from .point import *
 __all__.extend(point.__all__)
 
+from . import essential
+from .essential import *
+__all__.extend(essential.__all__)
 
 from . import lagrange
 from .lagrange import *

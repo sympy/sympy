@@ -21,13 +21,11 @@ __all__ = ['cross',
            'potential_energy',
            'Lagrangian']
 
-from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
-                                               CoordinateSym,
-                                               MechanicsStrPrinter,
+from sympy.physics.mechanics.essential import (MechanicsStrPrinter,
                                                MechanicsPrettyPrinter,
-                                               MechanicsLatexPrinter,
-                                               dynamicsymbols,
-                                               _check_frame, _check_vector)
+                                               MechanicsLatexPrinter)
+from sympy.physics.vector import Vector, Dyadic, ReferenceFrame, \
+     _check_frame, _check_vector, dynamicsymbols
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.point import Point

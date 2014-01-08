@@ -6,7 +6,7 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
-from sympy.physics.vector import dynamicsymbols
+from sympy.physics.vector.dynamicsymbols import dynamicsymbols
 
 
 class VectorStrPrinter(StrPrinter):

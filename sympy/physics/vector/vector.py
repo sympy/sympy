@@ -1,8 +1,8 @@
 from sympy import S, sympify, trigsimp, expand, sqrt, \
      Add, zeros, ImmutableMatrix as Matrix
-from sympy.physics.vector import VectorPrettyPrinter, \
+from sympy.physics.vector.printers import VectorPrettyPrinter, \
      VectorStrPrinter
-from sympy.physics.vector import Dyadic
+from sympy.physics.vector.dyadic import Dyadic
 
 
 class Vector(object):
@@ -108,7 +108,7 @@ class Vector(object):
 
     def __div__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
-        return self.__mul__(1 / other)
+        return self.__mul__(sympify(1) / other)
 
     __truediv__ = __div__
 
@@ -150,7 +150,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.vectors import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame, Vector
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
         >>> b = Symbol('b')
@@ -471,6 +471,7 @@ class Vector(object):
 
         """
 
+        from sympy.physics.vector import _check_frame
         wrt = sympify(wrt)
         _check_frame(otherframe)
         outvec = Vector(0)
@@ -533,7 +534,8 @@ class Vector(object):
         --------
 
         >>> from sympy import symbols
-        >>> from sympy.physics.vector import inertia, ReferenceFrame
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> from sympy.physics.mechanics.functions import inertia
         >>> a, b, c = symbols('a, b, c')
         >>> N = ReferenceFrame('N')
         >>> vector = a * N.x + b * N.y + c * N.z

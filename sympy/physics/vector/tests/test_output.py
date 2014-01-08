@@ -1,10 +1,16 @@
+from sympy import S, Function
+from sympy.physics.vector import Vector, ReferenceFrame, Dyadic, \
+     VectorLatexPrinter
+from sympy.utilities.pytest import raises
+
+
 Vector.simp = True
 A = ReferenceFrame('A')
 
 
 def test_latex_printer():
     r = Function('r')('t')
-    assert MechanicsLatexPrinter().doprint(r**2) == "r^{2}"
+    assert VectorLatexPrinter().doprint(r**2) == "r^{2}"
 
 
 def test_output_type():

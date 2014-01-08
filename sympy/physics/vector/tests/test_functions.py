@@ -1,12 +1,11 @@
 from sympy import S, Integral, sin, cos, pi, sqrt, symbols
-from sympy.physics.mechanics import (Dyadic, Particle, Point, ReferenceFrame,
-                                     RigidBody, Vector)
-from sympy.physics.mechanics import (angular_momentum, cross, dot,
-                                     dynamicsymbols, express, time_derivative,
-                                     inertia, inertia_of_point_mass,
-                                     kinematic_equations, kinetic_energy,
-                                     linear_momentum, outer, partial_velocity,
-                                     potential_energy, get_motion_params)
+from sympy.physics.vector import (Dyadic, Point, ReferenceFrame, \
+                                  Vector)
+from sympy.physics.vector import (cross, dot, express, \
+                                  time_derivative, kinematic_equations, \
+                                  outer, partial_velocity, \
+                                  get_motion_params)
+from sympy.physics.vector.dynamicsymbols import dynamicsymbols
 from sympy.utilities.pytest import raises
 
 Vector.simp = True
@@ -409,7 +408,8 @@ def test_get_motion_methods():
     assert answer == answer_expected
 
     #Test acceleration parameter
-    assert get_motion_params(N, acceleration=v1) == (v1, v1 * t, v1 * t**2/2)
+    assert get_motion_params(N, acceleration=v1) == \
+           (v1, v1 * t, v1 * t**2/2)
     assert get_motion_params(N, acceleration=v1, velocity=v0,
                           position=v2, timevalue1=t1, timevalue2=t2) == \
            (v1, (v0 + v1*t - v1*t2),
@@ -430,19 +430,6 @@ def test_get_motion_methods():
     assert answer == answer_expected
 
 
-def test_inertia():
-    N = ReferenceFrame('N')
-    ixx, iyy, izz = symbols('ixx iyy izz')
-    ixy, iyz, izx = symbols('ixy iyz izx')
-    assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
-            (N.y | N.y) + izz * (N.z | N.z))
-    assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
-    assert inertia(N, ixx, iyy, izz, ixy, iyz, izx) == (ixx * (N.x | N.x) +
-            ixy * (N.x | N.y) + izx * (N.x | N.z) + ixy * (N.y | N.x) + iyy *
-        (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
-            N.y) + izz * (N.z | N.z))
-
-
 def test_kin_eqs():
     q0, q1, q2, q3 = dynamicsymbols('q0 q1 q2 q3')
     q0d, q1d, q2d, q3d = dynamicsymbols('q0 q1 q2 q3', 1)
@@ -452,35 +439,6 @@ def test_kin_eqs():
             -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
             -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
             0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]
-
-
-def test_inertia_of_point_mass():
-    r, s, t, m = symbols('r s t m')
-    N = ReferenceFrame('N')
-
-    px = r * N.x
-    I = inertia_of_point_mass(m, px, N)
-    assert I == m * r**2 * (N.y | N.y) + m * r**2 * (N.z | N.z)
-
-    py = s * N.y
-    I = inertia_of_point_mass(m, py, N)
-    assert I == m * s**2 * (N.x | N.x) + m * s**2 * (N.z | N.z)
-
-    pz = t * N.z
-    I = inertia_of_point_mass(m, pz, N)
-    assert I == m * t**2 * (N.x | N.x) + m * t**2 * (N.y | N.y)
-
-    p = px + py + pz
-    I = inertia_of_point_mass(m, p, N)
-    assert I == (m * (s**2 + t**2) * (N.x | N.x) -
-                 m * r * s * (N.x | N.y) -
-                 m * r * t * (N.x | N.z) -
-                 m * r * s * (N.y | N.x) +
-                 m * (r**2 + t**2) * (N.y | N.y) -
-                 m * s * t * (N.y | N.z) -
-                 m * r * t * (N.z | N.x) -
-                 m * s * t * (N.z | N.y) +
-                 m * (r**2 + s**2) * (N.z | N.z))
 
 
 def test_partial_velocity():
@@ -505,75 +463,3 @@ def test_partial_velocity():
             [[- r*L.y, r*L.x, 0, L.x, cos(q2)*L.y - sin(q2)*L.z],
             [0, 0, 0, L.x, cos(q2)*L.y - sin(q2)*L.z],
             [L.x, L.y, L.z, 0, 0]])
-
-
-def test_linear_momentum():
-    N = ReferenceFrame('N')
-    Ac = Point('Ac')
-    Ac.set_vel(N, 25 * N.y)
-    I = outer(N.x, N.x)
-    A = RigidBody('A', Ac, N, 20, (I, Ac))
-    P = Point('P')
-    Pa = Particle('Pa', P, 1)
-    Pa.point.set_vel(N, 10 * N.x)
-    assert linear_momentum(N, A, Pa) == 10 * N.x + 500 * N.y
-
-
-def test_angular_momentum_and_linear_momentum():
-    m, M, l1 = symbols('m M l1')
-    q1d = dynamicsymbols('q1d')
-    N = ReferenceFrame('N')
-    O = Point('O')
-    O.set_vel(N, 0 * N.x)
-    Ac = O.locatenew('Ac', l1 * N.x)
-    P = Ac.locatenew('P', l1 * N.x)
-    a = ReferenceFrame('a')
-    a.set_ang_vel(N, q1d * N.z)
-    Ac.v2pt_theory(O, N, a)
-    P.v2pt_theory(O, N, a)
-    Pa = Particle('Pa', P, m)
-    I = outer(N.z, N.z)
-    A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert linear_momentum(
-        N, A, Pa) == 2 * m * q1d* l1 * N.y + M * l1 * q1d * N.y
-    assert angular_momentum(
-        O, N, A, Pa) == 4 * m * q1d * l1**2 * N.z + q1d * N.z
-
-
-def test_kinetic_energy():
-    m, M, l1 = symbols('m M l1')
-    omega = dynamicsymbols('omega')
-    N = ReferenceFrame('N')
-    O = Point('O')
-    O.set_vel(N, 0 * N.x)
-    Ac = O.locatenew('Ac', l1 * N.x)
-    P = Ac.locatenew('P', l1 * N.x)
-    a = ReferenceFrame('a')
-    a.set_ang_vel(N, omega * N.z)
-    Ac.v2pt_theory(O, N, a)
-    P.v2pt_theory(O, N, a)
-    Pa = Particle('Pa', P, m)
-    I = outer(N.z, N.z)
-    A = RigidBody('A', Ac, a, M, (I, Ac))
-    assert 0 == kinetic_energy(N, Pa, A) - (M*l1**2*omega**2/2
-            + 2*l1**2*m*omega**2 + omega**2/2)
-
-
-def test_potential_energy():
-    m, M, l1, g, h, H = symbols('m M l1 g h H')
-    omega = dynamicsymbols('omega')
-    N = ReferenceFrame('N')
-    O = Point('O')
-    O.set_vel(N, 0 * N.x)
-    Ac = O.locatenew('Ac', l1 * N.x)
-    P = Ac.locatenew('P', l1 * N.x)
-    a = ReferenceFrame('a')
-    a.set_ang_vel(N, omega * N.z)
-    Ac.v2pt_theory(O, N, a)
-    P.v2pt_theory(O, N, a)
-    Pa = Particle('Pa', P, m)
-    I = outer(N.z, N.z)
-    A = RigidBody('A', Ac, a, M, (I, Ac))
-    Pa.set_potential_energy(m * g * h)
-    A.set_potential_energy(M * g * H)
-    assert potential_energy(A, Pa) == m * g * h + M * g * H

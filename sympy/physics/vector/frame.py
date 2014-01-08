@@ -1,7 +1,8 @@
 from sympy import diff, trigsimp, expand, sin, cos, \
      solve, Symbol, sympify, eye, ImmutableMatrix as Matrix
-from sympy.core.compatibility import string_types
-from sympy.physics.vector import Vector, _check_vector, dynamicsymbols
+from sympy.core.compatibility import string_types, u
+from sympy.physics.vector.dynamicsymbols import dynamicsymbols
+from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.physics.vector.printers import VectorTypeError
 
 
@@ -36,7 +37,7 @@ class CoordinateSym(Symbol):
     >>> A[1]
     A_y
     >>> type(A[0])
-    <class 'sympy.physics.vector.CoordinateSym'>
+    <class 'sympy.physics.vector.frame.CoordinateSym'>
     >>> a_y = CoordinateSym('a_y', A, 1)
     >>> a_y == A[1]
     True

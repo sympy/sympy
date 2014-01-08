@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from sympy.physics.vecor import Vector, _check_frame, _check_vector
+from sympy.physics.vector import Vector, _check_frame, _check_vector
 
 
 class Point(object):
