@@ -538,3 +538,11 @@ def test_issue_2625():
     raises(TypeError, lambda: I in Interval(-oo,oo))
     raises(TypeError, lambda: Interval(-oo,oo).contains(I))
     raises(TypeError, lambda: I > 2)
+
+
+def test_boundary():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert FiniteSet(1).boundary == FiniteSet(1)
+    assert all(Interval(0, 1, left_open, right_open).boundary == FiniteSet(0, 1)
+            for left_open in (True, False) for right_open in (True, False))

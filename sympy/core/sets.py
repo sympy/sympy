@@ -232,6 +232,21 @@ class Set(Basic):
         """
         return self._measure
 
+    @property
+    def boundary(self):
+        """
+        Boundary of the set.  Limit points.
+
+        >>> from sympy import Interval
+        >>> Interval(0, 1).boundary
+        {0, 1}
+        """
+        return self._boundary
+
+    @property
+    def _boundary(self):
+        raise NotImplemented()
+
     def _eval_imageset(self, f):
         from sympy.sets.fancysets import ImageSet
         return ImageSet(f, self)
@@ -626,6 +641,10 @@ class Interval(Set, EvalfMixin):
         a = Interval(S.NegativeInfinity, self.start, True, not self.left_open)
         b = Interval(self.end, S.Infinity, not self.right_open, True)
         return Union(a, b)
+
+    @property
+    def _boundary(self):
+        return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
         if self.left_open:
@@ -1274,6 +1293,10 @@ class FiniteSet(Set, EvalfMixin):
             intervals.append(Interval(a, b, True, True))  # open intervals
         intervals.append(Interval(args[-1], S.Infinity, True, True))
         return Union(intervals, evaluate=False)
+
+    @property
+    def _boundary(self):
+        return self
 
     @property
     def _inf(self):
