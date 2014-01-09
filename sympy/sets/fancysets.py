@@ -335,3 +335,7 @@ class Range(Set):
     @property
     def _sup(self):
         return self.stop - self.step
+
+    @property
+    def _boundary(self):
+        return self
