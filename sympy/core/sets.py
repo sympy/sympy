@@ -245,7 +245,7 @@ class Set(Basic):
 
     @property
     def _boundary(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def _eval_imageset(self, f):
         from sympy.sets.fancysets import ImageSet
@@ -896,6 +896,11 @@ class Union(Set, EvalfMixin):
             # Flip Parity - next time subtract/add if we added/subtracted here
             parity *= -1
         return measure
+
+    @property
+    def _boundary(self):
+        all_possible = Union(arg.boundary for arg in self.args)
+        return all_possible
 
     def _eval_imageset(self, f):
         return Union(imageset(f, arg) for arg in self.args)

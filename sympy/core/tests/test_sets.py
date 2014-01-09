@@ -546,3 +546,11 @@ def test_boundary():
     assert FiniteSet(1).boundary == FiniteSet(1)
     assert all(Interval(0, 1, left_open, right_open).boundary == FiniteSet(0, 1)
             for left_open in (True, False) for right_open in (True, False))
+
+
+    # Union
+    assert (Interval(0, 1) + Interval(2, 3)).boundary == FiniteSet(0, 1, 2, 3)
+    assert ((Interval(0, 1, False, True)
+           + Interval(1, 2, True, False)).boundary == FiniteSet(0, 1, 2))
+
+    assert (Interval(0, 1) + FiniteSet(2)).boundary == FiniteSet(0, 1, 2)
