@@ -400,6 +400,13 @@ class ProductSet(Set):
         return Union(p for p in product_sets if p != self)
 
     @property
+    def _boundary(self):
+        return Union(ProductSet(b + b.boundary if i != j else b.boundary
+                                for j, b in enumerate(self.sets))
+                                for i, a in enumerate(self.sets))
+
+
+    @property
     def is_real(self):
         return all(set.is_real for set in self.sets)
 

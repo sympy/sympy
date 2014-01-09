@@ -548,9 +548,29 @@ def test_boundary():
             for left_open in (True, False) for right_open in (True, False))
 
 
-    # Union
+def test_boundary_Union():
     assert (Interval(0, 1) + Interval(2, 3)).boundary == FiniteSet(0, 1, 2, 3)
     assert ((Interval(0, 1, False, True)
            + Interval(1, 2, True, False)).boundary == FiniteSet(0, 1, 2))
 
     assert (Interval(0, 1) + FiniteSet(2)).boundary == FiniteSet(0, 1, 2)
+
+
+def test_boundary_ProductSet():
+    open_square = Interval(0, 1, True, True) ** 2
+    assert open_square.boundary == (FiniteSet(0, 1) * Interval(0, 1)
+                                  + Interval(0, 1) * FiniteSet(0, 1))
+
+    second_square = Interval(1, 2, True, True) * Interval(0, 1, True, True)
+    assert (open_square + second_square).boundary == (
+                FiniteSet(0, 1) * Interval(0, 1)
+              + FiniteSet(1, 2) * Interval(0, 1)
+              + Interval(0, 1) * FiniteSet(0, 1)
+              + Interval(1, 2) * FiniteSet(0, 1))
+
+
+@XFAIL
+def test_boundary_ProductSet_line():
+    """ This fails just due to simplification - it provides a correct answer """
+    line_in_r2 = Interval(0, 1) * FiniteSet(0)
+    assert line_in_r2.boundary == line_in_r2
