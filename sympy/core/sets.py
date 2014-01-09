@@ -1194,6 +1194,10 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     def _union(self, other):
         return self
 
+    @property
+    def _boundary(self):
+        return EmptySet()
+
 
 class FiniteSet(Set, EvalfMixin):
     """
