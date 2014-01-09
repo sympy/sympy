@@ -260,6 +260,13 @@ class Set(Basic):
         return self._boundary
 
     @property
+    def is_open(self):
+        if not Intersection(self, self.boundary):
+            return True
+        # We can't confidently claim that an intersection exists
+        return None
+
+    @property
     def is_closed(self):
         return self.subset(self.boundary)
 

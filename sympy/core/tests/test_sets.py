@@ -584,7 +584,14 @@ def test_boundary_ProductSet_line():
     assert line_in_r2.boundary == line_in_r2
 
 
-def test_closed():
+def test_is_open():
+    assert not Interval(0, 1, False, False).is_open
+    assert not Interval(0, 1, True, False).is_open
+    assert Interval(0, 1, True, True).is_open
+    assert not FiniteSet(1, 2, 3).is_open
+
+
+def test_is_closed():
     assert Interval(0, 1, False, False).is_closed
     assert not Interval(0, 1, True, False).is_closed
     assert FiniteSet(1, 2, 3).is_closed
