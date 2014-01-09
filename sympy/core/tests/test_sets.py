@@ -1,6 +1,6 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet
 )
 from sympy.mpmath import mpi
 
@@ -215,6 +215,10 @@ def test_intersection():
     assert (2, 2) not in i
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
+
+
+def test_ProductSet_of_single_arg_is_arg():
+    assert ProductSet(Interval(0, 1)) == Interval(0, 1)
 
 
 def test_interval_subs():

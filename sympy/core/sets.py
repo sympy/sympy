@@ -348,6 +348,9 @@ class ProductSet(Set):
         if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
+        if len(sets) == 1:
+            return sets[0]
+
         return Basic.__new__(cls, *sets, **assumptions)
 
     def _contains(self, element):
