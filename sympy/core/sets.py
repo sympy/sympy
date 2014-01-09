@@ -235,10 +235,26 @@ class Set(Basic):
     @property
     def boundary(self):
         """
-        Boundary of the set.  Limit points.
+        The boundary or frontier of a set
+
+        A point x is on the boundary of a set S if
+        1.  x is in the closure of S
+            - i.e. Every neighborhood of x contains a point in S
+        2.  x is not in the interior of S
+            - i.e. There does not exist an open set centered on x contained
+              entirely within S
+
+        There are the points on the outer rim of S.  If S is open then these
+        points need not actually be contained within S.
+
+        For example, the boundary of an interval is its start and end points.
+        This is true regardless of whether or not the interval is open
 
         >>> from sympy import Interval
         >>> Interval(0, 1).boundary
+        {0, 1}
+
+        >>> Interval(0, 1, True, False).boundary
         {0, 1}
         """
         return self._boundary
