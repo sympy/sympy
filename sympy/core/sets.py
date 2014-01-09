@@ -1143,6 +1143,10 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _eval_imageset(self, f):
         return self
 
+    @property
+    def _boundary(self):
+        return self
+
 class UniversalSet(with_metaclass(Singleton, Set)):
     """
     Represents the set of all things.
