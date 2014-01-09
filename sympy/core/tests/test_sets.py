@@ -588,3 +588,11 @@ def test_closed():
     assert Interval(0, 1, False, False).is_closed
     assert not Interval(0, 1, True, False).is_closed
     assert FiniteSet(1, 2, 3).is_closed
+
+
+def test_closure():
+    assert Interval(0, 1, False, True).closure == Interval(0, 1, False, False)
+
+
+def test_interior():
+    assert Interval(0, 1, False, True).interior == Interval(0, 1, True, True)

@@ -264,6 +264,14 @@ class Set(Basic):
         return self.subset(self.boundary)
 
     @property
+    def closure(self):
+        return self + self.boundary
+
+    @property
+    def interior(self):
+        return self - self.boundary
+
+    @property
     def _boundary(self):
         raise NotImplementedError()
 
