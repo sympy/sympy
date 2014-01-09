@@ -501,6 +501,12 @@ def test_universalset():
     assert U.union(Interval(2, 4)) == U
 
 
+def test_Union_of_ProductSets_shares():
+    line = Interval(0, 2)
+    points = FiniteSet(0, 1, 2)
+    assert Union(line * line, line * points) == line * line
+
+
 def test_Interval_free_symbols():
     x = Symbol('x', real=True)
     assert set(Interval(0, x).free_symbols) == set((x,))

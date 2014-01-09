@@ -387,6 +387,19 @@ class ProductSet(Set):
         return ProductSet(a.intersect(b)
                 for a, b in zip(self.sets, other.sets))
 
+    def _union(self, other):
+        if not other.is_ProductSet:
+            return None
+        if len(other.args) != len(self.args):
+            return None
+        if self.args[0] == other.args[0]:
+            return self.args[0] * Union(ProductSet(self.args[1:]),
+                                        ProductSet(other.args[1:]))
+        if self.args[-1] == other.args[-1]:
+            return Union(ProductSet(self.args[:-1]),
+                         ProductSet(other.args[:-1])) * self.args[-1]
+        return None
+
     @property
     def sets(self):
         return self.args
