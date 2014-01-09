@@ -5,12 +5,11 @@ __all__ = ['KanesMethod']
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.core.compatibility import reduce
 from sympy.utilities import default_sort_key
-from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
+from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
+     Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
-from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import (inertia_of_point_mass,
-                                               partial_velocity)
+from sympy.physics.mechanics.functions import inertia_of_point_mass
 
 class KanesMethod(object):
     """Kane's method object.

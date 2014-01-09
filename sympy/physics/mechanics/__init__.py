@@ -27,14 +27,40 @@ from . import particle
 from .particle import *
 __all__.extend(particle.__all__)
 
-from . import point
-from .point import *
-__all__.extend(point.__all__)
-
-from . import essential
-from .essential import *
-__all__.extend(essential.__all__)
-
 from . import lagrange
 from .lagrange import *
 __all__.extend(lagrange.__all__)
+
+
+#Import essential elements from physics.vector module
+from sympy.physics.vector.frame import ReferenceFrame, \
+     CoordinateSym, _check_frame
+from sympy.physics.vector.dyadic import Dyadic, _check_dyadic
+from sympy.physics.vector.vector import Vector, _check_vector
+from sympy.physics.vector.printers import \
+     VectorStrPrinter as MechanicsStrPrinter, \
+     VectorLatexPrinter as MechanicsLatexPrinter, \
+     VectorPrettyPrinter as MechanicsPrettyPrinter
+from sympy.physics.vector.dynamicsymbols import dynamicsymbols
+from sympy.physics.vector.point import Point
+from sympy.physics.vector.functions import cross, dot, express, \
+     time_derivative, outer, kinematic_equations, get_motion_params, \
+     partial_velocity
+from sympy.physics.vector.functions import \
+     time_derivative_printing as mechanics_printing, \
+     vprint as mprint, vsprint as msprint, \
+     vpprint as mpprint, vlatex as mlatex
+
+#essentialnames contains all names to be imported from vector package
+essentialnames = ['ReferenceFrame', 'CoordinateSym', '_check_frame', \
+                  'Dyadic', '_check_dyadic', 'Vector', '_check_vector', \
+                  'MechanicsStrPrinter', 'MechanicsLatexPrinter', \
+                  'MechanicsPrettyPrinter', 'dynamicsymbols', \
+                  'Point', 'cross', 'dot', 'express', \
+                  'time_derivative', 'outer', 'kinematic_equations', \
+                  'get_motion_params', 'partial_velocity', \
+                  'mechanics_printing', 'mprint', 'msprint', \
+                  'mpprint', 'mlatex']
+
+__all__.extend(essentialnames)
+

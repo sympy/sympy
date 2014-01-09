@@ -3,7 +3,7 @@ from __future__ import print_function, division
 __all__ = ['LagrangesMethod']
 
 from sympy import diff, zeros, Matrix, eye, sympify
-from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point)
+from sympy.physics.vector import (dynamicsymbols, ReferenceFrame, Point)
 
 
 class LagrangesMethod(object):

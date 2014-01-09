@@ -420,7 +420,8 @@ class Dyadic(object):
         --------
 
         >>> from sympy import symbols
-        >>> from sympy.physics.vector import ReferenceFrame
+        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> Vector.simp = True
         >>> from sympy.physics.mechanics import inertia
         >>> Ixx, Iyy, Izz, Ixy, Iyz, Ixz = symbols('Ixx, Iyy, Izz, Ixy, Iyz, Ixz')
         >>> N = ReferenceFrame('N')
