@@ -244,6 +244,10 @@ class Set(Basic):
         return self._boundary
 
     @property
+    def is_closed(self):
+        return self.subset(self.boundary)
+
+    @property
     def _boundary(self):
         raise NotImplementedError()
 
