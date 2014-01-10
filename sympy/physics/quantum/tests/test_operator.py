@@ -5,7 +5,8 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
 from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             HermitianOperator, OuterProduct,
-                                            DifferentialOperator)
+                                            DifferentialOperator,
+                                            IdentityOperator)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 from sympy.core.trace import Tr
