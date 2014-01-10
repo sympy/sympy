@@ -95,8 +95,6 @@ def test_diff_symbols():
 
 def test_Function():
     class myfunc(Function):
-        nargs = 1
-
         @classmethod
         def eval(cls, x):
             return
@@ -105,6 +103,13 @@ def test_Function():
     assert myfunc(x).nargs == FiniteSet(1)
     raises(TypeError, lambda: myfunc(x, y).nargs)
 
+    class myfunc(Function):
+        @classmethod
+        def eval(cls, *x):
+            return
+
+    assert myfunc.nargs == S.Naturals0
+    assert myfunc(x).nargs == S.Naturals0
 
 def test_nargs():
     f = Function('f')
@@ -432,7 +437,7 @@ def test_fdiff_argument_index_error():
     from sympy.core.function import ArgumentIndexError
 
     class myfunc(Function):
-        nargs = 1
+        nargs = 1  # define since there is no eval routine
 
         def fdiff(self, idx):
             raise ArgumentIndexError

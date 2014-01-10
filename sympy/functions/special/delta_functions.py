@@ -42,8 +42,6 @@ class DiracDelta(Function):
     .. [1] http://mathworld.wolfram.com/DeltaFunction.html
     """
 
-    nargs = (1, 2)
-
     is_real = True
 
     def fdiff(self, argindex=1):
@@ -213,7 +211,6 @@ class Heaviside(Function):
     .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
 
     """
-    nargs = 1
 
     is_real = True
 

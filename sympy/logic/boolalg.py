@@ -333,7 +333,6 @@ class Not(BooleanFunction):
 
     is_Not = True
 
-    nargs = 1
 
     @classmethod
     def eval(cls, arg):

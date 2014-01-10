@@ -72,7 +72,6 @@ def _create_lookup_table(table):
     from sympy import unpolarify, Function, Not
 
     class IsNonPositiveInteger(Function):
-        nargs = 1
 
         @classmethod
         def eval(cls, arg):

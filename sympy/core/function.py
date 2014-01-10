@@ -53,6 +53,8 @@ from sympy.utilities.iterables import uniq
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
 
+import inspect
+
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -98,7 +100,23 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     _new = type.__new__
 
     def __init__(cls, *args, **kwargs):
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', None))
+        if hasattr(cls, 'eval'):
+            evalargspec = inspect.getargspec(cls.eval)
+            if evalargspec.varargs:
+                evalargs = None
+            else:
+                evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
+                if evalargspec.defaults:
+                    # if there are default args then they are optional; the
+                    # fewest args will occur when all defaults are used and
+                    # the most when none are used (i.e. all args are given)
+                    evalargs = tuple(range(
+                        evalargs - len(evalargspec.defaults), evalargs + 1))
+        else:
+            evalargs = None
+        # honor kwarg value or class-defined value before using
+        # the number of arguments in the eval function (if present)
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', evalargs))
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
@@ -188,13 +206,13 @@ class Application(with_metaclass(FunctionClass, Basic)):
             # things passing through here:
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
-            #  - AppliedUndef with given nargs like Function('f', nargs=1)(1)
+            #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
             obj.nargs = FiniteSet(obj.nargs) if obj.nargs is not None \
                 else Naturals0()
         except AttributeError:
             # things passing through here:
-            #  - WildFunction
-            #  - AppliedUndef with no nargs like Function('f')(1)
+            #  - WildFunction('f').nargs
+            #  - AppliedUndef with no nargs like Function('f')(1).nargs
             obj.nargs = FiniteSet(obj._nargs) if obj._nargs is not None \
                 else Naturals0()
         return obj
@@ -273,10 +291,8 @@ class Function(Application, Expr):
     >>> from sympy import Function, S, oo, I, sin
     >>> class my_func(Function):
     ...
-    ...     nargs = 1  # if 1 or 2 args are acceptable, change 1 to (1, 2)
-    ...
     ...     @classmethod
-    ...     def eval(cls, x):  # if more than 1 arg is ok, change x to *x
+    ...     def eval(cls, x):
     ...         if x.is_Number:
     ...             if x is S.Zero:
     ...                 return S.One
@@ -300,6 +316,14 @@ class Function(Application, Expr):
     need to be implemented. See source code of some of the already
     implemented functions for more complete examples.
 
+    Also, if the function can take more than one argument, then ``nargs``
+    must be defined, e.g. if ``my_func`` can take one or two arguments
+    then,
+
+    >>> class my_func(Function):
+    ...     nargs = (1, 2)
+    ...
+    >>>
     """
 
     @property
@@ -393,9 +417,7 @@ class Function(Application, Expr):
         try:
             i = funcs[name]
         except KeyError:
-            nargs = cls.nargs
-
-            i = 0 if isinstance(nargs, Naturals0) else 10000
+            i = 0 if isinstance(cls.nargs, Naturals0) else 10000
 
         return 4, i, name
 

@@ -162,7 +162,6 @@ class exp_polar(ExpBase):
 
     is_polar = True
     is_comparable = False  # cannot be evalf'd
-    nargs = 1
 
     def _eval_Abs(self):
         from sympy import expand_mul
@@ -200,8 +199,6 @@ class exp(ExpBase):
 
     log
     """
-
-    nargs = 1
 
     def fdiff(self, argindex=1):
         """
@@ -460,8 +457,6 @@ class log(Function):
 
     exp
     """
-
-    nargs = (1, 2)
 
     def fdiff(self, argindex=1):
         """
@@ -746,7 +741,6 @@ class LambertW(Function):
     For more information, see:
     http://en.wikipedia.org/wiki/Lambert_W_function
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, x):

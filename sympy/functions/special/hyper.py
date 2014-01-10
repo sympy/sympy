@@ -173,7 +173,6 @@ class hyper(TupleParametersBase):
     .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
-    nargs = 3
 
     def __new__(cls, ap, bq, z):
         # TODO should we check convergence conditions?
@@ -431,7 +430,6 @@ class meijerg(TupleParametersBase):
 
     """
 
-    nargs = 3
 
     def __new__(cls, *args):
         if len(args) == 5:
@@ -711,7 +709,6 @@ class HyperRep(Function):
     supply the actual functions.
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, *args):
@@ -770,7 +767,6 @@ class HyperRep(Function):
 
 class HyperRep_power1(HyperRep):
     """ Return a representative for hyper([-a], [], z) == (1 - z)**a. """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, x):
@@ -795,7 +791,6 @@ class HyperRep_power1(HyperRep):
 
 class HyperRep_power2(HyperRep):
     """ Return a representative for hyper([a, a - 1/2], [2*a], z). """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, x):
@@ -908,7 +903,6 @@ class HyperRep_asin2(HyperRep):
 
 class HyperRep_sqrts1(HyperRep):
     """ Return a representative for hyper([-a, 1/2 - a], [1/2], z). """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -940,7 +934,6 @@ class HyperRep_sqrts2(HyperRep):
     """ Return a representative for
           sqrt(z)/2*[(1-sqrt(z))**2a - (1 + sqrt(z))**2a]
           == -2*z/(2*a+1) d/dz hyper([-a - 1/2, -a], [1/2], z)"""
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -997,7 +990,6 @@ class HyperRep_cosasin(HyperRep):
     """ Represent hyper([a, -a], [1/2], z) == cos(2*a*asin(sqrt(z))). """
     # Note there are many alternative expressions, e.g. as powers of a sum of
     # square roots.
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -1019,7 +1011,6 @@ class HyperRep_cosasin(HyperRep):
 class HyperRep_sinasin(HyperRep):
     """ Represent 2*a*z*hyper([1 - a, 1 + a], [3/2], z)
         == sqrt(z)/sqrt(1-z)*sin(2*a*asin(sqrt(z))) """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
