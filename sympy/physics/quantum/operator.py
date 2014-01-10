@@ -11,7 +11,7 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import Derivative, Expr
+from sympy import Derivative, Expr, Integer
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -264,8 +264,14 @@ class IdentityOperator(Operator):
 
         return Operator.__new__(cls, *args)
 
+    def _eval_commutator(self, other, **hints):
+        return Integer(0)
+
     def _eval_anticommutator(self, other, **hints):
-        return None
+        return 2 * other
+
+    def _eval_inverse(self):
+        return self
 
     def _eval_adjoint(self):
         return self

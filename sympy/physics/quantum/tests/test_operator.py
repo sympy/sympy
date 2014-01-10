@@ -80,6 +80,19 @@ def test_unitary():
     assert Dagger(U).is_commutative is False
 
 
+def test_identity():
+    I = IdentityOperator('I')
+    O = Operator('O')
+
+    assert isinstance(I, IdentityOperator)
+    assert isinstance(I, Operator)
+
+    assert I.inv() == I
+    assert Dagger(I) == I
+    assert qapply(I * O) == O
+    assert qapply(O * I) == O
+
+
 def test_outer_product():
     k = Ket('k')
     b = Bra('b')
