@@ -190,7 +190,7 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     """
     Helper function for normal_ordered_form_factor: Write multiplication
     expression with bosonic or fermionic operators on normally ordered form,
-    using the bosonic and fermionic commutation relations. The resulting 
+    using the bosonic and fermionic commutation relations. The resulting
     operator expression is equivalent to the argument, but will in general be
     a sum of operator products instead of a simple product.
     """
@@ -284,7 +284,7 @@ def _normal_ordered_form_terms(expr, independent=False, recursive_limit=10,
 def normal_ordered_form(expr, independent=False, recursive_limit=10,
                         _recursive_depth=0):
     """Write an expression with bosonic or fermionic operators on normal
-    ordered form, where each term is normally ordered. Note that this 
+    ordered form, where each term is normally ordered. Note that this
     normal ordered form is equivalent to the original expression.
 
     Parameters
@@ -328,9 +328,9 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
     """
     Helper function for normal_order: Normal order a multiplication expression
     with bosonic or fermionic operators. In general the resulting operator
-    expression will not be equivalent to original product. 
+    expression will not be equivalent to original product.
     """
-    
+
     factors = _expand_powers(product)
 
     n = 0
@@ -387,7 +387,7 @@ def _normal_order_terms(expr, recursive_limit=10, _recursive_depth=0):
     """
     Helper function for normal_order: look through each term in an addition
     expression and call _normal_order_factor to perform the normal ordering
-    on the factors. 
+    on the factors.
     """
 
     new_terms = []
@@ -461,14 +461,14 @@ class BosonFockKet(Ket):
     @classmethod
     def dual_class(self):
         return BosonFockBra
-    
+
     @classmethod
     def _eval_hilbert_space(cls, label):
         return FockSpace()
 
     def _eval_innerproduct_BosonFockBra(self, bra, **hints):
         return KroneckerDelta(self.n, bra.n)
-    
+
     def _apply_operator_BosonOperator(self, op, **options):
         if op.is_annihilation:
             if self.n > 0:
@@ -500,7 +500,7 @@ class BosonFockBra(Bra):
     @classmethod
     def dual_class(self):
         return BosonFockKet
-    
+
     @classmethod
     def _eval_hilbert_space(cls, label):
         return FockSpace()
@@ -527,17 +527,17 @@ class BosonCoherentKet(Ket):
     @classmethod
     def dual_class(self):
         return BosonCoherentBra
-    
+
     @classmethod
     def _eval_hilbert_space(cls, label):
         return HilbertSpace()
-    
+
     def _eval_innerproduct_BosonCoherentBra(self, bra, **hints):
         if self.alpha == bra.alpha:
             return Integer(1)
         else:
             return exp(-(abs(self.alpha)**2 + abs(bra.alpha)**2 - 2 * conjugate(bra.alpha) * self.alpha)/2)
-    
+
     def _apply_operator_BosonOperator(self, op, **options):
         if op.is_annihilation:
             return self.alpha * self
@@ -566,7 +566,7 @@ class BosonCoherentBra(Bra):
     @classmethod
     def dual_class(self):
         return BosonCoherentKet
-        
+
     def _apply_operator_BosonOperator(self, op, **options):
         if not op.is_annihilation:
             return self.alpha * self
@@ -597,14 +597,14 @@ class FermionFockKet(Ket):
     @classmethod
     def dual_class(self):
         return FermionFockBra
-    
+
     @classmethod
     def _eval_hilbert_space(cls, label):
         return HilbertSpace()
 
     def _eval_innerproduct_FermionFockBra(self, bra, **hints):
         return KroneckerDelta(self.n, bra.n)
-    
+
     def _apply_operator_FermionOperator(self, op, **options):
         if op.is_annihilation:
             if self.n == 1:
@@ -641,4 +641,3 @@ class FermionFockBra(Bra):
     @classmethod
     def dual_class(self):
         return FermionFockKet
-
