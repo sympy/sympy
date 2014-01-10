@@ -168,6 +168,11 @@ class FermionOperator(Operator):
 
 
 def _expand_powers(factors):
+    """
+    Helper function for normal_ordered_form and normal_order: Expand a
+    power expression to a multiplication expression so that that the
+    expression can be handled by the normal ordering functions.
+    """
 
     new_factors = []
     for factor in factors.args:
@@ -182,6 +187,13 @@ def _expand_powers(factors):
 
 def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                                 _recursive_depth=0):
+    """
+    Helper function for normal_ordered_form_factor: Write multiplication
+    expression with bosonic or fermionic operators on normally ordered form,
+    using the bosonic and fermionic commutation relations. The resulting 
+    operator expression is equivalent to the argument, but will in general be
+    a sum of operator products instead of a simple product.
+    """
 
     factors = _expand_powers(product)
 
@@ -250,6 +262,11 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
 
 def _normal_ordered_form_terms(expr, independent=False, recursive_limit=10,
                                _recursive_depth=0):
+    """
+    Helper function for normal_ordered_form: loop through each term in an
+    addition expression and call _normal_ordered_form_factor to perform the
+    factor to an normally ordered expression.
+    """
 
     new_terms = []
     for term in expr.args:
@@ -267,7 +284,8 @@ def _normal_ordered_form_terms(expr, independent=False, recursive_limit=10,
 def normal_ordered_form(expr, independent=False, recursive_limit=10,
                         _recursive_depth=0):
     """Write an expression with bosonic or fermionic operators on normal
-    ordered form, where each term is normally ordered.
+    ordered form, where each term is normally ordered. Note that this 
+    normal ordered form is equivalent to the original expression.
 
     Parameters
     ==========
@@ -307,7 +325,12 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
 
 
 def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
-
+    """
+    Helper function for normal_order: Normal order a multiplication expression
+    with bosonic or fermionic operators. In general the resulting operator
+    expression will not be equivalent to original product. 
+    """
+    
     factors = _expand_powers(product)
 
     n = 0
@@ -361,6 +384,11 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
 
 
 def _normal_order_terms(expr, recursive_limit=10, _recursive_depth=0):
+    """
+    Helper function for normal_order: look through each term in an addition
+    expression and call _normal_order_factor to perform the normal ordering
+    on the factors. 
+    """
 
     new_terms = []
     for term in expr.args:
@@ -376,7 +404,10 @@ def _normal_order_terms(expr, recursive_limit=10, _recursive_depth=0):
 
 
 def normal_order(expr, recursive_limit=10, _recursive_depth=0):
-    """Normal order an expression with bosonic or fermionic operators.
+    """Normal order an expression with bosonic or fermionic operators. Note
+    that this normal order is not equivalent to the original expression, but
+    the creation and annihilation operators in each term in expr is reordered
+    so that the expression becomes normal ordered.
 
     Parameters
     ==========
@@ -400,12 +431,10 @@ def normal_order(expr, recursive_limit=10, _recursive_depth=0):
         return expr
 
     if isinstance(expr, Add):
-        return _normal_order_terms(expr,
-                                   recursive_limit=recursive_limit,
+        return _normal_order_terms(expr, recursive_limit=recursive_limit,
                                    _recursive_depth=_recursive_depth)
     elif isinstance(expr, Mul):
-        return _normal_order_factor(expr,
-                                    recursive_limit=recursive_limit,
+        return _normal_order_factor(expr, recursive_limit=recursive_limit,
                                     _recursive_depth=_recursive_depth)
     else:
         return expr
@@ -475,18 +504,6 @@ class BosonFockBra(Bra):
     @classmethod
     def _eval_hilbert_space(cls, label):
         return FockSpace()
-
-#    def _eval_innerproduct_BosonFockKet(self, ket, **hints):
-#        return KroneckerDelta(self.n, ket.n)
-#    
-#    def _apply_operator_BosonOperator(self, op, **options):
-#        if not op.is_annihilation:
-#            if self.n > 0:
-#                return sqrt(Integer(self.n)) * BosonFockBra(self.n - 1)
-#            else:
-#                return Integer(0)
-#        else:
-#            return sqrt(Integer(self.n + 1)) * BosonFockBra(self.n+1)
 
 
 class BosonCoherentKet(Ket):
