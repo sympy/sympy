@@ -297,7 +297,7 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     1 + Dagger(a)*a
     """
 
-    if _recursive_depth > 10:
+    if _recursive_depth > recursive_limit:
         warn.warning("Warning: too many recursions, aborting")
         return expr
 
@@ -421,6 +421,7 @@ def normal_order(expr, recursive_limit=10, _recursive_depth=0):
     else:
         return expr
 
+
 class BosonFockKet(Ket):
     """Fock state ket for a bosonic mode.
 
@@ -458,6 +459,7 @@ class BosonFockKet(Ket):
                 return Integer(0)
         else:
             return sqrt(Integer(self.n + 1)) * BosonFockKet(self.n+1)
+
 
 class BosonFockBra(Bra):
     """Fock state bra for a bosonic mode.
