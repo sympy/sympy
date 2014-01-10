@@ -510,7 +510,8 @@ def polyexp(ctx, s, z):
 @defun_wrapped
 def cyclotomic(ctx, n, z):
     n = int(n)
-    assert n >= 0
+    if n < 0:
+        raise ValueError("n cannot be negative")
     p = ctx.one
     if n == 0:
         return p

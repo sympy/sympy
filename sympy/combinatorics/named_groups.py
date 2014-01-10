@@ -295,5 +295,6 @@ def RubikGroup(n):
     False
     """
     from sympy.combinatorics.generators import rubik
-    assert n > 1
+    if n <= 1:
+        raise ValueError("Invalid cube . n has to be greater than 1")
     return PermutationGroup(rubik(n))

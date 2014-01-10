@@ -894,7 +894,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         residueterms]] + [n], S(1))
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
-    assert common_denom == n*m  # Verify exact division
+    if common_denom != n*m:  # Verify exact division
+        raise ValueError("Inexact division")
     u = cancel(u**m*Mul(*[Pow(i, j) for i, j in residueterms]))
 
     return (common_denom, u)

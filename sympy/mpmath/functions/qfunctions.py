@@ -79,7 +79,8 @@ def qp(ctx, a, q=None, n=None, **kwargs):
         n = ctx.inf
     else:
         n = ctx.convert(n)
-    assert n >= 0
+    if n < 0:
+        raise ValueError("n cannot be negative")
     if q is None:
         q = a
     else:

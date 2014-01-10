@@ -206,7 +206,8 @@ class Normal(ContinuousProbability):
         if p == 1:
             return (-oo, oo)
 
-        assert p <= 1
+        if p > 1:
+            raise ValueError("p cannot be greater than 1")
 
         # In terms of n*sigma, we have n = sqrt(2)*ierf(p). The inverse
         # error function is not yet implemented in SymPy but can easily be
@@ -320,7 +321,8 @@ class Uniform(ContinuousProbability):
 
         """
         p = sympify(p)
-        assert p <= 1
+        if p > 1:
+            raise ValueError("p cannot be greater than 1")
 
         d = (s.b - s.a)*p / 2
         return (s.mean - d, s.mean + d)

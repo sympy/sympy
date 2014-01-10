@@ -106,7 +106,8 @@ class gamma(Function):
         return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
     def _latex(self, printer, exp=None):
-        assert len(self.args) == 1
+        if len(self.args) != 1:
+            raise ValueError("Args length should be 1")
         aa = printer._print(self.args[0])
         if exp:
             return r'\Gamma^{%s}{\left(%s \right)}' % (printer._print(exp), aa)
