@@ -106,7 +106,12 @@ def sech(ctx, z): return ctx.one / ctx.cosh(z)
 def csch(ctx, z): return ctx.one / ctx.sinh(z)
 
 @defun_wrapped
-def acot(ctx, z): return ctx.atan(ctx.one / z)
+def acot(ctx, z):
+    if z != 0:
+        return ctx.atan(ctx.one / z)
+    else:
+        from sympy import pi
+        return pi / 2
 
 @defun_wrapped
 def asec(ctx, z): return ctx.acos(ctx.one / z)

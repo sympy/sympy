@@ -16,7 +16,7 @@ eqs = [
     sin(x) - Rational(1, 2),
     sin(x) - sqrt(2) / 2,
     sin(x) - Rational(1, 3),
-    cos(x),cos(x**2) + cos(5*x**2),
+    cos(x),
     cos(x) + 1,
     cos(x) - 1,
     tan(x) + -sqrt(3),
@@ -32,7 +32,7 @@ eqs = [
 
 for eq in eqs:
     print '===================================================='
-    print '=== Equation: ' + str(eq)
+    print '=== Equation: ' + latex(eq) + ' = 0'
 
     reset_solution()
     res = solve(eq, x)

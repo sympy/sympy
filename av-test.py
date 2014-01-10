@@ -1,25 +1,22 @@
 #!/usr/bin/env python
 
-# Exponential equations
+# admissible values test
 
 from sympy import *
+from sympy.solvers.solvers import sub_trig_solution, _k
 from sympy.utilities.solution import *
 
 x = Symbol('x')
 
 eqs = [
-    2**(pi*x + E) - 4,
-    2**x - 8,
-    5**(x + 2) - 125,
-    2**(2 * x) - 8**(x + 1),
-    3**(2 * x + 4) - 11 * 9**x - 210,
-    4**x - 3 * 2**x + 2,
-    2**(5 * x - 1) * 3**(3 * x - 1) * 5**(2 * x - 1) - 720**x
+    sin(3*x) * cot(4*x),
+    sin(6 * x) / sin(4 * x),
+    sin(2*x) * sin(4*x) * sin(6*x) / sin(x)
 ]
 
 for eq in eqs:
     print '===================================================='
-    print '=== Equation: ' + latex(eq) + ' = 0'
+    print '=== Equation: ' + latex(eq)
 
     reset_solution()
     res = solve(eq, x)
