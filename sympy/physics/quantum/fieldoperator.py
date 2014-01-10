@@ -71,10 +71,6 @@ class BosonOperator(Operator):
 
         if isinstance(other, BosonOperator):
             if self.name == other.name:
-                # [a, a^\dagger] = 1
-                if self.is_annihilation and not other.is_annihilation:
-                    return Integer(1)
-
                 # [a^\dagger, a] = -1
                 if not self.is_annihilation and other.is_annihilation:
                     return Integer(-1)
@@ -147,10 +143,6 @@ class FermionOperator(Operator):
 
         if isinstance(other, FermionOperator):
             if self.name == other.name:
-                # {a, a^\dagger} = 1
-                if self.is_annihilation and not other.is_annihilation:
-                    return Integer(1)
-
                 # {a^\dagger, a} = 1
                 if not self.is_annihilation and other.is_annihilation:
                     return Integer(1)
