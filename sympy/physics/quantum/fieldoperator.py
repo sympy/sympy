@@ -6,7 +6,7 @@ from warnings import warn
 
 from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
-from sympy.physics.quantum import HilbertSpace, Ket, Bra
+from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 __all__ = [
@@ -16,6 +16,8 @@ __all__ = [
     'BosonCoherentKet',
     'BosonCoherentBra',
     'FermionOperator',
+    'FermionFockKet',
+    'FermionFockBra',
     'normal_order',
     'normal_ordered_form'
 ]
@@ -183,7 +185,6 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
 
     factors = _expand_powers(product)
 
-    m = 0
     new_factors = []
     n = 0
     while n < len(factors) - 1:
@@ -207,7 +208,6 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                         new_factors.append(
                             factors[n + 1] * factors[n] + c.doit())
                     n += 1
-                    m += 1
 
         elif (isinstance(factors[n], FermionOperator) and
               factors[n].is_annihilation):
@@ -229,7 +229,6 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                         new_factors.append(
                             -factors[n + 1] * factors[n] + c.doit())
                     n += 1
-                    m += 1
 
         else:
             new_factors.append(factors[n])
@@ -239,7 +238,7 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     if n == len(factors) - 1:
         new_factors.append(factors[-1])
 
-    if m == 0:
+    if new_factors == factors:
         return product
     else:
         expr = Mul(*new_factors).expand()
@@ -311,7 +310,7 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
 
     factors = _expand_powers(product)
 
-    n = m = 0
+    n = 0
     new_factors = []
     while n < len(factors) - 1:
 
@@ -328,7 +327,6 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
                     else:
                         new_factors.append(factors[n + 1] * factors[n])
                     n += 1
-                    m += 1
 
         elif (isinstance(factors[n], FermionOperator) and
               factors[n].is_annihilation):
@@ -344,7 +342,6 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
                     else:
                         new_factors.append(-factors[n + 1] * factors[n])
                     n += 1
-                    m += 1
 
         else:
             new_factors.append(factors[n])
@@ -354,7 +351,7 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
     if n == len(factors) - 1:
         new_factors.append(factors[-1])
 
-    if m == 0:
+    if new_factors == factors:
         return product
     else:
         expr = Mul(*new_factors).expand()
@@ -438,7 +435,7 @@ class BosonFockKet(Ket):
     
     @classmethod
     def _eval_hilbert_space(cls, label):
-        return HilbertSpace()
+        return FockSpace()
 
     def _eval_innerproduct_BosonFockBra(self, bra, **hints):
         return KroneckerDelta(self.n, bra.n)
@@ -446,11 +443,11 @@ class BosonFockKet(Ket):
     def _apply_operator_BosonOperator(self, op, **options):
         if op.is_annihilation:
             if self.n > 0:
-                return sqrt(Integer(self.n)) * BosonFockKet(self.n-1)
+                return sqrt(Integer(self.n)) * BosonFockKet(self.n - 1)
             else:
                 return Integer(0)
         else:
-            return sqrt(Integer(self.n + 1)) * BosonFockKet(self.n+1)
+            return sqrt(Integer(self.n + 1)) * BosonFockKet(self.n + 1)
 
 
 class BosonFockBra(Bra):
@@ -477,19 +474,19 @@ class BosonFockBra(Bra):
     
     @classmethod
     def _eval_hilbert_space(cls, label):
-        return HilbertSpace()
+        return FockSpace()
 
-    def _eval_innerproduct_BosonFockKet(self, ket, **hints):
-        return KroneckerDelta(self.n, ket.n)
-    
-    def _apply_operator_BosonOperator(self, op, **options):
-        if not op.is_annihilation:
-            if self.n > 0:
-                return sqrt(Integer(self.n)) * BosonFockBra(self.n - 1)
-            else:
-                return Integer(0)
-        else:
-            return sqrt(Integer(self.n + 1)) * BosonFockBra(self.n+1)
+#    def _eval_innerproduct_BosonFockKet(self, ket, **hints):
+#        return KroneckerDelta(self.n, ket.n)
+#    
+#    def _apply_operator_BosonOperator(self, op, **options):
+#        if not op.is_annihilation:
+#            if self.n > 0:
+#                return sqrt(Integer(self.n)) * BosonFockBra(self.n - 1)
+#            else:
+#                return Integer(0)
+#        else:
+#            return sqrt(Integer(self.n + 1)) * BosonFockBra(self.n+1)
 
 
 class BosonCoherentKet(Ket):
@@ -558,3 +555,73 @@ class BosonCoherentBra(Bra):
             return self.alpha * self
         else:
             return None
+
+
+class FermionFockKet(Ket):
+    """Fock state ket for a fermionic mode.
+
+    Parameters
+    ==========
+
+    n : Number
+        The Fock state number.
+
+    """
+
+    def __new__(cls, n):
+        if not n in [0, 1]:
+            raise ValueError("n must be 0 or 1")
+        return Ket.__new__(cls, n)
+
+    @property
+    def n(self):
+        return self.label[0]
+
+    @classmethod
+    def dual_class(self):
+        return FermionFockBra
+    
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        return HilbertSpace()
+
+    def _eval_innerproduct_FermionFockBra(self, bra, **hints):
+        return KroneckerDelta(self.n, bra.n)
+    
+    def _apply_operator_FermionOperator(self, op, **options):
+        if op.is_annihilation:
+            if self.n == 1:
+                return FermionFockKet(0)
+            else:
+                return Integer(0)
+        else:
+            if self.n == 0:
+                return FermionFockKet(1)
+            else:
+                return Integer(0)
+
+
+class FermionFockBra(Bra):
+    """Fock state bra for a fermionic mode.
+
+    Parameters
+    ==========
+
+    n : Number
+        The Fock state number.
+
+    """
+
+    def __new__(cls, n):
+        if not n in [0, 1]:
+            raise ValueError("n must be 0 or 1")
+        return Bra.__new__(cls, n)
+
+    @property
+    def n(self):
+        return self.label[0]
+
+    @classmethod
+    def dual_class(self):
+        return FermionFockKet
+
