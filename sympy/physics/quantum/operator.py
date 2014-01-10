@@ -247,7 +247,7 @@ class IdentityOperator(Operator):
 
     >>> from sympy.physics.quantum import IdentityOperator
     >>> IdentityOperator()
-    IdentityOperator()
+    I
     """
 
     @property
