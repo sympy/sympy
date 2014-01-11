@@ -212,6 +212,8 @@ class exp(ExpBase):
 
     @classmethod
     def eval(cls, arg):
+        if hasattr(arg, '_eval_exp'):
+            return arg._eval_exp(cls)
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -508,6 +510,9 @@ class log(Function):
                 return cls(arg)/cls(base)
             else:
                 return cls(arg)
+
+        if hasattr(arg, '_eval_log'):
+            return arg._eval_log(cls)
 
         if arg.is_Number:
             if arg is S.Zero:
