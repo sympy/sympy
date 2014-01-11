@@ -1019,10 +1019,6 @@ def test_sec():
     # https://code.google.com/p/sympy/issues/detail?id=4067
     assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
 
-    # https://code.google.com/p/sympy/issues/detail?id=4068
-    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
-            1/sqrt(x) +x**(S(3)/2)/12 + x**(S(7)/2)/160 + O(x**4))
-
     assert sec(x).diff(x) == tan(x)*sec(x)
 
 
