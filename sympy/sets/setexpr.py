@@ -3,6 +3,9 @@ from sympy import sift, latex, Min, Max, Set
 from sympy.core.sets import imageset, Interval, FiniteSet, Union
 from sympy.core.compatibility import u
 
+from sympy.core.decorators import call_highest_priority, _sympifyit
+
+
 x = Dummy('x')
 
 
@@ -30,6 +33,7 @@ class SetExpr(Expr):
     >>> simplify(2*a + b).set
     [1, 20]
     """
+    _op_priority = 11.0
     set = property(lambda self: self.args[0])
 
     def _latex(self, printer):
@@ -37,6 +41,56 @@ class SetExpr(Expr):
 
     def _pretty(self, printer):
         return printer._print(self.set)
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        return simplify(Add(self, other))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return simplify(Add(self, other))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __mul__(self, other):
+        return simplify(Mul(self, other))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return simplify(Mul(other, self))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
+    def __sub__(self, other):
+        return simplify(Add(self, -other))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return simplify(Add(other, -self))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        return simplify(Pow(self, other))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__pow__')
+    def __rpow__(self, other):
+        return simplify(Pow(other, self))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        return simplify(Mul(self, 1/other))
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        return simplify(Mul(other, Pow(self, -1)))
 
 
 def simplify(inp):
