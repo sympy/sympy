@@ -93,6 +93,11 @@ class SetExpr(Expr):
         return simplify(Mul(other, Pow(self, -1)))
 
 
+    def _eval_func(self, func):
+        return SetExpr(imageset(func, self.set))
+    _eval_exp = _eval_log = _eval_sin = _eval_cos = _eval_tan =_eval_func
+
+
 def simplify(inp):
     """ Collapse expression containing SetExprs to single SetExpr """
     if not inp.has(SetExpr):
