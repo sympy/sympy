@@ -47,7 +47,7 @@ def solve_general_linear(M, v, dummygen=None):
     >>> M = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
     >>> v = Matrix([0, 0, 0])
 
-    >>> sol, params = solve_general_linear(M, v, (s for s in (x, y, z)))
+    >>> sol, params = solve_general_linear(M, v, iter((x, y, z)))
     >>> sol
     Matrix([
     [-2*x - 3*y],
