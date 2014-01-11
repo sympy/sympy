@@ -13,7 +13,6 @@ This module contain solvers for all kinds of equations:
 """
 
 from __future__ import print_function, division
-from gtk.keysyms import infinity
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, reduce, xrange)
