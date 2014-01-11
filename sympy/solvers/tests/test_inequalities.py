@@ -1,11 +1,12 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
-        Or, Q, re, S, sin, sqrt, Union)
+        Or, Q, re, S, sin, sqrt, Symbol, Union)
 from sympy.assumptions import assuming
 from sympy.abc import x, y
 from sympy.solvers.inequalities import (reduce_inequalities,
-                                        reduce_rational_inequalities)
+                                        reduce_rational_inequalities,
+                                        solve_continuous_inequality)
 from sympy.utilities.pytest import raises
 
 inf = oo.evalf()
@@ -222,3 +223,15 @@ def test_issue_3244():
     eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
     assert reduce_inequalities(eq, Q.real(x)) == \
         And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
+
+
+def test_solve_continuous_inequality():
+    x = Symbol('x', real=True)
+    isolve = solve_continuous_inequality
+    assert isolve(x**2 >= 4, x, relational=False) == Union(Interval(-oo, -2), Interval(2, oo))
+    assert isolve(x**2 >= 4, x) == Or(x <= -2, x >= 2)
+    assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x, relational=False) == \
+        Union(Interval(1, 2), Interval(3, oo))
+    # XXX the order of args is not canonical, so test string
+    assert str(isolve((x - 1)*(x - 2)*(x - 3) >= 0, x)) == \
+        'Or(And(1 <= x, x <= 2), x >= 3)'

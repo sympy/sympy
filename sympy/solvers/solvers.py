@@ -2526,47 +2526,6 @@ def _invert(eq, *symbols, **kwargs):
     return rhs, lhs
 
 
-def isolve(rel, sym):
-    """
-    Solves real univariate inequation.
-
-    >>> from sympy import isolve
-    >>> x = Symbol('x', real=True)
-
-    >>> isolve(x**2 >= 4, x)
-    (-oo, -2] U [2, oo)
-
-    """
-
-    # Implementation for continous functions
-
-    from sympy import oo, Interval, FiniteSet, EmptySet, Union
-
-    expr = rel.lhs - rel.rhs
-    solns = solve(expr, sym)
-
-    start = -oo
-
-    sol_sets = [EmptySet()]
-
-    for x in solns:
-        end = x
-        if rel.subs(sym, (start + end)/2):
-            sol_sets.append(Interval(start, end, True, True))
-
-        if rel.subs(sym, x):
-            sol_sets.append(FiniteSet(x))
-
-        start = end
-
-    end = oo
-
-    if rel.subs(sym, (start + end)/2):
-        sol_sets.append(Interval(start, end, True, True))
-
-    return Union(*sol_sets)
-
-
 def unrad(eq, *syms, **flags):
     """ Remove radicals with symbolic arguments and return (eq, cov, dens),
     None or raise an error:
