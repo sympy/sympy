@@ -1,9 +1,10 @@
 from sympy.core import Expr, Function, Add, Mul, Pow, Dummy
-from sympy import sift, latex, Min, Max, Set
+from sympy import sift, latex, Min, Max, Set, sympify
 from sympy.core.sets import imageset, Interval, FiniteSet, Union
 from sympy.core.compatibility import u
-
 from sympy.core.decorators import call_highest_priority, _sympifyit
+
+from itertools import count
 
 
 x = Dummy('x')
@@ -17,6 +18,9 @@ def setexpr(inp):
     if isinstance(inp, list) and len(inp) == 2:
         return SetExpr(Interval(inp[0], inp[1], False, False))
     return SetExpr(inp)
+
+
+counter = ('_%d'%i for i in count(1))
 
 
 class SetExpr(Expr):
@@ -34,7 +38,13 @@ class SetExpr(Expr):
     [1, 20]
     """
     _op_priority = 11.0
+
+    def __new__(cls, set, token=None):
+        token = token or next(counter)
+        return Expr.__new__(cls, set, sympify(token))
+
     set = property(lambda self: self.args[0])
+    token = property(lambda self: self.args[1])
 
     def _latex(self, printer):
         return printer._print(self.set)
@@ -91,7 +101,6 @@ class SetExpr(Expr):
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
         return simplify(Mul(other, Pow(self, -1)))
-
 
     def _eval_func(self, func):
         return SetExpr(imageset(func, self.set))
