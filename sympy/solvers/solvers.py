@@ -1890,6 +1890,22 @@ def solve_linear_system(system, *symbols, **flags):
     {}
 
     """
+    do_simplify = flags.get('simplify', True)
+
+    if system.rows == system.cols - 1 == len(symbols):
+        try:
+            # well behaved n-equations and n-unknowns
+            inv = inv_quick(system[:, :-1])
+            rv = dict(zip(symbols, inv*system[:, -1]))
+            if do_simplify:
+                for k, v in rv.items():
+                    rv[k] = simplify(v)
+            if not all(i.is_zero for i in rv.values()):
+                # non-trivial solution
+                return rv
+        except ValueError:
+            pass
+
     matrix = system[:, :]
     syms = list(symbols)
 
@@ -1981,8 +1997,6 @@ def solve_linear_system(system, *symbols, **flags):
     # if there weren't any problems, augmented matrix is now
     # in row-echelon form so we can check how many solutions
     # there are and extract them using back substitution
-
-    do_simplify = flags.get('simplify', True)
 
     if len(syms) == matrix.rows:
         # this system is Cramer equivalent so there is
@@ -2106,6 +2120,101 @@ def solve_linear_system_LU(matrix, syms):
     for i in range(soln.rows):
         solutions[syms[i]] = soln[i, 0]
     return solutions
+
+
+def det_perm(self):
+    """Return the determinant by using permutations to select term factors.
+    For `n` larger than 8 the number of permutations becomes prohibitively
+    large, or if there are no symbols in the matrix, it is better to use the
+    standard determinant routines, e.g. `bareis`.
+
+    See Also
+    ========
+    det_minor
+    det_quick
+    """
+    from sympy.combinatorics import Permutation
+
+    n = self.rows
+    args = []
+    perm = Permutation(range(n))
+    k = 0
+    while k < perm.cardinality:
+        fac = []
+        idx = 0
+        for i, j in enumerate(perm.array_form):
+            fac.append(self._mat[idx + j])
+            idx += n
+        args.append(Mul(*fac))
+        if perm.signature() < 0:
+            args[-1] = -args[-1]
+        perm += 1
+        k += 1
+    return Add(*args)
+
+
+def det_minor(self):
+    """Return the determinant of self computed from minors without
+    introducing new nesting in products.
+
+    See Also
+    ========
+    det_perm
+    det_quick
+    """
+    n = self.rows
+    if n == 2:
+        return self[0,0]*self[1,1] - self[1,0]*self[0,1]
+    else:
+        return sum([(1, -1)[i%2]*Add(*[self[0, i]*d for d in
+                Add.make_args(det_minor(self.minorMatrix(0, i)))])
+            if self[0, i] else S.Zero for i in range(n)])
+
+
+def det_quick(self, method=None):
+    """Return the inverse of self, assuming that either
+    there are lots of zeros or the size of the matrix
+    is small.
+
+    See Also
+    ========
+    det_minor
+    det_perm
+    """
+    if any(i.has(Symbol) for i in self):
+        if self.rows < 8 and all(i.has(Symbol) for i in self):
+            return det_perm(self)
+        return det_minor(self)
+    else:
+        return self.det(method=method) if method else self.det()
+
+
+def inv_quick(self):
+    """Return the inverse of self, assuming that either
+    there are lots of zeros or the size of the matrix
+    is small.
+    """
+    from sympy.matrices import zeros
+    if any(i.has(Symbol) for i in self):
+        if all(i.has(Symbol) for i in self):
+            det = lambda m: det_perm(m)
+        else:
+            det = lambda m: det_minor(m)
+    else:
+        return self.inv()
+    n = self.rows
+    d = det(self)
+    if d is S.Zero:
+        raise ValueError("Matrix det == 0; not invertible.")
+    ret = zeros(n)
+    for i in range(n):
+        s = (-1)**i
+        for j in range(n):
+            di = det(self.minorMatrix(i, j))
+            ret[j, i] = s*di/d
+            s = -s
+    return ret
+
 
 def tsolve(eq, sym):
     SymPyDeprecationWarning(
