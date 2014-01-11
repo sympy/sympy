@@ -12,20 +12,20 @@ def solve_general_linear(M, v, dummygen=None):
 
     for any matrix :math:`A` having :math:`m` rows and :math:`n`
     columns and arbitrary rank :math:`r`. Returned are a matrix
-    of shape :math:`(n,1)` containing the solutions and a second
-    matrix of shape :math:`(m-r,1)` with all free parameters.
+    of shape :math:`(n, 1)` containing the solutions and a second
+    matrix of shape :math:`(m-r, 1)` with all free parameters.
 
     Example
     =======
 
     >>> from sympy import Matrix
     >>> from sympy.solvers.linear import solve_general_linear
-    >>> M = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+    >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     >>> M.det()
     0
 
-    >>> v = Matrix([3,6,9])
+    >>> v = Matrix([3, 6, 9])
 
     >>> sol, params = solve_general_linear(M, v)
     >>> sol
@@ -44,10 +44,10 @@ def solve_general_linear(M, v, dummygen=None):
     >>> y = Symbol("y")
     >>> z = Symbol("z")
 
-    >>> M = Matrix([[1,2,3],[2,4,6],[3,6,9]])
-    >>> v = Matrix([0,0,0])
+    >>> M = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    >>> v = Matrix([0, 0, 0])
 
-    >>> sol, params = solve_general_linear(M, v, (s for s in (x,y,z)))
+    >>> sol, params = solve_general_linear(M, v, (s for s in (x, y, z)))
     >>> sol
     Matrix([
     [-2*x - 3*y],
@@ -66,7 +66,7 @@ def solve_general_linear(M, v, dummygen=None):
 
     # Gauss Jordan elimination to produce a row echelon form
     U, pivots = U.rref()
-    U, v = U[:,:-1], U[:,-1]
+    U, v = U[:, :-1], U[:, -1]
     pivots = list(filter(lambda p: p < C, pivots))
     rank = len(pivots)
 
@@ -75,12 +75,12 @@ def solve_general_linear(M, v, dummygen=None):
     U = U.vstack(U, permutation)
 
     for i, c in enumerate(pivots):
-        U.col_swap(i,c)
+        U.col_swap(i, c)
 
-    U, permutation = U[:-1,:], U[-1,:]
+    U, permutation = U[:-1, :], U[-1, :]
 
     # Check if there are solutions
-    vzero = v[rank:,0]
+    vzero = v[rank:, 0]
     if not vzero.is_zero:
         raise ValueError("Linear system has no solution")
 
@@ -91,13 +91,13 @@ def solve_general_linear(M, v, dummygen=None):
     tau = Matrix([[ next(dummygen) for k in range(C - rank) ]]).T
 
     # Full parametric solution
-    V = U[:rank,rank:]
-    vt = v[:rank,0]
+    V = U[:rank, rank:]
+    vt = v[:rank, 0]
     xsigma = tau.vstack(vt - V*tau, tau)
 
     # Undo permutation
     sol = zeros(C, 1)
     for k, xksigma in enumerate(xsigma):
-        sol[permutation[k],0] = xksigma
+        sol[permutation[k], 0] = xksigma
 
     return sol, tau
