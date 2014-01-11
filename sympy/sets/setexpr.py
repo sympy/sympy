@@ -33,18 +33,10 @@ class SetExpr(Expr):
     set = property(lambda self: self.args[0])
 
     def _latex(self, printer):
-        return r"x \mid x \in " + printer._print(self.set)
+        return printer._print(self.set)
 
     def _pretty(self, printer):
-        if printer._use_unicode:
-            inn = u("\u220a")
-        else:
-            inn = 'in'
-        bar = printer._print('|')
-        xx = printer._print(x)
-        set = printer._print(self.set)
-
-        return printer._print_seq((x, bar, xx, inn, set), '', '', ' ')
+        return printer._print(self.set)
 
 
 def simplify(inp):
