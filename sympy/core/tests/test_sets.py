@@ -564,6 +564,21 @@ def test_boundary_Union():
            + Interval(1, 2, True, False)).boundary == FiniteSet(0, 1, 2))
 
     assert (Interval(0, 1) + FiniteSet(2)).boundary == FiniteSet(0, 1, 2)
+    assert Union(Interval(0, 10), Interval(5, 15), evaluate=False).boundary \
+            == FiniteSet(0, 15)
+
+    assert Union(Interval(0, 10), Interval(0, 1), evaluate=False).boundary \
+            == FiniteSet(0, 10)
+    assert Union(Interval(0, 10, True, True),
+                 Interval(10, 15, True, True), evaluate=False).boundary \
+            == FiniteSet(0, 10, 15)
+
+
+@XFAIL
+def test_union_boundary_of_joining_sets():
+    """ Testing the boundary of unions is a hard problem """
+    assert Union(Interval(0, 10), Interval(10, 15), evaluate=False).boundary \
+            == FiniteSet(0, 15)
 
 
 def test_boundary_ProductSet():

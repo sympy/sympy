@@ -957,8 +957,14 @@ class Union(Set, EvalfMixin):
 
     @property
     def _boundary(self):
-        all_possible = Union(arg.boundary for arg in self.args)
-        return all_possible
+        def boundary_of_set(i):
+            """ The boundary of set i minus interior of all other sets """
+            b = self.args[i].boundary
+            for j, a in enumerate(self.args):
+                if j != i:
+                    b = b - a.interior
+            return b
+        return Union(map(boundary_of_set, range(len(self.args))))
 
     def _eval_imageset(self, f):
         return Union(imageset(f, arg) for arg in self.args)
