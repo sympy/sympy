@@ -32,7 +32,6 @@ lowered when the tensor is put in canonical form.
 from __future__ import print_function, division
 
 from collections import defaultdict
-import collections
 from sympy import Matrix, Rational
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
@@ -505,7 +504,7 @@ class _TensorDataLazyEvaluator(object):
     TODO
     """
     _substitutions_dict = dict()
-    _lazy_operations_dict = dict()
+#     _lazy_operations_dict = dict()
 
     def __getitem__(self, key):
         """
@@ -514,14 +513,47 @@ class _TensorDataLazyEvaluator(object):
         if key in self._substitutions_dict:
             return self._substitutions_dict[key]
 
-        if key in self._lazy_operations_dict:
-            raise ValueError("")
-            s = self._lazy_operations_dict[key]()
-            self._substitutions_dict[key] = s
-            del self._lazy_operations_dict[key]
-            return s
+        if isinstance(key, TensorHead):
+            return None
+
+        if isinstance(key, TensMul):
+            tensmul_list = key.split()
+            data_list = [self.data_tensmul_from_tensorhead(i, i.components[0]) for i in tensmul_list]
+            if all(*[i is None for i in data_list]):
+                return None
+            if any(*[i is None for i in data_list]):
+                raise ValueError("Mixing tensors with associated data with tensors without data")
+            data_tens = [self.data_tensmul_from_tensorhead(i) for i in data_list]
+            return self.data_prodoct_tensors(data_tens, tensmul_list)
+
+        if isinstance(key, TensAdd):
+            sumvar = S.Zero
+            data_list = [i.data for i in key.args]
+            if all(*[i is None for i in data_list]):
+                return None
+            if any(*[i is None for i in data_list]):
+                raise ValueError("Mixing tensors with associated data with tensors without data")
+            for i in data_list:
+                sumvar += i.data
+            return sumvar
+#         if key in self._lazy_operations_dict:
+#             raise ValueError("")
+#             s = self._lazy_operations_dict[key]()
+#             self._substitutions_dict[key] = s
+#             del self._lazy_operations_dict[key]
+#             return s
 
         return None
+
+    def data_tensmul_from_tensorhead(self, tensmul, tensorhead):
+        return self._correct_signature_from_indices(
+            tensorhead.data,
+            tensmul.indices,
+            tensmul.free,
+            tensmul.dum)
+
+    def data_prodoct_tensors(self, *args):
+        pass
 
     def __setitem__(self, key, value):
         """
@@ -529,6 +561,13 @@ class _TensorDataLazyEvaluator(object):
         """
         # TODO: what if it already exists?
         self._substitutions_dict[key] = value
+
+    def __delitem__(self, key):
+#         del self._substitutions_dict[key]
+        pass
+
+    def __contains__(self, key):
+        return key in self._substitutions_dict
 
     @staticmethod
     def _contract_ndarray(free1, free2, ndarray1, ndarray2):
@@ -653,6 +692,7 @@ class _TensorDataLazyEvaluator(object):
 
         _TensorDataLazyEvaluator._substitutions_dict[new_tensmul] = sorted_compo()
 #         _TensorDataLazyEvaluator._lazy_operations_dict[new_tensmul] = sorted_compo
+
 
 _tensor_data_substitution_dict = _TensorDataLazyEvaluator()
 
@@ -840,6 +880,9 @@ class VTIDS(TIDS):
 
     def __repr__(self):
         return str(self)
+
+
+VTIDS = TIDS
 
 
 class _TensorManager(object):
@@ -1925,9 +1968,6 @@ class TensorHead(Basic):
         tmul = TensMul.from_TIDS(S.One, tids)
         tmul._matrix_behavior_kinds = matrix_behavior_kinds
 
-        if self.data is not None:
-            _tensor_data_substitution_dict.add_tensmul_from_tensorhead(self, tmul)
-
         return tmul
 
     def __pow__(self, other):
@@ -2750,8 +2790,6 @@ class TensMul(TensExpr):
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)
         obj._matrix_behavior_kinds = dict()
-        if isinstance(tids, VTIDS):
-            _tensor_data_substitution_dict[obj] = tids.data
         return obj
 
     @staticmethod
@@ -2959,7 +2997,6 @@ class TensMul(TensExpr):
             coeff = self._coeff*other
             tmul = TensMul.from_TIDS(coeff, self._tids, is_canon_bp=self._is_canon_bp)
             tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
-            _tensor_data_substitution_dict[tmul] = self.data
             return tmul
         if isinstance(other, TensAdd):
             return TensAdd(*[self*x for x in other.args])
@@ -2998,7 +3035,6 @@ class TensMul(TensExpr):
         if isinstance(tmul, TensExpr):
             tmul._matrix_behavior_kinds = matrix_behavior_kinds
 
-        _tensor_data_substitution_dict.add_tensor_mul(tmul, self, other)
         return tmul
 
     def __rmul__(self, other):
@@ -3006,7 +3042,6 @@ class TensMul(TensExpr):
         coeff = other*self._coeff
         tmul = TensMul.from_TIDS(coeff, self._tids)
         tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
-        _tensor_data_substitution_dict[tmul] = self.data
         return tmul
 
     def __div__(self, other):
@@ -3016,7 +3051,6 @@ class TensMul(TensExpr):
         coeff = self._coeff/other
         tmul = TensMul.from_TIDS(coeff, self._tids, is_canon_bp=self._is_canon_bp)
         tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
-        _tensor_data_substitution_dict[tmul] = self.data
         return tmul
 
     def __rdiv__(self, other):
@@ -3379,7 +3413,7 @@ class TensMul(TensExpr):
     @data.setter
     def data(self, data):
         # TODO: check data compatibility with properties of tensor.
-        self._tids = VTIDS(self.components, self.free, self.dum, data)
+#         self._tids = VTIDS(self.components, self.free, self.dum, data)
         _tensor_data_substitution_dict[self] = self._tids.data
 
     @data.deleter
