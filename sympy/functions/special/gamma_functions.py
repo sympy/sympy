@@ -312,7 +312,9 @@ class lowergamma(Function):
         return Expr._from_mpmath(res, prec)
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+        z = self.args[1]
+        if not z in (S.Zero, S.NegativeInfinity):
+            return self.func(self.args[0].conjugate(), z.conjugate())
 
     def _eval_rewrite_as_uppergamma(self, s, x):
         return gamma(s) - uppergamma(s, x)
@@ -419,6 +421,7 @@ class uppergamma(Function):
             elif z is S.Infinity:
                 return S.Zero
             elif z is S.Zero:
+                # TODO: Holds only for Re(a) > 0:
                 return gamma(a)
 
         # We extract branching information here. C/f lowergamma.
@@ -451,7 +454,9 @@ class uppergamma(Function):
                     return (cls(a + 1, z) - z**a * C.exp(-z))/a
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+        z = self.args[1]
+        if not z in (S.Zero, S.NegativeInfinity):
+            return self.func(self.args[0].conjugate(), z.conjugate())
 
     def _eval_rewrite_as_lowergamma(self, s, x):
         return gamma(s) - lowergamma(s, x)
@@ -802,7 +807,9 @@ class loggamma(Function):
         return self.args[0].is_real
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        z = self.args[0]
+        if not z in (S.Zero, S.NegativeInfinity):
+            return self.func(z.conjugate())
 
     def fdiff(self, argindex=1):
         if argindex == 1:
