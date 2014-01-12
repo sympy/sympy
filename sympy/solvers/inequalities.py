@@ -357,20 +357,19 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
         for expr, rel in exprs ])
 
 
-def solve_continuous_inequality(rel, sym, assume=True, relational=True):
-    """
-    Solves real univariate inequalities.
+def solve_univariate_inequality(expr, gen, assume=True, relational=True):
+    """Solves a real univariate inequality.
 
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import solve_continuous_inequality
+    >>> from sympy.solvers.inequalities import solve_univariate_inequality
     >>> from sympy.core.symbol import Symbol
     >>> x = Symbol('x', real=True)
 
-    >>> solve_continuous_inequality(x**2 >= 4, x)
+    >>> solve_univariate_inequality(x**2 >= 4, x)
     Or(x <= -2, x >= 2)
-    >>> solve_continuous_inequality(x**2 >= 4, x, relational=False)
+    >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     (-oo, -2] U [2, oo)
 
     """
@@ -379,8 +378,7 @@ def solve_continuous_inequality(rel, sym, assume=True, relational=True):
 
     from sympy.solvers.solvers import solve
 
-    expr = rel.lhs - rel.rhs
-    solns = solve(expr, sym, assume=assume)
+    solns = solve(expr.lhs - expr.rhs, gen, assume=assume)
     oo = S.Infinity
 
     start = -oo
@@ -389,21 +387,21 @@ def solve_continuous_inequality(rel, sym, assume=True, relational=True):
 
     for x in solns:
         end = x
-        if rel.subs(sym, (start + end)/2 if start != -oo else end - 1):
+        if expr.subs(gen, (start + end)/2 if start != -oo else end - 1):
             sol_sets.append(Interval(start, end, True, True))
 
-        if rel.subs(sym, x):
+        if expr.subs(gen, x):
             sol_sets.append(FiniteSet(x))
 
         start = end
 
     end = oo
 
-    if rel.subs(sym, start + 1):
+    if expr.subs(gen, start + 1):
         sol_sets.append(Interval(start, end, True, True))
 
     rv = Union(*sol_sets)
-    return rv if not relational else rv.as_relational(sym)
+    return rv if not relational else rv.as_relational(gen)
 
 
 def _solve_inequality(ie, s, assume=True):
@@ -421,7 +419,7 @@ def _solve_inequality(ie, s, assume=True):
             n, d = expr.as_numer_denom()
             return reduce_rational_inequalities([[ie]], s, assume=assume)
         except PolynomialError:
-            return solve_continuous_inequality(ie, s, assume=assume)
+            return solve_univariate_inequality(ie, s, assume=assume)
     a, b = p.all_coeffs()
     if a.is_positive:
         return ie.func(s, -b/a)
