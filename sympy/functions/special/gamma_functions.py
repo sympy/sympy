@@ -23,7 +23,7 @@ class gamma(Function):
     The gamma function
 
     .. math::
-        \Gamma(x) = \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t.
+        \Gamma(x) := \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t.
 
     The ``gamma`` function implements the function which passes through the
     values of the factorial function, i.e. `\Gamma(n) = (n - 1)!` when n is
@@ -59,6 +59,39 @@ class gamma(Function):
     >>> diff(gamma(x), x)
     gamma(x)*polygamma(0, x)
 
+    Euler's reflection formula:
+
+    >>> from sympy import expand_func, combsimp
+    >>> G = gamma(x)*gamma(1-x)
+    >>> G
+    gamma(x)*gamma(-x + 1)
+    >>> G = expand_func(G)
+    >>> G
+    -x*gamma(-x)*gamma(x)
+    >>> G = expand_func(G)
+    >>> G
+    pi*x*csc(pi*x)*gamma(x)/gamma(x + 1)
+    >>> combsimp(G)
+    pi*csc(pi*x)
+
+    The duplication formula:
+
+    >>> from sympy import simplify
+    >>> G = gamma(x)*gamma(x+S.Half)
+    >>> G
+    gamma(x)*gamma(x + 1/2)
+    >>> G = combsimp(G)
+    >>> G
+    2*sqrt(2)*2**(-2*x - 1/2)*sqrt(pi)*gamma(2*x)
+    >>> simplify(G)
+    2**(-2*x + 1)*sqrt(pi)*gamma(2*x)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(gamma(x), x, 0, 3)
+    1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 + polygamma(2, 1)/6 - EulerGamma**3/6) + O(x**3)
+
     We can numerically evaluate the gamma function to arbitrary precision
     on the whole complex plane:
 
@@ -76,7 +109,7 @@ class gamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler beta function.
+    beta: Euler Beta function.
 
     References
     ==========
@@ -199,7 +232,7 @@ class lowergamma(Function):
     It can be defined as the meromorphic continuation of
 
     .. math::
-        \gamma(s, x) = \int_0^x t^{s-1} e^{-t} \mathrm{d}t.
+        \gamma(s, x) := \int_0^x t^{s-1} e^{-t} \mathrm{d}t = \Gamma(s) - \Gamma(s, x).
 
     This can be shown to be the same as
 
@@ -223,13 +256,13 @@ class lowergamma(Function):
     See Also
     ========
 
-    gamma: Gamma function
-    uppergamma: Upper incomplete gamma function
-    polygamma: Polygamma function
-    loggamma: Log Gamma function
-    digamma: Digamma function
-    trigamma: Trigamma function
-    beta: Euler beta function
+    gamma: Gamma function.
+    uppergamma: Upper incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
+    beta: Euler Beta function.
 
     References
     ==========
@@ -336,7 +369,7 @@ class uppergamma(Function):
     It can be defined as the meromorphic continuation of
 
     .. math::
-        \Gamma(s, x) = \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t = \Gamma(s) - \gamma(s, x).
+        \Gamma(s, x) := \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t = \Gamma(s) - \gamma(s, x).
 
     where `\gamma(s, x)` is the lower incomplete gamma function,
     :class:`lowergamma`. This can be shown to be the same as
@@ -369,13 +402,13 @@ class uppergamma(Function):
     See Also
     ========
 
-    gamma: Gamma function
-    lowergamma: Lower incomplete gamma function
-    polygamma: Polygamma function
-    loggamma: Log Gamma function
-    digamma: Digamma function
-    trigamma: Trigamma function
-    beta: Euler beta function
+    gamma: Gamma function.
+    lowergamma: Lower incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
+    beta: Euler Beta function.
 
     References
     ==========
@@ -478,7 +511,7 @@ class polygamma(Function):
     derivative of the logarithm of the gamma function:
 
     .. math::
-        \psi^{(n)} (z) = \frac{\mathrm{d}^{n+1}}{\mathrm{d} z^{n+1}} \log\Gamma(z).
+        \psi^{(n)} (z) := \frac{\mathrm{d}^{n+1}}{\mathrm{d} z^{n+1}} \log\Gamma(z).
 
     Examples
     ========
@@ -548,13 +581,13 @@ class polygamma(Function):
     See Also
     ========
 
-    gamma: Gamma function
-    lowergamma: Lower incomplete gamma function
-    uppergamma: Upper incomplete gamma function
-    loggamma: Log Gamma function
-    digamma: Digamma function
-    trigamma: Trigamma function
-    beta: Euler beta function
+    gamma: Gamma function.
+    lowergamma: Lower incomplete gamma function.
+    uppergamma: Upper incomplete gamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
+    beta: Euler Beta function.
 
     References
     ==========
@@ -747,11 +780,14 @@ class loggamma(Function):
     >>> from sympy import S, I, pi, oo, loggamma
     >>> from sympy.abc import x
 
-    The loggamma function obeys the mirror symmetry:
+    The loggamma function obeys the mirror symmetry
+    if `x \in \mathbb{C} \setminus \{-\infty, 0\}`:
 
     >>> from sympy import conjugate
     >>> conjugate(loggamma(x))
     loggamma(conjugate(x))
+    >>> conjugate(loggamma(-oo))
+    conjugate(loggamma(-oo))
 
     Differentiation with respect to x is supported:
 
@@ -776,13 +812,13 @@ class loggamma(Function):
     See Also
     ========
 
-    gamma: Gamma function
-    lowergamma: Lower incomplete gamma function
-    uppergamma: Upper incomplete gamma function
-    polygamma: Polygamma function
-    digamma: Digamma function
-    trigamma: Trigamma function
-    beta: Euler beta function
+    gamma: Gamma function.
+    lowergamma: Lower incomplete gamma function.
+    uppergamma: Upper incomplete gamma function.
+    polygamma: Polygamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
+    beta: Euler Beta function.
 
     References
     ==========
@@ -842,7 +878,7 @@ def digamma(x):
     The digamma function is the first derivative of the loggamma function i.e,
 
     .. math::
-        \psi(x) = \frac{\mathrm{d}}{\mathrm{d} z} \log\Gamma(z)
+        \psi(x) := \frac{\mathrm{d}}{\mathrm{d} z} \log\Gamma(z)
                 = \frac{\Gamma'(z)}{\Gamma(z) }
 
     In this case, ``digamma(z) = polygamma(0, z)``.
@@ -850,13 +886,13 @@ def digamma(x):
     See Also
     ========
 
-    gamma: Gamma function
-    lowergamma: Lower incomplete gamma function
-    uppergamma: Upper incomplete gamma function
-    polygamma: Polygamma function
-    loggamma: Log Gamma function
-    trigamma: Trigamma function
-    beta: Euler beta function
+    gamma: Gamma function.
+    lowergamma: Lower incomplete gamma function.
+    uppergamma: Upper incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    trigamma: Trigamma function.
+    beta: Euler Beta function.
 
     References
     ==========
@@ -873,20 +909,20 @@ def trigamma(x):
     The trigamma function is the second derivative of the loggamma function i.e,
 
     .. math::
-        \psi^{(1)}(z) = \frac{\mathrm{d}^{2}}{\mathrm{d} z^{2}} \log\Gamma(z).
+        \psi^{(1)}(z) := \frac{\mathrm{d}^{2}}{\mathrm{d} z^{2}} \log\Gamma(z).
 
     In this case, ``trigamma(z) = polygamma(1, z)``.
 
     See Also
     ========
 
-    gamma: Gamma function
-    lowergamma: Lower incomplete gamma function
-    uppergamma: Upper incomplete gamma function
-    polygamma: Polygamma function
-    loggamma: Log Gamma function
-    digamma: Digamma function
-    beta: Euler beta function
+    gamma: Gamma function.
+    lowergamma: Lower incomplete gamma function.
+    uppergamma: Upper incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    beta: Euler Beta function.
 
     References
     ==========
@@ -912,13 +948,13 @@ def beta(x, y):
     See Also
     ========
 
-    gamma: Gamma function
-    lowergamma: Lower incomplete gamma function
-    uppergamma: Upper incomplete gamma function
-    polygamma: Polygamma function
-    loggamma: Log Gamma function
-    digamma: Digamma function
-    trigamma: Trigamma function
+    gamma: Gamma function.
+    lowergamma: Lower incomplete gamma function.
+    uppergamma: Upper incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
 
     References
     ==========
