@@ -10,16 +10,16 @@ from kivy.uix.label import Label
 class entrywidget(GridLayout):
     global flag
     global l
-    l=Label()
+    l = Label()
     flag = 0
     def __init__(self, **kwargs):
         super(entrywidget,self).__init__(**kwargs)
-        self.cols=2
-        self.add_widget(Label(text='Expression'))
-        self.text_input = TextInput(multiline=False)
+        self.cols = 2
+        self.add_widget(Label(text = 'Expression'))
+        self.text_input = TextInput(multiline = False)
         self.add_widget(self.text_input)
-        self.add_widget(Label(text="Result"))
-        self.text_input.bind(on_text_validate=self.on_enter)
+        self.add_widget(Label(text = "Result"))
+        self.text_input.bind(on_text_validate = self.on_enter)
 
     def on_enter(self, value):
         global flag
@@ -27,20 +27,19 @@ class entrywidget(GridLayout):
 	print flag
         if(flag == 1):
             self.remove_widget(l)
-        z=self.text_input.text
-        arr=z.split('=')
-        x=Symbol("x")
-        if(len(arr)>1):
-            print arr[0],arr[1]
-            x=eval(arr[1])
-            t=eval(arr[1])
-            t=str(t)
+        z = self.text_input.text
+        arr = z.split('=')
+        x = Symbol("x")
+        if(len(arr) > 1):
+            x = eval(arr[1])
+            t = eval(arr[1])
+            t = str(t)
         else:
-            t=eval(z)
-            t=str(t)
-            l=Label(text=t)
+            t = eval(z)
+            t = str(t)
+            l = Label(text = t)
             self.add_widget(l)
-            flag=1
+            flag = 1
 
 		
 class SympyApp(App):
