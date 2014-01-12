@@ -85,10 +85,9 @@ def solve_general_linear(M, v, dummygen=None):
         raise ValueError("Linear system has no solution")
 
     # Free parameters
-    # The double List and T operation are a hack to get the shapes correct
     if dummygen is None:
         dummygen = numbered_symbols("tau", Dummy)
-    tau = Matrix([[ next(dummygen) for k in range(C - rank) ]]).T
+    tau = Matrix([ next(dummygen) for k in range(C - rank) ]).reshape(C - rank, 1)
 
     # Full parametric solution
     V = U[:rank, rank:]
