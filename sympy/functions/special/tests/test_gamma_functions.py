@@ -180,6 +180,9 @@ def test_polygamma():
     assert polygamma(n, nan) == nan
 
     assert polygamma(0, oo) == oo
+    assert polygamma(0, -oo) == oo
+    assert polygamma(0, I*oo) == oo
+    assert polygamma(0, -I*oo) == oo
     assert polygamma(1, oo) == 0
     assert polygamma(5, oo) == 0
 
