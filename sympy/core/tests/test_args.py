@@ -2328,8 +2328,8 @@ def test_sympy__physics__quantum__fieldoperator__BosonFockKet():
 def test_sympy__physics__quantum__fieldoperator__BosonFockBra():
     from sympy.physics.quantum.fieldoperator import BosonFockBra
     assert _test_args(BosonFockBra(1))
-    
-    
+
+
 def test_sympy__physics__quantum__fieldoperator__BosonCoherentKet():
     from sympy.physics.quantum.fieldoperator import BosonCoherentKet
     assert _test_args(BosonCoherentKet(1))
