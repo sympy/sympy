@@ -1218,7 +1218,10 @@ def test_hidden_indices_for_matrix_multiplication():
 
 numpy = import_module('numpy')
 
-if numpy:
+def get_valued_base_test_variables():
+    if numpy is None:
+        return
+
     minkowski = Matrix((
         (1, 0, 0, 0),
         (0, -1, 0, 0),
@@ -1273,10 +1276,17 @@ if numpy:
     NC = tensorhead('NC', [ndm]*3, [[1]]*3)
     NC.data = [[[i+j+k for k in range(4, 7)] for j in range(1, 4)] for i in range(2, 5)]
 
+    return (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+            n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4)
+
 def test_valued_tensor_iter():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
+
     # iteration on VTensorHead
     assert list(A) == [E, px, py, pz]
     assert list(ba_matrix) == list(BA)
@@ -1299,6 +1309,9 @@ def test_valued_tensor_covariant_contravariant_elements():
     if numpy is None:
         skip("numpy not installed.")
 
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
+
     assert A(-i0)[0] == A(i0)[0]
     assert A(-i0)[1] == -A(i0)[1]
 
@@ -1312,6 +1325,9 @@ def test_valued_tensor_get_matrix():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
 
     matab = AB(i0, i1).get_matrix()
     assert matab == Matrix([
@@ -1333,6 +1349,9 @@ def test_valued_tensor_contraction():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
 
     assert A(i0) * A(-i0) == E ** 2 - px ** 2 - py ** 2 - pz ** 2
     assert A(i0) * A(-i0) == A ** 2
@@ -1359,6 +1378,9 @@ def test_valued_tensor_self_contraction():
     if numpy is None:
         skip("numpy not installed.")
 
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
+
     assert AB(i0, -i0) == 4
     assert BA(i0, -i0) == 2
 
@@ -1367,6 +1389,10 @@ def test_valued_tensor_pow():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
+
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
 
     assert C**2 == -E**2 + px**2 + py**2 + pz**2
     assert C**1 == sqrt(-E**2 + px**2 + py**2 + pz**2)
@@ -1378,6 +1404,9 @@ def test_valued_tensor_expressions():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
 
     x1, x2, x3 = symbols('x1:4')
 
@@ -1420,6 +1449,9 @@ def test_noncommuting_components():
     if numpy is None:
         skip("numpy not installed.")
 
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
+
     euclid = TensorIndexType('Euclidean')
     euclid.data = [1, 1]
     i1, i2, i3 = tensor_indices('i1:4', euclid)
@@ -1444,6 +1476,9 @@ def test_valued_non_diagonal_metric():
     if numpy is None:
         skip("numpy not installed.")
 
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
+
     mmatrix = Matrix(ndm_matrix)
     assert NA(n0)*NA(-n0) == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
 
@@ -1452,6 +1487,9 @@ def test_valued_tensor_strip():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
 
     sA = A(i0).strip()
     sB = B(-i0).strip()
@@ -1474,6 +1512,9 @@ def test_valued_tensor_applyfunc():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
 
     aA = A(i0).applyfunc(lambda x: x**2)
     aB = B(i0).applyfunc(lambda x: x**3)
@@ -1501,6 +1542,9 @@ def test_valued_canon_bp_swapaxes():
     numpy = import_module("numpy")
     if numpy is None:
         return
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = get_valued_base_test_variables()
 
     e1 = A(i1)*A(i0)
     e1.data[0, 1] = 44
