@@ -999,7 +999,7 @@ class Ei(Function):
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
     Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma
+    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
 
     References
     ==========
@@ -2062,7 +2062,7 @@ class fresnels(FresnelIntegral):
     See Also
     ========
 
-    fresnelc
+    fresnelc: Fresnel cosine integral.
 
     References
     ==========
@@ -2169,7 +2169,7 @@ class fresnelc(FresnelIntegral):
     See Also
     ========
 
-    fresnels
+    fresnels: Fresnel sine integral.
 
     References
     ==========
