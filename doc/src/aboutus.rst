@@ -304,6 +304,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. James Goppert: correct code in form_lagranges_equations
 #. Avichal Dayal: removed duplicate solutions obtained from solve
 #. Paul Scott: pass along keywords for plots
+#. shiprabanga: code quality fixes
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

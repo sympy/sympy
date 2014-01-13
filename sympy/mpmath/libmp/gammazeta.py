@@ -1406,7 +1406,8 @@ def primesieve(n):
     return sieve, primes, mult
 
 def zetasum_sieved(critical_line, sre, sim, a, n, wp):
-    assert a >= 1
+    if a < 1:
+        raise ValueError("a cannot be less than 1")
     sieve, primes, mult = primesieve(a+n)
     basic_powers = {}
     one = MPZ_ONE << wp

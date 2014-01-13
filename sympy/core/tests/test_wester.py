@@ -2136,10 +2136,8 @@ def test_U9():
     assert s3 == 2*(x + y)*Derivative(g(x**2 + y**2), x**2 + y**2)
 
 
-@XFAIL
 def test_U10():
-    z = symbols('z')
-    # returns wrong value-3/4 . problem seems to come from series expansion
+    # see github issue 2519:
     assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9, 4)
 
 
@@ -2577,15 +2575,14 @@ def test_X7():
             S(1)/12 - x**2/720 + x**4/30240 - x**6/1209600 + O(x**7))
 
 
-@XFAIL
 def test_X8():
     # Puiseux series (terms with fractional degree):
     # => 1/sqrt(x - 3/2 pi) + (x - 3/2 pi)^(3/2) / 12 + O([x - 3/2 pi]^(7/2))
+
+    # see issue 4068:
     x = symbols('x', real=True)
-    # raises PoleError: Cannot expand sec(_x + 3*pi/2) around 0
-    # https://code.google.com/p/sympy/issues/detail?id=4068
-    series(sqrt(sec(x)), x, x0=pi*3/2, n=4)
-    # assert missing, until exception is removed
+    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
+            1/sqrt(x) +x**(S(3)/2)/12 + x**(S(7)/2)/160 + O(x**4))
 
 
 def test_X9():

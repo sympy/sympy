@@ -158,9 +158,11 @@ class LinearAlgebraMethods(object):
         """
         Solve the lower part of a LU factorized matrix for y.
         """
-        assert L.rows == L.cols, 'need n*n matrix'
+        if L.rows != L.cols:
+            raise RuntimeError("need n*n matrix")
         n = L.rows
-        assert len(b) == n
+        if len(b) != n:
+            raise ValueError("Value should be equal to n")
         b = copy(b)
         if p: # swap b according to p
             for k in xrange(0, len(p)):
@@ -175,9 +177,11 @@ class LinearAlgebraMethods(object):
         """
         Solve the upper part of a LU factorized matrix for x.
         """
-        assert U.rows == U.cols, 'need n*n matrix'
+        if U.rows != U.cols:
+            raise RuntimeError("need n*n matrix")
         n = U.rows
-        assert len(y) == n
+        if len(y) != n:
+            raise ValueError("Value should be equal to n")
         x = copy(y)
         for i in xrange(n - 1, -1, -1):
             for j in xrange(i + 1, n):
@@ -233,7 +237,8 @@ class LinearAlgebraMethods(object):
         This re-uses the LU decomposition and is thus cheap.
         Usually 3 up to 4 iterations are giving the maximal improvement.
         """
-        assert A.rows == A.cols, 'need n*n matrix' # TODO: really?
+        if A.rows != A.cols:
+            raise RuntimeError("need n*n matrix") # TODO: really?
         for _ in xrange(maxsteps):
             r = ctx.residual(A, x, b)
             if ctx.norm(r, 2) < 10*ctx.eps:
@@ -324,10 +329,12 @@ class LinearAlgebraMethods(object):
         H and p contain all information about the transformation matrices.
         x is the solution, res the residual.
         """
-        assert isinstance(A, ctx.matrix)
+        if not isinstance(A, ctx.matrix):
+            raise TypeError("A should be a type of ctx.matrix")
         m = A.rows
         n = A.cols
-        assert m >= n - 1
+        if m < n - 1:
+            raise RuntimeError("Columns should not be less than rows")
         # calculate Householder matrix
         p = []
         for j in xrange(0, n - 1):
@@ -470,7 +477,8 @@ class LinearAlgebraMethods(object):
         1. [Wikipedia]_ http://en.wikipedia.org/wiki/Cholesky_decomposition
 
         """
-        assert isinstance(A, ctx.matrix)
+        if not isinstance(A, ctx.matrix):
+            raise RuntimeError("A should be a type of ctx.matrix")
         if not A.rows == A.cols:
             raise ValueError('need n*n matrix')
         if tol is None:
@@ -516,7 +524,8 @@ class LinearAlgebraMethods(object):
             L = ctx.cholesky(A)
             # solve
             n = L.rows
-            assert len(b) == n
+            if len(b) != n:
+                raise ValueError("Value should be equal to n")
             for i in xrange(n):
                 b[i] -= ctx.fsum(L[i,j] * b[j] for j in xrange(i))
                 b[i] /= L[i,i]

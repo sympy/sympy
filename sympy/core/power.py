@@ -301,6 +301,8 @@ class Pow(Expr):
                 elif self.base.is_negative:
                     if self.exp.is_Rational:
                         return False
+        if real_e and self.exp.is_negative:
+            return Pow(self.base, -self.exp).is_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:

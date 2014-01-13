@@ -1129,7 +1129,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             some K.  We have a few cases, since coeff may have several
             different types.
             """
-            assert order >= 0
+            if order < 0:
+                raise ValueError("order should be greater than 0")
             if coeff == 0:
                 return True
             if order == 0:
@@ -1225,7 +1226,8 @@ def odesimp(eq, func, order, hint):
 
     # First, integrate if the hint allows it.
     eq = _handle_Integral(eq, func, order, hint)
-    assert isinstance(eq, Equality)
+    if not isinstance(eq, Equality):
+        raise TypeError("eq should be an instance of Equality")
 
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
@@ -3190,7 +3192,8 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
         for i in range(multiplicity):
             if isinstance(root, RootOf):
                 gsol += (x**root) * next(constants)
-                assert multiplicity == 1
+                if multiplicity != 1:
+                    raise ValueError("Value should be 1")
                 collectterms = [(0, root, 0)] + collectterms
             elif root.is_real:
                 gsol += ln(x)**i*(x**root) * next(constants)
@@ -3694,7 +3697,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         for i in range(multiplicity):
             if isinstance(root, RootOf):
                 gsol += exp(root*x) * next(constants)
-                assert multiplicity == 1
+                if multiplicity != 1:
+                    raise ValueError("Value should be 1")
                 collectterms = [(0, root, 0)] + collectterms
             else:
                 reroot = re(root)

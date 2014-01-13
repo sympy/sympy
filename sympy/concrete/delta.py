@@ -61,8 +61,8 @@ def _extract_delta(expr, index):
         return (None, expr)
     if isinstance(expr, KroneckerDelta):
         return (expr, S(1))
-    assert expr.is_Mul
-
+    if not expr.is_Mul:
+        raise ValueError("Incorrect expr")
     delta = None
     terms = []
 
