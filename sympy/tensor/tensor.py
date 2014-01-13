@@ -40,6 +40,15 @@ from sympy.core.containers import Tuple
 from sympy import Matrix, Rational
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.core.dispatch import dispatch
+
+
+try:
+    numpy = import_module('numpy')
+    numpy_ndarray = numpy.ndarray
+except (ImportError, AttributeError):
+    numpy = None
+    numpy_ndarray = None
 
 
 class TIDS(object):
@@ -181,7 +190,7 @@ class TIDS(object):
         tids = None
         cur_pos = 0
         for i in components:
-            tids_sing = TIDS([i], *TIDS.free_dum_from_indices(*indices[cur_pos:cur_pos+i.rank]))
+            tids_sing = ATIDS([i], *ATIDS.free_dum_from_indices(*indices[cur_pos:cur_pos+i.rank]))
             if tids is None:
                 tids = tids_sing
             else:
@@ -189,7 +198,7 @@ class TIDS(object):
             cur_pos += i.rank
 
         if tids is None:
-            tids = TIDS([], [], [])
+            tids = ATIDS([], [], [])
 
         tids.free.sort(key=lambda x: x[0].name)
         tids.dum.sort()
@@ -347,7 +356,7 @@ class TIDS(object):
         return (f.components + g.components, free, dum)
 
     def __mul__(self, other):
-        return TIDS(*self.mul(self, other))
+        return ATIDS(*self.mul(self, other))
 
     def __str__(self):
         return "TIDS({0}, {1}, {2})".format(self.components, self.free, self.dum)
@@ -386,7 +395,7 @@ class TIDS(object):
         dum = [(i1, i2, perm[c1], perm[c2]) for i1, i2, c1, c2 in self.dum]
         dum.sort(key=lambda x: components[x[2]].index_types[x[0]])
 
-        return TIDS(components, free, dum), sign
+        return ATIDS(components, free, dum), sign
 
     def canon_args(self):
         """
@@ -497,7 +506,11 @@ class TIDS(object):
                     dum[idum][2] = icomp
         dum = [tuple(x) for x in dum]
 
-        return TIDS(components, free, dum)
+        return ATIDS(components, free, dum)
+
+
+class ATIDS(TIDS):
+    pass
 
 
 @doctest_depends_on(modules=('numpy',))
@@ -668,13 +681,13 @@ class VTIDS(TIDS):
         return new_data
 
     def sorted_components(self):
-        ret, sign = TIDS.sorted_components(self)
+        ret, sign = super(VTIDS, self).sorted_components()
         new_data = self._sort_data_axes(ret)
         vtids = VTIDS(ret.components, ret.free, ret.dum, new_data)
         return vtids, sign
 
     def perm2tensor(self, g, canon_bp=False):
-        ret = TIDS.perm2tensor(self, g, canon_bp)
+        ret = super(VTIDS, self).perm2tensor(g, canon_bp)
         new_data = self._sort_data_axes(ret)
         return VTIDS(ret.components, ret.free, ret.dum, new_data)
 
@@ -1758,7 +1771,7 @@ class TensorHead(Basic):
                 indices = indices[:el] + (elind,) + indices[el:]
 
         components = [self]
-        tids = TIDS.from_components_and_indices(components, indices)
+        tids = ATIDS.from_components_and_indices(components, indices)
 
         if self.data is not None:
             tids = VTIDS(tids.components, tids.free, tids.dum, self.data)
@@ -1769,6 +1782,8 @@ class TensorHead(Basic):
 
         tmul = TensMul.from_TIDS(S.One, tids)
         tmul._matrix_behavior_kinds = matrix_behavior_kinds
+        if self.data is not None:
+            tmul.__class__ = VTensMul
         return tmul
 
     def __pow__(self, other):
@@ -1830,12 +1845,12 @@ class TensExpr(Basic):
     A tensor expression is an expression formed by tensors;
     currently the sums of tensors are distributed.
 
-    A ``TensExpr`` can be a ``TensAdd`` or a ``TensMul``.
+    A ``TensExpr`` can be a ``ATensAdd`` or a ``ATensMul``.
 
-    ``TensAdd`` objects are put in canonical form using the Butler-Portugal
+    ``ATensAdd`` objects are put in canonical form using the Butler-Portugal
     algorithm for canonicalization under monoterm symmetries.
 
-    ``TensMul`` objects are formed by products of component tensors,
+    ``ATensMul`` objects are formed by products of component tensors,
     and include a coefficient, which is a SymPy expression.
 
 
@@ -1976,12 +1991,6 @@ class TensExpr(Basic):
 
         return expr
 
-    def strip(self):
-        """
-        Return an identical tensor expression, just with ``ndarray`` data removed.
-        """
-        return self.func(*self.args)
-
 
 @doctest_depends_on(modules=('numpy',))
 class TensAdd(TensExpr):
@@ -2039,49 +2048,61 @@ class TensAdd(TensExpr):
     -58
     """
 
+    @dispatch(type, prefix="TensAdd")
+    def __new__(cls):
+        return ATensAdd()
+
+    @dispatch(type, varargs=object, prefix="TensAdd")
     def __new__(cls, *args, **kw_args):
         args = [sympify(x) for x in args if x]
-        old_args = args[:]
-        args, data = TensAdd._tensAdd_flatten(args)
+        if args and (args[0].data is not None):
+            return VTensAdd(*args, **kw_args)
+        else:
+            return ATensAdd(*args, **kw_args)
 
-        if not args:
+    @staticmethod
+    def _new_prepare(cls, *addenda, **kw_args):
+        old_addenda = addenda[:]
+        addenda, data = TensAdd._tensAdd_flatten(addenda)
+
+        if not addenda:
             return S.Zero
 
         # replace auto-matrix indices so that they are the same in all addends
-        args = TensAdd._tensAdd_check_automatrix(args)
+        addenda = TensAdd._tensAdd_check_automatrix(addenda)
 
         # now check that all addends have the same indices:
-        TensAdd._tensAdd_check(args)
-        args = Tuple(*args)
+        TensAdd._tensAdd_check(addenda)
+        addenda = Tuple(*addenda)
 
-        # if TensAdd has only 1 TensMul element in its `args`:
-        if len(args) == 1 and isinstance(args[0], TensMul):
-            obj = Basic.__new__(cls, *args, **kw_args)
+        # if TensAdd has only 1 TensMul element in its `addenda`:
+        if len(addenda) == 1 and isinstance(addenda[0], TensMul):
+            obj = Basic.__new__(cls, *addenda, **kw_args)
             obj._data = data
             return obj
 
-        # canonicalize all TensMul
-        args = [x.canon_bp() for x in args if x]
-        args = [x for x in args if x]
+        # canonicalize all ATensMul
+        addenda = [x.canon_bp() for x in addenda if x]
+        addenda = [x for x in addenda if x]
 
-        # if there are no more args (i.e. have cancelled out),
+        # if there are no more addenda (i.e. have cancelled out),
         # just return zero:
-        if not args:
+        if not addenda:
             return S.Zero
 
         # collect canonicalized terms
-        args.sort(key=lambda x: (x.components, x.free, x.dum))
-        a = TensAdd._tensAdd_collect_terms(args)
+        addenda.sort(key=lambda x: (x.components, x.free, x.dum))
+        a = TensAdd._tensAdd_collect_terms(addenda)
         if not a:
             return S.Zero
         # it there is only a component tensor return it
         if len(a) == 1:
             if data is not None:
-                a[0].data = old_args[0].data
+                a[0].data = old_addenda[0].data
             return a[0]
 
-        args = Tuple(*args)
-        obj = Basic.__new__(cls, *args, **kw_args)
+        addenda = Tuple(*addenda)
+        obj = Basic.__new__(cls, *addenda, **kw_args)
         obj._args = tuple(a)
         obj._data = data
         return obj
@@ -2110,7 +2131,7 @@ class TensAdd(TensExpr):
                 a.extend(list(x.args))
             else:
                 a.append(x)
-        args = [x for x in a if x._coeff]
+        args = [x for x in a if x.coeff]
 
         data_p = [_ is None for _ in data_list]
         data = None
@@ -2121,7 +2142,7 @@ class TensAdd(TensExpr):
             if not any(data_p):
                 data = S.Zero
                 for i in args:
-                    if isinstance(i, TensAdd):
+                    if isinstance(i, ATensAdd):
                         data += i.data
                     else:
                         data += i.coeff * i.data
@@ -2177,7 +2198,7 @@ class TensAdd(TensExpr):
 
     @staticmethod
     def _tensAdd_collect_terms(args):
-        # collect TensMul terms differing at most by their coefficient
+        # collect ATensMul terms differing at most by their coefficient
         a = []
         prev = args[0]
         prev_coeff = prev._coeff
@@ -2255,7 +2276,7 @@ class TensAdd(TensExpr):
             return self
         index_tuples = list(zip(free_args, indices))
         a = [x.fun_eval(*index_tuples) for x in self.args]
-        res = TensAdd(*a)
+        res = ATensAdd(*a)
 
         return res
 
@@ -2265,24 +2286,24 @@ class TensAdd(TensExpr):
         under monoterm symmetries.
         """
         args = [x.canon_bp() for x in self.args]
-        res = TensAdd(*args)
+        res = ATensAdd(*args)
         return res
 
     def equals(self, other):
         other = sympify(other)
-        if isinstance(other, TensMul) and other._coeff == 0:
+        if isinstance(other, ATensMul) and other._coeff == 0:
             return all(x._coeff == 0 for x in self.args)
         if isinstance(other, TensExpr):
             if self.rank != other.rank:
                 return False
-        if isinstance(other, TensAdd):
+        if isinstance(other, ATensAdd):
             if set(self.args) != set(other.args):
                 return False
         t = self - other
         if not isinstance(t, TensExpr):
             return t == 0
         else:
-            if isinstance(t, TensMul):
+            if isinstance(t, ATensMul):
                 return t._coeff == 0
             else:
                 return all(x._coeff == 0 for x in t.args)
@@ -2290,40 +2311,8 @@ class TensAdd(TensExpr):
     def __eq__(self, other):
         return self.equals(other)
 
-    def __add__(self, other):
-        return TensAdd(self, other)
-
-    def __radd__(self, other):
-        return TensAdd(other, self)
-
-    def __sub__(self, other):
-        return TensAdd(self, -other)
-
-    def __rsub__(self, other):
-        return TensAdd(other, -self)
-
     def __mul__(self, other):
-        tadd = TensAdd(*(x*other for x in self.args))
-        if not isinstance(tadd, TensExpr):
-            if (self.data is not None):
-                tadd.data = self.data * other
-            return tadd
-        if self.data is not None:
-            if isinstance(other, TensExpr):
-                if other.data is None:
-                    raise ValueError("Cannot multiply abstract and valued tensors.")
-                data = VTIDS._contract_ndarray(self.args[0].free,
-                                            other.free,
-                                            self.data,
-                                            other.data)
-                if data.ndim == 0:
-                    return data[()]
-            else:
-                data = self.data * other
-        else:
-            data = None
-        tadd.data = data
-        return tadd
+        return tensor_product(self, other)
 
     def __rmul__(self, other):
         tadd = self*other
@@ -2331,14 +2320,6 @@ class TensAdd(TensExpr):
             tadd.data = other*self.data
         return tadd
 
-    def __div__(self, other):
-        other = sympify(other)
-        if isinstance(other, TensExpr):
-            raise ValueError('cannot divide by a tensor')
-        tadd = TensAdd(*(x/other for x in self.args))
-        if self.data is not None:
-            tadd.data = self.data / other
-        return tadd
 
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -2346,8 +2327,8 @@ class TensAdd(TensExpr):
     def __getitem__(self, item):
         return self.data[item]
 
-    __truediv__ = __div__
-    __truerdiv__ = __rdiv__
+#     __truediv__ = __div__
+#     __truerdiv__ = __rdiv__
 
     def _hashable_content(self):
         return tuple(self.args)
@@ -2360,7 +2341,7 @@ class TensAdd(TensExpr):
 
     def contract_delta(self, delta):
         args = [x.contract_delta(delta) for x in self.args]
-        t = TensAdd(*args)
+        t = ATensAdd(*args)
         return canon_bp(t)
 
     def contract_metric(self, g):
@@ -2381,9 +2362,8 @@ class TensAdd(TensExpr):
         """
 
         args = [x.contract_metric(g) for x in self.args]
-        t = TensAdd(*args)
+        t = ATensAdd(*args)
         return canon_bp(t)
-
 
     def fun_eval(self, *index_tuples):
         """
@@ -2410,7 +2390,7 @@ class TensAdd(TensExpr):
         for x in args:
             y = x.fun_eval(*index_tuples)
             args1.append(y)
-        return TensAdd(*args1)
+        return ATensAdd(*args1)
 
     def substitute_indices(self, *index_tuples):
         """
@@ -2438,7 +2418,7 @@ class TensAdd(TensExpr):
         for x in args:
             y = x.substitute_indices(*index_tuples)
             args1.append(y)
-        return TensAdd(*args1)
+        return ATensAdd(*args1)
 
     def _print(self):
         a = []
@@ -2454,13 +2434,13 @@ class TensAdd(TensExpr):
     def from_TIDS_list(coeff, tids_list):
         """
         Given a list of coefficients and a list of `TIDS` objects, construct
-        a `TensAdd` instance, equivalent to the one that would result from
-        creating single instances of `TensMul` and then adding them.
+        a `ATensAdd` instance, equivalent to the one that would result from
+        creating single instances of `ATensMul` and then adding them.
 
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, TensAdd
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, ATensAdd
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j = tensor_indices('i,j', Lorentz)
         >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
@@ -2470,27 +2450,27 @@ class TensAdd(TensExpr):
         >>> t2 = eB._tids
         >>> c1 = eA.coeff
         >>> c2 = eB.coeff
-        >>> TensAdd.from_TIDS_list([c1, c2], [t1, t2])
+        >>> ATensAdd.from_TIDS_list([c1, c2], [t1, t2])
         2*B(i, j) + 3*A(i, j)
 
         If the coefficient parameter is a scalar, then it will be applied
         as a coefficient on all `TIDS` objects.
 
-        >>> TensAdd.from_TIDS_list(4, [t1, t2])
+        >>> ATensAdd.from_TIDS_list(4, [t1, t2])
         4*A(i, j) + 4*B(i, j)
 
         """
         if not isinstance(coeff, (list, tuple, Tuple)):
             coeff = [coeff] * len(tids_list)
         tensmul_list = [TensMul.from_TIDS(c, t) for c, t in zip(coeff, tids_list)]
-        return TensAdd(*tensmul_list)
+        return ATensAdd(*tensmul_list)
 
     def applyfunc(self, func):
         """
-        Return a new ``TensAdd`` object, whose data ndarray will be the elementwise
+        Return a new ``ATensAdd`` object, whose data ndarray will be the elementwise
         map of the current data ndarray by function ``func``.
         """
-        new_tadd = TensAdd(*self.args)
+        new_tadd = ATensAdd(*self.args)
         new_tadd.data = func(self.data)
         return new_tadd
 
@@ -2504,11 +2484,13 @@ class TensAdd(TensExpr):
     def data(self, data):
         # TODO: check data compatibility with properties of tensor.
         self._data = data
+        self.__class__ = VTensAdd
 
     @data.deleter
     def data(self):
         del self._data
         self._data = None
+        self.__class__ = ATensAdd
 
     def __iter__(self):
         if not self.data:
@@ -2557,34 +2539,47 @@ class TensMul(TensExpr):
 
     """
 
-    def __new__(cls, coeff, *args, **kw_args):
-        coeff = sympify(coeff)
+    @dispatch(type, object, object, object, prefix="TensMul")
+    def __new__(cls, coeff, components, indices, **kw_args):
+        return TensMul.__new__(cls, sympify(coeff), Tuple(*components), Tuple(*indices))
 
-        if len(args) == 2:
-            components = args[0]
-            indices = args[1]
-            tids = TIDS.from_components_and_indices(components, indices)
-        elif len(args) == 1:
-            tids = args[0]
-            components = tids.components
-            indices = tids.to_indices()
-        else:
-            raise TypeError("wrong construction")
+    @dispatch(type, Basic, Tuple, Tuple, prefix="TensMul")
+    def __new__(cls, coeff, components, indices, **kw_args):
+        # tids = TIDS.from_components_and_indices(components, indices)
+        return ATensMul(cls, coeff, components, indices, **kw_args)
+
+    @dispatch(type, object, ATIDS, prefix="TensMul")
+    def __new__(cls, coeff, atids, **kw_args):
+        return ATensMul(sympify(coeff), atids, **kw_args)
+
+    @dispatch(type, object, VTIDS, prefix="TensMul")
+    def __new__(cls, coeff, vtids, **kw_args):
+        return VTensMul(sympify(coeff), vtids, **kw_args)
+
+    @dispatch(type, object, object, object, numpy_ndarray, prefix="TensMul")
+    def __new__(cls, coeff, components, indices, data, **kw_args):
+        return VTensMul(coeff, sympify(components), Tuple(*indices), Tuple(*data), **kw_args)
+
+    #@dispatch(type, Basic, TIDS, prefix="TensMul")
+    #def __new__(cls, coeff, tids, **kw_args):
+    @staticmethod
+    def _unpack_coeff_tids(coeff, tids):
+        components = Tuple(*tids.components)
+        indices = Tuple(*tids.to_indices())
 
         for i in indices:
             if not isinstance(i, TensorIndex):
                 raise TypeError("i should be of type TensorIndex")
 
-        t_components = Tuple(*components)
-        t_indices = Tuple(*indices)
+        return components, indices
 
-        obj = Basic.__new__(cls, coeff, t_components, t_indices)
+    @staticmethod
+    def _constructor_common(obj, **kw_args):
+        obj._coeff = obj._args[0]
         obj._types = []
-        for t in tids.components:
+        for t in obj._tids.components:
             obj._types.extend(t._types)
-        obj._tids = tids
         obj._ext_rank = len(obj._tids.free) + 2*len(obj._tids.dum)
-        obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)
         obj._matrix_behavior_kinds = dict()
         return obj
@@ -2592,7 +2587,7 @@ class TensMul(TensExpr):
     @staticmethod
     def from_data(coeff, components, free, dum, data=None, **kw_args):
         if data is None:
-            tids = TIDS(components, free, dum)
+            tids = ATIDS(components, free, dum)
         else:
             tids = VTIDS(components, free, dum, data)
         return TensMul.from_TIDS(coeff, tids, **kw_args)
@@ -2652,7 +2647,7 @@ class TensMul(TensExpr):
         return super(TensMul, self).__hash__()
 
     def __eq__(self, other):
-        # Basic's equality comparison considers 0 and a zero TensMul
+        # Basic's equality comparison considers 0 and a zero ATensMul
         # as never equal, here is a workaround:
         if other == 0 and self.coeff == 0:
             return True
@@ -2747,18 +2742,6 @@ class TensMul(TensExpr):
         res[0] = TensMul.from_data(self._coeff, res[0].components, res[0]._tids.free, res[0]._tids.dum, is_canon_bp=res[0]._is_canon_bp)
         return res
 
-    def __add__(self, other):
-        return TensAdd(self, other)
-
-    def __radd__(self, other):
-        return TensAdd(other, self)
-
-    def __sub__(self, other):
-        return TensAdd(self, -other)
-
-    def __rsub__(self, other):
-        return TensAdd(other, -self)
-
     def __mul__(self, other):
         """
         Multiply two tensors using Einstein summation convention.
@@ -2779,49 +2762,7 @@ class TensMul(TensExpr):
         >>> t1*t2
         p(L_0)*q(-L_0)
         """
-        other = sympify(other)
-        if not isinstance(other, TensExpr):
-            coeff = self._coeff*other
-            tmul = TensMul.from_TIDS(coeff, self._tids, is_canon_bp=self._is_canon_bp)
-            tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
-            return tmul
-        if isinstance(other, TensAdd):
-            return TensAdd(*[self*x for x in other.args])
-
-        matrix_behavior_kinds = dict()
-
-        self_matrix_behavior_kinds = self._matrix_behavior_kinds
-        other_matrix_behavior_kinds = other._matrix_behavior_kinds
-
-        for key, v1 in self_matrix_behavior_kinds.items():
-            if key in other_matrix_behavior_kinds:
-                v2 = other_matrix_behavior_kinds[key]
-                if len(v1) == 1:
-                    other = other.substitute_indices((v2[0], -v1[0]))
-                    if len(v2) == 2:
-                        matrix_behavior_kinds[key] = (v2[1],)
-                elif len(v1) == 2:
-                    auto_index = v1[1]._tensortype.auto_index
-                    self = self.substitute_indices((v1[1], -auto_index))
-                    other = other.substitute_indices((v2[0], auto_index))
-                    if len(v2) == 1:
-                        matrix_behavior_kinds[key] = (v1[0],)
-                    elif len(v2) == 2:
-                        matrix_behavior_kinds[key] = (v1[0], v2[1])
-            else:
-                matrix_behavior_kinds[key] = v1
-
-        for key, v2 in other_matrix_behavior_kinds.items():
-            if key in self_matrix_behavior_kinds:
-                continue
-            matrix_behavior_kinds[key] = v2
-
-        new_tids = self._tids*other._tids
-        coeff = self._coeff*other._coeff
-        tmul = TensMul.from_TIDS(coeff, new_tids)
-        if isinstance(tmul, TensExpr):
-            tmul._matrix_behavior_kinds = matrix_behavior_kinds
-        return tmul
+        return tensor_product(self, other)
 
     def __rmul__(self, other):
         other = sympify(other)
@@ -3058,7 +2999,7 @@ class TensMul(TensExpr):
         free = [(ind, p, c - shifts[c]) for (ind, p, c) in free if c not in elim]
         dum = [(p0, p1, c0 - shifts[c0], c1 - shifts[c1]) for  i, (p0, p1, c0, c1) in enumerate(dum) if c0 not in elim and c1 not in elim]
         components = [c for i, c in enumerate(components) if i not in elim]
-        tids = TIDS(components, free, dum)
+        tids = ATIDS(components, free, dum)
         res = TensMul.from_TIDS(coeff, tids)
         return res
 
@@ -3175,16 +3116,6 @@ class TensMul(TensExpr):
         else:
             return '(%s)*%s' %(self._coeff, res)
 
-    def applyfunc(self, func):
-        """
-        Return a new ``TensAdd`` object, whose data ndarray will be the elementwise
-        map of the current data ndarray by function ``func``.
-        """
-        new_tmul = TensMul(*self.args)
-        tids = new_tmul._tids
-        new_tmul._tids = VTIDS(tids.components, tids.free, tids.dum, func(self.data))
-        return new_tmul
-
     @property
     def data(self):
         if isinstance(self._tids, VTIDS):
@@ -3195,16 +3126,332 @@ class TensMul(TensExpr):
     def data(self, data):
         # TODO: check data compatibility with properties of tensor.
         self._tids = VTIDS(self.components, self.free, self.dum, data)
+        self.__class__ = VTensMul
 
     @data.deleter
     def data(self):
-        self._tids = TIDS(self._tids.components, self._tids.free, self._tids.dum)
+        self._tids = ATIDS(self._tids.components, self._tids.free, self._tids.dum)
         self._data = None
+        self.__class__ = ATensMul
 
     def __iter__(self):
         if self.data is None:
             raise ValueError("No iteration on abstract tensors")
         return (self.coeff * self.data.flatten()).__iter__()
+
+
+class ATensAdd(TensAdd):
+    @dispatch(type, prefix="ATensAdd")
+    def __new__(cls):
+        return TensAdd._new_prepare([])
+
+    @dispatch(type, varargs=object, prefix="ATensAdd")
+    def __new__(cls, *addends, **kw_args):
+        obj = TensAdd._new_prepare(cls, *addends, **kw_args)
+        return obj
+
+    def __add__(self, other):
+        return ATensAdd(self, other)
+
+    def __radd__(self, other):
+        return ATensAdd(other, self)
+
+    def __sub__(self, other):
+        return ATensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return ATensAdd(other, -self)
+
+    def __div__(self, other):
+        other = sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        tadd = ATensAdd(*(x/other for x in self.args))
+        if self.data is not None:
+            tadd.data = self.data / other
+        return tadd
+
+
+class ATensMul(TensMul):
+
+    @dispatch(type, Basic, Tuple, Tuple, prefix="ATensMul")
+    def __new__(cls, coeff, components, indices, **kw_args):
+        obj = Basic.__new__(cls, coeff, components, indices)
+        obj._tids = ATIDS.from_components_and_indices(components, indices)
+        obj = TensMul._constructor_common(obj, **kw_args)
+        return obj
+
+    @dispatch(type, Basic, ATIDS, prefix="ATensMul")
+    def __new__(cls, coeff, atids, **kw_args):
+        components = Tuple(*atids.components)
+        indices = Tuple(*atids.to_indices())
+        obj = Basic.__new__(cls, coeff, components, indices)
+        obj._tids = atids
+        obj = TensMul._constructor_common(obj, **kw_args)
+        return obj
+
+    def __add__(self, other):
+        return ATensAdd(self, other)
+
+    def __radd__(self, other):
+        return ATensAdd(other, self)
+
+    def __sub__(self, other):
+        return ATensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return ATensAdd(other, -self)
+
+
+class VTensAdd(TensAdd):
+    @dispatch(type, prefix="VTensAdd")
+    def __new__(cls, **kw_args):
+        obj = TensAdd._new_prepare(cls, **kw_args)
+        return obj
+
+    @dispatch(type, varargs=object, prefix="VTensAdd")
+    def __new__(cls, *addenda, **kw_args):
+        obj = TensAdd._new_prepare(cls, *addenda, **kw_args)
+        return obj
+
+    def strip(self):
+        """
+        Return an identical tensor expression, just with ``ndarray`` data removed.
+        """
+        return ATensAdd(*self.args)
+
+    def __add__(self, other):
+        return VTensAdd(self, other)
+
+    def __radd__(self, other):
+        return VTensAdd(other, self)
+
+    def __sub__(self, other):
+        return VTensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return VTensAdd(other, -self)
+
+    def __div__(self, other):
+        other = sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        tadd = VTensAdd(*(x/other for x in self.args))
+        tadd.data = self.data / other
+        return tadd
+
+
+class VTensMul(TensMul):
+
+    @dispatch(type, Basic, Tuple, Tuple, numpy_ndarray, prefix="VTensMul")
+    def __new__(cls, coeff, components, indices, ndarray, **kw_args):
+        atids = ATIDS.from_components_and_indices(components, indices)
+        vtids = VTIDS(atids.components, atids.free, atids.dum, ndarray)
+        obj = Basic.__new__(cls, coeff, components, indices, ndarray)
+        obj._tids = vtids
+        obj = TensMul._constructor_common(obj, **kw_args)
+        return obj
+
+    @dispatch(type, Basic, VTIDS, prefix="VTensMul")
+    def __new__(cls, coeff, vtids, **kw_args):
+#         raise NotImplementedError("TODO: this is wrong")
+        indices = Tuple(*vtids.to_indices())
+        components = Tuple(*vtids.components)
+        obj = Basic.__new__(cls, coeff, components, indices, vtids.data)
+        obj._tids = vtids
+        obj = TensMul._constructor_common(obj)
+        return obj
+
+    def strip(self):
+        """
+        Return an identical tensor expression, just with ``ndarray`` data removed.
+        """
+        atids = ATIDS(self.components, self.free, self.dum)
+        return TensMul(self.coeff, atids)
+
+    def applyfunc(self, func):
+        """
+        Return a new ``VTensMul`` object, whose data ndarray will be the elementwise
+        map of the current data ndarray by function ``func``.
+        """
+        new_data = func(self._tids.data.copy())
+        new_vtids = VTIDS(self._tids.components, self._tids.free, self._tids.dum, new_data)
+        new_tmul = VTensMul(self.coeff, new_vtids)
+        return new_tmul
+
+    def __add__(self, other):
+        return VTensAdd(self, other)
+
+    def __radd__(self, other):
+        return VTensAdd(other, self)
+
+    def __sub__(self, other):
+        return VTensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return VTensAdd(other, -self)
+
+
+@dispatch(ATensMul, object)
+def tensor_product(a, b):
+    return tensor_product(a, sympify(b))
+
+
+@dispatch(ATensMul, Basic)
+def tensor_product(a, b):
+    coeff = a._coeff*b
+    tmul = ATensMul.from_TIDS(coeff, a._tids, is_canon_bp=a._is_canon_bp)
+    tmul._matrix_behavior_kinds = a._matrix_behavior_kinds
+    return tmul
+
+
+@dispatch(ATensMul, ATensAdd)
+def tensor_product(a, b):
+    return ATensAdd(*[a*x for x in b.args])
+
+
+def tensor_product_mul(a, b):
+    matrix_behavior_kinds = dict()
+
+    self_matrix_behavior_kinds = a._matrix_behavior_kinds
+    other_matrix_behavior_kinds = b._matrix_behavior_kinds
+
+    for key, v1 in self_matrix_behavior_kinds.items():
+        if key in other_matrix_behavior_kinds:
+            v2 = other_matrix_behavior_kinds[key]
+            if len(v1) == 1:
+                b = b.substitute_indices((v2[0], -v1[0]))
+                if len(v2) == 2:
+                    matrix_behavior_kinds[key] = (v2[1],)
+            elif len(v1) == 2:
+                auto_index = v1[1]._tensortype.auto_index
+                a = a.substitute_indices((v1[1], -auto_index))
+                b = b.substitute_indices((v2[0], auto_index))
+                if len(v2) == 1:
+                    matrix_behavior_kinds[key] = (v1[0],)
+                elif len(v2) == 2:
+                    matrix_behavior_kinds[key] = (v1[0], v2[1])
+        else:
+            matrix_behavior_kinds[key] = v1
+
+    for key, v2 in other_matrix_behavior_kinds.items():
+        if key in self_matrix_behavior_kinds:
+            continue
+        matrix_behavior_kinds[key] = v2
+
+    new_tids = a._tids*b._tids
+    coeff = a._coeff*b._coeff
+    tmul = TensMul(coeff, new_tids)
+    if isinstance(tmul, TensExpr):
+        tmul._matrix_behavior_kinds = matrix_behavior_kinds
+    return tmul
+
+
+@dispatch(VTensMul, VTensMul)
+def tensor_product(a, b):
+    tmul = tensor_product_mul(a, b)
+    if tmul.data.ndim == 0:
+        return tmul.coeff * tmul.data[()]  # autodrop point
+    return tmul
+
+
+@dispatch(VTensMul, object)
+def tensor_product(a, b):
+    b = sympify(b)
+    return VTensMul(a.coeff*b, a._tids)
+
+@dispatch(VTensAdd, object)
+def tensor_product(a, b):
+    return tensor_product(a, sympify(b))
+
+@dispatch(ATensMul, ATensMul)
+def tensor_product(a, b):
+    return tensor_product_mul(a, b)
+
+@dispatch(VTensAdd, Basic)
+def tensor_product(a, b):
+    tadd = VTensAdd(Tuple(*(x*b for x in a.args)))
+    tadd.data = a.data * b
+#    if not isinstance(tadd, TensExpr):
+#        if (a.data is not None):
+#            tadd.data = a.data * b
+    return tadd
+
+@dispatch(ATensAdd, object)
+def tensor_product(a, b):
+    return tensor_product(a, sympify(b))
+
+@dispatch(ATensAdd, Basic)
+def tensor_product(a, b):
+    tadd = ATensAdd(*(x*b for x in a.args))
+#    if not isinstance(tadd, TensExpr):
+#        if (a.data is not None):
+#            tadd.data = a.data * b
+    return tadd
+
+
+@dispatch(VTensAdd, ATensAdd)
+def tensor_product(a, b):
+    raise ValueError("Cannot multiply abstract and valued tensors.")
+
+
+@dispatch(VTensAdd, ATensMul)
+def tensor_product(a, b):
+    raise ValueError("Cannot multiply abstract and valued tensors.")
+
+
+@dispatch(ATensAdd, VTensAdd)
+def tensor_product(a, b):
+    raise ValueError("Cannot multiply abstract and valued tensors.")
+
+@dispatch(ATensMul, VTensAdd)
+def tensor_product(a, b):
+    raise ValueError("Cannot multiply abstract and valued tensors.")
+
+@dispatch(VTensMul, VTensAdd)
+def tensor_product(a, b):
+    return tensor_product(VTensAdd(Tuple(a)), b)
+
+@dispatch(VTensMul, TensExpr)
+def tensor_product(a, b):
+    raise ValueError("Cannot multiply abstract and valued tensors.")
+
+
+@dispatch(TensExpr, VTensMul)
+def tensor_product(a, b):
+    raise ValueError("Cannot multiply abstract and valued tensors.")
+
+
+@dispatch(VTensAdd, VTensMul)
+def tensor_product(a, b):
+    return tensor_product(a, VTensAdd(*Tuple(b)))
+
+
+@dispatch(VTensAdd, VTensAdd)
+def tensor_product(a, b):
+    tadd = VTensAdd(Tuple(*(x*y for x in a.args for y in b.args)))
+    if not isinstance(tadd, TensExpr):
+        return tadd
+
+    data = VTIDS._contract_ndarray(a.args[0].free,
+                                b.args[0].free,
+                                a.data,
+                                b.data)
+    if data.ndim == 0:
+            return data[()]
+    tadd.data = data
+    return tadd
+
+
+@dispatch(ATensAdd, TensExpr)
+def tensor_product(a, b):
+    tadd = ATensAdd(*(x*b for x in a.args))
+    if not isinstance(tadd, TensExpr):
+        if (a.data is not None):
+            tadd.data = a.data * b
+        return tadd
+
+    return tadd
 
 
 def canon_bp(p):
@@ -3220,7 +3467,7 @@ def tensor_mul(*a):
     product of tensors
     """
     if not a:
-        return TensMul.from_data(S.One, [], [], [])
+        return ATensMul.from_data(S.One, [], [], [])
     t = a[0]
     for tx in a[1:]:
         t = t*tx
@@ -3260,14 +3507,14 @@ def riemann_cyclic(t2):
     >>> riemann_cyclic(t)
     0
     """
-    if isinstance(t2, TensMul):
+    if isinstance(t2, ATensMul):
         args = [t2]
     else:
         args = t2.args
     a1 = [x.split() for x in args]
     a2 = [[riemann_cyclic_replace(tx) for tx in y] for y in a1]
     a3 = [tensor_mul(*v) for v in a2]
-    t3 = TensAdd(*a3)
+    t3 = ATensAdd(*a3)
     if not t3:
         return t3
     else:
