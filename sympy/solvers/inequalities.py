@@ -30,7 +30,7 @@ def solve_poly_inequality(poly, rel):
     [(-oo, -1), (-1, 1), (1, oo)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
-    [{-1, 1}]
+    [{-1}, {1}]
 
     See Also
     ========
@@ -39,7 +39,9 @@ def solve_poly_inequality(poly, rel):
     reals, intervals = poly.real_roots(multiple=False), []
 
     if rel == '==':
-        intervals.append(FiniteSet([root for root, _ in reals]))
+        for root, _ in reals:
+            interval = Interval(root, root)
+            intervals.append(interval)
     elif rel == '!=':
         left = S.NegativeInfinity
 

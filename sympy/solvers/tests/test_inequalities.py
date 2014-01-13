@@ -232,5 +232,5 @@ def test_solve_univariate_inequality():
     assert isolve(x**2 >= 4, x) == Or(x <= -2, x >= 2)
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x, relational=False) == \
         Union(Interval(1, 2), Interval(3, oo))
-    assert str(isolve((x - 1)*(x - 2)*(x - 3) >= 0, x)) == \
+    assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
         Or(And(S.One <= x, x <= 2), x >= 3)
