@@ -1318,6 +1318,19 @@ class FiniteSet(Set, EvalfMixin):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
 
+    def __ge__(self, other):
+        return self.subset(other)
+
+    def __gt__(self, other):
+        return self != other and self >= other
+
+    def __le__(self, other):
+        return other.subset(self)
+
+    def __lt__(self, other):
+        return self != other and other >= self
+
+
 def imageset(*args):
     """ Image of set under transformation ``f``
 
