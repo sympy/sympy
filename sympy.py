@@ -24,7 +24,7 @@ class entrywidget(GridLayout):
     def on_enter(self, value):
         global flag
         global l
-	print flag
+        print flag
         if(flag == 1):
             self.remove_widget(l)
         z = self.text_input.text
