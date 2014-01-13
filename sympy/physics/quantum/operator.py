@@ -281,7 +281,7 @@ class IdentityOperator(Operator):
 
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{%s}}' % str(self.name)
- 
+
     def _print_contents(self, printer, *args):
         return r'%s' % str(self.name)
 
