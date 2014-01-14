@@ -12,7 +12,7 @@ from sympy.core import C
 from sympy.core.compatibility import reduce, u, string_types
 from sympy.core.function import UndefinedFunction
 from sympy.printing.conventions import split_super_sub
-from sympy.printing.latex import LatexPrinter
+from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
@@ -1890,6 +1890,7 @@ class MechanicsLatexPrinter(LatexPrinter):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
             name, sup, sub = split_super_sub(func)
+            name = translate(name)
             if len(sup) != 0:
                 sup = r"^{%s}" % "".join(sup)
             else:

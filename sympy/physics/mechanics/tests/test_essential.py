@@ -267,6 +267,16 @@ def test_vector_latex():
         '\\sqrt{d}\\mathbf{\\hat{a}_y} + ' +
         '\\operatorname{cos}\\left(\\omega\\right)\\mathbf{\\hat{a}_z}')
 
+    theta, omega, alpha, q = dynamicsymbols('theta, omega, alpha, q')
+
+    v = theta * A.x + omega * omega * A.y + (q * alpha) * A.z
+
+    # NOTE : gamma is not an accepted latex symbol it is alway overidden by
+    # SymPy's printing for gamma functions.
+
+    assert v._latex() == ('\\theta\\mathbf{\\hat{a}_x} + ' +
+                          '\\omega^{2}\\mathbf{\\hat{a}_y} + ' +
+                          '\\alpha q\\mathbf{\\hat{a}_z}')
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
