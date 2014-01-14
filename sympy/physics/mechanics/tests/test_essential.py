@@ -271,8 +271,11 @@ def test_vector_latex():
 
     v = theta * A.x + omega * omega * A.y + (q * alpha) * A.z
 
-    # NOTE : gamma is not an accepted latex symbol it is alway overidden by
-    # SymPy's printing for gamma functions.
+    # NOTE : "gamma" is not an accepted latex symbol it is always overidden
+    # by SymPy's printing for Gamma functions. It would be best to not use
+    # "gamma" as a symbol or dynamicsymbol name when using the mechanics
+    # package. I noticed this when writing this test which originally
+    # included a "gamma" dynamicsymbol.
 
     assert v._latex() == ('\\theta\\mathbf{\\hat{a}_x} + ' +
                           '\\omega^{2}\\mathbf{\\hat{a}_y} + ' +
