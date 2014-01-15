@@ -41,7 +41,6 @@ class re(Function):
 
        im
     """
-    nargs = 1
 
     is_real = True
     unbranched = True  # implicitely works on the projection to C
@@ -129,8 +128,6 @@ class im(Function):
 
     re
     """
-
-    nargs = 1
 
     is_real = True
     unbranched = True  # implicitely works on the projection to C
@@ -220,8 +217,6 @@ class sign(Function):
 
     Abs, conjugate
     """
-
-    nargs = 1
 
     is_bounded = True
     is_complex = True
@@ -360,8 +355,6 @@ class Abs(Function):
     sign, conjugate
     """
 
-    nargs = 1
-
     is_real = True
     is_negative = False
     unbranched = True
@@ -474,8 +467,6 @@ class Abs(Function):
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
 
-    nargs = 1
-
     is_real = True
     is_bounded = True
 
@@ -513,8 +504,6 @@ class conjugate(Function):
     sign, Abs
     """
 
-    nargs = 1
-
     @classmethod
     def eval(cls, arg):
         obj = arg._eval_conjugate()
@@ -545,8 +534,6 @@ class transpose(Function):
     Linear map transposition.
     """
 
-    nargs = 1
-
     @classmethod
     def eval(cls, arg):
         obj = arg._eval_transpose()
@@ -567,8 +554,6 @@ class adjoint(Function):
     """
     Conjugate transpose or Hermite conjugation.
     """
-
-    nargs = 1
 
     @classmethod
     def eval(cls, arg):
@@ -638,8 +623,6 @@ class polar_lift(Function):
     periodic_argument
     """
 
-    nargs = 1
-
     is_polar = True
     is_comparable = False  # Cannot be evalf'd.
 
@@ -705,8 +688,6 @@ class periodic_argument(Function):
     polar_lift : Lift argument to the riemann surface of the logarithm
     principal_branch
     """
-
-    nargs = 2
 
     @classmethod
     def _getunbranched(cls, ar):
@@ -803,7 +784,6 @@ class principal_branch(Function):
     periodic_argument
     """
 
-    nargs = 2
     is_polar = True
     is_comparable = False  # cannot always be evalf'd
 

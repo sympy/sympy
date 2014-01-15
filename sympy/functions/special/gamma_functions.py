@@ -29,7 +29,6 @@ class gamma(Function):
     .. [1] http://en.wikipedia.org/wiki/Gamma_function
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -169,7 +168,6 @@ class lowergamma(Function):
 
     """
 
-    nargs = 2
 
     def fdiff(self, argindex=2):
         from sympy import meijerg, unpolarify
@@ -307,7 +305,6 @@ class uppergamma(Function):
     .. [3] http://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
     """
 
-    nargs = 2
 
     def fdiff(self, argindex=2):
         from sympy import meijerg, unpolarify
@@ -419,7 +416,6 @@ class polygamma(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
 
-    nargs = 2
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -593,7 +589,7 @@ class loggamma(Function):
 
     """
 
-    nargs = 1
+    nargs = 1  # there is no eval defined so we must define this
 
     def _eval_nseries(self, x, n, logx=None):
         x0 = self.args[0].limit(x, 0)

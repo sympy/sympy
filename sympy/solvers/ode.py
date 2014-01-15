@@ -3375,7 +3375,7 @@ def _linear_coeff_match(expr, func):
                     return a1, b1, c1, a2, b2, c2, d
 
     m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
-         fi.nargs == 1 and not fi.args[0].is_Function] or set([expr])
+         len(fi.args) == 1 and not fi.args[0].is_Function] or set([expr])
     m1 = match(m.pop())
     if m1 and all(match(mi) == m1 for mi in m):
         a1, b1, c1, a2, b2, c2, denom = m1

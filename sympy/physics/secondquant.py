@@ -177,8 +177,6 @@ class AntiSymmetricTensor(TensorSymbol):
 
     """
 
-    nargs = 3
-
     def __new__(cls, symbol, upper, lower):
 
         try:
@@ -1677,7 +1675,6 @@ class Commutator(Function):
     """
 
     is_commutative = False
-    nargs = 2
 
     @classmethod
     def eval(cls, a, b):
@@ -1807,7 +1804,6 @@ class NO(Expr):
     Nothing more, nothing less.
 
     """
-    nargs = 1
     is_commutative = False
 
     def __new__(cls, arg):
