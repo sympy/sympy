@@ -281,6 +281,18 @@ def test_vector_latex():
                           '\\omega^{2}\\mathbf{\\hat{a}_y} + ' +
                           '\\alpha q\\mathbf{\\hat{a}_z}')
 
+    phi1, phi2, phi3 = dynamicsymbols('phi1, phi2, phi3')
+    theta1, theta2, theta3 = symbols('theta1, theta2, theta3')
+
+    v = (sin(theta1) * A.x +
+         cos(phi1) * cos(phi2) * A.y +
+         cos(theta1 + phi3) * A.z)
+
+    assert v._latex() == ('\\operatorname{sin}\\left(\\theta_{1}\\right)\\mathbf{\\hat{a}_x} + ' +
+                          '\\operatorname{cos}\\left(\\phi_{1}\\right) \\operatorname{cos}\\left(\\phi_{2}\\right)\\mathbf{\\hat{a}_y} + ' +
+                          '\\operatorname{cos}\\left(\\theta_{1} + \\phi_{3}\\right)\\mathbf{\\hat{a}_z}')
+
+
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
     q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4', 1)
