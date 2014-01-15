@@ -41,7 +41,7 @@ def test_expand():
 
 def test_pow_is_real():
     x = Symbol("x", nonnegative=True)
-    y = Symbol("y", real=True)
+    y = Symbol("y", nonnegative=True)
     from sympy import im
     assert im((x**y)).expand(complex=True) is S.Zero
     assert (x**y).is_real
