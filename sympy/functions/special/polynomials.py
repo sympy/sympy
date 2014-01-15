@@ -81,10 +81,10 @@ class jacobi(OrthogonalPolynomial):
     legendre(n, x)
 
     >>> jacobi(n, S(1)/2, S(1)/2, x)
-    chebyshevu(n, x)*RisingFactorial(3/2, n)/factorial(n + 1)
+    RisingFactorial(3/2, n)*chebyshevu(n, x)/factorial(n + 1)
 
     >>> jacobi(n, -S(1)/2, -S(1)/2, x)
-    chebyshevt(n, x)*RisingFactorial(1/2, n)/factorial(n)
+    RisingFactorial(1/2, n)*chebyshevt(n, x)/factorial(n)
 
     >>> jacobi(n, a, b, -x)
     (-1)**n*jacobi(n, b, a, x)

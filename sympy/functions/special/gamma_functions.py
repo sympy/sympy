@@ -588,6 +588,7 @@ class loggamma(Function):
 
     """
 
+    nargs = 1  # there is no eval defined so we must define this
 
     def _eval_nseries(self, x, n, logx=None):
         x0 = self.args[0].limit(x, 0)

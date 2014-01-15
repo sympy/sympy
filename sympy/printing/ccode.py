@@ -252,7 +252,7 @@ def ccode(expr, assign_to=None, **settings):
         ...           (lambda x: x.is_integer, "ABS")]
         ... }
         >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
-        'CEIL(x) + fabs(x)'
+        'fabs(x) + CEIL(x)'
 
 
     """

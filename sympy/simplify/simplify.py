@@ -4081,9 +4081,9 @@ def besselsimp(expr):
     >>> from sympy import besselj, besseli, besselsimp, polar_lift, I, S
     >>> from sympy.abc import z, nu
     >>> besselsimp(besselj(nu, z*polar_lift(-1)))
-    besselj(nu, z)*exp(I*pi*nu)
+    exp(I*pi*nu)*besselj(nu, z)
     >>> besselsimp(besseli(nu, z*polar_lift(-I)))
-    besselj(nu, z)*exp(-I*pi*nu/2)
+    exp(-I*pi*nu/2)*besselj(nu, z)
     >>> besselsimp(besseli(S(-1)/2, z))
     sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     >>> besselsimp(z*besseli(0, z) + z*(besseli(2, z))/2 + besseli(1, z))

@@ -1323,13 +1323,13 @@ class li(Function):
 
     >>> from sympy import Si, Ci, Shi, Chi
     >>> li(z).rewrite(Si)
-    Ci(I*log(z)) + Shi(log(z)) - log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2
+    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
     >>> li(z).rewrite(Ci)
-    Ci(I*log(z)) + Shi(log(z)) - log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2
+    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
     >>> li(z).rewrite(Shi)
-    Chi(log(z)) - Shi(log(z)) - log(1/log(z))/2 + log(log(z))/2
+    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
     >>> li(z).rewrite(Chi)
-    Chi(log(z)) - Shi(log(z)) - log(1/log(z))/2 + log(log(z))/2
+    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
 
     See Also
     ========

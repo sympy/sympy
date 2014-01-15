@@ -428,7 +428,7 @@ def test_inverse_mellin_transform():
                     (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
                     s, x,
                     (Max(-re(a)/2 - re(b)/2, -re(a)/2 + re(b)/2), S(1)/2))) == \
-                    -besselj(a, sqrt(x))*(besselj(-b, sqrt(x)) -
+                    besselj(a, sqrt(x))*-(besselj(-b, sqrt(x)) -
                     besselj(b, sqrt(x))*cos(pi*b))/sin(pi*b)
     # TODO more
 
