@@ -8,6 +8,8 @@ from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.delta_functions import Heaviside
+
 
 __all__ = [
     'BosonOperator',
@@ -471,12 +473,10 @@ class BosonFockKet(Ket):
 
     def _apply_operator_BosonOperator(self, op, **options):
         if op.is_annihilation:
-            if self.n > 0:
-                return sqrt(Integer(self.n)) * BosonFockKet(self.n - 1)
-            else:
-                return Integer(0)
+            if n.is_number
+            return sqrt(self.n) * BosonFockKet(self.n - 1)
         else:
-            return sqrt(Integer(self.n + 1)) * BosonFockKet(self.n + 1)
+            return sqrt(self.n + 1) * BosonFockKet(self.n + 1)
 
 
 class BosonFockBra(Bra):
