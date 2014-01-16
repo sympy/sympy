@@ -60,10 +60,12 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     @property
     def lhs(self):
+        """The left-hand side of the relation."""
         return self._args[0]
 
     @property
     def rhs(self):
+        """The right-hand side of the relation."""
         return self._args[1]
 
     @classmethod
@@ -75,7 +77,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         simplify or cannot be calculated, None will be returned.
 
         """
-        try:
+        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
             diff = lhs - rhs
             if not diff.has(Symbol):
                 know = diff.equals(0)
@@ -85,9 +87,6 @@ class Relational(Boolean, Expr, EvalfMixin):
                     diff = diff.evalf()
             if diff.is_Number and diff.is_real:
                 return cls._eval_relation(diff, S.Zero)
-        # If sides cannot be subtracted, continue.
-        except (TypeError, AttributeError):
-            pass
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
@@ -131,10 +130,16 @@ class Equality(Relational):
     >>> Eq(y, x+x**2)
     y == x**2 + x
 
+    See Also
+    ========
+    sympy.logic.boolalg.Equivalent : for representing equality between two
+        boolean expressions
+
     Notes
     =====
-    This class should not be used to represent an equation; it is intended
-    only to represent the equal relation.  See Issue 1887.
+    This class is not the same as the == operator.  The == operator tests
+    whether expressions are in exactly the same form; this class compares
+    expressions symbolically.
 
     """
     rel_op = '=='
@@ -181,6 +186,12 @@ class Unequality(Relational):
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
     y != x**2 + x
+
+    Notes
+    =====
+    This class is not the same as the != operator.  The != operator tests
+    whether expressions are in exactly the same form; this class compares
+    expressions symbolically.
 
     """
     rel_op = '!='
