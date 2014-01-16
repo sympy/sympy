@@ -63,4 +63,3 @@ essentialnames = ['ReferenceFrame', 'CoordinateSym', '_check_frame', \
                   'mpprint', 'mlatex']
 
 __all__.extend(essentialnames)
-
