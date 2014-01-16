@@ -6,13 +6,25 @@ from kivy.uix.textinput import TextInput
 from sympy import *
 from kivy.app import App
 from kivy.uix.label import Label
+from kivy.core.window import Window
 
 class entrywidget(GridLayout):
+
     global flag
     global l
     l = Label()
     flag = 0
+
+    def _keyboard_close(self):
+        print('My keyboard have been closed!')
+        self._keyboard = None
+
     def __init__(self, **kwargs):
+        self._keyboard = Window.request_keyboard(self._keyboard_close, self)
+        if self._keyboard.widget:
+            vkeyboard = self._keyboard.widget
+	    vkeyboard.layout = 'numeric'
+	
         super(entrywidget,self).__init__(**kwargs)
         self.cols = 2
         self.add_widget(Label(text = 'Expression'))
