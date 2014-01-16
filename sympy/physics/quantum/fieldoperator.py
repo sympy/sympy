@@ -472,7 +472,6 @@ class BosonFockKet(Ket):
 
     def _apply_operator_BosonOperator(self, op, **options):
         if op.is_annihilation:
-            if n.is_number
             return sqrt(self.n) * BosonFockKet(self.n - 1)
         else:
             return sqrt(self.n + 1) * BosonFockKet(self.n + 1)
