@@ -3,6 +3,7 @@ from sympy import Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies, Xor
 from sympy.core.relational import ( Relational, Equality, Unequality,
     GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
     Gt, Ge, Ne )
+from sympy.core.sets import Interval, FiniteSet
 
 x, y, z, t = symbols('x,y,z,t')
 
@@ -282,3 +283,21 @@ def test_relational_logic_symbols():
     assert isinstance((x < y) >> (z < t), Implies)
     assert isinstance((x < y) << (z < t), Implies)
     assert isinstance((x < y) ^ (z < t), (Or, Xor))
+
+
+def test_univariate_relational_as_set():
+    assert (x > 0).as_set() == Interval(0, oo, True, True)
+    assert (x >= 0).as_set() == Interval(0, oo)
+    assert (x < 0).as_set() == Interval(-oo, 0, True, True)
+    assert (x <= 0).as_set() == Interval(-oo, 0)
+    assert Eq(x, 0).as_set() == FiniteSet(0)
+    assert Ne(x, 0).as_set() == Interval(-oo, 0, True, True) + \
+        Interval(0, oo, True, True)
+
+    assert (x**2 >= 4).as_set() == Interval(-oo, -2) + Interval(2, oo)
+
+
+@XFAIL
+def test_multivariate_relational_as_set():
+    assert (x*y >= 0).as_set() == Interval(0, oo)*Interval(0, oo) + \
+        Interval(-oo, 0)*Interval(-oo, 0)
