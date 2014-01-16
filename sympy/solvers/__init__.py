@@ -21,3 +21,6 @@ from .pde import pde_separate, pde_separate_add, pde_separate_mul, \
     pdsolve, classify_pde, checkpdesol
 
 from .deutils import ode_order
+
+from .inequalities import reduce_inequalities, reduce_abs_inequality, \
+    reduce_abs_inequalities, solve_poly_inequality, solve_rational_inequalities, solve_univariate_inequality
