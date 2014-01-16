@@ -305,7 +305,8 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         m = int(m)
         n = int(n)
         f = self.function
-        assert len(self.limits) == 1
+        if len(self.limits) != 1:
+            raise ValueError("More than 1 limit")
         i, a, b = self.limits[0]
         if (a > b) is True:
             if a - b == 1:

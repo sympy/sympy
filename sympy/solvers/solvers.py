@@ -1026,7 +1026,8 @@ def solve(f, *symbols, **flags):
                     got_None.append(solution)
 
         elif isinstance(solution, (Relational, And, Or)):
-            assert len(symbols) == 1
+            if len(symbols) != 1:
+                raise ValueError("Length should be 1")
             if warning and symbols[0].assumptions0:
                 warnings.warn(filldedent("""
                     \tWarning: assumptions about variable '%s' are
@@ -1068,7 +1069,8 @@ def solve(f, *symbols, **flags):
         elif isinstance(solution[0], dict):
             pass
         else:
-            assert len(symbols) == 1
+            if len(symbols) != 1:
+                raise ValueError("Length should be 1")
             solution = [{symbols[0]: s} for s in solution]
     if as_dict:
         return solution
@@ -2095,7 +2097,8 @@ def solve_linear_system_LU(matrix, syms):
     sympy.matrices.LUsolve
 
     """
-    assert matrix.rows == matrix.cols - 1
+    if matrix.rows != matrix.cols - 1:
+        raise ValueError("Rows should be equal to columns - 1")
     A = matrix[:matrix.rows, :matrix.rows]
     b = matrix[:, matrix.cols - 1:]
     soln = A.LUsolve(b)
@@ -2163,7 +2166,7 @@ def _tsolve(eq, sym, **flags):
             if f.is_Mul:
                 return _solve(f, sym, **flags)
             if rhs:
-                f = logcombine(lhs, force=flags.get('force', False))
+                f = logcombine(lhs, force=flags.get('force', True))
                 if f.count(log) != lhs.count(log):
                     if f.func is log:
                         return _solve(f.args[0] - exp(rhs), sym, **flags)
@@ -2193,7 +2196,7 @@ def _tsolve(eq, sym, **flags):
             if llhs.is_Add:
                 return _solve(llhs - log(rhs), sym, **flags)
 
-        elif lhs.is_Function and lhs.nargs == 1 and lhs.func in multi_inverses:
+        elif lhs.is_Function and len(lhs.args) == 1 and lhs.func in multi_inverses:
             # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
             soln = []
             for i in multi_inverses[lhs.func](rhs):
@@ -2478,7 +2481,7 @@ def _invert(eq, *symbols, **kwargs):
             if ai*bi is S.NegativeOne:
                 if all(
                         isinstance(i, Function) for i in (ad, bd)) and \
-                        ad.func == bd.func and ad.nargs == bd.nargs:
+                        ad.func == bd.func and len(ad.args) == len(bd.args):
                     if len(ad.args) == 1:
                         lhs = ad.args[0] - bd.args[0]
                     else:

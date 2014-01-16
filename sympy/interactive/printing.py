@@ -6,8 +6,9 @@ from io import BytesIO
 
 from sympy import latex
 from sympy import preview
-from sympy.core.compatibility import integer_types, string_types
+from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
+from sympy.physics.mechanics import Vector, Dyadic
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
@@ -30,8 +31,8 @@ def _init_python_printing(stringify_func):
     sys.displayhook = _displayhook
 
 
-def _init_ipython_printing(ip, stringify_func, use_latex, euler,
-                           forecolor, backcolor, fontsize, latex_mode):
+def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
+                           backcolor, fontsize, latex_mode, print_builtin):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -93,10 +94,12 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
-            return all((isinstance(i, string_types) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
+            return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o, bool):
             return False
-        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, float, integer_types)):
+        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, Vector, Dyadic)):
+            return True
+        elif isinstance(o, (float, integer_types)) and print_builtin:
             return True
         return False
 
@@ -155,8 +158,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
     if IPython.__version__ >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
-        printable_types = [Basic, MatrixBase,  float, tuple, list, set,
-                frozenset, dict] + list(integer_types)
+        printable_types = [Basic, MatrixBase, float, tuple, list, set,
+                frozenset, dict, Vector, Dyadic] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
@@ -201,7 +204,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
-                  latex_mode='equation*'):
+                  latex_mode='equation*', print_builtin=True):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -231,17 +234,35 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         if 'mathjax', enable latex text generation, for example MathJax
         rendering in IPython notebook or text rendering in LaTeX documents
     wrap_line: boolean
-        If True, lines will wrap at the end;
-        if False, they will not wrap but continue as one line.
+        If True, lines will wrap at the end; if False, they will not wrap
+        but continue as one line. This is only relevant if `pretty_print` is
+        True.
     num_columns: int or None
-        If int, number of columns before wrapping is set to num_columns;
-        if None, number of columns before wrapping is set to terminal width.
+        If int, number of columns before wrapping is set to num_columns; if
+        None, number of columns before wrapping is set to terminal width.
+        This is only relevant if `pretty_print` is True.
     no_global: boolean
         If True, the settings become system wide;
         if False, use just for this console/session.
     ip: An interactive console
         This can either be an instance of IPython,
         or a class that derives from code.InteractiveConsole.
+    euler: boolean, optional, default=False
+        Loads the euler package in the LaTeX preamble for handwritten style
+        fonts (http://www.ctan.org/pkg/euler).
+    forecolor: string, optional, default='Black'
+        DVI setting for foreground color.
+    backcolor: string, optional, default='Transparent'
+        DVI setting for background color.
+    fontsize: string, optional, default='10pt'
+        A font size to pass to the LaTeX documentclass function in the
+        preamble.
+    latex_mode: string, optional, default='equation*'
+        The mode used in the LaTeX printer. Can be one of:
+        {'inline'|'plain'|'equation'|'equation*'}.
+    print_builtin: boolean, optional, default=True
+        If true then floats and integers will be printed. If false the
+        printer will only print SymPy types.
 
     Examples
     ========
@@ -334,6 +355,6 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
 
     if ip is not None and ip.__module__.startswith('IPython'):
         _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
-                               backcolor, fontsize, latex_mode)
+                               backcolor, fontsize, latex_mode, print_builtin)
     else:
         _init_python_printing(stringify_func)

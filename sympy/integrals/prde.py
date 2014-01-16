@@ -213,6 +213,8 @@ def constant_system(A, u, DE):
     Because Poly does not play well with Matrix yet, this algorithm assumes that
     all matrix entries are Basic expressions.
     """
+    if not A:
+        return A, u
     Au = A.row_join(u)
     Au = Au.rref(simplify=cancel)[0]
     # Warning: This will NOT return correct results if cancel() cannot reduce
@@ -894,7 +896,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         residueterms]] + [n], S(1))
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
-    assert common_denom == n*m  # Verify exact division
+    if common_denom != n*m:  # Verify exact division
+        raise ValueError("Inexact division")
     u = cancel(u**m*Mul(*[Pow(i, j) for i, j in residueterms]))
 
     return (common_denom, u)

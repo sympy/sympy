@@ -222,8 +222,10 @@ class RandomSymbol(Expr):
     """
 
     def __new__(cls, pspace, symbol):
-        assert isinstance(symbol, Symbol)
-        assert isinstance(pspace, PSpace)
+        if not isinstance(symbol, Symbol):
+            raise TypeError("symbol should be of type Symbol")
+        if not isinstance(pspace, PSpace):
+            raise TypeError("pspace variable should be of type PSpace")
         return Basic.__new__(cls, pspace, symbol)
 
     is_bounded = True

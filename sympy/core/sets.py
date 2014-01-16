@@ -10,7 +10,6 @@ from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
-from sympy.assumptions import ask
 from sympy.logic.boolalg import And, Or, true, false
 
 from sympy.utilities import default_sort_key
@@ -267,6 +266,7 @@ class Set(Basic):
         return self.complement
 
     def __contains__(self, other):
+        from sympy.assumptions import ask
         symb = self.contains(other)
         result = ask(symb)
         if result is None:

@@ -72,12 +72,6 @@ def limit(e, z, z0, dir="+"):
                 return limit(inve.as_leading_term(u), u,
                     S.Zero, "+" if z0 is S.Infinity else "-")
 
-    if e.is_Add:
-        if e.is_rational_function(z):
-            rval = Add(*[limit(term, z, z0, dir) for term in e.args])
-            if rval != S.NaN:
-                return rval
-
     if e.is_Order:
         return C.Order(limit(e.expr, z, z0), *e.args[1:])
 
