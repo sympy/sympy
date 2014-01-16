@@ -23,7 +23,7 @@ class entrywidget(GridLayout):
         self._keyboard = Window.request_keyboard(self._keyboard_close, self)
         if self._keyboard.widget:
             vkeyboard = self._keyboard.widget
-	    vkeyboard.layout = 'numeric'
+            vkeyboard.layout = 'numeric'
 	
         super(entrywidget,self).__init__(**kwargs)
         self.cols = 2
