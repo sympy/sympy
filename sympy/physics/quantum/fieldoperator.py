@@ -8,7 +8,6 @@ from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.functions.special.delta_functions import Heaviside
 
 
 __all__ = [
