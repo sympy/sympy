@@ -183,6 +183,8 @@ def test_creation():
     with raises(IndexError):
         Matrix((1, 2))[3] = 5
 
+    assert Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+
     a = Matrix([[x, 0], [0, 0]])
     m = a
     assert m.cols == m.rows

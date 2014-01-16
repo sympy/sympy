@@ -5,6 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
+from sympy.core.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 
@@ -92,6 +93,37 @@ def test_diff_symbols():
         Derivative(f(x, y, z), x, y, z)
 
 
+def test_Function():
+    class myfunc(Function):
+        @classmethod
+        def eval(cls, x):
+            return
+
+    assert myfunc.nargs == FiniteSet(1)
+    assert myfunc(x).nargs == FiniteSet(1)
+    raises(TypeError, lambda: myfunc(x, y).nargs)
+
+    class myfunc(Function):
+        @classmethod
+        def eval(cls, *x):
+            return
+
+    assert myfunc.nargs == S.Naturals0
+    assert myfunc(x).nargs == S.Naturals0
+
+def test_nargs():
+    f = Function('f')
+    assert f.nargs == S.Naturals0
+    assert f(1).nargs == S.Naturals0
+    assert Function('f', nargs=2)(1, 2).nargs == FiniteSet(2)
+    assert sin.nargs == FiniteSet(1)
+    assert sin(2).nargs == FiniteSet(1)
+    assert log.nargs == FiniteSet(1, 2)
+    assert log(2).nargs == FiniteSet(1, 2)
+    assert Function('f', nargs=2).nargs == FiniteSet(2)
+    assert Function('f', nargs=0).nargs == FiniteSet(0)
+
+
 def test_Lambda():
     e = Lambda(x, x**2)
     assert e(4) == 16
@@ -112,7 +144,7 @@ def test_Lambda():
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
 
-    assert Lambda((x, y), x + y).nargs == 2
+    assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
@@ -405,7 +437,7 @@ def test_fdiff_argument_index_error():
     from sympy.core.function import ArgumentIndexError
 
     class myfunc(Function):
-        nargs = 1
+        nargs = 1  # define since there is no eval routine
 
         def fdiff(self, idx):
             raise ArgumentIndexError

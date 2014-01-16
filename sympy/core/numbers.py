@@ -2242,16 +2242,28 @@ class Infinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return False
 
+    @_sympifyit('other', NotImplemented)
     def __le__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is not S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return True
 
     def __mod__(self, other):
@@ -2423,16 +2435,28 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.NegativeInfinity
 
+    @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is not S.NegativeInfinity
 
+    @_sympifyit('other', NotImplemented)
     def __le__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return True
 
+    @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return False
 
+    @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is S.NegativeInfinity
 
 

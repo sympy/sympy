@@ -72,6 +72,3 @@ def test_issue_2555():
 
 def test_issue_3400():
     assert residue(1/(exp(z) - 1), z, 0) == 1
-
-    # github issue 2519:
-    assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == -S(9)/4

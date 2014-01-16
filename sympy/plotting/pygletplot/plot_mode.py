@@ -66,11 +66,11 @@ class PlotMode(PlotObject):
         instance of the appropriate child class.
         """
 
-        nargs, nkwargs = PlotMode._extract_options(args, kwargs)
-        mode_arg = nkwargs.get('mode', '')
+        newargs, newkwargs = PlotMode._extract_options(args, kwargs)
+        mode_arg = newkwargs.get('mode', '')
 
         # Interpret the arguments
-        d_vars, intervals = PlotMode._interpret_args(nargs)
+        d_vars, intervals = PlotMode._interpret_args(newargs)
         i_vars = PlotMode._find_i_vars(d_vars, intervals)
         i, d = max([len(i_vars), len(intervals)]), len(d_vars)
 
@@ -84,7 +84,7 @@ class PlotMode(PlotObject):
         o.d_vars = d_vars
         o._fill_i_vars(i_vars)
         o._fill_intervals(intervals)
-        o.options = nkwargs
+        o.options = newkwargs
 
         return o
 
@@ -380,14 +380,14 @@ class PlotMode(PlotObject):
 
     @staticmethod
     def _extract_options(args, kwargs):
-        nkwargs, nargs = {}, []
+        newkwargs, newargs = {}, []
         for a in args:
             if isinstance(a, str):
-                nkwargs = dict(nkwargs, **parse_option_string(a))
+                newkwargs = dict(newkwargs, **parse_option_string(a))
             else:
-                nargs.append(a)
-        nkwargs = dict(nkwargs, **kwargs)
-        return nargs, nkwargs
+                newargs.append(a)
+        newkwargs = dict(newkwargs, **kwargs)
+        return newargs, newkwargs
 
 
 def var_count_error(is_independent, is_plotting):

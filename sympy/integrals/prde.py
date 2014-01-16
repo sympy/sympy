@@ -213,6 +213,8 @@ def constant_system(A, u, DE):
     Because Poly does not play well with Matrix yet, this algorithm assumes that
     all matrix entries are Basic expressions.
     """
+    if not A:
+        return A, u
     Au = A.row_join(u)
     Au = Au.rref(simplify=cancel)[0]
     # Warning: This will NOT return correct results if cancel() cannot reduce
