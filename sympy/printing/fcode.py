@@ -38,6 +38,7 @@ class FCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'source_format': 'fixed',
+        'look_for_contraction': True,
     }
 
     _implicit_functions = set([
