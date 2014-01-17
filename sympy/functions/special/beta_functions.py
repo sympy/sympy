@@ -19,22 +19,22 @@ class beta(Function):
     unbranched = True
 
     def fdiff(self, argindex):
-      x, y = self.args 
+        x, y = self.args 
         if argindex == 1:
-          # Diff wrt x
-          return beta(x, y)*(digamma(x) - digamma(x + y)) 
+            # Diff wrt x
+            return beta(x, y)*(digamma(x) - digamma(x + y)) 
         elif argindex == 2:
-          # Diff wrt y
-          return beta(x, y)*(digamma(y) - digamma(x + y)) 
+            # Diff wrt y
+            return beta(x, y)*(digamma(y) - digamma(x + y)) 
         else:
-          raise ArgumentIndexError(self, argindex)
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, x, y):
-      return gamma(x)*gamma(y) / gamma(x + y)
+        return gamma(x)*gamma(y) / gamma(x + y)
 
     def _eval_expand_func(self, **hints):
-      x, y = self.args
-      return gamma(x)*gamma(y) / gamma(x + y) 
+        x, y = self.args
+        return gamma(x)*gamma(y) / gamma(x + y) 
          
         
