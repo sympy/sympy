@@ -5,7 +5,7 @@ from sympy.physics.vector import (cross, dot, express, \
                                   time_derivative, kinematic_equations, \
                                   outer, partial_velocity, \
                                   get_motion_params)
-from sympy.physics.vector.dynamicsymbols import dynamicsymbols
+from sympy.physics.vector.functions import dynamicsymbols
 from sympy.utilities.pytest import raises
 
 Vector.simp = True

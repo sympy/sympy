@@ -1,9 +1,7 @@
 from sympy import diff, trigsimp, expand, sin, cos, \
      solve, Symbol, sympify, eye, ImmutableMatrix as Matrix
 from sympy.core.compatibility import string_types, u
-from sympy.physics.vector.dynamicsymbols import dynamicsymbols
 from sympy.physics.vector.vector import Vector, _check_vector
-from sympy.physics.vector.printers import VectorTypeError
 
 
 class CoordinateSym(Symbol):
@@ -255,6 +253,7 @@ class ReferenceFrame(object):
 
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
+        from sympy.physics.vector.functions import dynamicsymbols
         dcm2diff = self.dcm(otherframe)
         diffed = dcm2diff.diff(dynamicsymbols._t)
         angvelmat = diffed * dcm2diff.T
@@ -477,6 +476,7 @@ class ReferenceFrame(object):
 
         """
 
+        from sympy.physics.vector.functions import dynamicsymbols
         _check_frame(parent)
         amounts = list(amounts)
         for i, v in enumerate(amounts):
@@ -735,5 +735,6 @@ class ReferenceFrame(object):
 
 
 def _check_frame(other):
+    from sympy.physics.vector.printers import VectorTypeError
     if not isinstance(other, ReferenceFrame):
         raise VectorTypeError(other, "ReferenceFrame")

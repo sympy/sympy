@@ -13,7 +13,9 @@ from sympy.physics.vector.printers import \
      VectorLatexPrinter as MechanicsLatexPrinter, \
      VectorPrettyPrinter as MechanicsPrettyPrinter
 from sympy.physics.vector import Vector, Dyadic, ReferenceFrame, \
-     _check_frame, _check_vector, dynamicsymbols
+     dynamicsymbols
+from sympy.physics.vector.vector import _check_vector
+from sympy.physics.vector.frame import _check_frame
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.vector import Point

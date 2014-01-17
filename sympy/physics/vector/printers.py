@@ -6,13 +6,13 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
-from sympy.physics.vector.dynamicsymbols import dynamicsymbols
 
 
 class VectorStrPrinter(StrPrinter):
     """String Printer for vector expressions. """
 
     def _print_Derivative(self, e):
+        from sympy.physics.vector.functions import dynamicsymbols
         t = dynamicsymbols._t
         if (bool(sum([i == t for i in e.variables])) &
                 isinstance(type(e.args[0]), UndefinedFunction)):
@@ -24,6 +24,7 @@ class VectorStrPrinter(StrPrinter):
             return StrPrinter().doprint(e)
 
     def _print_Function(self, e):
+        from sympy.physics.vector.functions import dynamicsymbols
         t = dynamicsymbols._t
         if isinstance(type(e), UndefinedFunction):
             return StrPrinter().doprint(e).replace("(%s)" % t, '')
@@ -34,6 +35,7 @@ class VectorLatexPrinter(LatexPrinter):
     """Latex Printer for vector expressions. """
 
     def _print_Function(self, expr, exp=None):
+        from sympy.physics.vector.functions import dynamicsymbols
         func = expr.func.__name__
         t = dynamicsymbols._t
 
@@ -98,6 +100,7 @@ class VectorLatexPrinter(LatexPrinter):
             return name % ",".join(args)
 
     def _print_Derivative(self, der_expr):
+        from sympy.physics.vector.functions import dynamicsymbols
         # make sure it is an the right form
         der_expr = der_expr.doit()
         if not isinstance(der_expr, Derivative):
@@ -134,6 +137,7 @@ class VectorPrettyPrinter(PrettyPrinter):
     """Pretty Printer for vectorialexpressions. """
 
     def _print_Derivative(self, deriv):
+        from sympy.physics.vector.functions import dynamicsymbols
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = dynamicsymbols._t
         dots = 0
@@ -219,6 +223,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         return pform
 
     def _print_Function(self, e):
+        from sympy.physics.vector.functions import dynamicsymbols
         t = dynamicsymbols._t
         # XXX works only for applied functions
         func = e.func

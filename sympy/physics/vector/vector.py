@@ -1,8 +1,5 @@
 from sympy import S, sympify, trigsimp, expand, sqrt, \
      Add, zeros, ImmutableMatrix as Matrix
-from sympy.physics.vector.printers import VectorPrettyPrinter, \
-     VectorStrPrinter
-from sympy.physics.vector.dyadic import Dyadic
 
 
 class Vector(object):
@@ -92,6 +89,7 @@ class Vector(object):
 
         """
 
+        from sympy.physics.vector.dyadic import Dyadic
         if isinstance(other, Dyadic):
             return NotImplemented
         other = _check_vector(other)
@@ -192,6 +190,7 @@ class Vector(object):
 
         """
 
+        from sympy.physics.vector.dyadic import Dyadic
         other = _check_vector(other)
         ol = Dyadic(0)
         for i, v in enumerate(self.args):
@@ -212,6 +211,8 @@ class Vector(object):
 
     def _latex(self, printer=None):
         """Latex Printing method. """
+
+        from sympy.physics.vector.printers import VectorStrPrinter
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -245,6 +246,7 @@ class Vector(object):
 
     def _pretty(self, printer=None):
         """Pretty Printing method. """
+        from sympy.physics.vector.printers import VectorPrettyPrinter
         e = self
 
         class Fake(object):
@@ -307,6 +309,7 @@ class Vector(object):
 
         """
 
+        from sympy.physics.vector.dyadic import Dyadic
         other = _check_vector(other)
         ol = Dyadic(0)
         for i, v in enumerate(other.args):
@@ -330,6 +333,7 @@ class Vector(object):
 
     def __str__(self, printer=None):
         """Printing method. """
+        from sympy.physics.vector.printers import VectorStrPrinter
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -393,6 +397,7 @@ class Vector(object):
 
         """
 
+        from sympy.physics.vector.dyadic import Dyadic
         if isinstance(other, Dyadic):
             return NotImplemented
         other = _check_vector(other)

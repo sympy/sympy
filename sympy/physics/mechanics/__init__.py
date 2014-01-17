@@ -41,11 +41,10 @@ from sympy.physics.vector.printers import \
      VectorStrPrinter as MechanicsStrPrinter, \
      VectorLatexPrinter as MechanicsLatexPrinter, \
      VectorPrettyPrinter as MechanicsPrettyPrinter
-from sympy.physics.vector.dynamicsymbols import dynamicsymbols
 from sympy.physics.vector.point import Point
 from sympy.physics.vector.functions import cross, dot, express, \
      time_derivative, outer, kinematic_equations, get_motion_params, \
-     partial_velocity
+     partial_velocity, dynamicsymbols
 from sympy.physics.vector.functions import \
      time_derivative_printing as mechanics_printing, \
      vprint as mprint, vsprint as msprint, \
