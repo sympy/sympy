@@ -39,12 +39,6 @@ def test_expand():
     x = Symbol('x')
     assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
 
-def test_pow_is_real():
-    x = Symbol("x", nonnegative=True)
-    y = Symbol("y", nonnegative=True)
-    from sympy import im
-    assert im((x**y)).expand(complex=True) is S.Zero
-    assert (x**y).is_real
 
 def test_issue350():
     #test if powers are simplified correctly
