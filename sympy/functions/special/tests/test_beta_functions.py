@@ -22,3 +22,4 @@ def test_beta():
 
     assert diff(beta(x, y), x) == beta(x, y)*(digamma(x) - digamma(x+y))
     assert diff(beta(x, y), y) == beta(x, y)*(digamma(y) - digamma(x+y))
+    
