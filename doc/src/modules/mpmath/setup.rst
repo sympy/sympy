@@ -38,21 +38,21 @@ Debian and Ubuntu users can install mpmath with
 
     ``sudo apt-get install python-mpmath``
 
-See `debian <http://packages.debian.org/python-mpmath>`_ and `ubuntu <https://launchpad.net/ubuntu/+source/mpmath>`_ package information; please verify that you are getting the latest version.
+See `debian <http://packages.debian.org/stable/python/python-mpmath>`_ and `ubuntu <https://launchpad.net/ubuntu/+source/mpmath>`_ package information; please verify that you are getting the latest version.
 
 OpenSUSE
 ........
 
-Mpmath is provided in the "Science" repository for all recent versions of `openSUSE <http://www.opensuse.org/>`_. To add this repository to the YAST software management tool, see http://en.opensuse.org/SDB:Add_package_repositories
+Mpmath is provided in the "Science" repository for all recent versions of `openSUSE <http://www.opensuse.org/en/>`_. To add this repository to the YAST software management tool, see http://en.opensuse.org/SDB:Add_package_repositories
 
 Look up http://download.opensuse.org/repositories/science/ for a list
-of supported OpenSUSE versions and use http://download.opensuse.org/repositories/science/openSUSE_12.2/
+of supported OpenSUSE versions and use http://download.opensuse.org/repositories/science/openSUSE_11.1/
 (or accordingly for your OpenSUSE version) as the repository URL for YAST.
 
 Current development version
 ...........................
 
-See http://code.google.com/p/mpmath/source/checkout for instructions on how to check out the mpmath Subversion repository. The source code can also be browsed online from the Google Code page.
+See  http://code.google.com/p/mpmath/source/checkout for instructions on how to check out the mpmath Subversion repository. The source code can also be browsed online from the Google Code page.
 
 Checking that it works
 ......................
@@ -76,7 +76,7 @@ By default, mpmath uses Python integers internally. If `gmpy <http://code.google
 To verify that mpmath uses gmpy, check the internal variable ``BACKEND`` is not equal to 'python':
 
     >>> import mpmath.libmp
-    >>> mpmath.libmp.BACKEND
+    >>> mpmath.libmp.BACKEND # doctest:+SKIP
     'gmpy'
 
 The gmpy mode can be disabled by setting the MPMATH_NOGMPY environment variable. Note that the mode cannot be switched during runtime; mpmath must be re-imported for this change to take effect.
@@ -99,7 +99,7 @@ The tests should finish in about a minute. If you have `psyco <http://psyco.sour
 
 which will cut the running time in half.
 
-If any test fails, please send a detailed bug report to the `mpmath issue tracker <http://code.google.com/p/sympy/issues/list>`_. The tests can also be run with `py.test <http://codespeak.net/py/dist/>`_. This will sometimes generate more useful information in case of a failure.
+If any test fails, please send a detailed bug report to the `mpmath issue tracker <http://code.google.com/p/sympy/issues/list>`_. The tests can also be run with `py.test <http://pylib.org/>`_. This will sometimes generate more useful information in case of a failure.
 
 To run the tests with support for gmpy disabled, use
 
@@ -175,4 +175,5 @@ with the appropriate precision back::
     100
 
 See the help for ``sage.libs.mpmath.all`` for further information.
+
 

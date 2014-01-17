@@ -48,6 +48,19 @@ Bell numbers and polynomials
 .. autofunction:: mpmath.bell(n,x)
 
 
+Stirling numbers
+...........................................
+
+:func:`stirling1`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.stirling1(n,k,exact=False)
+
+:func:`stirling2`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.stirling2(n,k,exact=False)
+
+
+
 Prime counting functions
 ........................
 

@@ -340,6 +340,172 @@ The function ``lu`` computes an explicit LU factorization of a matrix::
     [4.0  5.0  6.0]
     [7.0  8.0  9.0]
 
+The function ``qr`` computes a QR factorization of a matrix::
+
+    >>> A = matrix([[1, 2], [3, 4], [1, 1]])
+    >>> Q, R = qr(A)
+    >>> print Q
+    [-0.301511344577764   0.861640436855329   0.408248290463863]
+    [-0.904534033733291  -0.123091490979333  -0.408248290463863]
+    [-0.301511344577764  -0.492365963917331   0.816496580927726]
+    >>> print R
+    [-3.3166247903554  -4.52267016866645]
+    [             0.0  0.738548945875996]
+    [             0.0                0.0]
+    >>> print Q * R
+    [1.0  2.0]
+    [3.0  4.0]
+    [1.0  1.0]
+    >>> print chop(Q.T * Q)
+    [1.0  0.0  0.0]
+    [0.0  1.0  0.0]
+    [0.0  0.0  1.0]
+
+
+The singular value decomposition
+................................
+
+The routines ``svd_r`` and ``svd_c`` compute the singular value decomposition
+of a real or complex matrix A. ``svd`` is an unified interface calling
+either ``svd_r`` or ``svd_c`` depending on whether *A* is real or complex.
+
+Given *A*, two orthogonal (*A* real) or unitary (*A* complex) matrices *U* and *V*
+are calculated such that
+
+.. math ::
+
+       A = U S V, \quad U' U = 1, \quad V V' = 1
+
+where *S* is a suitable shaped matrix whose off-diagonal elements are zero.
+Here ' denotes the hermitian transpose (i.e. transposition and complex
+conjugation). The diagonal elements of *S* are the singular values of *A*,
+i.e. the square roots of the eigenvalues of `A' A` or `A A'`.
+
+Examples::
+
+   >>> from mpmath import mp
+   >>> A = mp.matrix([[2, -2, -1], [3, 4, -2], [-2, -2, 0]])
+   >>> S = mp.svd_r(A, compute_uv = False)
+   >>> print S
+   [6.0]
+   [3.0]
+   [1.0]
+   >>> U, S, V = mp.svd_r(A)
+   >>> print mp.chop(A - U * mp.diag(S) * V)
+   [0.0  0.0  0.0]
+   [0.0  0.0  0.0]
+   [0.0  0.0  0.0]
+
+
+The Schur decomposition
+.......................
+
+This routine computes the Schur decomposition of a square matrix *A*.
+Given *A*, a unitary matrix *Q* is determined such that
+
+.. math ::
+
+      Q' A Q = R, \quad Q' Q = Q Q' = 1
+
+where *R* is an upper right triangular matrix. Here ' denotes the
+hermitian transpose (i.e. transposition and conjugation).
+
+Examples::
+
+    >>> from mpmath import mp
+    >>> A = mp.matrix([[3, -1, 2], [2, 5, -5], [-2, -3, 7]])
+    >>> Q, R = mp.schur(A)
+    >>> mp.nprint(R, 3) # doctest:+SKIP
+    [2.0  0.417  -2.53]
+    [0.0    4.0  -4.74]
+    [0.0    0.0    9.0]
+    >>> print(mp.chop(A - Q * R * Q.transpose_conj()))
+    [0.0  0.0  0.0]
+    [0.0  0.0  0.0]
+    [0.0  0.0  0.0]
+
+
+The eigenvalue problem
+......................
+
+The routine ``eig`` solves the (ordinary) eigenvalue problem for a real or complex
+square matrix *A*. Given *A*, a vector *E* and matrices *ER* and *EL* are calculated such that
+
+.. code ::
+
+              A ER[:,i] =         E[i] ER[:,i]
+      EL[i,:] A         = EL[i,:] E[i]
+
+*E* contains the eigenvalues of *A*. The columns of *ER* contain the right eigenvectors
+of *A* whereas the rows of *EL* contain the left eigenvectors.
+
+
+Examples::
+
+    >>> from mpmath import mp
+    >>> A = mp.matrix([[3, -1, 2], [2, 5, -5], [-2, -3, 7]])
+    >>> E, ER = mp.eig(A)
+    >>> print(mp.chop(A * ER[:,0] - E[0] * ER[:,0]))
+    [0.0]
+    [0.0]
+    [0.0]
+    >>> E, EL, ER = mp.eig(A,left = True, right = True)
+    >>> E, EL, ER = mp.eig_sort(E, EL, ER)
+    >>> mp.nprint(E)
+    [2.0, 4.0, 9.0]
+    >>> print(mp.chop(A * ER[:,0] - E[0] * ER[:,0]))
+    [0.0]
+    [0.0]
+    [0.0]
+    >>> print(mp.chop( EL[0,:] * A - EL[0,:] * E[0]))
+    [0.0  0.0  0.0]
+
+
+The symmetric eigenvalue problem
+................................
+
+The routines ``eigsy`` and ``eighe`` solve the (ordinary) eigenvalue problem
+for a real symmetric or complex hermitian square matrix *A*.
+``eigh`` is an unified interface for this two functions calling either
+``eigsy`` or ``eighe`` depending on whether *A* is real or complex.
+
+Given *A*, an orthogonal (*A* real) or unitary matrix *Q* (*A* complex) is
+calculated which diagonalizes A:
+
+.. math ::
+
+        Q' A Q = \operatorname{diag}(E), \quad Q Q' = Q' Q = 1
+
+Here diag(*E*) a is diagonal matrix whose diagonal is *E*.
+' denotes the hermitian transpose (i.e. ordinary transposition and
+complex conjugation).
+
+The columns of *Q* are the eigenvectors of *A* and *E* contains the eigenvalues:
+
+.. code ::
+
+        A Q[:,i] = E[i] Q[:,i]
+
+Examples::
+
+    >>> from mpmath import mp
+    >>> A = mp.matrix([[3, 2], [2, 0]])
+    >>> E = mp.eigsy(A, eigvals_only = True)
+    >>> print E
+    [-1.0]
+    [ 4.0]
+    >>> A = mp.matrix([[1, 2], [2, 3]])
+    >>> E, Q = mp.eigsy(A)                     # alternative: E, Q = mp.eigh(A)
+    >>> print mp.chop(A * Q[:,0] - E[0] * Q[:,0])
+    [0.0]
+    [0.0]
+    >>> A = mp.matrix([[1, 2 + 5j], [2 - 5j, 3]])
+    >>> E, Q = mp.eighe(A)                     # alternative: E, Q = mp.eigh(A)
+    >>> print mp.chop(A * Q[:,0] - E[0] * Q[:,0])
+    [0.0]
+    [0.0]
+
+
 Interval and double-precision matrices
 --------------------------------------
 

@@ -8,7 +8,7 @@ Welcome to mpmath's documentation!
 Mpmath is a Python library for arbitrary-precision floating-point arithmetic.
 For general information about mpmath, see the project website http://code.google.com/p/mpmath/
 
-These documentation pages include general information as well as docstring listing with extensive use of examples that can be run in the interactive Python interpreter. For quick access to the docstrings of individual functions, use the :ref:`genindex`, or type ``help(mpmath.function_name)`` in the Python interactive prompt.
+These documentation pages include general information as well as docstring listing with extensive use of examples that can be run in the interactive Python interpreter. For quick access to the docstrings of individual functions, use the `index listing <genindex.html>`_, or type ``help(mpmath.function_name)`` in the Python interactive prompt.
 
 Introduction
 ------------
@@ -16,8 +16,8 @@ Introduction
 .. toctree ::
    :maxdepth: 2
 
-   setup.rst
-   basics.rst
+   setup.txt
+   basics.txt
 
 Basic features
 ----------------
@@ -25,9 +25,9 @@ Basic features
 .. toctree ::
    :maxdepth: 2
 
-   contexts.rst
-   general.rst
-   plotting.rst
+   contexts.txt
+   general.txt
+   plotting.txt
 
 Advanced mathematics
 --------------------
@@ -38,10 +38,10 @@ provides extensive support for transcendental functions, evaluation of sums, int
 .. toctree ::
    :maxdepth: 2
 
-   functions/index.rst
-   calculus/index.rst
-   matrices.rst
-   identification.rst
+   functions/index.txt
+   calculus/index.txt
+   matrices.txt
+   identification.txt
 
 End matter
 ----------
@@ -49,5 +49,5 @@ End matter
 .. toctree ::
    :maxdepth: 2
 
-   technical.rst
-   references.rst
+   technical.txt
+   references.txt
