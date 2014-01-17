@@ -8,6 +8,7 @@ from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       test_numerically as tn)
 from sympy.utilities.pytest import raises
+from sympy.core.function import diff
 
 
 x = Symbol('x')
