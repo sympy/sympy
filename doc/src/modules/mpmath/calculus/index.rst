@@ -4,10 +4,10 @@ Numerical calculus
 .. toctree::
    :maxdepth: 2
 
-   polynomials.txt
-   optimization.txt
-   sums_limits.txt
-   differentiation.txt
-   integration.txt
-   odes.txt
-   approximation.txt
+   polynomials.rst
+   optimization.rst
+   sums_limits.rst
+   differentiation.rst
+   integration.rst
+   odes.rst
+   approximation.rst
