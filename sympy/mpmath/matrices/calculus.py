@@ -55,7 +55,7 @@ class MatrixCalculusMethods(object):
         Computes the matrix exponential of a square matrix `A`, which is defined
         by the power series
 
-        .. math :: 
+        .. math ::
 
             \exp(A) = I + A + \frac{A^2}{2!} + \frac{A^3}{3!} + \ldots
 

@@ -629,7 +629,7 @@ class LinearAlgebraMethods(object):
             [0.0  1.0]
 
         """
-        
+
         # check values before continuing
         assert isinstance(A, ctx.matrix)
         m = A.rows
@@ -644,22 +644,22 @@ class LinearAlgebraMethods(object):
         # temporarily increase the precision and initialize
         with ctx.extradps(edps):
             tau = ctx.matrix(n,1)
-            A = A.copy() 
+            A = A.copy()
 
             # ---------------
-            # FACTOR MATRIX A 
+            # FACTOR MATRIX A
             # ---------------
             if cmplx:
                 one = ctx.mpc('1.0', '0.0')
                 zero = ctx.mpc('0.0', '0.0')
                 rzero = ctx.mpf('0.0')
-            
-                # main loop to factor A (complex) 
+
+                # main loop to factor A (complex)
                 for j in xrange(0, n):
                     alpha = A[j,j]
                     alphr = ctx.re(alpha)
                     alphi = ctx.im(alpha)
-                
+
                     if (m-j) >= 2:
                         xnorm = ctx.fsum( A[i,j]*ctx.conj(A[i,j]) for i in xrange(j+1, m) )
                         xnorm = ctx.re( ctx.sqrt(xnorm) )
@@ -678,7 +678,7 @@ class LinearAlgebraMethods(object):
                     tau[j] = ctx.mpc( (beta - alphr) / beta, -alphi / beta )
                     t = -ctx.conj(tau[j])
                     za = one / (alpha - beta)
-                
+
                     for i in xrange(j+1, m):
                         A[i,j] *= za
 
@@ -714,29 +714,29 @@ class LinearAlgebraMethods(object):
                         beta = ctx.sqrt(alpha**2 + xnorm**2)
                     else:
                         beta = -ctx.sqrt(alpha**2 + xnorm**2)
-                
+
                     tau[j] = (beta - alpha) / beta
                     t = -tau[j]
                     da = one / (alpha - beta)
-                
+
                     for i in xrange(j+1, m):
                         A[i,j] *= da
-                    
+
                     A[j,j] = one
                     for k in xrange(j+1, n):
                         y = ctx.fsum( A[i,j] * A[i,k] for i in xrange(j, m) )
                         temp = t * y
                         for i in xrange(j,m):
-                            A[i,k] += A[i,j] * temp    
-                        
+                            A[i,k] += A[i,j] * temp
+
                     A[j,j] = beta
 
             # return factorization in same internal format as LAPACK
             if (mode == 'raw') or (mode == 'RAW'):
                 return A, tau
-            
+
             # ----------------------------------
-            # FORM Q USING BACKWARD ACCUMULATION 
+            # FORM Q USING BACKWARD ACCUMULATION
             # ----------------------------------
 
             # form R before the values are overwritten
@@ -756,7 +756,7 @@ class LinearAlgebraMethods(object):
                 A[j,j] = one
                 for i in xrange(0, j):
                     A[i,j] = zero
-                
+
             # main loop to form Q
             for j in xrange(n-1, -1, -1):
                 t = -tau[j]
@@ -764,18 +764,18 @@ class LinearAlgebraMethods(object):
 
                 for k in xrange(j+1, p):
                     if cmplx:
-                        y = ctx.fsum(A[i,j] * ctx.conj(A[i,k]) for i in xrange(j+1, m)) 
+                        y = ctx.fsum(A[i,j] * ctx.conj(A[i,k]) for i in xrange(j+1, m))
                         temp = t * ctx.conj(y)
                     else:
                         y = ctx.fsum(A[i,j] * A[i,k] for i in xrange(j+1, m))
-                        temp = t * y               
+                        temp = t * y
                     A[j,k] = temp
                     for i in xrange(j+1, m):
                         A[i,k] += A[i,j] * temp
-                        
+
                 for i in xrange(j+1, m):
                     A[i, j] *= t
-               
+
             return A, R[0:p,0:n]
 
         # ------------------

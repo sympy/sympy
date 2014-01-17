@@ -687,7 +687,7 @@ def elliprc(ctx, x, y, pv=True):
 
     .. math ::
 
-        R_C(x,y) = 
+        R_C(x,y) =
         \begin{cases}
           \dfrac{1}{\sqrt{y-x}}
             \cos^{-1}\left(\sqrt{\dfrac{x}{y}}\right),   & x < y \\

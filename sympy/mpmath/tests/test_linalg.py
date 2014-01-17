@@ -302,7 +302,7 @@ def test_qr():
         if n1 > maxnorm:
             raise ValueError('Excessive norm value')
 
-        if dtype == 'real':      
+        if dtype == 'real':
             n1 = norm(eye(m) - Q.T * Q)
             #print ' Norm of I - Q.T * Q = ', n1
             if n1 > maxnorm:
@@ -313,7 +313,7 @@ def test_qr():
             if n1 > maxnorm:
                 raise ValueError('Excessive norm value')
 
-        if dtype == 'complex':      
+        if dtype == 'complex':
             n1 = norm(eye(m) - Q.T * Q.conjugate())
             #print ' Norm of I - Q.T * Q.conjugate() = ', n1
             if n1 > maxnorm:

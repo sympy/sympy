@@ -151,7 +151,7 @@ def separate_my_zero(ctx, my_zero_number, zero_number_block, T, V, prec):
     t0 = T[k0-1]
     ctx.prec = prec
     wpz = wpzeros(my_zero_number*ctx.log(my_zero_number))
-    
+
     guard = 4*ctx.mag(my_zero_number)
     precs = [ctx.prec+4]
     index=0
@@ -160,7 +160,7 @@ def separate_my_zero(ctx, my_zero_number, zero_number_block, T, V, prec):
         precs = [precs[0] // 2 +3+2*index] + precs
     ctx.prec = precs[0] + guard
     r = ctx.findroot(lambda x:ctx.siegelz(x), (t0,t1), solver ='illinois', verbose=False)
-    #print "first step at", ctx.dps, "digits"    
+    #print "first step at", ctx.dps, "digits"
     z=ctx.mpc(0.5,r)
     for prec in precs[1:]:
         ctx.prec = prec + guard
@@ -190,7 +190,7 @@ def sure_number_block(ctx, n):
 def compute_triple_tvb(ctx, n):
     t = ctx.grampoint(n)
     v = ctx._fp.siegelz(t)
-    if ctx.mag(abs(v))<ctx.mag(t)-45: 
+    if ctx.mag(abs(v))<ctx.mag(t)-45:
         v = ctx.siegelz(t)
     b = v*(-1)**n
     return t,v,b
@@ -384,7 +384,7 @@ def zetazero(ctx, n, info=False, round=True):
         (0.5 + 727690.9069482075392389420041147142092708393819935j)
         >>> chop(zeta(_)/_)
         0.0
-        
+
     with *info=True*, :func:`~mpmath.zetazero` gives additional information::
 
         >>> mp.dps = 15
@@ -395,7 +395,7 @@ def zetazero(ctx, n, info=False, round=True):
     it is the 6-th zero between them. Finally (01311110) is the pattern
     of zeros in this interval. The numbers indicate the number of zeros
     in each Gram interval (Rosser blocks between parenthesis). In this case
-    there is only one Rosser block of length nine. 
+    there is only one Rosser block of length nine.
     """
     n = int(n)
     if n < 0:

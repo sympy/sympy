@@ -6776,7 +6776,7 @@ Evaluation is supported for real and complex arguments::
     -0.7363054628673177346778998
     >>> siegelz(3+4j)
     (-0.1852895764366314976003936 - 0.2773099198055652246992479j)
-    
+
 The first four derivatives are supported, using the
 optional *derivative* keyword argument::
 
@@ -6784,7 +6784,7 @@ optional *derivative* keyword argument::
     56.89689348495089294249178
     >>> diff(siegelz, 1234567, n=3)
     56.89689348495089294249178
-    
+
 
 The Z-function has a Maclaurin expansion::
 
@@ -9933,7 +9933,7 @@ of each other::
     ...     for k in range(5):
     ...         A[n,k] = stirling1(n,k)
     ...         B[n,k] = stirling2(n,k)
-    ... 
+    ...
     >>> A * B
     [1.0  0.0  0.0  0.0  0.0]
     [0.0  1.0  0.0  0.0  0.0]

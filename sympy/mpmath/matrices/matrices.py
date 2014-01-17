@@ -404,7 +404,7 @@ class _matrix(object):
 
     def __get_element(self, key):
         '''
-        Fast extraction of the i,j element from the matrix   
+        Fast extraction of the i,j element from the matrix
             This function is for private use only because is unsafe:
                 1. Does not check on the value of key it expects key to be a integer tuple (i,j)
                 2. Does not check bounds
@@ -429,11 +429,11 @@ class _matrix(object):
 
 
     def __getitem__(self, key):
-        ''' 
+        '''
             Getitem function for mp matrix class with slice index enabled
             it allows the following assingments
             scalar to a slice of the matrix
-         B = A[:,2:6] 
+         B = A[:,2:6]
         '''
         # Convert vector to matrix indexing
         if isinstance(key, int) or isinstance(key,slice):
@@ -444,7 +444,7 @@ class _matrix(object):
                 key = (key, 0)
             else:
                 raise IndexError('insufficient indices for matrix')
-            
+
         if isinstance(key[0],slice) or isinstance(key[1],slice):
 
             #Rows
@@ -459,7 +459,7 @@ class _matrix(object):
             else:
                 # Single row
                 rows = [key[0]]
-            
+
             # Columns
             if isinstance(key[1],slice):
                 # Check bounds
@@ -469,21 +469,21 @@ class _matrix(object):
                     columns = xrange(*key[1].indices(self.__cols))
                 else:
                     raise IndexError('Column index out of bounds')
-                
+
             else:
                 # Single column
                 columns = [key[1]]
 
             # Create matrix slice
-            m = self.ctx.matrix(len(rows),len(columns)) 
+            m = self.ctx.matrix(len(rows),len(columns))
 
             # Assign elements to the output matrix
             for i,x in enumerate(rows):
                 for j,y in enumerate(columns):
                     m.__set_element((i,j),self.__get_element((x,y)))
-            
+
             return m
-            
+
         else:
             # single element extraction
             if key[0] >= self.__rows or key[1] >= self.__cols:
@@ -509,7 +509,7 @@ class _matrix(object):
                 key = (key, 0)
             else:
                 raise IndexError('insufficient indices for matrix')
-        # Slice indexing            
+        # Slice indexing
         if isinstance(key[0],slice) or isinstance(key[1],slice):
             # Rows
             if isinstance(key[0],slice):
@@ -561,11 +561,11 @@ class _matrix(object):
                 self.__data[key] = value
             elif key in self.__data:
                 del self.__data[key]
-        
+
         if self._LU:
             self._LU = None
         return
-        
+
 
     def __iter__(self):
         for i in xrange(self.__rows):

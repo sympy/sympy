@@ -157,7 +157,7 @@ def siegelz(ctx, t, **kwargs):
     if d > 4:
         h = lambda x: ctx.siegelz(x, derivative=4)
         return ctx.diff(h, t, n=d-4)
-        
+
 
 
 _zeta_zeros = [
@@ -883,7 +883,7 @@ def secondzeta_exp_term(ctx, s, a):
         mg = abs(term)
     v = a**(0.5*s)*totsum/ctx.gamma(0.5*s)
     return v
-    
+
 def secondzeta_singular_term(ctx, s, a, **kwargs):
     factor = a**(0.5*(s-1))/(4*ctx.sqrt(ctx.pi)*ctx.gamma(0.5*s))
     extraprec = ctx.mag(factor)
@@ -903,7 +903,7 @@ def secondzeta_singular_term(ctx, s, a, **kwargs):
         term = f(n)
         totsum += term
         n +=1
-        term = f(n)    
+        term = f(n)
         mg1 = mg2
         mg2 = abs(term)
     totsum += term

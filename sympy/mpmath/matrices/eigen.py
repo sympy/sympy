@@ -49,7 +49,7 @@ def hessenberg_reduce_0(ctx, A, T):
                Q' A Q = H              and             Q' Q = Q Q' = 1
 
     where H is an upper Hessenberg matrix, meaning that it only contains zeros
-    below the first subdiagonal. Here ' denotes the hermitian transpose (i.e. 
+    below the first subdiagonal. Here ' denotes the hermitian transpose (i.e.
     transposition and conjugation).
 
     parameters:
@@ -192,7 +192,7 @@ def hessenberg(ctx, A, overwrite_a = False):
 
           Q' A Q = H                and               Q' Q = Q Q' = 1
 
-    where H is an upper right Hessenberg matrix. Here ' denotes the hermitian 
+    where H is an upper right Hessenberg matrix. Here ' denotes the hermitian
     transpose (i.e. transposition and conjugation).
 
     input:
@@ -380,7 +380,7 @@ def hessenberg_qr(ctx, A, Q):
 
           Q' A Q = R                   and                  Q' Q = Q Q' = 1
 
-    where R is an upper right triangular matrix. Here ' denotes the hermitian 
+    where R is an upper right triangular matrix. Here ' denotes the hermitian
     transpose (i.e. transposition and conjugation).
 
     parameters:

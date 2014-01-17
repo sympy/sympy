@@ -914,7 +914,7 @@ def test_gammainc_expint_n():
     # These tests are intended to check all cases of the low-level code
     # for upper gamma and expint with small integer index.
     # Need to cover positive/negative arguments; small/large/huge arguments
-    # for both positive and negative indices, as well as indices 0 and 1 
+    # for both positive and negative indices, as well as indices 0 and 1
     # which may be special-cased
     mp.dps = 15
     assert expint(-3,3.5).ae(0.021456366563296693987)

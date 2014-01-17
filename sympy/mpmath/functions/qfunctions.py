@@ -207,8 +207,8 @@ def qhyper(ctx, a_s, b_s, q, z, **kwargs):
 
     .. math ::
 
-        \,_r\phi_s \left[\begin{matrix} 
-            a_1 & a_2 & \ldots & a_r \\ 
+        \,_r\phi_s \left[\begin{matrix}
+            a_1 & a_2 & \ldots & a_r \\
             b_1 & b_2 & \ldots & b_s
         \end{matrix} ; q,z \right] =
         \sum_{n=0}^\infty
