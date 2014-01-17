@@ -38,8 +38,8 @@ class beta(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-	@classmethod
+    @classmethod
     def eval(cls, x, y):
-        return gamma(x)*gamma(y) / gamma(x + y)
+        return gamma(x)*gamma(y) / gamma(x + y) 
          
         
