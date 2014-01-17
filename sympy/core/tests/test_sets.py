@@ -417,6 +417,16 @@ def test_finite_basic():
     # Ensure a variety of types can exist in a FiniteSet
     S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
 
+    assert (A > B) is False
+    assert (A >= B) is False
+    assert (A < B) is False
+    assert (A <= B) is False
+    assert AorB > A and AorB > B
+    assert AorB >= A and AorB >= B
+    assert A >= A and A <= A
+    assert A >= AandB and B >= AandB
+    assert A > AandB and B > AandB
+
 
 def test_product_basic():
     H, T = 'H', 'T'
