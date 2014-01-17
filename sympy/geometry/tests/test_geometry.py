@@ -1,13 +1,15 @@
 import warnings
 
 from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sin, sqrt, symbols, tan)
+                   simplify, sin, sqrt, symbols, tan, Derivative)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, centroid)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
+from sympy.geometry.util import idiff
+from sympy.solvers.solvers import solve
 from sympy.utilities.randtest import test_numerically
 from sympy.utilities.pytest import raises
 
@@ -1100,3 +1102,16 @@ def test_reflect():
         'Point(-2.41, 3.73), Point(-1.74, 2.76), '
         'Point(-0.616, 3.10)]')
     assert pent.area.equals(-rpent.area)
+
+def test_idiff():
+    # the use of idiff in ellipse also provides coverage
+    circ = x**2 + y**2 - 4
+    ans = -3*x*(x**2 + y**2)/y**5
+    assert ans == idiff(circ, y, x, 3).simplify()
+    assert ans == idiff(circ, [y], x, 3).simplify()
+    assert idiff(circ, y, x, 3).simplify() == ans
+    explicit  = 12*x/sqrt(-x**2 + 4)**5
+    assert ans.subs(y, solve(circ, y)[0]).simplify() == \
+        explicit
+    assert explicit in [sol.diff(x, 3).simplify() for sol in solve(circ, y)]
+    assert idiff(x + t + y, [y, t], x) == -Derivative(t, x) - 1

@@ -13,9 +13,13 @@ We have a blog aggregator at http://planet.sympy.org.
 SymPy logos
 -----------
 
-SymPy has a collection of official logos, which can be accessed here:
+SymPy has a collection of official logos, which can
+be generated from
+`sympy.svg <https://github.com/sympy/sympy/tree/master/doc/src/sympy.svg>`
+in your local copy of SymPy by::
 
-https://github.com/sympy/sympy/tree/master/doc/logo
+    $ cd doc
+    $ make logo # will be stored in the _build/logo subdirectory
 
 The license of all the logos is the same as SymPy: BSD. See the LICENSE file in
 the trunk for more information.

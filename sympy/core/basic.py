@@ -813,7 +813,7 @@ class Basic(with_metaclass(ManagedProperties)):
         Examples
         ========
 
-        >>> from sympy import pi, exp
+        >>> from sympy import pi, exp, limit, oo
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
@@ -870,12 +870,38 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> expr.subs(dict([A,B,C,D,E]))
         a*c*sin(d*e) + b
 
+        The resulting expression represents a literal replacement of the
+        old arguments with the new arguments. This may not reflect the
+        limiting behavior of the expression:
+
+        >>> (x**3 - 3*x).subs({x: oo})
+        nan
+
+        >>> limit(x**3 - 3*x, x, oo)
+        oo
+
+        If the substitution will be followed by numerical
+        evaluation, it is better to pass the substitution to
+        evalf as
+
+        >>> (1/x).evalf(subs={x: 3.0}, n=21)
+        0.333333333333333333333
+
+        rather than
+
+        >>> (1/x).subs({x: 3.0}).evalf(21)
+        0.333333333333333314830
+
+        as the former will ensure that the desired level of precision is
+        obtained.
+
         See Also
         ========
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
+        evalf: calculates the given formula to a desired level of precision
 
         """
         from sympy.core.containers import Dict

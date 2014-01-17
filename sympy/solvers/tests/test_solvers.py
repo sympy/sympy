@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify, atan2, arg)
+    sympify, tan, tanh, root, simplify, atan2, arg, Mul)
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -262,6 +262,14 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
     assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+
+
+def test_issue_4129():
+    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-Rational(3, 2), S.Half]
+
+
+def test_issue_4091():
+    assert solve(log(x-3) + log(x+3), x) == [sqrt(10)]
 
 
 def test_linear_system():
@@ -1262,6 +1270,8 @@ def test_issues_3720_3721_3722_3149():
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
+    # github issue 2642
+    assert solve(x*(1 + I)) == [0]
     x, y = symbols('x y', imaginary=True)
     assert solve(x + y*I + 3 + 2*I) == {x: -2*I, y: 3*I}
     x = symbols('x', real=True)
@@ -1384,3 +1394,16 @@ def test_misc():
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
+
+
+def test_gh2725():
+    R = Symbol('R')
+    eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
+    sol = solve(eq, R, set=True)[1]
+    assert sol == set([(S(5)/3 + 40/(3*(251 + 3*sqrt(111)*I)**(S(1)/3)) +
+                       (251 + 3*sqrt(111)*I)**(S(1)/3)/3,), ((-160 + (1 +
+                       sqrt(3)*I)*(10 - (1 + sqrt(3)*I)*(251 +
+                       3*sqrt(111)*I)**(S(1)/3))*(251 +
+                       3*sqrt(111)*I)**(S(1)/3))/Mul(6, (1 +
+                       sqrt(3)*I), (251 + 3*sqrt(111)*I)**(S(1)/3),
+                       evaluate=False),)])

@@ -370,4 +370,4 @@ def test_log_product():
             log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
-    assert Eq(simplify(expr), expr)
+    assert simplify(expr) == expr

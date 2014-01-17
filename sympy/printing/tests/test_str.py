@@ -97,7 +97,7 @@ def test_Exp():
 
 def test_factorial():
     n = Symbol('n', integer=True)
-    assert str(factorial(-2)) == "0"
+    assert str(factorial(-2)) == "zoo"
     assert str(factorial(0)) == "1"
     assert str(factorial(7)) == "5040"
     assert str(factorial(n)) == "factorial(n)"
@@ -199,6 +199,8 @@ def test_Mul():
     assert str((x + 1)/(y + 2)) == "(x + 1)/(y + 2)"
     assert str(2*x/3) == '2*x/3'
     assert str(-2*x/3) == '-2*x/3'
+    assert str(-1.0*x) == '-1.0*x'
+    assert str(1.0*x) == '1.0*x'
 
     class CustomClass1(Expr):
         is_commutative = True

@@ -526,6 +526,11 @@ def test_Sum_doit():
     assert Sum(f(l)*Sum(KroneckerDelta(m, l), (m, 0, oo)), (l, 1, oo)).doit() == \
         Sum(f(l), (l, 1, oo))
 
+    # github issue #2597
+    nmax = symbols('N', integer=True, positive=True)
+    pw = Piecewise((1, And(S(1) <= n, n <= nmax)), (0, True))
+    assert Sum(pw, (n, 1, nmax)).doit() == Sum(pw, (n, 1, nmax))
+
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9

@@ -510,7 +510,7 @@ class RootSum(Expr):
             except AttributeError:
                 is_func = False
 
-            if is_func and (func.nargs == 1 or 1 in func.nargs):
+            if is_func and 1 in func.nargs:
                 if not isinstance(func, Lambda):
                     func = Lambda(poly.gen, func(poly.gen))
             else:

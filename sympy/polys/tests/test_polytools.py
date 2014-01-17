@@ -54,6 +54,7 @@ from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
+from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
@@ -1958,7 +1959,8 @@ def test_terms_gcd():
     assert terms_gcd(2*x**3*y + 4*x*y**3) == 2*x*y*(x**2 + 2*y**2)
     assert terms_gcd(2*x**3*y/3 + 4*x*y**3/5) == 2*x*y/15*(5*x**2 + 6*y**2)
 
-    assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == 1.0*x*y*(2.0*x**2 + 4.1*y**2)
+    assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == x*y*(2.0*x**2 + 4.1*y**2)
+    assert _aresame(terms_gcd(2.0*x + 3), 2.0*x + 3)
 
     assert terms_gcd((3 + 3*x)*(x + x*y), expand=False) == \
         (3*x + 3)*(x*y + x)
@@ -3078,6 +3080,8 @@ def test_keep_coeff():
     u = Mul(2, x + 1, evaluate=False)
     assert _keep_coeff(S(1), x) == x
     assert _keep_coeff(S(-1), x) == -x
+    assert _keep_coeff(S(1.0), x) == 1.0*x
+    assert _keep_coeff(S(-1.0), x) == -1.0*x
     assert _keep_coeff(S(1), 2*x) == 2*x
     assert _keep_coeff(S(2), x/2) == x
     assert _keep_coeff(S(2), sin(x)) == 2*sin(x)

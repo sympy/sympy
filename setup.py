@@ -48,6 +48,7 @@ if sys.version_info[:2] < (2, 6):
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.calculus',
     'sympy.categories',
     'sympy.combinatorics',
     'sympy.concrete',
@@ -216,8 +217,10 @@ cmdclass = {'test': test_sympy,
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
+
 tests = [
     'sympy.assumptions.tests',
+    'sympy.calculus.tests',
     'sympy.categories.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
@@ -239,6 +242,7 @@ tests = [
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',

@@ -699,7 +699,8 @@ def _separatevars(expr, force):
 
 def _separatevars_dict(expr, symbols):
     if symbols:
-        assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
+        if not all((t.is_Atom for t in symbols)):
+            raise ValueError("symbols must be Atoms.")
         symbols = list(symbols)
     elif symbols is None:
         return {'coeff': expr}
@@ -3841,7 +3842,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         tolerance = 10**-min([15] +
              [mpmath.libmp.libmpf.prec_to_dps(n._prec)
              for n in expr.atoms(Float)])
-
+    # XXX should prec be set independent of tolerance or should it be computed
+    # from tolerance?
     prec = 30
     bprec = int(prec*3.33)
 
@@ -3878,6 +3880,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             if full:
                 newexpr = newexpr[0]
             expr = sympify(newexpr)
+            if x and not expr:  # don't let x become 0
+                raise ValueError
             if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr

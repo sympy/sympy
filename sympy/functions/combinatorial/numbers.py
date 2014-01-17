@@ -519,8 +519,6 @@ class harmonic(Function):
     # order and store it in a dictionary
     _functions = {}
 
-    nargs = (1, 2)
-
     @classmethod
     def eval(cls, n, m=None):
         if m is None:
@@ -625,8 +623,6 @@ class euler(Function):
 
     bell, bernoulli, catalan, fibonacci, harmonic, lucas
     """
-
-    nargs = 1
 
     @classmethod
     def eval(cls, m, evaluate=True):
@@ -1056,7 +1052,8 @@ def nC(n, k=None, replacement=False):
             if not replacement:
                 return 2**n
             return sum(nC(n, i, replacement) for i in range(n + 1))
-        assert k >= 0
+        if k < 0:
+            raise ValueError("k cannot be negative")
         if replacement:
             return binomial(n + k - 1, k)
         return binomial(n, k)
