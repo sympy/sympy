@@ -24,7 +24,6 @@ def test_beta():
     assert expand_func(beta(x, y)) == expand_func(beta(x,y + 1) + beta(x + 1,y)).simplify()
     assert diff(beta(x, y), x) == beta(x, y)*(digamma(x) - digamma(x + y))
     assert diff(beta(x, y), y) == beta(x, y)*(digamma(y) - digamma(x + y))
-    assert beta(x, y) == (beta(x,y + 1) + beta(x + 1,y)).simplify()
 
     
     
