@@ -31,7 +31,7 @@ class beta(Function):
 
     @classmethod
     def eval(cls, x, y):
-        return gamma(x)*gamma(y) / gamma(x + y)
+        pass
 
     def _eval_expand_func(self, **hints):
         x, y = self.args
