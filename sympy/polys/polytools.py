@@ -5404,7 +5404,7 @@ def _symbolic_factor_list(expr, opt, method):
             if exp is S.One:
                 factors.extend(_factors)
             elif exp.is_integer or len(_factors) == 1:
-                factors.extend([(f, k*exp) for f, k in _factors])
+                factors.extend([(f, k*exp) for f, k in _factors if k is not None])
             else:
                 other = []
 
