@@ -491,9 +491,9 @@ class BaseVectorField(Expr):
     the index of the coordinate.
 
     The use of the vector field after its definition is independent of the
-    coordinate system in which it was defined, however due to limitations in
-    the simplification routines you may arrive at more complicated
-    expression if you use unappropriate coordinate systems.
+    coordinate system in which it was defined, however due to limitations in the
+    simplification routines you may arrive at more complicated expression if you
+    use unappropriate coordinate systems.
 
     Examples
     ========
@@ -760,7 +760,7 @@ class Differential(Expr):
                 for j in range(i + 1, k):
                     c = Commutator(v[i], v[j])
                     if c:  # TODO this is ugly - the Commutator can be Zero and
-                          # this causes the next line to fail
+                        # this causes the next line to fail
                         t = f.rcall(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
                         ret += (-1)**(i + j)*t
             return ret
@@ -903,9 +903,9 @@ class WedgeProduct(TensorProduct):
 class LieDerivative(Expr):
     """Lie derivative with respect to a vector field.
 
-    The transport operator that defines the Lie derivative is the pushforward
-    of the field to be derived along the integral curve of the field with respect to which
-    one derives.
+    The transport operator that defines the Lie derivative is the pushforward of
+    the field to be derived along the integral curve of the field with respect
+    to which one derives.
 
     Examples
     ========
@@ -935,8 +935,9 @@ class LieDerivative(Expr):
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
         if contravariant_order(v_field) != 1 or covariant_order(v_field):
-            raise ValueError('Lie derivatives are defined only with respect to vector fields.'
-                             ' The supplied argument was not a vector field.')
+            raise ValueError('Lie derivatives are defined only with respect to'
+                             ' vector fields. The supplied argument was not a '
+                             'vector field.')
         if expr_form_ord > 0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
@@ -1051,8 +1052,9 @@ class CovarDerivativeOp(Expr):
         if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
             raise NotImplementedError()
         if contravariant_order(wrt) != 1 or covariant_order(wrt):
-            raise ValueError('Covariant derivatives are defined only with respect to vector fields.'
-                             ' The supplied argument was not a vector field.')
+            raise ValueError('Covariant derivatives are defined only with '
+                             'respect to vector fields. The supplied argument '
+                             'was not a vector field.')
         self._wrt = wrt
         self._christoffel = christoffel
         self._args = self._wrt, self._christoffel
