@@ -758,7 +758,8 @@ class Formula(object):
                         for expr in exprs:
                             for target in bucket[mod]:
                                 n0, = solve(expr.xreplace(repl0) - target, _n)
-                                assert not n0.free_symbols
+                                if n0.free_symbols:
+                                    raise ValueError("Value should not be true")
                                 vals.append(n0)
             else:
                 values = []
@@ -1780,7 +1781,8 @@ def try_lerchphi(func):
         numer, denom = arg.as_numer_denom()
         if not denom.has(t):
             p = Poly(numer, t)
-            assert p.is_monomial
+            if not p.is_monomial:
+                raise TypeError("p should be monomial")
             ((b, ), a) = p.LT()
             monomials += [(a/denom, b)]
             continue

@@ -6,14 +6,17 @@ from sympy import (
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, flatten,
-    generate_bell, generate_derangements, generate_involutions,
+    cartes, common_prefix, common_suffix, dict_merge,
+    flatten, generate_bell, generate_derangements, generate_involutions,
     generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions, multiset_permutations,
-    necklaces, numbered_symbols, ordered, partitions, permutations,
-    postfixes, postorder_traversal, prefixes, reshape, rotate_left,
-    rotate_right, runs, sift, subsets, take, topological_sort, unflatten,
-    uniq, variations)
+    multiset_combinations, multiset_partitions,
+    multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
+    permutations, postfixes, postorder_traversal, prefixes, reshape,
+    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
+    unflatten, uniq, variations)
+from sympy.utilities.enumerative import (
+    factoring_visitor, multiset_partitions_taocp )
+
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -286,7 +289,24 @@ def test_multiset_partitions():
     assert list(multiset_partitions('ab', 1)) == [[['a', 'b']]]
     assert list(multiset_partitions('aaa', 1)) == [['aaa']]
     assert list(multiset_partitions([1, 1], 1)) == [[[1, 1]]]
-
+    ans = [('mpsyy',), ('mpsy', 'y'), ('mps', 'yy'), ('mps', 'y', 'y'),
+           ('mpyy', 's'), ('mpy', 'sy'), ('mpy', 's', 'y'), ('mp', 'syy'),
+           ('mp', 'sy', 'y'), ('mp', 's', 'yy'), ('mp', 's', 'y', 'y'),
+           ('msyy', 'p'), ('msy', 'py'), ('msy', 'p', 'y'), ('ms', 'pyy'),
+           ('ms', 'py', 'y'), ('ms', 'p', 'yy'), ('ms', 'p', 'y', 'y'),
+           ('myy', 'ps'), ('myy', 'p', 's'), ('my', 'psy'), ('my', 'ps', 'y'),
+           ('my', 'py', 's'), ('my', 'p', 'sy'), ('my', 'p', 's', 'y'),
+           ('m', 'psyy'), ('m', 'psy', 'y'), ('m', 'ps', 'yy'),
+           ('m', 'ps', 'y', 'y'), ('m', 'pyy', 's'), ('m', 'py', 'sy'),
+           ('m', 'py', 's', 'y'), ('m', 'p', 'syy'),
+           ('m', 'p', 'sy', 'y'), ('m', 'p', 's', 'yy'),
+           ('m', 'p', 's', 'y', 'y')]
+    assert list(tuple("".join(part) for part in p)
+                for p in multiset_partitions('sympy')) == ans
+    factorings = [[24], [8, 3], [12, 2], [4, 6], [4, 2, 3],
+                  [6, 2, 2], [2, 2, 2, 3]]
+    assert list(factoring_visitor(p, [2,3]) for
+                p in multiset_partitions_taocp([3, 1])) == factorings
 
 def test_multiset_combinations():
     ans = ['iii', 'iim', 'iip', 'iis', 'imp', 'ims', 'ipp', 'ips',

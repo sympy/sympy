@@ -130,11 +130,13 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     """
 
     n = len(x)
-    assert n >= 2
+    if n < 2:
+        raise ValueError("n cannot be less than 2")
 
     # At too low precision, the algorithm becomes meaningless
     prec = ctx.prec
-    assert prec >= 53
+    if prec < 53:
+        raise ValueError("prec cannot be less than 53")
 
     if verbose and prec // max(2,n) < 5:
         print("Warning: precision for PSLQ may be too low")
@@ -413,7 +415,8 @@ def findpoly(ctx, x, n=1, **kwargs):
     idea what is happening can be useful.
     """
     x = ctx.mpf(x)
-    assert n >= 1
+    if n < 1:
+        raise ValueError("n cannot be less than 1")
     if x == 0:
         return [1, 0]
     xs = [ctx.mpf(1)]

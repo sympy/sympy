@@ -16,7 +16,8 @@ def textplot(expr, a, b, W=55, H=18):
     """
 
     free = expr.free_symbols
-    assert len(free) <= 1
+    if len(free) > 1:
+        raise ValueError("length can not be greater than 1")
     x = free.pop() if free else Dummy()
     f = lambdify([x], expr)
     a = float(a)

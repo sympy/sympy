@@ -1669,7 +1669,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         # Multiple expressions same range.
         # The arguments are tuples when the expression length is
         # greater than 1.
-        assert len(args) >= expr_len
+        if len(args) < expr_len:
+            raise ValueError("len(args) should not be less than expr_len")
         for i in range(len(args)):
             if isinstance(args[i], Tuple):
                 break
