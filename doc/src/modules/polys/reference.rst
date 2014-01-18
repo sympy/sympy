@@ -31,6 +31,8 @@ Basic polynomial manipulation functions
 .. autofunction:: subresultants
 .. autofunction:: resultant
 .. autofunction:: discriminant
+.. autofunction:: dispersion
+.. autofunction:: dispersionset
 .. autofunction:: terms_gcd
 .. autofunction:: cofactors
 .. autofunction:: gcd
