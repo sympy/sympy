@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.core.function import diff
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
