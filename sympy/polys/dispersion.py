@@ -17,6 +17,52 @@ def dispersionset(p, q=None):
 
     For a single polynomial one defines `\operatorname{J}(f) := \operatorname{J}(f, f)`.
 
+    Examples
+    ========
+
+    >>> from sympy import poly
+    >>> from sympy.polys.dispersion import dispersion, dispersionset
+    >>> from sympy.abc import x
+
+    Dispersion set and dispersion of a simple polynomial:
+
+    >>> fp = poly((x - 3)*(x + 3), x)
+    >>> sorted(dispersionset(fp))
+    [0, 6]
+    >>> dispersion(fp)
+    6
+
+    Note that the definition of the dispersion is not symmetric:
+
+    >>> fp = poly(x**4 - 3*x**2 + 1, x)
+    >>> gp = fp.shift(-3)
+    >>> sorted(dispersionset(fp, gp))
+    [2, 3, 4]
+    >>> dispersion(fp, gp)
+    4
+    >>> sorted(dispersionset(gp, fp))
+    []
+    >>> dispersion(gp, fp)
+    -oo
+
+    Computing the dispersion also works over field extensions:
+
+    >>> from sympy import sqrt
+    >>> fp = poly(x**2 + sqrt(5)*x - 1, x, domain='QQ<sqrt(5)>')
+    >>> gp = poly(x**2 + (2 + sqrt(5))*x + sqrt(5), x, domain='QQ<sqrt(5)>')
+    >>> sorted(dispersionset(fp, gp))
+    [2]
+    >>> sorted(dispersionset(gp, fp))
+    [1, 4]
+
+    We can even perform the computations for polynomials
+    having symbolic coefficients:
+
+    >>> from sympy.abc import a
+    >>> fp = poly(4*x**4 + (4*a + 8)*x**3 + (a**2 + 6*a + 4)*x**2 + (a**2 + 2*a)*x, x)
+    >>> sorted(dispersionset(fp))
+    [0, 1]
+
     See Also
     ========
 
@@ -92,6 +138,52 @@ def dispersion(p, q=None):
         &  = \max\{ \{a \in \mathbb{N} | \gcd(f(x), g(x+a)) \neq 1\} \cup \{0\} \}
 
     and for a single polynomial `\operatorname{dis}(f) := \operatorname{dis}(f, f)`.
+
+    Examples
+    ========
+
+    >>> from sympy import poly
+    >>> from sympy.polys.dispersion import dispersion, dispersionset
+    >>> from sympy.abc import x
+
+    Dispersion set and dispersion of a simple polynomial:
+
+    >>> fp = poly((x - 3)*(x + 3), x)
+    >>> sorted(dispersionset(fp))
+    [0, 6]
+    >>> dispersion(fp)
+    6
+
+    Note that the definition of the dispersion is not symmetric:
+
+    >>> fp = poly(x**4 - 3*x**2 + 1, x)
+    >>> gp = fp.shift(-3)
+    >>> sorted(dispersionset(fp, gp))
+    [2, 3, 4]
+    >>> dispersion(fp, gp)
+    4
+    >>> sorted(dispersionset(gp, fp))
+    []
+    >>> dispersion(gp, fp)
+    -oo
+
+    Computing the dispersion also works over field extensions:
+
+    >>> from sympy import sqrt
+    >>> fp = poly(x**2 + sqrt(5)*x - 1, x, domain='QQ<sqrt(5)>')
+    >>> gp = poly(x**2 + (2 + sqrt(5))*x + sqrt(5), x, domain='QQ<sqrt(5)>')
+    >>> sorted(dispersionset(fp, gp))
+    [2]
+    >>> sorted(dispersionset(gp, fp))
+    [1, 4]
+
+    We can even perform the computations for polynomials
+    having symbolic coefficients:
+
+    >>> from sympy.abc import a
+    >>> fp = poly(4*x**4 + (4*a + 8)*x**3 + (a**2 + 6*a + 4)*x**2 + (a**2 + 2*a)*x, x)
+    >>> sorted(dispersionset(fp))
+    [0, 1]
 
     See Also
     ========
