@@ -138,8 +138,8 @@ class Equality(Relational):
     Notes
     =====
     This class is not the same as the == operator.  The == operator tests
-    whether expressions are in exactly the same form; this class compares
-    expressions symbolically.
+    for exact structural equality between two expressions; this class
+    compares expressions mathematically.
 
     """
     rel_op = '=='
@@ -190,8 +190,8 @@ class Unequality(Relational):
     Notes
     =====
     This class is not the same as the != operator.  The != operator tests
-    whether expressions are in exactly the same form; this class compares
-    expressions symbolically.
+    for exact structural equality between two expressions; this class
+    compares expressions mathematically.
 
     """
     rel_op = '!='
