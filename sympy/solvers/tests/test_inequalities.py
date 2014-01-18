@@ -238,3 +238,6 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
         Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),
               Interval(S(1)/2 + sqrt(5)/2, oo, True, True))
+    # github's issue #2794:
+    assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
+        Interval(1, oo, True)
