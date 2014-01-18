@@ -1,7 +1,7 @@
 from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
+    nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
@@ -780,3 +780,13 @@ def test_factor_expand_subs():
     assert Sum(x,(x,1,10)).subs([(x,y-2)]) == Sum(x,(x,1,10))
     assert Sum(1/x,(x,1,10)).subs([(x,(3+n)**3)]) == Sum(1/x,(x,1,10))
     assert Sum(1/x,(x,1,10)).subs([(x,3*x-2)]) == Sum(1/x,(x,1,10))
+
+def test_github_issue_2787():
+    n, k = symbols('n k', positive=True, integer=True)
+    p = symbols('p', positive=True)
+    binomial_dist = binomial(n, k)*p**k*(1 - p)**(n - k)
+    s = Sum(binomial_dist*k, (k, 0, n))
+    res = s.doit().simplify()
+    assert res == Piecewise((n*p, And(Or(-n + 1 < 0, -n + 1 >= 0),
+        Or(-n + 1 < 0, Ne(p/(p - 1), 1)), p*Abs(1/(p - 1)) <= 1)),
+        (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)), True))
