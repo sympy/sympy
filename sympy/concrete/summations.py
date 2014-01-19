@@ -779,7 +779,7 @@ def eval_sum_hyper(f, i_a_b):
     if res is not None:
         r, c = res
         if c == False:
-            if r.is_number:
+            if r.is_number or r is S.ComplexInfinity:
                 f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:
                     return S.Infinity
