@@ -18,9 +18,6 @@ def test_gamma():
     assert gamma(nan) == nan
     assert gamma(oo) == oo
 
-    assert gamma(I*oo) == S.Zero
-    assert gamma(-I*oo) == S.Zero
-
     assert gamma(-100) == zoo
     assert gamma(0) == zoo
 
@@ -57,7 +54,6 @@ def test_gamma():
 
     assert gamma(x - 1).expand(func=True) == gamma(x)/(x - 1)
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x + 1)*gamma(x)
-    assert gamma(-x).expand(func=True) == -pi*csc(pi*x)/gamma(x+1)
 
     assert conjugate(gamma(x)) == gamma(conjugate(x))
     assert gamma(w).is_real is True
