@@ -45,7 +45,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, generate_bell, flatten
 
 from sympy.mpmath import findroot
 
@@ -1890,6 +1890,22 @@ def solve_linear_system(system, *symbols, **flags):
     {}
 
     """
+    do_simplify = flags.get('simplify', True)
+
+    if system.rows == system.cols - 1 == len(symbols):
+        try:
+            # well behaved n-equations and n-unknowns
+            inv = inv_quick(system[:, :-1])
+            rv = dict(zip(symbols, inv*system[:, -1]))
+            if do_simplify:
+                for k, v in rv.items():
+                    rv[k] = simplify(v)
+            if not all(i.is_zero for i in rv.values()):
+                # non-trivial solution
+                return rv
+        except ValueError:
+            pass
+
     matrix = system[:, :]
     syms = list(symbols)
 
@@ -1981,8 +1997,6 @@ def solve_linear_system(system, *symbols, **flags):
     # if there weren't any problems, augmented matrix is now
     # in row-echelon form so we can check how many solutions
     # there are and extract them using back substitution
-
-    do_simplify = flags.get('simplify', True)
 
     if len(syms) == matrix.rows:
         # this system is Cramer equivalent so there is
@@ -2106,6 +2120,102 @@ def solve_linear_system_LU(matrix, syms):
     for i in range(soln.rows):
         solutions[syms[i]] = soln[i, 0]
     return solutions
+
+
+def det_perm(M):
+    """Return the det(``M``) by using permutations to select factors.
+    For size larger than 8 the number of permutations becomes prohibitively
+    large, or if there are no symbols in the matrix, it is better to use the
+    standard determinant routines, e.g. `M.det()`.
+
+    See Also
+    ========
+    det_minor
+    det_quick
+    """
+    args = []
+    s = True
+    n = M.rows
+    try:
+        list = M._mat
+    except AttributeError:
+        list = flatten(M.tolist())
+    for perm in generate_bell(n):
+        fac = []
+        idx = 0
+        for j in perm:
+            fac.append(list[idx + j])
+            idx += n
+        term = Mul(*fac) # disaster with unevaluated Mul -- takes forever for n=7
+        args.append(term if s else -term)
+        s = not s
+    return Add(*args)
+
+
+def det_minor(M):
+    """Return the ``det(M)`` computed from minors without
+    introducing new nesting in products.
+
+    See Also
+    ========
+    det_perm
+    det_quick
+    """
+    n = M.rows
+    if n == 2:
+        return M[0, 0]*M[1, 1] - M[1, 0]*M[0, 1]
+    else:
+        return sum([(1, -1)[i % 2]*Add(*[M[0, i]*d for d in
+            Add.make_args(det_minor(M.minorMatrix(0, i)))])
+            if M[0, i] else S.Zero for i in range(n)])
+
+
+def det_quick(M, method=None):
+    """Return ``det(M)`` assuming that either
+    there are lots of zeros or the size of the matrix
+    is small. If this assumption is not met, then the normal
+    Matrix.det function will be used with method = ``method``.
+
+    See Also
+    ========
+    det_minor
+    det_perm
+    """
+    if any(i.has(Symbol) for i in M):
+        if M.rows < 8 and all(i.has(Symbol) for i in M):
+            return det_perm(M)
+        return det_minor(M)
+    else:
+        return M.det(method=method) if method else M.det()
+
+
+def inv_quick(M):
+    """Return the inverse of ``M``, assuming that either
+    there are lots of zeros or the size of the matrix
+    is small.
+    """
+    from sympy.matrices import zeros
+    if any(i.has(Symbol) for i in M):
+        if all(i.has(Symbol) for i in M):
+            det = lambda _: det_perm(_)
+        else:
+            det = lambda _: det_minor(_)
+    else:
+        return M.inv()
+    n = M.rows
+    d = det(M)
+    if d is S.Zero:
+        raise ValueError("Matrix det == 0; not invertible.")
+    ret = zeros(n)
+    s1 = -1
+    for i in range(n):
+        s = s1 = -s1
+        for j in range(n):
+            di = det(M.minorMatrix(i, j))
+            ret[j, i] = s*di/d
+            s = -s
+    return ret
+
 
 def tsolve(eq, sym):
     SymPyDeprecationWarning(

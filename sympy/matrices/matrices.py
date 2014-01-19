@@ -2636,10 +2636,10 @@ class MatrixBase(object):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
+                        r.row_swap(pivot, k)
                         break
-                if k == r.rows - 1 and iszerofunc(r[k, i]):
+                else:
                     continue
-                r.row_swap(pivot, k)
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
             for j in xrange(r.rows):
