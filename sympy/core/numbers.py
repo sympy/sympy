@@ -1877,9 +1877,11 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     Examples
     ========
 
-    >>> from sympy import S, Integer
+    >>> from sympy import S, Integer, zoo
     >>> Integer(0) is S.Zero
     True
+    >>> 1/S.Zero
+    zoo
 
     References
     ==========
@@ -1909,7 +1911,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         if expt.is_positive:
             return self
         if expt.is_negative:
-            return S.Infinity
+            return S.ComplexInfinity
         if expt.is_real is False:
             return S.NaN
         # infinities are already handled with pos and neg
@@ -1917,7 +1919,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         # exponent
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
-            return S.Infinity**terms
+            return S.ComplexInfinity**terms
         if coeff is not S.One:  # there is a Number to discard
             return self**terms
 
