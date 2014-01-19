@@ -1,10 +1,11 @@
 from __future__ import print_function, division
 
 from sympy.core import S
+from sympy.polys import Poly
 from sympy.polys.polytools import factor_list
 
 
-def dispersionset(p, q=None):
+def dispersionset(p, q=None, *gens, **args):
     r"""Compute the *dispersion set* of two polynomials.
 
     For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
@@ -81,7 +82,8 @@ def dispersionset(p, q=None):
     if same:
         q = p
 
-    p, q = Poly(p), Poly(q)
+    p = Poly(p, *gens, **args)
+    q = Poly(q, *gens, **args)
 
     if not p.is_univariate or not q.is_univariate:
         raise ValueError("Polynomials need to be univariate")
@@ -128,7 +130,7 @@ def dispersionset(p, q=None):
     return J
 
 
-def dispersion(p, q=None):
+def dispersion(p, q=None, *gens, **args):
     r"""Compute the *dispersion* of polynomials.
 
     For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
@@ -204,7 +206,7 @@ def dispersion(p, q=None):
     3. [Abramov71]_
     4. [Man93]_
     """
-    J = dispersionset(p, q)
+    J = dispersionset(p, q, *gens, **args)
     if not J:
         # Definition for maximum of empty set
         j = S.NegativeInfinity
