@@ -27,13 +27,15 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
     x
 
     """
-    __slots__ = []
-    nargs = 1
 
     def __new__(cls):
+        from sympy.core.sets import FiniteSet
         x = C.Dummy('x')
         #construct "by hand" to avoid infinite loop
-        return Expr.__new__(cls, Tuple(x), x)
+        obj = Expr.__new__(cls, Tuple(x), x)
+        obj.nargs = FiniteSet(1)
+        return obj
+
 Id = S.IdentityFunction
 
 ###############################################################################

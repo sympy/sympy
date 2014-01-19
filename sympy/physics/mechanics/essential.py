@@ -193,10 +193,8 @@ class Dyadic(object):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + r" " +
-                          mlp.doprint(ar[i][1]) +
-                          r"\otimes " +
-                          mlp.doprint(ar[i][2]))
+                ol.append(str_start + arg_str + mlp.doprint(ar[i][1]) +
+                          r"\otimes " + mlp.doprint(ar[i][2]))
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -1471,7 +1469,7 @@ class Vector(object):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = MechanicsStrPrinter().doprint(ar[i][0][j])
+                    arg_str = MechanicsLatexPrinter().doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
@@ -1479,8 +1477,7 @@ class Vector(object):
                         str_start = ' - '
                     else:
                         str_start = ' + '
-                    ol.append(str_start + arg_str + '*' +
-                              ar[i][1].latex_vecs[j])
+                    ol.append(str_start + arg_str + ar[i][1].latex_vecs[j])
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]

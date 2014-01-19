@@ -169,8 +169,6 @@ class sin(TrigonometricFunction):
 
     """
 
-    nargs = 1
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             return cos(self.args[0])
@@ -400,8 +398,6 @@ class cos(TrigonometricFunction):
 
     """
 
-    nargs = 1
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             return -sin(self.args[0])
@@ -576,7 +572,8 @@ class cos(TrigonometricFunction):
         def ipartfrac(r, factors=None):
             if isinstance(r, int):
                 return r
-            assert isinstance(r, C.Rational)
+            if not isinstance(r, C.Rational):
+                raise TypeError("r is not rational")
             n = r.q
             if 2 > r.q*r.q:
                 return r.q
@@ -611,8 +608,10 @@ class cos(TrigonometricFunction):
         }
 
         def fermatCoords(n):
-            assert isinstance(n, int)
-            assert n > 0
+            if not isinstance(n, int):
+                raise TypeError("n is not an integer")
+            if n <= 0:
+                raise ValueError("n has to be greater than 0")
             if n == 1 or 0 == n % 2:
                 return False
             primes = dict( [(p, 0) for p in cst_table_some ] )
@@ -717,7 +716,6 @@ class cos(TrigonometricFunction):
 class ReciprocalTrigonometricFunction(TrigonometricFunction):
     """Base class for reciprocal functions of trigonometric functions. """
 
-    nargs = 1
     _reciprocal_of = None       # mandatory, to be defined in subclass
 
     # _is_even and _is_odd are used for correct evaluation of csc(-x), sec(-x)
@@ -823,6 +821,7 @@ class sec(ReciprocalTrigonometricFunction):
     _reciprocal_of = cos
     _is_even = True
 
+
     def _eval_rewrite_as_cos(self, arg):
         return (1/cos(arg))
 
@@ -845,6 +844,7 @@ class sec(ReciprocalTrigonometricFunction):
 class csc(ReciprocalTrigonometricFunction):
     _reciprocal_of = sin
     _is_odd = True
+
 
     def _eval_rewrite_as_sin(self, arg):
         return (1/sin(arg))
@@ -896,8 +896,6 @@ class tan(TrigonometricFunction):
     .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
-
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1107,8 +1105,6 @@ class cot(TrigonometricFunction):
     """
     cot(x) -> Returns the cotangent of x (measured in radians)
     """
-
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1341,8 +1337,6 @@ class asin(Function):
     acos, atan, sin
     """
 
-    nargs = 1
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             return 1/sqrt(1 - self.args[0]**2)
@@ -1479,8 +1473,6 @@ class acos(Function):
     asin, atan, cos
     """
 
-    nargs = 1
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             return -1/sqrt(1 - self.args[0]**2)
@@ -1602,8 +1594,6 @@ class atan(Function):
     acos, asin, tan
     """
 
-    nargs = 1
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             return 1/(1 + self.args[0]**2)
@@ -1708,8 +1698,6 @@ class acot(Function):
     """
     acot(x) -> Returns the arc cotangent of x (measured in radians)
     """
-
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1909,8 +1897,6 @@ class atan2(Function):
     .. [1] http://en.wikipedia.org/wiki/Atan2
     .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcTan2/
     """
-
-    nargs = 2
 
     @classmethod
     def eval(cls, y, x):

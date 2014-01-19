@@ -34,6 +34,7 @@ MATH_TRANSLATIONS = {
 }
 
 MPMATH_TRANSLATIONS = {
+    "Abs": "fabs",
     "elliptic_k": "ellipk",
     "elliptic_f": "ellipf",
     "elliptic_e": "ellipe",

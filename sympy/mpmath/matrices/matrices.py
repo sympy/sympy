@@ -311,7 +311,8 @@ class _matrix(object):
             if len(args) == 1:
                 self.__rows = self.__cols = args[0]
             else:
-                assert isinstance(args[1], int), 'expected int'
+                if not isinstance(args[1], int):
+                    raise TypeError("expected int")
                 self.__rows = args[0]
                 self.__cols = args[1]
         elif isinstance(args[0], _matrix):
@@ -593,7 +594,8 @@ class _matrix(object):
 
     def __rmul__(self, other):
         # assume other is scalar and thus commutative
-        assert not isinstance(other, self.ctx.matrix)
+        if isinstance(other, self.ctx.matrix):
+            raise TypeError("other should not be type of ctx.matrix")
         return self.__mul__(other)
 
     def __pow__(self, other):
@@ -873,8 +875,10 @@ class MatrixMethods(object):
         """
         Extend matrix A with column b and return result.
         """
-        assert isinstance(A, ctx.matrix)
-        assert A.rows == len(b)
+        if not isinstance(A, ctx.matrix):
+            raise TypeError("A should be a type of ctx.matrix")
+        if A.rows != len(b):
+            raise ValueError("Value should be equal to len(b)")
         A = A.copy()
         A.cols += 1
         for i in xrange(A.rows):

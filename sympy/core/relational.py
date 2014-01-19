@@ -112,6 +112,34 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     __bool__ = __nonzero__
 
+    def as_set(self):
+        """
+        Rewrites univariate inequality in terms of real sets
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Eq
+        >>> x = Symbol('x', real=True)
+        >>> (x>0).as_set()
+        (0, oo)
+        >>> Eq(x, 0).as_set()
+        {0}
+
+        """
+        from sympy.solvers.inequalities import solve_univariate_inequality
+        syms = self.free_symbols
+
+        if len(syms) == 1:
+            sym = syms.pop()
+        else:
+            raise NotImplementedError("Sorry, Relational.as_set procedure"
+                                      " is not yet implemented for"
+                                      " multivariate expressions")
+
+        return solve_univariate_inequality(self, sym, relational=False)
+
+
 Rel = Relational
 
 

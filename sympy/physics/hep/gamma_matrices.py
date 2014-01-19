@@ -514,7 +514,8 @@ class GammaMatrixHead(TensorHead):
         index_is_free = [False]*total_number
 
         for i, indx in enumerate(free):
-            assert indx[1] == 0
+            if indx[1] != 0:
+                raise ValueError("indx[1] should be equal to 0")
             index_is_free[indx[2]] = True
 
         # `links` is a dictionary containing the graph described in Kahane's paper,
@@ -596,8 +597,10 @@ class GammaMatrixHead(TensorHead):
         # separated by free indices, hinting that free indices can be added without
         # altering the expression result).
         for i in dum:
-            assert i[0] == 0
-            assert i[1] == 0
+            if i[0] != 0:
+                raise ValueError("i[0] should be 0")
+            if i[1] != 0:
+                raise ValueError("i[1] should be 0")
             # get the positions of the two contracted indices:
             pos1 = i[2]
             pos2 = i[3]

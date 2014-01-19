@@ -1,6 +1,6 @@
 from sympy import (
     Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial, FiniteSet,
-    Float, FourierTransform, Function, Integral, Interval,
+    Float, FourierTransform, Function, IndexedBase, Integral, Interval,
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
@@ -365,6 +365,11 @@ def test_latex_fresnel():
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
 
+
+def test_latex_indexed():
+    Psi_symbol = Symbol('Psi_0', complex=True, real=False)
+    Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
+    assert latex(Psi_symbol * conjugate(Psi_symbol)) == latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
 
 def test_latex_derivatives():
     # regular "d" for ordinary derivatives

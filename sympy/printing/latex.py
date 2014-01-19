@@ -443,6 +443,14 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Indexed(self, expr):
+        tex = self._print(expr.base)+'_{%s}' % ','.join(
+            map(self._print, expr.indices))
+        return tex
+
+    def _print_IndexedBase(self, expr):
+        return self._print(expr.label)
+
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
         if requires_partial(expr):

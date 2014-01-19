@@ -64,12 +64,8 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
+    assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
     assert limit((1 + cos(x))**oo, x, 0) == oo
-
-
-@XFAIL
-def test_basic1_xfail():
-    assert limit(x**-pi, x, 0, dir='-') == zoo
 
 
 def test_basic2():
@@ -360,8 +356,8 @@ def test_polynomial():
 
 
 def test_rational():
-    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,oo) ==  1/y - 1/(y*z)
-    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,-oo) ==  1/y - 1/(y*z)
+    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, oo) == (z - 1)/(y*z)
+    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, -oo) == (z - 1)/(y*z)
 
 
 def test_issue_2641():
