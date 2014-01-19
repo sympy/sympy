@@ -1219,7 +1219,10 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.q, self.q*other.p)
+            if self.p and other.p == S.Zero:
+                return S.ComplexInfinity
+            else:
+                return Rational(self.p*other.q, self.q*other.p)
         elif isinstance(other, Float):
             return self*(1/other)
         else:
