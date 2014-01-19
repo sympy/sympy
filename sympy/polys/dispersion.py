@@ -81,6 +81,8 @@ def dispersionset(p, q=None):
     if same:
         q = p
 
+    p, q = Poly(p), Poly(q)
+
     if not p.is_univariate or not q.is_univariate:
         raise ValueError("Polynomials need to be univariate")
 
@@ -138,6 +140,7 @@ def dispersion(p, q=None):
         &  = \max\{ \{a \in \mathbb{N} | \gcd(f(x), g(x+a)) \neq 1\} \cup \{0\} \}
 
     and for a single polynomial `\operatorname{dis}(f) := \operatorname{dis}(f, f)`.
+    Note that we make the definition `\max\{\} := -\infty`.
 
     Examples
     ========
@@ -166,6 +169,9 @@ def dispersion(p, q=None):
     []
     >>> dispersion(gp, fp)
     -oo
+
+    The maximum of an empty set is defined to be `-\infty`
+    as seen in this example.
 
     Computing the dispersion also works over field extensions:
 
@@ -199,7 +205,7 @@ def dispersion(p, q=None):
     4. [Man93]_
     """
     J = dispersionset(p, q)
-    if len(J) == 0:
+    if not J:
         # Definition for maximum of empty set
         j = S.NegativeInfinity
     else:
