@@ -689,6 +689,19 @@ def test_substitute_indices():
     t1 = t.substitute_indices((-i, -j))
     assert t1 == p(j)
 
+    A_tmul = A(m, n)
+    A_c = A_tmul(m, -m)
+    assert A_c == A(n, -n)
+    ABm = A(i, j)*B(m, n)
+    ABc1 = ABm(i, j, -i, -j)
+    assert ABc1 == A(i, -j)*B(-i, j)
+    ABc2 = ABm(i, -i, j, -j)
+    assert ABc2 == A(m, -m)*B(-n, n)
+
+    asum = A(i, j) + B(i, j)
+    asc1 = asum(i, -i)
+    assert asc1 == A(i, -i) + B(i, -i)
+
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0, m1, m2, m3 = tensor_indices('m:4', Lorentz)
