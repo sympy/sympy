@@ -73,3 +73,23 @@ def test_dispersion():
     fpa = fp.as_expr().subs(a, 2).as_poly(x)
     gpa = gp.as_expr().subs(a, 2).as_poly(x)
     assert sorted(dispersionset(fpa, gpa)) == [6]
+
+    # Work with Expr instead of Poly
+    f = (x + 1)*(x + 2)
+    assert sorted(dispersionset(f)) == [0, 1]
+    assert dispersion(f) == 1
+
+    f = x**4 - 3*x**2 + 1
+    g = x**4 - 12*x**3 + 51*x**2 - 90*x + 55
+    assert sorted(dispersionset(f, g)) == [2, 3, 4]
+    assert dispersion(f, g) == 4
+
+    # Work with Expr and specify a generator
+    f = (x + 1)*(x + 2)
+    assert sorted(dispersionset(f, None, x)) == [0, 1]
+    assert dispersion(f, None, x) == 1
+
+    f = x**4 - 3*x**2 + 1
+    g = x**4 - 12*x**3 + 51*x**2 - 90*x + 55
+    assert sorted(dispersionset(f, g, x)) == [2, 3, 4]
+    assert dispersion(f, g, x) == 4
