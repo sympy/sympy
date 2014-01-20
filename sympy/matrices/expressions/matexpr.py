@@ -334,6 +334,9 @@ class MatrixSymbol(MatrixExpr):
     def name(self):
         return self.args[0]
 
+    def matsym_print(self):
+    	return ("["+self.args[0]+"1"+", "+self.args[0]+"2"+" ...,"+self.args[0]+self.args[1]+"]")
+
     def _eval_subs(self, old, new):
         # only do substitutions in shape
         shape = Tuple(*self.shape)._subs(old, new)
