@@ -3152,12 +3152,14 @@ class TensMul(TensExpr):
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
-        a = set(i if i.is_up else -i for i in indices)
-        if len(a) != len(indices):
-            raise ValueError('indices not allowed')
 
         t = self.fun_eval(*list(zip(free_args, indices)))
-        return t
+
+        if len(set(i if i.is_up else -i for i in indices)) != len(indices):
+            return TensMul(*t.args)
+        else:
+            return t
+
 
     def _print(self):
         if len(self.components) == 0:

@@ -695,7 +695,7 @@ def test_TensMul_call():
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     t = A(d0, d1)
     assert t(d1, d2) == A(d1, d2)
-    raises(ValueError, lambda: t(d2, -d2))
+    assert t(d2, -d2) == A(d0, -d0)
 
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
