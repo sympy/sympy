@@ -741,17 +741,22 @@ class Ellipse(GeometryEntity):
 
     def normal_lines(self,p):
         """Normal lines between `p` and the ellipse.
+        Parameters : p (Point from which the normals are drawn to the ellipse)
+        Returns    : A list of normal lines
+        Example
+        >>> from sympy import*
+        >>> e1= Ellipse(Point(0,0),2,3)
+        >>> e1.normal_lines(Point(1,0))
+        Out[5]: [Line(Point(1, 0), Point(2, 0))] """
 
-        If `p` is on the ellipse, returns the normal line through point `p`.
-        Otherwise, returns the normal lines from `p` to the ellipse"""
-        if( (p==Point(self.hradius,0)) or (p== Point(0,self.vradius)) ):
-            return [(Point(0,0),p)]
-        elif( (int(p.x)==0) & (int(p.y)==0)):
+
+
+        if( (int(p.x)==0) & (int(p.y)==0)):
             return [Line(p,Point(self.hradius,0)),Line(p,Point(0,self.vradius))]
-        elif(int(p.x)==0):
-            return [Line(p,Point(0,self.vradius))]
-        elif(int(p.y)==0):
-            return [Line(p,Point(self.hradius,0))]
+        elif((int(p.x)==0) & (int(p.y)!=0)):
+            return [Line(p,Point(0,((p.y)+1)))]
+        elif((int(p.y)==0) & (int(p.x)!=0)):
+            return [Line(p,Point(((p.x)+1),0))]
 
 
         else:
@@ -763,12 +768,6 @@ class Ellipse(GeometryEntity):
 
             normal_points=[Point(point).evalf() for point in points if Point.is_real(Point(point))]
 
-
-
-        #return normal_points
-        #return normal_points
-            """if len(normal_points==0):
-            return """
             if(len(normal_points)==2):
                 return [Line(p, (normal_points[0].evalf())),Line(p, (normal_points[1]))]
             if len(normal_points)==4:
