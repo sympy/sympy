@@ -739,6 +739,41 @@ class Ellipse(GeometryEntity):
         else:
             raise NotImplementedError("Unknown argument type")
 
+    def normal_lines(self,p):
+        """Normal lines between `p` and the ellipse.
+
+        If `p` is on the ellipse, returns the normal line through point `p`.
+        Otherwise, returns the normal lines from `p` to the ellipse"""
+        if( (p==Point(self.hradius,0)) or (p== Point(0,self.vradius)) ):
+            return [(Point(0,0),p)]
+        elif( (int(p.x)==0) & (int(p.y)==0)):
+            return [Line(p,Point(self.hradius,0)),Line(p,Point(0,self.vradius))]
+        elif(int(p.x)==0):
+            return [Line(p,Point(0,self.vradius))]
+        elif(int(p.y)==0):
+            return [Line(p,Point(self.hradius,0))]
+
+
+        else:
+            x, y = Dummy('x'), Dummy('y')
+            eq = self.equation(x, y)
+            dydx = -idiff(eq, x, y)
+            slope = Line(p, Point(x, y)).slope
+            points = solve([slope - dydx, eq], [x, y])
+
+            normal_points=[Point(point).evalf() for point in points if Point.is_real(Point(point))]
+
+
+
+        #return normal_points
+        #return normal_points
+            """if len(normal_points==0):
+            return """
+            if(len(normal_points)==2):
+                return [Line(p, (normal_points[0].evalf())),Line(p, (normal_points[1]))]
+            if len(normal_points)==4:
+                return [Line(p, (normal_points[0])),Line(p, (normal_points[1])),Line(p, (normal_points[2])),Line(p, (normal_points[3]))]
+
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the ellipse.
 
