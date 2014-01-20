@@ -387,7 +387,7 @@ def solve_univariate_inequality(expr, gen, assume=True, relational=True):
 
     sol_sets = [S.EmptySet]
 
-    for x in solns:
+    for x in sorted(s for s in solns if s.is_real):
         end = x
         if expr.subs(gen, (start + end)/2 if start != -oo else end - 1):
             sol_sets.append(Interval(start, end, True, True))

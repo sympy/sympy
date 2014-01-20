@@ -321,6 +321,26 @@ def test_line():
     assert s1.distance(pt1) == 0
     assert s2.distance(pt1) == 2**(half)/2
     assert s2.distance(pt2) == 2**(half)
+    # Line to point
+    p1, p2 = Point(0, 0), Point(1, 1)
+    s = Line(p1, p2)
+    assert s.distance(Point(-1, 1)) == sqrt(2)
+    assert s.distance(Point(1, -1)) == sqrt(2)
+    assert s.distance(Point(2, 2)) == 0
+    assert Line((0, 0), (0, 1)).distance(p1) == 0
+    assert Line((0, 0), (0, 1)).distance(p2) == 1
+    assert Line((0, 0), (1, 0)).distance(p1) == 0
+    assert Line((0, 0), (1, 0)).distance(p2) == 1
+    m = symbols('m')
+    l = Line((0, 5), slope=m)
+    p = Point(2, 3)
+    assert l.distance(p) == 2*abs(m + 1)/sqrt(m**2 + 1)
+    # Ray to point
+    r = Ray(p1, p2)
+    assert r.distance(Point(-1, -1)) == sqrt(2)
+    assert r.distance(Point(1, 1)) == 0
+    assert r.distance(Point(-1, 1)) == sqrt(2)
+
 
     # Special cases of projection and intersection
     r1 = Ray(Point(1, 1), Point(2, 2))

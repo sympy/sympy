@@ -1,11 +1,13 @@
-from sympy import symbols, sympify, Dummy, simplify, Equality, S
+from sympy import (symbols, sympify, Dummy, simplify, Equality, S, Interval,
+                   oo, EmptySet)
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_cnf, is_dnf,
-    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_map, true, false, BooleanAtom
+    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
+    BooleanAtom
 )
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
 
 
@@ -543,3 +545,22 @@ def test_true_false():
         assert ITE(F, T, F) is false
         assert ITE(F, F, T) is true
         assert ITE(F, F, F) is false
+
+
+def test_bool_as_set():
+    x = symbols('x')
+
+    assert And(x <= 2, x >= -2).as_set() == Interval(-2, 2)
+    assert Or(x >= 2, x <= -2).as_set() == Interval(-oo, -2) + Interval(2, oo)
+    assert Not(x > 2).as_set() == Interval(-oo, 2)
+    assert true.as_set() == S.UniversalSet
+    assert false.as_set() == EmptySet()
+
+
+@XFAIL
+def test_multivariate_bool_as_set():
+    x, y = symbols('x,y')
+
+    assert And(x >= 0, y >= 0).as_set() == Interval(0, oo)*Interval(0, oo)
+    assert Or(x >= 0, y >= 0).as_set() == S.UniversalSet - \
+        Interval(-oo, 0, True, True)*Interval(-oo, 0, True, True)

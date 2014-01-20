@@ -3,11 +3,12 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify, atan2, arg, Mul)
+    sympify, tan, tanh, root, simplify, atan2, arg, Mul, SparseMatrix)
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow
+from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
+    det_quick, det_perm, det_minor
 
 from sympy.polys.rootoftools import RootOf
 
@@ -1407,3 +1408,32 @@ def test_gh2725():
                        3*sqrt(111)*I)**(S(1)/3))/Mul(6, (1 +
                        sqrt(3)*I), (251 + 3*sqrt(111)*I)**(S(1)/3),
                        evaluate=False),)])
+
+
+def test_issue_2015_3512():
+    # See that it doesn't hang; this solves in about 2 seconds.
+    # Also check that the solution is relatively small.
+    # Note: the system in issue 3512 solves in about 5 seconds and has
+    # an op-count of 138336 (with simplify=False).
+    b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('b:r')
+    eqs = Matrix([
+        [b - c/d + r/d], [c*(1/g + 1/e + 1/d) - f/g - r/d],
+        [-c/g + f*(1/j + 1/i + 1/g) - h/i], [-f/i + h*(1/m + 1/l + 1/i) - k/m],
+        [-h/m + k*(1/p + 1/o + 1/m) - n/p], [-k/p + n*(1/q + 1/p)]])
+    v = Matrix([f, h, k, n, b, c])
+    ans = solve(list(eqs) , list(v), simplify=False)
+    # If time is taken to simplify then then 2617 below becomes
+    # 1168 and the time is about 50 seconds instead of 2.
+    assert sum([s.count_ops() for s in ans.values()]) <= 2617
+
+
+def test_det_quick():
+    m = Matrix(3, 3, symbols('a:9'))
+    assert m.det() == det_quick(m)  # calls det_perm
+    m[0, 0] = 1
+    assert m.det() == det_quick(m)  # calls det_minor
+    m = Matrix(3, 3, list(range(9)))
+    assert m.det() == det_quick(m)  # defaults to .det()
+    # make sure they work with Sparse
+    s = SparseMatrix(2, 2, (1, 2, 1, 4))
+    assert det_perm(s) == det_minor(s) == s.det()
