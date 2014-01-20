@@ -11,8 +11,10 @@ Segment
 from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, Dummy
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
+from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
+    sqrt
 from sympy.core.logic import fuzzy_and
+from sympy.core.exprtools import factor_terms
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -460,8 +462,20 @@ class LinearEntity(GeometryEntity):
         """
         if p in self:
             return p
-        pl = self.perpendicular_line(p)
-        p2 = Line(self).intersection(pl)[0]
+        a, b, c = self.coefficients
+        if a == 0:  # horizontal
+            p2 = Point(p.x, self.p1.y)
+        elif b == 0:  # vertical
+            p2 = Point(self.p1.x, p.y)
+        else:
+            # ax + by + c = 0
+            y = (-c - a*p.x)/b
+            m = self.slope
+            d2 = 1 + m**2
+            H = p.y - y
+            dx = m*H/d2
+            dy = m*dx
+            p2 = (p.x + dx, y + dy)
         return Segment(p, p2)
 
     @property
@@ -568,9 +582,8 @@ class LinearEntity(GeometryEntity):
         Line and then reforming the linear entity using these
         projections.
         A point P is projected onto a line L by finding the point
-        on L that is closest to P. This is done by creating a
-        perpendicular line through P and L and finding its
-        intersection with L.
+        on L that is closest to P. This point is the intersection
+        of L and the line perpendicular to L that passes through P.
 
         See Also
         ========
@@ -1101,6 +1114,35 @@ class Line(LinearEntity):
         else:
             return o.p1 in self and o.p2 in self
 
+    def distance(self, o):
+        """
+        Finds the shortest distance between a line and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> s = Line(p1, p2)
+        >>> s.distance(Point(-1, 1))
+        sqrt(2)
+        """
+        if not isinstance(o, Point):
+            raise NotImplementedError
+        a, b, c = self.coefficients
+        if 0 in (a, b):
+            return self.perpendicular_segment(o).length
+        m = self.slope
+        x = o.x
+        y = m*x - c/b
+        return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
+
+
     def __eq__(self, other):
         """Return True if other is equal to this Line, or False otherwise."""
         if not isinstance(other, Line):
@@ -1293,6 +1335,40 @@ class Ray(LinearEntity):
         else:
             return S.NegativeInfinity
 
+
+    def distance(self, o):
+        """
+        Finds the shortest distance between the ray and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ray
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> s = Ray(p1, p2)
+        >>> s.distance(Point(-1, -1))
+        sqrt(2)
+        """
+        if not isinstance(o, Point):
+            raise NotImplementedError
+        s = self.perpendicular_segment(o)
+        if isinstance(s, Point):
+            if self.contains(s):
+                return S.Zero
+        else:
+            # since arg-order is arbitrary, find the non-o point
+            non_o = s.p1 if s.p2 != o else s.p2
+            if self.contains(non_o):
+                return self.distance(o)  # = s.length but simpler
+        # the following applies when neither of the above apply
+        return self.source.distance(o)
+
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ray. Gives
         values that will produce a ray that is 10 units long (where a unit is
@@ -1363,7 +1439,7 @@ class Ray(LinearEntity):
 
 
 class Segment(LinearEntity):
-    """An undirected line segment in space.
+    """A undirected line segment in space.
 
     Parameters
     ==========
