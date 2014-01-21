@@ -784,7 +784,7 @@ class Ellipse(GeometryEntity):
 
             if(len(normal_points)==2):
                 return [Line(p, normal_points[0]),Line(p, normal_points[1])]
-            if len(normal_points)==4:
+            if(len(normal_points)==4):
                 return [Line(p, normal_points[0]),Line(p, normal_points[1]),Line(p, normal_points[2]),Line(p, normal_points[3])]
 
     def arbitrary_point(self, parameter='t'):
