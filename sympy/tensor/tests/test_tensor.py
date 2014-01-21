@@ -689,6 +689,14 @@ def test_substitute_indices():
     t1 = t.substitute_indices((-i, -j))
     assert t1 == p(j)
 
+def test_TensMul_call():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    d0, d1, d2, d3, d4 =tensor_indices('d0:5', Lorentz)
+    A = tensorhead('A', [Lorentz]*2, [[1]*2])
+    t = A(d0, d1)
+    assert t(d1, d2) == A(d1, d2)
+    assert t(d2, -d2) == A(d0, -d0)
+
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0, m1, m2, m3 = tensor_indices('m:4', Lorentz)

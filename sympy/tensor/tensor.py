@@ -3130,6 +3130,8 @@ class TensMul(TensExpr):
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
 
+        ``indices`` must be free indices
+
         Examples
         ========
 
@@ -3150,8 +3152,14 @@ class TensMul(TensExpr):
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
+
         t = self.fun_eval(*list(zip(free_args, indices)))
-        return t
+
+        if len(set(i if i.is_up else -i for i in indices)) != len(indices):
+            return TensMul(*t.args)
+        else:
+            return t
+
 
     def _print(self):
         if len(self.components) == 0:
