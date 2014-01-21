@@ -740,38 +740,52 @@ class Ellipse(GeometryEntity):
             raise NotImplementedError("Unknown argument type")
 
     def normal_lines(self,p):
-        """Normal lines between `p` and the ellipse.
-        Parameters : p (Point from which the normals are drawn to the ellipse)
-        Returns    : A list of normal lines
-        Example
+       """Normal lines between `p` and the ellipse.
+
+
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        normal_lines : list with 1 or 2 or 4 Lines
+
         >>> from sympy import*
         >>> e1= Ellipse(Point(0,0),2,3)
         >>> e1.normal_lines(Point(1,0))
-        Out[5]: [Line(Point(1, 0), Point(2, 0))] """
+        Out[5]: [Line(Point(1, 0), Point(2, 0))]
+
+        >>> from sympy import*
+        >>> e1=Ellipse(Point(3,2),2,3)
+        >>> e1.normal_lines(Point(3,2))
+        Out[6]:  [Line(Point(3, 2), Point(4, 2)), Line(Point(3, 2), Point(3, 3))]"""
 
 
-
-        if( (int(p.x)==0) & (int(p.y)==0)):
-            return [Line(p,Point(self.hradius,0)),Line(p,Point(0,self.vradius))]
-        elif((int(p.x)==0) & (int(p.y)!=0)):
-            return [Line(p,Point(0,((p.y)+1)))]
-        elif((int(p.y)==0) & (int(p.x)!=0)):
-            return [Line(p,Point(((p.x)+1),0))]
+        if( self.centre==p):
+            return [Line(p,Point(((p.x)+1),p.y)),Line(p,Point(p.x,((p.y)+1)))]
+        elif(int(p.x) == int(self.center.x) & int(p.y) != int(self.center.y)):
+            return [Line(p,Point(p.x,((p.y)+1)))]
+        elif(int(p.y) == int(self.center.y)):
+            return [Line(p,Point(((p.x)+1),p.y))]
 
 
         else:
             x, y = Dummy('x'), Dummy('y')
             eq = self.equation(x, y)
-            dydx = -idiff(eq, x, y)
+            dxdy = -idiff(eq, x, y)
             slope = Line(p, Point(x, y)).slope
-            points = solve([slope - dydx, eq], [x, y])
+            points = solve([slope - dxdy, eq], [x, y])
 
             normal_points=[Point(point).evalf() for point in points if Point.is_real(Point(point))]
 
             if(len(normal_points)==2):
-                return [Line(p, (normal_points[0].evalf())),Line(p, (normal_points[1]))]
+                return [Line(p, normal_points[0]),Line(p, normal_points[1])]
             if len(normal_points)==4:
-                return [Line(p, (normal_points[0])),Line(p, (normal_points[1])),Line(p, (normal_points[2])),Line(p, (normal_points[3]))]
+                return [Line(p, normal_points[0]),Line(p, normal_points[1]),Line(p, normal_points[2]),Line(p, normal_points[3])]
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the ellipse.
