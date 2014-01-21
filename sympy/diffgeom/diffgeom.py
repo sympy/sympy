@@ -1093,7 +1093,10 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    See also: ``intcurve_diffequ``
+    See Also
+    ========
+
+    intcurve_diffequ
 
     Parameters
     ==========
@@ -1202,7 +1205,10 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    See also: ``intcurve_series``
+    See Also
+    ========
+
+    intcurve_series
 
     Parameters
     ==========
