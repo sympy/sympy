@@ -204,3 +204,7 @@ def test_pow_issue_1724():
 
 def test_issue_2330():
     assert sqrt(I).conjugate() != sqrt(I)
+
+def test_issue_4124():
+    from sympy import oo
+    assert expand_complex(I*oo) == oo*I

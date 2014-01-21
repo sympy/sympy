@@ -690,11 +690,83 @@ class Mul(Expr, AssocOp):
             return None
         else:
             if coeff.is_real:
-                return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
+                re = coeff*(C.re(m))
+                im = coeff*(C.im(m))
+                # (re + I*im) is multiplied with (addre + I*addim)
+                if re == 0 and im != 0:
+                    if addre == 0 and addim != 0:
+                        outre = -im*addim
+                        outim = addre    #Zero
+                    elif addim == 0 and addre != 0:
+                        outre = addim    #Zero
+                        outim = im*addre
+                    else:
+                        outre = -im*addim
+                        outim = im*addre
+                elif im == 0 and re != 0:
+                    if addre == 0 and addim != 0:
+                        outre = addre    #Zero
+                        outim = re*addim
+                    elif addim == 0 and addre != 0:
+                        outre = re*addre
+                        outim = addim    #Zero
+                    else:
+                        outre = re*addre
+                        outim = re*addim
+                else:
+                    if addre == 0 and addim != 0:
+                        outre = -im*addim
+                        outim = im*addre
+                    elif addim == 0 and addre != 0:
+                        outre = re*addre
+                        outim = im*addre
+                    else:
+                        outre = re*addre - im*addim
+                        outim = re*addim + im*addre
+                return (outre, outim)
             else:
-                re = - C.im(coeff)*C.im(m)
-                im = C.im(coeff)*C.re(m)
-                return (re*addre - im*addim, re*addim + im*addre)
+                # C.im(coeff) is multiplied with m
+                if C.im(m) == 0 and C.re(m) != 0: # If m is a real number
+                    re = 0
+                    im = C.im(coeff)*C.re(m)
+                elif C.re(m) == 0 and C.im(m) != 0: # If m is purely imaginary
+                    re = -C.im(coeff)*C.im(m)
+                    im = 0
+                else: # If m is a complex number
+                    re = -C.im(coeff)*C.im(m)
+                    im = C.im(coeff)*C.re(m)
+                # (re + I*im) is multiplied with (addre + I*addim)
+                if re == 0 and im != 0:
+                    if addre == 0 and addim != 0:
+                        outre = -im*addim
+                        outim = addre    #Zero
+                    elif addim == 0 and addre != 0:
+                        outre = addim    #Zero
+                        outim = im*addre
+                    else:
+                        outre = -im*addim
+                        outim = im*addre
+                elif im == 0 and re != 0:
+                    if addre == 0 and addim != 0:
+                        outre = addre    #Zero
+                        outim = re*addim
+                    elif addim == 0 and addre != 0:
+                        outre = re*addre
+                        outim = addim    #Zero
+                    else:
+                        outre = re*addre
+                        outim = re*addim
+                else:
+                    if addre == 0 and addim != 0:
+                        outre = -im*addim
+                        outim = im*addre
+                    elif addim == 0 and addre != 0:
+                        outre = re*addre
+                        outim = im*addre
+                    else:
+                        outre = re*addre - im*addim
+                        outim = re*addim + im*addre
+                return (outre, outim)
 
     @staticmethod
     def _expandsums(sums):
