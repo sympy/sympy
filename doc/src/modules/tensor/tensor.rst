@@ -8,9 +8,6 @@ Tensor
 .. autoclass:: TIDS
    :members:
 
-.. autoclass:: VTIDS
-   :members:
-
 .. autoclass:: _TensorManager
    :members:
 

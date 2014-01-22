@@ -503,9 +503,17 @@ class TIDS(CantSympify):
         return TIDS(components, free, dum)
 
 
-class _TensorDataLazyEvaluator(object):
+class _TensorDataLazyEvaluator(CantSympify):
     """
-    TODO
+    This object contains the logic to associate data to a tensor expression.
+    Data are set via the ``.data`` property of tensor expressions, is stored
+    inside this class as a mapping between the tensor expression and the
+    ``ndarray``.
+
+    Computations are executed lazily: whereas the tensor expressions can
+    have contractions, tensor products, and additions, data are not computed
+    until they are accessed by reading the ``.data`` property associated to
+    the tensor expression.
     """
     _substitutions_dict = dict()
 
@@ -575,7 +583,7 @@ class _TensorDataLazyEvaluator(object):
             """
             TODO: wrong doc
 
-            Multiplies two ``VTIDS`` objects, it first calls its super method
+            Multiplies two ``ndarray`` objects, it first calls its super method
             on ``TIDS``, then creates a new ``VTIDS`` object, adding ``ndarray``
             data according to the metric contractions of indices.
             """
@@ -1899,6 +1907,10 @@ class TensorHead(Basic):
 
     def __iter__(self):
         return self.data.flatten().__iter__()
+
+    def __del__(self):
+        if self in _tensor_data_substitution_dict:
+            del _tensor_data_substitution_dict[self]
 
 
 @doctest_depends_on(modules=('numpy',))
