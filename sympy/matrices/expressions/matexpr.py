@@ -334,10 +334,9 @@ class MatrixSymbol(MatrixExpr):
     def name(self):
         return self.args[0]
 
-    @property
+    @property 
     def matsym_print(self):
-        """
-	Returns the symbolic representation of MatrixSymbol of arbotrary size
+	"""Returns the symbolic representation of MatrixSymbol of arbitrary size
 	Example
 	========
 	>>>from sympy import *
@@ -350,7 +349,7 @@ class MatrixSymbol(MatrixExpr):
 	[Am1, Am2, ..., Amn]
 	
 	"""
-	return ("["+self.args[0]+"11"+", "+str(self.args[0])+"12"+", ..., "+self.args[0]+"1"+str(self.args[2])+"]"+"\n"+"["+self.args[0]+"2"+"1"+", "+str(self.args[0])+"2"+"2"+", ..., "+self.args[0]+"2"+str(self.args[2])+"]"+"\n"+"["+"..., ..., ..., ..."+"]"+"\n"+"["+self.args[0]+str(self.args[1])+"1"+", "+str(self.args[0])+str(self.args[1])+"2"+", ..., "+self.args[0]+str(self.args[1])+str(self.args[2])+"]")
+        return ("["+self.args[0]+"11"+", "+str(self.args[0])+"12"+", ..., "+self.args[0]+"1"+str(self.args[2])+"]"+"\n"+"["+self.args[0]+"2"+"1"+", "+str(self.args[0])+"2"+"2"+", ..., "+self.args[0]+"2"+str(self.args[2])+"]"+"\n"+"["+"..., ..., ..., ..."+"]"+"\n"+"["+self.args[0]+str(self.args[1])+"1"+", "+str(self.args[0])+str(self.args[1])+"2"+", ..., "+self.args[0]+str(self.args[1])+str(self.args[2])+"]")
 
     def _eval_subs(self, old, new):
         # only do substitutions in shape
