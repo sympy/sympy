@@ -684,10 +684,9 @@ class Mul(Expr, AssocOp):
                         other.append(a)
             else:
                 other.append(a)
-        m = self.func(*other)        
+        m = self.func(*other)
         if hints.get('ignore') == m:
             return None
-        #import ipdb; ipdb.set_trace()
         if addterms == 1:
             if m == 1:
                 return (C.re(coeff), C.im(coeff))
