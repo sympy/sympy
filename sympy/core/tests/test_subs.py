@@ -598,3 +598,7 @@ def test_mul2():
     2) remove the special handling in Mul.flatten
     """
     assert (2*(x + 1)).is_Mul
+
+def test_noncommutative_subs():
+    x,y = symbols('x,y', commutative=False)
+    assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)

@@ -5399,7 +5399,7 @@ def _symbolic_factor_list(expr, opt, method):
                 elif _coeff.is_positive:
                     factors.append((_coeff, exp))
                 else:
-                    _factors.append((_coeff, None))
+                    _factors.append((_coeff, S.One))
 
             if exp is S.One:
                 factors.extend(_factors)
@@ -5411,10 +5411,8 @@ def _symbolic_factor_list(expr, opt, method):
                 for f, k in _factors:
                     if f.as_expr().is_positive:
                         factors.append((f, k*exp))
-                    elif k is not None:
-                        other.append((f, k))
                     else:
-                        other.append((f, S.One))
+                        other.append((f, k))
 
                 if len(other) == 1:
                     f, k = other[0]

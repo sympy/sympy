@@ -963,7 +963,7 @@ class Basic(with_metaclass(ManagedProperties)):
             reps = {}
             rv = self
             for old, new in sequence:
-                d = C.Dummy()
+                d = C.Dummy(commutative=new.is_commutative)
                 rv = rv._subs(old, d, **kwargs)
                 reps[d] = new
                 if not isinstance(rv, Basic):

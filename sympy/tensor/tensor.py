@@ -31,8 +31,8 @@ lowered when the tensor is put in canonical form.
 
 from __future__ import print_function, division
 
-from collections import defaultdict
 import functools
+from collections import defaultdict
 from sympy import Matrix, Rational
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
@@ -1548,7 +1548,7 @@ def tensorhead(name, typ, sym, comm=0, matrix_behavior=0):
 
 @doctest_depends_on(modules=('numpy',))
 class TensorHead(Basic):
-    """
+    r"""
     Tensor head of the tensor
 
     Parameters
@@ -1647,6 +1647,32 @@ class TensorHead(Basic):
     >>> A(i0, -i0).data
     -18
 
+    It is also possible to store symbolic data inside a tensor, for example,
+    define a four-momentum-like tensor:
+
+    >>> from sympy import symbols
+    >>> P = tensorhead('P', [Lorentz], [[1]])
+    >>> E, px, py, pz = symbols('E p_x p_y p_z', positive=True)
+    >>> P.data = [E, px, py, pz]
+
+    The contravariant and covariant components are, respectively:
+
+    >>> P(i0).data
+    [E p_x p_y p_z]
+    >>> P(-i0).data
+    [E -p_x -p_y -p_z]
+
+    The contraction of a 1-index tensor by itself is usually indicated by a
+    power by two:
+
+    >>> P(i0)**2
+    E**2 - p_x**2 - p_y**2 - p_z**2
+
+    As the power by two is clearly identical to `P_\mu P^\mu`, it is
+    possible to simply contract the ``TensorHead`` object, without specifying the indices
+
+    >>> P**2
+    E**2 - p_x**2 - p_y**2 - p_z**2
     """
     is_commutative = False
 
@@ -2862,7 +2888,7 @@ class TensMul(TensExpr):
         """
         Returns the tensor corresponding to the permutation ``g``
 
-        For further details, see the method in `TIDS` with the same name.
+        For further details, see the method in ``TIDS`` with the same name.
         """
         new_tids = self._tids.perm2tensor(g, canon_bp)
         coeff = self._coeff

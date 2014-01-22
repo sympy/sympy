@@ -37,8 +37,6 @@ class BesselBase(Function):
     ``2*F_n' = -_a*F_{n+1} + b*F_{n-1}``.
     """
 
-    nargs = 2
-
     @property
     def order(self):
         """ The order of the bessel-type function. """

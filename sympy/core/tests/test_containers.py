@@ -157,19 +157,7 @@ def test_Dict():
 
 def test_issue_2689():
     args = [(1, 2), (2, 1)]
-    for o in [Dict, Tuple]:
-        # __eq__ and arg handling
-        if o != Tuple:
-            assert o(*args) == o(*reversed(args))
-        pair = [o(*args), o(*reversed(args))]
-        assert sorted(pair) == sorted(reversed(pair))
-        assert set(o(*args))  # doesn't fail
-
-
-@XFAIL
-def test_issue_2689b():
-    args = [(1, 2), (2, 1)]
-    for o in [FiniteSet]:
+    for o in [Dict, Tuple, FiniteSet]:
         # __eq__ and arg handling
         if o != Tuple:
             assert o(*args) == o(*reversed(args))

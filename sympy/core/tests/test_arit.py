@@ -936,6 +936,11 @@ def test_Pow_is_real():
     assert (i**o).is_real is False
     assert (i**k).is_real is None
 
+    x = Symbol("x", nonnegative=True)
+    y = Symbol("y", nonnegative=True)
+    assert im(x**y).expand(complex=True) is S.Zero
+    assert (x**y).is_real
+
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)

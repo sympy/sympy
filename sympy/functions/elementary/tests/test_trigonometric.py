@@ -2,7 +2,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series)
+        conjugate, series, FiniteSet)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.core.compatibility import xrange
@@ -15,6 +15,7 @@ k = Symbol('k', integer=True)
 def test_sin():
     x, y = symbols('x y')
 
+    assert sin.nargs == FiniteSet(1)
     assert sin(nan) == nan
 
     assert sin(oo*I) == oo*I
@@ -188,6 +189,7 @@ def test_trig_symmetry():
 def test_cos():
     x, y = symbols('x y')
 
+    assert cos.nargs == FiniteSet(1)
     assert cos(nan) == nan
 
     assert cos(oo*I) == oo
@@ -316,6 +318,7 @@ def test_cos_expansion():
 def test_tan():
     assert tan(nan) == nan
 
+    assert tan.nargs == FiniteSet(1)
     assert tan(oo*I) == I
     assert tan(-oo*I) == -I
 
@@ -421,6 +424,7 @@ def test_tan_expansion():
 def test_cot():
     assert cot(nan) == nan
 
+    assert cot.nargs == FiniteSet(1)
     assert cot(oo*I) == -I
     assert cot(-oo*I) == I
 
@@ -524,6 +528,7 @@ def test_cot_expansion():
 def test_asin():
     assert asin(nan) == nan
 
+    assert asin.nargs == FiniteSet(1)
     assert asin(oo) == -I*oo
     assert asin(-oo) == I*oo
 
@@ -570,6 +575,8 @@ def test_asin_rewrite():
 
 def test_acos():
     assert acos(nan) == nan
+
+    assert acos.nargs == FiniteSet(1)
     assert acos(oo) == I*oo
     assert acos(-oo) == -I*oo
 
@@ -609,6 +616,7 @@ def test_acos_rewrite():
 def test_atan():
     assert atan(nan) == nan
 
+    assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
 
@@ -628,6 +636,7 @@ def test_atan_rewrite():
 
 
 def test_atan2():
+    assert atan2.nargs == FiniteSet(2)
     assert atan2(0, 0) == S.NaN
     assert atan2(0, 1) == 0
     assert atan2(1, 1) == pi/4
@@ -669,6 +678,7 @@ def test_atan2():
 def test_acot():
     assert acot(nan) == nan
 
+    assert acot.nargs == FiniteSet(1)
     assert acot(-oo) == 0
     assert acot(oo) == 0
     assert acot(1) == pi/4
@@ -973,7 +983,7 @@ def test_sec():
     x = symbols('x', real=True)
     z = symbols('z')
 
-    assert sec.nargs == 1
+    assert sec.nargs == FiniteSet(1)
 
     assert sec(0) == 1
     assert sec(pi) == -1
@@ -1032,7 +1042,7 @@ def test_csc():
     assert cosecant.equals(alternate) == True
     assert alternate.equals(cosecant) == True
 
-    assert csc.nargs == 1
+    assert csc.nargs == FiniteSet(1)
 
     assert csc(0) == oo
     assert csc(pi) == oo
