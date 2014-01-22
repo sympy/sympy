@@ -5,7 +5,7 @@ Essential Functions (Docstrings)
 dynamicsymbols
 --------------
 
-.. autofunction:: sympy.physics.vector.dynamicsymbols.dynamicsymbols
+.. autofunction:: sympy.physics.vector.dynamicsymbols
 
 
 dot
