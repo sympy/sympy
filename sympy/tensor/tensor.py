@@ -40,24 +40,27 @@ from sympy.core import Basic, sympify, Add, S
 from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.core.symbol import Symbol, symbols
+from sympy.core.sympify import CantSympify
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 
-class TIDS(object):
+class TIDS(CantSympify):
     """
     Tensor internal data structure. This contains internal data about
     components of a tensor expression, its free and dummy indices.
 
-    To create a `TIDS` object via the standard constructor, the required
+    To create a ``TIDS`` object via the standard constructor, the required
     arguments are
 
-    ``components``  `TensorHead` objects representing the components
-                    of the tensor expression.
+    Parameters
+    ==========
 
-    ``free``        Free indices in their internal representation.
+    components : ``TensorHead`` objects representing the components of the tensor expression.
 
-    ``dum``         Dummy indices in their internal representation.
+    free : Free indices in their internal representation.
+
+    dum : Dummy indices in their internal representation.
 
     Examples
     ========
@@ -153,12 +156,12 @@ class TIDS(object):
     @staticmethod
     def from_components_and_indices(components, indices):
         """
-        Create a new `TIDS` object from `components` and `indices`
+        Create a new ``TIDS`` object from ``components`` and ``indices``
 
-        ``components``  `TensorHead` objects representing the components
+        ``components``  ``TensorHead`` objects representing the components
                         of the tensor expression.
 
-        ``indices``     `TensorIndex` objects, the indices. Contractions are
+        ``indices``     ``TensorIndex`` objects, the indices. Contractions are
                         detected upon construction.
 
         Examples
@@ -281,9 +284,9 @@ class TIDS(object):
     @staticmethod
     def mul(f, g):
         """
-        The algorithms performing the multiplication of two TIDS instances.
+        The algorithms performing the multiplication of two ``TIDS`` instances.
 
-        In short, it forms a new TIDS object, joining components and indices,
+        In short, it forms a new ``TIDS`` object, joining components and indices,
         checking that abstract indices are compatible, and possibly contracting
         them.
 
@@ -308,7 +311,7 @@ class TIDS(object):
         TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
             [(m0, 0, 0)], [(1, 2, 0, 0), (3, 0, 0, 1)])
 
-        Free indices m3 and -m3 are identified as a contracted couple, and are
+        Free indices ``m3`` and ``-m3`` are identified as a contracted couple, and are
         therefore transformed into dummy indices.
 
         A wrong index construction (for example, trying to contract two
@@ -357,7 +360,7 @@ class TIDS(object):
 
     def sorted_components(self):
         """
-        Returns a TIDS with sorted components
+        Returns a ``TIDS`` with sorted components
 
         The sorting is done taking into account the commutation group
         of the component tensors.
@@ -456,7 +459,7 @@ class TIDS(object):
 
     def perm2tensor(self, g, canon_bp=False):
         """
-        Returns a `TIDS` instance corresponding to the permutation ``g``
+        Returns a ``TIDS`` instance corresponding to the permutation ``g``
 
         ``g``  permutation corresponding to the tensor in the representation
         used in canonicalization
@@ -2353,6 +2356,9 @@ class TensAdd(TensExpr):
     def _hashable_content(self):
         return tuple(self.args)
 
+    def __hash__(self):
+        return super(TensAdd, self).__hash__()
+
     def __ne__(self, other):
         return not (self == other)
 
@@ -2450,9 +2456,9 @@ class TensAdd(TensExpr):
     @staticmethod
     def from_TIDS_list(coeff, tids_list):
         """
-        Given a list of coefficients and a list of `TIDS` objects, construct
-        a `TensAdd` instance, equivalent to the one that would result from
-        creating single instances of `TensMul` and then adding them.
+        Given a list of coefficients and a list of ``TIDS`` objects, construct
+        a ``TensAdd`` instance, equivalent to the one that would result from
+        creating single instances of ``TensMul`` and then adding them.
 
         Examples
         ========
@@ -2471,7 +2477,7 @@ class TensAdd(TensExpr):
         2*B(i, j) + 3*A(i, j)
 
         If the coefficient parameter is a scalar, then it will be applied
-        as a coefficient on all `TIDS` objects.
+        as a coefficient on all ``TIDS`` objects.
 
         >>> TensAdd.from_TIDS_list(4, [t1, t2])
         4*A(i, j) + 4*B(i, j)
@@ -2582,9 +2588,6 @@ class TensMul(TensExpr):
 
     @staticmethod
     def from_TIDS(coeff, tids, **kw_args):
-        # t_indices = tids.to_indices()
-#         if isinstance(tids, VTIDS) and len(tids.free) == 0:  # autodrop point
-#             return coeff * tids.data[()]
         return TensMul(coeff, tids, **kw_args)
 
     @property
@@ -2626,6 +2629,7 @@ class TensMul(TensExpr):
         return res == 0
 
     def _hashable_content(self):
+        # TODO: refactor this, this code has already been used somewhere else
         if not self.components:
             return (self.coeff, tuple(self.components), tuple(self.free), tuple(self.dum))
 
@@ -2639,10 +2643,12 @@ class TensMul(TensExpr):
         if can[-1] != len(can) - 1:
             coeff = -coeff
 
-        #new_t = self.canon_bp()
         r = (coeff, tuple(t.components), \
                 tuple(sorted(t.free)), tuple(sorted(t.dum)))
         return r
+
+    def __hash__(self):
+        return super(TensMul, self).__hash__()
 
     def __eq__(self, other):
         # Basic's equality comparison considers 0 and a zero TensMul
@@ -2845,7 +2851,7 @@ class TensMul(TensExpr):
     def sorted_components(self):
         """
         Returns a tensor with sorted components
-        calling the corresponding method in a `TIDS` object.
+        calling the corresponding method in a ``TIDS`` object.
         """
         new_tids, sign = self._tids.sorted_components()
         coeff = -self._coeff if sign == -1 else self._coeff
@@ -2906,7 +2912,10 @@ class TensMul(TensExpr):
         """
         Raise or lower indices with the metric ``g``
 
-        ``g``  metric
+        Parameters
+        ==========
+
+        g : metric
 
         Notes
         =====
@@ -3092,7 +3101,7 @@ class TensMul(TensExpr):
         t = TensMul.from_data(self._coeff, self.components, free1, self.dum)
 
         # object is rebuilt in order to make sure that all contracted indices get recognized as dummies.
-        t2 = TensMul(*t.args)
+        # t2 = TensMul(*t.args)
         return t
 
     def fun_eval(self, *index_tuples):
@@ -3150,8 +3159,11 @@ class TensMul(TensExpr):
             return self
         t = self.fun_eval(*list(zip(free_args, indices)))
 
-        # object is rebuilt in order to make sure that all contracted indices get recognized as dummies.
-        return TensMul(*t.args)
+        # object is rebuilt in order to make sure that all contracted indices
+        # get recognized as dummies, but only if there are contracted indices.
+        if len(set(i if i.is_up else -i for i in indices)) != len(indices):
+            return t.func(*t.args)
+        return t
 
     def _print(self):
         if len(self.components) == 0:
@@ -3174,18 +3186,6 @@ class TensMul(TensExpr):
             return '%s*%s' % (self._coeff, res)
         else:
             return '(%s)*%s' %(self._coeff, res)
-
-#     def applyfunc(self, func):
-#         """
-#         TODO: correct errors:
-#
-#         Alters the data of the ``TensMul`` object, whose data ndarray will be the elementwise
-#         map of the current data ndarray by function ``func``.
-#         """
-#         new_tmul = TensMul(*self.args)
-#         tids = new_tmul._tids
-#         new_tmul._tids = TIDS(tids.components, tids.free, tids.dum, func(self.data))
-#         return new_tmul
 
     @property
     def data(self):
