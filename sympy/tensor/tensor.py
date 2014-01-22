@@ -32,30 +32,34 @@ lowered when the tensor is put in canonical form.
 from __future__ import print_function, division
 
 from collections import defaultdict
-from sympy.core import Basic, sympify, Add, S
-from sympy.core.symbol import Symbol, symbols
-from sympy.core.compatibility import string_types
-from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
-from sympy.core.containers import Tuple
 from sympy import Matrix, Rational
+from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
+    bsgs_direct_product, canonicalize, riemann_bsgs
+from sympy.core import Basic, sympify, Add, S
+from sympy.core.compatibility import string_types
+from sympy.core.containers import Tuple
+from sympy.core.symbol import Symbol, symbols
+from sympy.core.sympify import CantSympify
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 
-class TIDS(object):
+class TIDS(CantSympify):
     """
     Tensor internal data structure. This contains internal data about
     components of a tensor expression, its free and dummy indices.
 
-    To create a `TIDS` object via the standard constructor, the required
+    To create a ``TIDS`` object via the standard constructor, the required
     arguments are
 
-    ``components``  `TensorHead` objects representing the components
-                    of the tensor expression.
+    Parameters
+    ==========
 
-    ``free``        Free indices in their internal representation.
+    components : ``TensorHead`` objects representing the components of the tensor expression.
 
-    ``dum``         Dummy indices in their internal representation.
+    free : Free indices in their internal representation.
+
+    dum : Dummy indices in their internal representation.
 
     Examples
     ========
@@ -153,12 +157,12 @@ class TIDS(object):
     @staticmethod
     def from_components_and_indices(components, indices):
         """
-        Create a new `TIDS` object from `components` and `indices`
+        Create a new ``TIDS`` object from ``components`` and ``indices``
 
-        ``components``  `TensorHead` objects representing the components
+        ``components``  ``TensorHead`` objects representing the components
                         of the tensor expression.
 
-        ``indices``     `TensorIndex` objects, the indices. Contractions are
+        ``indices``     ``TensorIndex`` objects, the indices. Contractions are
                         detected upon construction.
 
         Examples
@@ -281,9 +285,9 @@ class TIDS(object):
     @staticmethod
     def mul(f, g):
         """
-        The algorithms performing the multiplication of two TIDS instances.
+        The algorithms performing the multiplication of two ``TIDS`` instances.
 
-        In short, it forms a new TIDS object, joining components and indices,
+        In short, it forms a new ``TIDS`` object, joining components and indices,
         checking that abstract indices are compatible, and possibly contracting
         them.
 
@@ -308,7 +312,7 @@ class TIDS(object):
         TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
             [(m0, 0, 0)], [(1, 2, 0, 0), (3, 0, 0, 1)])
 
-        Free indices m3 and -m3 are identified as a contracted couple, and are
+        Free indices ``m3`` and ``-m3`` are identified as a contracted couple, and are
         therefore transformed into dummy indices.
 
         A wrong index construction (for example, trying to contract two
@@ -357,7 +361,7 @@ class TIDS(object):
 
     def sorted_components(self):
         """
-        Returns a TIDS with sorted components
+        Returns a ``TIDS`` with sorted components
 
         The sorting is done taking into account the commutation group
         of the component tensors.
@@ -456,7 +460,7 @@ class TIDS(object):
 
     def perm2tensor(self, g, canon_bp=False):
         """
-        Returns a `TIDS` instance corresponding to the permutation ``g``
+        Returns a ``TIDS`` instance corresponding to the permutation ``g``
 
         ``g``  permutation corresponding to the tensor in the representation
         used in canonicalization
@@ -1477,7 +1481,7 @@ def tensorhead(name, typ, sym, comm=0, matrix_behavior=0):
 
 @doctest_depends_on(modules=('numpy',))
 class TensorHead(Basic):
-    """
+    r"""
     Tensor head of the tensor
 
     Parameters
@@ -1573,6 +1577,32 @@ class TensorHead(Basic):
     >>> A(i0, -i0)
     -18
 
+    It is also possible to store symbolic data inside a tensor, for example,
+    define a four-momentum-like tensor:
+
+    >>> from sympy import symbols
+    >>> P = tensorhead('P', [Lorentz], [[1]])
+    >>> E, px, py, pz = symbols('E p_x p_y p_z', positive=True)
+    >>> P.data = [E, px, py, pz]
+
+    The contravariant and covariant components are, respectively:
+
+    >>> P(i0).data
+    [E p_x p_y p_z]
+    >>> P(-i0).data
+    [E -p_x -p_y -p_z]
+
+    The contraction of a 1-index tensor by itself is usually indicated by a
+    power by two:
+
+    >>> P(i0)**2
+    E**2 - p_x**2 - p_y**2 - p_z**2
+
+    As the power by two is clearly identical to `P_\mu P^\mu`, it is
+    possible to simply contract the ``TensorHead`` object, without specifying the indices
+
+    >>> P**2
+    E**2 - p_x**2 - p_y**2 - p_z**2
     """
     is_commutative = False
 
@@ -2453,9 +2483,9 @@ class TensAdd(TensExpr):
     @staticmethod
     def from_TIDS_list(coeff, tids_list):
         """
-        Given a list of coefficients and a list of `TIDS` objects, construct
-        a `TensAdd` instance, equivalent to the one that would result from
-        creating single instances of `TensMul` and then adding them.
+        Given a list of coefficients and a list of ``TIDS`` objects, construct
+        a ``TensAdd`` instance, equivalent to the one that would result from
+        creating single instances of ``TensMul`` and then adding them.
 
         Examples
         ========
@@ -2474,7 +2504,7 @@ class TensAdd(TensExpr):
         2*B(i, j) + 3*A(i, j)
 
         If the coefficient parameter is a scalar, then it will be applied
-        as a coefficient on all `TIDS` objects.
+        as a coefficient on all ``TIDS`` objects.
 
         >>> TensAdd.from_TIDS_list(4, [t1, t2])
         4*A(i, j) + 4*B(i, j)
@@ -2851,7 +2881,7 @@ class TensMul(TensExpr):
     def sorted_components(self):
         """
         Returns a tensor with sorted components
-        calling the corresponding method in a `TIDS` object.
+        calling the corresponding method in a ``TIDS`` object.
         """
         new_tids, sign = self._tids.sorted_components()
         coeff = -self._coeff if sign == -1 else self._coeff
@@ -2862,7 +2892,7 @@ class TensMul(TensExpr):
         """
         Returns the tensor corresponding to the permutation ``g``
 
-        For further details, see the method in `TIDS` with the same name.
+        For further details, see the method in ``TIDS`` with the same name.
         """
         new_tids = self._tids.perm2tensor(g, canon_bp)
         coeff = self._coeff
@@ -2912,7 +2942,10 @@ class TensMul(TensExpr):
         """
         Raise or lower indices with the metric ``g``
 
-        ``g``  metric
+        Parameters
+        ==========
+
+        g : metric
 
         Notes
         =====
