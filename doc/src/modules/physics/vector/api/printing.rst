@@ -5,7 +5,7 @@ Printing (Docstrings)
 time_derivative_printing
 ========================
 
-.. autofunction:: sympy.physics.mechanics.functions.time_derivative_printing
+.. autofunction:: sympy.physics.vector.functions.time_derivative_printing
 
 vprint
 ======

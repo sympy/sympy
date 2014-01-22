@@ -1,5 +1,5 @@
 ============================================================================
-Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module
+Potential Issues/Advanced Topics/Future Features in Physics/Vector Module
 ============================================================================
 
 This document will describe some of the more advanced functionality that this

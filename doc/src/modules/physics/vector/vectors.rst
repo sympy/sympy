@@ -606,8 +606,8 @@ do this::
     [2*x],
     [3*x]])
 
-Vector Calculus, in sympy.physics.vector
-----------------------------------------
+Vector Calculus, in physics.vector
+----------------------------------
 
 We have already introduced our first reference frame. We can take the
 derivative in that frame right now, if we desire: ::

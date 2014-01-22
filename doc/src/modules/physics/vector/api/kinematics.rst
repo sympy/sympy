@@ -5,7 +5,7 @@ Kinematics (Docstrings)
 Point
 =====
 
-.. automodule:: sympy.physics.vectors.point
+.. automodule:: sympy.physics.vector.point
    :members:
 
 

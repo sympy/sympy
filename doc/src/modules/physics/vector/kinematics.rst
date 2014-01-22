@@ -415,8 +415,8 @@ another fixed object, such as in the following example:
 .. % rolling disc kinematics here
 
 
-Kinematics in the physics.vector module
-=======================================
+Kinematics in physics.vector
+============================
 
 It should be clear by now that the topic of kinematics here has been mostly
 describing the correct way to manipulate vectors into representing the
