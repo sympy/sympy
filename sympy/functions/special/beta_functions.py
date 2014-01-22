@@ -36,3 +36,9 @@ class beta(Function):
     def _eval_expand_func(self, **hints):
         x, y = self.args
         return gamma(x)*gamma(y) / gamma(x + y)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and self.args[1].is_real
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
