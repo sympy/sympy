@@ -1,4 +1,4 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
+from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
@@ -145,7 +145,7 @@ def test_ccode_settings():
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i, j, k, n, m, o = symbols('i j k n m o', integer=True)
+    i, j, k, n, m, o = symbols('i j k n m o', cls=Idx)
 
     p = CCodePrinter()
     p._not_c = set()
@@ -185,7 +185,7 @@ def test_ccode_loops_matrix_vector():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = y[i] + A[i*n + j]*x[j];\n'
+        '      y[i] = y[i] + A[%s]*x[j];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
@@ -228,7 +228,7 @@ def test_ccode_loops_add():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = y[i] + A[i*n + j]*x[j];\n'
+        '      y[i] = y[i] + A[%s]*x[j];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
@@ -256,7 +256,7 @@ def test_ccode_loops_multiple_contractions():
         '   for (int j=0; j<n; j++){\n'
         '      for (int k=0; k<o; k++){\n'
         '         for (int l=0; l<p; l++){\n'
-        '            y[i] = y[i] + b[j*o*p + k*p + l]*a[i*n*o*p + j*o*p + k*p + l];\n'
+        '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -287,7 +287,7 @@ def test_ccode_loops_addfactor():
         '   for (int j=0; j<n; j++){\n'
         '      for (int k=0; k<o; k++){\n'
         '         for (int l=0; l<p; l++){\n'
-        '            y[i] = (a[i*n*o*p + j*o*p + k*p + l] + b[i*n*o*p + j*o*p + k*p + l])*c[j*o*p + k*p + l] + y[i];\n'
+        '            y[i] = (a[%s] + b[%s])*c[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -318,7 +318,7 @@ def test_ccode_loops_multiple_terms():
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
         '      for (int k=0; k<o; k++){\n'
-        '         y[i] = b[j]*b[k]*c[i*n*o + j*o + k] + y[i];\n'
+        '         y[i] = b[j]*b[k]*c[%s] + y[i];\n' % (i*n*o + j*o + k) +\
         '      }\n'
         '   }\n'
         '}\n'
@@ -326,14 +326,14 @@ def test_ccode_loops_multiple_terms():
     s2 = (
         'for (int i=0; i<m; i++){\n'
         '   for (int k=0; k<o; k++){\n'
-        '      y[i] = b[k]*a[i*o + k] + y[i];\n'
+        '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = b[j]*a[i*n + j] + y[i];\n'
+        '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}\n'
     )

@@ -145,9 +145,12 @@ class CCodePrinter(CodePrinter):
         elem = S.Zero
         offset = S.One
         for i in reversed(range(expr.rank)):
-            elem += offset*expr.indices[i]
+            elem += expr.indices[i]*offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
 
     def _print_Exp1(self, expr):
         return "M_E"
