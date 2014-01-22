@@ -145,17 +145,17 @@ def test_ccode_settings():
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i, j, k, n, m, o = symbols('i j k n m o', cls=Idx)
-
+    n, m, o = symbols('n m o', integer=True)
+    i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = CCodePrinter()
     p._not_c = set()
 
-    x = IndexedBase('x')[Idx(j, n)]
+    x = IndexedBase('x')[j]
     assert p._print_Indexed(x) == 'x[j]'
-    A = IndexedBase('A')[Idx(i, m), Idx(j, n)]
-    assert p._print_Indexed(A) == 'A[%s]' % str(j + n*i)
-    B = IndexedBase('B')[Idx(i, m), Idx(j, n), Idx(k, o)]
-    assert p._print_Indexed(B) == 'B[%s]' % str(k + i*n*o + j*o)
+    A = IndexedBase('A')[i, j]
+    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
+    B = IndexedBase('B')[i, j, k]
+    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
 
     assert p._not_c == set()
 
