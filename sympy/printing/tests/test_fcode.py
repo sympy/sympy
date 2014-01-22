@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
+    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -573,8 +573,8 @@ def test_fcode_Indexed_without_looking_for_contraction():
     Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
     e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
-    code0 = ccode(e.rhs, assign_to=e.lhs, look_for_contraction=False)
-    assert code0.split('\n')[-1].endswith('Dy(i) = (y(i + 1) - y(i))*1.0/(x(i + 1) - x(i))')
+    code0 = fcode(e.rhs, assign_to=e.lhs, look_for_contraction=False)
+    assert code0.endswith('Dy(i) = (y(i + 1) - y(i))*1.0/(x(i + 1) - x(i))')
 
 
 def test_derived_classes():
