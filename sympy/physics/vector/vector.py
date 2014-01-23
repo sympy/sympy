@@ -476,7 +476,7 @@ class Vector(object):
 
         """
 
-        from sympy.physics.vector import _check_frame
+        from sympy.physics.vector.frame import _check_frame
         wrt = sympify(wrt)
         _check_frame(otherframe)
         outvec = Vector(0)
