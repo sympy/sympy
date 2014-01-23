@@ -864,6 +864,28 @@ def jacobi_symbol(m, n):
 
 
 def mobius(n):
+	"""Returns value of Mobius Function for all positive integer n 
+	   ======= 
+		1) 1 if n==1
+		2) 0 if p**2 divides n for some prime p
+		3) (-1)**k if n = p1*p2*p3*......*pk where p i's are distict primes
+
+		Examples
+		=========
+		>>> from sympy.ntheory import mobius
+		>>> mobius(13*7)
+		1
+		>>> mobius(1)
+		1
+		>>> mobius(-1)
+		'Mobius Fuction defined for positive integer only'
+		>>> mobius(13*7*5)
+		-1
+		>>> mobius(13**2)
+		0
+		
+	"""
+		
 	from sympy import factorint	
 	if n<=0 :
 		return "Mobius Fuction defined for positive integer only"
