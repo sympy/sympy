@@ -17,8 +17,6 @@ class AssignmentError(Exception):
 class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
-
-    self._settings['look_for_contraction'] assumed True if not passsed on by user
     """
 
     _operators = {
@@ -37,7 +35,7 @@ class CodePrinter(StrPrinter):
         lines = []
 
         # Setup loops over non-dummy indices  --  all terms need these
-        if self._settings.get('look_for_contraction', True):
+        if self._settings.get('contract', True):
             indices = self.get_expression_indices(expr, assign_to)
         else:
             indices = []
@@ -45,7 +43,7 @@ class CodePrinter(StrPrinter):
 
         # Setup loops over dummy indices  --  each term needs separate treatment
         from sympy.tensor import get_contraction_structure
-        if self._settings.get('look_for_contraction', True):
+        if self._settings.get('contract', True):
             d = get_contraction_structure(expr)
         else:
             d = {None: (expr,)}

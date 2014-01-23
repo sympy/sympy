@@ -7,6 +7,8 @@ using the functions defined in math.h where possible.
 A complete code generator, which uses ccode extensively, can be found in
 sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
+
+
 """
 
 from __future__ import print_function, division
@@ -34,7 +36,7 @@ class CCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
-        'look_for_contraction': True,
+        'contract': True,
     }
 
     def __init__(self, settings={}):
@@ -239,6 +241,13 @@ def ccode(expr, assign_to=None, **settings):
             constant declarations for the number symbols. If False, the
             same information is returned in a more programmer-friendly
             data structure.
+        contract: optional
+            If True, `Indexed` instances are assumed to obey
+            tensor contraction rules and the corresponding nested
+            loops over indices are generated. Setting contract = False
+            will not generate loops, instead the user is responsible
+            to provide values for the indices in the code. [default=True]
+
 
         Examples
         ========
@@ -256,7 +265,15 @@ def ccode(expr, assign_to=None, **settings):
         ... }
         >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
         'fabs(x) + CEIL(x)'
-
+        >>> from sympy import Eq, IndexedBase, Idx
+        >>> len_y = 5
+        >>> y = IndexedBase('y', shape=(len_y,))
+        >>> t = IndexedBase('t', shape=(len_y,))
+        >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+        >>> i = Idx('i', len_y-1)
+        >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+        >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
+        'Dy[i] = (y[i + 1] - y[i])*1.0/(t[i + 1] - t[i]);'
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)
