@@ -766,19 +766,22 @@ class Ellipse(GeometryEntity):
         [Line(Point(3, 2), Point(4, 2)), Line(Point(3, 2), Point(3, 3))]
         """
 
+        rv = []
         if self.centre == p:
-            return [Line(p, Point(p.x + 1, p.y)), Line(p, Point(p.x, p.y + 1))]
+            rv.append(Line(p, Point(p.x + 1, p.y)), Line(p, Point(p.x, p.y + 1)))
         elif p.x == self.center.x:
-            return [Line(p, Point(p.x, p.y + 1))]
+            rv.append(Line(p, Point(p.x, p.y + 1)))
         elif p.y == self.center.y:
-            return [Line(p, Point(p.x + 1, p.y))]
+            rv.append(Line(p, Point(p.x + 1, p.y)))
+        if rv:
+            return rv
 
         else:
             x, y = Dummy('x', real=True), Dummy('y', real=True)
             eq = self.equation(x, y)
-            dxdy = -idiff(eq, x, y)
+            dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
-            points = solve([slope - dxdy, eq], [x, y])
+            points = solve([slope + 1 / dydx, eq], [x, y])
             return [Line(p, pt) for pt in points]
 
 
