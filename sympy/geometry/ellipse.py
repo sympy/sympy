@@ -641,6 +641,7 @@ class Ellipse(GeometryEntity):
         >>> p[1] = t # doctest: +SKIP
 
         """
+        p = Point(p)
         if self.encloses_point(p):
             return []
 
@@ -750,37 +751,42 @@ class Ellipse(GeometryEntity):
         Returns
         =======
 
-        normal_lines : list with 1 , 2 or 4 Lines
+        normal_lines : list with 1, 2 or 4 Lines
 
         Examples
         ========
 
         >>> from sympy import Line, Point, Ellipse
-        >>> e1= Ellipse(Point(0, 0), 2, 3)
-        >>> e1.normal_lines(Point(1, 0))
-        [Line(Point(1, 0), Point(2, 0))]
-
-        >>> from sympy import Line, Point, Ellipse
-        >>> e1= Ellipse(Point(3, 2), 2, 3)
-        >>> e1.normal_lines(Point(3, 2))
-        [Line(Point(3, 2), Point(4, 2)), Line(Point(3, 2), Point(3, 3))]
+        >>> e = Ellipse((0, 0), 2, 3)
+        >>> c = e.center
+        >>> e.normal_lines(c + Point(1, 0))
+        [Line(Point(-2, 0), Point(2, 0))]
+        >>> e.normal_lines(c)
+        [Line(Point(0, -3), Point(0, 3)), Line(Point(-2, 0), Point(2, 0))]
         """
+        p = Point(p)
 
-        rv = []
-        if p.x == self.center.x:
-            rv.append(Line(*self.intersection(Line(p, Point(p.x, p.y + 1)))))
-        elif p.y == self.center.y:
-            rv.append(Line(*self.intersection(Line(p, Point(p.x + 1, p.y)))))
-        if rv:
-            return rv
+        # XXX change True to something like self.angle == 0 if the arbitrarily
+        # rotated ellipse is introduced.
+        # https://github.com/sympy/sympy/issues/2815)
+        if True:
+            rv = []
+            if p.x == self.center.x:
+                rv.append(Line(*self.intersection(Line(p, slope=oo))))
+            if p.y == self.center.y:
+                rv.append(Line(*self.intersection(Line(p, slope=0))))
+            if rv:
+                # at these special orientations of p either 1 or 2 normals
+                # exist and we are done
+                return rv
 
-        else:
-            x, y = Dummy('x', real=True), Dummy('y', real=True)
-            eq = self.equation(x, y)
-            dydx = idiff(eq, y, x)
-            slope = Line(p, Point(x, y)).slope
-            points = solve([slope + 1 / dydx, eq], [x, y])
-            return [Line(p, pt) for pt in points]
+        # find the 4 normal points and construct lines through them and p
+        x, y = Dummy('x', real=True), Dummy('y', real=True)
+        eq = self.equation(x, y)
+        dydx = idiff(eq, y, x)
+        slope = Line(p, Point(x, y)).slope
+        points = solve([slope + 1/dydx, eq], [x, y])
+        return [Line(p, pt) for pt in points]
 
 
     def arbitrary_point(self, parameter='t'):
