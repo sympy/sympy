@@ -767,9 +767,7 @@ class Ellipse(GeometryEntity):
         """
 
         rv = []
-        if self.centre == p:
-            rv.append(Line(*self.intersection(Line(p, Point(p.x + 1, p.y)))), Line(*self.intersection(Line(p, Point(p.x, p.y + 1)))))
-        elif p.x == self.center.x:
+        if p.x == self.center.x:
             rv.append(Line(*self.intersection(Line(p, Point(p.x, p.y + 1)))))
         elif p.y == self.center.y:
             rv.append(Line(*self.intersection(Line(p, Point(p.x + 1, p.y)))))

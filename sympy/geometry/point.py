@@ -322,14 +322,6 @@ class Point(GeometryEntity):
 #       return True
 #       """
 
-    def is_real(point):
-
-        x,y=point.args
-        if x.is_real and y.is_real:
-            return True
-        else:
-            return False
-
     def distance(self, p):
         """The Euclidean distance from self to point p.
 
