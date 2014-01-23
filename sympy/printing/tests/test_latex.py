@@ -177,6 +177,11 @@ def test_latex_functions():
     assert latex(beta(x)) == r"\beta{\left (x \right )}"
     assert latex(beta) == r"\beta"
 
+    a1 = Function('a_1')
+
+    assert latex(a1) == r"\operatorname{a_1}"
+    assert latex(a1(x)) == r"\operatorname{a_1}{\left (x \right )}"
+
     assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
