@@ -42,6 +42,9 @@ class entrywidget(GridLayout):
         z = self.text_input.text
         arr = z.split('=')
         x = Symbol("x")
+        y = Symbol("y")
+        z = Symbol("z")
+        t = Symbol("t")
         if(len(arr) > 1):
             x = eval(arr[1])
             t = eval(arr[1])
