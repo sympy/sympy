@@ -8,15 +8,49 @@ the features that will be implemented in the future will also be covered, along
 with unanswered questions about proper functionality. Also, common problems
 will be discussed, along with some solutions.
 
+Inertia (Dyadics)
+=================
+
+Dyadics are used to define the inertia of bodies within :mod:`mechanics`.
+Inertia dyadics can be defined explicitly but the ``inertia`` function is
+typically much more convenient for the user::
+
+  >>> from sympy.physics.mechanics import ReferenceFrame, inertia
+  >>> N = ReferenceFrame('N')
+
+  Supply a reference frame and the moments of inertia if the object
+  is symmetrical:
+
+  >>> inertia(N, 1, 2, 3)
+  (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
+
+  Supply a reference frame along with the products and moments of inertia
+  for a general object:
+
+  >>> inertia(N, 1, 2, 3, 4, 5, 6)
+  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
+
+Notice that the ``inertia`` function returns a dyadic with each component
+represented as two unit vectors separated by a ``|``. Refer to the
+:ref:`Dyadic` section for more information about dyadics.
+
+Inertia is often expressed in a matrix, or tensor, form, especially for
+numerical purposes. Since the matrix form does not contain any information
+about the reference frame(s) the inertia dyadic is defined in, you must provide
+one or two reference frames to extract the measure numbers from the dyadic.
+There is a convenience function to do this::
+
+  >>> inertia(N, 1, 2, 3, 4, 5, 6).to_matrix(N)
+  Matrix([
+  [1, 4, 6],
+  [4, 2, 5],
+  [6, 5, 3]])
+
 Common Issues
 =============
 Here issues with numerically integrating code, choice of `dynamicsymbols` for
 coordinate and speed representation, printing, differentiating, and
 substitution will occur.
-
-Numerically Integrating Code
-----------------------------
-See Future Features: Code Output
 
 Printing
 --------
@@ -25,12 +59,6 @@ measure numbers, and have unsorted output from the ``vprint``, ``vpprint``, and
 ``vlatex`` functions. If you are printing something large, please use one of
 those functions, as the sorting can increase printing time from seconds to
 minutes.
-
-Differentiating
----------------
-Differentiation of very large expressions can take some time in SymPy; it is
-possible for large expressions to take minutes for the derivative to be
-evaluated. This will most commonly come up in linearization.
 
 Substitution
 ------------
@@ -119,28 +147,4 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
-
-
-Future Features
-===============
-
-This will cover the planned features to be added to this submodule.
-
-Code Output
------------
-A function for generating code output for numerical integration is the highest
-priority feature to implement next. There are a number of considerations here.
-
-Code output for C (using the GSL libraries), Fortran 90 (using LSODA), MATLAB,
-and SciPy is the goal. Things to be considered include: use of ``cse`` on large
-expressions for MATLAB and SciPy, which are interpretive. It is currently unclear
-whether compiled languages will benefit from common subexpression elimination,
-especially considering that it is a common part of compiler optimization, and
-there can be a significant time penalty when calling ``cse``.
-
-Care needs to be taken when constructing the strings for these expressions, as
-well as handling of input parameters, and other dynamic symbols. How to deal
-with output quantities when integrating also needs to be decided, with the
-potential for multiple options being considered.
-
 

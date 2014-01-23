@@ -14,6 +14,16 @@ Here issues with numerically integrating code, choice of `dynamicsymbols` for
 coordinate and speed representation, printing, differentiating, and
 substitution will occur.
 
+Numerically Integrating Code
+----------------------------
+See Future Features: Code Output
+
+Differentiating
+---------------
+Differentiation of very large expressions can take some time in SymPy; it is
+possible for large expressions to take minutes for the derivative to be
+evaluated. This will most commonly come up in linearization.
+
 Choice of Coordinates and Speeds
 --------------------------------
 The Kane object is set up with the assumption that the generalized speeds are
@@ -115,4 +125,20 @@ Also possible is including the method which creates a transformation matrix for
 well as a "reference point" for distance to the camera. Development of this
 could also be tied into code output.
 
+Code Output
+-----------
+A function for generating code output for numerical integration is the highest
+priority feature to implement next. There are a number of considerations here.
+
+Code output for C (using the GSL libraries), Fortran 90 (using LSODA), MATLAB,
+and SciPy is the goal. Things to be considered include: use of ``cse`` on large
+expressions for MATLAB and SciPy, which are interpretive. It is currently unclear
+whether compiled languages will benefit from common subexpression elimination,
+especially considering that it is a common part of compiler optimization, and
+there can be a significant time penalty when calling ``cse``.
+
+Care needs to be taken when constructing the strings for these expressions, as
+well as handling of input parameters, and other dynamic symbols. How to deal
+with output quantities when integrating also needs to be decided, with the
+potential for multiple options being considered.
 
