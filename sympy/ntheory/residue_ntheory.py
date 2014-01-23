@@ -861,3 +861,16 @@ def jacobi_symbol(m, n):
         if s % 2 and n % 8 in [3, 5]:
             j *= -1
     return j
+
+
+def mobius(n):
+	from sympy import factorint	
+	if n<=0 :
+		return "Mobius Fuction defined for positive integer only"
+	elif n==1:
+		return 1
+	a = factorint(n)
+	for i in a:
+		if a[i]>1 :
+			return 0
+	return pow(-1,len(a))
