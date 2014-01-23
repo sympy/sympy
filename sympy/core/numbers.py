@@ -2600,7 +2600,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_commutative = True
     is_bounded = False
     is_real = None
-    is_number = False
+    is_number = True
 
     __slots__ = []
 
