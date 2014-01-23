@@ -516,6 +516,7 @@ class _TensorDataLazyEvaluator(CantSympify):
     the tensor expression.
     """
     _substitutions_dict = dict()
+    _substitutions_dict_tensmul = dict()
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -534,7 +535,16 @@ class _TensorDataLazyEvaluator(CantSympify):
 
     def _get(self, key):
         """
-        TODO
+        Retrieve ``data`` associated with ``key``.
+
+        This algorithm looks into ``self._substitutions_dict`` for all
+        ``TensorHead`` in the ``TensExpr`` (or just ``TensorHead`` if
+        key is a TensorHead instance). It reconstructs the data that the
+        tensor expression should have by performing data the operation that
+        correspond to the abstract tensor operations applied.
+
+        Metric tensor is handled in a different manner: it is pre-computed in
+        self._substitutions_dict_tensmul.
         """
         if key in self._substitutions_dict:
             return self._substitutions_dict[key]
@@ -544,6 +554,14 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         if isinstance(key, TensMul):
             tensmul_list = key.split()
+            if len(tensmul_list) == 1 and len(tensmul_list[0].components) == 1:
+                # special case to handle metrics. Metric tensors cannot be
+                # constructed through contraction by the metric, their
+                # components show if they are a matrix or its inverse.
+                signature = tuple([i.is_up for i in tensmul_list[0].get_indices()])
+                srch = (tensmul_list[0].components[0],) + signature
+                if srch in self._substitutions_dict_tensmul:
+                    return self._substitutions_dict_tensmul[srch]
             data_list = [self.data_tensmul_from_tensorhead(i, i.components[0]) for i in tensmul_list]
             if all([i is None for i in data_list]):
                 return None
@@ -565,6 +583,17 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         return None
 
+    def data_tensorhead_from_tensmul(self, data, tensmul, tensorhead):
+        if data is None:
+            return None
+
+        return self._correct_signature_from_indices(
+            data,
+            tensmul.get_indices(),
+            tensmul.free,
+            tensmul.dum,
+            True)
+
     def data_tensmul_from_tensorhead(self, tensmul, tensorhead):
         if tensorhead.data is None:
             return None
@@ -577,15 +606,15 @@ class _TensorDataLazyEvaluator(CantSympify):
 
     def data_product_tensors(self, data_list, tensmul_list):
         """
-        TODO
+        Given a ``data_list``, list of ``ndarray``'s and a ``tensmul_list``,
+        list of ``TensMul`` instances, compute the resulting ``ndarray``,
+        after tensor products and contractions.
         """
         def data_mul(f, g):
             """
-            TODO: wrong doc
-
-            Multiplies two ``ndarray`` objects, it first calls its super method
-            on ``TIDS``, then creates a new ``VTIDS`` object, adding ``ndarray``
-            data according to the metric contractions of indices.
+            Multiplies two ``ndarray`` objects, it first calls ``TIDS.mul``,
+            then checks which indices have been contracted, and then performs
+            contraction operation on data, according to the contracted indices.
             """
             data1, tensmul1 = f
             data2, tensmul2 = g
@@ -597,12 +626,41 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         return functools.reduce(data_mul, zip(data_list, tensmul_list))
 
+    def _assign_data_to_tensor_expr(self, key, data):
+        if isinstance(key, TensAdd):
+            raise ValueError('cannot assign data to TensAdd')
+        # here it is assumed that `key` is a `TensMul` instance.
+        if len(key.components) != 1:
+            raise ValueError('cannot assign data to TensMul with multiple components')
+        tensorhead = key.components[0]
+        newdata = self.data_tensorhead_from_tensmul(data, key, tensorhead)
+        return tensorhead, newdata
+
     def __setitem__(self, key, value):
         """
-        TODO
+        Set the data of a tensor object/expression.
+
+        Data is transformed to the all-contravariant form and stored
+        with the corresponding ``TensorHead`` object. If a ``TensorHead``
+        object cannot be uniquely identified, it will raise an error.
         """
-        # TODO: what if it already exists?
-        self._substitutions_dict[key] = value
+        data = _TensorDataLazyEvaluator.parse_data(value)
+
+        # TensorHead and TensorIndexType can be assigned data directly, while
+        # TensMul must first convert data to a fully contravariant form, and
+        # assign it to its corresponding TensorHead single component.
+        if not isinstance(key, (TensorHead, TensorIndexType)):
+            key, data = self._assign_data_to_tensor_expr(key, data)
+
+        if isinstance(key, TensorHead):
+            for dim, indextype in zip(data.shape, key.index_types):
+                if indextype.data is None:
+                    raise ValueError("index type {} has no data associated (needed to raise/lower index)".format(indextype))
+                if indextype.dim is None:
+                    continue
+                if dim != indextype.dim:
+                    raise ValueError("wrong dimension of ndarray")
+        self._substitutions_dict[key] = data
 
     def __delitem__(self, key):
         del self._substitutions_dict[key]
@@ -641,7 +699,6 @@ class _TensorDataLazyEvaluator(CantSympify):
 
     @staticmethod
     def add_tensor_mul(prod, f, g):
-        # TODO: decide whether to add a check of existence in _lazy_operations_dict
         def mul_function():
             return _TensorDataLazyEvaluator._contract_ndarray(f.free, g.free, f.data, g.data)
 
@@ -665,6 +722,15 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         _TensorDataLazyEvaluator._substitutions_dict[tensmul] = tensmul_build()
 
+    def add_metric_data(self, metric, data):
+        # hard assignment, data should not be added to `TensorHead` for metric:
+        # the problem with `TensorHead` is that the metric is anomalous, i.e.
+        # raising and lowering the index means considering the metric or its
+        # inverse, this is not the case for other tensors.
+        self._substitutions_dict_tensmul[metric, True, True] = data
+        inverse_matrix = self.inverse_matrix(data)
+        self._substitutions_dict_tensmul[metric, False, False] = inverse_matrix
+
     @staticmethod
     def _flip_index_by_metric(data, metric, pos):
         numpy = import_module('numpy')
@@ -676,7 +742,12 @@ class _TensorDataLazyEvaluator(CantSympify):
         return numpy.rollaxis(data, 0, pos+1)
 
     @staticmethod
-    def _correct_signature_from_indices(data, indices, free, dum):
+    def inverse_matrix(ndarray):
+        m = Matrix(ndarray).inv()
+        return _TensorDataLazyEvaluator.parse_data(m)
+
+    @staticmethod
+    def _correct_signature_from_indices(data, indices, free, dum, inverse=False):
         """
         Utility function to correct the values inside the data ndarray
         according to whether indices are covariant or contravariant.
@@ -687,8 +758,14 @@ class _TensorDataLazyEvaluator(CantSympify):
         # change the ndarray values according covariantness/contravariantness of the indices
         # use the metric
         for i, indx in enumerate(indices):
-            if not indx.is_up:
+            if not indx.is_up and not inverse:
                 data = _TensorDataLazyEvaluator._flip_index_by_metric(data, indx._tensortype.data, i)
+            elif not indx.is_up and inverse:
+                data = _TensorDataLazyEvaluator._flip_index_by_metric(
+                    data,
+                    _TensorDataLazyEvaluator.inverse_matrix(indx._tensortype.data),
+                    i
+                )
 
         if len(dum) > 0:
             ### perform contractions ###
@@ -1095,7 +1172,8 @@ class TensorIndexType(Basic):
             if self.dim != dim1:
                 raise ValueError("Dimension mismatch")
         _tensor_data_substitution_dict[self] = data
-        _tensor_data_substitution_dict[self.metric] = data
+        _tensor_data_substitution_dict.add_metric_data(self.metric, data)
+#         _tensor_data_substitution_dict[self.metric] = data
 
     @data.deleter
     def data(self):
@@ -1150,6 +1228,10 @@ class TensorIndexType(Basic):
         return self.name
 
     __repr__ = __str__
+
+    def __del__(self):
+        if self in _tensor_data_substitution_dict:
+            del _tensor_data_substitution_dict[self]
 
 
 @doctest_depends_on(modules=('numpy',))
@@ -1748,6 +1830,51 @@ class TensorHead(Basic):
     def _print(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
+    def _check_auto_matrix_indices_in_call(self, *indices):
+        matrix_behavior_kinds = dict()
+
+        if len(indices) != len(self.index_types):
+            if not self._matrix_behavior:
+                raise ValueError('wrong number of indices')
+
+            # _matrix_behavior is True, so take the last one or two missing
+            # indices as auto-matrix indices:
+            ldiff = len(self.index_types) - len(indices)
+            if ldiff > 2:
+                raise ValueError('wrong number of indices')
+            if ldiff == 2:
+                mat_ind = [len(indices), len(indices) + 1]
+            elif ldiff == 1:
+                mat_ind = [len(indices)]
+            not_equal = True
+        else:
+            not_equal = False
+            mat_ind = [i for i, e in enumerate(indices) if e is True]
+            if mat_ind:
+                not_equal = True
+            indices = tuple([_ for _ in indices if _ is not True])
+
+            for i, el in enumerate(indices):
+                if not isinstance(el, TensorIndex):
+                    not_equal = True
+                    break
+                if el._tensortype != self.index_types[i]:
+                    not_equal = True
+                    break
+
+        if not_equal:
+            for el in mat_ind:
+                eltyp = self.index_types[el]
+                if eltyp in matrix_behavior_kinds:
+                    elind = -self.index_types[el].auto_right
+                    matrix_behavior_kinds[eltyp].append(elind)
+                else:
+                    elind = self.index_types[el].auto_left
+                    matrix_behavior_kinds[eltyp] = [elind]
+                indices = indices[:el] + (elind,) + indices[el:]
+
+        return indices, matrix_behavior_kinds
+
     def __call__(self, *indices):
         """
         Returns a tensor with indices.
@@ -1822,47 +1949,7 @@ class TensorHead(Basic):
 
         """
 
-        matrix_behavior_kinds = dict()
-
-        if len(indices) != len(self.index_types):
-            if not self._matrix_behavior:
-                raise ValueError('wrong number of indices')
-
-            # _matrix_behavior is True, so take the last one or two missing
-            # indices as auto-matrix indices:
-            ldiff = len(self.index_types) - len(indices)
-            if ldiff > 2:
-                raise ValueError('wrong number of indices')
-            if ldiff == 2:
-                mat_ind = [len(indices), len(indices) + 1]
-            elif ldiff == 1:
-                mat_ind = [len(indices)]
-            not_equal = True
-        else:
-            not_equal = False
-            mat_ind = [i for i, e in enumerate(indices) if e is True]
-            if mat_ind:
-                not_equal = True
-            indices = tuple([_ for _ in indices if _ is not True])
-
-            for i, el in enumerate(indices):
-                if not isinstance(el, TensorIndex):
-                    not_equal = True
-                    break
-                if el._tensortype != self.index_types[i]:
-                    not_equal = True
-                    break
-
-        if not_equal:
-            for el in mat_ind:
-                eltyp = self.index_types[el]
-                if eltyp in matrix_behavior_kinds:
-                    elind = -self.index_types[el].auto_right
-                    matrix_behavior_kinds[eltyp].append(elind)
-                else:
-                    elind = self.index_types[el].auto_left
-                    matrix_behavior_kinds[eltyp] = [elind]
-                indices = indices[:el] + (elind,) + indices[el:]
+        indices, matrix_behavior_kinds = self._check_auto_matrix_indices_in_call(*indices)
 
         components = [self]
         tids = TIDS.from_components_and_indices(components, indices)
@@ -1890,14 +1977,6 @@ class TensorHead(Basic):
 
     @data.setter
     def data(self, data):
-        data = _TensorDataLazyEvaluator.parse_data(data)
-        for dim, indextype in zip(data.shape, self.index_types):
-            if indextype.data is None:
-                raise ValueError("index type {} has no data associated (needed to raise/lower index)".format(indextype))
-            if indextype.dim is None:
-                continue
-            if dim != indextype.dim:
-                raise ValueError("wrong dimension of ndarray")
         _tensor_data_substitution_dict[self] = data
 
     @data.deleter
@@ -1909,6 +1988,9 @@ class TensorHead(Basic):
         return self.data.flatten().__iter__()
 
     def __del__(self):
+        # the data attached to a tensor must be deleted only by the TensorHead
+        # destructor. If the TensorHead is deleted, it means that there are no
+        # more instances of that tensor anywhere.
         if self in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self]
 
@@ -3235,8 +3317,7 @@ class TensMul(TensExpr):
     @data.setter
     def data(self, data):
         # TODO: check data compatibility with properties of tensor.
-#         self._tids = VTIDS(self.components, self.free, self.dum, data)
-        _tensor_data_substitution_dict[self] = self._tids.data
+        _tensor_data_substitution_dict[self] = data
 
     @data.deleter
     def data(self):

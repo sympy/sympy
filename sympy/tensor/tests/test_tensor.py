@@ -8,8 +8,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.pretty import pretty
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
-    riemann_cyclic_replace, riemann_cyclic, TensMul, \
-    tensorsymmetry, tensorhead, TensorManager, TensExpr, TIDS
+    riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
+    TensorManager, TensExpr, TIDS
 from sympy.utilities.pytest import raises, skip
 
 
@@ -1275,7 +1275,7 @@ def _get_valued_base_test_variables():
 
     ### non-diagonal metric ###
     ndm_matrix = (
-        (0, 1, 0,),
+        (1, 1, 0,),
         (1, 0, 1),
         (0, 1, 0,),
     )
@@ -1557,6 +1557,66 @@ def test_valued_non_diagonal_metric():
 #         [33, 33, 32, 33],
 #         [33, 33, 33, 32],
 #     ])
+
+def test_valued_assign_numpy_ndarray():
+    numpy = import_module("numpy")
+    if numpy is None:
+        return
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+
+    # this is needed to make sure that a numpy.ndarray can be assigned to a
+    # tensor.
+    arr = [E+1, px-1, py, pz]
+    A.data = numpy.array(arr)
+    for i in range(4):
+            assert A(i0).data[i] == arr[i]
+
+    qx, qy, qz = symbols('qx qy qz')
+    A(-i0).data = numpy.array([E, qx, qy, qz])
+    for i in range(4):
+        assert A(i0).data[i] == [E, -qx, -qy, -qz][i]
+        assert A.data[i] == [E, -qx, -qy, -qz][i]
+
+    # test on multi-indexed tensors.
+    random_4x4_data = [[(i**3-3*i**2)%(j+7) for i in range(4)] for j in range(4)]
+    AB(-i0, -i1).data = random_4x4_data
+    for i in range(4):
+        for j in range(4):
+            assert AB(i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
+            assert AB(-i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
+            assert AB(i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)
+            assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]
+
+    AB(-i0, i1).data = random_4x4_data
+    for i in range(4):
+        for j in range(4):
+            assert AB(i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)
+            assert AB(-i0, i1).data[i, j] == random_4x4_data[i][j]
+            assert AB(i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
+            assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
+
+def test_valued_metric_inverse():
+    numpy = import_module("numpy")
+    if numpy is None:
+        return
+
+    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+
+    # let's assign some fancy matrix, just to verify it:
+    # (this has no physical sense, it's just testing sympy)
+    md = [[2, 2, 2, 1], [3, 3, 1, 0], [0, 2, 2, 3], [2, 1, 1, 2]]
+    Lorentz.data = md
+    m = Matrix(md)
+    metric = Lorentz.metric
+    minv = m.inv()
+
+    for i in range(4):
+        for j in range(4):
+            assert metric(i0, i1).data[i, j] == m[i, j]
+            assert metric(-i0, -i1).data[i, j] == minv[i, j]
 
 def test_valued_canon_bp_swapaxes():
     numpy = import_module("numpy")
