@@ -16,6 +16,7 @@ MPMATH = {}
 NUMPY = {}
 SYMPY = {}
 
+SCIPY = {}
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 # These are separate from the names above because the above names are modified
@@ -24,6 +25,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
+SCIPY_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -84,11 +86,22 @@ NUMPY_TRANSLATIONS = {
     "re": "real",
 }
 
+SCIPY_TRANSLATIONS = {
+"elliptic_k":"ellipk",
+"elliptic_f":"ellipeinc",
+"besselj":"jv",
+"bessely":"yv",
+"jn":"sph_jn",
+"yn":"sph_yn",
+"loggamma":"gammaln",
+}
+
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "scipy":(SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("from scipy.special import *",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -101,13 +114,14 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy".
+    "mpmath", "numpy", "sympy","scipy".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
+
     except KeyError:
         raise NameError(
             "'%s' module can't be used for lambdification" % module)
@@ -139,8 +153,11 @@ def _import(module, reload="False"):
             "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
+
     for sympyname, translation in translations.items():
+
         namespace[sympyname] = namespace[translation]
+
 
 
 def lambdify(args, expr, modules=None, printer=None, use_imps=True):
@@ -152,7 +169,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy"
+     - the strings "math", "mpmath", "numpy", "sympy", "scipy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -251,7 +268,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
-        modules = ["math", "mpmath", "sympy"]
+        modules = ["math", "mpmath", "scipy", "sympy"]
 
         try:
             _import("numpy")
