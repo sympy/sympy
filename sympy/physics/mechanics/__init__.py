@@ -34,9 +34,9 @@ __all__.extend(lagrange.__all__)
 
 #Import essential elements from physics.vector module
 from sympy.physics.vector.frame import ReferenceFrame, \
-     CoordinateSym, _check_frame
-from sympy.physics.vector.dyadic import Dyadic, _check_dyadic
-from sympy.physics.vector.vector import Vector, _check_vector
+     CoordinateSym
+from sympy.physics.vector.dyadic import Dyadic
+from sympy.physics.vector.vector import Vector
 from sympy.physics.vector.printers import \
      VectorStrPrinter as MechanicsStrPrinter, \
      VectorLatexPrinter as MechanicsLatexPrinter, \
@@ -51,9 +51,9 @@ from sympy.physics.vector.functions import \
      vpprint as mpprint, vlatex as mlatex
 
 #essentialnames contains all names to be imported from vector package
-essentialnames = ['ReferenceFrame', 'CoordinateSym', '_check_frame', \
-                  'Dyadic', '_check_dyadic', 'Vector', '_check_vector', \
-                  'MechanicsStrPrinter', 'MechanicsLatexPrinter', \
+essentialnames = ['ReferenceFrame', 'CoordinateSym', \
+                  'Dyadic', 'Vector', 'MechanicsStrPrinter', \
+                  'MechanicsLatexPrinter', \
                   'MechanicsPrettyPrinter', 'dynamicsymbols', \
                   'Point', 'cross', 'dot', 'express', \
                   'time_derivative', 'outer', 'kinematic_equations', \
