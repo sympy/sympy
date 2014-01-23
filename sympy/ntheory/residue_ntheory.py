@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function, division
 
 from sympy.core.numbers import igcd, igcdex
@@ -862,3 +864,54 @@ def jacobi_symbol(m, n):
         if s % 2 and n % 8 in [3, 5]:
             j *= -1
     return j
+
+
+def mobius(n):
+    """
+    Möbius Function maps natural number to {-1, 0, 1}
+
+    It is an important multiplicative function in number theory
+    and combinatorics.  It has applications in mathematical series,
+    algebraic number theory and also physics (Fermion operator has very
+    concrete realization with Möbius Function model).
+
+    Parameters
+    ==========
+    n : positive integer
+
+    Returns
+    =======
+
+    1) 1 if n == 1
+    2) 0 if n has a squared prime factor.
+    3) (-1)**k if n is a square-free positive integer with k number of
+       prime factors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import mobius
+    >>> mobius(13*7)
+    1
+    >>> mobius(1)
+    1
+    >>> mobius(13*7*5)
+    -1
+    >>> mobius(13**2)
+    0
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Möbius_function
+    .. [2] Thomas Koshy "Elementary Number Theory with Applications"
+    """
+    n = as_int(n)
+    if n <= 0:
+        raise ValueError("n should be a positive integer")
+    if n == 1:
+        return 1
+    a = factorint(n)
+    if any(i > 1 for i in a.values()):
+        return 0
+    return pow(-1, len(a))

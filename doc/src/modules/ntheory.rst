@@ -109,3 +109,5 @@ Ntheory Functions Reference
 
 .. automodule:: sympy.ntheory.continued_fraction
     :members:
+
+.. autofunction:: mobius
