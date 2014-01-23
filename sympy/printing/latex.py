@@ -555,7 +555,7 @@ class LatexPrinter(Printer):
         elif len(func) == 1 or func.startswith('\\'):
             name = func
         else:
-            name = r"\operatorname{%s}" % func.replace("_", r"\_")
+            name = r"\operatorname{%s}" % func
         return name
 
     def _print_Function(self, expr, exp=None):
@@ -761,6 +761,15 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
+
+    def _print_polar_lift(self, expr, exp=None):
+        func = r"\operatorname{polar\_lift}"
+        arg = r"{\left (%s \right )}" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}%s" % (func, exp, arg)
+        else:
+            return r"%s%s" % (func, arg)
 
     def _print_ExpBase(self, expr, exp=None):
         # TODO should exp_polar be printed differently?

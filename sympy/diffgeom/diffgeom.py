@@ -798,7 +798,7 @@ class TensorProduct(Expr):
     >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
     1
 
-    You can make partial contaction for instance when 'raising an index'.
+    You can make partial contraction for instance when 'raising an index'.
     Putting ``None`` in the second argument of ``rcall`` means that the
     respective position in the tensor product is left as it is.
 
