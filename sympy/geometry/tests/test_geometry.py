@@ -497,6 +497,16 @@ def test_ellipse():
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
 
+    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(0, 0)) == \
+        [Line(Point(0, 0), Point(1, 0)), Line(Point(0, 0), Point(0, 1))]
+    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(1, 0)) == \
+        [Line(Point(1, 0), Point(2, 0))]
+    assert Ellipse(Point(0, 0), 2, 1).normal_lines((0, 1)) == \
+        [Line(Point(0, 1), Point(0, 2))]
+    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(1, 1)) == \
+        [Line(Point(1, 1), Point(-19602460564453 / 10000000000000, -7935625953651 / 40000000000000)),
+       Line(Point(1, 1), Point(482864362534199 / 500000000000000, 875695156658093 / 1000000000000000))]
+
     # Properties
     major = 3
     minor = 1
