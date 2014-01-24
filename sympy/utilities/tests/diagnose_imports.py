@@ -270,14 +270,8 @@ def _import_wrapper(module, globals=globals(), locals=[], fromlist=None, level=-
     # Run the import and record the outcome
     result = None
     try:
-        #print('Before import')
-        #for r in _active_log_records:
-        #    print('%s:%d' % (r.file, r.line_number))
         result = _builtin_import(module, globals, locals, fromlist, level)
     finally:
-        #print('After import')
-        #for r in _active_log_records:
-        #    print('%s:%d' % (r.file, r.line_number))
         try:
             # Fill in name_list
             if fromlist != None:
