@@ -336,7 +336,6 @@ def printable_filename(file_name, paths):
 def dump_log(log_record, depth, options):
     if log_record == None:
         return
-    global sympy_dir
     str = '%*s%s line %d' % (
           depth * options.indent, '',
           printable_filename(log_record.file, options.paths),
