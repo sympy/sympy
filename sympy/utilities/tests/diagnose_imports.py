@@ -51,7 +51,7 @@ def parse_options():
             'because Python does not provide renaming information '
             'to import hooks. '
             'WORKAROUND: Avoid renaming imports such as the one above; '
-            'instead, do "import foo" and use "foo.baz" instead of "bar".')
+            'instead, do "import foo" and use "foo.bar" instead of "baz".')
 
     option_group = optparse.OptionGroup(
         option_parser,
