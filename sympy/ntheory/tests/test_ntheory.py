@@ -548,11 +548,11 @@ def test_residue():
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
 
-	assert mobius(13*7) == 1
-	assert mobius(1) == 1
-	assert mobius(-1) == 'Mobius Fuction defined for positive integer only'
-	assert mobius(13*7*5) == -1
-	assert mobius(13**2) == 0
+    assert mobius(13*7) == 1
+    assert mobius(1) == 1
+    assert mobius(-1) == 'Mobius Fuction defined for positive integer only'
+    assert mobius(13*7*5) == -1
+    assert mobius(13**2) == 0
 
 
 def test_hex_pi_nth_digits():
