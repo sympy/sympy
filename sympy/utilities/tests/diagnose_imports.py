@@ -193,11 +193,20 @@ def parse_options():
 
 ### Running the import #########################################################
 
-# Adapted from path_hack() bin/get_sympy.py
-this_file = os.path.abspath(__file__)
-# We need to go up more directories from sympy/utilities/tests than from bin/ :
-sympy_dir = os.path.join(os.path.dirname(this_file), '..', '..', '..')
-sympy_dir = os.path.normpath(sympy_dir)
+def super_dir(file_name, levels=1):
+    result = os.path.abspath(file_name)
+    for _ in range(levels):
+        result = os.path.join(result, '..')
+    result = os.path.normpath(result)
+    return result
+
+def sub_dir(dir_name, additional_name):
+    result = os.path.abspath(dir_name)
+    result = os.path.join(result, additional_name)
+    result = os.path.normpath(result)
+    return result
+
+sympy_dir = super_dir(__file__, 3)
 sys.path.insert(0, sympy_dir)
 
 import_log = None
@@ -319,7 +328,7 @@ def printable_filename(file_name, paths):
         ...     {'SYMPY': '/home/john/workspace/sympy/install'})
         $SYMPY_DIR/sympy.py
     """
-    for (path_name, path) in paths.iteritems():
+    for (path_name, path) in paths:
         if path == os.path.commonprefix([path, file_name]):
             return os.path.join('$' + path_name, os.path.relpath(file_name, path))
     return file_name
@@ -364,11 +373,15 @@ def report(options):
 ### Main program ###############################################################
 
 if __name__ == "__main__":
-    python_dir = os.path.dirname(sys.executable)
-    python_dir = os.path.join(python_dir, '..')
-    python_dir = os.path.normpath(python_dir)
     options = parse_options()
-    options.paths = {'SYMPY_DIR': sympy_dir, 'PYTHON_DIR': python_dir}
+    sympy_install_dir = super_dir(sympy_dir)
+    options.paths = [
+        ('PYTHON', super_dir(sys.executable, 2)),
+        ('SYMPY_BIN', sub_dir(sympy_install_dir, 'bin')),
+        ('SYMPY', sympy_dir),
+        ('SYMPY_INSTALL', sympy_install_dir),
+        ]
+    print(options.paths)
     recording_import(options.import_)
     report(options)
 
