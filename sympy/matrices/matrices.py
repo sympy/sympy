@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
 import collections
+from functools import partial
+
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C, Atom
 from sympy.core.expr import Expr
@@ -13,6 +15,7 @@ from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, xrange
 
 from sympy.polys import PurePoly, roots, cancel, gcd
+from sympy.polys.domains import ZZ
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -2594,7 +2597,7 @@ class MatrixBase(object):
         return self.adjugate() / d
 
     def rref(self, simplified=False, iszerofunc=_iszero,
-            simplify=False):
+            simplify=False, scalefunc=None, elimfunc=None):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         To simplify elements before finding nonzero pivots set simplify=True
@@ -2622,6 +2625,7 @@ class MatrixBase(object):
             simplify = simplify or True
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
+
         # pivot: index of next row to contain a pivot
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
@@ -2641,12 +2645,14 @@ class MatrixBase(object):
                 else:
                     continue
             scale = r[pivot, i]
-            r.row_op(pivot, lambda x, _: x / scale)
+            _scalefunc = partial(scalefunc, scale=scale) if scalefunc else lambda x, _: x / scale
+            r.row_op(pivot, _scalefunc)
             for j in xrange(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
-                r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
+                _elimfunc = partial(elimfunc, scale=scale) if elimfunc else lambda x, y: x - scale*y
+                r.zip_row_op(j, pivot, _elimfunc)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist

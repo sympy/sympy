@@ -72,6 +72,9 @@ class HeuristicGCDFailed(BasePolynomialError):
 class ModularGCDFailed(BasePolynomialError):
     pass
 
+class UnluckyLeadingCoefficient(BasePolynomialError):
+    pass
+
 @public
 class HomomorphismFailed(BasePolynomialError):
     pass

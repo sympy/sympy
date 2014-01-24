@@ -94,4 +94,8 @@ a theoretical foundation for implementing polynomials manipulation module.
 
 .. [Hoeij02] M. van Hoeij and M. Monagan, A modular GCD algorithm over
     number fields presented with multiple extensions, Proceedings of ISSAC
-    2002, pp. 109-116, ACM, 2002
+    2002, pp. 109-116, ACM, 2002.
+
+.. [Javadi09] S. M. M. Javadi and M. Monagan, On factorization of multivariate
+    polynomials over algebraic number and function fields, Proceedings of
+    ISSAC 2009, pp. 199-206, ACM, 2009.
