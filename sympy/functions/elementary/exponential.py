@@ -400,7 +400,7 @@ class exp(ExpBase):
         #      IMPORTANT.
         from sympy import limit, oo, powsimp
         arg = self.args[0]
-        arg_series = arg._eval_nseries(x, n=n, logx=logx)
+        arg_series = arg._eval_nseries(x, n=n, logx=logx).subs(logx, C.log(x))
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series.removeO(), x, 0)
