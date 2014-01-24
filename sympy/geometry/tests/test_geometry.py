@@ -504,8 +504,12 @@ def test_ellipse():
     assert Ellipse(Point(0, 0), 2, 1).normal_lines((0, 1)) == \
         [Line(Point(0, 1), Point(0, 2))]
     assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(1, 1)) == \
-        [Line(Point(1, 1), Point(-19602460564453 / 10000000000000, -7935625953651 / 40000000000000)),
-       Line(Point(1, 1), Point(482864362534199 / 500000000000000, 875695156658093 / 1000000000000000))]
+        [Line(Point(1, 1), Point(Rational(-19602460564453 / 10000000000000, -7935625953651 / 40000000000000))),
+       Line(Point(1, 1), Point(Rational(482864362534199 / 500000000000000, 875695156658093 / 1000000000000000)))]
+    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(sqrt(3), 0.5)) == \
+        [Line(Point(sqrt(3), 1 / 2), Point(Rational(21650635094611 / 12500000000000, 1 / 2))),
+       Line(Point(sqrt(3), 1 / 2), Point(Rational(-7976108716653 / 4000000000000, -772263050363531 / 10000000000000000)))]
+
 
     # Properties
     major = 3
