@@ -11,10 +11,15 @@ from __future__ import print_function, division
 from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
+from sympy.core.numbers import I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.special.gamma_functions import gamma
-from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.special.hyper import hyper
+from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
+
+
 
 from sympy.polys.orthopolys import (
     jacobi_poly,
@@ -1210,9 +1215,300 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, alpha, x):
         # TODO: Should make sure n is in N_0
         k = C.Dummy("k")
         kern = C.RisingFactorial(
             -n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
         return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))
+
+
+#----------------------------------------------------------------------------
+# Charlier polynomials
+#
+
+class charlier(OrthogonalPolynomial):
+    r"""
+    The Charlier polynomial in x, :math:`C_n(a, x)`.
+
+    .. math::
+        C_n(a, x) := {}_2F_0(-n,-x, -\frac{1}{a})
+
+    The orthogonality condition is
+
+    .. math::
+        \sum_{x=0}^\infty \frac{a^x}{x!} C_n(a, x) C_m(a, x)
+        = a^{-n} e^a n! \delta_{n,m}
+
+    with :math:`a > 0`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, charlier
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> a = Symbol("a")
+
+    >>> C = charlier(n, a, x)
+    >>> C
+    charlier(n, a, x)
+
+    >>> from sympy import hyper
+    >>> C.rewrite(hyper)
+    hyper((-n, -x), (), -1/a)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Charlier_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    """
+
+    @classmethod
+    def eval(cls, n, a, x):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+        if a.is_Number:
+            if a.is_nonnegative:
+                raise ValueError("The index a must be a positive number (got %r)" % n)
+
+
+    def _eval_rewrite_as_hyper(self, n, a, x):
+        return hyper([-n, -x], [], -1/a)
+
+
+#----------------------------------------------------------------------------
+# Meixner polynomials
+#
+
+class meixner(OrthogonalPolynomial):
+    r"""
+    The Meixner polynomial in x, :math:`M_n(\beta, c, x)`.
+
+    .. math::
+        M_n(\beta, c, x) := {}_2F_1\left(\begin{matrix} -n, -x \\ \beta \end{matrix} \middle| 1 - \frac{1}{c} \right)
+
+    The orthogonality condition is
+
+    .. math::
+        \sum_{x=0}^\infty \frac{(\beta)_x}{x!} c^x M_n(\beta, c, x) M_m(\beta, c, x)
+        = \frac{c^-n n!}{(\beta)_n (1-c)^\beta} \delta_{n,m}
+
+    with :math:`\beta > 0` and :math:`0 < c < 1`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, meixner
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> b = Symbol("beta")
+    >>> c = Symbol("c")
+
+    >>> M = meixner(n, b, c, x)
+    >>> M
+    meixner(n, beta, c, x)
+
+    >>> from sympy import hyper
+    >>> M.rewrite(hyper)
+    hyper((-n, -x), (beta,), 1 - 1/c)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Meixner_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    """
+
+    @classmethod
+    def eval(cls, n, b, c, x):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+        if b.is_Number:
+            if b.is_nonnegative:
+                raise ValueError("The index beta must be a positive number (got %r)" % n)
+
+
+    def _eval_rewrite_as_hyper(self, n, b, c, x):
+        return hyper([-n, -x], [b], 1 - 1/c)
+
+    def _eval_rewrite_as_jacobi(self, n, b, c, x):
+        return jacobi(n, b - 1, -n - b - x, (2 - c)/c) * factorial(n) / RisingFactorial(b, n)
+
+
+#----------------------------------------------------------------------------
+# Krawtchouk polynomials
+#
+
+class krawtchouk(OrthogonalPolynomial):
+    r"""
+    The Krawtchouk polynomial in x, :math:`K_n(p, N, x)`.
+
+    .. math::
+        K_n(p, N, x) := {}_2F_1\left(\begin{matrix} -n, -x \\ -N \end{matrix} \middle| \frac{1}{p} \right)
+
+    and :math:`n = 0, 1, 2, \ldots, N`.
+
+    The orthogonality condition is
+
+    .. math::
+        \sum_{x=0}^N \binom(N, x) p^x (1-p)^{N-x} K_n(p, N, x) K_m(p, N, x)
+        = \frac{(-1)^n n!}{(-N)_n} \left(\frac{1-p}{p}\right)^n \delta_{m,n}
+
+    with :math:`0 < p < 1`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, krawtchouk
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> p = Symbol("p")
+    >>> N = Symbol("N")
+
+    >>> K = krawtchouk(n, p, N, x)
+    >>> K
+    krawtchouk(n, p, N, x)
+
+    >>> from sympy import hyper
+    >>> K.rewrite(hyper)
+    hyper((-n, -x), (-N,), 1/p)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Krawtchouk_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    .. [3] http://mathworld.wolfram.com/KrawtchoukPolynomial.html
+    """
+
+    @classmethod
+    def eval(cls, n, p, N, x):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, p, N, x):
+        return hyper([-n, -x], [-N], 1/p)
+
+    def _eval_rewrite_as_meixner(self, n, p, N, x):
+        return meixner(n, -N, p/(p - 1), x)
+
+#----------------------------------------------------------------------------
+# Meixner-Pollaczek polynomials
+#
+
+class meixner_pollaczek(OrthogonalPolynomial):
+    r"""
+    The Meixner-Pollaczek polynomial in x, :math:`P_n(\lambda, \phi, x)`.
+
+    .. math::
+        P_n(\lambda, \phi, x) := \frac{(2\lambda)_n}{n!} \exp(\imath n \phi)
+        {}_2F_1\left(\begin{matrix} -n, \lambda + \imath x \\ 2 \lambda \end{matrix}
+        \middle| 1 - \exp(-2\imath \phi) \right)
+
+    The orthogonality condition is
+
+
+    with :math:`\lambda > 0` and :math:`0 < \phi < \pi`
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, meixner_pollaczek
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> l = Symbol("l")
+    >>> p = Symbol("p")
+
+    >>> M = meixner_pollaczek(n, l, p, x)
+    >>> M
+    meixner_pollaczek(n, l, p, x)
+
+    >>> from sympy import hyper
+    >>> M.rewrite(hyper)
+    exp(I*n*p)*RisingFactorial(2*l, n)*hyper((-n, l + I*x), (2*l,), 1 - exp(-2*I*p))/factorial(n)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Meixner%E2%80%93Pollaczek_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    """
+
+    @classmethod
+    def eval(cls, n, l, p, x):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, l, p, x):
+        return (RisingFactorial(2*l, n) / factorial(n) * exp(I*n*p) *
+                hyper([-n, l + I*x], [2*l], 1 - exp(-2*I*p)))
