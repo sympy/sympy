@@ -865,11 +865,17 @@ def jacobi_symbol(m, n):
 
 def mobius(n):
     """
-    Returns value of Mobius Function for a positive integer n
+    Mobius Function maps natural number to {-1,0,1}
+
+    Returns
     =======
+
     1) 1 if n==1
-    2) 0 if p**2 divides n for some prime p
-    3) (-1)**k if n = p1*p2*p3*......*pk where p i's are distict primes
+    2) 0 if n has a squared prime factor.
+    3) (-1)**k if n is a square-free positive integer with an k
+    number of prime factors.
+
+    n should be positive integer by defination
 
     Examples
     =========
@@ -878,18 +884,27 @@ def mobius(n):
     1
     >>> mobius(1)
     1
-    >>> mobius(-1)
-    'Mobius Fuction defined for positive integer only'
     >>> mobius(13*7*5)
     -1
     >>> mobius(13**2)
     0
+
+    References
+    ==========
+    [1] http://en.wikipedia.org/wiki/M%C3%B6bius_function
+    [2]http://en.wikipedia.org/wiki/Free_Riemann_gas
+    [3]Thomas Koshy "Elementary Number Theory with Applications"
     """
+    #It is an important multiplicative function in number theory
+    #and combinatorics.It has applications in mathematical series,
+    #algebraic number theory and also physics(Fermion operator has very
+    #concrete realization with Mobius Function model)
     from sympy import factorint,S
     if n<=0 :
-        return "Mobius Fuction defined for positive integer only"
-    elif n==1:
+        raise ValueError("n should be positive number")
+    if n==1:
         return 1
     a = factorint(n)
-    if any(i > 1 for i in a): return S.Zero
+    if any(i > 1 for i in a.values()):
+        return S.Zero
     return pow(-1,len(a))
