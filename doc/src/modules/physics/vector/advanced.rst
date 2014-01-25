@@ -11,6 +11,11 @@ will be discussed, along with some solutions.
 Inertia (Dyadics)
 =================
 
+A dyadic tensor is a second order tensor formed by the juxtaposition of a
+pair of vectors. There are various operations defined with respect to dyadics,
+which have been implemented in :mod:`vector` in the form of class
+:mod:`Dyadic`. To know more, refer to the :mod:`Dyadic` and :mod:`Vector` 
+class APIs.
 Dyadics are used to define the inertia of bodies within :mod:`mechanics`.
 Inertia dyadics can be defined explicitly but the ``inertia`` function is
 typically much more convenient for the user::
@@ -54,7 +59,7 @@ substitution will occur.
 
 Printing
 --------
-The default printing options are to use sorting for ``Vector`` and ``Dyad``
+The default printing options are to use sorting for ``Vector`` and ``Dyadic``
 measure numbers, and have unsorted output from the ``vprint``, ``vpprint``, and
 ``vlatex`` functions. If you are printing something large, please use one of
 those functions, as the sorting can increase printing time from seconds to

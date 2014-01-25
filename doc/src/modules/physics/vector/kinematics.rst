@@ -2,8 +2,7 @@
 Vector: Kinematics
 =====================
 
-In mechanics, kinematics refers to the motion of bodies (or particles).
-It is the 'a' in 'f=ma'. This document will give some mathematical background
+This document will give some mathematical background
 to describing a system's kinematics as well as how to represent the kinematics
 in :mod:`physics.vector`.
 
