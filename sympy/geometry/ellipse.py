@@ -774,8 +774,8 @@ class Ellipse(GeometryEntity):
         passing in the desired value:
 
         >>> e.normal_lines((3, 3), prec=2)
-        [Line(Point(-38/47, -85/31), Point(9/47, -77/62)),
-         Line(Point(19/13, -43/21), Point(32/13, 26/21))]
+        [Line(Point(-38/47, -85/31), Point(9/47, -21/17)),
+        Line(Point(19/13, -43/21), Point(32/13, -8/3))]
 
         Whereas the above solution has an operation count of 12, the exact
         solution has an operation count of 2020.
@@ -801,8 +801,9 @@ class Ellipse(GeometryEntity):
         x, y = Dummy('x', real=True), Dummy('y', real=True)
         eq = self.equation(x, y)
         dydx = idiff(eq, y, x)
+        norm = -1/dydx
         slope = Line(p, (x, y)).slope
-        seq = slope + 1/dydx
+        seq = slope - norm
         points = []
         if prec is not None:
             yis = solve(seq, y)[0]
@@ -811,16 +812,16 @@ class Ellipse(GeometryEntity):
                 iv = list(zip(*Poly(xeq).intervals()))[0]
                 # bisection is the safest here since other methods may miss root
                 xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson")) for i in iv]
-                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec).args for i in xsol]
+                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec) for i in xsol]
             except PolynomialError:
                 pass
         if not points:
-            points = solve((seq, eq), (x, y))
+            points = [Point(*s) for s in solve((seq, eq), (x, y))]
             # complicated expressions may not be decidably real so evaluate to
             # check whether they are real or not
-            points = [tuple([(j.n(prec) if prec is not None else j)
-                for j in i]) for i in points if all(j.n(2).is_real for j in i)]
-        slopes = [slope.subs(zip((x, y), pt)) for pt in points]
+            points = [i.n(prec) if prec is not None else i
+                for i in points if all(j.n(2).is_real for j in i.args)]
+        slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]
         if prec is not None:
             slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i for i in slopes]
         return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
