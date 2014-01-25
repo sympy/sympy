@@ -39,7 +39,8 @@ from sympy.functions.special.hyper import hyper, meijerg
 from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,
         laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized,
-        charlier, meixner, krawtchouk, meixner_pollaczek)
+        charlier, meixner, krawtchouk, meixner_pollaczek, hahn, hahn_dual,
+        hahn_continuous, hahn_dual_continuous)
 from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
 from sympy.functions.special.elliptic_integrals import (elliptic_k,
         elliptic_f, elliptic_e, elliptic_pi)

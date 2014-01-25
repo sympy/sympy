@@ -1512,3 +1512,285 @@ class meixner_pollaczek(OrthogonalPolynomial):
     def _eval_rewrite_as_hyper(self, n, l, p, x):
         return (RisingFactorial(2*l, n) / factorial(n) * exp(I*n*p) *
                 hyper([-n, l + I*x], [2*l], 1 - exp(-2*I*p)))
+
+#----------------------------------------------------------------------------
+# Hahn polynomials
+#
+
+class hahn(OrthogonalPolynomial):
+    r"""
+    The Hahn polynomial in x, :math:`Q_n(\alpha, \beta, N, x)`
+
+    .. math::
+        Q_n(\alpha, \beta, N, x) := {}_3F_2\left(
+        \begin{matrix}
+        -n, n + \alpha + \beta + 1, -x \\
+        \alpha + 1, N
+        \end{matrix}
+        \middle| 1 \right)
+
+    for :math:`n = 0, 1, 2, \ldots, N`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, hahn
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> N = Symbol("N")
+
+    >>> H = hahn(n, a, b, N, x)
+    >>> H
+    hahn(n, a, b, N, x)
+
+    >>> from sympy import hyper
+    >>> H.rewrite(hyper)
+    hyper((-n, a + b + n + 1, -x), (a + 1, -N), 1)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Hahn_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    """
+
+    @classmethod
+    def eval(cls, n, a, b, N, x):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, a, b, N, x):
+        return hyper([-n, n + a + b + 1, -x], [a + 1, -N], 1)
+
+
+#----------------------------------------------------------------------------
+# Dual Hahn polynomials
+#
+
+class hahn_dual(OrthogonalPolynomial):
+    r"""
+    The dual Hahn polynomial in x, :math:`R_n(\lambda(x), \gamma, \delta, N, x)`
+
+    .. math::
+        R_n(\lambda(x), \gamma, \delta, N, x) := {}_3F_2\left(
+        \begin{matrix}
+        -n, -x, x + \gamma + \delta + 1 \\
+        \gamma + 1, -N
+        \end{matrix}
+        \middle| 1 \right)
+
+    for :math:`n = 0, 1, 2, \ldots, N`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, hahn_dual
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> c = Symbol("c")
+    >>> d = Symbol("d")
+    >>> N = Symbol("N")
+
+    >>> H = hahn_dual(n, c, d, N, x)
+    >>> H
+    hahn_dual(n, c, d, N, x)
+
+    >>> from sympy import hyper
+    >>> H.rewrite(hyper)    # doctest:+SKIP
+    hyper((-n, c/2 + d/2 + sqrt(c**2 + 2*c*d + 2*c + d**2 + 2*d + 4*x + 1)/2 + 1/2,
+    c/2 + d/2 - sqrt(c**2 + 2*c*d + 2*c + d**2 + 2*d + 4*x + 1)/2 + 1/2), (c + 1, -N), 1)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Dual_Hahn_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    """
+
+    @classmethod
+    def eval(cls, n, c, d, N, lx):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, c, d, N, lx):
+        # It does not matter which root of l(x) = x * (x + c + d + 1) we take
+        x = -d/2 - c/2 - sqrt(d**2 + 2*d*c + 2*d + c**2 + 2*c + 4*lx + 1)/2 - S.Half
+        return hyper([-n, -x, x + c + d + 1], [c + 1, -N], 1)
+
+#----------------------------------------------------------------------------
+# Continuous Hahn polynomials
+#
+
+class hahn_continuous(OrthogonalPolynomial):
+    r"""
+    The continuous Hahn polynomial in x, :math:`p_n(a, b, c, d, x)`
+
+    .. math::
+        p_n(a, b, c, d, x) := \imath^n \frac{(a + c)_n (a + d)_n}{n!}
+        {}_3F_2\left(
+        \begin{matrix}
+        -n, n + a + b + c + d - 1, a + \imath x \\
+        a + c, a + d
+        \end{matrix}
+        \middle| 1 \right)
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, hahn_continuous
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> c = Symbol("c")
+    >>> d = Symbol("d")
+    >>> N = Symbol("N")
+
+    >>> H = hahn_continuous(n, a, b, c, d, x)
+    >>> H
+    hahn_continuous(n, a, b, c, d, x)
+
+    >>> from sympy import hyper
+    >>> H.rewrite(hyper)    # doctest:+SKIP
+    I**n*RisingFactorial(a + c, n)*RisingFactorial(a + d, n)*
+    hyper((-n, a + b + c + d + n - 1, a + I*x), (a + c, a + d), 1)/factorial(n)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Continuous_Hahn_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    """
+
+    @classmethod
+    def eval(cls, n, a, b, c, d, x):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, a, b, c, d, x):
+        return (I**n * RisingFactorial(a + c,n) * RisingFactorial(a + d,n) / factorial(n)
+                * hyper([-n, n + a + b + c + d - 1, a + I*x], [a + c, a + d], 1))
+
+#----------------------------------------------------------------------------
+# Continuous dual Hahn polynomials
+#
+
+class hahn_dual_continuous(OrthogonalPolynomial):
+    r"""
+    The continuous dual Hahn polynomial in x, :math:`S_n(a, b, c, x^2)`
+
+    .. math::
+        S_n(a, b, c, x^2) := (a + b)_n (a + c)_n {}_3F_2\left(
+        \begin{matrix}
+        -n, a + \imath x, a - \imag x \\
+        a + b, a + c
+        \end{matrix}
+        \middle| 1 \right)
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, hahn_dual_continuous
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> c = Symbol("c")
+    >>> N = Symbol("N")
+
+    >>> H = hahn_dual_continuous(n, a, b, c, x)
+    >>> H
+    hahn_dual_continuous(n, a, b, c, x)
+
+    >>> from sympy import hyper
+    >>> H.rewrite(hyper)    # doctest:+SKIP
+    RisingFactorial(a + b, n)*RisingFactorial(a + c, n)*
+    hyper((-n, a + I*sqrt(x), a - I*sqrt(x)), (a + b, a + c), 1)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Continuous_dual_Hahn_polynomials
+    .. [2] http://dlmf.nist.gov/18.19
+    """
+
+    @classmethod
+    def eval(cls, n, a, b, c, lx):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, a, b, c, lx):
+        # It does not matter which root of l(x) = x^2 we take
+        x = sqrt(lx)
+        return (RisingFactorial(a + b, n) * RisingFactorial(a + c, n)
+                * hyper([-n, a + I*x, a - I*x], [a + b, a + c], 1))
