@@ -400,7 +400,7 @@ class exp(ExpBase):
         #      IMPORTANT.
         from sympy import limit, oo, powsimp
         arg = self.args[0]
-        arg_series = arg._eval_nseries(x, n=n, logx=logx).subs(logx, C.log(x))
+        arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series.removeO(), x, 0)
@@ -411,7 +411,12 @@ class exp(ExpBase):
         o = exp_series.getO()
         exp_series = exp_series.removeO()
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
-        r += C.Order(o.expr.subs(t, (arg_series - arg0)), x)
+        # Substitute back logx to include in Order
+        if logx is not None:
+            s = (arg_series - arg0).subs(logx, C.log(x))
+        else:
+            s = arg_series - arg0
+        r += C.Order(o.expr.subs(t, s), x)
         r = r.expand()
         return powsimp(r, deep=True, combine='exp')
 
