@@ -412,7 +412,7 @@ class exp(ExpBase):
         exp_series = exp_series.removeO()
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         # Substitute back logx to include in Order
-        if logx is not None:
+        if logx:
             s = (arg_series - arg0).subs(logx, C.log(x))
         else:
             s = arg_series - arg0
