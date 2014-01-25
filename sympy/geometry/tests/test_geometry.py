@@ -517,19 +517,19 @@ def test_ellipse():
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
 
-    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(0, 0)) == \
-        [Line(Point(0, 0), Point(1, 0)), Line(Point(0, 0), Point(0, 1))]
-    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(1, 0)) == \
-        [Line(Point(1, 0), Point(2, 0))]
-    assert Ellipse(Point(0, 0), 2, 1).normal_lines((0, 1)) == \
-        [Line(Point(0, 1), Point(0, 2))]
-    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(1, 1)) == \
-        [Line(Point(1, 1), Point(Rational(-19602460564453 / 10000000000000, -7935625953651 / 40000000000000))),
-       Line(Point(1, 1), Point(Rational(482864362534199 / 500000000000000, 875695156658093 / 1000000000000000)))]
-    assert Ellipse(Point(0, 0), 2, 1).normal_lines(Point(sqrt(3), 0.5)) == \
-        [Line(Point(sqrt(3), 1 / 2), Point(Rational(21650635094611 / 12500000000000, 1 / 2))),
-       Line(Point(sqrt(3), 1 / 2), Point(Rational(-7976108716653 / 4000000000000, -772263050363531 / 10000000000000000)))]
-
+    e = Ellipse(Point(0, 0), 2, 1)
+    assert e.normal_lines(Point(0, 0)) == \
+        [Line(Point(0, 0), Point(0, 1)), Line(Point(0, 0), Point(1, 0))]
+    assert e.normal_lines(Point(1, 0)) == \
+        [Line(Point(0, 0), Point(1, 0))]
+    assert e.normal_lines((0, 1)) == \
+        [Line(Point(0, 0), Point(0, 1))]
+    assert e.normal_lines(Point(1, 1), 1) == \
+        [Line(Point(-2, -1/5), Point(-1, 1/5)), Line(Point(1, -9/10), Point(1, 1/10))]
+    p = Point(sqrt(3), S.Half)
+    assert p in e
+    assert e.normal_lines(p, 1) == \
+        [Line(Point(7/4, 1/2), Point(11/4, 1/2)), Line(Point(-2, -26/337), Point(-1, 26/337))]
 
     # Properties
     major = 3
