@@ -863,7 +863,7 @@ def jacobi_symbol(m, n):
     return j
 
 
-def mobius_function(n):
+def mobius(n):
     """
     Mobius Function maps natural number to {-1,0,1}
 
