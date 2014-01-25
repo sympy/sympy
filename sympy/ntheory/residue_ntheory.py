@@ -739,7 +739,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         else:
             res = a
     elif pa == 2:
-        return sqrt_mod(a, p , all_roots)
+        return sqrt_mod(a, p, all_roots)
     else:
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
@@ -863,7 +863,7 @@ def jacobi_symbol(m, n):
     return j
 
 
-def mobius(n):
+def mobius_function(n):
     """
     Mobius Function maps natural number to {-1,0,1}
 
@@ -878,7 +878,8 @@ def mobius(n):
     n should be positive integer by defination
 
     Examples
-    =========
+    ========
+
     >>> from sympy.ntheory import mobius
     >>> mobius(13*7)
     1
@@ -891,20 +892,20 @@ def mobius(n):
 
     References
     ==========
+
     [1] http://en.wikipedia.org/wiki/M%C3%B6bius_function
-    [2]http://en.wikipedia.org/wiki/Free_Riemann_gas
-    [3]Thomas Koshy "Elementary Number Theory with Applications"
+    [2] Thomas Koshy "Elementary Number Theory with Applications"
     """
-    #It is an important multiplicative function in number theory
-    #and combinatorics.It has applications in mathematical series,
-    #algebraic number theory and also physics(Fermion operator has very
-    #concrete realization with Mobius Function model)
-    from sympy import factorint,S
-    if n<=0 :
+    # It is an important multiplicative function in number theory
+    # and combinatorics.It has applications in mathematical series,
+    # algebraic number theory and also physics(Fermion operator has very
+    # concrete realization with Mobius Function model)
+    from sympy import factorint, S
+    if n <= 0:
         raise ValueError("n should be positive number")
-    if n==1:
+    if n == 1:
         return 1
     a = factorint(n)
     if any(i > 1 for i in a.values()):
         return S.Zero
-    return pow(-1,len(a))
+    return pow(-1, len(a))

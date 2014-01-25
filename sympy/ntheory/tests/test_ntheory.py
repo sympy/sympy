@@ -6,12 +6,12 @@ from sympy.core.numbers import Integer, igcd
 from sympy.core.compatibility import long
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
-    is_quad_residue, legendre_symbol, jacobi_symbol,npartitions, totient, \
+    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1, \
     sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
-    nthroot_mod, sqrt_mod_iter,mobius
+    nthroot_mod, sqrt_mod_iter, mobius_function
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p
@@ -548,11 +548,11 @@ def test_residue():
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
 
-    assert mobius(13*7) == 1
-    assert mobius(1) == 1
-    assert mobius(13*7*5) == -1
-    assert mobius(13**2) == 0
-    raises(ValueError,lambda: mobius(-3))
+    assert mobius_function(13*7) == 1
+    assert mobius_function(1) == 1
+    assert mobius_function(13*7*5) == -1
+    assert mobius_function(13**2) == 0
+    raises(ValueError, lambda: mobius_function(-3))
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
