@@ -70,7 +70,10 @@ from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
-        rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
+        rf, factorial, RisingFactorial, lerchphi, Piecewise, re, elliptic_k,
+        elliptic_e)
+from sympy.functions.special.polynomials import (legendre, chebyshevt, chebyshevu,
+        gegenbauer, jacobi, laguerre, assoc_laguerre, hermite)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -372,10 +375,14 @@ def add_formulae(formulae):
                  [0,0,0,-1]]))
 
     # Orthogonal polynomials
-    from sympy import hermite
-
-    add([-a/2, (1-a)/2], [], hermite(a, 1/sqrt(-z)) / (2/sqrt(-z))**a)
-
+    add([-a, a + 1], [1], legendre(a, 1 - 2*z))
+    add([-a, a], [S.Half], chebyshevt(a, 1 - 2*z))
+    add([-a, a + 2], [3*S.Half], chebyshevu(a, 1 - 2*z) / (a + 1))
+    add([-a, a + 2*b], [b + S.Half], gegenbauer(a, b, 1 - 2*z) * factorial(a) / RisingFactorial(2*b, a))
+    add([-a], [1], laguerre(a, z))
+    add([-a], [b + 1], assoc_laguerre(a, b, z) * factorial(a) / RisingFactorial(b + 1, a))
+    add([-a/2, (1 - a)/2], [], hermite(a, 1/sqrt(-z)) / (2/sqrt(-z))**a)
+    add([-a, a + b + c + 1], [b + 1], jacobi(a, b, c, 1 - 2*z) * factorial(a) / RisingFactorial(b + 1, a))
 
 
 def add_meijerg_formulae(formulae):
