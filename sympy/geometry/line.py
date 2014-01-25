@@ -1013,10 +1013,14 @@ class Line(LinearEntity):
             slope = sympify(slope)
             if slope.is_bounded is False:
                 # when unbounded slope, don't change x
-                p2 = p1 + Point(0, 1)
+                dx = 0
+                dy = 1
             else:
                 # go over 1 up slope
-                p2 = p1 + Point(1, slope)
+                dx = 1
+                dy = slope
+            # XXX avoiding simplification by adding to coords directly
+            p2 = Point(p1.x + dx, p1.y + dy)
         else:
             raise ValueError('A 2nd Point or keyword "slope" must be used.')
 
@@ -1096,6 +1100,7 @@ class Line(LinearEntity):
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
+            o = o.func(*[simplify(i) for i in o.args])
             x, y = Dummy(), Dummy()
             eq = self.equation(x, y)
             if not eq.has(y):
