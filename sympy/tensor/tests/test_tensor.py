@@ -702,6 +702,11 @@ def test_substitute_indices():
     asc1 = asum(i, -i)
     assert asc1 == A(i, -i) + B(i, -i)
 
+    assert A(i, -i) == A(i, -i)()
+    assert A(i, -i) + B(-j, j) == ((A(i, -i) + B(i, -i)))()
+    assert A(i, j)*B(-j, k) == (A(m, -j)*B(j, n))(i, k)
+    raises(ValueError, lambda: A(i, -i)(j, k))
+
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0, m1, m2, m3 = tensor_indices('m:4', Lorentz)
