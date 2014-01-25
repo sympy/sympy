@@ -86,6 +86,7 @@ def test_point():
     assert p4*5 == Point(5, 5)
     assert -p2 == Point(-y1, -y2)
 
+    assert Point(34.05, sqrt(3)) == Point(Rational(681, 20), sqrt(3))
     assert Point.midpoint(p3, p4) == Point(half, half)
     assert Point.midpoint(p1, p4) == Point(half + half*x1, half + half*x2)
     assert Point.midpoint(p2, p2) == p2

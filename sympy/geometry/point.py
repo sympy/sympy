@@ -77,18 +77,18 @@ class Point(GeometryEntity):
 
     def __new__(cls, *args, **kwargs):
         if iterable(args[0]):
-            coords = Tuple(*args[0])
+            args = args[0]
         elif isinstance(args[0], Point):
-            coords = args[0].args
-        else:
-            coords = Tuple(*args)
+            args = args[0].args
+        coords = Tuple(*args)
 
         if len(coords) != 2:
             raise NotImplementedError(
                 "Only two dimensional points currently supported")
         if kwargs.get('evaluate', True):
-            coords = [simplify(nsimplify(c, rational=True))
-                if isinstance(c, Float) else c for c in coords]
+            coords = coords.xreplace(dict(
+                [(f, simplify(nsimplify(f, rational=True)))
+                for f in coords.atoms(Float)]))
 
         return GeometryEntity.__new__(cls, *coords)
 
