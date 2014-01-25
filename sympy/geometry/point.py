@@ -87,7 +87,8 @@ class Point(GeometryEntity):
             raise NotImplementedError(
                 "Only two dimensional points currently supported")
         if kwargs.get('evaluate', True):
-            coords = [simplify(nsimplify(c, rational=True)) for c in coords]
+            coords = [simplify(nsimplify(c, rational=True))
+                if isinstance(c, Float) else c for c in coords]
 
         return GeometryEntity.__new__(cls, *coords)
 
