@@ -10,16 +10,20 @@ from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, zoo
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
+from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
+from sympy.utilities.lambdify import lambdify
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
 from .util import _symbol, idiff
+from sympy.mpmath import findroot as nroot
+
 
 import random
 
@@ -740,7 +744,7 @@ class Ellipse(GeometryEntity):
         else:
             raise NotImplementedError("Unknown argument type")
 
-    def normal_lines(self, p):
+    def normal_lines(self, p, prec=None):
         """Normal lines between `p` and the ellipse.
 
         Parameters
@@ -760,9 +764,21 @@ class Ellipse(GeometryEntity):
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
-        [Line(Point(-2, 0), Point(2, 0))]
+        [Line(Point(0, 0), Point(1, 0))]
         >>> e.normal_lines(c)
-        [Line(Point(0, -3), Point(0, 3)), Line(Point(-2, 0), Point(2, 0))]
+        [Line(Point(0, 0), Point(0, 1)), Line(Point(0, 0), Point(1, 0))]
+
+        Off-axis points require the solution of a quartic equation. This
+        often leads to very large expressions that may be of little practical
+        use. An approximate solution of `prec` digits can be obtained by
+        passing in the desired value:
+
+        >>> e.normal_lines((3, 3), prec=2)
+        [Line(Point(-38/47, -85/31), Point(9/47, -77/62)),
+         Line(Point(19/13, -43/21), Point(32/13, 26/21))]
+
+        Whereas the above solution has an operation count of 12, the exact
+        solution has an operation count of 2020.
         """
         p = Point(p)
 
@@ -772,21 +788,42 @@ class Ellipse(GeometryEntity):
         if True:
             rv = []
             if p.x == self.center.x:
-                rv.append(Line(*self.intersection(Line(p, slope=oo))))
+                rv.append(Line(self.center, slope=oo))
             if p.y == self.center.y:
-                rv.append(Line(*self.intersection(Line(p, slope=0))))
+                rv.append(Line(self.center, slope=0))
             if rv:
                 # at these special orientations of p either 1 or 2 normals
                 # exist and we are done
                 return rv
 
-        # find the 4 normal points and construct lines through them and p
+        # find the 4 normal points and construct lines through them with
+        # the corresponding slope
         x, y = Dummy('x', real=True), Dummy('y', real=True)
         eq = self.equation(x, y)
         dydx = idiff(eq, y, x)
-        slope = Line(p, Point(x, y)).slope
-        points = solve([slope + 1/dydx, eq], [x, y])
-        return [Line(p, pt) for pt in points]
+        slope = Line(p, (x, y)).slope
+        seq = slope + 1/dydx
+        points = []
+        if prec is not None:
+            yis = solve(seq, y)[0]
+            xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
+            try:
+                iv = list(zip(*Poly(xeq).intervals()))[0]
+                # bisection is the safest here since other methods may miss root
+                xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson")) for i in iv]
+                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec).args for i in xsol]
+            except PolynomialError:
+                pass
+        if not points:
+            points = solve((seq, eq), (x, y))
+            # complicated expressions may not be decidably real so evaluate to
+            # check whether they are real or not
+            points = [tuple([(j.n(prec) if prec is not None else j)
+                for j in i]) for i in points if all(j.n(2).is_real for j in i)]
+        slopes = [slope.subs(zip((x, y), pt)) for pt in points]
+        if prec is not None:
+            slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i for i in slopes]
+        return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
 
 
     def arbitrary_point(self, parameter='t'):
