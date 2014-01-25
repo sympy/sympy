@@ -22,6 +22,8 @@ Tensor
 .. autoclass:: TensorSymmetry
    :members:
 
+.. autofunction:: tensorsymmetry
+
 .. autoclass:: TensorType
    :members:
 

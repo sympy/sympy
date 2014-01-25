@@ -1606,17 +1606,31 @@ def test_valued_metric_inverse():
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
     # let's assign some fancy matrix, just to verify it:
-    # (this has no physical sense, it's just testing sympy)
-    md = [[2, 2, 2, 1], [3, 3, 1, 0], [0, 2, 2, 3], [2, 1, 1, 2]]
+    # (this has no physical sense, it's just testing sympy);
+    # it is symmetrical:
+    md = [[2, 2, 2, 1], [2, 3, 1, 0], [2, 1, 2, 3], [1, 0, 3, 2]]
     Lorentz.data = md
     m = Matrix(md)
     metric = Lorentz.metric
     minv = m.inv()
 
+    meye = eye(4)
+
+    # the Kronecker Delta:
+    KD = Lorentz.get_kronecker_delta()
+
     for i in range(4):
         for j in range(4):
             assert metric(i0, i1).data[i, j] == m[i, j]
             assert metric(-i0, -i1).data[i, j] == minv[i, j]
+            assert metric(i0, -i1).data[i, j] == meye[i, j]
+            assert metric(-i0, i1).data[i, j] == meye[i, j]
+            assert metric(i0, i1)[i, j] == m[i, j]
+            assert metric(-i0, -i1)[i, j] == minv[i, j]
+            assert metric(i0, -i1)[i, j] == meye[i, j]
+            assert metric(-i0, i1)[i, j] == meye[i, j]
+
+            assert KD(i0, -i1)[i, j] == meye[i, j]
 
 def test_valued_canon_bp_swapaxes():
     numpy = import_module("numpy")

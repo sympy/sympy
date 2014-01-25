@@ -43,11 +43,12 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.matrices import eye
 
 
 class TIDS(CantSympify):
     """
-    Tensor internal data structure. This contains internal data about
+    Tensor internal data structure. This contains internal data structures about
     components of a tensor expression, its free and dummy indices.
 
     To create a ``TIDS`` object via the standard constructor, the required
@@ -72,8 +73,8 @@ class TIDS(CantSympify):
     >>> TIDS([T], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
     TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
 
-    Details
-    =======
+    Notes
+    =====
 
     In short, this has created the components, free and dummy indices for
     the internal representation of a tensor T(m0, m1, -m1, m3).
@@ -505,15 +506,15 @@ class TIDS(CantSympify):
 
 class _TensorDataLazyEvaluator(CantSympify):
     """
-    This object contains the logic to associate data to a tensor expression.
-    Data are set via the ``.data`` property of tensor expressions, is stored
-    inside this class as a mapping between the tensor expression and the
-    ``ndarray``.
+    This object contains the logic to associate components data to a tensor
+    expression. Components data are set via the ``.data`` property of tensor
+    expressions, is stored inside this class as a mapping between the tensor
+    expression and the ``ndarray``.
 
-    Computations are executed lazily: whereas the tensor expressions can
-    have contractions, tensor products, and additions, data are not computed
-    until they are accessed by reading the ``.data`` property associated to
-    the tensor expression.
+    Computations are executed lazily: whereas the tensor expressions can have
+    contractions, tensor products, and additions, components data are not
+    computed until they are accessed by reading the ``.data`` property
+    associated to the tensor expression.
     """
     _substitutions_dict = dict()
     _substitutions_dict_tensmul = dict()
@@ -538,13 +539,13 @@ class _TensorDataLazyEvaluator(CantSympify):
         Retrieve ``data`` associated with ``key``.
 
         This algorithm looks into ``self._substitutions_dict`` for all
-        ``TensorHead`` in the ``TensExpr`` (or just ``TensorHead`` if
-        key is a TensorHead instance). It reconstructs the data that the
-        tensor expression should have by performing data the operation that
-        correspond to the abstract tensor operations applied.
+        ``TensorHead`` in the ``TensExpr`` (or just ``TensorHead`` if key is a
+        TensorHead instance). It reconstructs the components data that the
+        tensor expression should have by performing on components data the
+        operations that correspond to the abstract tensor operations applied.
 
         Metric tensor is handled in a different manner: it is pre-computed in
-        self._substitutions_dict_tensmul.
+        ``self._substitutions_dict_tensmul``.
         """
         if key in self._substitutions_dict:
             return self._substitutions_dict[key]
@@ -566,7 +567,8 @@ class _TensorDataLazyEvaluator(CantSympify):
             if all([i is None for i in data_list]):
                 return None
             if any([i is None for i in data_list]):
-                raise ValueError("Mixing tensors with associated data with tensors without data")
+                raise ValueError("Mixing tensors with associated components "\
+                                 "data with tensors without components data")
             data_result, tensmul_result = self.data_product_tensors(data_list, tensmul_list)
             return data_result
 
@@ -576,7 +578,8 @@ class _TensorDataLazyEvaluator(CantSympify):
             if all([i is None for i in data_list]):
                 return None
             if any([i is None for i in data_list]):
-                raise ValueError("Mixing tensors with associated data with tensors without data")
+                raise ValueError("Mixing tensors with associated components "\
+                                 "data with tensors without components data")
             for i in data_list:
                 sumvar += i
             return sumvar
@@ -584,6 +587,11 @@ class _TensorDataLazyEvaluator(CantSympify):
         return None
 
     def data_tensorhead_from_tensmul(self, data, tensmul, tensorhead):
+        """
+        This method is used when assigning components data to a ``TensMul``
+        object, it converts components data to a fully contravariant ndarray,
+        which is then stored according to the ``TensorHead`` key.
+        """
         if data is None:
             return None
 
@@ -595,6 +603,11 @@ class _TensorDataLazyEvaluator(CantSympify):
             True)
 
     def data_tensmul_from_tensorhead(self, tensmul, tensorhead):
+        """
+        This method corrects the components data to the right signature
+        (covariant/contravariant) using the metric associated with each
+        ``TensorIndexType``.
+        """
         if tensorhead.data is None:
             return None
 
@@ -613,7 +626,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         def data_mul(f, g):
             """
             Multiplies two ``ndarray`` objects, it first calls ``TIDS.mul``,
-            then checks which indices have been contracted, and then performs
+            then checks which indices have been contracted, and finally
             contraction operation on data, according to the contracted indices.
             """
             data1, tensmul1 = f
@@ -638,11 +651,11 @@ class _TensorDataLazyEvaluator(CantSympify):
 
     def __setitem__(self, key, value):
         """
-        Set the data of a tensor object/expression.
+        Set the components data of a tensor object/expression.
 
-        Data is transformed to the all-contravariant form and stored
-        with the corresponding ``TensorHead`` object. If a ``TensorHead``
-        object cannot be uniquely identified, it will raise an error.
+        Components data are transformed to the all-contravariant form and stored
+        with the corresponding ``TensorHead`` object. If a ``TensorHead`` object
+        cannot be uniquely identified, it will raise an error.
         """
         data = _TensorDataLazyEvaluator.parse_data(value)
 
@@ -655,7 +668,8 @@ class _TensorDataLazyEvaluator(CantSympify):
         if isinstance(key, TensorHead):
             for dim, indextype in zip(data.shape, key.index_types):
                 if indextype.data is None:
-                    raise ValueError("index type {} has no data associated (needed to raise/lower index)".format(indextype))
+                    raise ValueError("index type {} has no components data"\
+                    " associated (needed to raise/lower index)".format(indextype))
                 if indextype.dim is None:
                     continue
                 if dim != indextype.dim:
@@ -711,25 +725,32 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         _TensorDataLazyEvaluator._substitutions_dict[addition] = add_function()
 
-    @staticmethod
-    def add_tensmul_from_tensorhead(tensorhead, tensmul):
-        def tensmul_build():
-            return _TensorDataLazyEvaluator._correct_signature_from_indices(
-                tensorhead.data,
-                tensmul.indices,
-                tensmul.free,
-                tensmul.dum)
-
-        _TensorDataLazyEvaluator._substitutions_dict[tensmul] = tensmul_build()
-
     def add_metric_data(self, metric, data):
+        """
+        Assign data to the ``metric`` tensor. The metric tensor behaves in an
+        anomalous way when raising and lowering indices.
+
+        A fully covariant metric is the inverse transpose of the fully
+        contravariant metric (it is meant matrix inverse). If the metric is
+        symmetric, the transpose is not necessary and mixed
+        covariant/contravariant metrics are Kronecker deltas.
+        """
         # hard assignment, data should not be added to `TensorHead` for metric:
         # the problem with `TensorHead` is that the metric is anomalous, i.e.
         # raising and lowering the index means considering the metric or its
         # inverse, this is not the case for other tensors.
         self._substitutions_dict_tensmul[metric, True, True] = data
-        inverse_matrix = self.inverse_matrix(data)
-        self._substitutions_dict_tensmul[metric, False, False] = inverse_matrix
+        inverse_transpose = self.inverse_transpose_matrix(data)
+        # in symmetric spaces, the traspose is the same as the original matrix,
+        # the full covariant metric tensor is the inverse transpose, so this
+        # code will be able to handle non-symmetric metrics.
+        self._substitutions_dict_tensmul[metric, False, False] = inverse_transpose
+        # now mixed cases, these are identical to the unit matrix if the metric
+        # is symmetric.
+        m = Matrix(data)
+        invt = Matrix(inverse_transpose)
+        self._substitutions_dict_tensmul[metric, True, False] = m * invt
+        self._substitutions_dict_tensmul[metric, False, True] = invt * m
 
     @staticmethod
     def _flip_index_by_metric(data, metric, pos):
@@ -747,10 +768,15 @@ class _TensorDataLazyEvaluator(CantSympify):
         return _TensorDataLazyEvaluator.parse_data(m)
 
     @staticmethod
+    def inverse_transpose_matrix(ndarray):
+        m = Matrix(ndarray).inv().T
+        return _TensorDataLazyEvaluator.parse_data(m)
+
+    @staticmethod
     def _correct_signature_from_indices(data, indices, free, dum, inverse=False):
         """
-        Utility function to correct the values inside the data ndarray
-        according to whether indices are covariant or contravariant.
+        Utility function to correct the values inside the components data
+        ndarray according to whether indices are covariant or contravariant.
 
         It uses the metric matrix to lower values of covariant indices.
         """
@@ -811,7 +837,9 @@ class _TensorDataLazyEvaluator(CantSympify):
     @doctest_depends_on(modules=('numpy',))
     def parse_data(data):
         """
-        Transform data to a numpy ndarray.
+        Transform ``data`` to a numpy ndarray. The parameter ``data`` may
+        contain data in various formats, e.g. nested lists, sympy ``Matrix``,
+        and so on.
 
         Examples
         ========
@@ -1081,7 +1109,8 @@ class TensorIndexType(Basic):
     >>> Lorentz.metric
     metric(Lorentz,Lorentz)
 
-    Examples with metric data added, this means it is working on a fixed basis:
+    Examples with metric components data added, this means it is working on a
+    fixed basis:
 
     >>> Lorentz.data = [1, -1, -1, -1]
     >>> Lorentz
@@ -1173,7 +1202,10 @@ class TensorIndexType(Basic):
                 raise ValueError("Dimension mismatch")
         _tensor_data_substitution_dict[self] = data
         _tensor_data_substitution_dict.add_metric_data(self.metric, data)
-#         _tensor_data_substitution_dict[self.metric] = data
+        delta = self.get_kronecker_delta()
+        i1 = TensorIndex('i1', self)
+        i2 = TensorIndex('i2', self)
+        delta(i1, -i2).data = _TensorDataLazyEvaluator.parse_data(eye(dim1))
 
     @data.deleter
     def data(self):
@@ -1230,8 +1262,30 @@ class TensorIndexType(Basic):
     __repr__ = __str__
 
     def __del__(self):
+        """
+        Class destructor. This also destroys components data associated to the
+        ``TensorIndexType``, if any, specifically:
+
+        * metric tensor data
+        * Kronecker tensor data
+        """
         if self in _tensor_data_substitution_dict:
             del _tensor_data_substitution_dict[self]
+
+        def delete_tensmul_data(key):
+            if key in _tensor_data_substitution_dict._substitutions_dict_tensmul:
+                del _tensor_data_substitution_dict._substitutions_dict_tensmul[key]
+
+        # delete metric data:
+        delete_tensmul_data((self.metric, True, True))
+        delete_tensmul_data((self.metric, True, False))
+        delete_tensmul_data((self.metric, False, True))
+        delete_tensmul_data((self.metric, False, False))
+
+        # delete delta tensor data:
+        delta = self.get_kronecker_delta()
+        if delta in _tensor_data_substitution_dict:
+            del _tensor_data_substitution_dict[delta]
 
 
 @doctest_depends_on(modules=('numpy',))
@@ -1477,7 +1531,8 @@ def tensorsymmetry(*args):
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> V = S2('V')
 
-    Symmetric tensor using a BSGS
+    Symmetric tensor using a ``BSGS`` (base, strong generator set)
+
     >>> from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
     >>> sym2 = tensorsymmetry(*get_symmetric_group_sgs(2))
     >>> S2 = TensorType([Lorentz]*2, sym2)
@@ -1673,11 +1728,15 @@ class TensorHead(Basic):
 
     >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> sym2 = tensorsymmetry([1]*2)
+    >>> sym2 = tensorsymmetry([1], [1])
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> A = S2('A')
 
-    Examples with ndarray values:
+    Examples with ndarray values, the components data assigned to the
+    ``TensorHead`` object are assumed to be in a fully-contravariant
+    representation. In case it is necessary to assign components data which
+    represents the values of a non-fully covariant tensor, see the other
+    examples.
 
     >>> from sympy.tensor.tensor import tensor_indices, tensorhead
     >>> Lorentz.data = [1, -1, -1, -1]
@@ -1706,7 +1765,7 @@ class TensorHead(Basic):
      [6 7 8 9]]
 
     Turning to a tensor expression, covariant indices get the corresponding
-    data corrected by the metric:
+    components data corrected by the metric:
 
     >>> A(i0, -i1).data
     [[0 -1 -2 -3]
@@ -1728,17 +1787,62 @@ class TensorHead(Basic):
      [4 5 6 7]
      [6 7 8 9]]
 
-    When all indices are contracted and data are added to the tensor, accessing
-    the data will return a scalar, no numpy object. In fact, numpy ndarrays are
-    dropped to scalars if they contain only one element.
+    When all indices are contracted and components data are added to the tensor,
+    accessing the data will return a scalar, no numpy object. In fact, numpy
+    ndarrays are dropped to scalars if they contain only one element.
 
     >>> A(i0, -i0)
     A(L_0, -L_0)
     >>> A(i0, -i0).data
     -18
 
-    It is also possible to store symbolic data inside a tensor, for example,
-    define a four-momentum-like tensor:
+    It is also possible to assign components data to an indexed tensor, i.e. a
+    tensor with specified covariant and contravariant components. In this
+    example, the covariant components data of the Electromagnetic tensor are
+    injected into `A`:
+
+    >>> from sympy import symbols
+    >>> Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
+    >>> c = symbols('c', positive=True)
+    >>> A(-i0, -i1).data = [
+    ... [0, Ex/c, Ey/c, Ez/c],
+    ... [-Ex/c, 0, -Bz, By],
+    ... [-Ey/c, Bz, 0, -Bx],
+    ... [-Ez/c, -By, Bx, 0]]
+
+    Now it is possible to retrieve the contravariant form of the Electromagnetic
+    tensor:
+
+    >>> A(i0, i1).data
+    [[0 -E_x/c -E_y/c -E_z/c]
+     [E_x/c 0 -B_z B_y]
+     [E_y/c B_z 0 -B_x]
+     [E_z/c -B_y B_x 0]]
+
+    and the mixed contravariant-covariant form:
+
+    >>> A(i0, -i1).data
+    [[0 E_x/c E_y/c E_z/c]
+     [E_x/c 0 B_z -B_y]
+     [E_y/c -B_z 0 B_x]
+     [E_z/c B_y -B_x 0]]
+
+    To convert the numpy's ndarray to a sympy matrix, just cast:
+
+    >>> from sympy import Matrix
+    >>> Matrix(A.data)
+    Matrix([
+    [    0, -E_x/c, -E_y/c, -E_z/c],
+    [E_x/c,      0,   -B_z,    B_y],
+    [E_y/c,    B_z,      0,   -B_x],
+    [E_z/c,   -B_y,    B_x,      0]])
+
+    Still notice, in this last example, that accessing components data from a
+    tensor without specifying the indices is equivalent to assume that all
+    indices are contravariant.
+
+    It is also possible to store symbolic components data inside a tensor, for
+    example, define a four-momentum-like tensor:
 
     >>> from sympy import symbols
     >>> P = tensorhead('P', [Lorentz], [[1]])
@@ -1758,8 +1862,8 @@ class TensorHead(Basic):
     >>> P(i0)**2
     E**2 - p_x**2 - p_y**2 - p_z**2
 
-    As the power by two is clearly identical to `P_\mu P^\mu`, it is
-    possible to simply contract the ``TensorHead`` object, without specifying the indices
+    As the power by two is clearly identical to `P_\mu P^\mu`, it is possible to
+    simply contract the ``TensorHead`` object, without specifying the indices
 
     >>> P**2
     E**2 - p_x**2 - p_y**2 - p_z**2
@@ -1988,6 +2092,15 @@ class TensorHead(Basic):
         return self.data.flatten().__iter__()
 
     def __del__(self):
+        """
+        Destructor of a ``TensorHead`` object, this also check for attached
+        components data, and destroys components data too.
+        """
+        # do not garbage collect Kronecker tensor (it should be done by
+        # ``TensorIndexType`` garbage collection)
+        if self.name == "KD":
+            return
+
         # the data attached to a tensor must be deleted only by the TensorHead
         # destructor. If the TensorHead is deleted, it means that there are no
         # more instances of that tensor anywhere.
@@ -2079,20 +2192,14 @@ class TensExpr(Basic):
     def __rdiv__(self, other):
         raise NotImplementedError()
 
-#     def __del__(self):
-#         # if the object is being destroyed, make sure that all references
-#         # to it will be destroyed, in order to save memory space:
-#         if self in _tensor_data_substitution_dict:
-#             del _tensor_data_substitution_dict[self]
-
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
     @doctest_depends_on(modules=('numpy',))
     def get_matrix(self):
         """
-        Returns ndarray data as a matrix, if data are available and ndarray
-        dimension does not exceed 2.
+        Returns ndarray components data as a matrix, if components data are
+        available and ndarray dimension does not exceed 2.
 
         Examples
         ========
@@ -2191,7 +2298,7 @@ class TensAdd(TensExpr):
     >>> t(b)
     p(b) + q(b)
 
-    Examples with data added to the tensor expression:
+    Examples with components data added to the tensor expression:
 
     >>> from sympy import eye
     >>> Lorentz.data = [1, -1, -1, -1]
