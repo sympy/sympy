@@ -1100,8 +1100,8 @@ class Integral(AddWithLimits):
         dx = (upper_limit - lower_limit)/n
 
         if method == 'trapezoid':
-            l = self.function.subs(sym, lower_limit)
-            r = self.function.subs(sym, upper_limit)
+            l = self.function.limit(sym, lower_limit)
+            r = self.function.limit(sym, upper_limit, "-")
             result = (l + r)/2
             for i in range(1, n):
                 x = lower_limit + i*dx
@@ -1116,8 +1116,14 @@ class Integral(AddWithLimits):
                 xi = lower_limit + i*dx + dx/2
             elif method == "left":
                 xi = lower_limit + i*dx
+                if i == 0:
+                    result = self.function.limit(sym, lower_limit)
+                    continue
             elif method == "right":
                 xi = lower_limit + i*dx + dx
+                if i == n:
+                    result += self.function.limit(sym, upper_limit, "-")
+                    continue
             result += self.function.subs(sym, xi)
         return result*dx
 

@@ -987,11 +987,11 @@ def test_sec():
 
     assert sec(0) == 1
     assert sec(pi) == -1
-    assert sec(pi/2) == oo
-    assert sec(-pi/2) == oo
+    assert sec(pi/2) == zoo
+    assert sec(-pi/2) == zoo
     assert sec(pi/6) == 2*sqrt(3)/3
     assert sec(pi/3) == 2
-    assert sec(5*pi/2) == oo
+    assert sec(5*pi/2) == zoo
     assert sec(9*pi/7) == -sec(2*pi/7)
     assert sec(I) == 1/cosh(1)
     assert sec(x*I) == 1/cosh(x)
@@ -1044,8 +1044,8 @@ def test_csc():
 
     assert csc.nargs == FiniteSet(1)
 
-    assert csc(0) == oo
-    assert csc(pi) == oo
+    assert csc(0) == zoo
+    assert csc(pi) == zoo
 
     assert csc(pi/2) == 1
     assert csc(-pi/2) == -1
