@@ -14,6 +14,7 @@ from sympy.abc import z, n, k, x
 
 randint = _randint()
 
+
 def test_bessel_rand():
     for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
         assert td(f(randcplx(), z), z)
@@ -64,7 +65,7 @@ def test_expand():
 
     # XXX: teach sin/cos to work around arguments like
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
-    assert besselsimp(besselj(S(1)/2, z)) ==  sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert besselsimp(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besselj(S(-1)/2, z)) == sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besselj(S(5)/2, z)) == \
         -sqrt(2)*(z**2*sin(z) + 3*z*cos(z) - 3*sin(z))/(sqrt(pi)*z**(S(5)/2))
@@ -102,25 +103,25 @@ def test_expand():
         ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
         assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
 
-    assert check(expand_func(besseli(rn, x)), \
-        besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
-    assert check(expand_func(besseli(-rn, x)), \
-        besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
+    assert check(expand_func(besseli(rn, x)),
+                 besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
+    assert check(expand_func(besseli(-rn, x)),
+                 besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
 
-    assert check(expand_func(besselj(rn, x)), \
-        -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
-    assert check(expand_func(besselj(-rn, x)), \
-        -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
+    assert check(expand_func(besselj(rn, x)),
+                 -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
+    assert check(expand_func(besselj(-rn, x)),
+                 -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
 
-    assert check(expand_func(besselk(rn, x)), \
-        besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
-    assert check(expand_func(besselk(-rn, x)), \
-        besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
+    assert check(expand_func(besselk(rn, x)),
+                 besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
+    assert check(expand_func(besselk(-rn, x)),
+                 besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
 
-    assert check(expand_func(bessely(rn, x)), \
-        -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
-    assert check(expand_func(bessely(-rn, x)), \
-        -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
+    assert check(expand_func(bessely(rn, x)),
+                 -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
+    assert check(expand_func(bessely(-rn, x)),
+                 -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
 
     n = Symbol('n', integer=True, positive=True)
 
@@ -134,8 +135,8 @@ def test_expand():
         -bessely(n, z) + (2*n + 2)*(2*n*bessely(n, z)/z - bessely(n - 1, z))/z
 
     assert expand_func(besseli(n + S(1)/2, z).rewrite(jn)) == \
-        sqrt(2)*sqrt(z)*exp(-I*pi*(n + S(1)/2)/2)* \
-        exp_polar(I*pi/4)*jn(n, z*exp_polar(I*pi/2))/sqrt(pi)
+        (sqrt(2)*sqrt(z)*exp(-I*pi*(n + S(1)/2)/2) *
+         exp_polar(I*pi/4)*jn(n, z*exp_polar(I*pi/2))/sqrt(pi))
     assert expand_func(besselj(n + S(1)/2, z).rewrite(jn)) == \
         sqrt(2)*sqrt(z)*jn(n, z)/sqrt(pi)
 
@@ -383,6 +384,7 @@ def test_airyai():
     assert expand_func(airyai(2*(3*z**5)**(S(1)/3))) == (
         -sqrt(3)*(-1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airybi(2*3**(S(1)/3)*z**(S(5)/3))/6 +
          (1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airyai(2*3**(S(1)/3)*z**(S(5)/3))/2)
+
 
 def test_airybi():
     z = Symbol('z', real=False)

@@ -50,8 +50,8 @@ class BesselBase(Function):
     def fdiff(self, argindex=2):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
-        return self._b/2 * self.__class__(self.order - 1, self.argument) \
-            - self._a/2 * self.__class__(self.order + 1, self.argument) \
+        return (self._b/2 * self.__class__(self.order - 1, self.argument) -
+                self._a/2 * self.__class__(self.order + 1, self.argument))
 
     def _eval_conjugate(self):
         z = self.argument
@@ -738,9 +738,6 @@ def jn_zeros(n, k, method="sympy", dps=15):
         roots.append(root)
     return roots
 
-##################
-# Airy functions #
-##################
 
 class AiryBase(Function):
     """
@@ -878,7 +875,7 @@ class airyai(AiryBase):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg is S.Zero:
-                return S.One / (3**Rational(2,3) * gamma(Rational(2,3)))
+                return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -895,11 +892,11 @@ class airyai(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return ((3**(S(1)/3)*x)**(-n)*(3**(S(1)/3)*x)**(n + 1)*sin(pi*(2*n/3 + S(4)/3))*C.factorial(n)
-                        *gamma(n/3 + S(2)/3)/(sin(pi*(2*n/3 + S(2)/3))*C.factorial(n + 1)*gamma(n/3 + S(1)/3)) * p)
+                return ((3**(S(1)/3)*x)**(-n)*(3**(S(1)/3)*x)**(n + 1)*sin(pi*(2*n/3 + S(4)/3))*C.factorial(n) *
+                        gamma(n/3 + S(2)/3)/(sin(pi*(2*n/3 + S(2)/3))*C.factorial(n + 1)*gamma(n/3 + S(1)/3)) * p)
             else:
-                return (S.One/(3**(S(2)/3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3))
-                        / C.factorial(n) * (root(3,3)*x)**n)
+                return (S.One/(3**(S(2)/3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
+                        C.factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z):
         ot = Rational(1, 3)
@@ -919,7 +916,7 @@ class airyai(AiryBase):
 
     def _eval_rewrite_as_hyper(self, z):
         pf1 = S.One / (3**(S(2)/3)*gamma(S(2)/3))
-        pf2 = z / (root(3,3)*gamma(S(1)/3))
+        pf2 = z / (root(3, 3)*gamma(S(1)/3))
         return pf1 * hyper([], [S(2)/3], z**3/9) - pf2 * hyper([], [S(4)/3], z**3/9)
 
     def _eval_expand_func(self, **hints):
@@ -1045,7 +1042,7 @@ class airybi(AiryBase):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg is S.Zero:
-                return S.One / (3**Rational(1,6) * gamma(Rational(2,3)))
+                return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1062,11 +1059,11 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**(S(1)/3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * C.factorial((n - S.One)/S(3))
-                        / ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * C.factorial((n - 2)/S(3))) * p)
+                return (3**(S(1)/3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * C.factorial((n - S.One)/S(3)) /
+                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * C.factorial((n - 2)/S(3))) * p)
             else:
-                return (S.One/(root(3,6)*pi) * gamma((n+S.One)/S(3)) * Abs(sin(2*pi*(n+S.One)/S(3)))
-                        / C.factorial(n) * (root(3,3)*x)**n)
+                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
+                        C.factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z):
         ot = Rational(1, 3)
@@ -1087,8 +1084,8 @@ class airybi(AiryBase):
             return sqrt(ot)*(b*besseli(-ot, tt*a) + z*c*besseli(ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):
-        pf1 = S.One / (root(3,6)*gamma(S(2)/3))
-        pf2 = z*root(3,6) / gamma(S(1)/3)
+        pf1 = S.One / (root(3, 6)*gamma(S(2)/3))
+        pf2 = z*root(3, 6) / gamma(S(1)/3)
         return pf1 * hyper([], [S(2)/3], z**3/9) + pf2 * hyper([], [S(4)/3], z**3/9)
 
     def _eval_expand_func(self, **hints):
@@ -1201,7 +1198,7 @@ class airyaiprime(AiryBase):
             elif arg is S.Infinity:
                 return S.Zero
             elif arg is S.Zero:
-                return -S.One / (3**Rational(1,3) * gamma(Rational(1,3)))
+                return -S.One / (3**Rational(1, 3) * gamma(Rational(1, 3)))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1239,7 +1236,7 @@ class airyaiprime(AiryBase):
 
     def _eval_rewrite_as_hyper(self, z):
         pf1 = z**2 / (2*3**(S(2)/3)*gamma(S(2)/3))
-        pf2 = 1 / (root(3,3)*gamma(S(1)/3))
+        pf2 = 1 / (root(3, 3)*gamma(S(1)/3))
         return pf1 * hyper([], [S(5)/3], z**3/9) - pf2 * hyper([], [S(1)/3], z**3/9)
 
     def _eval_expand_func(self, **hints):
@@ -1358,7 +1355,7 @@ class airybiprime(AiryBase):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg is S.Zero:
-                return 3**Rational(1,6) / gamma(Rational(1,3))
+                return 3**Rational(1, 6) / gamma(Rational(1, 3))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1395,8 +1392,8 @@ class airybiprime(AiryBase):
             return sqrt(ot) * (b*besseli(-tt, tt*a) + z**2*c*besseli(tt, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):
-        pf1 = z**2 / (2*root(3,6)*gamma(S(2)/3))
-        pf2 = root(3,6) / gamma(S(1)/3)
+        pf1 = z**2 / (2*root(3, 6)*gamma(S(2)/3))
+        pf2 = root(3, 6) / gamma(S(1)/3)
         return pf1 * hyper([], [S(5)/3], z**3/9) + pf2 * hyper([], [S(1)/3], z**3/9)
 
     def _eval_expand_func(self, **hints):
