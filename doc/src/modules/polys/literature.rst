@@ -95,3 +95,21 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Hoeij02] M. van Hoeij and M. Monagan, A modular GCD algorithm over
     number fields presented with multiple extensions, Proceedings of ISSAC
     2002, pp. 109-116, ACM, 2002
+
+.. [ManWright94] Yiu-Kwong Man and Francis J. Wright, "Fast Polynomial Dispersion
+    Computation and its Application to Indefinite Summation",
+    Proceedings of the International Symposium on Symbolic and
+    Algebraic Computation, 1994, Pages 175-180
+    http://doi.acm.org/10.1145/190347.190413
+
+.. [Koepf98] Wolfram Koepf, "Hypergeometric Summation: An Algorithmic Approach
+    to Summation and Special Function Identities", Advanced lectures
+    in mathematics, Vieweg, 1998
+
+.. [Abramov71] S. A. Abramov, "On the Summation of Rational Functions",
+    USSR Computational Mathematics and Mathematical Physics,
+    Volume 11, Issue 4, 1971, Pages 324-330
+
+.. [Man93] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
+    Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
+    http://www.sciencedirect.com/science/article/pii/S0747717183710539

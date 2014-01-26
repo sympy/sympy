@@ -712,3 +712,7 @@ def test_issue_3532():
     assert ((-1)**(I/2)).is_real is True
     assert ((-1)**(I*S.Pi)).is_real is True
     assert (I**(I + 2)).is_real is True
+
+
+def test_gh2730():
+    assert (1/(1 + I)).is_real is False

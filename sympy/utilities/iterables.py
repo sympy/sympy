@@ -14,6 +14,9 @@ from sympy.core.compatibility import (
     iterable, ordered, xrange
 )
 
+from sympy.utilities.enumerative import (
+    multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -1195,14 +1198,24 @@ def multiset_partitions(multiset, m=None):
     sympy.functions.combinatorial.numbers.nT
     """
 
+    # This function looks at the supplied input and dispatches to
+    # several special-case routines as they apply.
     if type(multiset) is int:
         n = multiset
         if m and m > n:
             return
-        multiset = list(range(multiset))
+        multiset = list(range(n))
         if m == 1:
             yield [multiset[:]]
             return
+
+        # If m is not None, it can sometimes be faster to use
+        # MultisetPartitionTraverser.enum_range() even for inputs
+        # which are sets.  Since the _set_partitions code is quite
+        # fast, this is only advantageous when the overall set
+        # partitions outnumber those with the desired number of parts
+        # by a large factor.  (At least 60.)  Such a switch is not
+        # currently implemented.
         for nc, q in _set_partitions(n):
             if m is None or nc == m:
                 rv = [[] for i in range(nc)]
@@ -1215,6 +1228,8 @@ def multiset_partitions(multiset, m=None):
         multiset = [multiset]
 
     if not has_variety(multiset):
+        # Only one component, repeated n times.  The resulting
+        # partitions correspond to partitions of integer n.
         n = len(multiset)
         if m and m > n:
             return
@@ -1237,33 +1252,32 @@ def multiset_partitions(multiset, m=None):
             yield [multiset[:]]
             return
 
-        # if there are repeated elements, sort them and define the
-        # canon dictionary that will be used to create the cache key
-        # in case elements of the multiset are not hashable
-        cache = set()
-        canon = {}  # {physical position: position where it appeared first}
-        for i, mi in enumerate(multiset):
-            canon.setdefault(i, canon.get(i, multiset.index(mi)))
-        if len(set(canon.values())) != n:
-            canon = {}
-            for i, mi in enumerate(multiset):
-                canon.setdefault(i, canon.get(i, multiset.index(mi)))
+        # Split the information of the multiset into two lists -
+        # one of the elements themselves, and one (of the same length)
+        # giving the number of repeats for the corresponding element.
+        elements, multiplicities = zip(*group(multiset, False))
+
+        if len(elements) < len(multiset):
+            # General case - multiset with more than one distinct element
+            # and at least one element repeated more than once.
+            if m:
+                mpt = MultisetPartitionTraverser()
+                for state in mpt.enum_range(multiplicities, m-1, m):
+                    yield list_visitor(state, elements)
+            else:
+                for state in multiset_partitions_taocp(multiplicities):
+                    yield list_visitor(state, elements)
         else:
-            canon = None
-
-        for nc, q in _set_partitions(n):
-            if m is None or nc == m:
-                rv = [[] for i in range(nc)]
-                for i in range(n):
-                    rv[q[i]].append(i)
-                if canon:
-                    canonical = tuple(
-                        sorted([tuple([canon[i] for i in j]) for j in rv]))
-                    if canonical in cache:
-                        continue
-                    cache.add(canonical)
-
-                yield [[multiset[j] for j in i] for i in rv]
+            # Set partitions case - no repeated elements. Pretty much
+            # same as int argument case above, with same possible, but
+            # currently unimplemented optimization for some cases when
+            # m is not None
+            for nc, q in _set_partitions(n):
+                if m is None or nc == m:
+                    rv = [[] for i in range(nc)]
+                    for i in range(n):
+                        rv[q[i]].append(i)
+                    yield [[multiset[j] for j in i] for i in rv]
 
 
 def partitions(n, m=None, k=None, size=False):

@@ -134,11 +134,9 @@ def test_expand_frac():
 def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     assert cse((eq).expand(complex=True), optimizations='basic') \
-        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, x0**2 + x1**2), (x3,
-        atan2(x1, x0)/2), (x4, sin(x3)), (x5, atan2(0, x2)/4), (x6, sin(x5)),
-        (x7, x4*x6), (x8, cos(x3)), (x9, x6*x8), (x10, cos(x5)), (x11,
-        x10*x4), (x12, x10*x8)], [sqrt(2)*(x11 + I*x11 - x12 + I*x12 + x7 -
-        I*x7 + x9 + I*x9)/(8*pi**(3/2)*x2**(1/4))])''')
+        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, atan2(x1, x0)/2),
+        (x3, sin(x2)), (x4, cos(x2))], [sqrt(2)*(x3 + I*x3 - x4 +
+        I*x4)/(8*pi**(3/2)*(x0**2 + x1**2)**(1/4))])''')
 
 
 def test_expand_power_base():

@@ -10,7 +10,6 @@ from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
-from sympy.assumptions import ask
 from sympy.logic.boolalg import And, Or, true, false
 
 from sympy.utilities import default_sort_key
@@ -267,6 +266,7 @@ class Set(Basic):
         return self.complement
 
     def __contains__(self, other):
+        from sympy.assumptions import ask
         symb = self.contains(other)
         result = ask(symb)
         if result is None:
@@ -1317,6 +1317,19 @@ class FiniteSet(Set, EvalfMixin):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
+
+    def __ge__(self, other):
+        return self.subset(other)
+
+    def __gt__(self, other):
+        return self != other and self >= other
+
+    def __le__(self, other):
+        return other.subset(self)
+
+    def __lt__(self, other):
+        return self != other and other >= self
+
 
 def imageset(*args):
     """ Image of set under transformation ``f``

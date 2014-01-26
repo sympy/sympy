@@ -797,7 +797,8 @@ def groebner_lcm(f, g):
     1. [Cox97]_
 
     """
-    assert f.ring == g.ring
+    if f.ring != g.ring:
+        raise ValueError("Values should be equal")
 
     ring = f.ring
     domain = ring.domain
@@ -839,7 +840,8 @@ def groebner_lcm(f, g):
 
 def groebner_gcd(f, g):
     """Computes GCD of two polynomials using Groebner bases. """
-    assert f.ring == g.ring
+    if f.ring != g.ring:
+        raise ValueError("Values should be equal")
     domain = f.ring.domain
 
     if not domain.has_Field:
@@ -849,7 +851,8 @@ def groebner_gcd(f, g):
 
     H = (f*g).quo([groebner_lcm(f, g)])
 
-    assert len(H) == 1
+    if len(H) != 1:
+        raise ValueError("Length should be 1")
     h = H[0]
 
     if not domain.has_Field:

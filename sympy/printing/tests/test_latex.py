@@ -1,6 +1,6 @@
 from sympy import (
     Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial, FiniteSet,
-    Float, FourierTransform, Function, Integral, Interval,
+    Float, FourierTransform, Function, IndexedBase, Integral, Interval,
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
@@ -176,6 +176,11 @@ def test_latex_functions():
     # not to be confused with the beta function
     assert latex(beta(x)) == r"\beta{\left (x \right )}"
     assert latex(beta) == r"\beta"
+
+    a1 = Function('a_1')
+
+    assert latex(a1) == r"\operatorname{a_1}"
+    assert latex(a1(x)) == r"\operatorname{a_1}{\left (x \right )}"
 
     assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
@@ -365,6 +370,11 @@ def test_latex_fresnel():
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
 
+
+def test_latex_indexed():
+    Psi_symbol = Symbol('Psi_0', complex=True, real=False)
+    Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
+    assert latex(Psi_symbol * conjugate(Psi_symbol)) == latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
 
 def test_latex_derivatives():
     # regular "d" for ordinary derivatives

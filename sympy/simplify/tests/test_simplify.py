@@ -4,7 +4,7 @@ from sympy import (
     exp_polar, expand, exptrigsimp, factor, factorial, FallingFactorial, Float,
     fraction, Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I,
     Integer, Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
-    oo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
+    oo, zoo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
     radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
     root, S, separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
     Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
@@ -1092,8 +1092,8 @@ def test_extract_minus_sign():
     assert simplify(-x/y) == -x/y
     assert simplify(x/y) == x/y
     assert simplify(x/-y) == -x/y
-    assert simplify(-x/0) == -oo*x
-    assert simplify(S(-5)/0) == -oo
+    assert simplify(-x/0) == zoo*x
+    assert simplify(S(-5)/0) == zoo
     assert simplify(-a*x/(-y - b)) == a*x/(b + y)
 
 
