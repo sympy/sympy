@@ -875,8 +875,7 @@ def mobius(n):
 
     Parameters
     ==========
-    n : int
-        It should be positive integer
+    n : positive integer
 
     Returns
     =======
@@ -902,9 +901,8 @@ def mobius(n):
     References
     ==========
 
-      [1] see "http://en.wikipedia.org/wiki/Möbius_function"
-      [2] Thomas Koshy "Elementary Number Theory with Applications",
-          2nd Edition, page 398.
+      [1] http://en.wikipedia.org/wiki/Möbius_function
+      [2] Thomas Koshy "Elementary Number Theory with Applications",page 398
     """
     n = as_int(n)
     if n <= 0:
