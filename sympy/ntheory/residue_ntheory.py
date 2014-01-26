@@ -868,6 +868,15 @@ def jacobi_symbol(m, n):
 def mobius(n):
     """
     Möbius Function maps natural number to {-1, 0, 1}
+    It is an important multiplicative function in number theory
+    and combinatorics.It has applications in mathematical series,
+    algebraic number theory and also physics(Fermion operator has very
+    concrete realization with Möbius Function model)
+
+    Parameters
+    ==========
+    n : int
+        It should be positive integer
 
     Returns
     =======
@@ -876,8 +885,6 @@ def mobius(n):
     2) 0 if n has a squared prime factor.
     3) (-1)**k if n is a square-free positive integer with k number of
        prime factors.
-
-    n should be a positive integer by defination
 
     Examples
     ========
@@ -896,13 +903,9 @@ def mobius(n):
     ==========
 
       [1] see "http://en.wikipedia.org/wiki/Möbius_function"
-      [2] Thomas Koshy "Elementary Number Theory with Applications", page 398
+      [2] Thomas Koshy "Elementary Number Theory with Applications",
+          2nd Edition, page 398.
     """
-    # It is an important multiplicative function in number theory
-    # and combinatorics.It has applications in mathematical series,
-    # algebraic number theory and also physics(Fermion operator has very
-    # concrete realization with Möbius Function model)
-    from sympy import factorint
     n = as_int(n)
     if n <= 0:
         raise ValueError("n should be positive number")
