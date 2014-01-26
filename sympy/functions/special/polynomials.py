@@ -1598,7 +1598,8 @@ class hahn_dual(OrthogonalPolynomial):
         \end{matrix}
         \middle| 1 \right)
 
-    for :math:`n = 0, 1, 2, \ldots, N`.
+    for :math:`n = 0, 1, 2, \ldots, N` and with
+    :math:`\lambda(x) = x (x + \gamma + \delta + 1)`.
 
     Examples
     ========
@@ -1794,3 +1795,152 @@ class hahn_dual_continuous(OrthogonalPolynomial):
         x = sqrt(lx)
         return (RisingFactorial(a + b, n) * RisingFactorial(a + c, n)
                 * hyper([-n, a + I*x, a - I*x], [a + b, a + c], 1))
+
+#----------------------------------------------------------------------------
+# Wilson polynomials
+#
+
+class wilson(OrthogonalPolynomial):
+    r"""
+    The Wilson polynomial in x, :math:`W_n(a, b, c, d, x^2)`
+
+    .. math::
+        W_n(a, b, c, d, x^2) := (a + b)_n (a + c)_n (a + d)_n {}_4F_3\left(
+        \begin{matrix}
+        -n, n + a + b + c + d - 1, a + \imath x, a - \imag x \\
+        a + b, a + c, a + d
+        \end{matrix}
+        \middle| 1 \right)
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, wilson
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> c = Symbol("c")
+    >>> d = Symbol("d")
+
+    >>> W = wilson(n, a, b, c, d, x)
+    >>> W
+    wilson(n, a, b, c, d, x)
+
+    >>> from sympy import hyper
+    >>> W.rewrite(hyper)    # doctest:+SKIP
+    RisingFactorial(a + b, n) * RisingFactorial(a + c, n) * RisingFactorial(a + d, n) *
+    hyper((-n, a + b + c + d + n + 1, a + I*sqrt(x), a - I*sqrt(x)), (a + b, a + c, a + d), 1)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Wilson_polynomials
+    .. [2] http://dlmf.nist.gov/18.25
+    .. [3] http://dlmf.nist.gov/18.26
+    .. [4] http://www.encyclopediaofmath.org/index.php?title=Wilson_polynomials
+    """
+
+    @classmethod
+    def eval(cls, n, a, b, c, d, lx):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, a, b, c, d, lx):
+        # It does not matter which root of l(x) = x^2 we take
+        x = sqrt(lx)
+        return (RisingFactorial(a + b, n) * RisingFactorial(a + c, n) * RisingFactorial(a + d, n)
+                * hyper([-n, n + a + b + c + d + 1, a + I*x, a - I*x], [a + b, a + c, a + d], 1))
+
+#----------------------------------------------------------------------------
+# Racah polynomials
+#
+
+class racah(OrthogonalPolynomial):
+    r"""
+    The Racah polynomial in x, :math:`R_n(\lambda(x), \alpha, \beta, \gamma, \delta, x)`
+
+    .. math::
+        R_n(\lambda(x), \alpha, \beta, \gamma, \delta, x) := {}_3F_2\left(
+        \begin{matrix}
+        -n, b + \alpha + \beta + 1, -x, x + \gamma + \delta + 1 \\
+        \alpha + 1, \beta + \delta + 1,\gamma + 1
+        \end{matrix}
+        \middle| 1 \right)
+
+    for :math:`n = 0, 1, 2, \ldots, N` and with
+    :math:`\lambda(x) = x (x + \gamma + \delta + 1)`.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, racah
+    >>> x = Symbol('x')
+    >>> n = Symbol("n")
+    >>> a = Symbol("a")
+    >>> b = Symbol("b")
+    >>> c = Symbol("c")
+    >>> d = Symbol("d")
+
+    >>> R = racah(n, a, b, c, d, x)
+    >>> R
+    racah(n, a, b, c, d, x)
+
+    >>> from sympy import hyper
+    >>> R.rewrite(hyper)    # doctest:+SKIP
+    hyper((-n, a + b + n + 1, c/2 + d/2 +
+    sqrt(c**2 + 2*c*d + 2*c + d**2 + 2*d + 4*x + 1)/2 + 1/2,
+    c/2 + d/2 - sqrt(c**2 + 2*c*d + 2*c + d**2 + 2*d + 4*x + 1)/2
+    + 1/2), (a + 1, b + d + 1, c + 1), 1)
+
+    See Also
+    ========
+
+    jacobi, gegenbauer,
+    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Racah_polynomials
+    .. [2] http://dlmf.nist.gov/18.25
+    .. [3] http://dlmf.nist.gov/18.26
+    """
+
+    @classmethod
+    def eval(cls, n, a, b, c, d, lx):
+        if n.is_Number:
+            if n.is_negative:
+                raise ValueError("The index n must be nonnegative integer (got %r)" % n)
+
+    def _eval_rewrite_as_hyper(self, n, a, b, c, d, lx):
+        # It does not matter which root of l(x) = x * (x + c + d + 1) we take
+        x = -d/2 - c/2 - sqrt(d**2 + 2*d*c + 2*d + c**2 + 2*c + 4*lx + 1)/2 - S.Half
+        return hyper([-n, n + a + b + 1, -x, x + c + d + 1], [a + 1, b + d + 1, c + 1], 1)
