@@ -1232,7 +1232,9 @@ class charlier(OrthogonalPolynomial):
     The Charlier polynomial in x, :math:`C_n(a, x)`.
 
     .. math::
-        C_n(a, x) := {}_2F_0(-n,-x, -\frac{1}{a})
+        C_n(a, x) := {}_2F_0\left(
+                     \begin{matrix} -n, -x \\ - \end{matrix}
+                     \middle| -\frac{1}{a}\right)
 
     The orthogonality condition is
 
@@ -1304,13 +1306,13 @@ class meixner(OrthogonalPolynomial):
     The Meixner polynomial in x, :math:`M_n(\beta, c, x)`.
 
     .. math::
-        M_n(\beta, c, x) := {}_2F_1\left(\begin{matrix} -n, -x \\ \beta \end{matrix} \middle| 1 - \frac{1}{c} \right)
+        M_n(\beta, c, x) := {}_2F_1\left(\begin{matrix} -n, -x \\ \beta \end{matrix} \middle| 1 - \frac{1}{c}\right)
 
     The orthogonality condition is
 
     .. math::
         \sum_{x=0}^\infty \frac{(\beta)_x}{x!} c^x M_n(\beta, c, x) M_m(\beta, c, x)
-        = \frac{c^-n n!}{(\beta)_n (1-c)^\beta} \delta_{n,m}
+        = \frac{c^{-n} n!}{(\beta)_n (1-c)^\beta} \delta_{n,m}
 
     with :math:`\beta > 0` and :math:`0 < c < 1`.
 
@@ -1387,7 +1389,7 @@ class krawtchouk(OrthogonalPolynomial):
     The orthogonality condition is
 
     .. math::
-        \sum_{x=0}^N \binom(N, x) p^x (1-p)^{N-x} K_n(p, N, x) K_m(p, N, x)
+        \sum_{x=0}^N \binom{N, x} p^x (1-p)^{N-x} K_n(p, N, x) K_m(p, N, x)
         = \frac{(-1)^n n!}{(-N)_n} \left(\frac{1-p}{p}\right)^n \delta_{m,n}
 
     with :math:`0 < p < 1`.
@@ -1736,7 +1738,7 @@ class hahn_dual_continuous(OrthogonalPolynomial):
     .. math::
         S_n(a, b, c, x^2) := (a + b)_n (a + c)_n {}_3F_2\left(
         \begin{matrix}
-        -n, a + \imath x, a - \imag x \\
+        -n, a + \imath x, a - \imath x \\
         a + b, a + c
         \end{matrix}
         \middle| 1 \right)
@@ -1807,7 +1809,7 @@ class wilson(OrthogonalPolynomial):
     .. math::
         W_n(a, b, c, d, x^2) := (a + b)_n (a + c)_n (a + d)_n {}_4F_3\left(
         \begin{matrix}
-        -n, n + a + b + c + d - 1, a + \imath x, a - \imag x \\
+        -n, n + a + b + c + d - 1, a + \imath x, a - \imath x \\
         a + b, a + c, a + d
         \end{matrix}
         \middle| 1 \right)

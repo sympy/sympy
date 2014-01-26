@@ -168,6 +168,24 @@ Laguerre Polynomials
 .. autoclass:: sympy.functions.special.polynomials.assoc_laguerre
    :members:
 
+
+Askey scheme Polynomials
+++++++++++++++++++++++++
+
+The higher order hypergeometric polynomials from the Askey scheme.
+
+.. autoclass:: sympy.functions.special.polynomials.charlier
+.. autoclass:: sympy.functions.special.polynomials.meixner
+.. autoclass:: sympy.functions.special.polynomials.krawtchouk
+.. autoclass:: sympy.functions.special.polynomials.meixner_pollaczek
+.. autoclass:: sympy.functions.special.polynomials.hahn
+.. autoclass:: sympy.functions.special.polynomials.hahn_dual
+.. autoclass:: sympy.functions.special.polynomials.hahn_continuous
+.. autoclass:: sympy.functions.special.polynomials.hahn_dual_continuous
+.. autoclass:: sympy.functions.special.polynomials.wilson
+.. autoclass:: sympy.functions.special.polynomials.racah
+
+
 Spherical Harmonics
 -------------------
 
