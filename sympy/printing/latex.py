@@ -1135,6 +1135,7 @@ class LatexPrinter(Printer):
             return self._settings['symbol_names'][expr]
 
         return self._deal_with_super_sub(expr.name)
+
     _print_RandomSymbol = _print_Symbol
     _print_MatrixSymbol = _print_Symbol
 
