@@ -9,8 +9,7 @@ from sympy.core.singleton import S
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
-from sympy.core.compatibility import iterable, xrange, string_types
-from sympy.tensor import IndexedBase
+from sympy.core.compatibility import iterable, xrange
 from sympy.utilities.iterables import numbered_symbols, \
     sift, topological_sort, ordered
 
@@ -179,8 +178,7 @@ def opt_cse(exprs, order='canonical'):
         if expr.is_Atom:
             return
 
-        # passing IndexedBase in exclude needed to avoid infinite
-        if iterable(expr, exclude=(string_types, dict, IndexedBase)):
+        if iterable(expr):
             list(map(_find_opts, expr))
             return
 
@@ -297,7 +295,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
         if expr.is_Atom:
             return
 
-        if iterable(expr, exclude=(string_types, dict, IndexedBase)):
+        if iterable(expr):
             args = expr
 
         else:
@@ -329,7 +327,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
         if expr.is_Atom:
             return expr
 
-        if iterable(expr, exclude=(string_types, dict, IndexedBase)):
+        if iterable(expr):
             new_args = [_rebuild(arg) for arg in expr]
             return expr.func(*new_args)
 
