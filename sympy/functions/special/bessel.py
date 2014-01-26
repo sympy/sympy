@@ -823,6 +823,22 @@ class airyai(AiryBase):
                 return (S.One/(3**(S(2)/3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3))
                         / C.factorial(n) * (root(3,3)*x)**n)
 
+    def _eval_rewrite_as_besselj(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return ot*sqrt(-z) * (besselj(-ot, tt*a) + besselj(ot, tt*a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return ot*sqrt(z) * (besseli(-ot, tt*a) - besseli(ot, tt*a))
+        else:
+            return ot*(C.Pow(a, ot)*besseli(-ot, tt*a) - z*C.Pow(a, -ot)*besseli(ot, tt*a))
+
     def _eval_rewrite_as_hyper(self, z):
         pf1 = S.One / (3**(S(2)/3)*gamma(S(2)/3))
         pf2 = z / (root(3,3)*gamma(S(1)/3))
@@ -899,6 +915,24 @@ class airybi(AiryBase):
                 return (S.One/(root(3,6)*pi) * gamma((n+S.One)/S(3)) * Abs(sin(2*pi*(n+S.One)/S(3)))
                         / C.factorial(n) * (root(3,3)*x)**n)
 
+    def _eval_rewrite_as_besselj(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return sqrt(-z/3) * (besselj(-ot, tt*a) - besselj(ot, tt*a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return sqrt(z)/sqrt(3) * (besseli(-ot, tt*a) + besseli(ot, tt*a))
+        else:
+            b = C.Pow(a, ot)
+            c = C.Pow(a, -ot)
+            return sqrt(ot)*(b*besseli(-ot, tt*a) + z*c*besseli(ot, tt*a))
+
     def _eval_rewrite_as_hyper(self, z):
         pf1 = S.One / (root(3,6)*gamma(S(2)/3))
         pf2 = z*root(3,6) / gamma(S(1)/3)
@@ -967,6 +1001,24 @@ class airyaiprime(AiryBase):
         res = mp.airyai(z, derivative=1)
         mp.prec = oprec
         return Expr._from_mpmath(res, prec)
+
+    def _eval_rewrite_as_besselj(self, z):
+        tt = Rational(2, 3)
+        a = C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return z/3 * (besselj(-tt, tt*a) - besselj(tt, tt*a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = tt * C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return z/3 * (besseli(tt, a) - besseli(-tt, a))
+        else:
+            a = C.Pow(z, Rational(3, 2))
+            b = C.Pow(a, tt)
+            c = C.Pow(a, -tt)
+            return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-ot, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):
         pf1 = z**2 / (2*3**(S(2)/3)*gamma(S(2)/3))
@@ -1039,6 +1091,24 @@ class airybiprime(AiryBase):
         res = mp.airybi(z, derivative=1)
         mp.prec = oprec
         return Expr._from_mpmath(res, prec)
+
+    def _eval_rewrite_as_besselj(self, z):
+        tt = Rational(2, 3)
+        a = tt * C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return -z/sqrt(3) * (besselj(-tt, a) + besselj(tt, a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = tt * C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return z/sqrt(3) * (besseli(-tt, a) + besseli(tt, a))
+        else:
+            a = C.Pow(z, Rational(3, 2))
+            b = C.Pow(a, tt)
+            c = C.Pow(a, -tt)
+            return sqrt(ot) * (b*besseli(-tt, tt*a) + z**2*c*besseli(tt, tt*a))
 
     def _eval_rewrite_as_hyper(self, z):
         pf1 = z**2 / (2*root(3,6)*gamma(S(2)/3))
