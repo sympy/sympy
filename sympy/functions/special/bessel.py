@@ -850,27 +850,21 @@ class airyai(AiryBase):
 
         if len(symbs) == 1:
             z = symbs.pop()
-            print(z)
-
             c = Wild("c", exclude=[z])
             d = Wild("d", exclude=[z])
             m = Wild("m", exclude=[z])
             n = Wild("n", exclude=[z])
-
-            # 03.05.16.0001.01
             M = arg.match(c*(d*z**n)**m)
-
             if M is not None:
-                print(M)
                 m = M[m]
+                # The transformation is given by 03.05.16.0001.01
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
                     n = M[n]
-
-                    pf = (d*z**n)**m / (d**m*z**(m*n))
-                    newarg = c*d**m*z**(m*n)
-                    return S.Half*(pf + S.One)*airyai(newarg) - S.One/(2*sqrt(3))*(pf - S.One)*airybi(newarg)
+                    pf = (d * z**n)**m / (d**m * z**(m*n))
+                    newarg = c * d**m * z**(m*n)
+                    return S.Half * ((pf + S.One)*airyai(newarg) - (pf - S.One)/sqrt(3)*airybi(newarg))
 
 
 class airybi(AiryBase):
@@ -944,27 +938,21 @@ class airybi(AiryBase):
 
         if len(symbs) == 1:
             z = symbs.pop()
-            print(z)
-
             c = Wild("c", exclude=[z])
             d = Wild("d", exclude=[z])
             m = Wild("m", exclude=[z])
             n = Wild("n", exclude=[z])
-
-            # 03.06.16.0001.01
             M = arg.match(c*(d*z**n)**m)
-
             if M is not None:
-                print(M)
                 m = M[m]
+                # The transformation is given by 03.06.16.0001.01
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
                     n = M[n]
-
-                    pf = (d*z**n)**m / (d**m*z**(m*n))
-                    newarg = c*d**m*z**(m*n)
-                    return S.Half*(sqrt(3)*(S.One - pf)*airyai(newarg) + (pf + S.One)*airybi(newarg))
+                    pf = (d * z**n)**m / (d**m * z**(m*n))
+                    newarg = c * d**m * z**(m*n)
+                    return S.Half * (sqrt(3)*(S.One - pf)*airyai(newarg) + (S.One + pf)*airybi(newarg))
 
 
 class airyaiprime(AiryBase):
@@ -1031,28 +1019,23 @@ class airyaiprime(AiryBase):
 
         if len(symbs) == 1:
             z = symbs.pop()
-            print(z)
-
             c = Wild("c", exclude=[z])
             d = Wild("d", exclude=[z])
             m = Wild("m", exclude=[z])
             n = Wild("n", exclude=[z])
-
-            # 03.07.16.0001.01
-            # TODO: No 'n' in that formula, is it really correct?
             M = arg.match(c*(d*z**n)**m)
-
             if M is not None:
-                print(M)
                 m = M[m]
+                # The transformation is in principle
+                # given by 03.07.16.0001.01 but note
+                # that there is an error in this formule.
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
                     n = M[n]
-
-                    pf = (d*z**3)**(2*m) / (d**(2*m)*z**(6*m))
-                    newarg = c*d**m*z**(3*m)
-                    return S.Half*(pf + S.One)*airyaiprime(newarg) - S.One/(2*sqrt(3))*(S.One - pf)*airybiprime(newarg)
+                    pf = (d**m * z**(n*m)) / (d * z**n)**m
+                    newarg = c * d**m * z**(n*m)
+                    return S.Half * ((pf + S.One)*airyaiprime(newarg) + (pf - S.One)/sqrt(3)*airybiprime(newarg))
 
 
 class airybiprime(AiryBase):
@@ -1121,25 +1104,20 @@ class airybiprime(AiryBase):
 
         if len(symbs) == 1:
             z = symbs.pop()
-            print(z)
-
             c = Wild("c", exclude=[z])
             d = Wild("d", exclude=[z])
             m = Wild("m", exclude=[z])
             n = Wild("n", exclude=[z])
-
-            # 03.08.16.0001.01
-            # TODO: No 'n' in that formula, is it really correct?
             M = arg.match(c*(d*z**n)**m)
-
             if M is not None:
-                print(M)
                 m = M[m]
+                # The transformation is in principle
+                # given by 03.08.16.0001.01 but note
+                # that there is an error in this formule.
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
                     n = M[n]
-
-                    pf = (d*z**3)**(2*m) / (d**(2*m)*z**(6*m))
-                    newarg = c*d**m*z**(3*m)
-                    return S.Half*((S.One + pf)*airybiprime(newarg) - sqrt(3)*(S.One - pf)*airyaiprime(newarg))
+                    pf = (d**m * z**(n*m)) / (d * z**n)**m
+                    newarg = c * d**m * z**(n*m)
+                    return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
