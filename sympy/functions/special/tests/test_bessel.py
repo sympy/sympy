@@ -1,13 +1,14 @@
-from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros, besselj, \
-    bessely, besseli, besselk, hankel1, hankel2, expand_func, \
-    latex, sqrt, sinh, cosh
+from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
+                   bessely, besseli, besselk, hankel1, hankel2, expand_func,
+                   sqrt, sinh, cosh, diff, series, gamma, hyper, Abs, I, O, oo,
+                   conjugate)
 from sympy.functions.special.bessel import fn
-from sympy.utilities.pytest import raises, skip
-from sympy.utilities.randtest import \
-    random_complex_number as randcplx, \
-    test_numerically as tn, \
-    test_derivative_numerically as td, \
-    _randint
+from sympy.functions.special.bessel import (airyai, airybi,
+                                            airyaiprime, airybiprime)
+from sympy.utilities.randtest import (random_complex_number as randcplx,
+                                      test_numerically as tn,
+                                      test_derivative_numerically as td,
+                                      _randint)
 
 from sympy.abc import z, n, k, x
 
@@ -332,3 +333,157 @@ def test_branching():
     assert tn(besseli, 2)
     assert tn(besseli, pi)
     assert tn(besseli, I)
+
+
+def test_airy_base():
+    z = Symbol('z')
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+
+    assert conjugate(airyai(z)) == airyai(conjugate(z))
+    assert airyai(x).is_real
+
+    assert airyai(x+I*y).as_real_imag() == (
+        airyai(x - I*x*Abs(y)/Abs(x))/2 + airyai(x + I*x*Abs(y)/Abs(x))/2,
+        I*x*(airyai(x - I*x*Abs(y)/Abs(x)) -
+             airyai(x + I*x*Abs(y)/Abs(x)))*Abs(y)/(2*y*Abs(x)))
+
+
+def test_airyai():
+    z = Symbol('z', real=False)
+    t = Symbol('t', negative=True)
+    p = Symbol('p', positive=True)
+
+    assert isinstance(airyai(z), airyai)
+
+    assert airyai(0) == 3**(S(1)/3)/(3*gamma(S(2)/3))
+    assert airyai(oo) == 0
+    assert airyai(-oo) == 0
+
+    assert diff(airyai(z), z) == airyaiprime(z)
+
+    assert series(airyai(z), z, 0, 3) == (
+        3**(S(5)/6)*gamma(S(1)/3)/(6*pi) - 3**(S(1)/6)*z*gamma(S(2)/3)/(2*pi) + O(z**3))
+
+    assert airyai(z).rewrite(hyper) == (
+        -3**(S(2)/3)*z*hyper((), (S(4)/3,), z**S(3)/9)/(3*gamma(S(1)/3)) +
+         3**(S(1)/3)*hyper((), (S(2)/3,), z**S(3)/9)/(3*gamma(S(2)/3)))
+
+    assert isinstance(airyai(z).rewrite(besselj), airyai)
+    assert airyai(t).rewrite(besselj) == (
+        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
+                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+    assert airyai(z).rewrite(besseli) == (
+        -z*besseli(S(1)/3, 2*z**(S(3)/2)/3)/(3*(z**(S(3)/2))**(S(1)/3)) +
+         (z**(S(3)/2))**(S(1)/3)*besseli(-S(1)/3, 2*z**(S(3)/2)/3)/3)
+    assert airyai(p).rewrite(besseli) == (
+        sqrt(p)*(besseli(-S(1)/3, 2*p**(S(3)/2)/3) -
+                 besseli(S(1)/3, 2*p**(S(3)/2)/3))/3)
+
+    assert expand_func(airyai(2*(3*z**5)**(S(1)/3))) == (
+        -sqrt(3)*(-1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airybi(2*3**(S(1)/3)*z**(S(5)/3))/6 +
+         (1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airyai(2*3**(S(1)/3)*z**(S(5)/3))/2)
+
+def test_airybi():
+    z = Symbol('z', real=False)
+    t = Symbol('t', negative=True)
+    p = Symbol('p', positive=True)
+
+    assert isinstance(airybi(z), airybi)
+
+    assert airybi(0) == 3**(S(5)/6)/(3*gamma(S(2)/3))
+    assert airybi(oo) == oo
+    assert airybi(-oo) == 0
+
+    assert diff(airybi(z), z) == airybiprime(z)
+
+    assert series(airybi(z), z, 0, 3) == (
+        3**(S(1)/3)*gamma(S(1)/3)/(2*pi) + 3**(S(2)/3)*z*gamma(S(2)/3)/(2*pi) + O(z**3))
+
+    assert airybi(z).rewrite(hyper) == (
+        3**(S(1)/6)*z*hyper((), (S(4)/3,), z**S(3)/9)/gamma(S(1)/3) +
+        3**(S(5)/6)*hyper((), (S(2)/3,), z**S(3)/9)/(3*gamma(S(2)/3)))
+
+    assert isinstance(airybi(z).rewrite(besselj), airybi)
+    assert airyai(t).rewrite(besselj) == (
+        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
+                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+    assert airybi(z).rewrite(besseli) == (
+        sqrt(3)*(z*besseli(S(1)/3, 2*z**(S(3)/2)/3)/(z**(S(3)/2))**(S(1)/3) +
+                 (z**(S(3)/2))**(S(1)/3)*besseli(-S(1)/3, 2*z**(S(3)/2)/3))/3)
+    assert airybi(p).rewrite(besseli) == (
+        sqrt(3)*sqrt(p)*(besseli(-S(1)/3, 2*p**(S(3)/2)/3) +
+                         besseli(S(1)/3, 2*p**(S(3)/2)/3))/3)
+
+    assert expand_func(airybi(2*(3*z**5)**(S(1)/3))) == (
+        sqrt(3)*(1 - (z**5)**(S(1)/3)/z**(S(5)/3))*airyai(2*3**(S(1)/3)*z**(S(5)/3))/2 +
+        (1 + (z**5)**(S(1)/3)/z**(S(5)/3))*airybi(2*3**(S(1)/3)*z**(S(5)/3))/2)
+
+
+def test_airyaiprime():
+    z = Symbol('z', real=False)
+    t = Symbol('t', negative=True)
+    p = Symbol('p', positive=True)
+
+    assert isinstance(airyaiprime(z), airyaiprime)
+
+    assert airyaiprime(0) == -3**(S(2)/3)/(3*gamma(S(1)/3))
+    assert airyaiprime(oo) == 0
+
+    assert diff(airyaiprime(z), z) == z*airyai(z)
+
+    assert series(airyaiprime(z), z, 0, 3) == (
+        -3**(S(2)/3)/(3*gamma(S(1)/3)) + 3**(S(1)/3)*z**2/(6*gamma(S(2)/3)) + O(z**3))
+
+    assert airyaiprime(z).rewrite(hyper) == (
+        3**(S(1)/3)*z**2*hyper((), (S(5)/3,), z**S(3)/9)/(6*gamma(S(2)/3)) -
+        3**(S(2)/3)*hyper((), (S(1)/3,), z**S(3)/9)/(3*gamma(S(1)/3)))
+
+    assert isinstance(airyaiprime(z).rewrite(besselj), airyaiprime)
+    assert airyai(t).rewrite(besselj) == (
+        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
+                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+    assert airyaiprime(z).rewrite(besseli) == (
+        z**2*besseli(S(2)/3, 2*z**(S(3)/2)/3)/(3*(z**(S(3)/2))**(S(2)/3)) -
+        (z**(S(3)/2))**(S(2)/3)*besseli(-S(1)/3, 2*z**(S(3)/2)/3)/3)
+    assert airyaiprime(p).rewrite(besseli) == (
+        p*(-besseli(-S(2)/3, 2*p**(S(3)/2)/3) + besseli(S(2)/3, 2*p**(S(3)/2)/3))/3)
+
+    assert expand_func(airyaiprime(2*(3*z**5)**(S(1)/3))) == (
+        sqrt(3)*(z**(S(5)/3)/(z**5)**(S(1)/3) - 1)*airybiprime(2*3**(S(1)/3)*z**(S(5)/3))/6 +
+        (z**(S(5)/3)/(z**5)**(S(1)/3) + 1)*airyaiprime(2*3**(S(1)/3)*z**(S(5)/3))/2)
+
+
+def test_airybiprime():
+    z = Symbol('z', real=False)
+    t = Symbol('t', negative=True)
+    p = Symbol('p', positive=True)
+
+    assert isinstance(airybiprime(z), airybiprime)
+
+    assert airybiprime(0) == 3**(S(1)/6)/gamma(S(1)/3)
+    assert airybiprime(oo) == oo
+    assert airybiprime(-oo) == 0
+
+    assert diff(airybiprime(z), z) == z*airybi(z)
+
+    assert series(airybiprime(z), z, 0, 3) == (
+        3**(S(1)/6)/gamma(S(1)/3) + 3**(S(5)/6)*z**2/(6*gamma(S(2)/3)) + O(z**3))
+
+    assert airybiprime(z).rewrite(hyper) == (
+        3**(S(5)/6)*z**2*hyper((), (S(5)/3,), z**S(3)/9)/(6*gamma(S(2)/3)) +
+        3**(S(1)/6)*hyper((), (S(1)/3,), z**S(3)/9)/gamma(S(1)/3))
+
+    assert isinstance(airybiprime(z).rewrite(besselj), airybiprime)
+    assert airyai(t).rewrite(besselj) == (
+        sqrt(-t)*(besselj(-S(1)/3, 2*(-t)**(S(3)/2)/3) +
+                  besselj(S(1)/3, 2*(-t)**(S(3)/2)/3))/3)
+    assert airybiprime(z).rewrite(besseli) == (
+        sqrt(3)*(z**2*besseli(S(2)/3, 2*z**(S(3)/2)/3)/(z**(S(3)/2))**(S(2)/3) +
+                 (z**(S(3)/2))**(S(2)/3)*besseli(-S(2)/3, 2*z**(S(3)/2)/3))/3)
+    assert airybiprime(p).rewrite(besseli) == (
+        sqrt(3)*p*(besseli(-S(2)/3, 2*p**(S(3)/2)/3) + besseli(S(2)/3, 2*p**(S(3)/2)/3))/3)
+
+    assert expand_func(airybiprime(2*(3*z**5)**(S(1)/3))) == (
+        sqrt(3)*(z**(S(5)/3)/(z**5)**(S(1)/3) - 1)*airyaiprime(2*3**(S(1)/3)*z**(S(5)/3))/2 +
+        (z**(S(5)/3)/(z**5)**(S(1)/3) + 1)*airybiprime(2*3**(S(1)/3)*z**(S(5)/3))/2)

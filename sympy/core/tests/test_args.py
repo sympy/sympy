@@ -1260,6 +1260,30 @@ def test_sympy__functions__special__bessel__yn():
     assert _test_args(yn(0, x))
 
 
+def test_sympy__functions__special__bessel__AiryBase():
+    pass
+
+
+def test_sympy__functions__special__bessel__airyai():
+    from sympy.functions.special.bessel import airyai
+    assert _test_args(airyai(2))
+
+
+def test_sympy__functions__special__bessel__airybi():
+    from sympy.functions.special.bessel import airybi
+    assert _test_args(airybi(2))
+
+
+def test_sympy__functions__special__bessel__airyaiprime():
+    from sympy.functions.special.bessel import airyaiprime
+    assert _test_args(airyaiprime(2))
+
+
+def test_sympy__functions__special__bessel__airybiprime():
+    from sympy.functions.special.bessel import airybiprime
+    assert _test_args(airybiprime(2))
+
+
 def test_sympy__functions__special__elliptic_integrals__elliptic_k():
     from sympy.functions.special.elliptic_integrals import elliptic_k as K
     assert _test_args(K(x))
