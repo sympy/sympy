@@ -219,9 +219,8 @@ class Wild(Symbol):
     wanted. For example, using the above without
     exclude:
 
-    >>> from sympy import Wild, symbols
-    >>> from sympy.abc import x, y, z
-    >>> a, b = symbols('a b',cls=Wild)
+    >>> from sympy import symbols
+    >>> a, b = symbols('a b', cls=Wild)
     >>> (2 + 3*y).match(a*x + b*y)
     {a_: 2/x, b_: 3}
 
@@ -233,8 +232,8 @@ class Wild(Symbol):
     this.  With the exclude parameter, the pattern will
     not match.
 
-    >>> a = Wild('a',exclude=[x,y])
-    >>> b = Wild('b',exclude=[x,y])
+    >>> a = Wild('a', exclude=[x, y])
+    >>> b = Wild('b', exclude=[x, y])
     >>> (2 + 3*y).match(a*x + b*y)
 
     Exclude also helps remove ambiguity from matches.
