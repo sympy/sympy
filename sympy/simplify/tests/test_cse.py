@@ -1,11 +1,10 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf)
+                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf, IndexedBase, Idx, MatrixSymbol)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
-from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.pytest import XFAIL
 
 w, x, y, z = symbols('w,x,y,z')
@@ -279,4 +278,4 @@ def test_cse_Indexed():
     expr1 = (y[i+1]-y[i])/(x[i+1]-x[i])
     expr2 = 1/(x[i+1]-x[i])
     replacements, reduced_exprs = cse([expr1, expr2])
-    assert len(replacements) > 0 # this is a start but we need more
+    assert len(replacements) > 0
