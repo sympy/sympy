@@ -1389,7 +1389,7 @@ class krawtchouk(OrthogonalPolynomial):
     The orthogonality condition is
 
     .. math::
-        \sum_{x=0}^N \binom{N, x} p^x (1-p)^{N-x} K_n(p, N, x) K_m(p, N, x)
+        \sum_{x=0}^N \binom{N}{x} p^x (1-p)^{N-x} K_n(p, N, x) K_m(p, N, x)
         = \frac{(-1)^n n!}{(-N)_n} \left(\frac{1-p}{p}\right)^n \delta_{m,n}
 
     with :math:`0 < p < 1`.
