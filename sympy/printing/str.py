@@ -613,7 +613,7 @@ class StrPrinter(Printer):
     def _print_Symbol(self, expr):
         return expr.name
 		
-    def _print_MatrixExpr(self,expr):
+    def _print_MatrixSymbol(self,expr):
 		"""Returns the symbolic representation of MatrixSymbol of arbitrary size
 		Example
 		========
