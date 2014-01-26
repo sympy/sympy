@@ -612,8 +612,38 @@ class StrPrinter(Printer):
 
     def _print_Symbol(self, expr):
         return expr.name
-    _print_MatrixSymbol = _print_Symbol
-    _print_RandomSymbol = _print_Symbol
+		
+    def _print_MatrixExpr(self,expr):
+		"""Returns the symbolic representation of MatrixSymbol of arbitrary size
+		Example
+		========
+		>>>from sympy import *
+		>>>m,n=symbols('m n')
+		>>>A=MatrixSymbol('A',m,n)
+		>>>B=MatrixSymbol('B',3,4)
+		>>>print(A)
+		[A11, A12, ..., A1n]
+		[A21, A22, ..., A2n]
+		[..., ..., ..., ...]
+		[Am1, Am2, ..., Amn]
+		>>>print(B)
+		[A11, A12, A13, A14]
+		[A21, A22, A23, A24]
+		[A31, A32, A33, A34]
+		"""
+		
+		if (isinstance(expr.args[1],Integer)==True & isinstance(expr.args[2],Integer)==True):
+			retstr=''
+			for j in range(expr.rows):
+				retstr=retstr+"["
+				for i in range(expr.cols):
+					retstr=retstr+expr.args[0]+str(j+1)+str(i+1)+", "
+				retstr=retstr+"\b"+"\b"+"]"+"\n"
+			return retstr
+		else:
+			return ("["+expr.args[0]+"11"+", "+str(expr.args[0])+"12"+", ..., "+expr.args[0]+"1"+str(expr.args[2])+"]"+"\n"+"["+expr.args[0]+"2"+"1"+", "+str(expr.args[0])+"2"+"2"+", ..., "+expr.args[0]+"2"+str(expr.args[2])+"]"+"\n"+"["+"..., ..., ..., ..."+"]"+"\n"+"["+expr.args[0]+str(expr.args[1])+"1"+", "+str(expr.args[0])+str(expr.args[1])+"2"+", ..., "+expr.args[0]+str(expr.args[1])+str(expr.args[2])+"]")
+    
+	#_print_RandomSymbol = _print_Symbol
 
     def _print_Identity(self, expr):
         return "I"
