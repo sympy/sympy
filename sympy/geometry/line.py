@@ -211,30 +211,39 @@ class LinearEntity(GeometryEntity):
         except AttributeError:
             return False
 
-    def is_parallel(l1, l2):
-        """Are two linear entities parallel?
+    def is_parallel(*lines):
+        """Is a sequence of linear entities parallel?
+
+        Two or more linear entities are parallel if they all
+        have the same slope.
 
         Parameters
         ==========
 
-        l1 : LinearEntity
-        l2 : LinearEntity
+        lines : a sequence of linear entities.
 
         Returns
         =======
-
-        True : if l1 and l2 are parallel,
+        True : if the set of linear entities have the same slope,
         False : otherwise.
-
-        See Also
-        ========
-
-        coefficients
 
         Examples
         ========
 
         >>> from sympy import Point, Line
+        >>> l1 = Line(Point(3,4),Point(1,3))
+        >>> l2 = Line(Point(9,0),Point(3,7))
+        >>> l3 = Line(Point(3,9),Point(4,9))
+        >>> Line.is_parallel(l1, l2, l3)
+        False
+
+        >>> from sympy import Point, Line
+        >>> l1 = Line(Point(3,4),Point(1,3))
+        >>> l2 = Line(Point(9,8),Point(7,7))
+        >>> l3 = Line(Point(6,9),Point(4,8))
+        >>> Line.is_parallel(l1, l2, l3)
+        True
+
         >>> p1, p2 = Point(0, 0), Point(1, 1)
         >>> p3, p4 = Point(3, 4), Point(6, 7)
         >>> l1, l2 = Line(p1, p2), Line(p3, p4)
@@ -247,12 +256,14 @@ class LinearEntity(GeometryEntity):
         False
 
         """
-        try:
-            a1, b1, c1 = l1.coefficients
-            a2, b2, c2 = l2.coefficients
-            return bool(simplify(a1*b2 - b1*a2) == 0)
-        except AttributeError:
+
+        if len(lines) <= 1:
             return False
+        sl = lines[0].slope
+        for i in lines[1:]:
+            if i.slope != sl:
+                return False
+        return True
 
     def is_perpendicular(l1, l2):
         """Are two linear entities perpendicular?
