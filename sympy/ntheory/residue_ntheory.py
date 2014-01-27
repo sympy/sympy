@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division
@@ -868,6 +869,7 @@ def jacobi_symbol(m, n):
 def mobius(n):
     """
     Möbius Function maps natural number to {-1, 0, 1}
+
     It is an important multiplicative function in number theory
     and combinatorics.It has applications in mathematical series,
     algebraic number theory and also physics(Fermion operator has very
@@ -902,7 +904,8 @@ def mobius(n):
     ==========
 
       [1] http://en.wikipedia.org/wiki/Möbius_function
-      [2] Thomas Koshy "Elementary Number Theory with Applications",page 398
+      [2] Thomas Koshy "Elementary Number Theory with Applications"
+
     """
     n = as_int(n)
     if n <= 0:
