@@ -1,9 +1,11 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
-    Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
-    log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify, atan2, arg, Mul, SparseMatrix)
+    Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
+    erfcinv, erf2, erf2inv, exp, expand, im, log, pi, re, sec, sin,
+    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
+    root, simplify, atan2, arg, Mul, SparseMatrix)
+
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -21,7 +23,6 @@ from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
-
 def test_swap_back():
     f, g = map(Function, 'fg')
     fx, gx = f(x), g(x)
@@ -30,7 +31,6 @@ def test_swap_back():
     assert solve(fx + gx*x - 2, [fx, gx]) == {fx: 2, gx: 0}
     assert solve(fx + gx**2*x - y, [fx, gx]) == [{fx: y - gx**2*x}]
     assert solve([f(1) - 2, x + 2]) == [{x: -2, f(1): 2}]
-
 
 def guess_solve_strategy(eq, symbol):
     try:
@@ -1385,7 +1385,13 @@ def test_uselogcombine():
 
 
 def test_atan2():
-        assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
+    assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
+
+def test_errorinverses():
+    assert solve(erf(x)-y,x)==[erfinv(y)]
+    assert solve(erfinv(x)-y,x)==[erf(y)]
+    assert solve(erfc(x)-y,x)==[erfcinv(y)]
+    assert solve(erfcinv(x)-y,x)==[erfc(y)]
 
 
 def test_misc():
