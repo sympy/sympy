@@ -613,7 +613,7 @@ class StrPrinter(Printer):
     def _print_Symbol(self, expr):
         return expr.name
 		
-    def _print_MatrixSymbol(self,expr):
+    def _print_MatrixSymbol(self,expr1):
 		"""Returns the symbolic representation of MatrixSymbol of arbitrary size
 		Example
 		========
@@ -632,16 +632,35 @@ class StrPrinter(Printer):
 		[A31, A32, A33, A34]
 		"""
 		
-		if (isinstance(expr.args[1],Integer)==True & isinstance(expr.args[2],Integer)==True):
-			retstr=''
-			for j in range(expr.rows):
+		from sympy import *
+		x=expr1.args[0]
+		m=expr1.args[1]
+		n=expr1.args[2]
+		d=[Symbol('...')]*4
+		a=Matrix([d]*4)
+		a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+		a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+		a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+		a[3,3] = Symbol(x+str(m)+str(n))
+		
+		#if (0):
+		if ((isinstance(m,Integer)==True) & (isinstance(n,Integer)==True) & (m<5) & (n<5)):
+			d=[Symbol('...')]*n
+			a=Matrix([d]*m)
+			a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+			a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+			a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+			a[3,3] = Symbol(x+str(m)+str(n))
+			"""retstr=''
+			for j in range(expr1.rows):
 				retstr=retstr+"["
-				for i in range(expr.cols):
-					retstr=retstr+expr.args[0]+str(j+1)+str(i+1)+", "
+				for i in range(expr1.cols):
+					retstr=retstr+x+str(j+1)+str(i+1)+", "
 				retstr=retstr+"\b"+"\b"+"]"+"\n"
 			return retstr
+			"""
 		else:
-			return ("["+expr.args[0]+"11"+", "+str(expr.args[0])+"12"+", ..., "+expr.args[0]+"1"+str(expr.args[2])+"]"+"\n"+"["+expr.args[0]+"2"+"1"+", "+str(expr.args[0])+"2"+"2"+", ..., "+expr.args[0]+"2"+str(expr.args[2])+"]"+"\n"+"["+"..., ..., ..., ..."+"]"+"\n"+"["+expr.args[0]+str(expr.args[1])+"1"+", "+str(expr.args[0])+str(expr.args[1])+"2"+", ..., "+expr.args[0]+str(expr.args[1])+str(expr.args[2])+"]")
+			return '\n'.join([str(i) for i in a.tolist()])
     
 	#_print_RandomSymbol = _print_Symbol
 
