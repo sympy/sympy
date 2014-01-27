@@ -735,6 +735,56 @@ def dmp_sub_mul(f, g, h, u, K):
     """
     return dmp_sub(f, dmp_mul(g, h, u, K), u, K)
 
+def _dup_eval1(f, N, K):
+    result = K.zero
+    for c in f:
+        result <<= N
+        result += c
+    return result
+
+def dup_pack_mul(f, g, K):
+    """
+    encode integer polynomial
+
+    References
+    ==========
+
+    [1] R. J. Fateman 'Can you save time in multiplying polynomials'
+    'by encoding them as integers?/revised 2010'
+    """
+    df = dup_degree(f)
+    dg = dup_degree(g)
+    sign = 1
+    if f[0] < 0:
+        f = dup_neg(f, K)
+        sign = -sign
+    if g[0] < 0:
+        g = dup_neg(g, K)
+        sign = -sign
+    p = max(max([abs(x) for x in f]), max([abs(x) for x in g]))
+    N = min(df + 1, dg + 1).bit_length() + 2*p.bit_length() + 1
+    a = K.one << N
+    a2 = a // 2
+    mask = a - 1
+    sf = _dup_eval1(f, N, K)
+    sg = _dup_eval1(g, N, K)
+    r = sf*sg
+    v = []
+    carry = 0
+    while r or carry:
+        b = r & mask
+        if b < a2:
+            v.append(b + carry)
+            carry = 0
+        else:
+            v.append(b - a + carry)
+            carry = 1
+        r >>= N
+    v.reverse()
+    if sign == -1:
+        v = dup_neg(v, K)
+    return dup_strip(v)
+
 
 def dup_mul(f, g, K):
     """
@@ -756,12 +806,15 @@ def dup_mul(f, g, K):
     if not (f and g):
         return []
 
+    f = dup_strip(f)
+    g = dup_strip(g)
     df = dup_degree(f)
     dg = dup_degree(g)
 
     n = max(df, dg) + 1
-
-    if n < 100:
+    dmin = min(df, dg)
+    is_ZZ = str(K) == 'ZZ'
+    if (is_ZZ and dmin < 10) or ((not is_ZZ) and n < 100):
         h = []
 
         for i in xrange(0, df + dg + 1):
@@ -772,7 +825,9 @@ def dup_mul(f, g, K):
 
             h.append(coeff)
 
-        return dup_strip(h)
+        res = dup_strip(h)
+    elif is_ZZ:
+        res = dup_pack_mul(f, g, K)
     else:
         # Use Karatsuba's algorithm (divide and conquer), see e.g.:
         # Joris van der Hoeven, Relax But Don't Be Too Lazy,
@@ -789,9 +844,9 @@ def dup_mul(f, g, K):
         mid = dup_mul(dup_add(fl, fh, K), dup_add(gl, gh, K), K)
         mid = dup_sub(mid, dup_add(lo, hi, K), K)
 
-        return dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
+        res = dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
                        dup_lshift(hi, 2*n2, K), K)
-
+    return res
 
 def dmp_mul(f, g, u, K):
     """

@@ -10,6 +10,7 @@ from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.densebasic import dup_strip
 
 from sympy.ntheory import factorint
 
@@ -523,6 +524,13 @@ def gf_sub(f, g, p, K):
 
         return h + [ (a - b) % p for a, b in zip(f, g) ]
 
+def gf_eval1(f, p, N, K):
+    result = K.zero
+    for c in f:
+        result <<= N
+        result += c % p
+    return result
+
 
 def gf_mul(f, g, p, K):
     """
@@ -537,23 +545,27 @@ def gf_mul(f, g, p, K):
     >>> gf_mul([3, 2, 4], [2, 2, 2], 5, ZZ)
     [1, 0, 3, 2, 3]
 
+    See Also
+    ========
+
+    sympy.polys.densearith.dup_pack_mul
     """
     df = gf_degree(f)
     dg = gf_degree(g)
+    N = min(df + 1, dg + 1).bit_length() + 2*p.bit_length()
+    #N = (max(df + 1, dg + 1)*p**2).bit_length() + 1
+    a = K.one << N
+    mask = a - 1
+    sf = gf_eval1(f, p, N, K)
+    sg = gf_eval1(g, p, N, K)
+    r = sf*sg
+    a = []
 
-    dh = df + dg
-    h = [0]*(dh + 1)
-
-    for i in xrange(0, dh + 1):
-        coeff = K.zero
-
-        for j in xrange(max(0, i - dg), min(i, df) + 1):
-            coeff += f[j]*g[i - j]
-
-        h[i] = coeff % p
-
-    return gf_strip(h)
-
+    while r:
+        a.append((r & mask) % p)
+        r >>= N
+    a.reverse()
+    return dup_strip(a)
 
 def gf_sqr(f, p, K):
     """
