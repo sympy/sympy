@@ -279,3 +279,15 @@ def test_cse_Indexed():
     expr2 = 1/(x[i+1]-x[i])
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
+
+@XFAIL
+def test_cse_MatrixSymbol():
+    from sympy import MatrixSymbol
+    A = MatrixSymbol('A', 3, 3)
+    y = MatrixSymbol('y', 3, 1)
+
+    expr1 = (A.T*A).I * A * y
+    expr2 = (A.T*A) * A * y
+    replacements, reduced_exprs = cse([expr1, expr2])
+    print(replacements, reduced_exprs)
+    assert len(replacements) > 0
