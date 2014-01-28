@@ -1,5 +1,4 @@
 from sympy.core import S, symbols, Add, Mul
-from sympy.core.compatibility import iterable
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
@@ -196,7 +195,3 @@ def test_indexing():
 
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
-
-def test_not_interable():
-    A = MatrixSymbol('A', n, m)
-    assert not iterable(A)
