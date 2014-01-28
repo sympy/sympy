@@ -614,7 +614,7 @@ class StrPrinter(Printer):
         return expr.name
 		
     def _print_MatrixSymbol(self,expr1):
-	from sympy.core import Symbol,var
+        from sympy.core import Symbol,var
 	from sympy.matrices import Matrix
 
 	"""Returns the symbolic representation of MatrixSymbol of arbitrary size
@@ -650,34 +650,34 @@ class StrPrinter(Printer):
 	n=expr1.args[2]
 		
 	if (((isinstance(m,Integer)==True) & (m<5)) | ((isinstance(n,Integer)==True) & (n<5))):
-		if((((isinstance(m,Integer)==True)&(m>4)) | (isinstance(m,Integer)==False))&(isinstance(n,Integer)==True)):
-			d=[Symbol('...')]*n
-			a=Matrix([d]*4)
-			a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
-			a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
-			a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-			a[3,n-1] = Symbol(x+str(m)+str(n))
-		elif((((isinstance(n,Integer)==True)&(n>4)) | (isinstance(n,Integer)==False)) & (isinstance(m,Integer)==True)):
-			d=[Symbol('...')]*4
-			a=Matrix([d]*m)
-			a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
-			a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
-			a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-			a[m-1,3] = Symbol(x+str(m)+str(n))
-		else:
-			d=[Symbol('...')]*n
-			a=Matrix([d]*m)
-			a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
-			a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
-			a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-			a[m-1,n-1] = Symbol(x+str(m)+str(n))
-	else:
-		d=[Symbol('...')]*4
+            if((((isinstance(m,Integer)==True)&(m>4)) | (isinstance(m,Integer)==False))&(isinstance(n,Integer)==True)):
+	        d=[Symbol('...')]*n
 		a=Matrix([d]*4)
 		a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
 		a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+		a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+		a[3,n-1] = Symbol(x+str(m)+str(n))
+	    elif((((isinstance(n,Integer)==True)&(n>4)) | (isinstance(n,Integer)==False)) & (isinstance(m,Integer)==True)):
+		d=[Symbol('...')]*4
+		a=Matrix([d]*m)
+		a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+		a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
 		a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-		a[3,3] = Symbol(x+str(m)+str(n))
+		a[m-1,3] = Symbol(x+str(m)+str(n))
+	    else:
+		d=[Symbol('...')]*n
+		a=Matrix([d]*m)
+		a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+		a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+		a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+		a[m-1,n-1] = Symbol(x+str(m)+str(n))
+	else:
+	    d=[Symbol('...')]*4
+	    a=Matrix([d]*4)
+	    a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+	    a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+	    a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+	    a[3,3] = Symbol(x+str(m)+str(n))
 		
 	return '\n'.join([str(i) for i in a.tolist()])
     
