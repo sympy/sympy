@@ -881,11 +881,6 @@ class Pow(Expr):
         from sympy import powsimp, collect, exp, log, O, ceiling
         b, e = self.args
 
-        if logx is None:
-            d = Dummy('logx')
-            r = self._eval_nseries(x, n, d).subs(d, C.log(x))
-            return r
-
         if e.is_Integer:
             if e > 0:
                 # positive integer powers are easy to expand, e.g.:
