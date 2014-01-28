@@ -614,67 +614,74 @@ class StrPrinter(Printer):
         return expr.name
 		
     def _print_MatrixSymbol(self,expr1):
-		"""Returns the symbolic representation of MatrixSymbol of arbitrary size
-		Example
-		========
-		>>>from sympy import *
-		>>>m,n=symbols('m n')
-		>>>A=MatrixSymbol('A',m,n)
-		>>>B=MatrixSymbol('B',3,5)
-		>>>B=MatrixSymbol('C',3,m)
-		>>>print(A)
-		[A11, A12, ..., A1n]
-		[A21, A22, ..., A2n]
-		[..., ..., ..., ...]
-		[Am1, Am2, ..., Amn]
-		>>>print(B)
-		[B11, B12, ...,B15]
-		[B21, B22, ...,B25]
-		[B31, B32, ...,c35]
-		>>>print(C)
-		[C11, C12, ...,C1m]
-		[C21, C22, ...,C2m]
-		[C31, C32, ...,C3m]
-		"""
+	from sympy.core import Symbol,var
+	from sympy.matrices import Matrix
+
+	"""Returns the symbolic representation of MatrixSymbol of arbitrary size
+	
+	Examples
+
+	========
+
+	>>> from sympy import *
+
+	>>> m, n = symbols('m n')
+
+	>>> A = MatrixSymbol('A',m,n)
+	
+	>>> C = MatrixSymbol('C',3,m)
+
+	>>> print(A)
+	
+	[A11, A12, ..., A1n]
+	[A21, A22, ..., A2n]
+	[..., ..., ..., ...]
+	[Am1, Am2, ..., Amn]
+	
+	>>> print(C)
+	
+	[C11, C12, ...,C1m]
+	[C21, C22, ...,C2m]
+	[C31, C32, ...,C3m]
+	
+	"""
+	x=expr1.args[0]
+	m=expr1.args[1]
+	n=expr1.args[2]
 		
-		from sympy import *
-		x=expr1.args[0]
-		m=expr1.args[1]
-		n=expr1.args[2]
-		
-		if (((isinstance(m,Integer)==True) & (m<5)) | ((isinstance(n,Integer)==True) & (n<5))):
-			if((((isinstance(m,Integer)==True)&(m>4)) | (isinstance(m,Integer)==False))&(isinstance(n,Integer)==True)):
-				d=[Symbol('...')]*n
-				a=Matrix([d]*4)
-				a[0,0] = Matrix(2,2,var(x+'(1:3)(1:3)'))
-				a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
-				a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-				a[3,n-1] = Symbol(x+str(m)+str(n))
-			elif((((isinstance(n,Integer)==True)&(n>4)) | (isinstance(n,Integer)==False)) & (isinstance(m,Integer)==True)):
-				d=[Symbol('...')]*4
-				a=Matrix([d]*m)
-				a[0,0] = Matrix(2,2,var(x+'(1:3)(1:3)'))
-				a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
-				a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-				a[m-1,3] = Symbol(x+str(m)+str(n))
-			else:
-				d=[Symbol('...')]*n
-				a=Matrix([d]*m)
-				a[0,0] = Matrix(2,2,var(x+'(1:3)(1:3)'))
-				a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
-				a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-				a[m-1,n-1] = Symbol(x+str(m)+str(n))
-		else:
-			d=[Symbol('...')]*4
+	if (((isinstance(m,Integer)==True) & (m<5)) | ((isinstance(n,Integer)==True) & (n<5))):
+		if((((isinstance(m,Integer)==True)&(m>4)) | (isinstance(m,Integer)==False))&(isinstance(n,Integer)==True)):
+			d=[Symbol('...')]*n
 			a=Matrix([d]*4)
 			a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
 			a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+			a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+			a[3,n-1] = Symbol(x+str(m)+str(n))
+		elif((((isinstance(n,Integer)==True)&(n>4)) | (isinstance(n,Integer)==False)) & (isinstance(m,Integer)==True)):
+			d=[Symbol('...')]*4
+			a=Matrix([d]*m)
+			a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+			a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
 			a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
-			a[3,3] = Symbol(x+str(m)+str(n))
+			a[m-1,3] = Symbol(x+str(m)+str(n))
+		else:
+			d=[Symbol('...')]*n
+			a=Matrix([d]*m)
+			a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+			a[m-1,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+			a[0,n-1] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+			a[m-1,n-1] = Symbol(x+str(m)+str(n))
+	else:
+		d=[Symbol('...')]*4
+		a=Matrix([d]*4)
+		a[0,0] = Matrix(2,2,(x+"11",x+"12",x+"21",x+"22"))
+		a[3,0] = Matrix((x+str(m)+'1',x+str(m)+'2')).T
+		a[0,3] = Matrix((x+'1'+str(n),x+'2'+str(n)))
+		a[3,3] = Symbol(x+str(m)+str(n))
 		
-		return '\n'.join([str(i) for i in a.tolist()])
+	return '\n'.join([str(i) for i in a.tolist()])
     
-	#_print_RandomSymbol = _print_Symbol
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Identity(self, expr):
         return "I"
