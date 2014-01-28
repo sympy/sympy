@@ -1000,7 +1000,8 @@ def gf_frobenius_map(f, g, b, p, K):
     """
     m = gf_degree(g)
     if gf_degree(f) >= m:
-        f = gf_rem(f, g, p, K)
+        f = gf_pack_div(f, g, p, K)[1]
+        f = [y%p for y in f]
     if not f:
         return []
     n = gf_degree(f)
@@ -1022,7 +1023,8 @@ def _gf_pow_pnm1d2(f, n, g, b, p, K):
     for i in range(1, n):
         h = gf_frobenius_map(h, g, b, p, K)
         r = gf_mul(r, h, p, K)
-        r = gf_rem(r, g, p, K)
+        r = gf_pack_div(r, g, p, K)[1]
+        r = [y % p for y in r]
 
     res = gf_pow_mod(r, (p - 1)//2, g, p, K)
     return res
