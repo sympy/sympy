@@ -8,7 +8,8 @@ from sympy.polys.galoistools import (
     gf_div, gf_rem,
     gf_gcdex,
     gf_sqf_p,
-    gf_factor_sqf, gf_factor)
+    gf_factor_sqf, gf_factor,
+    gf_pack_div)
 
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC, dmp_ground_LC,
@@ -170,8 +171,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     e = dup_sub_mul(f, g, h, K)
     e = dup_trunc(e, M, K)
 
-    q, r = dup_div(dup_mul(s, e, K), h, K)
-
+    q, r = gf_pack_div(dup_mul(s, e, K), h, M, K)
     q = dup_trunc(q, M, K)
     r = dup_trunc(r, M, K)
 
@@ -181,8 +181,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
 
     u = dup_add(dup_mul(s, G, K), dup_mul(t, H, K), K)
     b = dup_trunc(dup_sub(u, [K.one], K), M, K)
-
-    c, d = dup_div(dup_mul(s, b, K), H, K)
+    c, d = gf_pack_div(dup_mul(s, b, K), H, M, K)
 
     c = dup_trunc(c, M, K)
     d = dup_trunc(d, M, K)

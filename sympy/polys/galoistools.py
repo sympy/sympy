@@ -11,6 +11,7 @@ from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.densebasic import dup_strip
+from sympy.polys.densearith import _dup_eval1
 
 from sympy.ntheory import factorint
 
@@ -722,6 +723,62 @@ def gf_div(f, g, p, K):
         h[i] = coeff % p
 
     return h[:dq + 1], gf_strip(h[dq + 1:])
+
+def gf_pack_div(f, g, p, K):
+    """
+    returns ``quo, rest``
+    ``quo`` is truncated modulo ``p``
+    ``rest`` is not truncated
+    """
+    df = gf_degree(f)
+    dg = gf_degree(g)
+    N = min(df + 1, dg + 1).bit_length() + 2*p.bit_length() + 1
+    if df < dg:
+        return [], f
+    f = [x % p for x in f]
+    lcf = gf_LC(f, K)
+    lcg = gf_LC(g, K)
+    inv = K.invert(lcg, p)
+    q = (lcf * inv) % p
+
+    sf = _dup_eval1(f, N, K)
+    g1 = [(-x) % p for x in g]
+    sgneg = _dup_eval1(g1, N, K)
+    qv = [K.zero]*(df - dg + 1)
+    while df >= dg or df == dg and lcf >= lcg:
+        q = (lcf * inv) % p
+        qv[df - dg] = q
+        sf += q*sgneg << ((df - dg)*N)
+        sf = sf & ((1<<(N*df)) - 1)
+        if sf == 0:
+            qv.reverse()
+            return qv, []
+        df -= 1
+        lcf = (sf >> (N*df)) % p
+        if not lcf:
+            sf = sf & ((1<<(N*df)) - 1)
+            if sf == 0:
+                qv.reverse()
+                return qv, []
+            df -= 1
+            lcf = (sf >> (N*df)) % p
+            if not lcf:
+                while not lcf:
+                    sf = sf & ((1<<(N*df)) - 1)
+                    if sf == 0:
+                        qv.reverse()
+                        return qv, []
+                    df -= 1
+                    lcf = (sf >> (N*df)) % p
+    mask = (K.one << N) - 1
+    a = []
+    while sf:
+        a.append(sf & mask)
+        sf >>= N
+    a.reverse()
+    qv.reverse()
+    a = dup_strip(a)
+    return qv, a
 
 
 def gf_rem(f, g, p, K):
