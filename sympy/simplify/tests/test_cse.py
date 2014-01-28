@@ -289,5 +289,4 @@ def test_cse_MatrixSymbol():
     expr1 = (A.T*A).I * A * y
     expr2 = (A.T*A) * A * y
     replacements, reduced_exprs = cse([expr1, expr2])
-    print(replacements, reduced_exprs)
     assert len(replacements) > 0
