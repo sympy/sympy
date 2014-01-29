@@ -1014,7 +1014,7 @@ def gf_frobenius_monomial_base(g, p, K):
     >>> from sympy.polys.galoistools import gf_frobenius_monomial_base
     >>> g = ZZ.map([1, 0, 2, 1])
     >>> b, Nb = gf_frobenius_monomial_base(g, 5, ZZ)
-    >>> map(int, b), Nb
+    >>> b, Nb
     ([1, 4198402, 1026], 10)
     """
     n = gf_degree(g)
@@ -1039,10 +1039,8 @@ def gf_frobenius_monomial_base(g, p, K):
     return b, Nb
 
 def gf_unpack(sf, N, mask, p, K):
-    #print('DB20 sf=%s N=%s p=%s' %(sf, N, p))
     a = []
     while sf:
-        #print('DB21', sf, mask, (sf & mask), (sf & mask) % p)
         a.append((sf & mask) % p)
         sf >>= N
     a.reverse()
@@ -1070,7 +1068,7 @@ def gf_frobenius_map(f, g, b, Nb, p, K):
     >>> g = ZZ.map([1, 0, 2, 1])
     >>> p = 5
     >>> b, Nb = gf_frobenius_monomial_base(g, p, ZZ)
-    >>> map(int, gf_frobenius_map(f, g, b, Nb, p, ZZ))
+    >>> gf_frobenius_map(f, g, b, Nb, p, ZZ)
     [4, 0, 3]
     """
     m = gf_degree(g)
@@ -1080,19 +1078,10 @@ def gf_frobenius_map(f, g, b, Nb, p, K):
         return []
     n = gf_degree(f)
     mask = (K.one << Nb) - 1
-    #print('DB0 f=%s g=%s b=%s p=%s' %(f,g,b,p))
-    #print ('DB2 N=', N, mask)
-    # TODO change b in pb, avoid computing it at each call
-    #sf = [f[-1]]
     r = f[-1]
     for i in range(1, n + 1):
-        #v = gf_mul_ground(b[i], f[n - i], p, K)
-        #sf = gf_add(sf, v, p, K)
         r += b[i]*f[n - i]
-    #print('DB8 r=', r)
     sf1 = gf_unpack(r, Nb, mask, p, K)
-    #print('DB9 sf=%s sf1=%s' %(sf, sf1))
-    #assert sf == sf1
     return sf1
 
 def _gf_pow_pnm1d2(f, n, g, b, Nb, p, K):
