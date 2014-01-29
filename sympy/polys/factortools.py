@@ -44,7 +44,8 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground)
+    dup_quo_ground, dmp_quo_ground,
+    dup_pack_mul)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -171,22 +172,22 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     e = dup_sub_mul(f, g, h, K)
     e = dup_trunc(e, M, K)
 
-    q, r = gf_pack_div(dup_mul(s, e, K), h, M, K)
+    q, r = gf_pack_div(dup_pack_mul(s, e, K), h, M, K)
     q = dup_trunc(q, M, K)
     r = dup_trunc(r, M, K)
 
-    u = dup_add(dup_mul(t, e, K), dup_mul(q, g, K), K)
+    u = dup_add(dup_pack_mul(t, e, K), dup_pack_mul(q, g, K), K)
     G = dup_trunc(dup_add(g, u, K), M, K)
     H = dup_trunc(dup_add(h, r, K), M, K)
 
-    u = dup_add(dup_mul(s, G, K), dup_mul(t, H, K), K)
+    u = dup_add(dup_pack_mul(s, G, K), dup_pack_mul(t, H, K), K)
     b = dup_trunc(dup_sub(u, [K.one], K), M, K)
-    c, d = gf_pack_div(dup_mul(s, b, K), H, M, K)
+    c, d = gf_pack_div(dup_pack_mul(s, b, K), H, M, K)
 
     c = dup_trunc(c, M, K)
     d = dup_trunc(d, M, K)
 
-    u = dup_add(dup_mul(t, b, K), dup_mul(c, G, K), K)
+    u = dup_add(dup_pack_mul(t, b, K), dup_pack_mul(c, G, K), K)
     S = dup_trunc(dup_sub(s, d, K), M, K)
     T = dup_trunc(dup_sub(t, u, K), M, K)
 

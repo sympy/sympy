@@ -13,7 +13,7 @@ from sympy.polys.densebasic import (
     dmp_ground, dmp_zeros)
 
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import xrange, HAS_GMPY
 
 def dup_add_term(f, c, i, K):
     """
@@ -742,7 +742,64 @@ def _dup_eval1(f, N, K):
         result += c
     return result
 
-def dup_pack_mul(f, g, K):
+
+def dup_mul(f, g, K):
+    """
+    Multiply dense polynomials in ``K[x]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
+
+    >>> R.dup_mul(x - 2, x + 2)
+    x**2 - 4
+
+    """
+    if f == g:
+        return dup_sqr(f, K)
+
+    if not (f and g):
+        return []
+
+    df = dup_degree(f)
+    dg = dup_degree(g)
+
+    n = max(df, dg) + 1
+
+    if n < 100:
+        h = []
+
+        for i in xrange(0, df + dg + 1):
+            coeff = K.zero
+
+            for j in xrange(max(0, i - dg), min(df, i) + 1):
+                coeff += f[j]*g[i - j]
+
+            h.append(coeff)
+
+        return dup_strip(h)
+    else:
+        # Use Karatsuba's algorithm (divide and conquer), see e.g.:
+        # Joris van der Hoeven, Relax But Don't Be Too Lazy,
+        # J. Symbolic Computation, 11 (2002), section 3.1.1.
+        n2 = n//2
+
+        fl, gl = dup_slice(f, 0, n2, K), dup_slice(g, 0, n2, K)
+
+        fh = dup_rshift(dup_slice(f, n2, n, K), n2, K)
+        gh = dup_rshift(dup_slice(g, n2, n, K), n2, K)
+
+        lo, hi = dup_mul(fl, gl, K), dup_mul(fh, gh, K)
+
+        mid = dup_mul(dup_add(fl, fh, K), dup_add(gl, gh, K), K)
+        mid = dup_sub(mid, dup_add(lo, hi, K), K)
+
+        return dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
+                       dup_lshift(hi, 2*n2, K), K)
+
+def _dup_pack_mul(f, g, K):
     """
     encode integer polynomial
 
@@ -785,21 +842,7 @@ def dup_pack_mul(f, g, K):
         v = dup_neg(v, K)
     return dup_strip(v)
 
-
-def dup_mul(f, g, K):
-    """
-    Multiply dense polynomials in ``K[x]``.
-
-    Examples
-    ========
-
-    >>> from sympy.polys import ring, ZZ
-    >>> R, x = ring("x", ZZ)
-
-    >>> R.dup_mul(x - 2, x + 2)
-    x**2 - 4
-
-    """
+def dup_pack_mul(f, g, K):
     if f == g:
         return dup_sqr(f, K)
 
@@ -827,7 +870,7 @@ def dup_mul(f, g, K):
 
         res = dup_strip(h)
     elif is_ZZ:
-        res = dup_pack_mul(f, g, K)
+        res = _dup_pack_mul(f, g, K)
     else:
         # Use Karatsuba's algorithm (divide and conquer), see e.g.:
         # Joris van der Hoeven, Relax But Don't Be Too Lazy,
@@ -847,6 +890,10 @@ def dup_mul(f, g, K):
         res = dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
                        dup_lshift(hi, 2*n2, K), K)
     return res
+
+if not HAS_GMPY:
+    dup_pack_mul = dup_mul
+
 
 def dmp_mul(f, g, u, K):
     """
