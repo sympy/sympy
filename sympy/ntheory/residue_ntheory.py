@@ -903,9 +903,8 @@ def mobius(n):
     References
     ==========
 
-      [1] http://en.wikipedia.org/wiki/Möbius_function
-      [2] Thomas Koshy "Elementary Number Theory with Applications"
-
+    [1] http://en.wikipedia.org/wiki/Möbius_function
+    [2] Thomas Koshy "Elementary Number Theory with Applications"
     """
     n = as_int(n)
     if n <= 0:
