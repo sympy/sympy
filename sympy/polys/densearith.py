@@ -14,6 +14,7 @@ from sympy.polys.densebasic import (
 
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
 from sympy.core.compatibility import xrange, HAS_GMPY
+from sympy.mpmath.libmp.libintmath import bitcount
 
 def dup_add_term(f, c, i, K):
     """
@@ -819,7 +820,7 @@ def _dup_pack_mul(f, g, K):
         g = dup_neg(g, K)
         sign = -sign
     p = max(max([abs(x) for x in f]), max([abs(x) for x in g]))
-    N = min(df + 1, dg + 1).bit_length() + 2*p.bit_length() + 1
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p) + 1
     a = K.one << N
     a2 = a // 2
     mask = a - 1

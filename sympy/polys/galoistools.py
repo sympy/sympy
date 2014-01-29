@@ -12,6 +12,7 @@ from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.densebasic import dup_strip
 from sympy.polys.densebasic import dup_strip
+from sympy.mpmath.libmp.libintmath import bitcount
 
 from sympy.ntheory import factorint
 
@@ -570,8 +571,7 @@ def dup_eval1(f, N, p, K):
 def gf_mul(f, g, p, K):
     df = gf_degree(f)
     dg = gf_degree(g)
-    N = min(df + 1, dg + 1).bit_length() + 2*p.bit_length()
-    #N = (max(df + 1, dg + 1)*p**2).bit_length() + 1
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p)
     a = K.one << N
     mask = a - 1
     sf = dup_eval1(f, N, p, K)
@@ -750,7 +750,7 @@ def gf_pack_div(f, g, p, K):
     """
     df = gf_degree(f)
     dg = gf_degree(g)
-    N = min(df + 1, dg + 1).bit_length() + 2*p.bit_length() + 1
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p) + 1
     if df < dg:
         return [], f
     f = [x % p for x in f]
@@ -818,7 +818,7 @@ def gf_rem(f, g, p, K):
 def gf_pack_rem(f, g, p, K):
     df = gf_degree(f)
     dg = gf_degree(g)
-    N = min(df + 1, dg + 1).bit_length() + 2*p.bit_length()
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p)
     if df < dg:
         return f
     lcf = gf_LC(f, K)
@@ -1019,7 +1019,7 @@ def gf_frobenius_monomial_base(g, p, K):
     """
     n = gf_degree(g)
     if n == 0:
-        return [], p.bit_length()
+        return [], bitcount(p)
     b = [0]*n
     b[0] = [1]
     if p < n:
@@ -1032,9 +1032,9 @@ def gf_frobenius_monomial_base(g, p, K):
             b[i] = gf_mul(b[i - 1], b[1], p, K)
             b[i] = gf_rem(b[i], g, p, K)
 
-    # FIXME n*p**2 < Nb in a multiplication of polynomials of degree n
+    # n*p**2 < Nb in a multiplication of polynomials of degree n
     # doing n successive multiplications, one needs n**2*p**2 < Nb
-    Nb = 2*n.bit_length() + 2*p.bit_length()
+    Nb = 2*bitcount(n) + 2*bitcount(p)
     b = [dup_eval1(bx, Nb, p, K) for bx in b]
     return b, Nb
 
