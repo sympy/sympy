@@ -495,6 +495,13 @@ def rs_exp(p, x, prec):
     r = rs_series_from_list(p, c, x, prec)
     return r
 
+def _newton1(p, x, prec):
+    deg = p.degree()
+    p1 = _invert_monoms(p)
+    p2 = rs_series_inversion(p1, x, prec)
+    p3 = rs_mul(p1.diff(x), p2, x, prec)
+    return p3
+
 def rs_newton(p, x, prec):
     """
     compute the truncated Newton sum of the polynomial ``p``
@@ -516,6 +523,15 @@ def rs_newton(p, x, prec):
     p3 = rs_mul(p1.diff(x), p2, x, prec)
     res = deg - p3*x
     return res
+
+def rs_hadamard_product(p1, p2):
+    ring = p1.ring
+    p = ring.zero
+    for exp1, v1 in p1.iteritems():
+        if exp1 in p2:
+            v = v1*p2[exp1]
+            p[exp1] = v
+    return p
 
 def rs_hadamard_exp(p1, inverse=False):
     """
@@ -596,3 +612,15 @@ def rs_compose_add(p1, p2):
     if dp:
         q = q*x**dp
     return q
+
+def rs_composed_product(p1, p2):
+    ring = p1.ring
+    x = ring.gens[0]
+    prec = p1.degree()*p2.degree() + 1
+    np1 = _newton1(p1, x, prec)
+    np2 = _newton1(p2, x, prec)
+    np = rs_hadamard_product(np1, np2)
+    q = rs_integrate(np, x)
+    q = rs_exp(-q, x, prec)
+    q = _invert_monoms(q)
+    return q.primitive()[1]
