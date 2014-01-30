@@ -104,7 +104,7 @@ def satisfiable(expr, algorithm="dpll2", encoding="normal"):
         expr = tseitin_transformation(expr)
     else:
         raise NotImplementedError
-    
+
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         result = dpll_satisfiable(expr)

@@ -1472,7 +1472,7 @@ def tseitin_transformation(formula):
     """
     Converts any propositional formula into an equisatisfiable CNF
     form with auxilliary literals using Tseitin Transformation.
-    This is mainly for use by SAT solvers as it prevents the 
+    This is mainly for use by SAT solvers as it prevents the
     exponential blowup of formula when converted to CNF. To get
     the CNF of any particular formula use to_cnf function.
 
@@ -1482,51 +1482,50 @@ def tseitin_transformation(formula):
     .. [1] http://en.wikipedia.org/wiki/Tseitin-Transformation
     """
 
-    from sympy import symbols
+    from sympy import numbered_symbols, Dummy
 
     if formula.is_Atom is True:
         return formula
 
-    i = 0
     q = list()
     dct = dict()
     clauses = list()
+    sym_factory = numbered_symbols('s', cls=Dummy)
 
     q.append(formula)
-    s = symbols("s0")
+    s = sym_factory.next()
     dct[formula] = s
     clauses.append(s)
-    
+
     while len(q) > 0:
         clause = q.pop(0)
         args = list()
-        
+
         for arg in clause.args:
             if arg.is_Atom:
                 s = arg
             else:
                 if arg not in dct:
-                    i += 1
-                    s = symbols('s' + str(i))
+                    s = sym_factory.next()
                     dct[arg] = s
                     q.append(arg)
                 else:
                     s = dct[arg]
-             
+
             args.append(s)
-        
+
         s = dct[clause]
-        
+
         if isinstance(clause, Not):
             arg = args[0]
             expr = [s | arg, ~s | ~arg]
             clauses.extend(expr)
-            
+
         elif isinstance(clause, And):
             expr = [~s | arg for arg in args]
             expr.append(Or(s, *map(Not, args)))
             clauses.extend(expr)
-            
+
         elif isinstance(clause, Or):
             expr = [s | ~arg for arg in args]
             expr.append(Or(~s, *args))
@@ -1541,5 +1540,5 @@ def tseitin_transformation(formula):
             a, b = args[0], args[-1]
             expr = [s | ~a | ~b, ~s | ~a | b, ~s | a | ~b, s | a | b]
             clauses.extend(expr)
-            
+
     return And(*clauses)
