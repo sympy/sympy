@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf
+    conjuncts, to_cnf, tseitin_transformation
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
@@ -63,12 +63,26 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm="dpll2"):
+def satisfiable(expr, algorithm="dpll2", encoding="normal"):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
 
-    Examples:
+    Parameters
+    ==========
+
+    expr : BooleanFunction
+        The propositional formula whose satisfiability is to be checked
+
+    algorithm: dpll, dpll2
+        The SAT solving method to use.
+
+    encoding : normal, tseitin
+        The method to use for conversion of formula to CNF
+
+
+    Examples
+    ========
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -76,20 +90,36 @@ def satisfiable(expr, algorithm="dpll2"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
-
     """
+
     if expr is True:
         return {}
     if expr is False:
         return False
-    expr = to_cnf(expr)
+
+    if encoding == "normal":
+        expr = to_cnf(expr)
+    elif encoding == "tseitin":
+        atoms = expr.atoms()
+        expr = tseitin_transformation(expr)
+    else:
+        raise NotImplementedError
+    
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
-        return dpll_satisfiable(expr)
+        result = dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr)
-    raise NotImplementedError
+        result = dpll_satisfiable(expr)
+    else:
+        raise NotImplementedError
+
+    if result and encoding == "tseitin":
+        for atom in result.keys():
+            if atom not in atoms:
+                del result[atom]
+
+    return result
 
 
 def pl_true(expr, model={}):

@@ -10,7 +10,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
-from sympy.core.operations import LatticeOp, AssocOp
+from sympy.core.operations import LatticeOp
 from sympy.core.function import Application
 from sympy.core.compatibility import ordered, xrange, with_metaclass
 from sympy.core.sympify import converter, _sympify, sympify
@@ -1466,3 +1466,80 @@ def bool_equal(bool1, bool2, info=False):
     if info:
         return mapping
     return True
+
+
+def tseitin_transformation(formula):
+    """
+    Converts any propositional formula into an equisatisfiable CNF
+    form with auxilliary literals using Tseitin Transformation.
+    This is mainly for use by SAT solvers as it prevents the 
+    exponential blowup of formula when converted to CNF. To get
+    the CNF of any particular formula use to_cnf function.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Tseitin-Transformation
+    """
+
+    from sympy import symbols
+
+    if formula.is_Atom is True:
+        return formula
+
+    i = 0
+    q = list()
+    dct = dict()
+    clauses = list()
+
+    q.append(formula)
+    s = symbols("s0")
+    dct[formula] = s
+    clauses.append(s)
+    
+    while len(q) > 0:
+        clause = q.pop(0)
+        args = list()
+        
+        for arg in clause.args:
+            if arg.is_Atom:
+                s = arg
+            else:
+                if arg not in dct:
+                    i += 1
+                    s = symbols('s' + str(i))
+                    dct[arg] = s
+                    q.append(arg)
+                else:
+                    s = dct[arg]
+             
+            args.append(s)
+        
+        s = dct[clause]
+        
+        if isinstance(clause, Not):
+            arg = args[0]
+            expr = [s | arg, ~s | ~arg]
+            clauses.extend(expr)
+            
+        elif isinstance(clause, And):
+            expr = [~s | arg for arg in args]
+            expr.append(Or(s, *map(Not, args)))
+            clauses.extend(expr)
+            
+        elif isinstance(clause, Or):
+            expr = [s | ~arg for arg in args]
+            expr.append(Or(~s, *args))
+            clauses.extend(expr)
+
+        elif isinstance(clause, Implies):
+            a, b = args
+            expr = [s | a, s | ~b, ~s | ~a | b]
+            clauses.extend(expr)
+
+        elif isinstance(clause, Equivalent):
+            a, b = args[0], args[-1]
+            expr = [s | ~a | ~b, ~s | ~a | b, ~s | a | ~b, s | a | b]
+            clauses.extend(expr)
+            
+    return And(*clauses)
