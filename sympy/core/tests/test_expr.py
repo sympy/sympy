@@ -966,6 +966,7 @@ def test_extractions():
     assert (Rational(1, 2)*x).extract_multiplicatively(3) == x/6
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
+    assert x.extract_multiplicatively(-x) is None
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
