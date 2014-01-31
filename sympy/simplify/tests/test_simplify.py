@@ -1853,3 +1853,6 @@ def test_trigsimp_methods_gh2827():
     M = Matrix.eye(1)
     assert all(trigsimp(M, method=m) == M for m in
         'fu matching groebner old'.split())
+    # watch for E in exptrigsimp, not only exp()
+    eq = 1/sqrt(E) + E
+    assert exptrigsimp(eq) == eq
