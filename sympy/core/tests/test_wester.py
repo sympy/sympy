@@ -1819,6 +1819,7 @@ def test_R14():
     assert T.simplify() == sin(n*x)**2/sin(x)
 
 
+@slow
 @XFAIL
 def test_R15():
     n, k = symbols('n k', integer=True, positive=True)
