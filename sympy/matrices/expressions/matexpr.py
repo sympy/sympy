@@ -375,7 +375,7 @@ class MatrixSymbol(MatrixExpr):
 
 	>>> A = MatrixSymbol('A',m,n)
 	
-	>>> C = MatrixSymbol('C',3,m)
+	>>> C = MatrixSymbol('C',3,n)
 
 	>>> A.explicit()
 	
