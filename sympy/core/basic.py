@@ -582,7 +582,9 @@ class Basic(with_metaclass(ManagedProperties)):
             u += "_"
         name = '%%i%s' % u
         V = self.variables
-        return dict(list(zip(V, [C.Symbol(name % i, **v.assumptions0)
+        return dict(list(zip(V,
+            [C.Symbol(name % i if not isinstance(v, C.Dummy)
+            else name % i + str(v.dummy_index), **v.assumptions0)
             for i, v in enumerate(V)])))
 
 
