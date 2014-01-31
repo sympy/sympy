@@ -393,7 +393,7 @@ class MatrixSymbol(MatrixExpr):
 	[			    ]	
 	[C(2, 1) C(2, 2) ... C(2, n)]
 	[                           ]
-	[C(m, 1) C(m, 2) ... C(m, n)]
+	[C(3, 1) C(3, 2) ... C(3, n)]
 	
 	"""
 	x, m, n = self.args
