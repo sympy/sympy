@@ -683,7 +683,7 @@ def solve(f, *symbols, **flags):
             f[i] = fi.lhs - fi.rhs
         elif isinstance(fi, Poly):
             f[i] = fi.as_expr()
-        elif isinstance(fi, bool) or fi.is_Relational:
+        elif isinstance(fi, (bool, C.BooleanAtom)) or fi.is_Relational:
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
 
@@ -1162,22 +1162,22 @@ def _solve(f, *symbols, **flags):
             for candidate in candidates:
                 if candidate in result:
                     continue
-                cond = cond is True or cond.subs(symbol, candidate)
-                if cond is not False:
+                cond = (cond == True) or cond.subs(symbol, candidate)
+                if cond != False:
                     # Only include solutions that do not match the condition
                     # of any previous pieces.
                     matches_other_piece = False
                     for other_n, (other_expr, other_cond) in enumerate(f.args):
                         if other_n == n:
                             break
-                        if other_cond is False:
+                        if other_cond == False:
                             continue
-                        if other_cond.subs(symbol, candidate) is True:
+                        if other_cond.subs(symbol, candidate) == True:
                             matches_other_piece = True
                             break
                     if not matches_other_piece:
                         result.add(Piecewise(
-                            (candidate, cond is True or cond.doit()),
+                            (candidate, cond == True or cond.doit()),
                             (S.NaN, True)
                         ))
         check = False
