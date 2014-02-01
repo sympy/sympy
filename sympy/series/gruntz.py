@@ -454,10 +454,15 @@ def calculate_series(e, x, logx=None):
     This is a place that fails most often, so it is in its own function.
     """
     from sympy.polys import cancel
+    from sympy.simplify.simplify import exptrigsimp
+    from sympy.core.power import Pow
+    from sympy.simplify.sqrtdenest import _mexpand
 
     for t in e.lseries(x, logx=logx):
-        t = cancel(t)
-
+        t = cancel(exptrigsimp(_mexpand(t)))
+        # for gruntz's sake, keep these sorts of terms intact
+        t = t.subs([(p, exp(p.exp*log(p.base))) for p in t.atoms(Pow)
+            if p.base.is_Symbol and p.exp.has(p.base)])
         if t:
             break
 
