@@ -1060,12 +1060,13 @@ class Ellipse(GeometryEntity):
 
         """
 
+        from sympy.utilities.iterables import uniq
         x = Dummy('x', real = True)
         y = Dummy('y', real = True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
         re = solve([seq, oeq], [x, y])
-        result = list(set(re))
+        result = list(uniq(re))
         return [Point(*r) for r in result]
 
     def intersection(self, o):
