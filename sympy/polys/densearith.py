@@ -743,6 +743,12 @@ def _dup_eval1(f, N, K):
         result += c
     return result
 
+if HAS_GMPY == 2:
+    def dup_eval1(f, N, K):
+        from sympy.polys.domains.groundtypes import gmpy_pack
+        f.reverse()
+        r = gmpy_pack(f, N)
+        return r
 
 def dup_mul(f, g, K):
     """

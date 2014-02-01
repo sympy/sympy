@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
-from sympy.core.compatibility import SYMPY_INTS, xrange
+from sympy.core.compatibility import SYMPY_INTS, xrange, HAS_GMPY
 from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
@@ -567,6 +567,15 @@ def dup_eval1(f, N, p, K):
         result <<= N
         result += c % p
     return result
+
+if HAS_GMPY == 2:
+    def dup_eval1(f, N, p, K):
+        from sympy.polys.domains.groundtypes import gmpy_pack
+        f = [x % p for x in f]
+        f.reverse()
+        r = gmpy_pack(f, N)
+        return r
+
 
 def gf_mul(f, g, p, K):
     df = gf_degree(f)
