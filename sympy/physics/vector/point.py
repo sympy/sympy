@@ -1,9 +1,6 @@
 from __future__ import print_function, division
-
-__all__ = ['Point']
-
-from sympy.physics.mechanics.essential import _check_frame, _check_vector
-from sympy.physics.mechanics.essential import Vector
+from sympy.physics.vector.vector import Vector, _check_vector
+from sympy.physics.vector.frame import _check_frame
 
 
 class Point(object):
@@ -78,8 +75,8 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Vector, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -132,7 +129,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')
@@ -167,7 +164,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_acc(N, 10 * N.x)
@@ -198,7 +195,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import ReferenceFrame, Point
+        >>> from sympy.physics.vector import ReferenceFrame, Point
         >>> N = ReferenceFrame('N')
         >>> P1 = Point('P1')
         >>> P2 = P1.locatenew('P2', 10 * N.x)
@@ -227,7 +224,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
@@ -257,7 +254,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_acc(N, 10 * N.x)
@@ -286,7 +283,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
@@ -317,7 +314,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)
@@ -355,8 +352,8 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Vector, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -406,7 +403,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')
@@ -440,7 +437,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)

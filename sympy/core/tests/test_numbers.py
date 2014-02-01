@@ -664,13 +664,13 @@ def test_Mul_Infinity_Zero():
 
 
 def test_Div_By_Zero():
-    assert 1/S(0) == oo
+    assert 1/S(0) == zoo
     assert 1/Float(0) == Float('inf')
     assert 0/S(0) == nan
     assert 0/Float(0) == nan
     assert S(0)/0 == nan
     assert Float(0)/0 == nan
-    assert -1/S(0) == -oo
+    assert -1/S(0) == zoo
     assert -1/Float(0) == Float('-inf')
 
 
@@ -682,6 +682,24 @@ def test_Infinity_inequations():
     assert Float('+inf') > pi
     assert not (Float('+inf') < pi)
     assert exp(-3) < Float('+inf')
+
+    raises(TypeError, lambda: oo < I)
+    raises(TypeError, lambda: oo <= I)
+    raises(TypeError, lambda: oo > I)
+    raises(TypeError, lambda: oo >= I)
+    raises(TypeError, lambda: -oo < I)
+    raises(TypeError, lambda: -oo <= I)
+    raises(TypeError, lambda: -oo > I)
+    raises(TypeError, lambda: -oo >= I)
+
+    raises(TypeError, lambda: I < oo)
+    raises(TypeError, lambda: I <= oo)
+    raises(TypeError, lambda: I > oo)
+    raises(TypeError, lambda: I >= oo)
+    raises(TypeError, lambda: I < -oo)
+    raises(TypeError, lambda: I <= -oo)
+    raises(TypeError, lambda: I > -oo)
+    raises(TypeError, lambda: I >= -oo)
 
 
 def test_NaN():
@@ -728,6 +746,7 @@ def test_special_numbers():
     assert S.NaN.is_number is True
     assert S.Infinity.is_number is True
     assert S.NegativeInfinity.is_number is True
+    assert S.ComplexInfinity.is_number is True
 
     assert isinstance(S.NaN, Rational) is False
     assert isinstance(S.Infinity, Rational) is False
@@ -1242,6 +1261,8 @@ def test_zoo():
             assert zoo/i is zoo
         elif (1/i).is_zero:
             assert zoo/i is S.NaN
+        elif i.is_zero:
+            assert zoo/i is zoo
         else:
             assert (zoo/i).is_Mul
 

@@ -1,6 +1,6 @@
 from sympy import S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 
 def test_sparse_matrix():
@@ -471,11 +471,6 @@ def test_errors():
 def test_len():
     assert not SparseMatrix()
     assert SparseMatrix() == SparseMatrix([])
-
-
-@XFAIL
-def test_len_different_shapes():
-    assert Matrix() == Matrix([[]])
     assert SparseMatrix() == SparseMatrix([[]])
 
 

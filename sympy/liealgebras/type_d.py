@@ -5,7 +5,8 @@ from sympy.matrices import eye
 class TypeD(Standard_Cartan):
 
     def __new__(cls, n):
-        assert n >= 3
+        if n < 3:
+            raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "D", n)
 
 

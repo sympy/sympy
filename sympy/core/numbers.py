@@ -1219,7 +1219,10 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.q, self.q*other.p)
+            if self.p and other.p == S.Zero:
+                return S.ComplexInfinity
+            else:
+                return Rational(self.p*other.q, self.q*other.p)
         elif isinstance(other, Float):
             return self*(1/other)
         else:
@@ -1877,9 +1880,11 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     Examples
     ========
 
-    >>> from sympy import S, Integer
+    >>> from sympy import S, Integer, zoo
     >>> Integer(0) is S.Zero
     True
+    >>> 1/S.Zero
+    zoo
 
     References
     ==========
@@ -1909,7 +1914,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         if expt.is_positive:
             return self
         if expt.is_negative:
-            return S.Infinity
+            return S.ComplexInfinity
         if expt.is_real is False:
             return S.NaN
         # infinities are already handled with pos and neg
@@ -1917,7 +1922,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         # exponent
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
-            return S.Infinity**terms
+            return S.ComplexInfinity**terms
         if coeff is not S.One:  # there is a Number to discard
             return self**terms
 
@@ -2242,16 +2247,28 @@ class Infinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return False
 
+    @_sympifyit('other', NotImplemented)
     def __le__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is not S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return True
 
     def __mod__(self, other):
@@ -2423,16 +2440,28 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.NegativeInfinity
 
+    @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is not S.NegativeInfinity
 
+    @_sympifyit('other', NotImplemented)
     def __le__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return True
 
+    @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return False
 
+    @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is S.NegativeInfinity
 
 
@@ -2571,7 +2600,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_commutative = True
     is_bounded = False
     is_real = None
-    is_number = False
+    is_number = True
 
     __slots__ = []
 

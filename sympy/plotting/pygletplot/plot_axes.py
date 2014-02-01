@@ -43,7 +43,8 @@ class PlotAxes(PlotObject):
         except TypeError:
             pass
         if is_sequence(stride):
-            assert len(stride) == 3
+            if len(stride) != 3:
+                raise ValueError("length should be equal to 3")
             self._stride = stride
         else:
             self._stride = [stride, stride, stride]

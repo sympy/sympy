@@ -107,7 +107,7 @@ class Pow(Expr):
     | 0**oo        | 0       | Because for all complex numbers z near        |
     |              |         | 0, z**oo -> 0.                                |
     +--------------+---------+-----------------------------------------------+
-    | 0**-oo       | oo      | This is strictly true, as 0**oo may be        |
+    | 0**-oo       | oo      | This is not strictly true, as 0**oo may be    |
     |              |         | oscillating between positive and negative     |
     |              |         | values or rotating in the complex plane.      |
     |              |         | It is convenient, however, when the base      |
@@ -295,12 +295,17 @@ class Pow(Expr):
         if real_b and real_e:
             if self.base.is_positive:
                 return True
-            else:   # negative or zero (or positive)
+            elif self.base.is_nonnegative:
+                if self.exp.is_nonnegative:
+                    return True
+            else:
                 if self.exp.is_integer:
                     return True
                 elif self.base.is_negative:
                     if self.exp.is_Rational:
                         return False
+        if real_e and self.exp.is_negative:
+            return Pow(self.base, -self.exp).is_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:

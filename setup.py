@@ -81,6 +81,7 @@ modules = [
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
+    'sympy.physics.vector',
     'sympy.plotting',
     'sympy.plotting.intervalmath',
     'sympy.plotting.pygletplot',

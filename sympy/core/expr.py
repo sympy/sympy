@@ -1863,7 +1863,7 @@ class Expr(Basic, EvalfMixin):
             if quotient.is_Mul and len(quotient.args) == 2:
                 if quotient.args[0].is_Integer and quotient.args[0].is_positive and quotient.args[1] == self:
                     return quotient
-            elif quotient.is_Integer:
+            elif quotient.is_Integer and c.is_Number:
                 return quotient
         elif self.is_Add:
             cs, ps = self.primitive()

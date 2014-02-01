@@ -12,8 +12,8 @@ Kane
 partial_velocity
 ================
 
-.. automodule:: sympy.physics.mechanics.functions
-   :members: partial_velocity
+This method is the same as :mod:`physics.vector`'s 
+:mod:`partial_velocity`.
 
 LagrangesMethod
 ===============

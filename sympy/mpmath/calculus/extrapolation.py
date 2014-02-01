@@ -77,7 +77,8 @@ def richardson(ctx, seq):
     1. [BenderOrszag]_ pp. 375-376
 
     """
-    assert len(seq) >= 3
+    if len(seq) < 3:
+        raise ValueError("seq should be of minimum length 3")
     if ctx.sign(seq[-1]-seq[-2]) != ctx.sign(seq[-2]-seq[-3]):
         seq = seq[::2]
     N = len(seq)//2-1
@@ -223,7 +224,8 @@ def shanks(ctx, seq, table=None, randomized=False):
     2. [BenderOrszag]_ pp. 368-375
 
     """
-    assert len(seq) >= 2
+    if len(seq) < 2:
+        raise ValueError("seq should be of minimum length 2")
     if table:
         START = len(table)
     else:
@@ -309,7 +311,8 @@ def sumap(ctx, f, interval, integral=None, error=False):
     try:
         ctx.prec += 10
         a, b = interval
-        assert b == ctx.inf
+        if  b != ctx.inf:
+            raise ValueError("b should be equal to ctx.inf")
         g = lambda x: f(x+a)
         if integral is None:
             i1, err1 = ctx.quad(g, [0,ctx.inf], error=True)

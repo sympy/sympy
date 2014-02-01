@@ -699,7 +699,8 @@ def _separatevars(expr, force):
 
 def _separatevars_dict(expr, symbols):
     if symbols:
-        assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
+        if not all((t.is_Atom for t in symbols)):
+            raise ValueError("symbols must be Atoms.")
         symbols = list(symbols)
     elif symbols is None:
         return {'coeff': expr}
@@ -1414,10 +1415,13 @@ def trigsimp(expr, **opts):
             if e.is_Function or e.is_Pow:
                 args = [trigsimp_groebner(x, **opts) for x in args]
             return e.func(*args)
-        return trigsimp_groebner(traverse(ex), **opts)
+        new = traverse(ex)
+        if not isinstance(new, Expr):
+            return new
+        return trigsimp_groebner(new, **opts)
 
     trigsimpfunc = {
-        'fu': (lambda x: fu(x)),
+        'fu': (lambda x: fu(x, **opts)),
         'matching': (lambda x: futrig(x)),
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
@@ -4193,7 +4197,7 @@ def exptrigsimp(expr, simplify=True):
     for ei in ex:
         e2 = ei**-2
         if e2 in ex:
-            a = e2.args[0]/2
+            a = e2.args[0]/2 if not e2 is S.Exp1 else S.Half
             newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
             newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
     ## exp ratios to tan and tanh
