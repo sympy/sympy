@@ -1110,13 +1110,13 @@ class Ellipse(GeometryEntity):
         []
         >>> e = Ellipse(Point(-1, 0), 4, 3)
         >>> e.intersection(Ellipse(Point(1, 0), 4, 3))
-        [Point(0, 3*sqrt(15)/4), Point(0, -3*sqrt(15)/4)]
+        [Point(0, -3*sqrt(15)/4), Point(0, 3*sqrt(15)/4)]
         >>> e.intersection(Ellipse(Point(5, 0), 4, 3))
         [Point(2, -3*sqrt(7)/4), Point(2, 3*sqrt(7)/4)]
         >>> e.intersection(Ellipse(Point(100500, 0), 4, 3))
         []
         >>> e.intersection(Ellipse(Point(0, 0), 3, 4))
-        [Point(3, 0),Point(-363/175, -48*sqrt(111)/175),Point(-363/175, 48*sqrt(111)/175)]
+        [Point(-363/175, -48*sqrt(111)/175),Point(-363/175, 48*sqrt(111)/175),Point(3, 0)]
 
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point(-17/5, -12/5), Point(-17/5, 12/5), Point(7/5, -12/5), Point(7/5, 12/5)]
