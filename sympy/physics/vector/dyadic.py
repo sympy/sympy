@@ -1,6 +1,6 @@
 from sympy import sympify, Add, ImmutableMatrix as Matrix
-from sympy.physics.vector.printers import VectorLatexPrinter, \
-     VectorPrettyPrinter, VectorStrPrinter
+from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
+                       VectorStrPrinter)
 
 
 class Dyadic(object):

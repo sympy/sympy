@@ -212,7 +212,7 @@ class Vector(object):
     def _latex(self, printer=None):
         """Latex Printing method. """
 
-        from sympy.physics.vector.printers import VectorStrPrinter
+        from sympy.physics.vector.printing import VectorStrPrinter
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -246,7 +246,7 @@ class Vector(object):
 
     def _pretty(self, printer=None):
         """Pretty Printing method. """
-        from sympy.physics.vector.printers import VectorPrettyPrinter
+        from sympy.physics.vector.printing import VectorPrettyPrinter
         e = self
 
         class Fake(object):
@@ -333,7 +333,7 @@ class Vector(object):
 
     def __str__(self, printer=None):
         """Printing method. """
-        from sympy.physics.vector.printers import VectorStrPrinter
+        from sympy.physics.vector.printing import VectorStrPrinter
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)

@@ -5,8 +5,9 @@ from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.physics.vector.frame import CoordinateSym, ReferenceFrame, \
      _check_frame
 from sympy.physics.vector.dyadic import Dyadic
-from sympy.physics.vector.printers import VectorStrPrinter, \
-     VectorPrettyPrinter, VectorLatexPrinter
+from sympy.physics.vector.printing import (VectorStrPrinter,
+                                           VectorPrettyPrinter,
+                                           VectorLatexPrinter)
 from sympy.physics.vector.point import Point
 from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate, \
      trigsimp, Function, symbols

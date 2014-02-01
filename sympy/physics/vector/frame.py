@@ -735,6 +735,6 @@ class ReferenceFrame(object):
 
 
 def _check_frame(other):
-    from sympy.physics.vector.printers import VectorTypeError
+    from sympy.physics.vector.printing import VectorTypeError
     if not isinstance(other, ReferenceFrame):
         raise VectorTypeError(other, "ReferenceFrame")
