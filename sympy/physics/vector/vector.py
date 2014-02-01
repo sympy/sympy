@@ -1,5 +1,6 @@
 from sympy import S, sympify, trigsimp, expand, sqrt, \
      Add, zeros, ImmutableMatrix as Matrix
+from sympy.core.compatibility import u
 
 
 class Vector(object):
