@@ -168,7 +168,3 @@ def test_intersections():
     assert -5 in S.Integers.intersect(Interval(-oo, 3))
     assert all(x.is_Integer
             for x in take(10, S.Integers.intersect(Interval(3, oo)) ))
-
-def test_ImageSet_boundary():
-    assert ImageSet(Lambda(x, x**2), Interval(0, 2)).boundary == \
-            ImageSet(Lambda(x, x**2), FiniteSet(0, 2))

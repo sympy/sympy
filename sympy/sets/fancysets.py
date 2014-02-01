@@ -223,10 +223,6 @@ class ImageSet(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
-    @property
-    def _boundary(self):
-        return ImageSet(self.lamda, self.base_set.boundary)
-
 
 @deprecated(useinstead="ImageSet", issue=3958, deprecated_since_version="0.7.4")
 def TransformationSet(*args, **kwargs):
