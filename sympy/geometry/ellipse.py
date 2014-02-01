@@ -1141,6 +1141,7 @@ class Ellipse(GeometryEntity):
                 return self._do_ellipse_intersection(o)
 
         return o.intersection(self)
+
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this ellipse?"""
         return isinstance(o, GeometryEntity) and (self.center == o.center and
