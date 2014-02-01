@@ -459,11 +459,8 @@ def calculate_series(e, x, logx=None):
     from sympy.simplify.sqrtdenest import _mexpand
 
     for t in e.lseries(x, logx=logx):
-        t = cancel(exptrigsimp(_mexpand(t)))
-        # for gruntz's sake, keep these sorts of terms intact
-        t = t.subs([(p, exp(p.exp*log(p.base))) for p in t.atoms(Pow)
-            if p.base.is_Symbol and p.exp.has(p.base)])
-        if t:
+        t = cancel(t)
+        if _mexpand(t.as_numer_denom()[0]):
             break
 
     return t
