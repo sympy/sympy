@@ -454,13 +454,15 @@ def calculate_series(e, x, logx=None):
     This is a place that fails most often, so it is in its own function.
     """
     from sympy.polys import cancel
-    from sympy.simplify.simplify import exptrigsimp
-    from sympy.core.power import Pow
     from sympy.simplify.sqrtdenest import _mexpand
+    from sympy.core.function import expand_log
 
     for t in e.lseries(x, logx=logx):
         t = cancel(t)
-        if _mexpand(t.as_numer_denom()[0]):
+        # break when t is non-zero...this requires some
+        # simplification but we want to do as little as possible
+        # in order to keep this fast
+        if _mexpand(expand_log(t.as_numer_denom()[0])):
             break
 
     return t
