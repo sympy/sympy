@@ -158,6 +158,7 @@ def pl_true(expr, model={}):
             return None
         else:
             return not p
+
     elif func is Or:
         result = False
         for arg in args:
@@ -167,6 +168,7 @@ def pl_true(expr, model={}):
             if p is None:
                 result = None
         return result
+
     elif func is And:
         result = True
         for arg in args:
@@ -176,9 +178,11 @@ def pl_true(expr, model={}):
             if p is None:
                 result = None
         return result
+
     elif func is Implies:
         p, q = args
         return pl_true(Or(Not(p), q), model)
+
     elif func is Equivalent:
         p, q = args
         pt = pl_true(p, model)
@@ -188,6 +192,7 @@ def pl_true(expr, model={}):
         if qt is None:
             return None
         return pt == qt
+
     else:
         raise ValueError("Illegal operator in logic expression" + str(expr))
 
