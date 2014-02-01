@@ -956,50 +956,39 @@ class Mul(Expr, AssocOp):
         return has_polar and \
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
-    # I*I -> R,  I*I*I -> -I
     def _eval_is_real(self):
+        from sympy.core.logic import fuzzy_not
         im_count = 0
         is_neither = False
+        is_zero = False
         for t in self.args:
             if t.is_imaginary:
                 im_count += 1
                 continue
             t_real = t.is_real
             if t_real:
+                if not is_zero:
+                    is_zero = fuzzy_not(t.is_nonzero)
+                    if is_zero:
+                        return True
                 continue
             elif t_real is False:
                 if is_neither:
-                    return None
+                    return
                 else:
                     is_neither = True
             else:
-                return None
+                return
         if is_neither:
-            return False
-
-        return (im_count % 2 == 0)
+            if im_count % 2 == 0:
+                if is_zero is False:
+                    return False
+        else:
+            return im_count % 2 == 0
 
     def _eval_is_imaginary(self):
-        im_count = 0
-        is_neither = False
-        for t in self.args:
-            if t.is_imaginary:
-                im_count += 1
-                continue
-            t_real = t.is_real
-            if t_real:
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return None
-                else:
-                    is_neither = True
-            else:
-                return None
-        if is_neither:
-            return False
-
-        return (im_count % 2 == 1)
+        if self.is_nonzero:
+            return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
         nc_count = 0

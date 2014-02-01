@@ -1119,6 +1119,14 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_imaginary is False
     assert (r*i*ii).is_real is True
 
+    # Github's issue 2775:
+    nr = Symbol('nr', real=False)
+    a = Symbol('a', real=True, nonzero=True)
+    b = Symbol('b', real=True)
+    assert (i*nr).is_real is None
+    assert (a*nr).is_real is False
+    assert (b*nr).is_real is None
+
 
 def test_Add_is_comparable():
     assert (x + y).is_comparable is False
