@@ -8,7 +8,7 @@ from sympy import latex
 from sympy import preview
 from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
-from sympy.physics.mechanics import Vector, Dyadic
+from sympy.physics.vector import Vector, Dyadic
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
