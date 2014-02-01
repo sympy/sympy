@@ -8,7 +8,8 @@ from sympy import latex
 from sympy import preview
 from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
-from sympy.physics.mechanics import Vector, Dyadic
+from sympy.physics.mechanics import Vector, Dyadic, mlatex
+
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
@@ -32,7 +33,8 @@ def _init_python_printing(stringify_func):
 
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
-                           backcolor, fontsize, latex_mode, print_builtin):
+                           backcolor, fontsize, latex_mode, print_builtin,
+                           mechanics_printing):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -108,6 +110,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a png rendered by an external latex
         distribution, falling back to matplotlib rendering
         """
+        if mechanics_printing:
+            latex = mlatex
+
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode)
             try:
@@ -122,6 +127,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         A function that returns a png rendered by mathtext
         """
+        if mechanics_printing:
+            latex = mlatex
+
         if _can_print_latex(o):
             s = latex(o, mode='inline')
             return _matplotlib_wrapper(s)
@@ -130,6 +138,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         A function to generate the latex representation of sympy expressions.
         """
+        if mechanics_printing:
+            latex = mlatex
+
         if _can_print_latex(o):
             s = latex(o, mode='plain')
             s = s.replace(r'\dag', r'\dagger')
@@ -204,7 +215,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
-                  latex_mode='equation*', print_builtin=True):
+                  latex_mode='equation*', print_builtin=True,
+                  mechanics_printing=False):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -263,6 +275,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     print_builtin: boolean, optional, default=True
         If true then floats and integers will be printed. If false the
         printer will only print SymPy types.
+    mechanics_printing: boolean, optional, default=False
+        If true the mechanics package printin utilities will be used, i.e.
+        dots for derivatives and functions of time ignored.
 
     Examples
     ========
@@ -354,7 +369,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
     if ip is not None and ip.__module__.startswith('IPython'):
-        _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
-                               backcolor, fontsize, latex_mode, print_builtin)
+        _init_ipython_printing(ip, stringify_func, use_latex, euler,
+                               forecolor, backcolor, fontsize, latex_mode,
+                               print_builtin, mechanics_printing)
     else:
         _init_python_printing(stringify_func)
