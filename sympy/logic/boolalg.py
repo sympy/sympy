@@ -1482,20 +1482,21 @@ def tseitin_transformation(formula):
     .. [1] http://en.wikipedia.org/wiki/Tseitin-Transformation
     """
 
-    from sympy import numbered_symbols, Dummy
+    from sympy import numbered_symbols
 
-    if formula.is_Atom is True:
+    if formula.is_Atom:
         return formula
 
-    q = list()
-    dct = dict()
-    clauses = list()
-    sym_factory = numbered_symbols('s', cls=Dummy)
+    formula = sympify(formula)
 
-    q.append(formula)
-    s = sym_factory.next()
-    dct[formula] = s
-    clauses.append(s)
+    if is_cnf(formula):
+        return formula
+
+    sym_factory = numbered_symbols('s')
+    s = next(sym_factory)
+    q = [formula]
+    dct = {formula: s}
+    clauses = [s]
 
     while len(q) > 0:
         clause = q.pop(0)
@@ -1506,7 +1507,7 @@ def tseitin_transformation(formula):
                 s = arg
             else:
                 if arg not in dct:
-                    s = sym_factory.next()
+                    s = next(sym_factory)
                     dct[arg] = s
                     q.append(arg)
                 else:
@@ -1518,27 +1519,30 @@ def tseitin_transformation(formula):
 
         if isinstance(clause, Not):
             arg = args[0]
-            expr = [s | arg, ~s | ~arg]
+            expr = [Or(s, arg), Or(Not(s), Not(arg))]
             clauses.extend(expr)
 
         elif isinstance(clause, And):
-            expr = [~s | arg for arg in args]
+            expr = [Or(Not(s), arg) for arg in args]
             expr.append(Or(s, *map(Not, args)))
             clauses.extend(expr)
 
         elif isinstance(clause, Or):
-            expr = [s | ~arg for arg in args]
-            expr.append(Or(~s, *args))
+            expr = [Or(s, Not(arg)) for arg in args]
+            expr.append(Or(Not(s), *args))
             clauses.extend(expr)
 
         elif isinstance(clause, Implies):
             a, b = args
-            expr = [s | a, s | ~b, ~s | ~a | b]
+            expr = [Or(s, a), Or(s, Not(b)), Or(Not(s), Not(a), b)]
             clauses.extend(expr)
 
         elif isinstance(clause, Equivalent):
-            a, b = args[0], args[-1]
-            expr = [s | ~a | ~b, ~s | ~a | b, ~s | a | ~b, s | a | b]
+            a, b = args
+            expr = [Or(s, Not(a) , Not(b)), Or(Not(s), Not(a), b), Or(Not(s), a, Not(b)), Or(s, a, b)]
             clauses.extend(expr)
+
+        else:
+            raise ValueError("Illegal operator in logic expression " + str(formula))
 
     return And(*clauses)

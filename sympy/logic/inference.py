@@ -63,7 +63,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm="dpll2", encoding="normal"):
+def satisfiable(expr, algorithm="dpll2", encoding="cnf"):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
@@ -77,7 +77,7 @@ def satisfiable(expr, algorithm="dpll2", encoding="normal"):
     algorithm: dpll, dpll2
         The SAT solving method to use.
 
-    encoding : normal, tseitin
+    encoding : cnf, tseitin
         The method to use for conversion of formula to CNF
 
 
@@ -97,7 +97,7 @@ def satisfiable(expr, algorithm="dpll2", encoding="normal"):
     if expr is False:
         return False
 
-    if encoding == "normal":
+    if encoding == "cnf":
         expr = to_cnf(expr)
     elif encoding == "tseitin":
         atoms = expr.atoms()
@@ -176,11 +176,9 @@ def pl_true(expr, model={}):
             if p is None:
                 result = None
         return result
-
     elif func is Implies:
         p, q = args
         return pl_true(Or(Not(p), q), model)
-
     elif func is Equivalent:
         p, q = args
         pt = pl_true(p, model)
