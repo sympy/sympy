@@ -236,7 +236,7 @@ def test_issue2065():
     assert limit(x**0.5, x, 16) == S(16)**0.5
     assert limit(x**0.5, x, 0) == 0
     assert limit(x**(-0.5), x, oo) == 0
-    assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
+    assert limit(x**(-0.5), x, 4) == S(4)**-0.5
 
 
 def test_issue2084():

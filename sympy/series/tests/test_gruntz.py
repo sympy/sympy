@@ -12,8 +12,7 @@ by nature, so "compare" is logically the lowest part of the algorithm, yet in
 some sense it's the most complex part, because it needs to calculate a limit
 to return the result.
 
-Nevertheless the rest of the algorithm depends on compare that it works
-correctly.
+Nevertheless, the rest of the algorithm depends on compare working correctly.
 """
 
 x = Symbol('x', real=True)
@@ -389,12 +388,11 @@ def test_MrvTestCase_page47_ex3_21():
 
 
 def test_I():
-    from sympy.functions import sign as sgn
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo).simplify() == sgn(y)*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
 
 
 def test_issue1715():
