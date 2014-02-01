@@ -1468,7 +1468,7 @@ def bool_equal(bool1, bool2, info=False):
     return True
 
 
-def tseitin_transformation(formula):
+def tseitin_transformation(formula, dummy=True):
     """
     Converts any propositional formula into an equisatisfiable CNF
     form with auxilliary literals using Tseitin Transformation.
@@ -1482,7 +1482,7 @@ def tseitin_transformation(formula):
     .. [1] http://en.wikipedia.org/wiki/Tseitin-Transformation
     """
 
-    from sympy import numbered_symbols
+    from sympy import numbered_symbols, Dummy
 
     if formula.is_Atom:
         return formula
@@ -1492,7 +1492,11 @@ def tseitin_transformation(formula):
     if is_cnf(formula):
         return formula
 
-    sym_factory = numbered_symbols('s')
+    if dummy:
+        sym_factory = numbered_symbols('s', cls=Dummy)
+    else:
+        sym_factory = numbered_symbols('s')
+
     s = next(sym_factory)
     q = [formula]
     dct = {formula: s}
