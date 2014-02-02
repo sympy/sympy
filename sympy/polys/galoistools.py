@@ -1023,8 +1023,8 @@ def gf_frobenius_monomial_base(g, p, K):
     n = gf_degree(g)
     if n == 0:
         return [], bitcount(p)
-    b = [0]*n
-    b[0] = [1]
+    b = [K.zero]*n
+    b[0] = [K.one]
     if p < n:
         for i in range(1, n):
             mon = gf_lshift(b[i - 1], p, K)
