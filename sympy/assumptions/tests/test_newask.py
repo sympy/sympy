@@ -210,3 +210,10 @@ def test_integer():
         ~Q.rational(z)) is None
     assert newask(Q.integer(x*y*z), Q.integer(x) & ~Q.rational(y)) is None
     assert newask(Q.integer(x*y), Q.integer(x) & Q.irrational(y)) is False
+
+def test_abs():
+    assert newask(Q.nonnegative(abs(x))) is True
+    assert newask(Q.positive(abs(x)), ~Q.zero(x)) is True
+    assert newask(Q.zero(x), ~Q.zero(abs(x))) is False
+    assert newask(Q.zero(x), Q.zero(abs(x))) is True
+    assert newask(Q.zero(abs(x)), Q.zero(x)) is True

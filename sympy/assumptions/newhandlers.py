@@ -302,6 +302,9 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.rational), Q.rational)),
     (Add, Implies(AllArgs(Q.rational), Q.rational)),
 
+    (Abs, Q.nonnegative),
+    (Abs, Equivalent(AllArgs(Q.nonzero), Q.nonzero)),
+
     # Including the integer qualification means we don't need to add any facts
     # for odd, since the assumptions already know that every integer is
     # exactly one of even or odd.
