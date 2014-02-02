@@ -66,8 +66,17 @@ matrix:
     - python: 3.3 # Dummy value
       env:
         - TEST_SAGE="true"
-  allow_failures:
     - python: "pypy"
+      env:
+        - TEST_DOCTESTS="true"
+    - python: "pypy"
+      env:
+        - TEST_PYPY="true"
+        - SPLIT="1/2"
+    - python: "pypy"
+      env:
+        - TEST_PYPY="true"
+        - SPLIT="2/2"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;
