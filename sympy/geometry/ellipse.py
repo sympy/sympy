@@ -18,6 +18,7 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
 from sympy.utilities.lambdify import lambdify
+from sympy.utilities.iterables import uniq
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
@@ -1060,14 +1061,13 @@ class Ellipse(GeometryEntity):
 
         """
 
-        from sympy.utilities.iterables import uniq
-        x = Dummy('x', real = True)
-        y = Dummy('y', real = True)
+        x = Dummy('x', real=True)
+        y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
         re = solve([seq, oeq], [x, y])
-        result = list(uniq(re))
-        return [Point(*r) for r in result]
+        return list(uniq(re))
+
 
     def intersection(self, o):
         """The intersection of this ellipse and another geometrical entity
