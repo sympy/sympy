@@ -611,11 +611,7 @@ class Expr(Basic, EvalfMixin):
 
                 # try to prove with minimal_polynomial but know when
                 # *not* to use this or else it can take a long time.
-                # Pernici noted the following:
-                # >>> q = -73*sqrt(3) + 1 + 128*sqrt(5) + 1315*sqrt(2)
-                # >>> p = expand(q**3)**Rational(1, 3)
-                # >>> minimal_polynomial(p - q)  # hangs for at least 15 minutes
-                if False:  # change False to condition that assures non-hang
+                if True:  # change True to condition that assures non-hang
                     try:
                         mp = minimal_polynomial(diff)
                         if mp.is_Symbol:
