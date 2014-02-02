@@ -10,8 +10,6 @@ from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
-from sympy.polys.densebasic import dup_strip
-from sympy.polys.densebasic import dup_strip
 from sympy.mpmath.libmp.libintmath import bitcount
 
 from sympy.ntheory import factorint
@@ -555,10 +553,6 @@ def gf_mul(f, g, p, K):
 
         h[i] = coeff % p
 
-    #r1 = gf_mul1(f, g, p, K)
-    #r2 = gf_strip(h)
-    #if r1 != r2:
-    #    print('ERR f=%s\ng=%s\np=%s K=%s\nr1=%s\nr2=%s' %(f, g, p, K, r1, r2))
     return gf_strip(h)
 
 def dup_eval1(f, N, p, K):
@@ -592,7 +586,7 @@ def gf_mul(f, g, p, K):
         a.append((r & mask) % p)
         r >>= N
     a.reverse()
-    return dup_strip(a)
+    return gf_strip(a)
 
 
 def gf_sqr(f, p, K):
@@ -804,7 +798,7 @@ def gf_pack_div(f, g, p, K):
         sf >>= N
     a.reverse()
     qv.reverse()
-    a = dup_strip(a)
+    a = gf_strip(a)
     return qv, a
 
 
@@ -864,7 +858,7 @@ def gf_pack_rem(f, g, p, K):
         a.append((sf & mask) % p)
         sf >>= N
     a.reverse()
-    return dup_strip(a)
+    return gf_strip(a)
 
 gf_rem = gf_pack_rem
 
@@ -1053,7 +1047,7 @@ def gf_unpack(sf, N, mask, p, K):
         a.append((sf & mask) % p)
         sf >>= N
     a.reverse()
-    return dup_strip(a)
+    return gf_strip(a)
 
 
 def gf_frobenius_map(f, g, b, Nb, p, K):
@@ -1620,7 +1614,6 @@ def gf_irred_p_rabin(f, p, K):
     indices = set([ n//d for d in factorint(n) ])
 
     b, Nb = gf_frobenius_monomial_base(f, p, K)
-    #h = b[1]
     mask = (K.one << Nb) - 1
     h = gf_unpack(b[1], Nb, mask, p, K)
 
