@@ -1065,8 +1065,8 @@ class Ellipse(GeometryEntity):
         y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
-        re = solve([seq, oeq], [x, y])
-        return list(uniq(re))
+        result = solve([seq, oeq], [x, y])
+        return [Point(*r) for r in list(uniq(result))]
 
 
     def intersection(self, o):
