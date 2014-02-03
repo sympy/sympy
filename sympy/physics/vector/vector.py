@@ -1,5 +1,6 @@
-from sympy import S, sympify, trigsimp, expand, sqrt, \
-     Add, zeros, ImmutableMatrix as Matrix
+from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
+                   ImmutableMatrix as Matrix)
+from sympy.core.compatibility import u
 
 
 class Vector(object):
@@ -37,8 +38,8 @@ class Vector(object):
             added = 0
             for i, v in enumerate(self.args):
                 if inlist[0][1] == self.args[i][1]:
-                    self.args[i] = (self.args[i][0] +
-                            inlist[0][0], inlist[0][1])
+                    self.args[i] = (self.args[i][0] + inlist[0][0],
+                                    inlist[0][1])
                     inlist.remove(inlist[0])
                     added = 1
                     break
@@ -75,7 +76,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector, dot
+        >>> from sympy.physics.vector import ReferenceFrame, dot
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -148,7 +149,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
         >>> b = Symbol('b')
@@ -212,7 +213,7 @@ class Vector(object):
     def _latex(self, printer=None):
         """Latex Printing method. """
 
-        from sympy.physics.vector.printers import VectorStrPrinter
+        from sympy.physics.vector.printers import VectorLatexPrinter
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -228,7 +229,7 @@ class Vector(object):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = VectorStrPrinter().doprint(ar[i][0][j])
+                    arg_str = VectorLatexPrinter().doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':

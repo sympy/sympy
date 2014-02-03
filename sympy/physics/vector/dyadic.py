@@ -1,6 +1,8 @@
 from sympy import sympify, Add, ImmutableMatrix as Matrix
-from sympy.physics.vector.printers import VectorLatexPrinter, \
-     VectorPrettyPrinter, VectorStrPrinter
+from sympy.core.compatibility import u
+from sympy.physics.vector.printers import (VectorLatexPrinter,
+                                           VectorPrettyPrinter,
+                                           VectorStrPrinter)
 
 
 class Dyadic(object):
@@ -37,8 +39,8 @@ class Dyadic(object):
             for i, v in enumerate(self.args):
                 if ((str(inlist[0][1]) == str(self.args[i][1])) and
                         (str(inlist[0][2]) == str(self.args[i][2]))):
-                    self.args[i] = (self.args[i][0] +
-                        inlist[0][0], inlist[0][1], inlist[0][2])
+                    self.args[i] = (self.args[i][0] + inlist[0][0],
+                                    inlist[0][1], inlist[0][2])
                     inlist.remove(inlist[0])
                     added = 1
                     break
@@ -140,7 +142,7 @@ class Dyadic(object):
         newlist = [v for v in self.args]
         for i, v in enumerate(newlist):
             newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1],
-                    newlist[i][2])
+                          newlist[i][2])
         return Dyadic(newlist)
 
     def __ne__(self, other):
@@ -159,7 +161,7 @@ class Dyadic(object):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
                 ol.append(' + ' + mlp.doprint(ar[i][1]) + r"\otimes " +
-                        mlp.doprint(ar[i][2]))
+                          mlp.doprint(ar[i][2]))
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
                 ol.append(' - ' +
