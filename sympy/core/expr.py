@@ -2748,12 +2748,17 @@ class Expr(Basic, EvalfMixin):
         (1, -2)
 
         """
-        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        l = self.as_leading_term(x)
+        d = C.Dummy('logx')
+        if l.has(C.log(x)):
+            l = l.subs(C.log(x), d)
+        c, e = l.as_coeff_exponent(x)
         if x in c.free_symbols:
             from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
                 cannot compute leadterm(%s, %s). The coefficient
                 should have been free of x but got %s""" % (self, x, c)))
+        c = c.subs(d, C.log(x))
         return c, e
 
     def as_coeff_Mul(self, rational=False):
