@@ -343,7 +343,7 @@ def subset_gen(a, s, kmin):
         for j in range(i, s):
             t[j] = c + j
 
-def _testS1(b, g, pl, fc, S, T, sorted_T, B, Brt1, factors, used, K):
+def _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K):
     # lift the constant coefficient of the product `G` of the factors
     # in the subset `S`; if it is does not divide `fc`, `G` does
     # not divide the input polynomial
@@ -462,7 +462,7 @@ def dup_zz_zassenhaus(f, K):
     if n < 10:
         while 2*s <= len(T):
             for S in subsets(sorted_T, s):
-                ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, Brt1, factors, used, K)
+                ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K)
                 if ret is False:
                     continue
                 else:
@@ -522,7 +522,7 @@ def dup_zz_zassenhaus(f, K):
                 if abs(kt) <= 1:
                     a1 = dyndv[s][kt]
                     for S1b in a1:
-                        ret = _testS1(b, g, pl, fc, S1b, T, sorted_T, B, Brt1, factors, used, K)
+                        ret = _testS1(b, g, pl, fc, S1b, T, sorted_T, B, factors, used, K)
                         if ret is False:
                             continue
                         else:
@@ -549,7 +549,7 @@ def dup_zz_zassenhaus(f, K):
                             if any(ii in used for ii in S1b):
                                 continue
                             S = S1a + S1b
-                            ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, Brt1, factors, used, K)
+                            ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K)
                             if ret is False:
                                 continue
                             else:
@@ -566,7 +566,7 @@ def dup_zz_zassenhaus(f, K):
 
             else:
 
-                ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, Brt1, factors, used, K)
+                ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K)
                 if ret is False:
                     continue
                 else:
