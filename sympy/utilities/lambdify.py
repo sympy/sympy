@@ -1,6 +1,7 @@
 """
 This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
+
 """
 
 from __future__ import print_function, division
@@ -15,8 +16,8 @@ MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
-
 SCIPY = {}
+
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 # These are separate from the names above because the above names are modified
@@ -86,13 +87,13 @@ NUMPY_TRANSLATIONS = {
 }
 
 SCIPY_TRANSLATIONS = {
-"elliptic_k":"ellipk",
-"elliptic_f":"ellipeinc",
-"besselj":"jv",
-"bessely":"yv",
-"jn":"sph_jn",
-"yn":"sph_yn",
-"loggamma":"gammaln",
+"elliptic_k": "ellipk",
+"elliptic_f": "ellipeinc",
+"besselj": "jv",
+"bessely": "yv",
+"jn": "sph_jn",
+"yn": "sph_yn",
+"loggamma": "gammaln",
 }
 
 # Available modules:
@@ -113,18 +114,16 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy","scipy".
+    "mpmath", "numpy", "scipy", "sympy".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
-
     except KeyError:
         raise NameError(
             "'%s' module can't be used for lambdification" % module)
-
     # Clear namespace or exit
     if namespace != namespace_default:
         # The namespace was already generated, don't do it again if not forced.
@@ -168,7 +167,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy", "scipy"
+     - the strings "math", "mpmath", "numpy", "scipy", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -330,7 +329,6 @@ def lambdastr(args, expr, printer=None, dummify=False):
     'lambda x: (x**2)'
     >>> lambdastr((x,y,z), [z,y,x])
     'lambda x,y,z: ([z, y, x])'
-
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
