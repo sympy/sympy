@@ -80,6 +80,7 @@ from math import ceil as _ceil, log as _log
 
 from sympy.core.compatibility import xrange
 from collections import defaultdict
+from sympy.mpmath.libmp.libintmath import bitcount
 
 
 def dup_trial_division(f, factors, K):
@@ -443,7 +444,7 @@ def dup_zz_zassenhaus(f, K):
             continue
         fsqfx = gf_factor_sqf(F, px, K)[1]
         a.append((px, fsqfx))
-        if len(fsqfx) < 15 or len(a) > 4:
+        if len(fsqfx) < 50 or len(a) > 4:
             break
     p, fsqf = min(a, key=lambda x: len(x[1]))
 
@@ -474,7 +475,7 @@ def dup_zz_zassenhaus(f, K):
 
         return factors + [f]
 
-    w = int((_log(pl, 2) + _log(Brt1, 2))/2)
+    w = (bitcount(pl) + bitcount(Brt1)) // 2
     tgv = [None]*r
     trs = [0]*r
 
