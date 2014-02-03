@@ -527,7 +527,7 @@ def rs_newton(p, x, prec):
 def rs_hadamard_product(p1, p2):
     ring = p1.ring
     p = ring.zero
-    for exp1, v1 in p1.iteritems():
+    for exp1, v1 in p1.items():
         if exp1 in p2:
             v = v1*p2[exp1]
             p[exp1] = v
