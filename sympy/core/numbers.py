@@ -71,18 +71,6 @@ def seterr(divide=False):
         _errdict["divide"] = divide
 
 
-def _as_integer_ratio(p):
-    """compatibility implementation for python < 2.6"""
-    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
-    p = [1, -1][neg_pow % 2]*man
-    if expt < 0:
-        q = 2**-expt
-    else:
-        q = 1
-        p *= 2**expt
-    return int(p), int(q)
-
-
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
     if not dec.is_finite():  # NOTE: this is_finite is not SymPy's
