@@ -33,13 +33,6 @@ def egypt_fraction(rat, algorithm="Greedy"):
     Differs from the Graham-Jewett algorithm only in the handling
     of duplicates.
 
-    References
-    =========
-
-    .. [1] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
-    .. [2] http://en.wikipedia.org/wiki/Egyptian_fraction#Modern_number_theory
-    .. [3] http://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
-
     Examples
     ========
 
@@ -53,6 +46,13 @@ def egypt_fraction(rat, algorithm="Greedy"):
     [7, 8, 9, 56, 57, 72, 3192]
     >>> egypt_fraction(Rational(3, 7), "Takenouchi")
     [4, 7, 28]
+
+    References
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
+    .. [2] http://en.wikipedia.org/wiki/Egyptian_fraction#Modern_number_theory
+    .. [3] http://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
 
     """
     x, y = rat.as_numer_denom()
