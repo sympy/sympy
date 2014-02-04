@@ -956,12 +956,7 @@ class Rational(Number):
     >>> Rational(.5)
     1/2
     >>> Rational(.2)
-    3602879701896397/18014398509481984
-
-    If the simpler representation of the float is desired then consider
-    limiting the denominator to the desired value or convert the float to
-    a string (which is roughly equivalent to limiting the denominator to
-    10**12):
+    1/5
 
     >>> Rational(str(.2))
     1/5
