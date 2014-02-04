@@ -303,7 +303,7 @@ def subset_gen(a, s, kmin):
 
     >>> from sympy.polys.factortools import subset_gen
     >>> for x in subset_gen([2, 3, 5, 7, 10, 12], 3, 7):
-    ...     print x
+    ...     print(x)
     ...
     ([2, 3, 5], 0)
     ([2, 3, 7], 1)
