@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import decimal
+import fractions
 import math
 import re as regex
 from collections import defaultdict
@@ -3104,16 +3105,12 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
 
 I = S.ImaginaryUnit
 
-try:
-    # fractions is only available for python 2.6+
-    import fractions
 
-    def sympify_fractions(f):
-        return Rational(f.numerator, f.denominator)
+def sympify_fractions(f):
+    return Rational(f.numerator, f.denominator)
 
-    converter[fractions.Fraction] = sympify_fractions
-except ImportError:
-    pass
+converter[fractions.Fraction] = sympify_fractions
+
 
 try:
     if HAS_GMPY == 2:
