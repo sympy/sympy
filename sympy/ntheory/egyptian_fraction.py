@@ -57,54 +57,6 @@ def egypt_fraction(rat, algorithm="Greedy"):
     """
     x, y = rat.as_numer_denom()
 
-    def egypt_greedy(x, y):
-        if x == 1:
-            return [y]
-        else:
-            a = (-y) % (x)
-            b = y*(y//x + 1)
-            c = gcd(a, b)
-            if c > 1:
-                num, denom = a//c, b//c
-            else:
-                num, denom = a, b
-            return [y//x + 1] + egypt_greedy(num, denom)
-
-    def egypt_graham_jewett(x, y):
-        l = [y] * x
-
-        # l is now a list of integers whose reciprocals sum to x/y.
-        # We shall now proceed to manipulate the elements of l without
-        # changing the reciprocated sum until all elements are unique.
-
-        while len(l) != len(set(l)):
-            l.sort() # So the list has duplicates. Find a smallest pair
-            for i in range(len(l) - 1):
-                if l[i] == l[i + 1]:
-                    break
-            # We have now identified a pair of identical
-            # elements: l[i] and l[i + 1].
-            # Now comes the application of the result of Graham and Jewett:
-            l[i + 1] = l[i] + 1
-            # And we just iterate that until the list has no duplicates.
-            l.append(l[i]*(l[i] + 1))
-        return sorted(l)
-
-    def egypt_takenouchi(x, y):
-        l = [y] * x
-        while len(l) != len(set(l)):
-            l.sort()
-            for i in range(len(l) - 1):
-                if l[i] == l[i + 1]:
-                    break
-            k = l[i]
-            if k % 2 == 0:
-                l[i] = l[i] // 2
-                del l[i + 1]
-            else:
-                l[i], l[i + 1] = (k + 1)//2, k*(k + 1)//2
-        return sorted(l)
-
     if algorithm == "Greedy":
         return egypt_greedy(x, y)
     elif algorithm == "Graham Jewett":
@@ -113,3 +65,54 @@ def egypt_fraction(rat, algorithm="Greedy"):
         return egypt_takenouchi(x, y)
     else:
         raise ValueError("Entered Invalid Algorithm")
+
+
+def egypt_greedy(x, y):
+    if x == 1:
+        return [y]
+    else:
+        a = (-y) % (x)
+        b = y*(y//x + 1)
+        c = gcd(a, b)
+        if c > 1:
+            num, denom = a//c, b//c
+        else:
+            num, denom = a, b
+        return [y//x + 1] + egypt_greedy(num, denom)
+
+
+def egypt_graham_jewett(x, y):
+    l = [y] * x
+
+    # l is now a list of integers whose reciprocals sum to x/y.
+    # we shall now proceed to manipulate the elements of l without
+    # changing the reciprocated sum until all elements are unique.
+
+    while len(l) != len(set(l)):
+        l.sort()  # so the list has duplicates. find a smallest pair
+        for i in range(len(l) - 1):
+            if l[i] == l[i + 1]:
+                break
+        # we have now identified a pair of identical
+        # elements: l[i] and l[i + 1].
+        # now comes the application of the result of graham and jewett:
+        l[i + 1] = l[i] + 1
+        # and we just iterate that until the list has no duplicates.
+        l.append(l[i]*(l[i] + 1))
+    return sorted(l)
+
+
+def egypt_takenouchi(x, y):
+    l = [y] * x
+    while len(l) != len(set(l)):
+        l.sort()
+        for i in range(len(l) - 1):
+            if l[i] == l[i + 1]:
+                break
+        k = l[i]
+        if k % 2 == 0:
+            l[i] = l[i] // 2
+            del l[i + 1]
+        else:
+            l[i], l[i + 1] = (k + 1)//2, k*(k + 1)//2
+    return sorted(l)
