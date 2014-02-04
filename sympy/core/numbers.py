@@ -71,18 +71,6 @@ def seterr(divide=False):
         _errdict["divide"] = divide
 
 
-def _as_integer_ratio(p):
-    """compatibility implementation for python < 2.6"""
-    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
-    p = [1, -1][neg_pow % 2]*man
-    if expt < 0:
-        q = 2**-expt
-    else:
-        q = 1
-        p *= 2**expt
-    return int(p), int(q)
-
-
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
     if not dec.is_finite():  # NOTE: this is_finite is not SymPy's
@@ -968,12 +956,7 @@ class Rational(Number):
     >>> Rational(.5)
     1/2
     >>> Rational(.2)
-    3602879701896397/18014398509481984
-
-    If the simpler representation of the float is desired then consider
-    limiting the denominator to the desired value or convert the float to
-    a string (which is roughly equivalent to limiting the denominator to
-    10**12):
+    1/5
 
     >>> Rational(str(.2))
     1/5
@@ -1077,7 +1060,7 @@ class Rational(Number):
                     pass  # error will raise below
 
                 if isinstance(p, (float, Float)):
-                    return Rational(*_as_integer_ratio(p))
+                    return Rational(str(p))
 
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
