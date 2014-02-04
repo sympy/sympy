@@ -1076,7 +1076,7 @@ class Rational(Number):
                 except NameError:
                     pass  # error will raise below
 
-                if isinstance(p, (float, Float)):		    
+                if isinstance(p, (float, Float)):
                     return Rational(str(p))
 
             if not isinstance(p, SYMPY_INTS + (Rational,)):
