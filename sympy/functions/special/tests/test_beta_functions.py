@@ -1,6 +1,7 @@
 from sympy import (Symbol, gamma, expand_func, beta, digamma, diff)
 
 
+
 def test_beta():
     x, y = Symbol('x'), Symbol('y')
 
