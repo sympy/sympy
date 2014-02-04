@@ -144,7 +144,8 @@ def strided_range(r_min, r_max, stride, max_steps=50):
         xrange(int(r_min - r_max))
     except TypeError:
         return []
-    assert r_min < r_max
+    if r_min > r_max:
+        raise ValueError("r_min can not be greater than r_max")
     r_min_s = (r_min % stride)
     r_max_s = stride - (r_max % stride)
     if abs(r_max_s - stride) < 0.001:

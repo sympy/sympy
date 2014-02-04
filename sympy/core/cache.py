@@ -122,8 +122,8 @@ def __cacheit_debug(func):
         hash(r1), hash(r2)
 
         # also see if returned values are the same
-        assert r1 == r2
-
+        if r1 != r2:
+            raise RuntimeError("Returned values are not the same")
         return r1
     return wrapper
 

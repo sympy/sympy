@@ -3,7 +3,7 @@ from __future__ import print_function, division
 __all__ = ['Particle']
 
 from sympy import sympify
-from sympy.physics.mechanics.point import Point
+from sympy.physics.vector import Point
 
 
 class Particle(object):

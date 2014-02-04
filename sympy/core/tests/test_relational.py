@@ -1,8 +1,10 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies, Xor
+from sympy import (S, Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies,
+    Xor)
 from sympy.core.relational import ( Relational, Equality, Unequality,
     GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
     Gt, Ge, Ne )
+from sympy.core.sets import Interval, FiniteSet
 
 x, y, z, t = symbols('x,y,z,t')
 
@@ -48,8 +50,8 @@ def test_rel_subs():
     assert e.rhs == y
 
     e = Eq(x, 0)
-    assert e.subs(x, 0) is True
-    assert e.subs(x, 1) is False
+    assert e.subs(x, 0) is S.true
+    assert e.subs(x, 1) is S.false
 
 
 def test_wrappers():
@@ -82,6 +84,9 @@ def test_Eq():
 
 
 def test_rel_Infinity():
+    # NOTE: All of these are actually handled by sympy.core.Number, and do
+    # not create Relational objects.  Therefore, they still return True and
+    # False instead of S.true and S.false.
     assert (oo > oo) is False
     assert (oo > -oo) is True
     assert (oo > 1) is True
@@ -109,29 +114,29 @@ def test_rel_Infinity():
 
 
 def test_bool():
-    assert Eq(0, 0) is True
-    assert Eq(1, 0) is False
-    assert Ne(0, 0) is False
-    assert Ne(1, 0) is True
-    assert Lt(0, 1) is True
-    assert Lt(1, 0) is False
-    assert Le(0, 1) is True
-    assert Le(1, 0) is False
-    assert Le(0, 0) is True
-    assert Gt(1, 0) is True
-    assert Gt(0, 1) is False
-    assert Ge(1, 0) is True
-    assert Ge(0, 1) is False
-    assert Ge(1, 1) is True
-    assert Eq(I, 2) is False
-    assert Ne(I, 2) is True
-    assert Gt(I, 2) not in [True, False]
-    assert Ge(I, 2) not in [True, False]
-    assert Lt(I, 2) not in [True, False]
-    assert Le(I, 2) not in [True, False]
+    assert Eq(0, 0) is S.true
+    assert Eq(1, 0) is S.false
+    assert Ne(0, 0) is S.false
+    assert Ne(1, 0) is S.true
+    assert Lt(0, 1) is S.true
+    assert Lt(1, 0) is S.false
+    assert Le(0, 1) is S.true
+    assert Le(1, 0) is S.false
+    assert Le(0, 0) is S.true
+    assert Gt(1, 0) is S.true
+    assert Gt(0, 1) is S.false
+    assert Ge(1, 0) is S.true
+    assert Ge(0, 1) is S.false
+    assert Ge(1, 1) is S.true
+    assert Eq(I, 2) is S.false
+    assert Ne(I, 2) is S.true
+    assert Gt(I, 2) not in [S.true, S.false]
+    assert Ge(I, 2) not in [S.true, S.false]
+    assert Lt(I, 2) not in [S.true, S.false]
+    assert Le(I, 2) not in [S.true, S.false]
     a = Float('.000000000000000000001', '')
     b = Float('.0000000000000000000001', '')
-    assert Eq(pi + a, pi + b) is False
+    assert Eq(pi + a, pi + b) is S.false
 
 
 def test_rich_cmp():
@@ -148,14 +153,14 @@ def test_doit():
     np = Symbol('np', nonpositive=True)
     nn = Symbol('nn', nonnegative=True)
 
-    assert Gt(p, 0).doit() is True
+    assert Gt(p, 0).doit() is S.true
     assert Gt(p, 1).doit() == Gt(p, 1)
-    assert Ge(p, 0).doit() is True
-    assert Le(p, 0).doit() is False
-    assert Lt(n, 0).doit() is True
-    assert Le(np, 0).doit() is True
+    assert Ge(p, 0).doit() is S.true
+    assert Le(p, 0).doit() is S.false
+    assert Lt(n, 0).doit() is S.true
+    assert Le(np, 0).doit() is S.true
     assert Gt(nn, 0).doit() == Gt(nn, 0)
-    assert Lt(nn, 0).doit() is False
+    assert Lt(nn, 0).doit() is S.false
 
     assert Eq(x, 0).doit() == Eq(x, 0)
 
@@ -282,3 +287,21 @@ def test_relational_logic_symbols():
     assert isinstance((x < y) >> (z < t), Implies)
     assert isinstance((x < y) << (z < t), Implies)
     assert isinstance((x < y) ^ (z < t), (Or, Xor))
+
+
+def test_univariate_relational_as_set():
+    assert (x > 0).as_set() == Interval(0, oo, True, True)
+    assert (x >= 0).as_set() == Interval(0, oo)
+    assert (x < 0).as_set() == Interval(-oo, 0, True, True)
+    assert (x <= 0).as_set() == Interval(-oo, 0)
+    assert Eq(x, 0).as_set() == FiniteSet(0)
+    assert Ne(x, 0).as_set() == Interval(-oo, 0, True, True) + \
+        Interval(0, oo, True, True)
+
+    assert (x**2 >= 4).as_set() == Interval(-oo, -2) + Interval(2, oo)
+
+
+@XFAIL
+def test_multivariate_relational_as_set():
+    assert (x*y >= 0).as_set() == Interval(0, oo)*Interval(0, oo) + \
+        Interval(-oo, 0)*Interval(-oo, 0)

@@ -11,13 +11,10 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
    :members:
 
-beta
-----
+Gamma, Beta and related Functions
+---------------------------------
+.. module:: sympy.functions.special.gamma_functions
 
-.. autofunction:: sympy.functions.special.gamma_functions.beta
-
-Gamma and Related Functions
----------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
@@ -31,9 +28,28 @@ Gamma and Related Functions
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
 
-Special Cases of the Incomplete Gamma Functions
------------------------------------------------
+.. autofunction:: sympy.functions.special.gamma_functions.beta
+
+Error Functions and Fresnel Integrals
+-------------------------------------
 .. module:: sympy.functions.special.error_functions
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.erfc
+.. autoclass:: sympy.functions.special.error_functions.erfi
+.. autoclass:: sympy.functions.special.error_functions.erf2
+.. autoclass:: sympy.functions.special.error_functions.erfinv
+.. autoclass:: sympy.functions.special.error_functions.erfcinv
+.. autoclass:: sympy.functions.special.error_functions.erf2inv
+
+.. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
+   :members:
+
+.. autoclass:: fresnels
+.. autoclass:: fresnelc
+
+Exponential, Logarithmic and Trigonometric Integrals
+----------------------------------------------------
 
 .. autoclass:: Ei
 .. autoclass:: expint
@@ -44,23 +60,6 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Ci
 .. autoclass:: Shi
 .. autoclass:: Chi
-
-.. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
-   :members:
-
-.. autoclass:: fresnels
-.. autoclass:: fresnelc
-
-Error Functions
----------------
-
-.. autoclass:: sympy.functions.special.error_functions.erf
-.. autoclass:: sympy.functions.special.error_functions.erfc
-.. autoclass:: sympy.functions.special.error_functions.erfi
-.. autoclass:: sympy.functions.special.error_functions.erf2
-.. autoclass:: sympy.functions.special.error_functions.erfinv
-.. autoclass:: sympy.functions.special.error_functions.erfcinv
-.. autoclass:: sympy.functions.special.error_functions.erf2inv
 
 Bessel Type Functions
 ---------------------

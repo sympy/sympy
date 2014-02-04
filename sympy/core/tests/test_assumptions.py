@@ -694,8 +694,8 @@ def test_special_assumptions():
     assert (z2*z).is_zero is True
 
     e = -3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2
-    assert (e < 0) is False
-    assert (e > 0) is False
+    assert (e < 0) is S.false
+    assert (e > 0) is S.false
     assert (e == 0) is False  # it's not a literal 0
     assert e.equals(0) is True
 
@@ -712,3 +712,7 @@ def test_issue_3532():
     assert ((-1)**(I/2)).is_real is True
     assert ((-1)**(I*S.Pi)).is_real is True
     assert (I**(I + 2)).is_real is True
+
+
+def test_gh2730():
+    assert (1/(1 + I)).is_real is False

@@ -10,7 +10,6 @@ from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
-from sympy.assumptions import ask
 from sympy.logic.boolalg import And, Or, true, false
 
 from sympy.utilities import default_sort_key
@@ -232,6 +231,57 @@ class Set(Basic):
         """
         return self._measure
 
+    @property
+    def boundary(self):
+        """
+        The boundary or frontier of a set
+
+        A point x is on the boundary of a set S if
+
+        1.  x is in the closure of S.
+            I.e. Every neighborhood of x contains a point in S.
+        2.  x is not in the interior of S.
+            I.e. There does not exist an open set centered on x contained
+            entirely within S.
+
+        There are the points on the outer rim of S.  If S is open then these
+        points need not actually be contained within S.
+
+        For example, the boundary of an interval is its start and end points.
+        This is true regardless of whether or not the interval is open.
+
+        >>> from sympy import Interval
+        >>> Interval(0, 1).boundary
+        {0, 1}
+
+        >>> Interval(0, 1, True, False).boundary
+        {0, 1}
+        """
+        return self._boundary
+
+    @property
+    def is_open(self):
+        if not Intersection(self, self.boundary):
+            return True
+        # We can't confidently claim that an intersection exists
+        return None
+
+    @property
+    def is_closed(self):
+        return self.subset(self.boundary)
+
+    @property
+    def closure(self):
+        return self + self.boundary
+
+    @property
+    def interior(self):
+        return self - self.boundary
+
+    @property
+    def _boundary(self):
+        raise NotImplementedError()
+
     def _eval_imageset(self, f):
         from sympy.sets.fancysets import ImageSet
         return ImageSet(f, self)
@@ -267,6 +317,7 @@ class Set(Basic):
         return self.complement
 
     def __contains__(self, other):
+        from sympy.assumptions import ask
         symb = self.contains(other)
         result = ask(symb)
         if result is None:
@@ -333,6 +384,9 @@ class ProductSet(Set):
         if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
+        if len(sets) == 1:
+            return sets[0]
+
         return Basic.__new__(cls, *sets, **assumptions)
 
     def _contains(self, element):
@@ -369,6 +423,19 @@ class ProductSet(Set):
         return ProductSet(a.intersect(b)
                 for a, b in zip(self.sets, other.sets))
 
+    def _union(self, other):
+        if not other.is_ProductSet:
+            return None
+        if len(other.args) != len(self.args):
+            return None
+        if self.args[0] == other.args[0]:
+            return self.args[0] * Union(ProductSet(self.args[1:]),
+                                        ProductSet(other.args[1:]))
+        if self.args[-1] == other.args[-1]:
+            return Union(ProductSet(self.args[:-1]),
+                         ProductSet(other.args[:-1])) * self.args[-1]
+        return None
+
     @property
     def sets(self):
         return self.args
@@ -383,6 +450,13 @@ class ProductSet(Set):
         product_sets = (ProductSet(*set) for set in switch_sets)
         # Union of all combinations but this one
         return Union(p for p in product_sets if p != self)
+
+    @property
+    def _boundary(self):
+        return Union(ProductSet(b + b.boundary if i != j else b.boundary
+                                for j, b in enumerate(self.sets))
+                                for i, a in enumerate(self.sets))
+
 
     @property
     def is_real(self):
@@ -626,6 +700,10 @@ class Interval(Set, EvalfMixin):
         a = Interval(S.NegativeInfinity, self.start, True, not self.left_open)
         b = Interval(self.end, S.Infinity, not self.right_open, True)
         return Union(a, b)
+
+    @property
+    def _boundary(self):
+        return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
         if self.left_open:
@@ -878,6 +956,17 @@ class Union(Set, EvalfMixin):
             parity *= -1
         return measure
 
+    @property
+    def _boundary(self):
+        def boundary_of_set(i):
+            """ The boundary of set i minus interior of all other sets """
+            b = self.args[i].boundary
+            for j, a in enumerate(self.args):
+                if j != i:
+                    b = b - a.interior
+            return b
+        return Union(map(boundary_of_set, range(len(self.args))))
+
     def _eval_imageset(self, f):
         return Union(imageset(f, arg) for arg in self.args)
 
@@ -1112,6 +1201,10 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _eval_imageset(self, f):
         return self
 
+    @property
+    def _boundary(self):
+        return self
+
 class UniversalSet(with_metaclass(Singleton, Set)):
     """
     Represents the set of all things.
@@ -1158,6 +1251,10 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     def _union(self, other):
         return self
+
+    @property
+    def _boundary(self):
+        return EmptySet()
 
 
 class FiniteSet(Set, EvalfMixin):
@@ -1276,6 +1373,10 @@ class FiniteSet(Set, EvalfMixin):
         return Union(intervals, evaluate=False)
 
     @property
+    def _boundary(self):
+        return self
+
+    @property
     def _inf(self):
         from sympy.functions.elementary.miscellaneous import Min
         return Min(*self)
@@ -1317,6 +1418,19 @@ class FiniteSet(Set, EvalfMixin):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
+
+    def __ge__(self, other):
+        return self.subset(other)
+
+    def __gt__(self, other):
+        return self != other and self >= other
+
+    def __le__(self, other):
+        return other.subset(self)
+
+    def __lt__(self, other):
+        return self != other and other >= self
+
 
 def imageset(*args):
     """ Image of set under transformation ``f``

@@ -98,7 +98,8 @@ def _af_rmuln(*abc):
     if m == 2:
         a, b = a
         return [a[i] for i in b]
-    assert m != 0
+    if m == 0:
+        raise ValueError("String must not be empty")
     p0 = _af_rmuln(*a[:m//2])
     p1 = _af_rmuln(*a[m//2:])
     return [p0[i] for i in p1]
@@ -2373,7 +2374,9 @@ class Permutation(Basic):
         """
         Returns the next permutation in Trotter-Johnson order.
         If self is the last permutation it returns None.
-        See [4] section 2.4.
+        See [4] section 2.4. If it is desired to generate all such
+        permutations, they can be generated in order more quickly
+        with the ``generate_bell`` function.
 
         Examples
         ========
@@ -2391,7 +2394,7 @@ class Permutation(Basic):
         See Also
         ========
 
-        rank_trotterjohnson, unrank_trotterjohnson
+        rank_trotterjohnson, unrank_trotterjohnson, sympy.utilities.iterables.generate_bell
         """
         pi = self.array_form[:]
         n = len(pi)

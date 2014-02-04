@@ -113,7 +113,6 @@ def test_sympy__combinatorics__permutations__Permutation():
     assert _test_args(Permutation([0, 1, 2, 3]))
 
 
-@XFAIL
 def test_sympy__combinatorics__perm_groups__PermutationGroup():
     from sympy.combinatorics.permutations import Permutation
     from sympy.combinatorics.perm_groups import PermutationGroup
@@ -1861,7 +1860,6 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     assert _test_args(MatAdd(X, Y))
 
 
-@XFAIL
 def test_sympy__matrices__expressions__matexpr__Identity():
     from sympy.matrices.expressions.matexpr import Identity
     assert _test_args(Identity(3))
@@ -2012,9 +2010,9 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
 
-def test_sympy__physics__mechanics__essential__CoordinateSym():
-    from sympy.physics.mechanics import CoordinateSym
-    from sympy.physics.mechanics import ReferenceFrame
+def test_sympy__physics__vector__frame__CoordinateSym():
+    from sympy.physics.vector import CoordinateSym
+    from sympy.physics.vector import ReferenceFrame
     assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
 
 def test_sympy__physics__gaussopt__BeamParameter():

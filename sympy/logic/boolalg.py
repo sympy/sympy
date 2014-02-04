@@ -135,6 +135,20 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     def __hash__(self):
         return hash(True)
 
+    def as_set(self):
+        """
+        Rewrite logic operators and relationals in terms of real sets.
+
+        Examples
+        ========
+
+        >>> from sympy import true
+        >>> true.as_set()
+        UniversalSet()
+        """
+        return S.UniversalSet
+
+
 class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
     """
     SymPy version of False.
@@ -173,6 +187,20 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
     def __hash__(self):
         return hash(False)
+
+    def as_set(self):
+        """
+        Rewrite logic operators and relationals in terms of real sets.
+
+        Examples
+        ========
+
+        >>> from sympy import false
+        >>> false.as_set()
+        EmptySet()
+        """
+        from sympy.core.sets import EmptySet
+        return EmptySet()
 
 true = BooleanTrue()
 false = BooleanFalse()
@@ -229,6 +257,8 @@ class And(LatticeOp, BooleanFunction):
     zero = false
     identity = true
 
+    nargs = None
+
     @classmethod
     def _new_args_filter(cls, args):
         newargs = []
@@ -238,6 +268,26 @@ class And(LatticeOp, BooleanFunction):
             else:
                 newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
+
+    def as_set(self):
+        """
+        Rewrite logic operators and relationals in terms of real sets.
+
+        Examples
+        ========
+
+        >>> from sympy import And, Symbol
+        >>> x = Symbol('x', real=True)
+        >>> And(x<2, x>-2).as_set()
+        (-2, 2)
+        """
+        from sympy.core.sets import Intersection
+        if len(self.free_symbols) == 1:
+            return Intersection(*[arg.as_set() for arg in self.args])
+        else:
+            raise NotImplementedError("Sorry, And.as_set has not yet been"
+                                      " implemented for multivariate"
+                                      " expressions")
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -280,6 +330,26 @@ class Or(LatticeOp, BooleanFunction):
             else:
                 newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
+
+    def as_set(self):
+        """
+        Rewrite logic operators and relationals in terms of real sets.
+
+        Examples
+        ========
+
+        >>> from sympy import Or, Symbol
+        >>> x = Symbol('x', real=True)
+        >>> Or(x>2, x<-2).as_set()
+        (-oo, -2) U (2, oo)
+        """
+        from sympy.core.sets import Union
+        if len(self.free_symbols) == 1:
+            return Union(*[arg.as_set() for arg in self.args])
+        else:
+            raise NotImplementedError("Sorry, Or.as_set has not yet been"
+                                      " implemented for multivariate"
+                                      " expressions")
 
 
 class Not(BooleanFunction):
@@ -342,6 +412,25 @@ class Not(BooleanFunction):
             return And(*[Not(a) for a in arg.args])
         if arg.func is Not:
             return arg.args[0]
+
+    def as_set(self):
+        """
+        Rewrite logic operators and relationals in terms of real sets.
+
+        Examples
+        ========
+
+        >>> from sympy import Not, Symbol
+        >>> x = Symbol('x', real=True)
+        >>> Not(x>0).as_set()
+        (-oo, 0]
+        """
+        if len(self.free_symbols) == 1:
+            return self.args[0].as_set().complement
+        else:
+            raise NotImplementedError("Sorry, Not.as_set has not yet been"
+                                      " implemented for mutivariate"
+                                      " expressions")
 
 
 class Xor(BooleanFunction):
@@ -1179,17 +1268,20 @@ def _find_predicates(expr):
 
 def simplify_logic(expr, form=None, deep=True):
     """
-    This function simplifies a boolean function to its
-    simplified version in SOP or POS form. The return type is an
-    Or or And object in SymPy. The input can be a string or a boolean
-    expression.
-    form can be 'cnf' or 'dnf' or None. If its 'cnf' or 'dnf' the simplest
-    expression in the corresponding normal form is returned. If form is
-    None, the answer is returned according to the form with lesser number
-    of args (CNF by default)
-    The optional parameter deep indicates whether to
-    recursively simplify any non-boolean-functions contained within the
-    input.
+    This function simplifies a boolean function to its simplified version
+    in SOP or POS form. The return type is an Or or And object in SymPy.
+
+    Parameters
+    ==========
+
+    expr : string or boolean expression
+    form : string ('cnf' or 'dnf') or None (default).
+        If 'cnf' or 'dnf', the simplest expression in the corresponding
+        normal form is returned; if None, the answer is returned
+        according to the form with fewest args (in CNF by default).
+    deep : boolean (default True)
+        indicates whether to recursively simplify any
+        non-boolean functions contained within the input.
 
     Examples
     ========

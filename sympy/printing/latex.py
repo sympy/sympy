@@ -443,6 +443,14 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Indexed(self, expr):
+        tex = self._print(expr.base)+'_{%s}' % ','.join(
+            map(self._print, expr.indices))
+        return tex
+
+    def _print_IndexedBase(self, expr):
+        return self._print(expr.label)
+
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
         if requires_partial(expr):
@@ -547,7 +555,7 @@ class LatexPrinter(Printer):
         elif len(func) == 1 or func.startswith('\\'):
             name = func
         else:
-            name = r"\operatorname{%s}" % func.replace("_", r"\_")
+            name = r"\operatorname{%s}" % func
         return name
 
     def _print_Function(self, expr, exp=None):
@@ -753,6 +761,15 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
+
+    def _print_polar_lift(self, expr, exp=None):
+        func = r"\operatorname{polar\_lift}"
+        arg = r"{\left (%s \right )}" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}%s" % (func, exp, arg)
+        else:
+            return r"%s%s" % (func, arg)
 
     def _print_ExpBase(self, expr, exp=None):
         # TODO should exp_polar be printed differently?

@@ -11,8 +11,10 @@ Segment
 from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, Dummy
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
+from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
+    sqrt
 from sympy.core.logic import fuzzy_and
+from sympy.core.exprtools import factor_terms
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -60,8 +62,8 @@ class LinearEntity(GeometryEntity):
         p1 = Point(p1)
         p2 = Point(p2)
         if p1 == p2:
-            # Rolygon returns lower priority classes...should LinearEntity, too?
-            return p1  # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
+            # if it makes sense to return a Point, handle in subclass
+            raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -460,8 +462,20 @@ class LinearEntity(GeometryEntity):
         """
         if p in self:
             return p
-        pl = self.perpendicular_line(p)
-        p2 = Line(self).intersection(pl)[0]
+        a, b, c = self.coefficients
+        if a == 0:  # horizontal
+            p2 = Point(p.x, self.p1.y)
+        elif b == 0:  # vertical
+            p2 = Point(self.p1.x, p.y)
+        else:
+            # ax + by + c = 0
+            y = (-c - a*p.x)/b
+            m = self.slope
+            d2 = 1 + m**2
+            H = p.y - y
+            dx = m*H/d2
+            dy = m*dx
+            p2 = (p.x + dx, y + dy)
         return Segment(p, p2)
 
     @property
@@ -568,9 +582,8 @@ class LinearEntity(GeometryEntity):
         Line and then reforming the linear entity using these
         projections.
         A point P is projected onto a line L by finding the point
-        on L that is closest to P. This is done by creating a
-        perpendicular line through P and L and finding its
-        intersection with L.
+        on L that is closest to P. This point is the intersection
+        of L and the line perpendicular to L that passes through P.
 
         See Also
         ========
@@ -996,16 +1009,18 @@ class Line(LinearEntity):
             except NotImplementedError:
                 raise ValueError('The 2nd argument was not a valid Point. '
                 'If it was a slope, enter it with keyword "slope".')
-            if p1 == p2:
-                raise ValueError('A line requires two distinct points.')
         elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_bounded is False:
                 # when unbounded slope, don't change x
-                p2 = p1 + Point(0, 1)
+                dx = 0
+                dy = 1
             else:
                 # go over 1 up slope
-                p2 = p1 + Point(1, slope)
+                dx = 1
+                dy = slope
+            # XXX avoiding simplification by adding to coords directly
+            p2 = Point(p1.x + dx, p1.y + dy)
         else:
             raise ValueError('A 2nd Point or keyword "slope" must be used.')
 
@@ -1085,6 +1100,7 @@ class Line(LinearEntity):
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
+            o = o.func(*[simplify(i) for i in o.args])
             x, y = Dummy(), Dummy()
             eq = self.equation(x, y)
             if not eq.has(y):
@@ -1100,6 +1116,35 @@ class Line(LinearEntity):
             return False
         else:
             return o.p1 in self and o.p2 in self
+
+    def distance(self, o):
+        """
+        Finds the shortest distance between a line and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> s = Line(p1, p2)
+        >>> s.distance(Point(-1, 1))
+        sqrt(2)
+        """
+        if not isinstance(o, Point):
+            raise NotImplementedError
+        a, b, c = self.coefficients
+        if 0 in (a, b):
+            return self.perpendicular_segment(o).length
+        m = self.slope
+        x = o.x
+        y = m*x - c/b
+        return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
+
 
     def __eq__(self, other):
         """Return True if other is equal to this Line, or False otherwise."""
@@ -1293,6 +1338,40 @@ class Ray(LinearEntity):
         else:
             return S.NegativeInfinity
 
+
+    def distance(self, o):
+        """
+        Finds the shortest distance between the ray and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ray
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> s = Ray(p1, p2)
+        >>> s.distance(Point(-1, -1))
+        sqrt(2)
+        """
+        if not isinstance(o, Point):
+            raise NotImplementedError
+        s = self.perpendicular_segment(o)
+        if isinstance(s, Point):
+            if self.contains(s):
+                return S.Zero
+        else:
+            # since arg-order is arbitrary, find the non-o point
+            non_o = s.p1 if s.p2 != o else s.p2
+            if self.contains(non_o):
+                return self.distance(o)  # = s.length but simpler
+        # the following applies when neither of the above apply
+        return self.source.distance(o)
+
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ray. Gives
         values that will produce a ray that is 10 units long (where a unit is
@@ -1363,7 +1442,7 @@ class Ray(LinearEntity):
 
 
 class Segment(LinearEntity):
-    """An undirected line segment in space.
+    """A undirected line segment in space.
 
     Parameters
     ==========

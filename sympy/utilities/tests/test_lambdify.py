@@ -14,10 +14,15 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+<<<<<<< HEAD
 scipy = import_module('scipy')
 if not scipy:
     skip("scipy not installed")
 x, y, z = symbols('x,y,z')
+=======
+
+w, x, y, z = symbols('w,x,y,z')
+>>>>>>> 1827249b1aa28f575a4f3eb17989c4d7de775e09
 
 #================== Test different arguments =======================
 
@@ -408,3 +413,8 @@ def test_true_false():
     # We want exact is comparison here, not just ==
     assert lambdify([], true)() is True
     assert lambdify([], false)() is False
+
+def test_gh2790():
+    assert lambdify((x, (y, z)), x + y)(1, (2, 4)) == 3
+    assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
+    assert lambdify(x, x + 1, dummify=False)(1) == 2

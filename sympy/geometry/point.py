@@ -77,17 +77,18 @@ class Point(GeometryEntity):
 
     def __new__(cls, *args, **kwargs):
         if iterable(args[0]):
-            coords = Tuple(*args[0])
+            args = args[0]
         elif isinstance(args[0], Point):
-            coords = args[0].args
-        else:
-            coords = Tuple(*args)
+            args = args[0].args
+        coords = Tuple(*args)
 
         if len(coords) != 2:
             raise NotImplementedError(
                 "Only two dimensional points currently supported")
         if kwargs.get('evaluate', True):
-            coords = [simplify(nsimplify(c, rational=True)) for c in coords]
+            coords = coords.xreplace(dict(
+                [(f, simplify(nsimplify(f, rational=True)))
+                for f in coords.atoms(Float)]))
 
         return GeometryEntity.__new__(cls, *coords)
 
@@ -298,29 +299,6 @@ class Point(GeometryEntity):
             # Circle could not be created, because of collinearity of the
             # three points passed in, hence they are not concyclic.
             return False
-
-#       """
-#       # This code is from Maple
-#       def f(u):
-#           dd = u[0]**2 + u[1]**2 + 1
-#           u1 = 2*u[0] / dd
-#           u2 = 2*u[1] / dd
-#           u3 = (dd - 2) / dd
-#           return u1,u2,u3
-
-#       u1,u2,u3 = f(points[0])
-#       v1,v2,v3 = f(points[1])
-#       w1,w2,w3 = f(points[2])
-#       p = [v1 - u1, v2 - u2, v3 - u3]
-#       q = [w1 - u1, w2 - u2, w3 - u3]
-#       r = [p[1]*q[2] - p[2]*q[1], p[2]*q[0] - p[0]*q[2], p[0]*q[1] - p[1]*q[0]]
-#       for ind in xrange(3, len(points)):
-#           s1,s2,s3 = f(points[ind])
-#           test = simplify(r[0]*(s1-u1) + r[1]*(s2-u2) + r[2]*(s3-u3))
-#           if test != 0:
-#               return False
-#       return True
-#       """
 
     def distance(self, p):
         """The Euclidean distance from self to point p.

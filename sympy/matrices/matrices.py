@@ -199,15 +199,13 @@ class MatrixBase(object):
             if len(ncol) > 1:
                 raise ValueError("Got rows of variable lengths: %s" %
                     sorted(list(ncol)))
-            rows = len(in_mat)
+            cols = ncol.pop() if ncol else 0
+            rows = len(in_mat) if cols else 0
             if rows:
                 if not is_sequence(in_mat[0]):
                     cols = 1
                     flat_list = [cls._sympify(i) for i in in_mat]
                     return rows, cols, flat_list
-                cols = ncol.pop()
-            else:
-                cols = 0
             flat_list = []
             for j in range(rows):
                 for i in range(cols):
@@ -575,7 +573,7 @@ class MatrixBase(object):
             for i in range(A.shape[0]):
                 ret[i] = list(map(lambda j, k: j + k, alst[i], blst[i]))
             rv = classof(A, B)._new(ret)
-            if not A.rows:
+            if 0 in A.shape:
                 rv = rv.reshape(*A.shape)
             return rv
         raise TypeError('cannot add matrix and %s' % type(other))
@@ -1962,16 +1960,19 @@ class MatrixBase(object):
 
         A matrix is zero if every element is zero.  A matrix need not be square
         to be considered zero.  The empty matrix is zero by the principle of
-        vacuous truth.
+        vacuous truth.  For a matrix that may or may not be zero (e.g.
+        contains a symbol), this will be None
 
         Examples
         ========
 
         >>> from sympy import Matrix, zeros
+        >>> from sympy.abc import x
         >>> a = Matrix([[0, 0], [0, 0]])
         >>> b = zeros(3, 4)
         >>> c = Matrix([[0, 1], [0, 0]])
         >>> d = Matrix([])
+        >>> e = Matrix([[x, 0], [0, 0]])
         >>> a.is_zero
         True
         >>> b.is_zero
@@ -1980,8 +1981,13 @@ class MatrixBase(object):
         False
         >>> d.is_zero
         True
+        >>> e.is_zero
         """
-        return not list(self.values())
+        if any(i.is_zero == False for i in self):
+            return False
+        if any(i.is_zero == None for i in self):
+            return None
+        return True
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
@@ -2630,10 +2636,10 @@ class MatrixBase(object):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
+                        r.row_swap(pivot, k)
                         break
-                if k == r.rows - 1 and iszerofunc(r[k, i]):
+                else:
                     continue
-                r.row_swap(pivot, k)
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
             for j in xrange(r.rows):

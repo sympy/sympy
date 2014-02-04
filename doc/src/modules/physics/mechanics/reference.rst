@@ -10,9 +10,3 @@ References for Physics/Mechanics
         Schwab. "Linearized Dynamics Equations for the Balance and Steer of a Bicycle:
         a Benchmark and Review." Proceedings of the Royal Society A: Mathematical,
         Physical and Engineering Sciences 463.2084 (2007): 1955-982. Print.
-.. [WikiDyadics] "Dyadics." Wikipedia, the Free Encyclopedia. Web. 05 Aug.
-        2011. <http://en.wikipedia.org/wiki/Dyadics>.
-.. [WikiDyadicProducts] "Dyadic Product." Wikipedia, the Free Encyclopedia.
-        Web. 05 Aug. 2011. <http://en.wikipedia.org/wiki/Dyadic_product>.
-.. [Likins1973] Likins, Peter W. Elements of Engineering Mechanics.
-        McGraw-Hill, Inc. 1973. Print.

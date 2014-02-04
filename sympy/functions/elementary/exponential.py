@@ -26,7 +26,6 @@ from sympy.core.compatibility import xrange
 
 class ExpBase(Function):
 
-    nargs = 1
     unbranched = True
 
     def inverse(self, argindex=1):
@@ -459,8 +458,6 @@ class log(Function):
     exp
     """
 
-    nargs = (1, 2)
-
     def fdiff(self, argindex=1):
         """
         Returns the first derivative of the function.
@@ -744,7 +741,6 @@ class LambertW(Function):
     For more information, see:
     http://en.wikipedia.org/wiki/Lambert_W_function
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, x):

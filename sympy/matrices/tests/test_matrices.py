@@ -183,6 +183,8 @@ def test_creation():
     with raises(IndexError):
         Matrix((1, 2))[3] = 5
 
+    assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+
     a = Matrix([[x, 0], [0, 0]])
     m = a
     assert m.cols == m.rows
@@ -1980,6 +1982,13 @@ def test_is_zero():
     assert Matrix([[0, 0], [0, 0]]).is_zero
     assert zeros(3, 4).is_zero
     assert not eye(3).is_zero
+    assert Matrix([[x, 0], [0, 0]]).is_zero == None
+    assert SparseMatrix([[x, 0], [0, 0]]).is_zero == None
+    assert ImmutableMatrix([[x, 0], [0, 0]]).is_zero == None
+    assert ImmutableSparseMatrix([[x, 0], [0, 0]]).is_zero == None
+    assert Matrix([[x, 1], [0, 0]]).is_zero == False
+    a = Symbol('a', nonzero=True)
+    assert Matrix([[a, 0], [0, 0]]).is_zero == False
 
 
 def test_rotation_matrices():

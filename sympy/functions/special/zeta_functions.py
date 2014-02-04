@@ -112,8 +112,6 @@ class lerchphi(Function):
     -s*lerchphi(z, s + 1, a)
     """
 
-    nargs = 3
-
     def _eval_expand_func(self, **hints):
         from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
         z, s, a = self.args
@@ -268,8 +266,6 @@ class polylog(Function):
     z*lerchphi(z, s, 1)
     """
 
-    nargs = 2
-
     @classmethod
     def eval(cls, s, z):
         if z == 1:
@@ -414,8 +410,6 @@ class zeta(Function):
 
     """
 
-    nargs = (1, 2)
-
     @classmethod
     def eval(cls, z, a_=None):
         if a_ is None:
@@ -509,7 +503,6 @@ class dirichlet_eta(Function):
     (-2**(-s + 1) + 1)*zeta(s)
 
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, s):

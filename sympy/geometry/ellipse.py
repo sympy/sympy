@@ -10,16 +10,21 @@ from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, zoo
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
+from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.iterables import uniq
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
 from .util import _symbol, idiff
+from sympy.mpmath import findroot as nroot
+
 
 import random
 
@@ -641,6 +646,7 @@ class Ellipse(GeometryEntity):
         >>> p[1] = t # doctest: +SKIP
 
         """
+        p = Point(p)
         if self.encloses_point(p):
             return []
 
@@ -738,6 +744,89 @@ class Ellipse(GeometryEntity):
             return c == 1
         else:
             raise NotImplementedError("Unknown argument type")
+
+    def normal_lines(self, p, prec=None):
+        """Normal lines between `p` and the ellipse.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        normal_lines : list with 1, 2 or 4 Lines
+
+        Examples
+        ========
+
+        >>> from sympy import Line, Point, Ellipse
+        >>> e = Ellipse((0, 0), 2, 3)
+        >>> c = e.center
+        >>> e.normal_lines(c + Point(1, 0))
+        [Line(Point(0, 0), Point(1, 0))]
+        >>> e.normal_lines(c)
+        [Line(Point(0, 0), Point(0, 1)), Line(Point(0, 0), Point(1, 0))]
+
+        Off-axis points require the solution of a quartic equation. This
+        often leads to very large expressions that may be of little practical
+        use. An approximate solution of `prec` digits can be obtained by
+        passing in the desired value:
+
+        >>> e.normal_lines((3, 3), prec=2)
+        [Line(Point(-38/47, -85/31), Point(9/47, -21/17)),
+        Line(Point(19/13, -43/21), Point(32/13, -8/3))]
+
+        Whereas the above solution has an operation count of 12, the exact
+        solution has an operation count of 2020.
+        """
+        p = Point(p)
+
+        # XXX change True to something like self.angle == 0 if the arbitrarily
+        # rotated ellipse is introduced.
+        # https://github.com/sympy/sympy/issues/2815)
+        if True:
+            rv = []
+            if p.x == self.center.x:
+                rv.append(Line(self.center, slope=oo))
+            if p.y == self.center.y:
+                rv.append(Line(self.center, slope=0))
+            if rv:
+                # at these special orientations of p either 1 or 2 normals
+                # exist and we are done
+                return rv
+
+        # find the 4 normal points and construct lines through them with
+        # the corresponding slope
+        x, y = Dummy('x', real=True), Dummy('y', real=True)
+        eq = self.equation(x, y)
+        dydx = idiff(eq, y, x)
+        norm = -1/dydx
+        slope = Line(p, (x, y)).slope
+        seq = slope - norm
+        points = []
+        if prec is not None:
+            yis = solve(seq, y)[0]
+            xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
+            try:
+                iv = list(zip(*Poly(xeq).intervals()))[0]
+                # bisection is the safest here since other methods may miss root
+                xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson")) for i in iv]
+                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec) for i in xsol]
+            except PolynomialError:
+                pass
+        if not points:
+            points = [Point(*s) for s in solve((seq, eq), (x, y))]
+            # complicated expressions may not be decidably real so evaluate to
+            # check whether they are real or not
+            points = [i.n(prec) if prec is not None else i
+                for i in points if all(j.n(2).is_real for j in i.args)]
+        slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]
+        if prec is not None:
+            slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i for i in slopes]
+        return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
+
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the ellipse.
@@ -965,43 +1054,20 @@ class Ellipse(GeometryEntity):
 
         return [r for r in result if r in o]
 
-    def _do_circle_intersection(self, o):
-        """The intersection of an Ellipse and a Circle.
-
-        Private helper method for `intersection`.
-
-        """
-        variables = self.equation().atoms(C.Symbol)
-        if len(variables) > 2:
-            return None
-        if self.center == o.center:
-            a, b, r = o.major, o.minor, self.radius
-            x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-            y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
-            return list(set([Point(x, y), Point(x, -y), Point(-x, y),
-                             Point(-x, -y)]))
-        else:
-            x, y = variables
-            xx = solve(self.equation(), x)
-            intersect = []
-            for xi in xx:
-                yy = solve(o.equation().subs(x, xi), y)
-                for yi in yy:
-                    intersect.append(Point(xi, yi))
-            return list(set(intersect))
-
     def _do_ellipse_intersection(self, o):
-        """The intersection of two ellipses.
+        """The intersection of an ellipse with another ellipse or a circle.
 
         Private helper method for `intersection`.
 
         """
-        x = Dummy('x')
-        y = Dummy('y')
+
+        x = Dummy('x', real=True)
+        y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
         result = solve([seq, oeq], [x, y])
-        return [Point(*r) for r in result if im(r[0]).is_zero is not False and im(r[1]).is_zero is not False]
+        return [Point(*r) for r in list(uniq(result))]
+
 
     def intersection(self, o):
         """The intersection of this ellipse and another geometrical entity
@@ -1050,11 +1116,10 @@ class Ellipse(GeometryEntity):
         >>> e.intersection(Ellipse(Point(100500, 0), 4, 3))
         []
         >>> e.intersection(Ellipse(Point(0, 0), 3, 4))
-        [Point(-363/175, -48*sqrt(111)/175), Point(-363/175, 48*sqrt(111)/175),
-        Point(3, 0)]
+        [Point(-363/175, -48*sqrt(111)/175), Point(-363/175, 48*sqrt(111)/175), Point(3, 0)]
+
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
-        [Point(-17/5, -12/5), Point(-17/5, 12/5), Point(7/5, -12/5),
-        Point(7/5, 12/5)]
+        [Point(-17/5, -12/5), Point(-17/5, 12/5), Point(7/5, -12/5), Point(7/5, 12/5)]
         """
         if isinstance(o, Point):
             if o in self:
@@ -1068,7 +1133,7 @@ class Ellipse(GeometryEntity):
             return self._do_line_intersection(o)
 
         elif isinstance(o, Circle):
-            return self._do_circle_intersection(o)
+            return self._do_ellipse_intersection(o)
 
         elif isinstance(o, Ellipse):
             if o == self:

@@ -459,3 +459,8 @@ def test_issue_1010():
 
 def test_issue_3583():
     assert gruntz(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)
+
+
+def test_issue_3997():
+    from sympy.functions import sign
+    assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))

@@ -96,7 +96,53 @@ everything is right before pushing.
 
 # Uploading
 
-TODO
+Before you release, you need to push the tag up, as described above.
+
+Release candidates should only be uploaded to GitHub only.
+
+    fab vagrant GitHub_release
+
+This will create the release on GitHub for the tag, and upload the files to
+it.  Do not upload release candidates to PyPI, as `pip` and `easy_install`
+will pick them up if you do.
+
+This will prompt you for a username and password the first time you call it.
+After that, it will prompt you to generate a token file.  If you don't save
+the token to a file, you will need to pass it in as an argument. Releasing is
+only supported via OAuth, so using a token is required.
+
+You (obviously) need push access to create a GitHub release.
+
+If you want to test this before doing it, use
+
+    fab vagrant GitHub_release:draft=True
+
+This will make the release not visible until you go to the web interface and
+publish it.  You can also set the `user` and `repo` flags to test against a
+different GitHub repo.
+
+For final releases, you should upload to both GitHub and PyPI. The command
+
+    fab vagrant upload
+
+will do both of these.  You will need admin access to the SymPy PyPI project.
+
+Note that if either of these commands fails for some reason, you will very
+likely need to go into the web interface and clean some things up before you
+can upload again.
+
+# Updating websites
+
+You should now update the websites. The command
+
+    fab vagrant update_websites
+
+will update docs.sympy.org and sympy.org.  You will need to have local clones
+of these repos, and push access to them (obviously).  **Note, this command
+will commit and push the changes automatically.**
+
+The other website that needs to be updated is SymPy Live. You should make this
+as a pull request to the Live repo.
 
 # Other
 

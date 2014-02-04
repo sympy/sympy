@@ -13,7 +13,8 @@ class TypeA(Standard_Cartan):
     """
 
     def __new__(cls, n):
-        assert n >= 1
+        if n < 1:
+            raise ValueError("n can not be less than 1")
         return Standard_Cartan.__new__(cls, "A", n)
 
 

@@ -936,6 +936,11 @@ def test_Pow_is_real():
     assert (i**o).is_real is False
     assert (i**k).is_real is None
 
+    x = Symbol("x", nonnegative=True)
+    y = Symbol("y", nonnegative=True)
+    assert im(x**y).expand(complex=True) is S.Zero
+    assert (x**y).is_real
+
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -1113,6 +1118,14 @@ def test_Mul_is_imaginary_real():
 
     assert (r*i*ii).is_imaginary is False
     assert (r*i*ii).is_real is True
+
+    # Github's issue 2775:
+    nr = Symbol('nr', real=False)
+    a = Symbol('a', real=True, nonzero=True)
+    b = Symbol('b', real=True)
+    assert (i*nr).is_real is None
+    assert (a*nr).is_real is False
+    assert (b*nr).is_real is None
 
 
 def test_Add_is_comparable():

@@ -213,7 +213,7 @@ def test_zero():
     assert (0**(2 - x)).as_base_exp() == (0, 2 - x)
     assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
-    assert 0**(-2*x*y) == S.Infinity**(x*y)
+    assert 0**(-2*x*y) == S.ComplexInfinity**(x*y)
     assert 0**I == nan
     i = Symbol('i', imaginary=True)
     assert 0**i == nan

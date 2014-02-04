@@ -45,9 +45,11 @@ access any SymPy module, or use this contens:
    solvers/pde.rst
    solvers/solvers.rst
    solvers/diophantine.rst
+   solvers/inequalities.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst
+   calculus/index.rst
    physics/index.rst
    categories.rst
    diffgeom.rst
