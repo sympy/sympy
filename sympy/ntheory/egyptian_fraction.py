@@ -3,12 +3,13 @@ from __future__ import print_function, division
 from sympy import Rational
 from fractions import gcd
 
-def egypt_fraction(rat, algorithm="Greedy"):
+
+def egyptian_fraction(rat, algorithm="Greedy"):
     """
     Return the denominators of an Egtyptian fraction expansion of
     the said rational.
 
-    The egypt_fraction function takes rat and algorithm as input.
+    The egyptian_fraction function takes rat and algorithm as input.
     'rat' is of the form Rational(n, d) where n is numerator and
     d is denominator. 'algorithm' denotes the algorithm to be
     used. By default, the 'algorithm' field can be left empty and
@@ -37,14 +38,14 @@ def egypt_fraction(rat, algorithm="Greedy"):
     ========
 
     >>> from sympy import Rational
-    >>> from sympy.ntheory.egyptian_fraction import egypt_fraction
-    >>> egypt_fraction(Rational(3,7))
+    >>> from sympy.ntheory.egyptian_fraction import egyptian_fraction
+    >>> egyptian_fraction(Rational(3,7))
     [3, 11, 231]
-    >>> egypt_fraction(Rational(3, 7), "Greedy")
+    >>> egyptian_fraction(Rational(3, 7), "Greedy")
     [3, 11, 231]
-    >>> egypt_fraction(Rational(3, 7), "Graham Jewett")
+    >>> egyptian_fraction(Rational(3, 7), "Graham Jewett")
     [7, 8, 9, 56, 57, 72, 3192]
-    >>> egypt_fraction(Rational(3, 7), "Takenouchi")
+    >>> egyptian_fraction(Rational(3, 7), "Takenouchi")
     [4, 7, 28]
 
     References
