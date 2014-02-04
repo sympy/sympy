@@ -733,15 +733,13 @@ def test_search():
 def test_egyptian_fraction():
     n, d = random_complex_number(a=0, c=1, b=0, d=0, rational=True).as_numer_denom()
     assert Rational(n, d) == Add(*[Rational(1, i) for i in egyptian_fraction(Rational(n, d), "Greedy")])
-    assert Rational(4, 17) == Add(*[Rational(1, i) for i in egyptian_fraction(Rational(4, 17))])
+
     assert egyptian_fraction(Rational(4, 17)) == [5, 29, 1233, 3039345]
-    assert Rational(7, 13) == Add(*[Rational(1, i) for i in egyptian_fraction(Rational(7, 13), "Greedy")])
     assert egyptian_fraction(Rational(7, 13), "Greedy") == [2, 26]
-    assert Rational(23, 101) == Add(*[Rational(1, i) for i in egyptian_fraction(Rational(23, 101), "Greedy")])
-    assert egyptian_fraction(Rational(23, 101), "Greedy") == [5, 37, 1438, 2985448, 40108045937720]
-    assert Rational(18, 23) == Add(*[Rational(1, i) for i in egyptian_fraction(Rational(18, 23), "Takenouchi")])
-    assert egyptian_fraction(Rational(18, 23), "Takenouchi") == [2, 6, 12, 35, 276, 2415]
-    assert Rational(5, 6) == Add(*[Rational(1, i) for i in egyptian_fraction(Rational(5, 6), "Graham Jewett")])
+    assert egyptian_fraction(Rational(23, 101), "Greedy") == \
+        [5, 37, 1438, 2985448, 40108045937720]
+    assert egyptian_fraction(Rational(18, 23), "Takenouchi") == \
+        [2, 6, 12, 35, 276, 2415]
     assert egyptian_fraction(Rational(5, 6), "Graham Jewett") == [6, 7, 8, 9, \
         10, 42, 43, 44, 45, 56, 57, 58, 72, 73, 90, 1806, 1807, 1808, \
         1892, 1893, 1980, 3192, 3193, 3306, 5256, 3263442, 3263443, 3267056, \
