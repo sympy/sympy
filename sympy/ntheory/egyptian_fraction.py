@@ -39,7 +39,7 @@ def egyptian_fraction(rat, algorithm="Greedy"):
 
     >>> from sympy import Rational
     >>> from sympy.ntheory.egyptian_fraction import egyptian_fraction
-    >>> egyptian_fraction(Rational(3,7))
+    >>> egyptian_fraction(Rational(3, 7))
     [3, 11, 231]
     >>> egyptian_fraction(Rational(3, 7), "Greedy")
     [3, 11, 231]
