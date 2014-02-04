@@ -71,7 +71,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     elif algorithm == "Takenouchi":
         return egypt_takenouchi(x, y)
     else:
-        raise ValueError("Entered Invalid Algorithm")
+        raise ValueError("Entered invalid algorithm")
 
 
 def egypt_greedy(x, y):
