@@ -4,35 +4,18 @@ from sympy import Rational
 from fractions import gcd
 
 
-def egyptian_fraction(rat, algorithm="Greedy"):
+def egyptian_fraction(r, algorithm="Greedy"):
     """
-    Return the denominators of an Egtyptian fraction expansion of
-    the said rational.
+    Return the list of denominators of an Egyptian fraction
+    expansion [1] of the said rational `r`.
 
-    The egyptian_fraction function takes rat and algorithm as input.
-    'rat' is of the form Rational(n, d) where n is numerator and
-    d is denominator. 'algorithm' denotes the algorithm to be
-    used. By default, the 'algorithm' field can be left empty and
-    the greedy algorithm will be used. 'algorithm' supports
-    values : "Greedy", "Graham Jewett", and "Takenouchi".
+    Parameters
+    ==========
 
-    Currently the following algorithms are supported :
-
-    1) Greedy Algorithm :
-    Greedy algorithm for Egyptian fraction expansion
-    also called the Fibonacci-Sylvester algorithm.
-    At each step, extract the largest unit fraction less
-    than the target and replace the target with the remainder.
-
-    2) Graham Jewett Algorithm :
-    The algorithm suggested by the result of Graham and Jewett.
-    Note that this has a tendency to blow up: the length of the
-    resulting expansion is always 2**(x/gcd(x, y)) - 1 .
-
-    3) Takenouchi Algorithm :
-    The algorithm suggested by Takenouchi (1921).
-    Differs from the Graham-Jewett algorithm only in the handling
-    of duplicates.
+    r : Rational
+        a rational number
+    algorithm : { "Greedy", "Graham Jewett", "Takenouchi"}, optional
+        Denotes the algorithm to be used (the default is "Greedy").
 
     Examples
     ========
@@ -41,22 +24,45 @@ def egyptian_fraction(rat, algorithm="Greedy"):
     >>> from sympy.ntheory.egyptian_fraction import egyptian_fraction
     >>> egyptian_fraction(Rational(3, 7))
     [3, 11, 231]
-    >>> egyptian_fraction(Rational(3, 7), "Greedy")
-    [3, 11, 231]
     >>> egyptian_fraction(Rational(3, 7), "Graham Jewett")
     [7, 8, 9, 56, 57, 72, 3192]
     >>> egyptian_fraction(Rational(3, 7), "Takenouchi")
     [4, 7, 28]
 
-    References
-    =========
+    See Also
+    ========
 
-    .. [1] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
-    .. [2] http://en.wikipedia.org/wiki/Egyptian_fraction#Modern_number_theory
+    sympy.core.numbers.Rational
+
+    Notes
+    =====
+
+    Currently the following algorithms are supported:
+
+    1) Greedy Algorithm
+        Also called the Fibonacci-Sylvester algorithm [2].
+        At each step, extract the largest unit fraction less
+        than the target and replace the target with the remainder.
+
+    2) Graham Jewett Algorithm
+        The algorithm suggested by the result of Graham and Jewett.
+        Note that this has a tendency to blow up: the length of the
+        resulting expansion is always 2**(x/gcd(x, y)) - 1 .  See [3].
+
+    3) Takenouchi Algorithm
+        The algorithm suggested by Takenouchi (1921).
+        Differs from the Graham-Jewett algorithm only in the handling
+        of duplicates.  See [3].
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Egyptian_fraction
+    .. [2] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
     .. [3] http://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
 
     """
-    x, y = rat.as_numer_denom()
+    x, y = r.as_numer_denom()
 
     if algorithm == "Greedy":
         return egypt_greedy(x, y)
