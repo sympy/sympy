@@ -731,8 +731,8 @@ def test_search():
 
 
 def test_egyptian_fraction():
-    n, d = random_complex_number(a=0, c=1, b=0, d=0, rational=True).as_numer_denom()
-    assert Rational(n, d) == Add(*[Rational(1, i) for i in egyptian_fraction(Rational(n, d), "Greedy")])
+    r = random_complex_number(a=0, c=1, b=0, d=0, rational=True)
+    assert r == Add(*[Rational(1, i) for i in egyptian_fraction(r)])
 
     assert egyptian_fraction(Rational(4, 17)) == [5, 29, 1233, 3039345]
     assert egyptian_fraction(Rational(7, 13), "Greedy") == [2, 26]
