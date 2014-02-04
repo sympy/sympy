@@ -160,3 +160,10 @@ def test_issue_1869():
 def test_issue_1893():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)
+
+
+@XFAIL
+def test_issue_4064():
+    # integral should be evaluated to (-1 + Sign[2 - x]) (Sin[1] - Sin[2]) +
+    # ((-1 + Sign[1 - x]) (1 + Sign[2 - x]) (Sin[1] - Sin[x]))/2
+    assert not integrate((sign(x - 1) - sign(x - 2)) * cos(x), x).has(Integral)

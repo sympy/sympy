@@ -221,7 +221,7 @@ class sign(Function):
     is_bounded = True
     is_complex = True
 
-    def doit(self):
+    def doit(self, **hints):
         if self.args[0].is_nonzero:
             return self.args[0] / Abs(self.args[0])
         return self
