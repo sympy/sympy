@@ -1077,7 +1077,9 @@ class Rational(Number):
                     pass  # error will raise below
 
                 if isinstance(p, (float, Float)):
-                    return Rational(*_as_integer_ratio(p))
+		    #Error Corrected by typecasting float to str
+		    return Rational(str(p))
+                    #return Rational(*_as_integer_ratio(p))
 
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
