@@ -1,0 +1,207 @@
+from fractions import gcd
+
+_continued_fraction_expantion = []
+
+
+def continued_fraction(numerator, denominator, delta):
+    """
+	Return continued fraction expantion of rational number.
+
+	Continued fraction expantion of a rational number is an expression 
+	obtained through an iterative process of representing a number as 
+	the sum of its integer part and the reciprocal of another number, 
+	then writing this other number as the sum of its integer part and 
+	another reciprocal, and so on.
+
+	Here the three parameters are, 
+	* numerator: the rational part of the number's numerator
+	* delta: the irrational part(discriminator) of the number's numerator
+	* denominator: the denominator of the number
+
+	ex: the golden ratio is (1+sqrt(5))/2
+	numerator = 1
+	delta = 5
+	denominator = 2
+
+	The denominator of a rational number cannot be zero. So such 
+	input will result an error.
+
+	>>> continued_fraction(1,0,0)
+	'Error: The denominator is zero.'
+
+	If the discriminator is negative the number is a complex number.
+	Complex numbers does not have continued fraction expansions.
+
+	>>> continued_fraction(1,2,-1)
+	'Error: The number is not real, so it does not have continued fraction 
+	expansion.'
+
+	If the discriminator is zero then the number will be a rational number.
+
+	>>> continued_fraction(4,3,0)
+	[1, 3]
+
+	Golden ratio has the simplest continued fraction expantion,
+
+	>>> continued_fraction(1,2,5)
+	[[1], [1]]
+
+	Note: if the length of recurrsive part of the continued part of expantion 
+	exceeds 100000 this module will truncate the convergents.
+
+    See Also
+    ========
+
+    continued_fraction_rational_number
+    sympy.ntheory.continued_fraction.continued_fraction_rational_number : function
+    which calculate the continued fraction of a rational number.
+
+    References
+    ==========
+
+    - A. J. van der Poorten, "NOTES ON CONTINUED FRACTIONS AND RECURRENCE SEQUENCES" 
+    in Number Theory and Cryptography. New York, USA: Cambridge university press, 2011, 
+    ch. 06, pp. 86-96. 
+    - http://en.wikipedia.org/wiki/Continued_fraction
+    - http://www.numbertheory.org/ntw/N4.html#continued_fractions
+    - http://www.numbertheory.org/pdfs/CFquadratic.pdf
+    - http://maths.mq.edu.au/~alf/www-centre/alfpapers/a117.pdf
+    """
+
+
+    global _continued_fraction_expantion
+    _continued_fraction_expantion[:] = []
+    
+    #if the denominator is zero the expression cannot be a legal fraction
+    if denominator == 0:
+        return "Error: The denominator is zero."
+
+    #if the discriminator is negative the number is a complex number
+    if delta < 0:
+        return "Error: The number is not real, so it does not have continued fraction expansion."
+
+    #if the discriminator is zero the number is a rational number
+    if delta == 0:
+        continued_fraction_rational_number(numerator, denominator)
+        return _continued_fraction_expantion
+
+    if (delta-(numerator*numerator))%denominator != 0:
+        delta = delta*denominator*denominator
+        numerator = numerator*abs(denominator)
+        denominator = denominator*abs(denominator)
+    
+    sqrtDelta = 0|1<<(delta.bit_length()+1)/2
+    sqrtDeltaNext = ((delta/sqrtDelta)+sqrtDelta)>>1
+
+    while sqrtDelta > sqrtDeltaNext:
+        sqrtDelta = sqrtDeltaNext
+        sqrtDeltaNext = ((delta/sqrtDelta)+sqrtDelta)>>1
+
+    if sqrtDelta*sqrtDelta == delta:
+        continued_fraction_rational_number(numerator+sqrtDelta, denominator)
+        return _continued_fraction_expantion
+
+    biP = denominator
+
+    if biP > 0:
+        biK = sqrtDelta
+    else:
+        biK = sqrtDelta+1
+
+    biK = biK+numerator
+
+    if biK > 0:
+        if denominator > 0:
+            biM = biK/denominator
+        else:
+            biM = ((denominator+1)-biK)/(denominator*-1)
+    else:
+        if denominator > 0:
+            biM = ((biK+1)-denominator)/denominator
+        else:
+            biM = (biK*-1)/(denominator*-1)
+    #appends the integer part of the continued fraction expansion to the result list
+    _continued_fraction_expantion.append(biM)
+    biM = ((biM*denominator)-numerator)
+    cont = -1
+    K = -1
+    P = -1
+    L = -1
+    M = -1
+
+    while (cont < 0 or K != P or L !=  M) :
+
+        if cont < 0 and biP > 0 and biP <= sqrtDelta+biM and biM > 0 and biM <= sqrtDelta:
+            K = P = biP
+            L = M = biM
+            cont = 0
+
+        #both numerator and denominator are positive
+        if cont >= 0:
+            P = (delta-(M*M))/P
+            Z = (sqrtDelta+M)/P
+            M = (Z*P)-M
+            cont += 1
+        else:
+            biP = (delta-(biM*biM))/biP
+            if biP>0:
+                Z = (sqrtDelta+biM)/biP
+            else:
+                Z = ((sqrtDelta+1)+biM)/biP
+            biM = (Z*biP)-biM
+
+
+        #show convergent
+        _continued_fraction_expantion.append(Z)
+
+        #too many convergent
+        if cont > 100000: 
+            return "truncate after 100000 convergents"
+    if cont >= 1:
+        non_recurring_part = _continued_fraction_expantion[:len(_continued_fraction_expantion)-cont]
+        recurring_part = _continued_fraction_expantion[len(_continued_fraction_expantion)-cont:]
+        return [non_recurring_part,recurring_part]
+    return _continued_fraction_expantion
+
+
+def continued_fraction_rational_number(numerator, denominator):
+    """
+    Return the continued fraction expantion of a rational number.
+
+    >>> from sympy.ntheory.continued_fraction import continued_fraction_rational_number
+    >>> continued_fraction_rational_number(3,4)
+    [0, 1, 3]
+    >>> continued_fraction_rational_number(4,3)
+    [1, 3]
+    >>> continued_fraction_rational_number(27,32)
+    [0, 1, 5, 2, 2]
+
+    """
+
+    global _continued_fraction_expantion
+
+    _continued_fraction_expantion[:] = []
+    
+    GcdAll = gcd(numerator, denominator)
+    numerator = numerator/GcdAll
+    denominator = denominator/GcdAll
+
+    if denominator<0:
+        numerator = numerator*(-1)
+        denominator = denominator*(-1)
+
+    #appends the integer part of the continued fraction expansion to the result list
+    _continued_fraction_expantion.append((numerator-(numerator%denominator))/denominator)
+    numerator = numerator%denominator
+
+    while numerator > 0:
+
+        if denominator > 0:
+            _continued_fraction_expantion.append(denominator/numerator)
+
+        temp = denominator%numerator
+        denominator = numerator
+        numerator = temp
+
+    return _continued_fraction_expantion
+			

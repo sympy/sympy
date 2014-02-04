@@ -19,6 +19,7 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy.ntheory.continued_fraction import continued_fraction
 
 from sympy.polys.domains import ZZ
 
@@ -727,3 +728,18 @@ def test_search():
     assert 1 not in sieve
     assert 2**1000 not in sieve
     raises(ValueError, lambda: sieve.search(1))
+
+
+def test_continued_fraction():
+    assert continued_fraction(4,3,0) == [1, 3]
+    assert continued_fraction(0,3,5) == [[0, 1], [2, 1, 12, 1, 2, 2]]
+    assert continued_fraction(1,1,0) == [1]
+    assert continued_fraction(3,4,0) == [0, 1, 3]
+    assert continued_fraction(4,5,0) == [0, 1, 4]
+    assert continued_fraction(5,6,0) == [0, 1, 5]
+    assert continued_fraction(11,13,0) == [0, 1, 5, 2]
+    assert continued_fraction(16,19,0) == [0, 1, 5, 3]
+    assert continued_fraction(27,32,0) == [0, 1, 5, 2, 2]
+    assert continued_fraction(1,2,5) == [[1], [1]]
+    assert continued_fraction(0,1,2) == [[1], [2]]
+    assert continued_fraction(3796,1387,0) == [2, 1, 2, 1, 4]
