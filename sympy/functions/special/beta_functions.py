@@ -12,6 +12,7 @@ from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
 from sympy.core.compatibility import xrange
+from sympy.functions.special.gamma_functions import gamma
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################

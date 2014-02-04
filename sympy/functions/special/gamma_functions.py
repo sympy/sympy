@@ -895,35 +895,3 @@ def trigamma(x):
     """
     return polygamma(1, x)
 
-
-###############################################################################
-############################### BETA FUNCTIONS ################################
-###############################################################################
-
-def beta(x, y):
-    r"""
-    Euler Beta function:
-
-    .. math::
-        \mathrm{B}(x, y) := \frac{\Gamma(x) \Gamma(y)}{\Gamma(x+y)}
-
-    See Also
-    ========
-
-    gamma: Gamma function.
-    lowergamma: Lower incomplete gamma function.
-    uppergamma: Upper incomplete gamma function.
-    polygamma: Polygamma function.
-    loggamma: Log Gamma function.
-    digamma: Digamma function.
-    trigamma: Trigamma function.
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Beta_function
-    .. [2] http://dlmf.nist.gov/5.12
-    .. [3] http://mathworld.wolfram.com/BetaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Beta/
-    """
-    return gamma(x)*gamma(y) / gamma(x + y)
