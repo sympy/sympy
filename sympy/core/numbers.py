@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import decimal
+import fractions
 import math
 import re as regex
 from collections import defaultdict
@@ -69,18 +70,6 @@ def seterr(divide=False):
     if _errdict["divide"] != divide:
         clear_cache()
         _errdict["divide"] = divide
-
-
-def _as_integer_ratio(p):
-    """compatibility implementation for python < 2.6"""
-    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
-    p = [1, -1][neg_pow % 2]*man
-    if expt < 0:
-        q = 2**-expt
-    else:
-        q = 1
-        p *= 2**expt
-    return int(p), int(q)
 
 
 def _decimal_to_Rational_prec(dec):
@@ -1077,7 +1066,7 @@ class Rational(Number):
                     pass  # error will raise below
 
                 if isinstance(p, (float, Float)):
-                    return Rational(*_as_integer_ratio(p))
+                    return Rational(*float(p).as_integer_ratio())
 
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
@@ -3104,16 +3093,12 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
 
 I = S.ImaginaryUnit
 
-try:
-    # fractions is only available for python 2.6+
-    import fractions
 
-    def sympify_fractions(f):
-        return Rational(f.numerator, f.denominator)
+def sympify_fractions(f):
+    return Rational(f.numerator, f.denominator)
 
-    converter[fractions.Fraction] = sympify_fractions
-except ImportError:
-    pass
+converter[fractions.Fraction] = sympify_fractions
+
 
 try:
     if HAS_GMPY == 2:
