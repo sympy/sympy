@@ -583,21 +583,26 @@ class Ellipse(GeometryEntity):
         False
 
         """
-        p = Point(p, real=True)
-        if p in self:
-            return False
 
-        if len(self.foci) == 2:
-            # if the combined distance from the foci to p (h1 + h2) is less
-            # than the combined distance from the foci to the minor axis
-            # (which is the same as the major axis length) then p is inside
-            # the ellipse
-            h1, h2 = [f.distance(p) for f in self.foci]
-            test = 2*self.major - (h1 + h2)
+        if isinstance(p, Point):
+            if p.x.is_imaginary or p.y.is_imaginary:
+                raise ValueError('Enter a Real Point.')
+            else:
+                if p in self:
+                    return False
+
+                if len(self.foci) == 2:
+                    # if the combined distance from the foci to p (h1 + h2) is less
+                    # than the combined distance from the foci to the minor axis
+                    # (which is the same as the major axis length) then p is inside
+                    # the ellipse
+                    h1, h2 = [f.distance(p) for f in self.foci]
+                    test = 2*self.major - (h1 + h2)
+                else:
+                    test = self.radius - self.center.distance(p)
         else:
-            test = self.radius - self.center.distance(p)
+            raise ValueError('Provide a Point as an argument.')
 
-        return fuzzy_bool(test.is_positive)
 
     @doctest_depends_on(modules=('pyglet',))
     def tangent_lines(self, p):
