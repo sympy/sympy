@@ -1,7 +1,5 @@
 from fractions import gcd
 
-_continued_fraction_expansion = []
-
 
 def continued_fraction(numerator, denominator, delta):
     """
@@ -69,8 +67,7 @@ def continued_fraction(numerator, denominator, delta):
         - http://maths.mq.edu.au/~alf/www-centre/alfpapers/a117.pdf
     """
 
-    global _continued_fraction_expansion
-    _continued_fraction_expansion[:] = []
+    _continued_fraction_expansion = []
 
     #if the denominator is zero the expression cannot be a legal fraction
     if denominator == 0:
@@ -83,7 +80,8 @@ def continued_fraction(numerator, denominator, delta):
 
     #if the discriminator is zero the number is a rational number
     if delta == 0:
-        continued_fraction_rational_number(numerator, denominator)
+        _continued_fraction_expansion = continued_fraction_rational_number(
+            numerator, denominator)
         return _continued_fraction_expansion
 
     if (delta-(numerator*numerator)) % denominator != 0:
@@ -188,9 +186,7 @@ def continued_fraction_rational_number(numerator, denominator):
 
     """
 
-    global _continued_fraction_expansion
-
-    _continued_fraction_expansion[:] = []
+    _continued_fraction_expansion = []
 
     GcdAll = gcd(numerator, denominator)
     numerator = numerator/GcdAll
