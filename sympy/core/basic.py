@@ -962,6 +962,7 @@ class Basic(with_metaclass(ManagedProperties)):
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
+            kwargs['hack2'] = True
             for old, new in sequence:
                 d = C.Dummy(commutative=new.is_commutative)
                 rv = rv._subs(old, d, **kwargs)
