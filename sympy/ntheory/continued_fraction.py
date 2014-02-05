@@ -3,7 +3,7 @@ from fractions import gcd
 
 def continued_fraction(numerator, denominator, delta):
     """
-        Return continued fraction expansion of rational number.
+        Return continued fraction expansion of surd.
 
         Continued fraction expansion of a rational number is an expression
         obtained through an iterative process of representing a number as
@@ -172,44 +172,19 @@ def continued_fraction(numerator, denominator, delta):
 
 
 def continued_fraction_rational_number(numerator, denominator):
+    """This applies the continued fraction expansion to two numbers
+    numerator/denominator
+
+    >>> continued_fraction(3, 8)
+    [0, 2, 1, 2]
     """
-    Return the continued fraction expansion of a rational number.
+    numerator = int(numerator)
+    denominator = int(denominator)
+    temp = numerator//denominator
+    if temp*denominator == numerator:
+        return [temp, ]
 
-    >>> from sympy.ntheory.continued_fraction import
-    continued_fraction_rational_number
-    >>> continued_fraction_rational_number(3,4)
-    [0, 1, 3]
-    >>> continued_fraction_rational_number(4,3)
-    [1, 3]
-    >>> continued_fraction_rational_number(27,32)
-    [0, 1, 5, 2, 2]
-
-    """
-
-    _continued_fraction_expansion = []
-
-    GcdAll = gcd(numerator, denominator)
-    numerator = numerator/GcdAll
-    denominator = denominator/GcdAll
-
-    if denominator < 0:
-        numerator = numerator*(-1)
-        denominator = denominator*(-1)
-
-    #appends the integer part of the continued fraction expansion
-    #to the result list
-    _continued_fraction_expansion.append(
-        (numerator-(numerator % denominator))/denominator)
-
-    numerator = numerator % denominator
-
-    while numerator > 0:
-
-        if denominator > 0:
-            _continued_fraction_expansion.append(denominator/numerator)
-
-        temp = denominator % numerator
-        denominator = numerator
-        numerator = temp
-
+    _continued_fraction_expansion = continued_fraction_rational_number(
+        denominator, numerator - temp*denominator)
+    _continued_fraction_expansion.insert(0, temp)
     return _continued_fraction_expansion
