@@ -1059,7 +1059,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if not hasattr(arg, '_eval_subs'):
                     continue
                 arg = arg._subs(old, new, **hints)
-                if arg != args[i]:
+                if not _aresame(arg, args[i]):
                     hit = True
                     args[i] = arg
             if hit:

@@ -599,6 +599,12 @@ def test_mul2():
     """
     assert (2*(x + 1)).is_Mul
 
+
 def test_noncommutative_subs():
     x,y = symbols('x,y', commutative=False)
     assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)
+
+
+def test_gh_issue_2877():
+    f = Float(2.0)
+    assert (x + f).subs({f: 2}) == x + 2
