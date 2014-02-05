@@ -1101,7 +1101,7 @@ class Line(LinearEntity):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
             if o.x.is_imaginary or o.y.is_imaginary:
-                return False
+                raise ValueError('Enter a Real Point.')
             else:
                 o = o.func(*[simplify(i) for i in o.args])
                 x, y = Dummy(), Dummy()

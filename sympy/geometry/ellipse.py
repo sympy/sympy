@@ -583,7 +583,7 @@ class Ellipse(GeometryEntity):
         False
 
         """
-        p = Point(p)
+        p = Point(p, real=True)
         if p in self:
             return False
 
