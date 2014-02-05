@@ -600,7 +600,7 @@ class Ellipse(GeometryEntity):
                     test = 2*self.major - (h1 + h2)
                 else:
                     test = self.radius - self.center.distance(p)
-                return fuzzy_bool(test.is_positive)
+            return fuzzy_bool(test.is_positive)
         else:
             raise ValueError('Provide a Point as an argument.')
 
