@@ -9,11 +9,46 @@ from sympy.functions.special.gamma_functions import gamma, digamma
 
 class beta(Function):
     """Beta function or Euler's first integral is closely associated with gamma function.
+    The Beta function is a function of two variables that is often found in probability theory 
+    and mathematical statistics (for example, as a normalizing constant in the 
+    probability density functions of the F distribution and of the Student's t distribution).
+
+    Examples
+    ========
+
+    >>> from sympy import S, I, pi, oo, gamma
+    >>> from sympy.abc import x,y
+
+    The Beta function obeys the mirror symmetry:
+    >>> from sympy import conjugate
+    >>> conjugate(beta(x,y))
+    beta(conjugate(x), conjugate(y))
+
+    Differentiation with respect to both x and y is supported:
+
+    >>> from sympy import diff
+    >>> diff(beta(x,y), x)
+    (polygamma(0, x) - polygamma(0, x + y))*beta(x, y)
+
+    >>> from sympy import diff
+    >>> diff(beta(x,y), y)
+    (polygamma(0, y) - polygamma(0, x + y))*beta(x, y)
+
+    We can numerically evaluate the gamma function to arbitrary precision
+    on the whole complex plane:
+
+    >>> beta(pi,pi).evalf(40)
+    0.02671848900111377452242355235388489324562
+
+    >>> beta(1+I,1+I).evalf(20)
+    -0.2112723729365330143 - 0.7655283165378005676*I
+
 
     References
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Beta_function
+    .. [2] http://www.statlect.com/subon2/betfun1.htm
     """
     nargs = 2
     unbranched = True
