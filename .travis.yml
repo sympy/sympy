@@ -65,9 +65,21 @@ matrix:
     - python: 2.7
       env: TEST_SPHINX="true"
     - python: 2.7
-      env: TEST_SLOW="true"
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
     - python: 3.3
-      env: TEST_SLOW="true"
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 3.3
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
     - python: 2.7
       env:
         - TEST_THEANO="true"
