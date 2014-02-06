@@ -1,9 +1,7 @@
 from sympy.solvers import solve
 from sympy.simplify import simplify
-from sympy.core.cache import cacheit
 
 
-@cacheit
 def singularities(expr, sym):
     """
     Finds singularities for a function.
@@ -19,7 +17,7 @@ def singularities(expr, sym):
     >>> singularities(x**2 + x + 1, x)
     ()
     >>> singularities(1/(x + 1), x)
-    (-1)
+    (-1,)
 
     References
     ==========

@@ -1,6 +1,6 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
 )
 from sympy.mpmath import mpi
 
@@ -521,18 +521,39 @@ def test_Interval_free_symbols():
     x = Symbol('x', real=True)
     assert set(Interval(0, x).free_symbols) == set((x,))
 
+
 def test_image_interval():
+    from sympy.core.numbers import Rational
     x = Symbol('x', real=True)
     assert imageset(x, 2*x, Interval(-2, 1)) == Interval(-4, 2)
     assert imageset(x, 2*x, Interval(-2, 1, True, False)) == \
-            Interval(-4, 2, True, False)
+        Interval(-4, 2, True, False)
     assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
-            Interval(0, 4, False, True)
+        Interval(0, 4, False, True)
     assert imageset(x, x**2, Interval(-2, 1)) == Interval(0, 4)
     assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
-            Interval(0, 4, False, True)
+        Interval(0, 4, False, True)
     assert imageset(x, x**2, Interval(-2, 1, True, True)) == \
-            Interval(0, 4, False, True)
+        Interval(0, 4, False, True)
+    assert imageset(x, (x - 2)**2, Interval(1, 3)) == Interval(0, 1)
+    assert imageset(x, 3*x**4 - 26*x**3 + 78*x**2 - 90*x, Interval(0, 4)) == \
+        Interval(-35, 0)  # Multiple Maxima
+    assert imageset(x, x + 1/x, Interval(-oo, oo)) == Interval(-oo, -2) \
+        + Interval(2, oo)  # Single Infinite discontinuity
+    assert imageset(x, 1/x + 1/(x-1)**2, Interval(0, 2, True, False)) == \
+        Interval(Rational(3, 2), oo, False)  # Multiple Infinite discontinuities
+
+    # Test for Python lambda
+    assert imageset(lambda x: 2*x, Interval(-2, 1)) == Interval(-4, 2)
+
+
+@XFAIL  # See: https://github.com/sympy/sympy/pull/2723#discussion_r8659826
+def test_image_Intersection():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert imageset(x, x**2, Interval(-2, 0).intersect(Interval(x, y))) == \
+           Interval(0, 4).intersect(Interval(Min(x**2, y**2), Max(x**2, y**2)))
+
 
 def test_image_FiniteSet():
     x = Symbol('x', real=True)
@@ -543,11 +564,6 @@ def test_image_Union():
     assert imageset(x, x**2, Interval(-2, 0) + FiniteSet(1, 2, 3)) == \
             (Interval(0, 4) + FiniteSet(9))
 
-def test_image_Intersection():
-    x = Symbol('x', real=True)
-    y = Symbol('y', real=True)
-    assert imageset(x, x**2, Interval(-2, 0).intersect(Interval(x, y))) == \
-           Interval(0, 4).intersect(Interval(Min(x**2, y**2), Max(x**2, y**2)))
 
 def test_image_EmptySet():
     x = Symbol('x', real=True)
