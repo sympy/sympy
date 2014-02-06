@@ -213,7 +213,7 @@ class Vector(object):
     def _latex(self, printer=None):
         """Latex Printing method. """
 
-        from sympy.physics.vector.printers import VectorLatexPrinter
+        from sympy.physics.vector.printing import VectorLatexPrinter
 
         ar = self.args  # just to shorten things
         if len(ar) == 0:

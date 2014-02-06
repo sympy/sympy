@@ -8,19 +8,10 @@ __all__ = ['inertia',
            'potential_energy',
            'Lagrangian']
 
-from sympy.physics.vector.printers import \
-     VectorStrPrinter as MechanicsStrPrinter, \
-     VectorLatexPrinter as MechanicsLatexPrinter, \
-     VectorPrettyPrinter as MechanicsPrettyPrinter
-from sympy.physics.vector import Vector, Dyadic, ReferenceFrame, \
-     dynamicsymbols
-from sympy.physics.vector.vector import _check_vector
-from sympy.physics.vector.frame import _check_frame
+from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.vector import Point
-from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate, \
-     trigsimp
+from sympy import sympify
 from sympy.core.basic import S
 
 

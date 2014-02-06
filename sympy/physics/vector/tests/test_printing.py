@@ -19,7 +19,7 @@ x = alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) + alpha * beta * (N.z | N.x)
 
 def test_latex_printer():
     r = Function('r')('t')
-    assert VectorLatexPrinter().doprint(r**2) == "r^{2}"
+    assert VectorLatexPrinter().doprint(r ** 2) == "r^{2}"
 
 
 def test_vector_pretty_print():
@@ -53,16 +53,17 @@ def test_vector_latex():
 
     v = (a ** 2 + b / c) * A.x + sqrt(d) * A.y + cos(omega) * A.z
 
-    assert v._latex() == ('(a^{2} + \\frac{b}{c})\\mathbf{\\hat{a}_x} + ' +
-                          '\\sqrt{d}\\mathbf{\\hat{a}_y} + ' +
-                          '\\operatorname{cos}\\left(\\omega\\right)\\mathbf{\\hat{a}_z}')
+    assert v._latex() == ('(a^{2} + \\frac{b}{c})\\mathbf{\\hat{a}_x} + '
+                          '\\sqrt{d}\\mathbf{\\hat{a}_y} + '
+                          '\\operatorname{cos}\\left(\\omega\\right)'
+                          '\\mathbf{\\hat{a}_z}')
 
     theta, omega, alpha, q = dynamicsymbols('theta, omega, alpha, q')
 
     v = theta * A.x + omega * omega * A.y + (q * alpha) * A.z
 
-    assert v._latex() == ('\\theta\\mathbf{\\hat{a}_x} + ' +
-                          '\\omega^{2}\\mathbf{\\hat{a}_y} + ' +
+    assert v._latex() == ('\\theta\\mathbf{\\hat{a}_x} + '
+                          '\\omega^{2}\\mathbf{\\hat{a}_y} + '
                           '\\alpha q\\mathbf{\\hat{a}_z}')
 
     phi1, phi2, phi3 = dynamicsymbols('phi1, phi2, phi3')
@@ -72,9 +73,12 @@ def test_vector_latex():
          cos(phi1) * cos(phi2) * A.y +
          cos(theta1 + phi3) * A.z)
 
-    assert v._latex() == ('\\operatorname{sin}\\left(\\theta_{1}\\right)\\mathbf{\\hat{a}_x} + ' +
-                          '\\operatorname{cos}\\left(\\phi_{1}\\right) \\operatorname{cos}\\left(\\phi_{2}\\right)\\mathbf{\\hat{a}_y} + ' +
-                          '\\operatorname{cos}\\left(\\theta_{1} + \\phi_{3}\\right)\\mathbf{\\hat{a}_z}')
+    assert v._latex() == ('\\operatorname{sin}\\left(\\theta_{1}\\right)'
+                          '\\mathbf{\\hat{a}_x} + \\operatorname{cos}'
+                          '\\left(\\phi_{1}\\right) \\operatorname{cos}'
+                          '\\left(\\phi_{2}\\right)\\mathbf{\\hat{a}_y} + '
+                          '\\operatorname{cos}\\left(\\theta_{1} + '
+                          '\\phi_{3}\\right)\\mathbf{\\hat{a}_z}')
 
     N = ReferenceFrame('N')
 
@@ -84,7 +88,8 @@ def test_vector_latex():
 
     expected = ('(a^{2} + \\frac{b}{c})\\mathbf{\\hat{n}_x} + '
                 '\\sqrt{d}\\mathbf{\\hat{n}_y} + '
-                '\\operatorname{cos}\\left(\\omega\\right)\\mathbf{\\hat{n}_z}')
+                '\\operatorname{cos}\\left(\\omega\\right)'
+                '\\mathbf{\\hat{n}_z}')
 
     assert v._latex() == expected
     lp = VectorLatexPrinter()
@@ -106,11 +111,16 @@ def test_vector_latex_with_functions():
 
     N = ReferenceFrame('N')
 
-    omega = dynamicsymbols('omega')
+    omega, alpha = dynamicsymbols('omega, alpha')
 
     v = omega.diff() * N.x
 
     assert v._latex() == r'\dot{\omega}\mathbf{\hat{n}_x}'
+
+    v = omega.diff() ** alpha * N.x
+
+    assert v._latex() == ('\\left(\\dot{\\omega}\\right)^{\\alpha}'
+                          '\\mathbf{\\hat{n}_x}')
 
 
 def test_dyadic_pretty_print():
@@ -141,12 +151,14 @@ def test_dyadic_latex():
 
     expected = (r'a^{2}\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + '
                 r'b\mathbf{\hat{n}_y}\otimes \mathbf{\hat{n}_y} + '
-                r'c \operatorname{sin}\left(\alpha\right)\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_y}')
+                r'c \operatorname{sin}\left(\alpha\right)'
+                r'\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_y}')
 
     assert u._latex() == expected
 
     expected = (r'\alpha\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_x} + '
-                r'\operatorname{sin}\left(\omega\right)\mathbf{\hat{n}_y}\otimes \mathbf{\hat{n}_z} + '
+                r'\operatorname{sin}\left(\omega\right)\mathbf{\hat{n}_y}'
+                r'\otimes \mathbf{\hat{n}_z} + '
                 r'\alpha \beta\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_x}')
 
     assert x._latex() == expected
