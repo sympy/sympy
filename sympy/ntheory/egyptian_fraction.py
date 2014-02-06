@@ -54,6 +54,19 @@ def egyptian_fraction(r, algorithm="Greedy"):
         Differs from the Graham-Jewett algorithm only in the handling
         of duplicates.  See [3].
 
+    Limits on the Greedy / Fibonacci-Sylvestor algorithm:
+    =====================================================
+    1) Given *p/q* in lowest terms, generates an expansion of maximum length *p*.
+    Even as the numerators get large, the number of terms is seldom more than a handful.
+    
+    2) Uses minimal memory.
+    
+    3) Only potential problem is that the terms can blow up (standard examples
+    of this are 5/121 and 31/311); however, this isn't really a problem in
+    Python until the numbers reach obscenely large numbers of digits.  The
+    denominator is at most squared at each step (doubly-exponential growth) and
+    typically exhibits singly-exponential growth.
+    
     References
     ==========
 
