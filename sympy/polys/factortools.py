@@ -421,8 +421,6 @@ def dup_zz_zassenhaus(f, K):
     f0 = f
     fc = f[-1]
     A = dup_max_norm(f, K)
-    Brt = int(1 + abs(float(A)/f[0])) + 1
-    Brt1 = 2*n*Brt
     b0 = b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
@@ -475,7 +473,7 @@ def dup_zz_zassenhaus(f, K):
 
         return factors + [f]
 
-    w = (bitcount(pl) + bitcount(Brt1)) // 2
+    w = (bitcount(pl) + bitcount(2*n) + bitcount(A) - bitcount(f[0])) // 2
     tgv = [None]*r
     trs = [0]*r
 
