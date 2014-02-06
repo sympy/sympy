@@ -15,6 +15,7 @@ MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
+SCIPY = {}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -24,6 +25,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
+SCIPY_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -84,11 +86,22 @@ NUMPY_TRANSLATIONS = {
     "re": "real",
 }
 
+SCIPY_TRANSLATIONS = {
+    "besselj": "jn",
+    "bessely": "yn",
+    "besseli": "iv",
+    "besselk": "kn",
+    "loggamma": "gammaln",
+    "digamma": "psi",
+    "hyper": "hyp1f1",
+    
+}
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("from scipy.special import *",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -101,7 +114,7 @@ def _import(module, reload="False"):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy".
+    "mpmath", "numpy", "sympy", "scipy".
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
@@ -152,7 +165,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy"
+     - the strings "math", "mpmath", "numpy", "sympy", "scipy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -179,7 +192,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
                    error when the lambda function is evaluated! So this would
                    be better:
 
-        >>> f = lambdify(x, sin(x)*gamma(x), ("math", "mpmath", "sympy"))
+        >>> f = lambdify(x, sin(x)*gamma(x), ("math", "mpmath", "sympy", "scipy"))
 
     (2) Use some other module:
 
@@ -270,7 +283,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
-        modules = ["math", "mpmath", "sympy"]
+        modules = ["math", "mpmath", "sympy", "scipy"]
 
         try:
             _import("numpy")
