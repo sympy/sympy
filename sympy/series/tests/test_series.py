@@ -111,6 +111,11 @@ def test_acceleration():
     assert round(shanks(A, n, 25, 5).evalf(), 10) == round(log(2).evalf(), 10)
 
 
+def test_issue_2753():
+    assert series(1/cos(x/log(x)), x, 0) == 1 + x**2/(2*log(x)**2) + \
+        5*x**4/(24*log(x)**4) + O(x**6)
+
+
 def test_1484():
     assert cos(1 + x + x**2).series(x, 0, 5) == cos(1) - x*sin(1) + \
         x**2*(-sin(1) - cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \

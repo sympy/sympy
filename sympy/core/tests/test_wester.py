@@ -1819,6 +1819,7 @@ def test_R14():
     assert T.simplify() == sin(n*x)**2/sin(x)
 
 
+@slow
 @XFAIL
 def test_R15():
     n, k = symbols('n k', integer=True, positive=True)
@@ -2252,15 +2253,14 @@ def test_V8_V9():
 
 
 def test_V10():
-    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(tan(x/2) + 3/4)/4
+    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(tan(x/2) + Rational(3, 4))/4
 
 
 def test_V11():
-#    x = symbols('x', real=True)
     r1 = integrate(1/(4 + 3*cos(x) + 4*sin(x)), x)
     r2 = factor(r1)
     assert (logcombine(r2, force=True) ==
-            log(((tan(x/2) + 1)/(tan(x/2) + 7))**(1/3)))
+            log(((tan(x/2) + 1)/(tan(x/2) + 7))**Rational(1, 3)))
 
 
 @XFAIL
@@ -2404,7 +2404,7 @@ def test_W12():
     p = symbols('p', real=True, positive=True)
     q = symbols('q', real=True)
     r1 = integrate(x*exp(-p*x**2 + 2*q*x), (x, -oo, oo))
-    assert r1.simplify() == sqrt(pi)*q*exp(q**2/p)/p**(3/2)
+    assert r1.simplify() == sqrt(pi)*q*exp(q**2/p)/p**Rational(3, 2)
 
 
 @XFAIL

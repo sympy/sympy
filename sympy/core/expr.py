@@ -611,11 +611,7 @@ class Expr(Basic, EvalfMixin):
 
                 # try to prove with minimal_polynomial but know when
                 # *not* to use this or else it can take a long time.
-                # Pernici noted the following:
-                # >>> q = -73*sqrt(3) + 1 + 128*sqrt(5) + 1315*sqrt(2)
-                # >>> p = expand(q**3)**Rational(1, 3)
-                # >>> minimal_polynomial(p - q)  # hangs for at least 15 minutes
-                if False:  # change False to condition that assures non-hang
+                if True:  # change True to condition that assures non-hang
                     try:
                         mp = minimal_polynomial(diff)
                         if mp.is_Symbol:
@@ -2748,12 +2744,17 @@ class Expr(Basic, EvalfMixin):
         (1, -2)
 
         """
-        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        l = self.as_leading_term(x)
+        d = C.Dummy('logx')
+        if l.has(C.log(x)):
+            l = l.subs(C.log(x), d)
+        c, e = l.as_coeff_exponent(x)
         if x in c.free_symbols:
             from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
                 cannot compute leadterm(%s, %s). The coefficient
                 should have been free of x but got %s""" % (self, x, c)))
+        c = c.subs(d, C.log(x))
         return c, e
 
     def as_coeff_Mul(self, rational=False):

@@ -1,4 +1,6 @@
 from sympy import Derivative
+from sympy.core import C
+from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
@@ -210,7 +212,7 @@ class VectorPrettyPrinter(PrettyPrinter):
             ds = prettyForm(*s.left('d'))
 
             if num > 1:
-                ds = ds**prettyForm(str(num))
+                ds = ds ** prettyForm(str(num))
 
             if x is None:
                 x = ds
@@ -219,7 +221,7 @@ class VectorPrettyPrinter(PrettyPrinter):
                 x = prettyForm(*x.right(ds))
         pform = prettyForm('d')
         if len(syms) > 1:
-            pform = pform**prettyForm(str(len(syms)))
+            pform = pform ** prettyForm(str(len(syms)))
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
@@ -239,10 +241,10 @@ class VectorPrettyPrinter(PrettyPrinter):
         # identical to the normal PrettyPrinter code
         if isinstance(func, UndefinedFunction) and (args == (t,)):
             pform = prettyForm(binding=prettyForm.FUNC,
-                       *stringPict.next(prettyFunc))
+                               *stringPict.next(prettyFunc))
         else:
             pform = prettyForm(binding=prettyForm.FUNC,
-                       *stringPict.next(prettyFunc, prettyArgs))
+                               *stringPict.next(prettyFunc, prettyArgs))
         # store pform parts so it can be reassembled e.g. when powered
         pform.prettyFunc = prettyFunc
         pform.prettyArgs = prettyArgs
@@ -252,6 +254,6 @@ class VectorPrettyPrinter(PrettyPrinter):
 class VectorTypeError(TypeError):
 
     def __init__(self, other, type_str):
-        super(VectorialTypeError, self).__init__("Expected an instance of %s, "
-                "instead received an object '%s' of type %s." % (
-                    type_str, other, type(other)))
+        msg = ("Expected an instance of %s, instead received an object "
+               "'%s' of type %s.") % (type_str, other, type(other))
+        super(VectorTypeError, self).__init__(msg)

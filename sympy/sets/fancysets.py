@@ -59,6 +59,11 @@ class Naturals(with_metaclass(Singleton, Set)):
             yield i
             i = i + 1
 
+    @property
+    def _boundary(self):
+        return self
+
+
 class Naturals0(Naturals):
     """Represents the whole numbers which are all the non-negative integers,
     inclusive of zero.
@@ -75,6 +80,7 @@ class Naturals0(Naturals):
         if ask(Q.negative(other)) == False and ask(Q.integer(other)):
             return True
         return False
+
 
 class Integers(with_metaclass(Singleton, Set)):
     """
@@ -136,6 +142,10 @@ class Integers(with_metaclass(Singleton, Set)):
     @property
     def _sup(self):
         return S.Infinity
+
+    @property
+    def _boundary(self):
+        return self
 
 
 class Reals(with_metaclass(Singleton, Interval)):
@@ -325,3 +335,7 @@ class Range(Set):
     @property
     def _sup(self):
         return self.stop - self.step
+
+    @property
+    def _boundary(self):
+        return self

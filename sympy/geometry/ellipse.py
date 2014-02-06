@@ -18,6 +18,7 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
 from sympy.utilities.lambdify import lambdify
+from sympy.utilities.iterables import uniq
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
@@ -1053,43 +1054,20 @@ class Ellipse(GeometryEntity):
 
         return [r for r in result if r in o]
 
-    def _do_circle_intersection(self, o):
-        """The intersection of an Ellipse and a Circle.
-
-        Private helper method for `intersection`.
-
-        """
-        variables = self.equation().atoms(C.Symbol)
-        if len(variables) > 2:
-            return None
-        if self.center == o.center:
-            a, b, r = o.major, o.minor, self.radius
-            x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-            y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
-            return list(set([Point(x, y), Point(x, -y), Point(-x, y),
-                             Point(-x, -y)]))
-        else:
-            x, y = variables
-            xx = solve(self.equation(), x)
-            intersect = []
-            for xi in xx:
-                yy = solve(o.equation().subs(x, xi), y)
-                for yi in yy:
-                    intersect.append(Point(xi, yi))
-            return list(set(intersect))
-
     def _do_ellipse_intersection(self, o):
-        """The intersection of two ellipses.
+        """The intersection of an ellipse with another ellipse or a circle.
 
         Private helper method for `intersection`.
 
         """
-        x = Dummy('x')
-        y = Dummy('y')
+
+        x = Dummy('x', real=True)
+        y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
         result = solve([seq, oeq], [x, y])
-        return [Point(*r) for r in result if im(r[0]).is_zero is not False and im(r[1]).is_zero is not False]
+        return [Point(*r) for r in list(uniq(result))]
+
 
     def intersection(self, o):
         """The intersection of this ellipse and another geometrical entity
@@ -1138,11 +1116,10 @@ class Ellipse(GeometryEntity):
         >>> e.intersection(Ellipse(Point(100500, 0), 4, 3))
         []
         >>> e.intersection(Ellipse(Point(0, 0), 3, 4))
-        [Point(-363/175, -48*sqrt(111)/175), Point(-363/175, 48*sqrt(111)/175),
-        Point(3, 0)]
+        [Point(-363/175, -48*sqrt(111)/175), Point(-363/175, 48*sqrt(111)/175), Point(3, 0)]
+
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
-        [Point(-17/5, -12/5), Point(-17/5, 12/5), Point(7/5, -12/5),
-        Point(7/5, 12/5)]
+        [Point(-17/5, -12/5), Point(-17/5, 12/5), Point(7/5, -12/5), Point(7/5, 12/5)]
         """
         if isinstance(o, Point):
             if o in self:
@@ -1156,7 +1133,7 @@ class Ellipse(GeometryEntity):
             return self._do_line_intersection(o)
 
         elif isinstance(o, Circle):
-            return self._do_circle_intersection(o)
+            return self._do_ellipse_intersection(o)
 
         elif isinstance(o, Ellipse):
             if o == self:

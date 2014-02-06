@@ -1,6 +1,8 @@
+from __future__ import division
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul)
+        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
+        factor, nsimplify)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
@@ -599,6 +601,17 @@ def test_mul2():
     """
     assert (2*(x + 1)).is_Mul
 
+
 def test_noncommutative_subs():
     x,y = symbols('x,y', commutative=False)
     assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)
+
+
+def test_gh_issue_2877():
+    f = Float(2.0)
+    assert (x + f).subs({f: 2}) == x + 2
+
+    def r(a,b,c):
+        return factor(a*x**2 + b*x + c)
+    e = r(5/6, 10, 5)
+    assert nsimplify(e) == 5*x**2/6 + 10*x + 5
