@@ -4386,10 +4386,10 @@ negative half of the real axis. They can be computed with
 
 **Plots**
 
-.. literalinclude :: /plots/ai.py
-.. image :: /plots/ai.png
-.. literalinclude :: /plots/ai_c.py
-.. image :: /plots/ai_c.png
+.. literalinclude :: /modules/mpmath/plots/ai.py
+.. image :: /modules/mpmath/plots/ai.png
+.. literalinclude :: /modules/mpmath/plots/ai_c.py
+.. image :: /modules/mpmath/plots/ai_c.png
 
 **Basic examples**
 
@@ -4579,10 +4579,10 @@ with :func:`~mpmath.airybizero`.
 
 **Plots**
 
-.. literalinclude :: /plots/bi.py
-.. image :: /plots/bi.png
-.. literalinclude :: /plots/bi_c.py
-.. image :: /plots/bi_c.png
+.. literalinclude :: /modules/mpmath/plots/bi.py
+.. image :: /modules/mpmath/plots/bi.png
+.. literalinclude :: /modules/mpmath/plots/bi_c.py
+.. image :: /modules/mpmath/plots/bi_c.png
 
 **Basic examples**
 
@@ -4881,8 +4881,8 @@ not the modulus `k` which is sometimes used.
 
 **Plots**
 
-.. literalinclude :: /plots/ellipk.py
-.. image :: /plots/ellipk.png
+.. literalinclude :: /modules/mpmath/plots/ellipk.py
+.. image :: /modules/mpmath/plots/ellipk.png
 
 **Examples**
 
@@ -5121,8 +5121,8 @@ The Laguerre polynomials are orthogonal with respect to the weight
 
 **Plots**
 
-.. literalinclude :: /plots/laguerre.py
-.. image :: /plots/laguerre.png
+.. literalinclude :: /modules/mpmath/plots/laguerre.py
+.. image :: /modules/mpmath/plots/laguerre.png
 
 **Examples**
 
@@ -5198,8 +5198,8 @@ for `\Re{z} > 0`, or generally
 
 **Plots**
 
-.. literalinclude :: /plots/hermite.py
-.. image :: /plots/hermite.png
+.. literalinclude :: /modules/mpmath/plots/hermite.py
+.. image :: /modules/mpmath/plots/hermite.png
 
 **Examples**
 
@@ -5398,8 +5398,8 @@ A third definition is in terms of the hypergeometric function
 
 **Plots**
 
-.. literalinclude :: /plots/legendre.py
-.. image :: /plots/legendre.png
+.. literalinclude :: /modules/mpmath/plots/legendre.py
+.. image :: /modules/mpmath/plots/legendre.png
 
 **Basic evaluation**
 
@@ -5624,8 +5624,8 @@ evaluated for nonintegral `n`.
 
 **Plots**
 
-.. literalinclude :: /plots/chebyt.py
-.. image :: /plots/chebyt.png
+.. literalinclude :: /modules/mpmath/plots/chebyt.py
+.. image :: /modules/mpmath/plots/chebyt.png
 
 **Basic evaluation**
 
@@ -5674,8 +5674,8 @@ evaluated for nonintegral `n`.
 
 **Plots**
 
-.. literalinclude :: /plots/chebyu.py
-.. image :: /plots/chebyu.png
+.. literalinclude :: /modules/mpmath/plots/chebyu.py
+.. image :: /modules/mpmath/plots/chebyu.png
 
 **Basic evaluation**
 
@@ -5743,10 +5743,10 @@ is computed.
 
 **Plots**
 
-.. literalinclude :: /plots/besselj.py
-.. image :: /plots/besselj.png
-.. literalinclude :: /plots/besselj_c.py
-.. image :: /plots/besselj_c.png
+.. literalinclude :: /modules/mpmath/plots/besselj.py
+.. image :: /modules/mpmath/plots/besselj.png
+.. literalinclude :: /modules/mpmath/plots/besselj_c.py
+.. image :: /modules/mpmath/plots/besselj_c.png
 
 **Examples**
 
@@ -5863,10 +5863,10 @@ is computed.
 
 **Plots**
 
-.. literalinclude :: /plots/besseli.py
-.. image :: /plots/besseli.png
-.. literalinclude :: /plots/besseli_c.py
-.. image :: /plots/besseli_c.png
+.. literalinclude :: /modules/mpmath/plots/besseli.py
+.. image :: /modules/mpmath/plots/besseli.png
+.. literalinclude :: /modules/mpmath/plots/besseli_c.py
+.. image :: /modules/mpmath/plots/besseli_c.png
 
 **Examples**
 
@@ -5938,10 +5938,10 @@ is computed.
 
 **Plots**
 
-.. literalinclude :: /plots/bessely.py
-.. image :: /plots/bessely.png
-.. literalinclude :: /plots/bessely_c.py
-.. image :: /plots/bessely_c.png
+.. literalinclude :: /modules/mpmath/plots/bessely.py
+.. image :: /modules/mpmath/plots/bessely.png
+.. literalinclude :: /modules/mpmath/plots/bessely_c.py
+.. image :: /modules/mpmath/plots/bessely_c.png
 
 **Examples**
 
@@ -6001,10 +6001,10 @@ limit.
 
 **Plots**
 
-.. literalinclude :: /plots/besselk.py
-.. image :: /plots/besselk.png
-.. literalinclude :: /plots/besselk_c.py
-.. image :: /plots/besselk_c.png
+.. literalinclude :: /modules/mpmath/plots/besselk.py
+.. image :: /modules/mpmath/plots/besselk.png
+.. literalinclude :: /modules/mpmath/plots/besselk_c.py
+.. image :: /modules/mpmath/plots/besselk_c.png
 
 **Examples**
 
@@ -6063,10 +6063,10 @@ which is the complex combination of Bessel functions given by
 
 **Plots**
 
-.. literalinclude :: /plots/hankel1.py
-.. image :: /plots/hankel1.png
-.. literalinclude :: /plots/hankel1_c.py
-.. image :: /plots/hankel1_c.png
+.. literalinclude :: /modules/mpmath/plots/hankel1.py
+.. image :: /modules/mpmath/plots/hankel1.png
+.. literalinclude :: /modules/mpmath/plots/hankel1_c.py
+.. image :: /modules/mpmath/plots/hankel1_c.png
 
 **Examples**
 
@@ -6090,10 +6090,10 @@ which is the complex combination of Bessel functions given by
 
 **Plots**
 
-.. literalinclude :: /plots/hankel2.py
-.. image :: /plots/hankel2.png
-.. literalinclude :: /plots/hankel2_c.py
-.. image :: /plots/hankel2_c.png
+.. literalinclude :: /modules/mpmath/plots/hankel2.py
+.. image :: /modules/mpmath/plots/hankel2.png
+.. literalinclude :: /modules/mpmath/plots/hankel2_c.py
+.. image :: /modules/mpmath/plots/hankel2_c.png
 
 **Examples**
 
@@ -6131,10 +6131,10 @@ is based on [Corless]_.
 
 **Plots**
 
-.. literalinclude :: /plots/lambertw.py
-.. image :: /plots/lambertw.png
-.. literalinclude :: /plots/lambertw_c.py
-.. image :: /plots/lambertw_c.png
+.. literalinclude :: /modules/mpmath/plots/lambertw.py
+.. image :: /modules/mpmath/plots/lambertw.png
+.. literalinclude :: /modules/mpmath/plots/lambertw_c.py
+.. image :: /modules/mpmath/plots/lambertw_c.png
 
 **Basic examples**
 
@@ -8057,8 +8057,8 @@ The imaginary part is given by :func:`~mpmath.bei`.
 
 **Plots**
 
-.. literalinclude :: /plots/ber.py
-.. image :: /plots/ber.png
+.. literalinclude :: /modules/mpmath/plots/ber.py
+.. image :: /modules/mpmath/plots/ber.png
 
 **Examples**
 
@@ -8102,8 +8102,8 @@ The imaginary part is given by :func:`~mpmath.kei`.
 
 **Plots**
 
-.. literalinclude :: /plots/ker.py
-.. image :: /plots/ker.png
+.. literalinclude :: /modules/mpmath/plots/ker.py
+.. image :: /modules/mpmath/plots/ker.png
 
 **Examples**
 
@@ -8506,8 +8506,8 @@ A second solution is given by :func:`~mpmath.lommels2`.
 
 **Plots**
 
-.. literalinclude :: /plots/lommels1.py
-.. image :: /plots/lommels1.png
+.. literalinclude :: /modules/mpmath/plots/lommels1.py
+.. image :: /modules/mpmath/plots/lommels1.png
 
 **Examples**
 
@@ -8561,8 +8561,8 @@ which solves the same differential equation as
 
 **Plots**
 
-.. literalinclude :: /plots/lommels2.py
-.. image :: /plots/lommels2.png
+.. literalinclude :: /modules/mpmath/plots/lommels2.py
+.. image :: /modules/mpmath/plots/lommels2.png
 
 **Examples**
 
@@ -9085,10 +9085,10 @@ to be complex in this implementation (see references).
 
 **Plots**
 
-.. literalinclude :: /plots/coulombf.py
-.. image :: /plots/coulombf.png
-.. literalinclude :: /plots/coulombf_c.py
-.. image :: /plots/coulombf_c.png
+.. literalinclude :: /modules/mpmath/plots/coulombf.py
+.. image :: /modules/mpmath/plots/coulombf.png
+.. literalinclude :: /modules/mpmath/plots/coulombf_c.py
+.. image :: /modules/mpmath/plots/coulombf_c.png
 
 **Examples**
 
@@ -9200,10 +9200,10 @@ See :func:`~mpmath.coulombf` for additional information.
 
 **Plots**
 
-.. literalinclude :: /plots/coulombg.py
-.. image :: /plots/coulombg.png
-.. literalinclude :: /plots/coulombg_c.py
-.. image :: /plots/coulombg_c.png
+.. literalinclude :: /modules/mpmath/plots/coulombg.py
+.. image :: /modules/mpmath/plots/coulombg.png
+.. literalinclude :: /modules/mpmath/plots/coulombg_c.py
+.. image :: /modules/mpmath/plots/coulombg_c.png
 
 **Examples**
 
@@ -9653,27 +9653,27 @@ are permitted to be complex numbers.
 
 **Plots**
 
-.. literalinclude :: /plots/spherharm40.py
+.. literalinclude :: /modules/mpmath/plots/spherharm40.py
 
 `Y_{4,0}`:
 
-.. image :: /plots/spherharm40.png
+.. image :: /modules/mpmath/plots/spherharm40.png
 
 `Y_{4,1}`:
 
-.. image :: /plots/spherharm41.png
+.. image :: /modules/mpmath/plots/spherharm41.png
 
 `Y_{4,2}`:
 
-.. image :: /plots/spherharm42.png
+.. image :: /modules/mpmath/plots/spherharm42.png
 
 `Y_{4,3}`:
 
-.. image :: /plots/spherharm43.png
+.. image :: /modules/mpmath/plots/spherharm43.png
 
 `Y_{4,4}`:
 
-.. image :: /plots/spherharm44.png
+.. image :: /modules/mpmath/plots/spherharm44.png
 
 **Examples**
 
@@ -9738,10 +9738,10 @@ particular solution is given by the Scorer Hi-function
 
 **Plots**
 
-.. literalinclude :: /plots/gi.py
-.. image :: /plots/gi.png
-.. literalinclude :: /plots/gi_c.py
-.. image :: /plots/gi_c.png
+.. literalinclude :: /modules/mpmath/plots/gi.py
+.. image :: /modules/mpmath/plots/gi.png
+.. literalinclude :: /modules/mpmath/plots/gi_c.py
+.. image :: /modules/mpmath/plots/gi_c.png
 
 **Examples**
 
@@ -9832,10 +9832,10 @@ differential equation `f''(z) - z f(z) = 1/\pi`. See also
 
 **Plots**
 
-.. literalinclude :: /plots/hi.py
-.. image :: /plots/hi.png
-.. literalinclude :: /plots/hi_c.py
-.. image :: /plots/hi_c.png
+.. literalinclude :: /modules/mpmath/plots/hi.py
+.. image :: /modules/mpmath/plots/hi.png
+.. literalinclude :: /modules/mpmath/plots/hi_c.py
+.. image :: /modules/mpmath/plots/hi_c.png
 
 **Examples**
 
