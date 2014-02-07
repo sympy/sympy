@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, xrange
+from sympy.core.compatibility import is_sequence, default_sort_key, xrange, NotIterable
 
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -42,7 +42,7 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
-class DeferredVector(Symbol):
+class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
 
     Examples

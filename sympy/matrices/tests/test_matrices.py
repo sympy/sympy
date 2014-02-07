@@ -11,7 +11,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros)
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, iterable
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow
 
@@ -2018,6 +2018,9 @@ def test_rotation_matrices():
 def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
+
+def test_DeferredVector_not_iterable():
+    assert not iterable(DeferredVector('X'))
 
 def test_DeferredVector_Matrix():
     raises(TypeError, lambda: Matrix(DeferredVector("V")))

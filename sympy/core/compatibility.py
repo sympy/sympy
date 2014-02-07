@@ -189,10 +189,19 @@ def with_metaclass(meta, *bases):
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
 # I think putting them here also makes it easier to use them in the core.
 
+class NotIterable:
+    """
+    Use this as mixin when creating a class which is not supposed to return
+    true when iterable() is called on its instances. I.e. avoid infinite loop
+    when calling e.g. list() on the instance
+    """
+    pass
 
-def iterable(i, exclude=(string_types, dict)):
+def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
+    True also indicates that the iterator is finite, i.e. you e.g.
+    call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
