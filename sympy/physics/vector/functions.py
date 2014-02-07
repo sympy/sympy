@@ -78,7 +78,7 @@ def express(expr, frame, frame2=None, variables=False):
     _check_frame(frame)
 
     if expr == 0:
-        return S(0)
+        return expr
 
     if isinstance(expr, Vector):
         #Given expr is a Vector
