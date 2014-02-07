@@ -141,7 +141,7 @@ def dmp_zz_mignotte_bound(f, u, K):
     return K.sqrt(K(n + 1))*2**n*a*b
 
 
-def dup_zz_hensel_step(m, f, g, h, s, t, K):
+def dup_zz_hensel_step(M, f, g, h, s, t, K, full=True):
     """
     One step in Hensel lifting in `Z[x]`.
 
@@ -169,9 +169,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     1. [Gathen99]_
 
     """
-    M = m**2
-
-    e = dup_sub_mul(f, g, h, K)
+    e = dup_sub(f, dup_pack_mul(g, h, K), K)
     e = dup_trunc(e, M, K)
 
     q, r = gf_pack_div(dup_pack_mul(s, e, K), h, M, K)
@@ -181,6 +179,9 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     u = dup_add(dup_pack_mul(t, e, K), dup_pack_mul(q, g, K), K)
     G = dup_trunc(dup_add(g, u, K), M, K)
     H = dup_trunc(dup_add(h, r, K), M, K)
+
+    if not full:
+        return G, H, None, None
 
     u = dup_add(dup_pack_mul(s, G, K), dup_pack_mul(t, H, K), K)
     b = dup_trunc(dup_sub(u, [K.one], K), M, K)
@@ -247,8 +248,9 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     s = gf_to_int_poly(s, p)
     t = gf_to_int_poly(t, p)
 
-    for _ in range(1, d + 1):
-        (g, h, s, t), m = dup_zz_hensel_step(m, f, g, h, s, t, K), m**2
+    for _ in range(1, d):
+        (g, h, s, t), m = dup_zz_hensel_step(m**2, f, g, h, s, t, K), m**2
+    (g, h, s, t) = dup_zz_hensel_step(p**l, f, g, h, s, t, K, False)
 
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
