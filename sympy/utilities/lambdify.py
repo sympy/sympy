@@ -87,13 +87,14 @@ NUMPY_TRANSLATIONS = {
 }
 
 SCIPY_TRANSLATIONS = {
+    "elliptic_k": "ellipk",
+    "elliptic_f": "ellipeinc",
     "besselj": "jn",
     "bessely": "yn",
     "besseli": "iv",
     "besselk": "kn",
     "loggamma": "gammaln",
     "digamma": "psi",
-    "hyper": "hyp1f1",
     
 }
 # Available modules:
@@ -153,8 +154,7 @@ def _import(module, reload="False"):
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
-        namespace[sympyname] = namespace[translation]
-
+        	namespace[sympyname] = namespace[translation]
 
 def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
     """
