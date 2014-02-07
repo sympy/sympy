@@ -1,7 +1,6 @@
 from sympy.mpmath import *
 
 def test_special():
-    assert inf == inf
     assert inf != -inf
     assert -inf == -inf
     assert inf != nan

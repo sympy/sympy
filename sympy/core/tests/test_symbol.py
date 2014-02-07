@@ -20,7 +20,7 @@ def test_Symbol():
     assert x1 != xdummy1
     assert xdummy1 != xdummy2
 
-    assert Symbol("x") == Symbol("x")
+    assert Symbol("x") == x1
     assert Dummy("x") != Dummy("x")
     d = symbols('d', cls=Dummy)
     assert isinstance(d, Dummy)

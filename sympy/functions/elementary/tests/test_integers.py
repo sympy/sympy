@@ -56,12 +56,11 @@ def test_floor():
     assert floor(E + 17) == 19
     assert floor(pi + 2) == 5
 
-    assert floor(E + pi) == floor(E + pi)
-    assert floor(I + pi) == floor(I + pi)
+    assert floor(E + pi) == floor(E)+ floor(pi)
+    assert floor(I + pi) == floor(pi) + I
 
     assert floor(floor(pi)) == 3
     assert floor(floor(y)) == floor(y)
-    assert floor(floor(x)) == floor(floor(x))
 
     assert floor(x) == floor(x)
     assert floor(2*x) == floor(2*x)
@@ -73,10 +72,10 @@ def test_floor():
 
     assert floor(k/2) == floor(k/2)
 
-    assert floor(x + y) == floor(x + y)
+    assert floor(x + y) != floor(x) + floor(y)
 
-    assert floor(x + 3) == floor(x + 3)
-    assert floor(x + k) == floor(x + k)
+    assert floor(x + 3) == floor(x) + 3
+    assert floor(x + k) == floor(x)+ k
 
     assert floor(y + 3) == floor(y) + 3
     assert floor(y + k) == floor(y) + k
@@ -154,8 +153,8 @@ def test_ceiling():
     assert ceiling(E + 17) == 20
     assert ceiling(pi + 2) == 6
 
-    assert ceiling(E + pi) == ceiling(E + pi)
-    assert ceiling(I + pi) == ceiling(I + pi)
+    assert ceiling(E + pi) == ceiling(E) + ceiling(pi) -1
+    assert ceiling(I + pi) == ceiling(pi) + I
 
     assert ceiling(ceiling(pi)) == 4
     assert ceiling(ceiling(y)) == ceiling(y)
@@ -171,10 +170,10 @@ def test_ceiling():
 
     assert ceiling(k/2) == ceiling(k/2)
 
-    assert ceiling(x + y) == ceiling(x + y)
+    assert ceiling(x + y) != ceiling(x) + ceiling(y)
 
-    assert ceiling(x + 3) == ceiling(x + 3)
-    assert ceiling(x + k) == ceiling(x + k)
+    assert ceiling(x + 3) == ceiling(x) + 3
+    assert ceiling(x + k) == ceiling(x) + k
 
     assert ceiling(y + 3) == ceiling(y) + 3
     assert ceiling(y + k) == ceiling(y) + k

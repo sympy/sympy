@@ -155,8 +155,7 @@ def test_pow():
     n = Symbol('k', even=False)
     k = Symbol('k', even=True)
 
-    assert (-1)**x == (-1)**x
-    assert (-1)**n == (-1)**n
+    assert (-1)**n != 1
     assert (-2)**k == 2**k
     assert (-2*x)**k == (-2*x)**k  # we choose not to auto expand this
     assert (-1)**k == 1
@@ -274,7 +273,7 @@ def test_ncmul():
     assert A/A == 1
     assert A/(A**2) == 1/A
 
-    assert A/(1 + A) == A/(1 + A)
+    assert A/(1 + A) == A/(A + 1)
 
     assert set((A + B + 2*(A + B)).args) == \
         set([A, B, 2*(A + B)])
@@ -323,8 +322,8 @@ def test_powerbug():
 def test_Mul_doesnt_expand_exp():
     x = Symbol('x')
     y = Symbol('y')
-    assert exp(x)*exp(y) == exp(x)*exp(y)
-    assert 2**x*2**y == 2**x*2**y
+    assert exp(x)*exp(y) == exp(y)*exp(x)
+    assert 2**x*2**y != 2**(x+y)
     assert x**2*x**3 == x**5
     assert 2**x*3**x == 6**x
     assert x**(y)*x**(2*y) == x**(3*y)
@@ -1118,14 +1117,6 @@ def test_Mul_is_imaginary_real():
 
     assert (r*i*ii).is_imaginary is False
     assert (r*i*ii).is_real is True
-
-    # Github's issue 2775:
-    nr = Symbol('nr', real=False)
-    a = Symbol('a', real=True, nonzero=True)
-    b = Symbol('b', real=True)
-    assert (i*nr).is_real is None
-    assert (a*nr).is_real is False
-    assert (b*nr).is_real is None
 
 
 def test_Add_is_comparable():

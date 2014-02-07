@@ -13,7 +13,7 @@ z = symbols('z', nonzero=True)
 def test_piecewise():
 
     # Test canonization
-    assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (0, True)) != Piecewise((x, x < 1), (0, x>=1))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == \

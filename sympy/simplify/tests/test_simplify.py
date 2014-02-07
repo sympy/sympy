@@ -277,7 +277,7 @@ def test_trigsimp_issue_2515():
     assert trigsimp(-sin(x) + cos(x)*tan(x)) == 0
 
 
-def test_trigsimp_issue_3826():
+def test_issue_3826():
     assert trigsimp(tan(2*x).expand(trig=True)) == tan(2*x)
 
 
@@ -588,7 +588,7 @@ def test_powsimp():
     assert powsimp(
         f(4**x * 2**(-x) * 2**(-x)) ) == f(4**x * 2**(-x) * 2**(-x))
     assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep=True ) == f(1)
-    assert exp(x)*exp(y) == exp(x)*exp(y)
+    assert exp(x)*exp(y) == exp(y)*exp(x)
     assert powsimp(exp(x)*exp(y)) == exp(x + y)
     assert powsimp(exp(x)*exp(y)*2**x*2**y) == (2*E)**(x + y)
     assert powsimp(exp(x)*exp(y)*2**x*2**y, combine='exp') == \
@@ -1702,7 +1702,7 @@ def test_issue_2998():
 
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
-    assert signsimp(Eq(e, 0)) is S.true
+    assert signsimp(Eq(e, 0)) is True
 
 
 def test_besselsimp():
@@ -1837,22 +1837,3 @@ def test_exptrigsimp():
         s = simplify(e)
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
-
-
-def test_trigsimp_methods_gh2827():
-    measure1 = lambda expr: len(str(expr))
-    measure2 = lambda expr: -count_ops(expr)
-                                       # Return the most complicated result
-    expr = (x + 1)/(x + sin(x)**2 + cos(x)**2)
-    ans = Matrix([1])
-    M = Matrix([expr])
-    assert trigsimp(M, method='fu', measure=measure1) == ans
-    assert trigsimp(M, method='fu', measure=measure2) != ans
-    # all methods should work with Basic expressions even if they
-    # aren't Expr
-    M = Matrix.eye(1)
-    assert all(trigsimp(M, method=m) == M for m in
-        'fu matching groebner old'.split())
-    # watch for E in exptrigsimp, not only exp()
-    eq = 1/sqrt(E) + E
-    assert exptrigsimp(eq) == eq
