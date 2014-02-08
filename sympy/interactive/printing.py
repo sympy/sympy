@@ -64,8 +64,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     else:
         latex = default_latex
 
-    print("latex printer after: {}".format(latex))
-
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
         if _can_print_latex(arg):
