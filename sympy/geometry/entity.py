@@ -14,6 +14,7 @@ from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
+from sympy.geometry.point import Point
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -122,7 +123,6 @@ class GeometryEntity(Basic):
         Triangle(Point(2, 0), Point(-1, sqrt(3)), Point(-1, -sqrt(3)))
 
         """
-        from sympy.geometry.point import Point
         if pt:
             pt = Point(pt)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
@@ -159,7 +159,7 @@ class GeometryEntity(Basic):
         return self.func(*newargs)
 
     def reflect(self, line):
-        from sympy import atan, Line, Point, Dummy, oo
+        from sympy import atan, Line, Dummy, oo
 
         g = self
         l = line
@@ -215,7 +215,6 @@ class GeometryEntity(Basic):
         >>> t.encloses(t2)
         False
         """
-        from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
         from sympy.geometry.ellipse import Ellipse
         from sympy.geometry.polygon import Polygon, RegularPolygon
@@ -321,7 +320,6 @@ class GeometryEntity(Basic):
         raise NotImplementedError()
 
     def _eval_subs(self, old, new):
-        from sympy.geometry.point import Point
         if is_sequence(old) or is_sequence(new):
             old = Point(old)
             new = Point(new)
@@ -344,7 +342,6 @@ def scale(x, y, pt=None):
     rv[0, 0] = x
     rv[1, 1] = y
     if pt:
-        from sympy.geometry.point import Point
         pt = Point(pt)
         tr1 = translate(*(-pt).args)
         tr2 = translate(*pt.args)
