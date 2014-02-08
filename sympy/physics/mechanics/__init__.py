@@ -33,7 +33,7 @@ __all__.extend(lagrange.__all__)
 
 
 #Import essential elements from physics.vector module
-from sympy.physics.vector.frame import (ReferenceFrame, CoordinateSym)
+from sympy.physics.vector.frame import ReferenceFrame, CoordinateSym
 from sympy.physics.vector.dyadic import Dyadic
 from sympy.physics.vector.vector import Vector
 from sympy.physics.vector.printing import (

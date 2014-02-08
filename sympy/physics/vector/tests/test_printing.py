@@ -7,7 +7,6 @@ a, b, c = symbols('a, b, c')
 alpha, omega, beta = dynamicsymbols('alpha, omega, beta')
 
 A = ReferenceFrame('A')
-
 N = ReferenceFrame('N')
 
 v = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z

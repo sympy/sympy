@@ -46,11 +46,8 @@ class VectorLatexPrinter(LatexPrinter):
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
 
             name, supers, subs = split_super_sub(func)
-
             name = translate(name)
-
             supers = [translate(sup) for sup in supers]
-
             subs = [translate(sub) for sub in subs]
 
             if len(supers) != 0:
