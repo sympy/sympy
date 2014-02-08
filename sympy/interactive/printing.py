@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from io import BytesIO
 
-from sympy import latex
+from sympy import latex as default_latex
 from sympy import preview
 from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
@@ -61,6 +61,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     if latex_printer is not None:
         latex = latex_printer
+    else:
+        latex = default_latex
+
+    print("latex printer after: {}".format(latex))
 
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
@@ -72,12 +76,13 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     def _preview_wrapper(o):
         exprbuffer = BytesIO()
         try:
-            preview(o, output='png', viewer='BytesIO', outputbuffer=exprbuffer,
-                preamble=preamble, dvioptions=dvioptions)
+            preview(o, output='png', viewer='BytesIO',
+                    outputbuffer=exprbuffer, preamble=preamble,
+                    dvioptions=dvioptions)
         except Exception as e:
             # IPython swallows exceptions
             debug("png printing:", "_preview_wrapper exception raised:",
-                repr(e))
+                  repr(e))
             raise
         return exprbuffer.getvalue()
 
@@ -87,7 +92,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         o = o.replace(r'\operatorname', '')
         o = o.replace(r'\overline', r'\bar')
         return latex_to_png(o)
-
 
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
@@ -222,8 +226,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     ==========
 
     pretty_print: boolean
-        If True, use pretty_print to stringify;
-        if False, use sstrrepr to stringify.
+        If True, use pretty_print to stringify or the provided pretty
+        printer; if False, use sstrrepr to stringify or the provided string
+        printer.
     order: string or None
         There are a few different settings for this parameter:
         lex (default), which is lexographic order;
@@ -274,11 +279,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         If true then floats and integers will be printed. If false the
         printer will only print SymPy types.
     str_printer: function, optiona, default=None
-        A custom string printer.
+        A custom string printer function. This should mimic
+        sympy.printing.sstrrepr().
     pretty_printer: function, optional, default=None
-        A custom pretty printer.
+        A custom pretty printer. This should mimic sympy.printing.pretty().
     latex_printer: function, optional, default=None
-        A custom LaTeX printer.
+        A custom LaTeX printer. This should mimic sympy.printing.latex()
+        This should mimic sympy.printing.latex().
 
     Examples
     ========

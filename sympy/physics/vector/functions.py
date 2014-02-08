@@ -326,8 +326,8 @@ def vsprint(expr, **settings):
 
     """
 
-    pr = VectorStrPrinter(settings)
-    return pr.doprint(expr)
+    string_printer = VectorStrPrinter(settings)
+    return string_printer.doprint(expr)
 
 
 def vpprint(expr, **settings):
@@ -401,8 +401,9 @@ def vlatex(expr, **settings):
     '\\frac{q_{1} \\ddot{q}_{1}}{\\dot{q}_{1}}'
 
     """
+    latex_printer = VectorLatexPrinter(settings)
 
-    return VectorLatexPrinter(settings).doprint(expr)
+    return latex_printer.doprint(expr)
 
 
 def init_printing(**kwargs):
