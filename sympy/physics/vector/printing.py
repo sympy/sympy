@@ -256,6 +256,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         return pform
 
 
+# TODO : Why is this in printing??
 class VectorTypeError(TypeError):
 
     def __init__(self, other, type_str):

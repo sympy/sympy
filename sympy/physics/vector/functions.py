@@ -1,17 +1,17 @@
 from __future__ import print_function, division
 
+from sympy import (sympify, solve, diff, sin, cos, Matrix, Symbol,
+                   integrate, trigsimp, Function, symbols)
+from sympy.core.basic import S
 from sympy.core.compatibility import reduce
 from sympy.physics.vector.vector import Vector, _check_vector
-from sympy.physics.vector.frame import CoordinateSym, ReferenceFrame, \
-     _check_frame
+from sympy.physics.vector.frame import (CoordinateSym, ReferenceFrame,
+                                        _check_frame)
 from sympy.physics.vector.dyadic import Dyadic
+from sympy.physics.vector.point import Point
 from sympy.physics.vector.printing import (VectorStrPrinter,
                                            VectorPrettyPrinter,
                                            VectorLatexPrinter)
-from sympy.physics.vector.point import Point
-from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate, \
-     trigsimp, Function, symbols
-from sympy.core.basic import S
 
 
 def cross(vec1, vec2):
@@ -219,10 +219,10 @@ outer.__doc__ += Vector.outer.__doc__
 def time_derivative_printing():
     """Sets up interactive printing for vector derivatives.
 
-    The main benefit of this is for printing of time derivatives;
-    instead of displaying as Derivative(f(t),t), it will display f'
-    This is only actually needed for when derivatives are present and are not
-    in a physics.vector or physics.mechanics object.
+    The main benefit of this is for printing of time derivatives; instead of
+    displaying as Derivative(f(t),t), it will display f' This is only
+    actually needed for when derivatives are present and are not in a
+    physics.vector.Vector or physics.vector.Dyadic object.
 
     Examples
     ========
@@ -247,6 +247,9 @@ def time_derivative_printing():
     >>> sys.displayhook = sys.__displayhook__
 
     """
+
+    # TODO : Remove this function once init_printing works, as this
+    # displyhook stuff is in sympy.interactive.printing.
 
     import sys
     sys.displayhook = vprint
@@ -286,6 +289,14 @@ def vprint(expr, **settings):
     if (outstr != 'None'):
         builtins._ = outstr
         print(outstr)
+
+class VectorStrReprPrinter(VectorStrPrinter):
+    def _print_str(self, s):
+        return repr(s)
+
+def vsstrtepr(exp, **settings):
+    p = VectorStrReprPrinter(settings)
+    return p.doprint(expr)
 
 
 def vsprint(expr, **settings):
@@ -342,8 +353,17 @@ def vpprint(expr, **settings):
 
     """
 
-    mp = VectorPrettyPrinter(settings)
-    print(mp.doprint(expr))
+    pp = VectorPrettyPrinter(settings)
+
+    # XXX: this is an ugly hack, but at least it works
+    use_unicode = pp._settings['use_unicode']
+    from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
+    uflag = pretty_use_unicode(use_unicode)
+
+    try:
+        return pp.doprint(expr)
+    finally:
+        pretty_use_unicode(uflag)
 
 
 def vlatex(expr, **settings):
@@ -383,6 +403,20 @@ def vlatex(expr, **settings):
     """
 
     return VectorLatexPrinter(settings).doprint(expr)
+
+
+def init_printing(**kwargs):
+    """Initializes time derivative printing for all sympy objects, i.e. any
+    functions of time will be displayed in a more compact notation. Take key
+    word arguments for `init_printing`:
+
+    """
+    from sympy.interactive.printing import init_printing as default_init_printing
+    #__doc__ = __doc__ + default_init_printing.__doc__
+    kwargs['str_printer'] = vsstrtepr
+    kwargs['pretty_printer'] = vpprint
+    kwargs['latex_printer'] = vlatex
+    default_init_printing(**kwargs)
 
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
