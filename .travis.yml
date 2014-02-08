@@ -101,7 +101,7 @@ before_install:
     fi
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
       pip install "numpy==1.7.1";
-      pip install "matplotlib==1.2.1";
+      pip install --allow-external "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       sudo apt-get update;
