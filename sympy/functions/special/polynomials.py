@@ -1100,7 +1100,7 @@ class laguerre(OrthogonalPolynomial):
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
             if n.could_extract_minus_sign():
-                return C.exp(x) * laguerre(n - 1, -x)
+                return C.exp(x) * laguerre(-n - 1, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return S.One
