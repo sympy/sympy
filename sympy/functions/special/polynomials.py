@@ -487,7 +487,7 @@ class chebyshevt(OrthogonalPolynomial):
 
     def _eval_expand_func(self, **hints):
         n, x = self.args
-        if not n.is_Number:
+        if not n.is_Number or (n.is_Number and n.is_negative):
             # Symbolic result T_n(x)
             # T_n(-x)  --->  (-1)**n * T_n(x)
             if x.could_extract_minus_sign():
@@ -504,11 +504,7 @@ class chebyshevt(OrthogonalPolynomial):
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
-            if n.is_negative:
-                # T_{-n}(x) == T_n(x)
-                return self._eval_at_order(-n, x)
-            else:
-                return self._eval_at_order(n, x)
+            return self._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -598,7 +594,7 @@ class chebyshevu(OrthogonalPolynomial):
 
     def _eval_expand_func(self, **hints):
         n, x = self.args
-        if not n.is_Number:
+        if not n.is_Number or (n.is_Number and n.is_negative):
             # Symbolic result U_n(x)
             # U_n(-x)  --->  (-1)**n * U_n(x)
             if x.could_extract_minus_sign():
@@ -618,14 +614,7 @@ class chebyshevu(OrthogonalPolynomial):
                 return S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
-            if n.is_negative:
-                # U_{-n}(x)  --->  -U_{n-2}(x)
-                if n == S.NegativeOne:
-                    return S.Zero
-                else:
-                    return -self._eval_at_order(-n - 2, x)
-            else:
-                return self._eval_at_order(n, x)
+            return self._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -785,7 +774,7 @@ class legendre(OrthogonalPolynomial):
 
     def _eval_expand_func(self, **hints):
         n, x = self.args
-        if not n.is_Number:
+        if not n.is_Number or (n.is_Number and n.is_negative):
             # Symbolic result L_n(x)
             # L_n(-x)  --->  (-1)**n * L_n(x)
             if x.could_extract_minus_sign():
@@ -804,11 +793,7 @@ class legendre(OrthogonalPolynomial):
                 return self
         else:
             # n is a given fixed integer, evaluate into polynomial
-            if n.is_negative:
-                raise ValueError(
-                    "The index n must be nonnegative integer (got %r)" % n)
-            else:
-                return self._eval_at_order(n, x)
+            return self._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -1095,7 +1080,7 @@ class laguerre(OrthogonalPolynomial):
 
     def _eval_expand_func(self, **hints):
         n, x = self.args
-        if not n.is_Number:
+        if not n.is_Number or (n.is_Number and n.is_negative):
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
@@ -1112,11 +1097,7 @@ class laguerre(OrthogonalPolynomial):
                 return self
         else:
             # n is a given fixed integer, evaluate into polynomial
-            if n.is_negative:
-                raise ValueError(
-                    "The index n must be nonnegative integer (got %r)" % n)
-            else:
-                return laguerre_poly(n, x, 0)
+            return laguerre_poly(n, x, 0)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
