@@ -53,18 +53,18 @@ def test_vector_latex():
 
     v = (a ** 2 + b / c) * A.x + sqrt(d) * A.y + cos(omega) * A.z
 
-    assert v._latex() == ('(a^{2} + \\frac{b}{c})\\mathbf{\\hat{a}_x} + '
-                          '\\sqrt{d}\\mathbf{\\hat{a}_y} + '
-                          '\\operatorname{cos}\\left(\\omega\\right)'
-                          '\\mathbf{\\hat{a}_z}')
+    assert v._latex() == (r'(a^{2} + \frac{b}{c})\mathbf{\hat{a}_x} + '
+                          r'\sqrt{d}\mathbf{\hat{a}_y} + '
+                          r'\operatorname{cos}\left(\omega\right)'
+                          r'\mathbf{\hat{a}_z}')
 
     theta, omega, alpha, q = dynamicsymbols('theta, omega, alpha, q')
 
     v = theta * A.x + omega * omega * A.y + (q * alpha) * A.z
 
-    assert v._latex() == ('\\theta\\mathbf{\\hat{a}_x} + '
-                          '\\omega^{2}\\mathbf{\\hat{a}_y} + '
-                          '\\alpha q\\mathbf{\\hat{a}_z}')
+    assert v._latex() == (r'\theta\mathbf{\hat{a}_x} + '
+                          r'\omega^{2}\mathbf{\hat{a}_y} + '
+                          r'\alpha q\mathbf{\hat{a}_z}')
 
     phi1, phi2, phi3 = dynamicsymbols('phi1, phi2, phi3')
     theta1, theta2, theta3 = symbols('theta1, theta2, theta3')
@@ -73,12 +73,12 @@ def test_vector_latex():
          cos(phi1) * cos(phi2) * A.y +
          cos(theta1 + phi3) * A.z)
 
-    assert v._latex() == ('\\operatorname{sin}\\left(\\theta_{1}\\right)'
-                          '\\mathbf{\\hat{a}_x} + \\operatorname{cos}'
-                          '\\left(\\phi_{1}\\right) \\operatorname{cos}'
-                          '\\left(\\phi_{2}\\right)\\mathbf{\\hat{a}_y} + '
-                          '\\operatorname{cos}\\left(\\theta_{1} + '
-                          '\\phi_{3}\\right)\\mathbf{\\hat{a}_z}')
+    assert v._latex() == (r'\operatorname{sin}\left(\theta_{1}\right)'
+                          r'\mathbf{\hat{a}_x} + \operatorname{cos}'
+                          r'\left(\phi_{1}\right) \operatorname{cos}'
+                          r'\left(\phi_{2}\right)\mathbf{\hat{a}_y} + '
+                          r'\operatorname{cos}\left(\theta_{1} + '
+                          r'\phi_{3}\right)\mathbf{\hat{a}_z}')
 
     N = ReferenceFrame('N')
 
@@ -86,10 +86,10 @@ def test_vector_latex():
 
     v = (a ** 2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
 
-    expected = ('(a^{2} + \\frac{b}{c})\\mathbf{\\hat{n}_x} + '
-                '\\sqrt{d}\\mathbf{\\hat{n}_y} + '
-                '\\operatorname{cos}\\left(\\omega\\right)'
-                '\\mathbf{\\hat{n}_z}')
+    expected = (r'(a^{2} + \frac{b}{c})\mathbf{\hat{n}_x} + '
+                r'\sqrt{d}\mathbf{\hat{n}_y} + '
+                r'\operatorname{cos}\left(\omega\right)'
+                r'\mathbf{\hat{n}_z}')
 
     assert v._latex() == expected
     lp = VectorLatexPrinter()
@@ -101,9 +101,9 @@ def test_vector_latex():
 
     v = (a ** 2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
 
-    expected = ('(a^{2} + \\frac{b}{c})\\hat{i} + '
-                '\\sqrt{d}\\hat{j} + '
-                '\\operatorname{cos}\\left(\\omega\\right)\\hat{k}')
+    expected = (r'(a^{2} + \frac{b}{c})\hat{i} + '
+                r'\sqrt{d}\hat{j} + '
+                r'\operatorname{cos}\left(\omega\right)\hat{k}')
     assert v._latex() == expected
 
 
@@ -119,8 +119,8 @@ def test_vector_latex_with_functions():
 
     v = omega.diff() ** alpha * N.x
 
-    assert v._latex() == ('\\left(\\dot{\\omega}\\right)^{\\alpha}'
-                          '\\mathbf{\\hat{n}_x}')
+    assert v._latex() == (r'\left(\dot{\omega}\right)^{\alpha}'
+                          r'\mathbf{\hat{n}_x}')
 
 
 def test_dyadic_pretty_print():
