@@ -256,9 +256,12 @@ class VectorPrettyPrinter(PrettyPrinter):
         return pform
 
 
+# TODO : Why is this in printing??
 class VectorTypeError(TypeError):
 
     def __init__(self, other, type_str):
         msg = ("Expected an instance of %s, instead received an object "
                "'%s' of type %s.") % (type_str, other, type(other))
         super(VectorTypeError, self).__init__(msg)
+
+
