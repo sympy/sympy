@@ -124,9 +124,12 @@ class jacobi(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
     """
 
-
     @classmethod
     def eval(cls, n, a, b, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, a, b, x = self.args
         # Simplify to other polynomials
         # P^{a, a}_n(x)
         if a == b:
@@ -182,7 +185,7 @@ class jacobi(OrthogonalPolynomial):
             k = C.Dummy("k")
             f1 = 1 / (a + b + n + k + 1)
             f2 = (-1)**(n - k) * ((a + b + 2*k + 1) * C.RisingFactorial(a + k + 1, n - k) /
-                  ((n - k) * C.RisingFactorial(a + b + k + 1, n - k)))
+                                  ((n - k) * C.RisingFactorial(a + b + k + 1, n - k)))
             return C.Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n - 1))
         elif argindex == 4:
             # Diff wrt x
@@ -330,9 +333,12 @@ class gegenbauer(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
     """
 
-
     @classmethod
     def eval(cls, n, a, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, a, x = self.args
         # For negative n the polynomials vanish
         # See http://functions.wolfram.com/Polynomials/GegenbauerC3/03/01/03/0012/
         if n.is_negative:
@@ -364,7 +370,7 @@ class gegenbauer(OrthogonalPolynomial):
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return (2**n * sqrt(S.Pi) * C.gamma(a + S.Half*n) /
-                        (C.gamma((1 - n)/2) * C.gamma(n + 1) * C.gamma(a)) )
+                        (C.gamma((1 - n)/2) * C.gamma(n + 1) * C.gamma(a)))
             if x == S.One:
                 return C.gamma(2*a + n) / (C.gamma(2*a) * C.gamma(n + 1))
             elif x == S.Infinity:
@@ -383,7 +389,7 @@ class gegenbauer(OrthogonalPolynomial):
             n, a, x = self.args
             k = C.Dummy("k")
             factor1 = 2 * (1 + (-1)**(n - k)) * (k + a) / ((k +
-                           n + 2*a) * (n - k))
+                                                            n + 2*a) * (n - k))
             factor2 = 2*(k + 1) / ((k + 2*a) * (2*k + 2*a + 1)) + \
                 2 / (k + n + 2*a)
             kern = factor1*gegenbauer(k, a, x) + factor2*gegenbauer(n, a, x)
@@ -423,7 +429,7 @@ class chebyshevt(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevt, diff
     >>> from sympy.abc import n,x
     >>> chebyshevt(0, x)
     1
@@ -477,6 +483,10 @@ class chebyshevt(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, x = self.args
         if not n.is_Number:
             # Symbolic result T_n(x)
             # T_n(-x)  --->  (-1)**n * T_n(x)
@@ -496,9 +506,9 @@ class chebyshevt(OrthogonalPolynomial):
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
                 # T_{-n}(x) == T_n(x)
-                return cls._eval_at_order(-n, x)
+                return self._eval_at_order(-n, x)
             else:
-                return cls._eval_at_order(n, x)
+                return self._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -530,7 +540,7 @@ class chebyshevu(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevu, diff
     >>> from sympy.abc import n,x
     >>> chebyshevu(0, x)
     1
@@ -584,6 +594,10 @@ class chebyshevu(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, x = self.args
         if not n.is_Number:
             # Symbolic result U_n(x)
             # U_n(-x)  --->  (-1)**n * U_n(x)
@@ -609,9 +623,9 @@ class chebyshevu(OrthogonalPolynomial):
                 if n == S.NegativeOne:
                     return S.Zero
                 else:
-                    return -cls._eval_at_order(-n - 2, x)
+                    return -self._eval_at_order(-n - 2, x)
             else:
-                return cls._eval_at_order(n, x)
+                return self._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -663,12 +677,11 @@ class chebyshevt_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-
     @classmethod
     def eval(cls, n, k):
         if not ((0 <= k) is (k < n) is True):
             raise ValueError("must have 0 <= k < n, "
-                "got k = %s and n = %s" % (k, n))
+                             "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(2*k + 1)/(2*n))
 
 
@@ -703,12 +716,11 @@ class chebyshevu_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-
     @classmethod
     def eval(cls, n, k):
         if not ((0 <= k) is (k < n) is True):
             raise ValueError("must have 0 <= k < n, "
-                "got k = %s and n = %s" % (k, n))
+                             "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(k + 1)/(n + 1))
 
 #----------------------------------------------------------------------------
@@ -769,6 +781,10 @@ class legendre(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, x = self.args
         if not n.is_Number:
             # Symbolic result L_n(x)
             # L_n(-x)  --->  (-1)**n * L_n(x)
@@ -784,13 +800,15 @@ class legendre(OrthogonalPolynomial):
                 return S.One
             elif x == S.Infinity:
                 return S.Infinity
+            else:
+                return self
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
                 raise ValueError(
                     "The index n must be nonnegative integer (got %r)" % n)
             else:
-                return cls._eval_at_order(n, x)
+                return self._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -864,7 +882,6 @@ class assoc_legendre(Function):
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
-
     @classmethod
     def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
@@ -872,6 +889,10 @@ class assoc_legendre(Function):
 
     @classmethod
     def eval(cls, n, m, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, m, x = self.args
         if m.could_extract_minus_sign():
             # P^{-m}_n  --->  F * P^m_n
             return S.NegativeOne**(-m) * (C.factorial(m + n)/C.factorial(n - m)) * assoc_legendre(n, -m, x)
@@ -882,10 +903,11 @@ class assoc_legendre(Function):
             return 2**m*sqrt(S.Pi) / (C.gamma((1 - m - n)/2)*C.gamma(1 - (m - n)/2))
         if n.is_Number and m.is_Number and n.is_integer and m.is_integer:
             if n.is_negative:
-                raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
+                raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (self, n))
             if abs(m) > n:
-                raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
-            return cls._eval_at_order(int(n), abs(int(m))).subs(_x, x)
+                raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (self, n, m))
+            return self._eval_at_order(int(n), abs(int(m))).subs(_x, x)
+        return self
 
     def fdiff(self, argindex=3):
         if argindex == 1:
@@ -967,6 +989,10 @@ class hermite(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, x = self.args
         if not n.is_Number:
             # Symbolic result H_n(x)
             # H_n(-x)  --->  (-1)**n * H_n(x)
@@ -977,13 +1003,15 @@ class hermite(OrthogonalPolynomial):
                 return 2**n * sqrt(S.Pi) / C.gamma((S.One - n)/2)
             elif x == S.Infinity:
                 return S.Infinity
+            else:
+                return self
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
                 raise ValueError(
                     "The index n must be nonnegative integer (got %r)" % n)
             else:
-                return cls._eval_at_order(n, x)
+                return self._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -1063,6 +1091,10 @@ class laguerre(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, x = self.args
         if not n.is_Number:
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
@@ -1076,6 +1108,8 @@ class laguerre(OrthogonalPolynomial):
                 return S.Infinity
             elif x == S.Infinity:
                 return S.NegativeOne**n * S.Infinity
+            else:
+                return self
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
@@ -1119,7 +1153,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import laguerre, assoc_laguerre, diff
+    >>> from sympy import assoc_laguerre, diff
     >>> from sympy.abc import x, n, a
     >>> assoc_laguerre(0, a, x)
     1
@@ -1171,9 +1205,12 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
-
     @classmethod
     def eval(cls, n, alpha, x):
+        pass
+
+    def _eval_expand_func(self, **hints):
+        n, alpha, x = self.args
         # L_{n}^{0}(x)  --->  L_{n}(x)
         if alpha == S.Zero:
             return laguerre(n, x)
@@ -1186,6 +1223,8 @@ class assoc_laguerre(OrthogonalPolynomial):
                 return S.NegativeOne**n * S.Infinity
             elif x == S.NegativeInfinity and n > S.Zero:
                 return S.Infinity
+            else:
+                return self
         else:
             # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
@@ -1210,7 +1249,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x):
+    def _eval_rewrite_as_polynomial(self, n, alpha, x):
         # TODO: Should make sure n is in N_0
         k = C.Dummy("k")
         kern = C.RisingFactorial(
