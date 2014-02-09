@@ -165,6 +165,8 @@ def test_operator_match():
 
 
 def test_express():
+    assert express(Vector(0), N) == Vector(0)
+    assert express(S(0), N) == S(0)
     assert express(A.x, C) == cos(q3)*C.x + sin(q3)*C.z
     assert express(A.y, C) == sin(q2)*sin(q3)*C.x + cos(q2)*C.y - \
         sin(q2)*cos(q3)*C.z
