@@ -203,6 +203,9 @@ class jacobi(OrthogonalPolynomial):
                 C.factorial(k) * ((1 - x)/2)**k)
         return 1 / C.factorial(n) * C.Sum(kern, (k, 0, n))
 
+    def _eval_rewrite_as_hyper(self, n, a, b, x):
+        return RisingFactorial(a + 1, n) / factorial(n) * hyper([-n, n + a + b + 1], [a + 1], (1 - x)/2)
+
     def _eval_conjugate(self):
         n, a, b, x = self.args
         return self.func(n, a.conjugate(), b.conjugate(), x.conjugate())
@@ -406,9 +409,13 @@ class gegenbauer(OrthogonalPolynomial):
                 (C.factorial(k) * C.factorial(n - 2*k)))
         return C.Sum(kern, (k, 0, C.floor(n/2)))
 
+    def _eval_rewrite_as_hyper(self, n, a, x):
+        return RisingFactorial(2*a, n) / factorial(n) * hyper([-n, n + 2*a], [a + S.Half], (1 - x)/2)
+
     def _eval_conjugate(self):
         n, a, x = self.args
         return self.func(n, a.conjugate(), x.conjugate())
+
 
 #----------------------------------------------------------------------------
 # Chebyshev polynomials of first and second kind
@@ -520,6 +527,9 @@ class chebyshevt(OrthogonalPolynomial):
         k = C.Dummy("k")
         kern = C.binomial(n, 2*k) * (x**2 - 1)**k * x**(n - 2*k)
         return C.Sum(kern, (k, 0, C.floor(n/2)))
+
+    def _eval_rewrite_as_hyper(self, n, x):
+        return hyper([-n, n], [S.Half], (1 - x)/2)
 
 
 class chebyshevu(OrthogonalPolynomial):
@@ -634,6 +644,9 @@ class chebyshevu(OrthogonalPolynomial):
         kern = S.NegativeOne**k * C.factorial(
             n - k) * (2*x)**(n - 2*k) / (C.factorial(k) * C.factorial(n - 2*k))
         return C.Sum(kern, (k, 0, C.floor(n/2)))
+
+    def _eval_rewrite_as_hyper(self, n, x):
+        return (n + 1) * hyper([-n, n + 2], [3*S.Half], (1 - x)/2)
 
 
 class chebyshevt_root(Function):
@@ -813,6 +826,9 @@ class legendre(OrthogonalPolynomial):
         k = C.Dummy("k")
         kern = (-1)**k*C.binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
         return C.Sum(kern, (k, 0, n))
+
+    def _eval_rewrite_as_hyper(self, n, x):
+        return hyper([-n, n + 1], [1], (1 - x)/2)
 
 
 class assoc_legendre(Function):
@@ -1006,6 +1022,10 @@ class hermite(OrthogonalPolynomial):
         kern = (-1)**k / (C.factorial(k)*C.factorial(n - 2*k)) * (2*x)**(n - 2*k)
         return C.factorial(n)*C.Sum(kern, (k, 0, C.floor(n/2)))
 
+    def _eval_rewrite_as_hyper(self, n, a, x):
+        return (2*x)**n * hyper([-n/2, (1 - n)/2], [], -1/x**2)
+
+
 #----------------------------------------------------------------------------
 # Laguerre polynomials
 #
@@ -1105,6 +1125,9 @@ class laguerre(OrthogonalPolynomial):
         k = C.Dummy("k")
         kern = C.RisingFactorial(-n, k) / C.factorial(k)**2 * x**k
         return C.Sum(kern, (k, 0, n))
+
+    def _eval_rewrite_as_hyper(self, n, x):
+        return hyper([-n], [1], x)
 
 
 class assoc_laguerre(OrthogonalPolynomial):
@@ -1222,10 +1245,14 @@ class assoc_laguerre(OrthogonalPolynomial):
             -n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
         return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))
 
+    def _eval_rewrite_as_hyper(self, n, a, x):
+        return RisingFactorial(a + 1, n) / factorial(n) * hyper([-n], [a + 1], x)
+
 
 #----------------------------------------------------------------------------
 # Charlier polynomials
 #
+
 
 class charlier(OrthogonalPolynomial):
     r"""
