@@ -1,7 +1,9 @@
-from sympy import diff, trigsimp, expand, sin, cos, \
-     solve, Symbol, sympify, eye, ImmutableMatrix as Matrix
+from sympy import (diff, trigsimp, expand, sin, cos, solve, Symbol, sympify,
+                   eye, ImmutableMatrix as Matrix)
 from sympy.core.compatibility import string_types, u
-from sympy.physics.vector.vector import Vector, _check_vector
+from .vector import Vector, _check_vector
+
+__all__ = ['CoordinateSym', 'ReferenceFrame']
 
 
 class CoordinateSym(Symbol):
@@ -735,6 +737,6 @@ class ReferenceFrame(object):
 
 
 def _check_frame(other):
-    from sympy.physics.vector.printing import VectorTypeError
+    from .vector import VectorTypeError
     if not isinstance(other, ReferenceFrame):
         raise VectorTypeError(other, "ReferenceFrame")

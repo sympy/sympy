@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from sympy import Derivative
 from sympy.core import C
 from sympy.core.compatibility import u
@@ -8,6 +10,8 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
+
+__all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex', 'init_printing']
 
 
 class VectorStrPrinter(StrPrinter):
@@ -31,6 +35,11 @@ class VectorStrPrinter(StrPrinter):
         if isinstance(type(e), UndefinedFunction):
             return StrPrinter().doprint(e).replace("(%s)" % t, '')
         return e.func.__name__ + "(%s)" % self.stringify(e.args, ", ")
+
+
+class VectorStrReprPrinter(VectorStrPrinter):
+    def _print_str(self, s):
+        return repr(s)
 
 
 class VectorLatexPrinter(LatexPrinter):
@@ -230,6 +239,8 @@ class VectorPrettyPrinter(PrettyPrinter):
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
+        # TODO : This should return a string not a prettyForm, according to
+        # Aaron.
         return pform
 
     def _print_Function(self, e):
@@ -253,15 +264,207 @@ class VectorPrettyPrinter(PrettyPrinter):
         # store pform parts so it can be reassembled e.g. when powered
         pform.prettyFunc = prettyFunc
         pform.prettyArgs = prettyArgs
+        # TODO : This should return a string not a prettyForm, according to
+        # Aaron.
         return pform
 
 
-# TODO : Why is this in printing??
-class VectorTypeError(TypeError):
+def vprint(expr, **settings):
+    r"""Function for printing of expressions generated in the
+    sympy.physics vector package.
 
-    def __init__(self, other, type_str):
-        msg = ("Expected an instance of %s, instead received an object "
-               "'%s' of type %s.") % (type_str, other, type(other))
-        super(VectorTypeError, self).__init__(msg)
+    Extends SymPy's StrPrinter; vprint is equivalent to:
+    print sstr()
+    vprint takes the same options as sstr.
+
+    Parameters
+    ==========
+
+    expr : valid sympy object
+        SymPy expression to print
+    settings : args
+        Same as print for SymPy
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import vprint, dynamicsymbols
+    >>> u1 = dynamicsymbols('u1')
+    >>> print(u1)
+    u1(t)
+    >>> vprint(u1)
+    u1
+
+    """
+
+    outstr = vsprint(expr, **settings)
+
+    from sympy.core.compatibility import builtins
+    if (outstr != 'None'):
+        builtins._ = outstr
+        print(outstr)
 
 
+def vsstrrepr(expr, **settings):
+    p = VectorStrReprPrinter(settings)
+    return p.doprint(expr)
+
+
+def vsprint(expr, **settings):
+    r"""Function for displaying expressions generated in the
+    sympy.physics vector package.
+
+    Returns the output of vprint() as a string.
+
+    Parameters
+    ==========
+
+    expr : valid sympy object
+        SymPy expression to print
+    settings : args
+        Same as print for SymPy
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import vsprint, dynamicsymbols
+    >>> u1, u2 = dynamicsymbols('u1 u2')
+    >>> u2d = dynamicsymbols('u2', level=1)
+    >>> print("%s = %s" % (u1, u2 + u2d))
+    u1(t) = u2(t) + Derivative(u2(t), t)
+    >>> print("%s = %s" % (vsprint(u1), vsprint(u2 + u2d)))
+    u1 = u2 + u2'
+
+    """
+
+    string_printer = VectorStrPrinter(settings)
+    return string_printer.doprint(expr)
+
+
+def vpprint(expr, **settings):
+    r"""Function for pretty printing of expressions generated in the
+    sympy.physics vector package.
+
+    Mainly used for expressions not inside a vector; the output of running
+    scripts and generating equations of motion. Takes the same options as
+    SymPy's pretty_print(); see that function for more information.
+
+    Parameters
+    ==========
+
+    expr : valid sympy object
+        SymPy expression to pretty print
+    settings : args
+        Same as pretty print
+
+    Examples
+    ========
+
+    Use in the same way as pprint
+
+    """
+
+    pp = VectorPrettyPrinter(settings)
+
+    # XXX: this is an ugly hack, but at least it works
+    use_unicode = pp._settings['use_unicode']
+    from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
+    uflag = pretty_use_unicode(use_unicode)
+
+    try:
+        return pp.doprint(expr)
+    finally:
+        pretty_use_unicode(uflag)
+
+
+def vlatex(expr, **settings):
+    r"""Function for printing latex representation of sympy.physics.vector
+    objects.
+
+    For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
+    same options as SymPy's latex(); see that function for more information;
+
+    Parameters
+    ==========
+
+    expr : valid sympy object
+        SymPy expression to represent in LaTeX form
+    settings : args
+        Same as latex()
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import vlatex, ReferenceFrame, dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q1, q2 = dynamicsymbols('q1 q2')
+    >>> q1d, q2d = dynamicsymbols('q1 q2', 1)
+    >>> q1dd, q2dd = dynamicsymbols('q1 q2', 2)
+    >>> vlatex(N.x + N.y)
+    '\\mathbf{\\hat{n}_x} + \\mathbf{\\hat{n}_y}'
+    >>> vlatex(q1 + q2)
+    'q_{1} + q_{2}'
+    >>> vlatex(q1d)
+    '\\dot{q}_{1}'
+    >>> vlatex(q1 * q2d)
+    'q_{1} \\dot{q}_{2}'
+    >>> vlatex(q1dd * q1 / q1d)
+    '\\frac{q_{1} \\ddot{q}_{1}}{\\dot{q}_{1}}'
+
+    """
+    latex_printer = VectorLatexPrinter(settings)
+
+    return latex_printer.doprint(expr)
+
+
+def init_printing(**kwargs):
+    """Initializes time derivative printing for all SymPy objects, i.e. any
+    functions of time will be displayed in a more compact notation. Any key
+    word arguments for `sympy.interactive.init_printing` are valid.
+
+    The main benefit of this is for printing of time derivatives; instead of
+    displaying as ``Derivative(f(t),t)``, it will display ``f'``. This is
+    only actually needed for when derivatives are present and are not in a
+    physics.vector.Vector or physics.vector.Dyadic object.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, symbols
+    >>> from sympy.physics.vector import init_printing
+    >>> t, x = symbols('t, x')
+    >>> omega = Function('omega')
+    >>> omega(x).diff()
+    Derivative(omega(x), x)
+    >>> omega(t).diff()
+    Derivative(omega(t), t)
+    >>> # Default uses pretty print and unicode.
+    >>> init_printing()
+    >>> omega(x).diff()
+    d
+    ──(ω(x))
+    dx
+    >>> omega(t).diff()
+    ω̇
+    >>> # Use only ASCII.
+    >>> init_printing(use_unicode=False)
+    >>> omega(x).diff()
+    d
+    --(omega(x))
+    dx
+    >>> omega(t).diff()
+    omegȧ
+    >>> # Use the string printer.
+    >>> init_printing(pretty_print=False)
+    >>> omega(x).diff()
+    Derivative(omega(x), x)
+    >>> omega(t).diff()
+    omega'
+
+    """
+    from sympy.interactive.printing import (init_printing as
+                                            default_init_printing)
+    kwargs['str_printer'] = vsstrrepr
+    kwargs['pretty_printer'] = vpprint
+    kwargs['latex_printer'] = vlatex
+    default_init_printing(**kwargs)

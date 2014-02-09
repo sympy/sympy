@@ -2,6 +2,8 @@ from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
                    ImmutableMatrix as Matrix)
 from sympy.core.compatibility import u
 
+__all__ = ['Vector']
+
 
 class Vector(object):
     """The class used to define vectors.
@@ -623,6 +625,14 @@ class Vector(object):
     def normalize(self):
         """Returns a Vector of magnitude 1, codirectional with self."""
         return Vector(self.args + []) / self.magnitude()
+
+
+class VectorTypeError(TypeError):
+
+    def __init__(self, other, type_str):
+        msg = ("Expected an instance of %s, instead received an object "
+               "'%s' of type %s.") % (type_str, other, type(other))
+        super(VectorTypeError, self).__init__(msg)
 
 
 def _check_vector(other):
