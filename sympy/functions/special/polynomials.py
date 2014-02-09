@@ -126,6 +126,8 @@ class jacobi(OrthogonalPolynomial):
     .. [1] http://en.wikipedia.org/wiki/Jacobi_polynomials
     .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+    .. [4] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -202,6 +204,7 @@ class jacobi(OrthogonalPolynomial):
         return 1 / C.factorial(n) * C.Sum(kern, (k, 0, n))
 
     def _eval_rewrite_as_hyper(self, n, a, b, x):
+        #
         return RisingFactorial(a + 1, n) / factorial(n) * hyper([-n, n + a + b + 1], [a + 1], (1 - x)/2)
 
     def _eval_conjugate(self):
@@ -334,6 +337,8 @@ class gegenbauer(OrthogonalPolynomial):
     .. [1] http://en.wikipedia.org/wiki/Gegenbauer_polynomials
     .. [2] http://mathworld.wolfram.com/GegenbauerPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
+    .. [4] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -480,6 +485,8 @@ class chebyshevt(OrthogonalPolynomial):
     .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
     .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
     .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+    .. [6] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     _ortho_poly = staticmethod(chebyshevt_poly)
@@ -590,6 +597,8 @@ class chebyshevu(OrthogonalPolynomial):
     .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html
     .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/
     .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/
+    .. [6] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     _ortho_poly = staticmethod(chebyshevu_poly)
@@ -777,6 +786,8 @@ class legendre(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LegendreP/
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
+    .. [5] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     _ortho_poly = staticmethod(legendre_poly)
@@ -978,6 +989,8 @@ class hermite(OrthogonalPolynomial):
     .. [1] http://en.wikipedia.org/wiki/Hermite_polynomial
     .. [2] http://mathworld.wolfram.com/HermitePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/HermiteH/
+    .. [4] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     _ortho_poly = staticmethod(hermite_poly)
@@ -1080,6 +1093,8 @@ class laguerre(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/LaguerrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+    .. [5] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1193,6 +1208,8 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
+    .. [5] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1303,6 +1320,8 @@ class charlier(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Charlier_polynomials
     .. [2] http://dlmf.nist.gov/18.19
+    .. [3] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1376,6 +1395,8 @@ class meixner(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Meixner_polynomials
     .. [2] http://dlmf.nist.gov/18.19
+    .. [3] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1455,6 +1476,8 @@ class krawtchouk(OrthogonalPolynomial):
     .. [1] http://en.wikipedia.org/wiki/Krawtchouk_polynomials
     .. [2] http://dlmf.nist.gov/18.19
     .. [3] http://mathworld.wolfram.com/KrawtchoukPolynomial.html
+    .. [4] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1527,6 +1550,8 @@ class meixner_pollaczek(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Meixner%E2%80%93Pollaczek_polynomials
     .. [2] http://dlmf.nist.gov/18.19
+    .. [3] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1598,6 +1623,8 @@ class hahn(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Hahn_polynomials
     .. [2] http://dlmf.nist.gov/18.19
+    .. [3] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1670,6 +1697,8 @@ class hahn_dual(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Dual_Hahn_polynomials
     .. [2] http://dlmf.nist.gov/18.19
+    .. [3] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1744,6 +1773,8 @@ class hahn_continuous(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Continuous_Hahn_polynomials
     .. [2] http://dlmf.nist.gov/18.19
+    .. [3] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1815,6 +1846,8 @@ class hahn_dual_continuous(OrthogonalPolynomial):
 
     .. [1] http://en.wikipedia.org/wiki/Continuous_dual_Hahn_polynomials
     .. [2] http://dlmf.nist.gov/18.19
+    .. [3] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1890,6 +1923,8 @@ class wilson(OrthogonalPolynomial):
     .. [2] http://dlmf.nist.gov/18.25
     .. [3] http://dlmf.nist.gov/18.26
     .. [4] http://www.encyclopediaofmath.org/index.php?title=Wilson_polynomials
+    .. [5] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
@@ -1969,6 +2004,8 @@ class racah(OrthogonalPolynomial):
     .. [1] http://en.wikipedia.org/wiki/Racah_polynomials
     .. [2] http://dlmf.nist.gov/18.25
     .. [3] http://dlmf.nist.gov/18.26
+    .. [4] 'Hypergeometric orthogonal polynomials and their q-analogues'
+           R. Koekoek, P. A. Lesky and R. F. Swarttouw, Springer-Verlag, 2010.
     """
 
     @classmethod
