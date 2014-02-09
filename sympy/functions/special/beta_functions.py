@@ -9,9 +9,10 @@ from sympy.functions.special.gamma_functions import gamma, digamma
 
 class beta(Function):
     """Beta function or Euler's first integral is closely associated with gamma function.
-    The Beta function is a function of two variables that is often found in probability theory 
-    and mathematical statistics (for example, as a normalizing constant in the 
-    probability density functions of the F distribution and of the Student's t distribution).
+    The Beta function often used in probability theory and mathematical statistics. It satisfies
+    properties like:
+    B(a,1) = 1/a;
+    B(a,b) = B(b,a) etc.
 
     Examples
     ========
@@ -48,7 +49,8 @@ class beta(Function):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Beta_function
-    .. [2] http://www.statlect.com/subon2/betfun1.htm
+    .. [2] http://mathworld.wolfram.com/BetaFunction.html
+    .. [3] http://dlmf.nist.gov/5.12
     """
     nargs = 2
     unbranched = True
