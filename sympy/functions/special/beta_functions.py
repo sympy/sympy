@@ -17,7 +17,7 @@ class beta(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma
+    >>> from sympy import I, pi
     >>> from sympy.abc import x,y
 
     The Beta function obeys the mirror symmetry:
