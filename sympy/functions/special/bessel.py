@@ -933,6 +933,7 @@ class airyai(AiryBase):
             if M is not None:
                 m = M[m]
                 # The transformation is given by 03.05.16.0001.01
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAi/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1102,6 +1103,7 @@ class airybi(AiryBase):
             if M is not None:
                 m = M[m]
                 # The transformation is given by 03.06.16.0001.01
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBi/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1255,6 +1257,7 @@ class airyaiprime(AiryBase):
                 # The transformation is in principle
                 # given by 03.07.16.0001.01 but note
                 # that there is an error in this formule.
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1412,6 +1415,7 @@ class airybiprime(AiryBase):
                 # The transformation is in principle
                 # given by 03.08.16.0001.01 but note
                 # that there is an error in this formule.
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
