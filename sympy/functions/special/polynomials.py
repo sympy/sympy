@@ -20,7 +20,6 @@ from sympy.functions.special.hyper import hyper
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 
 
-
 from sympy.polys.orthopolys import (
     jacobi_poly,
     gegenbauer_poly,
@@ -129,7 +128,6 @@ class jacobi(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
     """
 
-
     @classmethod
     def eval(cls, n, a, b, x):
         # Simplify to other polynomials
@@ -187,7 +185,7 @@ class jacobi(OrthogonalPolynomial):
             k = C.Dummy("k")
             f1 = 1 / (a + b + n + k + 1)
             f2 = (-1)**(n - k) * ((a + b + 2*k + 1) * C.RisingFactorial(a + k + 1, n - k) /
-                  ((n - k) * C.RisingFactorial(a + b + k + 1, n - k)))
+                                  ((n - k) * C.RisingFactorial(a + b + k + 1, n - k)))
             return C.Sum(f1 * (jacobi(n, a, b, x) + f2*jacobi(k, a, b, x)), (k, 0, n - 1))
         elif argindex == 4:
             # Diff wrt x
@@ -338,7 +336,6 @@ class gegenbauer(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
     """
 
-
     @classmethod
     def eval(cls, n, a, x):
         # For negative n the polynomials vanish
@@ -372,7 +369,7 @@ class gegenbauer(OrthogonalPolynomial):
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return (2**n * sqrt(S.Pi) * C.gamma(a + S.Half*n) /
-                        (C.gamma((1 - n)/2) * C.gamma(n + 1) * C.gamma(a)) )
+                        (C.gamma((1 - n)/2) * C.gamma(n + 1) * C.gamma(a)))
             if x == S.One:
                 return C.gamma(2*a + n) / (C.gamma(2*a) * C.gamma(n + 1))
             elif x == S.Infinity:
@@ -390,10 +387,10 @@ class gegenbauer(OrthogonalPolynomial):
             # Diff wrt a
             n, a, x = self.args
             k = C.Dummy("k")
-            factor1 = 2 * (1 + (-1)**(n - k)) * (k + a) / ((k +
-                           n + 2*a) * (n - k))
-            factor2 = 2*(k + 1) / ((k + 2*a) * (2*k + 2*a + 1)) + \
-                2 / (k + n + 2*a)
+            factor1 = (2 * (1 + (-1)**(n - k)) * (k + a) /
+                       (k + n + 2*a) * (n - k))
+            factor2 = (2*(k + 1) / ((k + 2*a) * (2*k + 2*a + 1)) +
+                       2 / (k + n + 2*a))
             kern = factor1*gegenbauer(k, a, x) + factor2*gegenbauer(n, a, x)
             return C.Sum(kern, (k, 0, n - 1))
         elif argindex == 3:
@@ -681,12 +678,11 @@ class chebyshevt_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-
     @classmethod
     def eval(cls, n, k):
         if not ((0 <= k) is (k < n) is True):
             raise ValueError("must have 0 <= k < n, "
-                "got k = %s and n = %s" % (k, n))
+                             "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(2*k + 1)/(2*n))
 
 
@@ -721,13 +717,13 @@ class chebyshevu_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-
     @classmethod
     def eval(cls, n, k):
         if not ((0 <= k) is (k < n) is True):
             raise ValueError("must have 0 <= k < n, "
-                "got k = %s and n = %s" % (k, n))
+                             "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(k + 1)/(n + 1))
+
 
 #----------------------------------------------------------------------------
 # Legendre polynomials and Associated Legendre polynomials
@@ -885,7 +881,6 @@ class assoc_legendre(Function):
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
-
     @classmethod
     def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
@@ -928,6 +923,7 @@ class assoc_legendre(Function):
         kern = C.factorial(2*n - 2*k)/(2**n*C.factorial(n - k)*C.factorial(
             k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, C.floor((n - m)*S.Half)))
+
 
 #----------------------------------------------------------------------------
 # Hermite polynomials
@@ -1199,7 +1195,6 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
-
     @classmethod
     def eval(cls, n, alpha, x):
         # L_{n}^{0}(x)  --->  L_{n}(x)
@@ -1319,7 +1314,6 @@ class charlier(OrthogonalPolynomial):
             if a.is_nonnegative:
                 raise ValueError("The index a must be a positive number (got %r)" % n)
 
-
     def _eval_rewrite_as_hyper(self, n, a, x):
         return hyper([-n, -x], [], -1/a)
 
@@ -1327,6 +1321,7 @@ class charlier(OrthogonalPolynomial):
 #----------------------------------------------------------------------------
 # Meixner polynomials
 #
+
 
 class meixner(OrthogonalPolynomial):
     r"""
@@ -1392,7 +1387,6 @@ class meixner(OrthogonalPolynomial):
             if b.is_nonnegative:
                 raise ValueError("The index beta must be a positive number (got %r)" % n)
 
-
     def _eval_rewrite_as_hyper(self, n, b, c, x):
         return hyper([-n, -x], [b], 1 - 1/c)
 
@@ -1403,6 +1397,7 @@ class meixner(OrthogonalPolynomial):
 #----------------------------------------------------------------------------
 # Krawtchouk polynomials
 #
+
 
 class krawtchouk(OrthogonalPolynomial):
     r"""
@@ -1474,9 +1469,11 @@ class krawtchouk(OrthogonalPolynomial):
     def _eval_rewrite_as_meixner(self, n, p, N, x):
         return meixner(n, -N, p/(p - 1), x)
 
+
 #----------------------------------------------------------------------------
 # Meixner-Pollaczek polynomials
 #
+
 
 class meixner_pollaczek(OrthogonalPolynomial):
     r"""
@@ -1542,9 +1539,11 @@ class meixner_pollaczek(OrthogonalPolynomial):
         return (RisingFactorial(2*l, n) / factorial(n) * exp(I*n*p) *
                 hyper([-n, l + I*x], [2*l], 1 - exp(-2*I*p)))
 
+
 #----------------------------------------------------------------------------
 # Hahn polynomials
 #
+
 
 class hahn(OrthogonalPolynomial):
     r"""
@@ -1615,6 +1614,7 @@ class hahn(OrthogonalPolynomial):
 # Dual Hahn polynomials
 #
 
+
 class hahn_dual(OrthogonalPolynomial):
     r"""
     The dual Hahn polynomial in x, :math:`R_n(\lambda(x), \gamma, \delta, N, x)`
@@ -1683,9 +1683,11 @@ class hahn_dual(OrthogonalPolynomial):
         x = -d/2 - c/2 - sqrt(d**2 + 2*d*c + 2*d + c**2 + 2*c + 4*lx + 1)/2 - S.Half
         return hyper([-n, -x, x + c + d + 1], [c + 1, -N], 1)
 
+
 #----------------------------------------------------------------------------
 # Continuous Hahn polynomials
 #
+
 
 class hahn_continuous(OrthogonalPolynomial):
     r"""
@@ -1751,12 +1753,14 @@ class hahn_continuous(OrthogonalPolynomial):
                 raise ValueError("The index n must be nonnegative integer (got %r)" % n)
 
     def _eval_rewrite_as_hyper(self, n, a, b, c, d, x):
-        return (I**n * RisingFactorial(a + c,n) * RisingFactorial(a + d,n) / factorial(n)
+        return (I**n * RisingFactorial(a + c, n) * RisingFactorial(a + d, n) / factorial(n)
                 * hyper([-n, n + a + b + c + d - 1, a + I*x], [a + c, a + d], 1))
+
 
 #----------------------------------------------------------------------------
 # Continuous dual Hahn polynomials
 #
+
 
 class hahn_dual_continuous(OrthogonalPolynomial):
     r"""
@@ -1825,9 +1829,11 @@ class hahn_dual_continuous(OrthogonalPolynomial):
         return (RisingFactorial(a + b, n) * RisingFactorial(a + c, n)
                 * hyper([-n, a + I*x, a - I*x], [a + b, a + c], 1))
 
+
 #----------------------------------------------------------------------------
 # Wilson polynomials
 #
+
 
 class wilson(OrthogonalPolynomial):
     r"""
@@ -1898,9 +1904,11 @@ class wilson(OrthogonalPolynomial):
         return (RisingFactorial(a + b, n) * RisingFactorial(a + c, n) * RisingFactorial(a + d, n)
                 * hyper([-n, n + a + b + c + d + 1, a + I*x, a - I*x], [a + b, a + c, a + d], 1))
 
+
 #----------------------------------------------------------------------------
 # Racah polynomials
 #
+
 
 class racah(OrthogonalPolynomial):
     r"""
