@@ -19,6 +19,7 @@ def test_sinh():
     assert sinh(0) == 0
 
     assert sinh(1) != sinh(pi-1)
+    assert sinh(1).func is sinh and sinh(1).args[0] == 1
     assert sinh(-1) == -sinh(1)
 
     assert sinh(x) != sinh(pi-x)
@@ -88,6 +89,7 @@ def test_cosh():
 
     assert cosh(0) == 1
 
+    assert cosh(1).func is cosh and cosh(1).args[0] == 1
     assert cosh(1) != cosh(2*pi-1)
     assert cosh(-1) == cosh(1)
 

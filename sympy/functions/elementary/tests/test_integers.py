@@ -56,7 +56,7 @@ def test_floor():
     assert floor(E + 17) == 19
     assert floor(pi + 2) == 5
 
-    assert floor(E + pi) == floor(E)+ floor(pi)
+    assert floor(E + pi) == floor(E) + floor(pi)
     assert floor(I + pi) == floor(pi) + I
 
     assert floor(floor(pi)) == 3
@@ -75,7 +75,7 @@ def test_floor():
     assert floor(x + y) != floor(x) + floor(y)
 
     assert floor(x + 3) == floor(x) + 3
-    assert floor(x + k) == floor(x)+ k
+    assert floor(x + k) == floor(x) + k
 
     assert floor(y + 3) == floor(y) + 3
     assert floor(y + k) == floor(y) + k

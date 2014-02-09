@@ -281,6 +281,24 @@ def test_issue_3826():
     assert trigsimp(tan(2*x).expand(trig=True)) == tan(2*x)
 
 
+def test_trigsimp_methods_gh2827():
+    measure1 = lambda expr: len(str(expr))
+    measure2 = lambda expr: -count_ops(expr)
+   				       # Return the most complicated result
+    expr = (x + 1)/(x + sin(x)**2 + cos(x)**2)
+    ans = Matrix([1])
+    M = Matrix([expr])
+    assert trigsimp(M, method='fu', measure=measure1) == ans
+    assert trigsimp(M, method='fu', measure=measure2) != ans
+    # all methods should work with Basic expressions even if they
+    # aren't Expr
+    M = Matrix.eye(1)
+    assert all(trigsimp(M, method=m) == M for m in
+   	'fu matching groebner old'.split())
+    # watch for E in exptrigsimp, not only exp()
+    eq = 1/sqrt(E) + E
+    assert exptrigsimp(eq) == eq
+
 def test_trigsimp_issue_4032():
     n = Symbol('n', integer=True, positive=True)
     assert trigsimp(2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2) == \
@@ -1702,7 +1720,7 @@ def test_issue_2998():
 
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
-    assert signsimp(Eq(e, 0)) is True
+    assert signsimp(Eq(e, 0)) == True
 
 
 def test_besselsimp():
