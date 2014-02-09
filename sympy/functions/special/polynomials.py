@@ -935,6 +935,11 @@ class assoc_legendre(Function):
             k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, C.floor((n - m)*S.Half)))
 
+    def _eval_rewrite_as_hyper(self, n, m, x):
+        # Note: This holds in principle only for m not a positive integer
+        return ((x + 1)**(m*S.Half) / (x - 1)**(m*S.Half) / gamma(1 - m) *
+                hyper([-n, n + 1], [1 - m], (1 - x)/2))
+
 
 #----------------------------------------------------------------------------
 # Hermite polynomials
