@@ -24,6 +24,7 @@ from .point import Point
 from .line import LinearEntity, Line
 from .util import _symbol, idiff
 from sympy.mpmath import findroot as nroot
+from sympy.functions import cos, sin
 
 
 import random
@@ -539,12 +540,27 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Circle, Line
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
         Circle(Point(1, 0), -1)
+        >>> a=Ellipse(Point(3,4),1,3)
+        >>> a.reflect(Line(Point(0,-4),Point(5,0)))
+        (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9
         """
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
-        raise NotImplementedError('reflection line not horizontal | vertical.')
+        else:
+            x = _symbol('x')
+            y = _symbol('y')
+            t = _symbol('t')
+            a = self.arbitrary_point(t)
+            b = a.reflect(line)
+            p = b.x
+            q = b.y
+            a1, a2, a3 = (p.coeff(sin(t)), p.coeff(cos(t)), p.as_independent(sin(t), cos(t))[0])
+            b1, b2, b3 = (q.coeff(sin(t)), q.coeff(cos(t)), q.as_independent(sin(t), cos(t))[0])
+            denominator = (a1*b2 - a2*b1)**2
+            numerator = (y*a1 - x*b1 + a3*b1 - b3*a1)**2 + (y*a2 - x*b2 + a3*b2 - b3*a2)**2
+            return numerator/denominator
 
     def encloses_point(self, p):
         """
