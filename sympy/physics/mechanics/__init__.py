@@ -33,32 +33,34 @@ __all__.extend(lagrange.__all__)
 
 
 #Import essential elements from physics.vector module
-from sympy.physics.vector.frame import ReferenceFrame, \
-     CoordinateSym
+from sympy.physics.vector.frame import ReferenceFrame, CoordinateSym
 from sympy.physics.vector.dyadic import Dyadic
 from sympy.physics.vector.vector import Vector
-from sympy.physics.vector.printers import \
-     VectorStrPrinter as MechanicsStrPrinter, \
-     VectorLatexPrinter as MechanicsLatexPrinter, \
-     VectorPrettyPrinter as MechanicsPrettyPrinter
+from sympy.physics.vector.printing import (
+    VectorStrPrinter as MechanicsStrPrinter,
+    VectorLatexPrinter as MechanicsLatexPrinter,
+    VectorPrettyPrinter as MechanicsPrettyPrinter)
 from sympy.physics.vector.point import Point
-from sympy.physics.vector.functions import cross, dot, express, \
-     time_derivative, outer, kinematic_equations, get_motion_params, \
-     partial_velocity, dynamicsymbols
-from sympy.physics.vector.functions import \
-     time_derivative_printing as mechanics_printing, \
-     vprint as mprint, vsprint as msprint, \
-     vpprint as mpprint, vlatex as mlatex
+from sympy.physics.vector.functions import (cross, dot, express,
+                                            time_derivative, outer,
+                                            kinematic_equations,
+                                            get_motion_params,
+                                            partial_velocity,
+                                            dynamicsymbols)
+from sympy.physics.vector.functions import (
+     time_derivative_printing as mechanics_printing,
+     vprint as mprint, vsprint as msprint,
+     vpprint as mpprint, vlatex as mlatex)
 
 #essentialnames contains all names to be imported from vector package
-essentialnames = ['ReferenceFrame', 'CoordinateSym', \
-                  'Dyadic', 'Vector', 'MechanicsStrPrinter', \
-                  'MechanicsLatexPrinter', \
-                  'MechanicsPrettyPrinter', 'dynamicsymbols', \
-                  'Point', 'cross', 'dot', 'express', \
-                  'time_derivative', 'outer', 'kinematic_equations', \
-                  'get_motion_params', 'partial_velocity', \
-                  'mechanics_printing', 'mprint', 'msprint', \
+essentialnames = ['ReferenceFrame', 'CoordinateSym',
+                  'Dyadic', 'Vector', 'MechanicsStrPrinter',
+                  'MechanicsLatexPrinter',
+                  'MechanicsPrettyPrinter', 'dynamicsymbols',
+                  'Point', 'cross', 'dot', 'express',
+                  'time_derivative', 'outer', 'kinematic_equations',
+                  'get_motion_params', 'partial_velocity',
+                  'mechanics_printing', 'mprint', 'msprint',
                   'mpprint', 'mlatex']
 
 __all__.extend(essentialnames)

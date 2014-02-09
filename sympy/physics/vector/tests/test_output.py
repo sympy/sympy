@@ -8,11 +8,6 @@ Vector.simp = True
 A = ReferenceFrame('A')
 
 
-def test_latex_printer():
-    r = Function('r')('t')
-    assert VectorLatexPrinter().doprint(r**2) == "r^{2}"
-
-
 def test_output_type():
     A = ReferenceFrame('A')
     v = A.x + A.y

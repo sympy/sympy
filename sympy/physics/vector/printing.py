@@ -3,7 +3,7 @@ from sympy.core import C
 from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
 from sympy.printing.conventions import split_super_sub
-from sympy.printing.latex import LatexPrinter
+from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
@@ -44,18 +44,26 @@ class VectorLatexPrinter(LatexPrinter):
         if hasattr(self, '_print_' + func):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
-            name, sup, sub = split_super_sub(func)
-            if len(sup) != 0:
-                sup = r"^{%s}" % "".join(sup)
+
+            name, supers, subs = split_super_sub(func)
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
+
+            if len(supers) != 0:
+                supers = r"^{%s}" % "".join(supers)
             else:
-                sup = r""
-            if len(sub) != 0:
-                sub = r"_{%s}" % "".join(sub)
+                supers = r""
+
+            if len(subs) != 0:
+                subs = r"_{%s}" % "".join(subs)
             else:
-                sub = r""
+                subs = r""
+
             if exp:
-                sup += r"^{%s}" % self._print(exp)
-            return r"%s" % (name + sup + sub)
+                supers += r"^{%s}" % self._print(exp)
+
+            return r"%s" % (name + supers + subs)
         else:
             args = [str(self._print(arg)) for arg in expr.args]
             # How inverse trig functions should be displayed, formats are:

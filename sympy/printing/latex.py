@@ -548,7 +548,7 @@ class LatexPrinter(Printer):
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
-        func = translate(func)
+        func = self._deal_with_super_sub(func)
 
         if func in accepted_latex_functions:
             name = r"\%s" % func
@@ -1134,7 +1134,14 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        name, supers, subs = split_super_sub(expr.name)
+        return self._deal_with_super_sub(expr.name)
+
+    _print_RandomSymbol = _print_Symbol
+    _print_MatrixSymbol = _print_Symbol
+
+    def _deal_with_super_sub(self, string):
+
+        name, supers, subs = split_super_sub(string)
 
         name = translate(name)
         supers = [translate(sup) for sup in supers]
@@ -1147,8 +1154,6 @@ class LatexPrinter(Printer):
             name += "_{%s}" % " ".join(subs)
 
         return name
-    _print_RandomSymbol = _print_Symbol
-    _print_MatrixSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:
