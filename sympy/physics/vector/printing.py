@@ -386,22 +386,6 @@ def init_printing(**kwargs):
     Derivative(omega(x), x)
     >>> omega(t).diff()
     Derivative(omega(t), t)
-    >>> # Default uses pretty print and unicode.
-    >>> init_printing()
-    >>> omega(x).diff()
-    d
-    ──(ω(x))
-    dx
-    >>> omega(t).diff()
-    ω̇
-    >>> # Use only ASCII.
-    >>> init_printing(use_unicode=False)
-    >>> omega(x).diff()
-    d
-    --(omega(x))
-    dx
-    >>> omega(t).diff()
-    omegȧ
     >>> # Use the string printer.
     >>> init_printing(pretty_print=False)
     >>> omega(x).diff()
