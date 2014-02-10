@@ -159,7 +159,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         from sympy.physics.vector.functions import dynamicsymbols
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = dynamicsymbols._t
-        dots = 0
+        dot_i = 0
         can_break = True
         syms = list(reversed(deriv.variables))
         x = None
@@ -167,81 +167,39 @@ class VectorPrettyPrinter(PrettyPrinter):
         while len(syms) > 0:
             if syms[-1] == t:
                 syms.pop()
-                dots += 1
+                dot_i += 1
             else:
-                break
+                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
-        f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr))
         if not (isinstance(type(deriv.expr), UndefinedFunction)
                 and (deriv.expr.args == (t,))):
-            dots = 0
-            can_break = False
-            f = prettyForm(binding=prettyForm.FUNC,
-                    *self._print(deriv.expr).parens())
-
-        if dots == 0:
-            dots = u("")
-        elif dots == 1:
-            dots = u("\u0307")
-        elif dots == 2:
-            dots = u("\u0308")
-        elif dots == 3:
-            dots = u("\u20db")
-        elif dots == 4:
-            dots = u("\u20dc")
-
-        uni_subs = [u("\u2080"), u("\u2081"), u("\u2082"), u("\u2083"), u("\u2084"),
-                    u("\u2085"), u("\u2086"), u("\u2087"), u("\u2088"), u("\u2089"),
-                    u("\u208a"), u("\u208b"), u("\u208c"), u("\u208d"), u("\u208e"),
-                    u("\u208f"), u("\u2090"), u("\u2091"), u("\u2092"), u("\u2093"),
-                    u("\u2094"), u("\u2095"), u("\u2096"), u("\u2097"), u("\u2098"),
-                    u("\u2099"), u("\u209a"), u("\u209b"), u("\u209c"), u("\u209d"),
-                    u("\u209e"), u("\u209f")]
-
-        fpic = f.__dict__['picture']
-        funi = f.__dict__['unicode']
-        ind = len(funi)
-        val = ""
-
-        for i in uni_subs:
-            cur_ind = funi.find(i)
-            if (cur_ind != -1) and (cur_ind < ind):
-                ind = cur_ind
-                val = i
-        if ind == len(funi):
-            funi += dots
+                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
         else:
-            funi = funi.replace(val, dots + val)
+            pform = self._print_Function(deriv.expr)
+        # the following condition would happen with some sort of non-standard
+        # dynamic symbol I guess, so we'll just print the SymPy way
+        if len(pform.picture) > 1:
+            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
-        if f.__dict__['picture'] == [f.__dict__['unicode']]:
-            fpic = [funi]
-        f.__dict__['picture'] = fpic
-        f.__dict__['unicode'] = funi
+        dots = {0 : u"",
+                1 : u"\u0307",
+                2 : u"\u0308",
+                3 : u"\u20db",
+                4 : u"\u20dc"}
 
-        if (len(syms)) == 0 and can_break:
-            return f
+        d = pform.__dict__
+        pic = d['picture'][0]
+        uni = d['unicode']
+        lp = len(pic) // 2 + 1
+        lu = len(uni) // 2 + 1
+        pic_split = [pic[:lp], pic[lp:]]
+        uni_split = [uni[:lu], uni[lu:]]
 
-        for sym, num in group(syms, multiple=False):
-            s = self._print(sym)
-            ds = prettyForm(*s.left('d'))
+        d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
+        d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
 
-            if num > 1:
-                ds = ds ** prettyForm(str(num))
-
-            if x is None:
-                x = ds
-            else:
-                x = prettyForm(*x.right(' '))
-                x = prettyForm(*x.right(ds))
-        pform = prettyForm('d')
-        if len(syms) > 1:
-            pform = pform ** prettyForm(str(len(syms)))
-        pform = prettyForm(*pform.below(stringPict.LINE, x))
-        pform.baseline = pform.baseline + 1
-        pform = prettyForm(*stringPict.next(pform, f))
-        # TODO : This should return a string not a prettyForm, according to
-        # Aaron.
         return pform
+
 
     def _print_Function(self, e):
         from sympy.physics.vector.functions import dynamicsymbols
@@ -250,22 +208,12 @@ class VectorPrettyPrinter(PrettyPrinter):
         func = e.func
         args = e.args
         func_name = func.__name__
-        prettyFunc = self._print(C.Symbol(func_name))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
+        pform = self._print_Symbol(C.Symbol(func_name))
         # If this function is an Undefined function of t, it is probably a
         # dynamic symbol, so we'll skip the (t). The rest of the code is
         # identical to the normal PrettyPrinter code
-        if isinstance(func, UndefinedFunction) and (args == (t,)):
-            pform = prettyForm(binding=prettyForm.FUNC,
-                               *stringPict.next(prettyFunc))
-        else:
-            pform = prettyForm(binding=prettyForm.FUNC,
-                               *stringPict.next(prettyFunc, prettyArgs))
-        # store pform parts so it can be reassembled e.g. when powered
-        pform.prettyFunc = prettyFunc
-        pform.prettyArgs = prettyArgs
-        # TODO : This should return a string not a prettyForm, according to
-        # Aaron.
+        if not (isinstance(func, UndefinedFunction) and (args == (t,))):
+            return super(VectorPrettyPrinter, self)._print_Function(e)
         return pform
 
 
