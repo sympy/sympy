@@ -540,8 +540,7 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Circle, Line
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
         Circle(Point(1, 0), -1)
-        >>> a=Ellipse(Point(3,4),1,3)
-        >>> a.reflect(Line(Point(0,-4),Point(5,0)))
+        >>>Ellipse(Point(3,4),1,3).reflect(Line(Point(0,-4),Point(5,0)))
         (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9
         """
         if line.slope in (0, oo):
@@ -556,11 +555,11 @@ class Ellipse(GeometryEntity):
             b = a.reflect(line)
             p = b.x
             q = b.y
-            a1, a2, a3 = (p.coeff(sin(t)), p.coeff(cos(t)), p.as_independent(sin(t), cos(t))[0])
-            b1, b2, b3 = (q.coeff(sin(t)), q.coeff(cos(t)), q.as_independent(sin(t), cos(t))[0])
+            a1, a2, a3 = (p.coeff(sin(t)), p.coeff(cos(t)), p.as_independent(sin(t), cos(t), as_Add=True)[0])
+            b1, b2, b3 = (q.coeff(sin(t)), q.coeff(cos(t)), q.as_independent(sin(t), cos(t), as_Add=True)[0])
             denominator = (a1*b2 - a2*b1)**2
             numerator = (y*a1 - x*b1 + a3*b1 - b3*a1)**2 + (y*a2 - x*b2 + a3*b2 - b3*a2)**2
-            return numerator/denominator
+            return (numerator/denominator - 1)
 
     def encloses_point(self, p):
         """
