@@ -52,16 +52,21 @@ def residue(expr, x, x0):
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x + x0)
-    for n in [0, 1, 2, 4, 8, 16, 32]:
-        if n == 0:
-            s = expr.series(x, n=0)
-        else:
-            s = expr.nseries(x, n=n)
-        if s.has(Order) and s.removeO() == 0:
-            # bug in nseries
-            continue
-        if not s.has(Order) or s.getn() >= 0:
-            break
+    def get_series(e):
+        for n in [0, 2, 4, 8, 16, 32]:
+            if n == 0:
+                s = e.series(x, n=0)
+            else:
+                s = e.nseries(x, n=n)
+            if s.has(Order) and s.removeO() == 0:
+                # bug in nseries
+                continue
+            if not s.has(Order) or s.getn() >= 0:
+                break
+        return s
+    s = get_series(expr)
+    if s == expr:  # try replacing x with 1/x
+        s = get_series(expr.subs(x, 1/x)).removeO().subs(x, 1/x)
     if s.has(Order) and s.getn() < 0:
         raise NotImplementedError('Bug in nseries?')
     s = collect(s.removeO(), x)
