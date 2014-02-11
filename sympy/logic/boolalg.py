@@ -1502,9 +1502,9 @@ def tseitin_transformation(formula, dummy=True):
     dct = {formula: s}
     clauses = [s]
 
-    while len(q) > 0:
+    while q:
         clause = q.pop(0)
-        args = list()
+        args = []
 
         for arg in clause.args:
             if arg.is_Atom:
@@ -1524,29 +1524,28 @@ def tseitin_transformation(formula, dummy=True):
         if isinstance(clause, Not):
             arg = args[0]
             expr = [Or(s, arg), Or(Not(s), Not(arg))]
-            clauses.extend(expr)
 
         elif isinstance(clause, And):
             expr = [Or(Not(s), arg) for arg in args]
-            expr.append(Or(s, *map(Not, args)))
-            clauses.extend(expr)
+            expr.append(Or(s, *[Not(arg) for arg in args]))
 
         elif isinstance(clause, Or):
             expr = [Or(s, Not(arg)) for arg in args]
             expr.append(Or(Not(s), *args))
-            clauses.extend(expr)
 
         elif isinstance(clause, Implies):
             a, b = args
             expr = [Or(s, a), Or(s, Not(b)), Or(Not(s), Not(a), b)]
-            clauses.extend(expr)
 
         elif isinstance(clause, Equivalent):
-            a, b = args
-            expr = [Or(s, Not(a) , Not(b)), Or(Not(s), Not(a), b), Or(Not(s), a, Not(b)), Or(s, a, b)]
-            clauses.extend(expr)
+            args.append(s)
+            expr = []
+            for a, b in zip(args[:-1], args[1:]):
+                expr.extend([Or(Not(a), b), Or(Not(b), a)])
 
         else:
-            raise ValueError("Illegal operator in logic expression " + str(formula))
+            raise ValueError
+
+        clauses.extend(expr)
 
     return And(*clauses)

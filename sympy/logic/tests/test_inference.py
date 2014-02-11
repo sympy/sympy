@@ -111,7 +111,10 @@ def test_dpll_satisfiable():
 
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
-    assert satisfiable(A & (A >> B) & ~B) is False
+    assert satisfiable(A & (A >> B) & ~B, encoding='cnf') is False
+    assert satisfiable(A & (A >> B) & ~B, encoding='tseitin') is False
+    assert satisfiable(A & (A >> B) & (C >> ~B), encoding='cnf') == {A: True, B: True, C: False}
+    assert satisfiable(A & (A >> B) & (C >> ~B), encoding='tseitin') == {A: True, B: True, C: False}
 
 
 def test_pl_true():
