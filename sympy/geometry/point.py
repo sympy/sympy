@@ -76,16 +76,22 @@ class Point(GeometryEntity):
     """
 
     def __new__(cls, *args, **kwargs):
-        if iterable(args[0]):
-            args = args[0]
-        elif isinstance(args[0], Point):
+        eval = kwargs.get('evaluate', True)
+        if isinstance(args[0], Point):
+            if not eval:
+                return args[0]
             args = args[0].args
+        else:
+            if iterable(args[0]):
+                args = args[0]
+            if any(a.is_imaginary for a in args):
+                raise ValueError('Imaginary args not permitted.')
+            if len(coords) != 2:
+                raise NotImplementedError(
+                    "Only two dimensional points currently supported")
         coords = Tuple(*args)
 
-        if len(coords) != 2:
-            raise NotImplementedError(
-                "Only two dimensional points currently supported")
-        if kwargs.get('evaluate', True):
+        if eval:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
                 for f in coords.atoms(Float)]))
@@ -121,6 +127,7 @@ class Point(GeometryEntity):
         0
         """
         return self.args[0]
+
 
     @property
     def y(self):
