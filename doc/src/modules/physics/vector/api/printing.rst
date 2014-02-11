@@ -5,21 +5,21 @@ Printing (Docstrings)
 init_printing
 =============
 
-.. autofunction:: sympy.physics.vector.functions.init_printing
+.. autofunction:: sympy.physics.vector.printing.init_printing
 
 vprint
 ======
 
-.. autofunction:: sympy.physics.vector.functions.vprint
+.. autofunction:: sympy.physics.vector.printing.vprint
 
 
 vpprint
 =======
 
-.. autofunction:: sympy.physics.vector.functions.vpprint
+.. autofunction:: sympy.physics.vector.printing.vpprint
 
 
 vlatex
 ======
 
-.. autofunction:: sympy.physics.vector.functions.vlatex
+.. autofunction:: sympy.physics.vector.printing.vlatex
