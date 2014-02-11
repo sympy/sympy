@@ -114,7 +114,7 @@ below: ::
 
 A dictionary returning the solved :math:`\dot{q}`'s can also be solved for: ::
 
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
   >>> KM.kindiffdict()
   {q1': u1, q2': u2, q3': u3, q4': u4}
 
@@ -234,7 +234,7 @@ initialization. ::
 
 With that the equations of motion can be formed. ::
 
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
   >>> LM.form_lagranges_equations()
   Matrix([
   [2*q1''],

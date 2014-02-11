@@ -40,8 +40,9 @@ __all__.extend(vector.__all__)
 # TODO : Add deprecation warnings for using these:
 
 mechanics_printing = init_printing
+mprint = vprint
 msprint = vsprint
 mpprint = vpprint
 mlatex = vlatex
 
-__all__.extend(['mechanics_printing', 'msprint', 'mpprint', 'mlatex'])
+__all__.extend(['mechanics_printing', 'mprint', 'msprint', 'mpprint', 'mlatex'])
