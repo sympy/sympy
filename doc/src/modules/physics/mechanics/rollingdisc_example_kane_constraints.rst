@@ -10,7 +10,7 @@ small problems, but can cause larger vector operations to hang. ::
 
   >>> from sympy import symbols, sin, cos, tan
   >>> from sympy.physics.mechanics import *
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
   >>> q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
   >>> r, m, g = symbols('r m g')

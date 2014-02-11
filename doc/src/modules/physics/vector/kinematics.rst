@@ -430,7 +430,6 @@ velocity definition. ::
 
   >>> from sympy import Symbol, sin, cos
   >>> from sympy.physics.vector import *
-  >>> time_derivative_printing()
   >>> N = ReferenceFrame('N')
   >>> q1 = dynamicsymbols('q1')
   >>> A = N.orientnew('A', 'Axis', [q1, N.x])

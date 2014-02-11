@@ -9,7 +9,7 @@ disc's mass and radius, and the local gravity. ::
 
   >>> from sympy import symbols, cos, sin
   >>> from sympy.physics.mechanics import *
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
   >>> q1, q2, q3 = dynamicsymbols('q1 q2 q3')
   >>> q1d, q2d, q3d = dynamicsymbols('q1 q2 q3', 1)
   >>> r, m, g = symbols('r m g')
