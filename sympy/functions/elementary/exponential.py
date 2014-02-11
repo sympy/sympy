@@ -674,8 +674,7 @@ class log(Function):
                 return True
             if arg.is_infinitesimal:
                 return False
-            if arg.is_Number:
-                return arg > 1
+            return (arg - 1).is_positive
 
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
