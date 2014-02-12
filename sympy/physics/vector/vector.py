@@ -273,16 +273,19 @@ class Vector(object):
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
-                            arg_str = (VectorPrettyPrinter().doprint(
-                                ar[i][0][j]))
                             if isinstance(ar[i][0][j], Add):
-                                arg_str = u("(%s)") % arg_str
+                                arg_str = VectorPrettyPrinter()._print(
+                                    ar[i][0][j]).parens()[0]
+                            else:
+                                arg_str = (VectorPrettyPrinter().doprint(
+                                    ar[i][0][j]))
+
                             if arg_str[0] == u("-"):
                                 arg_str = arg_str[1:]
                                 str_start = u(" - ")
                             else:
                                 str_start = u(" + ")
-                            ol.append(str_start + arg_str + '*' +
+                            ol.append(str_start + arg_str + ' ' +
                                       ar[i][1].pretty_vecs[j])
                 outstr = u("").join(ol)
                 if outstr.startswith(u(" + ")):
