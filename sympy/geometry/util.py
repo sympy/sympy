@@ -11,7 +11,7 @@ from __future__ import print_function, division
 
 from sympy import Symbol, Function, solve
 from sympy.core.compatibility import string_types, is_sequence
-from .point import Point
+
 
 def idiff(eq, y, x, n=1):
     """Return ``dy/dx`` assuming that ``eq == 0``.
@@ -174,6 +174,8 @@ def intersection(*entities):
 
     """
     from .entity import GeometryEntity
+    from .point import Point
+
     if len(entities) <= 1:
         return []
 
@@ -236,6 +238,7 @@ def convex_hull(*args):
 
     """
     from .entity import GeometryEntity
+    from .point import Point
     from .line import Segment
     from .polygon import Polygon
 
@@ -397,8 +400,7 @@ def centroid(*args):
 
     """
 
-    from sympy.geometry import Polygon, Segment
-    from sympy.geometry.point import Point
+    from sympy.geometry import Polygon, Segment, Point
     if args:
         if all(isinstance(g, Point) for g in args):
             c = Point(0, 0)
