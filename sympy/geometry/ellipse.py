@@ -542,7 +542,7 @@ class Ellipse(GeometryEntity):
         Circle(Point(1, 0), -1)
         >>> from sympy import Ellipse, Line, Point
         >>> Ellipse(Point(3,4), 1, 3).reflect(Line(Point(0,-4), Point(5,0)))
-        ((-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1)
+        (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1
 
         Notes
         -----
