@@ -219,6 +219,24 @@ class ImageSet(Set):
                     return True
         return False
 
+    def _intersect(self, other):
+        from sympy import solve, Dummy, imageset, Union
+
+        if isinstance(other, ImageSet):
+            return
+
+        f = self.lamda
+        if len(f.variables) > 1:
+            return
+        var = f.variables[0]
+        expr = f.expr
+        if not expr.is_polynomial(var):
+            return
+        d = Dummy()
+        solns = solve(expr - d, var)
+        return Union(imageset(f, self.base_set.intersect(
+            imageset(d, f_inv, other))) for f_inv in solns)
+
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
@@ -314,7 +332,7 @@ class Range(Set):
 
     def _eval_imageset(self, f):
         from sympy.core.sets import FiniteSet
-        return FiniteSet(*[f(i) for i in self])
+        return FiniteSet(f(i) for i in self)
 
     def __iter__(self):
         i = self.start

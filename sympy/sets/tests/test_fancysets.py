@@ -66,6 +66,15 @@ def test_ImageSet():
     assert harmonics.is_iterable
 
 
+def test_ImageSet_intersection():
+    n_pi = imageset(x, x*pi, S.Integers)
+
+    assert n_pi.intersect(Range(10)) == FiniteSet(0)
+    assert n_pi.intersect(Interval(0, 10)) == \
+        FiniteSet(0, pi, 2*pi, 3*pi)
+    #TODO: add test for functions which are not injection
+
+
 @XFAIL
 def test_halfcircle():
     # This test sometimes works and sometimes doesn't.
