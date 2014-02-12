@@ -540,8 +540,8 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Circle, Line
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
         Circle(Point(1, 0), -1)
-        >>> Ellipse(Point(3,4),1,3).reflect(Line(Point(0,-4),Point(5,0)))
-        (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9
+        >>> Ellipse(Point(3,4), 1, 3).reflect(Line(Point(0,-4), Point(5,0)))
+        ((-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1)
         """
         if line.slope in (0, oo):
             c = self.center
