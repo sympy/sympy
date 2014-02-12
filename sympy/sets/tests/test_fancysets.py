@@ -65,9 +65,6 @@ def test_ImageSet():
 
     assert harmonics.is_iterable
 
-def test_image_is_ImageSet():
-    assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
-
 
 @XFAIL
 def test_halfcircle():
@@ -115,6 +112,10 @@ def test_Range():
     assert len(Range(10, 38, 10)) == 3
 
     assert Range(0, 0, 5) == S.EmptySet
+
+    # Testing _eval_imageset
+    assert imageset(x, x*pi, Range(3)) == \
+        FiniteSet(0, pi, 2*pi)
 
 
 def test_range_interval_intersection():
