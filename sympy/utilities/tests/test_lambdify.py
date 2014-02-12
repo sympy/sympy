@@ -8,6 +8,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
+from sympy.functions import *
 from sympy.functions.special.bessel import *
 from sympy.functions.special.hyper import *
 from sympy.functions.special.gamma_functions import *
@@ -486,6 +487,17 @@ def test_scipy_digamma():
     f = lambdify(x, digamma(x), "scipy")
     assert f(10) == 2.2517525890667209
     assert f(13) == 2.5259950133091453
+
+#Issue 3421
+def test_scipy_factorial():
+	scipy = import_module("scipy.misc")
+	if not scipy:
+		skip("scipy not installed")
+	f = lambdify(x, factorial(x), "scipy")
+	assert f(0) == 1
+	assert f(1) == 1
+	assert f(3) == 6
+	assert f(5) == 120
 
 
 
