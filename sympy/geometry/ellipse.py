@@ -542,12 +542,13 @@ class Ellipse(GeometryEntity):
         Circle(Point(1, 0), -1)
         >>> from sympy import Ellipse, Line, Point
         >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
-        (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1
+        ('General Ellipse is not supported', (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1)
 
         Notes
         =====
 
-         "Until the general ellipse (with no axis parallel to the x-axis) is supported, an expression is returned."
+         "Until the general ellipse (with no axis parallel to the x-axis) is supported a NotImplemented error is raised,
+         although an expression is returned."
 
         """
         def _uniquely_named_symbol(xname, expr):
@@ -575,7 +576,7 @@ class Ellipse(GeometryEntity):
             denominator = (a1*b2 - a2*b1)**2
             numerator = (y*a1 - x*b1 + a3*b1 - b3*a1)**2 + (y*a2 - x*b2 + a3*b2 - b3*a2)**2
             result = (numerator/denominator - 1)
-            return result
+            raise NotImplementedError('General Ellipse is not supported', result)
 
     def encloses_point(self, p):
         """
