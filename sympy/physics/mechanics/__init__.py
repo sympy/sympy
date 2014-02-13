@@ -34,15 +34,3 @@ __all__.extend(lagrange.__all__)
 from sympy.physics import vector
 from sympy.physics.vector import *
 __all__.extend(vector.__all__)
-
-# These are functions that we've renamed in during the extraction of the
-# basic vector calculus code from the mechanics packages.
-# TODO : Add deprecation warnings for using these:
-
-mechanics_printing = init_printing
-mprint = vprint
-msprint = vsprint
-mpprint = vpprint
-mlatex = vlatex
-
-__all__.extend(['mechanics_printing', 'mprint', 'msprint', 'mpprint', 'mlatex'])

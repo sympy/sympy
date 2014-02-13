@@ -4,14 +4,14 @@ from sympy import Derivative
 from sympy.core import C
 from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
+from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
-from sympy.utilities import group
 
-__all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex', 'init_printing']
+__all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
+           'init_vprinting']
 
 
 class VectorStrPrinter(StrPrinter):
@@ -38,6 +38,7 @@ class VectorStrPrinter(StrPrinter):
 
 
 class VectorStrReprPrinter(VectorStrPrinter):
+    """String repr printer for vector expressions."""
     def _print_str(self, s):
         return repr(s)
 
@@ -200,7 +201,6 @@ class VectorPrettyPrinter(PrettyPrinter):
 
         return pform
 
-
     def _print_Function(self, e):
         from sympy.physics.vector.functions import dynamicsymbols
         t = dynamicsymbols._t
@@ -222,7 +222,7 @@ def vprint(expr, **settings):
     sympy.physics vector package.
 
     Extends SymPy's StrPrinter; vprint is equivalent to:
-    print sstr()
+    print(sstr())
     vprint takes the same options as sstr.
 
     Parameters
@@ -254,6 +254,8 @@ def vprint(expr, **settings):
 
 
 def vsstrrepr(expr, **settings):
+    """Function for displaying expression representation's with vector
+    printing enabled."""
     p = VectorStrReprPrinter(settings)
     return p.doprint(expr)
 
@@ -314,6 +316,8 @@ def vpprint(expr, **settings):
 
     pp = VectorPrettyPrinter(settings)
 
+    # Note that this is copied from sympy.printing.pretty.pretty_print:
+
     # XXX: this is an ugly hack, but at least it works
     use_unicode = pp._settings['use_unicode']
     from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
@@ -365,21 +369,23 @@ def vlatex(expr, **settings):
     return latex_printer.doprint(expr)
 
 
-def init_printing(**kwargs):
+def init_vprinting(**kwargs):
     """Initializes time derivative printing for all SymPy objects, i.e. any
-    functions of time will be displayed in a more compact notation. Any key
-    word arguments for `sympy.interactive.init_printing` are valid.
-
-    The main benefit of this is for printing of time derivatives; instead of
+    functions of time will be displayed in a more compact notation. The main
+    benefit of this is for printing of time derivatives; instead of
     displaying as ``Derivative(f(t),t)``, it will display ``f'``. This is
     only actually needed for when derivatives are present and are not in a
-    physics.vector.Vector or physics.vector.Dyadic object.
+    physics.vector.Vector or physics.vector.Dyadic object.This function is a
+    light wrapper to `sympy.interactive.init_printing`. Any keyword
+    arguments for it are valid here.
+
+    {}
 
     Examples
     ========
 
     >>> from sympy import Function, symbols
-    >>> from sympy.physics.vector import init_printing
+    >>> from sympy.physics.vector import init_vprinting
     >>> t, x = symbols('t, x')
     >>> omega = Function('omega')
     >>> omega(x).diff()
@@ -387,16 +393,17 @@ def init_printing(**kwargs):
     >>> omega(t).diff()
     Derivative(omega(t), t)
     >>> # Use the string printer.
-    >>> init_printing(pretty_print=False)
+    >>> init_vprinting(pretty_print=False)
     >>> omega(x).diff()
     Derivative(omega(x), x)
     >>> omega(t).diff()
     omega'
 
     """
-    from sympy.interactive.printing import (init_printing as
-                                            default_init_printing)
     kwargs['str_printer'] = vsstrrepr
     kwargs['pretty_printer'] = vpprint
     kwargs['latex_printer'] = vlatex
-    default_init_printing(**kwargs)
+    init_printing(**kwargs)
+
+params = init_printing.__doc__.split('Examples\n    ========')[0]
+init_vprinting.__doc__ = init_vprinting.__doc__.format(params)
