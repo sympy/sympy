@@ -7,10 +7,12 @@ from sympy.core.compatibility import reduce
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
+from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
-           'dynamicsymbols']
+           'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
+           'init_vprinting']
 
 
 def cross(vec1, vec2):
