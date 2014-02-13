@@ -541,32 +541,39 @@ class Ellipse(GeometryEntity):
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
         Circle(Point(1, 0), -1)
         >>> from sympy import Ellipse, Line, Point
-        >>> Ellipse(Point(3,4), 1, 3).reflect(Line(Point(0,-4), Point(5,0)))
+        >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
         (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1
 
         Notes
         -----
-        This method returns an expression until a general Ellipse is supported(whose axes are not parallel to
-        co-ordinate axes).
+
+         "Until the general ellipse (with no axis parallel to the x-axis) is supported, an expression is returned."
 
         """
+        def _uniquely_named_symbol(xname, expr):
+                prefix = '%s'
+                x = prefix % xname
+                while any(x == str(s) for s in expr.free_symbols):
+                    prefix = '_' + prefix
+                    x = prefix % xname
+                return _symbol(x)
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            x = _symbol('x')
-            y = _symbol('y')
-            t = _symbol('t')
+            t = Dummy('t')
             a = self.arbitrary_point(t)
             b = a.reflect(line)
             p = b.x
             q = b.y
+            x, y = [_uniquely_named_symbol(name, p) for name in 'xy']
             a1, a2, a3 = (p.coeff(sin(t)), p.coeff(cos(t)), p.as_independent(sin(t), cos(t), as_Add=True)[0])
             b1, b2, b3 = (q.coeff(sin(t)), q.coeff(cos(t)), q.as_independent(sin(t), cos(t), as_Add=True)[0])
             denominator = (a1*b2 - a2*b1)**2
             numerator = (y*a1 - x*b1 + a3*b1 - b3*a1)**2 + (y*a2 - x*b2 + a3*b2 - b3*a2)**2
-            return (numerator/denominator - 1)
+            akshay = (numerator/denominator - 1)
+            return akshay
 
     def encloses_point(self, p):
         """

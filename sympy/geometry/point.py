@@ -122,7 +122,6 @@ class Point(GeometryEntity):
         """
         return self.args[0]
 
-
     @property
     def y(self):
         """
