@@ -115,7 +115,7 @@ def satisfiable(expr, algorithm="dpll2", encoding="cnf"):
         raise NotImplementedError
 
     if result and encoding == "tseitin":
-        for atom in result.keys():
+        for atom in list(result.keys()):
             if atom not in atoms:
                 del result[atom]
 
