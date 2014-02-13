@@ -551,12 +551,14 @@ class Ellipse(GeometryEntity):
 
         """
         def _uniquely_named_symbol(xname, expr):
-                prefix = '%s'
+            """Return a symbol which, when printed, will have a name unique from any other already in `expr`.
+            The name is made unique by preppending underscores."""
+            prefix = '%s'
+            x = prefix % xname
+            while any(x == str(s) for s in expr.free_symbols):
+                prefix = '_' + prefix
                 x = prefix % xname
-                while any(x == str(s) for s in expr.free_symbols):
-                    prefix = '_' + prefix
-                    x = prefix % xname
-                return _symbol(x)
+            return _symbol(x)
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
