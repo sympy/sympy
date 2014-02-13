@@ -58,10 +58,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     debug("init_printing: DVIOPTIONS:", dvioptions)
     debug("init_printing: PREAMBLE:", preamble)
 
-    if latex_printer is not None:
-        latex = latex_printer
-    else:
-        latex = default_latex
+    latex = latex_printer or default_latex
 
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
