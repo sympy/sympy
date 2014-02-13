@@ -8,7 +8,6 @@ from sympy import latex as default_latex
 from sympy import preview
 from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
-from sympy.physics.vector import Vector, Dyadic
 
 
 def _init_python_printing(stringify_func):
@@ -98,6 +97,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         o can be printed with LaTeX.
         """
         import sympy
+        from sympy.physics.vector import Vector, Dyadic
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
@@ -168,6 +168,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     if IPython.__version__ >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
+        from sympy.physics.vector import Vector, Dyadic
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
                 frozenset, dict, Vector, Dyadic] + list(integer_types)
 

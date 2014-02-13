@@ -6,13 +6,55 @@ __all__ = ['inertia',
            'angular_momentum',
            'kinetic_energy',
            'potential_energy',
-           'Lagrangian']
+           'Lagrangian',
+           'mechanics_printing',
+           'mprint',
+           'msprint',
+           'mpprint',
+           'mlatex']
 
 from sympy.physics.vector import Vector, ReferenceFrame, Point
+from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
+                                           init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import sympify
 from sympy.core.basic import S
+
+# These are functions that we've renamed in during the extraction of the
+# basic vector calculus code from the mechanics packages.
+
+mprint = vprint
+msprint = vsprint
+mpprint = vpprint
+mlatex = vlatex
+
+
+def mechanics_printing(**kwargs):
+
+    # mechanics_printing has slightly different functionality in 0.7.5 but
+    # shouldn't fundamentally need a deprecation warning so we do this
+    # little wrapper that gives the warning that things have changed.
+
+    # TODO : Remove this warning in SymPy 0.7.6 (or whatever the next
+    # release is after 0.7.5.
+
+    # The message is only printed if this function is called with no args,
+    # as was the previous only way to call it.
+
+    def dict_is_empty(D):
+        for k in D:
+            return False
+        return True
+
+    if dict_is_empty(kwargs):
+        print('See the doc string for slight changes to this function, '
+              'keyword args may be needed for the desired effect. Otherwise '
+              'use sympy.physics.vector.init_vprinting directly.')
+
+    init_vprinting(**kwargs)
+
+mechanics_printing.__doc__ = init_vprinting.__doc__
 
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
