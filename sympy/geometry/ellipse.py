@@ -545,7 +545,7 @@ class Ellipse(GeometryEntity):
         (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1
 
         Notes
-        -----
+        =====
 
          "Until the general ellipse (with no axis parallel to the x-axis) is supported, an expression is returned."
 
