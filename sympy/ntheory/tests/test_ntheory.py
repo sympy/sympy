@@ -736,6 +736,7 @@ def test_egyptian_fraction():
 
     r = random_complex_number(a=0, c=1, b=0, d=0, rational=True)
     assert test_equality(r)
+    assert test_equality(r, alg="Golomb")
 
     assert egyptian_fraction(Rational(4, 17)) == [5, 29, 1233, 3039345]
     assert egyptian_fraction(Rational(7, 13), "Greedy") == [2, 26]
