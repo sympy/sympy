@@ -48,8 +48,8 @@ def mechanics_printing(**kwargs):
         return True
 
     if dict_is_empty(kwargs):
-        print('See the doc string for slight changes to this function, '
-              'keyword args may be needed for the desired effect. Otherwise '
+        print('See the doc string for slight changes to this function,\n'
+              'keyword args may be needed for the desired effect. Otherwise \n'
               'use sympy.physics.vector.init_vprinting directly.')
 
     init_vprinting(**kwargs)
