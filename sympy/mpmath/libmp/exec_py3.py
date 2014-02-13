@@ -1,1 +1,1 @@
-exec_ = exec
+exec_ = eval('exec')
