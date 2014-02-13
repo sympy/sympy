@@ -572,8 +572,8 @@ class Ellipse(GeometryEntity):
             b1, b2, b3 = (q.coeff(sin(t)), q.coeff(cos(t)), q.as_independent(sin(t), cos(t), as_Add=True)[0])
             denominator = (a1*b2 - a2*b1)**2
             numerator = (y*a1 - x*b1 + a3*b1 - b3*a1)**2 + (y*a2 - x*b2 + a3*b2 - b3*a2)**2
-            akshay = (numerator/denominator - 1)
-            return akshay
+            result = (numerator/denominator - 1)
+            return result
 
     def encloses_point(self, p):
         """
