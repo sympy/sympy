@@ -145,10 +145,10 @@ class jacobi(OrthogonalPolynomial):
                 return C.RisingFactorial(a + 1, n) / C.RisingFactorial(2*a + 1, n) * gegenbauer(n, a + S.Half, x)
         elif b == -a:
             # P^{a, -a}_n(x)
-            return C.gamma(n + a + 1) / C.gamma(n + 1) * (1 + x)**(a/2) / (1 - x)**(a/2) * assoc_legendre(n, -a, x)
+            return gamma(n + a + 1) / gamma(n + 1) * (1 + x)**(a/2) / (1 - x)**(a/2) * assoc_legendre(n, -a, x)
         elif a == -b:
             # P^{-b, b}_n(x)
-            return C.gamma(n - b + 1) / C.gamma(n + 1) * (1 - x)**(b/2) / (1 + x)**(b/2) * assoc_legendre(n, b, x)
+            return gamma(n - b + 1) / gamma(n + 1) * (1 - x)**(b/2) / (1 + x)**(b/2) * assoc_legendre(n, b, x)
 
         if not n.is_Number:
             # Symbolic result P^{a,b}_n(x)
@@ -157,7 +157,7 @@ class jacobi(OrthogonalPolynomial):
                 return S.NegativeOne**n * jacobi(n, b, a, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
-                return (2**(-n) * C.gamma(a + n + 1) / (C.gamma(a + 1) * C.factorial(n)) *
+                return (2**(-n) * gamma(a + n + 1) / (gamma(a + 1) * C.factorial(n)) *
                         C.hyper([-b - n, -n], [a + 1], -1))
             if x == S.One:
                 return C.RisingFactorial(a + 1, n) / C.factorial(n)
@@ -363,8 +363,8 @@ class gegenbauer(OrthogonalPolynomial):
                     return S.ComplexInfinity
                 else:
                     # No sec function available yet
-                    #return (C.cos(S.Pi*(a+n)) * C.sec(S.Pi*a) * C.gamma(2*a+n) /
-                    #            (C.gamma(2*a) * C.gamma(n+1)))
+                    #return (C.cos(S.Pi*(a+n)) * C.sec(S.Pi*a) * gamma(2*a+n) /
+                    #            (gamma(2*a) * gamma(n+1)))
                     return None
 
             # Symbolic result C^a_n(x)
@@ -373,10 +373,10 @@ class gegenbauer(OrthogonalPolynomial):
                 return S.NegativeOne**n * gegenbauer(n, a, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
-                return (2**n * sqrt(S.Pi) * C.gamma(a + S.Half*n) /
-                        (C.gamma((1 - n)/2) * C.gamma(n + 1) * C.gamma(a)))
+                return (2**n * sqrt(S.Pi) * gamma(a + S.Half*n) /
+                        (gamma((1 - n)/2) * gamma(n + 1) * gamma(a)))
             if x == S.One:
-                return C.gamma(2*a + n) / (C.gamma(2*a) * C.gamma(n + 1))
+                return gamma(2*a + n) / (gamma(2*a) * gamma(n + 1))
             elif x == S.Infinity:
                 if n.is_positive:
                     return C.RisingFactorial(a, n) * S.Infinity
@@ -804,7 +804,7 @@ class legendre(OrthogonalPolynomial):
                 return legendre(-n - S.One, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
-                return sqrt(S.Pi)/(C.gamma(S.Half - n/2)*C.gamma(S.One + n/2))
+                return sqrt(S.Pi)/(gamma(S.Half - n/2)*gamma(S.One + n/2))
             elif x == S.One:
                 return S.One
             elif x == S.Infinity:
@@ -906,7 +906,7 @@ class assoc_legendre(Function):
             # P^0_n  --->  L_n
             return legendre(n, x)
         if x == 0:
-            return 2**m*sqrt(S.Pi) / (C.gamma((1 - m - n)/2)*C.gamma(1 - (m - n)/2))
+            return 2**m*sqrt(S.Pi) / (gamma((1 - m - n)/2)*gamma(1 - (m - n)/2))
         if n.is_Number and m.is_Number and n.is_integer and m.is_integer:
             if n.is_negative:
                 raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
@@ -1009,7 +1009,7 @@ class hermite(OrthogonalPolynomial):
                 return S.NegativeOne**n * hermite(n, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
-                return 2**n * sqrt(S.Pi) / C.gamma((S.One - n)/2)
+                return 2**n * sqrt(S.Pi) / gamma((S.One - n)/2)
             elif x == S.Infinity:
                 return S.Infinity
         else:
@@ -1259,8 +1259,8 @@ class assoc_laguerre(OrthogonalPolynomial):
         # TODO: Should make sure n is in N_0
         k = C.Dummy("k")
         kern = C.RisingFactorial(
-            -n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
-        return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))
+            -n, k) / (gamma(k + alpha + 1) * C.factorial(k)) * x**k
+        return gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))
 
     def _eval_rewrite_as_hyper(self, n, a, x):
         return RisingFactorial(a + 1, n) / factorial(n) * hyper([-n], [a + 1], x)
