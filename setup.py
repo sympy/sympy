@@ -155,7 +155,7 @@ class clean(Command):
 
     def run(self):
         import os
-        os.system("py.cleanup")
+        os.system("find . -name '*.pyc' | xargs rm -f")
         os.system("rm -f python-build-stamp-2.4")
         os.system("rm -f MANIFEST")
         os.system("rm -rf build")
