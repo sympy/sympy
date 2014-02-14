@@ -543,7 +543,7 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Ellipse, Line, Point
         >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
         General Ellipse is not supported but the equation of the reflected Ellipse is:
-        (1075*x/1237 + 612*y/1237 - 92450/1237)**2/4 + (1224*x/1237 - 2150*y/1237 + 105026/1237)**2/4 - 1
+        (9*x/41 + 40*y/41 + 37/41)**2 + (40*x/123 - 3*y/41 - 364/123)**2 - 1
 
         Notes
         =====
@@ -566,17 +566,12 @@ class Ellipse(GeometryEntity):
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            t = Dummy('t')
-            a = self.arbitrary_point(t)
+            a = self.arbitrary_point()
             b = a.reflect(line)
             p = b.x
-            q = b.y
             x, y = [_uniquely_named_symbol(name, p) for name in 'xy']
-            a1, a2, a3 = (p.coeff(sin(t)), p.coeff(cos(t)), p.as_independent(sin(t), cos(t), as_Add=True)[0])
-            b1, b2, b3 = (q.coeff(sin(t)), q.coeff(cos(t)), q.as_independent(sin(t), cos(t), as_Add=True)[0])
-            denominator = (a1*b2 - a2*b1)**2
-            numerator = (y*a1 - x*b1 + a3*b1 - b3*a1)**2 + (y*a2 - x*b2 + a3*b2 - b3*a2)**2
-            result = (numerator/denominator - 1)
+            expr = self.equation()
+            result = expr.subs(zip((x, y), Point(x, y).reflect(line).args), simultaneous=True)
             raise NotImplementedError('General Ellipse is not supported but the equation of the reflected Ellipse is:\n'
             + str(result))
 
