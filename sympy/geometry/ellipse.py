@@ -542,7 +542,8 @@ class Ellipse(GeometryEntity):
         Circle(Point(1, 0), -1)
         >>> from sympy import Ellipse, Line, Point
         >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
-        ('General Ellipse is not supported', (-40*x/41 + 9*y/41 + 364/41)**2/9 + (27*x/41 + 120*y/41 + 111/41)**2/9 - 1)
+        General Ellipse is not supported but the equation of the reflected Ellipse is:
+        (1075*x/1237 + 612*y/1237 - 92450/1237)**2/4 + (1224*x/1237 - 2150*y/1237 + 105026/1237)**2/4 - 1
 
         Notes
         =====
@@ -576,7 +577,8 @@ class Ellipse(GeometryEntity):
             denominator = (a1*b2 - a2*b1)**2
             numerator = (y*a1 - x*b1 + a3*b1 - b3*a1)**2 + (y*a2 - x*b2 + a3*b2 - b3*a2)**2
             result = (numerator/denominator - 1)
-            raise NotImplementedError('General Ellipse is not supported', result)
+            raise NotImplementedError('General Ellipse is not supported but the equation of the reflected Ellipse is:\n'
+            + str(result))
 
     def encloses_point(self, p):
         """
