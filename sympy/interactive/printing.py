@@ -105,10 +105,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return True
         elif isinstance(o, (float, integer_types)) and print_builtin:
             return True
-        # Is this the standard way of making an object that prints latex. If
-        # so, the I can remove the Vector and Dyadic imports above.
-        elif hasattr(o, '_latex'):
-            return True
         return False
 
     def _print_latex_png(o):
@@ -381,6 +377,6 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     if ip is not None and ip.__module__.startswith('IPython'):
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer=latex_printer)
+                               print_builtin, latex_printer)
     else:
         _init_python_printing(stringify_func)
