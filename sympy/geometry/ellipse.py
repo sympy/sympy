@@ -543,7 +543,7 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Ellipse, Line, Point
         >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
         General Ellipse is not supported but the equation of the reflected Ellipse is:
-        (9*x/41 + 40*y/41 + 37/41)**2 + (40*x/123 - 3*y/41 - 364/123)**2 - 1
+        (9*x/41 + 40*y/41 + 37/41)**2 + (40*x/123 - 3*y/41 - 364/123)**2 - 1 == 0
 
         Notes
         =====
@@ -554,7 +554,7 @@ class Ellipse(GeometryEntity):
         """
         def _uniquely_named_symbol(xname, expr):
             """Return a symbol which, when printed, will have a name unique from any other already in `expr`.
-            The name is made unique by preppending underscores."""
+            The name is made unique by prepending underscores."""
             prefix = '%s'
             x = prefix % xname
             while any(x == str(s) for s in expr.free_symbols):
@@ -569,11 +569,11 @@ class Ellipse(GeometryEntity):
             a = self.arbitrary_point()
             b = a.reflect(line)
             p = b.x
-            x, y = [_uniquely_named_symbol(name, p) for name in 'xy']
             expr = self.equation()
+            x, y = [_uniquely_named_symbol(name, p) for name in 'xy']
             result = expr.subs(zip((x, y), Point(x, y).reflect(line).args), simultaneous=True)
             raise NotImplementedError('General Ellipse is not supported but the equation of the reflected Ellipse is:\n'
-            + str(result))
+            + "%s == 0" % str(result))
 
     def encloses_point(self, p):
         """
