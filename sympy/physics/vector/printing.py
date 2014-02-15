@@ -230,7 +230,7 @@ def vprint(expr, **settings):
     expr : valid sympy object
         SymPy expression to print.
     settings : args
-        Same as print for SymPy's sstr().
+        Same as the settings accepted by SymPy's sstr().
 
     Examples
     ========
