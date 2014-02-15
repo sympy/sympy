@@ -24,7 +24,6 @@ from .point import Point
 from .line import LinearEntity, Line
 from .util import _symbol, idiff
 from sympy.mpmath import findroot as nroot
-from sympy.functions import cos, sin
 
 
 import random
@@ -548,12 +547,12 @@ class Ellipse(GeometryEntity):
         Notes
         =====
 
-         "Until the general ellipse (with no axis parallel to the x-axis) is supported a NotImplemented error is raised,
-         although an expression is returned."
+        Until the general ellipse (with no axis parallel to the x-axis) is supported a
+        NotImplemented error is raised,although an expression is returned.
 
         """
         def _uniquely_named_symbol(xname, expr):
-            """Return a symbol which, when printed, will have a name unique from any other already in `expr`.
+            """ a symbol which, when printed, will have a name unique from any other already in `expr`.
             The name is made unique by prepending underscores."""
             prefix = '%s'
             x = prefix % xname
@@ -566,14 +565,12 @@ class Ellipse(GeometryEntity):
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            a = self.arbitrary_point()
-            b = a.reflect(line)
-            p = b.x
             expr = self.equation()
-            x, y = [_uniquely_named_symbol(name, p) for name in 'xy']
-            result = expr.subs(zip((x, y), Point(x, y).reflect(line).args), simultaneous=True)
-            raise NotImplementedError('General Ellipse is not supported but the equation of the reflected Ellipse is:\n'
-            + "%s == 0" % str(result))
+            x, y = [_uniquely_named_symbol(name, expr) for name in 'xy']
+            result = expr.subs(zip((x, y), Point(x, y).reflect(line).args
+                               ), simultaneous=True)
+            raise NotImplementedError('General Ellipse is not supported but the equation '
+                 'of the reflected Ellipse is:\n' + "%s == 0" % str(result))
 
     def encloses_point(self, p):
         """
