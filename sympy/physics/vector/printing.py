@@ -254,7 +254,17 @@ def vprint(expr, **settings):
 
 def vsstrrepr(expr, **settings):
     """Function for displaying expression representation's with vector
-    printing enabled."""
+    printing enabled.
+
+    Parameters
+    ==========
+
+    expr : valid sympy object
+        SymPy expression to print.
+    settings : args
+        Same as the settings accepted by SymPy's sstrrepr().
+
+    """
     p = VectorStrReprPrinter(settings)
     return p.doprint(expr)
 
@@ -271,7 +281,7 @@ def vsprint(expr, **settings):
     expr : valid sympy object
         SymPy expression to print
     settings : args
-        Same as print for SymPy
+        Same as the settings accepted by SymPy's sstr().
 
     Examples
     ========
