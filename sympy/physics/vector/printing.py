@@ -221,17 +221,16 @@ def vprint(expr, **settings):
     r"""Function for printing of expressions generated in the
     sympy.physics vector package.
 
-    Extends SymPy's StrPrinter; vprint is equivalent to:
-    print(sstr())
-    vprint takes the same options as sstr.
+    Extends SymPy's StrPrinter, takes the same setting accepted by SymPy's
+    `sstr()`, and is equivalent to `print(sstr(foo))`.
 
     Parameters
     ==========
 
     expr : valid sympy object
-        SymPy expression to print
+        SymPy expression to print.
     settings : args
-        Same as print for SymPy
+        Same as print for SymPy's sstr().
 
     Examples
     ========
@@ -305,12 +304,8 @@ def vpprint(expr, **settings):
     expr : valid sympy object
         SymPy expression to pretty print
     settings : args
-        Same as pretty print
+        Same as those accepted by SymPy's pretty_print.
 
-    Examples
-    ========
-
-    Use in the same way as pprint
 
     """
 
@@ -375,7 +370,7 @@ def init_vprinting(**kwargs):
     benefit of this is for printing of time derivatives; instead of
     displaying as ``Derivative(f(t),t)``, it will display ``f'``. This is
     only actually needed for when derivatives are present and are not in a
-    physics.vector.Vector or physics.vector.Dyadic object.This function is a
+    physics.vector.Vector or physics.vector.Dyadic object. This function is a
     light wrapper to `sympy.interactive.init_printing`. Any keyword
     arguments for it are valid here.
 
@@ -392,7 +387,9 @@ def init_vprinting(**kwargs):
     Derivative(omega(x), x)
     >>> omega(t).diff()
     Derivative(omega(t), t)
-    >>> # Use the string printer.
+
+    Now use the string printer:
+
     >>> init_vprinting(pretty_print=False)
     >>> omega(x).diff()
     Derivative(omega(x), x)
