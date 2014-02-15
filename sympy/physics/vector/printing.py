@@ -227,7 +227,7 @@ def vprint(expr, **settings):
     Parameters
     ==========
 
-    expr : valid sympy object
+    expr : valid SymPy object
         SymPy expression to print.
     settings : args
         Same as the settings accepted by SymPy's sstr().
@@ -259,7 +259,7 @@ def vsstrrepr(expr, **settings):
     Parameters
     ==========
 
-    expr : valid sympy object
+    expr : valid SymPy object
         SymPy expression to print.
     settings : args
         Same as the settings accepted by SymPy's sstrrepr().
@@ -278,7 +278,7 @@ def vsprint(expr, **settings):
     Parameters
     ==========
 
-    expr : valid sympy object
+    expr : valid SymPy object
         SymPy expression to print
     settings : args
         Same as the settings accepted by SymPy's sstr().
@@ -311,7 +311,7 @@ def vpprint(expr, **settings):
     Parameters
     ==========
 
-    expr : valid sympy object
+    expr : valid SymPy object
         SymPy expression to pretty print
     settings : args
         Same as those accepted by SymPy's pretty_print.
@@ -344,7 +344,7 @@ def vlatex(expr, **settings):
     Parameters
     ==========
 
-    expr : valid sympy object
+    expr : valid SymPy object
         SymPy expression to represent in LaTeX form
     settings : args
         Same as latex()
