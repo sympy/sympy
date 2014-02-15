@@ -365,10 +365,10 @@ def kleinj(ctx, tau=None, **kwargs):
 
     **Plots**
 
-    .. literalinclude :: /plots/kleinj.py
-    .. image :: /plots/kleinj.png
-    .. literalinclude :: /plots/kleinj2.py
-    .. image :: /plots/kleinj2.png
+    .. literalinclude :: /modules/mpmath/plots/kleinj.py
+    .. image :: /modules/mpmath/plots/kleinj.png
+    .. literalinclude :: /modules/mpmath/plots/kleinj2.py
+    .. image :: /modules/mpmath/plots/kleinj2.png
 
     **Examples**
 
@@ -941,8 +941,8 @@ def ellipf(ctx, phi, m):
 
     **Plots**
 
-    .. literalinclude :: /plots/ellipf.py
-    .. image :: /plots/ellipf.png
+    .. literalinclude :: /modules/mpmath/plots/ellipf.py
+    .. image :: /modules/mpmath/plots/ellipf.png
 
     **Examples**
 
@@ -1061,8 +1061,8 @@ def ellipe(ctx, *args):
 
     **Plots**
 
-    .. literalinclude :: /plots/ellipe.py
-    .. image :: /plots/ellipe.png
+    .. literalinclude :: /modules/mpmath/plots/ellipe.py
+    .. image :: /modules/mpmath/plots/ellipe.png
 
     **Examples for the complete integral**
 
@@ -1220,8 +1220,8 @@ def ellippi(ctx, *args):
 
     **Plots**
 
-    .. literalinclude :: /plots/ellippi.py
-    .. image :: /plots/ellippi.png
+    .. literalinclude :: /modules/mpmath/plots/ellippi.py
+    .. image :: /modules/mpmath/plots/ellippi.png
 
     **Examples for the complete integral**
 
