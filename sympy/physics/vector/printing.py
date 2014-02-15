@@ -379,7 +379,7 @@ def init_vprinting(**kwargs):
     light wrapper to `sympy.interactive.init_printing`. Any keyword
     arguments for it are valid here.
 
-    {}
+    {0}
 
     Examples
     ========
