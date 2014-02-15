@@ -1,4 +1,15 @@
 from __future__ import print_function, division
+import warnings
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import filldedent
+from sympy.physics.vector import Vector, ReferenceFrame, Point
+from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
+                                           init_vprinting)
+from sympy.physics.mechanics.particle import Particle
+from sympy.physics.mechanics.rigidbody import RigidBody
+from sympy import sympify
+from sympy.core.basic import S
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -13,13 +24,7 @@ __all__ = ['inertia',
            'mpprint',
            'mlatex']
 
-from sympy.physics.vector import Vector, ReferenceFrame, Point
-from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
-                                           init_vprinting)
-from sympy.physics.mechanics.particle import Particle
-from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify
-from sympy.core.basic import S
+warnings.simplefilter("always", SymPyDeprecationWarning)
 
 # These are functions that we've moved and renamed during extracting the
 # basic vector calculus code from the mechanics packages.
@@ -48,9 +53,10 @@ def mechanics_printing(**kwargs):
         return True
 
     if dict_is_empty(kwargs):
-        print('See the doc string for slight changes to this function,\n'
-              'keyword args may be needed for the desired effect. Otherwise \n'
-              'use sympy.physics.vector.init_vprinting directly.')
+        msg = ('See the doc string for slight changes to this function: '
+               'keyword args may be needed for the desired effect. '
+               'Otherwise use sympy.physics.vector.init_vprinting directly.')
+        SymPyDeprecationWarning(filldedent(msg)).warn()
 
     init_vprinting(**kwargs)
 
