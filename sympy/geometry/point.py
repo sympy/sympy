@@ -77,19 +77,22 @@ class Point(GeometryEntity):
 
     def __new__(cls, *args, **kwargs):
         eval = kwargs.get('evaluate', True)
+        check = True
         if isinstance(args[0], Point):
             if not eval:
                 return args[0]
             args = args[0].args
+            check = False
         else:
             if iterable(args[0]):
                 args = args[0]
-            if any(a.is_imaginary for a in args):
-                raise ValueError('Imaginary args not permitted.')
-            if len(coords) != 2:
+            if len(args) != 2:
                 raise NotImplementedError(
                     "Only two dimensional points currently supported")
         coords = Tuple(*args)
+        if check:
+            if any(a.is_imaginary for a in coords):
+                raise ValueError('Imaginary args not permitted.')
         if eval:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
