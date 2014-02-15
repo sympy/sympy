@@ -63,11 +63,11 @@ matrix:
     - python: 3.3
       env:
         - TEST_THEANO="true"
+  allow_failures:
+    - python: "pypy"
     - python: 3.3 # Dummy value
       env:
         - TEST_SAGE="true"
-  allow_failures:
-    - python: "pypy"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;
