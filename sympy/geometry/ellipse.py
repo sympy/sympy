@@ -539,12 +539,38 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Circle, Line
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
         Circle(Point(1, 0), -1)
+        >>> from sympy import Ellipse, Line, Point
+        >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
+        General Ellipse is not supported but the equation of the reflected Ellipse is:
+        (9*x/41 + 40*y/41 + 37/41)**2 + (40*x/123 - 3*y/41 - 364/123)**2 - 1 == 0
+
+        Notes
+        =====
+
+        Until the general ellipse (with no axis parallel to the x-axis) is supported a
+        NotImplemented error is raised,although an expression is returned.
+
         """
+        def _uniquely_named_symbol(xname, expr):
+            """ a symbol which, when printed, will have a name unique from any other already in `expr`.
+            The name is made unique by prepending underscores."""
+            prefix = '%s'
+            x = prefix % xname
+            while any(x == str(s) for s in expr.free_symbols):
+                prefix = '_' + prefix
+                x = prefix % xname
+            return _symbol(x)
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
-        raise NotImplementedError('reflection line not horizontal | vertical.')
+        else:
+            expr = self.equation()
+            x, y = [_uniquely_named_symbol(name, expr) for name in 'xy']
+            result = expr.subs(zip((x, y), Point(x, y).reflect(line).args
+                               ), simultaneous=True)
+            raise NotImplementedError('General Ellipse is not supported but the equation '
+                 'of the reflected Ellipse is:\n' + "%s == 0" % str(result))
 
     def encloses_point(self, p):
         """
