@@ -273,7 +273,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     print_builtin: boolean, optional, default=True
         If true then floats and integers will be printed. If false the
         printer will only print SymPy types.
-    str_printer: function, optiona, default=None
+    str_printer: function, optional, default=None
         A custom string printer function. This should mimic
         sympy.printing.sstrrepr().
     pretty_printer: function, optional, default=None

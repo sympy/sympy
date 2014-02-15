@@ -21,7 +21,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import sympify
 from sympy.core.basic import S
 
-# These are functions that we've renamed in during the extraction of the
+# These are functions that we've moved and renamed during extracting the
 # basic vector calculus code from the mechanics packages.
 
 mprint = vprint
@@ -37,7 +37,7 @@ def mechanics_printing(**kwargs):
     # little wrapper that gives the warning that things have changed.
 
     # TODO : Remove this warning in SymPy 0.7.6 (or whatever the next
-    # release is after 0.7.5.
+    # release is after 0.7.5
 
     # The message is only printed if this function is called with no args,
     # as was the previous only way to call it.
