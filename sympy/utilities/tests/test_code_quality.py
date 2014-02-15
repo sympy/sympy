@@ -150,6 +150,7 @@ def test_files():
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
         # these __init__.py should be fixed:
         # XXX: not really, they use useful import pattern (DRY)
+        "%(sep)svector%(sep)s__init__.py" % sepd,
         "%(sep)smechanics%(sep)s__init__.py" % sepd,
         "%(sep)squantum%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)s__init__.py" % sepd,

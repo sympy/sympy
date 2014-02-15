@@ -496,7 +496,7 @@ defining vectors in the more complex forms can vastly slow down formulation of
 the equations of motion and increase their length, sometimes to a point where
 they cannot be shown on screen.
 
-Using Vectors and Reference Frames 
+Using Vectors and Reference Frames
 ==================================
 
 We have waited until after all of the relevant mathematical relationships have
@@ -709,10 +709,11 @@ non-interactive sessions. ::
   >>> vprint(q1d)
   q1'
 
-For interactive sessions use ``time_derivative_printing``. There also exist analogs
+For interactive sessions use ``init_vprinting``. There also exist analogs
 for SymPy's ``vprint``, ``vpprint``, and ``latex``, ``vlatex``. ::
 
-  >>> time_derivative_printing()
+  >>> from sympy.physics.vector import init_vprinting
+  >>> init_vprinting(pretty_print=False)
   >>> q1
   q1
   >>> q1d

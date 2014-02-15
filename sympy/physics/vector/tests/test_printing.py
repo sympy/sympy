@@ -34,16 +34,16 @@ def test_vector_pretty_print():
 
     pp = VectorPrettyPrinter()
 
-    expected = (u' 2\na *\x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + '
-                u'b*\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m + '
-                u'c\u22c5sin(\u03b1)*\x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
+    expected = (u' 2\na  \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + b \x1b[94m'
+                u'\x1b[1mn_y\x1b[0;0m\x1b[0;0m + c\u22c5sin(\u03b1) \x1b[9'
+                u'4m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
 
     assert expected == pp.doprint(v)
     assert expected == v._pretty().render()
 
-    expected = (u'\u03b1*\x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + '
-                u'sin(\u03c9)*\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m + '
-                u'\u03b1\u22c5\u03b2*\x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
+    expected = (u'\u03b1 \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + sin(\u03c9'
+                u') \x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m + \u03b1\u22c5'
+                u'\u03b2 \x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
 
     assert expected == pp.doprint(w)
     assert expected == w._pretty().render()
@@ -127,22 +127,20 @@ def test_vector_latex_with_functions():
 
 def test_dyadic_pretty_print():
 
-    expected = (u' 2\na  \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2a02 \x1b[9'
-                u'4m\x1b[1mn_y\x1b[0;0m\x1b[0;0m + b \x1b[94m\x1b[1mn_y'
-                u'\x1b[0;0m\x1b[0;0m\u2a02 \x1b[94m\x1b[1mn_y\x1b[0;0m\x1b'
-                u'[0;0m + c\u22c5sin(\u03b1) \x1b[94m\x1b[1mn_z\x1b[0;0m'
-                u'\x1b[0;0m\u2a02 \x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m')
-
+    expected = (u' 2\na  \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2297\x1b[94'
+                u'm\x1b[1mn_y\x1b[0;0m\x1b[0;0m + b \x1b[94m\x1b[1mn_y\x1b'
+                u'[0;0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m'
+                u' + c\u22c5sin(\u03b1) \x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;'
+                u'0m\u2297\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m')
     result = u._pretty().render()
 
     assert expected == result
 
-    expected = (u'\u03b1 \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2a02 \x1b[9'
-                u'4m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + sin(\u03c9) \x1b[94m'
-                u'\x1b[1mn_y\x1b[0;0m\x1b[0;0m\u2a02 \x1b[94m\x1b[1mn_z'
-                u'\x1b[0;0m\x1b[0;0m + \u03b1\u22c5\u03b2 \x1b[94m\x1b[1mn'
-                u'_z\x1b[0;0m\x1b[0;0m\u2a02 \x1b[94m\x1b[1mn_x\x1b[0;0m'
-                u'\x1b[0;0m')
+    expected = (u'\u03b1 \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2297\x1b[94'
+                u'm\x1b[1mn_x\x1b[0;0m\x1b[0;0m + sin(\u03c9) \x1b[94m\x1b'
+                u'[1mn_y\x1b[0;0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_z\x1b[0;0'
+                u'm\x1b[0;0m + \u03b1\u22c5\u03b2 \x1b[94m\x1b[1mn_z\x1b[0'
+                u';0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m')
 
     result = x._pretty().render()
 

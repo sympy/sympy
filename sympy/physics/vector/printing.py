@@ -1,13 +1,17 @@
+# -*- coding: utf-8 -*-
+
 from sympy import Derivative
 from sympy.core import C
 from sympy.core.compatibility import u
 from sympy.core.function import UndefinedFunction
+from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
-from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
-from sympy.utilities import group
+
+__all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
+           'init_vprinting']
 
 
 class VectorStrPrinter(StrPrinter):
@@ -31,6 +35,12 @@ class VectorStrPrinter(StrPrinter):
         if isinstance(type(e), UndefinedFunction):
             return StrPrinter().doprint(e).replace("(%s)" % t, '')
         return e.func.__name__ + "(%s)" % self.stringify(e.args, ", ")
+
+
+class VectorStrReprPrinter(VectorStrPrinter):
+    """String repr printer for vector expressions."""
+    def _print_str(self, s):
+        return repr(s)
 
 
 class VectorLatexPrinter(LatexPrinter):
@@ -150,7 +160,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         from sympy.physics.vector.functions import dynamicsymbols
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = dynamicsymbols._t
-        dots = 0
+        dot_i = 0
         can_break = True
         syms = list(reversed(deriv.variables))
         x = None
@@ -158,78 +168,37 @@ class VectorPrettyPrinter(PrettyPrinter):
         while len(syms) > 0:
             if syms[-1] == t:
                 syms.pop()
-                dots += 1
+                dot_i += 1
             else:
-                break
+                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
-        f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr))
         if not (isinstance(type(deriv.expr), UndefinedFunction)
                 and (deriv.expr.args == (t,))):
-            dots = 0
-            can_break = False
-            f = prettyForm(binding=prettyForm.FUNC,
-                    *self._print(deriv.expr).parens())
-
-        if dots == 0:
-            dots = u("")
-        elif dots == 1:
-            dots = u("\u0307")
-        elif dots == 2:
-            dots = u("\u0308")
-        elif dots == 3:
-            dots = u("\u20db")
-        elif dots == 4:
-            dots = u("\u20dc")
-
-        uni_subs = [u("\u2080"), u("\u2081"), u("\u2082"), u("\u2083"), u("\u2084"),
-                    u("\u2085"), u("\u2086"), u("\u2087"), u("\u2088"), u("\u2089"),
-                    u("\u208a"), u("\u208b"), u("\u208c"), u("\u208d"), u("\u208e"),
-                    u("\u208f"), u("\u2090"), u("\u2091"), u("\u2092"), u("\u2093"),
-                    u("\u2094"), u("\u2095"), u("\u2096"), u("\u2097"), u("\u2098"),
-                    u("\u2099"), u("\u209a"), u("\u209b"), u("\u209c"), u("\u209d"),
-                    u("\u209e"), u("\u209f")]
-
-        fpic = f.__dict__['picture']
-        funi = f.__dict__['unicode']
-        ind = len(funi)
-        val = ""
-
-        for i in uni_subs:
-            cur_ind = funi.find(i)
-            if (cur_ind != -1) and (cur_ind < ind):
-                ind = cur_ind
-                val = i
-        if ind == len(funi):
-            funi += dots
+                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
         else:
-            funi = funi.replace(val, dots + val)
+            pform = self._print_Function(deriv.expr)
+        # the following condition would happen with some sort of non-standard
+        # dynamic symbol I guess, so we'll just print the SymPy way
+        if len(pform.picture) > 1:
+            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
-        if f.__dict__['picture'] == [f.__dict__['unicode']]:
-            fpic = [funi]
-        f.__dict__['picture'] = fpic
-        f.__dict__['unicode'] = funi
+        dots = {0 : u(""),
+                1 : u("\u0307"),
+                2 : u("\u0308"),
+                3 : u("\u20db"),
+                4 : u("\u20dc")}
 
-        if (len(syms)) == 0 and can_break:
-            return f
+        d = pform.__dict__
+        pic = d['picture'][0]
+        uni = d['unicode']
+        lp = len(pic) // 2 + 1
+        lu = len(uni) // 2 + 1
+        pic_split = [pic[:lp], pic[lp:]]
+        uni_split = [uni[:lu], uni[lu:]]
 
-        for sym, num in group(syms, multiple=False):
-            s = self._print(sym)
-            ds = prettyForm(*s.left('d'))
+        d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
+        d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
 
-            if num > 1:
-                ds = ds ** prettyForm(str(num))
-
-            if x is None:
-                x = ds
-            else:
-                x = prettyForm(*x.right(' '))
-                x = prettyForm(*x.right(ds))
-        pform = prettyForm('d')
-        if len(syms) > 1:
-            pform = pform ** prettyForm(str(len(syms)))
-        pform = prettyForm(*pform.below(stringPict.LINE, x))
-        pform.baseline = pform.baseline + 1
-        pform = prettyForm(*stringPict.next(pform, f))
         return pform
 
     def _print_Function(self, e):
@@ -239,26 +208,209 @@ class VectorPrettyPrinter(PrettyPrinter):
         func = e.func
         args = e.args
         func_name = func.__name__
-        prettyFunc = self._print(C.Symbol(func_name))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
+        pform = self._print_Symbol(C.Symbol(func_name))
         # If this function is an Undefined function of t, it is probably a
         # dynamic symbol, so we'll skip the (t). The rest of the code is
         # identical to the normal PrettyPrinter code
-        if isinstance(func, UndefinedFunction) and (args == (t,)):
-            pform = prettyForm(binding=prettyForm.FUNC,
-                               *stringPict.next(prettyFunc))
-        else:
-            pform = prettyForm(binding=prettyForm.FUNC,
-                               *stringPict.next(prettyFunc, prettyArgs))
-        # store pform parts so it can be reassembled e.g. when powered
-        pform.prettyFunc = prettyFunc
-        pform.prettyArgs = prettyArgs
+        if not (isinstance(func, UndefinedFunction) and (args == (t,))):
+            return super(VectorPrettyPrinter, self)._print_Function(e)
         return pform
 
 
-class VectorTypeError(TypeError):
+def vprint(expr, **settings):
+    r"""Function for printing of expressions generated in the
+    sympy.physics vector package.
 
-    def __init__(self, other, type_str):
-        msg = ("Expected an instance of %s, instead received an object "
-               "'%s' of type %s.") % (type_str, other, type(other))
-        super(VectorTypeError, self).__init__(msg)
+    Extends SymPy's StrPrinter, takes the same setting accepted by SymPy's
+    `sstr()`, and is equivalent to `print(sstr(foo))`.
+
+    Parameters
+    ==========
+
+    expr : valid SymPy object
+        SymPy expression to print.
+    settings : args
+        Same as the settings accepted by SymPy's sstr().
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import vprint, dynamicsymbols
+    >>> u1 = dynamicsymbols('u1')
+    >>> print(u1)
+    u1(t)
+    >>> vprint(u1)
+    u1
+
+    """
+
+    outstr = vsprint(expr, **settings)
+
+    from sympy.core.compatibility import builtins
+    if (outstr != 'None'):
+        builtins._ = outstr
+        print(outstr)
+
+
+def vsstrrepr(expr, **settings):
+    """Function for displaying expression representation's with vector
+    printing enabled.
+
+    Parameters
+    ==========
+
+    expr : valid SymPy object
+        SymPy expression to print.
+    settings : args
+        Same as the settings accepted by SymPy's sstrrepr().
+
+    """
+    p = VectorStrReprPrinter(settings)
+    return p.doprint(expr)
+
+
+def vsprint(expr, **settings):
+    r"""Function for displaying expressions generated in the
+    sympy.physics vector package.
+
+    Returns the output of vprint() as a string.
+
+    Parameters
+    ==========
+
+    expr : valid SymPy object
+        SymPy expression to print
+    settings : args
+        Same as the settings accepted by SymPy's sstr().
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import vsprint, dynamicsymbols
+    >>> u1, u2 = dynamicsymbols('u1 u2')
+    >>> u2d = dynamicsymbols('u2', level=1)
+    >>> print("%s = %s" % (u1, u2 + u2d))
+    u1(t) = u2(t) + Derivative(u2(t), t)
+    >>> print("%s = %s" % (vsprint(u1), vsprint(u2 + u2d)))
+    u1 = u2 + u2'
+
+    """
+
+    string_printer = VectorStrPrinter(settings)
+    return string_printer.doprint(expr)
+
+
+def vpprint(expr, **settings):
+    r"""Function for pretty printing of expressions generated in the
+    sympy.physics vector package.
+
+    Mainly used for expressions not inside a vector; the output of running
+    scripts and generating equations of motion. Takes the same options as
+    SymPy's pretty_print(); see that function for more information.
+
+    Parameters
+    ==========
+
+    expr : valid SymPy object
+        SymPy expression to pretty print
+    settings : args
+        Same as those accepted by SymPy's pretty_print.
+
+
+    """
+
+    pp = VectorPrettyPrinter(settings)
+
+    # Note that this is copied from sympy.printing.pretty.pretty_print:
+
+    # XXX: this is an ugly hack, but at least it works
+    use_unicode = pp._settings['use_unicode']
+    from sympy.printing.pretty.pretty_symbology import pretty_use_unicode
+    uflag = pretty_use_unicode(use_unicode)
+
+    try:
+        return pp.doprint(expr)
+    finally:
+        pretty_use_unicode(uflag)
+
+
+def vlatex(expr, **settings):
+    r"""Function for printing latex representation of sympy.physics.vector
+    objects.
+
+    For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
+    same options as SymPy's latex(); see that function for more information;
+
+    Parameters
+    ==========
+
+    expr : valid SymPy object
+        SymPy expression to represent in LaTeX form
+    settings : args
+        Same as latex()
+
+    Examples
+    ========
+
+    >>> from sympy.physics.vector import vlatex, ReferenceFrame, dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q1, q2 = dynamicsymbols('q1 q2')
+    >>> q1d, q2d = dynamicsymbols('q1 q2', 1)
+    >>> q1dd, q2dd = dynamicsymbols('q1 q2', 2)
+    >>> vlatex(N.x + N.y)
+    '\\mathbf{\\hat{n}_x} + \\mathbf{\\hat{n}_y}'
+    >>> vlatex(q1 + q2)
+    'q_{1} + q_{2}'
+    >>> vlatex(q1d)
+    '\\dot{q}_{1}'
+    >>> vlatex(q1 * q2d)
+    'q_{1} \\dot{q}_{2}'
+    >>> vlatex(q1dd * q1 / q1d)
+    '\\frac{q_{1} \\ddot{q}_{1}}{\\dot{q}_{1}}'
+
+    """
+    latex_printer = VectorLatexPrinter(settings)
+
+    return latex_printer.doprint(expr)
+
+
+def init_vprinting(**kwargs):
+    """Initializes time derivative printing for all SymPy objects, i.e. any
+    functions of time will be displayed in a more compact notation. The main
+    benefit of this is for printing of time derivatives; instead of
+    displaying as ``Derivative(f(t),t)``, it will display ``f'``. This is
+    only actually needed for when derivatives are present and are not in a
+    physics.vector.Vector or physics.vector.Dyadic object. This function is a
+    light wrapper to `sympy.interactive.init_printing`. Any keyword
+    arguments for it are valid here.
+
+    {0}
+
+    Examples
+    ========
+
+    >>> from sympy import Function, symbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> t, x = symbols('t, x')
+    >>> omega = Function('omega')
+    >>> omega(x).diff()
+    Derivative(omega(x), x)
+    >>> omega(t).diff()
+    Derivative(omega(t), t)
+
+    Now use the string printer:
+
+    >>> init_vprinting(pretty_print=False)
+    >>> omega(x).diff()
+    Derivative(omega(x), x)
+    >>> omega(t).diff()
+    omega'
+
+    """
+    kwargs['str_printer'] = vsstrrepr
+    kwargs['pretty_printer'] = vpprint
+    kwargs['latex_printer'] = vlatex
+    init_printing(**kwargs)
+
+params = init_printing.__doc__.split('Examples\n    ========')[0]
+init_vprinting.__doc__ = init_vprinting.__doc__.format(params)

@@ -1,17 +1,18 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import reduce
-from sympy.physics.vector.vector import Vector, _check_vector
-from sympy.physics.vector.frame import CoordinateSym, ReferenceFrame, \
-     _check_frame
-from sympy.physics.vector.dyadic import Dyadic
-from sympy.physics.vector.printing import (VectorStrPrinter,
-                                           VectorPrettyPrinter,
-                                           VectorLatexPrinter)
-from sympy.physics.vector.point import Point
-from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate, \
-     trigsimp, Function, symbols
+from sympy import (sympify, diff, sin, cos, Matrix, Symbol, integrate,
+                   trigsimp, Function, symbols)
 from sympy.core.basic import S
+from sympy.core.compatibility import reduce
+from .vector import Vector, _check_vector
+from .frame import CoordinateSym, _check_frame
+from .dyadic import Dyadic
+from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
+
+__all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
+           'kinematic_equations', 'get_motion_params', 'partial_velocity',
+           'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
+           'init_vprinting']
 
 
 def cross(vec1, vec2):
@@ -97,7 +98,7 @@ def express(expr, frame, frame2=None, variables=False):
             if v[1] != frame:
                 temp = frame.dcm(v[1]) * v[0]
                 if Vector.simp:
-                    temp = temp.applyfunc(lambda x: \
+                    temp = temp.applyfunc(lambda x:
                                           trigsimp(x, method='fu'))
                 outvec += Vector([(temp, frame)])
             else:
@@ -111,7 +112,7 @@ def express(expr, frame, frame2=None, variables=False):
         ol = Dyadic(0)
         for i, v in enumerate(expr.args):
             ol += express(v[0], frame, variables=variables) * \
-                  (express(v[1], frame, variables=variables) | \
+                  (express(v[1], frame, variables=variables) |
                    express(v[2], frame2, variables=variables))
         return ol
 
@@ -156,7 +157,7 @@ def time_derivative(expr, frame, order=1):
     Examples
     ========
 
-    >>> from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
+    >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
     >>> from sympy import Symbol
     >>> q1 = Symbol('q1')
     >>> u1 = dynamicsymbols('u1')
@@ -182,18 +183,18 @@ def time_derivative(expr, frame, order=1):
 
     if order == 0:
         return expr
-    if order%1 != 0 or order < 0:
+    if order % 1 != 0 or order < 0:
         raise ValueError("Unsupported value of order entered")
 
     if isinstance(expr, Vector):
         outvec = Vector(0)
         for i, v in enumerate(expr.args):
             if v[1] == frame:
-                outvec += Vector([(express(v[0], frame, \
+                outvec += Vector([(express(v[0], frame,
                                            variables=True).diff(t), frame)])
             else:
                 outvec += time_derivative(Vector([v]), v[1]) + \
-                          (v[1].ang_vel_in(frame) ^ Vector([v]))
+                    (v[1].ang_vel_in(frame) ^ Vector([v]))
         return time_derivative(outvec, frame, order - 1)
 
     if isinstance(expr, Dyadic):
@@ -214,175 +215,6 @@ def outer(vec1, vec2):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
 outer.__doc__ += Vector.outer.__doc__
-
-
-def time_derivative_printing():
-    """Sets up interactive printing for vector derivatives.
-
-    The main benefit of this is for printing of time derivatives;
-    instead of displaying as Derivative(f(t),t), it will display f'
-    This is only actually needed for when derivatives are present and are not
-    in a physics.vector or physics.mechanics object.
-
-    Examples
-    ========
-
-    >>> # 2 lines below are for tests to function properly
-    >>> import sys
-    >>> sys.displayhook = sys.__displayhook__
-    >>> from sympy import Function, Symbol, diff
-    >>> from sympy.physics.vector import time_derivative_printing
-    >>> f = Function('f')
-    >>> t = Symbol('t')
-    >>> x = Symbol('x')
-    >>> diff(f(t), t)
-    Derivative(f(t), t)
-    >>> time_derivative_printing()
-    >>> diff(f(t), t)
-    f'
-    >>> diff(f(x), x)
-    Derivative(f(x), x)
-    >>> # 2 lines below are for tests to function properly
-    >>> import sys
-    >>> sys.displayhook = sys.__displayhook__
-
-    """
-
-    import sys
-    sys.displayhook = vprint
-
-
-def vprint(expr, **settings):
-    r"""Function for printing of expressions generated in the
-    sympy.physics vector package.
-
-    Extends SymPy's StrPrinter; vprint is equivalent to:
-    print sstr()
-    vprint takes the same options as sstr.
-
-    Parameters
-    ==========
-
-    expr : valid sympy object
-        SymPy expression to print
-    settings : args
-        Same as print for SymPy
-
-    Examples
-    ========
-
-    >>> from sympy.physics.vector import vprint, dynamicsymbols
-    >>> u1 = dynamicsymbols('u1')
-    >>> print(u1)
-    u1(t)
-    >>> vprint(u1)
-    u1
-
-    """
-
-    outstr = vsprint(expr, **settings)
-
-    from sympy.core.compatibility import builtins
-    if (outstr != 'None'):
-        builtins._ = outstr
-        print(outstr)
-
-
-def vsprint(expr, **settings):
-    r"""Function for displaying expressions generated in the
-    sympy.physics vector package.
-
-    Returns the output of vprint() as a string.
-
-    Parameters
-    ==========
-
-    expr : valid sympy object
-        SymPy expression to print
-    settings : args
-        Same as print for SymPy
-
-    Examples
-    ========
-
-    >>> from sympy.physics.vector import vsprint, dynamicsymbols
-    >>> u1, u2 = dynamicsymbols('u1 u2')
-    >>> u2d = dynamicsymbols('u2', level=1)
-    >>> print("%s = %s" % (u1, u2 + u2d))
-    u1(t) = u2(t) + Derivative(u2(t), t)
-    >>> print("%s = %s" % (vsprint(u1), vsprint(u2 + u2d)))
-    u1 = u2 + u2'
-
-    """
-
-    pr = VectorStrPrinter(settings)
-    return pr.doprint(expr)
-
-
-def vpprint(expr, **settings):
-    r"""Function for pretty printing of expressions generated in the
-    sympy.physics vector package.
-
-    Mainly used for expressions not inside a vector; the output of running
-    scripts and generating equations of motion. Takes the same options as
-    SymPy's pretty_print(); see that function for more information.
-
-    Parameters
-    ==========
-
-    expr : valid sympy object
-        SymPy expression to pretty print
-    settings : args
-        Same as pretty print
-
-    Examples
-    ========
-
-    Use in the same way as pprint
-
-    """
-
-    mp = VectorPrettyPrinter(settings)
-    print(mp.doprint(expr))
-
-
-def vlatex(expr, **settings):
-    r"""Function for printing latex representation of sympy.physics.vector
-    objects.
-
-    For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
-    same options as SymPy's latex(); see that function for more information;
-
-    Parameters
-    ==========
-
-    expr : valid sympy object
-        SymPy expression to represent in LaTeX form
-    settings : args
-        Same as latex()
-
-    Examples
-    ========
-
-    >>> from sympy.physics.vector import vlatex, ReferenceFrame, dynamicsymbols
-    >>> N = ReferenceFrame('N')
-    >>> q1, q2 = dynamicsymbols('q1 q2')
-    >>> q1d, q2d = dynamicsymbols('q1 q2', 1)
-    >>> q1dd, q2dd = dynamicsymbols('q1 q2', 2)
-    >>> vlatex(N.x + N.y)
-    '\\mathbf{\\hat{n}_x} + \\mathbf{\\hat{n}_y}'
-    >>> vlatex(q1 + q2)
-    'q_{1} + q_{2}'
-    >>> vlatex(q1d)
-    '\\dot{q}_{1}'
-    >>> vlatex(q1 * q2d)
-    'q_{1} \\dot{q}_{2}'
-    >>> vlatex(q1dd * q1 / q1d)
-    '\\frac{q_{1} \\ddot{q}_{1}}{\\dot{q}_{1}}'
-
-    """
-
-    return VectorLatexPrinter(settings).doprint(expr)
 
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
@@ -768,10 +600,10 @@ def dynamicsymbols(names, level=0):
     esses = symbols(names, cls=Function)
     t = dynamicsymbols._t
     if hasattr(esses, '__iter__'):
-        esses = [reduce(diff, [t]*level, e(t)) for e in esses]
+        esses = [reduce(diff, [t] * level, e(t)) for e in esses]
         return esses
     else:
-        return reduce(diff, [t]*level, esses(t))
+        return reduce(diff, [t] * level, esses(t))
 
 
 dynamicsymbols._t = Symbol('t')
