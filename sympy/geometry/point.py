@@ -89,6 +89,8 @@ class Point(GeometryEntity):
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
                 for f in coords.atoms(Float)]))
+        if any(e.is_imaginary for e in coords.atoms()):
+            raise ValueError('Enter a Real Point')
 
         return GeometryEntity.__new__(cls, *coords)
 

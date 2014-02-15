@@ -1100,14 +1100,17 @@ class Line(LinearEntity):
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
-            o = o.func(*[simplify(i) for i in o.args])
-            x, y = Dummy(), Dummy()
-            eq = self.equation(x, y)
-            if not eq.has(y):
-                return (solve(eq, x)[0] - o.x).equals(0)
-            if not eq.has(x):
-                return (solve(eq, y)[0] - o.y).equals(0)
-            return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
+            if o.x.is_imaginary or o.y.is_imaginary:
+                raise ValueError('Enter a Real Point.')
+            else:
+                o = o.func(*[simplify(i) for i in o.args])
+                x, y = Dummy(), Dummy()
+                eq = self.equation(x, y)
+                if not eq.has(y):
+                    return (solve(eq, x)[0] - o.x).equals(0)
+                if not eq.has(x):
+                    return (solve(eq, y)[0] - o.y).equals(0)
+                return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):

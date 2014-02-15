@@ -623,21 +623,26 @@ class Ellipse(GeometryEntity):
         False
 
         """
+
         p = Point(p)
-        if p in self:
-            return False
-
-        if len(self.foci) == 2:
-            # if the combined distance from the foci to p (h1 + h2) is less
-            # than the combined distance from the foci to the minor axis
-            # (which is the same as the major axis length) then p is inside
-            # the ellipse
-            h1, h2 = [f.distance(p) for f in self.foci]
-            test = 2*self.major - (h1 + h2)
+        if p.x.is_imaginary or p.y.is_imaginary:
+            raise ValueError('Enter a Real Point.')
         else:
-            test = self.radius - self.center.distance(p)
+            if p in self:
+                return False
 
+            if len(self.foci) == 2:
+                # if the combined distance from the foci to p (h1 + h2) is less
+                # than the combined distance from the foci to the minor axis
+                # (which is the same as the major axis length) then p is inside
+                # the ellipse
+                h1, h2 = [f.distance(p) for f in self.foci]
+                test = 2*self.major - (h1 + h2)
+            else:
+                test = self.radius - self.center.distance(p)
         return fuzzy_bool(test.is_positive)
+
+
 
     @doctest_depends_on(modules=('pyglet',))
     def tangent_lines(self, p):
@@ -859,11 +864,10 @@ class Ellipse(GeometryEntity):
             except PolynomialError:
                 pass
         if not points:
-            points = [Point(*s) for s in solve((seq, eq), (x, y))]
+            points = solve((seq, eq), (x, y))
             # complicated expressions may not be decidably real so evaluate to
             # check whether they are real or not
-            points = [i.n(prec) if prec is not None else i
-                for i in points if all(j.n(2).is_real for j in i.args)]
+            points = [Point(i).n(prec) if prec is not None else Point(i)for i in points if (i[0].is_real and i[1].is_real is True)]
         slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]
         if prec is not None:
             slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i
