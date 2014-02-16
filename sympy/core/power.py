@@ -12,6 +12,7 @@ from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
 from sympy.core.logic import fuzzy_bool
 from sympy.core.compatibility import as_int, xrange
+from sympy.core.evaluate import global_evaluate
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
@@ -153,7 +154,9 @@ class Pow(Expr):
     __slots__ = ['is_commutative']
 
     @cacheit
-    def __new__(cls, b, e, evaluate=True):
+    def __new__(cls, b, e, evaluate=None):
+        if evaluate is None:
+            evaluate = global_evaluate[0]
         from sympy.functions.elementary.exponential import exp_polar
 
         # don't optimize "if e==0; return 1" here; it's better to handle that
