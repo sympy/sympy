@@ -92,7 +92,7 @@ class Point(GeometryEntity):
                     "Only two dimensional points currently supported")
         coords = Tuple(*args)
         if check:
-            if any(im(a) != 0 for a in coords):
+            if any(a.is_number and im(a) for a in coords):
                 raise ValueError('Imaginary args not permitted.')
         if eval:
             coords = coords.xreplace(dict(

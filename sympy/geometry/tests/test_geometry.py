@@ -1,6 +1,6 @@
 import warnings
 
-from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
+from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
                    simplify, sin, sqrt, symbols, tan, Derivative)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
