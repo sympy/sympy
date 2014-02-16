@@ -14,6 +14,7 @@ from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
@@ -91,7 +92,7 @@ class Point(GeometryEntity):
                     "Only two dimensional points currently supported")
         coords = Tuple(*args)
         if check:
-            if any(a.is_imaginary for a in coords):
+            if any(im(a) != 0 for a in coords):
                 raise ValueError('Imaginary args not permitted.')
         if eval:
             coords = coords.xreplace(dict(
