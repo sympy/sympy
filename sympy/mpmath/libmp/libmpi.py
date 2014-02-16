@@ -876,8 +876,7 @@ def mpci_gamma(z, prec, type=0):
 
     # Assume type != 1
     if type == 1:
-        (a1,a2) = mpi_add((a1,a2), mpi_one, wp)
-        z = (a1,a2), (b1,b2)
+        (a1,a2) = mpi_add((a1,a2), mpi_one, wp); z = (a1,a2), (b1,b2)
         type = 0
 
     # Avoid non-monotonic region near the negative real axis

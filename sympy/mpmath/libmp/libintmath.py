@@ -298,7 +298,7 @@ def sqrt_fixed(x, prec):
 sqrt_fixed2 = sqrt_fixed
 
 if BACKEND == 'gmpy':
-    if gmpy.version() >= "2":
+    if gmpy.version() >= '2':
         isqrt_small = isqrt_fast = isqrt = gmpy.isqrt
         sqrtrem = gmpy.isqrt_rem
     else:
@@ -509,7 +509,7 @@ def eulernum(m, _cache={0:MPZ_ONE}):
 
         \frac{1}{\cosh x} = \sum_{n=0}^\infty \frac{E_n}{n!} x^n
 
-    Examples::
+    Example::
 
         >>> [int(eulernum(n)) for n in range(11)]
         [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0, -50521]
@@ -537,3 +537,40 @@ def eulernum(m, _cache={0:MPZ_ONE}):
                 _cache[n] = ((-1)**(n//2))*(suma // 2**n)
         if n == m:
             return ((-1)**(n//2))*suma // 2**n
+
+def stirling1(n, k):
+    """
+    Stirling number of the first kind.
+    """
+    if n < 0 or k < 0:
+        raise ValueError
+    if k >= n:
+        return MPZ(n == k)
+    if k < 1:
+        return MPZ_ZERO
+    L = [MPZ_ZERO] * (k+1)
+    L[1] = MPZ_ONE
+    for m in xrange(2, n+1):
+        for j in xrange(min(k, m), 0, -1):
+            L[j] = (m-1) * L[j] + L[j-1]
+    return (-1)**(n+k) * L[k]
+
+def stirling2(n, k):
+    """
+    Stirling number of the second kind.
+    """
+    if n < 0 or k < 0:
+        raise ValueError
+    if k >= n:
+        return MPZ(n == k)
+    if k <= 1:
+        return MPZ(k == 1)
+    s = MPZ_ZERO
+    t = MPZ_ONE
+    for j in xrange(k+1):
+        if (k + j) & 1:
+            s -= t * MPZ(j)**n
+        else:
+            s += t * MPZ(j)**n
+        t = t * (k - j) // (j + 1)
+    return s // ifac(k)

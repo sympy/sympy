@@ -30,16 +30,16 @@ except NameError:
 
 BACKEND = 'python'
 
+from .six import exec_, print_
+
 if not python3:
     MPZ = long
     xrange = xrange
     basestring = basestring
-    from .exec_py2 import exec_
 else:
     MPZ = int
     xrange = range
     basestring = str
-    from .exec_py3 import exec_
 
 # Define constants for calculating hash on Python 3.2.
 if sys.version >= "3.2":
@@ -61,7 +61,7 @@ if 'MPMATH_NOGMPY' not in os.environ:
                 import gmpy
             except ImportError:
                 raise ImportError
-        if gmpy.version() >= '1.13':
+        if gmpy.version() >= '1.03':
             BACKEND = 'gmpy'
             MPZ = gmpy.mpz
     except:

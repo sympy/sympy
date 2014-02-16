@@ -24,6 +24,14 @@ def test_interval_identity():
     assert mpi(0, 2) in mpi(0, 10)
     assert not (3 in mpi(-inf, 0))
 
+def test_interval_hash():
+    assert hash(mpi(3)) == hash(3)
+    assert hash(mpi(3.25)) == hash(3.25)
+    assert hash(mpi(3,4)) == hash(mpi(3,4))
+    assert hash(iv.mpc(3)) == hash(3)
+    assert hash(iv.mpc(3,4)) == hash(3+4j)
+    assert hash(iv.mpc((1,3),(2,4))) == hash(iv.mpc((1,3),(2,4)))
+
 def test_interval_arithmetic():
     iv.dps = 15
     assert mpi(2) + mpi(3,4) == mpi(5,6)

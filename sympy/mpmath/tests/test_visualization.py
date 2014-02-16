@@ -4,11 +4,6 @@ sure that passing custom Axes works.
 
 """
 
-# This test either prints something to the terminal or displays a plot,
-# depending on whether matplotlib is installed or not.  Neither is ideal
-# for a test, so let's just skip this entirely.
-
-disabled = True
 from sympy.mpmath import mp, fp
 
 def test_axes():

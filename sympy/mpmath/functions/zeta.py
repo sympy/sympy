@@ -1,4 +1,4 @@
-from ..libmp.backend import xrange
+from ..libmp.backend import xrange, print_
 from .functions import defun, defun_wrapped, defun_static
 
 @defun
@@ -603,9 +603,9 @@ def _hurwitz(ctx, s, a=1, d=0, **kwargs):
             T1, T2 = _hurwitz_em(ctx, s, a, d, prec+10, verbose)
             cancellation = ctx.mag(T1) - ctx.mag(T1+T2)
             if verbose:
-                print("Term 1:", T1)
-                print("Term 2:", T2)
-                print("Cancellation:", cancellation, "bits")
+                print_("Term 1:", T1)
+                print_("Term 2:", T2)
+                print_("Cancellation:", cancellation, "bits")
             if cancellation < extraprec:
                 return T1 + T2
             else:
@@ -722,7 +722,7 @@ def _hurwitz_em(ctx, s, a, d, prec, verbose):
                 return lsum, (-1)**d * tailsum
             fact *= (j2+1)*(j2+2)
         if verbose:
-            print("Sum range:", M1, M2, "term magnitude", ctx.mag(t), "tolerance", tol)
+            print_("Sum range:", M1, M2, "term magnitude", ctx.mag(t), "tolerance", tol)
         M1, M2 = M2, M2*2
         if ctx.re(s) < 0:
             N += N//2
@@ -742,10 +742,12 @@ def _zetasum(ctx, s, a, n, derivatives=[0], reflect=False):
     or a range 0,1,...r). If reflect=False, the ydks are not computed.
     """
     #print "zetasum", s, a, n
-    try:
-        return ctx._zetasum_fast(s, a, n, derivatives, reflect)
-    except NotImplementedError:
-        pass
+    # don't use the fixed-point code if there are large exponentials
+    if abs(ctx.re(s)) < 0.5 * ctx.prec:
+        try:
+            return ctx._zetasum_fast(s, a, n, derivatives, reflect)
+        except NotImplementedError:
+            pass
     negs = ctx.fneg(s, exact=True)
     have_derivatives = derivatives != [0]
     have_one_derivative = len(derivatives) == 1
@@ -1034,12 +1036,12 @@ def secondzeta(ctx, s, a = 0.015, **kwargs):
         err = r1+r2+r4
         t = t1-t2+t3-t4
         if kwargs.get("verbose"):
-            print('main term =', t1)
-            print('    computed using', gt, 'zeros of zeta')
-            print('prime term =', t2)
-            print('    computed using', pt, 'values of the von Mangoldt function')
-            print('exponential term =', t3)
-            print('singular term =', t4)
+            print_('main term =', t1)
+            print_('    computed using', gt, 'zeros of zeta')
+            print_('prime term =', t2)
+            print_('    computed using', pt, 'values of the von Mangoldt function')
+            print_('exponential term =', t3)
+            print_('singular term =', t4)
     finally:
         ctx.prec = prec
     if kwargs.get("error"):
@@ -1110,6 +1112,21 @@ def lerchphi(ctx, z, s, a):
         >>> lerchphi(0,1,-2)
         -0.5
 
+    Reduction to simpler functions::
+
+        >>> lerchphi(1, 4.25+1j, 1)
+        (1.044674457556746668033975 - 0.04674508654012658932271226j)
+        >>> zeta(4.25+1j)
+        (1.044674457556746668033975 - 0.04674508654012658932271226j)
+        >>> lerchphi(1 - 0.5**10, 4.25+1j, 1)
+        (1.044629338021507546737197 - 0.04667768813963388181708101j)
+        >>> lerchphi(3, 4, 1)
+        (1.249503297023366545192592 - 0.2314252413375664776474462j)
+        >>> polylog(4, 3) / 3
+        (1.249503297023366545192592 - 0.2314252413375664776474462j)
+        >>> lerchphi(3, 4, 1 - 0.5**10)
+        (1.253978063946663945672674 + 0.2316736622836535468765376j)
+
     **References**
 
     1. [DLMF]_ section 25.14
@@ -1117,13 +1134,11 @@ def lerchphi(ctx, z, s, a):
     """
     if z == 0:
         return a ** (-s)
-    """
     # Faster, but these cases are useful for testing right now
     if z == 1:
         return ctx.zeta(s, a)
     if a == 1:
-        return z * ctx.polylog(s, z)
-    """
+        return ctx.polylog(s, z) / z
     if ctx.re(a) < 1:
         if ctx.isnpint(a):
             raise ValueError("Lerch transcendent complex infinity")

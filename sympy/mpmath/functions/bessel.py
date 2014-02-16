@@ -478,9 +478,7 @@ def airyai(ctx, z, derivative=0, **kwargs):
                 # http://functions.wolfram.com/03.07.06.0005.01
                 if ctx._re(z) > 4:
                     ctx.prec += extraprec
-                    w = z**1.5
-                    r = -0.75/w
-                    u = -2*w/3
+                    w = z**1.5; r = -0.75/w; u = -2*w/3
                     ctx.prec -= extraprec
                     C = -ctx.exp(u)/(2*ctx.sqrt(ctx.pi))*ctx.nthroot(z,4)
                     return ([C],[1],[],[],[(-1,6),(7,6)],[],r),
@@ -504,17 +502,10 @@ def airyai(ctx, z, derivative=0, **kwargs):
                 w = z**3/9
                 ctx.prec -= extraprec
                 q13,q23,q43 = ctx.mpq_1_3, ctx.mpq_2_3, ctx.mpq_4_3
-                a1=q13
-                a2=1
-                b1=(1-n)*q13
-                b2=(2-n)*q13
-                b3=1-n*q13
+                a1=q13; a2=1; b1=(1-n)*q13; b2=(2-n)*q13; b3=1-n*q13
                 T1 = [3, z], [n-q23, -n], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
-                a1=q23
-                b1=(2-n)*q13
-                b2=1-n*q13
-                b3=(4-n)*q13
+                a1=q23; b1=(2-n)*q13; b2=1-n*q13; b3=(4-n)*q13
                 T2 = [3, z, -z], [n-q43, -n, 1], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
                 return T1, T2
@@ -529,9 +520,7 @@ def airyai(ctx, z, derivative=0, **kwargs):
                 # the following expansion is better.
                 # TODO: asymptotic series for derivatives
                 ctx.prec += extraprec
-                w = z**1.5
-                r = -0.75/w
-                u = -2*w/3
+                w = z**1.5; r = -0.75/w; u = -2*w/3
                 ctx.prec -= extraprec
                 C = ctx.exp(u)/(2*ctx.sqrt(ctx.pi)*ctx.nthroot(z,4))
                 return ([C],[1],[],[],[(1,6),(5,6)],[],r),
@@ -599,17 +588,10 @@ def airybi(ctx, z, derivative=0, **kwargs):
                 q13,q23,q43 = ctx.mpq_1_3, ctx.mpq_2_3, ctx.mpq_4_3
                 q16 = ctx.mpq_1_6
                 q56 = ctx.mpq_5_6
-                a1=q13
-                a2=1
-                b1=(1-n)*q13
-                b2=(2-n)*q13
-                b3=1-n*q13
+                a1=q13; a2=1; b1=(1-n)*q13; b2=(2-n)*q13; b3=1-n*q13
                 T1 = [3, z], [n-q16, -n], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
-                a1=q23
-                b1=(2-n)*q13
-                b2=1-n*q13
-                b3=(4-n)*q13
+                a1=q23; b1=(2-n)*q13; b2=1-n*q13; b3=(4-n)*q13
                 T2 = [3, z], [n-q56, 1-n], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
                 return T1, T2
@@ -784,8 +766,7 @@ def coulombg(ctx, l, eta, z, w=1, chop=True, **kwargs):
         try:
             chi = ctx._coulomb_chi(l, eta)
             jw = ctx.j*w
-            s = ctx.sin(chi)
-            c = ctx.cos(chi)
+            s = ctx.sin(chi); c = ctx.cos(chi)
             C1 = ctx.coulombc(l,eta)
             C2 = ctx.coulombc(l2,eta)
             u = ctx.exp(jw*z)

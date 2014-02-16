@@ -31,7 +31,7 @@ Factorials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.fac2(x)
 
-Binomial coefficients
+Binomial coefficients 
 ....................................................
 
 :func:`binomial`
