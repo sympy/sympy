@@ -93,7 +93,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
-        import sympy
+        from sympy import Basic
+        from sympy.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
@@ -101,13 +102,11 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o, bool):
             return False
-        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, Vector, Dyadic)):
+        # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
+        # to use here, than these explicit imports.
+        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
             return True
         elif isinstance(o, (float, integer_types)) and print_builtin:
-            return True
-        # Is this the standard way of making an object that prints latex. If
-        # so, the I can remove the Vector and Dyadic imports above.
-        elif hasattr(o, '_latex'):
             return True
         return False
 
@@ -274,7 +273,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     print_builtin: boolean, optional, default=True
         If true then floats and integers will be printed. If false the
         printer will only print SymPy types.
-    str_printer: function, optiona, default=None
+    str_printer: function, optional, default=None
         A custom string printer function. This should mimic
         sympy.printing.sstrrepr().
     pretty_printer: function, optional, default=None
@@ -381,6 +380,6 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     if ip is not None and ip.__module__.startswith('IPython'):
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer=latex_printer)
+                               print_builtin, latex_printer)
     else:
         _init_python_printing(stringify_func)
