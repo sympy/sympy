@@ -309,6 +309,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Akshay: added normal_lines to Ellipse
 #. Buck Shlegeris: add inverses to error functions
 #. m777z: documentation
+#. Edward: update license year
 #. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
 
 
