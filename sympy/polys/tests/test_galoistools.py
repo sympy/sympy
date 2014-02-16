@@ -28,7 +28,7 @@ from sympy.polys.galoistools import (
 )
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed,
+    ExactQuotientFailed, NotInvertible,
 )
 
 from sympy.polys import polyconfig as config
@@ -227,7 +227,7 @@ def test_gf_arith():
 
 def test_gf_division():
     raises(ZeroDivisionError, lambda: gf_div([1, 2, 3], [], 11, ZZ))
-    raises(ZeroDivisionError, lambda: gf_rem([1, 2, 3], [], 11, ZZ))
+    raises((ZeroDivisionError, NotInvertible), lambda: gf_rem([1, 2, 3], [], 11, ZZ))
     raises(ZeroDivisionError, lambda: gf_quo([1, 2, 3], [], 11, ZZ))
     raises(ZeroDivisionError, lambda: gf_quo([1, 2, 3], [], 11, ZZ))
 
@@ -522,8 +522,8 @@ def test_gf_frobenius_map():
     g = ZZ.map([1,1,0,2,0,1,0,2,0,1])
     p = 3
     n = 4
-    b = gf_frobenius_monomial_base(g, p, ZZ)
-    h = gf_frobenius_map(f, g, b, p, ZZ)
+    b, Nb = gf_frobenius_monomial_base(g, p, ZZ)
+    h = gf_frobenius_map(f, g, b, Nb, p, ZZ)
     h1 = gf_pow_mod(f, p, g, p, ZZ)
     assert h == h1
 

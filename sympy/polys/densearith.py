@@ -13,7 +13,8 @@ from sympy.polys.densebasic import (
     dmp_ground, dmp_zeros)
 
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
-from sympy.core.compatibility import xrange
+from sympy.core.compatibility import xrange, HAS_GMPY
+from sympy.mpmath.libmp.libintmath import bitcount
 
 def dup_add_term(f, c, i, K):
     """
@@ -735,6 +736,19 @@ def dmp_sub_mul(f, g, h, u, K):
     """
     return dmp_sub(f, dmp_mul(g, h, u, K), u, K)
 
+def _dup_eval1(f, N, K):
+    result = K.zero
+    for c in f:
+        result <<= N
+        result += c
+    return result
+
+if HAS_GMPY == 2:
+    def dup_eval1(f, N, K):
+        from sympy.polys.domains.groundtypes import gmpy_pack
+        f.reverse()
+        r = gmpy_pack(f, N)
+        return r
 
 def dup_mul(f, g, K):
     """
@@ -791,6 +805,101 @@ def dup_mul(f, g, K):
 
         return dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
                        dup_lshift(hi, 2*n2, K), K)
+
+def _dup_pack_mul(f, g, K):
+    """
+    encode integer polynomial
+
+    References
+    ==========
+
+    [1] R. J. Fateman 'Can you save time in multiplying polynomials'
+    'by encoding them as integers?/revised 2010'
+    """
+    df = dup_degree(f)
+    dg = dup_degree(g)
+    sign = 1
+    if f[0] < 0:
+        f = dup_neg(f, K)
+        sign = -sign
+    if g[0] < 0:
+        g = dup_neg(g, K)
+        sign = -sign
+    p = max(max([abs(x) for x in f]), max([abs(x) for x in g]))
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p) + 1
+    a = K.one << N
+    a2 = a // 2
+    mask = a - 1
+    sf = _dup_eval1(f, N, K)
+    sg = _dup_eval1(g, N, K)
+    r = sf*sg
+    v = []
+    carry = 0
+    while r or carry:
+        b = r & mask
+        if b < a2:
+            v.append(b + carry)
+            carry = 0
+        else:
+            v.append(b - a + carry)
+            carry = 1
+        r >>= N
+    v.reverse()
+    if sign == -1:
+        v = dup_neg(v, K)
+    return dup_strip(v)
+
+def dup_pack_mul(f, g, K):
+    if f == g:
+        return dup_sqr(f, K)
+
+    if not (f and g):
+        return []
+
+    f = dup_strip(f)
+    g = dup_strip(g)
+    df = dup_degree(f)
+    dg = dup_degree(g)
+
+    n = max(df, dg) + 1
+    dmin = min(df, dg)
+    is_ZZ = str(K) == 'ZZ'
+    if (is_ZZ and dmin < 10) or ((not is_ZZ) and n < 100):
+        h = []
+
+        for i in xrange(0, df + dg + 1):
+            coeff = K.zero
+
+            for j in xrange(max(0, i - dg), min(df, i) + 1):
+                coeff += f[j]*g[i - j]
+
+            h.append(coeff)
+
+        res = dup_strip(h)
+    elif is_ZZ:
+        res = _dup_pack_mul(f, g, K)
+    else:
+        # Use Karatsuba's algorithm (divide and conquer), see e.g.:
+        # Joris van der Hoeven, Relax But Don't Be Too Lazy,
+        # J. Symbolic Computation, 11 (2002), section 3.1.1.
+        n2 = n//2
+
+        fl, gl = dup_slice(f, 0, n2, K), dup_slice(g, 0, n2, K)
+
+        fh = dup_rshift(dup_slice(f, n2, n, K), n2, K)
+        gh = dup_rshift(dup_slice(g, n2, n, K), n2, K)
+
+        lo, hi = dup_mul(fl, gl, K), dup_mul(fh, gh, K)
+
+        mid = dup_mul(dup_add(fl, fh, K), dup_add(gl, gh, K), K)
+        mid = dup_sub(mid, dup_add(lo, hi, K), K)
+
+        res = dup_add(dup_add(lo, dup_lshift(mid, n2, K), K),
+                       dup_lshift(hi, 2*n2, K), K)
+    return res
+
+if not HAS_GMPY:
+    dup_pack_mul = dup_mul
 
 
 def dmp_mul(f, g, u, K):

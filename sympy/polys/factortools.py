@@ -8,7 +8,8 @@ from sympy.polys.galoistools import (
     gf_div, gf_rem,
     gf_gcdex,
     gf_sqf_p,
-    gf_factor_sqf, gf_factor)
+    gf_factor_sqf, gf_factor,
+    gf_pack_div)
 
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC, dmp_ground_LC,
@@ -43,7 +44,8 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground)
+    dup_quo_ground, dmp_quo_ground,
+    dup_pack_mul)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -77,6 +79,8 @@ from sympy.utilities import subsets
 from math import ceil as _ceil, log as _log
 
 from sympy.core.compatibility import xrange
+from collections import defaultdict
+from sympy.mpmath.libmp.libintmath import bitcount
 
 
 def dup_trial_division(f, factors, K):
@@ -137,7 +141,7 @@ def dmp_zz_mignotte_bound(f, u, K):
     return K.sqrt(K(n + 1))*2**n*a*b
 
 
-def dup_zz_hensel_step(m, f, g, h, s, t, K):
+def dup_zz_hensel_step(M, f, g, h, s, t, K, full=True):
     """
     One step in Hensel lifting in `Z[x]`.
 
@@ -165,29 +169,28 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     1. [Gathen99]_
 
     """
-    M = m**2
-
-    e = dup_sub_mul(f, g, h, K)
+    e = dup_sub(f, dup_pack_mul(g, h, K), K)
     e = dup_trunc(e, M, K)
 
-    q, r = dup_div(dup_mul(s, e, K), h, K)
-
+    q, r = gf_pack_div(dup_pack_mul(s, e, K), h, M, K)
     q = dup_trunc(q, M, K)
     r = dup_trunc(r, M, K)
 
-    u = dup_add(dup_mul(t, e, K), dup_mul(q, g, K), K)
+    u = dup_add(dup_pack_mul(t, e, K), dup_pack_mul(q, g, K), K)
     G = dup_trunc(dup_add(g, u, K), M, K)
     H = dup_trunc(dup_add(h, r, K), M, K)
 
-    u = dup_add(dup_mul(s, G, K), dup_mul(t, H, K), K)
-    b = dup_trunc(dup_sub(u, [K.one], K), M, K)
+    if not full:
+        return G, H, None, None
 
-    c, d = dup_div(dup_mul(s, b, K), H, K)
+    u = dup_add(dup_pack_mul(s, G, K), dup_pack_mul(t, H, K), K)
+    b = dup_trunc(dup_sub(u, [K.one], K), M, K)
+    c, d = gf_pack_div(dup_pack_mul(s, b, K), H, M, K)
 
     c = dup_trunc(c, M, K)
     d = dup_trunc(d, M, K)
 
-    u = dup_add(dup_mul(t, b, K), dup_mul(c, G, K), K)
+    u = dup_add(dup_pack_mul(t, b, K), dup_pack_mul(c, G, K), K)
     S = dup_trunc(dup_sub(s, d, K), M, K)
     T = dup_trunc(dup_sub(t, u, K), M, K)
 
@@ -245,8 +248,9 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     s = gf_to_int_poly(s, p)
     t = gf_to_int_poly(t, p)
 
-    for _ in range(1, d + 1):
-        (g, h, s, t), m = dup_zz_hensel_step(m, f, g, h, s, t, K), m**2
+    for _ in range(1, d):
+        (g, h, s, t), m = dup_zz_hensel_step(m**2, f, g, h, s, t, K), m**2
+    (g, h, s, t) = dup_zz_hensel_step(p**l, f, g, h, s, t, K, False)
 
     return dup_zz_hensel_lift(p, g, f_list[:k], l, K) \
         + dup_zz_hensel_lift(p, h, f_list[k:], l, K)
@@ -258,16 +262,168 @@ def _test_pl(fc, q, pl):
         return True
     return fc % q == 0
 
+def dup_get_p(f, n):
+    """
+    compute ``Tr_i = sum root**i`` for ``i=0,..,n``
+    assume that ``f`` is monic
+    ``f = x**d + f_1*x**(d-1) + ... + f_d``
+    Newton identity
+    ``Tr_i = -i*E_i - sum_{k=1}^{i-1} Tr_k*E_{i-k}``
+    where ``E_i = f_i for i <= d, E_i = 0 for i > d``
+    """
+    d = dup_degree(f)
+    if n > d + 1:
+        f = f + [0]*(n - d - 1)
+    pv = [0]*n
+    for i in range(1, n):
+        t = -i*f[i]
+        for k in range(1, i):
+            t -= pv[k]*f[i - k]
+        pv[i] = t
+    pv[0] = 1
+    return pv
+
+def _symmetric_mod(c, m):
+    c = c % m
+    if c > m // 2:
+        c = c - m
+    return c
+
+def subset_gen(a, s, kmin):
+    """
+    generate the s-subsets (combinations) from the sorted list `a`;
+    when in a combination there is one or more elements >= kmin, subsequent
+    combinations which are generated from that by varying only elements
+    >= kmin are skipped.
+
+    Output: ``t, numk``, where ``numk`` is the number of the last ``k``
+    elements occurring in the combination ``t``.
+
+
+    Examples
+    ========
+
+    >>> from sympy.polys.factortools import subset_gen
+    >>> for x in subset_gen([2, 3, 5, 7, 10, 12], 3, 7):
+    ...     print(x)
+    ...
+    ([2, 3, 5], 0)
+    ([2, 3, 7], 1)
+    ([2, 5, 7], 1)
+    ([2, 7, 10], 2)
+    ([3, 5, 7], 1)
+    ([3, 7, 10], 2)
+    ([5, 7, 10], 2)
+    ([7, 10, 12], 3)
+
+    """
+    n = len(a)
+    t = list(range(s))
+    ns = n - s
+    s1 = s - 1
+    while 1:
+        numk = 0
+        j = s - 1
+        while j >= 0:
+            if a[t[j]] < kmin:
+                break
+            else:
+                numk += 1
+            j -= 1
+        yield [a[ii] for ii in t], numk
+        if numk:
+            # `j` is the position of the last element not in `[n-k,..,n-1]`
+            i = j
+        else:
+            i = s1
+        # search from the right the first element which has not maximum value
+        while i >= 0 and t[i] == ns + i:
+            i -= 1
+        if i == -1:
+            raise StopIteration
+        # increase the i-th element by one; the remaining elements are in sequence
+        c = t[i] + 1 - i
+        for j in range(i, s):
+            t[j] = c + j
+
+def _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K):
+    # lift the constant coefficient of the product `G` of the factors
+    # in the subset `S`; if it is does not divide `fc`, `G` does
+    # not divide the input polynomial
+
+    if b == 1:
+        q = 1
+        for i in S:
+            q = q*g[i][-1]
+        q = q % pl
+        if not _test_pl(fc, q, pl):
+            return False
+    else:
+        G = [b]
+        for i in S:
+            G = dup_mul(G, g[i], K)
+        G = dup_trunc(G, pl, K)
+        G1 = dup_primitive(G, K)[1]
+        q = G1[-1]
+        if q and fc % q != 0:
+            return False
+
+    H = [b]
+    S = set(S)
+    T_S = T - S
+
+    if b == 1:
+        G = [b]
+        for i in S:
+            G = dup_mul(G, g[i], K)
+        G = dup_trunc(G, pl, K)
+
+    for i in T_S:
+        H = dup_mul(H, g[i], K)
+
+    H = dup_trunc(H, pl, K)
+
+    G_norm = dup_l1_norm(G, K)
+    H_norm = dup_l1_norm(H, K)
+
+    if G_norm*H_norm <= B:
+        T = T_S
+        sorted_T = [i for i in sorted_T if i not in S]
+
+        G = dup_primitive(G, K)[1]
+        f = dup_primitive(H, K)[1]
+
+        factors.append(G)
+        b = dup_LC(f, K)
+        used |= S
+
+        return b, f, factors, T, sorted_T
+    return False
+
+
 def dup_zz_zassenhaus(f, K):
-    """Factor primitive square-free polynomials in `Z[x]`. """
+    """
+    Factor primitive square-free polynomials in `Z[x]`.
+
+    References
+    ==========
+
+    [1] Gathen99
+    [2] J. Abbott, V. Shoup and P. Zimmermann
+    "Factorization in Z[x]: the Searching Phase",
+    ISSAC 2000 Proceedings, 1-7 (2000)
+    [3] M. van Hoeij "Factoring polynomials and the knapsack problem",
+    J. Number Theory, 95 (2002) 167
+
+    """
     n = dup_degree(f)
 
     if n == 1:
         return [f]
-
+    f0 = f
     fc = f[-1]
     A = dup_max_norm(f, K)
-    b = dup_LC(f, K)
+    b0 = b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n + 1))*2**n*A*b))
     C = int((n + 1)**(2*n)*A**(2*n - 1))
     gamma = int(_ceil(2*_log(C, 2)))
@@ -288,7 +444,7 @@ def dup_zz_zassenhaus(f, K):
             continue
         fsqfx = gf_factor_sqf(F, px, K)[1]
         a.append((px, fsqfx))
-        if len(fsqfx) < 15 or len(a) > 4:
+        if len(fsqfx) < 50 or len(a) > 4:
             break
     p, fsqf = min(a, key=lambda x: len(x[1]))
 
@@ -302,64 +458,129 @@ def dup_zz_zassenhaus(f, K):
     T = set(sorted_T)
     factors, s = [], 1
     pl = p**l
-
-    while 2*s <= len(T):
-        for S in subsets(sorted_T, s):
-            # lift the constant coefficient of the product `G` of the factors
-            # in the subset `S`; if it is does not divide `fc`, `G` does
-            # not divide the input polynomial
-
-            if b == 1:
-                q = 1
-                for i in S:
-                    q = q*g[i][-1]
-                q = q % pl
-                if not _test_pl(fc, q, pl):
+    r = len(T)
+    used = set()
+    if n < 10:
+        while 2*s <= len(T):
+            for S in subsets(sorted_T, s):
+                ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K)
+                if ret is False:
                     continue
+                else:
+                    b, f, factors, T, sorted_T = ret
+                    break
+
             else:
-                G = [b]
+                s += 1
+
+        return factors + [f]
+
+    w = (bitcount(pl) + bitcount(2*n) + bitcount(A) - bitcount(f[0])) // 2
+    tgv = [None]*r
+    trs = [0]*r
+
+    for ii in range(r):
+        tgv[ii] = dup_get_p(g[ii], 4)
+        trs[ii] = tgv[ii][1] + tgv[ii][2] + tgv[ii][3]
+        #trs[ii] = tgv[ii][1]
+        #trg = dup_get_p(g[ii], 2)
+
+    # ``dynk`` is the number of elements the combinations of which are
+    # stored in dictionaries.
+    # We compute a combination of the sum of the roots and the sum of the
+    # square of the roots (computed with ``dup_get_p``); let ``tr1b`` be
+    # the contribution due to ``dynk`` elements, ``tr1a`` the contributions
+    # of all the other elements. One has
+    # ``-tr1b - B < tr1a < -tr1b + B`` where ``B`` is a bound.
+    # There are ``2**dynk`` such combinations.
+    # Dividing by ``2**w > B`` one gets
+    # ``int(-tr1b/2**w) - 1 <= int(tr1a/2**w) <= int(-tr1b/2**w) + 1``
+    # Therefore one enumerates on th first ``r <= kmax`` elements,
+    # computes ``tr1a = int(tr1a/2**w)``, then one looks if ``tr1a``,
+    # ``tr1a - 1`` or ``tr1a + 1`` are in the dictionary.
+    # This is a variant of pruning test described in [2]; the idea of
+    # taking a combination of the sum of the roots and the sum of the
+    # square of the roots is taken from [3]. The algorithm in [3]
+    # avoids enumerating combinations of modular factors using the LLL
+    # algorithm. It would be nice to implement it.
+
+    dynk = min((len(T))//2 + 1, 23)
+    kmax = max(r - dynk, 0)
+    dyndv = [defaultdict(list) for _ in range(dynk)]
+    # start the searching phase
+    while 2*s <= len(T):
+        if s < dynk and not dyndv[s]:
+            for S in subsets([i for i in sorted_T if i >= kmax], s):
+                tr1b = 0
                 for i in S:
-                    G = dup_mul(G, g[i], K)
-                G = dup_trunc(G, pl, K)
-                G1 = dup_primitive(G, K)[1]
-                q = G1[-1]
-                if q and fc % q != 0:
+                    tr1b += trs[i]
+                tr1b *= b0
+                tr1b = _symmetric_mod(-tr1b, pl)
+                tr1b = int(tr1b >> w)
+                dyndv[s][tr1b].append(list(S))
+            hit = None
+            for kt in dyndv[s]:
+                if abs(kt) <= 1:
+                    a1 = dyndv[s][kt]
+                    for S1b in a1:
+                        ret = _testS1(b, g, pl, fc, S1b, T, sorted_T, B, factors, used, K)
+                        if ret is False:
+                            continue
+                        else:
+                            hit = True
+                            break
+                    if hit:
+                        b, f, factors, T, sorted_T = ret
+                        break
+        for S, numk in subset_gen(sorted_T, s, kmax):
+            tr1a = 0
+            for i in S:
+                if i < kmax:
+                    tr1a += trs[i]
+
+            tr1a *= b0
+            tr1a = int(_symmetric_mod(tr1a, pl) >> w)
+            if numk:
+                hit = None
+                for trx in [tr1a, tr1a - 1, tr1a + 1]:
+                    if trx in dyndv[numk]:
+                        S1a = S[:-numk]
+                        a1 = dyndv[numk][trx]
+                        for S1b in a1:
+                            if any(ii in used for ii in S1b):
+                                continue
+                            S = S1a + S1b
+                            ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K)
+                            if ret is False:
+                                continue
+                            else:
+                                hit = True
+                                break
+                        if hit:
+                            break
+                    if hit:
+                        break
+                if hit:
+                    b, f, factors, T, sorted_T = ret
+                    break
+
+
+            else:
+
+                ret = _testS1(b, g, pl, fc, S, T, sorted_T, B, factors, used, K)
+                if ret is False:
                     continue
+                else:
+                    b, f, factors, T, sorted_T = ret
+                    break
 
-            H = [b]
-            S = set(S)
-            T_S = T - S
-
-            if b == 1:
-                G = [b]
-                for i in S:
-                    G = dup_mul(G, g[i], K)
-                G = dup_trunc(G, pl, K)
-
-            for i in T_S:
-                H = dup_mul(H, g[i], K)
-
-            H = dup_trunc(H, pl, K)
-
-            G_norm = dup_l1_norm(G, K)
-            H_norm = dup_l1_norm(H, K)
-
-            if G_norm*H_norm <= B:
-                T = T_S
-                sorted_T = [i for i in sorted_T if i not in S]
-
-                G = dup_primitive(G, K)[1]
-                f = dup_primitive(H, K)[1]
-
-                factors.append(G)
-                b = dup_LC(f, K)
-
-                break
         else:
             s += 1
 
-    return factors + [f]
-
+    if len(f) == 1:
+        return factors
+    else:
+        return factors + [f]
 
 def dup_zz_irreducible_p(f, K):
     """Test irreducibility using Eisenstein's criterion. """

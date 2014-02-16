@@ -49,6 +49,7 @@ elif HAS_GMPY == 2:
         lcm as gmpy_lcm,
         isqrt as gmpy_sqrt,
         qdiv as gmpy_qdiv,
+        pack as gmpy_pack
     )
 else:
     class GMPYInteger(object):

@@ -45,7 +45,7 @@ def test_dup_zz_hensel_step():
     s = -2
     t = 2*x**2 - 2*x - 1
 
-    G, H, S, T = R.dup_zz_hensel_step(5, f, g, h, s, t)
+    G, H, S, T = R.dup_zz_hensel_step(25, f, g, h, s, t)
 
     assert G == x**3 + 7*x**2 - x - 7
     assert H == x - 7

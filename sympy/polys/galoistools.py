@@ -5,11 +5,12 @@ from __future__ import print_function, division
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
-from sympy.core.compatibility import SYMPY_INTS, xrange
+from sympy.core.compatibility import SYMPY_INTS, xrange, HAS_GMPY
 from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.mpmath.libmp.libintmath import bitcount
 
 from sympy.ntheory import factorint
 
@@ -554,6 +555,39 @@ def gf_mul(f, g, p, K):
 
     return gf_strip(h)
 
+def dup_eval1(f, N, p, K):
+    result = K.zero
+    for c in f:
+        result <<= N
+        result += c % p
+    return result
+
+if HAS_GMPY == 2:
+    def dup_eval1(f, N, p, K):
+        from sympy.polys.domains.groundtypes import gmpy_pack
+        f = [x % p for x in f]
+        f.reverse()
+        r = gmpy_pack(f, N)
+        return r
+
+
+def gf_mul(f, g, p, K):
+    df = gf_degree(f)
+    dg = gf_degree(g)
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p)
+    a = K.one << N
+    mask = a - 1
+    sf = dup_eval1(f, N, p, K)
+    sg = dup_eval1(g, N, p, K)
+    r = sf*sg
+    a = []
+
+    while r:
+        a.append((r & mask) % p)
+        r >>= N
+    a.reverse()
+    return gf_strip(a)
+
 
 def gf_sqr(f, p, K):
     """
@@ -711,6 +745,62 @@ def gf_div(f, g, p, K):
 
     return h[:dq + 1], gf_strip(h[dq + 1:])
 
+def gf_pack_div(f, g, p, K):
+    """
+    returns ``quo, rest``
+    ``quo`` is truncated modulo ``p``
+    ``rest`` is not truncated
+    """
+    df = gf_degree(f)
+    dg = gf_degree(g)
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p) + 1
+    if df < dg:
+        return [], f
+    f = [x % p for x in f]
+    lcf = gf_LC(f, K)
+    lcg = gf_LC(g, K)
+    inv = K.invert(lcg, p)
+    q = (lcf * inv) % p
+
+    sf = dup_eval1(f, N, p, K)
+    g1 = [(-x) for x in g]
+    sgneg = dup_eval1(g1, N, p, K)
+    qv = [K.zero]*(df - dg + 1)
+    while df >= dg or df == dg and lcf >= lcg:
+        q = (lcf * inv) % p
+        qv[df - dg] = q
+        sf += q*sgneg << ((df - dg)*N)
+        sf = sf & ((1<<(N*df)) - 1)
+        if sf == 0:
+            qv.reverse()
+            return qv, []
+        df -= 1
+        lcf = (sf >> (N*df)) % p
+        if not lcf:
+            sf = sf & ((1<<(N*df)) - 1)
+            if sf == 0:
+                qv.reverse()
+                return qv, []
+            df -= 1
+            lcf = (sf >> (N*df)) % p
+            if not lcf:
+                while not lcf:
+                    sf = sf & ((1<<(N*df)) - 1)
+                    if sf == 0:
+                        qv.reverse()
+                        return qv, []
+                    df -= 1
+                    lcf = (sf >> (N*df)) % p
+    mask = (K.one << N) - 1
+    a = []
+    while sf:
+        a.append(sf & mask)
+        sf >>= N
+    a.reverse()
+    qv.reverse()
+    a = gf_strip(a)
+    return qv, a
+
 
 def gf_rem(f, g, p, K):
     """
@@ -728,6 +818,49 @@ def gf_rem(f, g, p, K):
     """
     return gf_div(f, g, p, K)[1]
 
+def gf_pack_rem(f, g, p, K):
+    df = gf_degree(f)
+    dg = gf_degree(g)
+    N = bitcount(min(df + 1, dg + 1)) + 2*bitcount(p)
+    if df < dg:
+        return f
+    lcf = gf_LC(f, K)
+    lcg = gf_LC(g, K)
+    inv = K.invert(lcg, p)
+    q = (lcf * inv) % p
+    sf = dup_eval1(f, N, p, K)
+    g1 = [(-x) % p for x in g]
+    sgneg = dup_eval1(g1, N, p, K)
+    while df >= dg or df == dg and lcf >= lcg:
+        q = (lcf * inv) % p
+        sf += q*sgneg << ((df - dg)*N)
+        sf = sf & ((1<<(N*df)) - 1)
+        if sf == 0:
+            return []
+        df -= 1
+        lcf = (sf >> (N*df)) % p
+        if not lcf:
+            sf = sf & ((1<<(N*df)) - 1)
+            if sf == 0:
+                return []
+            df -= 1
+            lcf = (sf >> (N*df)) % p
+            if not lcf:
+                while not lcf:
+                    sf = sf & ((1<<(N*df)) - 1)
+                    if sf == 0:
+                        return []
+                    df -= 1
+                    lcf = (sf >> (N*df)) % p
+    mask = (K.one << N) - 1
+    a = []
+    while sf:
+        a.append((sf & mask) % p)
+        sf >>= N
+    a.reverse()
+    return gf_strip(a)
+
+gf_rem = gf_pack_rem
 
 def gf_quo(f, g, p, K):
     """
@@ -875,7 +1008,7 @@ def gf_pow(f, n, p, K):
 def gf_frobenius_monomial_base(g, p, K):
     """
     return the list of ``x**(i*p) mod g in Z_p`` for ``i = 0, .., n - 1``
-    where ``n = gf_degree(g)``
+    in packed form, and the number of bits used in packing.
 
     Examples
     ========
@@ -883,15 +1016,15 @@ def gf_frobenius_monomial_base(g, p, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_frobenius_monomial_base
     >>> g = ZZ.map([1, 0, 2, 1])
-    >>> gf_frobenius_monomial_base(g, 5, ZZ)
-    [[1], [4, 4, 2], [1, 2]]
-
+    >>> b, Nb = gf_frobenius_monomial_base(g, 5, ZZ)
+    >>> b, Nb
+    ([1, 4198402, 1026], 10)
     """
     n = gf_degree(g)
     if n == 0:
-        return []
-    b = [0]*n
-    b[0] = [1]
+        return [], bitcount(p)
+    b = [K.zero]*n
+    b[0] = [K.one]
     if p < n:
         for i in range(1, n):
             mon = gf_lshift(b[i - 1], p, K)
@@ -902,9 +1035,22 @@ def gf_frobenius_monomial_base(g, p, K):
             b[i] = gf_mul(b[i - 1], b[1], p, K)
             b[i] = gf_rem(b[i], g, p, K)
 
-    return b
+    # n*p**2 < Nb in a multiplication of polynomials of degree n
+    # doing n successive multiplications, one needs n**2*p**2 < Nb
+    Nb = 2*bitcount(n) + 2*bitcount(p)
+    b = [dup_eval1(bx, Nb, p, K) for bx in b]
+    return b, Nb
 
-def gf_frobenius_map(f, g, b, p, K):
+def gf_unpack(sf, N, mask, p, K):
+    a = []
+    while sf:
+        a.append((sf & mask) % p)
+        sf >>= N
+    a.reverse()
+    return gf_strip(a)
+
+
+def gf_frobenius_map(f, g, b, Nb, p, K):
     """
     compute gf_pow_mod(f, p, g, p, K) using the Frobenius map
 
@@ -924,9 +1070,8 @@ def gf_frobenius_map(f, g, b, p, K):
     >>> f = ZZ.map([2, 1 , 0, 1])
     >>> g = ZZ.map([1, 0, 2, 1])
     >>> p = 5
-    >>> b = gf_frobenius_monomial_base(g, p, ZZ)
-    >>> r = gf_frobenius_map(f, g, b, p, ZZ)
-    >>> gf_frobenius_map(f, g, b, p, ZZ)
+    >>> b, Nb = gf_frobenius_monomial_base(g, p, ZZ)
+    >>> gf_frobenius_map(f, g, b, Nb, p, ZZ)
     [4, 0, 3]
     """
     m = gf_degree(g)
@@ -935,13 +1080,14 @@ def gf_frobenius_map(f, g, b, p, K):
     if not f:
         return []
     n = gf_degree(f)
-    sf = [f[-1]]
+    mask = (K.one << Nb) - 1
+    r = f[-1]
     for i in range(1, n + 1):
-        v = gf_mul_ground(b[i], f[n - i], p, K)
-        sf = gf_add(sf, v, p, K)
-    return sf
+        r += b[i]*f[n - i]
+    sf1 = gf_unpack(r, Nb, mask, p, K)
+    return sf1
 
-def _gf_pow_pnm1d2(f, n, g, b, p, K):
+def _gf_pow_pnm1d2(f, n, g, b, Nb, p, K):
     """
     utility function for ``gf_edf_zassenhaus``
     Compute ``f**((p**n - 1) // 2)`` in ``GF(p)[x]/(g)``
@@ -951,7 +1097,7 @@ def _gf_pow_pnm1d2(f, n, g, b, p, K):
     h = f
     r = f
     for i in range(1, n):
-        h = gf_frobenius_map(h, g, b, p, K)
+        h = gf_frobenius_map(h, g, b, Nb, p, K)
         r = gf_mul(r, h, p, K)
         r = gf_rem(r, g, p, K)
 
@@ -1346,7 +1492,7 @@ def gf_trace_map(a, b, c, n, f, p, K):
 
     return gf_compose_mod(a, V, f, p, K), U
 
-def _gf_trace_map(f, n, g, b, p, K):
+def _gf_trace_map(f, n, g, b, Nb, p, K):
     """
     utility for ``gf_edf_shoup``
     """
@@ -1354,7 +1500,7 @@ def _gf_trace_map(f, n, g, b, p, K):
     h = f
     r = f
     for i in range(1, n):
-        h = gf_frobenius_map(h, g, b, p, K)
+        h = gf_frobenius_map(h, g, b, Nb, p, K)
         r = gf_add(r, h, p, K)
         r = gf_rem(r, g, p, K)
     return r
@@ -1428,12 +1574,12 @@ def gf_irred_p_ben_or(f, p, K):
             else:
                 return False
     else:
-        b = gf_frobenius_monomial_base(f, p, K)
-        H = h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
+        b, Nb = gf_frobenius_monomial_base(f, p, K)
+        H = h = gf_frobenius_map([K.one, K.zero], f, b, Nb, p, K)
         for i in xrange(0, n//2):
             g = gf_sub(h, [K.one, K.zero], p, K)
             if gf_gcd(f, g, p, K) == [K.one]:
-                h = gf_frobenius_map(h, f, b, p, K)
+                h = gf_frobenius_map(h, f, b, Nb, p, K)
             else:
                 return False
 
@@ -1467,8 +1613,9 @@ def gf_irred_p_rabin(f, p, K):
 
     indices = set([ n//d for d in factorint(n) ])
 
-    b = gf_frobenius_monomial_base(f, p, K)
-    h = b[1]
+    b, Nb = gf_frobenius_monomial_base(f, p, K)
+    mask = (K.one << Nb) - 1
+    h = gf_unpack(b[1], Nb, mask, p, K)
 
     for i in xrange(1, n):
         if i in indices:
@@ -1477,7 +1624,7 @@ def gf_irred_p_rabin(f, p, K):
             if gf_gcd(f, g, p, K) != [K.one]:
                 return False
 
-        h = gf_frobenius_map(h, f, b, p, K)
+        h = gf_frobenius_map(h, f, b, Nb, p, K)
 
     return h == x
 
@@ -1833,9 +1980,9 @@ def gf_ddf_zassenhaus(f, p, K):
     """
     i, g, factors = 1, [K.one, K.zero], []
 
-    b = gf_frobenius_monomial_base(f, p, K)
+    b, Nb = gf_frobenius_monomial_base(f, p, K)
     while 2*i <= gf_degree(f):
-        g = gf_frobenius_map(g, f, b, p, K)
+        g = gf_frobenius_map(g, f, b, Nb, p, K)
         h = gf_gcd(f, gf_sub(g, [K.one, K.zero], p, K), p, K)
 
         if h != [K.one]:
@@ -1843,7 +1990,7 @@ def gf_ddf_zassenhaus(f, p, K):
 
             f = gf_quo(f, h, p, K)
             g = gf_rem(g, f, p, K)
-            b = gf_frobenius_monomial_base(f, p, K)
+            b, Nb = gf_frobenius_monomial_base(f, p, K)
 
         i += 1
 
@@ -1885,7 +2032,7 @@ def gf_edf_zassenhaus(f, n, p, K):
 
     N = gf_degree(f) // n
     if p != 2:
-        b = gf_frobenius_monomial_base(f, p, K)
+        b, Nb = gf_frobenius_monomial_base(f, p, K)
 
     while len(factors) < N:
         r = gf_random(2*n - 1, p, K)
@@ -1899,7 +2046,7 @@ def gf_edf_zassenhaus(f, n, p, K):
 
             g = gf_gcd(f, h, p, K)
         else:
-            h = _gf_pow_pnm1d2(r, n, f, b, p, K)
+            h = _gf_pow_pnm1d2(r, n, f, b, Nb, p, K)
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 
         if g != [K.one] and g != f:
@@ -1943,13 +2090,13 @@ def gf_ddf_shoup(f, p, K):
     """
     n = gf_degree(f)
     k = int(_ceil(_sqrt(n//2)))
-    b = gf_frobenius_monomial_base(f, p, K)
-    h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
+    b, Nb = gf_frobenius_monomial_base(f, p, K)
+    h = gf_frobenius_map([K.one, K.zero], f, b, Nb, p, K)
     # U[i] = x**(p**i)
     U = [[K.one, K.zero], h] + [K.zero]*(k - 1)
 
     for i in xrange(2, k + 1):
-        U[i] = gf_frobenius_map(U[i-1], f, b, p, K)
+        U[i] = gf_frobenius_map(U[i-1], f, b, Nb, p, K)
 
     h, U = U[k], U[:k]
     # V[i] = x**(p**(k*(i+1)))
@@ -2033,8 +2180,8 @@ def gf_edf_shoup(f, n, p, K):
         factors = gf_edf_shoup(h1, n, p, K) \
             + gf_edf_shoup(h2, n, p, K)
     else:
-        b = gf_frobenius_monomial_base(f, p, K)
-        H = _gf_trace_map(r, n, f, b, p, K)
+        b, Nb = gf_frobenius_monomial_base(f, p, K)
+        H = _gf_trace_map(r, n, f, b, Nb, p, K)
         h = gf_pow_mod(H, (q - 1)//2, f, p, K)
 
         h1 = gf_gcd(f, h, p, K)

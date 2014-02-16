@@ -33,6 +33,10 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy.polys.orthopolys import dup_chebyshevt
 
+from sympy.polys.rings import ring
+
+from sympy.polys.ring_series import rs_compose_add, rs_composed_product
+
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
@@ -256,15 +260,34 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
 
     if op is Add:
         # mp1a = mp1.subs({x: x - y})
-        (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
-        r = p1.compose(p2)
-        mp1a = r.as_expr()
+        if dom == QQ:
+            R, X = ring('X', QQ)
+            p1 = R(dict_from_expr(mp1)[0])
+            p2 = R(dict_from_expr(mp2)[0])
+        else:
+            (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
+            r = p1.compose(p2)
+            mp1a = r.as_expr()
+
     elif op is Mul:
-        mp1a = _muly(mp1, x, y)
+        if dom == QQ:
+            R, X = ring('X', QQ)
+            p1 = R(dict_from_expr(mp1)[0])
+            p2 = R(dict_from_expr(mp2)[0])
+        else:
+            mp1a = _muly(mp1, x, y)
     else:
         raise NotImplementedError('option not available')
 
-    r = resultant(mp1a, mp2, gens=[y, x])
+    if dom == QQ:
+        if op is Mul:
+            r = rs_composed_product(p1, p2)
+            r = expr_from_dict(r.as_expr_dict(), x)
+        else:
+            r = rs_compose_add(p1, p2)
+            r = expr_from_dict(r.as_expr_dict(), x)
+    else:
+        r = resultant(mp1a, mp2, gens=[y, x])
 
     deg1 = degree(mp1, x)
     deg2 = degree(mp2, y)
@@ -277,6 +300,20 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
         return r
 
     r = Poly(r, x, domain=dom)
+    if dom == QQ:
+        a = r.rep.rep
+        n = len(a)
+        i = n - 1
+        while a[i] == 0:
+            i -= 1
+        num_zeros = n - i - 1
+        if num_zeros:
+            r = r.from_list(a[:i + 1], x)
+            factors = [(x, num_zeros), (r, 1)]
+            res = _choose_factor(factors, x, op(ex1, ex2), dom)
+            if res == x:
+                return x
+
     _, factors = r.factor_list()
     res = _choose_factor(factors, x, op(ex1, ex2), dom)
     return res.as_expr()
@@ -357,15 +394,26 @@ def _minpoly_pow(ex, pw, x, dom, mp=None):
     return res.as_expr()
 
 
+def _minpoly_add_rec(x, dom, *a):
+    n = len(a)
+    assert n
+    if n == 1:
+        return a[0]
+    elif n == 2:
+        ex1, mp1 = a[0]
+        ex2, mp2 = a[1]
+        mp = _minpoly_op_algebraic_element(Add, ex1, ex2, x, dom, mp1=mp1, mp2=mp2)
+        return ex1 + ex2, mp
+    else:
+        ex1, mp1 = _minpoly_add_rec(x, dom, *a[:n//2])
+        ex2, mp2 = _minpoly_add_rec(x, dom, *a[n//2:])
+        mp = _minpoly_op_algebraic_element(Add, ex1, ex2, x, dom, mp1=mp1, mp2=mp2)
+        return ex1 + ex2, mp
+
+
 def _minpoly_add(x, dom, *a):
-    """
-    returns ``minpoly(Add(*a), dom, x)``
-    """
-    mp = _minpoly_op_algebraic_element(Add, a[0], a[1], x, dom)
-    p = a[0] + a[1]
-    for px in a[2:]:
-        mp = _minpoly_op_algebraic_element(Add, p, px, x, dom, mp1=mp)
-        p = p + px
+    b = [(ex, None) for ex in a]
+    r, mp = _minpoly_add_rec(x, dom, *b)
     return mp
 
 
