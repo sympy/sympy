@@ -6,14 +6,15 @@ from sympy.polys.monomials import monomial_min, monomial_mul
 from sympy.mpmath.libmp.libintmath import ifac
 from sympy.core.numbers import Rational
 from sympy.core.compatibility import as_int
+from sympy.mpmath.libmp.libintmath import giant_steps
 import math
 
 def _invert_monoms(p1):
     """
     Compute ``x**n * p1(1/x)`` for ``p1`` univariate polynomial.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.rings import ring
@@ -43,18 +44,11 @@ def _giant_steps(target):
     """
     list of precision steps for the Newton's method
 
-    code adapted from mpmath/libmp/libintmath.py
     """
-    L = [target]
-    start = 2
-    while 1:
-        Li = L[-1]//2 + 2
-        if Li >= L[-1] or Li < start:
-            if L[-1] != start:
-                L.append(start)
-            break
-        L.append(Li)
-    return L[::-1]
+    res = giant_steps(2, target)
+    if res[0] != 2:
+        res = [2] + res
+    return res
 
 def rs_trunc(p1, x, prec):
     """

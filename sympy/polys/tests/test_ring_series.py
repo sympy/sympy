@@ -137,7 +137,8 @@ def test_log():
     R, x, y = ring('x, y', QQ)
     p = 1 + x + 2*y*x**2
     p1 = rs_log(p, x, 6)
-    assert p1 == 4*x**5*y**2 - 2*x**5*y - 2*x**4*y**2 + x**5/5 + 2*x**4*y - x**4/4 - 2*x**3*y + x**3/3 + 2*x**2*y - x**2/2 + x
+    assert p1 == (4*x**5*y**2 - 2*x**5*y - 2*x**4*y**2 + x**5/5 + 2*x**4*y -
+                  x**4/4 - 2*x**3*y + x**3/3 + 2*x**2*y - x**2/2 + x)
 
 def test_exp():
     R, x = ring('x', QQ)
