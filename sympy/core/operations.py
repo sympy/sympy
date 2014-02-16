@@ -7,6 +7,29 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, xrange
 from sympy.core.logic import fuzzy_and
 
+global_evaluate = [True]
+
+from contextlib import contextmanager
+
+@contextmanager
+def evaluate(x):
+    """
+
+    >>> from sympy.abc import x
+    >>> from sympy.core.operations import evaluate
+    >>> print x + x
+    2*x
+    >>> with evaluate(False):
+    ...     print x + x
+    x + x
+    """
+
+    old = global_evaluate[0]
+
+    global_evaluate[0] = x
+    yield
+    global_evaluate[0] = old
+
 
 class AssocOp(Basic):
     """ Associative operations, can separate noncommutative and
@@ -24,12 +47,11 @@ class AssocOp(Basic):
     # and keep it right here
     __slots__ = ['is_commutative']
 
-    @cacheit
     def __new__(cls, *args, **options):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', True):
+        if not options.pop('evaluate', global_evaluate[0]):
             return cls._from_args(args)
 
         if len(args) == 0:
