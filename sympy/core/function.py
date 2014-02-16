@@ -165,7 +165,7 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         from sympy.core.sets import FiniteSet
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
-        return FiniteSet(self._nargs) if self._nargs else S.Naturals0
+        return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def __repr__(cls):
         return cls.__name__

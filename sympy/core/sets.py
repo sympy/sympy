@@ -1344,6 +1344,8 @@ class FiniteSet(Set, EvalfMixin):
 
 
         args = frozenset(args)  # remove duplicates
+        args = map(sympify, args)
+        args = frozenset(args)
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj
