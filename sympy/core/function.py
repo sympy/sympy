@@ -49,6 +49,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, xrange
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
+from sympy.core.evaluate import global_evaluate
 
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
@@ -186,7 +187,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         from sympy.core.sets import FiniteSet
 
         args = list(map(sympify, args))
-        evaluate = options.pop('evaluate', True)
+        evaluate = options.pop('evaluate', global_evaluate[0])
         # WildFunction (and anything else like it) may have nargs defined
         # and we throw that value away here
         options.pop('nargs', None)
@@ -364,7 +365,7 @@ class Function(Application, Expr):
                 'plural': 's'*(min(cls.nargs) != 1),
                 'given': n})
 
-        evaluate = options.get('evaluate', True)
+        evaluate = options.get('evaluate', global_evaluate[0])
         result = super(Function, cls).__new__(cls, *args, **options)
         if not evaluate or not isinstance(result, cls):
             return result

@@ -6,29 +6,7 @@ from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, xrange
 from sympy.core.logic import fuzzy_and
-
-global_evaluate = [True]
-
-from contextlib import contextmanager
-
-@contextmanager
-def evaluate(x):
-    """
-
-    >>> from sympy.abc import x
-    >>> from sympy.core.operations import evaluate
-    >>> print x + x
-    2*x
-    >>> with evaluate(False):
-    ...     print x + x
-    x + x
-    """
-
-    old = global_evaluate[0]
-
-    global_evaluate[0] = x
-    yield
-    global_evaluate[0] = old
+from sympy.core.evaluate import global_evaluate
 
 
 class AssocOp(Basic):

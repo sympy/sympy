@@ -17,6 +17,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
+from sympy.core.evaluate import global_evaluate
 
 
 class Point(GeometryEntity):
@@ -85,7 +86,7 @@ class Point(GeometryEntity):
         if len(coords) != 2:
             raise NotImplementedError(
                 "Only two dimensional points currently supported")
-        if kwargs.get('evaluate', True):
+        if kwargs.get('evaluate', global_evaluate[0]):
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
                 for f in coords.atoms(Float)]))

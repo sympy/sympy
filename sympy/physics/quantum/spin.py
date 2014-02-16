@@ -6,6 +6,7 @@ from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
                    pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
                    Tuple, Dummy)
 from sympy.core.compatibility import u, unicode
+from sympy.core.evaluate import global_evaluate
 from sympy.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import pretty_symbol
@@ -772,7 +773,7 @@ class WignerD(Expr):
         if not len(args) == 6:
             raise ValueError('6 parameters expected, got %s' % args)
         args = sympify(args)
-        evaluate = hints.get('evaluate', False)
+        evaluate = hints.get('evaluate', global_evaluate[0])
         if evaluate:
             return Expr.__new__(cls, *args)._eval_wignerd()
         return Expr.__new__(cls, *args)
