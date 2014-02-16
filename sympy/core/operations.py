@@ -25,6 +25,7 @@ class AssocOp(Basic):
     # and keep it right here
     __slots__ = ['is_commutative']
 
+    @cacheit
     def __new__(cls, *args, **options):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
