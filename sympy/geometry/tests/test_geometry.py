@@ -531,7 +531,7 @@ def test_ellipse():
         [Line(Point(0, 0), Point(0, 1))]
     assert e.normal_lines(Point(1, 1), 1) == \
         [Line(Point(-2, -1/5), Point(-1, 1/5)),
-        Line(Point(1, -9/10), Point(2, -43/11))]
+         Line(Point(1, -9/10), Point(2, -43/11))]
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
