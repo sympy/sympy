@@ -94,8 +94,7 @@ SCIPY_TRANSLATIONS = {
     "besseli": "iv",
     "besselk": "kn",
     "loggamma": "gammaln",
-    "digamma": "psi",
-    
+    "digamma": "psi",  
 }
 # Available modules:
 MODULES = {
@@ -154,7 +153,7 @@ def _import(module, reload="False"):
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
-        	namespace[sympyname] = namespace[translation]
+    	namespace[sympyname] = namespace[translation]
 
 def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
     """
