@@ -30,6 +30,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 from sympy.core.compatibility import reduce, xrange
+from sympy.utilities.misc import debug
 
 
 def prde_normal_denom(fa, fd, G, DE):
@@ -382,6 +383,8 @@ def param_rischDE(fa, fd, G, DE):
         # it will always terminate no matter what n is.
         n = bound_degree(A, B, G, DE, parametric=True)
     except NotImplementedError:
+        debug("param_rischDE: Proceeding with n = oo; may cause "
+              "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
