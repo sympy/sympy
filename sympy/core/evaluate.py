@@ -6,7 +6,10 @@ global_evaluate = [True]
 
 @contextmanager
 def evaluate(x):
-    """
+    """ Switch automatic evaluation on or off
+
+    Examples
+    ========
 
     >>> from sympy.abc import x
     >>> from sympy.core.operations import evaluate
