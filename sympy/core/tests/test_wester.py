@@ -634,10 +634,11 @@ def test_I9():
 def test_I10():
     assert trigsimp((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1)) == nan
 
-# It's just hangs, thus it comment out
-#@XFAIL
-#def test_I11():
-#    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
+
+@SKIP("hangs")
+@XFAIL
+def test_I11():
+    assert limit((tan(x)**2 + 1 - cos(x)**-2) / (sin(x)**2 + cos(x)**2 - 1), x, 0) != 0
 
 
 @XFAIL
