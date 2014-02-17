@@ -6,7 +6,7 @@ def singularities(expr, sym):
     """
     Finds singularities for a function.
     Currently supported functions are:
-        - univariate real rational functions
+    - univariate real rational functions
 
     Examples
     ========
