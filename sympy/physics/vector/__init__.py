@@ -34,3 +34,8 @@ __all__.extend(functions.__all__)
 from . import printing
 from .printing import *
 __all__.extend(printing.__all__)
+
+from . import fieldfunctions
+from .fieldfunctions import *
+__all__.extend(fieldfunctions.__all__)
+
