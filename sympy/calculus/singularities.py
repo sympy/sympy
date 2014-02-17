@@ -26,8 +26,8 @@ def singularities(expr, sym):
 
     """
     if not expr.is_rational_function(sym):
-        raise NotImplementedError("Sorry, Algorithms finding singularities for"
-                                  " non rational funcitons are not yet"
+        raise NotImplementedError("Algorithms finding singularities for"
+                                  " non rational functions are not yet"
                                   " implemented")
     else:
         return tuple(sorted(solve(simplify(1/expr), sym)))
