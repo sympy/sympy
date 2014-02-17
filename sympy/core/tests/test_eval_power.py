@@ -39,6 +39,12 @@ def test_expand():
     x = Symbol('x')
     assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
 
+def test_pow_is_real_or_imaginary():
+    x = Symbol("x", imaginary=True)
+    y = Symbol("y", odd=True)
+    assert (x**y).is_imaginary
+    y = Symbol("y", even=True)
+    assert (x**y).is_real
 
 def test_issue350():
     #test if powers are simplified correctly

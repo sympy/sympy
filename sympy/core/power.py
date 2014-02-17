@@ -331,6 +331,21 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
+        if self.exp is S.Half:
+            if self.base.is_nonnegative:
+                return True
+
+    def _eval_is_imaginary(self):
+        if self.base.is_imaginary:
+            if self.exp.is_odd:
+                return True
+            elif self.exp.is_even:
+                return False
+
+        if self.exp is S.Half:
+            if self.base.is_negative:
+                return True
+
     def _eval_is_odd(self):
         if self.exp.is_integer:
             if self.exp.is_positive:
