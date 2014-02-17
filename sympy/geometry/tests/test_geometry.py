@@ -1,6 +1,6 @@
 import warnings
 
-from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
+from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
                    simplify, sin, sqrt, symbols, tan, Derivative)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
@@ -85,6 +85,9 @@ def test_point():
     assert (p2 - p1) == Point(y1 - x1, y2 - x2)
     assert p4*5 == Point(5, 5)
     assert -p2 == Point(-y1, -y2)
+    raises(ValueError, lambda: Point(3, I))
+    raises(ValueError, lambda: Point(2*I, I))
+    raises(ValueError, lambda: Point(3 + I, I))
 
     assert Point(34.05, sqrt(3)) == Point(Rational(681, 20), sqrt(3))
     assert Point.midpoint(p3, p4) == Point(half, half)
@@ -528,7 +531,7 @@ def test_ellipse():
         [Line(Point(0, 0), Point(0, 1))]
     assert e.normal_lines(Point(1, 1), 1) == \
         [Line(Point(-2, -1/5), Point(-1, 1/5)),
-        Line(Point(1, -9/10), Point(2, -43/11))]
+         Line(Point(1, -9/10), Point(2, -43/11))]
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
