@@ -693,8 +693,8 @@ class LinearEntity(GeometryEntity):
                 elif isinstance(self, Ray):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
-                        if self.xdirection == o.xdirection:
-                            if self.source.x < o.source.x:
+                        if self.xdirection == o.xdirection and self.ydirection == o.ydirection:
+                            if self.source.x <= o.source.x and self.source.y <= o.source.y:
                                 return [o]
                             return [self]
                         # case 2, rays in the opposite directions
