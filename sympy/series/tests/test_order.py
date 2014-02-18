@@ -1,5 +1,6 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
-    S, Integral, sin, sqrt, conjugate, expand, transpose, symbols, Function)
+    S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
+    Function)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -129,6 +130,11 @@ def test_contains_2():
 def test_contains_3():
     assert Order(x*y**2).contains(Order(x**2*y)) is None
     assert Order(x**2*y).contains(Order(x*y**2)) is None
+
+
+def test_contains_4():
+    assert Order(sin(1/x**2)).contains(Order(cos(1/x**2))) is None
+    assert Order(cos(1/x**2)).contains(Order(sin(1/x**2))) is None
 
 
 def test_contains():
