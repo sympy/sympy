@@ -84,6 +84,10 @@ def test_roots_quartic():
     eq = Poly(q*x + q/4 + x**4 + x**3 + 2*x**2 - Rational(1, 3), x)
     sol = roots_quartic(eq)
     assert all(test_numerically(eq.subs(x, i), 0) for i in sol)
+    z = symbols('z', negative=True)
+    eq = x**4 + 2*x**3 + 3*x**2 + x*(z + 11) + 5
+    zans = roots_quartic(Poly(eq, x))
+    assert all([test_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
     # but some are (see also iss 1890)
     raises(PolynomialError, lambda: roots_quartic(Poly(y*x**4 + x + z, x)))
 

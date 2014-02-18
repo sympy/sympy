@@ -206,8 +206,9 @@ def roots_quartic(f):
     The quasisymmetric case solution [6] looks for quartics that have the form
     `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
 
-    Although there is a general solution, simpler results can be obtained for
-    certain values of the coefficients. In all cases, 4 roots are returned:
+    Although no general solution that is always applicable for all
+    coefficients is known to this reviewer, certain conditions are tested
+    to determine the simplest 4 expressions that can be returned:
 
       1) `f = c + a*(a**2/8 - b/2) == 0`
       2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
@@ -285,14 +286,15 @@ def roots_quartic(f):
             TH = Rational(1, 3)
             if p.is_zero:
                 y = -5*e/6 - q**TH
-            elif p.is_number and p.is_comparable:
+            elif p.is_nonzero:
                 # with p != 0 then u below is not 0
                 root = sqrt(q**2/4 + p**3/27)
                 r = -q/2 + root  # or -q/2 - root
                 u = r**TH  # primary root of solve(x**3-r, x)
                 y = -5*e/6 + u - p/u/3
             else:
-                raise PolynomialError('cannot return general quartic solution')
+                raise PolynomialError('Cannot determine if `%s` is nonzero.' % p)
+
             w = sqrt(e + 2*y)
             arg1 = 3*e + 2*y
             arg2 = 2*f/w
