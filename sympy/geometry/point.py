@@ -14,6 +14,7 @@ from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
@@ -76,20 +77,27 @@ class Point(GeometryEntity):
     """
 
     def __new__(cls, *args, **kwargs):
-        if iterable(args[0]):
-            args = args[0]
-        elif isinstance(args[0], Point):
+        eval = kwargs.get('evaluate', True)
+        check = True
+        if isinstance(args[0], Point):
+            if not eval:
+                return args[0]
             args = args[0].args
+            check = False
+        else:
+            if iterable(args[0]):
+                args = args[0]
+            if len(args) != 2:
+                raise NotImplementedError(
+                    "Only two dimensional points currently supported")
         coords = Tuple(*args)
-
-        if len(coords) != 2:
-            raise NotImplementedError(
-                "Only two dimensional points currently supported")
-        if kwargs.get('evaluate', True):
+        if check:
+            if any(a.is_number and im(a) for a in coords):
+                raise ValueError('Imaginary args not permitted.')
+        if eval:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
                 for f in coords.atoms(Float)]))
-
         return GeometryEntity.__new__(cls, *coords)
 
     def __hash__(self):
