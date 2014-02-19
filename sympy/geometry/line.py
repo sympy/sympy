@@ -706,6 +706,14 @@ class LinearEntity(GeometryEntity):
                                     return [self.source]
                                 return [Segment(o.source, self.source)]
                             return []
+                elif isinstance(o, Segment):
+                        if o.p1 in self:
+                            if o.p2 in self:
+                                return [o]
+                            return [Segment(o.p1, self.source)]
+                        elif o.p2 in self:
+                            return [Segment(o.p2, self.source)]
+                        return []
                 elif isinstance(self, Segment):
                     if isinstance(o, Ray):
                         return o.intersection(self)
