@@ -224,6 +224,8 @@ class exp(ExpBase):
                 return S.Zero
         elif arg.func is log:
             return arg.args[0]
+        elif arg.func is LambertW and arg.args[0].is_nonnegative:
+            return arg.args[0]/LambertW(arg.args[0])
         elif arg.is_Mul:
             Ioo = S.ImaginaryUnit*S.Infinity
             if arg in [Ioo, -Ioo]:
@@ -528,6 +530,8 @@ class log(Function):
             return S.One
         elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
+        elif arg.func is LambertW and arg.args[0].is_nonnegative:
+            return log(arg.args[0]) - LambertW(arg.args[0])
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
         #don't autoexpand Pow or Mul (see the issue 252):

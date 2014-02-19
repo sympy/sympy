@@ -308,7 +308,8 @@ def test_log_simplify():
 
 
 def test_lambertw():
-    x = Symbol('x')
+    x = Symbol('x', real=True)
+    y = Symbol('y')
     assert LambertW(x) == LambertW(x)
     assert LambertW(0) == 0
     assert LambertW(E) == 1
@@ -318,6 +319,9 @@ def test_lambertw():
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
     assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
         Float("0.701338383413663009202120278965", 30), 1e-29)
+    assert exp(LambertW(x)) == x/LambertW(x)
+    assert log(LambertW(x)) == log(x) - LambertW(x)
+    assert log(LambertW(y)) == log(LambertW(y))
 
 
 def test_exp_expand():
