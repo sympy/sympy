@@ -1856,3 +1856,7 @@ def test_trigsimp_methods_gh2827():
     # watch for E in exptrigsimp, not only exp()
     eq = 1/sqrt(E) + E
     assert exptrigsimp(eq) == eq
+
+
+def test_powsimp_on_numbers():
+    assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4

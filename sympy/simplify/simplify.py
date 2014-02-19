@@ -2595,7 +2595,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
-            assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
             if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
