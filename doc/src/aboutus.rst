@@ -318,7 +318,7 @@ You can find a brief history of SymPy in the README.
 Financial and Infrastructure Support
 ------------------------------------
 
-* `Google <http://www.google.com/corporate/>`_: SymPy has received generous
+* `Google <http://www.google.com/about/company/>`_: SymPy has received generous
   financial support from Google in various years through the `Google Summer of
   Code <http://www.google-melange.com/>`_ program by providing stipends:
 

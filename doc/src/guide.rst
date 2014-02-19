@@ -523,7 +523,7 @@ wiki for a guide on how to write patches to SymPy, how to work with Git,
 and how to make your life easier as you get started with SymPy.
 
 .. _issues:             http://code.google.com/p/sympy/issues/list
-.. _mailinglist:        http://groups.google.com/group/sympy
+.. _mailinglist:        https://groups.google.com/forum/#!forum/sympy
 
 Improving the docs
 ------------------
