@@ -694,9 +694,11 @@ class LinearEntity(GeometryEntity):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
                         if self.xdirection == o.xdirection and self.ydirection == o.ydirection:
-                            if abs(self.source.x) <= abs(o.source.x) and abs(self.source.y) <= abs(o.source.y):
+                            if self.source in o:
+                                return [self]
+                            elif o.source in self:
                                 return [o]
-                            return [self]
+                            return []
                         # case 2, rays in the opposite directions
                         else:
                             if o.source in self:
@@ -704,14 +706,6 @@ class LinearEntity(GeometryEntity):
                                     return [self.source]
                                 return [Segment(o.source, self.source)]
                             return []
-                    elif isinstance(o, Segment):
-                        if o.p1 in self:
-                            if o.p2 in self:
-                                return [o]
-                            return [Segment(o.p1, self.source)]
-                        elif o.p2 in self:
-                            return [Segment(o.p2, self.source)]
-                        return []
                 elif isinstance(self, Segment):
                     if isinstance(o, Ray):
                         return o.intersection(self)
