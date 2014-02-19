@@ -501,6 +501,21 @@ class Function(Application, Expr):
                 df = Function.fdiff(self, i)
             l.append(df * da)
         return Add(*l)
+   
+    def _step_derivative(self, s):
+        i = 0
+	l = []
+	for a in self.args:
+	    i += 1
+	    da = a.diff(s, evaluate=False)
+	    if da is S.Zero:
+                continue
+	    try:
+                df = self.fdiff(i)
+	    except ArgumentIndexError:
+                df = Function.fdiff(self, i)
+	    l.append(df * da)
+	return Add(*l)  
 
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
@@ -1042,6 +1057,7 @@ class Derivative(Expr):
         # Pop evaluate because it is not really an assumption and we will need
         # to track it carefully below.
         evaluate = assumptions.pop('evaluate', False)
+	step = assumptions.pop('step', False)
 
         # Look for a quick exit if there are symbols that don't appear in
         # expression at all. Note, this cannnot check non-symbols like
@@ -1099,7 +1115,10 @@ class Derivative(Expr):
                     expr = expr.subs(v, new_v)
                     old_v = v
                     v = new_v
-                obj = expr._eval_derivative(v)
+		if step:
+		    obj = expr._step_derivative(v)
+		else:
+		    obj = expr._eval_derivative(v)
                 nderivs += 1
                 if not is_symbol:
                     if obj is not None:
@@ -1218,6 +1237,34 @@ class Derivative(Expr):
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
         return self.func(self.expr, *(self.variables + (v, )), evaluate=False)
+
+    def goto_child(self, infunc):
+       	if len(infunc.args) == 0:
+		return infunc
+	temp = infunc
+	infunc =  list(infunc.args)
+	for i in range(len(infunc)):
+	    if isinstance(infunc[i], Derivative):
+	        infunc[i] = diff(infunc[i].expr, infunc[i].args[-1], evaluate=True, step=True)
+	    else:
+                infunc[i] = self.goto_child(infunc[i])
+	at = tuple(infunc)
+	return temp.func(*at)
+    
+    def _eval_steps(self):
+	from sympy.printing.pretty import pretty
+	a = self.expr.diff(self.variables[0], evaluate=False, step=True)
+	ans = pretty(a)
+	a = a.expr.diff(self.variables[0], evaluate=True, step=True)
+	ans = ans + '\n' + pretty(a)
+	while(1):
+	    temp = a
+            a = self.goto_child(a)
+	    if(temp == a):
+                break
+	    else:
+                ans = ans + '\n' + pretty(a)
+    	return ans
 
     def doit(self, **hints):
         expr = self.expr

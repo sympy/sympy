@@ -762,6 +762,11 @@ class Pow(Expr):
         dexp = self.exp.diff(s)
         return self * (dexp * C.log(self.base) + dbase * self.exp/self.base)
 
+    def _step_derivative(self, s):
+        dbase = self.base.diff(s, evaluate=False)
+        dexp = self.exp.diff(s, evaluate=False)
+        return self * (dexp * C.log(self.base) + dbase * self.exp/self.base)
+
     def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()
         base = base._evalf(prec)

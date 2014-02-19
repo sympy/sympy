@@ -773,6 +773,16 @@ class Mul(Expr, AssocOp):
             factors.append(self.func(*(terms[:i] + [t] + terms[i + 1:])))
         return Add(*factors)
 
+    def _step_derivative(self, s):
+        terms = list(self.args)
+        factors = []
+        for i in xrange(len(terms)):
+            t = terms[i].diff(s)
+            if t is S.Zero:
+                continue
+            factors.append(self.func(*(terms[:i] + [terms[i].diff(s, evaluate=False, step=False)] + terms[i + 1:])))
+        return Add(*factors)
+
     def _matches_simple(self, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
         coeff, terms = self.as_coeff_Mul()
