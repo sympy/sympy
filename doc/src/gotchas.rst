@@ -16,7 +16,7 @@ like Maple or Mathematica.  These are some of the gotchas and pitfalls
 that you may encounter when using SymPy.  See also the `FAQ
 <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
 remainder of the SymPy Docs, and the `official Python Tutorial
-<http://docs.python.org/tutorial/>`_.
+<http://docs.python.org/2/tutorial/>`_.
 
 If you are already familiar with C or Java, you might also want to look
 at this `4 minute Python tutorial
