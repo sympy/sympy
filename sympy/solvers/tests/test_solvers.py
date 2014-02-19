@@ -1443,3 +1443,8 @@ def test_det_quick():
     # make sure they work with Sparse
     s = SparseMatrix(2, 2, (1, 2, 1, 4))
     assert det_perm(s) == det_minor(s) == s.det()
+
+
+def test_piecewise():
+    # if no symbol is given the piecewise detection must still work
+    assert solve(Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3) == [-1, 5]
