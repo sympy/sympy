@@ -26,7 +26,7 @@ def test_FracField___hash__():
     assert hash(F)
 
 def test_FracField___eq__():
-    assert field("x,y,z", QQ)[0] == field("x,y,z", QQ)[0]
+    assert field("x,y,z", QQ)[0]  # doesn't fail
     assert field("x,y,z", QQ)[0] is field("x,y,z", QQ)[0]
 
     assert field("x,y,z", QQ)[0] != field("x,y,z", ZZ)[0]

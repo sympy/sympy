@@ -141,10 +141,10 @@ def test_log_values():
     assert log(E) == 1
     assert log(-E).expand() == 1 + I*pi
 
-    assert log(pi) == log(pi)
+    assert log(pi)  # doesn't fail
     assert log(-pi).expand() == log(pi) + I*pi
 
-    assert log(17) == log(17)
+    assert log(17)  # doesn't fail
     assert log(-17) == log(17) + I*pi
 
     assert log(I) == I*pi/2
@@ -309,7 +309,7 @@ def test_log_simplify():
 
 def test_lambertw():
     x = Symbol('x')
-    assert LambertW(x) == LambertW(x)
+    assert LambertW(x)  # doesn't fail
     assert LambertW(0) == 0
     assert LambertW(E) == 1
     assert LambertW(-1/E) == -1

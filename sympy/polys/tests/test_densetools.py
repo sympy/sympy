@@ -128,7 +128,7 @@ def test_dup_diff():
     f = dup_normal([17, 34, 56, -345, 23, 76, 0, 0, 12, 3, 7], ZZ)
 
     assert dup_diff(f, 0, ZZ) == f
-    assert dup_diff(f, 1, ZZ) == dup_diff(f, 1, ZZ)
+    assert dup_diff(f, 1, ZZ)  # doesn't fail
     assert dup_diff(f, 2, ZZ) == dup_diff(dup_diff(f, 1, ZZ), 1, ZZ)
     assert dup_diff(
         f, 3, ZZ) == dup_diff(dup_diff(dup_diff(f, 1, ZZ), 1, ZZ), 1, ZZ)
@@ -141,7 +141,7 @@ def test_dup_diff():
     assert dup_diff(f, 3, K) == dup_normal([], K)
 
     assert dup_diff(f, 0, K) == f
-    assert dup_diff(f, 1, K) == dup_diff(f, 1, K)
+    assert dup_diff(f, 1, K)  # doesn't fail
     assert dup_diff(f, 2, K) == dup_diff(dup_diff(f, 1, K), 1, K)
     assert dup_diff(
         f, 3, K) == dup_diff(dup_diff(dup_diff(f, 1, K), 1, K), 1, K)
@@ -161,7 +161,7 @@ def test_dmp_diff():
         dup_diff([1, -1, 0, 0, 2], 1, ZZ)
 
     assert dmp_diff(f_6, 0, 3, ZZ) == f_6
-    assert dmp_diff(f_6, 1, 3, ZZ) == dmp_diff(f_6, 1, 3, ZZ)
+    assert dmp_diff(f_6, 1, 3, ZZ)  # doesn't fail
     assert dmp_diff(
         f_6, 2, 3, ZZ) == dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ)
     assert dmp_diff(f_6, 3, 3, ZZ) == dmp_diff(
@@ -171,7 +171,7 @@ def test_dmp_diff():
     F_6 = dmp_normal(f_6, 3, K)
 
     assert dmp_diff(F_6, 0, 3, K) == F_6
-    assert dmp_diff(F_6, 1, 3, K) == dmp_diff(F_6, 1, 3, K)
+    assert dmp_diff(F_6, 1, 3, K)  # doesn't fail
     assert dmp_diff(F_6, 2, 3, K) == dmp_diff(dmp_diff(F_6, 1, 3, K), 1, 3, K)
     assert dmp_diff(F_6, 3, 3, K) == dmp_diff(
         dmp_diff(dmp_diff(F_6, 1, 3, K), 1, 3, K), 1, 3, K)

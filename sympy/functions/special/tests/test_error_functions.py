@@ -439,8 +439,8 @@ def test_li():
 
     assert conjugate(li(z)) == li(conjugate(z))
     assert conjugate(li(-zr)) == li(-zr)
-    assert conjugate(li(-zp)) == conjugate(li(-zp))
-    assert conjugate(li(zn)) == conjugate(li(zn))
+    assert conjugate(li(-zp))  # doesn't fail
+    assert conjugate(li(zn))  # doesn't fail
 
     assert li(z).rewrite(Li) == Li(z) + li(2)
     assert li(z).rewrite(Ei) == Ei(log(z))
@@ -565,7 +565,7 @@ def test_fresnel():
     assert fresnels(oo) == S.Half
     assert fresnels(-oo) == -S.Half
 
-    assert fresnels(z) == fresnels(z)
+    assert fresnels(z)  # doesn't fail
     assert fresnels(-z) == -fresnels(z)
     assert fresnels(I*z) == -I*fresnels(z)
     assert fresnels(-I*z) == I*fresnels(z)
@@ -608,7 +608,7 @@ def test_fresnel():
     assert fresnelc(oo) == S.Half
     assert fresnelc(-oo) == -S.Half
 
-    assert fresnelc(z) == fresnelc(z)
+    assert fresnelc(z)  # doesn't fail
     assert fresnelc(-z) == -fresnelc(z)
     assert fresnelc(I*z) == I*fresnelc(z)
     assert fresnelc(-I*z) == -I*fresnelc(z)

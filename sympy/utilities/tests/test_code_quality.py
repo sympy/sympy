@@ -32,6 +32,7 @@ message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\
 message_eof = "File does not end with a newline: %s, line %s"
 message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
+message_donothing = "Left and right side of equality are the same: %s, line %s"
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -41,6 +42,8 @@ gen_raise_re = re.compile(
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 test_file_re = re.compile(r'.*test_.*\.py$')
+donothing_re = re.compile(r'^ *assert +(.*) *== *\1$')
+
 
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
@@ -120,6 +123,8 @@ def test_files():
             if (implicit_test_re.search(line) and
                     not filter(lambda ex: ex in fname, import_exclude)):
                 assert False, message_implicit % (fname, idx + 1)
+            if donothing_re.match(line):
+                assert False, message_donothing % (fname, idx + 1)
 
             result = old_raise_re.search(line)
 
@@ -294,3 +299,19 @@ def test_test_suite_defs():
         assert test_suite_def_re.search(c) is None, c
     for c in candidates_fail:
         assert test_suite_def_re.search(c) is not None, c
+
+def test_donothing():
+    # XXX this will miss things like
+    # assert x == \
+    #        x
+    candidates_ok = [
+        "assert x == x1",
+    ]
+    candidates_fail = [
+        "    assert x == x",
+        "assert x   ==x",
+    ]
+    for c in candidates_ok:
+        assert donothing_re.match(c) is None
+    for c in candidates_fail:
+        assert donothing_re.match(c) is not None

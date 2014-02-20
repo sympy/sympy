@@ -25,7 +25,7 @@ def test_has():
     assert not f.has(c)
 
 def test_eq():
-    assert Hyper_Function([1], []) == Hyper_Function([1], [])
+    assert Hyper_Function([1], [])  # doesn't fail
     assert (Hyper_Function([1], []) != Hyper_Function([1], [])) is False
     assert Hyper_Function([1], []) != Hyper_Function([2], [])
     assert Hyper_Function([1], []) != Hyper_Function([1, 2], [])

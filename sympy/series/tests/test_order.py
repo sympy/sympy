@@ -52,7 +52,7 @@ def test_simple_3():
     assert Order(x) + x**2 == Order(x)
     assert Order(x) + 1/x == 1/x + Order(x)
     assert Order(1/x) + 1/x**2 == 1/x**2 + Order(1/x)
-    assert Order(x) + exp(1/x) == Order(x) + exp(1/x)
+    assert Order(x) + exp(1/x)  # doesn't fail
 
 
 def test_simple_4():
@@ -79,7 +79,7 @@ def test_simple_7():
     assert 1 + O(1) == O(1)
     assert 2 + O(1) == O(1)
     assert x + O(1) == O(1)
-    assert 1/x + O(1) == 1/x + O(1)
+    assert 1/x + O(1)  # doesn't fail
 
 
 def test_simple_8():
