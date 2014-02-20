@@ -279,6 +279,9 @@ def test_line():
     t = Symbol('t', real=True)
     assert Ray((1, 1), angle=pi/4).arbitrary_point() == \
         Point(t + 1, t + 1)
+    r8 = Ray(Point(0, 0), Point(0, 4))
+    r9 = Ray(Point(0, 1), Point(0, -1))
+    assert r8.intersection(r9) == [Segment(Point(0, 0), Point(0, 1))]
 
     s1 = Segment(p1, p2)
     s2 = Segment(p1, p1_1)
