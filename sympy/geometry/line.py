@@ -677,6 +677,7 @@ class LinearEntity(GeometryEntity):
                 return [o]
             else:
                 return []
+
         elif isinstance(o, LinearEntity):
             a1, b1, c1 = self.coefficients
             a2, b2, c2 = o.coefficients
@@ -693,10 +694,8 @@ class LinearEntity(GeometryEntity):
                 elif isinstance(self, Ray):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
-                        if self.xdirection == o.xdirection:
-                            if self.source.x < o.source.x:
-                                return [o]
-                            return [self]
+                        if self.xdirection == o.xdirection and self.ydirection == o.ydirection:
+                           return [self] if (self.source in o) else [o]
                         # case 2, rays in the opposite directions
                         else:
                             if o.source in self:
@@ -769,6 +768,7 @@ class LinearEntity(GeometryEntity):
                 if sray.xdirection == self.xdirection and \
                         sray.ydirection == self.ydirection:
                     return True
+
             for i in range(2):
                 if isinstance(self, Line):
                     if isinstance(o, Line):
