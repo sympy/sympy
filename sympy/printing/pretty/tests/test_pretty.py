@@ -4720,7 +4720,7 @@ def test_pretty_Add():
 
 def test_pretty_steps_Derivative():
     ucode = \
-    u("""d         
+u("""d         
 ──(cos(x))
 dx        
         d    
@@ -4730,7 +4730,7 @@ dx
     assert cos(x).diff(x, evaluate=False)._eval_steps() == ucode
 
     ucode = \
-    u("""d                
+u("""d                
 ──(sin(x)⋅cos(x))
 dx               
        d                   d         
@@ -4744,7 +4744,7 @@ sin(x)⋅──(cos(x)) + cos(x)⋅──(sin(x))
     assert (cos(x) * sin(x)).diff(x, evaluate=False)._eval_steps() == ucode
 
     ucode = \
-    u("""d                  
+u("""d                  
 ──(sin(x) + cos(x))
 dx                 
 d            d         
@@ -4756,7 +4756,7 @@ dx           dx
 -sin(x) + cos(x)""")
     assert (cos(x) + sin(x)).diff(x, evaluate=False)._eval_steps() == ucode
     ucode = \
-    u("""d                  
+u("""d                  
 ──(sin(x)⋅cos(2⋅x))
 dx                 
        d                       d         
@@ -4772,7 +4772,7 @@ sin(x)⋅──(cos(2⋅x)) + cos(2⋅x)⋅──(sin(x))
 
     assert (cos(x * 2) * sin(x)).diff(x, evaluate=False)._eval_steps() == ucode
     ucode = \
-    u("""d ⎛   ⎛ 2⎞⎞
+u("""d ⎛   ⎛ 2⎞⎞
 ──⎝cos⎝x ⎠⎠
 dx         
     ⎛ 2⎞ d ⎛ 2⎞
@@ -4788,7 +4788,7 @@ dx
 
     assert cos(x**2).diff(x, evaluate=False)._eval_steps() == ucode
     ucode = \
-    u("""d ⎛              ⎛ 2⎞⎞
+u("""d ⎛              ⎛ 2⎞⎞
 ──⎝sin(2⋅x) + cos⎝x ⎠⎠
 dx                    
 d              d ⎛   ⎛ 2⎞⎞

@@ -501,7 +501,7 @@ class Function(Application, Expr):
                 df = Function.fdiff(self, i)
             l.append(df * da)
         return Add(*l)
-   
+
     def _step_derivative(self, s):
         i = 0
 	l = []
