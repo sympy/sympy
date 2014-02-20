@@ -63,7 +63,8 @@ class LinearEntity(GeometryEntity):
         p2 = Point(p2)
         if p1 == p2:
             # if it makes sense to return a Point, handle in subclass
-            raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
+            raise ValueError(
+                "%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -111,7 +112,7 @@ class LinearEntity(GeometryEntity):
 
     @property
     def coefficients(self):
-        """The coefficients (`a`, `b`, `c`) for the linear equation `ax + by + c = 0`.
+        """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
 
         See Also
         ========
@@ -694,8 +695,9 @@ class LinearEntity(GeometryEntity):
                 elif isinstance(self, Ray):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
-                        if self.xdirection == o.xdirection and self.ydirection == o.ydirection:
-                           return [self] if (self.source in o) else [o]
+                        if self.xdirection == o.xdirection and \
+                                self.ydirection == o.ydirection:
+                            return [self] if (self.source in o) else [o]
                         # case 2, rays in the opposite directions
                         else:
                             if o.source in self:
@@ -1505,7 +1507,7 @@ class Segment(LinearEntity):
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Segment. Gives
+        """The plot interval for the default geometric plot of the Segment gives
         values that will produce the full segment in a plot.
 
         Parameters
