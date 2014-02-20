@@ -3073,7 +3073,7 @@ class Expr(Basic, EvalfMixin):
 class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
-
+    
     For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
