@@ -3073,7 +3073,7 @@ class Expr(Basic, EvalfMixin):
 class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
-    
+
     For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
@@ -3086,11 +3086,11 @@ class AtomicExpr(Atom, Expr):
         if self == s:
             return S.One
         return S.Zero
-    
+
     def _step_derivative(self, s):
         if self==s:
-	    return S.One
-    	return S.Zero
+            return S.One
+        return S.Zero
 
     def _eval_is_polynomial(self, syms):
         return True
