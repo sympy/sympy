@@ -210,9 +210,9 @@ def test_hermite():
     assert hermite(6, x) == 64*x**6 - 480*x**4 + 720*x**2 - 120
 
     n = Symbol("n")
-    assert hermite(n, x) == hermite(n, x)
+    assert hermite(n, x)  # doesn't fail
     assert hermite(n, -x) == (-1)**n*hermite(n, x)
-    assert hermite(-n, x) == hermite(-n, x)
+    assert hermite(-n, x)  # doesn't fail
 
     assert diff(hermite(n, x), x) == 2*n*hermite(n - 1, x)
     assert diff(hermite(n, x), n) == Derivative(hermite(n, x), n)

@@ -9,11 +9,8 @@ from sympy.logic.boolalg import Or
 from sympy.printing import pretty
 
 
-def test_equal():
-    """Test for equality"""
-    assert Q.positive(x) == Q.positive(x)
+def test_inequality():
     assert Q.positive(x) != ~Q.positive(x)
-    assert ~Q.positive(x) == ~Q.positive(x)
 
 
 def test_pretty():

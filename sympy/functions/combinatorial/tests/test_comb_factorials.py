@@ -10,7 +10,7 @@ def test_rf_eval_apply():
 
     assert rf(nan, y) == nan
 
-    assert rf(x, y) == rf(x, y)
+    assert rf(x, y)  # doesn't fail
 
     assert rf(oo, 0) == 1
     assert rf(-oo, 0) == 1
@@ -39,7 +39,7 @@ def test_ff_eval_apply():
 
     assert ff(nan, y) == nan
 
-    assert ff(x, y) == ff(x, y)
+    assert ff(x, y)  # doesn't fail
 
     assert ff(oo, 0) == 1
     assert ff(-oo, 0) == 1

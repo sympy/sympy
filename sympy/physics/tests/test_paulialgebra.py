@@ -10,7 +10,7 @@ sigma3 = Pauli(3)
 def test_Pauli():
     from sympy.physics.paulialgebra import evaluate_pauli_product
 
-    assert sigma1 == sigma1
+    assert sigma1  # doesn't fail
     assert sigma1 != sigma2
 
     assert sigma1*sigma2 == I*sigma3

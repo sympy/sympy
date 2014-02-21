@@ -130,7 +130,6 @@ def test_Lambda():
     assert e(x) == x**2
     assert e(y) == y**2
 
-    assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
@@ -172,10 +171,9 @@ def test_Lambda_arguments():
 
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) == Lambda(y, 2*y)
     # although variables are casts as Dummies, the expressions
     # should still compare equal
-    assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    assert Lambda((x, y), 2*x) == Lambda((y, x), 2*y)
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
 

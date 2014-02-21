@@ -35,7 +35,7 @@ def test_Pauli():
     sigma2 = msigma(2)
     sigma3 = msigma(3)
 
-    assert sigma1 == sigma1
+    assert sigma1  # doesn't fail
     assert sigma1 != sigma2
 
     # sigma*I -> I*sigma    (see #354)

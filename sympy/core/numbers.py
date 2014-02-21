@@ -1854,6 +1854,7 @@ class RationalConstant(Rational):
         return AtomicExpr.__new__(cls)
 
 
+
 class IntegerConstant(Integer):
     __slots__ = []
 

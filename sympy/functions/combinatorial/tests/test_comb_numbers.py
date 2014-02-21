@@ -162,7 +162,7 @@ def test_catalan():
     assert catalan(3) == 5
     assert catalan(4) == 14
 
-    assert catalan(x) == catalan(x)
+    assert catalan(x)  # doesn't fail
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
     assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
     assert catalan(3*x).rewrite(gamma) == 4**(
