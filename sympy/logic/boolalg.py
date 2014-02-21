@@ -15,8 +15,7 @@ from sympy.core.function import Application
 from sympy.core.compatibility import ordered, xrange, with_metaclass
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
-
-
+from sympy.utilities.iterables import multiset
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
@@ -477,8 +476,19 @@ class Xor(BooleanFunction):
     """
     def __new__(cls, *args, **options):
         args = [_sympify(arg) for arg in args]
-        argset = set(args)
-        
+        argset = multiset(args) #dictionary
+        args_final=[]
+        # xor is commutative and is false if count of x is even
+        #and  x if count of x is odd. Here x can be True, False, Symbols
+        for x,freq in argset.items():
+			if freq%2==0:
+				argset[x]=false
+			else:
+				argset[x]=x;
+				
+        for _,z in argset.items():
+        		 args_final.append(z)   
+        argset = set(args_final)
         truecount = 0
         for x in args:
             if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
@@ -487,8 +497,6 @@ class Xor(BooleanFunction):
                     truecount += 1
         if len(argset) < 1:
             return true if truecount % 2 != 0 else false
-	if len(argset) == 1:
-            return false
         if truecount % 2 != 0:
             return Not(Xor(*argset))
         _args = frozenset(argset)
