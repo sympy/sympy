@@ -1,4 +1,4 @@
-from mathematica import mathematica
+from sympy.parsing.mathematica import mathematica
 from sympy import sympify
 
 
