@@ -1,0 +1,88 @@
+Action Plan for Improving solve
+===============================
+
+We have following major problems with solve:
+
+1. We don't have a consitent output for various types of solutions
+
+We need to return a lot of types of solutions consistently:
+* single solution : ` x == 1`
+* Multiple solutions: `x**2 == 1`
+* No Solution: `x**2 + 1 == 0; x is real`
+* Interval of solution: `floor(x) == 0`
+* Infinitely manysolutions: `sin(x) == 0`
+* Multivariate functions with point solutions `x**2 + y**2 == 0`
+* Multivariate functions with non point solution `x**2 + y**2 == 1`
+* System of equations `x + y == 1 and x - y == 0`
+* Relationals `x > 0`
+
+and currently we don't do it right.
+
+2. Current solve isn't reliable enough. Currently it is not guaranteed that solve will
+   return all the solutions. The equations it solves. Or at least we should know when
+   it has not returned all the solutions. For example while evaluating imageset.
+
+
+# The Plan
+
+1. For the first issue:
+
+I think set is the best output for a solve because
+* Mathematically solving an equation means returning the set where the equation
+  is true.
+* It is most generic and consitent to represent any type of solution.
+* Our set theoric modules are maturing, the imageset module can be easily used
+  to represent both countably and uncountably infinite solutions.
+
+Set solution for the following examples are
+- single solution : ` x == 1`: FiniteSet(1)
+- Multiple solutions: `x**2 == 1`; FiniteSet(-1, 1)
+- No Solution: `x**2 + 1 == 0; x is real`: EmptySet()
+- Interval of solution: `floor(x) == 0`: `Interval(0, 1)`
+- Infinitely manysolutions: `sin(x) == 0`: `imageset(x, x*pi, S.Integers)`
+- Multivariate functions with point solutions `x**2 + y**2 == 0`: FiniteSet((0, 0))
+- Multivariate functions with non point solution `x**2 + y**2 == 1`:
+  `imageset(t, (sin(t), cos(t)), S.Real)` (currently raises NotImplemented
+  Error should return unevaulated set after https://github.com/sympy/sympy/pull/2907
+- System of equations `x + y == 2 and x - y == 0`: `FiniteSet((1, 0))`
+- Relationals `x > 0` `Interval(0, oo)`
+
+Set Theoretic capabilites we need to implement
+- We don't have any complex sets yet. We need to implement them.
+- We have almost no capability of dealing with multidimentional sets, they
+  need to implemented.
+- Sets need to get more powerful to deal with countable infinite sets. For
+  example `imageset(x, x*pi, S.Intergers).intersect(Interval(0, 10))` needs to
+  work. Some of these techniques are discussed in this draft by Richard Fateman http://www.cs.berkeley.edu/~fateman/papers/sets.pdf. After the implementation sympy should be able to:
+    * tell about the equality of set {2*n | n in Natural}, {2*m| m in Naturals}
+      and {2*k + 4| k in Intersection(Natural, Interval(-3, oo))}
+    * tell that Union({2n + 1| n in Naturals},{2n | n in Naturals}) is same as
+      Naturals
+    * Intesection({2n + 1| n in Naturals},{2n | n in Naturals}) is EmptySet()
+    * Finite sets can result from intersection of infinite sets.
+- Things like S.Intergers - S.Naturals also needs to work. We will probably have to
+  implement a Set Difference class.
+- Better imageset evaluater, that will need a more reliable solve.
+- More general set to native type convertors, they inculde Bool to Set and Set to Bool conversion
+  for multidimentional sets and bools.
+
+It has also been suggested that we create a solution class for unevaluated.
+Maybe we just return a set here with boolean predicate.
+
+2. For second issue the first thing we need to audit the current solver,
+and identify the algorithms and the classs of expressions where it is
+guarenteed to return all the solutions. I have started the audit at https://github.com/sympy/sympy/wiki/solvers, I need to complete the audit before having further discussion. I intend compete it in this week.
+
+
+
+### Relevant issues and discussions
+
+https://groups.google.com/forum/?fromgroups=#!topic/sympy/pYh8v0KdBMQ
+https://groups.google.com/forum/#!topic/sympy/OW1ezjt_E5c
+https://code.google.com/p/sympy/issues/detail?id=3699 (solve() should be able to tell you when it knows it's found all the solutions)
+https://code.google.com/p/sympy/issues/detail?id=3560 (solve() is a giant mess)
+https://code.google.com/p/sympy/issues/detail?id=3667 (getting consistent output from solve until a Solution class is available)
+https://code.google.com/p/sympy/issues/detail?id=1234 (solve() should give all solutions)
+https://code.google.com/p/sympy/issues/detail?id=1579 (Have solve() return RootOf when it can't solve equations)
+https://code.google.com/p/sympy/issues/detail?id=3975 (solve(floor (x)-5,x) should not raise NotImplementedError)
+https://code.google.com/p/sympy/issues/detail?id=3448 (Cannot solve multivariate inequalities)
