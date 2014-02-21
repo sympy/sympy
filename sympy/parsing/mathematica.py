@@ -62,3 +62,4 @@ def translateOperator(s):
     if s in dictionary:
         return dictionary[s]
     return s
+    
