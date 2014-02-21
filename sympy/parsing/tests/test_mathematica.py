@@ -1,4 +1,4 @@
-from sympy.parsing.mathematica import mathematica
+from mathematica import mathematica
 from sympy import sympify
 
 
@@ -14,6 +14,9 @@ def test_mathematica():
         'Exp[Log[4]]': 'exp(log(4))',
         '(x+1)(x+3)': '(x+1)*(x+3)',
         'Cos[Arccos[3.6]]': 'cos(acos(3.6))',
-        'Cos[x]==Sin[y]': 'cos(x)==sin(y)'}
+        'Cos[x]==Sin[y]': 'cos(x)==sin(y)',
+        '2*Sin[x+y]': '2*sin(x+y)',
+        'Sin[x]+Cos[y]': 'sin(x)+cos(y)',
+        'Sin[Cos[x]]': 'sin(cos(x))'}
     for e in d:
         assert mathematica(e) == sympify(d[e])

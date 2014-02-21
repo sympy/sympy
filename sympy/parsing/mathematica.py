@@ -11,8 +11,15 @@ def mathematica(s):
 def parse(s):
     s = s.strip()
 
+
     #Begin rules
     rules = (
+        (r"\A(\d+)([*/+-^])(\w+\[[^\]]+[^\[]*\])\Z",  # Arithmetic operation between a constant and a function
+        lambda m: m.group(1) + translateFunction(m.group(2)) + parse(m.group(3)) ),
+
+        (r"\A(\w+\[[^\]]+[^\[]*\])([*/+-^])(\w+\[[^\]]+[^\[]*\])\Z",  # Arithmetic operation between two functions
+        lambda m: parse(m.group(1)) + translateFunction(m.group(2)) + parse(m.group(3)) ),
+
         (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z",  # Function call
         lambda m: translateFunction(
             m.group(1)) + "(" + parse(m.group(2)) + ")" ),
