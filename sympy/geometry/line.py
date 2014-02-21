@@ -766,28 +766,32 @@ class LinearEntity(GeometryEntity):
                     return True
 
             def inray(self):
+                if self.p1 == inter:
+                    return True
                 sray = Ray(self.p1, inter)
                 if sray.xdirection == self.xdirection and \
                         sray.ydirection == self.ydirection:
                     return True
 
-            for i in range(2):
-                if isinstance(self, Line):
-                    if isinstance(o, Line):
-                        return [inter]
-                    elif isinstance(o, Ray) and inray(o):
-                        return [inter]
-                    elif isinstance(o, Segment) and inseg(o):
-                        return [inter]
-                elif isinstance(self, Ray) and inray(self):
-                    if isinstance(o, Ray) and inray(o):
-                        return [inter]
-                    elif isinstance(o, Segment) and inseg(o):
-                        return [inter]
-                elif isinstance(self, Segment) and inseg(self):
-                    if isinstance(o, Segment) and inseg(o):
-                        return [inter]
+            prec = (Line, Ray, Segment)
+            if prec.index(self.func) > prec.index(o.func):
                 self, o = o, self
+            rv = [inter]
+            if isinstance(self, Line):
+                if isinstance(o, Line):
+                    return rv
+                elif isinstance(o, Ray) and inray(o):
+                    return rv
+                elif isinstance(o, Segment) and inseg(o):
+                    return rv
+            elif isinstance(self, Ray) and inray(self):
+                if isinstance(o, Ray) and inray(o):
+                    return rv
+                elif isinstance(o, Segment) and inseg(o):
+                    return rv
+            elif isinstance(self, Segment) and inseg(self):
+                if isinstance(o, Segment) and inseg(o):
+                    return rv
             return []
 
         return o.intersection(self)
