@@ -1642,23 +1642,18 @@ class Segment(LinearEntity):
         sqrt(170)
         """
         if isinstance(o, Point):
-            return self._do_point_distance(o)
+            seg_vector = self.p2 - self.p1
+            pt_vector = o - self.p1
+            t = seg_vector.dot(pt_vector)/self.length**2
+            if t >= 1:
+                distance = Point.distance(self.p2, o)
+            elif t <= 0:
+                distance = Point.distance(self.p1, o)
+            else:
+                distance = Point.distance(
+                    self.p1 + Point(t*seg_vector.x, t*seg_vector.y), o)
+            return distance
         raise NotImplementedError()
-
-    def _do_point_distance(self, pt):
-        """Calculates the distance between a point and a line segment."""
-
-        seg_vector = self.p2 - self.p1
-        pt_vector = pt - self.p1
-        t = seg_vector.dot(pt_vector)/self.length**2
-        if t >= 1:
-            distance = Point.distance(self.p2, pt)
-        elif t <= 0:
-            distance = Point.distance(self.p1, pt)
-        else:
-            distance = Point.distance(
-                self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
-        return distance
 
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
