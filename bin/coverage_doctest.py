@@ -25,7 +25,12 @@ import re
 import string
 import inspect
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from HTMLParser import HTMLParser
+
+try:
+    from HTMLParser import HTMLParser
+except ImportError:
+    # It's html.parser in Python 3
+    from html.parser import HTMLParser
 
 # Load color templates, used from sympy/utilities/runtests.py
 color_templates = (
