@@ -476,18 +476,17 @@ class Xor(BooleanFunction):
     """
     def __new__(cls, *args, **options):
         args = [_sympify(arg) for arg in args]
-        argset = multiset(args) #dictionary
+        argset = multiset(args)  # dictionary
         args_final=[]
-        # xor is commutative and is false if count of x is even
-        #and  x if count of x is odd. Here x can be True, False, Symbols
-        for x,freq in argset.items():
-			if freq%2==0:
-				argset[x]=false
-			else:
-				argset[x]=x;
-				
-        for _,z in argset.items():
-        		 args_final.append(z)   
+        # xor is commutative and is false if count of x is even and  x 
+        # if count of x is odd. Here x can be True, False or any Symbols
+        for x, freq in argset.items():
+            if freq % 2 == 0:
+                argset[x] = false
+            else:
+                argset[x] = x
+        for _, z in argset.items():
+                args_final.append(z)   
         argset = set(args_final)
         truecount = 0
         for x in args:
