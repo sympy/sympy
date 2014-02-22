@@ -308,7 +308,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Pramod Ch: fix problem with (I*oo).expand_complex()
 #. Akshay: added normal_lines to Ellipse
 #. Buck Shlegeris: add inverses to error functions
-#. m777z: documentation
+#. Jonathan Miller: documentation
 #. Edward: update license year
 #. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
 
