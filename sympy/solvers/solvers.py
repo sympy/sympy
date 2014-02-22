@@ -23,9 +23,9 @@ from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops, Function, expand_power_exp)
+                          count_ops, Function, expand_power_exp, Lambda)
 from sympy.core.numbers import ilcm, Float
-from sympy.core.relational import Relational
+from sympy.core.relational import Relational, Ge
 from sympy.logic.boolalg import And, Or
 from sympy.core.basic import preorder_traversal
 
@@ -735,58 +735,49 @@ def solve(f, *symbols, **flags):
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
-    # Any embedded piecewise functions need to be brought out to the
-    # top level so that the appropriate strategy gets selected.
-    # However, this is necessary only if one of the piecewise
-    # functions depends on one of the symbols we are solving for.
-    def _has_piecewise(e):
-        if e.is_Piecewise:
-            return e.has(*symbols)
-        return any([_has_piecewise(a) for a in e.args])
+    # real/imag handling -----------------------------
+    w = Dummy('w')
+    reim = Lambda(w, sqrt(re(w)**2 + im(w)**2))
+    piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
     for i, fi in enumerate(f):
-        if _has_piecewise(fi):
-            f[i] = piecewise_fold(fi)
-
-    # real/imag handling
-    for i, fi in enumerate(f):
-        _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
-        fi = f[i] = fi.xreplace(dict(list(zip(_abs,
-            [sqrt(a.args[0]**2) for a in _abs]))))
-        if fi.has(*_abs):
-            if any(s.assumptions0 for a in
-                    _abs for s in a.free_symbols):
-                raise NotImplementedError(filldedent('''
-                All absolute
-                values were not removed from %s. In order to solve
-                this equation, try replacing your symbols with
-                Dummy symbols (or other symbols without assumptions).
-                ''' % fi))
-            else:
-                raise NotImplementedError(filldedent('''
-                Removal of absolute values from %s failed.''' % fi))
+        # abs
+        reps = [(a, piece(a.args[0]) if a.args[0].is_real else reim(a.args[0]))
+            for a in fi.atoms(Abs) if a.has(*symbols)]
+        fi = fi.subs(reps)
+        # arg
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
-        f[i] = fi.xreplace(dict(list(zip(_arg,
+        fi = fi.xreplace(dict(list(zip(_arg,
             [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
+        # save changes
+        f[i] = fi
+
     # see if re(s) or im(s) appear
     irf = []
     for s in symbols:
-        # if s is real or complex then re(s) or im(s) will not appear in the equation;
-        if s.is_real or s.is_complex:
-            continue
+        if s.is_real or s.is_imaginary:
+            continue  # neither re(x) nor im(x) will appear
         # if re(s) or im(s) appear, the auxiliary equation must be present
-        irs = re(s), im(s)
-        if any(_f.has(i) for _f in f for i in irs):
-            symbols.extend(irs)
+        if any(fi.has(re(s), im(s)) for fi in f):
             irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
     if irf:
         for s, rhs in irf:
             for i, fi in enumerate(f):
                 f[i] = fi.xreplace({s: rhs})
+            f.append(s - rhs)
+            for i, fi in enumerate(list(f)):
+                continue
+                f[i] = fi.subs(re(s), _r)
+                f[i] = fi.subs(im(s), _i)
+                #f.append(_r-re(s))
+                #f.append(_i-im(s))
+            if len(symbols) < len(f) and re(s) not in symbols:
+                symbols.append(re(s))
+            if len(symbols) < len(f) and im(s) not in symbols:
+                symbols.append(im(s))
         if bare_f:
             bare_f = False
         flags['dict'] = True
-        f.extend(s - rhs for s, rhs in irf)
-    # end of real/imag handling
+    # end of real/imag handling  -----------------------------
 
     symbols = list(uniq(symbols))
     if not ordered_symbols:
@@ -872,7 +863,7 @@ def solve(f, *symbols, **flags):
                     p in symset or
                     p.is_Add or p.is_Mul or
                     p.is_Pow and not implicit or
-                    p.is_Function and not implicit):
+                    p.is_Function and not implicit) and p.func not in (re, im):
                 continue
             elif not p in seen:
                 seen.add(p)
@@ -894,6 +885,18 @@ def solve(f, *symbols, **flags):
             if fi.has(Float):
                 floats = True
                 f[i] = nsimplify(fi, rational=True)
+
+    # Any embedded piecewise functions need to be brought out to the
+    # top level so that the appropriate strategy gets selected.
+    # However, this is necessary only if one of the piecewise
+    # functions depends on one of the symbols we are solving for.
+    def _has_piecewise(e):
+        if e.is_Piecewise:
+            return e.has(*symbols)
+        return any([_has_piecewise(a) for a in e.args])
+    for i, fi in enumerate(f):
+        if _has_piecewise(fi):
+            f[i] = piecewise_fold(fi)
 
     #
     # try to get a solution
@@ -955,6 +958,7 @@ def solve(f, *symbols, **flags):
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present
     if (
+            not flags.get('dict', False) and
             solution and
             ordered_symbols and
             type(solution) is not dict and
