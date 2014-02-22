@@ -63,7 +63,8 @@ class LinearEntity(GeometryEntity):
         p2 = Point(p2)
         if p1 == p2:
             # if it makes sense to return a Point, handle in subclass
-            raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
+            raise ValueError(
+                "%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -111,7 +112,7 @@ class LinearEntity(GeometryEntity):
 
     @property
     def coefficients(self):
-        """The coefficients (`a`, `b`, `c`) for the linear equation `ax + by + c = 0`.
+        """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
 
         See Also
         ========
@@ -677,6 +678,7 @@ class LinearEntity(GeometryEntity):
                 return [o]
             else:
                 return []
+
         elif isinstance(o, LinearEntity):
             a1, b1, c1 = self.coefficients
             a2, b2, c2 = o.coefficients
@@ -693,10 +695,9 @@ class LinearEntity(GeometryEntity):
                 elif isinstance(self, Ray):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
-                        if self.xdirection == o.xdirection:
-                            if self.source.x < o.source.x:
-                                return [o]
-                            return [self]
+                        if self.xdirection == o.xdirection and \
+                                self.ydirection == o.ydirection:
+                            return [self] if (self.source in o) else [o]
                         # case 2, rays in the opposite directions
                         else:
                             if o.source in self:
@@ -765,27 +766,32 @@ class LinearEntity(GeometryEntity):
                     return True
 
             def inray(self):
+                if self.p1 == inter:
+                    return True
                 sray = Ray(self.p1, inter)
                 if sray.xdirection == self.xdirection and \
                         sray.ydirection == self.ydirection:
                     return True
-            for i in range(2):
-                if isinstance(self, Line):
-                    if isinstance(o, Line):
-                        return [inter]
-                    elif isinstance(o, Ray) and inray(o):
-                        return [inter]
-                    elif isinstance(o, Segment) and inseg(o):
-                        return [inter]
-                elif isinstance(self, Ray) and inray(self):
-                    if isinstance(o, Ray) and inray(o):
-                        return [inter]
-                    elif isinstance(o, Segment) and inseg(o):
-                        return [inter]
-                elif isinstance(self, Segment) and inseg(self):
-                    if isinstance(o, Segment) and inseg(o):
-                        return [inter]
+
+            prec = (Line, Ray, Segment)
+            if prec.index(self.func) > prec.index(o.func):
                 self, o = o, self
+            rv = [inter]
+            if isinstance(self, Line):
+                if isinstance(o, Line):
+                    return rv
+                elif isinstance(o, Ray) and inray(o):
+                    return rv
+                elif isinstance(o, Segment) and inseg(o):
+                    return rv
+            elif isinstance(self, Ray) and inray(self):
+                if isinstance(o, Ray) and inray(o):
+                    return rv
+                elif isinstance(o, Segment) and inseg(o):
+                    return rv
+            elif isinstance(self, Segment) and inseg(self):
+                if isinstance(o, Segment) and inseg(o):
+                    return rv
             return []
 
         return o.intersection(self)
@@ -1505,7 +1511,7 @@ class Segment(LinearEntity):
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Segment. Gives
+        """The plot interval for the default geometric plot of the Segment gives
         values that will produce the full segment in a plot.
 
         Parameters
@@ -1636,23 +1642,18 @@ class Segment(LinearEntity):
         sqrt(170)
         """
         if isinstance(o, Point):
-            return self._do_point_distance(o)
+            seg_vector = self.p2 - self.p1
+            pt_vector = o - self.p1
+            t = seg_vector.dot(pt_vector)/self.length**2
+            if t >= 1:
+                distance = Point.distance(self.p2, o)
+            elif t <= 0:
+                distance = Point.distance(self.p1, o)
+            else:
+                distance = Point.distance(
+                    self.p1 + Point(t*seg_vector.x, t*seg_vector.y), o)
+            return distance
         raise NotImplementedError()
-
-    def _do_point_distance(self, pt):
-        """Calculates the distance between a point and a line segment."""
-
-        seg_vector = self.p2 - self.p1
-        pt_vector = pt - self.p1
-        t = seg_vector.dot(pt_vector)/self.length**2
-        if t >= 1:
-            distance = Point.distance(self.p2, pt)
-        elif t <= 0:
-            distance = Point.distance(self.p1, pt)
-        else:
-            distance = Point.distance(
-                self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
-        return distance
 
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
