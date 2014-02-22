@@ -352,23 +352,11 @@ class Expr(Basic, EvalfMixin):
             # increase the precision up to the default maximum
             # precision to see if we can get any significance
 
-            # get the prec steps (patterned after giant_steps in
-            # libintmath) which approximately doubles the prec
-            # each step
+            from sympy.mpmath.libmp.libintmath import giant_steps
             from sympy.core.evalf import DEFAULT_MAXPREC as target
-            L = [target]
-            start = 2
-            while 1:
-                Li = L[-1]//2 + 2
-                if Li >= L[-1] or Li < start:
-                    if L[-1] != start:
-                        L.append(start)
-                    break
-                L.append(Li)
-            L = L[::-1]
 
             # evaluate
-            for prec in L:
+            for prec in giant_steps(2, target):
                 nmag = abs(self.evalf(prec, subs=reps))
                 if nmag._prec != 1:
                     break
