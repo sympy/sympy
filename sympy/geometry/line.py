@@ -1371,9 +1371,9 @@ class Ray(LinearEntity):
                 return S.Zero
         else:
             # since arg-order is arbitrary, find the non-o point
-            non_o = s.p1 if s.p2 != o else s.p2
+            non_o = s.p1 if s.p2 == o else s.p2
             if self.contains(non_o):
-                return self.distance(o)  # = s.length but simpler
+                return s.length
         # the following applies when neither of the above apply
         return self.source.distance(o)
 
@@ -1656,7 +1656,7 @@ class Segment(LinearEntity):
         raise NotImplementedError()
 
     def __eq__(self, other):
-        """Is the other GeometryEntity equal to this Ray?"""
+        """Is the other GeometryEntity equal to this Segment?"""
         if not isinstance(other, Segment):
             return False
         return (self.p1 == other.p1) and (self.p2 == other.p2)
