@@ -348,6 +348,7 @@ def test_line():
     assert r.distance(Point(-1, -1)) == sqrt(2)
     assert r.distance(Point(1, 1)) == 0
     assert r.distance(Point(-1, 1)) == sqrt(2)
+    assert Ray((1, 1), (2, 2)).distance(Point(1.5, 3)) == 3*sqrt(2)/4
 
 
     # Special cases of projection and intersection
