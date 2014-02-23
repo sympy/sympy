@@ -148,7 +148,7 @@ class PrettyPrinter(Printer):
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
-            return prettyForm(*pform.left(u("\u00ac ")))
+            return prettyForm(*pform.left(u("\u00ac")))
         else:
             return self._print_Function(e)
 
@@ -746,7 +746,7 @@ class PrettyPrinter(Printer):
         P = {}
         for n, ec in enumerate(pexpr.args):
             P[n, 0] = self._print(ec.expr)
-            if ec.cond is True:
+            if ec.cond == True:
                 P[n, 1] = prettyForm('otherwise')
             else:
                 P[n, 1] = prettyForm(
@@ -985,30 +985,22 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_Lambda(self, e):
-        symbols, expr = e.args
-
-        if len(symbols) == 1:
-            symbols = self._print(symbols[0])
+        vars, expr = e.args
+        if self._use_unicode:
+            arrow = u(" \u21a6 ")
         else:
-            symbols = self._print(tuple(symbols))
+            arrow = " -> "
+        if len(vars) == 1:
+            var_form = self._print(vars[0])
+        else:
+            var_form = self._print(tuple(vars))
 
-        args = (symbols, self._print(expr))
-
-        prettyFunc = self._print(C.Symbol("Lambda"))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
-
-        pform = prettyForm(
-            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
-
-        # store pform parts so it can be reassembled e.g. when powered
-        pform.prettyFunc = prettyFunc
-        pform.prettyArgs = prettyArgs
-
-        return pform
+        return prettyForm(*stringPict.next(var_form, arrow, self._print(expr)), binding=8)
 
     def _print_Order(self, expr):
         pform = self._print(expr.expr)
-        if expr.point != S.Zero or len(expr.variables) > 1:
+        if (expr.point and any(p != S.Zero for p in expr.point)) or \
+           len(expr.variables) > 1:
             pform = prettyForm(*pform.right("; "))
             if len(expr.variables) > 1:
                 pform = prettyForm(*pform.right(self._print(expr.variables)))
@@ -1018,7 +1010,10 @@ class PrettyPrinter(Printer):
                 pform = prettyForm(*pform.right(u(" \u2192 ")))
             else:
                 pform = prettyForm(*pform.right(" -> "))
-            pform = prettyForm(*pform.right(self._print(expr.point)))
+            if len(expr.point) > 1:
+                pform = prettyForm(*pform.right(self._print(expr.point)))
+            else:
+                pform = prettyForm(*pform.right(self._print(expr.point[0])))
         pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.left("O"))
         return pform

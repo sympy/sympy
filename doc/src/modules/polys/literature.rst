@@ -77,3 +77,39 @@ a theoretical foundation for implementing polynomials manipulation module.
 
 .. [Atiyah69] M.F. Atiyah, I.G. MacDonald, Introduction to Commutative Algebra,
     Addison-Wesley, 1969
+
+.. [Monagan00] M. Monagan and A. Wittkopf, On the Design and Implementation
+    of Brown’s Algorithm over the Integers and Number Fields, Proceedings of
+    ISSAC 2000, pp. 225-233, ACM, 2000.
+
+.. [Brown71] W.S. Brown, On Euclid's Algorithm and the Computation of
+    Polynomial Greatest Common Divisors, J. ACM 18, 4, pp. 478-504, 1971.
+
+.. [Hoeij04] M. van Hoeij and M. Monagan, Algorithms for polynomial GCD
+    computation over algebraic function fields, Proceedings of ISSAC 2004,
+    pp. 297-304, ACM, 2004.
+
+.. [Wang81] P.S. Wang, A p-adic algorithm for univariate partial fractions,
+    Proceedings of SYMSAC 1981, pp. 212-217, ACM, 1981.
+
+.. [Hoeij02] M. van Hoeij and M. Monagan, A modular GCD algorithm over
+    number fields presented with multiple extensions, Proceedings of ISSAC
+    2002, pp. 109-116, ACM, 2002
+
+.. [ManWright94] Yiu-Kwong Man and Francis J. Wright, "Fast Polynomial Dispersion
+    Computation and its Application to Indefinite Summation",
+    Proceedings of the International Symposium on Symbolic and
+    Algebraic Computation, 1994, Pages 175-180
+    http://doi.acm.org/10.1145/190347.190413
+
+.. [Koepf98] Wolfram Koepf, "Hypergeometric Summation: An Algorithmic Approach
+    to Summation and Special Function Identities", Advanced lectures
+    in mathematics, Vieweg, 1998
+
+.. [Abramov71] S. A. Abramov, "On the Summation of Rational Functions",
+    USSR Computational Mathematics and Mathematical Physics,
+    Volume 11, Issue 4, 1971, Pages 324-330
+
+.. [Man93] Yiu-Kwong Man, "On Computing Closed Forms for Indefinite Summations",
+    Journal of Symbolic Computation, Volume 16, Issue 4, 1993, Pages 355-376
+    http://www.sciencedirect.com/science/article/pii/S0747717183710539

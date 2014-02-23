@@ -147,7 +147,7 @@ def fourier(ctx, f, interval, N):
     .. math ::
 
         f(x) \sim \sum_{k=0}^N
-            c_k \cos(k m) + s_k \sin(k m)
+            c_k \cos(k m x) + s_k \sin(k m x)
 
     where `m = 2 \pi / (b-a)`.
 

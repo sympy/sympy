@@ -20,7 +20,8 @@ for test in INPUT:
         file_name = "%s/input/%d.cnf" % (input_path, test)
         theory = load_file(file_name)
         start = time.time()
-        assert satisfiable(theory, algorithm=alg)
+        if not satisfiable(theory, algorithm=alg):
+            raise ValueError("Function returned false")
         end = time.time()
         results[test][alg] = end - start
         print("Test %d in time %.2f seconds for algorithm %s." %

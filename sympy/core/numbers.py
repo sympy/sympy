@@ -1,12 +1,13 @@
 from __future__ import print_function, division
 
 import decimal
+import fractions
 import math
 import re as regex
-import sys
 from collections import defaultdict
 
 from .core import C
+from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
@@ -71,21 +72,9 @@ def seterr(divide=False):
         _errdict["divide"] = divide
 
 
-def _as_integer_ratio(p):
-    """compatibility implementation for python < 2.6"""
-    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
-    p = [1, -1][neg_pow % 2]*man
-    if expt < 0:
-        q = 2**-expt
-    else:
-        q = 1
-        p *= 2**expt
-    return int(p), int(q)
-
-
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
-    if not dec.is_finite(): # NOTE: this is_finite is not SymPy's
+    if not dec.is_finite():  # NOTE: this is_finite is not SymPy's
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)
@@ -109,36 +98,65 @@ _gcdcache = {}
 # TODO caching with decorator, but not to degrade performance
 
 
-def igcd(a, b):
-    """Computes positive, integer greatest common divisor of two numbers.
+def igcd(*args):
+    """Computes positive integer greatest common divisor.
 
-       The algorithm is based on the well known Euclid's algorithm. To
-       improve speed, igcd() has its own caching mechanism implemented.
+    The algorithm is based on the well known Euclid's algorithm. To
+    improve speed, igcd() has its own caching mechanism implemented.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import igcd
+    >>> igcd(2, 4)
+    2
+    >>> igcd(5, 10, 15)
+    5
+
     """
-    try:
-        return _gcdcache[(a, b)]
-    except KeyError:
-        a, b = as_int(a), as_int(b)
+    a = args[0]
+    for b in args[1:]:
+        try:
+            a = _gcdcache[(a, b)]
+        except KeyError:
+            a, b = as_int(a), as_int(b)
 
-        if a and b:
-            if b < 0:
-                b = -b
+            if a and b:
+                if b < 0:
+                    b = -b
 
-            while b:
-                a, b = b, a % b
-        else:
-            a = abs(a or b)
+                while b:
+                    a, b = b, a % b
+            else:
+                a = abs(a or b)
 
-        _gcdcache[(a, b)] = a
-        return a
+            _gcdcache[(a, b)] = a
+        if a == 1 or b == 1:
+            return 1
+    return a
 
 
-def ilcm(a, b):
-    """Computes integer least common multiple of two numbers. """
-    if a == 0 and b == 0:
+def ilcm(*args):
+    """Computes integer least common multiple.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import ilcm
+    >>> ilcm(5, 10)
+    10
+    >>> ilcm(7, 3)
+    21
+    >>> ilcm(5, 10, 15)
+    30
+
+    """
+    if 0 in args:
         return 0
-    else:
-        return a*b // igcd(a, b)
+    a = args[0]
+    for b in args[1:]:
+        a = a*b // igcd(a, b)
+    return a
 
 
 def igcdex(a, b):
@@ -342,6 +360,8 @@ class Number(AtomicExpr):
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
+        elif isinstance(other, Tuple):
+            return NotImplemented
         return AtomicExpr.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -919,12 +939,6 @@ converter[float] = converter[decimal.Decimal] = Float
 RealNumber = Float
 
 
-@deprecated(useinstead="Float", issue=1721, deprecated_since_version="0.7.0")
-def Real(*args, **kwargs):  # pragma: no cover
-    """Deprecated alias for the Float constructor."""
-    return Float(*args, **kwargs)
-
-
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
 
@@ -1052,7 +1066,7 @@ class Rational(Number):
                     pass  # error will raise below
 
                 if isinstance(p, (float, Float)):
-                    return Rational(*_as_integer_ratio(p))
+                    return Rational(*float(p).as_integer_ratio())
 
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
@@ -1194,7 +1208,10 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.q, self.q*other.p)
+            if self.p and other.p == S.Zero:
+                return S.ComplexInfinity
+            else:
+                return Rational(self.p*other.q, self.q*other.p)
         elif isinstance(other, Float):
             return self*(1/other)
         else:
@@ -1288,10 +1305,12 @@ class Rational(Number):
                 return False
             return other.__eq__(self)
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                # a Rational is always in reduced form so will never be 2/4
+                # so we can just check equivalence of args
+                return self.p == other.p and self.q == other.q
             if isinstance(other, Float):
                 return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
-            elif isinstance(other, Rational):
-                return self.p == other.p and self.q == other.q
         return False
 
     def __ne__(self, other):
@@ -1307,10 +1326,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                return bool(self.p*other.q > self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_gt(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q > self.q*other.p)
+            if other is S.NaN:
+                return other.__le__(self)
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1323,10 +1345,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                 return bool(self.p*other.q >= self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q >= self.q*other.p)
+            if other is S.NaN:
+                return other.__lt__(self)
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
@@ -1339,10 +1364,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if isinstance(other, Rational):
+                return bool(self.p*other.q < self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_lt(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q < self.q*other.p)
+            if other is S.NaN:
+                return other.__ge__(self)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1355,12 +1383,13 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
-            if other is S.NaN:
-                return None
+            if isinstance(other, Rational):
+                return bool(self.p*other.q <= self.q*other.p)
             if isinstance(other, Float):
                 return bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p*other.q <= self.q*other.p)
+            if other is S.NaN:
+                return other.__gt__(self)
         return Expr.__le__(self, other)
 
     def __hash__(self):
@@ -1833,6 +1862,25 @@ class IntegerConstant(Integer):
 
 
 class Zero(with_metaclass(Singleton, IntegerConstant)):
+    """The number zero.
+
+    Zero is a singleton, and can be accessed by ``S.Zero``
+
+    Examples
+    ========
+
+    >>> from sympy import S, Integer, zoo
+    >>> Integer(0) is S.Zero
+    True
+    >>> 1/S.Zero
+    zoo
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Zero
+    """
+
     p = 0
     q = 1
     is_positive = False
@@ -1851,12 +1899,11 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     def __neg__():
         return S.Zero
 
-
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
         if expt.is_negative:
-            return S.Infinity
+            return S.ComplexInfinity
         if expt.is_real is False:
             return S.NaN
         # infinities are already handled with pos and neg
@@ -1864,7 +1911,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         # exponent
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
-            return S.Infinity**terms
+            return S.ComplexInfinity**terms
         if coeff is not S.One:  # there is a Number to discard
             return self**terms
 
@@ -1872,15 +1919,30 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         # Order(0,x) -> 0
         return self
 
-    if sys.version_info[0] >= 3:
-        def __bool__(self):
-            return False
-    else:
-        def __nonzero__(self):
-            return False
+    def __nonzero__(self):
+        return False
+
+    __bool__ = __nonzero__
 
 
 class One(with_metaclass(Singleton, IntegerConstant)):
+    """The number one.
+
+    One is a singleton, and can be accessed by ``S.One``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(1) is S.One
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/1_%28number%29
+    """
+
     p = 1
     q = 1
 
@@ -1909,6 +1971,29 @@ class One(with_metaclass(Singleton, IntegerConstant)):
 
 
 class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
+    """The number negative one.
+
+    NegativeOne is a singleton, and can be accessed by ``S.NegativeOne``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Integer
+    >>> Integer(-1) is S.NegativeOne
+    True
+
+    See Also
+    ========
+
+    One
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
+
+    """
+
     p = -1
     q = 1
 
@@ -1946,6 +2031,23 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
 
 
 class Half(with_metaclass(Singleton, RationalConstant)):
+    """The rational number 1/2.
+
+    Half is a singleton, and can be accessed by ``S.Half``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Rational
+    >>> Rational(1, 2) is S.Half
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/One_half
+    """
+
     p = 1
     q = 2
 
@@ -1956,8 +2058,44 @@ class Half(with_metaclass(Singleton, RationalConstant)):
         return S.Half
 
 
-
 class Infinity(with_metaclass(Singleton, Number)):
+    r"""Positive infinite quantity.
+
+    In real analysis the symbol `\infty` denotes an unbounded
+    limit: `x\to\infty` means that `x` grows without bound.
+
+    Infinity is often used not only to define a limit but as a value
+    in the affinely extended real number system.  Points labeled `+\infty`
+    and `-\infty` can be added to the topological space of the real numbers,
+    producing the two-point compactification of the real numbers.  Adding
+    algebraic properties to this gives us the extended real numbers.
+
+    Infinity is a singleton, and can be accessed by ``S.Infinity``,
+    or can be imported as ``oo``.
+
+    Examples
+    ========
+
+    >>> from sympy import oo, exp, limit, Symbol
+    >>> 1 + oo
+    oo
+    >>> 42/oo
+    0
+    >>> x = Symbol('x')
+    >>> limit(exp(x), x, oo)
+    oo
+
+    See Also
+    ========
+
+    NegativeInfinity, NaN
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Infinity
+    """
+
     is_commutative = True
     is_positive = True
     is_bounded = False
@@ -2065,6 +2203,12 @@ class Infinity(with_metaclass(Singleton, Number)):
         ``oo ** -p``     ``0``   ``p`` is number, ``oo``
         ================ ======= ==============================
 
+        See Also
+        ========
+        Pow
+        NaN
+        NegativeInfinity
+
         """
         if expt.is_positive:
             return S.Infinity
@@ -2092,16 +2236,28 @@ class Infinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return False
 
+    @_sympifyit('other', NotImplemented)
     def __le__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is not S.Infinity
 
+    @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return True
 
     def __mod__(self, other):
@@ -2113,6 +2269,17 @@ oo = S.Infinity
 
 
 class NegativeInfinity(with_metaclass(Singleton, Number)):
+    """Negative infinite quantity.
+
+    NegativeInfinity is a singleton, and can be accessed
+    by ``S.NegativeInfinity``.
+
+    See Also
+    ========
+
+    Infinity
+    """
+
     is_commutative = True
     is_real = True
     is_positive = False
@@ -2224,6 +2391,13 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         ``(-oo) ** o``   ``-oo`` ``o`` is positive odd integer
         ================ ======= ==============================
 
+        See Also
+        ========
+
+        Infinity
+        Pow
+        NaN
+
         """
         if isinstance(expt, Number):
             if expt is S.NaN or \
@@ -2255,16 +2429,28 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def __ne__(self, other):
         return other is not S.NegativeInfinity
 
+    @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is not S.NegativeInfinity
 
+    @_sympifyit('other', NotImplemented)
     def __le__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return True
 
+    @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return False
 
+    @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
+        if other.is_number and other.is_real is False:
+            raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return other is S.NegativeInfinity
 
 
@@ -2276,11 +2462,11 @@ class NaN(with_metaclass(Singleton, Number)):
     is defined in the IEEE 754 floating point standard, and corresponds to the
     Python ``float('nan')``.
 
-    NaN serves as a place holder for numeric values that are indeterminate,
-    but not infinite.  Most operations on nan, produce another nan.  Most
-    indeterminate forms, such as ``0/0`` or ``oo - oo` produce nan.  Three
-    exceptions are ``0**0``, ``1**oo``, and ``oo**0``, which all produce ``1``
-    (this is consistent with Python's float).
+    NaN serves as a place holder for numeric values that are indeterminate.
+    Most operations on nan, produce another nan.  Most indeterminate forms,
+    such as ``0/0`` or ``oo - oo` produce nan.  Two exceptions are ``0**0``
+    and ``oo**0``, which all produce ``1`` (this is consistent with Python's
+    float).
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
@@ -2299,7 +2485,7 @@ class NaN(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/NaN
+    .. [1] http://en.wikipedia.org/wiki/NaN
 
     """
     is_commutative = True
@@ -2372,10 +2558,38 @@ nan = S.NaN
 
 
 class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
+    r"""Complex infinity.
+
+    In complex analysis the symbol `\tilde\infty`, called "complex
+    infinity", represents a quantity with infinite magnitude, but
+    undetermined complex phase.
+
+    ComplexInfinity is a singleton, and can be accessed by
+    ``S.ComplexInfinity``, or can be imported as ``zoo``.
+
+    Examples
+    ========
+
+    >>> from sympy import zoo, oo
+    >>> zoo + 42
+    zoo
+    >>> 42/zoo
+    0
+    >>> zoo + zoo
+    nan
+    >>> zoo*zoo
+    zoo
+
+    See Also
+    ========
+
+    Infinity
+    """
+
     is_commutative = True
     is_bounded = False
     is_real = None
-    is_number = False
+    is_number = True
 
     __slots__ = []
 
@@ -2499,6 +2713,30 @@ class NumberSymbol(AtomicExpr):
 
 
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
+    r"""The `e` constant.
+
+    The transcendental number `e = 2.718281828\dots` is the base of the
+    natural logarithm and of the exponential function, `e = \exp(1)`.
+    Sometimes called Euler's number or Napier's constant.
+
+    Exp1 is a singleton, and can be accessed by ``S.Exp1``,
+    or can be imported as ``E``.
+
+    Examples
+    ========
+
+    >>> from sympy import exp, log, E
+    >>> E is exp(1)
+    True
+    >>> log(E)
+    1
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+    """
+
     is_real = True
     is_positive = True
     is_negative = False  # XXX Forces is_negative/is_nonnegative
@@ -2543,6 +2781,38 @@ E = S.Exp1
 
 
 class Pi(with_metaclass(Singleton, NumberSymbol)):
+    r"""The `\pi` constant.
+
+    The transcendental number `\pi = 3.141592654\dots` represents the ratio
+    of a circle's circumference to its diameter, the area of the unit circle,
+    the half-period of trigonometric functions, and many other things
+    in mathematics.
+
+    Pi is a singleton, and can be accessed by ``S.Pi``, or can
+    be imported as ``pi``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, pi, oo, sin, exp, integrate, Symbol
+    >>> S.Pi
+    pi
+    >>> pi > 3
+    True
+    >>> pi.is_irrational
+    True
+    >>> x = Symbol('x')
+    >>> sin(x + 2*pi)
+    sin(x)
+    >>> integrate(exp(-x**2), (x, -oo, oo))
+    sqrt(pi)
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Pi
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2576,6 +2846,31 @@ pi = S.Pi
 
 
 class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
+    r"""The golden ratio, `\phi`.
+
+    `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
+    are in the golden ratio if their ratio is the same as the ratio of
+    their sum to the larger of the two quantities, i.e. their maximum.
+
+    GoldenRatio is a singleton, and can be accessed by ``S.GoldenRatio``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.GoldenRatio > 1
+    True
+    >>> S.GoldenRatio.expand(func=True)
+    1/2 + sqrt(5)/2
+    >>> S.GoldenRatio.is_irrational
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Golden_ratio
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2610,6 +2905,34 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
 
 
 class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
+    r"""The Euler-Mascheroni constant.
+
+    `\gamma = 0.5772157\dots` (also called Euler's constant) is a mathematical
+    constant recurring in analysis and number theory.  It is defined as the
+    limiting difference between the harmonic series and the
+    natural logarithm:
+
+    .. math:: \gamma = \lim\limits_{n\to\infty}
+              \left(\sum\limits_{k=1}^n\frac{1}{k} - \ln n\right)
+
+    EulerGamma is a singleton, and can be accessed by ``S.EulerGamma``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.EulerGamma.is_irrational
+    >>> S.EulerGamma > 0
+    True
+    >>> S.EulerGamma > 1
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2641,6 +2964,30 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
 
 
 class Catalan(with_metaclass(Singleton, NumberSymbol)):
+    r"""Catalan's constant.
+
+    `K = 0.91596559\dots` is given by the infinite series
+
+    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+
+    Catalan is a singleton, and can be accessed by ``S.Catalan``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.Catalan.is_irrational
+    >>> S.Catalan > 0
+    True
+    >>> S.Catalan > 1
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Catalan%27s_constant
+    """
+
     is_real = True
     is_positive = True
     is_negative = False
@@ -2669,6 +3016,28 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
 
 
 class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
+    r"""The imaginary unit, `i = \sqrt{-1}`.
+
+    I is a singleton, and can be accessed by ``S.I``, or can be
+    imported as ``I``.
+
+    Examples
+    ========
+
+    >>> from sympy import I, sqrt
+    >>> sqrt(-1)
+    I
+    >>> I*I
+    -1
+    >>> 1/I
+    -I
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
+    """
+
     is_commutative = True
     is_imaginary = True
     is_bounded = True
@@ -2724,16 +3093,12 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
 
 I = S.ImaginaryUnit
 
-try:
-    # fractions is only available for python 2.6+
-    import fractions
 
-    def sympify_fractions(f):
-        return Rational(f.numerator, f.denominator)
+def sympify_fractions(f):
+    return Rational(f.numerator, f.denominator)
 
-    converter[fractions.Fraction] = sympify_fractions
-except ImportError:
-    pass
+converter[fractions.Fraction] = sympify_fractions
+
 
 try:
     if HAS_GMPY == 2:

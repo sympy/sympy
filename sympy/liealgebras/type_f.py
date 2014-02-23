@@ -1,13 +1,14 @@
-from sympy.core import Set, Dict, Tuple
+from sympy.core import Set, Dict, Tuple, Rational
 from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 
 
 class TypeF(Standard_Cartan):
 
-    def __init__(self, n):
-        assert n == 4
-        Standard_Cartan.__init__(self, "F", 4)
+    def __new__(cls, n):
+        if n != 4:
+            raise ValueError("n should be 4")
+        return Standard_Cartan.__new__(cls, "F", 4)
 
     def dimension(self):
         """
@@ -40,7 +41,16 @@ class TypeF(Standard_Cartan):
 
     def simple_root(self, i):
         """
-        Returns the ith simple root of F_4
+        Every lie algebra has a unique root system.
+        Given a root system Q, there is a subset of the
+        roots such that an element of Q is called a
+        simple root if it cannot be written as the sum
+        of two elements in Q.  If we let D denote the
+        set of simple roots, then it is clear that every
+        element of Q can be written as a linear combination
+        of elements of D with all coefficients non-negative.
+
+        This method returns the ith simple root of F_4
         Example
         =======
         >>> from sympy.liealgebras.cartan_type import CartanType
@@ -57,8 +67,59 @@ class TypeF(Standard_Cartan):
             root[3] = 1
             return root
         if i == 4:
-            root = [-0.5]*4
+            root = [Rational(-1, 2)]*4
             return root
+
+    def positive_roots(self):
+        """
+        This method generates all the positive roots of
+        A_n.  This is half of all of the roots of F_4;
+        by multiplying all the positive roots by -1 we
+        get the negative roots.
+
+        Example
+        ======
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("A3")
+        >>> c.positive_roots()
+        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
+                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+        """
+
+        n = self.n
+        posroots = {}
+        k = 0
+        for i in range(0, n-1):
+            for j in range(i+1, n):
+               k += 1
+               posroots[k] = self.basic_root(i, j)
+               k += 1
+               root = self.basic_root(i, j)
+               root[j] = 1
+               posroots[k] = root
+
+        for i in range(0, n):
+            k += 1
+            root = [0]*n
+            root[i] = 1
+            posroots[k] = root
+
+        k += 1
+        root = [Rational(1, 2)]*n
+        posroots[k] = root
+        for i in range(1, 4):
+            k += 1
+            root = [Rational(1, 2)]*n
+            root[i] = Rational(-1, 2)
+            posroots[k] = root
+
+        posroots[k+1] = [Rational(1, 2), Rational(1, 2), Rational(-1, 2), Rational(-1, 2)]
+        posroots[k+2] = [Rational(1, 2), Rational(-1, 2), Rational(1, 2), Rational(-1, 2)]
+        posroots[k+3] = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
+        posroots[k+4] = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(-1, 2)]
+
+        return posroots
+
 
     def roots(self):
         """
@@ -95,3 +156,8 @@ class TypeF(Standard_Cartan):
         Returns the number of independent generators of F_4
         """
         return 52
+
+    def dynkin_diagram(self):
+        diag = "0---0=>=0---0\n"
+        diag += "   ".join(str(i) for i in range(1, 5))
+        return diag

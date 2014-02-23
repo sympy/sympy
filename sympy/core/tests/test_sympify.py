@@ -1,5 +1,6 @@
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,\
+    Pow, And, Or, Xor, Not, true, false
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
@@ -143,10 +144,8 @@ def test_sympify_float():
 
 
 def test_sympify_bool():
-    """Test that sympify accepts boolean values
-    and that output leaves them unchanged"""
-    assert sympify(True) is True
-    assert sympify(False) is False
+    assert sympify(True) is true
+    assert sympify(False) is false
 
 
 def test_sympyify_iterables():
@@ -382,6 +381,21 @@ def test_int_float():
     assert abs(_sympify(f1_1) - 1.1) < 1e-5
     assert abs(_sympify(f1_1b) - 1.1) < 1e-5
     assert abs(_sympify(f1_1c) - 1.1) < 1e-5
+
+
+def test_evaluate_false():
+    cases = {
+        '2 + 3': Add(2, 3, evaluate=False),
+        '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
+        '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
+        '2 - 3 * 5': Add(2, -Mul(3, 5, evaluate=False), evaluate=False),
+        '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
+        'True | False': Or(True, False, evaluate=False),
+        '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
+        '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
+    }
+    for case, result in cases.items():
+        assert sympify(case, evaluate=False) == result
 
 
 def test_issue1034():

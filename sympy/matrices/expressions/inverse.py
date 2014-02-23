@@ -36,7 +36,8 @@ class Inverse(MatPow):
 
     def __new__(cls, mat):
         mat = _sympify(mat)
-        assert mat.is_Matrix
+        if not mat.is_Matrix:
+            raise TypeError("mat should be a matrix")
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s" % mat)
         return Basic.__new__(cls, mat)

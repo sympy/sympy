@@ -192,3 +192,6 @@ def test_indexing():
     A[1, 2]
     A[l, k]
     A[l+1, k+1]
+
+def test_MatrixElement_diff():
+    assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]

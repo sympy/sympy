@@ -1,13 +1,16 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
-    Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
-    log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify, atan2, arg)
+    Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
+    erfcinv, erf2, erf2inv, exp, expand, im, log, pi, re, sec, sin,
+    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
+    root, simplify, atan2, arg, Mul, SparseMatrix)
+
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow
+from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
+    det_quick, det_perm, det_minor
 
 from sympy.polys.rootoftools import RootOf
 
@@ -20,7 +23,6 @@ from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
-
 def test_swap_back():
     f, g = map(Function, 'fg')
     fx, gx = f(x), g(x)
@@ -29,7 +31,6 @@ def test_swap_back():
     assert solve(fx + gx*x - 2, [fx, gx]) == {fx: 2, gx: 0}
     assert solve(fx + gx**2*x - y, [fx, gx]) == [{fx: y - gx**2*x}]
     assert solve([f(1) - 2, x + 2]) == [{x: -2, f(1): 2}]
-
 
 def guess_solve_strategy(eq, symbol):
     try:
@@ -220,6 +221,17 @@ def test_quintics_1():
     for root in s:
         assert root.func == RootOf
 
+    # if one uses solve to get the roots of a polynomial that has a RootOf
+    # solution, make sure that the use of nfloat during the solve process
+    # doesn't fail. Note: if you want numerical solutions to a polynomial
+    # it is *much* faster to use nroots to get them than to solve the
+    # equation only to get RootOf solutions which are then numerically
+    # evaluated. So for eq = x**5 + 3*x + 7 do Poly(eq).nroots() rather
+    # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
+    assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) == \
+        RootOf(x**5 + 3*x**3 + 7, 0).n()
+
+
 
 def test_highorder_poly():
     # just testing that the uniq generator is unpacked
@@ -251,6 +263,14 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
     assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+
+
+def test_issue_4129():
+    assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-Rational(3, 2), S.Half]
+
+
+def test_issue_4091():
+    assert solve(log(x-3) + log(x+3), x) == [sqrt(10)]
 
 
 def test_linear_system():
@@ -1085,6 +1105,8 @@ def test_check_assumptions():
 
 def test_solve_abs():
     assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
+    r = symbols('r', real=True)
+    raises(NotImplementedError, lambda: solve(2*abs(r) - abs(r - 1)))
 
 
 def test_issue_2957():
@@ -1170,12 +1192,12 @@ def test_high_order_roots():
 def test_minsolve_linear_system():
     def count(dic):
         return len([x for x in dic.values() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) \
+    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=True)) \
         == 3
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) \
+    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=False)) \
         == 3
-    assert count(solve([x + y + z, y + z + a], minimal=True, quick=True)) == 1
-    assert count(solve([x + y + z, y + z + a], minimal=True, quick=False)) == 2
+    assert count(solve([x + y + z, y + z + a], particular=True, quick=True)) == 1
+    assert count(solve([x + y + z, y + z + a], particular=True, quick=False)) == 2
 
 
 def test_real_roots():
@@ -1249,6 +1271,8 @@ def test_issues_3720_3721_3722_3149():
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
+    # github issue 2642
+    assert solve(x*(1 + I)) == [0]
     x, y = symbols('x y', imaginary=True)
     assert solve(x + y*I + 3 + 2*I) == {x: -2*I, y: 3*I}
     x = symbols('x', real=True)
@@ -1361,7 +1385,13 @@ def test_uselogcombine():
 
 
 def test_atan2():
-        assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
+    assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
+
+def test_errorinverses():
+    assert solve(erf(x)-y,x)==[erfinv(y)]
+    assert solve(erfinv(x)-y,x)==[erf(y)]
+    assert solve(erfc(x)-y,x)==[erfcinv(y)]
+    assert solve(erfcinv(x)-y,x)==[erfc(y)]
 
 
 def test_misc():
@@ -1371,3 +1401,50 @@ def test_misc():
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
+
+
+def test_gh2725():
+    R = Symbol('R')
+    eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
+    sol = solve(eq, R, set=True)[1]
+    assert sol == set([(S(5)/3 + 40/(3*(251 + 3*sqrt(111)*I)**(S(1)/3)) +
+                       (251 + 3*sqrt(111)*I)**(S(1)/3)/3,), ((-160 + (1 +
+                       sqrt(3)*I)*(10 - (1 + sqrt(3)*I)*(251 +
+                       3*sqrt(111)*I)**(S(1)/3))*(251 +
+                       3*sqrt(111)*I)**(S(1)/3))/Mul(6, (1 +
+                       sqrt(3)*I), (251 + 3*sqrt(111)*I)**(S(1)/3),
+                       evaluate=False),)])
+
+
+def test_issue_2015_3512():
+    # See that it doesn't hang; this solves in about 2 seconds.
+    # Also check that the solution is relatively small.
+    # Note: the system in issue 3512 solves in about 5 seconds and has
+    # an op-count of 138336 (with simplify=False).
+    b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('b:r')
+    eqs = Matrix([
+        [b - c/d + r/d], [c*(1/g + 1/e + 1/d) - f/g - r/d],
+        [-c/g + f*(1/j + 1/i + 1/g) - h/i], [-f/i + h*(1/m + 1/l + 1/i) - k/m],
+        [-h/m + k*(1/p + 1/o + 1/m) - n/p], [-k/p + n*(1/q + 1/p)]])
+    v = Matrix([f, h, k, n, b, c])
+    ans = solve(list(eqs) , list(v), simplify=False)
+    # If time is taken to simplify then then 2617 below becomes
+    # 1168 and the time is about 50 seconds instead of 2.
+    assert sum([s.count_ops() for s in ans.values()]) <= 2617
+
+
+def test_det_quick():
+    m = Matrix(3, 3, symbols('a:9'))
+    assert m.det() == det_quick(m)  # calls det_perm
+    m[0, 0] = 1
+    assert m.det() == det_quick(m)  # calls det_minor
+    m = Matrix(3, 3, list(range(9)))
+    assert m.det() == det_quick(m)  # defaults to .det()
+    # make sure they work with Sparse
+    s = SparseMatrix(2, 2, (1, 2, 1, 4))
+    assert det_perm(s) == det_minor(s) == s.det()
+
+
+def test_piecewise():
+    # if no symbol is given the piecewise detection must still work
+    assert solve(Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3) == [-1, 5]

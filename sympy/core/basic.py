@@ -6,10 +6,11 @@ from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
-    string_types, with_metaclass)
+    string_types, with_metaclass, zip_longest)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
+from inspect import getmro
 
 class Basic(with_metaclass(ManagedProperties)):
     """
@@ -71,14 +72,6 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Not = False
     is_Matrix = False
 
-    @property
-    @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
-    def is_Real(self):  # pragma: no cover
-        """Deprecated alias for ``is_Float``"""
-        # When this is removed, remove the piece of code disabling the warning
-        # from test_pickling.py
-        return self.is_Float
-
     def __new__(cls, *args):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
@@ -117,7 +110,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
-        accordingly to return such relevent attributes.
+        accordingly to return such relevant attributes.
 
         Defining more than _hashable_content is necessary if __eq__ has
         been defined by a class. See note about this in Basic.__eq__."""
@@ -359,6 +352,16 @@ class Basic(with_metaclass(ManagedProperties)):
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
+        if self is other:
+            return True
+
+        from .function import AppliedUndef, UndefinedFunction as UndefFunc
+
+        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
+            if self.class_key() == other.class_key():
+                return True
+            else:
+                return False
         if type(self) is not type(other):
             # issue 3001 a**1.0 == a like a**2.0 == a**2
             while isinstance(self, C.Pow) and self.exp == 1:
@@ -370,7 +373,11 @@ class Basic(with_metaclass(ManagedProperties)):
             except SympifyError:
                 return False    # sympy != other
 
-            if type(self) is not type(other):
+            if isinstance(self, AppliedUndef) and isinstance(other,
+                                                             AppliedUndef):
+                if self.class_key() != other.class_key():
+                    return False
+            elif type(self) is not type(other):
                 return False
 
         return self._hashable_content() == other._hashable_content()
@@ -578,6 +585,43 @@ class Basic(with_metaclass(ManagedProperties)):
         return dict(list(zip(V, [C.Symbol(name % i, **v.assumptions0)
             for i, v in enumerate(V)])))
 
+
+    def rcall(self, *args):
+        """Apply on the argument recursively through the expression tree.
+
+        This method is used to simulate a common abuse of notation for
+        operators. For instance in SymPy the the following will not work:
+
+        ``(x+Lambda(y, 2*y))(z) == x+2*z``,
+
+        however you can use
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x,y,z
+        >>> (x + Lambda(y, 2*y)).rcall(z)
+        x + 2*z
+        """
+        return Basic._recursive_call(self, args)
+
+    @staticmethod
+    def _recursive_call(expr_to_call, on_args):
+        def the_call_method_is_overridden(expr):
+            for cls in getmro(type(expr)):
+                if '__call__' in cls.__dict__:
+                    return cls != Basic
+
+        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
+            if isinstance(expr_to_call, C.Symbol):  # XXX When you call a Symbol it is
+                return expr_to_call               # transformed into an UndefFunction
+            else:
+                return expr_to_call(*on_args)
+        elif expr_to_call.args:
+            args = [Basic._recursive_call(
+                sub, on_args) for sub in expr_to_call.args]
+            return type(expr_to_call)(*args)
+        else:
+            return expr_to_call
+
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
         return hypersimp(self, k) is not None
@@ -769,7 +813,7 @@ class Basic(with_metaclass(ManagedProperties)):
         Examples
         ========
 
-        >>> from sympy import pi, exp
+        >>> from sympy import pi, exp, limit, oo
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
@@ -826,12 +870,38 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> expr.subs(dict([A,B,C,D,E]))
         a*c*sin(d*e) + b
 
+        The resulting expression represents a literal replacement of the
+        old arguments with the new arguments. This may not reflect the
+        limiting behavior of the expression:
+
+        >>> (x**3 - 3*x).subs({x: oo})
+        nan
+
+        >>> limit(x**3 - 3*x, x, oo)
+        oo
+
+        If the substitution will be followed by numerical
+        evaluation, it is better to pass the substitution to
+        evalf as
+
+        >>> (1/x).evalf(subs={x: 3.0}, n=21)
+        0.333333333333333333333
+
+        rather than
+
+        >>> (1/x).subs({x: 3.0}).evalf(21)
+        0.333333333333333314830
+
+        as the former will ensure that the desired level of precision is
+        obtained.
+
         See Also
         ========
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         xreplace: exact node replacement in expr tree; also capable of
                   using matching rules
+        evalf: calculates the given formula to a desired level of precision
 
         """
         from sympy.core.containers import Dict
@@ -892,8 +962,9 @@ class Basic(with_metaclass(ManagedProperties)):
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
+            kwargs['hack2'] = True
             for old, new in sequence:
-                d = C.Dummy()
+                d = C.Dummy(commutative=new.is_commutative)
                 rv = rv._subs(old, d, **kwargs)
                 reps[d] = new
                 if not isinstance(rv, Basic):
@@ -989,7 +1060,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if not hasattr(arg, '_eval_subs'):
                     continue
                 arg = arg._subs(old, new, **hints)
-                if arg is not args[i]:
+                if not _aresame(arg, args[i]):
                     hit = True
                     args[i] = arg
             if hit:
@@ -1669,9 +1740,15 @@ def _aresame(a, b):
     False
 
     """
-    for i, j in zip(preorder_traversal(a), preorder_traversal(b)):
+    from .function import AppliedUndef, UndefinedFunction as UndefFunc
+    for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
         if i != j or type(i) != type(j):
-            return False
+            if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
+                (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
+                if i.class_key() != j.class_key():
+                    return False
+            else:
+                return False
     else:
         return True
 
@@ -1773,7 +1850,12 @@ class preorder_traversal(Iterator):
             self._skip_flag = False
             return
         if isinstance(node, Basic):
-            args = node.args
+            if not keys and hasattr(node, '_argset'):
+                # LatticeOp keeps args as a set. We should use this if we
+                # don't care about the order, to prevent unnecessary sorting.
+                args = node._argset
+            else:
+                args = node.args
             if keys:
                 if keys != True:
                     args = ordered(args, keys, default=False)

@@ -286,8 +286,32 @@ want to be mentioned here, so see our repository history for a full list).
 #. Manish Gill: Fix infinite loop in Matrix constructor
 #. Markus Müller: Add Jordan form for matrices
 #. Amit Saha: Fixes to documentation
+#. Jeremy: Bug fix
 #. QuaBoo: Optimizations in ntheory
 #. Stefan van der Walt: Fixes to mechanics module
+#. David Joyner: Cryptography module
+#. Lars Buitinck: Bug fix
+#. Alkiviadis G. Akritas: Add a reference
+#. Vinit Ravishankar: fix iterables documentation
+#. Mike Boyle: Additions to the printing system
+#. Heiner Kirchhoffer: PythonRational int conversion fix
+#. Pablo Puente: Test cases from Wester paper
+#. James Fiedler: Bug fix
+#. Harsh Gupta: Bug fix
+#. Tuomas Airaksinen: is_real for besselx
+#. rathmann: fix some Python 2/3 issues
+#. Paul Strickland: documentation fix
+#. James Goppert: correct code in form_lagranges_equations
+#. Avichal Dayal: removed duplicate solutions obtained from solve
+#. Paul Scott: pass along keywords for plots
+#. shiprabanga: code quality fixes
+#. Pramod Ch: fix problem with (I*oo).expand_complex()
+#. Akshay: added normal_lines to Ellipse
+#. Buck Shlegeris: add inverses to error functions
+#. Jonathan Miller: documentation
+#. Edward: update license year
+#. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
+
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

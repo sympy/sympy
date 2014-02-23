@@ -1953,14 +1953,33 @@ def Format(Fmode=True, Dmode=True, ipy=False):
 
 
 def ga_print_on():
-    "Turn on the galgebra-aware string printer."
-    GA_Printer.on()
+    """
+    Turn on the galgebra-aware string printer.
+
+    This function is intended for interactive use only.
+    Use
+
+      with GA_Printer():
+        xxx
+
+    instead of
+
+      ga_print_on()
+      xxx
+      ga_print_off()
+    """
+    GA_Printer._on()
     return
 
 
 def ga_print_off():
-    "Turn off the galgebra-aware string printer."
-    GA_Printer.off()
+    """
+    Turn off the galgebra-aware string printer.
+
+    This function is intended for interactive use only.
+    See ga_print_on for the noninteractive technique.
+    """
+    GA_Printer._off()
     return
 
 

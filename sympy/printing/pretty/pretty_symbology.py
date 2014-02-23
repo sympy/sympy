@@ -181,6 +181,38 @@ for s in '+-=()':
     sub[s] = SSUB(s)
     sup[s] = SSUP(s)
 
+# Variable modifiers
+# TODO: Is it worth trying to handle faces with, e.g., 'MATHEMATICAL BOLD CAPITAL A'?
+# TODO: Make brackets adjust to height of contents
+modifier_dict = {
+    # Accents
+    'mathring': lambda s: s+u('\u030A'),
+    'ddddot': lambda s: s+u('\u0308\u0308'),
+    'dddot': lambda s: s+u('\u0308\u0307'),
+    'ddot': lambda s: s+u('\u0308'),
+    'dot': lambda s: s+u('\u0307'),
+    'check': lambda s: s+u('\u030C'),
+    'breve': lambda s: s+u('\u0306'),
+    'acute': lambda s: s+u('\u0301'),
+    'grave': lambda s: s+u('\u0300'),
+    'tilde': lambda s: s+u('\u0303'),
+    'hat': lambda s: s+u('\u0302'),
+    'bar': lambda s: s+u('\u0305'),
+    'vec': lambda s: s+u('\u20D7'),
+    'prime': lambda s: s+u(' \u030D'),
+    'prm': lambda s: s+u(' \u030D'),
+    # # Faces -- these are here for some compatibility with latex printing
+    # 'bold': lambda s: s,
+    # 'bm': lambda s: s,
+    # 'cal': lambda s: s,
+    # 'scr': lambda s: s,
+    # 'frak': lambda s: s,
+    # Brackets
+    'norm': lambda s: u('\u2016')+s+u('\u2016'),
+    'avg': lambda s: u('\u27E8')+s+u('\u27E9'),
+    'abs': lambda s: u('\u007C')+s+u('\u007C'),
+    'mag': lambda s: u('\u007C')+s+u('\u007C'),
+}
 
 # VERTICAL OBJECTS
 HUP = lambda symb: U('%s UPPER HOOK' % symb_2txt[symb])
@@ -273,7 +305,8 @@ def xobj(symb, length):
     return: [] of equal-length strings
     """
 
-    assert length > 0
+    if length <= 0:
+        raise ValueError("Length should be greater than 0")
 
     # TODO robustify when no unicodedat available
     if _use_unicode:
@@ -452,10 +485,16 @@ def pretty_symbol(symb_name):
 
     name, sups, subs = split_super_sub(symb_name)
 
-    # let's prettify name
-    gG = greek_unicode.get(name)
-    if gG is not None:
-        name = gG
+    def translate(s) :
+        gG = greek_unicode.get(s)
+        if gG is not None:
+            return gG
+        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True) :
+            if s.lower().endswith(key) and len(s)>len(key):
+                return modifier_dict[key](translate(s[:-len(key)]))
+        return s
+
+    name = translate(name)
 
     # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
     # not used at all.
@@ -479,7 +518,11 @@ def pretty_symbol(symb_name):
 
     # glue the results into one string
     if pretty_subs is None:  # nice formatting of sups/subs did not work
-        return symb_name
+        if subs:
+            name += '_'+'_'.join([translate(s) for s in subs])
+        if sups:
+            name += '__'+'__'.join([translate(s) for s in sups])
+        return name
     else:
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)

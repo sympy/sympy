@@ -663,8 +663,10 @@ class Mul(Expr, AssocOp):
             return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import expand_mul
         other = []
         coeff = S.One
+        addterms = S.One
         for a in self.args:
             if a.is_real or a.is_imaginary:
                 coeff *= a
@@ -676,17 +678,30 @@ class Mul(Expr, AssocOp):
                         del other[i]
                         break
                 else:
-                    other.append(a)
+                    if a.is_Add:
+                        addterms *= a
+                    else:
+                        other.append(a)
             else:
                 other.append(a)
         m = self.func(*other)
         if hints.get('ignore') == m:
             return None
-        else:
+        if addterms == 1:
+            if m == 1:
+                return (C.re(coeff), C.im(coeff))
+            rem, imm = (C.re(m), C.im(m))
             if coeff.is_real:
-                return (coeff*C.re(m), coeff*C.im(m))
-            else:
-                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m))
+                return (coeff*rem, coeff*imm)
+            imco = C.im(coeff)
+            return (-imco*imm, imco*rem)
+        addre, addim = expand_mul(addterms, deep=False).as_real_imag()
+        if coeff.is_real:
+            return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
+        else:
+            re = - C.im(coeff)*C.im(m)
+            im = C.im(coeff)*C.re(m)
+            return (re*addre - im*addim, re*addim + im*addre)
 
     @staticmethod
     def _expandsums(sums):
@@ -941,50 +956,39 @@ class Mul(Expr, AssocOp):
         return has_polar and \
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
-    # I*I -> R,  I*I*I -> -I
     def _eval_is_real(self):
+        from sympy.core.logic import fuzzy_not
         im_count = 0
         is_neither = False
+        is_zero = False
         for t in self.args:
             if t.is_imaginary:
                 im_count += 1
                 continue
             t_real = t.is_real
             if t_real:
+                if not is_zero:
+                    is_zero = fuzzy_not(t.is_nonzero)
+                    if is_zero:
+                        return True
                 continue
             elif t_real is False:
                 if is_neither:
-                    return None
+                    return
                 else:
                     is_neither = True
             else:
-                return None
+                return
         if is_neither:
-            return False
-
-        return (im_count % 2 == 0)
+            if im_count % 2 == 0:
+                if is_zero is False:
+                    return False
+        else:
+            return im_count % 2 == 0
 
     def _eval_is_imaginary(self):
-        im_count = 0
-        is_neither = False
-        for t in self.args:
-            if t.is_imaginary:
-                im_count += 1
-                continue
-            t_real = t.is_real
-            if t_real:
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return None
-                else:
-                    is_neither = True
-            else:
-                return None
-        if is_neither:
-            return False
-
-        return (im_count % 2 == 1)
+        if self.is_nonzero:
+            return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
         nc_count = 0
@@ -1139,7 +1143,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            r = True
+            r, acc = True, 1
             for t in self.args:
                 if not t.is_integer:
                     return None
@@ -1148,8 +1152,11 @@ class Mul(Expr, AssocOp):
                 elif t.is_integer:
                     if r is False:
                         pass
+                    elif acc != 1 and (acc + t).is_odd:
+                        r = False
                     elif t.is_odd is None:
                         r = None
+                acc = t
             return r
 
         # !integer -> !odd

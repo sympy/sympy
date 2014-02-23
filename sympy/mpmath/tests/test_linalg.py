@@ -3,6 +3,7 @@
 from __future__ import division
 
 from sympy.mpmath import *
+xrange = libmp.backend.xrange
 
 # XXX: these shouldn't be visible(?)
 LU_decomp = mp.LU_decomp
@@ -248,3 +249,77 @@ def test_exp_pade():
         assert norm(d, inf).ae(0)
     mp.dps = 15
 
+def test_qr():
+    mp.dps = 15                     # used default value for dps
+    lowlimit = -9                   # lower limit of matrix element value
+    uplimit = 9                     # uppter limit of matrix element value
+    maxm = 4                        # max matrix size
+    flg = False                     # toggle to create real vs complex matrix
+    zero = mpf('0.0')
+
+    for k in xrange(0,10):
+        exdps = 0
+        mode = 'full'
+        flg = bool(k % 2)
+
+        # generate arbitrary matrix size (2 to maxm)
+        num1 = nint(2 + (maxm-2)*rand())
+        num2 = nint(2 + (maxm-2)*rand())
+        m = int(max(num1, num2))
+        n = int(min(num1, num2))
+
+        # create matrix
+        A = mp.matrix(m,n)
+
+        # populate matrix values with arbitrary integers
+        if flg:
+            flg = False
+            dtype = 'complex'
+            for j in xrange(0,n):
+                for i in xrange(0,m):
+                    val = nint(lowlimit + (uplimit-lowlimit)*rand())
+                    val2 = nint(lowlimit + (uplimit-lowlimit)*rand())
+                    A[i,j] = mpc(val, val2)
+        else:
+            flg = True
+            dtype = 'real'
+            for j in xrange(0,n):
+                for i in xrange(0,m):
+                    val = nint(lowlimit + (uplimit-lowlimit)*rand())
+                    A[i,j] = mpf(val)
+
+        # perform A -> QR decomposition
+        Q, R = qr(A, mode, edps = exdps)
+
+        #print('\n\n A = \n', nstr(A, 4))
+        #print('\n Q = \n', nstr(Q, 4))
+        #print('\n R = \n', nstr(R, 4))
+        #print('\n Q*R = \n', nstr(Q*R, 4))
+
+        maxnorm = mpf('1.0E-11')
+        n1 = norm(A - Q * R)
+        #print '\n Norm of A - Q * R = ', n1
+        if n1 > maxnorm:
+            raise ValueError('Excessive norm value')
+
+        if dtype == 'real':
+            n1 = norm(eye(m) - Q.T * Q)
+            #print ' Norm of I - Q.T * Q = ', n1
+            if n1 > maxnorm:
+                raise ValueError('Excessive norm value')
+
+            n1 = norm(eye(m) - Q * Q.T)
+            #print ' Norm of I - Q * Q.T = ', n1
+            if n1 > maxnorm:
+                raise ValueError('Excessive norm value')
+
+        if dtype == 'complex':
+            n1 = norm(eye(m) - Q.T * Q.conjugate())
+            #print ' Norm of I - Q.T * Q.conjugate() = ', n1
+            if n1 > maxnorm:
+                raise ValueError('Excessive norm value')
+
+            n1 = norm(eye(m) - Q.conjugate() * Q.T)
+            #print ' Norm of I - Q.conjugate() * Q.T = ', n1
+            if n1 > maxnorm:
+                raise ValueError('Excessive norm value')

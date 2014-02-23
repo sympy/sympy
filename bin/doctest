@@ -16,6 +16,7 @@ blacklist = []
 import sys
 import os
 from optparse import OptionParser
+import re
 
 from get_sympy import path_hack
 path_hack()
@@ -38,6 +39,8 @@ parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
 parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
                   default=True, help="Don't run the tests in a separate "
                   "subprocess.  This may prevent hash randomization from being enabled.")
+parser.add_option('--split', action="store", type='str', default=None,
+    help="Only run part of the doctests. Should be of the form a/b, e.g., 1/2")
 parser.set_usage("test [options ...] [files ...]")
 parser.epilog = """\
 "options" are any of the options above. "files" are 0 or more glob strings of \
@@ -48,6 +51,13 @@ documentation (doc/src/ directory).\
 
 options, args = parser.parse_args()
 
+# Check this again here to give a better error message
+if options.split:
+    sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+    if not sp.match(options.split):
+        parser.error("option --split: must be of the form a/b where a and b "
+            "are integers, not %r" % options.split)
+
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
 if options.types:
@@ -56,7 +66,7 @@ if options.types:
 import sympy
 
 ok = sympy.doctest(*args, verbose=options.verbose, blacklist=blacklist,
-    normal=options.normal, subprocess=options.subprocess)
+    normal=options.normal, subprocess=options.subprocess, split=options.split)
 
 if ok:
     sys.exit(0)

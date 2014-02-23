@@ -5,6 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
+from sympy.core.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 
@@ -92,6 +93,37 @@ def test_diff_symbols():
         Derivative(f(x, y, z), x, y, z)
 
 
+def test_Function():
+    class myfunc(Function):
+        @classmethod
+        def eval(cls, x):
+            return
+
+    assert myfunc.nargs == FiniteSet(1)
+    assert myfunc(x).nargs == FiniteSet(1)
+    raises(TypeError, lambda: myfunc(x, y).nargs)
+
+    class myfunc(Function):
+        @classmethod
+        def eval(cls, *x):
+            return
+
+    assert myfunc.nargs == S.Naturals0
+    assert myfunc(x).nargs == S.Naturals0
+
+def test_nargs():
+    f = Function('f')
+    assert f.nargs == S.Naturals0
+    assert f(1).nargs == S.Naturals0
+    assert Function('f', nargs=2)(1, 2).nargs == FiniteSet(2)
+    assert sin.nargs == FiniteSet(1)
+    assert sin(2).nargs == FiniteSet(1)
+    assert log.nargs == FiniteSet(1, 2)
+    assert log(2).nargs == FiniteSet(1, 2)
+    assert Function('f', nargs=2).nargs == FiniteSet(2)
+    assert Function('f', nargs=0).nargs == FiniteSet(0)
+
+
 def test_Lambda():
     e = Lambda(x, x**2)
     assert e(4) == 16
@@ -112,7 +144,7 @@ def test_Lambda():
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
 
-    assert Lambda((x, y), x + y).nargs == 2
+    assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
@@ -310,6 +342,22 @@ def test_function_non_commutative():
     assert sin(x).is_commutative is False
     assert exp(x).is_commutative is False
     assert log(x).is_commutative is False
+    assert f(x).is_complex is False
+    assert sin(x).is_complex is False
+    assert exp(x).is_complex is False
+    assert log(x).is_complex is False
+
+
+def test_function_complex():
+    x = Symbol('x', complex=True)
+    assert f(x).is_commutative is True
+    assert sin(x).is_commutative is True
+    assert exp(x).is_commutative is True
+    assert log(x).is_commutative is True
+    assert f(x).is_complex is True
+    assert sin(x).is_complex is True
+    assert exp(x).is_complex is True
+    assert log(x).is_complex is True
 
 
 def test_function__eval_nseries():
@@ -389,7 +437,7 @@ def test_fdiff_argument_index_error():
     from sympy.core.function import ArgumentIndexError
 
     class myfunc(Function):
-        nargs = 1
+        nargs = 1  # define since there is no eval routine
 
         def fdiff(self, idx):
             raise ArgumentIndexError
@@ -535,7 +583,6 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-@XFAIL
 def test_issue_1612():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)
@@ -543,6 +590,8 @@ def test_issue_1612():
 
 def test_nfloat():
     from sympy.core.basic import _aresame
+    from sympy.polys.rootoftools import RootOf
+
     x = Symbol("x")
     eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
     assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
@@ -558,10 +607,14 @@ def test_nfloat():
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
-    # issues 3243
+    # issue 3243
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
     assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
 
     # issue 3533
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
         9.99999999800000e-11
+
+    # issue 4023
+    eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
+    assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'

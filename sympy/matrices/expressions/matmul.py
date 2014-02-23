@@ -47,8 +47,8 @@ class MatMul(MatrixExpr):
             return coeff * matrices[0][i, j]
 
         head, tail = matrices[0], matrices[1:]
-        assert len(tail) != 0
-
+        if len(tail) == 0:
+            raise ValueError("lenth of tail cannot be 0")
         X = head
         Y = MatMul(*tail)
 
@@ -178,7 +178,8 @@ canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):
     """ factor matrices only if they are square """
-    assert matrices[0].rows == matrices[-1].cols
+    if matrices[0].rows != matrices[-1].cols:
+        raise RuntimeError("Invalid matrices being multiplied")
     out = []
     start = 0
     for i, M in enumerate(matrices):

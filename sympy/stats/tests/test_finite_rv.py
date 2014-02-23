@@ -1,6 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        factor)
+        factor, cancel)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
         given, independent, dependent, where, FiniteRV, pspace, cdf,
@@ -179,12 +179,12 @@ def test_binomial_numeric():
     for n in nvals:
         for p in pvals:
             X = Binomial('X', n, p)
-            assert Eq(E(X), n*p)
-            assert Eq(variance(X), n*p*(1 - p))
+            assert E(X) == n*p
+            assert variance(X) == n*p*(1 - p)
             if n > 0 and 0 < p < 1:
-                assert Eq(skewness(X), (1 - 2*p)/sqrt(n*p*(1 - p)))
+                assert skewness(X) == (1 - 2*p)/sqrt(n*p*(1 - p))
             for k in range(n + 1):
-                assert Eq(P(Eq(X, k)), binomial(n, k)*p**k*(1 - p)**(n - k))
+                assert P(Eq(X, k)) == binomial(n, k)*p**k*(1 - p)**(n - k)
 
 
 @slow
@@ -194,13 +194,12 @@ def test_binomial_symbolic():
     X = Binomial('X', n, p)
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
-    assert factor(simplify(skewness(X))) == factor((1-2*p)/sqrt(n*p*(1-p)))
+    assert cancel((skewness(X) - (1-2*p)/sqrt(n*p*(1-p)))) == 0
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
-    assert simplify(E(Y)) == simplify(n*(H*p + T*(1 - p)))
-
+    assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
@@ -214,8 +213,8 @@ def test_hypergeometric_numeric():
                     assert variance(X) == n*(m/N)*(N - m)/N*(N - n)/(N - 1)
                 # Only test for skewness when defined
                 if N > 2 and 0 < m < N and n < N:
-                    assert Eq(skewness(X), simplify((N - 2*m)*sqrt(N - 1)*(N - 2*n)
-                        / (sqrt(n*m*(N - m)*(N - n))*(N - 2))))
+                    assert skewness(X) == simplify((N - 2*m)*sqrt(N - 1)*(N - 2*n)
+                        / (sqrt(n*m*(N - m)*(N - n))*(N - 2)))
 
 
 def test_FiniteRV():

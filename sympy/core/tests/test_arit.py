@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im
+        sign, im, nan
 )
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
@@ -374,6 +374,7 @@ def test_Add_Mul_is_bounded():
 
 def test_Mul_is_even_odd():
     x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
 
     k = Symbol('k', odd=True)
     n = Symbol('n', odd=True)
@@ -414,6 +415,20 @@ def test_Mul_is_even_odd():
     assert (x/2).is_integer is None
     assert (k/2).is_integer is False
     assert (m/2).is_integer is True
+
+    assert (x*y).is_even is None
+    assert (x*x).is_even is None
+    assert (x*(x + k)).is_even is True
+    assert (x*(x + m)).is_even is None
+    assert (x*y*(y + k)).is_even is True
+    assert (x*y*(y + m)).is_even is None
+
+    assert (x*y).is_odd is None
+    assert (x*x).is_odd is None
+    assert (x*(x + k)).is_odd is False
+    assert (x*(x + m)).is_odd is None
+    assert (x*y*(y + k)).is_odd is False
+    assert (x*y*(y + m)).is_odd is None
 
 
 def test_Mul_is_rational():
@@ -921,6 +936,11 @@ def test_Pow_is_real():
     assert (i**o).is_real is False
     assert (i**k).is_real is None
 
+    x = Symbol("x", nonnegative=True)
+    y = Symbol("y", nonnegative=True)
+    assert im(x**y).expand(complex=True) is S.Zero
+    assert (x**y).is_real
+
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -1098,6 +1118,14 @@ def test_Mul_is_imaginary_real():
 
     assert (r*i*ii).is_imaginary is False
     assert (r*i*ii).is_real is True
+
+    # Github's issue 2775:
+    nr = Symbol('nr', real=False)
+    a = Symbol('a', real=True, nonzero=True)
+    b = Symbol('b', real=True)
+    assert (i*nr).is_real is None
+    assert (a*nr).is_real is False
+    assert (b*nr).is_real is None
 
 
 def test_Add_is_comparable():
@@ -1466,6 +1494,15 @@ def test_mul_flatten_oo():
     assert n*m*oo == oo
     assert p*oo == oo
     assert x_im*oo != I*oo  # i could be +/- 3*I -> +/-oo
+
+
+def test_add_flatten():
+    # see https://github.com/sympy/sympy/issues/2633#issuecomment-29545524
+    a = oo + I*oo
+    b = oo - I*oo
+    assert a + b == nan
+    assert a - b == nan
+    assert (1/a).simplify() == (1/b).simplify() == 0
 
 
 def test_issue_2061_2988_2990_2991():

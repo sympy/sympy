@@ -230,12 +230,12 @@ def test_basic_nostr():
 
 
 def test_series_expansion_for_uniform_order():
-    assert (1/x + y + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + y + x).series(x, 0, 0) == 1/x + O(1, x)
     assert (1/x + y + x).series(x, 0, 1) == 1/x + y + O(x)
-    assert (1/x + 1 + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + 1 + x).series(x, 0, 0) == 1/x + O(1, x)
     assert (1/x + 1 + x).series(x, 0, 1) == 1/x + 1 + O(x)
-    assert (1/x + x).series(x, 0, 0) == 1/x + O(1)
-    assert (1/x + y + y*x + x).series(x, 0, 0) == 1/x + O(1)
+    assert (1/x + x).series(x, 0, 0) == 1/x + O(1, x)
+    assert (1/x + y + y*x + x).series(x, 0, 0) == 1/x + O(1, x)
     assert (1/x + y + y*x + x).series(x, 0, 1) == 1/x + y + O(x)
 
 def test_leadterm():
@@ -610,25 +610,6 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
 
-def test_call():
-    # See the long history of this in issues 1927 and 2006.
-
-    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
-    raises(TypeError, lambda: sin(x)(1))
-
-    # No effect as there are no callables
-    assert sin(x).rcall(1) == sin(x)
-    assert (1 + sin(x)).rcall(1) == 1 + sin(x)
-
-    # Effect in the pressence of callables
-    l = Lambda(x, 2*x)
-    assert (l + x).rcall(y) == 2*y + x
-    assert (x**l).rcall(2) == x**4
-    # TODO UndefinedFunction does not subclass Expr
-    #f = Function('f')
-    #assert (2*f)(x) == 2*f(x)
-
-
 def test_replace():
     f = log(sin(x)) + tan(sin(x**2))
 
@@ -985,6 +966,7 @@ def test_extractions():
     assert (Rational(1, 2)*x).extract_multiplicatively(3) == x/6
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
+    assert x.extract_multiplicatively(-x) is None
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1

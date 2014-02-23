@@ -384,7 +384,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     _calc_factlist(maxfact)
 
     sumres = 0
-    for kk in range(imin, imax + 1):
+    for kk in range(int(imin), int(imax) + 1):
         den = _Factlist[int(kk - aa - bb - ee)] * \
             _Factlist[int(kk - cc - dd - ee)] * \
             _Factlist[int(kk - aa - cc - ff)] * \
@@ -540,7 +540,7 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
 
     sumres = 0
-    for kk in range(imin, imax + 1):
+    for kk in range(int(imin), int(imax) + 1):
         sumres = sumres + (2 * kk + 1) * \
             racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
             racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
@@ -685,7 +685,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
          _Factlist[bigL - l_2] * _Factlist[bigL - l_3])
 
     sumres = 0
-    for ii in range(imin, imax + 1):
+    for ii in range(int(imin), int(imax) + 1):
         den = _Factlist[ii] * _Factlist[ii + l_3 - l_1 - m_2] * \
             _Factlist[l_2 + m_2 - ii] * _Factlist[l_1 - ii - m_1] * \
             _Factlist[ii + l_3 - l_2 + m_1] * _Factlist[l_1 + l_2 - l_3 - ii]

@@ -4,7 +4,7 @@ from sympy import (
     exp_polar, expand, exptrigsimp, factor, factorial, FallingFactorial, Float,
     fraction, Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I,
     Integer, Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
-    oo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
+    oo, zoo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
     radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
     root, S, separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
     Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
@@ -277,8 +277,14 @@ def test_trigsimp_issue_2515():
     assert trigsimp(-sin(x) + cos(x)*tan(x)) == 0
 
 
-def test_issue_3826():
+def test_trigsimp_issue_3826():
     assert trigsimp(tan(2*x).expand(trig=True)) == tan(2*x)
+
+
+def test_trigsimp_issue_4032():
+    n = Symbol('n', integer=True, positive=True)
+    assert trigsimp(2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2) == \
+        2**(n/2)*cos(pi*n/4)/2 + 2**n/4
 
 
 def test_trigsimp_noncommutative():
@@ -1073,6 +1079,8 @@ def test_nsimplify():
     assert nsimplify(-.2, tolerance=0) == -S.One/5
     assert nsimplify(.2222, tolerance=0) == S(1111)/5000
     assert nsimplify(-.2222, tolerance=0) == -S(1111)/5000
+    # issues 4112
+    assert nsimplify(S(2e-8)) == S(1)/50000000
 
 
 def test_extract_minus_sign():
@@ -1084,8 +1092,8 @@ def test_extract_minus_sign():
     assert simplify(-x/y) == -x/y
     assert simplify(x/y) == x/y
     assert simplify(x/-y) == -x/y
-    assert simplify(-x/0) == -oo*x
-    assert simplify(S(-5)/0) == -oo
+    assert simplify(-x/0) == zoo*x
+    assert simplify(S(-5)/0) == zoo
     assert simplify(-a*x/(-y - b)) == a*x/(b + y)
 
 
@@ -1694,7 +1702,7 @@ def test_issue_2998():
 
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
-    assert signsimp(Eq(e, 0)) is True
+    assert signsimp(Eq(e, 0)) is S.true
 
 
 def test_besselsimp():
@@ -1829,3 +1837,22 @@ def test_exptrigsimp():
         s = simplify(e)
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
+
+
+def test_trigsimp_methods_gh2827():
+    measure1 = lambda expr: len(str(expr))
+    measure2 = lambda expr: -count_ops(expr)
+                                       # Return the most complicated result
+    expr = (x + 1)/(x + sin(x)**2 + cos(x)**2)
+    ans = Matrix([1])
+    M = Matrix([expr])
+    assert trigsimp(M, method='fu', measure=measure1) == ans
+    assert trigsimp(M, method='fu', measure=measure2) != ans
+    # all methods should work with Basic expressions even if they
+    # aren't Expr
+    M = Matrix.eye(1)
+    assert all(trigsimp(M, method=m) == M for m in
+        'fu matching groebner old'.split())
+    # watch for E in exptrigsimp, not only exp()
+    eq = 1/sqrt(E) + E
+    assert exptrigsimp(eq) == eq

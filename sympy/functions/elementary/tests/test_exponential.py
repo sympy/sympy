@@ -242,6 +242,7 @@ def test_log_assumptions():
     assert log(p).is_zero is None
     assert log(n).is_zero is False
     assert log(0.5).is_negative is True
+    assert log(exp(p) + 1).is_positive
 
 
 def test_log_hashing():
@@ -370,4 +371,4 @@ def test_log_product():
             log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
-    assert Eq(simplify(expr), expr)
+    assert simplify(expr) == expr

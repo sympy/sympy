@@ -19,8 +19,10 @@ access any SymPy module, or use this contens:
    core.rst
    combinatorics/index.rst
    ntheory.rst
+   crypto.rst
    concrete.rst
    evalf.rst
+   numeric-computation.rst
    functions/index.rst
    galgebra/index.rst
    geometry.rst
@@ -42,9 +44,12 @@ access any SymPy module, or use this contens:
    solvers/ode.rst
    solvers/pde.rst
    solvers/solvers.rst
+   solvers/diophantine.rst
+   solvers/inequalities.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst
+   calculus/index.rst
    physics/index.rst
    categories.rst
    diffgeom.rst

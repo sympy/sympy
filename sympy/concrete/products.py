@@ -6,13 +6,14 @@ from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
+from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 from sympy.core.compatibility import xrange
 
 
-class Product(Expr):
+class Product(ExprWithIntLimits):
     r"""Represents unevaluated products.
 
     ``Product`` represents a finite or infinite product, with the first
@@ -190,54 +191,13 @@ class Product(Expr):
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
-        from sympy.integrals.integrals import _process_limits
-
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        function = piecewise_fold(sympify(function))
-
-        if function is S.NaN:
-            return S.NaN
-
-        if not symbols:
-            raise ValueError("Product variables must be given")
-
-        limits, sign = _process_limits(*symbols)
-
-        # Only limits with lower and upper bounds are supported; the indefinite
-        # Product is not supported
-        if any(len(l) != 3 or None in l for l in limits):
-            raise ValueError(
-                'Product requires values for lower and upper bounds.')
-
-        obj = Expr.__new__(cls, **assumptions)
-        arglist = [sign*function]
-        arglist.extend(limits)
-        obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative  # limits already checked
-
+        obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
     @property
     def term(self):
         return self._args[0]
     function = term
-
-    @property
-    def limits(self):
-        return self._args[1:]
-
-    @property
-    def variables(self):
-        """Return a list of the product variables
-
-        >>> from sympy import Product
-        >>> from sympy.abc import x, i
-        >>> Product(x**i, (i, 1, 3)).variables
-        [i]
-        """
-        return [l[0] for l in self.limits]
 
     @property
     def free_symbols(self):
@@ -251,10 +211,9 @@ class Product(Expr):
         >>> Product(x, (x, y, 1)).free_symbols
         set([y])
         """
-        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero or self.function == 1:
             return set()
-        return _free_symbols(self)
+        return self._free_symbols()
 
     @property
     def is_zero(self):
@@ -285,10 +244,6 @@ class Product(Expr):
         """
 
         return self.function.is_zero or self.function == 1 or not self.free_symbols
-
-    def as_dummy(self):
-        from sympy.integrals.integrals import _as_dummy
-        return _as_dummy(self)
 
     def doit(self, **hints):
         f = self.function
@@ -402,15 +357,97 @@ class Product(Expr):
             else:
                 return f
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import product_simplify
+        return product_simplify(self)
+
     def _eval_transpose(self):
         if self.is_commutative:
             return self.func(self.function.transpose(), *self.limits)
         return None
 
+    def reverse_order(expr, *indices):
+        """
+        Reverse the order of a limit in a Product.
 
-    def _eval_subs(self, old, new):
-        from sympy.integrals.integrals import _eval_subs
-        return _eval_subs(self, old, new)
+        Usage
+        =====
+
+        ``reverse_order(expr, *indices)`` reverses some limits in the expression
+        ``expr`` which can be either a ``Sum`` or a ``Product``. The selectors in
+        the argument ``indices`` specify some indices whose limits get reversed.
+        These selectors are either variable names or numerical indices counted
+        starting from the inner-most limit tuple.
+
+        Examples
+        ========
+
+        >>> from sympy import Product, simplify, RisingFactorial, gamma, Sum
+        >>> from sympy.abc import x, y, a, b, c, d
+        >>> P = Product(x, (x, a, b))
+        >>> Pr = P.reverse_order(x)
+        >>> Pr
+        Product(1/x, (x, b + 1, a - 1))
+        >>> Pr = Pr.doit()
+        >>> Pr
+        1/RisingFactorial(b + 1, a - b - 1)
+        >>> simplify(Pr)
+        gamma(b + 1)/gamma(a)
+        >>> P = P.doit()
+        >>> P
+        RisingFactorial(a, -a + b + 1)
+        >>> simplify(P)
+        gamma(b + 1)/gamma(a)
+
+        While one should prefer variable names when specifying which limits
+        to reverse, the index counting notation comes in handy in case there
+        are several symbols with the same name.
+
+        >>> S = Sum(x*y, (x, a, b), (y, c, d))
+        >>> S
+        Sum(x*y, (x, a, b), (y, c, d))
+        >>> S0 = S.reverse_order( 0)
+        >>> S0
+        Sum(-x*y, (x, b + 1, a - 1), (y, c, d))
+        >>> S1 = S0.reverse_order( 1)
+        >>> S1
+        Sum(x*y, (x, b + 1, a - 1), (y, d + 1, c - 1))
+
+        Of course we can mix both notations:
+
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( x, 1)
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+        >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order( y, x)
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+        See Also
+        ========
+
+        index, reorder_limit, reorder
+
+        References
+        ==========
+
+        .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
+               Volume 28 Issue 2, April 1981, Pages 305-350
+               http://dl.acm.org/citation.cfm?doid=322248.322255
+        """
+        l_indices = list(indices)
+
+        for i, indx in enumerate(l_indices):
+            if not isinstance(indx, int):
+                l_indices[i] = expr.index(indx)
+
+        e = 1
+        limits = []
+        for i, limit in enumerate(expr.limits):
+            l = limit
+            if i in l_indices:
+                e = -e
+                l = (limit[0], limit[2] + 1 , limit[1] - 1)
+            limits.append(l)
+
+        return Product(expr.function ** e, *limits)
 
 
 def product(*args, **kwargs):

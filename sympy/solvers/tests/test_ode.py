@@ -77,7 +77,7 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
         '1st_linear_Integral', 'almost_linear', 'almost_linear_Integral',
-        'best', 'best_hint', 'default',
+        'best', 'best_hint', 'default', 'lie_group',
         'nth_linear_euler_eq_homogeneous', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
@@ -139,18 +139,19 @@ def test_dsolve_options():
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         ('nth_linear_constant_coeff_homogeneous', 'Liouville',
-            'Liouville_Integral')
+            '2nd_power_series_ordinary' ,'Liouville_Integral')
     assert classify_ode(f(x), f(x)) == ()
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('separable',
         '1st_linear', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_homogeneous',
         'separable_Integral',
         '1st_linear_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-    assert classify_ode(f(x).diff(x)**2, f(x)) == ()
+    assert classify_ode(f(x).diff(x)**2, f(x)) == ('lie_group',)
     # 1650: f(x) should be cleared from highest derivative before classifying
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
@@ -158,6 +159,7 @@ def test_classify_ode():
     assert a == ('1st_linear',
         'Bernoulli',
         'almost_linear',
+        '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral',
@@ -167,7 +169,8 @@ def test_classify_ode():
     assert b == c != ()
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-    ) == ('Bernoulli', 'almost_linear', 'Bernoulli_Integral', 'almost_linear_Integral')
+    ) == ('Bernoulli', 'almost_linear', 'lie_group',
+        'Bernoulli_Integral', 'almost_linear_Integral')
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
@@ -176,13 +179,14 @@ def test_classify_ode():
     k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) + 2*f(x)/(k*f(x) +
         k*x*f(x)) + x*f(x).diff(x)/(k*f(x) + k*x*f(x)) + z, f(x)) == \
-        ('separable', '1st_exact', 'separable_Integral', '1st_exact_Integral')
+        ('separable', '1st_exact', '1st_power_series', 'lie_group',
+         'separable_Integral', '1st_exact_Integral')
     # preprocessing
     ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced',
+        'separable_reduced', '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
@@ -1271,6 +1275,7 @@ def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
+        '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral', 'almost_linear_Integral',
@@ -1281,7 +1286,8 @@ def test_1686():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', '1st_exact_Integral',
+        'separable_reduced', '1st_power_series',
+        'lie_group', '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         'separable_reduced_Integral')
@@ -1450,11 +1456,11 @@ def test_separable_reduced():
     f = Function('f')
     df = f(x).diff(x)
     eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced', 'lie_group',
         '1st_linear_Integral', 'separable_reduced_Integral')
 
     eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced', 'lie_group',
         '1st_linear_Integral', 'separable_reduced_Integral')
     sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
     assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
@@ -1462,7 +1468,7 @@ def test_separable_reduced():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = df + (f(x) / (x**4*f(x) - x))
-    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced', 'lie_group',
         '1st_linear_Integral', 'separable_reduced_Integral')
     # generates PolynomialError in solve attempt
     sol = dsolve(eq, hint = 'separable_reduced')
@@ -1615,15 +1621,14 @@ def test_heuristic2():
     xi = Function('xi')
     eta = Function('eta')
     df = f(x).diff(x)
-    eq = df -(f(x)/x)*(x*log(x**2/f(x)) + 2)
+
+    # This ODE can be solved by the Lie Group method, when there are
+    # better assumptions
+    eq = df - (f(x)/x)*(x*log(x**2/f(x)) + 2)
     i = infinitesimals(eq, hint='abaco1_product')
     assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
     assert checkinfsol(eq, i)[0]
 
-    eq = x*(f(x).diff(x)) - f(x)*(2 +x*log(x**2/f(x)))
-    i = infinitesimals(eq, hint='abaco1_product')
-    assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
-    assert checkinfsol(eq, i)[0]
 
 def test_heuristic3():
     y = Symbol('y')
@@ -1637,7 +1642,7 @@ def test_heuristic3():
     assert i == [{eta(x, f(x)): f(x), xi(x, f(x)): x}]
     assert checkinfsol(eq, i)[0]
 
-    eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) +2 -a*x
+    eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) + 2 - a*x
     i = infinitesimals(eq, hint='bivariate')
     assert checkinfsol(eq, i)[0]
 
@@ -1716,7 +1721,131 @@ def test_kamke():
     i = infinitesimals(eq, hint='sum_function')
     assert checkinfsol(eq, i)[0]
 
+
+def test_series():
+    C0 = Symbol("C0")
+    eq = f(x).diff(x) - f(x)
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
+        C0 + C0*x + C0*x**2/S(2) + C0*x**3/S(6) + C0*x**4/S(24) +
+        C0*x**5/S(120) + O(x**6))
+    eq = f(x).diff(x) - x*f(x)
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
+        C0*x**4/S(8) + C0*x**2/S(2) + C0 + O(x**6))
+    eq = f(x).diff(x) - sin(x*f(x))
+    assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == Eq(
+        f(x), (x - 2)**2*(2*cos(4) + 2*sin(4)*cos(4))/S(2) + (x - 2)*sin(4) +
+        2 + O(x**3))
+
+
+def test_lie_group():
+    C1 = Symbol("C1")
+    a, b, c = symbols("a b c")
+    eq = f(x).diff(x)**2
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert checkodesol(eq, sol)[0]
+
+    eq = Eq(f(x).diff(x), x**2*f(x))
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), C1*exp(x**3/S(3)))
+    assert checkodesol(eq, sol)[0]
+
+    eq = f(x).diff(x) + a*f(x) - c*exp(b*x)
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert checkodesol(eq, sol)[0]
+
+    eq = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), (C1 + x**2/S(2))*exp(-x**2))
+    assert checkodesol(eq, sol)[0]
+
+    eq = (1 + 2*x)*(f(x).diff(x)) + 2 - 4*exp(-f(x))
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), log(C1/(2*x + 1) + 2))
+    assert checkodesol(eq, sol)[0]
+
+    eq = x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x))
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert checkodesol(eq, sol)[0]
+
+    eq = x**2*f(x)**2 + x*Derivative(f(x), x)
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), 2/(C1 + x**2))
+    assert checkodesol(eq, sol)[0]
+
+
+def test_user_infinitesimals():
+    C2 = Symbol("C2")
+    eq = x*(f(x).diff(x)) + 1 - f(x)**2
+    sol = dsolve(eq, hint='lie_group', xi=sqrt(f(x) - 1)/sqrt(f(x) + 1),
+        eta=0)
+    assert sol == Eq(f(x), (C2 + x**2)/(C1 - x**2))
+    raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
+
 @XFAIL
 def test_issue_3982():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     assert dsolve(eq) == Eq(f(x), (C2 + x**2)/(C1 - x**2))
+
+
+def test_2nd_power_series_ordinary():
+    C0, C1 = symbols("C0 C1")
+    eq = f(x).diff(x, 2) - x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x),
+        C0*(x**3/S(6) + 1) + C1*x*(x**3/S(12) + 1) + O(x**6))
+    assert dsolve(eq, x0=-2) == Eq(f(x),
+        C0*((x + 2)**4/S(6) + (x + 2)**3/S(6) - (x + 2)**2 + 1)
+        + C1*(x + (x + 2)**4/S(12) - (x + 2)**3/3 + S(2))
+        + O(x**6))
+    assert dsolve(eq, n=2) == Eq(f(x), C1*x + C0 + O(x**2))
+
+    eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(-x**4/S(3) + x**2 + 1) + C1*x
+        + O(x**6))
+
+    eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        x**4/S(8) - x**2/S(2) + 1) + C1*x*(-x**2/S(3) + 1) + O(x**6))
+
+    eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        -x**4/S(24) + x**3/S(6) + 1) + C1*x*(x**3/S(24) + x**2/S(6) - x/S(2)
+        + 1) + O(x**6))
+
+    eq = f(x).diff(x, 2) + x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq, n=7) == Eq(f(x), C0*(
+        x**6/S(180) - x**3/S(6) + 1) + C1*x*(-x**3/S(12) + 1) + O(x**7))
+
+
+def test_2nd_power_series_ordinary():
+    C0, C1 = symbols("C0 C1")
+    eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
+    assert dsolve(eq) == Eq(f(x), C0*x**2*(-16*x**3/S(9) +
+        4*x**2 - 4*x + 1) + O(x**6))
+
+    eq = 4*x**2*(f(x).diff(x, 2)) -8*x**2*(f(x).diff(x)) + (4*x**2 +
+        1)*f(x)
+    assert dsolve(eq) == Eq(f(x), C0*sqrt(x)*(
+        x**4/S(24) + x**3/S(6) + x**2/S(2) + x + 1) + O(x**6))
+
+    eq = x**2*(f(x).diff(x, 2)) - x**2*(f(x).diff(x)) + (
+        x**2 - 2)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*(-x**6/S(720) - 3*x**5/S(80) - x**4/S(8) +
+        x**2/S(2) + x/S(2) + 1)/x + C0*x**2*(-x**3/S(60) + x**2/S(20) + x/S(2) + 1)
+        + O(x**6))
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 1/S(4))*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*(x**4/S(24) - x**2/S(2) + 1)/sqrt(x) +
+        C0*sqrt(x)*(x**4/S(120) - x**2/S(6) + 1) + O(x**6))
+
+    eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*(-x**4/S(2) + 1) + C0*x**2 + O(x**6))
+
+def test_issue3994():
+    sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
+    eq = Derivative(f(x), x)**2 - x**3
+    assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)

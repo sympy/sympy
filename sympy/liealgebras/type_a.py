@@ -12,9 +12,10 @@ class TypeA(Standard_Cartan):
     ====
     """
 
-    def __init__(self, n):
-        assert n >= 1
-        Standard_Cartan.__init__(self, "A", n)
+    def __new__(cls, n):
+        if n < 1:
+            raise ValueError("n can not be less than 1")
+        return Standard_Cartan.__new__(cls, "A", n)
 
 
     def dimension(self):
@@ -47,7 +48,20 @@ class TypeA(Standard_Cartan):
 
     def simple_root(self, i):
         """
-        Returns the ith simple root for the A series.
+        Every lie algebra has a unique root system.
+        Given a root system Q, there is a subset of the
+        roots such that an element of Q is called a
+        simple root if it cannot be written as the sum
+        of two elements in Q.  If we let D denote the
+        set of simple roots, then it is clear that every
+        element of Q can be written as a linear combination
+        of elements of D with all coefficients non-negative.
+
+        In A_n the ith simple root is the root which has a 1
+        in the ith position, a -1 in the (i+1)th position,
+        and zeroes elsewhere.
+
+        This method returns the ith simple root for the A series.
 
         Examples
         ========
@@ -59,6 +73,31 @@ class TypeA(Standard_Cartan):
         """
 
         return self.basic_root(i-1, i)
+
+    def positive_roots(self):
+        """
+        This method generates all the positive roots of
+        A_n.  This is half of all of the roots of A_n;
+        by multiplying all the positive roots by -1 we
+        get the negative roots.
+
+        Example
+        ======
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("A3")
+        >>> c.positive_roots()
+        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
+                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+        """
+
+        n = self.n
+        posroots = {}
+        k = 0
+        for i in range(0, n):
+            for j in range(i+1, n+1):
+               k += 1
+               posroots[k] = self.basic_root(i, j)
+        return posroots
 
     def highest_root(self):
         """
@@ -119,3 +158,9 @@ class TypeA(Standard_Cartan):
         """
         n = self.n
         return "su(" + str(n + 1) + ")"
+
+    def dynkin_diagram(self):
+        n = self.n
+        diag = "---".join("0" for i in range(1, n+1)) + "\n"
+        diag += "   ".join(str(i) for i in range(1, n+1))
+        return diag

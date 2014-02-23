@@ -6,6 +6,8 @@ from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
 from sympy.core.compatibility import default_sort_key, with_metaclass
 
+from sympy import sin, Lambda, Q
+
 from sympy.utilities.pytest import raises
 
 
@@ -146,3 +148,24 @@ def test_sorted_args():
     x = symbols('x')
     assert b21._sorted_args == b21.args
     raises(AttributeError, lambda: x._sorted_args)
+
+def test_call():
+    x, y = symbols('x y')
+    # See the long history of this in issues 1927 and 2006.
+
+    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
+    raises(TypeError, lambda: sin(x)(1))
+
+    # No effect as there are no callables
+    assert sin(x).rcall(1) == sin(x)
+    assert (1 + sin(x)).rcall(1) == 1 + sin(x)
+
+    # Effect in the pressence of callables
+    l = Lambda(x, 2*x)
+    assert (l + x).rcall(y) == 2*y + x
+    assert (x**l).rcall(2) == x**4
+    # TODO UndefinedFunction does not subclass Expr
+    #f = Function('f')
+    #assert (2*f)(x) == 2*f(x)
+
+    assert (Q.real & Q.positive).rcall(x) == Q.real(x) & Q.positive(x)

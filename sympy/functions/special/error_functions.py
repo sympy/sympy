@@ -90,7 +90,6 @@ class erf(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -98,6 +97,13 @@ class erf(Function):
             return 2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfinv
 
     @classmethod
     def eval(cls, arg):
@@ -274,7 +280,6 @@ class erfc(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -282,6 +287,12 @@ class erfc(Function):
             return -2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfcinv
 
     @classmethod
     def eval(cls, arg):
@@ -452,7 +463,6 @@ class erfi(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -616,7 +626,6 @@ class erf2(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
     """
 
-    nargs = 2
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -733,13 +742,18 @@ class erfinv(Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
     """
 
-    nargs = 1
 
     def fdiff(self, argindex =1):
         if argindex == 1:
             return sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else :
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erf
 
     @classmethod
     def eval(cls, z):
@@ -806,13 +820,18 @@ class erfcinv (Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
     """
 
-    nargs = 1
 
     def fdiff(self, argindex =1):
         if argindex == 1:
             return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfc
 
     @classmethod
     def eval(cls, z):
@@ -878,7 +897,6 @@ class erf2inv(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
     """
 
-    nargs = 2
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -1006,7 +1024,7 @@ class Ei(Function):
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
     Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma
+    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
 
     References
     ==========
@@ -1017,7 +1035,6 @@ class Ei(Function):
 
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1067,6 +1084,14 @@ class Ei(Function):
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(z) * _eis(z)
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_Si(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(Ei, self)._eval_nseries(x, n, logx)
+
 
 class expint(Function):
     r"""
@@ -1168,7 +1193,6 @@ class expint(Function):
 
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, nu, z):
@@ -1230,6 +1254,17 @@ class expint(Function):
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
+
+    def _eval_nseries(self, x, n, logx):
+        if not self.args[0].has(x):
+            nu = self.args[0]
+            if nu == 1:
+                f = self._eval_rewrite_as_Si(*self.args)
+                return f._eval_nseries(x, n, logx)
+            elif nu.is_Integer and nu > 1:
+                f = self._eval_rewrite_as_Ei(*self.args)
+                return f._eval_nseries(x, n, logx)
+        return super(expint, self)._eval_nseries(x, n, logx)
 
 
 def E1(z):
@@ -1342,7 +1377,6 @@ class li(Function):
     .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1460,7 +1494,6 @@ class Li(Function):
     .. [3] http://dlmf.nist.gov/6
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1492,7 +1525,6 @@ class Li(Function):
 class TrigonometricIntegral(Function):
     """ Base class for trigonometric integrals. """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1891,7 +1923,8 @@ class Chi(TrigonometricIntegral):
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
     def _latex(self, printer, exp=None):
-        assert len(self.args) == 1
+        if len(self.args) != 1:
+            raise ValueError("Arg length should be 1")
         if exp:
             return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
                 % (printer._print(exp), printer._print(self.args[0]))
@@ -1910,7 +1943,6 @@ class Chi(TrigonometricIntegral):
 class FresnelIntegral(Function):
     """ Base class for the Fresnel integrals."""
 
-    nargs = 1
     unbranched = True
 
     @classmethod
@@ -2055,7 +2087,7 @@ class fresnels(FresnelIntegral):
     See Also
     ========
 
-    fresnelc
+    fresnelc: Fresnel cosine integral.
 
     References
     ==========
@@ -2162,7 +2194,7 @@ class fresnelc(FresnelIntegral):
     See Also
     ========
 
-    fresnels
+    fresnels: Fresnel sine integral.
 
     References
     ==========
@@ -2210,7 +2242,6 @@ class _erfs(Function):
     tractable for the Gruntz algorithm.
     """
 
-    nargs = 1
 
     def _eval_aseries(self, n, args0, x, logx):
         point = args0[0]
@@ -2255,7 +2286,6 @@ class _eis(Function):
     tractable for the Gruntz algorithm.
     """
 
-    nargs = 1
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != S.Infinity:
@@ -2277,3 +2307,10 @@ class _eis(Function):
 
     def _eval_rewrite_as_intractable(self, z):
         return C.exp(-z)*Ei(z)
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(_eis, self)._eval_nseries(x, n, logx)

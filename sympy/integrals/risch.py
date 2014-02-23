@@ -28,7 +28,7 @@ from __future__ import print_function, division
 from sympy import real_roots, default_sort_key
 from sympy.abc import z
 from sympy.core.function import Lambda
-from sympy.core.numbers import ilcm
+from sympy.core.numbers import ilcm, oo
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -759,7 +759,7 @@ def as_poly_1t(p, t, z):
     # (...)*exp(-x).
     pa, pd = frac_in(p, t, cancel=True)
     if not pd.is_monomial:
-        # XXX: Is there a better Poly exception that we could raise here
+        # XXX: Is there a better Poly exception that we could raise here?
         # Either way, if you see this (from the Risch Algorithm) it indicates
         # a bug.
         raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
@@ -772,10 +772,10 @@ def as_poly_1t(p, t, z):
     except DomainError as e:
         # Issue 1851
         raise NotImplementedError(e)
-    # Compute the negative degree parts.  Also requires polys11.
+    # Compute the negative degree parts.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
         domain=one_t_part.domain)
-    if r > 0:
+    if 0 < r < oo:
         one_t_part *= Poly(t**r, t)
 
     one_t_part = one_t_part.replace(t, z)  # z will be 1/t
@@ -1284,7 +1284,8 @@ def integrate_primitive_polynomial(p, DE):
 
             try:
                 (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-                assert len(c) == 1
+                if len(c) != 1:
+                    raise ValueError("Length of c should  be 1")
             except NonElementaryIntegralException:
                 return (q, p, False)
 
@@ -1358,6 +1359,9 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     qd = Poly(1, DE.t)
     b = True
 
+    if p.is_zero:
+        return(qa, qd, b)
+
     with DecrementLevel(DE):
         for i in xrange(-p.degree(z), p.degree(t1) + 1):
             if not i:
@@ -1429,15 +1433,19 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
         + residue_reduce_to_basic(g2, DE, z))
 
+    qas = qa.as_expr().subs(s)
     qds = qd.as_expr().subs(s)
     if conds == 'piecewise' and DE.x not in qds.free_symbols:
         # We have to be careful if the exponent is S.Zero!
+
+        # XXX: Does qd = 0 always necessarily correspond to the exponential
+        # equaling 1?
         ret += Piecewise(
-                (integrate(p/DE.t, DE.x), Eq(qds, 0)),
-                (qa.as_expr().subs(s) / qds, True)
+                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), Eq(qds, 0)),
+                (qas/qds, True)
             )
     else:
-        ret += qa.as_expr().subs(s) / qds
+        ret += qas/qds
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
@@ -1689,7 +1697,9 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             DE.decrement_level()
             fa, fd = frac_in(i, DE.t)
         else:
-            result, i = result.subs(DE.backsubs), i.subs(DE.backsubs)
+            result = result.subs(DE.backsubs)
+            if not i.is_zero:
+                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
             if not separate_integral:
                 result += i
                 return result

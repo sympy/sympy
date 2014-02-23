@@ -31,6 +31,7 @@ from __future__ import print_function
 import os
 import sys
 from sympy.core.compatibility import StringIO
+from sympy.core.decorators import deprecated
 
 from sympy import C, S, Basic, Symbol, Matrix
 from sympy.printing.str import StrPrinter
@@ -183,7 +184,7 @@ class GA_Printer(StrPrinter):
     def _print_Function(self, expr):
         name = expr.func.__name__
 
-        if expr.func.nargs is not None:
+        if expr.args:
             if name in GA_Printer.function_names:
                 return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
@@ -211,15 +212,32 @@ class GA_Printer(StrPrinter):
             return ostr
 
     @staticmethod
-    def on():
+    def _on():
         GA_Printer.Basic__str__ = Basic.__str__
         Basic.__str__ = lambda self: GA_Printer().doprint(self)
         return
 
     @staticmethod
-    def off():
+    def _off():
         Basic.__str__ = GA_Printer.Basic__str__
         return
+
+    def __enter__ (self):
+        GA_Printer._on()
+        return self
+
+    def __exit__ (self, type, value, traceback):
+        GA_Printer._off()
+
+    @staticmethod
+    @deprecated(useinstead="with GA_Printer()", issue=4042, deprecated_since_version="0.7.4")
+    def on():
+        GA_Printer._on()
+
+    @staticmethod
+    @deprecated(useinstead="with GA_Printer()", issue=4042, deprecated_since_version="0.7.4")
+    def off():
+        GA_Printer._off()
 
 
 class GA_LatexPrinter(LatexPrinter):

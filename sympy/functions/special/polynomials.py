@@ -32,7 +32,6 @@ _x = C.Dummy('x')
 class OrthogonalPolynomial(Function):
     """Base class for orthogonal polynomials.
     """
-    nargs = 2
 
     @classmethod
     def _eval_at_order(cls, n, x):
@@ -125,7 +124,6 @@ class jacobi(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
     """
 
-    nargs = 4
 
     @classmethod
     def eval(cls, n, a, b, x):
@@ -332,7 +330,6 @@ class gegenbauer(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
     """
 
-    nargs = 3
 
     @classmethod
     def eval(cls, n, a, x):
@@ -666,7 +663,6 @@ class chebyshevt_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, n, k):
@@ -707,7 +703,6 @@ class chebyshevu_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, n, k):
@@ -869,7 +864,6 @@ class assoc_legendre(Function):
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
-    nargs = 3
 
     @classmethod
     def _eval_at_order(cls, n, m):
@@ -1177,7 +1171,6 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
-    nargs = 3
 
     @classmethod
     def eval(cls, n, alpha, x):

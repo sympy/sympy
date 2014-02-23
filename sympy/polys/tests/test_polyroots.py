@@ -1,7 +1,7 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
-    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ)
+    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise)
 
 from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
     PolynomialError)
@@ -40,6 +40,8 @@ def test_roots_cubic():
 
     assert roots_cubic(Poly(x**3 + 1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
+    assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
+         S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
 
 
 def test_roots_quartic():
@@ -82,8 +84,22 @@ def test_roots_quartic():
     eq = Poly(q*x + q/4 + x**4 + x**3 + 2*x**2 - Rational(1, 3), x)
     sol = roots_quartic(eq)
     assert all(test_numerically(eq.subs(x, i), 0) for i in sol)
-    # but some are (see also iss 1890)
-    raises(PolynomialError, lambda: roots_quartic(Poly(y*x**4 + x + z, x)))
+    z = symbols('z', negative=True)
+    eq = x**4 + 2*x**3 + 3*x**2 + x*(z + 11) + 5
+    zans = roots_quartic(Poly(eq, x))
+    assert all([test_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
+    # but some are (see also issue 1890)
+    # it's ok if the solution is not Piecewise, but the tests below should pass
+    eq = Poly(y*x**4 + x**3 - x + z, x)
+    ans = roots_quartic(eq)
+    assert all(type(i) == Piecewise for i in ans)
+    reps = (
+        dict(y=-Rational(1, 3), z=-Rational(1, 4)),  # 4 real
+        dict(y=-Rational(1, 3), z=-Rational(1, 2)),  # 2 real
+        dict(y=-Rational(1, 3), z=-2))  # 0 real
+    for rep in reps:
+        sol = roots_quartic(Poly(eq.subs(rep), x))
+        assert all([test_numerically(w.subs(rep) - s, 0) for w, s in zip(ans, sol)])
 
 
 def test_roots_cyclotomic():

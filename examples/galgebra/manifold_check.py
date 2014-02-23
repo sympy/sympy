@@ -3,9 +3,9 @@
 from __future__ import print_function
 
 from sympy import symbols, log, simplify, diff, cos, sin
-from sympy.galgebra.ga import MV, ReciprocalFrame, ga_print_on, ga_print_off
+from sympy.galgebra.ga import MV, ReciprocalFrame
 from sympy.galgebra.debug import oprint
-from sympy.galgebra.printing import enhance_print, Get_Program, Print_Function
+from sympy.galgebra.printing import GA_Printer, enhance_print, Get_Program, Print_Function
 from sympy.galgebra.manifold import Manifold
 
 def Test_Reciprocal_Frame():
@@ -105,13 +105,12 @@ def dummy():
 
 def main():
     Get_Program(True)
-    ga_print_on()
-    enhance_print()
-    Test_Reciprocal_Frame()
-    Distorted_manifold_with_scalar_function()
-    Simple_manifold_with_scalar_function_derivative()
-    #Plot_Mobius_Strip_Manifold()
-    ga_print_off()
+    with GA_Printer():
+        enhance_print()
+        Test_Reciprocal_Frame()
+        Distorted_manifold_with_scalar_function()
+        Simple_manifold_with_scalar_function_derivative()
+        #Plot_Mobius_Strip_Manifold()
     return
 
 if __name__ == "__main__":

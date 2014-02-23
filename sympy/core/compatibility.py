@@ -14,14 +14,18 @@ from sympy.external import import_module
 Python 2 and Python 3 compatible imports
 
 String and Unicode compatible changes:
-    * `unicode()` removed in Python 3, defined as `str()`
-    * `u()` escapes unicode sequences in Python 2 (e.g. u('\u2020'))
-    * `u_decode()` decodes utf-8 fomrmatted unicode strings
+    * `unicode()` removed in Python 3, import `unicode` for Python 2/3
+      compatible function
+    * `unichr()` removed in Python 3, import `unichr` for Python 2/3 compatible
+      function
+    * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
+    * Use `u_decode()` to decode utf-8 formatted unicode strings
     * `string_types` gives str in Python 3, unicode and str in Python 2,
       equivalent to basestring
 
 Integer related changes:
-    * `long()` removed in Python 3, defined as `int()`
+    * `long()` removed in Python 3, import `long` for Python 2/3 compatible
+      function
     * `integer_types` gives int in Python 3, int and long in Python 2
 
 Types related changes:
@@ -41,25 +45,27 @@ Moved modules:
     * `cStringIO()` (same as `StingIO()` in Python 3)
     * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
+Iterator/list changes:
+    * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
+      iterator version of range
+
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
 
 Metaclasses:
     * Use `with_metaclass()`, examples below
-    * Define class `Foo` with metaclass `Meta`, and no parent:
-        class Foo(with_metaclass(Meta)):
-            pass
-    * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
-        class Foo(with_metaclass(Meta, Bar)):
-            pass
+        * Define class `Foo` with metaclass `Meta`, and no parent:
+            class Foo(with_metaclass(Meta)):
+                pass
+        * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
+            class Foo(with_metaclass(Meta, Bar)):
+                pass
 """
 
 import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
-    import collections
-
     class_types = type,
     integer_types = (int,)
     string_types = (str,)
@@ -67,6 +73,7 @@ if PY3:
 
     # String / unicode compatibility
     unicode = str
+    unichr = chr
     def u(x):
         return x
     def u_decode(x):
@@ -80,7 +87,6 @@ if PY3:
     get_function_name = operator.attrgetter("__name__")
 
     import builtins
-    # This is done to make filter importable
     from functools import reduce
     from io import StringIO
     cStringIO = StringIO
@@ -99,6 +105,7 @@ else:
 
     # String / unicode compatibility
     unicode = unicode
+    unichr = unichr
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
     def u_decode(x):
@@ -133,7 +140,40 @@ else:
     xrange = xrange
 
 def with_metaclass(meta, *bases):
-    """Create a base class with a metaclass."""
+    """
+    Create a base class with a metaclass.
+
+    For example, if you have the metaclass
+
+    >>> class Meta(type):
+    ...     pass
+
+    Use this as the metaclass by doing
+
+    >>> from sympy.core.compatibility import with_metaclass
+    >>> class MyClass(with_metaclass(Meta, object)):
+    ...     pass
+
+    This is equivalent to the Python 2::
+
+        class MyClass(object):
+            __metaclass__ = Meta
+
+    or Python 3::
+
+        class MyClass(object, metaclass=Meta):
+            pass
+
+    That is, the first argument is the metaclass, and the remaining arguments
+    are the base classes. Note that if the base class is just ``object``, you
+    may omit it.
+
+    >>> MyClass.__mro__
+    (<class 'MyClass'>, <... 'object'>)
+    >>> type(MyClass)
+    <class 'Meta'>
+
+    """
     class metaclass(meta):
         __call__ = type.__call__
         __init__ = type.__init__
@@ -149,10 +189,19 @@ def with_metaclass(meta, *bases):
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
 # I think putting them here also makes it easier to use them in the core.
 
+class NotIterable:
+    """
+    Use this as mixin when creating a class which is not supposed to return
+    true when iterable() is called on its instances. I.e. avoid infinite loop
+    when calling e.g. list() on the instance
+    """
+    pass
 
-def iterable(i, exclude=(string_types, dict)):
+def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
+    True also indicates that the iterator is finite, i.e. you e.g.
+    call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
@@ -234,35 +283,40 @@ def is_sequence(i, include=None):
             bool(include) and
             isinstance(i, include))
 
-def cmp_to_key(mycmp):
-    """
-    Convert a cmp= function into a key= function
+try:
+    from functools import cmp_to_key
+except ImportError: # <= Python 2.6
+    def cmp_to_key(mycmp):
+        """
+        Convert a cmp= function into a key= function
+        """
+        class K(object):
+            def __init__(self, obj, *args):
+                self.obj = obj
 
-    This code is included in Python 2.7 and 3.2 in functools.
-    """
-    class K(object):
-        def __init__(self, obj, *args):
-            self.obj = obj
+            def __lt__(self, other):
+                return mycmp(self.obj, other.obj) < 0
 
-        def __lt__(self, other):
-            return mycmp(self.obj, other.obj) < 0
+            def __gt__(self, other):
+                return mycmp(self.obj, other.obj) > 0
 
-        def __gt__(self, other):
-            return mycmp(self.obj, other.obj) > 0
+            def __eq__(self, other):
+                return mycmp(self.obj, other.obj) == 0
 
-        def __eq__(self, other):
-            return mycmp(self.obj, other.obj) == 0
+            def __le__(self, other):
+                return mycmp(self.obj, other.obj) <= 0
 
-        def __le__(self, other):
-            return mycmp(self.obj, other.obj) <= 0
+            def __ge__(self, other):
+                return mycmp(self.obj, other.obj) >= 0
 
-        def __ge__(self, other):
-            return mycmp(self.obj, other.obj) >= 0
+            def __ne__(self, other):
+                return mycmp(self.obj, other.obj) != 0
+        return K
 
-        def __ne__(self, other):
-            return mycmp(self.obj, other.obj) != 0
-    return K
-
+try:
+    from itertools import zip_longest
+except ImportError: # <= Python 2.7
+    from itertools import izip_longest as zip_longest
 
 try:
     from itertools import combinations_with_replacement
@@ -503,7 +557,7 @@ def _nodes(e):
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
     elif isinstance(e, dict):
-        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.iteritems())
+        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.items())
     else:
         return 1
 
@@ -661,13 +715,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-
-import sys
-
-if sys.version_info[0] == 2:
-    SYMPY_INTS = (int, long)
-else:
-    SYMPY_INTS = (int,)
+SYMPY_INTS = integer_types
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
@@ -676,11 +724,10 @@ if GROUND_TYPES == 'gmpy':
 import os
 
 try:
-    from subprocess import CalledProcessError
     try:
         from subprocess import check_output
-    except ImportError:
-        from subprocess import check_call
+    except ImportError: # <= Python 2.6
+        from subprocess import CalledProcessError, check_call
         def check_output(*args, **kwargs):
             with open(os.devnull, 'w') as fh:
                 kwargs['stdout'] = fh

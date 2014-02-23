@@ -37,17 +37,12 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
-    from sympy import Wild, log
-
     e = sympify(e)
     z = sympify(z)
     z0 = sympify(z0)
 
     if e == z:
         return z0
-
-    if e.is_Rational:
-        return e
 
     if not e.has(z):
         return e
@@ -59,124 +54,26 @@ def limit(e, z, z0, dir="+"):
     if z0.is_positive:
         e = e.rewrite(factorial, gamma)
 
-    if e.func is tan:
-        # discontinuity at odd multiples of pi/2; 0 at even
-        disc = S.Pi/2
-        sign = 1
-        if dir == '-':
-            sign *= -1
-        i = limit(sign*e.args[0], z, z0)/disc
-        if i.is_integer:
-            if i.is_even:
-                return S.Zero
-            elif i.is_odd:
-                if dir == '+':
-                    return S.NegativeInfinity
-                else:
-                    return S.Infinity
-
-    if e.func is cot:
-        # discontinuity at multiples of pi; 0 at odd pi/2 multiples
-        disc = S.Pi
-        sign = 1
-        if dir == '-':
-            sign *= -1
-        i = limit(sign*e.args[0], z, z0)/disc
-        if i.is_integer:
-            if dir == '-':
-                return S.NegativeInfinity
-            else:
-                return S.Infinity
-        elif (2*i).is_integer:
-            return S.Zero
-
-    if e.is_Pow:
-        b, ex = e.args
-        c = None  # records sign of b if b is +/-z or has a bounded value
-        if b.is_Mul:
-            c, b = b.as_two_terms()
-            if c is S.NegativeOne and b == z:
-                c = '-'
-        elif b == z:
-            c = '+'
-
-        if ex.is_number:
-            if c is None:
-                base = b.subs(z, z0)
-                if base != 0 and (ex.is_bounded or base is not S.One):
-                    return base**ex
-            else:
-                if z0 == 0 and ex < 0:
-                    if dir != c:
-                        # integer
-                        if ex.is_even:
-                            return S.Infinity
-                        elif ex.is_odd:
-                            return S.NegativeInfinity
-                        # rational
-                        elif ex.is_Rational:
-                            return (S.NegativeOne**ex)*S.Infinity
-                        else:
-                            return S.ComplexInfinity
-                    return S.Infinity
-                return z0**ex
-
-    if e.is_Mul or not z0 and e.is_Pow and b.func is log:
-        if e.is_Mul:
-            if abs(z0) is S.Infinity:
-                n, d = e.as_numer_denom()
-                # XXX todo: this should probably be stated in the
-                # negative -- i.e. to exclude expressions that should
-                # not be handled this way but I'm not sure what that
-                # condition is; when ok is True it means that the leading
-                # term approach is going to succeed (hopefully)
-                ok = lambda w: (z in w.free_symbols and
-                     any(a.is_polynomial(z) or
-                     any(z in m.free_symbols and m.is_polynomial(z)
-                     for m in Mul.make_args(a))
-                     for a in Add.make_args(w)))
-                if all(ok(w) for w in (n, d)):
-                    u = C.Dummy(positive=(z0 is S.Infinity))
-                    inve = (n/d).subs(z, 1/u)
-                    return limit(inve.as_leading_term(u), u,
-                        S.Zero, "+" if z0 is S.Infinity else "-")
-
-            # weed out the z-independent terms
-            i, d = e.as_independent(z)
-            if i is not S.One and i.is_bounded:
-                return i*limit(d, z, z0, dir)
-        else:
-            i, d = S.One, e
-        if not z0:
-            # look for log(z)**q or z**p*log(z)**q
-            p, q = Wild("p"), Wild("q")
-            r = d.match(z**p * log(z)**q)
-            if r:
-                p, q = [r.get(w, w) for w in [p, q]]
-                if q and q.is_number and p.is_number:
-                    if q > 0:
-                        if p > 0:
-                            return S.Zero
-                        else:
-                            return -oo*i
-                    else:
-                        if p >= 0:
-                            return S.Zero
-                        else:
-                            return -oo*i
-
-    if e.is_Add:
-        if e.is_polynomial():
-            if not z0.is_unbounded:
-                return Add(*[limit(term, z, z0, dir) for term in e.args])
-        elif e.is_rational_function(z):
-            rval = Add(*[limit(term, z, z0, dir) for term in e.args])
-            if rval != S.NaN:
-                return rval
+    if e.is_Mul:
+        if abs(z0) is S.Infinity:
+            # XXX todo: this should probably be stated in the
+            # negative -- i.e. to exclude expressions that should
+            # not be handled this way but I'm not sure what that
+            # condition is; when ok is True it means that the leading
+            # term approach is going to succeed (hopefully)
+            ok = lambda w: (z in w.free_symbols and
+                 any(a.is_polynomial(z) or
+                 any(z in m.free_symbols and m.is_polynomial(z)
+                 for m in Mul.make_args(a))
+                 for a in Add.make_args(w)))
+            if all(ok(w) for w in e.as_numer_denom()):
+                u = C.Dummy(positive=(z0 is S.Infinity))
+                inve = e.subs(z, 1/u)
+                return limit(inve.as_leading_term(u), u,
+                    S.Zero, "+" if z0 is S.Infinity else "-")
 
     if e.is_Order:
-        args = e.args
-        return C.Order(limit(args[0], z, z0), *args[1:])
+        return C.Order(limit(e.expr, z, z0), *e.args[1:])
 
     try:
         r = gruntz(e, z, z0, dir)
@@ -192,22 +89,25 @@ def heuristics(e, z, z0, dir):
         return limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
 
     rv = None
-    bad = (S.Infinity, S.NegativeInfinity, S.NaN, None)
-    if e.is_Mul:
+    bad = (S.NaN, None)
+
+    if e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
         r = []
         for a in e.args:
-            if not a.is_bounded:
-                r.append(a.limit(z, z0, dir))
-                if r[-1] in bad:
-                    break
+            try:
+                r.append(limit(a, z, z0, dir))
+            except PoleError:
+                break
+            if r[-1] in bad:
+                break
         else:
             if r:
-                rv = Mul(*r)
-    if rv is None and (e.is_Add or e.is_Pow or e.is_Function):
-        rv = e.func(*[limit(a, z, z0, dir) for a in e.args])
+                rv = e.func(*r)
+
     if rv in bad:
         msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
         raise PoleError(msg % (e, z, z0, dir))
+
     return rv
 
 

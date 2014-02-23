@@ -96,6 +96,12 @@ class ReprPrinter(Printer):
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
 
+    def _print_BooleanTrue(self, expr):
+        return "S.true"
+
+    def _print_BooleanFalse(self, expr):
+        return "S.false"
+
     def _print_NaN(self, expr):
         return "nan"
 

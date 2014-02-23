@@ -1,7 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
-from sympy import symbols
-from sympy.logic.boolalg import Or, Equivalent, Implies
+from sympy import symbols, Q
+from sympy.logic.boolalg import Or, Equivalent, Implies, And
 from sympy.logic.inference import is_literal, literal_symbol, \
      pl_true, satisfiable, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -181,3 +181,23 @@ def test_propKB_tolerant():
     kb = PropKB()
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) is False
+
+def test_satisfiable_non_symbols():
+    x, y = symbols('x y')
+    assumptions = Q.zero(x*y)
+    facts = Implies(Q.zero(x*y), Q.zero(x) | Q.zero(y))
+    query = ~Q.zero(x) & ~Q.zero(y)
+    refutations = [
+        {Q.zero(x): True, Q.zero(x*y): True},
+        {Q.zero(y): True, Q.zero(x*y): True},
+        {Q.zero(x): True, Q.zero(y): True, Q.zero(x*y): True},
+        {Q.zero(x): True, Q.zero(y): False, Q.zero(x*y): True},
+        {Q.zero(x): False, Q.zero(y): True, Q.zero(x*y): True}]
+    assert not satisfiable(And(assumptions, facts, query), algorithm='dpll')
+    assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
+    assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
+    assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+
+def test_satisfiable_bool():
+    assert satisfiable(True) == {}
+    assert satisfiable(False) == False

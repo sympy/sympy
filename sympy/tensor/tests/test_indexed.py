@@ -1,4 +1,5 @@
 from sympy.core import symbols, Integer, Symbol, Tuple, oo
+from sympy.core.compatibility import iterable
 from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises
 
@@ -175,3 +176,8 @@ def test_complex_indices():
     A = Indexed('A', i, i + j)
     assert A.rank == 2
     assert A.indices == (i, i + j)
+
+def test_not_interable():
+    i, j = symbols('i j', integer=True)
+    A = Indexed('A', i, i + j)
+    assert not iterable(A)

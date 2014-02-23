@@ -99,10 +99,10 @@ def test_radius_of_convergence():
     assert hyper([-1, 1, 3], [-2], z).radius_of_convergence == 0
     assert hyper((-1, 2, 3, 4), [], z).radius_of_convergence == oo
 
-    assert hyper([1, 1], [3], 1).convergence_statement is True
-    assert hyper([1, 1], [2], 1).convergence_statement is False
-    assert hyper([1, 1], [2], -1).convergence_statement is True
-    assert hyper([1, 1], [1], -1).convergence_statement is False
+    assert hyper([1, 1], [3], 1).convergence_statement == True
+    assert hyper([1, 1], [2], 1).convergence_statement == False
+    assert hyper([1, 1], [2], -1).convergence_statement == True
+    assert hyper([1, 1], [1], -1).convergence_statement == False
 
 
 def test_meijer():

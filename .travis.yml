@@ -1,13 +1,13 @@
 language: python
 env:
   - TEST_DOCTESTS="true"
-  -
+  - SPLIT="1/2"
+  - SPLIT="2/2"
 python:
   - 2.6
   - 2.7
   - 3.2
   - 3.3
-  - "pypy"
 matrix:
   include:
     - python: 2.7
@@ -19,6 +19,17 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
+        - SPLIT="1/3"
+    - python: 2.7
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - SPLIT="2/3"
+    - python: 2.7
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - SPLIT="3/3"
     - python: 3.3
       env:
         - TEST_GMPY="true"
@@ -28,10 +39,58 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
+        - SPLIT="1/3"
+    - python: 3.3
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - SPLIT="2/3"
+    - python: 3.3
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - SPLIT="3/3"
+    - python: "pypy"
+      env:
+        - TEST_DOCTESTS="true"
+    - python: "pypy"
+      env:
+        - SPLIT="1/3"
+    - python: "pypy"
+      env:
+        - SPLIT="2/3"
+    - python: "pypy"
+      env:
+        - SPLIT="3/3"
     - python: 2.7
       env: TEST_SPHINX="true"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
+    - python: 3.3
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 3.3
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
+    - python: 2.7
+      env:
+        - TEST_THEANO="true"
+    - python: 3.3
+      env:
+        - TEST_THEANO="true"
   allow_failures:
     - python: "pypy"
+    - python: 3.3 # Dummy value
+      env:
+        - TEST_SAGE="true"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;
@@ -39,15 +98,29 @@ before_install:
       pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern;
+      sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern librsvg2-bin imagemagick;
       pip install "sphinx==1.1.3";
     fi
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
       pip install "numpy==1.7.1";
-      pip install "matplotlib==1.2.1";
+      pip install --allow-external "matplotlib==1.2.1";
+    fi
+  - if [[ "${TEST_THEANO}" == "true" ]]; then
+      sudo apt-get update;
+      sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran;
+      pip install "numpy==1.7.1";
+      pip install "scipy==0.12.0";
+      pip install --no-deps https://github.com/Theano/Theano/archive/master.zip;
+    fi
+  - if [[ "${TEST_SAGE}" == "true" ]]; then
+      sudo apt-add-repository -y ppa:aims/sagemath;
+      sudo apt-get update;
+      sudo apt-get install sagemath-upstream-binary;
     fi
 install:
-  - python setup.py install
+  - if [[ "${TEST_SAGE}" != "true" ]]; then
+      python setup.py install;
+    fi
 script:
   - bin/test_travis.sh
 notifications:

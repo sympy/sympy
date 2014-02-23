@@ -7,7 +7,7 @@ from sympy import (
     tan, S, log, Function, gamma, sinh,
 )
 
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.pytest import XFAIL, SKIP, slow
 
 from sympy.abc import x, k, c, y, R, b, h, a, m, A, z, t
 
@@ -31,8 +31,8 @@ def run_with_timeout(test, time):
     return r
 
 
+@SKIP("Too slow for @slow")
 @XFAIL
-@slow
 def test_issue_781():
     # integrate_hyperexponential(Poly(t*2*(1 - t0**2)*t0*(x**3 + x**2), t), Poly((1 + t0**2)**2*2*(x**2 + x + 1), t), [Poly(1, x), Poly(1 + t0**2, t0), Poly(t, t)], [x, t0, t], [exp, tan])
     assert not integrate(exp(x)*cos(2*x)*sin(2*x) * (x**3 + x**2)/(2*(x**2 + x + 1)), x).has(Integral)

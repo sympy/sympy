@@ -54,6 +54,7 @@ from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt, Piecewise,
     exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
+from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
@@ -1122,19 +1123,19 @@ def test_Poly__gen_to_level():
 
 
 def test_Poly_degree():
-    assert Poly(0, x).degree() == -1
+    assert Poly(0, x).degree() == -oo
     assert Poly(1, x).degree() == 0
     assert Poly(x, x).degree() == 1
 
-    assert Poly(0, x).degree(gen=0) == -1
+    assert Poly(0, x).degree(gen=0) == -oo
     assert Poly(1, x).degree(gen=0) == 0
     assert Poly(x, x).degree(gen=0) == 1
 
-    assert Poly(0, x).degree(gen=x) == -1
+    assert Poly(0, x).degree(gen=x) == -oo
     assert Poly(1, x).degree(gen=x) == 0
     assert Poly(x, x).degree(gen=x) == 1
 
-    assert Poly(0, x).degree(gen='x') == -1
+    assert Poly(0, x).degree(gen='x') == -oo
     assert Poly(1, x).degree(gen='x') == 0
     assert Poly(x, x).degree(gen='x') == 1
 
@@ -1167,9 +1168,9 @@ def test_Poly_degree():
 
 
 def test_Poly_degree_list():
-    assert Poly(0, x).degree_list() == (-1,)
-    assert Poly(0, x, y).degree_list() == (-1, -1)
-    assert Poly(0, x, y, z).degree_list() == (-1, -1, -1)
+    assert Poly(0, x).degree_list() == (-oo,)
+    assert Poly(0, x, y).degree_list() == (-oo, -oo)
+    assert Poly(0, x, y, z).degree_list() == (-oo, -oo, -oo)
 
     assert Poly(1, x).degree_list() == (0,)
     assert Poly(1, x, y).degree_list() == (0, 0)
@@ -1199,7 +1200,7 @@ def test_Poly_homogenize():
 
 
 def test_Poly_homogeneous_order():
-    assert Poly(0, x, y).homogeneous_order() == -1
+    assert Poly(0, x, y).homogeneous_order() == -oo
     assert Poly(1, x, y).homogeneous_order() == 0
     assert Poly(x, x, y).homogeneous_order() == 1
     assert Poly(x*y, x, y).homogeneous_order() == 2
@@ -1809,6 +1810,19 @@ def test_discriminant():
     raises(ComputationFailed, lambda: discriminant(4))
 
 
+def test_dispersion():
+    # We test only the API here. For more mathematical
+    # tests see the dedicated test file.
+    fp = poly((x + 1)*(x + 2), x)
+    assert sorted(fp.dispersionset()) == [0, 1]
+    assert fp.dispersion() == 1
+
+    fp = poly(x**4 - 3*x**2 + 1, x)
+    gp = fp.shift(-3)
+    assert sorted(fp.dispersionset(gp)) == [2, 3, 4]
+    assert fp.dispersion(gp) == 4
+
+
 def test_gcd_list():
     F = [x**3 - 1, x**2 - 1, x**2 - 3*x + 2]
 
@@ -1958,7 +1972,8 @@ def test_terms_gcd():
     assert terms_gcd(2*x**3*y + 4*x*y**3) == 2*x*y*(x**2 + 2*y**2)
     assert terms_gcd(2*x**3*y/3 + 4*x*y**3/5) == 2*x*y/15*(5*x**2 + 6*y**2)
 
-    assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == 1.0*x*y*(2.0*x**2 + 4.1*y**2)
+    assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == x*y*(2.0*x**2 + 4.1*y**2)
+    assert _aresame(terms_gcd(2.0*x + 3), 2.0*x + 3)
 
     assert terms_gcd((3 + 3*x)*(x + x*y), expand=False) == \
         (3*x + 3)*(x*y + x)
@@ -3078,6 +3093,8 @@ def test_keep_coeff():
     u = Mul(2, x + 1, evaluate=False)
     assert _keep_coeff(S(1), x) == x
     assert _keep_coeff(S(-1), x) == -x
+    assert _keep_coeff(S(1.0), x) == 1.0*x
+    assert _keep_coeff(S(-1.0), x) == -1.0*x
     assert _keep_coeff(S(1), 2*x) == 2*x
     assert _keep_coeff(S(2), x/2) == x
     assert _keep_coeff(S(2), sin(x)) == 2*sin(x)

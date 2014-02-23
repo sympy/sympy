@@ -9,6 +9,7 @@ from .factor_ import divisors, factorint, multiplicity, perfect_power, \
     pollard_pm1, pollard_rho, primefactors, totient, trailing, divisor_count
 from .partitions_ import npartitions
 from .residue_ntheory import is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, n_order
+    legendre_symbol, jacobi_symbol, n_order, sqrt_mod, quadratic_residues, \
+    primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter
 from .multinomial import binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients

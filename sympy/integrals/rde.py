@@ -300,7 +300,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                 except NonElementaryIntegralException:
                     pass
                 else:
-                    assert len(m) == 1
+                    if len(m) != 1:
+                        raise ValueError("Length of m should be 1")
                     n = max(n, m[0])
 
             elif db == da:
@@ -321,7 +322,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         except NonElementaryIntegralException:
                             pass
                         else:
-                            assert len(m) == 1
+                            if len(m) != 1:
+                                raise ValueError("Length of m should be 1")
                             n = max(n, m[0])
 
     elif case == 'exp':
@@ -653,8 +655,10 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             h, b0, c0 = R
             with DecrementLevel(DE):
                 b0, c0 = b0.as_poly(DE.t), c0.as_poly(DE.t)
-                assert b0 is not None  # See above comment
-                assert c0 is not None
+                if b0 is None:  # See above comment
+                    raise ValueError("b0 should be a non-Null value")
+                if c0 is  None:
+                    raise ValueError("c0 should be a non-Null value")
                 y = solve_poly_rde(b0, c0, n, DE).as_poly(DE.t)
             return h + y
 
@@ -663,7 +667,8 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
         # TODO: Is this check necessary, and if so, what should it do if it fails?
         # b comes from the first element returned from spde()
-        assert b.as_poly(DE.t).LC().is_number
+        if not b.as_poly(DE.t).LC().is_number:
+            raise TypeError("Result should be a number")
 
         if parametric:
             raise NotImplementedError("prde_no_cancel_b_equal() is not yet "

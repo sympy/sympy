@@ -11,9 +11,9 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros)
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, iterable
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 from sympy.abc import x, y, z
 
@@ -60,6 +60,50 @@ def test_addition():
     ))
 
     assert a + b == a.add(b) == Matrix([[2, 4], [6, 1]])
+
+
+def test_fancy_index_matrix():
+    for M in (Matrix, SparseMatrix):
+        a = M(3, 3, range(9))
+        assert a == a[:, :]
+        assert a[1, :] == Matrix(1, 3, [3, 4, 5])
+        assert a[:, 1] == Matrix([1, 4, 7])
+        assert a[[0, 1], :] == Matrix([[0, 1, 2], [3, 4, 5]])
+        assert a[[0, 1], 2] == a[[0, 1], [2]]
+        assert a[2, [0, 1]] == a[[2], [0, 1]]
+        assert a[:, [0, 1]] == Matrix([[0, 1], [3, 4], [6, 7]])
+        assert a[0, 0] == 0
+        assert a[0:2, :] == Matrix([[0, 1, 2], [3, 4, 5]])
+        assert a[:, 0:2] == Matrix([[0, 1], [3, 4], [6, 7]])
+        assert a[::2, 1] == a[[0, 2], 1]
+        assert a[1, ::2] == a[1, [0, 2]]
+        a = M(3, 3, range(9))
+        assert a[[0, 2, 1, 2, 1], :] == Matrix([
+            [0, 1, 2],
+            [6, 7, 8],
+            [3, 4, 5],
+            [6, 7, 8],
+            [3, 4, 5]])
+        assert a[:, [0,2,1,2,1]] == Matrix([
+            [0, 2, 1, 2, 1],
+            [3, 5, 4, 5, 4],
+            [6, 8, 7, 8, 7]])
+
+    a = SparseMatrix.zeros(3)
+    a[1, 2] = 2
+    a[0, 1] = 3
+    a[2, 0] = 4
+    assert a.extract([1, 1], [2]) == Matrix([
+    [2],
+    [2]])
+    assert a.extract([1, 0], [2, 2, 2]) == Matrix([
+    [2, 2, 2],
+    [0, 0, 0]])
+    assert a.extract([1, 0, 1, 2], [2, 0, 1, 0]) == Matrix([
+        [2, 0, 0, 0],
+        [0, 0, 3, 0],
+        [2, 0, 0, 0],
+        [0, 4, 0, 4]])
 
 
 def test_multiplication():
@@ -138,6 +182,8 @@ def test_creation():
         Matrix((1, 2))[1:2] = 5
     with raises(IndexError):
         Matrix((1, 2))[3] = 5
+
+    assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -347,7 +393,7 @@ def test_berkowitz_minors():
     assert B.berkowitz_minors() == (1, -3)
 
 
-def test_submatrix():
+def test_slicing():
     m0 = eye(4)
     assert m0[:3, :3] == eye(3)
     assert m0[2:4, 0:2] == zeros(2)
@@ -569,12 +615,23 @@ def test_inverse():
     assert all(type(m.inv(s)) is cls for s in 'CH LDL'.split())
 
 
+def test_matrix_inverse_mod():
+    A = Matrix(2, 1, [1, 0])
+    raises(NonSquareMatrixError, lambda: A.inv_mod(2))
+    A = Matrix(2, 2, [1, 0, 0, 0])
+    raises(ValueError, lambda: A.inv_mod(2))
+    A = Matrix(2, 2, [1, 2, 3, 4])
+    Ai = Matrix(2, 2, [1, 1, 0, 1])
+    assert A.inv_mod(3) == Ai
+    A = Matrix(2, 2, [1, 0, 0, 1])
+    assert A.inv_mod(2) == A
+
+
 def test_util():
     R = Rational
 
     v1 = Matrix(1, 3, [1, 2, 3])
     v2 = Matrix(1, 3, [3, 4, 5])
-    assert v1.cross(v2) == Matrix(1, 3, [-2, 4, -2])
     assert v1.norm() == sqrt(14)
     assert v1.project(v2) == Matrix(1, 3, [R(39)/25, R(52)/25, R(13)/5])
     assert Matrix.zeros(1, 2) == Matrix(1, 2, [0, 0])
@@ -588,7 +645,6 @@ def test_util():
     test = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert test.cofactorMatrix() == \
         Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
-    raises(ShapeError, lambda: Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
 
 def test_jacobian_hessian():
@@ -1926,6 +1982,13 @@ def test_is_zero():
     assert Matrix([[0, 0], [0, 0]]).is_zero
     assert zeros(3, 4).is_zero
     assert not eye(3).is_zero
+    assert Matrix([[x, 0], [0, 0]]).is_zero == None
+    assert SparseMatrix([[x, 0], [0, 0]]).is_zero == None
+    assert ImmutableMatrix([[x, 0], [0, 0]]).is_zero == None
+    assert ImmutableSparseMatrix([[x, 0], [0, 0]]).is_zero == None
+    assert Matrix([[x, 1], [0, 0]]).is_zero == False
+    a = Symbol('a', nonzero=True)
+    assert Matrix([[a, 0], [0, 0]]).is_zero == False
 
 
 def test_rotation_matrices():
@@ -1955,6 +2018,9 @@ def test_rotation_matrices():
 def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
+
+def test_DeferredVector_not_iterable():
+    assert not iterable(DeferredVector('X'))
 
 def test_DeferredVector_Matrix():
     raises(TypeError, lambda: Matrix(DeferredVector("V")))
@@ -2051,7 +2117,6 @@ def test_issue_860():
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
 
 
-@XFAIL
 def test_issue_2865():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
 
@@ -2143,18 +2208,21 @@ def test_issue2221():
 def test_cross():
     a = [1, 2, 3]
     b = [3, 4, 5]
-    ans = Matrix([-2, 4, -2]).T
+    col = Matrix([-2, 4, -2])
+    row = col.T
 
-    def test(M):
+    def test(M, ans):
         assert ans == M
         assert type(M) == cls
     for cls in classes:
         A = cls(a)
         B = cls(b)
-        test(A.cross(B))
-        test(A.T.cross(B))
-        test(A.T.cross(B.T))
-        test(A.cross(B.T))
+        test(A.cross(B), col)
+        test(A.cross(B.T), col)
+        test(A.T.cross(B.T), row)
+        test(A.T.cross(B), row)
+    raises(ShapeError, lambda:
+        Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
 
 def test_hash():
@@ -2210,3 +2278,95 @@ def test_replace_map():
     M = Matrix(2, 2, lambda i, j: F(i+j))
     N = M.replace(F, G, True)
     assert N == K
+
+def test_atoms():
+    from sympy.abc import x
+    m = Matrix([[1, 2], [x, 1 - 1/x]])
+    assert m.atoms() == set([S(1),S(2),S(-1), x])
+    assert m.atoms(Symbol) == set([x])
+
+@slow
+def test_pinv():
+    from sympy.abc import a, b, c, d, e, f
+    # Pseudoinverse of an invertible matrix is the inverse.
+    A1 = Matrix([[a, b], [c, d]])
+    assert simplify(A1.pinv()) == simplify(A1.inv())
+    # Test the four properties of the pseudoinverse for various matrices.
+    As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
+          Matrix([[1, 7, 9], [11, 17, 19]]),
+          Matrix([a, b])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+def test_pinv_solve():
+    # Fully determined system (unique result, identical to other solvers).
+    A = Matrix([[1, 5], [7, 9]])
+    B = Matrix([12, 13])
+    assert A.pinv_solve(B) == A.cholesky_solve(B)
+    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == Matrix([sympify('-43/26'), sympify('71/26')])
+    assert A * A.pinv() * B == B
+    # Fully determined, with two-dimensional B matrix.
+    B = Matrix([[12, 13, 14], [15, 16, 17]])
+    assert A.pinv_solve(B) == A.cholesky_solve(B)
+    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == Matrix([[-33, -37, -41], [69, 75, 81]]) / 26
+    assert A * A.pinv() * B == B
+    # Underdetermined system (infinite results).
+    A = Matrix([[1, 0, 1], [0, 1, 1]])
+    B = Matrix([5, 7])
+    solution = A.pinv_solve(B)
+    w = {}
+    for s in solution.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert solution == Matrix([[w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 1],
+                               [w['w0_0']/3 + w['w1_0']/3 - w['w2_0']/3 + 3],
+                               [-w['w0_0']/3 - w['w1_0']/3 + w['w2_0']/3 + 4]])
+    assert A * A.pinv() * B == B
+    # Overdetermined system (least squares results).
+    A = Matrix([[1, 0], [0, 0], [0, 1]])
+    B = Matrix([3, 2, 1])
+    assert A.pinv_solve(B) == Matrix([3, 1])
+    # Proof the solution is not exact.
+    assert A * A.pinv() * B != B
+
+@XFAIL
+def test_pinv_rank_deficient():
+    # Test the four properties of the pseudoinverse for various matrices.
+    As = [Matrix([[1, 1, 1], [2, 2, 2]]),
+          Matrix([[1, 0], [0, 0]])]
+    for A in As:
+        A_pinv = A.pinv()
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+    # Test solving with rank-deficient matrices.
+    A = Matrix([[1, 0], [0, 0]])
+    # Exact, non-unique solution.
+    B = Matrix([3, 0])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B == B
+    # Least squares, non-unique solution.
+    B = Matrix([3, 1])
+    solution = A.pinv_solve(B)
+    w1 = solution.atoms(Symbol).pop()
+    assert w1.name == 'w1_0'
+    assert solution == Matrix([3, w1])
+    assert A * A.pinv() * B != B
+
+def test_issue4102():
+    assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
+    assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])

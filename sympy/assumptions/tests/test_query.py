@@ -120,6 +120,7 @@ def test_float_1():
 def test_zero_0():
     z = Integer(0)
     assert ask(Q.nonzero(z)) is False
+    assert ask(Q.zero(z)) is True
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is True
     assert ask(Q.rational(z)) is True
@@ -141,6 +142,7 @@ def test_zero_0():
 def test_negativeone():
     z = Integer(-1)
     assert ask(Q.nonzero(z)) is True
+    assert ask(Q.zero(z)) is False
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is True
     assert ask(Q.rational(z)) is True
@@ -218,6 +220,7 @@ def test_nan():
     assert ask(Q.imaginary(nan)) is False
     assert ask(Q.positive(nan)) is False
     assert ask(Q.nonzero(nan)) is True
+    assert ask(Q.zero(nan)) is False
     assert ask(Q.even(nan)) is False
     assert ask(Q.odd(nan)) is False
     assert ask(Q.bounded(nan)) is False
@@ -1223,6 +1226,13 @@ def test_even():
     assert ask(Q.even(k**x), Q.even(k)) is None
     assert ask(Q.even(n**x), Q.odd(n)) is None
 
+    assert ask(Q.even(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.even(x*x), Q.integer(x)) is None
+    assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.odd(y)) is True
+    assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.even(y)) is None
+    assert ask(Q.even(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.odd(z)) is True
+    assert ask(Q.even(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.even(z)) is None
+
 
 def test_extended_real():
     assert ask(Q.extended_real(x), Q.positive(x)) is True
@@ -1540,6 +1550,38 @@ def test_nonzero():
     assert ask(Q.nonzero(Abs(x))) is None
     assert ask(Q.nonzero(Abs(x)), Q.nonzero(x)) is True
 
+def test_zero():
+    assert ask(Q.zero(x)) is None
+    assert ask(Q.zero(x), Q.real(x)) is None
+    assert ask(Q.zero(x), Q.positive(x)) is False
+    assert ask(Q.zero(x), Q.negative(x)) is False
+    assert ask(Q.zero(x), Q.negative(x) | Q.positive(x)) is False
+
+    assert ask(Q.zero(x), Q.nonnegative(x) & Q.nonpositive(x)) is True
+
+    assert ask(Q.zero(x + y)) is None
+    assert ask(Q.zero(x + y), Q.positive(x) & Q.positive(y)) is False
+    assert ask(Q.zero(x + y), Q.positive(x) & Q.negative(y)) is None
+    assert ask(Q.zero(x + y), Q.negative(x) & Q.negative(y)) is False
+
+    assert ask(Q.zero(2*x)) is None
+    assert ask(Q.zero(2*x), Q.positive(x)) is False
+    assert ask(Q.zero(2*x), Q.negative(x)) is False
+    assert ask(Q.zero(x*y), Q.nonzero(x)) is None
+
+    assert ask(Q.zero(Abs(x))) is None
+    assert ask(Q.zero(Abs(x)), Q.zero(x)) is True
+
+    assert ask(Q.integer(x), Q.zero(x)) is True
+    assert ask(Q.even(x), Q.zero(x)) is True
+    assert ask(Q.odd(x), Q.zero(x)) is False
+    assert ask(Q.zero(x), Q.even(x)) is None
+    assert ask(Q.zero(x), Q.odd(x)) is False
+
+@XFAIL
+def test_zero_doesnt_work():
+    # This requires moving logic from the handler to the deduction system
+    assert ask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
 
 def test_odd():
     assert ask(Q.odd(x)) is None
@@ -1609,6 +1651,13 @@ def test_odd():
     assert ask(Q.odd(k**x), Q.even(k)) is None
     assert ask(Q.odd(n**x), Q.odd(n)) is None
 
+    assert ask(Q.odd(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.odd(x*x), Q.integer(x)) is None
+    assert ask(Q.odd(x*(x + y)), Q.integer(x) & Q.odd(y)) is False
+    assert ask(Q.odd(x*(x + y)), Q.integer(x) & Q.even(y)) is None
+    assert ask(Q.odd(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.odd(z)) is False
+    assert ask(Q.odd(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.even(z)) is None
+
 
 def test_prime():
     assert ask(Q.prime(x), Q.prime(x)) is True
@@ -1663,6 +1712,23 @@ def test_positive():
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
 
+def test_nonpositive():
+    assert ask(Q.nonpositive(-1))
+    assert ask(Q.nonpositive(0))
+    assert ask(Q.nonpositive(1)) is False
+    assert ask(~Q.positive(x), Q.nonpositive(x))
+    assert ask(Q.nonpositive(x), Q.positive(x)) is False
+    assert ask(Q.nonpositive(sqrt(-1))) is False
+    assert ask(Q.nonpositive(x), Q.imaginary(x)) is False
+
+def test_nonnegative():
+    assert ask(Q.nonnegative(-1)) is False
+    assert ask(Q.nonnegative(0))
+    assert ask(Q.nonnegative(1))
+    assert ask(~Q.negative(x), Q.nonnegative(x))
+    assert ask(Q.nonnegative(x), Q.negative(x)) is False
+    assert ask(Q.nonnegative(sqrt(-1))) is False
+    assert ask(Q.nonnegative(x), Q.imaginary(x)) is False
 
 def test_real():
     assert ask(Q.real(x)) is None
@@ -1796,6 +1862,7 @@ def test_composite_ask():
 
 def test_composite_proposition():
     assert ask(True) is True
+    assert ask(False) is False
     assert ask(~Q.negative(x), Q.positive(x)) is True
     assert ask(~Q.real(x), Q.commutative(x)) is None
     assert ask(Q.negative(x) & Q.integer(x), Q.positive(x)) is False
@@ -1812,9 +1879,11 @@ def test_composite_proposition():
     assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
 
 
-def test_composite_assomption():
+def test_composite_assumptions():
+    assert ask(Q.real(x), Q.real(x) & Q.real(y)) is True
     assert ask(Q.positive(x), Q.positive(x) | Q.positive(y)) is None
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
+    assert ask(Q.real(x), ~(Q.real(x) >> Q.real(y))) is True
 
 
 def test_incompatible_resolutors():

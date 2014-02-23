@@ -72,6 +72,8 @@ class Symbol(AtomicExpr, Boolean):
             raise ValueError(
                 '''Symbol commutativity must be True or False.''')
         assumptions['commutative'] = is_commutative
+        for key in assumptions.keys():
+            assumptions[key] = bool(assumptions[key])
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
@@ -182,28 +184,71 @@ class Dummy(Symbol):
 
 class Wild(Symbol):
     """
-    A Wild symbol matches anything.
+    A Wild symbol matches anything, or anything
+    without whatever is explicitly excluded.
 
     Examples
     ========
 
     >>> from sympy import Wild, WildFunction, cos, pi
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y, z
     >>> a = Wild('a')
-    >>> b = Wild('b')
-    >>> b.match(a)
-    {a_: b_}
     >>> x.match(a)
     {a_: x}
     >>> pi.match(a)
     {a_: pi}
-    >>> (x**2).match(a)
-    {a_: x**2}
+    >>> (3*x**2).match(a*x)
+    {a_: 3*x}
     >>> cos(x).match(a)
     {a_: cos(x)}
+    >>> b = Wild('b', exclude=[x])
+    >>> (3*x**2).match(b*x)
+    >>> b.match(a)
+    {a_: b_}
     >>> A = WildFunction('A')
     >>> A.match(a)
     {a_: A_}
+
+    Tips
+    ====
+
+    When using Wild, be sure to use the exclude
+    keyword to make the pattern more precise.
+    Without the exclude pattern, you may get matches
+    that are technically correct, but not what you
+    wanted. For example, using the above without
+    exclude:
+
+    >>> from sympy import symbols
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> (2 + 3*y).match(a*x + b*y)
+    {a_: 2/x, b_: 3}
+
+    This is technically correct, because
+    (2/x)*x + 3*y == 2 + 3*y, but you probably
+    wanted it to not match at all. The issue is that
+    you really didn't want a and b to include x and y,
+    and the exclude parameter lets you specify exactly
+    this.  With the exclude parameter, the pattern will
+    not match.
+
+    >>> a = Wild('a', exclude=[x, y])
+    >>> b = Wild('b', exclude=[x, y])
+    >>> (2 + 3*y).match(a*x + b*y)
+
+    Exclude also helps remove ambiguity from matches.
+
+    >>> E = 2*x**3*y*z
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> E.match(a*b)
+    {a_: 2*y*z, b_: x**3}
+    >>> a = Wild('a', exclude=[x, y])
+    >>> E.match(a*b)
+    {a_: z, b_: 2*x**3*y}
+    >>> a = Wild('a', exclude=[x, y, z])
+    >>> E.match(a*b)
+    {a_: 2, b_: x**3*y*z}
+
     """
 
     __slots__ = ['exclude', 'properties']
@@ -366,16 +411,6 @@ def symbols(names, **args):
 
     """
     result = []
-    if 'each_char' in args:
-        if args['each_char']:
-            value = "Tip: ' '.join(s) will transform a string s = 'xyz' to 'x y z'."
-        else:
-            value = ""
-        SymPyDeprecationWarning(
-            feature="each_char in the options to symbols() and var()",
-            useinstead="spaces or commas between symbol names",
-            issue=1919, deprecated_since_version="0.7.0", value=value
-        ).warn()
 
     if isinstance(names, string_types):
         marker = 0
@@ -409,9 +444,6 @@ def symbols(names, **args):
         # split on spaces
         for i in range(len(names) - 1, -1, -1):
             names[i: i + 1] = names[i].split()
-
-        if args.pop('each_char', False) and not as_seq and len(names) == 1:
-            return symbols(tuple(names[0]), **args)
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)

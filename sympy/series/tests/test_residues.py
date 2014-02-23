@@ -64,3 +64,11 @@ def test_NotImplemented():
 def test_bug():
     assert residue(2**(z)*(s + z)*(1 - s - z)/z**2, z, 0) == \
         1 + s*log(2) - s**2*log(2) - 2*s
+
+
+def test_issue_2555():
+    assert residue(1/(x**2 + a**2)**2, x, a*I) == -I/(4*a**3)
+
+
+def test_issue_3400():
+    assert residue(1/(exp(z) - 1), z, 0) == 1

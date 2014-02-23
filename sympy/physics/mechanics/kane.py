@@ -5,12 +5,11 @@ __all__ = ['KanesMethod']
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.core.compatibility import reduce
 from sympy.utilities import default_sort_key
-from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
+from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
+     Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
-from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import (inertia_of_point_mass,
-                                               partial_velocity)
+from sympy.physics.mechanics.functions import inertia_of_point_mass
 
 class KanesMethod(object):
     """Kane's method object.
@@ -487,44 +486,35 @@ class KanesMethod(object):
         for i, v in enumerate(bl):
             if isinstance(v, RigidBody):
                 M = v.mass.subs(uaz).doit()
+                vel = v.masscenter.vel(N).subs(uaz).doit()
+                acc = v.masscenter.acc(N).subs(udotzero).subs(uaz).doit()
+                inertial_force = (M.diff(t) * vel + M * acc)
+                omega = v.frame.ang_vel_in(N).subs(uaz).doit()
                 I = v.central_inertia.subs(uaz).doit()
+                inertial_torque = ((I.dt(v.frame) & omega).subs(uaz).doit() +
+                    (I & v.frame.ang_acc_in(N)).subs(udotzero).subs(uaz).doit() +
+                    (omega ^ (I & omega)).subs(uaz).doit())
                 for j in range(o):
+                    tmp_vel = partials[i][0][j].subs(uaz).doit()
+                    tmp_ang = (I & partials[i][1][j].subs(uaz).doit())
                     for k in range(o):
                         # translational
-                        MM[j, k] += M * (partials[i][0][j].subs(uaz).doit() &
-                                         partials[i][0][k])
+                        MM[j, k] += M * (tmp_vel & partials[i][0][k])
                         # rotational
-                        temp = (I & partials[i][1][j].subs(uaz).doit())
-                        MM[j, k] += (temp &
-                                     partials[i][1][k])
-                    # translational components
-                    nonMM[j] += ( (M.diff(t) *
-                                   v.masscenter.vel(N)).subs(uaz).doit() &
-                                 partials[i][0][j])
-                    nonMM[j] += (M *
-                            v.masscenter.acc(N).subs(udotzero).subs(uaz).doit()
-                            & partials[i][0][j])
-                    # rotational components
-                    omega = v.frame.ang_vel_in(N).subs(uaz).doit()
-                    nonMM[j] += ((I.dt(v.frame) & omega).subs(uaz).doit() &
-                                 partials[i][1][j])
-                    nonMM[j] += ((I &
-                        v.frame.ang_acc_in(N)).subs(udotzero).subs(uaz).doit()
-                        & partials[i][1][j])
-                    nonMM[j] += ((omega ^ (I & omega)).subs(uaz).doit() &
-                                 partials[i][1][j])
+                        MM[j, k] += (tmp_ang & partials[i][1][k])
+                    nonMM[j] += inertial_force & partials[i][0][j]
+                    nonMM[j] += inertial_torque & partials[i][1][j]
 
             if isinstance(v, Particle):
                 M = v.mass.subs(uaz).doit()
+                vel = v.point.vel(N).subs(uaz).doit()
+                acc = v.point.acc(N).subs(udotzero).subs(uaz).doit()
+                inertial_force = (M.diff(t) * vel + M * acc)
                 for j in range(o):
+                    temp = partials[i][0][j].subs(uaz).doit()
                     for k in range(o):
-                        MM[j, k] += M * (partials[i][0][j].subs(uaz).doit() &
-                                         partials[i][0][k])
-                    nonMM[j] += M.diff(t) * (v.point.vel(N).subs(uaz).doit() &
-                                             partials[i][0][j])
-                    nonMM[j] += (M *
-                            v.point.acc(N).subs(udotzero).subs(uaz).doit() &
-                            partials[i][0][j])
+                        MM[j, k] += M * (temp & partials[i][0][k])
+                    nonMM[j] += inertial_force & partials[i][0][j]
         # Negate FRSTAR since Kane defines the inertia forces/torques
         # to be negative and we didn't do so above.
         MM = MM.subs(qdots).subs(uaz).doit()

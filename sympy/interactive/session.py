@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -288,7 +289,9 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
         app.initialize(argv)
 
         if auto_symbols:
-            enable_automatic_symbols(app)
+            readline = import_module("readline")
+            if readline:
+                enable_automatic_symbols(app)
         if auto_int_to_Integer:
             enable_automatic_int_sympification(app)
 
@@ -468,8 +471,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if not in_ipython:
             mainloop = ip.mainloop
 
-    if auto_symbols and (not ipython or IPython.__version__ < '0.11'):
-        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
+    readline = import_module("readline")
+    if auto_symbols and (not ipython or IPython.__version__ < '0.11' or not readline):
+        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
     if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 

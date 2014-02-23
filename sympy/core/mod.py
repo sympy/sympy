@@ -21,7 +21,6 @@ class Mod(Function):
     1
 
     """
-    nargs = 2
 
     @classmethod
     def eval(cls, p, q):
@@ -57,10 +56,10 @@ class Mod(Function):
 
             # by differencec
             d = p - q
-            if (d < 0) is True:
-                if (q < 0) is True:
+            if d.is_negative:
+                if q.is_negative:
                     return d
-                elif (q > 0) is True:
+                elif q.is_positive:
                     return p
 
         rv = doit(p, q)

@@ -13,9 +13,8 @@ from __future__ import print_function, division
 from collections import defaultdict
 from heapq import heappush, heappop
 
-from sympy.core import Symbol
-from sympy import Predicate
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr
+from sympy import default_sort_key
+from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
 
 
 def dpll_satisfiable(expr):
@@ -26,7 +25,6 @@ def dpll_satisfiable(expr):
     Examples
     ========
 
-    >>> from sympy import symbols
     >>> from sympy.abc import A, B
     >>> from sympy.logic.algorithms.dpll2 import dpll_satisfiable
     >>> dpll_satisfiable(A & ~B)
@@ -35,7 +33,7 @@ def dpll_satisfiable(expr):
     False
 
     """
-    symbols = list(expr.atoms(Symbol, Predicate))
+    symbols = sorted(_find_predicates(expr), key=default_sort_key)
     symbols_int_repr = range(1, len(symbols) + 1)
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)

@@ -3,7 +3,7 @@ from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Determinant,
-    det, ZeroMatrix
+    det, ZeroMatrix, Transpose
 )
 from sympy.utilities.pytest import raises
 
@@ -24,3 +24,8 @@ def test_det():
     raises(TypeError, lambda: Determinant(S.One))
 
     assert Determinant(A).arg is A
+
+def test_eval_determinant():
+    assert det(Identity(n)) == 1
+    assert det(ZeroMatrix(n, n)) == 0
+    assert det(Transpose(A)) == det(A)

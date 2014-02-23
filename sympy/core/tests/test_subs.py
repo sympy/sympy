@@ -1,6 +1,8 @@
+from __future__ import division
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul)
+        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
+        factor, nsimplify)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
@@ -51,8 +53,8 @@ def test_powers():
     assert (x**Rational(1, 3)).subs(x, -27) == 3*(-1)**Rational(1, 3)
     assert ((-x)**Rational(1, 3)).subs(x, 27) == 3*(-1)**Rational(1, 3)
     n = Symbol('n', negative=True)
-    assert (x**n).subs(x, 0) is S.Infinity
-    assert exp(-1).subs(S.Exp1, 0) is S.Infinity
+    assert (x**n).subs(x, 0) is S.ComplexInfinity
+    assert exp(-1).subs(S.Exp1, 0) is S.ComplexInfinity
     assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
 
 
@@ -389,8 +391,8 @@ def test_subs_issue910():
 
 
 def test_functions_subs():
-    x, y = map(Symbol, 'xy')
-    f, g = map(Function, 'fg')
+    x, y = symbols('x y')
+    f, g = symbols('f g', cls=Function)
     l = Lambda((x, y), sin(x) + y)
     assert (g(y, x) + cos(x)).subs(g, l) == sin(y) + x + cos(x)
     assert (f(x)**2).subs(f, sin) == sin(x)**2
@@ -412,6 +414,25 @@ def test_derivative_subs():
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)
 
+def test_derivative_subs2():
+    x, y, z = symbols('x y z')
+    f, g = symbols('f g', cls=Function)
+    assert Derivative(f, x, y).subs(Derivative(f, x, y), g) == g
+    assert Derivative(f, y, x).subs(Derivative(f, x, y), g) == g
+    assert Derivative(f, x, y).subs(Derivative(f, x), g) == Derivative(g, y)
+    assert Derivative(f, x, y).subs(Derivative(f, y), g) == Derivative(g, x)
+    assert (Derivative(f(x, y, z), x, y, z).subs(
+                Derivative(f(x, y, z), x, z), g) == Derivative(g, y))
+    assert (Derivative(f(x, y, z), x, y, z).subs(
+                Derivative(f(x, y, z), z, y), g) == Derivative(g, x))
+    assert (Derivative(f(x, y, z), x, y, z).subs(
+                Derivative(f(x, y, z), z, y, x), g) == g)
+
+def test_derivative_subs3():
+    x = Symbol('x')
+    dex = Derivative(exp(x), x)
+    assert Derivative(dex, x).subs(dex, exp(x)) == dex
+    assert dex.subs(exp(x), dex) == Derivative(exp(x), x, x)
 
 def test_issue2185():
     A, B = symbols('A B', commutative=False)
@@ -549,7 +570,7 @@ def test_issue_3460():
     e = -log(-12*sqrt(2) + 17)/24 - log(-2*sqrt(2) + 3)/12 + sqrt(2)/3
     # XXX modify cse so x1 is eliminated and x0 = -sqrt(2)?
     assert cse(e) == (
-        [(x0, sqrt(2)), (x1, -x0)], [x0/3 - log(2*x1 + 3)/12 - log(12*x1 + 17)/24])
+        [(x0, sqrt(2))], [x0/3 - log(-12*x0 + 17)/24 - log(-2*x0 + 3)/12])
 
 
 def test_issue_2162():
@@ -579,3 +600,18 @@ def test_mul2():
     2) remove the special handling in Mul.flatten
     """
     assert (2*(x + 1)).is_Mul
+
+
+def test_noncommutative_subs():
+    x,y = symbols('x,y', commutative=False)
+    assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)
+
+
+def test_gh_issue_2877():
+    f = Float(2.0)
+    assert (x + f).subs({f: 2}) == x + 2
+
+    def r(a,b,c):
+        return factor(a*x**2 + b*x + c)
+    e = r(5/6, 10, 5)
+    assert nsimplify(e) == 5*x**2/6 + 10*x + 5

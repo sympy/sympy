@@ -9,6 +9,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
+from sympy.core.compatibility import as_int
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
@@ -66,6 +67,15 @@ class Tuple(Basic):
             return Tuple(*(other + self.args))
         else:
             return NotImplemented
+
+    def __mul__(self, other):
+        try:
+            n = as_int(other)
+        except ValueError:
+            raise TypeError("Can't multiply sequence by non-integer of type '%s'" % type(other))
+        return self.func(*(self.args*n))
+
+    __rmul__ = __mul__
 
     def __eq__(self, other):
         if isinstance(other, Basic):

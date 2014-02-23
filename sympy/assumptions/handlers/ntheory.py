@@ -76,7 +76,6 @@ class AskPrimeHandler(CommonHandler):
 
 
 class AskCompositeHandler(CommonHandler):
-
     @staticmethod
     def Basic(expr, assumptions):
         _positive = ask(Q.positive(expr), assumptions)
@@ -94,7 +93,6 @@ class AskCompositeHandler(CommonHandler):
 
 
 class AskEvenHandler(CommonHandler):
-
     @staticmethod
     def _number(expr, assumptions):
         # helper method
@@ -114,14 +112,17 @@ class AskEvenHandler(CommonHandler):
     @staticmethod
     def Mul(expr, assumptions):
         """
-        Even * Integer -> Even
-        Even * Odd     -> Even
-        Integer * Odd  -> ?
-        Odd * Odd      -> Odd
+        Even * Integer    -> Even
+        Even * Odd        -> Even
+        Integer * Odd     -> ?
+        Odd * Odd         -> Odd
+        Even * Even       -> Even
+        Integer * Integer -> Even if Integer + Integer = Odd
+                          -> ? otherwise
         """
         if expr.is_number:
             return AskEvenHandler._number(expr, assumptions)
-        even, odd, irrational = False, 0, False
+        even, odd, irrational, acc = False, 0, False, 1
         for arg in expr.args:
             # check for all integers and at least one even
             if ask(Q.integer(arg), assumptions):
@@ -129,6 +130,9 @@ class AskEvenHandler(CommonHandler):
                     even = True
                 elif ask(Q.odd(arg), assumptions):
                     odd += 1
+                elif not even and acc != 1:
+                    if ask(Q.odd(acc + arg), assumptions):
+                        even = True
             elif ask(Q.irrational(arg), assumptions):
                 # one irrational makes the result False
                 # two makes it undefined
@@ -137,6 +141,7 @@ class AskEvenHandler(CommonHandler):
                 irrational = True
             else:
                 break
+            acc = arg
         else:
             if irrational:
                 return False

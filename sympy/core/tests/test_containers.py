@@ -1,4 +1,4 @@
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
+from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import is_sequence, iterable, u
@@ -88,6 +88,16 @@ def test_Tuple_index():
     raises(ValueError, lambda: Tuple(0, 1, 2, 3, 4).index(4, 1, 4))
 
 
+def test_Tuple_mul():
+    assert Tuple(1, 2, 3)*2 == Tuple(1, 2, 3, 1, 2, 3)
+    assert 2*Tuple(1, 2, 3) == Tuple(1, 2, 3, 1, 2, 3)
+    assert Tuple(1, 2, 3)*Integer(2) == Tuple(1, 2, 3, 1, 2, 3)
+    assert Integer(2)*Tuple(1, 2, 3) == Tuple(1, 2, 3, 1, 2, 3)
+
+    raises(TypeError, lambda: Tuple(1, 2, 3)*S.Half)
+    raises(TypeError, lambda: S.Half*Tuple(1, 2, 3))
+
+
 def test_tuple_wrapper():
 
     @tuple_wrapper
@@ -147,19 +157,7 @@ def test_Dict():
 
 def test_issue_2689():
     args = [(1, 2), (2, 1)]
-    for o in [Dict, Tuple]:
-        # __eq__ and arg handling
-        if o != Tuple:
-            assert o(*args) == o(*reversed(args))
-        pair = [o(*args), o(*reversed(args))]
-        assert sorted(pair) == sorted(reversed(pair))
-        assert set(o(*args))  # doesn't fail
-
-
-@XFAIL
-def test_issue_2689b():
-    args = [(1, 2), (2, 1)]
-    for o in [FiniteSet]:
+    for o in [Dict, Tuple, FiniteSet]:
         # __eq__ and arg handling
         if o != Tuple:
             assert o(*args) == o(*reversed(args))

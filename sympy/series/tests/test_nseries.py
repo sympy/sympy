@@ -238,12 +238,8 @@ def test_expbug4():
     assert exp(
         log(sin(2*x)/x)*(1 + x)).series(x, 0, 2) == 2 + 2*x*log(2) + O(x**2)
 
-
-@XFAIL
-def test_expbug4_failing():
-    x = Symbol("x", real=True)
-    assert exp(log(2) + O(x)).nseries(x, 0, 2) == 2 + O(x**2, x)
-    assert ((2 + O(x))**(1 + x)).nseries(x, 0, 2) == 2 + O(x**2, x)
+    assert exp(log(2) + O(x)).nseries(x, 0, 2) == 2 + O(x)
+    assert ((2 + O(x))**(1 + x)).nseries(x, 0, 2) == 2 + O(x)
 
 
 def test_logbug4():
@@ -253,10 +249,7 @@ def test_logbug4():
 def test_expbug5():
     assert exp(log(1 + x)/x).nseries(x, n=3) == exp(1) + -exp(1)*x/2 + O(x**2)
 
-
-@XFAIL
-def test_expbug5_failing():
-    assert exp(O(x)).nseries(x, 0, 2) == 1 + O(x**2, x)
+    assert exp(O(x)).nseries(x, 0, 2) == 1 + O(x)
 
 
 def test_sinsinbug():
@@ -505,3 +498,22 @@ def test_issue2084():
     assert (1 + 1/x).series() == 1 + 1/x
     assert Derivative(exp(x).series(), x).doit() == \
         1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)
+
+
+def test_issue_2555():
+    a = Symbol('a')
+    assert (1/(x**2+a**2)**2).nseries(x, x0=I*a, n=0) == \
+        -I/(4*a**3*x) - 1/(4*a**2*x**2) + O(1, x)
+    assert (1/(x**2+a**2)**2).nseries(x, x0=I*a, n=1) == \
+        3/(16*a**4) - I/(4*a**3*x) - 1/(4*a**2*x**2) + O(x)
+
+
+def test_issue_2826():
+    sx = sqrt(x + z).series(z, 0, 1)
+    sxy = sqrt(x + y + z).series(z, 0, 1)
+    s1, s2 = sx.subs(x, x + y), sxy
+    assert (s1 - s2).expand().removeO().simplify() == 0
+
+    sx = sqrt(x + z).series(z, 0, 1)
+    sxy = sqrt(x + y + z).series(z, 0, 1)
+    assert sxy.subs({x:1, y:2}) == sx.subs(x, 3)

@@ -93,14 +93,18 @@ def test_Factors():
     n, d = x**(2 + y), x**2
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors(x**y), Factors())
+    assert f.gcd(d) == Factors()
     d = x**y
     assert f.div(d) == f.normal(d) == (Factors(x**2), Factors())
+    assert f.gcd(d) == Factors(d)
     n = d = 2**x
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors(), Factors())
+    assert f.gcd(d) == Factors(d)
     n, d = 2**x, 2**y
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors({S(2): x}), Factors({S(2): y}))
+    assert f.gcd(d) == Factors()
 
     # extraction of constant only
     n = x**(x + 3)

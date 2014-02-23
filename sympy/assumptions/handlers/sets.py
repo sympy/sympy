@@ -354,7 +354,7 @@ class AskComplexHandler(CommonHandler):
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
-    Mul = Pow = Add
+    Mul, Pow = [Add]*2
 
     Number, sin, cos, exp, re, im, NumberSymbol, Abs, ImaginaryUnit = \
         [staticmethod(CommonHandler.AlwaysTrue)]*9 # they are all complex functions or expressions

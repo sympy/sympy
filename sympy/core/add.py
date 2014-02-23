@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.core.core import C
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, is_sequence
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
@@ -181,6 +181,9 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
+                if terms[s] is S.NaN:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
             else:
                 terms[s] = c
 
@@ -626,7 +629,7 @@ class Add(Expr, AssocOp):
             return self._new_rawargs(*args)
 
     @cacheit
-    def extract_leading_order(self, *symbols):
+    def extract_leading_order(self, symbols, point=None):
         """
         Returns the leading term and it's order.
 
@@ -643,7 +646,10 @@ class Add(Expr, AssocOp):
 
         """
         lst = []
-        seq = [(f, C.Order(f, *symbols)) for f in self.args]
+        symbols = list(symbols if is_sequence(symbols) else [symbols])
+        if not point:
+            point = [0]*len(symbols)
+        seq = [(f, C.Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
                 if o.contains(of) and o != of:
@@ -669,6 +675,10 @@ class Add(Expr, AssocOp):
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
         (7, 9)
+        >>> ((1 + I)/(1 - I)).as_real_imag()
+        (0, 1)
+        >>> ((1 + 2*I)*(1 + 3*I)).as_real_imag()
+        (-5, 5)
         """
         sargs, terms = self.args, []
         re_part, im_part = [], []
@@ -688,26 +698,26 @@ class Add(Expr, AssocOp):
             return self.as_leading_term(x)
 
         unbounded = [t for t in self.args if t.is_unbounded]
-        if unbounded:
-            return self.func._from_args(unbounded)
 
         self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
         if not self:
             # simple leading term analysis gave us 0 but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
+        elif self is S.NaN:
+            return old.func._from_args(unbounded)
         elif not self.is_Add:
             return self
         else:
             plain = self.func(*[s for s, _ in self.extract_leading_order(x)])
             rv = factor_terms(plain, fraction=False)
-            rv_fraction = factor_terms(rv, fraction=True)
+            rv_simplify = rv.simplify()
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
-            if x not in rv_fraction.free_symbols:
-                if rv_fraction.is_zero and plain.is_zero is not True:
+            if x not in rv_simplify.free_symbols:
+                if rv_simplify.is_zero and plain.is_zero is not True:
                     return (self - plain)._eval_as_leading_term(x)
-                return rv_fraction
+                return rv_simplify
             return rv
 
     def _eval_adjoint(self):

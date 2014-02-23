@@ -125,7 +125,7 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
+def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -179,6 +179,11 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # or partial differential equation. Accordingly corresponding
     # changes are made in the function.
     type = kwargs.get('type', None)
+    xi = kwargs.get('xi')
+    eta = kwargs.get('eta')
+    x0 = kwargs.get('x0', 0)
+    terms = kwargs.get('n')
+
     if type == 'ode':
         from sympy.solvers.ode import classify_ode, allhints
         classifier = classify_ode
@@ -195,7 +200,8 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # being called more than it needs to be by passing its results through
     # recursive calls.
     if kwargs.get('classify', True):
-        hints = classifier(eq, func, dict=True, prep=prep)
+        hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
+        n=terms, x0=x0, prep=prep)
 
     else:
         # Here is what all this means:
@@ -227,9 +233,9 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
         else:
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
-        return _desolve(eq, func, hint=hints['default'], simplify=simplify,
-                      prep=prep, classify=False, order=hints['order'],
-                      match=hints[hints['default']], type=type)
+        return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
+                      prep=prep, x0=x0, classify=False, order=hints['order'],
+                      match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         failedhints = {}
@@ -238,12 +244,14 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
             for i in hints:
                 if i.endswith('_Integral'):
                     gethints.remove(i[:-len('_Integral')])
-            # special case
-            if "1st_homogeneous_coeff_best" in gethints:
-                gethints.remove("1st_homogeneous_coeff_best")
+            # special cases
+            for k in ["1st_homogeneous_coeff_best", "1st_power_series",
+                "lie_group", "2nd_power_series_ordinary", "2nd_power_series_regular"]:
+                if k in gethints:
+                    gethints.remove(k)
         for i in gethints:
-            sol = _desolve(eq, func, hint=i, simplify=simplify, prep=prep,
-                classify=False, order=hints['order'], match=hints[i], type=type)
+            sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify, prep=prep,
+                classify=False, n=terms, order=hints['order'], match=hints[i], type=type)
             retdict[i] = sol
         retdict['all'] = True
         retdict['eq'] = eq

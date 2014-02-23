@@ -1178,6 +1178,7 @@ def dmp_gf_factor(f, u, K):
 def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
     j, f = dup_terms_gcd(f, K0)
+    cont, f = dup_primitive(f, K0)
 
     if K0.is_FiniteField:
         coeff, factors = dup_gf_factor(f, K0)
@@ -1232,7 +1233,7 @@ def dup_factor_list(f, K0):
     if j:
         factors.insert(0, ([K0.one, K0.zero], j))
 
-    return coeff, _sort_factors(factors)
+    return coeff*cont, _sort_factors(factors)
 
 
 def dup_factor_list_include(f, K):
@@ -1252,6 +1253,7 @@ def dmp_factor_list(f, u, K0):
         return dup_factor_list(f, K0)
 
     J, f = dmp_terms_gcd(f, u, K0)
+    cont, f = dmp_ground_primitive(f, u, K0)
 
     if K0.is_FiniteField:  # pragma: no cover
         coeff, factors = dmp_gf_factor(f, u, K0)
@@ -1314,7 +1316,7 @@ def dmp_factor_list(f, u, K0):
         term = {(0,)*(u - i) + (1,) + (0,)*i: K0.one}
         factors.insert(0, (dmp_from_dict(term, u, K0), j))
 
-    return coeff, _sort_factors(factors)
+    return coeff*cont, _sort_factors(factors)
 
 
 def dmp_factor_list_include(f, u, K):

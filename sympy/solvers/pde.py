@@ -26,6 +26,10 @@ more information on each (run help(pde)):
 
   - 1st order linear homogeneous partial differential equations
     with constant coefficients.
+  - 1st order linear general partial differential equations
+    with constant coefficients.
+  - 1st order linear partial differential equations with
+    variable coefficients.
 
 """
 from __future__ import print_function, division
@@ -846,7 +850,8 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return pde_separate(Eq(eq.lhs - eq.rhs), fun, sep, strategy)
-    assert eq.rhs == 0
+    if eq.rhs != 0:
+        raise ValueError("Value should be 0")
 
     # Handle arguments
     orig_args = list(fun.args)

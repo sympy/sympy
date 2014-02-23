@@ -758,7 +758,8 @@ class Formula(object):
                         for expr in exprs:
                             for target in bucket[mod]:
                                 n0, = solve(expr.xreplace(repl0) - target, _n)
-                                assert not n0.free_symbols
+                                if n0.free_symbols:
+                                    raise ValueError("Value should not be true")
                                 vals.append(n0)
             else:
                 values = []
@@ -1370,7 +1371,7 @@ class ReduceOrder(Operator):
         b = sympify(b)
         a = sympify(a)
         n = b - a
-        if (n < 0) is True or not n.is_Integer:
+        if n.is_negative or not n.is_Integer:
             return None
 
         self = Operator.__new__(cls)
@@ -1780,7 +1781,8 @@ def try_lerchphi(func):
         numer, denom = arg.as_numer_denom()
         if not denom.has(t):
             p = Poly(numer, t)
-            assert p.is_monomial
+            if not p.is_monomial:
+                raise TypeError("p should be monomial")
             ((b, ), a) = p.LT()
             monomials += [(a/denom, b)]
             continue
@@ -1922,7 +1924,7 @@ def hyperexpand_special(ap, bq, z):
     z_ = z
     z = unpolarify(z)
     if z == 0:
-        return S.Zero
+        return S.One
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -1955,6 +1957,10 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
+
+    if z is S.Zero:
+        return S.One
+
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
