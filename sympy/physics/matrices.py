@@ -1,11 +1,10 @@
 """Known matrices related to physics"""
 
 from __future__ import print_function, division
-from sympy.abc import i, j, k
 from sympy import Matrix, I
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
-def msigma(a):
+def msigma(i):
     r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`
 
     References
@@ -22,13 +21,13 @@ def msigma(a):
     [0, 1],
     [1, 0]])
     """
-    if a in [1,2,3]:
-    	x = KroneckerDelta(a, 1)
-    	y = KroneckerDelta(a, 2)
-    	z = KroneckerDelta(a, 3)
+    if i in [1,2,3]:
+    	x = KroneckerDelta(i, 1)
+    	y = KroneckerDelta(i, 2)
+    	z = KroneckerDelta(i, 3)
    	mat = ( (
-            (z,  x-y),
-            (x+y, -z)
+            (z,  x-I*y),
+            (x+I*y, -z)
         	) )
     else:
         raise IndexError("Invalid Pauli index")
