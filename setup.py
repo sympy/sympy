@@ -247,6 +247,7 @@ tests = [
     'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
+    'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',
