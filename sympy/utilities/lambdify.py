@@ -170,9 +170,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
 
     (1) Use one of the provided modules:
 
-        >>> from sympy import lambdify, sin, gamma
+        >>> from sympy import lambdify, sin, tan, gamma
         >>> from sympy.utilities.lambdify import lambdastr
-        >>> from sympy.abc import x
+        >>> from sympy.abc import x, y
         >>> f = lambdify(x, sin(x), "math")
 
         Attention: Functions that are not in the math module will throw a name
@@ -183,19 +183,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
 
     (2) Use some other module:
 
-        >> import numpy
-        >> f = lambdify((x,y), tan(x*y), numpy)
+        >>> import numpy
+        >>> f = lambdify((x,y), tan(x*y), numpy)
 
         Attention: There are naming differences between numpy and sympy. So if
                    you simply take the numpy module, e.g. sympy.atan will not be
                    translated to numpy.arctan. Use the modified module instead
                    by passing the string "numpy":
 
-        >> f = lambdify((x,y), tan(x*y), "numpy")
-        >> f(1, 2)
+        >>> f = lambdify((x,y), tan(x*y), "numpy")
+        >>> f(1, 2)
         -2.18503986326
-        >> from numpy import array
-        >> f(array([1, 2, 3]), array([2, 3, 5]))
+        >>> from numpy import array
+        >>> f(array([1, 2, 3]), array([2, 3, 5]))
         [-2.18503986 -0.29100619 -0.8559934 ]
 
     (3) Use a dictionary defining custom functions:
