@@ -127,7 +127,7 @@ def denom(expr):
 
 
 def fraction_expand(expr, **hints):
-    return expr.expand(frac=True, **hints).doit()
+    return expr.expand(frac=True, **hints)
 
 
 def numer_expand(expr, **hints):
@@ -342,7 +342,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
             else:
                 break
 
-        return expr.doit(), (sym, Rational(order))
+        return expr, (sym, Rational(order))
 
     def parse_term(expr):
         """Parses expression expr and outputs tuple (sexpr, rat_expo,
@@ -462,7 +462,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
         if expr.is_Mul:
             return expr.func(*[
                 collect(term, syms, func, True, exact, distribute_order_term)
-                for term in expr.args]).doit()
+                for term in expr.args])
         elif expr.is_Pow:
             b = collect(
                 expr.base, syms, func, True, exact, distribute_order_term)
@@ -563,14 +563,14 @@ def rcollect(expr, *vars):
     collect, collect_const, collect_sqrt
     """
     if expr.is_Atom or not expr.has(*vars):
-        return expr.doit()
+        return expr
     else:
         expr = expr.__class__(*[rcollect(arg, *vars) for arg in expr.args])
 
         if expr.is_Add:
             return collect(expr, vars)
         else:
-            return expr.doit()
+            return expr
 
 
 def separatevars(expr, symbols=[], dict=False, force=False):
@@ -645,7 +645,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
 def _separatevars(expr, force):
     if len(expr.free_symbols) == 1:
-        return expr.doit()
+        return expr
     # don't destroy a Mul since much of the work may already be done
     if expr.is_Mul:
         args = list(expr.args)
@@ -655,7 +655,7 @@ def _separatevars(expr, force):
             changed = changed or args[i] != a
         if changed:
             expr = expr.func(*args)
-        return expr.doit()
+        return expr
 
     # get a Pow ready for expansion
     if expr.is_Pow:
@@ -668,7 +668,7 @@ def _separatevars(expr, force):
     expr = factor(_expr).subs(reps)
 
     if not expr.is_Add:
-        return expr.doit()
+        return expr
 
     # Find any common coefficients to pull out
     args = list(expr.args)
@@ -797,7 +797,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     try:
         polys, opt = parallel_poly_from_expr([num, denom] + G, *gens, **args)
     except PolificationFailed:
-        return expr.doit()
+        return expr
 
     domain = opt.domain
 
@@ -1284,7 +1284,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     try:
         (pnum, pdenom), opt = parallel_poly_from_expr([num, denom])
     except PolificationFailed:
-        return expr.doit()
+        return expr
     debug('initial gens:', opt.gens)
     ideal, freegens, gens = analyse_gens(opt.gens, hints)
     debug('ideal:', ideal)
@@ -1293,7 +1293,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # NOTE we force the domain to be ZZ to stop polys from injecting generators
     #      (which is usually a sign of a bug in the way we build the ideal)
     if not gens:
-        return expr.doit()
+        return expr
     G = groebner(ideal, order=order, gens=gens, domain=ZZ)
     debug('groebner basis:', list(G), " -- len", len(G))
 
@@ -1544,7 +1544,7 @@ def collect_const(expr, *vars, **kwargs):
     collect, collect_sqrt, rcollect
     """
     if not expr.is_Add:
-        return expr.doit()
+        return expr
 
     recurse = False
     Numbers = kwargs.get('Numbers', True)
@@ -1615,7 +1615,7 @@ def collect_const(expr, *vars, **kwargs):
             if not expr.is_Add:
                 break
 
-    return expr.doit()
+    return expr
 
 
 def _split_gcd(*a):
@@ -1732,7 +1732,7 @@ def nthroot(expr, n, max_len=4, prec=15):
     expr = _nthroot_solve(expr, n, prec)
     if expr is None:
         return p
-    return expr.doit()
+    return expr
 
 
 def split_surds(expr):
@@ -1905,7 +1905,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
     def handle(expr):
         if expr.is_Atom:
-            return expr.doit()
+            return expr
 
         n, d = fraction(expr)
 
@@ -1919,7 +1919,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             return _umul(*[handle(1/d) for d in d.args])
 
         if not symbolic and d.free_symbols:
-            return expr.doit()
+            return expr
 
         if d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
             d2 = sqrtdenest(sqrt(d.base))**d.exp.p
@@ -2000,7 +2000,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 break
 
         if not keep:
-            return expr.doit()
+            return expr
         return _umul(n, 1/d)
 
     coeff, expr = expr.as_coeff_Add()
@@ -2540,7 +2540,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     if not isinstance(expr, Basic) or expr.is_Atom or expr in (
             exp_polar(0), exp_polar(1)):
-        return expr.doit()
+        return expr
 
     if deep or expr.is_Add or expr.is_Mul and _y not in expr.args:
         expr = expr.func(*[recurse(w) for w in expr.args])
@@ -2549,7 +2549,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         return recurse(expr*_y, deep=False)/_y
 
     if not expr.is_Mul:
-        return expr.doit()
+        return expr
 
     # handle the Mul
     if combine in ('exp', 'all'):
@@ -2785,7 +2785,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # rebuild the expression
         newexpr = expr.func(*(newexpr + [Pow(b, e) for b, e in c_powers.items()]))
         if combine == 'exp':
-            return expr.func(newexpr, expr.func(*nc_part)).doit()
+            return expr.func(newexpr, expr.func(*nc_part))
         else:
             return recurse(expr.func(*nc_part), combine='base') * \
                 recurse(newexpr, combine='base')
@@ -2905,7 +2905,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         c_part = [Pow(b, ei) for b, e in c_powers.items() for ei in e]
 
         # we're done
-        return expr.func(*(c_part + nc_part)).doit()
+        return expr.func(*(c_part + nc_part))
 
     else:
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
@@ -3114,7 +3114,7 @@ def combsimp(expr):
         """ Simplify products of gamma functions further. """
 
         if expr.is_Atom:
-            return expr.doit()
+            return expr
 
         def gamma_rat(x):
             # helper to simplify ratios of gammas
@@ -3141,13 +3141,13 @@ def combsimp(expr):
             level += 1
 
         if not expr.is_Mul:
-            return expr.doit()
+            return expr
 
         # non-commutative step
         if level == 1:
             args, nc = expr.args_cnc()
             if not args:
-                return expr.doit()
+                return expr
             if nc:
                 return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
             level += 1
@@ -3176,7 +3176,7 @@ def combsimp(expr):
                 nd, dd = dd, nd  # now process in reversed order
             expr = gamma_ind*nd/dd
             if not (expr.is_Mul and (gamma_factor(dd) or gamma_factor(nd))):
-                return expr.doit()
+                return expr
             level += 1
 
         # iteration until constant
@@ -3185,7 +3185,7 @@ def combsimp(expr):
                 was = expr
                 expr = rule_gamma(expr, 4)
                 if expr == was:
-                    return expr.doit()
+                    return expr
 
         numer_gammas = []
         denom_gammas = []
@@ -3467,7 +3467,7 @@ def combsimp(expr):
     if expr != was:
         expr = factor(expr)
 
-    return expr.doit()
+    return expr
 
 
 def signsimp(expr, evaluate=True):
@@ -3511,7 +3511,7 @@ def signsimp(expr, evaluate=True):
     """
     expr = sympify(expr)
     if not isinstance(expr, Expr) or expr.is_Atom:
-        return expr.doit()
+        return expr
     e = sub_post(sub_pre(expr))
     if not isinstance(e, Expr) or e.is_Atom:
         return e
@@ -3860,7 +3860,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
 
     # safety check to make sure that this evaluated to a number
     if not (re.is_Number and im.is_Number):
-        return expr.doit()
+        return expr
 
     def nsimplify_real(x):
         orig = mpmath.mp.dps
@@ -3884,7 +3884,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
                 raise ValueError
             if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
-            return expr.doit()
+            return expr
         finally:
             # even though there are returns above, this is executed
             # before leaving
@@ -3897,7 +3897,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     except ValueError:
         if rational is None:
             return _real_to_rational(expr)
-        return expr.doit()
+        return expr
 
     rv = re + im*S.ImaginaryUnit
     # if there was a change or rational is explicitly not wanted
@@ -4152,7 +4152,7 @@ def besselsimp(expr):
     if expr != orig_expr:
         expr = expr.factor()
 
-    return expr.doit()
+    return expr
 
 def exptrigsimp(expr, simplify=True):
     """
@@ -4224,7 +4224,7 @@ def exptrigsimp(expr, simplify=True):
     # can we ever generate an I where there was none previously?
     if not (newexpr.has(I) and not expr.has(I)):
         expr = newexpr
-    return expr.doit()
+    return expr
 
 
 def _is_Expr(e):
@@ -4563,7 +4563,7 @@ def trigsimp_old(expr, **opts):
     first = opts.pop('first', True)
     if first:
         if not expr.has(*_trigs):
-            return expr.doit()
+            return expr
 
         trigsyms = set.union(*[t.free_symbols for t in expr.atoms(*_trigs)])
         if len(trigsyms) > 1:
@@ -4764,7 +4764,7 @@ def _replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph):
             fargs[key] = fe
             gargs[key] = ge
     if not hit:
-        return expr.doit()
+        return expr
     while fargs:
         key, e = fargs.popitem()
         args.append(f(key)**e)
@@ -4819,7 +4819,7 @@ def _match_div_rewrite(expr, i):
             _idn, _one, _idn)
     else:
         return None
-    return expr.doit()
+    return expr
 
 
 def _trigsimp(expr, deep=False):
@@ -4827,7 +4827,7 @@ def _trigsimp(expr, deep=False):
     # trig patterns to enter the cache
     if expr.has(*_trigs):
         return __trigsimp(expr, deep)
-    return expr.doit()
+    return expr
 
 
 @cacheit
@@ -4957,5 +4957,5 @@ def __trigsimp(expr, deep=False):
     except TypeError:
         pass
 
-    return expr.doit()
+    return expr
 #------------------- end of old trigsimp routines --------------------
