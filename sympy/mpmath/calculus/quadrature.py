@@ -453,7 +453,7 @@ class GaussLegendre(QuadratureRule):
         ctx.prec = orig
         return nodes
 
-class QuadratureMethods:
+class QuadratureMethods(object):
 
     def __init__(ctx, *args, **kwargs):
         ctx._gauss_legendre = GaussLegendre(ctx)

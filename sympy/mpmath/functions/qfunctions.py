@@ -19,7 +19,7 @@ def qp(ctx, a, q=None, n=None, **kwargs):
             \sum_{k=-\infty}^{\infty} (-1)^k q^{(3k^2-k)/2}
 
     is also known as the Euler function, or (up to a factor `q^{-1/24}`)
-    the Dirichlet eta function.
+    the Dedekind eta function.
 
     **Examples**
 

@@ -109,7 +109,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types
+from sympy.core.compatibility import is_sequence, string_types, NotIterable
 
 
 class IndexException(Exception):
@@ -272,7 +272,7 @@ class Indexed(Expr):
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
 
-class IndexedBase(Expr):
+class IndexedBase(Expr, NotIterable):
     """Represent the base or stem of an indexed object
 
     The IndexedBase class represent an array that contains elements. The main purpose

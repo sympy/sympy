@@ -37,7 +37,6 @@ TODO:
 
 """
 
-from __future__ import print_function
 
 import sys, os
 from timeit import default_timer as clock
@@ -78,7 +77,7 @@ def test_asymp(f, maxdps=150, verbose=False, huge_range=False):
         exponents += [-1000, -100, -50, 50, 100, 1000]
     for n in exponents:
         if verbose:
-            print(".", end=' ')
+            sys.stdout.write(". ")
         mp.dps = 25
         xpos = mpf(10)**n / 1.1287
         xneg = -xpos
@@ -210,7 +209,7 @@ def testit(line):
     if filt in line:
         print(line)
         t1 = clock()
-        exec_(line)
+        exec_(line, globals(), locals())
         t2 = clock()
         elapsed = t2-t1
         print("Time:", elapsed, "for", line, "(OK)")
@@ -228,4 +227,3 @@ if __name__ == '__main__':
     mapf(testit, tasks)
     t2 = clock()
     print("Cumulative wall time:", t2-t1)
-

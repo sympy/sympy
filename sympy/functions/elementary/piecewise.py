@@ -508,6 +508,15 @@ class Piecewise(Function):
                 return diff.is_zero
         return None
 
+    def as_expr_set_pairs(self):
+        exp_sets = []
+        U = S.UniversalSet
+        for expr, cond in self.args:
+            cond_int = U.intersect(cond.as_set())
+            U = U - cond_int
+            exp_sets.append((expr, cond_int))
+        return exp_sets
+
 
 def piecewise_fold(expr):
     """

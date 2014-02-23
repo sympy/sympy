@@ -4,11 +4,11 @@ from __future__ import print_function, division
 
 from io import BytesIO
 
-from sympy import latex
+from sympy import latex as default_latex
 from sympy import preview
 from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
-from sympy.physics.vector import Vector, Dyadic
+
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
@@ -32,7 +32,8 @@ def _init_python_printing(stringify_func):
 
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
-                           backcolor, fontsize, latex_mode, print_builtin):
+                           backcolor, fontsize, latex_mode, print_builtin,
+                           latex_printer):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -57,6 +58,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     debug("init_printing: DVIOPTIONS:", dvioptions)
     debug("init_printing: PREAMBLE:", preamble)
 
+    latex = latex_printer or default_latex
+
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
         if _can_print_latex(arg):
@@ -67,22 +70,22 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     def _preview_wrapper(o):
         exprbuffer = BytesIO()
         try:
-            preview(o, output='png', viewer='BytesIO', outputbuffer=exprbuffer,
-                preamble=preamble, dvioptions=dvioptions)
+            preview(o, output='png', viewer='BytesIO',
+                    outputbuffer=exprbuffer, preamble=preamble,
+                    dvioptions=dvioptions)
         except Exception as e:
             # IPython swallows exceptions
             debug("png printing:", "_preview_wrapper exception raised:",
-                repr(e))
+                  repr(e))
             raise
         return exprbuffer.getvalue()
 
     def _matplotlib_wrapper(o):
-        # mathtext does not understand centain latex flags, so we try to
+        # mathtext does not understand certain latex flags, so we try to
         # replace them with suitable subs
         o = o.replace(r'\operatorname', '')
         o = o.replace(r'\overline', r'\bar')
         return latex_to_png(o)
-
 
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
@@ -90,14 +93,18 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
-        import sympy
+        from sympy import Basic
+        from sympy.matrices import MatrixBase
+        from sympy.physics.vector import Vector, Dyadic
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
             return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o, bool):
             return False
-        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, Vector, Dyadic)):
+        # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
+        # to use here, than these explicit imports.
+        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
             return True
         elif isinstance(o, (float, integer_types)) and print_builtin:
             return True
@@ -116,7 +123,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 if latex_mode != 'inline':
                     s = latex(o, mode='inline')
                 return _matplotlib_wrapper(s)
-
 
     def _print_latex_matplotlib(o):
         """
@@ -158,6 +164,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     if IPython.__version__ >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
+        from sympy.physics.vector import Vector, Dyadic
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
                 frozenset, dict, Vector, Dyadic] + list(integer_types)
 
@@ -204,7 +211,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
-                  latex_mode='equation*', print_builtin=True):
+                  latex_mode='equation*', print_builtin=True,
+                  str_printer=None, pretty_printer=None,
+                  latex_printer=None):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -212,8 +221,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     ==========
 
     pretty_print: boolean
-        If True, use pretty_print to stringify;
-        if False, use sstrrepr to stringify.
+        If True, use pretty_print to stringify or the provided pretty
+        printer; if False, use sstrrepr to stringify or the provided string
+        printer.
     order: string or None
         There are a few different settings for this parameter:
         lex (default), which is lexographic order;
@@ -263,6 +273,14 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     print_builtin: boolean, optional, default=True
         If true then floats and integers will be printed. If false the
         printer will only print SymPy types.
+    str_printer: function, optional, default=None
+        A custom string printer function. This should mimic
+        sympy.printing.sstrrepr().
+    pretty_printer: function, optional, default=None
+        A custom pretty printer. This should mimic sympy.printing.pretty().
+    latex_printer: function, optional, default=None
+        A custom LaTeX printer. This should mimic sympy.printing.latex()
+        This should mimic sympy.printing.latex().
 
     Examples
     ========
@@ -303,9 +321,15 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     from sympy.printing.printer import Printer
 
     if pretty_print:
-        from sympy.printing import pretty as stringify_func
+        if pretty_printer is not None:
+            stringify_func = pretty_printer
+        else:
+            from sympy.printing import pretty as stringify_func
     else:
-        from sympy.printing import sstrrepr as stringify_func
+        if str_printer is not None:
+            stringify_func = str_printer
+        else:
+            from sympy.printing import sstrrepr as stringify_func
 
     # Even if ip is not passed, double check that not in IPython shell
     if ip is None:
@@ -354,7 +378,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
     if ip is not None and ip.__module__.startswith('IPython'):
-        _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
-                               backcolor, fontsize, latex_mode, print_builtin)
+        _init_ipython_printing(ip, stringify_func, use_latex, euler,
+                               forecolor, backcolor, fontsize, latex_mode,
+                               print_builtin, latex_printer)
     else:
         _init_python_printing(stringify_func)

@@ -1,6 +1,9 @@
 from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
                    ImmutableMatrix as Matrix)
 from sympy.core.compatibility import u
+from sympy.utilities.misc import filldedent
+
+__all__ = ['Vector']
 
 
 class Vector(object):
@@ -213,7 +216,8 @@ class Vector(object):
     def _latex(self, printer=None):
         """Latex Printing method. """
 
-        from sympy.physics.vector.printers import VectorLatexPrinter
+        from sympy.physics.vector.printing import VectorLatexPrinter
+
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -247,7 +251,7 @@ class Vector(object):
 
     def _pretty(self, printer=None):
         """Pretty Printing method. """
-        from sympy.physics.vector.printers import VectorPrettyPrinter
+        from sympy.physics.vector.printing import VectorPrettyPrinter
         e = self
 
         class Fake(object):
@@ -270,16 +274,19 @@ class Vector(object):
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
-                            arg_str = (VectorPrettyPrinter().doprint(
-                                ar[i][0][j]))
                             if isinstance(ar[i][0][j], Add):
-                                arg_str = u("(%s)") % arg_str
+                                arg_str = VectorPrettyPrinter()._print(
+                                    ar[i][0][j]).parens()[0]
+                            else:
+                                arg_str = (VectorPrettyPrinter().doprint(
+                                    ar[i][0][j]))
+
                             if arg_str[0] == u("-"):
                                 arg_str = arg_str[1:]
                                 str_start = u(" - ")
                             else:
                                 str_start = u(" + ")
-                            ol.append(str_start + arg_str + '*' +
+                            ol.append(str_start + arg_str + ' ' +
                                       ar[i][1].pretty_vecs[j])
                 outstr = u("").join(ol)
                 if outstr.startswith(u(" + ")):
@@ -334,7 +341,7 @@ class Vector(object):
 
     def __str__(self, printer=None):
         """Printing method. """
-        from sympy.physics.vector.printers import VectorStrPrinter
+        from sympy.physics.vector.printing import VectorStrPrinter
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -622,6 +629,14 @@ class Vector(object):
     def normalize(self):
         """Returns a Vector of magnitude 1, codirectional with self."""
         return Vector(self.args + []) / self.magnitude()
+
+
+class VectorTypeError(TypeError):
+
+    def __init__(self, other, want):
+        msg = filldedent("Expected an instance of %s, but received object "
+                         "'%s' of %s." % (type(want), other, type(other)))
+        super(VectorTypeError, self).__init__(msg)
 
 
 def _check_vector(other):

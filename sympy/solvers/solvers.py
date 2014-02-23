@@ -687,17 +687,6 @@ def solve(f, *symbols, **flags):
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
 
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that the appropriate strategy gets selected.
-        # However, this is necessary only if one of the piecewise
-        # functions depends on one of the symbols we are solving for.
-        def _has_piecewise(e):
-            if e.is_Piecewise:
-                return e.has(*symbols)
-            return any([_has_piecewise(a) for a in e.args])
-        if _has_piecewise(f[i]):
-            f[i] = piecewise_fold(f[i])
-
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
             bare_f = False
@@ -745,6 +734,18 @@ def solve(f, *symbols, **flags):
             exclude = [exclude]
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
+
+    # Any embedded piecewise functions need to be brought out to the
+    # top level so that the appropriate strategy gets selected.
+    # However, this is necessary only if one of the piecewise
+    # functions depends on one of the symbols we are solving for.
+    def _has_piecewise(e):
+        if e.is_Piecewise:
+            return e.has(*symbols)
+        return any([_has_piecewise(a) for a in e.args])
+    for i, fi in enumerate(f):
+        if _has_piecewise(fi):
+            f[i] = piecewise_fold(fi)
 
     # real/imag handling
     for i, fi in enumerate(f):
@@ -1929,18 +1930,20 @@ def solve_linear_system(system, *symbols, **flags):
                     break
             else:
                 if matrix[i, m]:
-                    # we need to know if this is always zero or not. We
+                    # We need to know if this is always zero or not. We
                     # assume that if there are free symbols that it is not
                     # identically zero (or that there is more than one way
-                    # to make this zero. Otherwise, if there are none, this
+                    # to make this zero). Otherwise, if there are none, this
                     # is a constant and we assume that it does not simplify
-                    # to zero XXX are there better ways to test this?
+                    # to zero XXX are there better (fast) ways to test this?
+                    # The .equals(0) method could be used but that can be
+                    # slow; numerical testing is prone to errors of scaling.
                     if not matrix[i, m].free_symbols:
                         return None  # no solution
 
-                    # zero row with non-zero rhs can only be accepted
-                    # if there is another equivalent row, so look for
-                    # them and delete them
+                    # A row of zeros with a non-zero rhs can only be accepted
+                    # if there is another equivalent row. Any such rows will
+                    # be deleted.
                     nrows = matrix.rows
                     rowi = matrix.row(i)
                     ip = None

@@ -155,7 +155,7 @@ class clean(Command):
 
     def run(self):
         import os
-        os.system("py.cleanup")
+        os.system("find . -name '*.pyc' | xargs rm -f")
         os.system("rm -f python-build-stamp-2.4")
         os.system("rm -f MANIFEST")
         os.system("rm -rf build")
@@ -247,6 +247,7 @@ tests = [
     'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
+    'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',

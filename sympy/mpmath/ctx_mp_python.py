@@ -351,7 +351,7 @@ class _constant(_mpf):
         return self.func(prec, rounding)
 
     def __repr__(self):
-        return "<%s: %s~>" % (self.name, self.context.nstr(self))
+        return "<%s: %s~>" % (self.name, self.context.nstr(self(dps=15)))
 
 
 class _mpc(mpnumeric):
@@ -578,7 +578,7 @@ class _mpc(mpnumeric):
 complex_types = (complex, _mpc)
 
 
-class PythonMPContext:
+class PythonMPContext(object):
 
     def __init__(ctx):
         ctx._prec_rounding = [53, round_nearest]
@@ -870,7 +870,7 @@ class PythonMPContext:
             s = ctx.make_mpc((s, mpf_sum(imag, prec, rnd)))
         else:
             s = ctx.make_mpf(s)
-        if other == 0:
+        if other is 0:
             return s
         else:
             return s + other
@@ -964,7 +964,7 @@ class PythonMPContext:
             s = ctx.make_mpc((s, mpf_sum(imag, prec, rnd)))
         else:
             s = ctx.make_mpf(s)
-        if other == 0:
+        if other is 0:
             return s
         else:
             return s + other
@@ -1127,3 +1127,16 @@ class PythonMPContext:
             else:
                 raise TypeError("requires an mpf/mpc")
 
+
+# Register with "numbers" ABC
+#     We do not subclass, hence we do not use the @abstractmethod checks. While
+#     this is less invasive it may turn out that we do not actually support
+#     parts of the expected interfaces.  See
+#     http://docs.python.org/2/library/numbers.html for list of abstract
+#     methods.
+try:
+    import numbers
+    numbers.Complex.register(_mpc)
+    numbers.Real.register(_mpf)
+except ImportError:
+    pass

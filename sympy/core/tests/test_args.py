@@ -361,9 +361,9 @@ def test_sympy__core__numbers__Rational():
     assert _test_args(Rational(1, 7))
 
 
+@SKIP("abstract class")
 def test_sympy__core__numbers__RationalConstant():
-    from sympy.core.numbers import RationalConstant
-    assert _test_args(RationalConstant())
+    pass
 
 
 def test_sympy__core__numbers__Zero():
@@ -1258,6 +1258,30 @@ def test_sympy__functions__special__bessel__jn():
 def test_sympy__functions__special__bessel__yn():
     from sympy.functions.special.bessel import yn
     assert _test_args(yn(0, x))
+
+
+def test_sympy__functions__special__bessel__AiryBase():
+    pass
+
+
+def test_sympy__functions__special__bessel__airyai():
+    from sympy.functions.special.bessel import airyai
+    assert _test_args(airyai(2))
+
+
+def test_sympy__functions__special__bessel__airybi():
+    from sympy.functions.special.bessel import airybi
+    assert _test_args(airybi(2))
+
+
+def test_sympy__functions__special__bessel__airyaiprime():
+    from sympy.functions.special.bessel import airyaiprime
+    assert _test_args(airyaiprime(2))
+
+
+def test_sympy__functions__special__bessel__airybiprime():
+    from sympy.functions.special.bessel import airybiprime
+    assert _test_args(airybiprime(2))
 
 
 def test_sympy__functions__special__elliptic_integrals__elliptic_k():
@@ -2901,9 +2925,9 @@ def test_sympy__geometry__ellipse__Circle():
     assert _test_args(Circle((0, 1), 2))
 
 
+@SKIP("abstract class")
 def test_sympy__geometry__line__LinearEntity():
-    from sympy.geometry.line import LinearEntity
-    assert _test_args(LinearEntity((0, 1), (2, 3)))
+    pass
 
 
 def test_sympy__geometry__line__Line():

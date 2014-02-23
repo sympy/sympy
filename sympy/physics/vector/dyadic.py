@@ -1,8 +1,9 @@
 from sympy import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.compatibility import u
-from sympy.physics.vector.printers import (VectorLatexPrinter,
-                                           VectorPrettyPrinter,
-                                           VectorStrPrinter)
+from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
+                       VectorStrPrinter)
+
+__all__ = ['Dyadic']
 
 
 class Dyadic(object):
@@ -206,20 +207,22 @@ class Dyadic(object):
                     if ar[i][0] == 1:
                         ol.append(u(" + ") +
                                   mpp.doprint(ar[i][1]) +
-                                  u("\u2a02 ") +
+                                  u("\u2297") +
                                   mpp.doprint(ar[i][2]))
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
                         ol.append(u(" - ") +
                                   mpp.doprint(ar[i][1]) +
-                                  u("\u2a02 ") +
+                                  u("\u2297") +
                                   mpp.doprint(ar[i][2]))
                     # If the coefficient of the dyadic is not 1 or -1,
                     # we might wrap it in parentheses, for readability.
                     elif ar[i][0] != 0:
-                        arg_str = mpp.doprint(ar[i][0])
                         if isinstance(ar[i][0], Add):
-                            arg_str = u("(%s)") % arg_str
+                            arg_str = VectorPrettyPrinter()._print(
+                                ar[i][0]).parens()[0]
+                        else:
+                            arg_str = mpp.doprint(ar[i][0])
                         if arg_str.startswith(u("-")):
                             arg_str = arg_str[1:]
                             str_start = u(" - ")
@@ -227,7 +230,7 @@ class Dyadic(object):
                             str_start = u(" + ")
                         ol.append(str_start + arg_str + u(" ") +
                                   mpp.doprint(ar[i][1]) +
-                                  u("\u2a02 ") +
+                                  u("\u2297") +
                                   mpp.doprint(ar[i][2]))
                 outstr = u("").join(ol)
                 if outstr.startswith(u(" + ")):
