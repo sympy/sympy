@@ -46,9 +46,7 @@ def continued_fraction(num, den, delta):
     See Also
     ========
 
-    continued_fraction_rational_number
-    sympy.ntheory.continued_fraction.continued_fraction_rational_number :
-    function which calculate the continued fraction of a rational number.
+    continued_fraction_iterator
 
     References
     ==========
@@ -76,9 +74,7 @@ def continued_fraction(num, den, delta):
 
     # if the discriminator is zero the number is a rational number
     if delta == 0:
-        list = continued_fraction_rational_number(
-            num, den)
-        return list
+        return list(continued_fraction_iterator(Rational(num, den)))
 
     if (delta - (num*num)) % den != 0:
         delta = delta*den*den
@@ -93,8 +89,7 @@ def continued_fraction(num, den, delta):
         sqrtDeltaNext = ((delta/sqrtDelta) + sqrtDelta) >> 1
 
     if sqrtDelta*sqrtDelta == delta:
-        continued_fraction_rational_number(num + sqrtDelta, den)
-        return list
+        return list(continued_fraction_iterator(Rational(num + sqrtDelta, den)))
 
     biP = den
 
@@ -161,25 +156,43 @@ def continued_fraction(num, den, delta):
     return list
 
 
-def continued_fraction_rational_number(n, d):
-    """This applies the continued fraction expansion to two numbers
-    numerator/denominator
+def continued_fraction_iterator(x):
+    """
+    Return continued fraction expansion of x as iterator.
 
     Examples
     ========
 
-    >>> from sympy.ntheory.continued_fraction import continued_fraction_rational_number
-    >>> continued_fraction_rational_number(3, 8)
+    >>> from sympy.core import Rational, pi
+    >>> from sympy.ntheory.continued_fraction import continued_fraction_iterator
+
+    >>> list(continued_fraction_iterator(Rational(3, 8)))
     [0, 2, 1, 2]
 
+    >>> for i, v in enumerate(continued_fraction_iterator(pi)):
+    ...    if i > 7:
+    ...        break
+    ...    print(v)
+    3
+    7
+    15
+    1
+    292
+    1
+    1
+    1
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Continued_fraction
+
     """
-    x = Rational(n, d)
-    list = []
+
     while True:
         i = Integer(x)
-        list.append(i)
+        yield i
         x -= i
         if not x:
             break
         x = 1/x
-    return list
