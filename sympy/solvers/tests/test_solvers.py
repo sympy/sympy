@@ -1266,11 +1266,14 @@ def test_issues_3720_3721_3722_3149():
     x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
         {re(x): 1, x: 1 + 2*I, im(x): 2}]
-    # leave both forms of the test here since this tests the proper
-    # attention to the 'dict' flag
-    assert solve(abs(x) - 3) == solve(abs(x) - 3, x) == [
-        {re(x): -sqrt(-im(x)**2 + 9), x: -sqrt(-im(x)**2 + 9) + I*im(x)},
-        {re(x): sqrt(-im(x)**2 + 9), x: sqrt(-im(x)**2 + 9) + I*im(x)}]
+
+    # check for 'dict' handling of solution
+    eq = sqrt(re(x)**2 + im(x)**2) - 3
+    assert solve(eq) == solve(eq, x)
+
+    i = symbols('i', imaginary=True)
+    assert solve(abs(i) - 3) == [-3*I, 3*I]
+    raises(NotImplementedError, lambda: solve(abs(x) - 3))
 
     w = symbols('w', integer=True)
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)

@@ -737,17 +737,25 @@ def solve(f, *symbols, **flags):
 
     # real/imag handling -----------------------------
     w = Dummy('w')
-    reim = Lambda(w, sqrt(re(w)**2 + im(w)**2))
     piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
     for i, fi in enumerate(f):
-        # abs
-        reps = [(a, piece(a.args[0]) if a.args[0].is_real else reim(a.args[0]))
-            for a in fi.atoms(Abs) if a.has(*symbols)]
+        # Abs
+        reps = []
+        for a in fi.atoms(Abs):
+            if not a.has(*symbols):
+                continue
+            if a.args[0].is_real is None:
+                raise NotImplementedError('solving %s when the argument '
+                    'is not real or imaginary.' % a)
+            reps.append((a, piece(a.args[0]) if a.args[0].is_real else \
+                piece(a.args[0]*S.ImaginaryUnit)))
         fi = fi.subs(reps)
+
         # arg
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
         fi = fi.xreplace(dict(list(zip(_arg,
             [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
+
         # save changes
         f[i] = fi
 
@@ -764,16 +772,7 @@ def solve(f, *symbols, **flags):
             for i, fi in enumerate(f):
                 f[i] = fi.xreplace({s: rhs})
             f.append(s - rhs)
-            for i, fi in enumerate(list(f)):
-                continue
-                f[i] = fi.subs(re(s), _r)
-                f[i] = fi.subs(im(s), _i)
-                #f.append(_r-re(s))
-                #f.append(_i-im(s))
-            if len(symbols) < len(f) and re(s) not in symbols:
-                symbols.append(re(s))
-            if len(symbols) < len(f) and im(s) not in symbols:
-                symbols.append(im(s))
+            symbols.extend([re(s), im(s)])
         if bare_f:
             bare_f = False
         flags['dict'] = True
