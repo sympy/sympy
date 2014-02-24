@@ -7,6 +7,7 @@ from __future__ import print_function, division
 
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
+from sympy.utilities.decorator import doctest_depends_on
 
 import inspect
 
@@ -143,6 +144,7 @@ def _import(module, reload="False"):
         namespace[sympyname] = namespace[translation]
 
 
+@doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
