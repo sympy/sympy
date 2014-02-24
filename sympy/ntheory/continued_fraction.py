@@ -28,8 +28,11 @@ def continued_fraction(num, den, delta):
     The denominator of a rational number cannot be zero. So such
     input will result an error.
 
+    Examples
+    ========
+
     >>> from sympy.ntheory.continued_fraction import continued_fraction
-    >>> continued_fraction(1,0,0)
+    >>> continued_fraction(1, 0, 0)
     Traceback (most recent call last):
     ...
     ValueError: The denominator is zero.
@@ -37,13 +40,13 @@ def continued_fraction(num, den, delta):
     If the discriminator is zero then the number will be a rational number.
 
     >>> from sympy.ntheory.continued_fraction import continued_fraction
-    >>> continued_fraction(4,3,0)
+    >>> continued_fraction(4, 3, 0)
     [1, 3]
 
     Golden ratio has the simplest continued fraction expansion,
 
     >>> from sympy.ntheory.continued_fraction import continued_fraction
-    >>> continued_fraction(1,2,5)
+    >>> continued_fraction(1, 2, 5)
     [[1], [1]]
 
     Note: if the length of recurrsive part of the continued part of
@@ -59,14 +62,14 @@ def continued_fraction(num, den, delta):
     References
     ==========
 
-    [1] A. J. van der Poorten, "NOTES ON CONTINUED FRACTIONS AND RECURRENCE
-    SEQUENCES" in Number Theory and Cryptography. New York,
-    USA: Cambridge university press, 2011,
-    ch. 06, pp. 86-96.
-    [2] http://en.wikipedia.org/wiki/Continued_fraction
-    [3] http://www.numbertheory.org/ntw/N4.html#continued_fractions
-    [4] http://www.numbertheory.org/pdfs/CFquadratic.pdf
-    [5] http://maths.mq.edu.au/~alf/www-centre/alfpapers/a117.pdf
+    .. [1] A. J. van der Poorten, "NOTES ON CONTINUED FRACTIONS AND RECURRENCE
+           SEQUENCES" in Number Theory and Cryptography. New York,
+           USA: Cambridge university press, 2011, ch. 06, pp. 86-96.
+    .. [2] http://en.wikipedia.org/wiki/Continued_fraction
+    .. [3] http://www.numbertheory.org/ntw/N4.html#continued_fractions
+    .. [4] http://www.numbertheory.org/pdfs/CFquadratic.pdf
+    .. [5] http://maths.mq.edu.au/~alf/www-centre/alfpapers/a117.pdf
+
     """
 
     list = []
@@ -175,10 +178,14 @@ def continued_fraction_rational_number(n, d):
     """This applies the continued fraction expansion to two numbers
     numerator/denominator
 
+    Examples
+    ========
+
     >>> from sympy.ntheory.continued_fraction import\
     continued_fraction_rational_number
     >>> continued_fraction_rational_number(3, 8)
     [0, 2, 1, 2]
+
     """
     x = Rational(n, d)
     list = []
