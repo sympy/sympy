@@ -1,8 +1,4 @@
-from sympy.core.compatibility import as_int
-from sympy.core.numbers import Rational
-from sympy.core.numbers import Integer
-
-from fractions import gcd
+from sympy.core.numbers import Integer, Rational
 
 
 def continued_fraction(num, den, delta):
@@ -39,13 +35,11 @@ def continued_fraction(num, den, delta):
 
     If the discriminator is zero then the number will be a rational number.
 
-    >>> from sympy.ntheory.continued_fraction import continued_fraction
     >>> continued_fraction(4, 3, 0)
     [1, 3]
 
     Golden ratio has the simplest continued fraction expansion,
 
-    >>> from sympy.ntheory.continued_fraction import continued_fraction
     >>> continued_fraction(1, 2, 5)
     [[1], [1]]
 
@@ -181,8 +175,7 @@ def continued_fraction_rational_number(n, d):
     Examples
     ========
 
-    >>> from sympy.ntheory.continued_fraction import\
-    continued_fraction_rational_number
+    >>> from sympy.ntheory.continued_fraction import continued_fraction_rational_number
     >>> continued_fraction_rational_number(3, 8)
     [0, 2, 1, 2]
 
