@@ -43,9 +43,6 @@ def continued_fraction(num, den, delta):
     >>> continued_fraction(1, 2, 5)
     [[1], [1]]
 
-    Note: if the length of recurrsive part of the continued part of
-    expansion exceeds 100000 this module will truncate the convergents.
-
     See Also
     ========
 
@@ -152,10 +149,6 @@ def continued_fraction(num, den, delta):
 
         # show convergent
         list.append(Z)
-
-        # too many convergent
-        if cont > 100000:
-            raise NotImplementedError('more than 100,000 convergents')
 
     if cont >= 1:
 
