@@ -41,7 +41,7 @@ def continued_fraction(num, den, delta):
     Golden ratio has the simplest continued fraction expansion,
 
     >>> continued_fraction(1, 2, 5)
-    [[1], [1]]
+    [[1]]
 
     See Also
     ========
@@ -61,99 +61,88 @@ def continued_fraction(num, den, delta):
 
     """
 
-    list = []
+    return continued_fraction_periodic(num, den, delta)
 
-    # if the denominator is zero the expression cannot be a legal fraction
-    if den == 0:
+
+def continued_fraction_periodic(p, q, d=0):
+    r"""
+    Compute the continued fraction expansion of a rational or a
+    quadratic irrational number, i.e. `\frac{p + \sqrt{d}}{q}`, where
+    `p`, `q` and `d \ge 0` are integers.
+
+    Returns the continued fraction representation (canonical form) as
+    a list of integers, optionally ending (for quadratic irrationals)
+    with repeating block as the last term of this list.
+
+    Parameters
+    ==========
+
+    p : the rational part of the number's numerator
+    q : the denominator of the number
+    d : the irrational part(discriminator) of the number's numerator
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.continued_fraction import continued_fraction_periodic
+    >>> continued_fraction_periodic(3, 2, 7)
+    [2, [1, 4, 1, 1]]
+
+    Golden ratio has the simplest continued fraction expansion:
+
+    >>> continued_fraction(1, 2, 5)
+    [[1]]
+
+    If the discriminator is zero then the number will be a rational number:
+
+    >>> continued_fraction(4, 3, 0)
+    [1, 3]
+
+    See Also
+    ========
+
+    continued_fraction_iterator
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Periodic_continued_fraction
+    .. [2] K. Rosen. Elementary Number theory and its applications.
+           Addison-Wesley, 3 Sub edition, pages 379-381, January 1992.
+
+    """
+    from sympy.core.compatibility import as_int
+    from sympy.functions import sqrt
+
+    p, q, d = list(map(as_int, [p, q, d]))
+
+    if q == 0:
         raise ValueError("The denominator is zero.")
 
-    # if the discriminator is negative the number is a complex number
-    if delta < 0:
-        raise ValueError("The number is not real, so it does not\n\
-            have continued fraction expansion.")
+    if d < 0:
+        raise ValueError("Delta supposed to be a non-negative "
+                         "integer, got %d" % d)
+    elif d == 0:
+        # the number is a rational number
+        return list(continued_fraction_iterator(Rational(p, q)))
 
-    # if the discriminator is zero the number is a rational number
-    if delta == 0:
-        return list(continued_fraction_iterator(Rational(num, den)))
+    if (d - p**2)%q:
+        d *= q**2
+        p *= abs(q)
+        q *= abs(q)
 
-    if (delta - (num*num)) % den != 0:
-        delta = delta*den*den
-        num = num*abs(den)
-        den = den*abs(den)
+    terms = []
+    pq = {}
+    sd = sqrt(d)
 
-    sqrtDelta = 0 | 1 << (delta.bit_length() + 1)/2
-    sqrtDeltaNext = ((delta/sqrtDelta) + sqrtDelta) >> 1
+    while (p, q) not in pq:
+        pq[(p, q)] = len(terms)
+        terms.append(int((p + sd)/q))
+        p = terms[-1]*q - p
+        q = (d - p**2)/q
 
-    while sqrtDelta > sqrtDeltaNext:
-        sqrtDelta = sqrtDeltaNext
-        sqrtDeltaNext = ((delta/sqrtDelta) + sqrtDelta) >> 1
-
-    if sqrtDelta*sqrtDelta == delta:
-        return list(continued_fraction_iterator(Rational(num + sqrtDelta, den)))
-
-    biP = den
-
-    if biP > 0:
-        biK = sqrtDelta
-    else:
-        biK = sqrtDelta + 1
-
-    biK = biK + num
-
-    if biK > 0:
-        if den > 0:
-            biM = biK/den
-        else:
-            biM = ((den + 1) - biK)/(den*-1)
-    else:
-        if den > 0:
-            biM = ((biK + 1) - den)/den
-        else:
-            biM = (biK*-1)/(den*-1)
-    # appends the integer part of the continued fraction expansion
-    # to the result list
-    list.append(biM)
-    biM = ((biM*den) - num)
-    cont = -1
-    K = -1
-    P = -1
-    L = -1
-    M = -1
-
-    while (cont < 0 or K != P or L != M):
-
-        if (cont < 0 and biP > 0 and biP <= sqrtDelta + biM and
-                biM > 0 and biM <= sqrtDelta):
-            K = P = biP
-            L = M = biM
-            cont = 0
-
-        # both numerator and denominator are positive
-        if cont >= 0:
-            P = (delta - (M*M))/P
-            Z = (sqrtDelta + M)/P
-            M = (Z*P) - M
-            cont += 1
-        else:
-            biP = (delta - (biM*biM))/biP
-            if biP > 0:
-                Z = (sqrtDelta + biM)/biP
-            else:
-                Z = ((sqrtDelta + 1) + biM)/biP
-            biM = (Z*biP) - biM
-
-        # show convergent
-        list.append(Z)
-
-    if cont >= 1:
-
-        non_recurring_part = list[:len(list) - cont]
-
-        recurring_part = list[len(list) - cont:]
-
-        return [non_recurring_part, recurring_part]
-
-    return list
+    i = pq[(p, q)]
+    return terms[:i] + [terms[i:]]
 
 
 def continued_fraction_iterator(x):
