@@ -14,8 +14,15 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
+<<<<<<< HEAD
+scipy = import_module('scipy')
+if not scipy:
+    skip("scipy not installed")
+x, y, z = symbols('x,y,z')
+=======
 
 w, x, y, z = symbols('w,x,y,z')
+>>>>>>> 1827249b1aa28f575a4f3eb17989c4d7de775e09
 
 #================== Test different arguments =======================
 
