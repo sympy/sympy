@@ -1,6 +1,10 @@
 Action Plan for Improving solve
 ===============================
 
+# Motivations
+
+
+
 We have following major problems with solve:
 
 1. We don't have a consitent output for various types of solutions
@@ -74,15 +78,26 @@ and identify the algorithms and the classs of expressions where it is
 guarenteed to return all the solutions. I have started the audit at https://github.com/sympy/sympy/wiki/solvers, I need to complete the audit before having further discussion. I intend compete it in this week.
 
 
+# Raw Ideas
+
+
 
 ### Relevant issues and discussions
 
 https://groups.google.com/forum/?fromgroups=#!topic/sympy/pYh8v0KdBMQ
+
 https://groups.google.com/forum/#!topic/sympy/OW1ezjt_E5c
+
 https://code.google.com/p/sympy/issues/detail?id=3699 (solve() should be able to tell you when it knows it's found all the solutions)
+
 https://code.google.com/p/sympy/issues/detail?id=3560 (solve() is a giant mess)
+
 https://code.google.com/p/sympy/issues/detail?id=3667 (getting consistent output from solve until a Solution class is available)
+
 https://code.google.com/p/sympy/issues/detail?id=1234 (solve() should give all solutions)
+
 https://code.google.com/p/sympy/issues/detail?id=1579 (Have solve() return RootOf when it can't solve equations)
+
 https://code.google.com/p/sympy/issues/detail?id=3975 (solve(floor (x)-5,x) should not raise NotImplementedError)
+
 https://code.google.com/p/sympy/issues/detail?id=3448 (Cannot solve multivariate inequalities)
