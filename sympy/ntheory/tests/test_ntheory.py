@@ -1,7 +1,7 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
-    factorial as fac, Rational
+    factorial as fac, Rational, pi, GoldenRatio as phi
 from sympy.core.numbers import Integer, igcd
 from sympy.core.compatibility import long
 
@@ -19,7 +19,9 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
-from sympy.ntheory.continued_fraction import continued_fraction
+from sympy.ntheory.continued_fraction import \
+    (continued_fraction_periodic as cf_p,
+     continued_fraction_iterator as cf_i)
 
 from sympy.polys.domains import ZZ
 
@@ -731,15 +733,28 @@ def test_search():
 
 
 def test_continued_fraction():
-    assert continued_fraction(4, 3, 0) == [1, 3]
-    assert continued_fraction(0, 3, 5) == [0, 1, [2, 1, 12, 1, 2, 2]]
-    assert continued_fraction(1, 1, 0) == [1]
-    assert continued_fraction(3, 4, 0) == [0, 1, 3]
-    assert continued_fraction(4, 5, 0) == [0, 1, 4]
-    assert continued_fraction(5, 6, 0) == [0, 1, 5]
-    assert continued_fraction(11, 13, 0) == [0, 1, 5, 2]
-    assert continued_fraction(16, 19, 0) == [0, 1, 5, 3]
-    assert continued_fraction(27, 32, 0) == [0, 1, 5, 2, 2]
-    assert continued_fraction(1, 2, 5) == [[1]]
-    assert continued_fraction(0, 1, 2) == [1, [2]]
-    assert continued_fraction(3796, 1387, 0) == [2, 1, 2, 1, 4]
+    raises(ValueError, lambda: cf_p(1, 0, 0))
+    raises(ValueError, lambda: cf_p(1, 1, -1))
+    assert cf_p(4, 3, 0) == [1, 3]
+    assert cf_p(0, 3, 5) == [0, 1, [2, 1, 12, 1, 2, 2]]
+    assert cf_p(1, 1, 0) == [1]
+    assert cf_p(3, 4, 0) == [0, 1, 3]
+    assert cf_p(4, 5, 0) == [0, 1, 4]
+    assert cf_p(5, 6, 0) == [0, 1, 5]
+    assert cf_p(11, 13, 0) == [0, 1, 5, 2]
+    assert cf_p(16, 19, 0) == [0, 1, 5, 3]
+    assert cf_p(27, 32, 0) == [0, 1, 5, 2, 2]
+    assert cf_p(1, 2, 5) == [[1]]
+    assert cf_p(0, 1, 2) == [1, [2]]
+    assert cf_p(3796, 1387, 0) == [2, 1, 2, 1, 4]
+
+    def take(iterator, n=7):
+        res = []
+        for i, t in enumerate(cf_i(iterator)):
+            if i >= n:
+                break
+            res.append(t)
+        return res
+
+    assert take(phi) == [1, 1, 1, 1, 1, 1, 1]
+    assert take(pi) == [3, 7, 15, 1, 292, 1, 1]

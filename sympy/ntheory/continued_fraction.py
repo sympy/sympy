@@ -1,69 +1,6 @@
 from sympy.core.numbers import Integer, Rational
 
 
-def continued_fraction(num, den, delta):
-    """
-    Return continued fraction expansion of surd.
-
-    Continued fraction expansion of a rational number is an expression
-    obtained through an iterative process of representing a number as
-    the sum of its integer part and the reciprocal of another number,
-    then writing this other number as the sum of its integer part and
-    another reciprocal, and so on.
-
-    Here the three parameters are,
-    * num: the rational part of the number's numerator
-    * delta: the irrational part(discriminator) of the number's numerator
-    * denominator: the denominator of the number
-
-    ex: the golden ratio is (1 + sqrt(5))/2
-    num = 1
-    delta = 5
-    den = 2
-
-    The denominator of a rational number cannot be zero. So such
-    input will result an error.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.continued_fraction import continued_fraction
-    >>> continued_fraction(1, 0, 0)
-    Traceback (most recent call last):
-    ...
-    ValueError: The denominator is zero.
-
-    If the discriminator is zero then the number will be a rational number.
-
-    >>> continued_fraction(4, 3, 0)
-    [1, 3]
-
-    Golden ratio has the simplest continued fraction expansion,
-
-    >>> continued_fraction(1, 2, 5)
-    [[1]]
-
-    See Also
-    ========
-
-    continued_fraction_iterator
-
-    References
-    ==========
-
-    .. [1] A. J. van der Poorten, "NOTES ON CONTINUED FRACTIONS AND RECURRENCE
-           SEQUENCES" in Number Theory and Cryptography. New York,
-           USA: Cambridge university press, 2011, ch. 06, pp. 86-96.
-    .. [2] http://en.wikipedia.org/wiki/Continued_fraction
-    .. [3] http://www.numbertheory.org/ntw/N4.html#continued_fractions
-    .. [4] http://www.numbertheory.org/pdfs/CFquadratic.pdf
-    .. [5] http://maths.mq.edu.au/~alf/www-centre/alfpapers/a117.pdf
-
-    """
-
-    return continued_fraction_periodic(num, den, delta)
-
-
 def continued_fraction_periodic(p, q, d=0):
     r"""
     Compute the continued fraction expansion of a rational or a
@@ -77,9 +14,12 @@ def continued_fraction_periodic(p, q, d=0):
     Parameters
     ==========
 
-    p : the rational part of the number's numerator
-    q : the denominator of the number
-    d : the irrational part(discriminator) of the number's numerator
+    p : int
+        the rational part of the number's numerator
+    q : int
+        the denominator of the number
+    d : int, optional
+        the irrational part (discriminator) of the number's numerator
 
     Examples
     ========
@@ -90,12 +30,12 @@ def continued_fraction_periodic(p, q, d=0):
 
     Golden ratio has the simplest continued fraction expansion:
 
-    >>> continued_fraction(1, 2, 5)
+    >>> continued_fraction_periodic(1, 2, 5)
     [[1]]
 
     If the discriminator is zero then the number will be a rational number:
 
-    >>> continued_fraction(4, 3, 0)
+    >>> continued_fraction_periodic(4, 3, 0)
     [1, 3]
 
     See Also
