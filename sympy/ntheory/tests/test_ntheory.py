@@ -747,6 +747,9 @@ def test_continued_fraction():
     assert cf_p(1, 2, 5) == [[1]]
     assert cf_p(0, 1, 2) == [1, [2]]
     assert cf_p(3796, 1387, 0) == [2, 1, 2, 1, 4]
+    assert cf_p(3245, 10000) == [0, 3, 12, 4, 13]
+    assert cf_p(1932, 2568) == [0, 1, 3, 26, 2]
+    assert cf_p(6589, 2569) == [2, 1, 1, 3, 2, 1, 3, 1, 23]
 
     def take(iterator, n=7):
         res = []
