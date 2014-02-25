@@ -107,25 +107,26 @@ def test_sympify_mpmath():
     assert sympify(
         mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
 
-    assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
+    assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0) * I
 
 
 def test_sympify2():
     class A:
+
         def _sympy_(self):
-            return Symbol("x")**3
+            return Symbol("x") ** 3
 
     a = A()
 
-    assert _sympify(a) == x**3
-    assert sympify(a) == x**3
-    assert a == x**3
+    assert _sympify(a) == x ** 3
+    assert sympify(a) == x ** 3
+    assert a == x ** 3
 
 
 def test_sympify3():
-    assert sympify("x**3") == x**3
-    assert sympify("x^3") == x**3
-    assert sympify("1/2") == Integer(1)/2
+    assert sympify("x**3") == x ** 3
+    assert sympify("x^3") == x ** 3
+    assert sympify("1/2") == Integer(1) / 2
 
     raises(SympifyError, lambda: _sympify('x**3'))
     raises(SympifyError, lambda: _sympify('1/2'))
@@ -159,13 +160,14 @@ def test_sympyify_iterables():
 
 def test_sympify4():
     class A:
+
         def _sympy_(self):
             return Symbol("x")
 
     a = A()
 
-    assert _sympify(a)**3 == x**3
-    assert sympify(a)**3 == x**3
+    assert _sympify(a) ** 3 == x ** 3
+    assert sympify(a) ** 3 == x ** 3
     assert a == x
 
 
@@ -181,12 +183,12 @@ def test_sympify_text():
 
 
 def test_sympify_function():
-    assert sympify('factor(x**2-1, x)') == -(1 - x)*(x + 1)
+    assert sympify('factor(x**2-1, x)') == -(1 - x) * (x + 1)
     assert sympify('sin(pi/2)*cos(pi)') == -Integer(1)
 
 
 def test_sympify_poly():
-    p = Poly(x**2 + x + 1, x)
+    p = Poly(x ** 2 + x + 1, x)
 
     assert _sympify(p) is p
     assert sympify(p) is p
@@ -195,14 +197,14 @@ def test_sympify_poly():
 def test_sympify_factorial():
     assert sympify('x!') == factorial(x)
     assert sympify('(x+1)!') == factorial(x + 1)
-    assert sympify('(1 + y*(x + 1))!') == factorial(1 + y*(x + 1))
-    assert sympify('(1 + y*(x + 1)!)^2') == (1 + y*factorial(x + 1))**2
-    assert sympify('y*x!') == y*factorial(x)
+    assert sympify('(1 + y*(x + 1))!') == factorial(1 + y * (x + 1))
+    assert sympify('(1 + y*(x + 1)!)^2') == (1 + y * factorial(x + 1)) ** 2
+    assert sympify('y*x!') == y * factorial(x)
     assert sympify('x!!') == factorial2(x)
     assert sympify('(x+1)!!') == factorial2(x + 1)
-    assert sympify('(1 + y*(x + 1))!!') == factorial2(1 + y*(x + 1))
-    assert sympify('(1 + y*(x + 1)!!)^2') == (1 + y*factorial2(x + 1))**2
-    assert sympify('y*x!!') == y*factorial2(x)
+    assert sympify('(1 + y*(x + 1))!!') == factorial2(1 + y * (x + 1))
+    assert sympify('(1 + y*(x + 1)!!)^2') == (1 + y * factorial2(x + 1)) ** 2
+    assert sympify('y*x!!') == y * factorial2(x)
     assert sympify('factorial2(x)!') == factorial(factorial2(x))
 
     raises(SympifyError, lambda: sympify("+!!"))
@@ -219,7 +221,7 @@ def test_sage():
     assert hasattr(Integer(3), "_sage_")
     assert hasattr(sin(x), "_sage_")
     assert hasattr(cos(x), "_sage_")
-    assert hasattr(x**2, "_sage_")
+    assert hasattr(x ** 2, "_sage_")
     assert hasattr(x + y, "_sage_")
     assert hasattr(exp(x), "_sage_")
     assert hasattr(log(x), "_sage_")
@@ -230,12 +232,11 @@ def test_bug496():
     assert sympify("_a") == Symbol("_a")
 
 
-@XFAIL
 def test_lambda():
     x = Symbol('x')
     assert sympify('lambda: 1') == Lambda((), 1)
-    assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
-    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x + y)
+    assert sympify('lambda x: 2*x') == Lambda(x, 2 * x)
+    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2 * x + y)
 
 
 def test_lambda_raises():
@@ -256,9 +257,10 @@ def test__sympify():
     assert _sympify(f) is f
     assert _sympify(1) == Integer(1)
     assert _sympify(0.5) == Float("0.5")
-    assert _sympify(1 + 1j) == 1.0 + I*1.0
+    assert _sympify(1 + 1j) == 1.0 + I * 1.0
 
     class A:
+
         def _sympy_(self):
             return Integer(5)
 
@@ -297,13 +299,16 @@ def test_sympifyit():
 
 def test_int_float():
     class F1_1(object):
+
         def __float__(self):
             return 1.1
 
     class F1_1b(object):
+
         """
         This class is still a float, even though it also implements __int__().
         """
+
         def __float__(self):
             return 1.1
 
@@ -311,9 +316,11 @@ def test_int_float():
             return 1
 
     class F1_1c(object):
+
         """
         This class is still a float, because it implements _sympy_()
         """
+
         def __float__(self):
             return 1.1
 
@@ -324,10 +331,12 @@ def test_int_float():
             return Float(1.1)
 
     class I5(object):
+
         def __int__(self):
             return 5
 
     class I5b(object):
+
         """
         This class implements both __int__() and __float__(), so it will be
         treated as Float in SymPy. One could change this behavior, by using
@@ -336,6 +345,7 @@ def test_int_float():
         If, in the future, we decide to do it anyway, the tests for I5b need to
         be changed.
         """
+
         def __float__(self):
             return 5.0
 
@@ -343,10 +353,12 @@ def test_int_float():
             return 5
 
     class I5c(object):
+
         """
         This class implements both __int__() and __float__(), but also
         a _sympy_() method, so it will be Integer.
         """
+
         def __float__(self):
             return 5.0
 
@@ -391,7 +403,7 @@ def test_evaluate_false():
         '2 - 3 * 5': Add(2, -Mul(3, 5, evaluate=False), evaluate=False),
         '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False),
         'True | False': Or(True, False, evaluate=False),
-        '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x**2/2, evaluate=False),
+        '1 + 2 + 3 + 5*3 + integrate(x)': Add(1, 2, 3, Mul(5, 3, evaluate=False), x ** 2 / 2, evaluate=False),
         '2 * 4 * 6 + 8': Add(Mul(2, 4, 6, evaluate=False), 8, evaluate=False),
     }
     for case, result in cases.items():
@@ -413,8 +425,8 @@ def test_issue883():
 
 
 def test_S_sympify():
-    assert S(1)/2 == sympify(1)/2
-    assert (-2)**(S(1)/2) == sqrt(2)*I
+    assert S(1) / 2 == sympify(1) / 2
+    assert (-2) ** (S(1) / 2) == sqrt(2) * I
 
 
 def test_issue1689():
@@ -448,10 +460,11 @@ def test_geometry():
 
 
 def test_kernS():
-    s =   '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
+    s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
     # when 1497 is fixed, this no longer should pass: the expression
     # should be unchanged
-    assert -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) == -1
+    assert -1 - 2 * \
+        (-(-x + 1 / x) / (x * (x - 1 / x) ** 2) - 1 / (x * (x - 1 / x))) == -1
     # sympification should not allow the constant to enter a Mul
     # or else the structure can change dramatically
     ss = kernS(s)
@@ -464,10 +477,10 @@ def test_kernS():
     assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
     assert kernS('_kern') == Symbol('_kern')
     assert kernS('E**-(x)') == exp(-x)
-    e = 2*(x + y)*y
+    e = 2 * (x + y) * y
     assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
     assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
-        -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
+        -y * (2 * sin(x) ** 2 + 2 * sin(x) * cos(x)) / 2
 
 
 def test_issue_3441_3453():
@@ -475,6 +488,7 @@ def test_issue_3441_3453():
     assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
+
 
 def test_issue_2497():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
