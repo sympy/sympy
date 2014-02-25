@@ -573,7 +573,7 @@ def lambda_notation(tokens, local_dict, global_dict):
                     result.insert(-2, (tokNum, tokVal))
     else:
         result.extend(tokens)
-    
+
     return result
 
 
