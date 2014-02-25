@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf
+    conjuncts, to_cnf, eliminate_implications
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
@@ -96,8 +96,7 @@ def pl_true(expr, model={}):
     """
     Return True if the propositional logic expression is true in the model,
     and False if it is false. If the model does not specify the value for
-    every proposition, this may return None to indicate 'not obvious';
-    this may happen even when the expression is tautological.
+    every proposition, this may return None to indicate 'not obvious'
 
     The model is implemented as a dict containing the pair symbol, boolean value.
 
@@ -106,9 +105,16 @@ def pl_true(expr, model={}):
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
-    >>> pl_true( A & B, {A: True, B : True})
+    >>> pl_true(A & B, {A: True, B: True})
     True
-
+    >>> pl_true(A & B, {A: False})
+    False
+    >>> pl_true(A & B, {A: True})
+    >>> pl_true(A >> (B >> A))
+    True
+    >>> pl_true(A & ~A)
+    False
+    >>> pl_true(A & B)
     """
 
     if isinstance(expr, bool):
@@ -119,16 +125,20 @@ def pl_true(expr, model={}):
     if expr.is_Symbol:
         return model.get(expr)
 
-    args = expr.args
-    func = expr.func
+    expr = eliminate_implications(expr)
 
-    if func is Not:
-        p = pl_true(args[0], model)
+    if isinstance(expr, Not):
+        p = pl_true(expr.args[0], model)
         if p is None:
             return None
         else:
             return not p
-    elif func is Or:
+
+    elif isinstance(expr, Or):
+        args = set(expr.args)
+        for arg in args:
+            if Not(arg) in args:
+                return True
         result = False
         for arg in args:
             p = pl_true(arg, model)
@@ -137,7 +147,12 @@ def pl_true(expr, model={}):
             if p is None:
                 result = None
         return result
-    elif func is And:
+
+    elif isinstance(expr, And):
+        args = set(expr.args)
+        for arg in args:
+            if Not(arg) in args:
+                return False
         result = True
         for arg in args:
             p = pl_true(arg, model)
@@ -147,21 +162,57 @@ def pl_true(expr, model={}):
                 result = None
         return result
 
-    elif func is Implies:
-        p, q = args
-        return pl_true(Or(Not(p), q), model)
-
-    elif func is Equivalent:
-        p, q = args
-        pt = pl_true(p, model)
-        if pt is None:
-            return None
-        qt = pl_true(q, model)
-        if qt is None:
-            return None
-        return pt == qt
     else:
-        raise ValueError("Illegal operator in logic expression" + str(expr))
+        raise ValueError("Illegal operator in expression" + str(expr))
+
+
+def semantic_tableaux(expr):
+    """
+    Checks satisfiability of a formula using a Semantic Tableaux
+    This method is much faster than a traditional SAT solver however
+    it returns only True or False. To obtain a model use satisfiability
+
+    Examples
+    ========
+
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.inference import semantic_tableaux
+    >>> semantic_tableaux(A | B)
+    True
+    >>> semantic_tableaux(A & ~A)
+    False
+    """
+
+    if isinstance(expr, bool):
+        return expr
+
+    expr = eliminate_implications(sympify(expr))
+
+    if is_literal(expr):
+        return expr
+
+    elif isinstance(expr, Not):
+        raise TypeError("Expression is not in Negation Normal Form")
+
+    elif isinstance(expr, Or):
+        args = [semantic_tableaux(arg) for arg in expr.args]
+        result = Or(*args)
+        if result is False:
+            return False
+        else:
+            return True
+
+    elif isinstance(expr, And):
+        args = [semantic_tableaux(arg) for arg in expr.args]
+        result = And(*args)
+        if isinstance(result, bool):
+            return result
+
+        args = set(args)
+        for arg in args:
+            if Not(arg) in args:
+                return False
+        return True
 
 
 class KB(object):
