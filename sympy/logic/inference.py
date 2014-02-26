@@ -170,7 +170,7 @@ def semantic_tableaux(expr):
     """
     Checks satisfiability of a formula using a Semantic Tableaux
     This method is much faster than a traditional SAT solver however
-    it returns only True or False. To obtain a model use satisfiability
+    it returns only True or False. To obtain a model use 'satisfiable'
 
     Examples
     ========
@@ -181,38 +181,49 @@ def semantic_tableaux(expr):
     True
     >>> semantic_tableaux(A & ~A)
     False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Method_of_analytic_tableaux
     """
 
-    if isinstance(expr, bool):
-        return expr
-
     expr = eliminate_implications(sympify(expr))
+    s = [set([expr])]
 
-    if is_literal(expr):
-        return expr
+    while s:
+        e = s.pop()
 
-    elif isinstance(expr, Not):
-        raise TypeError("Expression is not in Negation Normal Form")
+        clause = None
+        flag = False
+        for c in e:
+            if is_literal(c):
+                if Not(c) in e:
+                    flag = True
+            else:
+                clause = c
 
-    elif isinstance(expr, Or):
-        args = [semantic_tableaux(arg) for arg in expr.args]
-        result = Or(*args)
-        if result is False:
-            return False
-        else:
+        if flag:
+            continue
+        elif clause is None:
             return True
+        else:
+            e.remove(clause)
 
-    elif isinstance(expr, And):
-        args = [semantic_tableaux(arg) for arg in expr.args]
-        result = And(*args)
-        if isinstance(result, bool):
-            return result
+        if isinstance(clause, Or):
+            for arg in clause.args[1:]:
+                temp = set(e)
+                temp.add(arg)
+                s.append(temp)
+            e.add(clause.args[0])
+            s.append(e)
 
-        args = set(args)
-        for arg in args:
-            if Not(arg) in args:
-                return False
-        return True
+        elif isinstance(clause, And):
+            for arg in clause.args:
+                    e.add(arg)
+            s.append(e)
+
+    return False
 
 
 class KB(object):
