@@ -87,7 +87,6 @@ matrix:
       env:
         - TEST_THEANO="true"
   allow_failures:
-    - python: "pypy"
     - python: 3.3 # Dummy value
       env:
         - TEST_SAGE="true"
