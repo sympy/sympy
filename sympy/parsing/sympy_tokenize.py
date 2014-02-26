@@ -34,7 +34,7 @@ from token import *
 
 import token
 __all__ = [x for x in dir(token) if x[0] != '_'] + ["COMMENT", "tokenize",
-                                                    "generate_tokens", "NL", "untokenize"]
+           "generate_tokens", "NL", "untokenize"]
 del token
 
 COMMENT = N_TOKENS
@@ -148,7 +148,7 @@ for t in ("'", '"',
           "uR'", 'uR"', "UR'", 'UR"',
           "b'", 'b"', "B'", 'B"',
           "br'", 'br"', "Br'", 'Br"',
-          "bR'", 'bR"', "BR'", 'BR"'):
+          "bR'", 'bR"', "BR'", 'BR"' ):
     single_quoted[t] = t
 
 tabsize = 8
@@ -165,8 +165,8 @@ class StopTokenizing(Exception):
 def printtoken(type, token, srow_scol, erow_ecol, line):  # for testing
     srow, scol = srow_scol
     erow, ecol = erow_ecol
-    print("%d,%d-%d,%d:\t%s\t%s" %
-         (srow, scol, erow, ecol, tok_name[type], repr(token)))
+    print("%d,%d-%d,%d:\t%s\t%s" % \
+        (srow, scol, erow, ecol, tok_name[type], repr(token)))
 
 
 def tokenize(readline, tokeneater=printtoken):
@@ -346,7 +346,7 @@ def generate_tokens(readline):
                 if line[pos] == ' ':
                     column = column + 1
                 elif line[pos] == '\t':
-                    column = (column / tabsize + 1) * tabsize
+                    column = (column/tabsize + 1)*tabsize
                 elif line[pos] == '\f':
                     column = 0
                 else:

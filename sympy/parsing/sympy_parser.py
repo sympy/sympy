@@ -18,7 +18,6 @@ from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
-
 def _token_splittable(token):
     """
     Predicate for whether a token name can be split into multiple tokens.
@@ -81,13 +80,11 @@ def _add_factorial_tokens(name, result):
 
 
 class AppliedFunction(object):
-
     """
     A group of tokens representing a function and its arguments.
 
     `exponent` is for handling the shorthand sin^2, ln^2, etc.
     """
-
     def __init__(self, function, args, exponent=None):
         if exponent is None:
             exponent = []
@@ -112,7 +109,6 @@ class AppliedFunction(object):
 
 
 class ParenthesisGroup(list):
-
     """List of tokens representing an expression in parentheses."""
     pass
 
@@ -152,8 +148,7 @@ def _group_parentheses(recursor):
                         stacks[-1].extend(stack)
                     else:
                         # Recurse here to handle nested parentheses
-                        # Strip off the outer parentheses to avoid an infinite
-                        # loop
+                        # Strip off the outer parentheses to avoid an infinite loop
                         inner = stack[1:-1]
                         inner = recursor(inner,
                                          local_dict,
@@ -215,7 +210,7 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (isinstance(tok, AppliedFunction) and
-           isinstance(nextTok, AppliedFunction)):
+              isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
         elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
@@ -268,8 +263,8 @@ def _implicit_application(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and
-           nextTok[0] != OP and
-           nextTok[0] != ENDMARKER):
+              nextTok[0] != OP and
+              nextTok[0] != ENDMARKER):
             if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
@@ -394,9 +389,8 @@ def split_symbols_custom(predicate):
                         if char in local_dict or char in global_dict:
                             # Get rid of the call to Symbol
                             del result[-2:]
-                            result.extend(
-                                [(OP, '('), (NAME, "%s" % char), (OP, ')'),
-                                 (NAME, 'Symbol'), (OP, '(')])
+                            result.extend([(OP, '('), (NAME, "%s" % char), (OP, ')'),
+                                           (NAME, 'Symbol'), (OP, '(')])
                         else:
                             result.extend([(NAME, "'%s'" % char), (OP, ')'),
                                            (NAME, 'Symbol'), (OP, '(')])
@@ -638,21 +632,20 @@ def auto_number(tokens, local_dict, global_dict):
                 postfix = [(OP, '*'), (NAME, 'I')]
 
             if '.' in number or (('e' in number or 'E' in number) and
-                                 not (number.startswith('0x') or number.startswith('0X'))):
+                    not (number.startswith('0x') or number.startswith('0X'))):
                 match = _re_repeated.match(number)
 
                 if match is not None:
-                    # Clear repeating decimals, e.g. 3.4[31] -> (3 + 4/10 +
-                    # 31/990)
+                    # Clear repeating decimals, e.g. 3.4[31] -> (3 + 4/10 + 31/990)
                     pre, post, repetend = match.groups()
 
-                    zeros = '0' * len(post)
+                    zeros = '0'*len(post)
                     post, repetends = [w.lstrip('0') for w in [post, repetend]]
                                                 # or else interpreted as octal
 
                     a = pre or '0'
                     b, c = post or '0', '1' + zeros
-                    d, e = repetends, ('9' * len(repetend)) + zeros
+                    d, e = repetends, ('9'*len(repetend)) + zeros
 
                     seq = [
                         (OP, '('),
@@ -702,8 +695,7 @@ def rationalize(tokens, local_dict, global_dict):
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations = (
-    lambda_notation, auto_symbol, auto_number, factorial_notation)
+standard_transformations = (lambda_notation, auto_symbol, auto_number, factorial_notation)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):
@@ -843,11 +835,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             elif isinstance(node.op, ast.Div):
                 right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
-                    args=[
-                        right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[
-                        ast.keyword(
-                            arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -855,9 +844,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[self.visit(node.left), right],
-                keywords=[
-                    ast.keyword(
-                        arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
                 starargs=None,
                 kwargs=None
             )
