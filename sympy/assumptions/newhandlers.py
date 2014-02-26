@@ -296,7 +296,8 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.prime), ~Q.prime)),
     # More advanced prime assumptions will require inequalities, as 1 provides
     # a corner case.
-    (Mul, Implies(ExactlyOneArg(Q.imaginary),Q.imaginary)),
+    (Mul, Implies(ExactlyOneArg(Q.imaginary),Q.imaginary)), 
+    #General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
         Q.irrational))),
     (Add, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
