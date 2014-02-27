@@ -161,6 +161,7 @@ class clean(Command):
         os.system("rm -rf build")
         os.system("rm -rf dist")
         os.system("rm -rf doc/_build")
+        os.system("rm -f sample.tex")
 
 
 class test_sympy(Command):
