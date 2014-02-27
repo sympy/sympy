@@ -612,6 +612,9 @@ class G_Function(Expr):
         same, and that the buckets are sorted by real part (an and bq
         descendending, bm and ap ascending).
 
+        Examples
+        ========
+
         >>> from sympy.simplify.hyperexpand import G_Function
         >>> from sympy.abc import y
         >>> from sympy import S
@@ -621,8 +624,7 @@ class G_Function(Expr):
         {0: [2], Mod(y, 1): [y, y + 1, y + 3]}, {0: [2]}, {Mod(y, 1): [y]})
 
         """
-        dicts = pan, pap, pbm, pbq = defaultdict(list), defaultdict(list), \
-            defaultdict(list), defaultdict(list)
+        dicts = pan, pap, pbm, pbq = [defaultdict(list) for i in range(4)]
         for dic, lis in zip(dicts, (self.an, self.ap, self.bm, self.bq)):
             for x in lis:
                 dic[Mod(x, 1)].append(x)
