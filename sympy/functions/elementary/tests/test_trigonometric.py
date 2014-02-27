@@ -1049,6 +1049,11 @@ def test_sec():
     # https://github.com/sympy/sympy/issues/7166
     assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
 
+    # https://github.com/sympy/sympy/issues/7167
+    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
+            1/sqrt(x - 3*pi/2) + (x - 3*pi/2)**(S(3)/2)/12 +
+            (x - 3*pi/2)**(S(7)/2)/160 + O((x - 3*pi/2)**4, (x, 3*pi/2)))
+
     assert sec(x).diff(x) == tan(x)*sec(x)
 
     # Taylor Term checks
