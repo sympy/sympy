@@ -107,7 +107,7 @@ class Integral(AddWithLimits):
 
     @property
     def is_zero(self):
-        """Since Integral doesn't autosimplify it, it is useful to see if
+        """Since Integral doesn't autosimplify, it is useful to see if
         it would simplify to zero or not in a trivial manner, i.e. when
         the function is 0 or two limits of a definite integral are the same.
 
