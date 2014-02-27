@@ -239,6 +239,7 @@ def test_lambda():
 
 
 def test_lambda_raises():
+    raises(SympifyError, lambda: sympify("lambda *args: args"))
     with raises(SympifyError):
         _sympify('lambda: 1')
 
