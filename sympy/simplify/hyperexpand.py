@@ -79,6 +79,17 @@ from sympy.simplify import powdenest, simplify, polarify, unpolarify
 from sympy.polys import poly, Poly
 from sympy.series import residue
 
+# function to define "buckets"
+def _mod1(x):
+    # although it would be nice to make this just Mod(x, 1)
+    # lots of tests break now because Mod(i + 1, 1) -> 0 instead
+    # of giving Mod(i, 1)
+    if x.is_Number:
+        return Mod(x, 1)
+    c, x = x.as_coeff_Add()
+    return Mod(c, 1) + x
+
+
 # leave add formulae at the top for easy reference
 def add_formulae(formulae):
     """ Create our knowledge base. """
@@ -386,10 +397,10 @@ def add_meijerg_formulae(formulae):
         x = func.an[0]
         y, z = func.bm
         swapped = False
-        if not Mod((x - y).simplify(), 1):
+        if not _mod1((x - y).simplify()):
             swapped = True
             (y, z) = (z, y)
-        if Mod((x - z).simplify(), 1) or x > z:
+        if _mod1((x - z).simplify()) or x > z:
             return None
         l = [y, x]
         if swapped:
@@ -407,22 +418,22 @@ def add_meijerg_formulae(formulae):
         """http://functions.wolfram.com/07.34.03.0984.01"""
         x = func.an[0]
         u, v, w = func.bm
-        if Mod((u - v).simplify(), 1) == 0:
-            if Mod((v - w).simplify(), 1) == 0:
+        if _mod1((u - v).simplify()) == 0:
+            if _mod1((v - w).simplify()) == 0:
                 return
             sig = (S(1)/2, S(1)/2, S(0))
             x1, x2, y = u, v, w
         else:
-            if Mod((x - u).simplify(), 1) == 0:
+            if _mod1((x - u).simplify()) == 0:
                 sig = (S(1)/2, S(0), S(1)/2)
                 x1, y, x2 = u, v, w
             else:
                 sig = (S(0), S(1)/2, S(1)/2)
                 y, x1, x2 = u, v, w
 
-        if (Mod((x - x1).simplify(), 1) != 0 or
-            Mod((x - x2).simplify(), 1) != 0 or
-            Mod((x - y).simplify(), 1) != S(1)/2 or
+        if (_mod1((x - x1).simplify()) != 0 or
+            _mod1((x - x2).simplify()) != 0 or
+            _mod1((x - y).simplify()) != S(1)/2 or
                 x > x1 or x > x2):
             return
 
@@ -459,7 +470,6 @@ def debug(*args):
             print(a, end="")
         print()
 
-_mod1 = lambda x: Mod(x, 1)
 
 class Hyper_Function(Expr):
     """ A generalized hypergeometric function. """
@@ -617,17 +627,18 @@ class G_Function(Expr):
 
         >>> from sympy.simplify.hyperexpand import G_Function
         >>> from sympy.abc import y
-        >>> from sympy import S
+        >>> from sympy import S, symbols
+
         >>> a, b = [1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3]
         >>> G_Function(a, b, [2], [y]).compute_buckets()
         ({0: [3, 2, 1], 1/2: [3/2]},
-        {0: [2], Mod(y, 1): [y, y + 1, y + 3]}, {0: [2]}, {Mod(y, 1): [y]})
+        {0: [2], y: [y, y + 1, y + 3]}, {0: [2]}, {y: [y]})
 
         """
         dicts = pan, pap, pbm, pbq = [defaultdict(list) for i in range(4)]
         for dic, lis in zip(dicts, (self.an, self.ap, self.bm, self.bq)):
             for x in lis:
-                dic[Mod(x, 1)].append(x)
+                dic[_mod1(x)].append(x)
 
         for dic, flip in zip(dicts, (True, False, False, True)):
             for m, items in dic.items():
