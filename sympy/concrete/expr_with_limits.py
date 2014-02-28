@@ -327,7 +327,8 @@ class ExprWithLimits(Expr):
         return self.func(func, *limits)
 
 class AddWithLimits(ExprWithLimits):
-    r"""Represents unevaluated oriented additions of integer sequences.
+    r"""Represents unevaluated oriented additions.
+        Parent class for Integral and Sum.
     """
 
     def __new__(cls, function, *symbols, **assumptions):
