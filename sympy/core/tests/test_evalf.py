@@ -305,7 +305,7 @@ def test_implemented_function_evalf():
 
 
 def test_evaluate_false():
-    for no in [0, False, None]:
+    for no in [0, False]:
         assert Add(3, 2, evaluate=no).is_Add
         assert Mul(3, 2, evaluate=no).is_Mul
         assert Pow(3, 2, evaluate=no).is_Pow
