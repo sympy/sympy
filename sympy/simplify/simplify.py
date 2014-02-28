@@ -1475,7 +1475,7 @@ def collect_sqrt(expr, evaluate=None):
     ========
     collect, collect_const, rcollect
     """
-    if evaluate is none:
+    if evaluate is None:
         evaluate = global_evaluate[0]
     # this step will help to standardize any complex arguments
     # of sqrts
@@ -3516,7 +3516,7 @@ def signsimp(expr, evaluate=None):
     exp(-(x - y))
 
     """
-    if global_evaluate is None:
+    if evaluate is None:
         evaluate = global_evaluate[0]
     expr = sympify(expr)
     if not isinstance(expr, Expr) or expr.is_Atom:

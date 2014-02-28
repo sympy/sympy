@@ -15,6 +15,9 @@ def evaluate(x):
     is experimental and is unlikely to function as intended on large
     expressions.
 
+    Examples
+    ========
+
     >>> from sympy.abc import x
     >>> from sympy.core.operations import evaluate
     >>> print x + x
