@@ -312,7 +312,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Edward: update license year
 #. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
 #. Aditya Shah: bug fix
-
+#. Sambuddha Basu: documentation fix
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
