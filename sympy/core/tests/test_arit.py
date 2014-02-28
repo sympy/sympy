@@ -1422,6 +1422,7 @@ def test_Mod():
     assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
     i = Symbol('i', integer=True)
     assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
+    assert Mod(4*i, 4) == 0
 
 
 def test_issue_2902():
