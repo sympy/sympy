@@ -150,7 +150,7 @@ def test_issue_3647():
         assert manualintegrate(1 / (a + b*x**2), x) == \
             Integral(1/(a + b*x**2), x)
 
-def test_issue_2850():
+def test_gh_issue_2850():
     assert manualintegrate(asin(x)*log(x), x) == -x*asin(x) - sqrt(-x**2 + 1) \
             + (x*asin(x) + sqrt(-x**2 + 1))*log(x) - Integral(sqrt(-x**2 + 1)/x, x)
     assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + sqrt(-x**2 + 1) + \
