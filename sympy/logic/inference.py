@@ -63,12 +63,13 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm="dpll2"):
+def satisfiable(expr, return_model=True, algorithm="dpll2"):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -76,23 +77,31 @@ def satisfiable(expr, algorithm="dpll2"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
-
     """
+
     if expr is True:
         return {}
     if expr is False:
         return False
-    expr = to_cnf(expr)
-    if algorithm == "dpll":
-        from sympy.logic.algorithms.dpll import dpll_satisfiable
-        return dpll_satisfiable(expr)
-    elif algorithm == "dpll2":
-        from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr)
-    raise NotImplementedError
+
+    if return_model is True:
+        expr = to_cnf(expr)
+        if algorithm == "dpll":
+            from sympy.logic.algorithms.dpll import dpll_satisfiable
+            return dpll_satisfiable(expr)
+        elif algorithm == "dpll2":
+            from sympy.logic.algorithms.dpll2 import dpll_satisfiable
+            return dpll_satisfiable(expr)
+        raise NotImplementedError
+
+    elif return_model is False:
+        return semantic_tableaux(expr)
+
+    else:
+        raise ValueError("return_model must contain a boolean value")
 
 
-def pl_true(expr, model={}):
+def pl_true(expr, model={}, deep=False):
     """
     Return True if the propositional logic expression is true in the model,
     and False if it is false. If the model does not specify the value for
@@ -103,7 +112,7 @@ def pl_true(expr, model={}):
     Examples
     ========
 
-    >>> from sympy.abc import A, B
+    >>> from sympy.abc import A, B, C
     >>> from sympy.logic.inference import pl_true
     >>> pl_true(A & B, {A: True, B: True})
     True
@@ -115,6 +124,12 @@ def pl_true(expr, model={}):
     >>> pl_true(A & ~A)
     False
     >>> pl_true(A & B)
+    >>> pl_true((C >> A) >> (B >> A), {C: True})
+    >>> pl_true((C >> A) >> (B >> A), {C: True}, deep=True)
+    True
+    >>> pl_true(A & B & (~A | ~B), {A: True})
+    >>> pl_true(A & B & (~A | ~B), {A: True}, deep=True)
+    False
     """
 
     if isinstance(expr, bool):
@@ -127,6 +142,24 @@ def pl_true(expr, model={}):
 
     expr = eliminate_implications(expr)
 
+    if deep:
+        atoms = set()
+        expr = _pl_interpretation(expr, atoms, model)
+        if isinstance(expr, bool):
+            return result
+        model = {atom: True for atom in atoms}
+
+        if pl_true(expr, model, deep=False):
+            if satisfiable(Not(expr), return_model=False):
+                return None
+            else:
+                return True
+        else:
+            if satisfiable(expr, return_model=False):
+                return None
+            else:
+                return False
+
     if isinstance(expr, Not):
         p = pl_true(expr.args[0], model)
         if p is None:
@@ -136,7 +169,8 @@ def pl_true(expr, model={}):
 
     elif isinstance(expr, Or):
         args = set(expr.args)
-        for arg in args:
+        gen = (arg for arg in args if is_literal(arg))
+        for arg in gen:
             if Not(arg) in args:
                 return True
         result = False
@@ -150,7 +184,8 @@ def pl_true(expr, model={}):
 
     elif isinstance(expr, And):
         args = set(expr.args)
-        for arg in args:
+        gen = (arg for arg in args if is_literal(arg))
+        for arg in gen:
             if Not(arg) in args:
                 return False
         result = True
@@ -163,7 +198,19 @@ def pl_true(expr, model={}):
         return result
 
     else:
-        raise ValueError("Illegal operator in expression" + str(expr))
+        raise ValueError("Illegal operator in expression " + str(expr))
+
+
+def _pl_interpretation(expr, atoms, i={}):
+    if expr.is_Atom:
+        if isinstance(i.get(expr), bool):
+            return i[expr]
+        else:
+            atoms.add(expr)
+            return expr
+    else:
+        args = [_pl_interpretation(arg, atoms, i) for arg in expr.args]
+        return expr.func(*args)
 
 
 def semantic_tableaux(expr):
@@ -171,6 +218,12 @@ def semantic_tableaux(expr):
     Checks satisfiability of a formula using a Semantic Tableaux
     This method is much faster than a traditional SAT solver however
     it returns only True or False. To obtain a model use 'satisfiable'
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Method_of_analytic_tableaux
+
 
     Examples
     ========
@@ -181,11 +234,6 @@ def semantic_tableaux(expr):
     True
     >>> semantic_tableaux(A & ~A)
     False
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Method_of_analytic_tableaux
     """
 
     expr = eliminate_implications(sympify(expr))
