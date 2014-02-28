@@ -6,7 +6,14 @@ global_evaluate = [True]
 
 @contextmanager
 def evaluate(x):
-    """
+    """ Control automatic evaluation
+
+    This context managers controls whether or not all SymPy functions evaluate
+    by default.
+
+    Note that much of SymPy expects evaluated expressions.  This functionality
+    is experimental and is unlikely to function as intended on large
+    expressions.
 
     >>> from sympy.abc import x
     >>> from sympy.core.operations import evaluate
