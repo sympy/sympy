@@ -343,7 +343,7 @@ def _parts_rule(integrand, symbol):
 
     dummy = sympy.Dummy("temporary")
     # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, sympy.log) or isinstance(integrand, sympy.atan) or isinstance(integrand, sympy.asin) or isinstance(integrand, sympy.acos):
+    if isinstance(integrand, (sympy.log, sympy.atan, sympy.asin, sympy.acos)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
