@@ -119,6 +119,7 @@ before_install:
 install:
   - if [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
+      pip install multipledispatch
     fi
 script:
   - bin/test_travis.sh
