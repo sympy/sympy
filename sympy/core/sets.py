@@ -35,7 +35,7 @@ class Set(Basic):
     is_Interval = False
     is_ProductSet = False
     is_Union = False
-    is_Intersection = None
+    isintersection_simpion = None
     is_EmptySet = None
     is_UniversalSet = None
 
@@ -87,20 +87,6 @@ class Set(Basic):
 
         """
         return Intersection(self, other)
-
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        self._intersect(other) returns a new, intersected set if self knows how
-        to intersect itself with other, otherwise it returns None
-
-        When making a new set class you can be assured that other will not
-        be a Union, FiniteSet, or EmptySet
-
-        Used within the Intersection class
-        """
-        return None
 
     @property
     def complement(self):
@@ -397,19 +383,6 @@ class ProductSet(Set):
             return False
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        See Set._intersect for docstring
-        """
-        if not other.is_ProductSet:
-            return None
-        if len(other.args) != len(self.args):
-            return S.EmptySet
-        return ProductSet(a.intersect(b)
-                for a, b in zip(self.sets, other.sets))
-
     @property
     def sets(self):
         return self.args
@@ -585,53 +558,6 @@ class Interval(Set, EvalfMixin):
 
         """
         return self._args[3]
-
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        See Set._intersect for docstring
-        """
-        # We only know how to intersect with other intervals
-        if not other.is_Interval:
-            return None
-        # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
-        if not self._is_comparable(other):
-            return None
-
-        empty = False
-
-        if self.start <= other.end and other.start <= self.end:
-            # Get topology right.
-            if self.start < other.start:
-                start = other.start
-                left_open = other.left_open
-            elif self.start > other.start:
-                start = self.start
-                left_open = self.left_open
-            else:
-                start = self.start
-                left_open = self.left_open or other.left_open
-
-            if self.end < other.end:
-                end = self.end
-                right_open = self.right_open
-            elif self.end > other.end:
-                end = other.end
-                right_open = other.right_open
-            else:
-                end = self.end
-                right_open = self.right_open or other.right_open
-
-            if end - start == 0 and (left_open or right_open):
-                empty = True
-        else:
-            empty = True
-
-        if empty:
-            return S.EmptySet
-
-        return Interval(start, end, left_open, right_open)
 
     @property
     def _complement(self):
@@ -1011,7 +937,7 @@ class Intersection(Set):
     ==========
     <http://en.wikipedia.org/wiki/Intersection_(set_theory)>
     """
-    is_Intersection = True
+    isintersection_simpion = True
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', True)
@@ -1021,7 +947,7 @@ class Intersection(Set):
 
         def flatten(arg):
             if isinstance(arg, Set):
-                if arg.is_Intersection:
+                if arg.isintersection_simpion:
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
@@ -1116,7 +1042,7 @@ class Intersection(Set):
             for s in args:
                 new_args = False
                 for t in args - set((s,)):
-                    new_set = s._intersect(t)
+                    new_set = intersection_simp(s, t)
                     # This returns None if s does not know how to intersect
                     # with t. Returns the newly intersected set otherwise
                     if new_set is not None:
@@ -1161,9 +1087,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
     http://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
-
-    def _intersect(self, other):
-        return S.EmptySet
 
     @property
     def _complement(self):
@@ -1218,9 +1141,6 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     """
 
     is_UniversalSet = True
-
-    def _intersect(self, other):
-        return other
 
     @property
     def _complement(self):
@@ -1281,16 +1201,6 @@ class FiniteSet(Set, EvalfMixin):
 
     def __iter__(self):
         return iter(self.args)
-
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        See Set._intersect for docstring
-        """
-        if isinstance(other, self.__class__):
-            return self.__class__(*(self._elements & other._elements))
-        return self.__class__(el for el in self if el in other)
 
     def _contains(self, other):
         """
@@ -1511,4 +1421,83 @@ def union_simp(a, b):
 
 @dispatch(Set, Set)
 def union_simp(a, b):
+    return None
+
+
+@dispatch(ProductSet, ProductSet)
+def intersection_simp(a, b):
+    """
+    This function should only be used internally
+
+    See Set.intersection_simp for docstring
+    """
+    if len(b.args) != len(a.args):
+        return S.EmptySet
+    return ProductSet(a.intersect(b)
+            for a, b in zip(a.sets, b.sets))
+
+
+@dispatch(Interval, Interval)
+def intersection_simp(a, b):
+    """
+    This function should only be used internally
+
+    See Set.intersection_simp for docstring
+    """
+    # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
+    if not a._is_comparable(b):
+        return None
+
+    empty = False
+
+    if a.start <= b.end and b.start <= a.end:
+        # Get topology right.
+        if a.start < b.start:
+            start = b.start
+            left_open = b.left_open
+        elif a.start > b.start:
+            start = a.start
+            left_open = a.left_open
+        else:
+            start = a.start
+            left_open = a.left_open or b.left_open
+
+        if a.end < b.end:
+            end = a.end
+            right_open = a.right_open
+        elif a.end > b.end:
+            end = b.end
+            right_open = b.right_open
+        else:
+            end = a.end
+            right_open = a.right_open or b.right_open
+
+        if end - start == 0 and (left_open or right_open):
+            empty = True
+    else:
+        empty = True
+
+    if empty:
+        return S.EmptySet
+
+    return Interval(start, end, left_open, right_open)
+
+@dispatch(EmptySet, Set)
+def intersection_simp(a, b):
+    return S.EmptySet
+
+@dispatch(UniversalSet, Set)
+def intersection_simp(a, b):
+    return b
+
+@dispatch(FiniteSet, FiniteSet)
+def intersection_simp(a, b):
+    return FiniteSet(*(a._elements & b._elements))
+
+@dispatch(FiniteSet, Set)
+def intersection_simp(a, b):
+    return FiniteSet(el for el in a if el in b)
+
+@dispatch(Set, Set)
+def intersection_simp(a, b):
     return None
