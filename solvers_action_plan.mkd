@@ -4,6 +4,7 @@ Action Plan for Improving solve
 # Motivations
 
 
+# The Problem
 
 We have following major problems with solve:
 
@@ -48,7 +49,7 @@ Set solution for the following examples are
 - Multivariate functions with non point solution `x**2 + y**2 == 1`:
   `imageset(t, (sin(t), cos(t)), S.Real)` (currently raises NotImplemented
   Error should return unevaulated set after https://github.com/sympy/sympy/pull/2907
-- System of equations `x + y == 2 and x - y == 0`: `FiniteSet((1, 0))`
+- System of equations `x + y == 2 and x - y == 0`: `FiniteSet((1, 1))`
 - Relationals `x > 0` `Interval(0, oo)`
 
 Set Theoretic capabilites we need to implement
@@ -57,7 +58,8 @@ Set Theoretic capabilites we need to implement
   need to implemented.
 - Sets need to get more powerful to deal with countable infinite sets. For
   example `imageset(x, x*pi, S.Intergers).intersect(Interval(0, 10))` needs to
-  work. Some of these techniques are discussed in this draft by Richard Fateman http://www.cs.berkeley.edu/~fateman/papers/sets.pdf. After the implementation sympy should be able to:
+  work. Some of these techniques are discussed in this draft by Richard Fateman
+  http://www.cs.berkeley.edu/~fateman/papers/sets.pdf. After the implementation sympy should be able to:
     * tell about the equality of set {2*n | n in Natural}, {2*m| m in Naturals}
       and {2*k + 4| k in Intersection(Natural, Interval(-3, oo))}
     * tell that Union({2n + 1| n in Naturals},{2n | n in Naturals}) is same as
@@ -73,31 +75,132 @@ Set Theoretic capabilites we need to implement
 It has also been suggested that we create a solution class for unevaluated.
 Maybe we just return a set here with boolean predicate.
 
-2. For second issue the first thing we need to audit the current solver,
-and identify the algorithms and the classs of expressions where it is
-guarenteed to return all the solutions. I have started the audit at https://github.com/sympy/sympy/wiki/solvers, I need to complete the audit before having further discussion. I intend compete it in this week.
+2. The audit for univariate equations is complete, and hopefully I understand how
+it works. To summarize how it works,
+
+1. If the function is a polynomial, we use various polynomial solving
+   algorithms implemented in the polynomials module.
+2. If the function is not a polynomial, we try to reduce it a polynomial with
+   suitable generator. e.g., pure trigonometric equations are reduced to
+   polynomial of tan.
+3. If the function is of form `f(x)*g(x)` then the overall solution is the
+   union of the solution of `f(x)` and `g(x)`.
+4. Then we try to invert the function by various inversion, or try to recognize
+   a lambert pattern.
+5. If it fails we force some assumption, to simplify the expression. e.g.,
+   `log(f(x)) + log(g(x))` is combined to `log(f(x)*g(x))` assuming both `f(x)`
+   and `g(x)` are positive. And the above steps are repeated.
 
 
-# Raw Ideas
+We have a possiblity of loosing a solution:
+
+- if we get `f(x)*g(x)` in some intermediate stage and the solution of f(x) is known but the solution of g(x) is not know.
+- In simplification process where we force certain assumptions upton the
+  expressions and variables for example while solving log(f(x)) + log(g(x)) we
+  force the assumption that both f(x) and g(x) are positive and we loose
+  solutions in other domain.
+- In case all the function is not injective and all the branches of the inverse
+  function are not implemented. Ex: cos(x) == 0 is inverted to x == acos(0).
+  for x in `[0, 2*pi]` and all other branches of inverse of cos are neglected.
+
+We will be refactoring the solvers horizontally across domains, i.e., Integers,
+Reals and Complexes. Then we will be breaking up them vertically across various
+types of functions; polynomials, pure trigonometric and hyperbolic equations,
+piecewise functions, transcedental equations, misc equations; multivariate polynomials.
 
 
+## Other stuff that should be implemented if time permits.
 
-### Relevant issues and discussions
+- The solvers module is heavily dependent on polynomial solving module, and
+  polynomial solvers in turn uses the various formula to solve equations. These
+  formulas have heavily nested radicals and these make them too long. To make
+  the results of polynomial solvers more readable and usable it is import to
+  denest them.
+- Not all solvable quintic, sixtic or septic equations can be solved by sympy;
+  if time permits we
 
-https://groups.google.com/forum/?fromgroups=#!topic/sympy/pYh8v0KdBMQ
 
-https://groups.google.com/forum/#!topic/sympy/OW1ezjt_E5c
+## Solvers in other CAS:
 
-https://code.google.com/p/sympy/issues/detail?id=3699 (solve() should be able to tell you when it knows it's found all the solutions)
+### Maxima
 
-https://code.google.com/p/sympy/issues/detail?id=3560 (solve() is a giant mess)
+Here is the output of some of the solve queries given to maxima. Its approach
+to solvers appears to similar to that of sympy.
 
-https://code.google.com/p/sympy/issues/detail?id=3667 (getting consistent output from solve until a Solution class is available)
+```
+(%i21) solve(sin(x)=0, x);
 
-https://code.google.com/p/sympy/issues/detail?id=1234 (solve() should give all solutions)
+solve: using arc-trig functions to get a solution.
+Some solutions will be lost.
+(%o21)                              [x = 0]
 
-https://code.google.com/p/sympy/issues/detail?id=1579 (Have solve() return RootOf when it can't solve equations)
+(%i22) solve(floor(x)=0, x);
+(%o22)                          [floor(x) = 0]
+(%i23) solve(x**2 + y**2 = 0, (x, y));
+(%o23)                      [y = - %i x, y = %i x]
+(%i24) solve(x**2 + y**2 = 1, (x, y));
+                                     2                 2
+(%o24)              [y = - sqrt(1 - x ), y = sqrt(1 - x )]
 
-https://code.google.com/p/sympy/issues/detail?id=3975 (solve(floor (x)-5,x) should not raise NotImplementedError)
+(%i29) solve([x + 4*y = 2, -2*x + y = 14], [x, y]);
+(%o29)                        [[x = - 6, y = 2]]
+(%i30) solve([x + 4*y + z = 2, -2*x + y -z = 14], [x, y]);
+                               5 z + 54        z - 18
+(%o30)                 [[x = - --------, y = - ------]]
+                                  9              9
+```
 
-https://code.google.com/p/sympy/issues/detail?id=3448 (Cannot solve multivariate inequalities)
+### Matlab
+
+Matlab does something similar to what we are planning to do now. They also
+return a set for solution with the domain explicitly given as a parameter.
+See the documentation of Matlab here: http://www.mathworks.in/help/symbolic/mupad_ref/solve.html
+
+### Mathematica
+
+Mathematica returns something equivalent to list of dictionaries. for both
+single variable and multivariable cases. See: https://reference.wolfram.com/mathematica/ref/Solve.html
+For cases like `sin(x) == 0` mathematica outputs:
+
+```
+In[1]:= Solve[Sin[x] == 1/3, x]
+Out[1] = {{x -> ConditinalExpression[pi - ArcSin[1/3] + 2*pi*C[1], C[1] in
+Integers]},
+{x -> ConditinalExpression[ArcSin[1/3] + 2*pi*C[1], C[1] in Integers]}}
+```
+
+I'm not sure how usable these results are in Mathematica. Since I don't have
+access to the software it will help if someone with Mathematica can check them
+out.
+
+## TODO
+
+- [] Complete the audit for multivarite linear and non linear system of
+equations.
+- [] Discuss and conclude about the usage of sets as output of solve.
+- [] Summarize the discussion on the mailing list, and answer the questions raised there.
+- [] Discuss the new algorithms to be implemented in solve.
+- [] Find out about the set theoretic capabilities of other CAS
+- [] Try to find some literature on symbolic solvers and set theory
+  implementation in CAS
+
+## Relevant issues and discussions
+
+[https://groups.google.com/forum/?fromgroups=#!topic/sympy/pyh8v0kdbmq] (Mailing List pyh8v0kdbmq)
+
+[https://groups.google.com/forum/#!topic/sympy/OW1ezjt_E5c] (Mainling List OW1ezjt_E5c)
+
+[https://code.google.com/p/sympy/issues/detail?id=3699] (#3699) solve should be able to tell you when it knows it's found all the solutions
+
+[https://code.google.com/p/sympy/issues/detail?id=3560] (#3590) solve is a giant mess
+
+[https://code.google.com/p/sympy/issues/detail?id=3667] (#3667) getting consistent output from solve until a Solution class is available
+
+[https://code.google.com/p/sympy/issues/detail?id=1234] (#1234) solve should give all solutions
+
+[https://code.google.com/p/sympy/issues/detail?id=1579] (#1579) Have solve return RootOf when it can't solve equations
+
+[https://code.google.com/p/sympy/issues/detail?id=3975] (#3975) solve(floor (x)-5,x) should not raise NotImplementedError
+
+[https://code.google.com/p/sympy/issues/detail?id=3448] (#3448) Cannot solve multivariate inequalities
+
