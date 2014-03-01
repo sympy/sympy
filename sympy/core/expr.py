@@ -218,7 +218,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
-            return dif.is_nonnegative
+            return sympify(dif.is_nonnegative)
         return C.GreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -228,7 +228,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
-            return dif.is_nonpositive
+            return sympify(dif.is_nonpositive)
         return C.LessThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -238,7 +238,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
-            return dif.is_positive
+            return sympify(dif.is_positive)
         return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -248,7 +248,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
-            return dif.is_negative
+            return sympify(dif.is_negative)
         return C.StrictLessThan(self, other)
 
     @staticmethod
@@ -2019,7 +2019,7 @@ class Expr(Basic, EvalfMixin):
                 return len(negative_args) % 2 == 1
 
             # As a last resort, we choose the one with greater value of .sort_key()
-            return self.sort_key() < negative_self.sort_key()
+            return bool(self.sort_key() < negative_self.sort_key())
 
     def extract_branch_factor(self, allow_half=False):
         """

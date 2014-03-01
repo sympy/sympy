@@ -461,11 +461,10 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     poly_part, abs_part, extra_assume = {}, {}, []
 
     for inequality in inequalities:
-        if isinstance(inequality, bool):
-            if inequality is False:
-                return False
-            else:
-                continue
+        if inequality == True:
+            continue
+        elif inequality == False:
+            return False
 
         if isinstance(inequality, AppliedPredicate):
             extra_assume.append(inequality)

@@ -878,10 +878,10 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     _, s = _get_coeff_exp(po, x)
     _, b1 = _get_coeff_exp(g1.argument, x)
     _, b2 = _get_coeff_exp(g2.argument, x)
-    if (b1 < 0) is True:
+    if (b1 < 0) == True:
         b1 = -b1
         g1 = _flip_g(g1)
-    if (b2 < 0) is True:
+    if (b2 < 0) == True:
         b2 = -b2
         g2 = _flip_g(g2)
     if not b1.is_Rational or not b2.is_Rational:
@@ -969,7 +969,7 @@ def _check_antecedents(g1, g2, x):
         for a in g1.an:
             for b in g1.bm:
                 diff = a - b
-                if (diff > 0) is True and diff.is_integer:
+                if (diff > 0) == True and diff.is_integer:
                     c1 = False
 
     tmp = []
@@ -1637,7 +1637,7 @@ def _meijerint_indefinite_1(f, x):
 
         def tr(p):
             return [a + rho + 1 for a in p]
-        if any(b.is_integer and (b <= 0) is True for b in tr(g.bm)):
+        if any(b.is_integer and (b <= 0) == True for b in tr(g.bm)):
             r = -meijerg(
                 tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
         else:
@@ -1770,7 +1770,7 @@ def meijerint_definite(f, x, a, b):
     results = []
     if b == oo:
         for split in _find_splitting_points(f, x):
-            if (a - split >= 0) is True:
+            if (a - split >= 0) == True:
                 _debug('Trying x --> x + %s' % split)
                 res = _meijerint_definite_2(f.subs(x, x + split)
                                             *Heaviside(x + split - a), x)

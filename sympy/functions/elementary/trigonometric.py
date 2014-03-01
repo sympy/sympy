@@ -1433,7 +1433,11 @@ class asin(Function):
         return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1 - x**2))
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
+        r = self.args[0].is_real and (self.args[0] >= -1 and
+                                      self.args[0] <= 1)
+        if r == True or r == False:
+            r = bool(r)
+        return r
 
     def inverse(self, argindex=1):
         """
@@ -1545,7 +1549,11 @@ class acos(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
+        r = self.args[0].is_real and (self.args[0] >= -1 and
+                                      self.args[0] <= 1)
+        if r == True or r == False:
+            r = bool(r)
+        return r
 
     def _eval_rewrite_as_log(self, x):
         return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))

@@ -282,7 +282,7 @@ def checksol(f, symbol, sol=None, **flags):
         elif val.is_Rational:
             return val == 0
         if numerical and not val.free_symbols:
-            return abs(val.n(18).n(12, chop=True)) < 1e-9
+            return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
         was = val
 
     if flags.get('warn', False):
@@ -2711,7 +2711,7 @@ def unrad(eq, *syms, **flags):
         # make sign canonical
         free = eq.free_symbols
         if len(free) == 1:
-            if (eq.coeff(free.pop()**degree(eq)) < 0) is True:
+            if (eq.coeff(free.pop()**degree(eq)) < 0) == True:
                 eq = -eq
         elif eq.could_extract_minus_sign():
             eq = -eq

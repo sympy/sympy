@@ -70,9 +70,9 @@ def test_reduce_poly_inequalities_real_relational():
         assert reduce_rational_inequalities(
             [[Le(x**2, 0)]], x, relational=True) == Eq(x, 0)
         assert reduce_rational_inequalities(
-            [[Lt(x**2, 0)]], x, relational=True) is False
+            [[Lt(x**2, 0)]], x, relational=True) == False
         assert reduce_rational_inequalities(
-            [[Ge(x**2, 0)]], x, relational=True) is True
+            [[Ge(x**2, 0)]], x, relational=True) == True
         assert reduce_rational_inequalities(
             [[Gt(x**2, 0)]], x, relational=True) == Or(Lt(x, 0), Gt(x, 0))
         assert reduce_rational_inequalities(

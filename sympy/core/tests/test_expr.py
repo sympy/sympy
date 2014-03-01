@@ -161,15 +161,15 @@ def test_ibasic():
 
 
 def test_relational():
-    assert (pi < 3) is False
-    assert (pi <= 3) is False
-    assert (pi > 3) is True
-    assert (pi >= 3) is True
-    assert (-pi < 3) is True
-    assert (-pi <= 3) is True
-    assert (-pi > 3) is False
-    assert (-pi >= 3) is False
-    assert (x - 2 < x - 3) is False
+    assert (pi < 3) is S.false
+    assert (pi <= 3) is S.false
+    assert (pi > 3) is S.true
+    assert (pi >= 3) is S.true
+    assert (-pi < 3) is S.true
+    assert (-pi <= 3) is S.true
+    assert (-pi > 3) is S.false
+    assert (-pi >= 3) is S.false
+    assert (x - 2 < x - 3) is S.false
 
 
 def test_relational_assumptions():
@@ -186,26 +186,26 @@ def test_relational_assumptions():
     m2 = Symbol("m2", positive=False, real=True)
     m3 = Symbol("m3", nonpositive=False, real=True)
     m4 = Symbol("m4", negative=False, real=True)
-    assert (m1 < 0) is True
-    assert (m2 <= 0) is True
-    assert (m3 > 0) is True
-    assert (m4 >= 0) is True
+    assert (m1 < 0) is S.true
+    assert (m2 <= 0) is S.true
+    assert (m3 > 0) is S.true
+    assert (m4 >= 0) is S.true
     m1 = Symbol("m1", negative=True)
     m2 = Symbol("m2", nonpositive=True)
     m3 = Symbol("m3", positive=True)
     m4 = Symbol("m4", nonnegative=True)
-    assert (m1 < 0) is True
-    assert (m2 <= 0) is True
-    assert (m3 > 0) is True
-    assert (m4 >= 0) is True
+    assert (m1 < 0) is S.true
+    assert (m2 <= 0) is S.true
+    assert (m3 > 0) is S.true
+    assert (m4 >= 0) is S.true
     m1 = Symbol("m1", negative=False)
     m2 = Symbol("m2", nonpositive=False)
     m3 = Symbol("m3", positive=False)
     m4 = Symbol("m4", nonnegative=False)
-    assert (m1 < 0) is False
-    assert (m2 <= 0) is False
-    assert (m3 > 0) is False
-    assert (m4 >= 0) is False
+    assert (m1 < 0) is S.false
+    assert (m2 <= 0) is S.false
+    assert (m3 > 0) is S.false
+    assert (m4 >= 0) is S.false
 
 
 def test_relational_noncommutative():

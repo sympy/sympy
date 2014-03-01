@@ -222,7 +222,7 @@ class Pow(Expr):
                 e.is_real is False and smallarg is False):
             return -self.func(b, e*other)
         if (other.is_integer or
-            e.is_real and (b_nneg or (abs(e) < 1) is True) or
+            e.is_real and (b_nneg or (abs(e) < 1) == True) or
             e.is_real is False and smallarg is True or
                 b.is_polar):
             return self.func(b, e*other)
@@ -778,9 +778,8 @@ class Pow(Expr):
             return False
 
         if self.base.has(*syms):
-            return self.base._eval_is_polynomial(syms) and \
-                self.exp.is_Integer and \
-                (self.exp >= 0) is True
+            return bool(self.base._eval_is_polynomial(syms) and
+                self.exp.is_Integer and (self.exp >= 0))
         else:
             return True
 
