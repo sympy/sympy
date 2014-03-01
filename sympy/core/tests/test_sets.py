@@ -10,9 +10,9 @@ from sympy.utilities.pytest import raises, XFAIL
 
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)
-    assert Interval(0, oo).right_open is True
+    assert Interval(0, oo).right_open is true
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
-    assert Interval(-oo, 0).left_open is True
+    assert Interval(-oo, 0).left_open is true
 
     assert isinstance(Interval(1, 1), FiniteSet)
 
@@ -518,8 +518,10 @@ def test_Union_of_ProductSets_shares():
 
 
 def test_Interval_free_symbols():
+    # issue 6211
+    assert Interval(0, 1).free_symbols == set()
     x = Symbol('x', real=True)
-    assert set(Interval(0, x).free_symbols) == set((x,))
+    assert Interval(0, x).free_symbols == set([x])
 
 
 def test_image_interval():
@@ -581,7 +583,7 @@ def test_boundary():
     y = Symbol('y', real=True)
     assert FiniteSet(1).boundary == FiniteSet(1)
     assert all(Interval(0, 1, left_open, right_open).boundary == FiniteSet(0, 1)
-            for left_open in (True, False) for right_open in (True, False))
+            for left_open in (true, false) for right_open in (true, false))
 
 
 def test_boundary_Union():

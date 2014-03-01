@@ -436,7 +436,6 @@ def test_sympy__core__sets__FiniteSet():
     assert _test_args(FiniteSet(x, y, z))
 
 
-@XFAIL
 def test_sympy__core__sets__Interval():
     from sympy.core.sets import Interval
     assert _test_args(Interval(0, 1))
