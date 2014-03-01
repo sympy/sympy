@@ -13,6 +13,7 @@ from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
 
 from sympy.utilities import default_sort_key
+from multipledispatch import dispatch
 
 
 class Set(Basic):
@@ -98,20 +99,6 @@ class Set(Basic):
         be a Union, FiniteSet, or EmptySet
 
         Used within the Intersection class
-        """
-        return None
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        self._union(other) returns a new, joined set if self knows how
-        to join itself with other, otherwise it returns None.
-        It may also return a python set of SymPy Sets if they are somehow
-        simpler. If it does this it must be idempotent i.e. the sets returned
-        must return None with _union'ed with each other
-
-        Used within the Union class
         """
         return None
 
@@ -423,19 +410,6 @@ class ProductSet(Set):
         return ProductSet(a.intersect(b)
                 for a, b in zip(self.sets, other.sets))
 
-    def _union(self, other):
-        if not other.is_ProductSet:
-            return None
-        if len(other.args) != len(self.args):
-            return None
-        if self.args[0] == other.args[0]:
-            return self.args[0] * Union(ProductSet(self.args[1:]),
-                                        ProductSet(other.args[1:]))
-        if self.args[-1] == other.args[-1]:
-            return Union(ProductSet(self.args[:-1]),
-                         ProductSet(other.args[:-1])) * self.args[-1]
-        return None
-
     @property
     def sets(self):
         return self.args
@@ -658,42 +632,6 @@ class Interval(Set, EvalfMixin):
             return S.EmptySet
 
         return Interval(start, end, left_open, right_open)
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        See Set._union for docstring
-        """
-        if other.is_Interval and self._is_comparable(other):
-            from sympy.functions.elementary.miscellaneous import Min, Max
-            # Non-overlapping intervals
-            end = Min(self.end, other.end)
-            start = Max(self.start, other.start)
-            if (end < start or
-               (end == start and (end not in self and end not in other))):
-                return None
-            else:
-                start = Min(self.start, other.start)
-                end = Max(self.end, other.end)
-
-                left_open = ((self.start != start or self.left_open) and
-                             (other.start != start or other.left_open))
-                right_open = ((self.end != end or self.right_open) and
-                              (other.end != end or other.right_open))
-
-                return Interval(start, end, left_open, right_open)
-
-        # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) is True) or
-                (self.right_open and other.contains(self.end) is True)):
-            # Fill in my end points and return
-            open_left = self.left_open and self.start not in other
-            open_right = self.right_open and self.end not in other
-            new_self = Interval(self.start, self.end, open_left, open_right)
-            return set((new_self, other))
-
-        return None
 
     @property
     def _complement(self):
@@ -921,7 +859,7 @@ class Union(Set, EvalfMixin):
             for s in args:
                 new_args = False
                 for t in args - set((s,)):
-                    new_set = s._union(t)
+                    new_set = union_simp(s, t)
                     # This returns None if s does not know how to intersect
                     # with t. Returns the newly intersected set otherwise
                     if new_set is not None:
@@ -1244,9 +1182,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def __len__(self):
         return 0
 
-    def _union(self, other):
-        return other
-
     def __iter__(self):
         return iter([])
 
@@ -1300,9 +1235,6 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     def as_relational(self, symbol):
         return True
-
-    def _union(self, other):
-        return self
 
     @property
     def _boundary(self):
@@ -1359,23 +1291,6 @@ class FiniteSet(Set, EvalfMixin):
         if isinstance(other, self.__class__):
             return self.__class__(*(self._elements & other._elements))
         return self.__class__(el for el in self if el in other)
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        See Set._union for docstring
-        """
-        if other.is_FiniteSet:
-            return FiniteSet(*(self._elements | other._elements))
-
-        # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) is True for x in self):
-            return set((
-                FiniteSet(x for x in self if other.contains(x) is not True),
-                other))
-
-        return None
 
     def _contains(self, other):
         """
@@ -1513,3 +1428,87 @@ def imageset(*args):
     set = args[-1]
 
     return set._eval_imageset(f)
+
+
+@dispatch(EmptySet, Set)
+def union_simp(a, b):
+    return b
+
+
+@dispatch(UniversalSet, Set)
+def union_simp(a, b):
+    return a
+
+
+@dispatch(ProductSet, ProductSet)
+def union_simp(a, b):
+    if len(b.args) != len(a.args):
+        return None
+    if a.args[0] == b.args[0]:
+        return a.args[0] * Union(ProductSet(a.args[1:]),
+                                    ProductSet(b.args[1:]))
+    if a.args[-1] == b.args[-1]:
+        return Union(ProductSet(a.args[:-1]),
+                     ProductSet(b.args[:-1])) * a.args[-1]
+    return None
+
+
+@dispatch(Interval, Interval)
+def union_simp(a, b):
+    """
+    This function should only be used internally
+
+    See Set._union for docstring
+    """
+    if a._is_comparable(b):
+        from sympy.functions.elementary.miscellaneous import Min, Max
+        # Non-overlapping intervals
+        end = Min(a.end, b.end)
+        start = Max(a.start, b.start)
+        if (end < start or
+           (end == start and (end not in a and end not in b))):
+            return None
+        else:
+            start = Min(a.start, b.start)
+            end = Max(a.end, b.end)
+
+            left_open = ((a.start != start or a.left_open) and
+                         (b.start != start or b.left_open))
+            right_open = ((a.end != end or a.right_open) and
+                          (b.end != end or b.right_open))
+
+            return Interval(start, end, left_open, right_open)
+
+
+@dispatch(Interval, Set)
+def union_simp(a, b):
+    # If I have open end points and these endpoints are contained in b
+    if ((a.left_open and b.contains(a.start) is True) or
+            (a.right_open and b.contains(a.end) is True)):
+        # Fill in my end points and return
+        open_left = a.left_open and a.start not in b
+        open_right = a.right_open and a.end not in b
+        new_a = Interval(a.start, a.end, open_left, open_right)
+        return set((new_a, b))
+
+    return None
+
+
+@dispatch(FiniteSet, FiniteSet)
+def union_simp(a, b):
+    return FiniteSet(*(a._elements | b._elements))
+
+
+@dispatch(FiniteSet, Set)
+def union_simp(a, b):
+    # If b set contains one of my elements, remove it from myself
+    if any(b.contains(x) is True for x in a):
+        return set((
+            FiniteSet(x for x in a if b.contains(x) is not True), b))
+
+    return None
+
+
+@dispatch(Set, Set)
+def union_simp(a, b):
+    return None
