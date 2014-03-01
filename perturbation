@@ -1,0 +1,69 @@
+from __future__ import print_function, division
+from sympy.physics.quantum import *
+SOCE = 0
+#V = Perturbed Term
+def Hamiltonian(V):
+'''
+	Returns total Hamiltonian when Perturbed term is passed
+	V = Perturbed Term ( So passed with quotes)
+	e.g. Hamiltonian('kx^2')
+	Examples
+    ========
+
+    >>> from sympy.physics.quantum import Operator
+    >>> Hamiltonian('kx^2')
+		kx2+Ho
+'''
+	H1 = Symbol(V)
+	H = Operator('H')
+	Ho = Operator('Ho')
+	H = Ho + H1
+	return H
+'''=================================================='''
+
+def first_order_correction(V):
+	FOCE = (Bra('n')*H1*Ket('n'))
+	return FOCE
+'''=================================================='''	
+	
+def E(n):
+	E = str(Symbol('E'))+str(n)
+	F = Symbol(E)
+	return F
+'''=================================================='''	
+def second_order_correction(V,n):
+	global SOCE
+	for i in range(0,n):
+		if i !=n:
+			SOCE = ((Bra('n')*V*Ket('n'))**2)/ (E(n) - E(i)) + SOCE
+	return SOCE
+'''=================================================='''	
+def Perturbation(V,n):
+'''
+	Returns Correction Energy Terms for perturbation
+	Parameters:
+	V = Perturbed Term (Passed in quotes)
+	e.g. Perturbation('kx',2)
+	N = nth order coorection
+	
+	Examples
+    ========
+	>>>Perturbation('kx',1)
+	First Order Energy Change:
+	<n|kx|n>
+	>>>Perturbation('kx',2)
+	
+	Second Order Energy Change:
+	(<n|kx|n>)2-E3+E4+(<n|kx|n>)2-E2+E4+(<n|kx|n>)2-E1+E4+(<n|kx|n>)2-E0+E4
+
+	--- It gives result for n= 4 terms(for psi).
+		Will include summation  next for terms till 'n'
+'''
+	
+	H1 = Operator(V)
+	if n ==1:
+		print('First Order Energy Change:')
+		return first_order_correction(H1)
+	elif n ==2:
+		print('Second Order Energy Change:')
+		return second_order_correction(H1,4)    #passing 4 just to see 'psi' for n terms
