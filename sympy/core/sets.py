@@ -35,7 +35,7 @@ class Set(Basic):
     is_Interval = False
     is_ProductSet = False
     is_Union = False
-    isintersection_simpion = None
+    is_Intersection = None
     is_EmptySet = None
     is_UniversalSet = None
 
@@ -937,7 +937,7 @@ class Intersection(Set):
     ==========
     <http://en.wikipedia.org/wiki/Intersection_(set_theory)>
     """
-    isintersection_simpion = True
+    is_Intersection = True
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', True)
@@ -947,7 +947,7 @@ class Intersection(Set):
 
         def flatten(arg):
             if isinstance(arg, Set):
-                if arg.isintersection_simpion:
+                if arg.is_Intersection:
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
@@ -1426,11 +1426,6 @@ def union_simp(a, b):
 
 @dispatch(ProductSet, ProductSet)
 def intersection_simp(a, b):
-    """
-    This function should only be used internally
-
-    See Set.intersection_simp for docstring
-    """
     if len(b.args) != len(a.args):
         return S.EmptySet
     return ProductSet(a.intersect(b)
@@ -1439,11 +1434,6 @@ def intersection_simp(a, b):
 
 @dispatch(Interval, Interval)
 def intersection_simp(a, b):
-    """
-    This function should only be used internally
-
-    See Set.intersection_simp for docstring
-    """
     # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
     if not a._is_comparable(b):
         return None
