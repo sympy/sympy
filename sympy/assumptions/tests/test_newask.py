@@ -217,3 +217,10 @@ def test_abs():
     assert newask(Q.zero(x), ~Q.zero(abs(x))) is False
     assert newask(Q.zero(x), Q.zero(abs(x))) is True
     assert newask(Q.zero(abs(x)), Q.zero(x)) is True
+
+def test_imaginary():
+    assert newask(Q.imaginary(2*I)) is True
+    assert newask(Q.imaginary(x*y),Q.imaginary(x)) is None
+    assert newask(Q.imaginary(x*y),Q.imaginary(x) & Q.real(y)) is True
+    assert newask(Q.imaginary(x),Q.real(x)) is False
+    assert newask(Q.imaginary(1)) is False
