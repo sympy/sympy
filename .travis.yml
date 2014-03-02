@@ -119,7 +119,7 @@ before_install:
 install:
   - if [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
-      pip install multipledispatch
+      pip install multipledispatch --use-mirrors;
     fi
 script:
   - bin/test_travis.sh
