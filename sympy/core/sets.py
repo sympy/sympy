@@ -13,7 +13,7 @@ from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
 
 from sympy.utilities import default_sort_key
-from multipledispatch import dispatch
+from sympy.dispatch import dispatch
 
 
 class Set(Basic):

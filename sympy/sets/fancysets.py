@@ -7,7 +7,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
 from sympy.core.decorators import deprecated
-from multipledispatch import dispatch
+from sympy.dispatch import dispatch
 
 
 class Naturals(with_metaclass(Singleton, Set)):
