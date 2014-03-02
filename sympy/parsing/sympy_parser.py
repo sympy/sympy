@@ -536,6 +536,41 @@ def auto_symbol(tokens, local_dict, global_dict):
     return result
 
 
+def lambda_notation(tokens, local_dict, global_dict):
+    """Substitutes "lambda" with its Sympy equivalent Lambda().
+    However, the conversion doesn't take place if only "lambda"
+    is passed because that is a syntax error.
+
+    """
+    result = []
+    flag = False
+    toknum, tokval = tokens[0]
+    tokLen = len(tokens)
+    if toknum == NAME and tokval == 'lambda':
+        if tokLen == 2:
+            result.extend(tokens)
+        elif tokLen > 2:
+            result.extend([
+                (NAME, 'Lambda'),
+                (OP, '('),
+                (OP, '('),
+                (OP, ')'),
+                (OP, ')'),
+            ])
+            for tokNum, tokVal in tokens[1:]:
+                if tokNum == OP and tokVal == ':':
+                    tokVal = ','
+                    flag = True
+                if flag:
+                    result.insert(-1, (tokNum, tokVal))
+                else:
+                    result.insert(-2, (tokNum, tokVal))
+    else:
+        result.extend(tokens)
+
+    return result
+
+
 def factorial_notation(tokens, local_dict, global_dict):
     """Allows standard notation for factorial."""
     result = []
@@ -660,7 +695,7 @@ def rationalize(tokens, local_dict, global_dict):
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations = (auto_symbol, auto_number, factorial_notation)
+standard_transformations = (lambda_notation, auto_symbol, auto_number, factorial_notation)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):

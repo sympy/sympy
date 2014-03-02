@@ -230,15 +230,18 @@ def test_bug496():
     assert sympify("_a") == Symbol("_a")
 
 
-@XFAIL
 def test_lambda():
     x = Symbol('x')
     assert sympify('lambda: 1') == Lambda((), 1)
+    assert sympify('lambda x: x') == Lambda(x, x)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
     assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x + y)
 
 
 def test_lambda_raises():
+    raises(SympifyError, lambda: sympify("lambda *args: args")) # args argument error
+    raises(SympifyError, lambda: sympify("lambda **kwargs: kwargs[0]")) # kwargs argument error
+    raises(SympifyError, lambda: sympify("lambda x = 1: x"))    # Keyword argument error
     with raises(SympifyError):
         _sympify('lambda: 1')
 
