@@ -224,3 +224,14 @@ def test_imaginary():
     assert newask(Q.imaginary(x*y),Q.imaginary(x) & Q.real(y)) is True
     assert newask(Q.imaginary(x),Q.real(x)) is False
     assert newask(Q.imaginary(1)) is False
+    assert newask(Q.imaginary(x*y),Q.real(x) & Q.real(y)) is False
+    assert newask(Q.imaginary(x+y),Q.real(x) & Q.real(y)) is False
+
+def test_real():
+    assert newask(Q.real(x*y),Q.real(x) & Q.real(y)) is True
+    assert newask(Q.real(x+y),Q.real(x) & Q.real(y)) is True
+    assert newask(Q.real(x*y*z),Q.real(x) & Q.real(y) & Q.real(z)) is True
+    assert newask(Q.real(x*y*z),Q.real(x) & Q.real(y)) is None
+    assert newask(Q.real(x*y*z),Q.real(x) & Q.real(y) & Q.imaginary(z)) is False
+    assert newask(Q.real(x+y+z),Q.real(x) & Q.real(y) & Q.real(z)) is True
+    assert newask(Q.real(x+y+z),Q.real(x) & Q.real(y)) is None
