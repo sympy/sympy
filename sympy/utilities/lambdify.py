@@ -168,7 +168,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     should probably set dummify=False.
 
     If numpy is installed, the default behavior is to substitute Sympy Matrices
-    for numpy.matrix. If you would rather have a numpy.array returned, 
+    for numpy.matrix. If you would rather have a numpy.array returned,
     set use_array=True.
 
     Usage
