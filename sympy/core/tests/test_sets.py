@@ -7,6 +7,8 @@ from sympy.mpmath import mpi
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
+from sympy.abc import x, y, z
+
 
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)
@@ -25,6 +27,9 @@ def test_interval_arguments():
 
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
     raises(ValueError, lambda: Interval(0, Symbol('z')))
+    raises(NotImplementedError, lambda: Interval(0, 1, And(x, y)))
+    raises(NotImplementedError, lambda: Interval(0, 1, False, And(x, y)))
+    raises(NotImplementedError, lambda: Interval(0, 1, z, And(x, y)))
 
     assert isinstance(Interval(1, Symbol('a', real=True)), Interval)
 

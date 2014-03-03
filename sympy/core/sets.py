@@ -527,6 +527,11 @@ class Interval(Set, EvalfMixin):
         left_open = _sympify(left_open)
         right_open = _sympify(right_open)
 
+        if not all(isinstance(a, (type(true), type(false))) for a in [left_open, right_open]):
+            raise NotImplementedError(
+                "left_open and right_open can have only true/false values, "
+                "got %s and %s" % (left_open, right_open))
+
         inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_real=True').
         if not (start.is_real or start in inftys) or not (end.is_real or end in inftys):
