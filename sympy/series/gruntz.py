@@ -408,6 +408,8 @@ def limitinf(e, x):
 
     if not e.has(x):
         return e  # e is a constant
+    if e.is_Order:
+        raise ValueError("Cannot find limit of %s" % e)
     if e.has(Order):
         e = e.expand().removeO()
     if not x.is_positive:
