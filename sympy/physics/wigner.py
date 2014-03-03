@@ -532,7 +532,7 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
 
     sumres = 0
-    for kk in range(int(imin), int(imax) + 1):
+    for kk in range(imin, int(imax) + 1):
         sumres = sumres + (2 * kk + 1) * \
             racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
             racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
