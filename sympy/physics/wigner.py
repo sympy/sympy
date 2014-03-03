@@ -70,7 +70,7 @@ def _calc_factlist(nn):
     return _Factlist[:int(nn) + 1]
 
 
-def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
+def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`.
 
@@ -78,13 +78,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
     OUTPUT:
 
-    Rational number times the square root of a rational number
-    (if ``prec=None``), or real number if a precision is given.
+    Rational number times the square root of a rational number.
 
     Examples
     ========
@@ -217,7 +213,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     return res
 
 
-def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
+def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculates the Clebsch-Gordan coefficient
     `\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle`.
@@ -228,14 +224,10 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
     OUTPUT:
 
-    Rational number times the square root of a rational number
-    (if ``prec=None``), or real number if a precision is given.
-
+    Rational number times the square root of a rational number.
+    
     EXAMPLES::
 
         >>> from sympy import S
