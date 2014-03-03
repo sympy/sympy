@@ -1,6 +1,6 @@
 from sympy import S, sqrt, pi
 from sympy.physics.wigner import clebsch_gordan, wigner_9j, wigner_6j, gaunt, racah
-from sympy.core.numbers import Rational, Float
+from sympy.core.numbers import Rational
 
 # Todo: more tests should be added from:
 # http://en.wikipedia.org/wiki/Table_of_Clebsch-Gordan_coefficients
