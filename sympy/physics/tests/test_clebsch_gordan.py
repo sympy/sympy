@@ -1,6 +1,6 @@
 from sympy import S, sqrt, pi
-from sympy.physics.wigner import clebsch_gordan, wigner_9j, wigner_6j, gaunt
-from sympy.core.numbers import Rational
+from sympy.physics.wigner import clebsch_gordan, wigner_9j, wigner_6j, gaunt, racah
+from sympy.core.numbers import Rational, Float
 
 # Todo: more tests should be added from:
 # http://en.wikipedia.org/wiki/Table_of_Clebsch-Gordan_coefficients
@@ -120,3 +120,8 @@ def test_gaunt():
     assert gaunt(1, 0, 1, 1, 0, -1) == -1/(2*sqrt(pi))
     assert tn(gaunt(
         10, 10, 12, 9, 3, -12, prec=64), (-S(98)/62031) * sqrt(6279)/sqrt(pi))
+
+def test_racah():
+    assert racah(3,3,3,3,3,3) == Rational(-1,14)
+    assert racah(2,2,2,2,2,2) == Rational(-3,70)
+    assert racah(7,8,7,1,7,7, prec=4).is_Float == True
