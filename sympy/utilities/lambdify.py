@@ -145,7 +145,8 @@ def _import(module, reload="False"):
 
 
 @doctest_depends_on(modules=('numpy'))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True, use_array=False):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+        dummify=True, use_array=False):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -168,7 +169,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     should probably set dummify=False.
 
     If numpy is installed, the default behavior is to substitute Sympy Matrices
-    for numpy.matrix. If you would rather have a numpy.array returned,
+    with numpy.matrix. If you would rather have a numpy.array returned,
     set use_array=True.
 
     Usage

@@ -268,8 +268,8 @@ def test_numpy_matrix():
     #Lambdify array first, to ensure return to matrix as default
     f_arr = lambdify((x, y, z), A, use_array=True)
     f_mat = lambdify((x, y, z), A)
-    assert numpy.all(f_mat(1, 2, 3) == sol_mat)
-    assert numpy.all(f_arr(1, 2, 3) == sol_arr)
+    numpy.testing.assert_allclose(f_mat(1, 2, 3), sol_mat)
+    numpy.testing.assert_allclose(f_arr(1, 2, 3), sol_arr)
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
