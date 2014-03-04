@@ -2,7 +2,7 @@ import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
                    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
-                   IndexedBase, Idx, MatrixSymbol, Piecewise)
+                   IndexedBase, Idx, MatrixSymbol, Piecewise, O)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
@@ -297,3 +297,7 @@ def test_Piecewise():
     ans = cse(f)
     actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
+
+def test_ignore_order_terms():
+    eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
+    assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
