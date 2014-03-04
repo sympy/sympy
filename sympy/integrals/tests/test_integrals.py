@@ -302,7 +302,6 @@ def test_integrate_functions():
     assert integrate(diff(f(x), x) / f(x), x) == log(f(x))
 
 
-@XFAIL
 def test_integrate_derivatives():
     assert integrate(Derivative(f(x), x), x) == f(x)
     assert integrate(Derivative(f(y), y), x) == x*Derivative(f(y), y)
@@ -394,7 +393,6 @@ def test_evalf_integrals():
     assert NS(Integral(x, (x, y))) == 'Integral(x, (x, y))'
 
 
-@XFAIL
 def test_evalf_issue_939():
     # http://code.google.com/p/sympy/issues/detail?id=939
 
@@ -725,7 +723,6 @@ def test_issue_1304():
         -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
 
-@XFAIL
 def test_issue_1304_2():
     assert integrate(sqrt(-x**2 - 4), x) == \
         -2*atan(x/sqrt(-4 - x**2)) + x*sqrt(-4 - x**2)/2
