@@ -125,3 +125,4 @@ def test_racah():
     assert racah(3,3,3,3,3,3) == Rational(-1,14)
     assert racah(2,2,2,2,2,2) == Rational(-3,70)
     assert racah(7,8,7,1,7,7, prec=4).is_Float
+    assert racah(5.5,7.5,9.5,6.5,8,9)
