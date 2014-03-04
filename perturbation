@@ -109,8 +109,7 @@ def Perturbation_time_independent_second_order(x):
 	Z = Operator(x)
 	second_order = 0
 	for i in (0,n):
-		if i != n:
-			second_order = second_order + (((Bra(i)*Z*Ket(n))**2)/(E(n) - E(i)))
+		second_order = second_order + (((Bra(i)*Z*Ket(n))**2)/(E(n) - E(i)))
 	return second_order	
 '''============================================================================================================='''
 	
