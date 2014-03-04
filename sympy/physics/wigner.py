@@ -227,7 +227,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     OUTPUT:
 
     Rational number times the square root of a rational number.
-    
+
     EXAMPLES::
 
         >>> from sympy import S
