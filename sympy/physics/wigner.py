@@ -65,7 +65,7 @@ def _calc_factlist(nn):
         [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]
     """
     if nn >= len(_Factlist):
-        for ii in range(len(_Factlist), nn + 1):
+        for ii in range(len(_Factlist), int(nn + 1)):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
 
@@ -288,6 +288,7 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         sage: _big_delta_coeff(1,1,1)
         1/2*sqrt(1/6)
     """
+
     if int(aa + bb - cc) != (aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if int(aa + cc - bb) != (aa + cc - bb):
