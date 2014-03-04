@@ -817,7 +817,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
              b: dep.coeff(f(x)),
              c: ind}
         # double check f[a] since the preconditioning may have failed
-        if not r[a].has(f) and (
+        if not r[a].has(f) and not r[b].has(f) and (
                 r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
             r['a'] = a
             r['b'] = b
