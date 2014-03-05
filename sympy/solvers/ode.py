@@ -254,7 +254,7 @@ from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, fraction, posify
+    simplify, trigsimp, denom, fraction, posify, cse
 from sympy.simplify.simplify import _mexpand
 from sympy.solvers import solve
 
@@ -355,6 +355,33 @@ def sub_func_doit(eq, func, new):
         reps[d] = u
 
     return eq.subs(reps).subs(func, new).subs(repu)
+
+
+def new_constants(eq, start=1, prefix='C'):
+    """
+    Yield an infinite sequence constants that do not occur
+    in eq already.
+    """
+    if isinstance(eq, C.Expr):
+        atom_set = eq.atoms(Symbol)
+    elif is_iterable(eq):
+        atom_set = reduce(lambda x, y : x | y,
+            [i.atoms(Symbol) for i in eq], set() )
+    else:
+        raise ValueError("Expected Expr or iterable but got %s"%eq)
+    for Ci in numbered_symbols(prefix=prefix, start=start, cls=Symbol):
+        if Ci not in atom_set:
+            yield Ci
+
+
+def get_new_constants(eq, num=1, start=1, prefix='C'):
+    """
+    Returns a list of constants that do not occur
+    in eq already.
+    """
+    g = new_constants(eq, start=start, prefix=prefix)
+    Cs = [ next(g) for i in xrange(num) ]
+    return ( Cs[0] if num == 1 else tuple(Cs) )
 
 
 def dsolve(eq, func=None, hint="default", simplify=True,
@@ -578,8 +605,13 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
         # attempt to solve for func, and apply any other hint specific
         # simplifications
-        rv = odesimp(solvefunc(eq, func, order, match), func, order, hint)
-        return rv
+        sols = solvefunc(eq, func, order, match)
+        if isinstance(sols, C.Expr):
+            constants = sols.free_symbols.difference(eq.free_symbols)
+            return odesimp(sols, func, order, constants, hint)
+        return [odesimp(sol, func, order,
+                        sol.free_symbols.difference(eq.free_symbols), hint)
+                        for sol in sols]
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
@@ -1163,7 +1195,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return tuple(retlist)
 
 @vectorize(0)
-def odesimp(eq, func, order, hint):
+def odesimp(eq, func, order, constants, hint):
     r"""
     Simplifies ODEs, including trying to solve for ``func`` and running
     :py:meth:`~sympy.solvers.ode.constantsimp`.
@@ -1234,7 +1266,7 @@ def odesimp(eq, func, order, hint):
     # expression.  If that number grows with another hint, the third argument
     # here should be raised accordingly, or constantsimp() rewritten to handle
     # an arbitrary number of constants.
-    eq = constantsimp(eq, x, 2*order)
+    eq = constantsimp(eq, constants)
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When RootOf is implemented in solve(), we will want to return a RootOf
@@ -1254,7 +1286,22 @@ def odesimp(eq, func, order, hint):
             # Collect terms to make the solution look nice.
             # This is also necessary for constantsimp to remove unnecessary
             # terms from the particular solution from variation of parameters
+            #
+            # Collect is not behaving reliably here.  The results for
+            # some linear constant-coefficient equations with repeated
+            # roots do not properly simplify all constants sometimes.
+            # 'collectterms' gives different orders sometimes, and results
+            # differ in collect based on that order.  The
+            # sort-reverse trick fixes things, but may fail in the
+            # future. In addition, collect is spliting exponentials with
+            # rational powers for no reason.  We have to do a match
+            # to fix this using Wilds.
             global collectterms
+            try:
+                collectterms.sort()
+                collectterms.reverse()
+            except:
+                pass
             assert len(eq) == 1 and eq[0].lhs == f(x)
             sol = eq[0].rhs
             sol = expand_mul(sol)
@@ -1264,6 +1311,11 @@ def odesimp(eq, func, order, hint):
             for i, reroot, imroot in collectterms:
                 sol = collect(sol, x**i*exp(reroot*x))
             del collectterms
+
+            # contract over-expanded exponentials -- this is
+            # a work-around for collect's bad behavior, 2013
+            w1, w2 = Wild('w1',exclude=[x]), Wild('w2')
+            sol = sol.replace( exp(w1*x)**w2, exp(w1*w2*x) )
             eq[0] = Eq(f(x), sol)
 
     else:
@@ -1297,12 +1349,12 @@ def odesimp(eq, func, order, hint):
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
-    # We cleaned up the costants before solving to help the solve engine with
+    # We cleaned up the constants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
-        eqi = constantsimp(eqi, x, 2*order)
-        eq[i] = constant_renumber(eqi, 'C', 1, 2*order)
+        eq[i] = constantsimp(eqi, constants)
+        eq[i] = constant_renumber(eq[i], 'C', 1, 2*order)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -1675,9 +1727,91 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     return len(str(sol))
 
 
+def _get_constant_subexpressions(expr, Cs):
+    Cs = set(Cs)
+    Ces = []
+    def _recursive_walk(expr):
+        expr_syms = expr.atoms(Symbol)
+        if len(expr_syms) > 0 and expr_syms.issubset(Cs):
+            Ces.append(expr)
+        else:
+            if expr.func == exp:
+                expr = expr.expand(mul=True)
+            if expr.func in (Add, Mul):
+                d = sift(expr.args, lambda i : i.free_symbols.issubset(Cs))
+                if True in d and len(d[True])>1:
+                    x = expr.func(*d[True])
+                    if 0 < len(x.atoms(Symbol)):
+                        Ces.append(x)
+            elif expr.func in (C.Integral, ):
+                if expr.free_symbols.issubset(Cs) and \
+                        all(map( lambda x : len(x) == 3, expr.limits)):
+                    Ces.append(expr)
+            for i in expr.args:
+                _recursive_walk(i)
+        return
+    _recursive_walk(expr)
+    return Ces
+
+def __remove_linear_redundancies(expr, Cs):
+    cnts = dict([(i, expr.count(i)) for i in Cs])
+    Cs = [ i for i in Cs if cnts[i] > 0 ]
+
+    def _linear(expr):
+        if expr.func is Add:
+            xs = [ i for i in Cs if expr.count(i)==cnts[i] \
+                and 0 == expr.diff(i, 2) ]
+            d = {}
+            for x in xs:
+                y = expr.diff(x)
+                if y not in d:
+                    d[y]=[]
+                d[y].append(x)
+            for y in d:
+                if len(d[y]) > 1:
+                    d[y].sort(key=str)
+                    for x in d[y][1:]:
+                        expr = expr.subs(x, 0)
+        return expr
+
+    def _recursive_walk(expr):
+        if len(expr.args) != 0:
+            expr = expr.func(*[_recursive_walk(i) for i in expr.args])
+        expr = _linear(expr)
+        return expr
+
+    if expr.func is Equality:
+        lhs = expr.lhs
+        rhs = expr.rhs
+        lhs = _recursive_walk(lhs)
+        rhs = _recursive_walk(rhs)
+        f = lambda i: isinstance(i, C.Number) or i in Cs
+        g = lambda i: isinstance(i, C.Number) or i in Cs
+        if lhs.func is Symbol and lhs in Cs:
+            (rhs, lhs) = (lhs, rhs)
+        if lhs.func in (Add, Symbol) and rhs.func in (Add, Symbol):
+            dlhs = sift([lhs] if isinstance(lhs, C.AtomicExpr) else lhs.args, f)
+            drhs = sift([rhs] if isinstance(rhs, C.AtomicExpr) else rhs.args, f)
+            for i in [ True, False ]:
+                for hs in [dlhs, drhs]:
+                    if i not in hs:
+                        hs[i] = [0]
+            # this calculation can be simplified
+            lhs = Add(*dlhs[False]) - Add(*drhs[False])
+            rhs = Add(*drhs[True]) - Add(*dlhs[True])
+        elif lhs.func in (Mul, Symbol) and rhs.func in (Mul, Symbol):
+            dlhs = sift([lhs] if isinstance(lhs, C.AtomicExpr) else lhs.args, f)
+            if True in dlhs:
+                if False not in dlhs:
+                    dlhs[False] = [1]
+                lhs = Mul(*dlhs[False])
+                rhs = rhs/Mul(*dlhs[True])
+        return Eq(lhs, rhs)
+    else:
+        return _recursive_walk(expr)
+
 @vectorize(0)
-def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
-                 symbolname='C'):
+def constantsimp(expr, constants):
     r"""
     Simplifies an expression with arbitrary constants in it.
 
@@ -1747,51 +1881,40 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    if type(symbolname) is tuple:
-        x, endnumber, startnumber, constantsymbols = symbolname
-    else:
-        constantsymbols = symbols(
-            symbolname + '%i:%i' % (startnumber, endnumber + 1))
-        x = independentsymbol
-    con_set = set(constantsymbols)
-    ARGS = None, None, None, (
-        x, endnumber, startnumber, constantsymbols)
+    Cs = constants
 
-    if isinstance(expr, Equality):
-        # For now, only treat the special case where one side of the equation
-        # is a constant
-        if expr.lhs in con_set:
-            return Eq(expr.lhs, constantsimp(expr.rhs + expr.lhs, *ARGS) - expr.lhs)
-            # this could break if expr.lhs is absorbed into another constant,
-            # but for now, the only solutions that return Eq's with a constant
-            # on one side are first order.  At any rate, it will still be
-            # technically correct.  The expression will just have too many
-            # constants in it
-        elif expr.rhs in con_set:
-            return Eq(constantsimp(expr.lhs + expr.rhs, *ARGS) - expr.rhs, expr.rhs)
-        else:
-            return Eq(constantsimp(expr.lhs, *ARGS), constantsimp(expr.rhs, *ARGS))
+    orig_expr = expr
 
-    if not hasattr(expr, 'has') or not expr.has(*constantsymbols):
-        return expr
-    else:
-        # ================ pre-processing ================
-        def _take(i):
-            # return the lowest numbered constant symbol that appears in ``i``
-            # else return ``i``
-            c = i.free_symbols & con_set
-            if c:
-                return min(c, key=str)
-            return i
+    constant_subexprs = _get_constant_subexpressions(expr, Cs)
+    for xe in constant_subexprs:
+        xes = list(xe.free_symbols)
+        if len(xes) == 0:
+            continue
+        if all([ expr.count(c) == xe.count(c) for c in xes ]):
+            xes.sort(key=str)
+            expr = expr.subs(xe, xes[0])
 
-        if not (expr.has(x) and x in expr.free_symbols):
-            return constantsymbols[0]
+    # try to perform common sub-expression elimination of constant terms
+    try:
+        commons, rexpr = cse(expr)
+        commons.reverse()
+        rexpr = rexpr[0]
+        for s in commons:
+            cs = list(s[1].atoms(Symbol))
+            if len(cs) == 1 and cs[0] in Cs:
+                rexpr = rexpr.subs(s[0], cs[0])
+            else:
+                rexpr = rexpr.subs(*s)
+        expr = rexpr
+    except:
+        pass
+    expr = __remove_linear_redundancies(expr, Cs)
 
-        # collect terms to get constants together
+    def conditional_term_factoring(expr):
         new_expr = terms_gcd(expr, clear=False, deep=True, expand=False)
 
+        # we do not want to factor exponentials, so handle this separately
         if new_expr.is_Mul:
-            # don't let C1*exp(x) + C2*exp(2*x) become exp(x)*(C1 + C2*exp(x))
             infac = False
             asfac = False
             for m in new_expr.args:
@@ -1803,122 +1926,29 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 if asfac and infac:
                     new_expr = expr
                     break
-        expr = new_expr
-        # don't allow a number to be factored out of an expression
-        # that has no denominator
-        if expr.is_Mul:
-            h, t = expr.as_coeff_Mul()
-            if h != 1 and (t.is_Add or denom(t) == 1):
-                args = list(Mul.make_args(t))
-                for i, a in enumerate(args):
-                    if a.is_Add:
-                        args[i] = h*a
-                        expr = Mul._from_args(args)
-                        break
-            # let numbers absorb into constants of an Add, perhaps
-            # in the base of a power, if all its terms have a constant
-            # symbol in them, e.g. sqrt(2)*(C1 + C2*x) -> C1 + C2*x
-            if expr.is_Mul:
-                d = sift(expr.args, lambda m: m.is_number is True)
-                num = d[True]
-                other = d[False]
-                if num:
-                    for o in other:
-                        b, e = o.as_base_exp()
-                        if b.is_Add and \
-                                all(a.args_cnc(cset=True, warn=False)[0] &
-                                con_set for a in b.args):
-                            expr = sign(Mul(*num))*Mul._from_args(other)
-                            break
-        if expr.is_Mul:  # check again that it's still a Mul
-            i, d = expr.as_independent(x, strict=True)
-            newi = _take(i)
-            if newi != i:
-                expr = newi*d
-        elif expr.is_Add:
-            i, d = expr.as_independent(x, strict=True)
-            expr = _take(i) + d
-            if expr.is_Add:
-                terms = {}
-                for ai in expr.args:
-                    i, d = ai.as_independent(x, strict=True, as_Add=False)
-                    terms.setdefault(d, []).append(i)
-                expr = Add(*[k*Add(*v) for k, v in terms.items()])
-        # handle powers like exp(C0 + g(x)) -> C0*exp(g(x))
-        pows = [p for p in expr.atoms(C.Function, C.Pow) if
-                (p.is_Pow or p.func is exp) and
-                p.exp.is_Add and
-                p.exp.as_independent(x, strict=True)[1]]
-        if pows:
-            reps = []
-            for p in pows:
-                b, e = p.as_base_exp()
-                ei, ed = e.as_independent(x, strict=True)
-                e = _take(ei)
-                if e != ei or e in constantsymbols:
-                    reps.append((p, e*b**ed))
-            expr = expr.xreplace(dict(reps))
-            # a C1*C2 may have been introduced and the code below won't
-            # handle that so handle it now: once to handle the C1*C2
-            # and once to handle any C0*f(x) + C0*f(x)
-            for _ in range(2):
-                muls = [m for m in expr.atoms(Mul) if m.has(*constantsymbols)]
-                reps = []
-                for m in muls:
-                    i, d = m.as_independent(x, strict=True)
-                    newi = _take(i)
-                    if newi != i:
-                        reps.append((m, _take(i)*d))
-                expr = expr.xreplace(dict(reps))
-        # ================ end of pre-processing ================
-        newargs = []
-        hasconst = False
-        isPowExp = False
-        reeval = False
-        for i in expr.args:
-            if i not in constantsymbols:
-                newargs.append(i)
-            else:
-                newconst = i
-                hasconst = True
-                if expr.is_Pow and i == expr.exp:
-                    isPowExp = True
+        return new_expr
 
-        for i in range(len(newargs)):
-            isimp = constantsimp(newargs[i], *ARGS)
-            if isimp in constantsymbols:
-                reeval = True
-                hasconst = True
-                newconst = isimp
-                if expr.is_Pow and i == 1:
-                    isPowExp = True
-            newargs[i] = isimp
-        if hasconst:
-            newargs = [i for i in newargs if i.has(x)]
-            if isPowExp:
-                newargs = newargs + [newconst]  # Order matters in this case
-            else:
-                newargs = [newconst] + newargs
-        if expr.is_Pow and len(newargs) == 1:
-            newargs.append(S.One)
-        if expr.is_Function:
-            if (len(newargs) == 0 or hasconst and len(newargs) == 1):
-                return newconst
-            else:
-                newfuncargs = [constantsimp(t, *ARGS) for t in expr.args]
-                return expr.func(*newfuncargs)
-        else:
-            newexpr = expr.func(*newargs)
-            if reeval:
-                return constantsimp(newexpr, *ARGS)
-            else:
-                return newexpr
+    # XXX terms_gcd sometimes turns an equality into a difference.
+    # So we explicitly handle equalities seperately.  Fix terms_gcd.
+    if isinstance(expr, Eq):
+        new_lhs = conditional_term_factoring(expr.lhs)
+        new_rhs = conditional_term_factoring(expr.rhs)
+        new_expr = Eq(new_lhs, new_rhs)
+    else:
+        new_expr = conditional_term_factoring(expr)
+    expr = new_expr
+
+    # call recursively if more simplification is possible
+    if orig_expr != expr:
+        return constantsimp(expr, Cs)
+    return expr
 
 
 def constant_renumber(expr, symbolname, startnumber, endnumber):
     r"""
     Renumber arbitrary constants in ``expr`` to have numbers 1 through `N`
     where `N` is ``endnumber - startnumber + 1`` at most.
+    In the process, this reorders expression terms in a standard way.
 
     This is a simple function that goes through and renumbers any
     :py:class:`~sympy.core.symbol.Symbol` with a name in the form ``symbolname
@@ -1964,24 +1994,29 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         )
     global newstartnumber
     newstartnumber = 1
+    constants_found = [None]*(endnumber+2)
+    constantsymbols = [Symbol(
+        symbolname + "%d" % t) for t in range(startnumber,
+        endnumber + 1)]
 
-    def _constant_renumber(expr, symbolname, startnumber, endnumber):
+    # make a mapping to send all constantsymbols to S.One and use
+    # that to make sure that term ordering is not dependent on
+    # the indexed value of C
+    C_1 = [(ci, S.One) for ci in constantsymbols]
+    sort_key=lambda arg: default_sort_key(arg.subs(C_1))
+
+    def _constant_renumber(expr):
         r"""
         We need to have an internal recursive function so that
         newstartnumber maintains its values throughout recursive calls.
 
         """
-        constantsymbols = [Symbol(
-            symbolname + "%d" % t) for t in range(startnumber,
-        endnumber + 1)]
         global newstartnumber
 
         if isinstance(expr, Equality):
             return Eq(
-                _constant_renumber(
-                    expr.lhs, symbolname, startnumber, endnumber),
-                _constant_renumber(
-                    expr.rhs, symbolname, startnumber, endnumber))
+                _constant_renumber(expr.lhs),
+                _constant_renumber(expr.rhs))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and \
                 not expr.has(*constantsymbols):
@@ -1991,29 +2026,22 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         elif expr.is_Piecewise:
             return expr
         elif expr in constantsymbols:
-            # Renumbering happens here
-            newconst = Symbol(symbolname + str(newstartnumber))
-            newstartnumber += 1
-            return newconst
+            if expr not in constants_found:
+                constants_found[newstartnumber] = expr
+                newstartnumber += 1
+            return expr
+        elif expr.is_Function or expr.is_Pow or isinstance(expr, C.Tuple):
+            return expr.func(
+                *[_constant_renumber(x) for x in expr.args])
         else:
-            from sympy.core.containers import Tuple
-            if expr.is_Function or expr.is_Pow or isinstance(expr, Tuple):
-                return expr.func(
-                    *[_constant_renumber(x, symbolname, startnumber,
-                endnumber) for x in expr.args])
-            else:
-                sortedargs = list(expr.args)
-                # make a mapping to send all constantsymbols to S.One and use
-                # that to make sure that term ordering is not dependent on
-                # the indexed value of C
-                C_1 = [(ci, S.One) for ci in constantsymbols]
-                sortedargs.sort(
-                    key=lambda arg: default_sort_key(arg.subs(C_1)))
-                return expr.func(
-                    *[_constant_renumber(x, symbolname, startnumber,
-                    endnumber) for x in sortedargs])
-
-    return _constant_renumber(expr, symbolname, startnumber, endnumber)
+            sortedargs = list(expr.args)
+            sortedargs.sort( key=sort_key )
+            return expr.func(*[_constant_renumber(x) for x in sortedargs])
+    expr = _constant_renumber(expr)
+    # Renumbering happens here
+    newconsts = symbols('C1:%d'%newstartnumber)
+    expr = expr.subs( zip(constants_found[1:], newconsts), simultaneous=True)
+    return expr
 
 
 def _handle_Integral(expr, func, order, hint):
