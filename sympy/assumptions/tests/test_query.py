@@ -1053,16 +1053,6 @@ def test_bounded_xfail():
     assert ask(Q.bounded(sin(x)**x)) is True
     assert ask(Q.bounded(cos(x)**x)) is True
 
-@XFAIL
-def test_imaginary_xfail():
-    assert ask(Q.imaginary(0**I)) is None
-    assert ask(Q.imaginary(0**(-I))) is None
-
-@XFAIL
-def test_real_xfail():
-    assert ask(Q.real(0**I)) is None
-    assert ask(Q.real(0**(-I))) is None
-
 
 def test_commutative():
     """By default objects are Q.commutative that is why it returns True
@@ -1409,6 +1399,9 @@ def test_hermitian():
 
 
 def test_imaginary():
+    assert ask(Q.imaginary(0**I)) is False
+    assert ask(Q.imaginary(0**(-I))) is False
+
     assert ask(Q.imaginary(x)) is None
     assert ask(Q.imaginary(x), Q.real(x)) is False
     assert ask(Q.imaginary(x), Q.prime(x)) is False
@@ -1732,6 +1725,9 @@ def test_nonnegative():
     assert ask(Q.nonnegative(x), Q.imaginary(x)) is False
 
 def test_real():
+    assert ask(Q.real(0**I)) is False
+    assert ask(Q.real(0**(-I))) is False
+
     assert ask(Q.real(x)) is None
     assert ask(Q.real(x), Q.real(x)) is True
     assert ask(Q.real(x), Q.nonzero(x)) is True
