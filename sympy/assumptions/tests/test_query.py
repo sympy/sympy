@@ -1529,6 +1529,11 @@ def test_negative():
     assert ask(Q.negative(x + y), Q.negative(x)) is None
     assert ask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
     assert ask(Q.negative(x + y), Q.negative(x) & ~Q.positive(y)) is True
+    assert ask(Q.negative(2 + I)) is False
+    # although this could be False, it is representative of expressions
+    # that don't evaluate to a zero with precision
+    assert ask(Q.negative(cos(I)**2 + sin(I)**2 - 1)) is None
+    assert ask(Q.negative(-I + I*(cos(2)**2 + sin(2)**2))) is None
 
     assert ask(Q.negative(x**2)) is None
     assert ask(Q.negative(x**2), Q.real(x)) is False
@@ -1569,6 +1574,12 @@ def test_nonzero():
 
     assert ask(Q.nonzero(Abs(x))) is None
     assert ask(Q.nonzero(Abs(x)), Q.nonzero(x)) is True
+
+    assert ask(Q.nonzero(log(exp(2*I)))) is True
+    # although this could be False, it is representative of expressions
+    # that don't evaluate to a zero with precision
+    assert ask(Q.nonzero(cos(1)**2 + sin(1)**2 - 1)) is None
+
 
 def test_zero():
     assert ask(Q.zero(x)) is None

@@ -26,10 +26,23 @@ class AskNegativeHandler(CommonHandler):
 
     @staticmethod
     def _number(expr, assumptions):
-        if not expr.as_real_imag()[1]:
-            return expr.evalf() < 0
+        r, i = expr.as_real_imag()
+        # If the imaginary part can symbolically be shown to be zero then
+        # we just evaluate the real part; otherwise we evaluate the imaginary
+        # part to see if it actually evaluates to zero and if it does then
+        # we make the comparison between the real part and zero.
+        if not i:
+            r = r.evalf(2)
+            if r._prec != 1:
+                return r < 0
         else:
-            return False
+            i = i.evalf(2)
+            if i._prec != 1:
+                if i != 0:
+                    return False
+                r = r.evalf(2)
+                if r._prec != 1:
+                    return r < 0
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -123,7 +136,11 @@ class AskNonZeroHandler(CommonHandler):
     def Basic(expr, assumptions):
         if expr.is_number:
             # if there are no symbols just evalf
-            return expr.evalf() != 0
+            i = expr.evalf(2)
+            def nonz(i):
+                if i._prec != 1:
+                    return i != 0
+            return fuzzy_or(nonz(i) for i in i.as_real_imag())
 
     @staticmethod
     def Add(expr, assumptions):
@@ -179,10 +196,23 @@ class AskPositiveHandler(CommonHandler):
 
     @staticmethod
     def _number(expr, assumptions):
-        if not expr.as_real_imag()[1]:
-            return expr.evalf() > 0
+        r, i = expr.as_real_imag()
+        # If the imaginary part can symbolically be shown to be zero then
+        # we just evaluate the real part; otherwise we evaluate the imaginary
+        # part to see if it actually evaluates to zero and if it does then
+        # we make the comparison between the real part and zero.
+        if not i:
+            r = r.evalf(2)
+            if r._prec != 1:
+                return r > 0
         else:
-            return False
+            i = i.evalf(2)
+            if i._prec != 1:
+                if i != 0:
+                    return False
+                r = r.evalf(2)
+                if r._prec != 1:
+                    return r > 0
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -226,7 +256,7 @@ class AskPositiveHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         if expr.is_number:
-            return expr.evalf() > 0
+            return AskPositiveHandler._number(expr, assumptions)
         if ask(Q.positive(expr.base), assumptions):
             if ask(Q.real(expr.exp), assumptions):
                 return True
