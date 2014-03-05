@@ -44,6 +44,11 @@ class AskNegativeHandler(CommonHandler):
         """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
+
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+
         nonpos = 0
         for arg in expr.args:
             if ask(Q.negative(arg), assumptions) is not True:
@@ -202,6 +207,11 @@ class AskPositiveHandler(CommonHandler):
     def Add(expr, assumptions):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
+
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+
         nonneg = 0
         for arg in expr.args:
             if ask(Q.positive(arg), assumptions) is not True:
@@ -230,6 +240,12 @@ class AskPositiveHandler(CommonHandler):
     def exp(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
             return True
+        if ask(Q.imaginary(expr.args[0]), assumptions):
+            return False
+
+    @staticmethod
+    def log(expr, assumptions):
+        return ask(Q.positive(expr.args[0] - 1), assumptions)
 
     @staticmethod
     def factorial(expr, assumptions):
