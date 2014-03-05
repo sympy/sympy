@@ -7,7 +7,8 @@ var("k")
 
 
 def Perturbation(Ho,H1,n):
-'''	3 parameters passed:
+	'''
+	3 parameters passed:
 	Ho = Hamiltonian
 	H1 = Perturbed Hamiltonian
 	n = order of correction
@@ -20,8 +21,8 @@ def Perturbation(Ho,H1,n):
 	e.g. >>>Hamiltonian('2m','kx',2)
 	
 	Examples
-    ========
-    >>> Perturbation('2m','kx',1)			(Time Independent)
+    	========
+    	>>> Perturbation('2m','kx',1)			(Time Independent)
 	Time Independent:
 	First Order Correction:
 	<n|kx|n>
@@ -38,7 +39,7 @@ def Perturbation(Ho,H1,n):
 
 	
 		
-'''
+	'''
 	global h1
 	h1 = H1
 	order = n
@@ -69,7 +70,7 @@ E = Function('E')
 
 
 def Perturbation_time_independent_first_order(x):
-'''
+	'''
 	Returns 1st order Correction Energy Term for Time independent Perturbation
 	Parameters:
 	x = Perturbed Term (Passed in quotes)
@@ -77,13 +78,13 @@ def Perturbation_time_independent_first_order(x):
 	
 	
 	Examples
-    ========
+    	========
 	>>>Perturbation_time_independent_first_order('kx')
 	
 	<n|kx|n>
 	
 	
-'''
+	'''
 	Z = Operator(x)
 	first_order = (Bra('n')*Z*Ket('n'))
 	return first_order
@@ -92,7 +93,7 @@ def Perturbation_time_independent_first_order(x):
 '''============================================================================================================'''
 
 def Perturbation_time_independent_second_order(x):
-'''
+	'''
 	Returns 2nd order Correction Energy Term for perturbation
 	Parameters:
 	x = Perturbed Term (Passed in quotes)
@@ -100,12 +101,12 @@ def Perturbation_time_independent_second_order(x):
 	
 	
 	Examples
-    ========
+    	========
 	>>>Perturbation_time_independent_second_order('kx')
 	8(<n|kx|n>)2+(<n|kx|n>)2E(n)-E(0)
 	
 
-'''
+	'''
 	Z = Operator(x)
 	second_order = 0
 	for i in (0,n):
@@ -115,18 +116,18 @@ def Perturbation_time_independent_second_order(x):
 	
 var("t i w h")	
 def Perturbation_time_dependent(x):	
-'''
+	'''
 	Returns Transition Rate for time dependent Perturbation
 	Parameters:
 	x = Perturbed Term (Passed in quotes)
 	e.g. Perturbation_time_dependent('kt')
 	
 	Examples
-    ========
+	 ========
 	>>>Perturbation_time_dependent('kt')
 	i2h2(?e-itwktdt)2
 	
-'''
+	'''
 	#C = Function('Cm')
 	Z = Operator(x)
 	var("i h ")
