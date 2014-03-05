@@ -1256,7 +1256,7 @@ def odesimp(eq, func, order, constants, hint):
                             |
                            /
 
-    >>> pprint(odesimp(eq, f(x), 1,
+    >>> pprint(odesimp(eq, f(x), 1, set([C1]),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
     ... )) #doctest: +SKIP
         x
@@ -1882,12 +1882,12 @@ def constantsimp(expr, constants):
 
     >>> from sympy import symbols
     >>> from sympy.solvers.ode import constantsimp
-    >>> C1, C2, C3, x, y = symbols('C1,C2,C3,x,y')
-    >>> constantsimp(2*C1*x, x, 3)
+    >>> C1, C2, C3, x, y = symbols('C1, C2, C3, x, y')
+    >>> constantsimp(2*C1*x, set([C1, C2, C3]))
     C1*x
-    >>> constantsimp(C1 + 2 + x + y, x, 3)
+    >>> constantsimp(C1 + 2 + x, set([C1, C2, C3]))
     C1 + x
-    >>> constantsimp(C1*C2 + 2 + x + y + C3*x, x, 3)
+    >>> constantsimp(C1*C2 + 2 + C2 + C3*x, set([C1, C2, C3]))
     C1 + C3*x
 
     """
@@ -2796,10 +2796,10 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
-                /   2    \      / 4    2    \
-                |  x     |      |x    x     |    / 6\
-    f(x) = C1*x*|- -- + 1| + C0*|-- - -- + 1| + O\x /
-                \  6     /      \24   2     /
+              / 4    2    \        /   2    \
+              |x    x     |        |  x     |    / 6\
+    f(x) = C2*|-- - -- + 1| + C1*x*|- -- + 1| + O\x /
+              \24   2     /        \  6     /
 
 
     References
@@ -2960,12 +2960,12 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq))
-              /    6    4    2    \
-              |   x    x    x     |
-           C1*|- --- + -- - -- + 1|      /  4    2    \
-              \  720   24   2     /      | x    x     |    / 6\
-    f(x) = ------------------------ + C0*|--- - -- + 1| + O\x /
-                      x                  \120   6     /
+                                  /    6    4    2    \
+                                  |   x    x    x     |
+              /  4    2    \   C1*|- --- + -- - -- + 1|
+              | x    x     |      \  720   24   2     /    / 6\
+    f(x) = C2*|--- - -- + 1| + ------------------------ + O\x /
+              \120   6     /              x
 
 
     References
@@ -3725,8 +3725,8 @@ def ode_1st_power_series(eq, func, order, match):
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
     >>> pprint(dsolve(eq, hint='1st_power_series'))
                            3       4       5
-                       C0*x    C0*x    C0*x     / 6\
-    f(x) = C0 + C0*x - ----- + ----- + ----- + O\x /
+                       C1*x    C1*x    C1*x     / 6\
+    f(x) = C1 + C1*x - ----- + ----- + ----- + O\x /
                          6       24      60
 
 
