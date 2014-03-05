@@ -389,6 +389,7 @@ class AskImaginaryHandler(CommonHandler):
         """
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
+
         reals = 0
         for arg in expr.args:
             if ask(Q.imaginary(arg), assumptions):

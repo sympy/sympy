@@ -926,20 +926,20 @@ def test_Pow_is_real():
     assert (2**i).is_real is None  # (2**(pi/log(2) * I)) is real, 2**I is not
     assert (2**I).is_real is False
     assert (2**-I).is_real is False
-    assert (i**2).is_real
+    assert (i**2).is_real is True
     assert (i**3).is_real is False
     assert (i**x).is_real is None  # could be (-I)**(2/3)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     k = Symbol('k', integer=True)
-    assert (i**e).is_real
+    assert (i**e).is_real is True
     assert (i**o).is_real is False
     assert (i**k).is_real is None
 
     x = Symbol("x", nonnegative=True)
     y = Symbol("y", nonnegative=True)
     assert im(x**y).expand(complex=True) is S.Zero
-    assert (x**y).is_real
+    assert (x**y).is_real is True
 
 
 def test_real_Pow():

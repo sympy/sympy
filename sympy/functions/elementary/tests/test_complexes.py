@@ -249,6 +249,7 @@ def test_as_real_imag():
         ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
      (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
 
+
     # issue 754
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \

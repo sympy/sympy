@@ -1421,22 +1421,21 @@ def test_imaginary():
     assert ask(Q.imaginary(x + y), Q.real(x) & Q.real(y)) is False
     assert ask(Q.imaginary(x + y), Q.imaginary(x) & Q.real(y)) is False
     assert ask(Q.imaginary(x + y), Q.complex(x) & Q.real(y)) is None
-
-    assert ask(Q.imaginary(I*x), Q.real(x)) is True
-    assert ask(Q.imaginary(I*x), Q.imaginary(x)) is False
-    assert ask(Q.imaginary(I*x), Q.complex(x)) is None
-    assert ask(Q.imaginary(I**x), Q.negative(x)) is None
-    assert ask(Q.imaginary(I**x), Q.positive(x)) is None
-    assert ask(Q.imaginary(I**x), Q.even(x)) is False
-    assert ask(Q.imaginary(I**y), Q.odd(y)) is True
-    assert ask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
-
     assert ask(
         Q.imaginary(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is False
     assert ask(Q.imaginary(x + y + z),
         Q.real(x) & Q.real(y) & Q.imaginary(z)) is None
     assert ask(Q.imaginary(x + y + z),
         Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) is False
+
+    assert ask(Q.imaginary(I*x), Q.real(x)) is True
+    assert ask(Q.imaginary(I*x), Q.imaginary(x)) is False
+    assert ask(Q.imaginary(I*x), Q.complex(x)) is None
+    assert ask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
+
+    assert ask(Q.imaginary(I**x), Q.negative(x)) is None
+    assert ask(Q.imaginary(I**x), Q.positive(x)) is None
+    assert ask(Q.imaginary(I**x), Q.even(x)) is False
     assert ask(Q.imaginary(x**0), Q.imaginary(x)) is False
     assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.imaginary(y)) is None
     assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.real(y)) is None
@@ -1451,6 +1450,7 @@ def test_imaginary():
     assert ask(Q.imaginary(x**y), Q.positive(x) & Q.real(y)) is False
     assert ask(Q.imaginary(x**y), Q.negative(x) & Q.real(y)) is True
     assert ask(Q.imaginary(x**y), Q.integer(x) & Q.imaginary(y)) is None
+    assert ask(Q.imaginary(x**(y/z)), Q.negative(x) & Q.integer(y) & Q.even(z)) is True
     assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is True
     assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is True
     assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.integer(y/z)) is False
@@ -1712,6 +1712,7 @@ def test_positive():
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
 
+
 def test_nonpositive():
     assert ask(Q.nonpositive(-1))
     assert ask(Q.nonpositive(0))
@@ -1757,9 +1758,9 @@ def test_real():
     assert ask(Q.real(x**y), Q.real(x) & Q.integer(y)) is True
     assert ask(Q.real(x**y), Q.real(x) & Q.real(y)) is None
     assert ask(Q.real(x**y), Q.positive(x) & Q.real(y)) is True
-    assert ask(Q.real(x**y), Q.imaginary(x) & Q.imaginary(y)) is None
-    assert ask(Q.real(x**y), Q.imaginary(x) & Q.real(y)) is None
-    assert ask(Q.real(x**y), Q.real(x) & Q.imaginary(y)) is None
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.imaginary(y)) is None  # I**I or (2*I)**I
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.real(y)) is None  # I**1 or I**0
+    assert ask(Q.real(x**y), Q.real(x) & Q.imaginary(y)) is None  # could be exp(2*pi*I) or 2**I
     assert ask(Q.real(x**0), Q.imaginary(x)) is True
     assert ask(Q.real(x**y), Q.real(x) & Q.integer(y)) is True
     assert ask(Q.real(x**y), Q.positive(x) & Q.real(y)) is True
