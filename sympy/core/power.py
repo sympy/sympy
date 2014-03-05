@@ -243,6 +243,15 @@ class Pow(Expr):
         elif self.base.is_nonpositive:
             if self.exp.is_odd:
                 return False
+        elif self.base.is_imaginary:
+            if self.exp.is_integer:
+                m = self.exp % 4
+                if m.is_zero:
+                    return True
+                if m.is_integer and m.is_zero is False:
+                    return False
+            if self.exp.is_imaginary:
+                return C.log(self.base).is_imaginary
 
     def _eval_is_negative(self):
         if self.base.is_negative:
@@ -288,6 +297,8 @@ class Pow(Expr):
     def _eval_is_real(self):
         real_b = self.base.is_real
         if real_b is None:
+            if self.base.func == C.exp and self.base.args[0].is_imaginary:
+                return self.exp.is_imaginary
             return
         real_e = self.exp.is_real
         if real_e is None:
@@ -314,8 +325,7 @@ class Pow(Expr):
                     return True
                 elif self.exp.is_odd:
                     return False
-            elif (self.exp in [S.ImaginaryUnit, -S.ImaginaryUnit] and
-                  self.base in [S.ImaginaryUnit, -S.ImaginaryUnit]):
+            elif im_e and C.log(self.base).is_imaginary:
                 return True
             elif self.exp.is_Add:
                 c, a = self.exp.as_coeff_Add()
