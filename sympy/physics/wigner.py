@@ -65,7 +65,7 @@ def _calc_factlist(nn):
         [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]
     """
     if nn >= len(_Factlist):
-        for ii in range(len(_Factlist), nn + 1):
+        for ii in range(len(_Factlist), int(nn + 1)):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
 
@@ -226,7 +226,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     OUTPUT:
 
-    Rational number times the square root of a rational number
+    Rational number times the square root of a rational number.
 
     EXAMPLES::
 
@@ -288,6 +288,7 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         sage: _big_delta_coeff(1,1,1)
         1/2*sqrt(1/6)
     """
+
     if int(aa + bb - cc) != (aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if int(aa + cc - bb) != (aa + cc - bb):
@@ -532,7 +533,7 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
 
     sumres = 0
-    for kk in range(int(imin), int(imax) + 1):
+    for kk in range(imin, int(imax) + 1):
         sumres = sumres + (2 * kk + 1) * \
             racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
             racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
