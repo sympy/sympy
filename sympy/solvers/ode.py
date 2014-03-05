@@ -2193,10 +2193,15 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     func, order, match)
     simplify = match.get('simplify', True)
     if simplify:
+        # why is odesimp called here?  Should it be at the usual spot?
+        constants = sol1.free_symbols.difference(eq.free_symbols)
         sol1 = odesimp(
-            sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
+            sol1, func, order, constants,
+            "1st_homogeneous_coeff_subs_indep_div_dep")
+        constants = sol2.free_symbols.difference(eq.free_symbols)
         sol2 = odesimp(
-            sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
+            sol2, func, order, constants,
+            "1st_homogeneous_coeff_subs_dep_div_indep")
     return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
