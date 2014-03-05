@@ -13,6 +13,7 @@ from sympy.core.power import Pow
 from sympy.core.symbol import symbols
 from sympy.functions import (Abs, cos, exp, im, log, re, sign, sin, sqrt,
         tan, atan, acos, asin, cot, acot)
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf, Not
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
@@ -1528,7 +1529,7 @@ def test_negative():
     assert ask(Q.negative(x + y)) is None
     assert ask(Q.negative(x + y), Q.negative(x)) is None
     assert ask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
-    assert ask(Q.negative(x + y), Q.negative(x) & ~Q.positive(y)) is True
+    assert ask(Q.negative(x + y), Q.negative(x) & Q.nonpositive(y)) is True
     assert ask(Q.negative(2 + I)) is False
     # although this could be False, it is representative of expressions
     # that don't evaluate to a zero with precision
@@ -1715,7 +1716,7 @@ def test_positive():
     assert ask(Q.positive(-x), Q.negative(x)) is True
 
     assert ask(Q.positive(x + y), Q.positive(x) & Q.positive(y)) is True
-    assert ask(Q.positive(x + y), Q.positive(x) & ~Q.negative(y)) is True
+    assert ask(Q.positive(x + y), Q.positive(x) & Q.nonnegative(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.negative(y)) is None
 
     assert ask(Q.positive(2*x), Q.positive(x)) is True
@@ -2044,7 +2045,7 @@ def test_Add_queries():
     assert ask(Q.integer(Add(S(2), S(2), evaluate=0))) is True
 
 
-def test_positive():
+def test_positive_assuming():
     with assuming(Q.positive(x + 1)):
         assert not ask(Q.positive(x))
 

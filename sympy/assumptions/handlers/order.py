@@ -275,7 +275,13 @@ class AskPositiveHandler(CommonHandler):
 
     @staticmethod
     def log(expr, assumptions):
-        return ask(Q.positive(expr.args[0] - 1), assumptions)
+        r = ask(Q.real(expr.args[0]), assumptions)
+        if r is not True:
+            return r
+        if ask(Q.positive(expr.args[0] - 1), assumptions):
+            return True
+        if ask(Q.negative(expr.args[0] - 1), assumptions):
+            return False
 
     @staticmethod
     def factorial(expr, assumptions):
