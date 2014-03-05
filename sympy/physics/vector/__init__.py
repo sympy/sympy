@@ -38,4 +38,3 @@ __all__.extend(printing.__all__)
 from . import fieldfunctions
 from .fieldfunctions import *
 __all__.extend(fieldfunctions.__all__)
-

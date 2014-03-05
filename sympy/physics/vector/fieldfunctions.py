@@ -104,7 +104,7 @@ def gradient(scalar, frame):
     Parameters
     ==========
 
-    scalar : sympyfiable
+    scalar : sympifiable
         The scalar field to take the gradient of
 
     frame : ReferenceFrame
@@ -161,7 +161,7 @@ def is_conservative(field):
     #separate method of Vector
     if field == Vector(0):
         return True
-    frame = field.separate().keys()[0]
+    frame = list(field.separate())[0]
     return curl(field, frame).simplify() == Vector(0)
 
 
@@ -193,7 +193,7 @@ def is_solenoidal(field):
     #separate method in Vector
     if field == Vector(0):
         return True
-    frame = field.separate().keys()[0]
+    frame = list(field.separate())[0]
     return divergence(field, frame).simplify() == S(0)
 
 

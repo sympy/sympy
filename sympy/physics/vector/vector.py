@@ -458,9 +458,9 @@ class Vector(object):
         >>> from sympy.physics.vector import ReferenceFrame
         >>> R1 = ReferenceFrame('R1')
         >>> R2 = ReferenceFrame('R2')
-        >>> v = 3*R1.x + 2*R1.y + R2.x
-        >>> v.separate()
-        {R1: 3*R1.x + 2*R1.y, R2: R2.x}
+        >>> v = R1.x + R2.x
+        >>> v.separate() == {R1: R1.x, R2: R2.x}
+        True
 
         """
 
