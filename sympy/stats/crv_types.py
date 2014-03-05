@@ -1339,7 +1339,7 @@ def Laplace(name, mu, b):
     >>> X = Laplace("x", mu, b)
 
     >>> density(X)(z)
-    exp(-Abs(-mu + z)/b)/(2*b)
+    exp(-Abs(mu - z)/b)/(2*b)
 
     References
     ==========
@@ -2155,7 +2155,8 @@ class UniformDistribution(SingleContinuousDistribution):
         z = Dummy('z', real=True, bounded=True)
         result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
         result = result(z).subs({Min(z, self.right): z,
-                                 Min(z, self.left, self.right): self.left})
+                                 Min(z, self.left, self.right): self.left,
+                                 Min(z, self.left): self.left})
         return Lambda(z, result)
 
     def expectation(self, expr, var, **kwargs):

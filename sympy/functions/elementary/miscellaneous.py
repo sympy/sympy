@@ -307,14 +307,14 @@ class MinMaxBase(Expr, LatticeOp):
         # variant II: find local zeros
         args = cls._find_localzeros(set(_args), **assumptions)
 
-        _args = frozenset(args)
-
-        if not _args:
+        if not args:
             return cls.identity
-        elif len(_args) == 1:
-            return set(_args).pop()
+        elif len(args) == 1:
+            return args.pop()
         else:
             # base creation
+            # XXX should _args be made canonical with sorting?
+            _args = frozenset(args)
             obj = Expr.__new__(cls, _args, **assumptions)
             obj._argset = _args
             return obj

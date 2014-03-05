@@ -133,7 +133,7 @@ can upload again.
 
 # Updating websites
 
-You should now update the websites. The command
+You should now update the websites. Only do this for final releases. The command
 
     fab vagrant update_websites
 

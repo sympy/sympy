@@ -687,17 +687,6 @@ def solve(f, *symbols, **flags):
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
 
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that the appropriate strategy gets selected.
-        # However, this is necessary only if one of the piecewise
-        # functions depends on one of the symbols we are solving for.
-        def _has_piecewise(e):
-            if e.is_Piecewise:
-                return e.has(*symbols)
-            return any([_has_piecewise(a) for a in e.args])
-        if _has_piecewise(f[i]):
-            f[i] = piecewise_fold(f[i])
-
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
             bare_f = False
@@ -745,6 +734,18 @@ def solve(f, *symbols, **flags):
             exclude = [exclude]
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
+
+    # Any embedded piecewise functions need to be brought out to the
+    # top level so that the appropriate strategy gets selected.
+    # However, this is necessary only if one of the piecewise
+    # functions depends on one of the symbols we are solving for.
+    def _has_piecewise(e):
+        if e.is_Piecewise:
+            return e.has(*symbols)
+        return any([_has_piecewise(a) for a in e.args])
+    for i, fi in enumerate(f):
+        if _has_piecewise(fi):
+            f[i] = piecewise_fold(fi)
 
     # real/imag handling
     for i, fi in enumerate(f):

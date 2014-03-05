@@ -361,9 +361,9 @@ def test_sympy__core__numbers__Rational():
     assert _test_args(Rational(1, 7))
 
 
+@SKIP("abstract class")
 def test_sympy__core__numbers__RationalConstant():
-    from sympy.core.numbers import RationalConstant
-    assert _test_args(RationalConstant())
+    pass
 
 
 def test_sympy__core__numbers__Zero():
@@ -2925,9 +2925,9 @@ def test_sympy__geometry__ellipse__Circle():
     assert _test_args(Circle((0, 1), 2))
 
 
+@SKIP("abstract class")
 def test_sympy__geometry__line__LinearEntity():
-    from sympy.geometry.line import LinearEntity
-    assert _test_args(LinearEntity((0, 1), (2, 3)))
+    pass
 
 
 def test_sympy__geometry__line__Line():

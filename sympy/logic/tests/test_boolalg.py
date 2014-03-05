@@ -65,6 +65,10 @@ def test_Xor():
 
     assert Xor() is false
     assert Xor(A) == A
+    assert Xor(A, A) is false
+    assert Xor(True, A, A) is true
+    assert Xor(A, A, A, A, A) == A
+    assert Xor(True, False, False, A, B) == And(Or(A, Not(B)), Or(B, Not(A)))
     assert Xor(True) is true
     assert Xor(False) is false
     assert Xor(True, True ) is false

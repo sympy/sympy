@@ -1,4 +1,5 @@
 from sympy import symbols, sin, cos, sqrt, Function
+from sympy.core.compatibility import u
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols
 from sympy.physics.vector.printing import (VectorPrettyPrinter,
                                            VectorLatexPrinter)
@@ -15,7 +16,7 @@ N = ReferenceFrame('N')
 v = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z
 w = alpha * N.x + sin(omega) * N.y + alpha * beta * N.z
 
-u = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
+y = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
 x = alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) + alpha * beta * (N.z | N.x)
 
 
@@ -34,16 +35,12 @@ def test_vector_pretty_print():
 
     pp = VectorPrettyPrinter()
 
-    expected = (u' 2\na  \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + b \x1b[94m'
-                u'\x1b[1mn_y\x1b[0;0m\x1b[0;0m + c\u22c5sin(\u03b1) \x1b[9'
-                u'4m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
+    expected = u(' 2\na  n_x + b n_y + c\u22c5sin(\u03b1) n_z')
 
     assert expected == pp.doprint(v)
     assert expected == v._pretty().render()
 
-    expected = (u'\u03b1 \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + sin(\u03c9'
-                u') \x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m + \u03b1\u22c5'
-                u'\u03b2 \x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
+    expected = u('\u03b1 n_x + sin(\u03c9) n_y + \u03b1\u22c5\u03b2 n_z')
 
     assert expected == pp.doprint(w)
     assert expected == w._pretty().render()
@@ -127,21 +124,12 @@ def test_vector_latex_with_functions():
 
 def test_dyadic_pretty_print():
 
-    expected = (u' 2\na  \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2297\x1b[94'
-                u'm\x1b[1mn_y\x1b[0;0m\x1b[0;0m + b \x1b[94m\x1b[1mn_y\x1b'
-                u'[0;0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m'
-                u' + c\u22c5sin(\u03b1) \x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;'
-                u'0m\u2297\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m')
-    result = u._pretty().render()
+    expected = u(' 2\na  n_x\u2297n_y + b n_y\u2297n_y + c\u22c5sin(\u03b1) n_z\u2297n_y')
+    result = y._pretty().render()
 
     assert expected == result
 
-    expected = (u'\u03b1 \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2297\x1b[94'
-                u'm\x1b[1mn_x\x1b[0;0m\x1b[0;0m + sin(\u03c9) \x1b[94m\x1b'
-                u'[1mn_y\x1b[0;0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_z\x1b[0;0'
-                u'm\x1b[0;0m + \u03b1\u22c5\u03b2 \x1b[94m\x1b[1mn_z\x1b[0'
-                u';0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m')
-
+    expected = u('\u03b1 n_x\u2297n_x + sin(\u03c9) n_y\u2297n_z + \u03b1\u22c5\u03b2 n_z\u2297n_x')
     result = x._pretty().render()
 
     assert expected == result
@@ -154,7 +142,7 @@ def test_dyadic_latex():
                 r'c \operatorname{sin}\left(\alpha\right)'
                 r'\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_y}')
 
-    assert u._latex() == expected
+    assert y._latex() == expected
 
     expected = (r'\alpha\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_x} + '
                 r'\operatorname{sin}\left(\omega\right)\mathbf{\hat{n}_y}'

@@ -1218,7 +1218,7 @@ def test_overdetermined():
     eqs = [Abs(4*x - 7) - 5, Abs(3 - 8*x) - 1]
     assert solve(eqs, x) == [(S.Half,)]
     assert solve(eqs, x, manual=True) == [(S.Half,)]
-    assert solve(eqs, x, manual=True, check=False) == [(S.Half/2,), (S.Half,)]
+    assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (S(3),)]
 
 
 def test_issue_3506():
@@ -1443,3 +1443,8 @@ def test_det_quick():
     # make sure they work with Sparse
     s = SparseMatrix(2, 2, (1, 2, 1, 4))
     assert det_perm(s) == det_minor(s) == s.det()
+
+
+def test_piecewise():
+    # if no symbol is given the piecewise detection must still work
+    assert solve(Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3) == [-1, 5]
