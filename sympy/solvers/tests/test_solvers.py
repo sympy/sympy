@@ -387,6 +387,18 @@ def test_tsolve():
     #issue #1640
     assert solve(exp(log(5)*x) - 2**x, x) == [0]
 
+    # misc
+    # make sure that the right variables is picked up in tsolve
+    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
+
+    # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
+    # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
+    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
+
+    # watch out for recursive loop in tsolve
+    raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
+
+
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
     x = Function('x')(t)
@@ -933,11 +945,6 @@ def test_issue_2015():
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
 
 
-def test_misc():
-    # make sure that the right variables is picked up in tsolve
-    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
-
-
 def test_issue_2750():
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
@@ -1392,15 +1399,6 @@ def test_errorinverses():
     assert solve(erfinv(x)-y,x)==[erf(y)]
     assert solve(erfc(x)-y,x)==[erfcinv(y)]
     assert solve(erfcinv(x)-y,x)==[erfc(y)]
-
-
-def test_misc():
-    # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
-    # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
-    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
-
-    # watch out for recursive loop in tsolve
-    raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
 
 
 def test_gh2725():
