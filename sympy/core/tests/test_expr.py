@@ -1315,6 +1315,9 @@ def test_expr_sorting():
     exprs = [set([1]), set([1, 2])]
     assert sorted(exprs, key=default_sort_key) == exprs
 
+    a, b = exprs = [Dummy(), Dummy()]
+    assert sorted([b, a], key=default_sort_key) == exprs
+
 
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
