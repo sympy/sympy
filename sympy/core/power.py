@@ -734,10 +734,17 @@ class Pow(Expr):
             im_part1.subs({a: re, b: im}) + im_part3.subs({a: re, b: -im}))
 
         elif self.exp.is_Rational:
-            # NOTE: This is not totally correct since for x**(p/q) with
-            #       x being imaginary there are actually q roots, but
-            #       only a single one is returned from here.
             re, im = self.base.as_real_imag(deep=deep)
+
+            if im.is_zero and self.exp is S.Half:
+                if re.is_nonnegative:
+                    return self, S.Zero
+                if re.is_nonpositive:
+                    return S.Zero, (-self.base)**self.exp
+
+            # XXX: This is not totally correct since for x**(p/q) with
+            #      x being imaginary there are actually q roots, but
+            #      only a single one is returned from here.
             r = self.func(self.func(re, 2) + self.func(im, 2), S.Half)
             t = C.atan2(im, re)
 
