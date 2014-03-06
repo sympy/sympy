@@ -1103,12 +1103,6 @@ def test_check_assumptions():
     assert solve(x**2 - 1) == [1]
 
 
-def test_solve_abs():
-    assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
-    r = symbols('r', real=True)
-    raises(NotImplementedError, lambda: solve(2*abs(r) - abs(r - 1)))
-
-
 def test_issue_2957():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
     assert set([simplify(w) for w in solve(tanh(x - 1)*tanh(x + 1) + 1)]) == set([
@@ -1215,6 +1209,7 @@ def test_issue3429():
 
 
 def test_overdetermined():
+    x = symbols('x', real=True)
     eqs = [Abs(4*x - 7) - 5, Abs(3 - 8*x) - 1]
     assert solve(eqs, x) == [(S.Half,)]
     assert solve(eqs, x, manual=True) == [(S.Half,)]
@@ -1260,27 +1255,45 @@ def test_issue_3693():
 
 def test_issues_3720_3721_3722_3149():
     # 3722
-    x, y = symbols('x y')
+    x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
-    assert solve([abs(x) - 2, arg(x) - pi], x) == [
-        {re(x): -2, x: -2, im(x): 0}, {re(x): 2, x: 2, im(x): 0}]
+    assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
+    assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
+
+    # issue 4046
+    assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
+
+    x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
         {re(x): 1, x: 1 + 2*I, im(x): 2}]
 
+    # check for 'dict' handling of solution
+    eq = sqrt(re(x)**2 + im(x)**2) - 3
+    assert solve(eq) == solve(eq, x)
+
+    i = symbols('i', imaginary=True)
+    assert solve(abs(i) - 3) == [-3*I, 3*I]
+    raises(NotImplementedError, lambda: solve(abs(x) - 3))
+
     w = symbols('w', integer=True)
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
+
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
     # github issue 2642
     assert solve(x*(1 + I)) == [0]
+
     x, y = symbols('x y', imaginary=True)
     assert solve(x + y*I + 3 + 2*I) == {x: -2*I, y: 3*I}
+
     x = symbols('x', real=True)
     assert solve(x + y + 3 + 2*I) == {x: -3, y: -2*I}
+
     # issue 3149
     f = Function('f')
     assert solve(f(x + 1) - f(2*x - 1)) == [2]
     assert solve(log(x + 1) - log(2*x - 1)) == [2]
+
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
 
