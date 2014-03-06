@@ -11,9 +11,12 @@ from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols
-from sympy.functions import (Abs, cos, exp, im, log, re, sign, sin, sqrt,
-        tan, atan, acos, asin, cot, acot)
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (Abs, im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (
+    acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf, Not
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
@@ -1430,6 +1433,7 @@ def test_imaginary():
     assert ask(Q.imaginary(I*x), Q.imaginary(x)) is False
     assert ask(Q.imaginary(I*x), Q.complex(x)) is None
     assert ask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
+    assert ask(Q.imaginary(x*y), Q.real(x) & Q.real(y)) is False
 
     assert ask(Q.imaginary(I**x), Q.negative(x)) is None
     assert ask(Q.imaginary(I**x), Q.positive(x)) is None
@@ -1506,6 +1510,7 @@ def test_integer():
     assert ask(Q.integer(2*x), Q.rational(x)) is None
     assert ask(Q.integer(2*x), Q.real(x)) is None
     assert ask(Q.integer(sqrt(2)*x), Q.integer(x)) is False
+    assert ask(Q.integer(sqrt(2)*x), Q.irrational(x)) is None
 
     assert ask(Q.integer(x/2), Q.odd(x)) is False
     assert ask(Q.integer(x/2), Q.even(x)) is True
@@ -1572,6 +1577,8 @@ def test_nonzero():
     assert ask(Q.nonzero(2*x), Q.negative(x)) is True
     assert ask(Q.nonzero(x*y), Q.nonzero(x)) is None
     assert ask(Q.nonzero(x*y), Q.nonzero(x) & Q.nonzero(y)) is True
+
+    assert ask(Q.nonzero(x**y), Q.nonzero(x)) is True
 
     assert ask(Q.nonzero(Abs(x))) is None
     assert ask(Q.nonzero(Abs(x)), Q.nonzero(x)) is True
@@ -1718,6 +1725,7 @@ def test_positive():
     assert ask(Q.positive(x + y), Q.positive(x) & Q.positive(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.nonnegative(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.negative(y)) is None
+    assert ask(Q.positive(x + y), Q.positive(x) & Q.imaginary(y)) is False
 
     assert ask(Q.positive(2*x), Q.positive(x)) is True
     assumptions = Q.positive(x) & Q.negative(y) & Q.negative(z) & Q.positive(w)
@@ -1729,6 +1737,7 @@ def test_positive():
 
     assert ask(Q.positive(x**2), Q.positive(x)) is True
     assert ask(Q.positive(x**2), Q.negative(x)) is True
+    assert ask(Q.positive(x**3), Q.negative(x)) is False
     assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
     assert ask(Q.positive(2**I)) is False
     assert ask(Q.positive(2 + I)) is False
@@ -1745,6 +1754,8 @@ def test_positive():
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
     assert ask(Q.positive(log(x)), Q.negative(x)) is False
+    assert ask(Q.positive(log(x)), Q.positive(x)) is None
+    assert ask(Q.positive(log(x + 2)), Q.positive(x)) is True
 
     # factorial
     assert ask(Q.positive(factorial(x)), Q.integer(x) & Q.positive(x))

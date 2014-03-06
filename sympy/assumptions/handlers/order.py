@@ -263,7 +263,7 @@ class AskPositiveHandler(CommonHandler):
         if ask(Q.negative(expr.base), assumptions):
             if ask(Q.even(expr.exp), assumptions):
                 return True
-            if ask(Q.even(expr.exp), assumptions):
+            if ask(Q.odd(expr.exp), assumptions):
                 return False
 
     @staticmethod
