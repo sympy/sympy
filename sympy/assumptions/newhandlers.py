@@ -11,7 +11,7 @@ from sympy.matrices.expressions import MatMul
 
 from sympy.functions.elementary.complexes import Abs
 
-from sympy.assumptions.ask import Q
+from sympy.assumptions.ask import Q,ask
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
     BooleanFunction, Not)
@@ -130,6 +130,7 @@ class AnyArgs(UnevaluatedOnFree):
     def apply(self):
         return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
 
+
 class ExactlyOneArg(UnevaluatedOnFree):
     """
     Class representing a predicate holding on exactly one of the .args of an
@@ -207,6 +208,8 @@ def _old_assump_replacer(obj):
         ret = e.is_integer
     if obj.func == Q.imaginary:
         ret = e.is_imaginary
+    if obj.func == Q.commutative:
+        ret = e.is_commutative
 
     if ret is None:
         return obj
@@ -287,6 +290,8 @@ for klass, fact in [
     (MatMul, Implies(AllArgs(Q.square), Equivalent(Q.invertible, AllArgs(Q.invertible)))),
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),
+    (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
+    (Mul, Implies(AllArgs(Q.real), Q.commutative)),
     # This one can still be made easier to read. I think we need basic pattern
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
