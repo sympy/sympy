@@ -3,7 +3,7 @@
 from sympy import symbols, Q
 from sympy.logic.boolalg import Or, Equivalent, Implies, And
 from sympy.logic.inference import is_literal, literal_symbol, \
-     pl_true, satisfiable, PropKB
+     pl_true, satisfiable, semantic_tableaux, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
@@ -143,8 +143,29 @@ def test_pl_true():
 def test_pl_true_wrong_input():
     from sympy import pi
     raises(ValueError, lambda: pl_true('John Cleese'))
-    raises(ValueError, lambda: pl_true(42 + pi + pi ** 2))
-    raises(ValueError, lambda: pl_true(42))
+    raises(TypeError, lambda: pl_true(42 + pi + pi ** 2))
+    raises(TypeError, lambda: pl_true(42))
+
+
+def test_pl_true_deep():
+    from sympy.abc import A, B, C
+    assert pl_true(A | B, {A: False}, deep=True) is None
+    assert pl_true(~A & ~B, {A: False}, deep=True) is None
+    assert pl_true(A | B, {A: False, B: False}, deep=True) is False
+    assert pl_true(A & B & (~A | ~B), {A: True}, deep=True) is False
+    assert pl_true((C >> A) >> (B >> A), {C: True}, deep=True) is True
+
+
+def test_semantic_tableaux():
+    from sympy import pi
+    from sympy.abc import A, B
+    assert semantic_tableaux(A & B) is True
+    assert semantic_tableaux(A >> (B >> A)) is True
+    assert semantic_tableaux(Equivalent(A, B)) is True
+    assert semantic_tableaux(Implies(False, True)) is True
+    assert semantic_tableaux(A & ~A) is False
+    assert semantic_tableaux(Implies(True, False)) is False
+    raises(TypeError, lambda: semantic_tableaux(pi**2))
 
 
 def test_PropKB():

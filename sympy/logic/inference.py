@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf, eliminate_implications
+    BooleanAtom, BooleanFunction, conjuncts, to_cnf, eliminate_implications
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
@@ -130,12 +130,13 @@ def pl_true(expr, model={}, deep=False):
     >>> pl_true(A & B & (~A | ~B), {A: True})
     >>> pl_true(A & B & (~A | ~B), {A: True}, deep=True)
     False
+    >>> pl_true(A | B, {A: False}, deep=True)
     """
 
-    if isinstance(expr, bool):
-        return expr
-
     expr = sympify(expr)
+
+    if isinstance(expr, BooleanAtom):
+        return bool(expr)
 
     if expr.is_Symbol:
         return model.get(expr)
@@ -145,9 +146,10 @@ def pl_true(expr, model={}, deep=False):
     if deep:
         atoms = set()
         expr = _pl_interpretation(expr, atoms, model)
-        if isinstance(expr, bool):
-            return result
-        model = {atom: True for atom in atoms}
+        if isinstance(expr, BooleanAtom):
+            return bool(expr)
+        for atom in atoms:
+            model[atom] = True
 
         if pl_true(expr, model, deep=False):
             if satisfiable(Not(expr), return_model=False):
@@ -198,7 +200,7 @@ def pl_true(expr, model={}, deep=False):
         return result
 
     else:
-        raise ValueError("Illegal operator in expression " + str(expr))
+        raise TypeError("Illegal operator %s" % expr.func)
 
 
 def _pl_interpretation(expr, atoms, i={}):
@@ -219,12 +221,6 @@ def semantic_tableaux(expr):
     This method is much faster than a traditional SAT solver however
     it returns only True or False. To obtain a model use 'satisfiable'
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Method_of_analytic_tableaux
-
-
     Examples
     ========
 
@@ -234,9 +230,20 @@ def semantic_tableaux(expr):
     True
     >>> semantic_tableaux(A & ~A)
     False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Method_of_analytic_tableaux
     """
 
-    expr = eliminate_implications(sympify(expr))
+    expr = sympify(expr)
+    if isinstance(expr, BooleanAtom):
+        return bool(expr)
+    if not isinstance(expr, BooleanFunction):
+        raise TypeError("Illegal propositional expression '%s'" % expr)
+    expr = eliminate_implications(expr)
+
     s = [set([expr])]
 
     while s:
@@ -244,8 +251,9 @@ def semantic_tableaux(expr):
 
         clause = None
         flag = False
+
         for c in e:
-            if is_literal(c):
+            if c.is_Atom or c.is_Not :
                 if Not(c) in e:
                     flag = True
             else:
@@ -264,12 +272,14 @@ def semantic_tableaux(expr):
                 temp.add(arg)
                 s.append(temp)
             e.add(clause.args[0])
-            s.append(e)
 
         elif isinstance(clause, And):
-            for arg in clause.args:
-                    e.add(arg)
-            s.append(e)
+            e.update(clause.args)
+
+        else:
+            raise TypeError("Illegal operator %s" % expr.func)
+
+        s.append(e)
 
     return False
 
