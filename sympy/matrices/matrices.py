@@ -998,7 +998,8 @@ class MatrixBase(object):
     def extract(self, rowsList, colsList):
         """Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
-        -n <= i < n where n is the number of rows or columns.
+        -n <= i < n where n is the number of rows or columns. If a list
+        of booleans is provided, indexing will start at 0.
 
         Examples
         ========
@@ -1012,6 +1013,11 @@ class MatrixBase(object):
         [6,  7,  8],
         [9, 10, 11]])
         >>> m.extract([0, 1, 3], [0, 1])
+        Matrix([
+        [0,  1],
+        [3,  4],
+        [9, 10]])
+        >>> m.extract([0, 1, 3], [True, True, False])
         Matrix([
         [0,  1],
         [3,  4],
@@ -1035,6 +1041,10 @@ class MatrixBase(object):
         """
         cols = self.cols
         flat_list = self._mat
+        if len(rowsList) > 0 and isinstance(rowsList[0], bool):
+            rowsList = [i for i, b in enumerate(rowsList) if b]
+        if len(colsList) > 0 and isinstance(colsList[0], bool):
+            colsList = [i for i, b in enumerate(colsList) if b]
         rowsList = [a2idx(k, self.rows) for k in rowsList]
         colsList = [a2idx(k, self.cols) for k in colsList]
         return self._new(len(rowsList), len(colsList),

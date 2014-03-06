@@ -508,6 +508,10 @@ class SparseMatrix(MatrixBase):
         return M
 
     def extract(self, rowsList, colsList):
+        if len(rowsList) > 0 and isinstance(rowsList[0], bool):
+            rowsList = [i for i, b in enumerate(rowsList) if b]
+        if len(colsList) > 0 and isinstance(colsList[0], bool):
+            colsList = [i for i, b in enumerate(colsList) if b]
         urow = list(uniq(rowsList))
         ucol = list(uniq(colsList))
         smat = {}

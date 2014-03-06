@@ -72,6 +72,12 @@ def test_fancy_index_matrix():
         assert a[[0, 1], 2] == a[[0, 1], [2]]
         assert a[2, [0, 1]] == a[[2], [0, 1]]
         assert a[:, [0, 1]] == Matrix([[0, 1], [3, 4], [6, 7]])
+        assert a[[True, True, False], :] == Matrix([[0, 1, 2], [3, 4, 5]])
+        assert a[[True, True, False], 2] == a[[True, True, False],
+                                              [False, False, True]]
+        assert a[2, [True, True, False]] == a[[False, False, True],
+                                              [True, True, False]]
+        assert a[:, [True, True, False]] == Matrix([[0, 1], [3, 4], [6, 7]])
         assert a[0, 0] == 0
         assert a[0:2, :] == Matrix([[0, 1, 2], [3, 4, 5]])
         assert a[:, 0:2] == Matrix([[0, 1], [3, 4], [6, 7]])
