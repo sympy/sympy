@@ -817,7 +817,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     logarithmic derivative of a k(t)-radical.
 
     case is one of {'primitive', 'exp', 'tan', 'auto'} for the primitive,
-    hyperexponential, and hypertangent cases, respectively.  If case it 'auto',
+    hyperexponential, and hypertangent cases, respectively.  If case is 'auto',
     it will attempt to determine the type of the derivation automatically.
     """
     fa, fd = fa.cancel(fd, include=True)
