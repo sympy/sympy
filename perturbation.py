@@ -1,0 +1,142 @@
+from __future__ import print_function, division
+from sympy.physics.quantum import *
+from sympy import var,Function,Integral,exp
+var("k")
+
+
+
+def Perturbation(Ho,H1,n):
+	'''	
+	3 parameters passed:
+	Ho = Hamiltonian
+	H1 = Perturbed Hamiltonian
+	n = order of correction
+	
+	This function checks H1 if it is time dependent/independent 
+	If independent, the order n gives the nth order of correction
+	If dependent, n doesn't matter!
+	
+	Ho,H1 parameters have to be passed with quotes
+	e.g. >>>Hamiltonian('2m','kx',2)
+	
+	Examples
+    ========
+    >>> Perturbation('2m','kx',1)			(Time Independent)
+	Time Independent:
+	First Order Correction:
+	<n|kx|n>
+	
+	>>>Perturbation('2m','kx',2)				(Time Independent)
+	Time Independent:
+	Second Order Correction:
+	8(<n|kx|n>)2+(<n|kx|n>)2E(n)-E(0)
+	
+	>>>Perturbation('2m','kt',0)				(Time Dependent)
+		Time dependent:
+		Transition Rate:
+		i2h2(?e-itwktdt)2
+
+	
+		
+	'''
+	global h1
+	h1 = H1
+	order = n
+	global flag
+	for i  in h1:
+		if i == 't':
+			flag = 1
+			break
+		else:
+			flag = 0
+	if flag == 1:
+		print("Time Dependent Perturbation:")
+		print("Transition Rate:")
+		print(" Assuming w = (E(i) - E(m))/h")
+		return Perturbation_time_dependent(h1)
+		
+	else:
+		print("Time Independent Perturbation:")
+		if order == 1:
+			print("First Order Correction:")
+			return Perturbation_time_independent_first_order(h1)
+		elif order ==2:
+			print("Second Order Correction:")
+			return Perturbation_time_independent_second_order(h1)
+'''==============================================================================================================='''
+var ("n i")
+E = Function('E')
+
+
+def Perturbation_time_independent_first_order(x):
+	'''
+	Returns 1st order Correction Energy Term for Time independent Perturbation
+	Parameters:
+	x = Perturbed Term (Passed in quotes)
+	e.g. Perturbation_time_independent_first_order('kx')
+	
+	
+	Examples
+    ========
+	>>>Perturbation_time_independent_first_order('kx')
+	
+	<n|kx|n>
+	
+	
+	'''
+	Z = Operator(x)
+	first_order = (Bra('n')*Z*Ket('n'))
+	return first_order
+
+	
+'''============================================================================================================'''
+
+def Perturbation_time_independent_second_order(x):
+	'''
+	Returns 2nd order Correction Energy Term for perturbation
+	Parameters:
+	x = Perturbed Term (Passed in quotes)
+	e.g. Perturbation_time_independent_second_order('kx')
+	
+	
+	Examples
+    ========
+	>>>Perturbation_time_independent_second_order('kx')
+	8(<n|kx|n>)2+(<n|kx|n>)2E(n)-E(0)
+	
+
+	'''
+	var(" i n")
+
+	Z = Operator(x)
+	second_order = 0
+	for i in (0,n):
+		if i != n:
+			second_order = second_order + (((Bra(i)*Z*Ket(n))**2)/(E(n) - E(i)))
+	return second_order	
+'''============================================================================================================='''
+	
+var("t i w h")	
+def Perturbation_time_dependent(x):	
+	'''
+	Returns Transition Rate for time dependent Perturbation
+	Parameters:
+	x = Perturbed Term (Passed in quotes)
+	e.g. Perturbation_time_dependent('kt')
+	
+	Examples
+    ========
+	>>>Perturbation_time_dependent('kt')
+	i2h2(?e-itwktdt)2
+	
+	'''
+	
+	#C = Function('Cm')
+	Z = Operator(x)
+	var("i h ")
+	c = -(i/h) * Integral(exp(-i*w*t)*Z,t)
+	transition_rate = c**2
+	return transition_rate
+	
+
+'''=============================================================================================================='''
