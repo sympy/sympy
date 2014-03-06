@@ -8,7 +8,14 @@ from sympy.functions.special.gamma_functions import gamma, digamma
 ###############################################################################
 
 class beta(Function):
-    """Beta function or Euler's first integral is closely associated with gamma function.
+    r"""
+    The beta function
+    
+    .. math::
+        \Beta(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1} \mathrm{d}t.
+        
+                
+    Beta function or Euler's first integral is closely associated with gamma function.
     The Beta function often used in probability theory and mathematical statistics. It satisfies
     properties like:
     B(a,1) = 1/a;
