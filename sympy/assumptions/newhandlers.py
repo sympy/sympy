@@ -11,7 +11,7 @@ from sympy.matrices.expressions import MatMul
 
 from sympy.functions.elementary.complexes import Abs
 
-from sympy.assumptions.ask import Q,ask
+from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
     BooleanFunction, Not)
@@ -129,7 +129,6 @@ class AnyArgs(UnevaluatedOnFree):
 
     def apply(self):
         return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
-
 
 class ExactlyOneArg(UnevaluatedOnFree):
     """
