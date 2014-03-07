@@ -1387,7 +1387,7 @@ def test_int_NumberSymbols():
         [3, 0, 2, 1, 0]
 
 
-def test_3541():
+def test_issue_3541():
     from sympy.mpmath.libmp.libmpf import (
         _normalize as mpf_normalize, finf, fninf, fzero)
     # fnan is not included because Float no longer returns fnan,
@@ -1397,7 +1397,7 @@ def test_3541():
     assert bool(Float(0)) is False
 
 
-def test_3250():
+def test_issue_3250():
     assert Float('23.e3', '')._prec == 10
     assert Float('23e3', '')._prec == 20
     assert Float('23000', '')._prec == 20

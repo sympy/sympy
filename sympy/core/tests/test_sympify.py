@@ -14,7 +14,7 @@ from sympy.core.compatibility import exec_, HAS_GMPY
 from sympy import mpmath
 
 
-def test_439():
+def test_issue_439():
     v = sympify("exp(x)")
     assert v == exp(x)
     assert type(v) == type(exp(x))

@@ -1220,7 +1220,7 @@ def test_new_rawargs():
     assert m._new_rawargs(S.One) is S.One
 
 
-def test_2127():
+def test_issue_2127():
     assert Add(evaluate=False) == 0
     assert Mul(evaluate=False) == 1
     assert Mul(x + y, evaluate=False).is_Add

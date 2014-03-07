@@ -29,7 +29,7 @@ def test_exp2():
     assert e1 == e2
 
 
-def test_2124():
+def test_issue_2124():
     assert series(1, x) == 1
     assert next(S(0).lseries(x)) == 0
     assert cos(x).series() == cos(x).series(x)
@@ -78,7 +78,7 @@ def test_2124():
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
 
-def test_879():
+def test_issue_879():
     f = Function('f')
     assert f(x).series(x, 0, 3, dir='-') == \
             f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
@@ -116,7 +116,7 @@ def test_issue_2753():
         5*x**4/(24*log(x)**4) + O(x**6)
 
 
-def test_1484():
+def test_issue_1484():
     assert cos(1 + x + x**2).series(x, 0, 5) == cos(1) - x*sin(1) + \
         x**2*(-sin(1) - cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
         x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)

@@ -601,12 +601,12 @@ def test_messy():
         Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
 
 
-def test_3023():
+def test_issue_3023():
     assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \
         -I*sqrt(pi)*exp(I*pi/4)
 
 
-def test_3153():
+def test_issue_3153():
     expr = 1/x/(a + b*x)**(S(1)/3)
     anti = integrate(expr, x, meijerg=True)
     assert not expr.has(hyper)
@@ -614,7 +614,7 @@ def test_3153():
     # putting in numerical values seems to work...
 
 
-def test_3249():
+def test_issue_3249():
     assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
         == pi*exp(-1)
 
@@ -625,5 +625,5 @@ def test_fresnel():
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
 
-def test_3761():
+def test_issue_3761():
     assert meijerint_indefinite(x**x**x, x) is None

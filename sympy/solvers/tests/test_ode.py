@@ -1271,7 +1271,7 @@ def test_unexpanded_Liouville_ODE():
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
 
 
-def test_1686():
+def test_issue_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
@@ -1292,7 +1292,7 @@ def test_1686():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         'separable_reduced_Integral')
 
-def test_1726():
+def test_issue_1726():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
     assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
         {'default': None, 'order': 0}

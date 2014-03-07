@@ -169,7 +169,7 @@ def test_trigsimp3():
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
 
-def test_1562():
+def test_issue_1562():
     a, x, y = symbols('a x y')
     eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
     assert trigsimp(eq) == -4
@@ -181,32 +181,32 @@ def test_1562():
     assert trigsimp(eq) == 0
 
 
-def test_1395():
+def test_issue_1395():
     a, b = symbols('a b')
     eq = sin(a)**2*sin(b)**2 + cos(a)**2*cos(b)**2*tan(a)**2 + cos(a)**2
     assert trigsimp(eq) == 1
 
 
-def test_2849():
+def test_issue_2849():
     a, x, y = symbols('a x y')
     assert trigsimp(diff(integrate(cos(x)/sin(x)**7, x), x)) == \
            cos(x)/sin(x)**7
 
 
-def test_1676():
+def test_issue_1676():
     a, x, y = symbols('a x y')
     assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)) == sin(x + y)
     assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)+3) == sin(x + y) + 3
 
 
-def test_1181():
+def test_issue_1181():
     a, x, y = symbols('a x y')
     assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1
     assert trigsimp(a**2*sin(x)**2 + a**2*cos(y)**2*cos(x)**2 + a**2*cos(x)**2*sin(y)**2) == a**2
     assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
 
 
-def test_111():
+def test_issue_111():
     eqs = (sin(2)*cos(3) + sin(3)*cos(2),
         -sin(2)*sin(3) + cos(2)*cos(3),
         sin(2)*cos(3) - sin(3)*cos(2),
@@ -1759,7 +1759,7 @@ def test_issue_from_PR1599():
         (-n1)**(S(1)/3)*(-n2)**(S(1)/3)*(-n3)**(S(1)/3)*(-n4)**(S(1)/3))
 
 
-def test_3712():
+def test_issue_3712():
     eq = (x + 2*y)*(2*x + 2)
     assert simplify(eq) == (x + 1)*(x + 2*y)*2
     # reject the 2-arg Mul -- these are a headache for test writing
@@ -1768,7 +1768,7 @@ def test_3712():
 
 
 @XFAIL
-def test_3712_fail():
+def test_issue_3712_fail():
     # from doc/src/modules/physics/mechanics/examples.rst, the current `eq`
     # at Line 576 (in different variables) was formerly the equivalent and
     # shorter expression given below...it would be nice to get the short one
@@ -1778,7 +1778,7 @@ def test_3712_fail():
     assert trigsimp(eq) == -2*(2*cos(x)*tan(x)*y + 3*z)*xp/cos(x)
 
 
-def test_3821():
+def test_issue_3821():
     e = [cos(x) + I*sin(x), cos(x) - I*sin(x),
         cosh(x) - sinh(x), cosh(x) + sinh(x)]
     ok = [exp(I*x), exp(-I*x), exp(-x), exp(x)]
@@ -1787,7 +1787,7 @@ def test_3821():
     assert [simplify(f(ei)).args[0] for ei in e] == ok
 
 
-def test_3902():
+def test_issue_3902():
     from sympy.abc import r, R
     assert simplify(-(r*Piecewise((4*pi/3, r <= R),
         (-8*pi*R**3/(3*r**3), True)) + 2*Piecewise((4*pi*r/3, r <= R),
