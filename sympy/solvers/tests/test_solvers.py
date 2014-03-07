@@ -597,7 +597,7 @@ def test_checking():
     assert solve(1/(1/x + 2)) == []
 
 
-def test_issue_4671_1364_1368():
+def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
     assert set(solve((2**exp(y**2/x) + 2)/(x**2 + 15), y)) == set([
@@ -1429,7 +1429,7 @@ def test_gh2725():
                        evaluate=False),)])
 
 
-def test_issue_5114_3512():
+def test_issue_5114_6611():
     # See that it doesn't hang; this solves in about 2 seconds.
     # Also check that the solution is relatively small.
     # Note: the system in issue 3512 solves in about 5 seconds and has

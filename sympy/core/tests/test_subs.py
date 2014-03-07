@@ -556,7 +556,7 @@ def test_simultaneous_subs():
         (y/x).subs(reps, simultaneous=True)
 
 
-def test_issue_6419_3322():
+def test_issue_6419_6421():
     assert (1/(1 + x/y)).subs(x/y, x) == 1/(1 + x)
     assert (-2*I).subs(2*I, x) == -x
     assert (-I*x).subs(I*x, x) == -x

@@ -1506,7 +1506,7 @@ def test_add_flatten():
     assert (1/a).simplify() == (1/b).simplify() == 0
 
 
-def test_issue_5160_2988_2990_2991():
+def test_issue_5160_6087_6089_6090():
     #2988
     assert ((-2*x*y**y)**3.2).n(2) == (2**3.2*(-x*y**y)**3.2).n(2)
     #2990

@@ -74,6 +74,6 @@ def test_global_dict():
     for text, result in inputs.items():
         assert parse_expr(text, global_dict=global_dict) == result
 
-def test_issue_5614_github():
+def test_issue_2515():
     raises(TokenError, lambda: parse_expr('(()'))
     raises(TokenError, lambda: parse_expr('"""'))

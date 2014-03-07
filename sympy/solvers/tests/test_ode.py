@@ -1330,7 +1330,7 @@ def test_issue_5770():
     assert constantsimp(x + C1 + Integral(x, (x, 1, 2)), x, 1) == C1 + x
 
 
-def test_issue_5112_2331():
+def test_issue_5112_5430():
     assert homogeneous_order(-log(x) + acosh(x), x) is None
     assert homogeneous_order(y - log(x), x, y) is None
 

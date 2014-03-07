@@ -592,7 +592,7 @@ def test_principal_branch():
 
 
 @XFAIL
-def test_issue_6167_3052():
+def test_issue_6167_6151():
     n = pi**1000
     i = int(n)
     assert sign(n - i) == 1
