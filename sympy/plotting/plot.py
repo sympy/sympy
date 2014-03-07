@@ -33,6 +33,7 @@ from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
+from math import pi
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -369,12 +370,13 @@ class List2DSeries(Line2DBaseSeries):
         return (self.list_x, self.list_y)
 
 
+
 class LineOver1DRangeSeries(Line2DBaseSeries):
     """Representation for a line consisting of a sympy expression over a range."""
 
     def __init__(self, expr, var_start_end, **kwargs):
         super(LineOver1DRangeSeries, self).__init__()
-        self.expr = sympify(expr)
+        self.expr = sympify(expr)        
         self.label = str(self.expr)
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
@@ -405,7 +407,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         if self.only_integers or not self.adaptive:
             return super(LineOver1DRangeSeries, self).get_segments()
         else:
-            f = lambdify([self.var], self.expr)
+            f = lambdify([self.var], self.expr)            
             list_segments = []
 
             def sample(p, q, depth):
@@ -415,6 +417,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 allowed is 12.
                 """
                 np = import_module('numpy')
+               
+
                 #Randomly sample to avoid aliasing.
                 random = 0.45 + np.random.rand() * 0.1
                 xnew = p[0] + random * (q[0] - p[0])
@@ -454,7 +458,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
             f_start = f(self.start)
             f_end = f(self.end)
+            
             sample([self.start, f_start], [self.end, f_end], 0)
+          
             return list_segments
 
     def get_points(self):
@@ -840,6 +846,7 @@ class MatplotlibBackend(BaseBackend):
             self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
 
+
     def process_series(self):
         parent = self.parent
 
@@ -902,6 +909,7 @@ class MatplotlibBackend(BaseBackend):
                     collection.set_array(color_array)
                 else:
                     collection.set_color(s.line_color)
+                   
             if s.is_3Dsurface and s.surface_color:
                 if self.matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
                     warnings.warn('The version of matplotlib is too old to use surface coloring.')
@@ -1070,6 +1078,8 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
+
+
 @doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
@@ -1206,15 +1216,70 @@ def plot(*args, **kwargs):
 
     """
     args = list(map(sympify, args))
+
     show = kwargs.pop('show', True)
+    auto_domain = kwargs.pop('auto_domain', False)    #additional keyword argument
     series = []
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
+
+    if auto_domain == True:
+        range_list = [periodic_range(*arg) for arg in plot_expr]
+        for i in range(len(series)):
+            series[i].start = range_list[i][0]
+            series[i].end = range_list[i][1]
+
 
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
     return plots
+
+def periodic_range(expr, var_start_end):   # reference : http://www.cs.uic.edu/~wilkinson/Publications/plotfunc.pdf
+    """ 
+    Returns a domain to be plotted for a periodic funtion.If function is not periodic returns default_range.
+    Called when plot() recieves auto_domain=True
+
+    Usage >>> plot(sin(4*x),auto_domain=True)
+     """
+    default_range=[-10,10]
+    func = sympify(expr)        
+    variable = sympify(var_start_end[0])
+    f = lambdify([variable], func)
+    factor = 50
+    small = pi / factor         # minimum periodicity detectable
+    large = factor * pi         # max periodicity detectable
+    cycles = 4     #no. of cycles after which to assume periodicity
+    
+    y_delta=0.001     #range for treating two nos. equal
+    x_delta = 0.001   #increments for x
+    period = small
+    while (period < large):        
+        x=small
+        periodic = True
+        while(x<=small+period):
+            fa = f(x)
+            for i in range(1,cycles+1):
+                fb = f(x + i*period)
+                try:
+                    y_delta=(fb-f(x+i*period+x_delta))/(x_delta)
+                except ZeroDivisionError:
+                    y_delta=0.01
+                y_delta/=10
+                if abs(fb - fa) > abs(y_delta) :
+                    periodic = False
+                    break   
+
+            if(periodic==False):
+                break
+            x+=x_delta
+
+        if periodic:
+            return [-3*period,3*period]     #display 6 periods, 3 on either side of y-axis
+        
+        period+=x_delta
+    
+    return default_range
 
 
 @doctest_depends_on(modules=('numpy', 'matplotlib',))
@@ -1651,6 +1716,7 @@ def plot3d_parametric_surface(*args, **kwargs):
     return plots
 
 
+
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
     Checks the arguments and converts into tuples of the
@@ -1718,6 +1784,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
             ranges = Tuple(*[range_expr for range_expr in args[
                            i:i + nb_of_free_symbols]])
+            
             plots = [expr + ranges for expr in exprs]
             return plots
         else:
