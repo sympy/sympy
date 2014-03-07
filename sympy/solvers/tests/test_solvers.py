@@ -884,7 +884,7 @@ def test_unrad_slow():
                 sqrt(1 - x) - sqrt(2 + x))
     assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
     # the fence optimization problem
-    # https://github.com/sympy/sympy/issues/4793#c159
+    # https://github.com/sympy/sympy/issues/4793#issuecomment-36994519
     F = Symbol('F')
     eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
     X = solve(eq, x, hint='minimal')[0]
@@ -1280,7 +1280,7 @@ def test_issues_3720_3721_3722_3149():
 
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
-    # github issue 5741
+    # issue 2642
     assert solve(x*(1 + I)) == [0]
 
     x, y = symbols('x y', imaginary=True)
