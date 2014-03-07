@@ -229,7 +229,7 @@ def test_issue_3210():
 def test_trigsimp_issues():
     a, x, y = symbols('a x y')
 
-    # 1526 - factor_terms works, too
+    # issue 4625 - factor_terms works, too
     assert trigsimp(sin(x)**3 + cos(x)**2*sin(x)) == sin(x)
 
     # issue 5948
@@ -845,7 +845,7 @@ def test_collect_D():
     assert collect(a*fx + b*fx, fx) == (a + b)*fx
     assert collect(a*D(fx, x) + b*D(fx, x), fx) == (a + b)*D(fx, x)
     assert collect(a*fxx + b*fxx, fx) == (a + b)*D(fx, x)
-    # 1685
+    # issue 4784
     assert collect(5*f(x) + 3*fx, fx) == 5*f(x) + 3*fx
     assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x)) == \
         (x*f(x) + f(x))*D(f(x), x) + f(x)
@@ -910,7 +910,7 @@ def test_collect_func():
 
 @XFAIL
 def test_collect_func_xfail():
-    # XXX: this test will pass when automatic constant distribution is removed (#1497)
+    # XXX: this test will pass when automatic constant distribution is removed (issue 4596)
     assert collect(f, x, factor, evaluate=False) == {S.One: (a + 1)**3,
                    x: 3*(a + 1)**2, x**2: 3*(a + 1), x**3: 1}
 
@@ -956,16 +956,16 @@ def test_separatevars():
     assert separatevars(y/pi*exp(-(z - x)/cos(n))) == \
         y*exp(x/cos(n))*exp(-z/cos(n))/pi
     assert separatevars((x + y)*(x - y) + y**2 + 2*x + 1) == (x + 1)**2
-    # 1759
+    # issue 4858
     p = Symbol('p', positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
     assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y*(1 + x))
     assert separatevars(sqrt(y*(p**2 + x*p**2)), force=True) == \
         p*sqrt(y)*sqrt(1 + x)
-    # 1766
+    # issue 4865
     assert separatevars(sqrt(x*y)).is_Pow
     assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
-    # 1858
+    # issue 4957
     # any type sequence for symbols is fine
     assert separatevars(((2*x + 2)*y), dict=True, symbols=()) == \
         {'coeff': 1, x: 2*x + 2, y: y}
@@ -983,11 +983,11 @@ def test_separatevars():
     assert separatevars(2*x + y, dict=True, symbols=()) is None
     assert separatevars(2*x + y, dict=True) is None
     assert separatevars(2*x + y, dict=True, symbols=None) == {'coeff': 2*x + y}
-    # 1709
+    # issue 4808
     n, m = symbols('n,m', commutative=False)
     assert separatevars(m + n*m) == (1 + n)*m
     assert separatevars(x + x*n) == x*(1 + n)
-    # 1811
+    # issue 4910
     f = Function('f')
     assert separatevars(f(x) + x*f(x)) == f(x) + x*f(x)
     # a noncommutable object present

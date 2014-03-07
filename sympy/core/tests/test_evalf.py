@@ -183,9 +183,9 @@ def test_evalf_bugs():
     assert NS((x*(1 + y*(1 + n))).subs(d).evalf(), 6) == '0.346011 + 0.433884*I'
     assert NS(((-I - sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
     assert NS((1 + I)**2*I, 15) == '-2.00000000000000'
-    #1659 (1/2):
+    # issue 4758 (1/2):
     assert NS(pi.evalf(69) - pi) == '-4.43863937855894e-71'
-    #1659 (2/2): With the bug present, this still only fails if the
+    # issue 4758 (2/2): With the bug present, this still only fails if the
     # terms are in the order given here. This is not generally the case,
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
@@ -196,7 +196,7 @@ def test_evalf_bugs():
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
     assert cos(x).n(subs={x: 1+I}) == cos(x).subs(x, 1+I).n()
-    #3561. Also NaN != mpmath.nan
+    # issue 6660. Also NaN != mpmath.nan
     # In this order:
     # 0*nan, 0/nan, 0*inf, 0/inf
     # 0+nan, 0-nan, 0+inf, 0-inf
@@ -343,14 +343,14 @@ def test_subs_bugs():
 
 
 def test_issue_4956_5204():
-    # 1857
+    # issue 4956
     v = S('''(-27*12**(1/3)*sqrt(31)*I +
     27*2**(2/3)*3**(1/3)*sqrt(31)*I)/(-2511*2**(2/3)*3**(1/3) +
     (29*18**(1/3) + 9*2**(1/3)*3**(2/3)*sqrt(31)*I +
     87*2**(1/3)*3**(1/6)*I)**2)''')
     assert NS(v, 1) == '0.e-118 - 0.e-118*I'
 
-    # 2105
+    # issue 5204
     v = S('''-(357587765856 + 18873261792*249**(1/2) + 56619785376*I*83**(1/2) +
     108755765856*I*3**(1/2) + 41281887168*6**(1/3)*(1422 +
     54*249**(1/2))**(1/3) - 1239810624*6**(1/3)*249**(1/2)*(1422 +

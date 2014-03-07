@@ -525,20 +525,20 @@ def test_issue_4793():
 
 
 def test_PR1964():
-    # 2072
+    # issue 5171
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
     assert solve(sqrt(x - 1)) == [1]
-    # 1363
+    # issue 4462
     a = Symbol('a')
     assert solve(-3*a/sqrt(x), x) == []
-    # 1387
+    # issue 4486
     assert solve(2*x/(x + 2) - 1, x) == [2]
-    # 1397
+    # issue 4496
     assert set(solve((x**2/(7 - x)).diff(x))) == set([S(0), S(14)])
-    # 1596
+    # issue 4695
     f = Function('f')
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
-    # 1398
+    # issue 4497
     assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
 
     assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
@@ -1254,7 +1254,7 @@ def test_issue_6792():
 
 
 def test_issues_3720_3721_3722_3149():
-    # 3722
+    # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
     assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]

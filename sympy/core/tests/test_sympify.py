@@ -25,7 +25,7 @@ def test_sympify1():
     assert sympify("x") == Symbol("x")
     assert sympify("   x") == Symbol("x")
     assert sympify("   x   ") == Symbol("x")
-    # 1778
+    # issue 4877
     n1 = Rational(1, 2)
     assert sympify('--.5') == n1
     assert sympify('-1/2') == -n1

@@ -224,10 +224,10 @@ def test_special_products():
 
 def test__eval_product():
     from sympy.abc import i, n
-    # 1710
+    # issue 4809
     a = Function('a')
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
-    # 1711
+    # issue 4810
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
 
 
