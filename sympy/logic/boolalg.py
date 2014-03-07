@@ -1006,7 +1006,7 @@ def eliminate_implications(expr):
 
 
 @deprecated(
-    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=6550, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
@@ -1459,7 +1459,7 @@ def bool_map(bool1, bool2):
 
 
 @deprecated(
-    useinstead="bool_map", issue=4098, deprecated_since_version="0.7.4")
+    useinstead="bool_map", issue=7197, deprecated_since_version="0.7.4")
 def bool_equal(bool1, bool2, info=False):
     """Return True if the two expressions represent the same logical
     behaviour for some correspondence between the variables of each

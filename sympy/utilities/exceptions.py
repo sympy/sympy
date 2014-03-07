@@ -80,7 +80,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
     >>> SymPyDeprecationWarning(
     ...    feature="Old feature",
     ...    useinstead="new feature",
-    ...    issue=2142)
+    ...    issue=5241)
     Old feature has been deprecated. Use new feature instead. See
     https://github.com/sympy/sympy/issues/5241 for more info.
 

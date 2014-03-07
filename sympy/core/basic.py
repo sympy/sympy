@@ -220,7 +220,7 @@ class Basic(with_metaclass(ManagedProperties)):
         return Basic.compare(a, b)
 
     @staticmethod
-    @deprecated(useinstead="default_sort_key", issue=1491, deprecated_since_version="0.7.2")
+    @deprecated(useinstead="default_sort_key", issue=4590, deprecated_since_version="0.7.2")
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
@@ -1171,7 +1171,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 return self.func(*args)
         return self
 
-    @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
+    @deprecated(useinstead="has", issue=5488, deprecated_since_version="0.7.2")
     def __contains__(self, obj):
         if self == obj:
             return True
