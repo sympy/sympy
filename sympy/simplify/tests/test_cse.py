@@ -167,7 +167,7 @@ def test_powers():
     assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
 
 
-def test_issues_1399():
+def test_issue_4498():
     assert cse(w/(x - y) + z/(y - x), optimizations='basic') == \
         ([], [(w - z)/(x - y)])
 

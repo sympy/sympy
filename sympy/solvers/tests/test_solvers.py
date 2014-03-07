@@ -1253,7 +1253,7 @@ def test_issue_6792():
     RootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_3720_3721_3722_3149():
+def test_issues_6819_6820_6821_6248():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]

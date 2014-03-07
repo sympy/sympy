@@ -253,7 +253,7 @@ def test_power_expand():
     assert (A**(a + b)).expand() != A**(a + b)
 
 
-def test_issues_2820_3731():
+def test_issues_5919_6830():
     # issue 5919
     n = -1 + 1/x
     z = n/x/(-n)**2 - 1/n/x
