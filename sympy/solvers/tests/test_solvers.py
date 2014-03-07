@@ -366,25 +366,25 @@ def test_tsolve():
 
     assert solve(z*cos(x), x) == [pi/2, 3*pi/2]
 
-    # issue #1409
+    # issue 4508
     assert solve(y - b*x/(a + x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]
     assert solve(y - b*exp(a/x), x) == [a/log(y/b)]
-    # issue #1408
+    # issue 4507
     assert solve(y - b/(1 + a*x), x) in [[(b - y)/(a*y)], [-((y - b)/(a*y))]]
-    # issue #1407
+    # issue 4506
     assert solve(y - a*x**b, x) == [(y/a)**(1/b)]
-    # issue #1406
+    # issue 4505
     assert solve(z**x - y, x) == [log(y)/log(z)]
-    # issue #1405
+    # issue 4504
     assert solve(2**x - 10, x) == [log(10)/log(2)]
-    # issue #3645
+    # issue 6744
     assert solve(x*y) == [{x: 0}, {y: 0}]
     assert solve([x*y]) == [{x: 0}, {y: 0}]
     assert solve(x**y - 1) == [{x: 1}, {y: 0}]
     assert solve([x**y - 1]) == [{x: 1}, {y: 0}]
     assert solve(x*y*(x**2 - y**2)) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
     assert solve([x*y*(x**2 - y**2)]) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
-    #issue #1640
+    #issue 4739
     assert solve(exp(log(5)*x) - 2**x, x) == [0]
 
 def test_solve_for_functions_derivatives():

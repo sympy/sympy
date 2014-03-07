@@ -186,7 +186,7 @@ def test_latex_functions():
     assert latex(a1) == r"\operatorname{a_{1}}"
     assert latex(a1(x)) == r"\operatorname{a_{1}}{\left (x \right )}"
 
-    # issue #2769
+    # issue 5868
     omega1 = Function('omega1')
     assert latex(omega1) == r"\omega_{1}"
     assert latex(omega1(x)) == r"\omega_{1}{\left (x \right )}"

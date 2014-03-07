@@ -1330,7 +1330,7 @@ def test_as_content_primitive():
 
 @XFAIL
 def test_hashing_sympy_integers():
-    # Test for issue #1973
+    # Test for issue 5072
     # https://github.com/sympy/sympy/issues/5072
     assert hash(S(4)) == 4
     assert hash(S(4)) == hash(int(4))

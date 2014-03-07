@@ -234,10 +234,10 @@ def test_solve_univariate_inequality():
         Union(Interval(1, 2), Interval(3, oo))
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
         Or(And(S.One <= x, x <= 2), x >= 3)
-    # github's issue #2785:
+    # github's issue 5884:
     assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
         Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),
               Interval(S(1)/2 + sqrt(5)/2, oo, True, True))
-    # github's issue #2794:
+    # github's issue 5893:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)

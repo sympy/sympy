@@ -319,7 +319,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         """
 
-        # XXX: remove this when issue #2070 is fixed
+        # XXX: remove this when issue 5169 is fixed
         def inner_key(arg):
             if isinstance(arg, Basic):
                 return arg.sort_key(order)
