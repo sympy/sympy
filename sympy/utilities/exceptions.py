@@ -131,7 +131,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
             self.fullMessage += "Use %s instead. " % useinstead
         if issue:
             self.fullMessage += ("See "
-                "http://code.google.com/p/sympy/issues/detail?id=%d for more "
+                "https://github.com/sympy/sympy/issues/%d for more "
                 "info. ") % issue
 
         if value:
