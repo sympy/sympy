@@ -424,10 +424,10 @@ def test_integrate_DiracDelta():
     assert integrate(DiracDelta(x) * f(x), (x, -oo, oo)) == f(0)
     assert integrate(DiracDelta(x) * f(x), (x, 0, oo)) == f(0)/2
     assert integrate(DiracDelta(x)**2, (x, -oo, oo)) == DiracDelta(0)
-    # issue 1423
+    # issue 4522
     assert integrate(integrate((4 - 4*x + x*y - 4*y) * \
         DiracDelta(x)*DiracDelta(y - 1), (x, 0, 1)), (y, 0, 1)) == 0
-    # issue 2630
+    # issue 5729
     p = exp(-(x**2 + y**2))/pi
     assert integrate(p*DiracDelta(x - 10*y), (x, -oo, oo), (y, -oo, oo)) == \
         integrate(p*DiracDelta(x - 10*y), (y, -oo, oo), (x, -oo, oo)) == \
@@ -438,7 +438,7 @@ def test_integrate_DiracDelta():
 
 @XFAIL
 def test_integrate_DiracDelta_fails():
-    # issue 3328
+    # issue 6427
     assert integrate(integrate(integrate(
         DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S(1)/2
 
@@ -835,7 +835,7 @@ def test_issue_4892a():
 
 
 def test_issue_4892b():
-    # Issues relating to issue 1497 are making the actual result of this hard
+    # Issues relating to issue 4596 are making the actual result of this hard
     # to test.  The answer should be something like
     #
     # (-sin(y) + sqrt(-72 + 48*cos(y) - 8*cos(y)**2)/2)*log(x + sqrt(-72 +

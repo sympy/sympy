@@ -671,7 +671,7 @@ def ordered(seq, keys=None, default=True, warn=False):
 
 # Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
 # For example, int(gmpy.mpz(2**256)) would raise OverflowError.
-# See issue 1881.
+# See issue 4980.
 
 # Minimum version of gmpy changed to 1.13 to allow a single code base to also
 # work with gmpy2.

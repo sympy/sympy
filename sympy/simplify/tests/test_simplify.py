@@ -232,7 +232,7 @@ def test_trigsimp_issues():
     # 1526 - factor_terms works, too
     assert trigsimp(sin(x)**3 + cos(x)**2*sin(x)) == sin(x)
 
-    # issue 2849
+    # issue 5948
     assert trigsimp(diff(integrate(cos(x)/sin(x)**3, x), x)) == \
         cos(x)/sin(x)**3
     assert trigsimp(diff(integrate(sin(x)/cos(x)**3, x), x)) == \
@@ -255,7 +255,7 @@ def test_trigsimp_issues():
     assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
         cos(2)*sin(3)**4
 
-    # issue 3690; this generates an expression that formerly caused
+    # issue 6789; this generates an expression that formerly caused
     # trigsimp to hang
     assert cot(x).equals(tan(x)) is False
 
@@ -489,7 +489,7 @@ def test_simplify_other():
         Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
     nc = symbols('nc', commutative=False)
     assert simplify(x + x*nc) == x*(1 + nc)
-    # issue 3024
+    # issue 6123
     # f = exp(-I*(k*sqrt(t) + x/(2*sqrt(t)))**2)
     # ans = integrate(f, (k, -oo, oo), conds='none')
     ans = I*(-pi*x*exp(-3*I*pi/4 + I*x**2/(4*t))*erf(x*exp(-3*I*pi/4)/
@@ -497,7 +497,7 @@ def test_simplify_other():
         (2*sqrt(t)))*exp(-I*x**2/(4*t))/(sqrt(pi)*x) - I*sqrt(pi) * \
         (-erf(x*exp(I*pi/4)/(2*sqrt(t))) + 1)*exp(I*pi/4)/(2*sqrt(t))
     assert simplify(ans) == -(-1)**(S(3)/4)*sqrt(pi)/sqrt(t)
-    # issue 3271
+    # issue 6370
     assert simplify(2**(2 + x)/4) == 2**x
 
 
@@ -505,7 +505,7 @@ def test_simplify_complex():
     cosAsExp = cos(x)._eval_rewrite_as_exp(x)
     tanAsExp = tan(x)._eval_rewrite_as_exp(x)
     assert simplify(cosAsExp*tanAsExp).expand() == (
-        sin(x))._eval_rewrite_as_exp(x).expand()  # issue 1242
+        sin(x))._eval_rewrite_as_exp(x).expand()  # issue 4341
 
 
 def test_simplify_ratio():
@@ -663,7 +663,7 @@ def test_powsimp():
 
     assert powsimp(exp(p/2)) == exp(p/2)
 
-    # issue 3269
+    # issue 6368
     eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
     assert powsimp(eq) == eq and eq.is_Mul
 
@@ -821,7 +821,7 @@ def test_collect_4():
     a, b, c, x = symbols('a,b,c,x')
 
     assert collect(a*x**c + b*x**c, x**c) == x**c*(a + b)
-    # issue 2997: 2 stays with c (unless c is integer or x is positive0
+    # issue 6096: 2 stays with c (unless c is integer or x is positive0
     assert collect(a*x**(2*c) + b*x**(2*c), x**c) == x**(2*c)*(a + b)
 
 
@@ -1246,7 +1246,7 @@ def test_issue_4194():
 
 @XFAIL
 def test_simplify_float_vs_integer():
-    # Test for issue 1374:
+    # Test for issue 4473:
     # https://github.com/sympy/sympy/issues/4473
     assert simplify(x**2.0 - x**2) == 0
     assert simplify(x**2 - x**2.0) == 0
@@ -1450,21 +1450,21 @@ def test_radsimp():
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -(-sqrt(3) + sqrt(2))**3
 
-    # issue 3433
+    # issue 6532
     assert fraction(radsimp(1/sqrt(x))) == (sqrt(x), x)
     assert fraction(radsimp(1/sqrt(2*x + 3))) == (sqrt(2*x + 3), 2*x + 3)
     assert fraction(radsimp(1/sqrt(2*(x + 3)))) == (sqrt(2*x + 6), 2*x + 6)
 
-    # issue 2895
+    # issue 5994
     e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
         '(1 + 2**(3/4) + 3*2**(1/4) + 3*sqrt(2))')
     assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S(1)/4) + 2 + 2*sqrt(2)
 
-    # issue 2887 (modifications to radimp didn't initially recognize this so
+    # issue 5986 (modifications to radimp didn't initially recognize this so
     # the test is included here)
     assert radsimp(1/(-sqrt(5)/2 - S(1)/2 + (-sqrt(5)/2 - S(1)/2)**2)) == 1
 
-    # from issue 2835
+    # from issue 5934
     eq = (
         (-240*sqrt(2)*sqrt(sqrt(5) + 5)*sqrt(8*sqrt(5) + 40) -
         360*sqrt(2)*sqrt(-8*sqrt(5) + 40)*sqrt(-sqrt(5) + 5) -
@@ -1524,7 +1524,7 @@ def test_collect_const():
     assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
         sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
 
-    # issue 2191
+    # issue 5290
     assert collect_const(2*x + 2*y + 1, 2) == \
         collect_const(2*x + 2*y + 1) == \
         Add(S(1), Mul(2, x + y, evaluate=False), evaluate=False)
@@ -1588,7 +1588,7 @@ def test_combsimp_gamma():
     assert powsimp(combsimp(gamma(2*x)/gamma(x))) == \
         2**(2*x - 1)*gamma(x + S(1)/2)/sqrt(pi)
 
-    # issue 3693
+    # issue 6792
     e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2
     assert combsimp(e) == -k
     assert combsimp(1/e) == -1/k

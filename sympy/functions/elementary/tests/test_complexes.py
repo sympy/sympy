@@ -243,13 +243,13 @@ def test_as_real_imag():
     # this should not hang
     assert n.as_real_imag() == (n, 0)
 
-    # issue 3162
+    # issue 6261
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
         ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
      (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
 
-    # issue 754
+    # issue 3853
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (

@@ -262,11 +262,11 @@ def checksol(f, symbol, sol=None, **flags):
                 val = val.subs(reps)
             nz = val.is_nonzero
             if nz is not None:
-                # issue 2574: nz may be True even when False
+                # issue 5673: nz may be True even when False
                 # so these are just hacks to keep a false positive
                 # from being returned
 
-                # HACK 1: LambertW (issue 2574)
+                # HACK 1: LambertW (issue 5673)
                 if val.is_number and val.has(LambertW):
                     # don't eval this to verify solution since if we got here,
                     # numerical must be False

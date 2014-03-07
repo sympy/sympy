@@ -225,14 +225,14 @@ def test_geometric_sums():
     assert summation(2**(-4*n + 3), (n, 1, oo)) == Rational(8, 15)
     assert summation(2**(n + 1), (n, 1, b)).expand() == 4*(2**b - 1)
 
-    # issue 3565:
+    # issue 6664:
     assert summation(x**n, (n, 0, oo)) == \
         Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
 
     assert summation(-2**n, (n, 0, oo)) == -oo
     assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
 
-    # issue 3703:
+    # issue 6802:
     assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
     assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - S(4)/3
     assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S(1)/2
@@ -370,7 +370,7 @@ def test_evalf_euler_maclaurin():
 
 def test_evalf_symbolic():
     f, g = symbols('f g', cls=Function)
-    # issue 3229
+    # issue 6328
     expr = Sum(f(x), (x, 1, 3)) + Sum(g(x), (x, 1, 3))
     assert expr.evalf() == expr
 
@@ -442,7 +442,7 @@ def test_wallis_product():
 
 
 def test_telescopic_sums():
-    #checks also input 2 of comment 1 issue 1028
+    #checks also input 2 of comment 1 issue 4127
     assert Sum(1/k - 1/(k + 1), (k, 1, n)).doit() == 1 - 1/(1 + n)
     f = Function("f")
     assert Sum(
@@ -501,7 +501,7 @@ def test_equality():
         assert F(1, (x, 1, x)) != F(1, (y, 1, x))
         assert F(1, (x, 1, x)) != F(1, (y, 1, y))
 
-    # issue 2166
+    # issue 5265
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 

@@ -15,7 +15,7 @@ __all__ = (
 )
 
 
-# Note, see issue 1887.  Ideally, we wouldn't want to subclass both Boolean
+# Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
 
 class Relational(Boolean, Expr, EvalfMixin):

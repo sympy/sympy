@@ -475,7 +475,7 @@ def test_cot():
 def test_cot_series():
     assert cot(x).series(x, 0, 9) == \
         1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
-    # issue 3111:
+    # issue 6210:
     assert cot(x**20 + x**21 + x**22).series(x, 0, 4) == \
         x**(-20) - 1/x**19 + x**(-17) - 1/x**16 + x**(-14) - 1/x**13 + \
         x**(-11) - 1/x**10 + x**(-8) - 1/x**7 + x**(-5) - 1/x**4 + \
@@ -938,7 +938,7 @@ def test_real_imag():
 
 @XFAIL
 def test_sin_cos_with_infinity():
-    # Test for issue 2097
+    # Test for issue 5196
     # https://github.com/sympy/sympy/issues/5196
     assert sin(oo) == S.NaN
     assert cos(oo) == S.NaN

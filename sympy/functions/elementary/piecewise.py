@@ -198,7 +198,7 @@ class Piecewise(Function):
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
         # FIXME: Currently complex intervals are not supported.  A possible
-        # replacement algorithm, discussed in issue 2128, can be found in the
+        # replacement algorithm, discussed in issue 5227, can be found in the
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf

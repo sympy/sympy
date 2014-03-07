@@ -409,7 +409,7 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    # See issue 1824
+    # See issue 4923
     expr = Pow(3, 1, evaluate=False)
     ascii_str = \
 """\
@@ -2913,7 +2913,7 @@ u("""\
 
 
 def test_any_object_in_sequence():
-    # Cf. issue 2207
+    # Cf. issue 5306
     b1 = Basic()
     b2 = Basic(Basic())
 

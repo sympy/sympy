@@ -544,7 +544,7 @@ def test_tuple():
 
 def test_Unit():
     assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 2461
+    assert str(joule) == "kg*m**2/s**2"  # issue 5560
 
 
 def test_wild_str():

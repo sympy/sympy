@@ -741,7 +741,7 @@ def test_nullspace():
     assert basis[2] == Matrix([-2, 0, 0, -2, 1, 0, 0])
     assert basis[3] == Matrix([0, 0, 0, 0, 0, R(-1)/3, 1])
 
-    # issue 1698; just see that we can do it when rows > cols
+    # issue 4797; just see that we can do it when rows > cols
     M = Matrix([[1, 2], [2, 4], [3, 6]])
     assert M.nullspace()
 
@@ -1310,7 +1310,7 @@ def test_inv_block():
 def test_creation_args():
     """
     Check that matrix dimensions can be specified using any reasonable type
-    (see issue 1515).
+    (see issue 4614).
     """
     raises(ValueError, lambda: zeros(3, -1))
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
@@ -1431,7 +1431,7 @@ def test_eigen_vects():
     m = Matrix(2, 2, [1, 0, 0, I])
     raises(NotImplementedError, lambda: m.is_diagonalizable(True))
     # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 2193
+    # see issue 5292
     assert not m.is_diagonalizable(True)
     raises(MatrixError, lambda: m.diagonalize(True))
     (P, D) = m.diagonalize(True)
@@ -2126,7 +2126,7 @@ def test_is_Identity():
     assert eye(3).as_immutable().is_Identity
     assert not zeros(3).is_Identity
     assert not ones(3).is_Identity
-    # issue 3143
+    # issue 6242
     assert not Matrix([[1, 0, 0]]).is_Identity
 
 
@@ -2229,7 +2229,7 @@ def test_hash():
     for cls in classes[-2:]:
         s = set([cls.eye(1), cls.eye(1)])
         assert len(s) == 1 and s.pop() == cls.eye(1)
-    # issue 880
+    # issue 3979
     for cls in classes[:2]:
         assert not isinstance(cls.eye(1), collections.Hashable)
 
@@ -2237,7 +2237,7 @@ def test_hash():
 @XFAIL
 def test_issue_3979():
     # when this passes, delete this and change the [1:2]
-    # to [:2] in the test_hash above for issue 880
+    # to [:2] in the test_hash above for issue 3979
     cls = classes[0]
     raises(AttributeError, lambda: hash(cls.eye(1)))
 

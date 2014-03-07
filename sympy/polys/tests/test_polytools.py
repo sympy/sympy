@@ -1470,7 +1470,7 @@ def test_Poly_eval():
     raises(ValueError, lambda: Poly(x*y + y, x, y).eval((6, 7, 8)))
     raises(DomainError, lambda: Poly(x + 1, domain='ZZ').eval(S(1)/2, auto=False))
 
-    # issue 3245
+    # issue 6344
     alpha = Symbol('alpha')
     result = (2*alpha*z - 2*alpha + z**2 + 3)/(z**2 - 2*z + 1)
 
@@ -2372,7 +2372,7 @@ def test_factor():
 
     assert factor(sqrt(-x)) == sqrt(-x)
 
-    # issue 2818
+    # issue 5917
     e = (-2*x*(-x + 1)*(x - 1)*(-x*(-x + 1)*(x - 1) - x*(x - 1)**2)*(x**2*(x -
     1) - x*(x - 1) - x) - (-2*x**2*(x - 1)**2 - x*(-x + 1)*(-x*(-x + 1) +
     x*(x - 1)))*(x**2*(x - 1)**4 - x*(-x*(-x + 1)*(x - 1) - x*(x - 1)**2)))
@@ -2839,7 +2839,7 @@ def test_cancel():
       + (-(-2*P**2 + 2)*P*Q**2/2 - (-2*Q**2 + 2)*P**2*Q/2)*((-2*P**2 + 2)*P*Q**2/2 + (-2*Q**2 + 2)*P**2*Q/2)/(2*(P**2*Q**2 + 0.0001)**(S(3)/2))
     assert cancel(f).is_Mul == True
 
-    # issue 3923
+    # issue 7022
     A = Symbol('A', commutative=False)
     p1 = Piecewise((A*(x**2 - 1)/(x + 1), x > 1), ((x + 2)/(x**2 + 2*x), True))
     p2 = Piecewise((A*(x - 1), x > 1), (1/x, True))
@@ -3084,7 +3084,7 @@ def test_poly():
     assert poly(1, x) == Poly(1, x)
     raises(GeneratorsNeeded, lambda: poly(1))
 
-    # issue 3085
+    # issue 6184
     assert poly(x + y, x, y) == Poly(x + y, x, y)
     assert poly(x + y, y, x) == Poly(x + y, y, x)
 

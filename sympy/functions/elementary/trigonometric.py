@@ -417,7 +417,7 @@ class cos(TrigonometricFunction):
                 # useful test case is how "limit(sin(x)/x,x,oo)"
                 # is handled.
                 # See test_sin_cos_with_infinity() an
-                # Test for issue 209
+                # Test for issue 3308
                 # https://github.com/sympy/sympy/issues/5196
                 # For now, we return un-evaluated.
                 return

@@ -363,7 +363,7 @@ class Basic(with_metaclass(ManagedProperties)):
             else:
                 return False
         if type(self) is not type(other):
-            # issue 3001 a**1.0 == a like a**2.0 == a**2
+            # issue 6100 a**1.0 == a like a**2.0 == a**2
             while isinstance(self, C.Pow) and self.exp == 1:
                 self = self.base
             while isinstance(other, C.Pow) and other.exp == 1:
@@ -451,7 +451,7 @@ class Basic(with_metaclass(ManagedProperties)):
         return self.subs(dummy, tmp) == other.subs(symbol, tmp)
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
-    # regardless of the global setting.  See issue 2388.
+    # regardless of the global setting.  See issue 5487.
     def __repr__(self):
         from sympy.printing import sstr
         return sstr(self, order=None)

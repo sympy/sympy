@@ -298,7 +298,7 @@ def test_piecewise_solve():
                   (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
     assert solve(g, x) == [5]
 
-# See issue 1253 (enhance the solver to handle inequalities).
+# See issue 4352 (enhance the solver to handle inequalities).
 
 
 @XFAIL

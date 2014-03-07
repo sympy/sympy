@@ -411,7 +411,7 @@ def test_Mul_is_even_odd():
     assert (k*m*x).is_even is True
     assert (k*m*x).is_odd is False
 
-    # issue 3692:
+    # issue 6791:
     assert (x/2).is_integer is None
     assert (k/2).is_integer is False
     assert (m/2).is_integer is True
@@ -1119,7 +1119,7 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_imaginary is False
     assert (r*i*ii).is_real is True
 
-    # Github's issue 2775:
+    # Github's issue 5874:
     nr = Symbol('nr', real=False)
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)

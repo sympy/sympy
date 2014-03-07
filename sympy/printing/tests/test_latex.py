@@ -553,7 +553,7 @@ def test_latex_list():
 
 
 def test_latex_rational():
-    #tests issue 874
+    #tests issue 3973
     assert latex(-Rational(1, 2)) == "- \\frac{1}{2}"
     assert latex(Rational(-1, 2)) == "- \\frac{1}{2}"
     assert latex(Rational(1, -2)) == "- \\frac{1}{2}"
@@ -564,7 +564,7 @@ def test_latex_rational():
 
 
 def test_latex_inverse():
-    #tests issue 1030
+    #tests issue 4129
     assert latex(1/x) == "\\frac{1}{x}"
     assert latex(1/(x + y)) == "\\frac{1}{x + y}"
 
@@ -587,7 +587,7 @@ def test_latex_Heaviside():
 def test_latex_KroneckerDelta():
     assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
     assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
-    # issue 3479
+    # issue 6578
     assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{y, x + 1}"
 
 

@@ -653,7 +653,7 @@ class Function(Application, Expr):
         if not (1 <= argindex <= len(self.args)):
             raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
-            # See issue 1525 and issue 1620 and issue 2501
+            # See issue 4624 and issue 4719 and issue 5600
             arg_dummy = C.Dummy('xi_%i' % argindex)
             arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
@@ -2383,7 +2383,7 @@ def nfloat(expr, n=15, exponent=False):
 
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have
-    # problems with evaluating at low precision (issue 3294)
+    # problems with evaluating at low precision (issue 6393)
     rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
 
     if not exponent:

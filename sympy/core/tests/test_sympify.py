@@ -463,7 +463,7 @@ def test_kernS():
         'x', '_kern')
     ss = kernS(s)
     assert ss != -1 and ss.simplify() == -1
-    # issue 3588
+    # issue 6687
     assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
     assert kernS('_kern') == Symbol('_kern')
     assert kernS('E**-(x)') == exp(-x)

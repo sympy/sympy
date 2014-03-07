@@ -408,7 +408,7 @@ class GA_LatexPrinter(LatexPrinter):
             else:
                 if expr.is_commutative and expr.exp == -1:
                     """
-                    solves issue 1030
+                    solves issue 4129
                     As Mul always simplify 1/x to x**-1
                     The objective is achieved with this hack
                     first we get the latex for -1 * expr,

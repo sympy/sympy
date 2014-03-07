@@ -212,11 +212,11 @@ def test_mul():
     assert (x*A*B*C*A*B).subs(x*A*B, C) == C**2*A*B
     assert (-I*a*b).subs(a*b, 2) == -2*I
 
-    # issue 3262
+    # issue 6361
     assert (-8*I*a).subs(-2*a, 1) == 4*I
     assert (-I*a).subs(-a, 1) == I
 
-    # issue 3342
+    # issue 6441
     assert (4*x**2).subs(2*x, y) == y**2
     assert (2*4*x**2).subs(2*x, y) == 2*y**2
     assert (-x**3/9).subs(-x/3, z) == -z**2*x
@@ -350,7 +350,7 @@ def test_division():
     assert (1/x**2).subs(x, -2) == Rational(1, 4)
     assert (-(1/x**2)).subs(x, -2) == -Rational(1, 4)
 
-    #issue 2261
+    #issue 5360
     assert (1/x).subs(x, 0) == 1/S(0)
 
 

@@ -828,7 +828,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         ## Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
         r = collect(
             reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
-        if r and r[c] != 0 and r[n] != 1:  # See issue 1577
+        if r and r[c] != 0 and r[n] != 1:  # See issue 4676
             r['a'] = a
             r['b'] = b
             r['c'] = c
@@ -912,7 +912,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
-                # like f(2*x).diff(x).  See issue 1525 and issue 1620.
+                # like f(2*x).diff(x).  See issue 4624 and issue 4719.
                 pass
 
         # Any first order ODE can be ideally solved by the Lie Group
@@ -4156,7 +4156,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
 
     if r.get('simplify', True):
         wr = simplify(wr)  # We need much better simplification for
-                           # some ODEs. See issue 1563, for example.
+                           # some ODEs. See issue 4662, for example.
 
         # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)

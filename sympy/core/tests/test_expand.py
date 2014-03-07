@@ -217,9 +217,9 @@ def test_expand_arit():
     m = Symbol('m', negative=True)
     assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
     assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
-    # issue 2383
+    # issue 5482
     assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
-    # issue 2506 (2)
+    # issue 5605 (2)
     assert (cos(x + y)**2).expand(trig=True) in [
         (-sin(x)*sin(y) + cos(x)*cos(y))**2,
         sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2

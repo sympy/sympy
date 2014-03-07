@@ -216,7 +216,7 @@ def test_ode_order():
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
     assert ode_order(diff(x*diff(x*exp(f(x)), x, x), x), g(x)) == 0
-    # issue 2736: ode_order has to also work for unevaluated derivatives
+    # issue 5835: ode_order has to also work for unevaluated derivatives
     # (ie, without using doit()).
     assert ode_order(Derivative(x*f(x), x), f(x)) == 1
     assert ode_order(x*sin(Derivative(x*f(x)**2, x, x)), f(x)) == 2
@@ -330,7 +330,7 @@ def test_1st_exact1():
     assert dsolve(eq4, hint='1st_exact') == sol4
     assert dsolve(eq5, hint='1st_exact', simplify=False) == sol5
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
-    # issue 1981 needs to be addressed to test these
+    # issue 5080 needs to be addressed to test these
     # assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2b, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
@@ -583,7 +583,7 @@ def test_1st_homogeneous_coeff_ode_check3():
     # (False,
     #   x*(log(exp(-LambertW(C1*x))) +
     #   LambertW(C1*x))*exp(-LambertW(C1*x) + 1))
-    # This is blocked by issue 1981.
+    # This is blocked by issue 5080.
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
     sol3a = Eq(f(x), x*exp(1 - LambertW(C1*x)))
     assert checkodesol(eq3, sol3a, solve_for_func=True)[0]
@@ -635,7 +635,7 @@ def test_1st_homogeneous_coeff_ode_check9():
 
 def test_1st_homogeneous_coeff_ode3():
     # The standard integration engine cannot handle one of the integrals
-    # involved (see issue 1452).  meijerg code comes up with an answer, but in
+    # involved (see issue 4551).  meijerg code comes up with an answer, but in
     # unconventional form.
     # checkodesol fails for this equation, so its test is in
     # test_1st_homogeneous_coeff_ode_check9 above. It has to compare string
@@ -1296,7 +1296,7 @@ def test_issue_4825():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
     assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
         {'default': None, 'order': 0}
-    # See also issue 694, test Z13.
+    # See also issue 3793, test Z13.
     raises(ValueError, lambda: dsolve(f(x).diff(x), f(y)))
     assert classify_ode(f(x).diff(x), f(y), dict=True) == \
         {'default': None, 'order': 0}

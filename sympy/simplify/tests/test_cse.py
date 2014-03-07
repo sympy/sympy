@@ -75,7 +75,7 @@ def test_cse_not_possible():
     substs, reduced = cse([e])
     assert substs == []
     assert reduced == [x + y]
-    # issue 3230
+    # issue 6329
     eq = (meijerg((1, 2), (y, 4), (5,), [], x) +
           meijerg((1, 3), (y, 4), (5,), [], x))
     assert cse(eq) == ([], [eq])
@@ -101,7 +101,7 @@ def test_subtraction_opt():
         [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
     assert substs == [(x0, (x - y)*(y - z))]
     assert reduced == [x0 + exp(x0)]
-    # issue 978
+    # issue 4077
     n = -1 + 1/x
     e = n/x/(-n)**2 - 1/n/x
     assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)]) == \

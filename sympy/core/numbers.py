@@ -46,7 +46,7 @@ def mpf_norm(mpf, prec):
     if not man:
         # hack for mpf_normalize which does not do this;
         # it assumes that if man is zero the result is 0
-        # (see issue 3540)
+        # (see issue 6639)
         if not bc:
             return _mpf_zero
         else:

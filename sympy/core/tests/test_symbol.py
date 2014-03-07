@@ -291,7 +291,7 @@ def test_symbols():
     assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
 
-    # issue 3576
+    # issue 6675
     def sym(s):
         return str(symbols(s))
     assert sym('a0:4') == '(a0, a1, a2, a3)'

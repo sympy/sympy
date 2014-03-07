@@ -18,7 +18,7 @@ def test_Tuple():
     st2 = Tuple(*t2)
     assert st2.atoms() == set(t2)
     assert st == st2.subs({p: 1, q: 2, r: 3, s: 4})
-    # issue 2406
+    # issue 5505
     assert all(isinstance(arg, Basic) for arg in st.args)
     assert Tuple(p, 1).subs(p, 0) == Tuple(0, 1)
     assert Tuple(p, Tuple(p, 1)).subs(p, 0) == Tuple(0, Tuple(0, 1))

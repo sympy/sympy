@@ -1189,7 +1189,7 @@ class Mul(Expr, AssocOp):
 
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
-            # a -1 base (see issue 3322); all we want here are the
+            # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
             if a.is_Pow or a.func is C.exp:
                 return a.as_base_exp()
@@ -1235,7 +1235,7 @@ class Mul(Expr, AssocOp):
                 return int(a/b)
             return 0
 
-        # give Muls in the denominator a chance to be changed (see issue 2552)
+        # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
         rv = None
         n, d = fraction(self)

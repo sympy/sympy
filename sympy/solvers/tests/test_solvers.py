@@ -495,7 +495,7 @@ def test_solve_inequalities():
     assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
-    # issue 3528, 3448
+    # issue 6627, 3448
     assert solve((x - 3)/(x - 2) < 0, x, assume=Q.real(x)) == And(Lt(2, x), Lt(x, 3))
     assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == Lt(x, -1)
 
@@ -720,7 +720,7 @@ def test_unrad():
     s = symbols('s', cls=Dummy)
 
     # checkers to deal with possibility of answer coming
-    # back with a sign change (cf issue 2104)
+    # back with a sign change (cf issue 5203)
     def check(rv, ans):
         rv, ans = list(rv), list(ans)
         rv[0] = rv[0].expand()
@@ -964,7 +964,7 @@ def test_issue_5849():
     Q4: -I3/2 + 3*I5/2 - dI4/2}]
     assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == ans
     # the matrix solver (tested below) doesn't like this because it produces
-    # a zero row in the matrix. Is this related to issue 1452?
+    # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
         ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
 
@@ -1195,7 +1195,7 @@ def test_minsolve_linear_system():
 
 
 def test_real_roots():
-    # cf. issue 3551
+    # cf. issue 6650
     x = Symbol('x', real=True)
     assert len(solve(x**5 + x**3 + 1)) == 1
 
@@ -1260,7 +1260,7 @@ def test_issues_3720_3721_3722_3149():
     assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
     assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
 
-    # issue 4046
+    # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
     x = symbols('x')
@@ -1280,7 +1280,7 @@ def test_issues_3720_3721_3722_3149():
 
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
-    # github issue 2642
+    # github issue 5741
     assert solve(x*(1 + I)) == [0]
 
     x, y = symbols('x y', imaginary=True)
@@ -1289,7 +1289,7 @@ def test_issues_3720_3721_3722_3149():
     x = symbols('x', real=True)
     assert solve(x + y + 3 + 2*I) == {x: -3, y: -2*I}
 
-    # issue 3149
+    # issue 6248
     f = Function('f')
     assert solve(f(x + 1) - f(2*x - 1)) == [2]
     assert solve(log(x + 1) - log(2*x - 1)) == [2]
@@ -1337,7 +1337,7 @@ def test_lambert_multivariate():
     assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
         -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]
 
-    # issue 1172
+    # issue 4271
     assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
         6*LambertW((-1)**(S(1)/3)*a**(S(1)/3)/3)]
 
@@ -1432,7 +1432,7 @@ def test_issue_2725():
 def test_issue_5114_6611():
     # See that it doesn't hang; this solves in about 2 seconds.
     # Also check that the solution is relatively small.
-    # Note: the system in issue 3512 solves in about 5 seconds and has
+    # Note: the system in issue 6611 solves in about 5 seconds and has
     # an op-count of 138336 (with simplify=False).
     b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('b:r')
     eqs = Matrix([

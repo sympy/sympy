@@ -42,7 +42,7 @@ def test_expand():
 
 def test_issue_3449():
     #test if powers are simplified correctly
-    #see also issue 896
+    #see also issue 3995
     x = Symbol('x')
     assert ((x**Rational(1, 3))**Rational(2)) == x**Rational(2, 3)
     assert (

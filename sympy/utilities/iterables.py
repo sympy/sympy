@@ -1612,7 +1612,7 @@ def generate_bell(n):
     * http://en.wikipedia.org/wiki/
       Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
     * Generating involutions, derangements, and relatives by ECO
-      Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+      Vincent Vajnovszki, DMTCS vol 1 issue 3111, 2010
 
     """
     n = as_int(n)

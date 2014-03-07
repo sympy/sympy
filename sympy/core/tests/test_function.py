@@ -82,7 +82,7 @@ def test_diff_symbols():
     assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
 
-    # issue 1929
+    # issue 5028
     assert [diff(-z + x/y, sym) for sym in (z, x, y)] == [-1, 1/y, -x/y**2]
     assert diff(f(x, y, z), x, y, z, 2) == Derivative(f(x, y, z), x, y, z, z)
     assert diff(f(x, y, z), x, y, z, 2, evaluate=False) == \
@@ -270,8 +270,8 @@ def test_function_comparable_infinities():
 
 
 def test_deriv1():
-    # These all requre derivatives evaluated at a point (issue 1620) to work.
-    # See issue 1525
+    # These all requre derivatives evaluated at a point (issue 4719) to work.
+    # See issue 4624
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
     assert (
@@ -297,7 +297,7 @@ def test_deriv2():
 
 def test_func_deriv():
     assert f(x).diff(x) == Derivative(f(x), x)
-    # issue 1435
+    # issue 4534
     assert f(x, y).diff(x, y) - f(x, y).diff(y, x) == 0
     assert Derivative(f(x, y), x, y).args[1:] == (x, y)
     assert Derivative(f(x, y), y, x).args[1:] == (y, x)
@@ -376,7 +376,7 @@ def test_function__eval_nseries():
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
-    # issue 3626:
+    # issue 6725:
     assert expint(S(3)/2, -x)._eval_nseries(x, 5, None) == \
         2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
@@ -607,14 +607,14 @@ def test_nfloat():
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
-    # issue 3243
+    # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
     assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
 
-    # issue 3533
+    # issue 6632
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
         9.99999999800000e-11
 
-    # issue 4023
+    # issue 7122
     eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'

@@ -317,7 +317,7 @@ def test_I():
 
 
 def test_symbol_real():
-    # issue 749
+    # issue 3848
     a = Symbol('a', real=False)
 
     assert a.is_real is False
@@ -676,7 +676,7 @@ def test_issue_6275():
 
 
 def test_sanitize_assumptions():
-    # issue 3567
+    # issue 6666
     x = Symbol('x', real=1, positive=0)
     assert x.is_real is True
     assert x.is_positive is False

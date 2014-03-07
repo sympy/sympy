@@ -273,7 +273,7 @@ def test_relational_bool_output():
 
 
 def test_relational_logic_symbols():
-    # See issue 3105
+    # See issue 6204
     assert (x < y) & (z < t) == And(x < y, z < t)
     assert (x < y) | (z < t) == Or(x < y, z < t)
     assert ~(x < y) == Not(x < y)
