@@ -26,7 +26,6 @@ def test_order_at():
         order_at_oo(Poly(t - 1, t), Poly(1, t), t) == -1
     assert order_at_oo(Poly(0, t), Poly(1, t), t) == oo
 
-
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t)
     d = Poly(t**4 - 3*t**2 + 2, t)
