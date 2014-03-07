@@ -153,13 +153,13 @@ def test_re_im1652():
     assert im(x)*re(conjugate(x)) + im(conjugate(x)) * re(x) == 0
 
 
-def test_issue_1985():
+def test_issue_5084():
     x = Symbol('x')
     assert ((x + x*I)/(1 + I)).as_real_imag() == (re((x + I*x)/(1 + I)
             ), im((x + I*x)/(1 + I)))
 
 
-def test_issue_2137():
+def test_issue_5236():
     assert (cos(1 + I)**3).as_real_imag() == (-3*sin(1)**2*sinh(1)**2*cos(1)*cosh(1) +
         cos(1)**3*cosh(1)**3, -3*cos(1)**2*cosh(1)**2*sin(1)*sinh(1) + sin(1)**3*sinh(1)**3)
 
@@ -202,7 +202,7 @@ def test_pow_issue_1724():
     assert e.conjugate().n() == e.n().conjugate()
 
 
-def test_issue_2330():
+def test_issue_5429():
     assert sqrt(I).conjugate() != sqrt(I)
 
 def test_issue_4124():

@@ -172,16 +172,16 @@ def test_issues_1399():
         ([], [(w - z)/(x - y)])
 
 
-def test_issue_921():
+def test_issue_4020():
     assert cse(x**5 + x**4 + x**3 + x**2, optimizations='basic') \
         == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
 
 
-def test_issue_1104():
+def test_issue_4203():
     assert cse(sin(x**x)/x**x) == ([(x0, x**x)], [sin(x0)/x0])
 
 
-def test_issue_3164():
+def test_issue_6263():
     e = Eq(x*(-x + 1) + x*(x - 1), 0)
     assert cse(e, optimizations='basic') == ([], [True])
 
@@ -237,7 +237,7 @@ def test_postprocess():
         [x0 + exp(x0/x1) + cos(x1), z - 2, x0*x2]]
 
 
-def test_issue_1400():
+def test_issue_4499():
     # previously, this gave 16 constants
     from sympy.abc import a, b
     B = Function('B')
@@ -261,7 +261,7 @@ def test_issue_1400():
     assert ans == c
 
 
-def test_issue_3070():
+def test_issue_6169():
     r = RootOf(x**6 - 4*x**5 - 2, 1)
     assert cse(r) == ([], [r])
     # and a check that the right thing is done with the new

@@ -343,7 +343,7 @@ def test_factor_nc():
     assert factor_nc(-n*(2*x**2 + 2*x)) == -2*n*x*(x + 1)
 
 
-def test_issue_3261():
+def test_issue_6360():
     a, b = symbols("a b")
     apb = a + b
     eq = apb + apb**2*(-2*a - 2*b)

@@ -268,7 +268,7 @@ def test_cos():
             assert e < 1e-12
 
 
-def test_issue_3091():
+def test_issue_6190():
     c = Float('123456789012345678901234567890.25', '')
     for cls in [sin, cos, tan, cot]:
         assert cls(c*pi) == cls(pi/4)
@@ -748,7 +748,7 @@ def test_evenodd_rewrite():
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
 
 
-def test_issue_1448():
+def test_issue_4547():
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)
@@ -795,7 +795,7 @@ def test_aseries():
     t(acot, -0.1, '-', 1e-5)
 
 
-def test_issue_1321():
+def test_issue_4420():
     i = Symbol('i', integer=True)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)

@@ -1132,7 +1132,7 @@ def test_as_base_exp():
     assert ((x + y)**z).as_base_exp() == (x + y, z)
 
 
-def test_issue_1864():
+def test_issue_4963():
     assert hasattr(Mul(x, y), "is_commutative")
     assert hasattr(Mul(x, y, evaluate=False), "is_commutative")
     assert hasattr(Pow(x, y), "is_commutative")
@@ -1220,7 +1220,7 @@ def test_new_rawargs():
     assert m._new_rawargs(S.One) is S.One
 
 
-def test_issue_2127():
+def test_issue_5226():
     assert Add(evaluate=False) == 0
     assert Mul(evaluate=False) == 1
     assert Mul(x + y, evaluate=False).is_Add
@@ -1236,7 +1236,7 @@ def test_free_symbols():
     assert (meter**x).free_symbols == set([x])
 
 
-def test_issue_2201():
+def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
@@ -1374,7 +1374,7 @@ def test_sort_key_atomic_expr():
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 
-def test_issue_1100():
+def test_issue_4199():
     # first subs and limit gives NaN
     a = x/y
     assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) is S.NaN
@@ -1407,7 +1407,7 @@ def test_primitive():
     assert S.Zero.primitive() == (S.One, S.Zero)
 
 
-def test_issue_2744():
+def test_issue_5843():
     a = 1 + x
     assert (2*a).extract_multiplicatively(a) == 2
     assert (4*a).extract_multiplicatively(2*a) == 2
@@ -1613,7 +1613,7 @@ def test_float_0_fail():
     assert (x + Float(0.0)).is_Add
 
 
-def test_issue_3226():
+def test_issue_6325():
     ans = (b**2 + z**2 - (b*(a + b*t) + z*(c + t*z))**2/(
         (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
     e = sqrt((a + b*t)**2 + (c + z*t)**2)

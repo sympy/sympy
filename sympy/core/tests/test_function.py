@@ -401,7 +401,7 @@ def test_evalf_default():
     assert type(sin(Rational(1, 4))) == sin
 
 
-def test_issue_2300():
+def test_issue_5399():
     args = [x, y, S(2), S.Half]
 
     def ok(a):
@@ -583,7 +583,7 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-def test_issue_1612():
+def test_issue_4711():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)
 

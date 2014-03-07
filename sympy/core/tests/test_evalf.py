@@ -316,11 +316,11 @@ def test_evalf_relational():
     assert Eq(x/5, y/10).evalf() == Eq(0.2*x, 0.1*y)
 
 
-def test_issue_2387():
+def test_issue_5486():
     assert not cos(sqrt(0.5 + I)).n().is_Function
 
 
-def test_issue_2387_bug():
+def test_issue_5486_bug():
     from sympy import I, Expr
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
 
@@ -342,7 +342,7 @@ def test_subs_bugs():
         '1.00000000000000'
 
 
-def test_issue_1857_2105():
+def test_issue_4956_2105():
     # 1857
     v = S('''(-27*12**(1/3)*sqrt(31)*I +
     27*2**(2/3)*3**(1/3)*sqrt(31)*I)/(-2511*2**(2/3)*3**(1/3) +
@@ -372,7 +372,7 @@ def test_old_docstring():
     assert a.n() == 17.25866050002001
 
 
-def test_issue_1707():
+def test_issue_4806():
     assert integrate(atan(x)**2, (x, -1, 1)).evalf().round(1) == 0.5
     assert atan(0, evaluate=False).n() == 0
 
@@ -411,7 +411,7 @@ def test_to_mpmath():
     assert S(3.2)._to_mpmath(20)._mpf_ == (0, long(838861), -18, 20)
 
 
-def test_issue_3533_evalf():
+def test_issue_6632_evalf():
     add = (-100000*sqrt(2500000001) + 5000000001)
     assert add.n() == 9.999999998e-11
     assert (add*add).n() == 9.999999996e-21

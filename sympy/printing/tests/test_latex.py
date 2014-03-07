@@ -521,7 +521,7 @@ def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
 
 
-def test_issue_469():
+def test_issue_3568():
     beta = Symbol(r'\beta')
     y = beta + x
     assert latex(y) in [r'\beta + x', r'x + \beta']
@@ -1221,7 +1221,7 @@ def test_builtin_no_args():
     assert latex(DiracDelta) == r'\delta'
     assert latex(lowergamma) == r'\gamma'
 
-def test_issue_3754():
+def test_issue_6853():
     p = Function('Pi')
     assert latex(p(x)) == r"\Pi{\left (x \right )}"
 

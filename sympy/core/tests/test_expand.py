@@ -113,7 +113,7 @@ def test_expand_modulus():
     raises(ValueError, lambda: ((x + y)**11).expand(modulus=x))
 
 
-def test_issue_2644():
+def test_issue_5743():
     assert (x*sqrt(
         x + y)*(1 + sqrt(x + y))).expand() == x**2 + x*y + x*sqrt(x + y)
     assert (x*sqrt(
@@ -131,7 +131,7 @@ def test_expand_frac():
     assert expand_numer(eq, multinomial=False) == eq
 
 
-def test_issue_3022():
+def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     assert cse((eq).expand(complex=True), optimizations='basic') \
         == S(''' ([(x0, re(x)), (x1, im(x)), (x2, atan2(x1, x0)/2),

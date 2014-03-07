@@ -154,7 +154,7 @@ def test_equality_subs2():
     assert bool(eq.subs(f(x), 4)) is True
 
 
-def test_issue_643():
+def test_issue_3742():
     y = Symbol('y')
 
     e = sqrt(x)*exp(y)
@@ -434,7 +434,7 @@ def test_derivative_subs3():
     assert Derivative(dex, x).subs(dex, exp(x)) == dex
     assert dex.subs(exp(x), dex) == Derivative(exp(x), x, x)
 
-def test_issue_2185():
+def test_issue_5284():
     A, B = symbols('A B', commutative=False)
     assert (x*A).subs(x**2*A, B) == x*A
     assert (A**2).subs(A**3, B) == A**2
@@ -498,7 +498,7 @@ def test_no_arith_subs_on_floats():
     assert (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
 
 
-def test_issue_2552():
+def test_issue_5651():
     a, b, c, K = symbols('a b c K', commutative=True)
     x, y, z = symbols('x y z')
     assert (a/(b*c)).subs(b*c, K) == a/K
@@ -509,11 +509,11 @@ def test_issue_2552():
     assert ((1 + x*y)/(x*y)/z).subs(x*y, 1) == 2/z
 
 
-def test_issue_2976():
+def test_issue_6075():
     assert Tuple(1, True).subs(1, 2) == Tuple(2, True)
 
 
-def test_issue_2980():
+def test_issue_6079():
     # since x + 2.0 == x + 2 we can't do a simple equality test
     x = symbols('x')
     assert _aresame((x + 2.0).subs(2, 3), x + 2.0)
@@ -525,12 +525,12 @@ def test_issue_2980():
     assert not _aresame(x, symbols('x', positive=True))
 
 
-def test_issue_1581():
+def test_issue_4680():
     N = Symbol('N')
     assert N.subs(dict(N=3)) == 3
 
 
-def test_issue_3059():
+def test_issue_6158():
     assert (x - 1).subs(1, y) == x - y
     assert (x - 1).subs(-1, y) == x + y
     assert (x - oo).subs(oo, y) == x - y
@@ -556,14 +556,14 @@ def test_simultaneous_subs():
         (y/x).subs(reps, simultaneous=True)
 
 
-def test_issue_3320_3322():
+def test_issue_6419_3322():
     assert (1/(1 + x/y)).subs(x/y, x) == 1/(1 + x)
     assert (-2*I).subs(2*I, x) == -x
     assert (-I*x).subs(I*x, x) == -x
     assert (-3*I*y**4).subs(3*I*y**2, x) == -x*y**2
 
 
-def test_issue_3460():
+def test_issue_6559():
     assert (-12*x + y).subs(-x, 1) == 12 + y
     # though this involves cse it generated a failure in Mul._eval_subs
     x0, x1 = symbols('x0 x1')
@@ -573,7 +573,7 @@ def test_issue_3460():
         [(x0, sqrt(2))], [x0/3 - log(-12*x0 + 17)/24 - log(-2*x0 + 3)/12])
 
 
-def test_issue_2162():
+def test_issue_5261():
     e = I*x
     assert exp(e).subs(exp(x), y) == y**I
     assert (2**e).subs(2**x, y) == y**I
@@ -581,7 +581,7 @@ def test_issue_2162():
     assert eq.subs((-2)**x, y) == eq
 
 
-def test_issue_3824():
+def test_issue_6923():
     assert (-2*x*sqrt(2)).subs(2*x, y) == -sqrt(2)*y
 
 
@@ -617,7 +617,7 @@ def test_gh_issue_2877():
     assert nsimplify(e) == 5*x**2/6 + 10*x + 5
 
 
-def test_issue_2811():
+def test_issue_5910():
     t = Symbol('t')
     assert (1/(1 - t)).subs(t, 1) == zoo
     n = t

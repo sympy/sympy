@@ -14,7 +14,7 @@ from sympy.core.compatibility import exec_, HAS_GMPY
 from sympy import mpmath
 
 
-def test_issue_439():
+def test_issue_3538():
     v = sympify("exp(x)")
     assert v == exp(x)
     assert type(v) == type(exp(x))
@@ -401,14 +401,14 @@ def test_evaluate_false():
         assert sympify(case, evaluate=False) == result
 
 
-def test_issue_1034():
+def test_issue_4133():
     a = sympify('Integer(4)')
 
     assert a == Integer(4)
     assert a.is_Integer
 
 
-def test_issue_883():
+def test_issue_3982():
     a = [3, 2.0]
     assert sympify(a) == [Integer(3), Float(2.0)]
     assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
@@ -420,11 +420,11 @@ def test_S_sympify():
     assert (-2)**(S(1)/2) == sqrt(2)*I
 
 
-def test_issue_1689():
+def test_issue_4788():
     assert srepr(S(1.0 + 0J)) == srepr(S(1.0)) == srepr(Float(1.0))
 
 
-def test_issue_1699_None():
+def test_issue_4798_None():
     assert S(None) is None
 
 
@@ -432,7 +432,7 @@ def test_issue_3218():
     assert sympify("x+\ny") == x + y
 
 
-def test_issue_1889_builtins():
+def test_issue_4988_builtins():
     C = Symbol('C')
     vars = {}
     vars['C'] = C
@@ -473,13 +473,13 @@ def test_kernS():
         -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
 
 
-def test_issue_3441_3453():
+def test_issue_6540_3453():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
     assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
-def test_issue_2497():
+def test_issue_5596():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'

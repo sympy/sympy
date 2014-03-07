@@ -196,7 +196,7 @@ def test_multivar_3():
     assert (Order(x**2*y) + Order(y*x)) == Order(x*y)
 
 
-def test_issue_369():
+def test_issue_3468():
     y = Symbol('y', negative=True)
     z = Symbol('z', complex=True)
 
@@ -290,7 +290,7 @@ def test_oseries():
     assert Order(x).oseries(x) == Order(x)
 
 
-def test_issue_1180():
+def test_issue_4279():
     a, b = symbols('a b')
     assert O(a, a, b) + O(1, a, b) == O(1, a, b)
     assert O(b, a, b) + O(1, a, b) == O(1, a, b)
@@ -300,7 +300,7 @@ def test_issue_1180():
     assert O(1, a, b) + O(a + b, a, b) == O(1, a, b)
 
 
-def test_issue_1756():
+def test_issue_4855():
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
     assert 1/O(x, (x, oo)) != O(1/x, (x, oo))
@@ -332,7 +332,7 @@ def test_order_noncommutative():
     assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
 
 
-def test_issue_3654():
+def test_issue_6753():
     assert (1 + x**2)**10000*O(x) == O(x)
 
 

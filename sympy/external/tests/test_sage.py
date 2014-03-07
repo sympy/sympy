@@ -160,7 +160,7 @@ def test_functions():
     check_expression("log(x)", "x")
 
 
-def test_issue_924():
+def test_issue_4023():
     sage.var("a x")
     log = sage.log
     i = sympy.integrate(log(x)/a, (x, a, a + 1))

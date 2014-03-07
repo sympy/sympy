@@ -1271,7 +1271,7 @@ def test_unexpanded_Liouville_ODE():
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
 
 
-def test_issue_1686():
+def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
@@ -1292,7 +1292,7 @@ def test_issue_1686():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         'separable_reduced_Integral')
 
-def test_issue_1726():
+def test_issue_4825():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
     assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
         {'default': None, 'order': 0}
@@ -1313,7 +1313,7 @@ def test_constant_renumber_order_issue2209():
         assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e
 
 
-def test_issue_2671():
+def test_issue_5770():
     k = Symbol("k", real=True)
     t = Symbol('t')
     w = Function('w')
@@ -1330,7 +1330,7 @@ def test_issue_2671():
     assert constantsimp(x + C1 + Integral(x, (x, 1, 2)), x, 1) == C1 + x
 
 
-def test_issue_2013_2331():
+def test_issue_5112_2331():
     assert homogeneous_order(-log(x) + acosh(x), x) is None
     assert homogeneous_order(y - log(x), x, y) is None
 
@@ -1390,7 +1390,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
 
-def test_issue_1996():
+def test_issue_5095():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
@@ -1548,7 +1548,7 @@ def test_constantsimp_take_problem():
     assert len(Poly(constantsimp(exp(C1) + c + c*x, x, 2)).gens) > 2
 
 
-def test_issue_3780():
+def test_issue_6879():
     f = Function('f')
     eq = Eq(Derivative(f(x), x, 2) - 2*Derivative(f(x), x) + f(x), sin(x))
     sol = (C1 + C2*x)*exp(x) + cos(x)/S(2)
@@ -1556,7 +1556,7 @@ def test_issue_3780():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
-def test_issue_3890():
+def test_issue_6989():
     f = Function('f')
     k = Symbol('k')
     assert dsolve(f(x).diff(x) - x*exp(-k*x), f(x)) == \
@@ -1610,7 +1610,7 @@ def test_heuristic1():
 
 
 @XFAIL
-def test_issue_3148():
+def test_issue_6247():
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
     sol = dsolve(eq, hint = 'separable_reduced')
     assert checkodesol(eq, sol, order=1)[0]
@@ -1782,7 +1782,7 @@ def test_user_infinitesimals():
     raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
 
 @XFAIL
-def test_issue_3982():
+def test_issue_7081():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     assert dsolve(eq) == Eq(f(x), (C2 + x**2)/(C1 - x**2))
 
@@ -1845,7 +1845,7 @@ def test_2nd_power_series_ordinary():
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C1*(-x**4/S(2) + 1) + C0*x**2 + O(x**6))
 
-def test_issue_3994():
+def test_issue_7093():
     sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
     eq = Derivative(f(x), x)**2 - x**3
     assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)

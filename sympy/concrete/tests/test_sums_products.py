@@ -579,7 +579,7 @@ def test_hypersum():
     assert summation(binomial(m, k), (k, 0, m)) == 2**m
 
 
-def test_issue_1071():
+def test_issue_4170():
     assert summation(1/factorial(k), (k, 0, oo)) == E
 
 
@@ -646,16 +646,16 @@ def test_conjugate_transpose():
     assert p.transpose().doit() == p.doit().transpose()
 
 
-def test_issue_1072():
+def test_issue_4171():
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
     assert summation(2*k + 1, (k, 0, oo)) == oo
 
 
-def test_issue_3174():
+def test_issue_6273():
     assert Sum(x, (x, 1, n)).n(2, subs={n: 1}) == 1
 
 
-def test_issue_3175():
+def test_issue_6274():
     assert Sum(x, (x, 1, 0)).doit() == 0
     assert NS(Sum(x, (x, 1, 0))) == '0'
     assert Sum(n, (n, 10, 5)).doit() == -30
@@ -750,7 +750,7 @@ def test_reverse_order():
     assert Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
-def test_issue_3998():
+def test_issue_7097():
     assert sum(x**n/n for n in range(1, 401)) == summation(x**n/n, (n, 1, 400))
 
 def test_factor_expand_subs():

@@ -1167,7 +1167,7 @@ def test_Add_is_irrational():
 
 
 @XFAIL
-def test_issue_432():
+def test_issue_3531():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):
             return "something"
@@ -1177,7 +1177,7 @@ def test_issue_432():
     assert sympify(1)/MightyNumeric((1, 2)) == "something"
 
 
-def test_issue_432b():
+def test_issue_3531b():
     class Foo:
         def __init__(self):
             self.field = 1.0
@@ -1240,7 +1240,7 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
 
-def test_issue_415():
+def test_issue_3514():
     assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
     assert S(1)/2*sqrt(6)*sqrt(2) == sqrt(3)
     assert sqrt(6)/2*sqrt(2) == sqrt(3)
@@ -1261,7 +1261,7 @@ def test_make_args():
     assert Mul.make_args((x + y)**z) == ((x + y)**z,)
 
 
-def test_issue_2027():
+def test_issue_5126():
     assert (-2)**x*(-3)**x != 6**x
     i = Symbol('i', integer=1)
     assert (-2)**i*(-3)**i == 6**i
@@ -1318,7 +1318,7 @@ def test_Pow_as_content_primitive():
     assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
 
 
-def test_issue_2361():
+def test_issue_5460():
     u = Mul(2, (1 + x), evaluate=False)
     assert (2 + u).args == (2, u)
 
@@ -1330,7 +1330,7 @@ def test_product_irrational():
     assert (I*pi).is_positive is False
 
 
-def test_issue_2820():
+def test_issue_5919():
     assert (x/(y*(1 + y))).expand() == x/(y**2 + y)
 
 
@@ -1425,7 +1425,7 @@ def test_Mod():
     assert Mod(4*i, 4) == 0
 
 
-def test_issue_2902():
+def test_issue_6001():
     A = Symbol("A", commutative=False)
     eq = A + A**2
     # it doesn't matter whether it's True or False; they should
@@ -1463,7 +1463,7 @@ def test_polar():
     assert ((p*q)**x).expand() == p**x * q**x
 
 
-def test_issue_2941():
+def test_issue_6040():
     a, b = Pow(1, 2, evaluate=False), S.One
     assert a != b
     assert b != a
@@ -1471,11 +1471,11 @@ def test_issue_2941():
     assert not (b == a)
 
 
-def test_issue_2983():
+def test_issue_6082():
     assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
 
 
-def test_issue_2978():
+def test_issue_6077():
     assert x**2.0/x == x**1.0
     assert x/x**2.0 == x**-1.0
     assert x*x**2.0 == x**3.0
@@ -1506,7 +1506,7 @@ def test_add_flatten():
     assert (1/a).simplify() == (1/b).simplify() == 0
 
 
-def test_issue_2061_2988_2990_2991():
+def test_issue_5160_2988_2990_2991():
     #2988
     assert ((-2*x*y**y)**3.2).n(2) == (2**3.2*(-x*y**y)**3.2).n(2)
     #2990
@@ -1557,7 +1557,7 @@ def test_float_int():
     assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == \
         12345678901234567891
 
-def test_issue_3512a():
+def test_issue_6611a():
     assert Mul.flatten([3**Rational(1, 3),
         Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
         ([Rational(1, 3), (-1)**Rational(2, 3)], [], None)

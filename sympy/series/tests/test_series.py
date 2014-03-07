@@ -29,7 +29,7 @@ def test_exp2():
     assert e1 == e2
 
 
-def test_issue_2124():
+def test_issue_5223():
     assert series(1, x) == 1
     assert next(S(0).lseries(x)) == 0
     assert cos(x).series() == cos(x).series(x)
@@ -78,7 +78,7 @@ def test_issue_2124():
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
 
-def test_issue_879():
+def test_issue_3978():
     f = Function('f')
     assert f(x).series(x, 0, 3, dir='-') == \
             f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
@@ -111,18 +111,18 @@ def test_acceleration():
     assert round(shanks(A, n, 25, 5).evalf(), 10) == round(log(2).evalf(), 10)
 
 
-def test_issue_2753():
+def test_issue_5852():
     assert series(1/cos(x/log(x)), x, 0) == 1 + x**2/(2*log(x)**2) + \
         5*x**4/(24*log(x)**4) + O(x**6)
 
 
-def test_issue_1484():
+def test_issue_4583():
     assert cos(1 + x + x**2).series(x, 0, 5) == cos(1) - x*sin(1) + \
         x**2*(-sin(1) - cos(1)/2) + x**3*(-cos(1) + sin(1)/6) + \
         x**4*(-11*cos(1)/24 + sin(1)/2) + O(x**5)
 
 
-def test_issue_3219():
+def test_issue_6318():
     eq = (1/x)**(S(2)/3)
     assert (eq + 1).as_leading_term(x) == eq
 

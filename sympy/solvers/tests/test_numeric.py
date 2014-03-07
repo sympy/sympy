@@ -48,12 +48,12 @@ def test_nsolve():
         mpf('0.31883011387318591'))
 
 
-def test_issue_3309():
+def test_issue_6408():
     x = Symbol('x')
     assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
 
 
 @XFAIL
-def test_issue_3309_fail():
+def test_issue_6408_fail():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0

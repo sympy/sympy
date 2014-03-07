@@ -155,7 +155,7 @@ def test_Dict():
     assert d == Dict(d)
 
 
-def test_issue_2689():
+def test_issue_5788():
     args = [(1, 2), (2, 1)]
     for o in [Dict, Tuple, FiniteSet]:
         # __eq__ and arg handling

@@ -495,7 +495,7 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
-def test_issue_936():
+def test_issue_4035():
     x = Symbol('x')
     assert Abs(x).expand(trig=True) == Abs(x)
     assert sign(x).expand(trig=True) == sign(x)
@@ -507,7 +507,7 @@ def test_issue_3206():
     assert Abs(Abs(x)) == Abs(x)
 
 
-def test_issue_1655_derivative_conjugate():
+def test_issue_4754_derivative_conjugate():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')
@@ -592,7 +592,7 @@ def test_principal_branch():
 
 
 @XFAIL
-def test_issue_3068_3052():
+def test_issue_6167_3052():
     n = pi**1000
     i = int(n)
     assert sign(n - i) == 1

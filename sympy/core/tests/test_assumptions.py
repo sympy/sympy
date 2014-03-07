@@ -561,7 +561,7 @@ def test_other_symbol():
         x.is_real = False
 
 
-def test_issue_726():
+def test_issue_3825():
     """catch: hash instability"""
     x = Symbol("x")
     y = Symbol("y")
@@ -574,7 +574,7 @@ def test_issue_726():
     assert h1 == h2
 
 
-def test_issue_1723():
+def test_issue_4822():
     z = (-1)**Rational(1, 3)*(1 - I*sqrt(3))
     assert z.is_real in [True, None]
 
@@ -665,7 +665,7 @@ def test_special_is_rational():
 
 
 @XFAIL
-def test_issue_3176():
+def test_issue_6275():
     x = Symbol('x')
     # both zero or both Muls...but neither "change would be very appreciated.
     # This is similar to x/x => 1 even though if x = 0, it is really nan.
@@ -706,7 +706,7 @@ def test_inconsistent():
            commutative=False))
 
 
-def test_issue_3532():
+def test_issue_6631():
     assert ((-1)**(I)).is_real is True
     assert ((-1)**(I*2)).is_real is True
     assert ((-1)**(I/2)).is_real is True

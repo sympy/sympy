@@ -997,7 +997,7 @@ def test_zip_row_op():
                          [4,  0, 0],
                          [0,  0, 2]])
 
-def test_issue_851():
+def test_issue_3950():
     m = Matrix([1, 2, 3])
     a = Matrix([1, 2, 3])
     b = Matrix([2, 2, 3])
@@ -1008,7 +1008,7 @@ def test_issue_851():
     assert m != b
 
 
-def test_issue_882():
+def test_issue_3981():
     class Index1(object):
         def __index__(self):
             return 1
@@ -1113,7 +1113,7 @@ def test_empty_zeros():
     assert a.cols == 0
 
 
-def test_issue_650():
+def test_issue_3749():
     a = Matrix([[x**2, x*y], [x*sin(y), x*cos(y)]])
     assert a.diff(x) == Matrix([[2*x, y], [sin(y), cos(y)]])
     assert Matrix([
@@ -1162,7 +1162,7 @@ def test_jacobian2():
     assert X.jacobian(Y) == J
 
 
-def test_issue_1465():
+def test_issue_4564():
     X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
     Y = Matrix([x, y, z])
     for i in range(1, 3):
@@ -2111,13 +2111,13 @@ def test_invertible_check():
 
 
 @XFAIL
-def test_issue_860():
+def test_issue_3959():
     x, y = symbols('x, y')
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
 
 
-def test_issue_2865():
+def test_issue_5964():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
 
 
@@ -2183,11 +2183,11 @@ def test_normalize_sort_diogonalization():
     assert P*Q*P.inv() == A
 
 
-def test_issue_2222():
+def test_issue_5321():
     raises(ValueError, lambda: Matrix([[1, 2, 3], Matrix(0, 1, [])]))
 
 
-def test_issue_2221():
+def test_issue_5320():
     assert Matrix.hstack(eye(2), 2*eye(2)) == Matrix([
         [1, 0, 2, 0],
         [0, 1, 0, 2]
@@ -2235,7 +2235,7 @@ def test_hash():
 
 
 @XFAIL
-def test_issue_880():
+def test_issue_3979():
     # when this passes, delete this and change the [1:2]
     # to [:2] in the test_hash above for issue 880
     cls = classes[0]
@@ -2367,6 +2367,6 @@ def test_pinv_rank_deficient():
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
 
-def test_issue_4102():
+def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
     assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])

@@ -108,16 +108,16 @@ def test_ratint_logpart():
         [(Poly(x**3 - 5, x), Poly(-3*t + 1, t))]
 
 
-def test_issue_2315():
+def test_issue_5414():
     assert ratint(1/(x**2 + 16), x) == atan(x/4)/4
 
 
-def test_issue_2150():
+def test_issue_5249():
     assert ratint(
         1/(x**2 + a**2), x) == (-I*log(-I*a + x)/2 + I*log(I*a + x)/2)/a
 
 
-def test_issue_2718():
+def test_issue_5817():
     a, b, c = symbols('a,b,c', positive=True)
 
     assert simplify(ratint(a/(b*c*x**2 + a**2 + b*a), x)) == \
@@ -125,7 +125,7 @@ def test_issue_2718():
             b)*sqrt(c)*x/(sqrt(a)*sqrt(a + b)))/(sqrt(b)*sqrt(c)*sqrt(a + b))
 
 
-def test_issue_2882():
+def test_issue_5981():
     u = symbols('u')
     assert integrate(1/(u**2 + 1)) == atan(u)
 

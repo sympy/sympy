@@ -836,7 +836,7 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-def test_issue_2425():
+def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 """\
         /         ___    \\           2\n\
@@ -4351,12 +4351,12 @@ def test_PrettyPoly():
     assert upretty(expr) == u("x + y")
 
 
-def test_issue_3186():
+def test_issue_6285():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
 
 
-def test_issue_3260():
+def test_issue_6359():
     assert pretty(Integral(x**2, x)**2) == \
 """\
           2
@@ -4437,7 +4437,7 @@ u("""\
 ⎝dx      ⎠ \
 """)
 
-def test_issue_3640():
+def test_issue_6739():
     ascii_str = \
 """\
   1  \n\

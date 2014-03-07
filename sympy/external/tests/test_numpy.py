@@ -199,7 +199,7 @@ def test_Matrix_array():
     assert Matrix(matarr) == Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
 
-def test_issue_629():
+def test_issue_3728():
     assert (Rational(1, 2)*array([2*x, 0]) == array([x, 0])).all()
     assert (Rational(1, 2) + array(
         [2*x, 0]) == array([2*x + Rational(1, 2), Rational(1, 2)])).all()
