@@ -1416,7 +1416,7 @@ def test_misc():
     raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
 
 
-def test_gh2725():
+def test_issue_2725():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solve(eq, R, set=True)[1]

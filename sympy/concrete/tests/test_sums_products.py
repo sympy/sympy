@@ -788,7 +788,7 @@ def test_distribution_over_equality():
         Eq(Sum(f(x), (x, 0, y)), Sum(x**2, (x, 0, y)))
 
 
-def test_github_issue_2787():
+def test_issue_2787():
     n, k = symbols('n k', positive=True, integer=True)
     p = symbols('p', positive=True)
     binomial_dist = binomial(n, k)*p**k*(1 - p)**(n - k)

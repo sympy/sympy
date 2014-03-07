@@ -1841,7 +1841,7 @@ def test_exptrigsimp():
         assert valid(s, 2*sinh(a))
 
 
-def test_trigsimp_methods_gh2827():
+def test_issue_2827_trigsimp_methods():
     measure1 = lambda expr: len(str(expr))
     measure2 = lambda expr: -count_ops(expr)
                                        # Return the most complicated result

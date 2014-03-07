@@ -607,7 +607,7 @@ def test_noncommutative_subs():
     assert (x*y*x).subs([(x,x*y),(y,x)],simultaneous=True) == (x*y*x**2*y)
 
 
-def test_gh_issue_2877():
+def test_issue_2877():
     f = Float(2.0)
     assert (x + f).subs({f: 2}) == x + 2
 
