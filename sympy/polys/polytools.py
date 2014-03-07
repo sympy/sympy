@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Pow, Mul, Dummy, Tuple, oo
 )
 
 from sympy.core.mul import _keep_coeff
@@ -55,7 +55,6 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys import polyoptions as options
 
 from sympy.core.compatibility import iterable
-
 
 @public
 class Poly(Expr):
@@ -4209,7 +4208,7 @@ def _update_args(args, key, value):
 
 
 @public
-def degree(f, *gens, **args):
+def degree(expr, *argv, **kwargs):
     """
     Return the degree of ``f`` in the given variable.
 
@@ -4221,22 +4220,50 @@ def degree(f, *gens, **args):
     >>> from sympy import degree
     >>> from sympy.abc import x, y
 
-    >>> degree(x**2 + y*x + 1, gen=x)
+    >>> degree(x**2 + y*x + 1, x)
     2
-    >>> degree(x**2 + y*x + 1, gen=y)
+    >>> degree(x**2 + y*x + 1, y)
     1
     >>> degree(0, x)
     -oo
-
+        
     """
-    options.allowed_flags(args, ['gen', 'polys'])
+    options.allowed_flags(kwargs, ['gen', 'polys'])
 
     try:
-        F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed as exc:
-        raise ComputationFailed('degree', 1, exc)
+        if expr==0: return -oo
+    	elif isinstance(expr, int): 
+	    poly_from_expr(expr, *argv, **kwargs)
+	    return 0
+    	elif expr.is_number: return 0
+    	else: func = expr.atoms(Symbol).pop()
+    	if argv is not None:
+	    for arg in argv:
+	    	func = arg
+	    	if len(argv): break
+    	if kwargs is not None:
+	    for key, value in kwargs.iteritems():
+	    	func = value
+	    	if len(kwargs): break
 
-    return sympify(F.degree(opt.gen))
+    	if expr==func:
+            return 1
+    	elif expr.has(func):
+            if isinstance(expr, Pow):
+            	order = 1
+            	if expr.args[0].has(func):
+                    for arg in expr.args[0].args:
+                    	order = max(order, degree(arg, func))
+            	return order * expr.args[1]
+            else:
+            	order = 0
+            	for arg in expr.args:
+                    order = max(order, degree(arg, func))
+            	return order
+    	else:
+            return 0
+    except PolificationFailed as exc:
+	raise ComputationFailed('degree', 1, exc)
 
 
 @public
