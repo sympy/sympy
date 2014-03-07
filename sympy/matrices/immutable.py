@@ -91,7 +91,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
 # This is included after the class definition as a workaround for issue 4114.
-# See http://code.google.com/p/sympy/issues/detail?id=4114
+# See https://github.com/sympy/sympy/issues/7213
 ImmutableMatrix.is_zero = DenseMatrix.is_zero
 
 

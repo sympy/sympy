@@ -263,7 +263,7 @@ def test_new_relational():
 
 
 def test_relational_bool_output():
-    # http://code.google.com/p/sympy/issues/detail?id=2832
+    # https://github.com/sympy/sympy/issues/5931
     raises(TypeError, lambda: bool(x > 3))
     raises(TypeError, lambda: bool(x >= 3))
     raises(TypeError, lambda: bool(x < 3))

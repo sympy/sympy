@@ -206,7 +206,7 @@ class sin(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # https://github.com/sympy/sympy/issues/6048
             # transform a sine to a cosine, to avoid redundant code
             if pi_coeff.is_Rational:
                 x = pi_coeff % 2
@@ -418,7 +418,7 @@ class cos(TrigonometricFunction):
                 # is handled.
                 # See test_sin_cos_with_infinity() an
                 # Test for issue 209
-                # http://code.google.com/p/sympy/issues/detail?id=2097
+                # https://github.com/sympy/sympy/issues/5196
                 # For now, we return un-evaluated.
                 return
 
@@ -444,7 +444,7 @@ class cos(TrigonometricFunction):
                 return None
 
             # cosine formula #####################
-            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # https://github.com/sympy/sympy/issues/6048
             # explicit calculations are preformed for
             # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
             # Some other exact values like cos(k pi/15) can be

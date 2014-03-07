@@ -74,7 +74,7 @@ def test_function_return_types():
     assert type(X.minorMatrix(0, 0)) == ImmutableMatrix
 
 # Issue 3180
-# http://code.google.com/p/sympy/issues/detail?id=3180
+# https://github.com/sympy/sympy/issues/6279
 # Test that Immutable _op_ Immutable => Immutable and not MatExpr
 
 

@@ -939,7 +939,7 @@ def test_real_imag():
 @XFAIL
 def test_sin_cos_with_infinity():
     # Test for issue 2097
-    # http://code.google.com/p/sympy/issues/detail?id=2097
+    # https://github.com/sympy/sympy/issues/5196
     assert sin(oo) == S.NaN
     assert cos(oo) == S.NaN
 
@@ -1026,7 +1026,7 @@ def test_sec():
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
-    # https://code.google.com/p/sympy/issues/detail?id=4067
+    # https://github.com/sympy/sympy/issues/7166
     assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
 
     assert sec(x).diff(x) == tan(x)*sec(x)
@@ -1036,7 +1036,7 @@ def test_csc():
     x = symbols('x', real=True)
     z = symbols('z')
 
-    # https://code.google.com/p/sympy/issues/detail?id=3608
+    # https://github.com/sympy/sympy/issues/6707
     cosecant = csc('x')
     alternate = 1/sin('x')
     assert cosecant.equals(alternate) == True
@@ -1094,6 +1094,6 @@ def test_csc():
 def test_csc_rewrite_failing():
     # Move these 2 tests to test_csc() once bugs fixed
     # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
-    # https://code.google.com/p/sympy/issues/detail?id=4072
+    # https://github.com/sympy/sympy/issues/7171
     assert csc(x).rewrite(pow) == csc(x)
     assert csc(x).rewrite(sqrt) == csc(x)

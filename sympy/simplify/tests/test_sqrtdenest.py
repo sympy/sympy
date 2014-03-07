@@ -110,7 +110,7 @@ def test_sqrtdenest3():
 
 
 def test_sqrtdenest4():
-    # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
+    # see Denest_en.pdf in https://github.com/sympy/sympy/issues/3192
     z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
     z1 = sqrtdenest(z)
     c = sqrt(-r5 + 5)

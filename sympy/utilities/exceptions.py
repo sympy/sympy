@@ -82,7 +82,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
     ...    useinstead="new feature",
     ...    issue=2142)
     Old feature has been deprecated. Use new feature instead. See
-    http://code.google.com/p/sympy/issues/detail?id=2142 for more info.
+    https://github.com/sympy/sympy/issues/5241 for more info.
 
     Every formal deprecation should have an associated issue in the Google
     Code issue tracker.  All such issues should have the DeprecationRemoval

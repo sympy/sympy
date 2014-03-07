@@ -433,7 +433,7 @@ def test_is_algebraic_expr():
     assert (cos(y)/sqrt(x)).is_algebraic_expr(x, y) is False
 
 def test_SAGE1():
-    #see http://code.google.com/p/sympy/issues/detail?id=247
+    #see https://github.com/sympy/sympy/issues/3346
     class MyInt:
         def _sympy_(self):
             return Integer(5)

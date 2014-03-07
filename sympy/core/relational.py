@@ -534,10 +534,10 @@ class GreaterThan(_Greater):
     .. [2] For more information, see these two bug reports:
 
        "Separate boolean and symbolic relationals"
-       `Issue 1887 <http://code.google.com/p/sympy/issues/detail?id=1887>`_
+       `Issue 1887 <https://github.com/sympy/sympy/issues/4986>`_
 
        "It right 0 < x < 1 ?"
-       `Issue 2960 <http://code.google.com/p/sympy/issues/detail?id=2960>`_
+       `Issue 2960 <https://github.com/sympy/sympy/issues/6059>`_
 
     """
     rel_op = '>='

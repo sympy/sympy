@@ -394,7 +394,7 @@ def test_evalf_integrals():
 
 
 def test_evalf_issue_939():
-    # http://code.google.com/p/sympy/issues/detail?id=939
+    # https://github.com/sympy/sympy/issues/4038
 
     # The output form of an integral may differ by a step function between
     # revisions, making this test a bit useless. This can't be said about

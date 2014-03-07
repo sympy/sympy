@@ -964,7 +964,7 @@ def _separate(eq, dep, others):
         div.add(ext)
     # FIXME: Find lcm() of all the divisors and divide with it, instead of
     # current hack :(
-    # http://code.google.com/p/sympy/issues/detail?id=1498
+    # https://github.com/sympy/sympy/issues/4597
     if len(div) > 0:
         final = 0
         for term in eq.args:
