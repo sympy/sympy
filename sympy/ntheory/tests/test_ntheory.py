@@ -365,7 +365,7 @@ def test_divisors_and_divisor_count():
     assert divisor_count(180, 3) == divisor_count(180//3)
     assert divisor_count(2*3*5, 7) == 0
 
-def test_issue3882():
+def test_issue_3882():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
     assert S == set([1,2,4])
 
@@ -616,7 +616,7 @@ def test_multinomial_coefficients():
       ((0, 2, 0, 0, 0, 0, 0), 1), ((1, 0, 1, 0, 0, 0, 0), 2)]
 
 
-def test_issue1257():
+def test_issue_1257():
     assert factorint(1030903) == {53: 2, 367: 1}
 
 

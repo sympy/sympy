@@ -1167,7 +1167,7 @@ def test_Add_is_irrational():
 
 
 @XFAIL
-def test_issue432():
+def test_issue_432():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):
             return "something"
@@ -1177,7 +1177,7 @@ def test_issue432():
     assert sympify(1)/MightyNumeric((1, 2)) == "something"
 
 
-def test_issue432b():
+def test_issue_432b():
     class Foo:
         def __init__(self):
             self.field = 1.0
@@ -1240,7 +1240,7 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
 
-def test_issue415():
+def test_issue_415():
     assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
     assert S(1)/2*sqrt(6)*sqrt(2) == sqrt(3)
     assert sqrt(6)/2*sqrt(2) == sqrt(3)
@@ -1261,7 +1261,7 @@ def test_make_args():
     assert Mul.make_args((x + y)**z) == ((x + y)**z,)
 
 
-def test_issue2027():
+def test_issue_2027():
     assert (-2)**x*(-3)**x != 6**x
     i = Symbol('i', integer=1)
     assert (-2)**i*(-3)**i == 6**i
@@ -1318,7 +1318,7 @@ def test_Pow_as_content_primitive():
     assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
 
 
-def test_issue2361():
+def test_issue_2361():
     u = Mul(2, (1 + x), evaluate=False)
     assert (2 + u).args == (2, u)
 

@@ -401,7 +401,7 @@ def test_evalf_default():
     assert type(sin(Rational(1, 4))) == sin
 
 
-def test_issue2300():
+def test_issue_2300():
     args = [x, y, S(2), S.Half]
 
     def ok(a):

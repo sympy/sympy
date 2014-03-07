@@ -40,7 +40,7 @@ def test_expand():
     assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
 
 
-def test_issue350():
+def test_issue_350():
     #test if powers are simplified correctly
     #see also issue 896
     x = Symbol('x')
@@ -72,7 +72,7 @@ def test_issue350():
     assert (a**Rational(2, 3))**x == (a**(2*x/3)) != (a**x)**Rational(2, 3)
 
 
-def test_issue767():
+def test_issue_767():
     assert --sqrt(sqrt(5) - 1) == sqrt(sqrt(5) - 1)
 
 
@@ -82,7 +82,7 @@ def test_negative_one():
     assert 1/x**y == x**(-y)
 
 
-def test_issue1263():
+def test_issue_1263():
     neg = Symbol('neg', negative=True)
     nonneg = Symbol('nonneg', nonnegative=True)
     any = Symbol('any')

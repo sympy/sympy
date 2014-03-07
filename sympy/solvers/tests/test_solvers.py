@@ -427,14 +427,14 @@ def test_solve_for_functions_derivatives():
             x: (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
 
-def test_issue626():
+def test_issue_626():
     f = Function('f')
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
     assert solve(e, f(x).diff(x)) in [[(2 - x)/f(x)], [-((x - 2)/f(x))]]
 
 
-def test_issue771():
+def test_issue_771():
     a, b, c, d = symbols('a b c d')
     A = Matrix(2, 2, [a, b, c, d])
     B = Matrix(2, 2, [0, 2, -3, 0])
@@ -1201,7 +1201,7 @@ def test_real_roots():
 
 
 @slow
-def test_issue3429():
+def test_issue_3429():
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
         895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]

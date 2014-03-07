@@ -154,7 +154,7 @@ def test_equality_subs2():
     assert bool(eq.subs(f(x), 4)) is True
 
 
-def test_issue643():
+def test_issue_643():
     y = Symbol('y')
 
     e = sqrt(x)*exp(y)
@@ -434,7 +434,7 @@ def test_derivative_subs3():
     assert Derivative(dex, x).subs(dex, exp(x)) == dex
     assert dex.subs(exp(x), dex) == Derivative(exp(x), x, x)
 
-def test_issue2185():
+def test_issue_2185():
     A, B = symbols('A B', commutative=False)
     assert (x*A).subs(x**2*A, B) == x*A
     assert (A**2).subs(A**3, B) == A**2

@@ -237,7 +237,7 @@ def test_postprocess():
         [x0 + exp(x0/x1) + cos(x1), z - 2, x0*x2]]
 
 
-def test_issue1400():
+def test_issue_1400():
     # previously, this gave 16 constants
     from sympy.abc import a, b
     B = Function('B')

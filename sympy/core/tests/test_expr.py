@@ -1132,7 +1132,7 @@ def test_as_base_exp():
     assert ((x + y)**z).as_base_exp() == (x + y, z)
 
 
-def test_issue1864():
+def test_issue_1864():
     assert hasattr(Mul(x, y), "is_commutative")
     assert hasattr(Mul(x, y, evaluate=False), "is_commutative")
     assert hasattr(Pow(x, y), "is_commutative")
@@ -1236,7 +1236,7 @@ def test_free_symbols():
     assert (meter**x).free_symbols == set([x])
 
 
-def test_issue2201():
+def test_issue_2201():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 

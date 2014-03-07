@@ -521,7 +521,7 @@ def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
 
 
-def test_issue469():
+def test_issue_469():
     beta = Symbol(r'\beta')
     y = beta + x
     assert latex(y) in [r'\beta + x', r'x + \beta']

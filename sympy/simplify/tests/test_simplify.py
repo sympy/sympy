@@ -150,7 +150,7 @@ def test_trigsimp2():
         Subs(x, x, sin(y)**2 + cos(y)**2)) == Subs(x, x, 1)
 
 
-def test_issue1274():
+def test_issue_1274():
     x = Symbol("x")
     assert abs(trigsimp(2.0*sin(x)**2 + 2.0*cos(x)**2) - 2.0) < 1e-10
 
@@ -1540,7 +1540,7 @@ def test_collect_const():
         2*sqrt(sqrt(2) + 3)*(sqrt(5)*x + y) + 2
 
 
-def test_issue2834():
+def test_issue_2834():
     from sympy import Polygon, RegularPolygon, denom
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12

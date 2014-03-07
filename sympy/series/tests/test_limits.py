@@ -92,7 +92,7 @@ def test_basic4():
     assert integrate(1/(x**3 + 1), (x, 0, oo)) == 2*pi*sqrt(3)/9
 
 
-def test_issue786():
+def test_issue_786():
     assert limit(x*y + x*z, z, 2) == x*y + 2*x
 
 
@@ -172,7 +172,7 @@ def test_heuristic():
     assert limit(log(2 + sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 
-def test_issue772():
+def test_issue_772():
     z = Symbol("z", positive=True)
     f = -1/z*exp(-z*x)
     assert limit(f, x, oo) == 0
@@ -213,25 +213,25 @@ def test_bug693a():
     assert sin(sin(x + 1) + 1).limit(x, 0) == sin(sin(1) + 1)
 
 
-def test_issue693():
+def test_issue_693():
     assert limit( (1 - cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
     assert limit(sin(sin(x + 1) + 1), x, 0) == sin(1 + sin(1))
     assert limit(abs(sin(x + 1) + 1), x, 0) == 1 + sin(1)
 
 
-def test_issue991():
+def test_issue_991():
     assert limit(1/(x + 3), x, 2) == S(1)/5
     assert limit(1/(x + pi), x, 2) == S(1)/(2 + pi)
     assert limit(log(x)/(x**2 + 3), x, 2) == log(2)/7
     assert limit(log(x)/(x**2 + pi), x, 2) == log(2)/(4 + pi)
 
 
-def test_issue1448():
+def test_issue_1448():
     assert limit(cot(x), x, 0, dir='+') == oo
     assert limit(cot(x), x, pi/2, dir='+') == 0
 
 
-def test_issue2065():
+def test_issue_2065():
     assert limit(x**0.5, x, oo) == oo**0.5 == oo
     assert limit(x**0.5, x, 16) == S(16)**0.5
     assert limit(x**0.5, x, 0) == 0
@@ -239,7 +239,7 @@ def test_issue2065():
     assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
 
 
-def test_issue2084():
+def test_issue_2084():
     # using list(...) so py.test can recalculate values
     tests = list(cartes([x, -x],
                         [-1, 1],
@@ -263,7 +263,7 @@ def test_issue2084():
                 assert None
 
 
-def test_issue2085():
+def test_issue_2085():
     assert limit(sin(x)/x, x, oo) == 0
     assert limit(atan(x), x, oo) == pi/2
     assert limit(gamma(x), x, oo) == oo
@@ -274,11 +274,11 @@ def test_issue2085():
     assert limit(r*sin(1/r), r, 0) == 0
 
 
-def test_issue2130():
+def test_issue_2130():
     assert limit((1 + y)**(1/y) - S.Exp1, y, 0) == 0
 
 
-def test_issue1447():
+def test_issue_1447():
     # using list(...) so py.test can recalculate values
     tests = list(cartes([cot, tan],
                         [-pi/2, 0, pi/2, pi, 3*pi/2],
@@ -299,7 +299,7 @@ def test_issue1447():
                 assert None
 
 
-def test_issue835():
+def test_issue_835():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
@@ -311,7 +311,7 @@ def test_calculate_series():
     assert limit(x**101.1/(1 + x**101.1), x, oo) == 1
 
 
-def test_issue2856():
+def test_issue_2856():
     assert limit((x**16)/(1 + x**16), x, oo) == 1
     assert limit((x**100)/(1 + x**100), x, oo) == 1
     assert limit((x**1885)/(1 + x**1885), x, oo) == 1
@@ -340,7 +340,7 @@ def test_order_oo():
     assert limit(oo/(x**2 - 4), x, oo) == oo
 
 
-def test_issue2337():
+def test_issue_2337():
     raises(NotImplementedError, lambda: limit(exp(x*y), x, oo))
     raises(NotImplementedError, lambda: limit(exp(-x*y), x, oo))
 

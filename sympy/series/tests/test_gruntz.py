@@ -397,7 +397,7 @@ def test_I():
     assert gruntz(y*3*sin(I)*x, x, oo).simplify() == sgn(y)*I*oo
 
 
-def test_issue1715():
+def test_issue_1715():
     assert gruntz((x + 1)**(1/log(x + 1)), x, oo) == E
 
 
@@ -422,17 +422,17 @@ def test_exp_log_series():
     assert gruntz(x/log(log(x*exp(x))), x, oo) == oo
 
 
-def test_issue545():
+def test_issue_545():
     assert gruntz(((x**7 + x + 1)/(2**x + x**2))**(-1/x), x, oo) == 2
 
 
-def test_issue3744():
+def test_issue_3744():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
     assert gruntz(r, x, 1).simplify() == n/2
 
 
-def test_issue1091():
+def test_issue_1091():
     assert gruntz(x - gamma(1/x), x, oo) == S.EulerGamma
 
 

@@ -1006,25 +1006,25 @@ def test_no_len():
     raises(TypeError, lambda: len(Integer(2)))
 
 
-def test_issue222():
+def test_issue_222():
     assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
     assert 5 * sqrt(Rational(1, 5)) == sqrt(5)
 
 
-def test_issue593():
+def test_issue_593():
     assert ((-1)**Rational(1, 6)).expand(complex=True) == I/2 + sqrt(3)/2
     assert ((-5)**Rational(1, 6)).expand(complex=True) == \
         5**Rational(1, 6)*I/2 + 5**Rational(1, 6)*sqrt(3)/2
     assert ((-64)**Rational(1, 6)).expand(complex=True) == I + sqrt(3)
 
 
-def test_issue324():
+def test_issue_324():
     x = Symbol("x")
     assert sqrt(x - 1).as_base_exp() == (x - 1, S.Half)
     assert sqrt(x - 1) != I*sqrt(1 - x)
 
 
-def test_issue350():
+def test_issue_350():
     x = Symbol("x", real=True)
     assert sqrt(x**2) == abs(x)
     assert sqrt(x - 1).subs(x, 5) == 2
@@ -1101,7 +1101,7 @@ def test_Rational_factors():
     assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
 
-def test_issue1008():
+def test_issue_1008():
     assert pi*(E + 10) + pi*(-E - 10) != 0
     assert pi*(E + 10**10) + pi*(-E - 10**10) != 0
     assert pi*(E + 10**20) + pi*(-E - 10**20) != 0
@@ -1169,7 +1169,7 @@ def test_Float_gcd_lcm_cofactors():
         (S.One, Float(2.0), Rational(1, 2))
 
 
-def test_issue1512():
+def test_issue_1512():
     assert abs(pi._evalf(50) - 3.14159265358979) < 1e-10
     assert abs(E._evalf(50) - 2.71828182845905) < 1e-10
     assert abs(Catalan._evalf(50) - 0.915965594177219) < 1e-10

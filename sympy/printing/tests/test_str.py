@@ -576,7 +576,7 @@ def test_bug4():
     assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 
-def test_issue922():
+def test_issue_922():
     e = Integral(x, x) + 1
     assert str(e) == 'Integral(x, x) + 1'
 
@@ -684,7 +684,7 @@ def test_Tr():
     assert str(t) == 'Tr(A*B)'
 
 
-def test_issue3288():
+def test_issue_3288():
     assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
 
 

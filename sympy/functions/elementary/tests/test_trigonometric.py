@@ -748,7 +748,7 @@ def test_evenodd_rewrite():
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
 
 
-def test_issue1448():
+def test_issue_1448():
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)

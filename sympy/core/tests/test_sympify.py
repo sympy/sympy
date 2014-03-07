@@ -401,14 +401,14 @@ def test_evaluate_false():
         assert sympify(case, evaluate=False) == result
 
 
-def test_issue1034():
+def test_issue_1034():
     a = sympify('Integer(4)')
 
     assert a == Integer(4)
     assert a.is_Integer
 
 
-def test_issue883():
+def test_issue_883():
     a = [3, 2.0]
     assert sympify(a) == [Integer(3), Float(2.0)]
     assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
@@ -420,19 +420,19 @@ def test_S_sympify():
     assert (-2)**(S(1)/2) == sqrt(2)*I
 
 
-def test_issue1689():
+def test_issue_1689():
     assert srepr(S(1.0 + 0J)) == srepr(S(1.0)) == srepr(Float(1.0))
 
 
-def test_issue1699_None():
+def test_issue_1699_None():
     assert S(None) is None
 
 
-def test_issue3218():
+def test_issue_3218():
     assert sympify("x+\ny") == x + y
 
 
-def test_issue1889_builtins():
+def test_issue_1889_builtins():
     C = Symbol('C')
     vars = {}
     vars['C'] = C

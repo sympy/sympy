@@ -640,5 +640,5 @@ def test_elliptic_integrals():
         assert elliprg(0, mpf('0.0796'), 4).ae('1.0284758090288040009838871385180217366569777284430590125081211090574701293154645750017813190805144572673802094')
     mp.dps = 15
 
-def test_issue198():
+def test_issue_198():
     assert isnan(qfrom(m=nan))

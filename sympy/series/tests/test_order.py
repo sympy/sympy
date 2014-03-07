@@ -196,7 +196,7 @@ def test_multivar_3():
     assert (Order(x**2*y) + Order(y*x)) == Order(x*y)
 
 
-def test_issue369():
+def test_issue_369():
     y = Symbol('y', negative=True)
     z = Symbol('z', complex=True)
 

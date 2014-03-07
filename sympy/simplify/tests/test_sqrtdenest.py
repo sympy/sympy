@@ -85,7 +85,7 @@ def test_sqrtdenest_rec():
     assert sqrtdenest(z) == z
 
 
-def test_issue3142():
+def test_issue_3142():
     z = sqrt( -320 + 32*sqrt(5) + 64*r15)
     assert sqrtdenest(z) == z
 

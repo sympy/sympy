@@ -561,7 +561,7 @@ def test_other_symbol():
         x.is_real = False
 
 
-def test_issue726():
+def test_issue_726():
     """catch: hash instability"""
     x = Symbol("x")
     y = Symbol("y")
@@ -574,7 +574,7 @@ def test_issue726():
     assert h1 == h2
 
 
-def test_issue1723():
+def test_issue_1723():
     z = (-1)**Rational(1, 3)*(1 - I*sqrt(3))
     assert z.is_real in [True, None]
 

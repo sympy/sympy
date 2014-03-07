@@ -495,19 +495,19 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
-def test_issue936():
+def test_issue_936():
     x = Symbol('x')
     assert Abs(x).expand(trig=True) == Abs(x)
     assert sign(x).expand(trig=True) == sign(x)
     assert arg(x).expand(trig=True) == arg(x)
 
 
-def test_issue3206():
+def test_issue_3206():
     x = Symbol('x')
     assert Abs(Abs(x)) == Abs(x)
 
 
-def test_issue1655_derivative_conjugate():
+def test_issue_1655_derivative_conjugate():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')

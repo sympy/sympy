@@ -1845,7 +1845,7 @@ def test_2nd_power_series_ordinary():
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C1*(-x**4/S(2) + 1) + C0*x**2 + O(x**6))
 
-def test_issue3994():
+def test_issue_3994():
     sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
     eq = Derivative(f(x), x)**2 - x**3
     assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)

@@ -534,7 +534,7 @@ def test_simplifications():
     assert coth(acoth(x)) == x
 
 
-def test_issue1037():
+def test_issue_1037():
     assert cosh(asinh(Integer(3)/2)) == sqrt(Integer(13)/4)
 
 
