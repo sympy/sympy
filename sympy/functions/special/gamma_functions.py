@@ -894,4 +894,3 @@ def trigamma(x):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
     return polygamma(1, x)
-

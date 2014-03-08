@@ -11,22 +11,21 @@ class beta(Function):
     r"""
     The beta integral is called the Eulerian integral of the first kind by
     Legendre:
-    
+
     .. math::
         \Beta(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1}
-        
-                
+
     Beta function or Euler's first integral is closely associated with gamma function.
-    The Beta function often used in probability theory and mathematical statistics. It satisfies
-    properties like:
-    
+    The Beta function often used in probability theory and mathematical statistics.
+    It satisfies properties like:
+
     .. math::
         \Beta(a,1) = \frac{1}{a}
         \Beta(a,b) = \Beta(b,a)
-        \Beta(a,b) = \frac{\gamma(a)*\gamma(b)}{\gamma(a+b)}
-    
+        \Beta(a,b) = \frac{\Gamma(a)*\Gamma(b)}{\Gamma(a+b)}
+
     Therefore for integral values of a and b
-    
+
     .. math::
         \Beta(a,b) = \frac{(a-1)!*(b-1)!}{(a+b-1)!}
 
@@ -37,16 +36,19 @@ class beta(Function):
     >>> from sympy.abc import x,y
 
     The Beta function obeys the mirror symmetry:
+    >>> from sympy import beta
     >>> from sympy import conjugate
     >>> conjugate(beta(x,y))
     beta(conjugate(x), conjugate(y))
 
     Differentiation with respect to both x and y is supported:
 
+    >>> from sympy import beta
     >>> from sympy import diff
     >>> diff(beta(x,y), x)
     (polygamma(0, x) - polygamma(0, x + y))*beta(x, y)
 
+    >>> from sympy import beta
     >>> from sympy import diff
     >>> diff(beta(x,y), y)
     (polygamma(0, y) - polygamma(0, x + y))*beta(x, y)
@@ -54,6 +56,7 @@ class beta(Function):
     We can numerically evaluate the gamma function to arbitrary precision
     on the whole complex plane:
 
+    >>> from sympy import beta
     >>> beta(pi,pi).evalf(40)
     0.02671848900111377452242355235388489324562
 
