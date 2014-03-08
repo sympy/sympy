@@ -13,21 +13,21 @@ class beta(Function):
     Legendre:
 
     .. math::
-        \Beta(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1}
+        \mathrm{B}(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1}
 
     Beta function or Euler's first integral is closely associated with gamma function.
     The Beta function often used in probability theory and mathematical statistics.
     It satisfies properties like:
 
     .. math::
-        \Beta(a,1) = \frac{1}{a}
-        \Beta(a,b) = \Beta(b,a)
-        \Beta(a,b) = \frac{\Gamma(a)*\Gamma(b)}{\Gamma(a+b)}
+        \mathrm{B}(a,1) = \frac{1}{a}
+        \mathrm{B}(a,b) = \mathrm{B}(b,a)
+        \mathrm{B}(a,b) = \frac{\Gamma(a)*\Gamma(b)}{\Gamma(a+b)}
 
     Therefore for integral values of a and b
 
     .. math::
-        \Beta(a,b) = \frac{(a-1)!*(b-1)!}{(a+b-1)!}
+        \mathrm{B} = \frac{(a-1)!*(b-1)!}{(a+b-1)!}
 
     Examples
     ========
