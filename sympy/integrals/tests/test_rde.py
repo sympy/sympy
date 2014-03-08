@@ -26,7 +26,6 @@ def test_order_at():
         order_at_oo(Poly(t - 1, t), Poly(1, t), t) == -1
     assert order_at_oo(Poly(0, t), Poly(1, t), t) == oo
 
-
 def test_weak_normalizer():
     a = Poly((1 + x)*t**5 + 4*t**4 + (-1 - 3*x)*t**3 - 4*t**2 + (-2 + 2*x)*t, t)
     d = Poly(t**4 - 3*t**2 + 2, t)
@@ -62,7 +61,7 @@ def test_special_denom():
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE) == \
         (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
-#    assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), DE) == 1
+    # assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), DE) == 1
 
     # Issue 841
     # Note, this isn't a very good test, because the denominator is just 1,
