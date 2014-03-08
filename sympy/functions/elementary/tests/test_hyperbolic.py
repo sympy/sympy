@@ -323,7 +323,7 @@ def test_asinh_series():
 
 
 def test_acosh():
-    # TODO please write more tests  -- see #652
+    # TODO please write more tests  -- see issue 3751
     # From http://functions.wolfram.com/ElementaryFunctions/ArcCosh/03/01/
     # at specific points
     assert acosh(1) == 0
@@ -368,9 +368,9 @@ def test_acosh_series():
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
 
 
-# TODO please write more tests -- see #652
+# TODO please write more tests -- see issue 3751
 def test_atanh():
-    # TODO please write more tests  -- see #652
+    # TODO please write more tests  -- see issue 3751
     # From http://functions.wolfram.com/ElementaryFunctions/ArcTanh/03/01/
     # at specific points
     x = Symbol('x')
@@ -416,11 +416,11 @@ def test_atanh_infinities():
     assert atanh(oo) == -I*pi/2
     assert atanh(-oo) == I*pi/2
 
-# TODO please write more tests -- see #652
+# TODO please write more tests -- see issue 3751
 
 
 def test_acoth():
-    # TODO please write more tests  -- see #652
+    # TODO please write more tests  -- see issue 3751
     # From http://functions.wolfram.com/ElementaryFunctions/ArcCoth/03/01/
     # at specific points
     x = Symbol('x')

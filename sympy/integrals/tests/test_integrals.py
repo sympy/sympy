@@ -211,7 +211,7 @@ def test_issue_3635():
 
 
 def test_integrate_linearterm_pow():
-    # check integrate((a*x+b)^c, x)  --  #400
+    # check integrate((a*x+b)^c, x)  --  issue 3499
     y = Symbol('y', positive=True)
     # TODO: Remove conds='none' below, let the assumption take care of it.
     assert integrate(x**y, x, conds='none') == x**(y + 1)/(y + 1)

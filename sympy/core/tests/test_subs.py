@@ -102,7 +102,7 @@ def test_dict_set():
     assert x.subs(Dict((x, 1))) == 1
 
 
-def test_dict_ambigous():   # see #467
+def test_dict_ambigous():   # see issue 3566
     y = Symbol('y')
     z = Symbol('z')
 
