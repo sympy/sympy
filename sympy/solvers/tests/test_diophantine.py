@@ -7,6 +7,7 @@ from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities import default_sort_key
 from sympy.simplify.simplify import _mexpand
+from sympy.matrices import Matrix, zeros, ones
 
 x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", Integer=True)
 
@@ -553,3 +554,35 @@ def check_solutions(eq):
                 break
 
     return okay
+
+#-----------------Homogeneous linear diophantine systems ----------------------#
+
+def test_homogeneous_LDS():
+
+    #TODO: More tests should be added.
+    
+    #Two Examples in the paper:
+    #Evelyne Contejean, Herve Devie. An Efficient Incremental Algorithm
+    #for Solving Systems of Linear Diophantine Equations. Information and
+    #computation, 113(1):143-172, August 1994.
+    
+    a = Matrix([[-1, 1, 2, -3],[-1, 3, -2, -1]])
+    L = homogeneous_LDS(a)
+    assert len(L) == 2
+    assert [0, 1, 1, 1] in L
+    assert [4, 2, 1, 0] in L
+
+    a = Matrix([[-1, 1, 2, -3]])
+    L = homogeneous_LDS(a)
+    assert len(L) == 6
+    for l in [[0, 0, 3, 2], [0, 1, 1, 1], [0, 3, 0, 1], [1, 0, 2, 1],
+              [2, 0, 1, 0], [1, 1, 0, 0]]:
+        assert l in L
+        
+    a = Matrix([[2, 3]])
+    L = homogeneous_LDS(a)
+    assert len(L) == 0
+
+    a = Matrix([[2, -3]])
+    L = homogeneous_LDS(a)
+    assert L == [[3, 2]]
