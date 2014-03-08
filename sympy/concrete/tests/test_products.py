@@ -232,13 +232,13 @@ def test__eval_product():
 
 
 def test_product_pow():
-    # Issue 1718
+    # issue 4817
     assert product(2**f(k), (k, 1, n)) == 2**Sum(f(k), (k, 1, n))
     assert product(2**(2*f(k)), (k, 1, n)) == 2**Sum(2*f(k), (k, 1, n))
 
 
 def test_infinite_product():
-    # Issue 2638
+    # issue 5737
     assert isinstance(Product(2**(1/factorial(n)), (n, 0, oo)), Product)
 
 

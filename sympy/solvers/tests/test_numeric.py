@@ -13,7 +13,7 @@ def test_nsolve():
     # Testing checks on number of inputs
     raises(TypeError, lambda: nsolve(Eq(2*x, 2)))
     raises(TypeError, lambda: nsolve(Eq(2*x, 2), x, 1, 2))
-    # Issue 1730
+    # issue 4829
     assert nsolve(x**2/(1 - x)/(1 - 2*x)**2 - 100, x, 0)  # doesn't fail
     # multidimensional
     x1 = Symbol('x1')

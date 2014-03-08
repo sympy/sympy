@@ -1262,7 +1262,7 @@ class Derivative(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables and not new.is_Symbol:
-            # Issue 1620
+            # issue 4719
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.

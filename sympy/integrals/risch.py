@@ -765,7 +765,7 @@ def as_poly_1t(p, t, z):
     try:
         t_part = t_part.to_field().exquo(pd)
     except DomainError as e:
-        # Issue 1851
+        # issue 4950
         raise NotImplementedError(e)
     # Compute the negative degree parts.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,

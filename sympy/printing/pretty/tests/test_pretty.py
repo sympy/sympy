@@ -49,7 +49,7 @@ x/y
 (1+x)*y  #3
 -5*x/(x+10)  # correct placement of negative sign
 1 - Rational(3,2)*(x+1)
--(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5) # Issue 2425
+-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5) # issue 5524
 
 
 ORDERING:

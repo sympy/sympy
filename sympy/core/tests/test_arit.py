@@ -1216,7 +1216,7 @@ def test_suppressed_evaluation():
 
 
 def test_Add_as_coeff_mul():
-    # Issue 2425.  These should all be (1, self)
+    # issue 5524.  These should all be (1, self)
     assert (x + 1).as_coeff_mul() == (1, (x + 1,))
     assert (x + 2).as_coeff_mul() == (1, (x + 2,))
     assert (x + 3).as_coeff_mul() == (1, (x + 3,))

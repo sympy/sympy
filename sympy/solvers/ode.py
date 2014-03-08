@@ -406,7 +406,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
           It should be given in the form of ``{f(x0): x1, f(x).diff(x).subs(x, x2):
           x3}`` and so on. For now initial conditions are implemented only for
           power series solutions of first-order differential equations which should
-          be given in the form of ``{f(x0): x1}`` (See Issue 1621). If nothing is
+          be given in the form of ``{f(x0): x1}`` (See issue 4720). If nothing is
           specified for this case ``f(0)`` is assumed to be ``C0`` and the power
           series solution is calculated about 0.
 
