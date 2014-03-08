@@ -38,8 +38,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
 
     if what == 'module':
         # Strip top title
-        title_re = re.compile(ur'^\s*[#*=]{4,}\n[a-z0-9 -]+\n[#*=]{4,}\s*',
-                              re.I | re.S)
+        title_re = re.compile(ur'^\s*[#*=]{4,}\n[a-z0-9 -]+\n[#*=]{4,}\s',re.I | re.S)
         lines[:] = title_re.sub(u'', u"\n".join(lines)).split(u"\n")
     else:
         doc = get_doc_object(obj, what, u"\n".join(lines), config=cfg)
