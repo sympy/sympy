@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Pow, Mul, Dummy, Tuple, oo
+    S, Basic, Expr, I, Integer, Add, Pow, Mul, Dummy, Tuple
 )
 
 from sympy.core.mul import _keep_coeff
@@ -55,6 +55,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys import polyoptions as options
 
 from sympy.core.compatibility import iterable
+
 
 @public
 class Poly(Expr):
@@ -4208,7 +4209,7 @@ def _update_args(args, key, value):
 
 
 @public
-def degree(expr, *argv, **kwargs):
+def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
 
@@ -4220,51 +4221,57 @@ def degree(expr, *argv, **kwargs):
     >>> from sympy import degree
     >>> from sympy.abc import x, y
 
-    >>> degree(x**2 + y*x + 1, x)
+    >>> degree(x**2 + y*x + 1, gen=x)
     2
-    >>> degree(x**2 + y*x + 1, y)
+    >>> degree(x**2 + y*x + 1, gen=y)
     1
     >>> degree(0, x)
     -oo
-        
+
     """
-    options.allowed_flags(kwargs, ['gen', 'polys'])
+    options.allowed_flags(args, ['gen', 'polys'])
 
     try:
-        if expr==0: return -oo
-    	elif isinstance(expr, int): 
-	    poly_from_expr(expr, *argv, **kwargs)
-	    return 0
-    	elif expr.is_number: return 0
-    	else: func = expr.atoms(Symbol).pop()
-    	if argv is not None:
-	    for arg in argv:
-	    	func = arg
-	    	if len(argv): break
-    	if kwargs is not None:
-	    for key, value in kwargs.iteritems():
-	    	func = value
-	    	if len(kwargs): break
+        if f == 0:
+            return -(S.Infinity)
+        elif isinstance(f, int):
+            F, opt = poly_from_expr(f, *gens, **args)
+            return 0
+        elif f.is_number:
+            return 0
+        else:
+            func = f.atoms(Symbol).pop()
 
-    	if expr==func:
+        if gens is not None:
+            for arg in gens:
+                func = arg
+                if len(gens) > 1:
+                    break
+        if args is not None:
+            for key, value in args.items():
+                func = value
+                if len(args) > 1:
+                    break
+
+        if f == func:
             return 1
-    	elif expr.has(func):
-            if isinstance(expr, Pow):
-            	order = 1
-            	if expr.args[0].has(func):
-                    for arg in expr.args[0].args:
-                    	order = max(order, degree(arg, func))
-            	return order * expr.args[1]
+        elif f.has(func):
+            if isinstance(f, Pow):
+                order = 1
+                if f.args[0].has(func):
+                    order = max(degree(arg, func) for arg in f.args)
+                if f.args[1].has(func):
+                    order = max(order, f.args[1].coeff(func))
+                    return order
+                return order * f.args[1]
             else:
-            	order = 0
-            	for arg in expr.args:
-                    order = max(order, degree(arg, func))
-            	return order
-    	else:
+                order = 0
+                order = max(degree(arg, func) for arg in f.args)
+                return order
+        else:
             return 0
     except PolificationFailed as exc:
-	raise ComputationFailed('degree', 1, exc)
-
+        raise ComputationFailed('degree', 1, exc)
 
 @public
 def degree_list(f, *gens, **args):
