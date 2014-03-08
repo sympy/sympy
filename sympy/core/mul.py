@@ -552,6 +552,15 @@ class Mul(Expr, AssocOp):
             # we know for sure the result will be 0
             return [coeff], [], order_symbols
 
+        # check for straggling Numbers that were produced
+        _new = []
+        for i in c_part:
+            if i.is_Number:
+                coeff *= i
+            else:
+                _new.append(i)
+        c_part = _new
+
         # order commutative part canonically
         _mulsort(c_part)
 
