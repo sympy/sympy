@@ -147,8 +147,8 @@ def qapply_Mul(e, **options):
             return qapply(e.func(*args)*comm*rhs, **options)
 
     # Apply tensor products of operators to states
-    if isinstance(lhs, TensorProduct) and all([isinstance(arg, (Operator, State, Mul)) or arg == 1 for arg in lhs.args]) and \
-            isinstance(rhs, TensorProduct) and all([isinstance(arg, (Operator, State)) or arg == 1 for arg in rhs.args]) and \
+    if isinstance(lhs, TensorProduct) and all([isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in lhs.args]) and \
+            isinstance(rhs, TensorProduct) and all([isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in rhs.args]) and \
             len(lhs.args) == len(rhs.args):
         result = TensorProduct(*[qapply(lhs.args[n]*rhs.args[n], **options) for n in range(len(lhs.args))]).expand(tensorproduct=True)
         return qapply_Mul(e.func(*args), **options)*result
