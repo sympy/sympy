@@ -2784,7 +2784,7 @@ def homogeneous_LDS(a):
     natural numbers.All the solutions of the system can be found by
     linear combinations of the basis solutions using natural numbers as
     coefficients.
-    
+
     Details
     =======
 
@@ -2822,15 +2822,15 @@ def homogeneous_LDS(a):
     """
 
     p, q = a.shape
-    col_zero = zeros((p, 1))
-    row_zero = zeros((1, q))
+    col_zero = zeros(p, 1)
+    row_zero = zeros(1, q)
 
     P = []
-    P.append(zeros((1, q)))
+    P.append(zeros(1, q))
 
     Basis = []
 
-    Frozen = ones((q, q))
+    Frozen = ones(q, q)
     for i in range(q):
         Frozen[0, i] = 0;
 
@@ -2849,7 +2849,7 @@ def homogeneous_LDS(a):
 
             for i in range(q):
 
-                T = zeros((1, q)
+                T = zeros(1, q)
                 for j, t_j in enumerate(t):
                     T[j] = t_j
                 T[i] = T[i] + 1
@@ -2868,7 +2868,7 @@ def homogeneous_LDS(a):
 
 def mul(a, t):
 
-    result = zeros((a.shape[0], 1))
+    result = zeros(a.shape[0], 1)
 
     for i in range(a.shape[1]):
         result += t[i] * a[:, i]
@@ -2895,4 +2895,3 @@ def ordering(a, b):
             eq = False;
 
     return True and not eq
-
