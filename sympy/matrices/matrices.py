@@ -2617,7 +2617,7 @@ class MatrixBase(object):
                 feature="'simplified' as a keyword to rref",
                 useinstead="simplify=True, or set simplify equal to your "
                 "own custom simplification function",
-                issue=3382, deprecated_since_version="0.7.2",
+                issue=6481, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(
@@ -2679,7 +2679,7 @@ class MatrixBase(object):
                 feature="'simplified' as a keyword to nullspace",
                 useinstead="simplify=True, or set simplify equal to your "
                 "own custom simplification function",
-                issue=3382, deprecated_since_version="0.7.2",
+                issue=6481, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(

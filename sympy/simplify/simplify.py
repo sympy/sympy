@@ -150,7 +150,7 @@ def separate(expr, deep=False, force=False):
     """
     from sympy.utilities.exceptions import SymPyDeprecationWarning
     SymPyDeprecationWarning(
-        feature="separate()", useinstead="expand_power_base()", issue=3383,
+        feature="separate()", useinstead="expand_power_base()", issue=6482,
         deprecated_since_version="0.7.2", value="Note: in separate() deep "
         "defaults to False, whereas in expand_power_base(), "
         "deep defaults to True.",

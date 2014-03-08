@@ -1397,7 +1397,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             msg = ""
         SymPyDeprecationWarning(msg, feature="The order of the "
             "arguments sol and func to checkodesol()",
-            useinstead="checkodesol(ode, sol, func)", issue=3384,
+            useinstead="checkodesol(ode, sol, func)", issue=6483,
         ).warn()
         sol, func = func, sol
     elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):

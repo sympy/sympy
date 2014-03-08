@@ -4,7 +4,6 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
 
 from sympy.core.compatibility import u
 from sympy.utilities.pytest import raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def test_Symbol():

@@ -307,7 +307,7 @@ class Integral(AddWithLimits):
             SymPyDeprecationWarning(
                 feature="transform(x, f(x), inverse=True)",
                 useinstead="transform(f(x), x)",
-                issue=3380, deprecated_since_version="0.7.2",
+                issue=6479, deprecated_since_version="0.7.2",
             ).warn()
             # in the old style x and u contained the same variable so
             # don't worry about using the old-style feature with the
