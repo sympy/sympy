@@ -9,17 +9,26 @@ from sympy.functions.special.gamma_functions import gamma, digamma
 
 class beta(Function):
     r"""
-    The beta function
+    The beta integral is called the Eulerian integral of the first kind by
+    Legendre:
     
     .. math::
-        \Beta(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1} \mathrm{d}t.
+        \Beta(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1}
         
                 
     Beta function or Euler's first integral is closely associated with gamma function.
     The Beta function often used in probability theory and mathematical statistics. It satisfies
     properties like:
-    B(a,1) = 1/a;
-    B(a,b) = B(b,a) etc.
+    
+    .. math::
+        \Beta(a,1) = \frac{1}{a}
+        \Beta(a,b) = \Beta(b,a)
+        \Beta(a,b) = \frac{\gamma(a)*\gamma(b)}{\gamma(a+b)}
+    
+    Therefore for integral values of a and b
+    
+    .. math::
+        \Beta(a,b) = \frac{(a-1)!*(b-1)!}{(a+b-1)!}
 
     Examples
     ========
@@ -50,7 +59,6 @@ class beta(Function):
 
     >>> beta(1+I,1+I).evalf(20)
     -0.2112723729365330143 - 0.7655283165378005676*I
-
 
     References
     ==========
