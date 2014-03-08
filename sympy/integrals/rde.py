@@ -55,14 +55,29 @@ def order_at(a, p, t):
     # TODO: Can this be done more efficiently?
     # Perhaps using sqf factorization, binary search with an upper bound of
     # a.degree(t)//p.degree(t), or some other clever method.
-    n = -1
-    p1 = Poly(1, t)
-    r = Poly(0, t)
+    # Used binary search for calculating the power. power_list collects the tuples
+    # (p^k,k) where each k is some power of 2. After deciding the largest k
+    # such that k is power of 2 and p^k|a the loop iteratively calculates
+    # the actual power. Complexity reduced from n to log(n). - Anurag
+    power_list = []
+    p1 = p
+    r = a.rem(p1)
+    tracks_power = 1
     while r.is_zero:
-        n += 1
-        p1 = p1*p
+        power_list.append((p1,tracks_power))
+        p1 = p1*p1
+        tracks_power *= 2
         r = a.rem(p1)
-
+    n = 0
+    product = Poly(1, t)
+    while len(power_list) != 0:
+        final = power_list.pop()
+        productf = product*final[0]
+        r = a.rem(productf)
+        if r.is_zero:
+            n += final[1]
+            product = productf
+        
     return n
 
 

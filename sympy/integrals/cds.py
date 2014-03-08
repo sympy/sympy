@@ -105,9 +105,9 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     """
     Cancellation - hyperexponential case
 
-    Given a derivation D on k[t], n either an integer or positive
-    infinity, a in Const(k), b1, b2 in k and c1, c2 in k[t] with Dt/t
-    in k, sqrt(a) not in k(t) and b1 != 0  or b2 != 0, raises either
+    Given a derivation D on k[t], n either an integer or +oo,
+    a in Const(k), b1, b2 in k and c1, c2 in k[t] with Dt/t
+    in k, sqrt(a) not in k(t) and b1 != 0 or b2 != 0, raises either
     "NonElementaryIntegralException", in which case the system as below
 
           /     \       /        \    /  \        /    \
@@ -136,7 +136,7 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         n1, m1, u1 = A1
         n2, m2, u2 = A2
         m = m1
-        z1a, z1d = frac_in(cancel((u1.as_expr()*c1.as_expr() - u2.as_expr()*c2.as_expr())*t**m), t)
+        z1a, z1d = frac_in(cancel((u1.as_expr()*c1.as_expr() + a*u2.as_expr()*c2.as_expr())*t**m), t)
         z2a, z2d = frac_in(cancel((u2.as_expr()*c1.as_expr() + u1.as_expr()*c2.as_expr())*t**m), t)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
@@ -144,8 +144,8 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         if P1 and P2:
             p1, i1 = P1
             p2, i2 = P2
-            q1 = cancel((u1*p1 + u2*p2)*t**(-m)/(u1**2 + u2**2))
-            q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 + u2**2))
+            q1 = cancel((u1*p1 - a*u2*p2)*t**(-m)/(u1**2 - a*u2**2))
+            q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 - a*u2**2))
             q1a, q1d = frac_in(q1, t)
             q2a, q2d = frac_in(q2, t)
 
@@ -179,7 +179,7 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         n = m - 1
         Ds1tm = derivation(s1*t**m, DE)
         Ds2tm = derivation(s2*t**m, DE)
-        c1 = Poly(c1.as_expr() - Ds1tm.as_expr() - (b1*s1 - b2*s2).as_expr()*t**m, t)
+        c1 = Poly(c1.as_expr() - Ds1tm.as_expr() - (b1*s1 + a*b2*s2).as_expr()*t**m, t)
         c2 = Poly(c2.as_expr() - Ds2tm.as_expr() - (b2*s1 + b1*s2).as_expr()*t**m, t)
     return (q1, q2)
 
@@ -188,7 +188,7 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     """
     Cancellation - tangent case
 
-    Given a derivation D on k[t], n either an integer or positive infinity,
+    Given a derivation D on k[t], n either an integer or +oo,
     b0, b2 in k and c1, c2 in k[t] with Dt/(t**2 + 1) = eta in k, sqrt(-1)
     not in k(t) and b0 != 0 or b2 != 0, raises either "NonElementaryIntegralException",
     in which case the system
@@ -204,22 +204,22 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     t = DE.t
     if n == 0:
         if not c1.has(t) and not c2.has(t):
-            A = coupled_DE_system(b0, b2, c1, c2)
+			A = coupled_DE_system(b0, b2, c1, c2)
         else:
             raise NonElementaryIntegralException
 
-    p = t - sqrt(-1)
+    a = sqrt(-1)
+    p = t - a
     eta = DE.d.exquo(Poly(t**2 + 1, t))
     #u1 + u2*I = c1(I) + c2(I)*I
-    c1_ = Poly(c1.eval(sqrt(-1)), t)
-    c2_ = Poly(c2.eval(sqrt(-1)), t)
-    ca, cd = frac_in(c1_ + c2_*sqrt(-1), t)
+    c1_ = Poly(c1.eval(a), t)
+    c2_ = Poly(c2.eval(a), t)
+    ca, cd = frac_in(c1_ + c2_*a, t)
     u1a, u2a, u1d = real_imag(ca, cd, k)
     u1 = u1a.to_field().mul_ground(1/u1d)
     u2 = u2a.to_field().mul_ground(1/u1d)
-    A = coupled_DE_system(b0, b2, u1, u2, DE)
-    (s1, s2) = A
-    c = c1 - u1 + n*eta*(s1*t + s2) + (c2 - u2 + n*eta*(s2*t - s1))*sqrt(-1)
+    (s1, s2) = coupled_DE_system(b0, b2, u1, u2, DE)
+    c = c1 - u1 + n*eta*(s1*t + s2) + (c2 - u2 + n*eta*(s2*t - s1))*a
     c = c.to_field().mul_ground(1/p)
     ca, cd = frac_in(c)
     d1a, d2a, d1d = real_imag(ca, cd, k)
