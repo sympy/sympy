@@ -235,6 +235,10 @@ class AskRealHandler(CommonHandler):
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
                 if ask(Q.imaginary(expr.exp), assumptions):
                     return True
+            # If the i = (exp's arg)/(I*pi) is an integer or half-integer
+            # multiple of I*pi then 2*i will be an integer. In addition,
+            # exp(i*I*pi) = (-1)**i so the overall realness of the expr
+            # can be determined by replacing exp(i*I*pi) with (-1)**i.
             i = expr.base.args[0]/I/pi
             if ask(Q.integer(2*i), assumptions):
                 return ask(Q.real(((-1)**i)**expr.exp), assumptions)
@@ -250,7 +254,8 @@ class AskRealHandler(CommonHandler):
         if ask(Q.imaginary(expr.exp), assumptions):
             imlog = ask(Q.imaginary(C.log(expr.base)), assumptions)
             if imlog is not None:
-                # I**i -> real, log(I) is imag; (2*I)**i -> complex, log(2*I) is not imag
+                # I**i -> real, log(I) is imag;
+                # (2*I)**i -> complex, log(2*I) is not imag
                 return imlog
 
         if ask(Q.real(expr.base), assumptions):
