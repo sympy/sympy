@@ -80,7 +80,7 @@ class gamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    sympy.functions.special.beta_functions.sympy.functions.special.beta_functions.beta: Euler Beta function. function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -224,7 +224,7 @@ class lowergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    sympy.functions.special.beta_functions.sympy.functions.special.beta_functions.beta: Euler Beta function. function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -370,7 +370,7 @@ class uppergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    sympy.functions.special.beta_functions.sympy.functions.special.beta_functions.beta: Euler Beta function. function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -549,7 +549,7 @@ class polygamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    sympy.functions.special.beta_functions.beta: Euler Beta function. function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -780,7 +780,7 @@ class loggamma(Function):
     polygamma: Polygamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    sympy.functions.special.beta_functions.beta: Euler Beta function. function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -854,7 +854,7 @@ def digamma(x):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     trigamma: Trigamma function.
-    sympy.functions.special.beta_functions.beta: Euler Beta function. function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -884,7 +884,7 @@ def trigamma(x):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     digamma: Digamma function.
-    sympy.functions.special.beta_functions.beta: Euler Beta function. function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========

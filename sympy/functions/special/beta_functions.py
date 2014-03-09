@@ -20,8 +20,8 @@ class beta(Function):
     It satisfies properties like:
 
     .. math::
-        \mathrm{B}(a,1) = \frac{1}{a}
-        \mathrm{B}(a,b) = \mathrm{B}(b,a)
+        \mathrm{B}(a,1) = \frac{1}{a} \\
+        \mathrm{B}(a,b) = \mathrm{B}(b,a)  \\
         \mathrm{B}(a,b) = \frac{\Gamma(a)*\Gamma(b)}{\Gamma(a+b)}
 
     Therefore for integral values of a and b
@@ -62,12 +62,13 @@ class beta(Function):
 
     >>> beta(1+I,1+I).evalf(20)
     -0.2112723729365330143 - 0.7655283165378005676*I
-    
+
     See Also
     ========
-    
+
     sympy.functions.special.gamma_functions.gamma: Gamma function.
     sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
+    sympy.functions.special.gamma_functions.lowergamma: Lower incomplete gamma function.
     sympy.functions.special.gamma_functions.polygamma: Polygamma function.
     sympy.functions.special.gamma_functions.loggamma: Log Gamma function.
     sympy.functions.special.gamma_functions.digamma: Digamma function.
