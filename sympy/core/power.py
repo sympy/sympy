@@ -875,6 +875,10 @@ class Pow(Expr):
             if d is not None:
                 return d
 
+        # make sure the expression to be matched is an Expr
+        if not isinstance(expr, Expr):
+            return None
+
         b, e = expr.as_base_exp()
 
         # special case number

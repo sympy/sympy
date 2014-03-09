@@ -162,6 +162,11 @@ class AssocOp(Basic):
         equivalent.
 
         """
+        # make sure expr is Expr if pattern is Expr
+        from .expr import Expr
+        if isinstance(self, Expr) and not isinstance(expr, Expr):
+            return None
+
         # handle simple patterns
         if self == expr:
             return repl_dict
