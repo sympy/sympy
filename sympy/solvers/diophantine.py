@@ -2856,9 +2856,7 @@ def homogeneous_LDS(a):
 
             for i in range(q):
 
-                T = zeros(1, q)
-                for j, t_j in enumerate(t):
-                    T[j] = t_j
+                T = Matrix([[t[j] for j in range(q)]])
                 T[i] = T[i] + 1
 
                 if F[i] == 0 and ((mul(a, t).dot(a[:, i]) < 0 and minimum(T, Basis))
