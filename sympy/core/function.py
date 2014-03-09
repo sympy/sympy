@@ -2335,11 +2335,11 @@ def count_ops(expr, visual=False):
             for bool_functions in bool_ops:
                 operations += str(expr).count(bool_functions)
             return operations
-                
+
     if not ops:
         if visual:
             return S.Zero
-        return 0    
+        return 0
 
     ops = Add(*ops)
 
