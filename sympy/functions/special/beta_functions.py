@@ -62,6 +62,11 @@ class beta(Function):
 
     >>> beta(1+I,1+I).evalf(20)
     -0.2112723729365330143 - 0.7655283165378005676*I
+    
+    See Also
+    ========
+    
+    sympy.functions.special.gamma_functions.gamma: Gamma function.
 
     References
     ==========
