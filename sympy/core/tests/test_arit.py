@@ -921,25 +921,36 @@ def test_Pow_is_real():
 
     i = Symbol('i', imaginary=True)
     assert (i**i).is_real is None
-    assert (I**i).is_real is None
-    assert ((-I)**i).is_real is None
+    assert (I**i).is_real is True
+    assert ((-I)**i).is_real is True
     assert (2**i).is_real is None  # (2**(pi/log(2) * I)) is real, 2**I is not
     assert (2**I).is_real is False
     assert (2**-I).is_real is False
-    assert (i**2).is_real
+    assert (i**2).is_real is True
     assert (i**3).is_real is False
     assert (i**x).is_real is None  # could be (-I)**(2/3)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     k = Symbol('k', integer=True)
-    assert (i**e).is_real
+    assert (i**e).is_real is True
     assert (i**o).is_real is False
     assert (i**k).is_real is None
+    assert (i**(4*k)).is_real is True
 
     x = Symbol("x", nonnegative=True)
     y = Symbol("y", nonnegative=True)
     assert im(x**y).expand(complex=True) is S.Zero
-    assert (x**y).is_real
+    assert (x**y).is_real is True
+    i = Symbol('i', imaginary=True)
+    assert (exp(i)**I).is_real is True
+    assert log(exp(i)).is_imaginary is None  # i could be 2*pi*I
+    c = Symbol('c', complex=True)
+    assert log(c).is_real is None  # c could be 0 or 2, too
+    assert log(exp(c)).is_real is None  # log(0), log(E), ...
+    n = Symbol('n', negative=False)
+    assert log(n).is_real is None
+    n = Symbol('n', nonnegative=True)
+    assert log(n).is_real is None
 
 
 def test_real_Pow():
@@ -1063,6 +1074,7 @@ def test_Pow_is_nonpositive_nonnegative():
     n = Symbol('n', even=True)
     m = Symbol('m', odd=True)
 
+    assert (x**(4*k)).is_nonnegative is True
     assert (2**x).is_nonnegative is True
     assert ((-2)**x).is_nonnegative is None
     assert ((-2)**n).is_nonnegative is True
@@ -1090,6 +1102,14 @@ def test_Pow_is_nonpositive_nonnegative():
     assert ((-k)**x).is_nonpositive is None
     assert ((-k)**n).is_nonpositive is None
     assert ((-k)**m).is_nonpositive is True
+
+    assert (x**2).is_nonnegative is True
+    i = symbols('i', imaginary=True)
+    assert (i**2).is_nonpositive is True
+    assert (i**4).is_nonpositive is False
+    assert (i**3).is_nonpositive is False
+    assert (I**i).is_nonnegative is True
+    assert (exp(I)**i).is_nonnegative is True
 
 
 def test_Mul_is_imaginary_real():

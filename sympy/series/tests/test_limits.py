@@ -361,7 +361,7 @@ def test_rational():
 
 
 def test_issue_2641():
-    assert limit(log(x)/z - log(2*x)/z, x, 0) == -log(2)/z
+    assert limit(log(x)*z - log(2*x)*y, x, 0) == oo*sign(y - z)
 
 
 def test_issue_3267():
@@ -387,10 +387,6 @@ def test_issue_3461():
     e = 5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) + \
         35*x**4/8 - 15*x**2/4 + S(3)/8)/(2*(y + 1))
     assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
-
-
-def test_issue_2641():
-    assert limit(log(x)*z - log(2*x)*y, x, 0) == oo*sign(y - z)
 
 
 def test_issue_2073():
