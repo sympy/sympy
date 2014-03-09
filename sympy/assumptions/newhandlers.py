@@ -207,6 +207,8 @@ def _old_assump_replacer(obj):
         ret = e.is_integer
     if obj.func == Q.imaginary:
         ret = e.is_imaginary
+    if obj.func == Q.commutative:
+        ret = e.is_commutative
 
     if ret is None:
         return obj
@@ -287,6 +289,8 @@ for klass, fact in [
     (MatMul, Implies(AllArgs(Q.square), Equivalent(Q.invertible, AllArgs(Q.invertible)))),
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),
+    (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
+    (Mul, Implies(AllArgs(Q.real), Q.commutative)),
     # This one can still be made easier to read. I think we need basic pattern
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
@@ -296,7 +300,9 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.prime), ~Q.prime)),
     # More advanced prime assumptions will require inequalities, as 1 provides
     # a corner case.
-    (Mul, Implies(AllArgs(Q.imaginary | Q.real), Implies(ExactlyOneArg(Q.imaginary),Q.imaginary))), 
+    (Mul, Implies(AllArgs(Q.imaginary | Q.real), Implies(ExactlyOneArg(Q.imaginary), Q.imaginary))),
+    (Mul, Implies(AllArgs(Q.real), Q.real)),
+    (Add, Implies(AllArgs(Q.real), Q.real)),
     #General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
         Q.irrational))),
