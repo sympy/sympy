@@ -316,19 +316,46 @@ class LagrangesMethod(object):
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
 
-    def rhs(self, method="GE"):
+    def _mat_inv_mul(self, A, B):
+        """Internal Function
+
+        Computes A^-1 * B symbolically w/ substitution, where B is not
+        necessarily a vector, but can be a matrix.
+
+        """
+
+        r1, c1 = A.shape
+        r2, c2 = B.shape
+        temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j) + str(r1 * i)))
+        temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j) + str(r2 * i)))
+        for i in range(len(temp1)):
+            if A[i] == 0:
+                temp1[i] = 0
+        for i in range(len(temp2)):
+            if B[i] == 0:
+                temp2[i] = 0
+        temp3 = []
+        for i in range(c2):
+            temp3.append(temp1.LDLsolve(temp2[:, i]))
+        temp3 = Matrix([i.T for i in temp3]).T
+        return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
+
+    def rhs(self, inv_method=None):
         """ Returns equations that can be solved numerically
 
         Parameters
         ==========
 
-        method : string
-            The method by which matrix inversion of mass_matrix_full must be
-            performed such as Gauss Elimination or LU decomposition.
+        inv_method : str
+            The specific sympy inverse matrix calculation method to use.
 
         """
 
-        # TODO- should probably use the matinvmul method from Kane
+        if inv_method is None:
+            self._rhs = self._mat_inv_mul(self.mass_matrix_full,
+                                          self.forcing_full)
+        else:
+            self._rhs = (self.mass_matrix_full.inv(inv_method,
+                         try_block_diag=True) * self.forcing_full)
+        return self._rhs
 
-        return ((self.mass_matrix_full).inv(method, try_block_diag=True) *
-                self.forcing_full)
