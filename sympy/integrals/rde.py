@@ -51,13 +51,10 @@ def order_at(a, p, t):
     if p == Poly(t, t):
         return a.as_poly(t).ET()[0][0]
 
-    # TODO: Can this be done more efficiently?
-    # Perhaps using sqf factorization, binary search with an upper bound of
-    # a.degree(t)//p.degree(t), or some other clever method.
-    # Used binary search for calculating the power. power_list collects the tuples
+    # Uses binary search for calculating the power. power_list collects the tuples
     # (p^k,k) where each k is some power of 2. After deciding the largest k
     # such that k is power of 2 and p^k|a the loop iteratively calculates
-    # the actual power. Complexity reduced from n to log(n). - Anurag
+    # the actual power.
     power_list = []
     p1 = p
     r = a.rem(p1)
