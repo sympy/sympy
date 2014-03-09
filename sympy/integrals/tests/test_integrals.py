@@ -806,6 +806,15 @@ def test_issue_3940():
     assert integrate(exp(a*x**2 + b*x + c), x) == \
         sqrt(pi)*exp(c)*exp(-b**2/(4*a))*erfi(sqrt(a)*x + b/(2*sqrt(a)))/(2*sqrt(a))
 
+    from sympy import expand_mul
+    from sympy.abc import k
+    assert expand_mul(integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo))) == \
+        sqrt(pi)*exp(-k**2/4)
+    a, d = symbols('a d', positive=True)
+    assert expand_mul(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == \
+        sqrt(pi)*exp(d**2/a)/sqrt(a)
+
+
 
 def test_issue_5413():
     # Note that this is not the same as testing ratint() becuase integrate()
@@ -890,16 +899,6 @@ def test_issue_1888():
 def test_issue_3558():
     from sympy import Si
     assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
-
-
-def test_issue_3940():
-    from sympy import expand_mul
-    from sympy.abc import k
-    assert expand_mul(integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo))) == \
-        sqrt(pi)*exp(-k**2/4)
-    a, d = symbols('a d', positive=True)
-    assert expand_mul(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == \
-        sqrt(pi)*exp(d**2/a)/sqrt(a)
 
 
 def test_issue_4403():
