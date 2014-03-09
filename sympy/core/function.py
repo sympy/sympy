@@ -54,7 +54,7 @@ from sympy import mpmath
 import sympy.mpmath.libmp as mlib
 
 import inspect
-from sympy import *
+from sympy import Or,And,Not,Xor,Nand,Nor,Implies,Equivalent
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
