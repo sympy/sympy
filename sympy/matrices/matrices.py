@@ -2437,7 +2437,7 @@ class MatrixBase(object):
         if not self:
             return S.One
 
-        M, n = self.copy(), self.rows
+        M, n = self.copy().as_mutable(), self.rows
 
         if n == 1:
             det = M[0, 0]
