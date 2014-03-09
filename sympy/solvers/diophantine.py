@@ -2897,6 +2897,6 @@ def ordering(a, b):
         if a_i < b[i]:
             return False
         elif a[i] > b[i]:
-            eq = False;
+            eq = False
 
     return True and not eq
