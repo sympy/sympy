@@ -23,6 +23,7 @@ class MatAdd(MatrixExpr):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
+        args = map(sympify, args)
         check = kwargs.get('check', True)
 
         obj = Basic.__new__(cls, *args)
