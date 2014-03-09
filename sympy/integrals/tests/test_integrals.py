@@ -722,6 +722,11 @@ def test_issue_4403():
     assert integrate(sqrt(x**2 - z**2), x) == \
         -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
+    x = Symbol('x', real=True)
+    y = Symbol('y', nonzero=True, real=True)
+    assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
+        1/(y**2*sqrt(1 + y**2/x**2))
+
 
 def test_issue_4403_2():
     assert integrate(sqrt(-x**2 - 4), x) == \
@@ -899,13 +904,6 @@ def test_issue_1888():
 def test_issue_3558():
     from sympy import Si
     assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
-
-
-def test_issue_4403():
-    x = Symbol('x', real=True)
-    y = Symbol('y', nonzero=True, real=True)
-    assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
-        1/(y**2*sqrt(1 + y**2/x**2))
 
 
 def test_issue_4422():
