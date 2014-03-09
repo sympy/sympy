@@ -67,6 +67,11 @@ class beta(Function):
     ========
     
     sympy.functions.special.gamma_functions.gamma: Gamma function.
+    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
+    sympy.functions.special.gamma_functions.polygamma: Polygamma function.
+    sympy.functions.special.gamma_functions.loggamma: Log Gamma function.
+    sympy.functions.special.gamma_functions.digamma: Digamma function.
+    sympy.functions.special.gamma_functions.trigamma: Trigamma function.
 
     References
     ==========
