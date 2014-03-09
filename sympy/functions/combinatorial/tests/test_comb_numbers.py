@@ -106,7 +106,7 @@ def test_harmonic_rewrite_sum():
 
 
 @XFAIL
-def test_harmonic_rewrite_sum():
+def test_harmonic_rewrite_sum_fail():
     n = Symbol("n")
     m = Symbol("m")
 

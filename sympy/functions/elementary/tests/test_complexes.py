@@ -257,6 +257,9 @@ def test_as_real_imag():
                    1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
                (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
+    assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
+    i = symbols('i', imaginary=True)
+    assert sqrt(i**2).as_real_imag() == (0, sqrt(-i**2))
 
 @XFAIL
 def test_sign_issue_3068():

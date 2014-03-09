@@ -387,6 +387,18 @@ def test_tsolve():
     #issue 4739
     assert solve(exp(log(5)*x) - 2**x, x) == [0]
 
+    # misc
+    # make sure that the right variables is picked up in tsolve
+    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
+
+    # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
+    # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
+    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
+
+    # watch out for recursive loop in tsolve
+    raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
+
+
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
     x = Function('x')(t)
@@ -933,11 +945,6 @@ def test_issue_5114():
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
 
 
-def test_misc():
-    # make sure that the right variables is picked up in tsolve
-    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
-
-
 def test_issue_5849():
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
@@ -1407,15 +1414,6 @@ def test_errorinverses():
     assert solve(erfcinv(x)-y,x)==[erfc(y)]
 
 
-def test_misc():
-    # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
-    # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
-    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
-
-    # watch out for recursive loop in tsolve
-    raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
-
-
 def test_issue_2725():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
@@ -1461,3 +1459,11 @@ def test_det_quick():
 def test_piecewise():
     # if no symbol is given the piecewise detection must still work
     assert solve(Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3) == [-1, 5]
+
+
+def test_real_imag_splitting():
+    a, b = symbols('a b', real=True)
+    assert solve(sqrt(a**2 + b**2) - 3, a) == \
+        [-sqrt(-b**2 + 9), sqrt(-b**2 + 9)]
+    a, b = symbols('a b', imaginary=True)
+    assert solve(sqrt(a**2 + b**2) - 3, a) == []
