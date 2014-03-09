@@ -387,6 +387,18 @@ def test_tsolve():
     #issue #1640
     assert solve(exp(log(5)*x) - 2**x, x) == [0]
 
+    # misc
+    # make sure that the right variables is picked up in tsolve
+    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
+
+    # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
+    # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
+    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
+
+    # watch out for recursive loop in tsolve
+    raises(NotImplementedError, lambda: solve((x + 2)**y*x - 3, x))
+
+
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
     x = Function('x')(t)
@@ -933,11 +945,6 @@ def test_issue_2015():
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
 
 
-def test_misc():
-    # make sure that the right variables is picked up in tsolve
-    raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
-
-
 def test_issue_2750():
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
@@ -1103,12 +1110,6 @@ def test_check_assumptions():
     assert solve(x**2 - 1) == [1]
 
 
-def test_solve_abs():
-    assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
-    r = symbols('r', real=True)
-    raises(NotImplementedError, lambda: solve(2*abs(r) - abs(r - 1)))
-
-
 def test_issue_2957():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
     assert set([simplify(w) for w in solve(tanh(x - 1)*tanh(x + 1) + 1)]) == set([
@@ -1215,10 +1216,11 @@ def test_issue3429():
 
 
 def test_overdetermined():
+    x = symbols('x', real=True)
     eqs = [Abs(4*x - 7) - 5, Abs(3 - 8*x) - 1]
     assert solve(eqs, x) == [(S.Half,)]
     assert solve(eqs, x, manual=True) == [(S.Half,)]
-    assert solve(eqs, x, manual=True, check=False) == [(S.Half/2,), (S.Half,)]
+    assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (S(3),)]
 
 
 def test_issue_3506():
@@ -1260,27 +1262,45 @@ def test_issue_3693():
 
 def test_issues_3720_3721_3722_3149():
     # 3722
-    x, y = symbols('x y')
+    x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
-    assert solve([abs(x) - 2, arg(x) - pi], x) == [
-        {re(x): -2, x: -2, im(x): 0}, {re(x): 2, x: 2, im(x): 0}]
+    assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
+    assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
+
+    # issue 4046
+    assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
+
+    x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2], x) == [
         {re(x): 1, x: 1 + 2*I, im(x): 2}]
 
+    # check for 'dict' handling of solution
+    eq = sqrt(re(x)**2 + im(x)**2) - 3
+    assert solve(eq) == solve(eq, x)
+
+    i = symbols('i', imaginary=True)
+    assert solve(abs(i) - 3) == [-3*I, 3*I]
+    raises(NotImplementedError, lambda: solve(abs(x) - 3))
+
     w = symbols('w', integer=True)
     assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
+
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
     # github issue 2642
     assert solve(x*(1 + I)) == [0]
+
     x, y = symbols('x y', imaginary=True)
     assert solve(x + y*I + 3 + 2*I) == {x: -2*I, y: 3*I}
+
     x = symbols('x', real=True)
     assert solve(x + y + 3 + 2*I) == {x: -3, y: -2*I}
+
     # issue 3149
     f = Function('f')
     assert solve(f(x + 1) - f(2*x - 1)) == [2]
     assert solve(log(x + 1) - log(2*x - 1)) == [2]
+
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
 
@@ -1394,15 +1414,6 @@ def test_errorinverses():
     assert solve(erfcinv(x)-y,x)==[erfc(y)]
 
 
-def test_misc():
-    # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
-    # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
-    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None
-
-    # watch out for recursive loop in tsolve
-    raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
-
-
 def test_gh2725():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
@@ -1448,3 +1459,11 @@ def test_det_quick():
 def test_piecewise():
     # if no symbol is given the piecewise detection must still work
     assert solve(Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3) == [-1, 5]
+
+
+def test_real_imag_splitting():
+    a, b = symbols('a b', real=True)
+    assert solve(sqrt(a**2 + b**2) - 3, a) == \
+        [-sqrt(-b**2 + 9), sqrt(-b**2 + 9)]
+    a, b = symbols('a b', imaginary=True)
+    assert solve(sqrt(a**2 + b**2) - 3, a) == []

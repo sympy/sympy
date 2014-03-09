@@ -178,6 +178,11 @@ class Dummy(Symbol):
     def __getstate__(self):
         return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
 
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (
+            2, (str(self), self._count)), S.One.sort_key(), S.One
+
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
 

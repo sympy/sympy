@@ -934,6 +934,7 @@ def test_M28():
 
 
 def test_M29():
+    x = symbols('x', real=True)
     assert solve(abs(x - 1) - 2) == [-1, 3]
 
 

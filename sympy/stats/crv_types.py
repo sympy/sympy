@@ -1339,7 +1339,7 @@ def Laplace(name, mu, b):
     >>> X = Laplace("x", mu, b)
 
     >>> density(X)(z)
-    exp(-Abs(-mu + z)/b)/(2*b)
+    exp(-Abs(mu - z)/b)/(2*b)
 
     References
     ==========
