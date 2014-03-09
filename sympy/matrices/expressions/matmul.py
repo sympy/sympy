@@ -7,6 +7,9 @@ from sympy.strategies import (rm_id, unpack, typed, debug, flatten, exhaust,
         do_one, new)
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix)
+from sympy.utilities import sift
+from sympy.matrices.matrices import MatrixBase
+from operator import mul
 
 
 class MatMul(MatrixExpr):
@@ -131,6 +134,30 @@ def any_zeros(mul):
         return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
     return mul
 
+def merge_explicit(matmul):
+    """ Merge explicit MatrixBase arguments
+
+    >>> from sympy import MatrixSymbol, eye, Matrix, MatMul, pprint
+    >>> from sympy.matrices.expressions.matmul import merge_explicit
+    >>> A = MatrixSymbol('A', 2, 2)
+    >>> B = Matrix([[1, 1], [1, 1]])
+    >>> C = Matrix([[1, 2], [3, 4]])
+    >>> X = MatMul(A, B, C)
+    >>> pprint(X)
+    A*[1  1]*[1  2]
+      [    ] [    ]
+      [1  1] [3  4]
+    >>> pprint(merge_explicit(X))
+    A*[4  6]
+      [    ]
+      [4  6]
+    """
+    groups = sift(matmul.args, lambda arg: isinstance(arg, MatrixBase))
+    if len(groups[True]) > 1:
+        return MatMul(*(groups[False] + [reduce(mul, groups[True])]))
+    else:
+        return matmul
+
 def xxinv(mul):
     """ Y * X * X.I -> Y """
     from sympy.matrices.expressions import Inverse
@@ -172,7 +199,7 @@ def factor_in_front(mul):
     return mul
 
 rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
-         factor_in_front, flatten)
+         merge_explicit, factor_in_front, flatten)
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
