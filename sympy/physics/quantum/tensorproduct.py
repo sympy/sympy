@@ -11,6 +11,7 @@ from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
+from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray,
     scipy_sparse_matrix,
@@ -161,6 +162,14 @@ class TensorProduct(Expr):
         return pform
 
     def _latex(self, printer, *args):
+        if all([isinstance(arg, Ket) for arg in self.args]):
+            s = r", ".join([arg._print_label_latex(printer) for arg in self.args])
+            return r"{\left|%s\right\rangle}" % s
+
+        if all([isinstance(arg, Bra) for arg in self.args]):
+            s = ", ".join([arg._print_label_latex(printer) for arg in self.args])
+            return r"{\left\langle%s\right|}" % s
+
         length = len(self.args)
         s = ''
         for i in range(length):
