@@ -158,7 +158,7 @@ def test_pl_true_deep():
 
 def test_semantic_tableaux():
     from sympy import pi
-    from sympy.abc import A, B
+    from sympy.abc import A, B, C
     assert semantic_tableaux(A & B) is True
     assert semantic_tableaux(A >> (B >> A)) is True
     assert semantic_tableaux(Equivalent(A, B)) is True
@@ -166,6 +166,17 @@ def test_semantic_tableaux():
     assert semantic_tableaux(A & ~A) is False
     assert semantic_tableaux(Implies(True, False)) is False
     raises(TypeError, lambda: semantic_tableaux(pi**2))
+
+    formulas = {
+        A & C & (B >> A) & (B >> (A & C & (~A | ~C))): True,
+        (~A | ~B | (A & B) | (A & B & ~C) | (~A >> (~A | ~B))): True,
+        (A | C & (B >> ~A) | (C & ~(C >> A)) & (B & ~(C >> ~A))): True,
+        (B | C | ~(A >> B)) & (~A & ~C & ~B) & ~((B | A) >> B): False,
+        (C & ~B & ((A | C) >> A) & ((~C >> A) >> (B & (A | C)))): False,
+        (A & ~B & ~C & (B | C | (~A & B)) & (A >> (A & (B | C)))): False
+    }
+    for expr, sat in formulas.items():
+        assert semantic_tableaux(expr) is sat
 
 
 def test_PropKB():
@@ -218,6 +229,8 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+    assert not satisfiable(And(assumptions, facts, query), return_model=False)
+    assert satisfiable(And(assumptions, facts, ~query), return_model=False)
 
 def test_satisfiable_bool():
     assert satisfiable(True) == {}

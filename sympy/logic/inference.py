@@ -66,7 +66,11 @@ def literal_symbol(literal):
 def satisfiable(expr, return_model=True, algorithm="dpll2"):
     """
     Check satisfiability of a propositional sentence.
-    Returns a model when it succeeds
+
+    return_model:   Return a model when if expression is satisfiable.
+                    Faster when set to False.
+    algorithm:      Select algorithm to use for SAT solving - dpll/dpll2
+
 
     Examples
     ========
@@ -77,6 +81,11 @@ def satisfiable(expr, return_model=True, algorithm="dpll2"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
+    >>> satisfiable(A & ~B, return_model=False)
+    True
+    >>> satisfiable(A & ~A, return_model=False)
+    False
+    >>> 
     """
 
     if expr is True:
@@ -92,22 +101,26 @@ def satisfiable(expr, return_model=True, algorithm="dpll2"):
         elif algorithm == "dpll2":
             from sympy.logic.algorithms.dpll2 import dpll_satisfiable
             return dpll_satisfiable(expr)
-        raise NotImplementedError
+        raise ValueError("'algorithm' must be one of 'dpll', 'dpll2'")
 
     elif return_model is False:
         return semantic_tableaux(expr)
 
     else:
-        raise ValueError("return_model must contain a boolean value")
+        raise ValueError("'return_model' must contain a boolean value")
 
 
 def pl_true(expr, model={}, deep=False):
     """
-    Return True if the propositional logic expression is true in the model,
-    and False if it is false. If the model does not specify the value for
-    every proposition, this may return None to indicate 'not obvious'
+    Returns the value of the expression under the given model.
 
-    The model is implemented as a dict containing the pair symbol, boolean value.
+    If the model does not specify the value for every proposition,
+    this may return None to indicate 'not obvious'.
+
+    model:  dict containing the symbol, boolean value pair.
+    deep:   gives the value of the expression under partial
+            interpretations correctly. May still return None.
+
 
     Examples
     ========
@@ -217,9 +230,10 @@ def _pl_interpretation(expr, atoms, i={}):
 
 def semantic_tableaux(expr):
     """
-    Checks satisfiability of a formula using a Semantic Tableaux
-    This method is much faster than a traditional SAT solver however
-    it returns only True or False. To obtain a model use 'satisfiable'
+    Checks satisfiability of a formula using a Semantic Tableaux.
+
+    This method is much faster than a traditional SAT solver, however,
+    it returns only True or False. To obtain a model use 'satisfiable'.
 
     Examples
     ========
