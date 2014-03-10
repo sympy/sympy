@@ -162,13 +162,18 @@ class TensorProduct(Expr):
         return pform
 
     def _latex(self, printer, *args):
-        if all([isinstance(arg, Ket) for arg in self.args]):
-            s = r", ".join([arg._print_label_latex(printer) for arg in self.args])
-            return r"{\left|%s\right\rangle}" % s
 
-        if all([isinstance(arg, Bra) for arg in self.args]):
-            s = ", ".join([arg._print_label_latex(printer) for arg in self.args])
-            return r"{\left\langle%s\right|}" % s
+        if all([isinstance(arg, Ket) or isinstance(arg, Bra)
+                for arg in self.args]):
+
+            def _label_wrap(label, nlabels):
+                return label if nlabels == 1 else r"\left\{%s\right\}" % label
+
+            s = r", ".join([_label_wrap(arg._print_label_latex(printer, *args),
+                                  len(arg.args)) for arg in self.args])
+
+            return r"{%s%s%s}" % (self.args[0].lbracket_latex, s,
+                                  self.args[0].rbracket_latex)
 
         length = len(self.args)
         s = ''
