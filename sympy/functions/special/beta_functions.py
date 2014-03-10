@@ -13,7 +13,7 @@ class beta(Function):
     Legendre:
 
     .. math::
-        \mathrm{B}(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1}
+        \mathrm{B}(x,y) := \int^{1}_{0} t^{x-1} (1-t)^{y-1} \mathrm{d}t.
 
     Beta function or Euler's first integral is closely associated with gamma function.
     The Beta function often used in probability theory and mathematical statistics.
@@ -36,6 +36,7 @@ class beta(Function):
     >>> from sympy.abc import x,y
 
     The Beta function obeys the mirror symmetry:
+
     >>> from sympy import beta
     >>> from sympy import conjugate
     >>> conjugate(beta(x,y))
