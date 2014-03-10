@@ -375,7 +375,8 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            if isinstance(args, Function):
+            #Sub in dummy variables for functions or symbols
+            if isinstance(args, (Function, Symbol)):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
@@ -401,6 +402,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     # Transform args
     def isiter(l):
         return iterable(l, exclude=(str, DeferredVector))
+
     if isiter(args) and any(isiter(i) for i in args):
         from sympy.utilities.iterables import flatten
         import re
