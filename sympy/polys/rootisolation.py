@@ -71,20 +71,20 @@ def dup_sturm(f, K):
     return sturm[:-1]
 
 def dup_root_upper_bound(f, K):
-    """Compute the LMQ upper bound for `f`'s positive roots,
-       which was developed by Akritas-Strzebonski-Vigklas.
+    """
+    Compute the LMQ upper bound for the positive roots of `f`;
+    LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-       Reference:
-       ==========
-       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+    Reference:
+    ==========
+    Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
            Values of the Positive Roots of Polynomials"
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
-    n, t, P = len(f), K.one, []
-
+    n, P = len(f), []
+    t = n* [K.one]    #list instead of single counter
     if dup_LC(f, K) < 0:
         f = dup_neg(f, K)
-
     f = list(reversed(f))
 
     for i in xrange(0, n):
@@ -98,15 +98,15 @@ def dup_root_upper_bound(f, K):
             if f[j] <= 0:
                 continue
 
-            q = t + a - K.log(f[j], 2)
-            Q.append(q // (j - i))
-
-            t += 1
+            q = t[j] + a - K.log(f[j], 2)
+            Q.append([q // (j - i) , j])   #index added to the canditates for minimum
 
         if not Q:
             continue
 
-        P.append(min(Q))
+        q=min(Q)
+        t[q[1]]+=1   #only minimum's t is increased
+        P.append(q[0])
 
     if not P:
         return None
@@ -114,11 +114,13 @@ def dup_root_upper_bound(f, K):
         return K.get_field()(2)**(max(P) + 1)
 
 def dup_root_lower_bound(f, K):
-    """Compute LMQ lower bound for `f`'s positive roots.
+    """
+    Compute the LMQ upper bound for the positive roots of `f`;
+    LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-       Reference:
-       ==========
-       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+    Reference:
+    ==========
+    Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
            Values of the Positive Roots of Polynomials"
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
