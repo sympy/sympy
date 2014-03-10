@@ -121,6 +121,7 @@ install:
   - if [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
     fi
+  - sudo apt-get install python-scipy
 script:
   - bin/test_travis.sh
 notifications:
