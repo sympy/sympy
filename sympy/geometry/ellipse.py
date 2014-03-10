@@ -19,6 +19,7 @@ from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.iterables import uniq
+from sympy.utilities.misc import filldedent
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
@@ -483,7 +484,8 @@ class Ellipse(GeometryEntity):
         if hr == vr:
             return (c, c)
 
-        # calculate focus distance manually, since focus_distance calls this routine
+        # calculate focus distance manually, since focus_distance calls this
+        # routine
         fd = sqrt(self.major**2 - self.minor**2)
         if hr == self.minor:
             # foci on the y-axis
@@ -539,12 +541,50 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Circle, Line
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
         Circle(Point(1, 0), -1)
+        >>> from sympy import Ellipse, Line, Point
+        >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError:
+        General Ellipse is not supported but the equation of the reflected
+        Ellipse is given by the zeros of: f(x, y) = (9*x/41 + 40*y/41 +
+        37/41)**2 + (40*x/123 - 3*y/41 - 364/123)**2 - 1
+
+        Notes
+        =====
+
+        Until the general ellipse (with no axis parallel to the x-axis) is
+        supported a NotImplemented error is raised and the equation whose
+        zeros define the rotated ellipse is given.
+
         """
+        def _uniquely_named_symbol(xname, *exprs):
+            """Return a symbol which, when printed, will have a name unique
+            from any other already in the expressions given. The name is made
+            unique by prepending underscores.
+            """
+            prefix = '%s'
+            x = prefix % xname
+            syms = set.union(*[e.free_symbols for e in exprs])
+            while any(x == str(s) for s in syms):
+                prefix = '_' + prefix
+                x = prefix % xname
+            return _symbol(x)
+
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
-        raise NotImplementedError('reflection line not horizontal | vertical.')
+        else:
+            x, y = [_uniquely_named_symbol(name, self, line) for name in 'xy']
+            expr = self.equation(x, y)
+            p = Point(x, y).reflect(line)
+            result = expr.subs(zip((x, y), p.args
+                               ), simultaneous=True)
+            raise NotImplementedError(filldedent(
+                'General Ellipse is not supported but the equation '
+                'of the reflected Ellipse is given by the zeros of: ' +
+                "f(%s, %s) = %s" % (str(x), str(y), str(result))))
 
     def encloses_point(self, p):
         """
@@ -811,20 +851,23 @@ class Ellipse(GeometryEntity):
             xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
             try:
                 iv = list(zip(*Poly(xeq).intervals()))[0]
-                # bisection is the safest here since other methods may miss root
-                xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson")) for i in iv]
-                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec) for i in xsol]
+                # bisection is safest here since other methods may miss root
+                xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson"))
+                    for i in iv]
+                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec)
+                    for i in xsol]
             except PolynomialError:
                 pass
         if not points:
-            points = [Point(*s) for s in solve((seq, eq), (x, y))]
+            points = solve((seq, eq), (x, y))
             # complicated expressions may not be decidably real so evaluate to
             # check whether they are real or not
-            points = [i.n(prec) if prec is not None else i
-                for i in points if all(j.n(2).is_real for j in i.args)]
+            points = [Point(i).n(prec) if prec is not None else Point(i)
+                      for i in points if all(j.n(2).is_real for j in i)]
         slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]
         if prec is not None:
-            slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i for i in slopes]
+            slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i
+                for i in slopes]
         return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
 
 
@@ -864,7 +907,8 @@ class Ellipse(GeometryEntity):
         """
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
+            raise ValueError(filldedent('Symbol %s already appears in object '
+                'and cannot be used as a parameter.' % t.name))
         return Point(self.center.x + self.hradius*C.cos(t),
                      self.center.y + self.vradius*C.sin(t))
 
@@ -949,11 +993,11 @@ class Ellipse(GeometryEntity):
         >>> p2 in e1
         False
 
-        Note that arbitrary_point routine does not take this approach. A value for
-        cos(t) and sin(t) (not t) is substituted into the arbitrary point. There is
-        a small chance that this will give a point that will not test as being
-        in the ellipse, so the process is repeated (up to 10 times) until a
-        valid point is obtained.
+        Note that arbitrary_point routine does not take this approach. A value
+        for cos(t) and sin(t) (not t) is substituted into the arbitrary point.
+        There is a small chance that this will give a point that will not
+        test as being in the ellipse, so the process is repeated (up to 10
+        times) until a valid point is obtained.
 
         """
         from sympy import sin, cos, Rational

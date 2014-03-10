@@ -719,20 +719,72 @@ class Interval(Set, EvalfMixin):
         return expr
 
     def _eval_imageset(self, f):
-        # Cut out 0, perform image, add back in image of 0
-        if self.contains(0) == True:
-            return imageset(f, self - FiniteSet(0)) + imageset(f, FiniteSet(0))
-
+        from sympy import Dummy
         from sympy.functions.elementary.miscellaneous import Min, Max
-        # TODO: manage left_open and right_open better in case of
-        # non-comparable left/right (e.g. Interval(x, y))
-        _left, _right = f(self.left), f(self.right)
-        left, right = Min(_left, _right), Max(_left, _right)
-        if _right == left: # switch happened
-            left_open, right_open = self.right_open, self.left_open
+        from sympy.solvers import solve
+        from sympy.core.function import diff
+        from sympy.series import limit
+        from sympy.calculus.singularities import singularities
+        # TODO: handle piecewise defined functions
+        # TODO: handle functions with infinitely many solutions (eg, sin, tan)
+        # TODO: handle multivariate functions
+
+        # var and expr are being defined this way to
+        # support Python lambda and not just sympy Lambda
+        try:
+            var = Dummy()
+            expr = f(var)
+            if len(expr.free_symbols) > 1:
+                raise TypeError
+        except TypeError:
+            raise NotImplementedError("Sorry, Multivariate imagesets are"
+                                      " not yet implemented, you are welcome"
+                                      " to add this feature in Sympy")
+
+        if not self.start.is_comparable or not self.end.is_comparable:
+            raise NotImplementedError("Sets with non comparable/variable"
+                                      " arguments are not supported")
+
+        sing = [x for x in singularities(expr, var) if x.is_real and x in self]
+
+        if self.left_open:
+            _start = limit(expr, var, self.start, dir="+")
+        elif self.start not in sing:
+            _start = f(self.start)
+        if self.right_open:
+            _end = limit(expr, var, self.end, dir="-")
+        elif self.end not in sing:
+            _end = f(self.end)
+
+        if len(sing) == 0:
+            solns = solve(diff(expr, var), var)
+
+            extr = [_start, _end] + [f(x) for x in solns
+                                     if x.is_real and x in self]
+            start, end = Min(*extr), Max(*extr)
+
+            left_open, right_open = False, False
+            if _start <= _end:
+                # the minimum or maximum value can occur simultaneously
+                # on both the edge of the interval and in some interior
+                # point
+                if start == _start and start not in solns:
+                    left_open = self.left_open
+                if end == _end and end not in solns:
+                    right_open = self.right_open
+            else:
+                if start == _end and start not in solns:
+                    left_open = self.right_open
+                if end == _start and end not in solns:
+                    right_open = self.left_open
+
+            return Interval(start, end, left_open, right_open)
         else:
-            left_open, right_open = self.left_open, self.right_open
-        return Interval(left, right, left_open, right_open)
+            return imageset(f, Interval(self.start, sing[0],
+                                        self.left_open, True)) + \
+                Union(*[imageset(f, Interval(sing[i], sing[i + 1]), True, True)
+                        for i in range(1, len(sing) - 1)]) + \
+                imageset(f, Interval(sing[-1], self.end, True, self.right_open))
 
     @property
     def _measure(self):
@@ -743,7 +795,7 @@ class Interval(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return Interval(self.left.evalf(), self.right.evalf(),
-          left_open=self.left_open, right_open=self.right_open)
+                        left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable

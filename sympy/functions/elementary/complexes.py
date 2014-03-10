@@ -378,11 +378,13 @@ class Abs(Function):
 
     @classmethod
     def eval(cls, arg):
+        from sympy.simplify.simplify import signsimp
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
         # handle what we can
+        arg = signsimp(arg, evaluate=False)
         if arg.is_Mul:
             known = []
             unk = []

@@ -163,6 +163,9 @@ def test_Interval():
 
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
+    # github issue #2908
+    assert str(Lambda((), 1)) == "Lambda((), 1)"
+    assert str(Lambda((), x)) == "Lambda((), x)"
 
 
 def test_Limit():

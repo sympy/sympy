@@ -702,22 +702,22 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
 
         >>> from sympy import sympify
         >>> sympify(identify(sqrt(2)))
-        sqrt(2)
+        2**(1/2)
 
     Sometimes :func:`~mpmath.identify` can simplify an expression further than
     a symbolic algorithm::
 
         >>> from sympy import simplify
-        >>> x = sympify('-1/(-3/2+(1/2)*sqrt(5))*sqrt(3/2-1/2*sqrt(5))')
+        >>> x = sympify('-1/(-3/2+(1/2)*5**(1/2))*(3/2-1/2*5**(1/2))**(1/2)')
         >>> x
-        1/sqrt(3/2 - sqrt(5)/2)
+        (3/2 - 5**(1/2)/2)**(-1/2)
         >>> x = simplify(x)
         >>> x
-        2/sqrt(6 - 2*sqrt(5))
+        2/(6 - 2*5**(1/2))**(1/2)
         >>> mp.dps = 30
         >>> x = sympify(identify(x.evalf(30)))
         >>> x
-        1/2 + sqrt(5)/2
+        1/2 + 5**(1/2)/2
 
     (In fact, this functionality is available directly in SymPy as the
     function :func:`~mpmath.nsimplify`, which is essentially a wrapper for

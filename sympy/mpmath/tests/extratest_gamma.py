@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from mpmath import *
 from mpmath.libmp import ifac
 
@@ -49,7 +47,7 @@ def check(name, func, z, y):
         if raise_:
             raise SystemExit
     if not err:
-        print("%s ok;" % name, end=' ')
+        sys.stdout.write("%s ok; " % name)
 
 def testcase(case):
     z, result = case

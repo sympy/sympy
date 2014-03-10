@@ -1,14 +1,15 @@
 from sympy import (
-    acos, Add, atan, besselsimp, binomial, collect, collect_const, combsimp,
-    cos, cosh, cot, coth, count_ops, Derivative, diff, Dummy, E, Eq, erf, exp,
-    exp_polar, expand, exptrigsimp, factor, factorial, FallingFactorial, Float,
-    fraction, Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I,
-    Integer, Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
-    oo, zoo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
-    radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
-    root, S, separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
-    Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
-    expand_multinomial, denom)
+    Abs, acos, Add, atan, Basic, besselsimp, binomial, collect,
+    collect_const, combsimp, cos, cosh, cot, coth, count_ops, denom,
+    Derivative, diff, Dummy, E, Eq, erf, exp, exp_polar, expand,
+    expand_multinomial, exptrigsimp, factor, factorial, FallingFactorial,
+    Float, fraction, Function, gamma, GoldenRatio, hyper, hyper,
+    hypersimp, I, Integer, Integral, integrate, log, logcombine, Matrix,
+    Mul, nsimplify, O, oo, ordered, pi, Piecewise, polar_lift, polarify,
+    posify, powdenest, powsimp, radsimp, Rational, ratsimp,
+    ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
+    signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
+    sympify, tan, tanh, trigsimp, Wild, zoo)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
@@ -1703,6 +1704,7 @@ def test_issue_2998():
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
     assert signsimp(Eq(e, 0)) is S.true
+    assert Abs(x - 1) == Abs(1 - x)
 
 
 def test_besselsimp():

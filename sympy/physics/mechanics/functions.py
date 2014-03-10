@@ -1,4 +1,15 @@
 from __future__ import print_function, division
+import warnings
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import filldedent
+from sympy.physics.vector import Vector, ReferenceFrame, Point
+from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
+                                           init_vprinting)
+from sympy.physics.mechanics.particle import Particle
+from sympy.physics.mechanics.rigidbody import RigidBody
+from sympy import sympify
+from sympy.core.basic import S
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -6,22 +17,49 @@ __all__ = ['inertia',
            'angular_momentum',
            'kinetic_energy',
            'potential_energy',
-           'Lagrangian']
+           'Lagrangian',
+           'mechanics_printing',
+           'mprint',
+           'msprint',
+           'mpprint',
+           'mlatex']
 
-from sympy.physics.vector.printers import \
-     VectorStrPrinter as MechanicsStrPrinter, \
-     VectorLatexPrinter as MechanicsLatexPrinter, \
-     VectorPrettyPrinter as MechanicsPrettyPrinter
-from sympy.physics.vector import Vector, Dyadic, ReferenceFrame, \
-     dynamicsymbols
-from sympy.physics.vector.vector import _check_vector
-from sympy.physics.vector.frame import _check_frame
-from sympy.physics.mechanics.particle import Particle
-from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.vector import Point
-from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate, \
-     trigsimp
-from sympy.core.basic import S
+warnings.simplefilter("always", SymPyDeprecationWarning)
+
+# These are functions that we've moved and renamed during extracting the
+# basic vector calculus code from the mechanics packages.
+
+mprint = vprint
+msprint = vsprint
+mpprint = vpprint
+mlatex = vlatex
+
+
+def mechanics_printing(**kwargs):
+
+    # mechanics_printing has slightly different functionality in 0.7.5 but
+    # shouldn't fundamentally need a deprecation warning so we do this
+    # little wrapper that gives the warning that things have changed.
+
+    # TODO : Remove this warning in the release after SymPy 0.7.5
+
+    # The message is only printed if this function is called with no args,
+    # as was the previous only way to call it.
+
+    def dict_is_empty(D):
+        for k in D:
+            return False
+        return True
+
+    if dict_is_empty(kwargs):
+        msg = ('See the doc string for slight changes to this function: '
+               'keyword args may be needed for the desired effect. '
+               'Otherwise use sympy.physics.vector.init_vprinting directly.')
+        SymPyDeprecationWarning(filldedent(msg)).warn()
+
+    init_vprinting(**kwargs)
+
+mechanics_printing.__doc__ = init_vprinting.__doc__
 
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):

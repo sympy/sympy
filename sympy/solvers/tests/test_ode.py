@@ -1821,7 +1821,7 @@ def test_2nd_power_series_ordinary():
         x**6/S(180) - x**3/S(6) + 1) + C1*x*(-x**3/S(12) + 1) + O(x**7))
 
 
-def test_2nd_power_series_ordinary():
+def test_2nd_power_series_regular():
     C0, C1 = symbols("C0 C1")
     eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
     assert dsolve(eq) == Eq(f(x), C0*x**2*(-16*x**3/S(9) +
@@ -1844,6 +1844,7 @@ def test_2nd_power_series_ordinary():
 
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C1*(-x**4/S(2) + 1) + C0*x**2 + O(x**6))
+
 
 def test_issue3994():
     sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)

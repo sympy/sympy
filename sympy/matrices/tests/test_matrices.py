@@ -11,7 +11,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros)
-from sympy.core.compatibility import long
+from sympy.core.compatibility import long, iterable
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow
 
@@ -884,11 +884,12 @@ def test_simplify():
     M.simplify()
     assert M == Matrix([[ (x + y)/(x * y),                        1 + y ],
                         [           1 + y, 2*((1 - 1*cos(pi*n))/(pi*n)) ]])
-    M = Matrix([[(1 + x)**2]])
+    eq = (1 + x)**2
+    M = Matrix([[eq]])
     M.simplify()
-    assert M == Matrix([[(1 + x)**2]])
-    M.simplify(ratio=oo)
-    assert M == Matrix([[1 + 2*x + x**2]])
+    assert M == Matrix([[eq]])
+    M.simplify(ratio=oo) == M
+    assert M == Matrix([[eq.simplify(ratio=oo)]])
 
 
 def test_transpose():
@@ -2019,6 +2020,9 @@ def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
 
+def test_DeferredVector_not_iterable():
+    assert not iterable(DeferredVector('X'))
+
 def test_DeferredVector_Matrix():
     raises(TypeError, lambda: Matrix(DeferredVector("V")))
 
@@ -2245,7 +2249,7 @@ def test_adjoint():
     for cls in classes:
         assert ans == cls(dat).adjoint()
 
-def test_simplify():
+def test_simplify_immutable():
     from sympy import simplify, sin, cos
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])

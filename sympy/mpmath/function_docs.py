@@ -1878,8 +1878,8 @@ Some special values are::
 An example of a sum that can be computed more accurately and
 efficiently via :func:`~mpmath.altzeta` than via numerical summation::
 
-    >>> sum(-(-1)**n / n**2.5 for n in range(1, 100))
-    0.86720495150398402
+    >>> sum(-(-1)**n / mpf(n)**2.5 for n in range(1, 100))
+    0.867204951503984
     >>> altzeta(2.5)
     0.867199889012184
 
@@ -3972,7 +3972,7 @@ hypergeometric function `\,_2F_2`::
    http://functions.wolfram.com/GammaBetaErf/ExpIntegralEi/27/01/
 
 2. Abramowitz & Stegun, section 5:
-   http://www.math.sfu.ca/~cbm/aands/page_228.htm
+   http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
 3. Asymptotic expansion for Ei:
    http://mathworld.wolfram.com/En-Function.html
@@ -6409,7 +6409,7 @@ Evaluation is supported for arbitrary arguments::
 
 **References**
 
-1. http://www.research.att.com/~njas/sequences/A000178
+1. http://oeis.org/A000178
 
 """
 
@@ -6512,7 +6512,7 @@ definition::
 
 **References**
 
-1. http://www.research.att.com/~njas/sequences/A002109
+1. http://oeis.org/A002109
 2. http://mathworld.wolfram.com/Hyperfactorial.html
 
 """
@@ -9894,5 +9894,93 @@ Verifying the integral representation::
     >>> Ai,Bi = airyai,airybi
     >>> Bi(z)*(Ai(z,-1)-Ai(-inf,-1)) - Ai(z)*(Bi(z,-1)-Bi(-inf,-1))
     0.6095559998265972956089949
+
+"""
+
+
+stirling1 = r"""
+Gives the Stirling number of the first kind `s(n,k)`, defined by
+
+.. math ::
+
+    x(x-1)(x-2)\cdots(x-n+1) = \sum_{k=0}^n s(n,k) x^k.
+
+The value is computed using an integer recurrence. The implementation
+is not optimized for approximating large values quickly.
+
+**Examples**
+
+Comparing with the generating function::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> taylor(lambda x: ff(x, 5), 0, 5)
+    [0.0, 24.0, -50.0, 35.0, -10.0, 1.0]
+    >>> [stirling1(5, k) for k in range(6)]
+    [0.0, 24.0, -50.0, 35.0, -10.0, 1.0]
+
+Recurrence relation::
+
+    >>> n, k = 5, 3
+    >>> stirling1(n+1,k) + n*stirling1(n,k) - stirling1(n,k-1)
+    0.0
+
+The matrices of Stirling numbers of first and second kind are inverses
+of each other::
+
+    >>> A = matrix(5, 5); B = matrix(5, 5)
+    >>> for n in range(5):
+    ...     for k in range(5):
+    ...         A[n,k] = stirling1(n,k)
+    ...         B[n,k] = stirling2(n,k)
+    ...
+    >>> A * B
+    [1.0  0.0  0.0  0.0  0.0]
+    [0.0  1.0  0.0  0.0  0.0]
+    [0.0  0.0  1.0  0.0  0.0]
+    [0.0  0.0  0.0  1.0  0.0]
+    [0.0  0.0  0.0  0.0  1.0]
+
+Pass ``exact=True`` to obtain exact values of Stirling numbers as integers::
+
+    >>> stirling1(42, 5)
+    -2.864498971768501633736628e+50
+    >>> print stirling1(42, 5, exact=True)
+    -286449897176850163373662803014001546235808317440000
+
+"""
+
+stirling2 = r"""
+Gives the Stirling number of the second kind `S(n,k)`, defined by
+
+.. math ::
+
+    x^n = \sum_{k=0}^n S(n,k) x(x-1)(x-2)\cdots(x-k+1)
+
+The value is computed using integer arithmetic to evaluate a power sum.
+The implementation is not optimized for approximating large values quickly.
+
+**Examples**
+
+Comparing with the generating function::
+
+    >>> from mpmath import *
+    >>> mp.dps = 25; mp.pretty = True
+    >>> taylor(lambda x: sum(stirling2(5,k) * ff(x,k) for k in range(6)), 0, 5)
+    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+Recurrence relation::
+
+    >>> n, k = 5, 3
+    >>> stirling2(n+1,k) - k*stirling2(n,k) - stirling2(n,k-1)
+    0.0
+
+Pass ``exact=True`` to obtain exact values of Stirling numbers as integers::
+
+    >>> stirling2(52, 10)
+    2.641822121003543906807485e+45
+    >>> print stirling2(52, 10, exact=True)
+    2641822121003543906807485307053638921722527655
+
 
 """

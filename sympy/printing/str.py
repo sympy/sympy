@@ -196,7 +196,7 @@ class StrPrinter(Printer):
             return "Lambda(%s, %s)" % (args.args[0], expr)
         else:
             arg_string = ", ".join(self._print(arg) for arg in args)
-            return "Lambda((%s), %s" % (arg_string, expr)
+            return "Lambda((%s), %s)" % (arg_string, expr)
 
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, key=default_sort_key)

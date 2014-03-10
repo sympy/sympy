@@ -2,24 +2,24 @@
 Printing (Docstrings)
 =====================
 
-time_derivative_printing
-========================
+init_printing
+=============
 
-.. autofunction:: sympy.physics.vector.functions.time_derivative_printing
+.. autofunction:: sympy.physics.vector.printing.init_printing
 
 vprint
 ======
 
-.. autofunction:: sympy.physics.vector.functions.vprint
+.. autofunction:: sympy.physics.vector.printing.vprint
 
 
 vpprint
 =======
 
-.. autofunction:: sympy.physics.vector.functions.vpprint
+.. autofunction:: sympy.physics.vector.printing.vpprint
 
 
 vlatex
 ======
 
-.. autofunction:: sympy.physics.vector.functions.vlatex
+.. autofunction:: sympy.physics.vector.printing.vlatex

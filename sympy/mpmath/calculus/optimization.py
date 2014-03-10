@@ -1,6 +1,6 @@
 from copy import copy
 
-from ..libmp.backend import xrange
+from ..libmp.backend import xrange, print_
 
 class OptimizationMethods(object):
     def __init__(ctx):
@@ -268,8 +268,8 @@ class Muller:
             fx2x1x0 = (fx1x0 - fx2x1) / (x0 - x2)
             if w == 0 and fx2x1x0 == 0:
                 if self.verbose:
-                    print('canceled with')
-                    print('x0 =', x0, ', x1 =', x1, 'and x2 =', x2)
+                    print_('canceled with')
+                    print_('x0 =', x0, ', x1 =', x1, 'and x2 =', x2)
                 break
             x0 = x1
             fx0 = fx1
@@ -320,11 +320,14 @@ class Bisection:
         while True:
             m = self.ctx.ldexp(a + b, -1)
             fm = f(m)
-            if fm * fb < 0:
+            sign = fm * fb
+            if sign < 0:
                 a = m
-            else:
+            elif sign > 0:
                 b = m
                 fb = fm
+            else:
+                yield m, self.ctx.zero
             l /= 2
             yield (a + b)/2, abs(l)
 
@@ -392,7 +395,7 @@ class Illinois:
         self.method = kwargs.get('method', 'illinois')
         self.getm = _getm(self.method)
         if self.verbose:
-            print('using %s method' % self.method)
+            print_('using %s method' % self.method)
 
     def __iter__(self):
         method = self.method
@@ -412,7 +415,7 @@ class Illinois:
             if abs(fz) < self.tol:
                 # TODO: better condition (when f is very flat)
                 if self.verbose:
-                    print('canceled with z =', z)
+                    print_('canceled with z =', z)
                 yield z, l
                 break
             if fz * fb < 0: # root in [z, b]
@@ -426,7 +429,7 @@ class Illinois:
                 fb = fz
                 fa = m*fa # scale down to ensure convergence
             if self.verbose and m and not method == 'illinois':
-                print('m:', m)
+                print_('m:', m)
             yield (a + b)/2, abs(l)
 
 def Pegasus(*args, **kwargs):
@@ -497,7 +500,7 @@ class Ridder:
             if abs(fx4) < self.tol:
                 # TODO: better condition (when f is very flat)
                 if self.verbose:
-                    print('canceled with f(x4) =', fx4)
+                    print_('canceled with f(x4) =', fx4)
                 yield x4, abs(x1 - x2)
                 break
             if fx4 * fx2 < 0: # root in [x4, x2]
@@ -548,21 +551,21 @@ class ANewton:
                 x0 = phi(x0)
             except ZeroDivisionError:
                 if self.verbose:
-                    'ZeroDivisionError: canceled with x =', x0
+                    print_('ZeroDivisionError: canceled with x =', x0)
                 break
             preverror = error
             error = abs(prevx - x0)
             # TODO: decide not to use convergence acceleration
             if error and abs(error - preverror) / error < 1:
                 if self.verbose:
-                    print('converging slowly')
+                    print_('converging slowly')
                 counter += 1
             if counter >= 3:
                 # accelerate convergence
                 phi = steffensen(phi)
                 counter = 0
                 if self.verbose:
-                    print('accelerating convergence')
+                    print_('accelerating convergence')
             yield x0, error
 
 # TODO: add Brent
@@ -620,7 +623,7 @@ class MDNewton:
 
     [1] http://scipy.org
 
-    [2] http://openopt.org
+    [2] http://openopt.org/Welcome
     """
     maxsteps = 10
 
@@ -654,16 +657,16 @@ class MDNewton:
             Jx = J(*x0)
             s = self.ctx.lu_solve(Jx, fxn)
             if self.verbose:
-                print('Jx:')
-                print(Jx)
-                print('s:', s)
+                print_('Jx:')
+                print_(Jx)
+                print_('s:', s)
             # damping step size TODO: better strategy (hard task)
             l = self.ctx.one
             x1 = x0 + s
             while True:
                 if x1 == x0:
                     if self.verbose:
-                        print("canceled, won't get more excact")
+                        print_("canceled, won't get more excact")
                     cancel = True
                     break
                 fx = self.ctx.matrix(f(*x1))
@@ -850,8 +853,8 @@ def findroot(ctx, f, x0, solver=Secant, tol=None, verbose=False, verify=True, **
         error: 10.562244329955107759
         x:     1.0
         error: 7.8598304758094664213e-18
+        ZeroDivisionError: canceled with x = 1.0
         1.0
-
 
     **Complex roots**
 
@@ -956,8 +959,8 @@ def findroot(ctx, f, x0, solver=Secant, tol=None, verbose=False, verify=True, **
         i = 0
         for x, error in iterations:
             if verbose:
-                print('x:    ', x)
-                print('error:', error)
+                print_('x:    ', x)
+                print_('error:', error)
             i += 1
             if error < tol * max(1, norm(x)) or i >= maxsteps:
                 break
@@ -1014,8 +1017,8 @@ def steffensen(f):
     Definition:
     F(x) = (x*f(f(x)) - f(x)**2) / (f(f(x)) - 2*f(x) + x)
 
-    Examples
-    --------
+    Example
+    .......
 
     You can use Steffensen's method to accelerate a fixpoint iteration of linear
     (or less) convergence.

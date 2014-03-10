@@ -2,7 +2,7 @@ from __future__ import division
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify)
+        factor, nsimplify, zoo)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
@@ -615,3 +615,12 @@ def test_gh_issue_2877():
         return factor(a*x**2 + b*x + c)
     e = r(5/6, 10, 5)
     assert nsimplify(e) == 5*x**2/6 + 10*x + 5
+
+
+def test_issue_2811():
+    t = Symbol('t')
+    assert (1/(1 - t)).subs(t, 1) == zoo
+    n = t
+    d = t - 1
+    assert (n/d).subs(t, 1) == zoo
+    assert (-n/-d).subs(t, 1) == zoo
