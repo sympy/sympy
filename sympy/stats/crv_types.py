@@ -312,7 +312,7 @@ def Beta(name, alpha, beta):
     ========
 
     >>> from sympy.stats import Beta, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, simplify, pprint, expand_func
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -323,11 +323,11 @@ def Beta(name, alpha, beta):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
      alpha - 1         beta - 1
-    z         *(-z + 1)        *gamma(alpha + beta)
-    -----------------------------------------------
-                gamma(alpha)*gamma(beta)
+    z         *(-z + 1)
+    ---------------------------
+         beta(alpha, beta)
 
-    >>> simplify(E(X, meijerg=True))
+    >>> expand_func(simplify(E(X, meijerg=True)))
     alpha/(alpha + beta)
 
     >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
@@ -393,9 +393,9 @@ def BetaPrime(name, alpha, beta):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
      alpha - 1        -alpha - beta
-    z         *(z + 1)             *gamma(alpha + beta)
-    ---------------------------------------------------
-                  gamma(alpha)*gamma(beta)
+    z         *(z + 1)
+    -------------------------------
+           beta(alpha, beta)
 
     References
     ==========
@@ -915,13 +915,12 @@ def FDistribution(name, d1, d2):
     >>> pprint(D, use_unicode=False)
       d2
       --    ______________________________
-      2    /       d1            -d1 - d2       /d1   d2\
-    d2  *\/  (d1*z)  *(d1*z + d2)         *gamma|-- + --|
-                                                \2    2 /
-    -----------------------------------------------------
-                           /d1\      /d2\
-                    z*gamma|--|*gamma|--|
-                           \2 /      \2 /
+      2    /       d1            -d1 - d2
+    d2  *\/  (d1*z)  *(d1*z + d2)
+    --------------------------------------
+                      /d1  d2\
+                z*beta|--, --|
+                      \2   2 /
 
     References
     ==========
@@ -984,13 +983,12 @@ def FisherZ(name, d1, d2):
                                 d1   d2
         d1   d2               - -- - --
         --   --                 2    2
-        2    2  /    2*z     \           d1*z      /d1   d2\
-    2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --|
-                                                   \2    2 /
-    --------------------------------------------------------
-                           /d1\      /d2\
-                      gamma|--|*gamma|--|
-                           \2 /      \2 /
+        2    2  /    2*z     \           d1*z
+    2*d1  *d2  *\d1*e    + d2/         *e
+    -----------------------------------------
+                       /d1  d2\
+                   beta|--, --|
+                       \2   2 /
 
     References
     ==========
@@ -2036,17 +2034,17 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-              nu   1
-            - -- - -
-              2    2
-    /     2\
-    |    z |              /nu   1\
-    |1 + --|        *gamma|-- + -|
-    \    nu/              \2    2/
-    ------------------------------
-         ____   ____      /nu\
-       \/ pi *\/ nu *gamma|--|
-                          \2 /
+                nu   1
+              - -- - -
+                2    2
+      /     2\
+      |    z |
+      |1 + --|
+      \    nu/
+    --------------------
+      ____     /     nu\
+    \/ nu *beta|1/2, --|
+               \     2 /
 
     References
     ==========
