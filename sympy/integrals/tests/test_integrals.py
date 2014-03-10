@@ -716,6 +716,8 @@ def test_series():
 
 
 def test_issue_4403():
+    x = Symbol('x')
+    y = Symbol('y')
     z = Symbol('z', positive=True)
     assert integrate(sqrt(x**2 + z**2), x) == \
         z**2*asinh(x/z)/2 + x*sqrt(x**2 + z**2)/2
