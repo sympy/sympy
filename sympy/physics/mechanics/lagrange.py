@@ -358,4 +358,3 @@ class LagrangesMethod(object):
             self._rhs = (self.mass_matrix_full.inv(inv_method,
                          try_block_diag=True) * self.forcing_full)
         return self._rhs
-
