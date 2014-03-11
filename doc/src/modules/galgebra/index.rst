@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   ga.rst
+   GA.rst
    manifold.rst
    vector.rst
    precedence.rst
