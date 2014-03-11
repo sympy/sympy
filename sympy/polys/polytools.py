@@ -4229,6 +4229,18 @@ def degree(f, *gens, **args):
     >>> degree(0, x)
     -oo
 
+    Enhancement
+    ===========
+
+    The degree is calculated by traversing through the
+    argument list recursively and hence improve the speed
+    of operation for higher exponents of functions.
+
+    >>> degree((x+1)**10000)
+    10000
+    >>> degree(((x**2+y**3+4)**11111+1)**3, y)
+    99999
+
     """
     options.allowed_flags(args, ['gen', 'polys'])
 
