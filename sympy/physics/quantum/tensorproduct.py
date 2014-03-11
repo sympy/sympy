@@ -106,10 +106,10 @@ class TensorProduct(Expr):
         if len(new_args) == 0:
             return c_part
         elif len(new_args) == 1:
-            return c_part*new_args[0]
+            return c_part * new_args[0]
         else:
             tp = Expr.__new__(cls, *new_args)
-            return c_part*tp
+            return c_part * tp
 
     @classmethod
     def flatten(cls, args):
@@ -127,7 +127,7 @@ class TensorProduct(Expr):
 
     def _eval_rewrite(self, pattern, rule, **hints):
         sargs = self.args
-        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs]
+        terms = [t._eval_rewrite(pattern, rule, **hints) for t in sargs]
         return TensorProduct(*terms).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):
@@ -170,7 +170,7 @@ class TensorProduct(Expr):
                 return label if nlabels == 1 else r"\left\{%s\right\}" % label
 
             s = r", ".join([_label_wrap(arg._print_label_latex(printer, *args),
-                                  len(arg.args)) for arg in self.args])
+                                        len(arg.args)) for arg in self.args])
 
             return r"{%s%s%s}" % (self.args[0].lbracket_latex, s,
                                   self.args[0].rbracket_latex)
@@ -219,7 +219,7 @@ class TensorProduct(Expr):
             return Mul(*[Tr(arg).doit() for arg in exp.args])
         else:
             return Mul(*[Tr(value).doit() if idx in indices else value
-                        for idx, value in enumerate(exp.args)])
+                         for idx, value in enumerate(exp.args)])
 
 
 def tensor_product_simp_Mul(e):
@@ -287,13 +287,14 @@ def tensor_product_simp_Mul(e):
                         (current, next)
                     )
                 for i in range(len(new_args)):
-                    new_args[i] = new_args[i]*next.args[i]
+                    new_args[i] = new_args[i] * next.args[i]
             else:
-                # this won't quite work as we don't want next in the TensorProduct
+                # this won't quite work as we don't want next in the
+                # TensorProduct
                 for i in range(len(new_args)):
-                    new_args[i] = new_args[i]*next
+                    new_args[i] = new_args[i] * next
             current = next
-        return Mul(*c_part)*TensorProduct(*new_args)
+        return Mul(*c_part) * TensorProduct(*new_args)
     else:
         return e
 
@@ -335,7 +336,7 @@ def tensor_product_simp(e, **hints):
     if isinstance(e, Add):
         return Add(*[tensor_product_simp(arg) for arg in e.args])
     elif isinstance(e, Pow):
-        return tensor_product_simp(e.base)**e.exp
+        return tensor_product_simp(e.base) ** e.exp
     elif isinstance(e, Mul):
         return tensor_product_simp_Mul(e)
     elif isinstance(e, Commutator):
