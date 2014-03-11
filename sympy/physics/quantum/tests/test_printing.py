@@ -786,7 +786,7 @@ def test_tensorproduct():
     assert pretty(tp) == '|1,1>x |1,0>'
     assert upretty(tp) == u('❘1,1⟩⨂ ❘1,0⟩')
     assert latex(tp) == \
-        r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
+        r'{\left|\left\{1,1\right\}, \left\{1,0\right\}\right\rangle }'
     sT(tp, "TensorProduct(JzKet(Integer(1),Integer(1)), JzKet(Integer(1),Integer(0)))")
 
 
