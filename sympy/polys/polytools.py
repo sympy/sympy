@@ -4212,6 +4212,7 @@ def _update_args(args, key, value):
 def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
+    This function is implemented recursively.
 
     The degree of 0 is negative infinity.
 
@@ -4231,47 +4232,43 @@ def degree(f, *gens, **args):
     """
     options.allowed_flags(args, ['gen', 'polys'])
 
-    try:
-        if f == 0:
-            return -(S.Infinity)
-        elif isinstance(f, int):
-            F, opt = poly_from_expr(f, *gens, **args)
-            return 0
-        elif f.is_number:
-            return 0
-        else:
-            func = f.atoms(Symbol).pop()
+    if f == S.Zero:
+        return S.NegativeInfinity
+    elif isinstance(f, int) or f.is_number:
+        try:
+            poly_from_expr(f, *gens, **args)
+        except PolificationFailed as exc:
+            raise ComputationFailed('degree', 1, exc)
+        return S.Zero
+    elif isinstance(f, Poly):
+        func = f.gens[0]
+    else:
+        func = f.atoms(Symbol).pop()
 
-        if gens is not None:
-            for arg in gens:
-                func = arg
-                if len(gens) > 1:
-                    break
-        if args is not None:
-            for key, value in args.items():
-                func = value
-                if len(args) > 1:
-                    break
-
-        if f == func:
-            return 1
-        elif f.has(func):
-            if isinstance(f, Pow):
-                order = 1
-                if f.args[0].has(func):
-                    order = max(degree(arg, func) for arg in f.args)
-                if f.args[1].has(func):
-                    order = max(order, f.args[1].coeff(func))
-                    return order
-                return order * f.args[1]
-            else:
-                order = 0
+    if gens is not None:
+        for arg in gens:
+            func = arg
+            if len(gens) > S.One:
+                break
+    if args is not None:
+        for key, value in args.items():
+            func = value
+            if len(args) > S.One:
+                break
+    if f == func:
+        return S.One
+    elif f.has(func):
+        if isinstance(f, Pow):
+            order = S.One
+            if f.args[0].has(func):
                 order = max(degree(arg, func) for arg in f.args)
-                return order
+            elif f.args[1].has(func):
+                return max(order, f.args[1].coeff(func))
+            return order * f.args[1]
         else:
-            return 0
-    except PolificationFailed as exc:
-        raise ComputationFailed('degree', 1, exc)
+            return max(degree(arg, func) for arg in f.args)
+    else:
+        return S.Zero
 
 @public
 def degree_list(f, *gens, **args):
