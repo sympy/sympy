@@ -161,6 +161,7 @@ class Plot(object):
         self.legend = False
         self.autoscale = True
         self.margin = 0
+        self.widget = None
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -968,6 +969,39 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
             self.ax.set_ylabel(parent.ylabel, position=(0, 1))
+
+        # for widget span-selector
+        if parent.widget=='span_selector':            
+            self.ax.change_geometry(2,1,1)
+            self.ax2 = self.fig.add_subplot(212, axisbg='#FFFFCC')
+            self.ax2.spines['bottom'].set_position('zero')
+            for s in self.parent._series:                
+                    if s.is_2Dline:
+                        collection = self.LineCollection(s.get_segments())
+                        self.ax2.add_collection(collection)
+
+
+            def onselect(xmin, xmax):
+                max_y=float('-inf')
+                min_y=float('inf')              
+                self.ax2.set_xlim(xmin,xmax)
+                for s in self.parent._series:                
+                    if s.is_2Dline:                        
+                        segments=s.get_segments()
+                        for segment in segments:
+                            if(xmin<=segment[0][0]<=xmax):
+                                max_y=max(max_y,segment[0][1])
+                                min_y=min(min_y,segment[0][1])
+
+                            if(segment[1][0]>=xmin and segment[1][0]<=xmax):
+                                max_y=max(max_y,segment[1][1])
+                                min_y=min(min_y,segment[1][1])
+
+                        
+                self.ax2.set_ylim(min_y,max_y)
+                self.fig.canvas.draw()
+
+            self.span = self.matplotlib.widgets.SpanSelector(self.ax, onselect, 'horizontal', useblit=True,rectprops=dict(alpha=0.5, facecolor='red') )
 
     def show(self):
         self.process_series()
