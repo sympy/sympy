@@ -270,6 +270,9 @@ def test_numpy_matrix():
     f_mat = lambdify((x, y, z), A)
     numpy.testing.assert_allclose(f_mat(1, 2, 3), sol_mat)
     numpy.testing.assert_allclose(f_arr(1, 2, 3), sol_arr)
+    #Check that the types are arrays and matrices
+    assert isinstance(f_mat, numpy.matrix)
+    assert isinstance(f_arr, numpy.ndarray)
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
