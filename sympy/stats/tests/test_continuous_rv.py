@@ -15,7 +15,7 @@ from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor)
+                   floor, expand_func)
 
 
 from sympy.stats.crv_types import NormalDistribution
@@ -194,17 +194,16 @@ def test_beta():
     # Full symbolic solution is too much, test with numeric version
     a, b = 1, 2
     B = Beta('x', a, b)
-    assert E(B) == a / S(a + b)
-    assert variance(B) == (a*b) / S((a + b)**2 * (a + b + 1))
+    assert expand_func(E(B)) == a / S(a + b)
+    assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
 
 
 def test_betaprime():
     alpha = Symbol("alpha", positive=True)
-    beta = Symbol("beta", positive=True)
+    betap = Symbol("beta", positive=True)
 
-    X = BetaPrime('x', alpha, beta)
-    assert density(X)(x) == (x**(alpha - 1)*(x + 1)**(-alpha - beta)
-                          *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    X = BetaPrime('x', alpha, betap)
+    assert density(X)(x) == x**(alpha - 1)*(x + 1)**(-alpha - betap)/beta(alpha, betap)
 
 
 def test_cauchy():
@@ -271,17 +270,16 @@ def test_f_distribution():
     d2 = Symbol("d2", positive=True)
 
     X = FDistribution("x", d1, d2)
-    assert density(X)(x) == (d2**(d2/2)*sqrt((x*d1)**d1 *
-        (x*d1 + d2)**(-d1 - d2))*gamma(d1/2 + d2/2)/(x*gamma(d1/2)*gamma(d2/2)))
+    assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
+                             /(x*beta(d1/2, d2/2)))
 
 def test_fisher_z():
     d1 = Symbol("d1", positive=True)
     d2 = Symbol("d2", positive=True)
 
     X = FisherZ("x", d1, d2)
-    assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*
-            (d1*exp(2*x) + d2)**(-d1/2 - d2/2)*
-             exp(x*d1)*gamma(d1/2 + d2/2)/(gamma(d1/2)*gamma(d2/2)))
+    assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*(d1*exp(2*x) + d2)
+                             **(-d1/2 - d2/2)*exp(d1*x)/beta(d1/2, d2/2))
 
 def test_frechet():
     a = Symbol("a", positive=True)
@@ -436,8 +434,7 @@ def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
-    assert density(X)(x) == ((x**2/nu + 1)**(-nu/2 - S.Half)
-                        *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
 
 
 @XFAIL
@@ -476,7 +473,7 @@ def test_uniform():
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
 
-@XFAIL
+
 def test_uniform_P():
     """ This stopped working because SingleContinuousPSpace.compute_density no
     longer calls integrate on a DiracDelta but rather just solves directly.
