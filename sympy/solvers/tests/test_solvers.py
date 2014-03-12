@@ -640,6 +640,13 @@ def test_issue_1572_1364_1368():
     assert solve(atan(x) - 1) == [tan(1)]
 
 
+def test_issue2014():
+    assert solve((x+5*y-2, -3*x+6*y-15), x, y) == {x: -3, y: 1}
+    assert solve([x+5*y-2, -3*x+6*y-15], x, y) == {x: -3, y: 1}
+    assert solve(set((x+5*y-2, -3*x+6*y-15)), x, y) == {x: -3, y: 1}
+    assert solve(frozenset((x+5*y-2, -3*x+6*y-15)), x, y) == {x: -3, y: 1}
+
+
 def test_issue_2033():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
