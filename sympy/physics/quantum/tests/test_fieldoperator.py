@@ -1,5 +1,9 @@
-from sympy.physics.quantum import Dagger, Commutator, AntiCommutator
+from sympy import sqrt, exp, S, prod
+from sympy.physics.quantum import Dagger, Commutator, AntiCommutator, qapply
 from sympy.physics.quantum.fieldoperator import BosonOperator, FermionOperator
+from sympy.physics.quantum.fieldoperator import (
+    BosonFockKet, BosonFockBra, BosonCoherentKet, BosonCoherentBra,
+    FermionFockKet, FermionFockBra)
 from sympy.physics.quantum.fieldoperator import (normal_order,
                                                  normal_ordered_form)
 
@@ -23,6 +27,26 @@ def test_bosonoperator():
     assert Commutator(a, Dagger(b)).doit() == a * Dagger(b) - Dagger(b) * a
 
 
+def test_boson_states():
+    a = BosonOperator("a")
+
+    # Fock states
+    n = 3
+    assert (BosonFockBra(0) * BosonFockKet(1)).doit() == 0
+    assert (BosonFockBra(1) * BosonFockKet(1)).doit() == 1
+    assert qapply(BosonFockBra(n) * Dagger(a)**n * BosonFockKet(0)) \
+        == sqrt(prod(range(1, n+1)))
+
+    # Coherent states
+    alpha1, alpha2 = 1.2, 4.3
+    assert (BosonCoherentBra(alpha1) * BosonCoherentKet(alpha1)).doit() == 1
+    assert (BosonCoherentBra(alpha2) * BosonCoherentKet(alpha2)).doit() == 1
+    assert abs((BosonCoherentBra(alpha1) * BosonCoherentKet(alpha2)).doit() -
+               exp(-S(1) / 2 * (alpha1 - alpha2) ** 2)) < 1e-12
+    assert qapply(a * BosonCoherentKet(alpha1)) == \
+        alpha1 * BosonCoherentKet(alpha1)
+
+
 def test_fermionoperator():
     c = FermionOperator('c')
     d = FermionOperator('d')
@@ -40,6 +64,20 @@ def test_fermionoperator():
     assert AntiCommutator(c, Dagger(c)).doit() == 1
 
     assert AntiCommutator(c, Dagger(d)).doit() == c * Dagger(d) + Dagger(d) * c
+
+
+def test_fermion_states():
+    c = FermionOperator("c")
+
+    # Fock states
+    assert (FermionFockBra(0) * FermionFockKet(1)).doit() == 0
+    assert (FermionFockBra(1) * FermionFockKet(1)).doit() == 1
+
+    assert qapply(c * FermionFockKet(1)) == FermionFockKet(0)
+    assert qapply(c * FermionFockKet(0)) == 0
+
+    assert qapply(Dagger(c) * FermionFockKet(0)) == FermionFockKet(1)
+    assert qapply(Dagger(c) * FermionFockKet(1)) == 0
 
 
 def test_normal_order():
