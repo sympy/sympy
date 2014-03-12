@@ -106,3 +106,5 @@ Ntheory Functions Reference
 .. autofunction:: legendre_symbol
 
 .. autofunction:: jacobi_symbol
+
+.. autofunction:: mobius
