@@ -165,7 +165,7 @@ class sin(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
+    .. [1] http://planetmath.org/DefinitionsInTrigonometry
 
     """
 
@@ -394,7 +394,7 @@ class cos(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
+    .. [1] http://planetmath.org/DefinitionsInTrigonometry
 
     """
 
@@ -893,7 +893,7 @@ class tan(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
+    .. [1] http://planetmath.org/DefinitionsInTrigonometry
 
     """
 

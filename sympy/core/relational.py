@@ -505,7 +505,7 @@ class GreaterThan(_Greater):
     .. [1] This implementation detail is that Python provides no reliable
        method to determine that a chained inequality is being built.  Chained
        comparison operators are evaluated pairwise, using "and" logic (see
-       http://docs.python.org/reference/expressions.html#notin).  This is done
+       http://docs.python.org/2/reference/expressions.html#notin).  This is done
        in an efficient way, so that each object being compared is only
        evaluated once and the comparison can short-circuit.  For example, ``1
        > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2 > 3)``.  The
