@@ -246,7 +246,7 @@ def test_RootSum___new__():
     assert RootSum(f**2, g) == 2*RootSum(f, g)
     assert RootSum((x - 7)*f**3, g) == log(7*x) + 3*RootSum(f, g)
 
-    # Issue 2472
+    # issue 5571
     assert hash(RootSum((x - 7)*f**3, g)) == hash(log(7*x) + 3*RootSum(f, g))
 
     raises(MultivariatePolynomialError, lambda: RootSum(x**3 + x + y))

@@ -230,12 +230,12 @@ class GA_Printer(StrPrinter):
         GA_Printer._off()
 
     @staticmethod
-    @deprecated(useinstead="with GA_Printer()", issue=4042, deprecated_since_version="0.7.4")
+    @deprecated(useinstead="with GA_Printer()", issue=7141, deprecated_since_version="0.7.4")
     def on():
         GA_Printer._on()
 
     @staticmethod
-    @deprecated(useinstead="with GA_Printer()", issue=4042, deprecated_since_version="0.7.4")
+    @deprecated(useinstead="with GA_Printer()", issue=7141, deprecated_since_version="0.7.4")
     def off():
         GA_Printer._off()
 
@@ -408,7 +408,7 @@ class GA_LatexPrinter(LatexPrinter):
             else:
                 if expr.is_commutative and expr.exp == -1:
                     """
-                    solves issue 1030
+                    solves issue 4129
                     As Mul always simplify 1/x to x**-1
                     The objective is achieved with this hack
                     first we get the latex for -1 * expr,

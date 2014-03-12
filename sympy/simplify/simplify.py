@@ -150,7 +150,7 @@ def separate(expr, deep=False, force=False):
     """
     from sympy.utilities.exceptions import SymPyDeprecationWarning
     SymPyDeprecationWarning(
-        feature="separate()", useinstead="expand_power_base()", issue=3383,
+        feature="separate()", useinstead="expand_power_base()", issue=6482,
         deprecated_since_version="0.7.2", value="Note: in separate() deep "
         "defaults to False, whereas in expand_power_base(), "
         "deep defaults to True.",
@@ -3683,7 +3683,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     expr = bottom_up(expr, lambda w: w.normal())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
-    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 3730
+    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
     expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
 
     if ratio is S.Infinity:

@@ -243,14 +243,13 @@ def test_as_real_imag():
     # this should not hang
     assert n.as_real_imag() == (n, 0)
 
-    # issue 3162
+    # issue 6261
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
         ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
      (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
 
-
-    # issue 754
+    # issue 3853
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (
@@ -499,19 +498,19 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
-def test_issue936():
+def test_issue_4035():
     x = Symbol('x')
     assert Abs(x).expand(trig=True) == Abs(x)
     assert sign(x).expand(trig=True) == sign(x)
     assert arg(x).expand(trig=True) == arg(x)
 
 
-def test_issue3206():
+def test_issue_3206():
     x = Symbol('x')
     assert Abs(Abs(x)) == Abs(x)
 
 
-def test_issue1655_derivative_conjugate():
+def test_issue_4754_derivative_conjugate():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')
@@ -596,7 +595,7 @@ def test_principal_branch():
 
 
 @XFAIL
-def test_issue_3068_3052():
+def test_issue_6167_6151():
     n = pi**1000
     i = int(n)
     assert sign(n - i) == 1

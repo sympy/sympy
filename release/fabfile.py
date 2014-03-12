@@ -336,7 +336,7 @@ def show_files(file, print_=True):
     Note, this runs locally, not in vagrant.
     """
     # TODO: Test the unarchived name. See
-    # https://code.google.com/p/sympy/issues/detail?id=3988.
+    # https://github.com/sympy/sympy/issues/7087.
     if file == 'source':
         ret = local("tar tf release/{source}".format(**tarball_formatter()), capture=True)
     elif file == 'win':
@@ -397,7 +397,7 @@ git_whitelist = {
     'build.py',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferrably doctested.  See also
-    # https://code.google.com/p/sympy/issues/detail?id=2940.
+    # https://github.com/sympy/sympy/issues/6039.
     'examples/advanced/identitysearch_example.ipynb',
     'examples/beginner/plot_advanced.ipynb',
     'examples/beginner/plot_colors.ipynb',
@@ -645,7 +645,7 @@ def get_tarball_name(file):
         name = "sympy-docs-{type}-{version}"
         if file == 'html-nozip':
             # zip files keep the name of the original zipped directory. See
-            # https://code.google.com/p/sympy/issues/detail?id=3988.
+            # https://github.com/sympy/sympy/issues/7087.
             file = 'html'
         else:
             name += ".{extension}"

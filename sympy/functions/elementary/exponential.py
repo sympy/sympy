@@ -530,7 +530,7 @@ class log(Function):
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        #don't autoexpand Pow or Mul (see the issue 252):
+        #don't autoexpand Pow or Mul (see the issue 3351):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 

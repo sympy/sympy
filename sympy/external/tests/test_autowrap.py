@@ -131,7 +131,7 @@ def test_ufuncify_f95_f2py():
 
 # Cython
 
-# See issue 3008.  This XFAIL can be removed if we can accurately determine the
+# See issue 6107.  This XFAIL can be removed if we can accurately determine the
 # correct minimum Cython version required.
 @XFAIL
 def test_wrap_twice_c_cython():

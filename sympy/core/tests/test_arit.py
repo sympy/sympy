@@ -411,7 +411,7 @@ def test_Mul_is_even_odd():
     assert (k*m*x).is_even is True
     assert (k*m*x).is_odd is False
 
-    # issue 3692:
+    # issue 6791:
     assert (x/2).is_integer is None
     assert (k/2).is_integer is False
     assert (m/2).is_integer is True
@@ -1139,7 +1139,7 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_imaginary is False
     assert (r*i*ii).is_real is True
 
-    # Github's issue 2775:
+    # Github's issue 5874:
     nr = Symbol('nr', real=False)
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
@@ -1187,7 +1187,7 @@ def test_Add_is_irrational():
 
 
 @XFAIL
-def test_issue432():
+def test_issue_3531():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):
             return "something"
@@ -1197,7 +1197,7 @@ def test_issue432():
     assert sympify(1)/MightyNumeric((1, 2)) == "something"
 
 
-def test_issue432b():
+def test_issue_3531b():
     class Foo:
         def __init__(self):
             self.field = 1.0
@@ -1236,7 +1236,7 @@ def test_suppressed_evaluation():
 
 
 def test_Add_as_coeff_mul():
-    # Issue 2425.  These should all be (1, self)
+    # issue 5524.  These should all be (1, self)
     assert (x + 1).as_coeff_mul() == (1, (x + 1,))
     assert (x + 2).as_coeff_mul() == (1, (x + 2,))
     assert (x + 3).as_coeff_mul() == (1, (x + 3,))
@@ -1260,7 +1260,7 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
 
-def test_issue415():
+def test_issue_3514():
     assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
     assert S(1)/2*sqrt(6)*sqrt(2) == sqrt(3)
     assert sqrt(6)/2*sqrt(2) == sqrt(3)
@@ -1281,7 +1281,7 @@ def test_make_args():
     assert Mul.make_args((x + y)**z) == ((x + y)**z,)
 
 
-def test_issue2027():
+def test_issue_5126():
     assert (-2)**x*(-3)**x != 6**x
     i = Symbol('i', integer=1)
     assert (-2)**i*(-3)**i == 6**i
@@ -1338,7 +1338,7 @@ def test_Pow_as_content_primitive():
     assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
 
 
-def test_issue2361():
+def test_issue_5460():
     u = Mul(2, (1 + x), evaluate=False)
     assert (2 + u).args == (2, u)
 
@@ -1350,7 +1350,7 @@ def test_product_irrational():
     assert (I*pi).is_positive is False
 
 
-def test_issue_2820():
+def test_issue_5919():
     assert (x/(y*(1 + y))).expand() == x/(y**2 + y)
 
 
@@ -1445,7 +1445,7 @@ def test_Mod():
     assert Mod(4*i, 4) == 0
 
 
-def test_issue_2902():
+def test_issue_6001():
     A = Symbol("A", commutative=False)
     eq = A + A**2
     # it doesn't matter whether it's True or False; they should
@@ -1483,7 +1483,7 @@ def test_polar():
     assert ((p*q)**x).expand() == p**x * q**x
 
 
-def test_issue_2941():
+def test_issue_6040():
     a, b = Pow(1, 2, evaluate=False), S.One
     assert a != b
     assert b != a
@@ -1491,11 +1491,11 @@ def test_issue_2941():
     assert not (b == a)
 
 
-def test_issue_2983():
+def test_issue_6082():
     assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
 
 
-def test_issue_2978():
+def test_issue_6077():
     assert x**2.0/x == x**1.0
     assert x/x**2.0 == x**-1.0
     assert x*x**2.0 == x**3.0
@@ -1526,18 +1526,18 @@ def test_add_flatten():
     assert (1/a).simplify() == (1/b).simplify() == 0
 
 
-def test_issue_2061_2988_2990_2991():
-    #2988
+def test_issue_5160_6087_6089_6090():
+    # issue 6087
     assert ((-2*x*y**y)**3.2).n(2) == (2**3.2*(-x*y**y)**3.2).n(2)
-    #2990
+    # issue 6089
     A, B, C = symbols('A,B,C', commutative=False)
     assert (2.*B*C)**3 == 8.0*(B*C)**3
     assert (-2.*B*C)**3 == -8.0*(B*C)**3
     assert (-2*B*C)**2 == 4*(B*C)**2
-    #2061
+    # issue 5160
     assert sqrt(-1.0*x) == 1.0*sqrt(-x)
     assert sqrt(1.0*x) == 1.0*sqrt(x)
-    #2991
+    # issue 6090
     assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
 
 
@@ -1577,7 +1577,7 @@ def test_float_int():
     assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == \
         12345678901234567891
 
-def test_issue_3512a():
+def test_issue_6611a():
     assert Mul.flatten([3**Rational(1, 3),
         Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
         ([Rational(1, 3), (-1)**Rational(2, 3)], [], None)

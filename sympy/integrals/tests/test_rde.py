@@ -72,7 +72,7 @@ def test_special_denom():
         (Poly(1, t), Poly(t**2 - 1, t), Poly(t**2 - 1, t), Poly(t, t))
     # assert special_denom(Poly(1, t), Poly(2*x, t), Poly((1 + 2*x)*t, t), DE) == 1
 
-    # Issue 841
+    # issue 3940
     # Note, this isn't a very good test, because the denominator is just 1,
     # but at least it tests the exp cancellation case
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-2*x*t0, t0),

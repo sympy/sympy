@@ -33,13 +33,13 @@ def run_with_timeout(test, time):
 
 @SKIP("Too slow for @slow")
 @XFAIL
-def test_issue_781():
+def test_issue_3880():
     # integrate_hyperexponential(Poly(t*2*(1 - t0**2)*t0*(x**3 + x**2), t), Poly((1 + t0**2)**2*2*(x**2 + x + 1), t), [Poly(1, x), Poly(1 + t0**2, t0), Poly(t, t)], [x, t0, t], [exp, tan])
     assert not integrate(exp(x)*cos(2*x)*sin(2*x) * (x**3 + x**2)/(2*(x**2 + x + 1)), x).has(Integral)
 
 
 @XFAIL
-def test_issue_1113():
+def test_issue_4212():
     assert not integrate(sign(x), x).has(Integral)
 
 
@@ -49,23 +49,23 @@ def test_issue_1135():
 
 
 @XFAIL
-def test_issue_1227():
+def test_issue_4326():
     assert integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(Integral)
 
 
 @XFAIL
-def test_issue_1392():
+def test_issue_4491():
     assert not integrate(x*sqrt(x**2 + 2*x + 4), x).has(Integral)
 
 
 @XFAIL
-def test_issue_1393():
+def test_issue_4492():
     assert not integrate(x**2 * sqrt(5 - x**2), x).has(Integral)
 
 
 @XFAIL
 @slow
-def test_issue_1412():
+def test_issue_4511():
     # This works, but gives a complicated answer.  The correct answer is x - cos(x).
     # The last one is what Maple gives.  It is also quite slow.
     assert integrate(cos(x)**2 / (1 - sin(x))) in [x - cos(x), 1 - cos(x) + x,
@@ -73,20 +73,20 @@ def test_issue_1412():
 
 
 @XFAIL
-def test_issue_1415():
+def test_issue_4514():
     # The correct answer is 2*sin(x)
     assert not integrate(sin(2*x)/ sin(x)).has(Integral)
 
 
 @XFAIL
-def test_issue_1426():
+def test_issue_4525():
     # Warning: takes a long time
     assert not integrate((x**m * (1 - x)**n * (a + b*x + c*x**2))/(1 + x**2), (x, 0, 1)).has(Integral)
 
 
 @XFAIL
 @slow
-def test_issue_1441():
+def test_issue_4540():
     # Note, this integral is probably nonelementary
     assert not integrate(
         (sin(1/x) - x*exp(x)) /
@@ -94,12 +94,12 @@ def test_issue_1441():
 
 
 @XFAIL
-def test_issue_1452():
+def test_issue_4551():
     assert integrate(1/(x*sqrt(1 - x**2)), x).has(Integral)
 
 
 @XFAIL
-def test_issue_1638a():
+def test_issue_4737a():
     # Implementation of Si()
     assert integrate(sin(x)/x, x).has(Integral)
 
@@ -111,7 +111,7 @@ def test_issue_1638b():
 
 @XFAIL
 @slow
-def test_issue_1792():
+def test_issue_4891():
     # Requires the hypergeometric function.
     assert not integrate(cos(x)**y, x).has(Integral)
 
@@ -122,41 +122,41 @@ def test_issue_1796a():
 
 
 @XFAIL
-def test_issue_1796b():
+def test_issue_4895b():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), (x, -oo, 0)).has(Integral)
 
 
 @XFAIL
-def test_issue_1796c():
+def test_issue_4895c():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), (x, -oo, oo)).has(Integral)
 
 
 @XFAIL
-def test_issue_1796d():
+def test_issue_4895d():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), (x, 0, oo)).has(Integral)
 
 
 @XFAIL
 @slow
-def test_issue_1842():
+def test_issue_4941():
     assert not integrate(sqrt(1 + sinh(x/20)**2), (x, -25, 25)).has(Integral)
 
 
 @XFAIL
 @slow
-def test_issue_1851():
+def test_issue_4950():
     # Problem is with exception
     assert not integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x).has(Integral)
 
 
 @XFAIL
 @slow
-def test_issue_1869():
+def test_issue_4968():
     assert not integrate(sin(log(x**2))).has(Integral)
 
 
 @XFAIL
 @slow
-def test_issue_1893():
+def test_issue_4992():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)

@@ -265,11 +265,11 @@ def test_solve_nonlinear():
     assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
 
-def test_issue_4129():
+def test_issue_7228():
     assert solve(4**(2*(x**2) + 2*x) - 8, x) == [-Rational(3, 2), S.Half]
 
 
-def test_issue_4091():
+def test_issue_7190():
     assert solve(log(x-3) + log(x+3), x) == [sqrt(10)]
 
 
@@ -366,25 +366,25 @@ def test_tsolve():
 
     assert solve(z*cos(x), x) == [pi/2, 3*pi/2]
 
-    # issue #1409
+    # issue 4508
     assert solve(y - b*x/(a + x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]
     assert solve(y - b*exp(a/x), x) == [a/log(y/b)]
-    # issue #1408
+    # issue 4507
     assert solve(y - b/(1 + a*x), x) in [[(b - y)/(a*y)], [-((y - b)/(a*y))]]
-    # issue #1407
+    # issue 4506
     assert solve(y - a*x**b, x) == [(y/a)**(1/b)]
-    # issue #1406
+    # issue 4505
     assert solve(z**x - y, x) == [log(y)/log(z)]
-    # issue #1405
+    # issue 4504
     assert solve(2**x - 10, x) == [log(10)/log(2)]
-    # issue #3645
+    # issue 6744
     assert solve(x*y) == [{x: 0}, {y: 0}]
     assert solve([x*y]) == [{x: 0}, {y: 0}]
     assert solve(x**y - 1) == [{x: 1}, {y: 0}]
     assert solve([x**y - 1]) == [{x: 1}, {y: 0}]
     assert solve(x*y*(x**2 - y**2)) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
     assert solve([x*y*(x**2 - y**2)]) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
-    #issue #1640
+    #issue 4739
     assert solve(exp(log(5)*x) - 2**x, x) == [0]
 
     # misc
@@ -439,14 +439,14 @@ def test_solve_for_functions_derivatives():
             x: (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
 
-def test_issue626():
+def test_issue_3725():
     f = Function('f')
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
     assert solve(e, f(x).diff(x)) in [[(2 - x)/f(x)], [-((x - 2)/f(x))]]
 
 
-def test_issue771():
+def test_issue_3870():
     a, b, c, d = symbols('a b c d')
     A = Matrix(2, 2, [a, b, c, d])
     B = Matrix(2, 2, [0, 2, -3, 0])
@@ -507,11 +507,11 @@ def test_solve_inequalities():
     assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
-    # issue 3528, 3448
+    # issue 6627, 3448
     assert solve((x - 3)/(x - 2) < 0, x, assume=Q.real(x)) == And(Lt(2, x), Lt(x, 3))
     assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == Lt(x, -1)
 
-def test_issue_1694():
+def test_issue_4793():
     assert solve(1/x) == []
     assert solve(x*(1 - 5/x)) == [5]
     assert solve(x + sqrt(x) - 2) == [1]
@@ -537,20 +537,20 @@ def test_issue_1694():
 
 
 def test_PR1964():
-    # 2072
+    # issue 5171
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
     assert solve(sqrt(x - 1)) == [1]
-    # 1363
+    # issue 4462
     a = Symbol('a')
     assert solve(-3*a/sqrt(x), x) == []
-    # 1387
+    # issue 4486
     assert solve(2*x/(x + 2) - 1, x) == [2]
-    # 1397
+    # issue 4496
     assert set(solve((x**2/(7 - x)).diff(x))) == set([S(0), S(14)])
-    # 1596
+    # issue 4695
     f = Function('f')
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
-    # 1398
+    # issue 4497
     assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
 
     assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
@@ -580,7 +580,7 @@ def test_PR1964():
     assert solve((1/p + 1)**(p + 1)) == []
 
 
-def test_issue_2098():
+def test_issue_5197():
     x = Symbol('x', real=True)
     assert solve(x**2 + 1, x) == []
     n = Symbol('n', integer=True, positive=True)
@@ -609,7 +609,7 @@ def test_checking():
     assert solve(1/(1/x + 2)) == []
 
 
-def test_issue_1572_1364_1368():
+def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
     assert set(solve((2**exp(y**2/x) + 2)/(x**2 + 15), y)) == set([
@@ -640,7 +640,7 @@ def test_issue_1572_1364_1368():
     assert solve(atan(x) - 1) == [tan(1)]
 
 
-def test_issue_2033():
+def test_issue_5132():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
         set([
@@ -692,7 +692,7 @@ def test_issue_2033():
         set([(S(1), S(3)), (S(3), S(1))])
 
 
-def test_issue_2236():
+def test_issue_5335():
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
            a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
@@ -702,7 +702,7 @@ def test_issue_2236():
     assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
 
 
-def test_issue_2236_float():
+def test_issue_5335_float():
     skip("This test hangs.")
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
@@ -713,7 +713,7 @@ def test_issue_2236_float():
         solve(eqs, sym, rational=False, check=False, simplify=False)) == 2
 
 
-def test_issue_2668():
+def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
         set([(-sqrt(-y - 4),), (sqrt(-y - 4),)])
 
@@ -732,7 +732,7 @@ def test_unrad():
     s = symbols('s', cls=Dummy)
 
     # checkers to deal with possibility of answer coming
-    # back with a sign change (cf issue 2104)
+    # back with a sign change (cf issue 5203)
     def check(rv, ans):
         rv, ans = list(rv), list(ans)
         rv[0] = rv[0].expand()
@@ -896,7 +896,7 @@ def test_unrad_slow():
                 sqrt(1 - x) - sqrt(2 + x))
     assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
     # the fence optimization problem
-    # http://code.google.com/p/sympy/issues/detail?id=1694#c159
+    # https://github.com/sympy/sympy/issues/4793#issuecomment-36994519
     F = Symbol('F')
     eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
     X = solve(eq, x, hint='minimal')[0]
@@ -920,7 +920,7 @@ def test__invert():
     assert _invert(a, x) == (a, 0)
 
 
-def test_issue_1364():
+def test_issue_4463():
     assert solve(-a*x + 2*x*log(x), x) == [exp(a/2)]
     assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
     assert solve(x**x) == []
@@ -930,7 +930,7 @@ def test_issue_1364():
         (a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
 
 
-def test_issue_2015():
+def test_issue_5114():
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 
     # there is no 'a' in the equation set but this is how the
@@ -945,7 +945,7 @@ def test_issue_2015():
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
 
 
-def test_issue_2750():
+def test_issue_5849():
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
@@ -971,12 +971,12 @@ def test_issue_2750():
     Q4: -I3/2 + 3*I5/2 - dI4/2}]
     assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == ans
     # the matrix solver (tested below) doesn't like this because it produces
-    # a zero row in the matrix. Is this related to issue 1452?
+    # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
         ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
 
 
-def test_2750_matrix():
+def test_issue_5849_matrix():
     '''Same as test_2750 but solved with the matrix solver.'''
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
@@ -1002,7 +1002,7 @@ def test_2750_matrix():
         I4: I3 - I5}
 
 
-def test_issue_2802():
+def test_issue_5901():
     f, g, h = map(Function, 'fgh')
     a = Symbol('a')
     D = Derivative(f(x), x)
@@ -1069,7 +1069,7 @@ def test_issue_2802():
         [-x + 3]
 
 
-def test_issue_2813():
+def test_issue_5912():
     assert set(solve(x**2 - x - 0.1, rational=True)) == \
         set([S(1)/2 + sqrt(35)/10, -sqrt(35)/10 + S(1)/2])
     # [-0.0916079783099616, 1.09160797830996]
@@ -1110,7 +1110,7 @@ def test_check_assumptions():
     assert solve(x**2 - 1) == [1]
 
 
-def test_issue_2957():
+def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
     assert set([simplify(w) for w in solve(tanh(x - 1)*tanh(x + 1) + 1)]) == set([
         -log(2)/2 + log(1 - I),
@@ -1124,7 +1124,7 @@ def test_issue_2957():
         -log(2)/2 + log(-1 + I),])
 
 
-def test_issue_2961():
+def test_issue_6060():
     x = Symbol('x')
     absxm3 = Piecewise(
         (x - 3, S(0) <= x - 3),
@@ -1139,7 +1139,7 @@ def test_issue_2961():
     assert solve(absxm3 - y, x) == [-y + 3, y + 3]
 
 
-def test_issue_2574():
+def test_issue_5673():
     eq = -x + exp(exp(LambertW(log(x)))*LambertW(log(x)))
     assert checksol(eq, x, 2) is True
     assert checksol(eq, x, 2, numerical=False) is None
@@ -1202,13 +1202,13 @@ def test_minsolve_linear_system():
 
 
 def test_real_roots():
-    # cf. issue 3551
+    # cf. issue 6650
     x = Symbol('x', real=True)
     assert len(solve(x**5 + x**3 + 1)) == 1
 
 
 @slow
-def test_issue3429():
+def test_issue_6528():
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
         895613949*x**2 - 273830224*x*y + 530506983*y**2 - 10000000000]
@@ -1223,7 +1223,7 @@ def test_overdetermined():
     assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (S(3),)]
 
 
-def test_issue_3506():
+def test_issue_6605():
     x = symbols('x')
     assert solve(4**(x/2) - 2**(x/3)) == [0]
     # while the first one passed, this one failed
@@ -1239,7 +1239,7 @@ def test__ispow():
     assert not _ispow(True)
 
 
-def test_issue_3545():
+def test_issue_6644():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
     4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
     4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
@@ -1248,26 +1248,26 @@ def test_issue_3545():
         m**2/2 + sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4]
 
 
-def test_issue_3653():
+def test_issue_6752():
     assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
     assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]
 
 
-def test_issue_3693():
+def test_issue_6792():
     assert solve(x*(x - 1)**2*(x + 1)*(x**6 - x + 1)) == [
     -1, 0, 1, RootOf(x**6 - x + 1, 0), RootOf(x**6 - x + 1, 1),
     RootOf(x**6 - x + 1, 2), RootOf(x**6 - x + 1, 3), RootOf(x**6 - x + 1, 4),
     RootOf(x**6 - x + 1, 5)]
 
 
-def test_issues_3720_3721_3722_3149():
-    # 3722
+def test_issues_6819_6820_6821_6248():
+    # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
     assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
     assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
 
-    # issue 4046
+    # issue 7145
     assert solve(2*abs(x) - abs(x - 1)) == [-1, Rational(1, 3)]
 
     x = symbols('x')
@@ -1287,7 +1287,7 @@ def test_issues_3720_3721_3722_3149():
 
     x, y = symbols('x y', real=True)
     assert solve(x + y*I + 3) == {y: 0, x: -3}
-    # github issue 2642
+    # issue 2642
     assert solve(x*(1 + I)) == [0]
 
     x, y = symbols('x y', imaginary=True)
@@ -1296,7 +1296,7 @@ def test_issues_3720_3721_3722_3149():
     x = symbols('x', real=True)
     assert solve(x + y + 3 + 2*I) == {x: -3, y: -2*I}
 
-    # issue 3149
+    # issue 6248
     f = Function('f')
     assert solve(f(x + 1) - f(2*x - 1)) == [2]
     assert solve(log(x + 1) - log(2*x - 1)) == [2]
@@ -1305,7 +1305,7 @@ def test_issues_3720_3721_3722_3149():
     assert solve(2**x + 4**x) == [I*pi/log(2)]
 
 
-def test_issue_3890():
+def test_issue_6989():
     f = Function('f')
     assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
         [Piecewise((-1, x > 0), (0, True))]
@@ -1344,7 +1344,7 @@ def test_lambert_multivariate():
     assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
         -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]
 
-    # issue 1172
+    # issue 4271
     assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
         6*LambertW((-1)**(S(1)/3)*a**(S(1)/3)/3)]
 
@@ -1414,7 +1414,7 @@ def test_errorinverses():
     assert solve(erfcinv(x)-y,x)==[erfc(y)]
 
 
-def test_gh2725():
+def test_issue_2725():
     R = Symbol('R')
     eq = sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1)
     sol = solve(eq, R, set=True)[1]
@@ -1427,10 +1427,10 @@ def test_gh2725():
                        evaluate=False),)])
 
 
-def test_issue_2015_3512():
+def test_issue_5114_6611():
     # See that it doesn't hang; this solves in about 2 seconds.
     # Also check that the solution is relatively small.
-    # Note: the system in issue 3512 solves in about 5 seconds and has
+    # Note: the system in issue 6611 solves in about 5 seconds and has
     # an op-count of 138336 (with simplify=False).
     b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('b:r')
     eqs = Matrix([

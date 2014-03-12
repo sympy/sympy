@@ -382,7 +382,7 @@ class Pow(Expr):
                 except ValueError:
                     ok = self.base.is_positive
                 if ok:
-                    # issue 2081
+                    # issue 5180
                     return self.func(new, pow)  # (x**(6*y)).subs(x**(3*y),z)->z**2
         if old.func is C.exp and self.exp.is_real and self.base.is_positive:
             coeff1, terms1 = old.args[0].as_independent(C.Symbol, as_Add=False)

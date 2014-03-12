@@ -1433,7 +1433,7 @@ def test_qfunctions():
     mp.dps = 15
     assert qp(2,3,100).ae('2.7291482267247332183e2391')
 
-def test_issue199():
+def test_issue_3298():
     mp.prec = 150
     x = ldexp(2476979795053773,-52)
     assert betainc(206, 385, 0, 0.55, 1).ae('0.99999999999999999999996570910644857895771110649954')

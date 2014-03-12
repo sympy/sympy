@@ -16,6 +16,6 @@ def test_as_int():
 
 
 def test_ordered():
-    # Issue 4111 - this had been failing with python2/3 problems
+    # Issue 7210 - this had been failing with python2/3 problems
     assert(list(ordered([{1:3, 2:4, 9:10}, {1:3}])) == \
                [{1: 3}, {1: 3, 2: 4, 9: 10}])

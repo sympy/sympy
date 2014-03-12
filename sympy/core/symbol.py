@@ -12,7 +12,6 @@ from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import string
 import re as _re

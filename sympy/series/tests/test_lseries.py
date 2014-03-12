@@ -38,7 +38,7 @@ def test_simple():
     assert not next((x/(x + y)).lseries(y)).has(Order)
 
 
-def test_issue_2084():
+def test_issue_5183():
     s = (x + 1/x).lseries()
     assert [si for si in s] == [1/x, x]
     assert next((x + x**2).lseries()) == x
@@ -51,7 +51,7 @@ def test_issue_2084():
     assert [next(s) for i in range(2)] == [128, -448 + 448*x]
 
 
-def test_issue_3900():
+def test_issue_6999():
     s = tanh(x).lseries(x, 1)
     assert next(s) == tanh(1)
     assert next(s) == x - (x - 1)*tanh(1)**2 - 1

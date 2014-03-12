@@ -741,7 +741,7 @@ def test_nullspace():
     assert basis[2] == Matrix([-2, 0, 0, -2, 1, 0, 0])
     assert basis[3] == Matrix([0, 0, 0, 0, 0, R(-1)/3, 1])
 
-    # issue 1698; just see that we can do it when rows > cols
+    # issue 4797; just see that we can do it when rows > cols
     M = Matrix([[1, 2], [2, 4], [3, 6]])
     assert M.nullspace()
 
@@ -998,7 +998,7 @@ def test_zip_row_op():
                          [4,  0, 0],
                          [0,  0, 2]])
 
-def test_issue851():
+def test_issue_3950():
     m = Matrix([1, 2, 3])
     a = Matrix([1, 2, 3])
     b = Matrix([2, 2, 3])
@@ -1009,7 +1009,7 @@ def test_issue851():
     assert m != b
 
 
-def test_issue882():
+def test_issue_3981():
     class Index1(object):
         def __index__(self):
             return 1
@@ -1114,7 +1114,7 @@ def test_empty_zeros():
     assert a.cols == 0
 
 
-def test_issue650():
+def test_issue_3749():
     a = Matrix([[x**2, x*y], [x*sin(y), x*cos(y)]])
     assert a.diff(x) == Matrix([[2*x, y], [sin(y), cos(y)]])
     assert Matrix([
@@ -1163,7 +1163,7 @@ def test_jacobian2():
     assert X.jacobian(Y) == J
 
 
-def test_issue1465():
+def test_issue_4564():
     X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
     Y = Matrix([x, y, z])
     for i in range(1, 3):
@@ -1311,7 +1311,7 @@ def test_inv_block():
 def test_creation_args():
     """
     Check that matrix dimensions can be specified using any reasonable type
-    (see issue 1515).
+    (see issue 4614).
     """
     raises(ValueError, lambda: zeros(3, -1))
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
@@ -1432,7 +1432,7 @@ def test_eigen_vects():
     m = Matrix(2, 2, [1, 0, 0, I])
     raises(NotImplementedError, lambda: m.is_diagonalizable(True))
     # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 2193
+    # see issue 5292
     assert not m.is_diagonalizable(True)
     raises(MatrixError, lambda: m.diagonalize(True))
     (P, D) = m.diagonalize(True)
@@ -2112,13 +2112,13 @@ def test_invertible_check():
 
 
 @XFAIL
-def test_issue_860():
+def test_issue_3959():
     x, y = symbols('x, y')
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
 
 
-def test_issue_2865():
+def test_issue_5964():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
 
 
@@ -2127,7 +2127,7 @@ def test_is_Identity():
     assert eye(3).as_immutable().is_Identity
     assert not zeros(3).is_Identity
     assert not ones(3).is_Identity
-    # issue 3143
+    # issue 6242
     assert not Matrix([[1, 0, 0]]).is_Identity
 
 
@@ -2184,11 +2184,11 @@ def test_normalize_sort_diogonalization():
     assert P*Q*P.inv() == A
 
 
-def test_issue2222():
+def test_issue_5321():
     raises(ValueError, lambda: Matrix([[1, 2, 3], Matrix(0, 1, [])]))
 
 
-def test_issue2221():
+def test_issue_5320():
     assert Matrix.hstack(eye(2), 2*eye(2)) == Matrix([
         [1, 0, 2, 0],
         [0, 1, 0, 2]
@@ -2230,15 +2230,15 @@ def test_hash():
     for cls in classes[-2:]:
         s = set([cls.eye(1), cls.eye(1)])
         assert len(s) == 1 and s.pop() == cls.eye(1)
-    # issue 880
+    # issue 3979
     for cls in classes[:2]:
         assert not isinstance(cls.eye(1), collections.Hashable)
 
 
 @XFAIL
-def test_issue880():
+def test_issue_3979():
     # when this passes, delete this and change the [1:2]
-    # to [:2] in the test_hash above for issue 880
+    # to [:2] in the test_hash above for issue 3979
     cls = classes[0]
     raises(AttributeError, lambda: hash(cls.eye(1)))
 
@@ -2368,6 +2368,6 @@ def test_pinv_rank_deficient():
     assert solution == Matrix([3, w1])
     assert A * A.pinv() * B != B
 
-def test_issue4102():
+def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
     assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])

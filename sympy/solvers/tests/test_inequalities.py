@@ -219,7 +219,7 @@ def test_hacky_inequalities():
     assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
 
 
-def test_issue_3244():
+def test_issue_6343():
     eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
     assert reduce_inequalities(eq, Q.real(x)) == \
         And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
@@ -234,10 +234,10 @@ def test_solve_univariate_inequality():
         Union(Interval(1, 2), Interval(3, oo))
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
         Or(And(S.One <= x, x <= 2), x >= 3)
-    # github's issue #2785:
+    # issue 2785:
     assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
         Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),
               Interval(S(1)/2 + sqrt(5)/2, oo, True, True))
-    # github's issue #2794:
+    # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)

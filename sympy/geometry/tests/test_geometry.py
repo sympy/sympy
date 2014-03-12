@@ -1173,7 +1173,7 @@ def test_idiff():
     assert idiff(x + t + y, [y, t], x) == -Derivative(t, x) - 1
 
 
-def test_gh2941():
+def test_issue_2941():
     def _check():
         for f, g in cartes(*[(Line, Ray, Segment)]*2):
           l1 = f(a, b)

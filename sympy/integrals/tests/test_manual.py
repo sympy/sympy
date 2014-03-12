@@ -104,7 +104,7 @@ def test_manualintegrate_derivative():
     assert manualintegrate(Derivative(sin(x), x, x, y, x), x) == \
         Derivative(sin(x), x, x, y)
 
-def test_issue_3700():
+def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
     n = Symbol('n', integer=True, positive=True)
 
@@ -124,7 +124,7 @@ def test_manual_true():
     assert integrate(sin(x) * cos(x), x, manual=True) in \
         [sin(x) ** 2 / 2, -cos(x)**2 / 2]
 
-def test_issue_3647():
+def test_issue_6746():
     assert manualintegrate(y**x, x) == \
         Piecewise((x, Eq(log(y), 0)), (y**x/log(y), True))
     assert manualintegrate(y**(n*x), x) == \
@@ -150,7 +150,7 @@ def test_issue_3647():
         assert manualintegrate(1 / (a + b*x**2), x) == \
             Integral(1/(a + b*x**2), x)
 
-def test_gh_issue_2850():
+def test_issue_2850():
     assert manualintegrate(asin(x)*log(x), x) == -x*asin(x) - sqrt(-x**2 + 1) \
             + (x*asin(x) + sqrt(-x**2 + 1))*log(x) - Integral(sqrt(-x**2 + 1)/x, x)
     assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + sqrt(-x**2 + 1) + \
