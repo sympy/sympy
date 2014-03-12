@@ -1434,6 +1434,11 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
     assert _test_args(uppergamma(x, 2))
 
 
+def test_sympy__functions__special__beta_functions__beta():
+    from sympy.functions.special.beta_functions import beta
+    assert _test_args(beta(x, x))
+
+
 @SKIP("abstract class")
 def test_sympy__functions__special__hyper__TupleParametersBase():
     pass
