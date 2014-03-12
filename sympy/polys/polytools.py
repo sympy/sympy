@@ -4278,7 +4278,11 @@ def degree(f, *gens, **args):
                 return max(order, f.args[1].coeff(func))
             return order * f.args[1]
         else:
-            return max(degree(arg, func) for arg in f.args)
+            try:
+                F, opt = poly_from_expr(f, *gens, **args)
+            except PolificationFailed as exc:
+                raise ComputationFailed('degree', 1, exc)
+            return sympify(F.degree(opt.gen))
     else:
         return S.Zero
 
