@@ -1,5 +1,8 @@
 from __future__ import print_function, division
 
+from functools import reduce
+from operator import mul
+
 from sympy.core import Mul, Basic, sympify, Add
 from sympy.functions import transpose, adjoint
 from sympy.matrices.expressions.transpose import transpose
@@ -9,7 +12,6 @@ from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix)
 from sympy.utilities import sift
 from sympy.matrices.matrices import MatrixBase
-from operator import mul
 
 
 class MatMul(MatrixExpr):

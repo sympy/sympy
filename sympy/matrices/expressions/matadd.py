@@ -1,5 +1,8 @@
 from __future__ import print_function, division
 
+from functools import reduce
+from operator import add
+
 from sympy.core import Add, Basic, sympify
 from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
@@ -8,7 +11,6 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition, debug,
         exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
 from sympy.utilities import default_sort_key, sift
-from operator import add
 
 
 class MatAdd(MatrixExpr):
@@ -26,7 +28,7 @@ class MatAdd(MatrixExpr):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         check = kwargs.get('check', True)
 
         obj = Basic.__new__(cls, *args)
@@ -57,6 +59,7 @@ class MatAdd(MatrixExpr):
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
+
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
