@@ -8,7 +8,7 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify
+from sympy import sympify, Matrix, Symbol
 from sympy.core.basic import S
 
 __all__ = ['inertia',
@@ -412,3 +412,27 @@ def Lagrangian(frame, *body):
         if not isinstance(e, (RigidBody, Particle)):
             raise TypeError('*body must have only Particle or RigidBody')
     return kinetic_energy(frame, *body) - potential_energy(*body)
+
+
+def mat_inv_mul(A, B):
+    """
+    Computes A^-1 * B symbolically w/ substitution, where B is not
+    necessarily a vector, but can be a matrix.
+
+    """
+
+    r1, c1 = A.shape
+    r2, c2 = B.shape
+    temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j) + str(r1 * i)))
+    temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j) + str(r2 * i)))
+    for i in range(len(temp1)):
+        if A[i] == 0:
+            temp1[i] = 0
+    for i in range(len(temp2)):
+        if B[i] == 0:
+            temp2[i] = 0
+    temp3 = []
+    for i in range(c2):
+        temp3.append(temp1.LDLsolve(temp2[:, i]))
+    temp3 = Matrix([i.T for i in temp3]).T
+    return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
