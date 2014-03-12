@@ -9,7 +9,7 @@ from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, xrange
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
-
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from collections import defaultdict
 
 
@@ -2915,6 +2915,12 @@ class Expr(Basic, EvalfMixin):
         return nsimplify(self, constants, tolerance, full)
 
     def separate(self, deep=False, force=False):
+	SymPyDeprecationWarning(
+	    feature="separate()",
+	    useinstead="expand_power_base()",
+	    issue=3383,
+	    deprecated_since_version="0.7.2",
+	).warn()
         """See the separate function in sympy.simplify"""
         from sympy.simplify import separate
         return separate(self, deep)
