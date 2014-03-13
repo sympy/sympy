@@ -4225,18 +4225,37 @@ def degree(f, *gens, **args):
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
+    >>> degree((x**10-1)/(x-1))
+    9
     >>> degree(0, x)
     -oo
 
+    The degree of constants (including S.Pi, S.Exp1, S.Catalan
+    S.GoldenRatio, etc.) should be 0.
+
+    Examples
+    ========
+
+    >>> degree(pi)
+    0
+    >>> degree(S.Catalan)
+    0
     """
     options.allowed_flags(args, ['gen', 'polys'])
 
     try:
-        F, opt = poly_from_expr(f, *gens, **args)
+        from sympy.simplify import simplify
+        if isinstance(f, Poly):
+            F, opt = poly_from_expr(cancel(f), f.gens[0])
+        else:
+            F, opt = poly_from_expr(cancel(f), *gens, **args)
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    return sympify(F.degree(opt.gen))
+    if F.is_number:
+        return S.Zero
+    else:
+        return sympify(F.degree(opt.gen))
 
 
 @public
