@@ -4,7 +4,7 @@ How to Build Documentation
 To make the html documentation, install the prerequisites, e.g. on
 Debian/Ubuntu (similarly for other distributions)::
 
-    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick
+    apt-get install python-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x
 
 and do::
 

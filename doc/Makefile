@@ -19,7 +19,7 @@ ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
 
 .PHONY: changes cheatsheet clean help html html-errors \
         htmlapi htmlhelp info latex linkcheck livehtml \
-        texinfo web logo
+        texinfo web logo man
 
 .SUFFIXES: .pdf .svg
 
@@ -39,6 +39,7 @@ help:
 	@echo "  texinfo     to make Texinfo files"
 	@echo "  web         to make files usable by Sphinx.web"
 	@echo "  logo        generate logos from src/logo/sympy.svg"
+	@echo "  man         build manpage"
 
 clean:
 	-rm -rf _build
@@ -130,6 +131,9 @@ info:
 	@echo "Running Texinfo files through makeinfo..."
 	make -C _build/texinfo info
 	@echo "makeinfo finished; the Info files are in _build/texinfo."
+
+man: man/isympy.xml
+	docbook2x-man --to-stdout $< > man/isympy.1
 
 _build/logo/sympy-notailtext-favicon.ico: logo
 
