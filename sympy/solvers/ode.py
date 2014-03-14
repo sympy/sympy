@@ -290,6 +290,7 @@ allhints = (
     "1st_power_series",
     "lie_group",
     "nth_linear_constant_coeff_homogeneous",
+    "nth_linear_euler_eq_nonhomogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
@@ -306,6 +307,7 @@ allhints = (
     "linear_coefficients_Integral",
     "separable_reduced_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
+    "nth_linear_euler_eq_nonhomogeneous_Integral",
     "Liouville_Integral",
     )
 
@@ -1120,7 +1122,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
-        # Euler equation case (a_i * x**i for all i)
+        # nth order Euler equation a_n*x**n*y^(n) + ... + a_1*x*y' + a_0*y = F(x)
+        #In case of Homogeneous euler equation F(x) = 0
         def _test_term(coeff, order):
             r"""
             Linear Euler ODEs have the form  K*x**order*diff(y(x),x,order),
@@ -1134,9 +1137,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if coeff == 0:
                 return True
             if order == 0:
-                if x in coeff.free_symbols:
-                    return False
-                return f(x) not in coeff.atoms()
+                if f(x) in coeff.atoms(AppliedUndef):
+                    if x in coeff.free_symbols:
+                        return False
+                    return f(x) not in coeff.atoms()
             if coeff.is_Mul:
                 if coeff.has(f(x)):
                     return False
@@ -1149,6 +1153,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         if r and not any(not _test_term(r[i], i) for i in r if i >= 0):
             if not r[-1]:
                 matching_hints["nth_linear_euler_eq_homogeneous"] = r
+            else:
+               matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
+               matching_hints["nth_linear_euler_eq_nonhomogeneous_Integral"] = r
 
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
@@ -3231,6 +3238,52 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             return {'sol': Eq(f(x), gsol), 'list': gensols}
     else:
         raise ValueError('Unknown value for key "returns".')
+        
+def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'):
+    r"""
+    Solves an `n`\th order linear non homogeneous variable-coefficient
+    Cauchy-Euler equidimensional ordinary differential equation.
+
+    This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    These equations can be solved in a general manner, by substituting
+    solutions of the form `x = exp(t)`, and deriving a characteristic equation
+    of form g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) which can be then solved
+    by nth_linear_constant_coeff_variation_of_parameters. If this method hangs, try
+    using "nth_linear_euler_eq_nonhomogeneous_Integral" hint which will then use
+    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` and then
+    simplifying the integrals can be done manually.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> dsolve(x**3*f(x).diff(x, 3) - 2*x**2*f(x).diff(x,2) + 6*x*f(x).diff(x) + x*(2*ln(x) + 1), f(x),
+    ... hint='nth_linear_euler_eq_nonhomogeneous')
+    f(x) = C1 + C2*x**2 + C3*x**3 + x*(ln(x) + 1)"""
+    x = func.args[0]
+    f = func.func
+    r = match	
+
+    chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
+    t = Symbol('t')
+    #for i in r.keys():
+    for i in r.keys():
+        if not isinstance(i, str) and i >= 0:
+            chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
+    
+    for i in range(1,degree(chareq)+1):
+        eq += chareq.coeff(symbol**i)*diff(f(t),t,i)
+    
+    chareq = Poly(chareq)
+    eq += chareq.coeffs()[-1]*f(t)
+    eq += r[-1].replace(x, exp(t))
+    
+    sol = ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match)
+    return sol.replace(exp(t), x)
 
 def ode_almost_linear(eq, func, order, match):
     r"""
