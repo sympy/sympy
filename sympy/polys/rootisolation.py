@@ -105,6 +105,7 @@ def dup_root_upper_bound(f, K):
             continue
 
 #        q = min(Q)
+        q = Q[0]  # pick minimum q[0] value
         for i in range(1, len(Q)):
     	     if q[0] > Q[i][0]:
     	         q = Q[i]
