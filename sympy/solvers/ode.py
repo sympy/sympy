@@ -3238,7 +3238,8 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             return {'sol': Eq(f(x), gsol), 'list': gensols}
     else:
         raise ValueError('Unknown value for key "returns".')
-        
+
+
 def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'):
     r"""
     Solves an `n`\th order linear non homogeneous variable-coefficient
@@ -3269,7 +3270,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     r = match	
 
     chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
-    t = Symbol('t')
+    t = Dummy('t')
     #for i in r.keys():
     for i in r.keys():
         if not isinstance(i, str) and i >= 0:
@@ -3283,7 +3284,8 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     eq += r[-1].replace(x, exp(t))
     
     sol = ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match)
-    return sol.replace(exp(t), x)
+    return sol.replace(t, log(x))
+
 
 def ode_almost_linear(eq, func, order, match):
     r"""
