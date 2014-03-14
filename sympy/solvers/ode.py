@@ -3264,7 +3264,13 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     >>> f = Function('f')
     >>> dsolve(x**3*f(x).diff(x, 3) - 2*x**2*f(x).diff(x,2) + 6*x*f(x).diff(x) + x*(2*ln(x) + 1), f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous')
-    f(x) = C1 + C2*x**2 + C3*x**3 + x*(ln(x) + 1)"""
+    f(x) = C1 + C2*x**2 + C3*x**3 + x*(ln(x) + 1)
+    
+    References
+    ==========
+    http://www2.fiu.edu/~aladrog/CauchyEuler
+    
+    """
     x = func.args[0]
     f = func.func
     r = match	
