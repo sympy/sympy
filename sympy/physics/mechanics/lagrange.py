@@ -4,8 +4,11 @@ __all__ = ['LagrangesMethod']
 
 from sympy import diff, zeros, Matrix, eye, sympify, Symbol
 from sympy.physics.vector import (dynamicsymbols, ReferenceFrame, Point)
-from sympy.physics.mechanics.functions import mat_inv_mul
+from sympy.physics.mechanics.functions import _mat_inv_mul
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+import warnings
 
+warnings.simplefilter("always", SymPyDeprecationWarning)
 
 class LagrangesMethod(object):
     """Lagrange's method object.
@@ -317,7 +320,7 @@ class LagrangesMethod(object):
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
 
-    def rhs(self, inv_method=None):
+    def rhs(self, inv_method=None, **kwargs):
         """ Returns equations that can be solved numerically
 
         Parameters
@@ -330,8 +333,16 @@ class LagrangesMethod(object):
 
         """
 
+        if 'method' in kwargs:
+            #The method kwarg is deprecated in favor of inv_method.
+            SymPyDeprecationWarning(feature="method kwarg",
+                    useinstead="inv_method kwarg",
+                    deprecated_since_version="0.7.6").warn()
+            #For now accept both
+            inv_method = kwargs['method']
+
         if inv_method is None:
-            self._rhs = mat_inv_mul(self.mass_matrix_full,
+            self._rhs = _mat_inv_mul(self.mass_matrix_full,
                                           self.forcing_full)
         else:
             self._rhs = (self.mass_matrix_full.inv(inv_method,

@@ -414,7 +414,7 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def mat_inv_mul(A, B):
+def _mat_inv_mul(A, B):
     """
     Computes A^-1 * B symbolically w/ substitution, where B is not
     necessarily a vector, but can be a matrix.

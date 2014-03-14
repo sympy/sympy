@@ -5,7 +5,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum, \
                                      outer, potential_energy)
-from sympy.physics.mechanics.functions import mat_inv_mul
+from sympy.physics.mechanics.functions import _mat_inv_mul
 from sympy.utilities.pytest import raises
 
 Vector.simp = True
@@ -133,7 +133,7 @@ def test_potential_energy():
 def test_mat_inv_mul():
     # Uses SymPy generated primes as matrix entries, so each entry in
     # each matrix should be symbolic and unique, allowing proper comparison.
-    # Checks mat_inv_mul against Matrix.inv / Matrix.__mul__.
+    # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
     from sympy import Matrix, prime
 
     # going to form 3 matrices
@@ -145,5 +145,5 @@ def test_mat_inv_mul():
     m2 = Matrix(n, n, lambda i, j: prime(i * n + j + 5))
     m3 = Matrix(n, n, lambda i, j: prime(i + j * n + 2))
 
-    assert mat_inv_mul(m1, m2) == m1.inv() * m2
-    assert mat_inv_mul(m1, m3) == m1.inv() * m3
+    assert _mat_inv_mul(m1, m2) == m1.inv() * m2
+    assert _mat_inv_mul(m1, m3) == m1.inv() * m3
