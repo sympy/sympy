@@ -82,7 +82,7 @@ def dup_root_upper_bound(f, K):
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
     n, P = len(f), []
-    t = n* [K.one]    #list instead of single counter
+    t = n * [K.one]    #list instead of single counter
     if dup_LC(f, K) < 0:
         f = dup_neg(f, K)
     f = list(reversed(f))
@@ -104,8 +104,11 @@ def dup_root_upper_bound(f, K):
         if not Q:
             continue
 
-        q=min(Q)
-        t[q[1]]+=1   #only minimum's t is increased
+#        q = min(Q)
+        for i in range(1, len(Q)):
+    	     if q[0] > Q[i][0]:
+    	         q = Q[i]
+        t[q[1]] += 1   #only minimum's t is increased
         P.append(q[0])
 
     if not P:
