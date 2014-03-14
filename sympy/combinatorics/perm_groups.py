@@ -3069,6 +3069,63 @@ class PermutationGroup(Basic):
             else:
                 computed_words[l] = rmul(computed_words[l - 1], u[l])
 
+    def cyclic_subgroups(self,t):
+        """
+        Returns the list of Cyclic Subgroups of order t in G.
+            
+        Examples
+        ========
+         
+        >>> from sympy.combinatorics.perm_groups import AlternatingGroup
+        >>> t=4
+        >>> G=AlternatingGroup(4)
+        >>> G.cyclic_subgroups(4)
+         ([PermutationGroup([
+          Permutation(1, 3, 2)]), PermutationGroup([
+          Permutation(3)(0, 1, 2)]), PermutationGroup([
+          Permutation(0, 2, 3)]), PermutationGroup([
+          Permutation(0, 3, 1)])], 4)
+        """
+        cyclic=[]
+        if self.order()%t!=0:
+            return cyclic
+        L1=set(self.generate())
+        while len(L1)>0:
+            i=L1.pop()
+            L1.discard(i)
+            order=i.order()
+            if order==t:
+                Gp=PermutationGroup(i)
+                S=set(Gp.generate())
+                cyclic.append(Gp)
+                L1.difference(S)
+                A=L1
+                # Gp is the cyclic subgroup finded of order t.
+                # To don't generate the same subgroup again, all the
+                # elements of Gp are removed from the list L1.
+                while len(A)>0:
+                    x=A.pop()
+                    A.discard(x)
+                    d=x*i*(~x)
+                    Gpp=PermutationGroup(d)
+                    if not Gpp in cyclic:
+                        E=set(Gpp.generate())
+                        cyclic.append(Gpp)
+                        L1.difference(E)
+                        A.difference(E)
+                        # If 'a' generates a cyclic group of order t,
+                        # the element 'g*a*(~g)' will generate another
+                        # subgroup of the same order (Gpp), so the iteration
+                        # will look for an element in A3 that generates
+                        # a distinct group of order t.
+                        # If the iteration finds it, all the elements of 
+                        # the new cyclic subgroup will be removed to 
+                        # don't generate the same subgroup again.
+                else:
+                    if igcd(order,t)==1 or order<t:
+                        L1.difference(set(PermutationGroup(i).generate()))
+        return cyclic
+
     @property
     def transitivity_degree(self):
         """Compute the degree of transitivity of the group.
