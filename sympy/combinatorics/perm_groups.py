@@ -3080,11 +3080,11 @@ class PermutationGroup(Basic):
         >>> t=4
         >>> G=AlternatingGroup(4)
         >>> G.cyclic_subgroups(4)
-         ([PermutationGroup([
+         [PermutationGroup([
           Permutation(1, 3, 2)]), PermutationGroup([
           Permutation(3)(0, 1, 2)]), PermutationGroup([
           Permutation(0, 2, 3)]), PermutationGroup([
-          Permutation(0, 3, 1)])], 4)
+          Permutation(0, 3, 1)])]
         """
         cyclic=[]
         if self.order()%t!=0:
