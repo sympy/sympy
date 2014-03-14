@@ -279,6 +279,9 @@ class IdentityOperator(Operator):
     def _apply_operator(self, ket, **options):
         return ket
 
+    def _eval_power(self, exp):
+        return self
+
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{%s}}' % str(self.name)
 
