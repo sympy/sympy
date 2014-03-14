@@ -4236,6 +4236,9 @@ def degree(f, *gens, **args):
     Examples
     ========
 
+    >>> from sympy import *
+    >>> from sympy.abc import x, y
+
     >>> degree(pi)
     0
     >>> degree(S.Catalan)
@@ -4244,7 +4247,6 @@ def degree(f, *gens, **args):
     options.allowed_flags(args, ['gen', 'polys'])
 
     try:
-        from sympy.simplify import simplify
         if isinstance(f, Poly):
             F, opt = poly_from_expr(cancel(f), f.gens[0])
         else:
@@ -4253,7 +4255,7 @@ def degree(f, *gens, **args):
         raise ComputationFailed('degree', 1, exc)
 
     if F.is_number:
-        return S.Zero
+        return S.NegativeInfinity if F == S.Zero else S.Zero
     else:
         return sympify(F.degree(opt.gen))
 
