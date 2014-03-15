@@ -421,11 +421,11 @@ class uppergamma(Function):
 
         # We extract branching information here. C/f lowergamma.
         nx, n = z.extract_branch_factor()
-        if a.is_integer and (a > 0) is True:
+        if a.is_integer and (a > 0) == True:
             nx = unpolarify(z)
             if z != nx:
                 return uppergamma(a, nx)
-        elif a.is_integer and (a <= 0) is True:
+        elif a.is_integer and (a <= 0) == True:
             if n != 0:
                 return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
         elif n != 0:
@@ -569,11 +569,11 @@ class polygamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_is_positive(self):
-        if self.args[1].is_positive and (self.args[0] > 0) is True:
+        if self.args[1].is_positive and (self.args[0] > 0) == True:
             return self.args[0].is_odd
 
     def _eval_is_negative(self):
-        if self.args[1].is_positive and (self.args[0] > 0) is True:
+        if self.args[1].is_positive and (self.args[0] > 0) == True:
             return self.args[0].is_even
 
     def _eval_is_real(self):

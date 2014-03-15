@@ -194,7 +194,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_integer and (dif < 0) is True:
+            if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -308,7 +308,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         if len(self.limits) != 1:
             raise ValueError("More than 1 limit")
         i, a, b = self.limits[0]
-        if (a > b) is True:
+        if (a > b) == True:
             if a - b == 1:
                 return S.Zero,S.Zero
             a, b = b + 1, a - 1
@@ -324,10 +324,9 @@ class Sum(AddWithLimits,ExprWithIntLimits):
                 term = f.subs(i, a)
                 if term:
                     test = abs(term.evalf(3)) < eps
-                    if isinstance(test, bool):
-                        if test is True:
-                            return s, abs(term)
-                    else:
+                    if test == True:
+                        return s, abs(term)
+                    elif not (test == False):
                         # a symbolic Relational class, can't go further
                         return term, S.Zero
                 s += term
@@ -758,7 +757,7 @@ def eval_sum_hyper(f, i_a_b):
                 return None
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
-            if cond is False:
+            if cond == False:
                 return None
         return Piecewise((res1 - res2, cond), (old_sum, True))
 
@@ -770,7 +769,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond is False:
+        if cond == False:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 

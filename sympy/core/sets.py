@@ -816,7 +816,7 @@ class Interval(Set, EvalfMixin):
             right = other < self.end
         else:
             right = other <= self.end
-        if right is True:
+        if right == True:
             if self.left_open:
                 return other > self.start
             else:

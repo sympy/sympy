@@ -2325,7 +2325,7 @@ def _denest_pow(eq):
     if glogb.func is C.log or not glogb.is_Mul:
         if glogb.args[0].is_Pow or glogb.args[0].func is exp:
             glogb = _denest_pow(glogb.args[0])
-            if (abs(glogb.exp) < 1) is True:
+            if (abs(glogb.exp) < 1) == True:
                 return Pow(glogb.base, glogb.exp*e)
         return eq
 

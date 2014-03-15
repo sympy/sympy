@@ -150,12 +150,12 @@ class BlockMatrix(MatrixExpr):
     def _entry(self, i, j):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
-            if (i < numrows) is not False:
+            if (i < numrows) != False:
                 break
             else:
                 i -= numrows
         for col_block, numcols in enumerate(self.colblocksizes):
-            if (j < numcols) is not False:
+            if (j < numcols) != False:
                 break
             else:
                 j -= numcols

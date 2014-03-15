@@ -135,7 +135,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
-        return res
+        return bool(res)
 
     if assumptions == True:
         return

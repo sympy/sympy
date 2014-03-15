@@ -373,7 +373,7 @@ def test_Interval_as_relational():
     assert Interval(-2, oo, left_open=False).as_relational(x) == Ge(x, -2)
     assert Interval(-2, oo, left_open=True).as_relational(x) == Gt(x, -2)
 
-    assert Interval(-oo, oo).as_relational(x) is True
+    assert Interval(-oo, oo).as_relational(x) is S.true
 
 
 def test_Finite_as_relational():
