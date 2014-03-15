@@ -44,11 +44,6 @@ def test_issue_4212():
 
 
 @XFAIL
-def test_issue_1135():
-    assert not integrate(1/sqrt(1 + tan(x)**2)).has(Integral)
-
-
-@XFAIL
 def test_issue_4326():
     assert integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(Integral)
 
@@ -56,11 +51,6 @@ def test_issue_4326():
 @XFAIL
 def test_issue_4491():
     assert not integrate(x*sqrt(x**2 + 2*x + 4), x).has(Integral)
-
-
-@XFAIL
-def test_issue_4492():
-    assert not integrate(x**2 * sqrt(5 - x**2), x).has(Integral)
 
 
 @XFAIL

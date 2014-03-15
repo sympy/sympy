@@ -2,7 +2,7 @@ from sympy import (
     Abs, acos, acosh, Add, adjoint, asin, asinh, atan, Ci, conjugate, cos,
     Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma, factor, Function,
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
-    Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
+    Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
     Tuple, nan, And, Eq, Or
 )
@@ -1001,3 +1001,15 @@ def test_issue_4803():
     x_max = Symbol("x_max")
     assert integrate(y/pi*exp(-(x_max - x)/cos(a)), x) == \
         y*exp((x - x_max)/cos(a))*cos(a)/pi
+
+
+def test_issue_4234():
+    assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x) / sqrt(1 + tan(x)**2)
+
+
+def test_issue_4492():
+    assert simplify(integrate(x**2 * sqrt(5 - x**2), x)) == Piecewise(
+        (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
+            (8*sqrt(x**2 - 5)), Abs(x**2)/5 > 1),
+        ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
+            (8*sqrt(-x**2 + 5)), True))
