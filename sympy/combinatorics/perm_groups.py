@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
+
 from random import randrange, choice
 from math import log
 
 from sympy.core import Basic
+from sympy.core.numbers import igcd
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
     _af_rmul, _af_rmuln, _af_pow, Cycle)
@@ -3087,7 +3089,7 @@ class PermutationGroup(Basic):
           Permutation(0, 3, 1)])]
         """
         cyclic=[]
-        if self.order()%t!=0:
+        if self.order()%t>0:
             return cyclic
         L1=set(self.generate())
         while len(L1)>0:
