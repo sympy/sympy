@@ -290,8 +290,8 @@ allhints = (
     "1st_power_series",
     "lie_group",
     "nth_linear_constant_coeff_homogeneous",
-    "nth_linear_euler_eq_nonhomogeneous",
     "nth_linear_euler_eq_homogeneous",
+    "nth_linear_euler_eq_nonhomogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
     "Liouville",
@@ -1141,6 +1141,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     if x in coeff.free_symbols:
                         return False
                     return f(x) not in coeff.atoms()
+                else:
+                    return True
             if coeff.is_Mul:
                 if coeff.has(f(x)):
                     return False
@@ -3262,9 +3264,9 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> dsolve(x**3*f(x).diff(x, 3) - 2*x**2*f(x).diff(x,2) + 6*x*f(x).diff(x) + x*(2*ln(x) + 1), f(x),
+    >>> dsolve(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3), f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous')
-    f(x) = C1 + C2*x**2 + C3*x**3 + x*(ln(x) + 1)
+    f(x) = C1*x**2 + C2*x + Rational(1, 2)*x**3
     
     References
     ==========
