@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-
 from random import randrange, choice
 from math import log
 
