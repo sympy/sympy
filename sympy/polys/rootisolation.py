@@ -75,9 +75,9 @@ def dup_root_upper_bound(f, K):
     Compute the LMQ upper bound for the positive roots of `f`;
     LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-    Reference:
-    ==========
-    Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+        Reference:
+        ==========
+        Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
            Values of the Positive Roots of Polynomials"
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
@@ -121,9 +121,9 @@ def dup_root_lower_bound(f, K):
     Compute the LMQ upper bound for the positive roots of `f`;
     LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-    Reference:
-    ==========
-    Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+        Reference:
+        ==========
+        Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
            Values of the Positive Roots of Polynomials"
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
