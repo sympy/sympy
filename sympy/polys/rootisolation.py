@@ -72,13 +72,13 @@ def dup_sturm(f, K):
 
 def dup_root_upper_bound(f, K):
     """Compute the LMQ upper bound for the positive roots of `f`;
-    LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-    Reference:
-    ==========
-    Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
-        Values of the Positive Roots of Polynomials"
-        Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
+       Reference:
+       ==========
+       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+           Values of the Positive Roots of Polynomials"
+           Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
     n, P = len(f), []
     t = n * [K.one]
@@ -90,7 +90,7 @@ def dup_root_upper_bound(f, K):
         if f[i] >= 0:
             continue
 
-        a, Q = K.log(-f[i], 2), []
+        a, QL = K.log(-f[i], 2), []
 
         for j in xrange(i + 1, n):
 
@@ -98,16 +98,17 @@ def dup_root_upper_bound(f, K):
                 continue
 
             q = t[j] + a - K.log(f[j], 2)
-            Q.append([q // (j - i) , j])
+            QL.append([q // (j - i) , j])
 
-        if not Q:
+        if not QL:
             continue
 
-        q = Q[0]
-        for i in range(1, len(Q)):
-            if q[0] > Q[i][0]:
-                q = Q[i]
-        t[q[1]] += 1
+        q = min(QL)
+#        q = QL[0]
+#        for i in range(1, len(QL)):
+#            if q[0] > QL[i, 0]:   # QL[i][0]:
+#                q = QL[i]
+        t[q[1]] = t[q[1]] + 1
         P.append(q[0])
 
     if not P:
@@ -117,13 +118,13 @@ def dup_root_upper_bound(f, K):
 
 def dup_root_lower_bound(f, K):
     """Compute the LMQ lower bound for the positive roots of `f`;
-    LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
-    Reference:
-    ==========
-    Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
-        Values of the Positive Roots of Polynomials"
-        Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
+       Reference:
+       ==========
+       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
+           Values of the Positive Roots of Polynomials"
+           Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
     bound = dup_root_upper_bound(dup_reverse(f), K)
 
