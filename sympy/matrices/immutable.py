@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Integer, Tuple, Dict
+from sympy.core import Basic, Integer, Tuple, Dict, S, sympify
 from sympy.core.sympify import converter as sympify_converter
 
 from sympy.matrices.matrices import MatrixBase
@@ -62,6 +62,21 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
 
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
+
+    def _eval_Eq(self, other):
+        """Helper method for Equality with matrices.
+
+        Relational automatically converts matrices to ImmutableMatrix
+        instances, so this method only applies here.  Returns True if the
+        matrices are definitively the same, False if they are definitively
+        different, and None if undetermined (e.g. if they contain Symbols).
+        Returning None triggers default handling of Equalities.
+
+        """
+        if not hasattr(other, 'shape') or self.shape != other.shape:
+            return S.false
+        diff = self - other
+        return sympify(diff.is_zero)
 
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
@@ -142,3 +157,5 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
 
     def __hash__(self):
         return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
+
+    _eval_Eq = ImmutableMatrix._eval_Eq
