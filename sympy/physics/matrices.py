@@ -2,7 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy import Matrix, I
+from sympy import Matrix, I, pi, sqrt
+from sympy.functions import exp
 
 
 def msigma(i):
@@ -151,3 +152,32 @@ minkowski_tensor = Matrix( (
     (0, 0, -1, 0),
     (0, 0, 0, -1)
 ))
+
+def dft(n):
+    r"""Returns an expression of a discrete Fourier transform as a matrix multiplication.
+    It is an n X n matrix.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/DFT_matrix
+
+    Examples
+    ========
+
+    >>> from sympy.physics.matrices import dft
+    >>> dft(3)
+    Matrix([
+    [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
+    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3, sqrt(3)*exp(-4*I*pi/3)/3],
+    [sqrt(3)/3, sqrt(3)*exp(-4*I*pi/3)/3, sqrt(3)*exp(-8*I*pi/3)/3]])
+    """
+    mat = [[None for x in range(n)] for y in range(n)]
+    base = exp(-2*pi*I/n)
+    mat[0] = [1]*n
+    for i in range(n):
+        mat[i][0] = 1
+    for i in range(1,n):
+        for j in range(1,n):
+            mat[i][j] = base**(i*j)
+    return (1/sqrt(n))*Matrix(mat)
