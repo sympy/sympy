@@ -104,11 +104,9 @@ def dup_root_upper_bound(f, K):
             continue
 
         q = min(QL)
-#        q = QL[0]
-#        for i in range(1, len(QL)):
-#            if q[0] > QL[i, 0]:   # QL[i][0]:
-#                q = QL[i]
+
         t[q[1]] = t[q[1]] + 1
+
         P.append(q[0])
 
     if not P:
