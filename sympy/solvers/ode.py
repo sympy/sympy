@@ -3289,7 +3289,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     
     chareq = Poly(chareq)
     eq += chareq.coeffs()[-1]*f(t)
-    eq += r[-1].replace(x, exp(t)).replace(log(exp(t), t))
+    eq += r[-1].replace(x, exp(t)).replace(log(exp(t)), t)
     if 'nth_linear_constant_coeff_undetermined_coefficients' in classify_ode(eq):
         return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).replace(t,log(x))
     else:
