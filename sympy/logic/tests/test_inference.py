@@ -111,10 +111,30 @@ def test_dpll_satisfiable():
 
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
-    assert satisfiable(A & (A >> B) & ~B, encoding='cnf') is False
-    assert satisfiable(A & (A >> B) & ~B, encoding='tseitin') is False
-    assert satisfiable(A & (A >> B) & (C >> ~B), encoding='cnf') == {A: True, B: True, C: False}
-    assert satisfiable(A & (A >> B) & (C >> ~B), encoding='tseitin') == {A: True, B: True, C: False}
+    assert satisfiable(A & (A >> B) & ~B) is False
+
+
+def test_satisfiable_tseitin():
+    from sympy.abc import A, B, C, D
+
+    #SAT
+    formulas = [
+    (A | ~(B >> A) | (~B & ~C) | (A & ~B & ~C) | (C & (A | (~B & ~C)))),
+    ~A & (D >> C) & (B >> D) & (A | B | C) & (D >> A) & ~(C >> (B | D)),
+    ((D >> A) | (~A & B) | (C & ~D) | ((C | A) >> B) | ~((B | D) >> A))
+    ]
+    for formula in formulas:
+        model = satisfiable(formula, encoding='tseitin')
+        assert pl_true(formula, model) is True
+
+    #UNSAT
+    formulas = [
+    (A & ~B & ~C & (B | C) & (A >> ~A) & (C | (B >> ~A)) & (C | ~A)),
+    (B & C & (A >> B) & (A | (B & C)) & (~B | ~C) & (C | ~A | (A & B))),
+    (A & ~B & (C >> D) & (A & C) & (~A | ~C) & (~B | (D & (~A | ~C))))
+    ]
+    for formula in formulas:
+        assert satisfiable(formula, encoding='tseitin') is False
 
 
 def test_pl_true():
@@ -200,6 +220,8 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+    assert not satisfiable(And(assumptions, facts, query), encoding='tseitin')
+    assert satisfiable(And(assumptions, facts, ~query), encoding='tseitin') in refutations
 
 def test_satisfiable_bool():
     assert satisfiable(True) == {}

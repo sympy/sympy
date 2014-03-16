@@ -92,6 +92,8 @@ def satisfiable(expr, algorithm="dpll2", encoding="cnf"):
     False
     """
 
+    from sympy.core.symbol import Dummy
+
     if expr is True:
         return {}
     if expr is False:
@@ -100,7 +102,6 @@ def satisfiable(expr, algorithm="dpll2", encoding="cnf"):
     if encoding == "cnf":
         expr = to_cnf(expr)
     elif encoding == "tseitin":
-        atoms = expr.atoms()
         expr = tseitin_transformation(expr)
     else:
         raise NotImplementedError
@@ -116,7 +117,7 @@ def satisfiable(expr, algorithm="dpll2", encoding="cnf"):
 
     if result and encoding == "tseitin":
         for atom in list(result.keys()):
-            if atom not in atoms:
+            if isinstance(atom, Dummy):
                 del result[atom]
 
     return result

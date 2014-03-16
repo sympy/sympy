@@ -1468,7 +1468,7 @@ def bool_equal(bool1, bool2, info=False):
     return True
 
 
-def tseitin_transformation(formula, dummy=True):
+def tseitin_transformation(expr, dummy=True):
     """
     Converts any propositional formula into an equisatisfiable CNF
     form with auxilliary literals using Tseitin Transformation.
@@ -1481,16 +1481,16 @@ def tseitin_transformation(formula, dummy=True):
 
     .. [1] http://en.wikipedia.org/wiki/Tseitin-Transformation
     """
+    from sympy.core.symbol import Dummy
+    from sympy.utilities.iterables import numbered_symbols
 
-    from sympy import numbered_symbols, Dummy
+    if expr.is_Atom:
+        return expr
 
-    if formula.is_Atom:
-        return formula
+    expr = eliminate_implications(sympify(expr))
 
-    formula = sympify(formula)
-
-    if is_cnf(formula):
-        return formula
+    if is_cnf(expr):
+        return expr
 
     if dummy:
         sym_factory = numbered_symbols('s', cls=Dummy)
@@ -1498,8 +1498,8 @@ def tseitin_transformation(formula, dummy=True):
         sym_factory = numbered_symbols('s')
 
     s = next(sym_factory)
-    q = [formula]
-    dct = {formula: s}
+    q = [expr]
+    dct = {expr: s}
     clauses = [s]
 
     while q:
@@ -1522,30 +1522,15 @@ def tseitin_transformation(formula, dummy=True):
         s = dct[clause]
 
         if isinstance(clause, Not):
-            arg = args[0]
-            expr = [Or(s, arg), Or(Not(s), Not(arg))]
+            clauses.append(Or(Not(s), Not(arg)))
 
         elif isinstance(clause, And):
-            expr = [Or(Not(s), arg) for arg in args]
-            expr.append(Or(s, *[Not(arg) for arg in args]))
+            clauses.extend([Or(Not(s), arg) for arg in args])
 
         elif isinstance(clause, Or):
-            expr = [Or(s, Not(arg)) for arg in args]
-            expr.append(Or(Not(s), *args))
-
-        elif isinstance(clause, Implies):
-            a, b = args
-            expr = [Or(s, a), Or(s, Not(b)), Or(Not(s), Not(a), b)]
-
-        elif isinstance(clause, Equivalent):
-            args.append(s)
-            expr = []
-            for a, b in zip(args[:-1], args[1:]):
-                expr.extend([Or(Not(a), b), Or(Not(b), a)])
+            clauses.append(Or(Not(s), *args))
 
         else:
-            raise ValueError
-
-        clauses.extend(expr)
+            raise ValueError("Illegal operator " + str(expr))
 
     return And(*clauses)
