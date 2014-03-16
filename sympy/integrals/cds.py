@@ -25,6 +25,7 @@ from sympy.integrals.rde import (weak_normalizer,
     bound_degree, spde, normal_denom, special_denom)
 from sympy.integrals.prde import (real_imag, is_log_deriv_k_t_radical_in_field)
 
+
 def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     """
     Cancellation - primitive case
@@ -54,19 +55,19 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     A2 = is_log_deriv_k_t_radical_in_field(b2a, b2d, DE)
 
     if A1 and A2:
-        n1, u1 = A1
-        n2, u2 = A2
-        z1a, z1d = frac_in(cancel(u1*c1.as_expr() - u2*c2.as_expr()), DE.t)
-        z2a, z2d = frac_in(cancel(u2*c1.as_expr() + u1*c2.as_expr()), DE.t)
-        P1 = is_deriv(z1a, z1d, DE)
-        P2 = is_deriv(z2a, z2d, DE)
+        _, z1 = A1
+        _, z2 = A2
+        u1a, u1d = frac_in(cancel(z1*c1.as_expr() + a*z2*c2.as_expr()), DE.t)
+        u2a, u2d = frac_in(cancel(z2*c1.as_expr() + z1*c2.as_expr()), DE.t)
+        P1 = is_deriv(u1a, u1d, DE)
+        P2 = is_deriv(u2a, u2d, DE)
         if P1 and P2:
             p1, _ = P1
             p2, _ = P2
             if Poly(p1).degree(t) <= n and Poly(p2).degree(t) <= n:
-                num1 = Poly(cancel(u1*p1 + u2*p2), t)
-                num2 = Poly(cancel(u1*p2 - u2*p1), t)
-                denom = Poly(cancel(u1**2 + u2**2), t)
+                num1 = Poly(cancel(z1*p1 - a*z2*p2), t)
+                num2 = Poly(cancel(z1*p2 - z2*p1), t)
+                denom = Poly(cancel(z1**2 - a*z2**2), t)
                 return (cancel(num1/denom), cancel(num2/denom))
             else:
                 raise NonElementaryIntegralException
@@ -96,7 +97,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         n = m - 1
         Ds1tm = derivation(s1*t**m, DE)
         Ds2tm = derivation(s2*t**m, DE)
-        c1 = Poly(c1.as_expr() - Ds1tm.as_expr() - (b1*s1 - b2*s2).as_expr()*t**m, t)
+        c1 = Poly(c1.as_expr() - Ds1tm.as_expr() - (b1*s1 + a*b2*s2).as_expr()*t**m, t)
         c2 = Poly(c2.as_expr() - Ds2tm.as_expr() - (b2*s1 + b1*s2).as_expr()*t**m, t)
     return (q1, q2)
 
@@ -133,19 +134,19 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         A2 = parametric_log_deriv(b2a, b2d, wa, wd, DE)
 
     if A1 and A2:
-        n1, m1, u1 = A1
-        n2, m2, u2 = A2
+        n1, m1, z1 = A1
+        n2, m2, z2 = A2
         m = m1
-        z1a, z1d = frac_in(cancel((u1.as_expr()*c1.as_expr() + a*u2.as_expr()*c2.as_expr())*t**m), t)
-        z2a, z2d = frac_in(cancel((u2.as_expr()*c1.as_expr() + u1.as_expr()*c2.as_expr())*t**m), t)
-        P1 = is_deriv(z1a, z1d, DE)
-        P2 = is_deriv(z2a, z2d, DE)
+        u1a, u1d = frac_in(cancel((z1.as_expr()*c1.as_expr() + a*z2.as_expr()*c2.as_expr())*t**m), t)
+        u2a, u2d = frac_in(cancel((z2.as_expr()*c1.as_expr() + z1.as_expr()*c2.as_expr())*t**m), t)
+        P1 = is_deriv(u1a, u1d, DE)
+        P2 = is_deriv(u2a, u2d, DE)
 
         if P1 and P2:
-            p1, i1 = P1
-            p2, i2 = P2
-            q1 = cancel((u1*p1 - a*u2*p2)*t**(-m)/(u1**2 - a*u2**2))
-            q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 - a*u2**2))
+            p1, _ = P1
+            p2, _ = P2
+            q1 = cancel((z1*p1 - a*z2*p2)*t**(-m)/(z1**2 - a*z2**2))
+            q2 = cancel((z1*p2 - z2*p1)*t**(-m)/(z1**2 - a*z2**2))
             q1a, q1d = frac_in(q1, t)
             q2a, q2d = frac_in(q2, t)
 
@@ -204,34 +205,32 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     t = DE.t
     if n == 0:
         if not c1.has(t) and not c2.has(t):
-			A = coupled_DE_system(b0, b2, c1, c2)
+            return coupled_DE_system(b0, b2, c1, c2, DE)
         else:
             raise NonElementaryIntegralException
 
-    a = sqrt(-1)
-    p = t - a
+    sa = sqrt(-1)
+    p = t - sa
     eta = DE.d.exquo(Poly(t**2 + 1, t))
     #u1 + u2*I = c1(I) + c2(I)*I
-    c1_ = Poly(c1.eval(a), t)
-    c2_ = Poly(c2.eval(a), t)
-    ca, cd = frac_in(c1_ + c2_*a, t)
-    u1a, u2a, u1d = real_imag(ca, cd, k)
-    u1 = u1a.to_field().mul_ground(1/u1d)
-    u2 = u2a.to_field().mul_ground(1/u1d)
-    (s1, s2) = coupled_DE_system(b0, b2, u1, u2, DE)
-    c = c1 - u1 + n*eta*(s1*t + s2) + (c2 - u2 + n*eta*(s2*t - s1))*a
+    c1_ = Poly(c1.eval(sa), t)
+    c2_ = Poly(c2.eval(sa), t)
+    ca, cd = frac_in(c1_ + c2_*sa, t)
+    z1a, z2a, z1d = real_imag(ca, cd, k)
+    z1 = z1a.to_field().mul_ground(1/z1d)
+    z2 = z2a.to_field().mul_ground(1/z1d)
+    (s1, s2) = coupled_DE_system(b0, b2 - n*eta, z1, z2, DE)
+    c = c1 - z1 + n*eta*(s1*t + s2) + (c2 - z2 + n*eta*(s2*t - s1))*sa
     c = c.to_field().mul_ground(1/p)
-    ca, cd = frac_in(c)
+    ca, cd = frac_in(c, t)
     d1a, d2a, d1d = real_imag(ca, cd, k)
     d1 = d1a.to_field().mul_ground(1/d1d)
     d2 = d2a.to_field().mul_ground(1/d1d)
-    B = cds_cancel_tan(b0, b2 + eta, d1, d2, DE, n-1)
-    h1, h2 = B
+    h1, h2 = cds_cancel_tan(b0, b2 + eta, d1, d2, DE, n-1)
     return (h1*t + h2 + s1, h2*t - h1 + s2)
 
 
 def non_cancellation_algo(alpha, beta, hn, hs, b, c, n, DE):
-    from sympy.integrals.prde import real_imag
     from sympy.integrals.rde import (no_cancel_b_large,
         no_cancel_b_small, no_cancel_equal)
     k = Dummy('k')
@@ -239,21 +238,21 @@ def non_cancellation_algo(alpha, beta, hn, hs, b, c, n, DE):
     if not b.is_zero and (DE.case == 'base' or \
         b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
         q = no_cancel_b_large(b, c, n, DE)
-        qa , qd = frac_in(q, DE.t)
+        qa, qd = frac_in(q, DE.t)
         qa_r, qa_i, qd = real_imag(alpha*qa + beta, hn*hs*qd, k)
         return (qa_r/qd, qa_i/qd)
 
     elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) \
         and (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
         q = no_cancel_b_small(b, c, n, DE)
-        qa , qd = frac_in(q, DE.t)
+        qa, qd = frac_in(q, DE.t)
         qa_r, qa_i, qd = real_imag(alpha*qa + beta, hn*hs*qd, k)
         return (qa_r/qd, qa_i/qd)
 
-    elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t)- 1 \
+    elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t) - 1 \
         and n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
         q = no_cancel_equal(b, c, n, DE)
-        qa , qd = frac_in(q, DE.t)
+        qa, qd = frac_in(q, DE.t)
         qa_r, qa_i, qd = real_imag(alpha*qa + beta, hn*hs*qd, k)
         return (qa_r/qd, qa_i/qd)
     #spde passed but not a non-cancellation case
@@ -269,7 +268,7 @@ def cancellation_algo(a, b1, b2, c1, c2, DE, n):
     if case == 'exp':
         (q1, q2) = cds_cancel_exp(a, b1, b2, c1, c2, DE, n)
     if case == 'tan':
-        (q1, q2) = cds_cancel_tan(a, b1, b2, c1, c2, DE, n)
+        (q1, q2) = cds_cancel_tan(b1, b2, c1, c2, DE, n)
     return (q1, q2)
 
 
@@ -288,33 +287,34 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
 
     Hence returning (y1, y2) if a solution exist, None otherwise
     """
-    a = Poly(sqrt(-1) , DE.t)
+    a = Poly(-1, DE.t)
+    sa = sqrt(-1)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     c1a, c1d = frac_in(c1, DE.t)
     c2a, c2d = frac_in(c2, DE.t)
-    fa = b1a*b2d + b1d*b2a*sqrt(-1)
+    fa = b1a*b2d + b1d*b2a*sa
     fd = b1d*b2d
-    ga = c1a*c2d + c1d*c2a*sqrt(-1)
+    ga = c1a*c2d + c1d*c2a*sa
     gd = c1d*c2d
     _, (fa, fd) = weak_normalizer(fa, fd, DE)
-    a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
-    A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
+    ta, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
+    A, B, C, hs = special_denom(ta, ba, bd, ca, cd, DE)
 
     try:
-       n = bound_degree(A, B, C, DE)
+        n = bound_degree(A, B, C, DE)
     except NotImplementedError:
-       n = oo
+        n = oo
 
     try:
-       B, C, m, alpha, beta = spde(A, B, C, n, DE)
+        B, C, m, alpha, beta = spde(A, B, C, n, DE)
     except NonElementaryIntegralException:
-       # Does not fall in non cancellation
-       # Hence cancellation cases
-       return cancellation_algo(a, b1, b2, c1, c2, DE, n)
+        # Does not fall in non cancellation
+        # Hence cancellation cases
+        return cancellation_algo(a, b1, b2, c1, c2, DE, n)
     else:
-       # non cancellation cases solve for q
-       A = non_cancellation_algo(alpha, beta, hn, hs, B, C, m, DE)
-       if A is None:
-           return cancellation_algo(a, b1, b2, c1, c2, DE, n)
-       return A
+        # non cancellation cases solve for q
+        A = non_cancellation_algo(alpha, beta, hn, hs, B, C, m, DE)
+        if A is None:
+            return cancellation_algo(a, b1, b2, c1, c2, DE, n)
+        return A
