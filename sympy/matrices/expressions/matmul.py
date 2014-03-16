@@ -153,12 +153,30 @@ def merge_explicit(matmul):
     A*[4  6]
       [    ]
       [4  6]
+
+    >>> X = MatMul(B, A, C)
+    >>> pprint(X)
+    [1  1]*A*[1  2]
+    [    ]   [    ]
+    [1  1]   [3  4]
+    >>> pprint(merge_explicit(X))
+    [1  1]*A*[1  2]
+    [    ]   [    ]
+    [1  1]   [3  4]
     """
-    groups = sift(matmul.args, lambda arg: isinstance(arg, MatrixBase))
-    if len(groups[True]) > 1:
-        return MatMul(*(groups[False] + [reduce(mul, groups[True])]))
-    else:
+    if not any(isinstance(arg, MatrixBase) for arg in matmul.args):
         return matmul
+    newargs = []
+    last = matmul.args[0]
+    for arg in matmul.args[1:]:
+        if isinstance(arg, MatrixBase) and isinstance(last, MatrixBase):
+            last = last * arg
+        else:
+            newargs.append(last)
+            last = arg
+    newargs.append(last)
+
+    return MatMul(*newargs)
 
 def xxinv(mul):
     """ Y * X * X.I -> Y """
