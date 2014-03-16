@@ -153,7 +153,7 @@ minkowski_tensor = Matrix( (
     (0, 0, 0, -1)
 ))
 
-def dft(n):
+def mdft(n):
     r"""Returns an expression of a discrete Fourier transform as a matrix multiplication.
     It is an n X n matrix.
 
@@ -165,8 +165,8 @@ def dft(n):
     Examples
     ========
 
-    >>> from sympy.physics.matrices import dft
-    >>> dft(3)
+    >>> from sympy.physics.matrices import mdft
+    >>> mdft(3)
     Matrix([
     [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
     [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3, sqrt(3)*exp(-4*I*pi/3)/3],
