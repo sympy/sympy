@@ -4,7 +4,7 @@ Boolean algebra module for SymPy
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import product, islice, izip
+from itertools import product, islice
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -995,7 +995,7 @@ def eliminate_implications(expr):
 
     elif expr.func is Equivalent:
         clauses = []
-        for a, b in izip(islice(args, None), islice(args, 1, None)):
+        for a, b in zip(islice(args, None), islice(args, 1, None)):
             clauses.append(Or(Not(a), b))
         a, b = args[-1], args[0]
         clauses.append(Or(Not(a), b))
