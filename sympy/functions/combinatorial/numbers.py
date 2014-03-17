@@ -1075,7 +1075,49 @@ def nC(n, k=None, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-class stirling(Function):
+@cacheit
+def _stirling1(n, k):
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+    n1 = n - 1
+
+    # some special values
+    if n == k:
+        return S.One
+    elif k == 1:
+        return factorial(n1)
+    elif k == n1:
+        return C.binomial(n, 2)
+    elif k == n - 2:
+        return (3*n - 1)*C.binomial(n, 3)/4
+    elif k == n - 3:
+        return C.binomial(n, 2)*C.binomial(n, 4)
+
+    # general recurrence
+    return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
+
+
+@cacheit
+def _stirling2(n, k):
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+    n1 = n - 1
+
+    # some special values
+    if k == n1:
+        return C.binomial(n, 2)
+    elif k == 2:
+        return 2**n1 - 1
+
+    # general recurrence
+    return k*_stirling2(n1, k) + _stirling2(n1, k - 1)
+
+
+def stirling(n, k, d=None, kind=2, signed=False):
     """Return Stirling number S(n, k) of the first or second (default) kind.
 
     The sum of all Stirling numbers of the second kind for k = 1
@@ -1159,68 +1201,28 @@ class stirling(Function):
     sympy.utilities.iterables.multiset_partitions
 
     """
+    # TODO: make this a class like bell()
 
-    @staticmethod
-    def _stirling1(n, k):
-        if n == k == 0:
-            return S.One
-        if 0 in (n, k):
-            return S.Zero
-        n1 = n - 1
+    n = as_int(n)
+    k = as_int(k)
+    if n < 0:
+        raise ValueError('n must be nonnegative')
+    if k > n:
+        return S.Zero
+    if d:
+        # assert k >= d
+        # kind is ignored -- only kind=2 is supported
+        return _stirling2(n - d + 1, k - d + 1)
+    elif signed:
+        # kind is ignored -- only kind=1 is supported
+        return (-1)**(n - k)*_stirling1(n, k)
 
-        # some special values
-        if n == k:
-            return S.One
-        elif k == 1:
-            return factorial(n1)
-        elif k == n1:
-            return C.binomial(n, 2)
-        elif k == n - 2:
-            return (3*n - 1)*C.binomial(n, 3)/4
-        elif k == n - 3:
-            return C.binomial(n, 2)*C.binomial(n, 4)
-
-        # general recurrence
-        return n1*stirling._stirling1(n1, k) + stirling._stirling1(n1, k - 1)
-
-    @staticmethod
-    def _stirling2(n, k):
-        if n == k == 0:
-            return S.One
-        if 0 in (n, k):
-            return S.Zero
-        n1 = n - 1
-
-        # some special values
-        if k == n1:
-            return C.binomial(n, 2)
-        elif k == 2:
-            return 2**n1 - 1
-
-        # general recurrence
-        return k*stirling._stirling2(n1, k) + stirling._stirling2(n1, k - 1)
-
-    @classmethod
-    def eval(cls, n, k, d=None, kind=2, signed=False):
-        n = as_int(n)
-        k = as_int(k)
-        if n < 0:
-            raise ValueError('n must be nonnegative')
-        if k > n:
-            return S.Zero
-        if d:
-            # assert k >= d
-            # kind is ignored -- only kind=2 is supported
-            return cls._stirling2(n - d + 1, k - d + 1)
-        elif signed:
-            # kind is ignored -- only kind=1 is supported
-            return (-1)**(n - k)*cls._stirling1(n, k)
-        if kind == 1:
-            return cls._stirling1(n, k)
-        elif kind == 2:
-            return cls._stirling2(n, k)
-        else:
-            raise ValueError('kind must be 1 or 2, not %s' % k)
+    if kind == 1:
+        return _stirling1(n, k)
+    elif kind == 2:
+        return _stirling2(n, k)
+    else:
+        raise ValueError('kind must be 1 or 2, not %s' % k)
 
 
 @cacheit
