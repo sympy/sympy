@@ -336,7 +336,7 @@ known_facts = And(
     Implies(Q.rational, Q.algebraic),
     Implies(Q.algebraic, Q.complex),
     Equivalent(Q.transcendental, Q.complex & ~Q.algebraic),
-    Implies(Q.imaginary, Q.complex & ~Q.real),
+    Implies(Q.imaginary, Q.complex & ~Q.extended_real),
     Implies(Q.imaginary, Q.antihermitian),
     Implies(Q.antihermitian, ~Q.hermitian),
     Equivalent(Q.negative, Q.nonzero & ~Q.positive),

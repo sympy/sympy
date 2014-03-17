@@ -55,7 +55,7 @@ known_facts_cnf = And(
     Or(Not(Q.antihermitian), Not(Q.hermitian)),
     Or(Not(Q.composite), Not(Q.prime)),
     Or(Not(Q.even), Not(Q.odd)),
-    Or(Not(Q.imaginary), Not(Q.real)),
+    Or(Not(Q.extended_real), Not(Q.imaginary)),
     Or(Not(Q.invertible), Not(Q.singular)),
     Or(Not(Q.irrational), Not(Q.rational)),
     Or(Not(Q.negative), Not(Q.nonnegative)),

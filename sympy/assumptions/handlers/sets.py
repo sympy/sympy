@@ -494,7 +494,7 @@ class AskImaginaryHandler(CommonHandler):
             if imlog is not None:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
-        if ask(Q.real(expr.base) & Q.real(expr.exp), assumptions):
+        if ask(Q.extended_real(expr.base) & Q.extended_real(expr.exp), assumptions):
             if ask(Q.positive(expr.base), assumptions):
                 return False
             else:
@@ -512,7 +512,7 @@ class AskImaginaryHandler(CommonHandler):
 
     @staticmethod
     def log(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
+        if ask(Q.extended_real(expr.args[0]), assumptions):
             if ask(Q.positive(expr.args[0]), assumptions):
                return False
             return
