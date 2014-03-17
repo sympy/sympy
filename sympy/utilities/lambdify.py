@@ -76,9 +76,9 @@ NUMPY_TRANSLATIONS = {
     "E": "e",
     "im": "imag",
     "ln": "log",
-    "Matrix": "matrix",
-    "MutableDenseMatrix": "matrix",
-    "ImmutableMatrix": "matrix",
+    "Matrix": "array",
+    "MutableDenseMatrix": "array",
+    "ImmutableMatrix": "array",
     "Max": "amax",
     "Min": "amin",
     "oo": "inf",
@@ -145,8 +145,7 @@ def _import(module, reload="False"):
 
 
 @doctest_depends_on(modules=('numpy'))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True, use_array=False):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -167,10 +166,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     dummy substitution is unwanted (and `args` is not a string). If you want
     to view the lambdified function or provide "sympy" as the module, you
     should probably set dummify=False.
-
-    If numpy is installed, the default behavior is to substitute Sympy Matrices
-    with numpy.matrix. If you would rather have a numpy.array returned,
-    set use_array=True.
 
     Usage
     =====
@@ -235,10 +230,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> row = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> row(1, 2)
     Matrix([[1, 3]])
-    >>> col = lambdify((x, y), Matrix((x, x + y)), use_array=True)
-    >>> col(1, 2)
-    array([[1],
-           [3]])
 
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
@@ -276,6 +267,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # If the user hasn't specified any modules, use what is available.
     module_provided = True
+    use_numpy = False
     if modules is None:
         module_provided = False
         # Use either numpy (if available) or python.math where possible.
@@ -283,17 +275,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
-        #If numpy.array should be used instead of numpy.matrix
-        if use_array:
-            NUMPY_TRANSLATIONS.update({"Matrix": "array",
-                "MutableDenseMatrix": "array",
-                "ImmutableMatrix": "array"})
-        else:
-            #Ensures that the translation dict is set back
-            #to matrix if lambdify was already called
-            NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
-                "MutableDenseMatrix": "matrix",
-                "ImmutableMatrix": "matrix"})
         #Attempt to import numpy
         try:
             _import("numpy")
@@ -301,6 +282,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             pass
         else:
             modules.insert(1, "numpy")
+            use_numpy=True
 
 
     # Get the needed namespaces.
@@ -327,7 +309,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             namespace.update({str(term): term})
 
     # Create lambda function.
-    lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
+    lstr = lambdastr(args, expr, printer=printer, dummify=dummify, use_numpy=use_numpy)
     flat = '__flatten_args__'
     if flat in lstr:
         import itertools
@@ -350,7 +332,7 @@ def _get_namespace(m):
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
 
-def lambdastr(args, expr, printer=None, dummify=False):
+def lambdastr(args, expr, printer=None, dummify=False, use_numpy=False):
     """
     Returns a string that can be evaluated to a lambda function.
 
@@ -372,10 +354,11 @@ def lambdastr(args, expr, printer=None, dummify=False):
     'lambda _0,_1: (lambda x,y,z: (x + y))(*list(__flatten_args__([_0,_1])))'
     """
     # Transforming everything to strings.
-    from sympy.matrices import DeferredVector
+    from sympy.matrices import DeferredVector, MatrixSymbol
     from sympy import Dummy, sympify, Symbol, Function, flatten
 
     if printer is not None:
+        special_printer = True
         if inspect.isfunction(printer):
             lambdarepr = printer
         else:
@@ -384,6 +367,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             else:
                 lambdarepr = lambda expr: printer.doprint(expr)
     else:
+        special_printer = False
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
 
@@ -392,7 +376,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             return args
         elif isinstance(args, DeferredVector):
             return str(args)
-        elif iterable(args):
+        elif iterable(args, exclude=(MatrixSymbol,)):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
@@ -421,7 +405,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
 
     # Transform args
     def isiter(l):
-        return iterable(l, exclude=(str, DeferredVector))
+        return iterable(l, exclude=(str, DeferredVector, MatrixSymbol))
     if isiter(args) and any(isiter(i) for i in args):
         from sympy.utilities.iterables import flatten
         import re
@@ -451,7 +435,10 @@ def lambdastr(args, expr, printer=None, dummify=False):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
-    expr = lambdarepr(expr)
+    if special_printer:
+        expr = lambdarepr(expr)
+    else:
+        expr = lambdarepr(expr, use_numpy=use_numpy)
 
     return "lambda %s: (%s)" % (args, expr)
 
