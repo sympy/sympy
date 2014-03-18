@@ -129,6 +129,7 @@ html_theme_options = {
 
 # If false, no module index is generated.
 #html_use_modindex = True
+html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
 #html_copy_source = True
