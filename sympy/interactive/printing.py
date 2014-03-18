@@ -284,7 +284,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
 
     Examples
     ========
-    
+
     >>> from sympy.interactive import init_printing
     >>> from sympy import Symbol, sqrt
     >>> from sympy.abc import x, y
