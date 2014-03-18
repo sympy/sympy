@@ -3077,7 +3077,7 @@ class PermutationGroup(Basic):
         Examples
         ========
          
-        >>> from sympy.combinatorics.perm_groups import AlternatingGroup
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> t=4
         >>> G=AlternatingGroup(4)
         >>> G.cyclic_subgroups(4)
