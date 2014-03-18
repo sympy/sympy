@@ -4,6 +4,7 @@ from sympy.physics.vector import ReferenceFrame, Vector, Point, \
 from sympy.physics.vector.fieldfunctions import divergence, \
      gradient, curl, is_conservative, is_solenoidal, \
      scalar_potential, scalar_potential_difference
+from sympy.utilities.pytest import raises
 
 R = ReferenceFrame('R')
 q = dynamicsymbols('q')
@@ -99,6 +100,7 @@ def test_scalar_potential():
     assert scalar_potential(R[2]*P.x + P[0]*R.z, R) == \
            R[0]*R[2]*cos(q) + R[1]*R[2]*sin(q)
     assert scalar_potential(R[2]*P.x + P[0]*R.z, P) == P[0]*P[2]
+    raises(ValueError, lambda: scalar_potential(R[0] * R.y, R))
 
 
 def test_scalar_potential_difference():
