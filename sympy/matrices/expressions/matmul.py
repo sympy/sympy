@@ -254,9 +254,9 @@ def refine_MatMul(expr, assumptions):
     newargs = []
     last = expr.args[0]
     for arg in expr.args[1:]:
-        if arg == last.T and ask(Q.orthogonal(arg)):
+        if arg == last.T and ask(Q.orthogonal(arg), assumptions):
             last = Identity(arg.shape[0])
-        elif arg == last.conjugate() and ask(Q.unitary(arg)):
+        elif arg == last.conjugate() and ask(Q.unitary(arg), assumptions):
             last = Identity(arg.shape[0])
         else:
             newargs.append(last)
