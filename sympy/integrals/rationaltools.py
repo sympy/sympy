@@ -216,7 +216,7 @@ def ratint_logpart(f, g, x, t=None):
         R_map[r.degree()] = r
 
     def _include_sign(c, sqf):
-        if (c < 0) is True:
+        if (c < 0) == True:
             h, k = sqf[0]
             sqf[0] = h*c, k
 

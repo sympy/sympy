@@ -206,7 +206,7 @@ class sin(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # https://github.com/sympy/sympy/issues/6048
             # transform a sine to a cosine, to avoid redundant code
             if pi_coeff.is_Rational:
                 x = pi_coeff % 2
@@ -417,8 +417,8 @@ class cos(TrigonometricFunction):
                 # useful test case is how "limit(sin(x)/x,x,oo)"
                 # is handled.
                 # See test_sin_cos_with_infinity() an
-                # Test for issue 209
-                # http://code.google.com/p/sympy/issues/detail?id=2097
+                # Test for issue 3308
+                # https://github.com/sympy/sympy/issues/5196
                 # For now, we return un-evaluated.
                 return
 
@@ -444,7 +444,7 @@ class cos(TrigonometricFunction):
                 return None
 
             # cosine formula #####################
-            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # https://github.com/sympy/sympy/issues/6048
             # explicit calculations are preformed for
             # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
             # Some other exact values like cos(k pi/15) can be
@@ -1433,7 +1433,11 @@ class asin(Function):
         return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1 - x**2))
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
+        r = self.args[0].is_real and (self.args[0] >= -1 and
+                                      self.args[0] <= 1)
+        if r == True or r == False:
+            r = bool(r)
+        return r
 
     def inverse(self, argindex=1):
         """
@@ -1545,7 +1549,11 @@ class acos(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
+        r = self.args[0].is_real and (self.args[0] >= -1 and
+                                      self.args[0] <= 1)
+        if r == True or r == False:
+            r = bool(r)
+        return r
 
     def _eval_rewrite_as_log(self, x):
         return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))

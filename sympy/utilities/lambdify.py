@@ -145,7 +145,8 @@ def _import(module, reload="False"):
 
 
 @doctest_depends_on(modules=('numpy'))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+        dummify=True, use_array=False):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -166,6 +167,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     dummy substitution is unwanted (and `args` is not a string). If you want
     to view the lambdified function or provide "sympy" as the module, you
     should probably set dummify=False.
+
+    If numpy is installed, the default behavior is to substitute Sympy Matrices
+    with numpy.matrix. If you would rather have a numpy.array returned,
+    set use_array=True.
 
     Usage
     =====
@@ -230,6 +235,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     >>> row = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> row(1, 2)
     Matrix([[1, 3]])
+    >>> col = lambdify((x, y), Matrix((x, x + y)), use_array=True)
+    >>> col(1, 2)
+    array([[1],
+           [3]])
 
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
@@ -274,6 +283,18 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
+        #If numpy.array should be used instead of numpy.matrix
+        if use_array:
+            NUMPY_TRANSLATIONS.update({"Matrix": "array",
+                "MutableDenseMatrix": "array",
+                "ImmutableMatrix": "array"})
+        else:
+            #Ensures that the translation dict is set back
+            #to matrix if lambdify was already called
+            NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
+                "MutableDenseMatrix": "matrix",
+                "ImmutableMatrix": "matrix"})
+        #Attempt to import numpy
         try:
             _import("numpy")
         except ImportError:

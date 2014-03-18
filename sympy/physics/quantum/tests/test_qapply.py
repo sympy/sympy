@@ -87,7 +87,7 @@ def test_dagger():
     assert qapply(lhs, dagger=True) == rhs
 
 
-def test_issue2974():
+def test_issue_6073():
     x, y = symbols('x y', commutative=False)
     A = Ket(x, y)
     B = Operator('B')

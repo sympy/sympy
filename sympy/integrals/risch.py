@@ -735,7 +735,7 @@ def as_poly_1t(p, t, z):
     In other words, z == 1/t will be a dummy variable that Poly can handle
     better.
 
-    See issue 2032.
+    See issue 5131.
 
     Examples
     ========
@@ -765,7 +765,7 @@ def as_poly_1t(p, t, z):
     try:
         t_part = t_part.to_field().exquo(pd)
     except DomainError as e:
-        # Issue 1851
+        # issue 4950
         raise NotImplementedError(e)
     # Compute the negative degree parts.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
@@ -1573,7 +1573,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     handle_first may be either 'exp' or 'log'.  This changes the order in
     which the extension is built, and may result in a different (but
-    equivalent) solution (for an example of this, see issue 2010).  It is also
+    equivalent) solution (for an example of this, see issue 5109).  It is also
     possible that the integral may be computed with one but not the other,
     because not all cases have been implemented yet.  It defaults to 'log' so
     that the outer extension is exponential when possible, because more of the

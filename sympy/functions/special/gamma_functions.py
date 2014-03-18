@@ -80,7 +80,7 @@ class gamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -224,7 +224,7 @@ class lowergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -370,7 +370,7 @@ class uppergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -421,11 +421,11 @@ class uppergamma(Function):
 
         # We extract branching information here. C/f lowergamma.
         nx, n = z.extract_branch_factor()
-        if a.is_integer and (a > 0) is True:
+        if a.is_integer and (a > 0) == True:
             nx = unpolarify(z)
             if z != nx:
                 return uppergamma(a, nx)
-        elif a.is_integer and (a <= 0) is True:
+        elif a.is_integer and (a <= 0) == True:
             if n != 0:
                 return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
         elif n != 0:
@@ -549,7 +549,7 @@ class polygamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -569,11 +569,11 @@ class polygamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_is_positive(self):
-        if self.args[1].is_positive and (self.args[0] > 0) is True:
+        if self.args[1].is_positive and (self.args[0] > 0) == True:
             return self.args[0].is_odd
 
     def _eval_is_negative(self):
-        if self.args[1].is_positive and (self.args[0] > 0) is True:
+        if self.args[1].is_positive and (self.args[0] > 0) == True:
             return self.args[0].is_even
 
     def _eval_is_real(self):
@@ -780,7 +780,7 @@ class loggamma(Function):
     polygamma: Polygamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -854,7 +854,7 @@ def digamma(x):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -884,7 +884,7 @@ def trigamma(x):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     digamma: Digamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -894,36 +894,3 @@ def trigamma(x):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
     return polygamma(1, x)
-
-
-###############################################################################
-############################### BETA FUNCTIONS ################################
-###############################################################################
-
-def beta(x, y):
-    r"""
-    Euler Beta function:
-
-    .. math::
-        \mathrm{B}(x, y) := \frac{\Gamma(x) \Gamma(y)}{\Gamma(x+y)}
-
-    See Also
-    ========
-
-    gamma: Gamma function.
-    lowergamma: Lower incomplete gamma function.
-    uppergamma: Upper incomplete gamma function.
-    polygamma: Polygamma function.
-    loggamma: Log Gamma function.
-    digamma: Digamma function.
-    trigamma: Trigamma function.
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Beta_function
-    .. [2] http://dlmf.nist.gov/5.12
-    .. [3] http://mathworld.wolfram.com/BetaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Beta/
-    """
-    return gamma(x)*gamma(y) / gamma(x + y)

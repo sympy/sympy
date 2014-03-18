@@ -44,7 +44,7 @@ def test_Limits_simple_2():
 
 def test_Limits_simple_3a():
     a = Symbol('a')
-    #issue 414
+    #issue 3513
     assert together(limit((x**2 - (a + 1)*x + a)/(x**3 - a**3), x, a)) == \
         (a - 1)/(3*a**2)  # 196
 
@@ -74,7 +74,7 @@ def test_limits_simple_4aa():
 
 
 def test_Limits_simple_4b():
-    #issue 412
+    #issue 3511
     assert limit(x - root3(x**3 - 1), x, oo) == 0  # 215
 
 
@@ -90,12 +90,12 @@ def test_bounded():
 
 def test_f1a():
     h = Symbol("h")
-    #issue 409:
+    #issue 3508:
     assert limit((sin(2*x)/x)**(1 + x), x, 0) == 2  # Primer 7
 
 
 def test_f1a2():
-    #issue 410:
+    #issue 3509:
     assert limit(((x - 1)/(x + 1))**x, x, oo) == exp(-2)  # Primer 9
 
 
@@ -134,5 +134,5 @@ def test_f2():
 
 def test_f3():
     a = Symbol('a')
-    #issue 405
+    #issue 3504
     assert limit(asin(a*x)/x, x, 0) == a

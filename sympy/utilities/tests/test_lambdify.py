@@ -259,6 +259,20 @@ def test_matrix():
     assert lambdify(v, J, modules='sympy')(1, 2) == sol
     assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
+def test_numpy_matrix():
+    if not numpy:
+        skip("numpy not installed.")
+    A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
+    sol_mat = numpy.matrix([[1, 2], [numpy.sin(3) + 4, 1]])
+    sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
+    #Lambdify array first, to ensure return to matrix as default
+    f_arr = lambdify((x, y, z), A, use_array=True)(1, 2, 3)
+    f_mat = lambdify((x, y, z), A)(1, 2, 3)
+    numpy.testing.assert_allclose(f_mat, sol_mat)
+    numpy.testing.assert_allclose(f_arr, sol_arr)
+    #Check that the types are arrays and matrices
+    assert isinstance(f_mat, numpy.matrix)
+    assert isinstance(f_arr, numpy.ndarray)
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
@@ -407,7 +421,7 @@ def test_true_false():
     assert lambdify([], true)() is True
     assert lambdify([], false)() is False
 
-def test_gh2790():
+def test_issue_2790():
     assert lambdify((x, (y, z)), x + y)(1, (2, 4)) == 3
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2

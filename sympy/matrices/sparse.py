@@ -1083,7 +1083,7 @@ class SparseMatrix(MatrixBase):
             SymPyDeprecationWarning(
                 feature="The syntax zeros([%i, %i])" % tuple(r),
                 useinstead="zeros(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
+                issue=6480, deprecated_since_version="0.7.2",
             ).warn()
             r, c = r
         else:

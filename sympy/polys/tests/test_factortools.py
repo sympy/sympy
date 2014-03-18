@@ -308,7 +308,7 @@ def test_dmp_zz_wang():
     assert R.dmp_expand(factors) == w_1
 
 
-def test_issue_3256():
+def test_issue_6355():
     # This tests a bug in the Wang algorithm that occured only with a very
     # specific set of random numbers.
     random_sequence = [-1, -1, 0, 0, 0, 0, -1, -1, 0, -1, 3, -1, 3, 3, 3, 3, -1, 3]

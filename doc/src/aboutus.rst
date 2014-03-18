@@ -249,7 +249,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. CJ Carey: Fix for limits of factorials
 #. Patrick Lacasse: Fix for Piecewise.subs
 #. Ananya H: Bug fix
-#. Tarang Patel: added test for issue 1640
+#. Tarang Patel: added test for issue 4739
 #. Christopher Dembia: improvements to mecahanics documentation
 #. Benjamin Fishbein: added rank method to Matrix
 #. Sean Ge: made KroneckerDelta arguments canonically ordered
@@ -314,6 +314,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Aditya Shah: bug fix, improvement to parsers
 #. Sambuddha Basu: documentation fix
 #. zeel: fixes to logic module
+#. Rajat Aggarwal: improvements to integration module
+#. Anurag Sharma: improvements to Risch algorithm
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

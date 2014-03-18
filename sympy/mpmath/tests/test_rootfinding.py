@@ -29,7 +29,7 @@ def test_findroot():
     assert isinstance(fp.findroot(f, 1+0j, tol=1e-10), complex)
 
 def test_bisection():
-    # issue 233
+    # issue 3332
     assert findroot(lambda x: x**2-1,(0,2),solver='bisect') == 1
 
 def test_mnewton():

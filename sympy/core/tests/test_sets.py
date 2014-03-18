@@ -373,7 +373,7 @@ def test_Interval_as_relational():
     assert Interval(-2, oo, left_open=False).as_relational(x) == Ge(x, -2)
     assert Interval(-2, oo, left_open=True).as_relational(x) == Gt(x, -2)
 
-    assert Interval(-oo, oo).as_relational(x) is True
+    assert Interval(-oo, oo).as_relational(x) is S.true
 
 
 def test_Finite_as_relational():
@@ -570,7 +570,7 @@ def test_image_EmptySet():
     assert imageset(x, 2*x, S.EmptySet) == S.EmptySet
 
 
-def test_issue_2625():
+def test_issue_5724():
     raises(TypeError, lambda: I in Interval(-oo,oo))
     raises(TypeError, lambda: Interval(-oo,oo).contains(I))
     raises(TypeError, lambda: I > 2)

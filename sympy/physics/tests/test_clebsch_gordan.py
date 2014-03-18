@@ -106,7 +106,7 @@ def test_clebsch_gordan2():
 
 def test_wigner():
     def tn(a, b):
-        return abs((a - b).n(64) < S('1e-64'))
+        return (a - b).n(64) < S('1e-64')
     assert tn(wigner_9j(1, 1, 1, 1, 1, 1, 1, 1, 0, prec=64), S(1)/18)
     assert wigner_9j(3, 3, 2, 3, 3, 2, 3, 3, 2) == 3221*sqrt(
         70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
@@ -116,7 +116,7 @@ def test_wigner():
 
 def test_gaunt():
     def tn(a, b):
-        return abs((a - b).n(64) < S('1e-64'))
+        return (a - b).n(64) < S('1e-64')
     assert gaunt(1, 0, 1, 1, 0, -1) == -1/(2*sqrt(pi))
     assert tn(gaunt(
         10, 10, 12, 9, 3, -12, prec=64), (-S(98)/62031) * sqrt(6279)/sqrt(pi))

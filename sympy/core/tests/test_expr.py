@@ -161,15 +161,15 @@ def test_ibasic():
 
 
 def test_relational():
-    assert (pi < 3) is False
-    assert (pi <= 3) is False
-    assert (pi > 3) is True
-    assert (pi >= 3) is True
-    assert (-pi < 3) is True
-    assert (-pi <= 3) is True
-    assert (-pi > 3) is False
-    assert (-pi >= 3) is False
-    assert (x - 2 < x - 3) is False
+    assert (pi < 3) is S.false
+    assert (pi <= 3) is S.false
+    assert (pi > 3) is S.true
+    assert (pi >= 3) is S.true
+    assert (-pi < 3) is S.true
+    assert (-pi <= 3) is S.true
+    assert (-pi > 3) is S.false
+    assert (-pi >= 3) is S.false
+    assert (x - 2 < x - 3) is S.false
 
 
 def test_relational_assumptions():
@@ -186,26 +186,26 @@ def test_relational_assumptions():
     m2 = Symbol("m2", positive=False, real=True)
     m3 = Symbol("m3", nonpositive=False, real=True)
     m4 = Symbol("m4", negative=False, real=True)
-    assert (m1 < 0) is True
-    assert (m2 <= 0) is True
-    assert (m3 > 0) is True
-    assert (m4 >= 0) is True
+    assert (m1 < 0) is S.true
+    assert (m2 <= 0) is S.true
+    assert (m3 > 0) is S.true
+    assert (m4 >= 0) is S.true
     m1 = Symbol("m1", negative=True)
     m2 = Symbol("m2", nonpositive=True)
     m3 = Symbol("m3", positive=True)
     m4 = Symbol("m4", nonnegative=True)
-    assert (m1 < 0) is True
-    assert (m2 <= 0) is True
-    assert (m3 > 0) is True
-    assert (m4 >= 0) is True
+    assert (m1 < 0) is S.true
+    assert (m2 <= 0) is S.true
+    assert (m3 > 0) is S.true
+    assert (m4 >= 0) is S.true
     m1 = Symbol("m1", negative=False)
     m2 = Symbol("m2", nonpositive=False)
     m3 = Symbol("m3", positive=False)
     m4 = Symbol("m4", nonnegative=False)
-    assert (m1 < 0) is False
-    assert (m2 <= 0) is False
-    assert (m3 > 0) is False
-    assert (m4 >= 0) is False
+    assert (m1 < 0) is S.false
+    assert (m2 <= 0) is S.false
+    assert (m3 > 0) is S.false
+    assert (m4 >= 0) is S.false
 
 
 def test_relational_noncommutative():
@@ -282,7 +282,7 @@ def test_as_leading_term3():
 
 
 def test_as_leading_term4():
-    # see issue 3744
+    # see issue 6843
     n = Symbol('n', integer=True, positive=True)
     r = -n**3/(2*n**2 + 4*n + 2) - n**2/(n**2 + 2*n + 1) + \
         n**2/(n + 1) - n/(2*n**2 + 4*n + 2) + n/(n*x + x) + 2*n/(n + 1) - \
@@ -329,7 +329,7 @@ def test_atoms():
     assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == \
         set([1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z])
 
-    # issue 3033
+    # issue 6132
     f = Function('f')
     e = (f(x) + sin(x) + 2)
     assert e.atoms(AppliedUndef) == \
@@ -433,7 +433,7 @@ def test_is_algebraic_expr():
     assert (cos(y)/sqrt(x)).is_algebraic_expr(x, y) is False
 
 def test_SAGE1():
-    #see http://code.google.com/p/sympy/issues/detail?id=247
+    #see https://github.com/sympy/sympy/issues/3346
     class MyInt:
         def _sympy_(self):
             return Integer(5)
@@ -578,7 +578,7 @@ def test_as_independent():
     assert (2*sin(x)).as_independent(x) == (2, sin(x))
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
 
-    # issue 1804 = 1766b
+    # issue 4903 = 1766b
     n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
     assert (n1 + n1*n2).as_independent(n2) == (n1, n1*n2)
     assert (n2*n1 + n1*n2).as_independent(n2) == (0, n1*n2 + n2*n1)
@@ -590,10 +590,10 @@ def test_as_independent():
     assert (3 + x).as_independent(x, as_Add=True) == (3, x)
     assert (3 + x).as_independent(x, as_Add=False) == (1, 3 + x)
 
-    # issue 2380
+    # issue 5479
     assert (3*x).as_independent(Symbol) == (3, x)
 
-    # issue 2549
+    # issue 5648
     assert (n1*x*y).as_independent(x) == (n1*y, x)
     assert ((x + n1)*(x - y)).as_independent(x) == (1, (x + n1)*(x - y))
     assert ((x + n1)*(x - y)).as_independent(y) == (x + n1, x - y)
@@ -605,7 +605,7 @@ def test_as_independent():
     assert (DiracDelta(x - n1)*DiracDelta(y - n1)*DiracDelta(x - n2)).as_independent(y) == \
            (DiracDelta(x - n1)*DiracDelta(x - n2), DiracDelta(y - n1))
 
-    # issue 2685
+    # issue 5784
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
 
@@ -950,7 +950,7 @@ def test_as_coeff_exponent():
     assert (2*x**3 + pi*x**3).as_coeff_exponent(x) == (2 + pi, 3)
     assert (x*log(2)/(2*x + pi*x)).as_coeff_exponent(x) == \
         (log(2)/(2 + pi), 0)
-    # 1685
+    # issue 4784
     D = Derivative
     f = Function('f')
     fx = D(f(x), x)
@@ -1132,7 +1132,7 @@ def test_as_base_exp():
     assert ((x + y)**z).as_base_exp() == (x + y, z)
 
 
-def test_issue1864():
+def test_issue_4963():
     assert hasattr(Mul(x, y), "is_commutative")
     assert hasattr(Mul(x, y, evaluate=False), "is_commutative")
     assert hasattr(Pow(x, y), "is_commutative")
@@ -1220,7 +1220,7 @@ def test_new_rawargs():
     assert m._new_rawargs(S.One) is S.One
 
 
-def test_2127():
+def test_issue_5226():
     assert Add(evaluate=False) == 0
     assert Mul(evaluate=False) == 1
     assert Mul(x + y, evaluate=False).is_Add
@@ -1236,7 +1236,7 @@ def test_free_symbols():
     assert (meter**x).free_symbols == set([x])
 
 
-def test_issue2201():
+def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
@@ -1315,6 +1315,9 @@ def test_expr_sorting():
     exprs = [set([1]), set([1, 2])]
     assert sorted(exprs, key=default_sort_key) == exprs
 
+    a, b = exprs = [Dummy(), Dummy()]
+    assert sorted([b, a], key=default_sort_key) == exprs
+
 
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
@@ -1371,7 +1374,7 @@ def test_sort_key_atomic_expr():
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 
-def test_issue_1100():
+def test_issue_4199():
     # first subs and limit gives NaN
     a = x/y
     assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) is S.NaN
@@ -1404,7 +1407,7 @@ def test_primitive():
     assert S.Zero.primitive() == (S.One, S.Zero)
 
 
-def test_issue_2744():
+def test_issue_5843():
     a = 1 + x
     assert (2*a).extract_multiplicatively(a) == 2
     assert (4*a).extract_multiplicatively(2*a) == 2
@@ -1484,7 +1487,7 @@ def test_equals():
     p = expand(q**3)**Rational(1, 3)
     assert (p - q).equals(0)
 
-    # issue 3730
+    # issue 6829
     # eq = q*x + q/4 + x**4 + x**3 + 2*x**2 - S(1)/3
     # z = eq.subs(x, solve(eq, x)[0])
     q = symbols('q')
@@ -1587,7 +1590,7 @@ def test_round():
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
     assert (pi/10 + E*I).round(2) == Float(0.31, 2) + I*Float(2.72, 3)
 
-    # issue 3815
+    # issue 6914
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
 
 
@@ -1610,7 +1613,7 @@ def test_float_0_fail():
     assert (x + Float(0.0)).is_Add
 
 
-def test_issue_3226():
+def test_issue_6325():
     ans = (b**2 + z**2 - (b*(a + b*t) + z*(c + t*z))**2/(
         (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
     e = sqrt((a + b*t)**2 + (c + z*t)**2)
