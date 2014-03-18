@@ -3266,7 +3266,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> dsolve(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3), f(x),
+    >>> dsolve(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x) - x**3, f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous')
     f(x) = C1*x**2 + C2*x + Rational(1, 2)*x**3
 
