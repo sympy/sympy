@@ -173,12 +173,12 @@ def mdft(n):
     [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3, sqrt(3)*exp(-4*I*pi/3)/3],
     [sqrt(3)/3, sqrt(3)*exp(-4*I*pi/3)/3, sqrt(3)*exp(-8*I*pi/3)/3]])
     """
-    mat = [[None for x in range(n)] for y in range(n)]
+    mat = [[None for x in xrange(n)] for y in xrange(n)]
     base = exp(-2*pi*I/n)
     mat[0] = [1]*n
     for i in range(n):
         mat[i][0] = 1
-    for i in range(1,n):
-        for j in range(1,n):
-            mat[i][j] = base**(i*j)
+    for i in xrange(1, n):
+        for j in xrange(i, n):
+            mat[i][j] = mat[j][i] = base**(i*j)
     return (1/sqrt(n))*Matrix(mat)
