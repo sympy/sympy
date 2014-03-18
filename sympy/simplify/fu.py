@@ -1792,6 +1792,7 @@ def trig_split(a, b, two=False):
 
     Examples
     ========
+
     >>> from sympy.simplify.fu import trig_split
     >>> from sympy.abc import x, y, z
     >>> from sympy import cos, sin, sqrt

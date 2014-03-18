@@ -1961,6 +1961,7 @@ def square_factor(a):
 
     Examples
     ========
+
     >>> from sympy.solvers.diophantine import square_factor
     >>> square_factor(24)
     2

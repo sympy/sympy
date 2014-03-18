@@ -252,6 +252,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     Examples
     ========
+
     >>> from sympy.solvers.pde import classify_pde
     >>> from sympy import Function, diff, Eq
     >>> from sympy.abc import x, y
@@ -413,6 +414,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
     Examples
     ========
+
     >>> from sympy import Function, symbols, diff
     >>> from sympy.solvers.pde import checkpdesol, pdsolve
     >>> x, y = symbols('x y')

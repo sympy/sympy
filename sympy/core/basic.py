@@ -1113,6 +1113,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Examples
         ========
+
         >>> from sympy import symbols, pi, exp
         >>> x, y, z = symbols('x y z')
         >>> (1 + x*y).xreplace({x: pi})
@@ -1761,6 +1762,7 @@ def _atomic(e):
 
     Examples
     ========
+
     >>> from sympy import Derivative, Function, cos
     >>> from sympy.abc import x, y
     >>> from sympy.core.basic import _atomic

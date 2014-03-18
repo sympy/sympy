@@ -1884,6 +1884,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
         >>> e.extract_additively(x + 1)
@@ -2987,6 +2988,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy import pi, E, I, S, Add, Mul, Number
         >>> S(10.5).round()
         11.
@@ -3093,6 +3095,7 @@ def _mag(x):
 
     Examples
     ========
+
     >>> from sympy.core.expr import _mag
     >>> from sympy import Float
     >>> _mag(Float(.1))
