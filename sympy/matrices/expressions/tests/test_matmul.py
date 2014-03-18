@@ -1,6 +1,7 @@
-from sympy.core import I, symbols
+from sympy.core import I, symbols, Basic
 from sympy.functions import adjoint, transpose
-from sympy.matrices import Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix
+from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
+        eye, zeros, ImmutableMatrix)
 from sympy.matrices.expressions import Adjoint, Transpose, det
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
@@ -87,3 +88,13 @@ def test_doit():
     assert MatMul(C, 2, D).doit().args == (2, C, D)
     assert MatMul(C, Transpose(D*C)).args == (C, Transpose(D*C))
     assert MatMul(C, Transpose(D*C)).doit(deep=True).args == (C, C.T, D.T)
+
+
+def test_matmul_sympify():
+    assert isinstance(MatMul(eye(1), eye(1)).args[0], Basic)
+
+
+def test_collapse_MatrixBase():
+    A = Matrix([[1, 1], [1, 1]])
+    B = Matrix([[1, 2], [3, 4]])
+    assert MatMul(A, B).doit() == ImmutableMatrix([[4, 6], [4, 6]])

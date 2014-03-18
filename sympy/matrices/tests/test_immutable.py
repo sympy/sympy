@@ -86,3 +86,7 @@ def test_immutable_evaluation():
     assert isinstance(X * 2, ImmutableMatrix)
     assert isinstance(2 * X, ImmutableMatrix)
     assert isinstance(A**2, ImmutableMatrix)
+
+
+def test_deterimant():
+    assert ImmutableMatrix(4, 4, lambda i, j: i + j).det() == 0
