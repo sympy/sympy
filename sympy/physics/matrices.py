@@ -154,7 +154,8 @@ minkowski_tensor = Matrix( (
 ))
 
 def mdft(n):
-    r"""Returns an expression of a discrete Fourier transform as a matrix multiplication.
+    r"""
+    Returns an expression of a discrete Fourier transform as a matrix multiplication.
     It is an n X n matrix.
 
     References
