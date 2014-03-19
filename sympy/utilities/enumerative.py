@@ -737,6 +737,7 @@ class MultisetPartitionTraverser():
 
         Examples
         ========
+
         >>> from sympy.utilities.enumerative import list_visitor
         >>> from sympy.utilities.enumerative import MultisetPartitionTraverser
         >>> m = MultisetPartitionTraverser()

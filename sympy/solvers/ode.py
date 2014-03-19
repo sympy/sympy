@@ -2742,6 +2742,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x, y
     >>> f = Function("f")
@@ -2905,6 +2906,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x, y
     >>> f = Function("f")
@@ -3532,6 +3534,7 @@ def ode_1st_power_series(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, Derivative, pprint, exp
     >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
@@ -4501,6 +4504,7 @@ def _lie_group_remove(coords):
 
     Examples
     ========
+
     >>> from sympy.solvers.ode import _lie_group_remove
     >>> from sympy import Function
     >>> from sympy.abc import x, y

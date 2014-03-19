@@ -1588,6 +1588,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     Examples
     ========
+
     >>> from sympy.integrals.risch import risch_integrate
     >>> from sympy import exp, log, pprint
     >>> from sympy.abc import x

@@ -1080,6 +1080,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> square = RegularPolygon((0, 0), 1, 4)
         >>> square.area
@@ -1100,6 +1101,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> from sympy import sqrt
         >>> s = square_in_unit_circle = RegularPolygon((0, 0), 1, 4)
