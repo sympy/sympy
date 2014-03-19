@@ -28,8 +28,8 @@ def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
         'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
-    OR, AND, NAND, NOR, IMPLIES, EQUIVALENT = symbols(
-        'Or And Nand Nor Implies Equivalent'.upper())
+    OR, AND, IMPLIES, EQUIVALENT = symbols(
+        'Or And Implies Equivalent'.upper())
 
     def count(val):
         return count_ops(val, visual=True)
@@ -90,8 +90,8 @@ def test_count_ops_visual():
 
     assert count(Or(x,y)) == OR
     assert count(And(x,y)) == AND
-    assert count(Nor(x,y)) == NOR
-    assert count(Nand(x,y)) == NAND
+    assert count(Nor(x,y)) == AND
+    assert count(Nand(x,y)) == OR
     assert count(Xor(x,y)) == 2*AND + OR
     assert count(Implies(x,y)) == IMPLIES
     assert count(Equivalent(x,y)) == EQUIVALENT
