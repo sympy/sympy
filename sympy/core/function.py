@@ -2323,21 +2323,21 @@ def count_ops(expr, visual=False):
         ops = [count_ops(i, visual=visual) for i in expr]
     elif not isinstance(expr, Basic):
         ops = []
+    elif expr.is_Boolean:
+        ops = []
+        args = [expr]
+        while args:
+            a = args.pop()
+            o = C.Symbol(a.func.__name__.upper())
+            ops.append(o*(len(a.args)-1))
+            args_len = len(a.args)
+            aargs = list(a.args)
+            for i in range(args_len):
+                if aargs[i].is_Boolean:
+                    args.append(aargs[i])
     else:  # it's Basic not isinstance(expr, Expr):
         if not isinstance(expr, Basic):
             raise TypeError("Invalid type of expr")
-        elif expr.is_Boolean:
-            ops = []
-            args = [expr]
-            while args:
-                a = args.pop()
-                o = C.Symbol(a.func.__name__.upper())
-                ops.append(o*(len(a.args)-1))
-                args_len = len(a.args)
-                aargs = list(a.args)
-                for i in range(args_len):
-                    if aargs[i].is_Boolean:
-                        args.append(aargs[i])
         ops = [count_ops(a, visual=visual) for a in expr.args]
 
     if not ops:
