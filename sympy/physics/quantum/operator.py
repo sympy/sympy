@@ -100,6 +100,10 @@ class Operator(QExpr):
     def default_args(self):
         return ("O",)
 
+    @property
+    def free_symbols(self):
+        return set([self])
+
     #-------------------------------------------------------------------------
     # Printing
     #-------------------------------------------------------------------------
