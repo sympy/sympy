@@ -98,6 +98,5 @@ def test_count_ops_visual():
     assert count(ITE(x,y,z)) == 2*AND + OR
 
     # XXX: These are a bit surprising, only Expr-compatible ops are counted.
-    assert count(And(x, y, z)) == 0
     assert count(Basic(x, x + y)) == ADD
     assert count(Eq(x + y, S(2))) == ADD
