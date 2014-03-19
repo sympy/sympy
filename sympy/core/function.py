@@ -54,7 +54,7 @@ from sympy import mpmath
 import sympy.mpmath.libmp as mlib
 
 import inspect
-
+from sympy import Or,And,Not,Xor,Nand,Nor,Implies,Equivalent
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -2327,6 +2327,14 @@ def count_ops(expr, visual=False):
         if not isinstance(expr, Basic):
             raise TypeError("Invalid type of expr")
         ops = [count_ops(a, visual=visual) for a in expr.args]
+
+    bool_ops = ['Or','And','Not','Xor','Nand','Nor','Implies','Equivalent']
+    for bool_func in bool_ops:
+        if bool_func in str(expr):
+            operations = 0
+            for bool_functions in bool_ops:
+                operations += str(expr).count(bool_functions)
+            return operations
 
     if not ops:
         if visual:
