@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
+from sympy.matrices.expressions.matexpr import Identity
 
 __all__ = [
     'numpy_ndarray',
@@ -188,15 +189,22 @@ def _sympy_tensor_product(*matrices):
     [1] http://en.wikipedia.org/wiki/Kronecker_product
     """
     # Make sure we have a sequence of Matrices
-    if not all(isinstance(m, Matrix) for m in matrices):
-        raise TypeError(
-            'Sequence of Matrices expected, got: %s' % repr(matrices)
-        )
+    transformed = []
+    for m in matrices:
+        if isinstance(m, Matrix):
+            transformed.append(m)
+        elif isinstance(m, Identity):
+            m = m.as_explicit()
+            transformed.append(m)
+        else:
+            raise TypeError(
+                'Sequence of Matrices expected, got: %s' % repr(matrices)
+            )
 
     # Pull out the first element in the product.
-    matrix_expansion = matrices[-1]
+    matrix_expansion = transformed[-1]
     # Do the tensor product working from right to left.
-    for mat in reversed(matrices[:-1]):
+    for mat in reversed(transformed[:-1]):
         rows = mat.rows
         cols = mat.cols
         # Go through each row appending tensor product to.
@@ -244,10 +252,13 @@ def matrix_tensor_product(*product):
     """Compute the matrix tensor product of sympy/numpy/scipy.sparse matrices."""
     if isinstance(product[0], Matrix):
         return _sympy_tensor_product(*product)
+    elif isinstance(product[0], Identity):
+        return _sympy_tensor_product(*product)
     elif isinstance(product[0], numpy_ndarray):
         return _numpy_tensor_product(*product)
     elif isinstance(product[0], scipy_sparse_matrix):
         return _scipy_sparse_tensor_product(*product)
+    raise NotImplementedError("`matrix_tensor_product` not implemented for '%s'." % type(product[0]))
 
 
 def _numpy_eye(n):

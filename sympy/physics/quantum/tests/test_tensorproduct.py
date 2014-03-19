@@ -1,4 +1,5 @@
 from sympy import I, symbols, Matrix
+from sympy.matrices.expressions.matexpr import Identity
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -105,3 +106,10 @@ def test_eval_trace():
                         1.0*A*Dagger(C)*Tr(B*Dagger(D)) +
                         1.0*C*Dagger(A)*Tr(D*Dagger(B)) +
                         1.0*C*Dagger(C)*Tr(D*Dagger(D)))
+
+
+def test_tensor_product_identity():
+    assert (TensorProduct(Identity(2), mat1)) == \
+        TensorProduct(Matrix(Identity(2)), mat1)
+    assert (TensorProduct(mat1, Identity(2))) == \
+        TensorProduct(mat1, Matrix(Identity(2)))
