@@ -1,5 +1,5 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
-    count_ops, S, And, I, pi, Eq
+    count_ops, S, And, I, pi, Eq, Or, Not, Xor ,Nand ,Nor, Implies,Equivalent, ITE
 
 x, y, z = symbols('x,y,z')
 
@@ -14,12 +14,22 @@ def test_count_ops_non_visual():
     assert count(x + y*x + 2*y) == 4
     assert count({x + y: x}) == 1
     assert count({x + y: S(2) + x}) is not S.One
-
+    assert count(Or(x,y)) == 1
+    assert count(And(x,y)) == 1
+    assert count(Not(x)) == 0
+    assert count(Nor(x,y)) == 1
+    assert count(Nand(x,y)) == 1
+    assert count(Xor(x,y)) == 3
+    assert count(Implies(x,y)) == 1
+    assert count(Equivalent(x,y)) == 1
+    assert count(ITE(x,y,z)) == 3
 
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
         'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
+    OR, AND, XOR, NAND, NOR, IMPLIES, NOT, EQUIVALENT = symbols(
+        'Or And Xor Nand Nor Implies Not Equivalent'.upper())
 
     def count(val):
         return count_ops(val, visual=True)
@@ -77,6 +87,15 @@ def test_count_ops_visual():
     assert count({}) is S.Zero
     assert count([x + 1, sin(x)*y, None]) == SIN + ADD + MUL
     assert count([]) is S.Zero
+
+    assert count(Or(x,y)) == OR
+    assert count(And(x,y)) == AND
+    assert count(Nor(x,y)) == NOR
+    assert count(Nand(x,y)) == NAND
+    assert count(Xor(x,y)) == XOR
+    assert count(Implies(x,y)) == IMPLIES
+    assert count(Equivalent(x,y)) == EQUIVALENT
+    assert count(ITE(x,y,z)) == 2*AND + OR
 
     # XXX: These are a bit surprising, only Expr-compatible ops are counted.
     assert count(And(x, y, z)) == 0
