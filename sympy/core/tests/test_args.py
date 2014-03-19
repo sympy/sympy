@@ -2309,11 +2309,6 @@ def test_sympy__physics__quantum__piab__PIABBra():
     assert _test_args(PIABBra('B'))
 
 
-def test_sympy__physics__quantum__operator__UnitaryOperator():
-    from sympy.physics.quantum.operator import UnitaryOperator
-    assert _test_args(UnitaryOperator('U'))
-
-
 def test_sympy__physics__quantum__fieldoperator__BosonOperator():
     from sympy.physics.quantum.fieldoperator import BosonOperator
     assert _test_args(BosonOperator('a'))
