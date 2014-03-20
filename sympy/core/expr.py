@@ -57,7 +57,9 @@ class Expr(Basic, EvalfMixin):
         else:
             expr, exp = expr, S.One
 
-        if expr.is_Atom:
+        if expr.is_Dummy:
+            args = (expr.sort_key(),)
+        elif expr.is_Atom:
             args = (str(expr),)
         else:
             if expr.is_Add:
