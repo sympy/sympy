@@ -543,7 +543,7 @@ def eigsy(ctx, A, eigvals_only = False, overwrite_a = False):
          (E, Q)      if eigvals_only is false
 
     example:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[3, 2], [2, 0]])
       >>> E = mp.eigsy(A, eigvals_only = True)
       >>> print(E)
@@ -617,7 +617,7 @@ def eighe(ctx, A, eigvals_only = False, overwrite_a = False):
           (E, Q)     if eigvals_only is false
 
     example:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[1, -3 - 1j], [-3 + 1j, -2]])
       >>> E = mp.eighe(A, eigvals_only = True)
       >>> print(E)
@@ -695,7 +695,7 @@ def eigh(ctx, A, eigvals_only = False, overwrite_a = False):
          (E, Q)     if eigvals_only is false
 
     example:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[3, 2], [2, 0]])
       >>> E = mp.eigh(A, eigvals_only = True)
       >>> print(E)
@@ -778,7 +778,7 @@ def gauss_quadrature(ctx, n, qtype = "legendre", alpha = 0, beta = 0):
                       with alpha>-1 and beta>-1
 
     examples:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> f = lambda x: x**8 + 2 * x**6 - 3 * x**4 + 5 * x**2 - 7
       >>> X, W = mp.gauss_quadrature(5, "hermite")
       >>> A = mp.fdot([(f(x), w) for x, w in zip(X, W)])
@@ -1571,7 +1571,7 @@ def svd_r(ctx, A, full_matrices = False, compute_uv = True, overwrite_a = False)
 
     examples:
 
-       >>> from mpmath import mp
+       >>> from sympy.mpmath import mp
        >>> A = mp.matrix([[2, -2, -1], [3, 4, -2], [-2, -2, 0]])
        >>> S = mp.svd_r(A, compute_uv = False)
        >>> print(S)
@@ -1676,7 +1676,7 @@ def svd_c(ctx, A, full_matrices = False, compute_uv = True, overwrite_a = False)
         V           : min(m,n)*n             V  V' = 1
 
     example:
-      >>> from mpmath import mp
+      >>> from sympy.mpmath import mp
       >>> A = mp.matrix([[-2j, -1-3j, -2+2j], [2-2j, -1-3j, 1], [-3+1j,-2j,0]])
       >>> S = mp.svd_c(A, compute_uv = False)
       >>> print(mp.chop(S - mp.matrix([mp.sqrt(34), mp.sqrt(15), mp.sqrt(6)])))
@@ -1783,7 +1783,7 @@ def svd(ctx, A, full_matrices = False, compute_uv = True, overwrite_a = False):
 
     examples:
 
-       >>> from mpmath import mp
+       >>> from sympy.mpmath import mp
        >>> A = mp.matrix([[2, -2, -1], [3, 4, -2], [-2, -2, 0]])
        >>> S = mp.svd(A, compute_uv = False)
        >>> print(S)

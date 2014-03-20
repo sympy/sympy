@@ -433,7 +433,7 @@ class LinearAlgebraMethods(object):
 
         Cholesky decomposition of a positive-definite symmetric matrix::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 25; mp.pretty = True
             >>> A = eye(3) + hilbert(3)
             >>> nprint(A)
@@ -601,7 +601,7 @@ class LinearAlgebraMethods(object):
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15
             >>> mp.pretty = True
             >>> A = matrix([[1, 2], [3, 4], [1, 1]])

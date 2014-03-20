@@ -1,5 +1,5 @@
-from mpmath import *
-from mpmath.libmp import ifac
+from sympy.mpmath import *
+from sympy.mpmath.libmp import ifac
 
 import sys
 if "-dps" in sys.argv:

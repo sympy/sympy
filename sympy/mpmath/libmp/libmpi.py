@@ -539,7 +539,7 @@ def mpi_to_str(x, dps, use_spaces=True, brackets='[]', mode='brackets', error_dp
 
     **Examples**
 
-        >>> from mpmath import mpi, mp
+        >>> from sympy.mpmath import mpi, mp
         >>> mp.dps = 30
         >>> x = mpi(1, 2)
         >>> mpi_to_str(x, mode='plusminus')
