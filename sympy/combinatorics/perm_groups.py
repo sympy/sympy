@@ -3071,12 +3071,11 @@ class PermutationGroup(Basic):
                 computed_words[l] = rmul(computed_words[l - 1], u[l])
 
     def cyclic_subgroups(self,t):
-        """
-        Returns the list of Cyclic Subgroups of order t in G.
-            
+        """Returns the list of Cyclic Subgroups of order t in G.
+
         Examples
         ========
-         
+
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> t=4
         >>> G=AlternatingGroup(4)
@@ -3086,6 +3085,7 @@ class PermutationGroup(Basic):
           Permutation(3)(0, 1, 2)]), PermutationGroup([
           Permutation(0, 2, 3)]), PermutationGroup([
           Permutation(0, 3, 1)])]
+
         """
         cyclic=[]
         if self.order()%t>0:
