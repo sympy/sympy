@@ -1159,8 +1159,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 undetcoeff = _undetermined_coefficients_match(r[-1], x)
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
-                matching_hints["nth_linear_euler_eq_nonhomogeneous_Integral"] = r
+                    matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
+                else:
+                    matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
+                    matching_hints["nth_linear_euler_eq_nonhomogeneous_Integral"] = r
 
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
@@ -3283,7 +3285,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     r = match
 
     chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
-    t = Dummy('t')
+    t = Symbol('t')
     #for i in r.keys():
     for i in r.keys():
         if not isinstance(i, str) and i >= 0:
