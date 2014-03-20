@@ -1156,8 +1156,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if not r[-1]:
                 matching_hints["nth_linear_euler_eq_homogeneous"] = r
             else:
-               matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
-               matching_hints["nth_linear_euler_eq_nonhomogeneous_Integral"] = r
+                undetcoeff = _undetermined_coefficients_match(r[-1], x)
+                if undetcoeff['test']:
+                    r['trialset'] = undetcoeff['trialset']
+                matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
+                matching_hints["nth_linear_euler_eq_nonhomogeneous_Integral"] = r
 
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
