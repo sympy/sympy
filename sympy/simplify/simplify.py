@@ -35,6 +35,8 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
 
 import sympy.mpmath as mpmath
 
+from sympy.functions.combinatorial.numbers import fibonacci
+
 
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
@@ -2341,7 +2343,7 @@ def _denest_pow(eq):
 
 
 def powdenest(eq, force=False, polar=False):
-    r"""
+    """
     Collect exponents on powers as assumptions allow.
 
     Given ``(bb**be)**e``, this can be simplified as follows:
@@ -2977,7 +2979,7 @@ from sympy.utilities.timeutils import timethis
 
 @timethis('combsimp')
 def combsimp(expr):
-    r"""
+    """
     Simplify combinatorial expressions.
 
     This function takes as input an expression containing factorials,
@@ -3700,6 +3702,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     expr = piecewise_fold(expr)
 
+    if expr.has(fibonacci):
+        expr = fibsimp(expr)
+
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
@@ -4354,6 +4359,59 @@ def _futrig(e, **kwargs):
     e = greedy(tree, objective=Lops)(e)
 
     return coeff*e
+
+def fibsimp(s):
+    """
+    Simplifying expressions with Fibonacci functions
+
+    Notes
+    =====
+    Very basic start for dealing with simplifying expression
+    with fibonacci functions. This only works for the simple
+    case when the expresion is exactly of the form
+
+    s = fibonacci(a) + fibonacci(b)
+
+    if a = b +- 1 it will return the corresponding simplified
+    expression
+    """
+
+    # TODO
+    # - Is this ad hoc way the right approach? I need to explore
+    #   simplify more and get a feel if there is a more general way.
+    #   This definitely seem quite fast, but maybe not scalable
+    #   to complicated expression.
+    # - If this is on the right track the first thing to do is
+    #   replace the initial check for the form of the expression
+    #   with some type of pattern matching search to extract
+    #   only the relevant part of a complicated expression
+    #   and simplify that
+    # - After this maybe more properties of Fibonacci can be implemented
+    #   in a similar manner.
+
+    # Makes sure we do not do anything if the expression is not
+    # in the simplest form possible
+    if not isinstance(s, Add):
+        return s
+
+    if not len(s.args) == 2:
+        return s
+
+    for i in range(2):
+        if not isinstance(s.args[i], fibonacci):
+            return s
+
+    # Simplifies expression
+    f1 = s.args[0]
+    f2 = s.args[1]
+
+    n1 = f1.args[0]
+    n2 = f2.args[0]
+
+    if n1 - n2 == 1:
+        return fibonacci(n1 + 1)
+    if n2 - n1 == 1:
+        return fibonacci(n2 + 1)
 
 
 def sum_simplify(s):
