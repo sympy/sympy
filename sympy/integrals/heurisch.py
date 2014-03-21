@@ -336,11 +336,14 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             terms |= set(hints)
 
     for g in set(terms):
-        terms |= components(cancel(g.diff(x)), x)
+        try:
+            terms |= components(cancel(g.heurisch_diff()), x)
+
+        except:
+            terms |= components(cancel(g.diff(x)), x)
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
-
     mapping = dict(list(zip(terms, V)))
 
     rev_mapping = {}
@@ -366,7 +369,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for mapping in mappings:
         mapping = list(mapping)
         mapping = mapping + unnecessary_permutations
-        diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
+        diffs=[]
+        for g in terms:
+            try:
+                diffs.append( _substitute(cancel(g.heurisch_diff())))
+            except:
+                diffs.append( _substitute(cancel(g.diff(x))))
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
         if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
             denom = reduce(lambda p, q: lcm(p, q, *V), denoms)

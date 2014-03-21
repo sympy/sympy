@@ -754,13 +754,21 @@ class LambertW(Function):
         if x == S.Infinity:
             return S.Infinity
 
-    def fdiff(self, argindex=1):
+    def heurisch_diff(self, argindex=1):
         """
         Return the first derivative of this function.
         """
+
         if argindex == 1:
             x = self.args[0]
             return LambertW(x)/(x*(1 + LambertW(x)))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            x = self.args[0]
+            return 1/((exp(LambertW(x)))*(1 + LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
 

@@ -283,6 +283,13 @@ def test_issue_3952():
 def test_issue_4516():
     assert integrate(2**x - 2*x, x) == 2**x/log(2) - x**2
 
+def test_old_4058():
+    assert integrate(1/(5 + 3*cos(x) + 4*sin(x)), x) in \
+           [-1/(tan(x/2) + 2),tan(x/2)/(2*tan(x/2) + 4)]
+
+def test_issue_1393():
+    #This should now work, output needs to be checked
+    assert integrate(x**2 * sqrt(5 - x**2), x).has(Integral)
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
@@ -724,6 +731,11 @@ def test_issue_4403():
     assert integrate(sqrt(x**2 - z**2), x) == \
         -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
+
+def test_lambertw():
+    assert integrate(LambertW(x),x) == x*LambertW(x) - x +x/LambertW(x)
+
+def test_issue_1304_2():
     x = Symbol('x', real=True)
     y = Symbol('y', nonzero=True, real=True)
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \

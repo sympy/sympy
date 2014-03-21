@@ -2174,6 +2174,13 @@ def test_anti_symmetric():
     m[0, 0] = 1
     assert m.is_anti_symmetric() is False
 
+def test_probability_transition():
+    assert Matrix([0.7,0.3]).is_probability_transition() is False
+    m = Matrix(3,3,[0,0.6,0.4,1,0,0,0.3,0.2,0.5])
+    n = Matrix(3,3,[1,x,-x,1,0,0,0.3,0.2,0.5])
+    assert m.is_probability_transition() is True
+    assert n.is_probability_transition() is True
+
 
 def test_normalize_sort_diogonalization():
     A = Matrix(((1, 2), (2, 1)))

@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.numbers import igcdex
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -912,9 +912,15 @@ class tan(TrigonometricFunction):
 
     """
 
+    def heurisch_diff(self, argindex=1):
+        if argindex == 1:
+            return (S.One + self**2)*Derivative(self.args[0],evaluate=True)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.One + self**2
+            return  (sec(self.args[0])**2)
         else:
             raise ArgumentIndexError(self, argindex)
 

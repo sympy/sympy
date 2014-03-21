@@ -2383,6 +2383,19 @@ class MatrixBase(object):
                     return False
         return True
 
+    def is_probability_transition(self):
+        """
+        Checks if a matrix can represent a probability transition matrix.
+        The matrix must be square and all row entries must sum to 1.
+        """
+        if not self.is_square:
+            return False
+        for i in range(self.rows):
+            if sum(self.cols) != 1:
+                return False
+        return True
+
+
     def det(self, method="bareis"):
         """Computes the matrix determinant using the method "method".
 

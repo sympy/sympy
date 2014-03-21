@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs
+    Function, log, sqrt, Symbol, Subs, LambertW
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -27,6 +27,11 @@ def test_exp2():
     e1 = exp(cos(x)).series(x, 0)
     e2 = series(exp(cos(x)), x, 0)
     assert e1 == e2
+
+def test_lambertW_series():
+    #Test series around x=0
+    assert series(LambertW(x),x,6) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
+
 
 
 def test_issue_5223():
