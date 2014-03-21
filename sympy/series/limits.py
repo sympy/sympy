@@ -47,6 +47,16 @@ def limit(e, z, z0, dir="+"):
     if not e.has(z):
         return e
 
+    if e.has(C.Float):
+        prec = min(a._prec for a in e.atoms(C.Float))
+        d = C.Dummy('d') # XXX
+        e = e.replace(lambda v: v.is_Float, lambda v: d*C.Rational(v))
+        e = e.replace(d, S.One)
+        r = limit(e, z, z0)
+        r = r.replace(lambda v: v.is_Rational, lambda v: d*v.n(n=prec))
+        r = r.replace(d, C.Float(1.0, prec=prec))
+        return r.n(n=prec)
+        
     # gruntz fails on factorials but works with the gamma function
     # If no factorial term is present, e should remain unchanged.
     # factorial is defined to be zero for negative inputs (which
