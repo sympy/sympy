@@ -3274,7 +3274,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     >>> f = Function('f')
     >>> dsolve(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x, f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous')
-    f(x) = C1*x**2 + C2*x - x*log(x)
+    f(x) == x*(C1 + C2*x - log(x))
 
     References
     ==========
@@ -3299,8 +3299,12 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     e, re = posify(r[-1].subs(x, exp(x)))
     eq += e.subs(re)
 
+    match = _nth_linear_match(eq, f(x), ode_order(eq, f(x)))
+    undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
+    if undetcoeff['test']:
+        match['trialset'] = undetcoeff['trialset']
     if 'nth_linear_constant_coeff_undetermined_coefficients' in classify_ode(eq):
-        return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x))
+        return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x))
     else:
         return ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match).subs(x, log(x))
 
