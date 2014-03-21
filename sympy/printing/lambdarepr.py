@@ -104,6 +104,14 @@ class LambdaPrinter(StrPrinter):
             return '*'.join([self.parenthesize(arg, precedence(expr))
                 for arg in expr.args])
 
+    def _print_Transpose(self, T):
+        return "%s.T" % self.parenthesize(T.arg, 1000)
+
+    def _print_Inverse(self, I):
+        if self.use_numpy:
+            return "linalg.inv(%s)" % self.parenthesize(I.arg, 1000)
+        else:
+            return "%s**-1" % self.parenthesize(I.arg, 1000)
 
 def lambdarepr(expr, **settings):
     """

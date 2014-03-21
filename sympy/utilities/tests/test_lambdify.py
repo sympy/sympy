@@ -264,11 +264,15 @@ def test_matrix_symbol():
     #Test matrix symbol lambdification with sympy
     A = MatrixSymbol('A', 2, 2)
     B = MatrixSymbol('B', 2, 2)
-    f = lambdify((A, B), 5*(A-B) + A, modules="sympy")
+    C = Matrix([[x, 2*x],
+                [y, 2*y]])
+    f = lambdify((A, B, x, y), A.T*B*A + A.I*C*A*5, modules="sympy")
     a = Matrix([[1, 2], [3, 4]])
     b = Matrix([[1, 0], [0, 1]])
-    sol = Matrix([[1, 12], [18, 19]])
-    assert f(a, b) == sol
+    a = Matrix([[1, 2], [3, 4]])
+    b = Matrix([[1, 0], [0, 1]])
+    sol = Matrix([[ 10. ,  14. ], [ 31.5,  45. ]])
+    assert f(a, b, 1, 2) == sol
 
 def test_matrix_symbol_numpy():
     #Test matrix symbol lambdification with numpy
@@ -276,11 +280,13 @@ def test_matrix_symbol_numpy():
         skip("numpy not installed")
     A = MatrixSymbol('A', 2, 2)
     B = MatrixSymbol('B', 2, 2)
-    f = lambdify((A, B), 5*(A-B) + A)
+    C = Matrix([[x, 2*x],
+                [y, 2*y]])
+    f = lambdify((A, B, x, y), A.T*B*A + A.I*C*A*5)
     a = numpy.array([[1, 2], [3, 4]])
     b = numpy.array([[1, 0], [0, 1]])
-    sol = numpy.array([[1, 12], [18, 19]])
-    numpy.testing.assert_allclose(f(a, b), sol)
+    sol = numpy.array([[ 10. ,  14. ], [ 31.5,  45. ]])
+    numpy.testing.assert_allclose(f(a, b, 1, 2), sol)
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
