@@ -12,7 +12,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, xrange, NotIterable
 
-from sympy.polys import PurePoly, roots, cancel, gcd
+from sympy.polys import PurePoly, roots, cancel, gcd, gcd_list
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -1155,6 +1155,32 @@ class MatrixBase(object):
         return self.applyfunc(lambda x: x.expand(
                               deep, modulus, power_base, power_exp, mul, log, multinomial, basic,
         **hints))
+
+    def put_common_factor_in_front(self):
+        """
+        Extract a common fractor of a matrix and put it in front of it.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x
+        >>> from sympy import sqrt
+        >>> from sympy.matrices import Matrix
+        >>> Matrix([[x/sqrt(2), 5*x**2/sqrt(2)],
+        ...         [-4*x/sqrt(2), 2/sqrt(2)]])
+        Matrix([
+        [ sqrt(2)*x/2, 5*sqrt(2)*x**2/2],
+        [-2*sqrt(2)*x,          sqrt(2)]])
+        >>> _.put_common_factor_in_front()
+        (sqrt(2)/2)*Matrix([
+        [   x, 5*x**2],
+        [-4*x,      2]])
+
+        """
+
+        from sympy.matrices.expressions.matmul import MatMul
+        prediv = gcd_list(list(self))
+        return MatMul(prediv, self / prediv)
 
     def simplify(self, ratio=1.7, measure=count_ops):
         """Apply simplify to each element of the matrix.
