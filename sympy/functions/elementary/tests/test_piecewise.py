@@ -5,7 +5,7 @@ from sympy import (
     cos, exp, Abs, Not
 )
 from sympy.utilities.pytest import XFAIL, raises
-
+from sympy.functions.elementary.piecewise import ExprCondPair as EC
 x, y = symbols('x y')
 z = symbols('z', nonzero=True)
 
@@ -13,7 +13,8 @@ z = symbols('z', nonzero=True)
 def test_piecewise():
 
     # Test canonization
-    assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (0, True)) != Piecewise((x, x < 1), (0, x>=1))
+    assert Piecewise((x, x < 1), (0, True)).args == (EC(x, x < 1), EC(0, True))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == \

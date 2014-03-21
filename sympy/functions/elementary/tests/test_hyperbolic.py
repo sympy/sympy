@@ -18,13 +18,15 @@ def test_sinh():
 
     assert sinh(0) == 0
 
-    assert sinh(1) == sinh(1)
+    assert sinh(1) != sinh(pi-1)
+    assert sinh(1).func is sinh and sinh(1).args[0] == 1
     assert sinh(-1) == -sinh(1)
 
-    assert sinh(x) == sinh(x)
+    assert sinh(x) != sinh(pi-x)
+    assert sinh(x) != -sinh(pi+x)
     assert sinh(-x) == -sinh(x)
 
-    assert sinh(pi) == sinh(pi)
+    assert sinh(pi) != sinh(3*pi)
     assert sinh(-pi) == -sinh(pi)
 
     assert sinh(2**1024 * E) == sinh(2**1024 * E)
@@ -87,10 +89,11 @@ def test_cosh():
 
     assert cosh(0) == 1
 
-    assert cosh(1) == cosh(1)
+    assert cosh(1).func is cosh and cosh(1).args[0] == 1
+    assert cosh(1) != cosh(2*pi-1)
     assert cosh(-1) == cosh(1)
 
-    assert cosh(x) == cosh(x)
+    assert cosh(x) != cosh(2*pi-x)
     assert cosh(-x) == cosh(x)
 
     assert cosh(pi*I) == cos(pi)
@@ -156,10 +159,10 @@ def test_tanh():
 
     assert tanh(0) == 0
 
-    assert tanh(1) == tanh(1)
+    assert tanh(1) != tanh(pi+1)
     assert tanh(-1) == -tanh(1)
 
-    assert tanh(x) == tanh(x)
+    assert tanh(x) != tanh(pi+x)
     assert tanh(-x) == -tanh(x)
 
     assert tanh(pi) == tanh(pi)
@@ -223,12 +226,12 @@ def test_coth():
     assert coth(oo) == 1
     assert coth(-oo) == -1
 
-    assert coth(0) == coth(0)
+    assert coth(0) == 0
 
-    assert coth(1) == coth(1)
+    assert coth(1) != coth(pi+1)
     assert coth(-1) == -coth(1)
 
-    assert coth(x) == coth(x)
+    assert coth(x) != coth(pi+x)
     assert coth(-x) == -coth(x)
 
     assert coth(pi*I) == -I*cot(pi)
@@ -283,10 +286,10 @@ def test_coth_series():
 
 def test_asinh():
     x, y = symbols('x,y')
-    assert asinh(x) == asinh(x)
+    assert asinh(x) != asinh(pi-x)
     assert asinh(-x) == -asinh(x)
     assert asinh(nan) == nan
-    assert asinh( 0) == 0
+    assert asinh(0) == 0
     assert asinh(+1) == log(sqrt(2) + 1)
 
     assert asinh(-1) == log(sqrt(2) - 1)

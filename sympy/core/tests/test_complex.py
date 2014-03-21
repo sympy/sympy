@@ -39,7 +39,7 @@ def test_conjugate():
 def test_abs1():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
-    assert abs(a) == abs(a)
+    assert abs(a) != -abs(a)
     assert abs(-a) == abs(a)
     assert abs(a + I*b) == sqrt(a**2 + b**2)
 
