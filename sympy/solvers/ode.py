@@ -1156,7 +1156,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if not r[-1]:
                 matching_hints["nth_linear_euler_eq_homogeneous"] = r
             else:
-                undetcoeff = _undetermined_coefficients_match(r[-1], x)
+                e, re = posify(r[-1].subs(x, exp(x)))
+                undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
                     matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
@@ -3259,7 +3260,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
 
     These equations can be solved in a general manner, by substituting
     solutions of the form `x = exp(t)`, and deriving a characteristic equation
-    of form g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) which can be then solved
+    of form `g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) \cdots` which can be then solved
     by nth_linear_constant_coeff_variation_of_parameters. If this method hangs, try
     using "nth_linear_euler_eq_nonhomogeneous_Integral" hint which will then use
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` and then
@@ -3271,9 +3272,9 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     >>> from sympy import Function, dsolve, Eq, Derivative
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> dsolve(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x**3, f(x),
+    >>> dsolve(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x, f(x),
     ... hint='nth_linear_euler_eq_nonhomogeneous')
-    f(x) = C1*x**2 + C2*x + Rational(1, 2)*x**3
+    f(x) = C1*x**2 + C2*x - x*log(x)
 
     References
     ==========
@@ -3285,23 +3286,23 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     r = match
 
     chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
-    t = Symbol('t')
     #for i in r.keys():
     for i in r.keys():
         if not isinstance(i, str) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     for i in range(1,degree(chareq)+1):
-        eq += chareq.coeff(symbol**i)*diff(f(t),t,i)
+        eq += chareq.coeff(symbol**i)*diff(f(x), x, i)
 
     chareq = Poly(chareq)
-    eq += chareq.coeffs()[-1]*f(t)
-    eq += r[-1].replace(x, exp(t)).replace(log(exp(t)), t)
+    eq += chareq.coeffs()[-1]*f(x)
+    e, re = posify(r[-1].subs(x, exp(x)))
+    eq += e.subs(re)
 
     if 'nth_linear_constant_coeff_undetermined_coefficients' in classify_ode(eq):
-        return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).replace(t,log(x))
+        return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x))
     else:
-        return ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match).replace(t,log(x))
+        return ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match).subs(x, log(x))
 
 
 def ode_almost_linear(eq, func, order, match):
