@@ -413,3 +413,10 @@ def test_issue_3265():
     a = Symbol('a')
     e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
     assert limit(e, z, 0).simplify() == 2/cos(2*a)
+    
+def test_issue_2284():
+    from sympy import E, nsimplify
+    x = Symbol('x')
+    x0 = 0
+    func = (1.0*1 + 1.0*x)**( 1.0*1/x)
+    assert nsimplify(limit(func, x, x0)) == E
