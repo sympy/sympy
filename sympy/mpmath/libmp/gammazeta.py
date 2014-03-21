@@ -495,7 +495,7 @@ def bernfrac(n):
 
     The first few Bernoulli numbers are exactly::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> for n in range(15):
         ...     p, q = bernfrac(n)
         ...     print("%s %s/%s" % (n, p, q))

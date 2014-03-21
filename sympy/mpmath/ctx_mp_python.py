@@ -628,7 +628,7 @@ class PythonMPContext(object):
         working precision. Strings representing fractions or complex
         numbers are permitted.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> mpmathify(3.5)
             mpf('3.5')
@@ -667,7 +667,7 @@ class PythonMPContext(object):
         number, whether either the real or complex part is NaN;
         otherwise return *False*::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isnan(3.14)
             False
             >>> isnan(nan)
@@ -694,7 +694,7 @@ class PythonMPContext(object):
         Return *True* if the absolute value of *x* is infinite;
         otherwise return *False*::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isinf(inf)
             True
             >>> isinf(-inf)
@@ -729,7 +729,7 @@ class PythonMPContext(object):
         complex number *x* is considered "normal" if its magnitude is
         normal::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isnormal(3)
             True
             >>> isnormal(0)
@@ -766,7 +766,7 @@ class PythonMPContext(object):
         Return *True* if *x* is integer-valued; otherwise return
         *False*::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isint(3)
             True
             >>> isint(mpf(3))
@@ -816,7 +816,7 @@ class PythonMPContext(object):
         faster and produces more accurate results than the builtin
         Python function :func:`sum`.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fsum([1, 2, 0.5, 7])
             mpf('10.5')
@@ -896,7 +896,7 @@ class PythonMPContext(object):
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> A = [2, 1.5, 3]
             >>> B = [1, -1, 2]
@@ -1090,7 +1090,7 @@ class PythonMPContext(object):
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.pretty = True
             >>> mag(10), mag(10.0), mag(mpf(10)), int(ceil(log(10,2)))
             (4, 4, 4, 4)
