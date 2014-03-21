@@ -134,3 +134,7 @@ def test_x_is_base_detection():
 def test_sin_power():
     e = sin(x)**1.2
     assert calculate_series(e, x) == x**1.2
+    
+def test_4132():
+    a=symbols(a)
+    #test if f(x).series(x,a) works good when run twice
