@@ -1402,21 +1402,21 @@ def test_nth_order_linear_euler_eq_nonhomogeneous():
     assert our_hint in classify_ode(eq, f(x))
 
     eq = Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3)
-    sol = C1*x**2 + C2*x + Rational(1, 2)*x**3
+    sol = x*(C1 + C2*x + Rational(1, 2)*x**2)
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x)
-    sol = C1*x**3 + C2/x - Rational(1, 16)*log(x)*(2*log(x) + 1)/x
+    sol =  C1/x + C2*x**3 - Rational(1, 16)*log(x)/x - Rational(1, 8)*log(x)**2/x
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x))
-    sol = C1*x**2 + C2*x**-4 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
+    sol = C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
     sols = constant_renumber(sol, 'C', 1, 2)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)

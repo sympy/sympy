@@ -3304,9 +3304,9 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     if undetcoeff['test']:
         match['trialset'] = undetcoeff['trialset']
     if 'nth_linear_constant_coeff_undetermined_coefficients' in classify_ode(eq):
-        return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x))
+        return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x)).expand()
     else:
-        return ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match).subs(x, log(x))
+        return ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x)).expand()
 
 
 def ode_almost_linear(eq, func, order, match):
