@@ -1164,6 +1164,39 @@ def test_Poly_degree():
     assert degree(x*y**2, x, y) == 1
     assert degree(x*y**2, y, x) == 2
 
+    assert degree((x+1)**100000) == 100000
+    assert degree((x**3+1)**33333) == 99999
+
+    assert degree(Poly(y**2 - x, y, domain='ZZ[x]')) == 2
+
+    assert degree((x+1)**3-(x-1)**3) == 2
+    assert degree((x+1)**5-(x-1)**5) == 4
+    assert degree((x+1)**5-(-x-1)**5) == 5
+
+    assert degree((x+1)**30000-(x-1)**30000) == 29999
+    assert degree((x**100+1)**30000-(x**100-1)**30000) == 2999900
+    assert degree((x**100+x**2)**5-(x**100-x**2)**5) == 402
+
+    assert degree((x**100+x**2)**5-(2*x**100-x**2)**5) == 500
+    assert degree((x**100+1)**5-(x**100-1)**5) == 400
+    assert degree((x**100+x)**5-2*(x**100-x)**5) == 500
+    assert degree(2*(x**100+x**2)**5-2*(x**100-x**2)**5) == 402
+    assert degree(2**5*(x**100+x**2)**5-(2*x**100-x**2)**5) == 402
+
+    assert degree((2*x+1)**10-(2*x-1)**10) == 9
+    assert degree((2*x+1)**10-(x-1)**10) == 10
+    assert degree((x+1)**5-(x-1)**5) == 4
+    assert degree((x+1)**5-(2*x-1)**5) == 5
+    assert degree((2*x**10+1)**5-(2*x-1)**5) == 50
+    assert degree((2*x**10+1)**5-(2*x**10-1)**5) == 40
+
+    assert degree((x+1)**5-(x)**5) == 4
+    assert degree((2*x+1)**5-(2*x)**5) == 4
+    assert degree((2*x+1)**5-(x)**5) == 5
+    assert degree((2*x**10+1)**5-(2*x**10)**5) == 40
+    assert degree((2*x**10+1)**5-(x**10)**5) == 50
+    assert degree((2*x**10+1)**5-2*(x**10)**5) == 50
+
     raises(ComputationFailed, lambda: degree(1))
 
 
