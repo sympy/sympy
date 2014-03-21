@@ -13,7 +13,7 @@ from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered, xrange
 from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.numbers import Float, Number, I
+from sympy.core.numbers import Float, Number, I, fibonacci
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
@@ -34,8 +34,6 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, lcm, gcd)
 
 import sympy.mpmath as mpmath
-
-from sympy.functions.combinatorial.numbers import fibonacci
 
 
 def _mexpand(expr):
