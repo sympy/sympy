@@ -1,4 +1,4 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise
+from sympy import symbols, sin, Matrix, MatrixSymbol, Interval, Piecewise
 from sympy.utilities.pytest import raises
 
 from sympy.printing.lambdarepr import lambdarepr
@@ -16,6 +16,19 @@ def test_matrix():
     A = Matrix([[x, y], [y*x, z**2]])
     assert lambdarepr(A) == "MutableDenseMatrix([[x, y], [x*y, z**2]])"
 
+def test_matrix_symbol():
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    assert lambdarepr(5*A*B) == "5*A*B"
+    assert lambdarepr(A*B.T) == "A*(B).T"
+    assert lambdarepr(A*B.I) == "A*(B)**-1"
+
+def test_matrix_symbol_numpy():
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    assert lambdarepr(5*A*B, use_numpy=True) == "5*(A).dot(B)"
+    assert lambdarepr(A*B.T, use_numpy=True) == "(A).dot((B).T)"
+    assert lambdarepr(A*B.I, use_numpy=True) == "(A).dot(linalg.inv((B)))"
 
 def test_piecewise():
     # In each case, test eval() the lambdarepr() to make sure there are a

@@ -1,7 +1,8 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
-    Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
+    Matrix, MatrixSymbol, Lambda, exp, Integral, oo, I, Abs, Function,
+    true, false)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
@@ -259,20 +260,33 @@ def test_matrix():
     assert lambdify(v, J, modules='sympy')(1, 2) == sol
     assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
-def test_numpy_matrix():
+def test_matrix_symbol():
+    #Test matrix symbol lambdification with sympy
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    C = Matrix([[x, 2*x],
+                [y, 2*y]])
+    f = lambdify((A, B, x, y), A.T*B*A + A.I*C*A*5, modules="sympy")
+    a = Matrix([[1, 2], [3, 4]])
+    b = Matrix([[1, 0], [0, 1]])
+    a = Matrix([[1, 2], [3, 4]])
+    b = Matrix([[1, 0], [0, 1]])
+    sol = Matrix([[ 10. ,  14. ], [ 31.5,  45. ]])
+    assert f(a, b, 1, 2) == sol
+
+def test_matrix_symbol_numpy():
+    #Test matrix symbol lambdification with numpy
     if not numpy:
-        skip("numpy not installed.")
-    A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
-    sol_mat = numpy.matrix([[1, 2], [numpy.sin(3) + 4, 1]])
-    sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
-    #Lambdify array first, to ensure return to matrix as default
-    f_arr = lambdify((x, y, z), A, use_array=True)(1, 2, 3)
-    f_mat = lambdify((x, y, z), A)(1, 2, 3)
-    numpy.testing.assert_allclose(f_mat, sol_mat)
-    numpy.testing.assert_allclose(f_arr, sol_arr)
-    #Check that the types are arrays and matrices
-    assert isinstance(f_mat, numpy.matrix)
-    assert isinstance(f_arr, numpy.ndarray)
+        skip("numpy not installed")
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    C = Matrix([[x, 2*x],
+                [y, 2*y]])
+    f = lambdify((A, B, x, y), A.T*B*A + A.I*C*A*5)
+    a = numpy.array([[1, 2], [3, 4]])
+    b = numpy.array([[1, 0], [0, 1]])
+    sol = numpy.array([[ 10. ,  14. ], [ 31.5,  45. ]])
+    numpy.testing.assert_allclose(f(a, b, 1, 2), sol)
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
