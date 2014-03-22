@@ -314,6 +314,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Aditya Shah: bug fix, improvement to parsers
 #. Sambuddha Basu: documentation fix
 #. zeel: fixes to logic module
+#. Abhinav Chanda: wigner_3j and clebsch_gordan fixes
 #. Rajat Aggarwal: improvements to integration module
 #. Anurag Sharma: improvements to Risch algorithm
 #. Sushant Hiray: taylor_term for sec
