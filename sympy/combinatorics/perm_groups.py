@@ -3123,7 +3123,7 @@ class PermutationGroup(Basic):
                         # the new cyclic subgroup will be removed to 
                         # don't generate the same subgroup again.
                 else:
-                    if igcd(order,t)==1 or order<t:
+                    if igcd(order,t)==1:
                         L1.difference(set(PermutationGroup(i).generate()))
         return cyclic
 
