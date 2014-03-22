@@ -2342,7 +2342,7 @@ def _denest_pow(eq):
 
 
 def powdenest(eq, force=False, polar=False):
-    """
+    r"""
     Collect exponents on powers as assumptions allow.
 
     Given ``(bb**be)**e``, this can be simplified as follows:
