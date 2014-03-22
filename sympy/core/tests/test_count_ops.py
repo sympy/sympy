@@ -79,7 +79,6 @@ def test_count_ops_visual():
 
     assert count(Derivative(x, x)) == D
     assert count(Integral(x, x) + 2*x/(1 + x)) == G + DIV + MUL + 2*ADD
-    assert count(Basic()) is S.Zero
 
     assert count({x + 1: sin(x)}) == ADD + SIN
     assert count([x + 1, sin(x) + y, None]) == ADD + SIN + ADD
@@ -97,5 +96,4 @@ def test_count_ops_visual():
     assert count(Equivalent(x,y)) == EQUIVALENT
     assert count(ITE(x,y,z)) == 2*AND + OR
 
-    assert count(Basic(x, x + y)) == ADD
     assert count(Eq(x + y, S(2))) == ADD
