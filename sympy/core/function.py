@@ -2338,7 +2338,6 @@ def count_ops(expr, visual=False):
                 for i in range(args_len):
                     if not aargs[i].is_Symbol:
                         args.append(aargs[i])
-        
 
     if not ops:
         if visual:
