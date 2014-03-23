@@ -2327,17 +2327,22 @@ def count_ops(expr, visual=False):
         if not isinstance(expr, Basic):
             raise TypeError("Invalid type of expr")
         else:
+            true = sympify(True)
+            false = sympify(False)
             ops = []
             args = [expr]
             while args:
                 a = args.pop()
                 o = C.Symbol(a.func.__name__.upper())
-                ops.append(o*(len(a.args)-1))
-                args_len = len(a.args)
-                aargs = list(a.args)
-                for i in range(args_len):
-                    if not aargs[i].is_Symbol:
-                        args.append(aargs[i])
+                if (not expr is true and not expr is false):
+                    ops.append(o*(len(a.args)-1))
+                    args_len = len(a.args)
+                    aargs = list(a.args)
+                    for i in range(args_len):
+                        if (not aargs[i].is_Symbol or
+                            (not aargs[i] is true and 
+                            not aargs[i] is false)) :
+                            args.append(aargs[i])
 
     if not ops:
         if visual:
