@@ -524,6 +524,13 @@ class Interval(Set, EvalfMixin):
 
         start = _sympify(start)
         end = _sympify(end)
+        left_open = _sympify(left_open)
+        right_open = _sympify(right_open)
+
+        if not all(isinstance(a, (type(true), type(false))) for a in [left_open, right_open]):
+            raise NotImplementedError(
+                "left_open and right_open can have only true/false values, "
+                "got %s and %s" % (left_open, right_open))
 
         inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_real=True').
@@ -542,9 +549,9 @@ class Interval(Set, EvalfMixin):
 
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
-            left_open = True
+            left_open = true
         if end == S.Infinity:
-            right_open = True
+            right_open = true
 
         return Basic.__new__(cls, start, end, left_open, right_open)
 
@@ -827,9 +834,6 @@ class Interval(Set, EvalfMixin):
             left = self.start <= other
         return And(left, right)
 
-    @property
-    def free_symbols(self):
-        return self.start.free_symbols | self.end.free_symbols
 
 class Union(Set, EvalfMixin):
     """
