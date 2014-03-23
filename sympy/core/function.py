@@ -2339,9 +2339,9 @@ def count_ops(expr, visual=False):
                     args_len = len(a.args)
                     aargs = list(a.args)
                     for i in range(args_len):
-                        if (not aargs[i].is_Symbol or
-                            (not aargs[i] is true and 
-                            not aargs[i] is false)) :
+                        if (not aargs[i].is_Symbol and
+                            not  aargs[i] is true and
+                            not  aargs[i] is false):
                             args.append(aargs[i])
 
     if not ops:
