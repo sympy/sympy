@@ -20,11 +20,11 @@ class Set(Basic):
     The base class for any kind of set.
 
     This is not meant to be used directly as a container of items.
-    It does not behave like the builtin set; see FiniteSet for that.
+    It does not behave like the builtin ``set``; see :class:`FiniteSet` for that.
 
-    Real intervals are represented by the Interval class and unions of sets
-    by the Union class. The empty set is represented by the EmptySet class
-    and available as a singleton as S.EmptySet.
+    Real intervals are represented by the :class:`Interval` class and unions of sets
+    by the :class:`Union` class. The empty set is represented by the :class:`EmptySet` class
+    and available as a singleton as ``S.EmptySet``.
     """
     is_number = False
     is_iterable = False
@@ -92,12 +92,12 @@ class Set(Basic):
         This function should only be used internally
 
         self._intersect(other) returns a new, intersected set if self knows how
-        to intersect itself with other, otherwise it returns None
+        to intersect itself with other, otherwise it returns ``None``
 
         When making a new set class you can be assured that other will not
-        be a Union, FiniteSet, or EmptySet
+        be a :class:`Union`, :class:`FiniteSet`, or :class:`EmptySet`
 
-        Used within the Intersection class
+        Used within the :class:`Intersection` class
         """
         return None
 
@@ -106,12 +106,12 @@ class Set(Basic):
         This function should only be used internally
 
         self._union(other) returns a new, joined set if self knows how
-        to join itself with other, otherwise it returns None.
+        to join itself with other, otherwise it returns ``None``.
         It may also return a python set of SymPy Sets if they are somehow
         simpler. If it does this it must be idempotent i.e. the sets returned
-        must return None with _union'ed with each other
+        must return ``None`` with _union'ed with each other
 
-        Used within the Union class
+        Used within the :class:`Union` class
         """
         return None
 
@@ -515,7 +515,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    <http://en.wikipedia.org/wiki/Interval_(mathematics)>
+    http://en.wikipedia.org/wiki/Interval_(mathematics)
     """
     is_Interval = True
     is_real = True
@@ -833,7 +833,7 @@ class Interval(Set, EvalfMixin):
 
 class Union(Set, EvalfMixin):
     """
-    Represents a union of sets as a Set.
+    Represents a union of sets as a :class:`Set`.
 
     Examples
     ========
@@ -855,7 +855,7 @@ class Union(Set, EvalfMixin):
 
     References
     ==========
-    <http://en.wikipedia.org/wiki/Union_(set_theory)>
+    http://en.wikipedia.org/wiki/Union_(set_theory)
     """
     is_Union = True
 
@@ -891,7 +891,7 @@ class Union(Set, EvalfMixin):
     @staticmethod
     def reduce(args):
         """
-        Simplify a Union using known rules
+        Simplify a :class:`Union` using known rules
 
         We first start with global rules like
         'Merge all FiniteSets'
@@ -1044,7 +1044,7 @@ class Union(Set, EvalfMixin):
 
 class Intersection(Set):
     """
-    Represents an intersection of sets as a Set.
+    Represents an intersection of sets as a :class:`Set`.
 
     Examples
     ========
@@ -1065,7 +1065,7 @@ class Intersection(Set):
 
     References
     ==========
-    <http://en.wikipedia.org/wiki/Intersection_(set_theory)>
+    http://en.wikipedia.org/wiki/Intersection_(set_theory)
     """
     is_Intersection = True
 
