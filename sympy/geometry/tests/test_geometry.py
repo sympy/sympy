@@ -108,6 +108,9 @@ def test_point():
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
     assert Point.is_collinear(p3, p3, p4, p5) is False
+    line = Line(Point(1,0), slope = 1)
+    raises(TypeError, lambda: Point.is_collinear(line))
+    raises(TypeError, lambda: p1_1.is_collinear(line))
 
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
