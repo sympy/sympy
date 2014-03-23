@@ -1137,12 +1137,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if coeff == 0:
                 return True
             if order == 0:
-                if f(x) in coeff.atoms(AppliedUndef):
-                    if x in coeff.free_symbols:
-                        return False
-                    return f(x) not in coeff.atoms()
-                else:
-                    return True
+                if x in coeff.free_symbols:
+                    return False
+                return True
             if coeff.is_Mul:
                 if coeff.has(f(x)):
                     return False
@@ -3286,12 +3283,12 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     r = match
 
     chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
-    #for i in r.keys():
+
     for i in r.keys():
         if not isinstance(i, str) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
-    for i in range(1,degree(chareq)+1):
+    for i in range(1,degree(Poly(chareq, symbol))+1):
         eq += chareq.coeff(symbol**i)*diff(f(x), x, i)
 
     chareq = Poly(chareq)
@@ -3300,10 +3297,8 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     eq += e.subs(re)
 
     match = _nth_linear_match(eq, f(x), ode_order(eq, f(x)))
-    undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
-    if undetcoeff['test']:
-        match['trialset'] = undetcoeff['trialset']
-    if 'nth_linear_constant_coeff_undetermined_coefficients' in classify_ode(eq):
+    if 'trialset' in r.keys():
+        match['trialset'] = r['trialset']
         return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x)).expand()
     else:
         return ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match).subs(x, log(x)).replace(f(log(x)), f(x))
