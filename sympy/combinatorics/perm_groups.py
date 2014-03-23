@@ -6,8 +6,7 @@ from math import log
 from sympy.core import Basic
 from sympy.core.numbers import igcd
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
-    _af_rmul, _af_rmuln, _af_pow, Cycle)
+from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert, _af_rmul, _af_rmuln, _af_pow, Cycle)
 from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
@@ -3077,9 +3076,8 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
-        >>> t=4
         >>> G=AlternatingGroup(4)
-        >>> G.cyclic_subgroups(4)
+        >>> G.cyclic_subgroups(3)
          [PermutationGroup([
           Permutation(1, 3, 2)]), PermutationGroup([
           Permutation(3)(0, 1, 2)]), PermutationGroup([
@@ -3114,13 +3112,13 @@ class PermutationGroup(Basic):
                         cyclic.append(Gpp)
                         L1.difference(E)
                         A.difference(E)
-                        # If 'a' generates a cyclic group of order t,
-                        # the element 'g*a*(~g)' will generate another
+                        # If 'i' generates a cyclic group of order t,
+                        # the element 'x*i*(~x)' will generate another
                         # subgroup of the same order (Gpp), so the iteration
-                        # will look for an element in A3 that generates
+                        # will look for an element in  that generates
                         # a distinct group of order t.
-                        # If the iteration finds it, all the elements of 
-                        # the new cyclic subgroup will be removed to 
+                        # If the iteration finds it, all the elements of
+                        # the new cyclic subgroup will be removed to
                         # don't generate the same subgroup again.
                 else:
                     if igcd(order,t)==1:
@@ -3474,3 +3472,5 @@ def _stabilizer(degree, generators, alpha):
     return [_af_new(x) for x in stab_gens]
 
 PermGroup = PermutationGroup
+
+G=PermutationGroup(Permutation(0,1,2),Permutation(1,2,3))
