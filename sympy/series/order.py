@@ -389,42 +389,36 @@ class Order(Expr):
         return result
 
     def _eval_subs(self, old, new):
+        newexpr = self.expr.subs(old, new)
         if old.is_Symbol and old in self.variables:
             i = self.variables.index(old)
-            newexpr = self.expr._subs(old, new)
-            newpt = self.point
+            newvars = list(self.variables)
+            newpt = list(self.point)
             if isinstance(new, Symbol):
-                newvars = list(self.variables)
                 newvars[i] = new
             else:
-                s = list(new.free_symbols)
-                if len(s) > 1 or not s:
-                    # fallback to the old way:
-                    newvars = tuple(newexpr.free_symbols) + \
-                        self.variables[:i] + self.variables[i + 1:]
-                    p = new.as_numer_denom()[1].is_number*2 - 1
-                    newpt = self.point[0]**p
-                    if not newpt.is_real:
-                        x = Dummy('x')
-                        newpt = (x**p).limit(x, self.point[0])
-                    newpt = [newpt]*len(newvars)
-                if len(s) == 1:
-                    # First, try to substitute self.point in the "new" expr
-                    # to see if this is a fixed point.  E.g.  O(y).subs(y, sin(x))
-                    point = new._subs(s[0], self.point[0])
-                    if point != self.point[0]:
+                syms = new.free_symbols
+                if not syms and new == self.point[i]:
+                    del newvars[i], newpt[i]
+                elif len(syms) == 1:
+                    var = syms.pop()
+                    # First, try to substitute self.point in the "new"
+                    # expr to see if this is a fixed point.
+                    # E.g.  O(y).subs(y, sin(x))
+                    point = new.subs(var, self.point[i])
+                    if point != self.point[i]:
                         from sympy.solvers import solve
                         d = Dummy()
-                        res = solve(old - new._subs(s[0], d), d, dict=True)
-                        point = d.subs(res[0])._subs(old, self.point[0])
+                        res = solve(old - new.subs(var, d), d, dict=True)
+                        point = d.subs(res[0]).subs(old, self.point[i])
                     if not point.is_real:
-                        x = Dummy('x')
-                        point = d.subs(res[0]).limit(old, self.point[0])
-                    newvars = (s[0],) + self.variables[:i] + \
-                            self.variables[i + 1:]
-                    newpt = [point]*len(newvars)
+                        point = d.subs(res[0]).limit(old, self.point[i])
+                    newvars[i] = var
+                    newpt[i] = point
+                else:
+                    raise NotImplementedError
             return Order(newexpr, *zip(newvars, newpt))
-        return Order(self.expr._subs(old, new), *self.args[1:])
+        return Order(newexpr, *self.args[1:])
 
     def _eval_conjugate(self):
         expr = self.expr._eval_conjugate()
