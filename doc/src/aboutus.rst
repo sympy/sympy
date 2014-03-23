@@ -313,7 +313,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
 #. Aditya Shah: bug fix, improvement to parsers
 #. Sambuddha Basu: documentation fix
-#. zeel: fixes to logic module
+#. Zeel Shah: fixes to logic module
 #. Abhinav Chanda: wigner_3j and clebsch_gordan fixes
 #. Jim Crist: lambdify improvments
 #. Sudhanshu Mishra: Added tests for racah() of sympy.physics.wigner module
