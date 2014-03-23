@@ -314,8 +314,13 @@ want to be mentioned here, so see our repository history for a full list).
 #. Aditya Shah: bug fix, improvement to parsers
 #. Sambuddha Basu: documentation fix
 #. zeel: fixes to logic module
+#. Abhinav Chanda: wigner_3j and clebsch_gordan fixes
+#. Jim Crist: lambdify improvments
+#. Sudhanshu Mishra: Added tests for racah() of sympy.physics.wigner module
 #. Rajat Aggarwal: improvements to integration module
+#. Soumya Dipta Biswas: Add support for Equivalent with multiple arguments
 #. Anurag Sharma: improvements to Risch algorithm
+#. Sushant Hiray: taylor_term for sec
 #. Ben Lucato: documentation fixes
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
