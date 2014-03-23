@@ -1010,6 +1010,7 @@ def _mask_nc(eq, name=None):
 
     Examples
     ========
+
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
     >>> from sympy import symbols, Mul
     >>> from sympy.core.exprtools import _mask_nc

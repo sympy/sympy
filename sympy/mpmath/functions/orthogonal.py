@@ -86,7 +86,7 @@ def pcfd(ctx, n, z, **kwargs):
 
     **Examples**
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> pcfd(0,0); pcfd(1,0); pcfd(2,0); pcfd(3,0)
         1.0
@@ -144,7 +144,7 @@ def pcfu(ctx, a, z, **kwargs):
 
     Connection to other functions::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> z = mpf(3)
         >>> pcfu(0.5,z)
@@ -178,7 +178,7 @@ def pcfv(ctx, a, z, **kwargs):
 
     Wronskian relation between `U` and `V`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> a, z = 2, 3
         >>> pcfu(a,z)*diff(pcfv,(a,z),(0,1))-diff(pcfu,(a,z),(0,1))*pcfv(a,z)
@@ -246,7 +246,7 @@ def pcfw(ctx, a, z, **kwargs):
 
     Value at the origin::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> a = mpf(0.25)
         >>> pcfw(a,0)

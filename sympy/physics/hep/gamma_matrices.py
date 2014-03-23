@@ -196,6 +196,7 @@ class GammaMatrixHead(TensorHead):
 
         Examples
         ========
+
         >>> from sympy.physics.hep.gamma_matrices import GammaMatrix, DiracSpinorIndex
         >>> from sympy.tensor.tensor import tensor_indices
         >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', GammaMatrix.LorentzIndex)

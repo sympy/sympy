@@ -834,7 +834,22 @@ class sec(ReciprocalTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    # TODO def taylor_term(n, x, *previous_terms):
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        # Reference Formula:
+        # https://www.efunda.com/math/taylor_series/trig.cfm
+        if n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            a = n//2
+
+            E = C.euler(n)
+            F = C.factorial(n)
+
+            return (-1)**a * E/F * x**n
 
     def _sage_(self):
         import sage.all as sage

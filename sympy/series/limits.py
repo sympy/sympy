@@ -95,7 +95,11 @@ def heuristics(e, z, z0, dir):
         r = []
         for a in e.args:
             try:
-                r.append(limit(a, z, z0, dir))
+                l = limit(a, z, z0, dir)
+                if l.has(S.Infinity) and l.is_bounded is None:
+                    break
+                else:
+                    r.append(l)
             except PoleError:
                 break
             if r[-1] in bad:

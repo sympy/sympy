@@ -33,6 +33,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     Examples
     ========
+
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
@@ -153,6 +154,7 @@ class Equality(Relational):
 
     Examples
     ========
+
     >>> from sympy import Eq
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
@@ -225,6 +227,7 @@ class Unequality(Relational):
 
     Examples
     ========
+
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)

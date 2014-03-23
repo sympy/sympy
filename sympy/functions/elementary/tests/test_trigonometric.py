@@ -1031,6 +1031,11 @@ def test_sec():
 
     assert sec(x).diff(x) == tan(x)*sec(x)
 
+    # Taylor Term checks
+    assert sec(z).taylor_term(4, z) == 5*z**4/24
+    assert sec(z).taylor_term(6, z) == 61*z**6/720
+    assert sec(z).taylor_term(5, z) == 0
+
 
 def test_csc():
     x = symbols('x', real=True)
