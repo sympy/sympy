@@ -106,3 +106,7 @@ Ntheory Functions Reference
 .. autofunction:: legendre_symbol
 
 .. autofunction:: jacobi_symbol
+
+.. module:: sympy.ntheory.egyptian_fraction
+
+.. autofunction:: egyptian_fraction

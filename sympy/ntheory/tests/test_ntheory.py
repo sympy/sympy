@@ -1,7 +1,7 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
-    factorial as fac, Rational
+    factorial as fac, Rational, Add
 from sympy.core.numbers import Integer, igcd
 from sympy.core.compatibility import long
 
@@ -19,13 +19,14 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy.ntheory.egyptian_fraction import egyptian_fraction
 
 from sympy.polys.domains import ZZ
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
+from sympy.utilities.randtest import random_complex_number
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
-
 
 def test_trailing():
     assert trailing(0) == 0
@@ -727,3 +728,27 @@ def test_search():
     assert 1 not in sieve
     assert 2**1000 not in sieve
     raises(ValueError, lambda: sieve.search(1))
+
+
+def test_egyptian_fraction():
+    def test_equality(r, alg="Greedy"):
+        return r == Add(*[Rational(1, i) for i in egyptian_fraction(r, alg)])
+
+    r = random_complex_number(a=0, c=1, b=0, d=0, rational=True)
+    assert test_equality(r)
+    assert test_equality(r, alg="Golomb")
+
+    assert egyptian_fraction(Rational(4, 17)) == [5, 29, 1233, 3039345]
+    assert egyptian_fraction(Rational(7, 13), "Greedy") == [2, 26]
+    assert egyptian_fraction(Rational(23, 101), "Greedy") == \
+        [5, 37, 1438, 2985448, 40108045937720]
+    assert egyptian_fraction(Rational(18, 23), "Takenouchi") == \
+        [2, 6, 12, 35, 276, 2415]
+    assert egyptian_fraction(Rational(5, 6), "Graham Jewett") == \
+        [6, 7, 8, 9, 10, 42, 43, 44, 45, 56, 57, 58, 72, 73, 90, 1806, 1807,
+         1808, 1892, 1893, 1980, 3192, 3193, 3306, 5256, 3263442, 3263443,
+         3267056, 3581556, 10192056, 10650056950806]
+    assert egyptian_fraction(Rational(18, 23), "Golomb") == \
+        [2, 6, 12, 36, 207]
+    assert egyptian_fraction(Rational(5, 6), "Golomb") == \
+        [2, 6, 12, 20, 30]
