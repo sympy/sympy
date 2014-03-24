@@ -4,7 +4,7 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, erf2, erf2inv, exp, expand, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -1467,3 +1467,8 @@ def test_real_imag_splitting():
         [-sqrt(-b**2 + 9), sqrt(-b**2 + 9)]
     a, b = symbols('a b', imaginary=True)
     assert solve(sqrt(a**2 + b**2) - 3, a) == []
+
+
+def test_issue_7110():
+    y = -2*x**3 + 4*x**2 - 2*x + 5
+    assert any(ask(Q.real(i)) for i in solve(y))

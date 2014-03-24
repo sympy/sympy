@@ -413,3 +413,11 @@ def test_issue_6364():
     a = Symbol('a')
     e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
     assert limit(e, z, 0).simplify() == 2/cos(2*a)
+
+
+def test_issue_4099():
+    a = Symbol('a')
+    assert limit(a/x, x, 0) == oo*sign(a)
+    assert limit(-a/x, x, 0) == -oo*sign(a)
+    assert limit(-a*x, x, oo) == -oo*sign(a)
+    assert limit(a*x, x, oo) == oo*sign(a)
