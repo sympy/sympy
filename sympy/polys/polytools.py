@@ -4251,6 +4251,7 @@ def degree(f, *gens, **args):
         return S.Zero
     elif isinstance(f, Poly):
         func = f.gens[0]
+        f = f.args[0]
     else:
         func = f.atoms(Symbol).pop()
 
@@ -4279,8 +4280,8 @@ def _degree(f, func):
         # if f is a power function
         if isinstance(f, Pow):
             order = S.One
+            temp_r = 1
             if f.args[0].has(func):
-                temp_r = 1
                 order1 = 0
                 for arg in f.args:
                     order2, r = _degree(arg, func)
