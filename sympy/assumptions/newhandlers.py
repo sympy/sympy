@@ -303,20 +303,21 @@ for klass, fact in [
     (Add, Implies(AllArgs(Q.rational), Q.rational)),
 
     (Abs, Q.nonnegative),
-    (Abs, Equivalent(AllArgs(Q.nonzero), Q.nonzero)),
+    (Abs, Equivalent(AllArgs(~Q.zero), ~Q.zero)),
 
     # Including the integer qualification means we don't need to add any facts
     # for odd, since the assumptions already know that every integer is
     # exactly one of even or odd.
     (Mul, Implies(AllArgs(Q.integer), Equivalent(AnyArgs(Q.even), Q.even))),
 
-    (Abs, Equivalent(AllArgs(Q.even), Q.even)),
+    (Abs, Implies(AllArgs(Q.even), Q.even)),
+    (Abs, Implies(AllArgs(Q.odd), Q.odd)),
 
     (Add, Implies(AllArgs(Q.integer), Q.integer)),
     (Add, Implies(ExactlyOneArg(~Q.integer), ~Q.integer)),
     (Mul, Implies(AllArgs(Q.integer), Q.integer)),
     (Mul, Implies(ExactlyOneArg(~Q.rational), ~Q.integer)),
-    (Abs, Equivalent(AllArgs(Q.integer), Q.integer)),
+    (Abs, Implies(AllArgs(Q.integer), Q.integer)),
 
     (Number, CheckOldAssump(Q.negative)),
     (Number, CheckOldAssump(Q.zero)),

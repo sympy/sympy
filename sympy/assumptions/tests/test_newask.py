@@ -167,6 +167,7 @@ def test_even():
 
     assert newask(Q.even(abs(x)), Q.even(x)) is True
     assert newask(Q.even(abs(x)), Q.odd(x)) is False
+    assert newask(Q.even(x), Q.even(abs(x))) is None # x could be complex
 
 def test_odd():
     assert newask(Q.odd(2)) is False
@@ -182,6 +183,7 @@ def test_odd():
 
     assert newask(Q.odd(abs(x)), Q.even(x)) is False
     assert newask(Q.odd(abs(x)), Q.odd(x)) is True
+    assert newask(Q.odd(x), Q.odd(abs(x))) is None # x could be complex
 
 
 def test_integer():
@@ -216,4 +218,5 @@ def test_abs():
     assert newask(Q.positive(abs(x)), ~Q.zero(x)) is True
     assert newask(Q.zero(x), ~Q.zero(abs(x))) is False
     assert newask(Q.zero(x), Q.zero(abs(x))) is True
+    assert newask(Q.nonzero(x), ~Q.zero(abs(x))) is None # x could be complex
     assert newask(Q.zero(abs(x)), Q.zero(x)) is True
