@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy import Rational
 from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
@@ -711,6 +712,14 @@ class log(Function):
             n += 1
             s = self.args[0].nseries(x, n=n, logx=logx)
         a, b = s.leadterm(x)
+        try:
+            a = Rational(a)
+        except TypeError:
+            pass
+        try:
+            b = Rational(b)
+        except TypeError:
+            pass
         p = cancel(s/(a*x**b) - 1)
         g = None
         l = []
