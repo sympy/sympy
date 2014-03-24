@@ -4321,6 +4321,8 @@ def _degree(f, func):
                             arg = arg.args[1]
                         if isinstance(arg.args[1], Pow) and isinstance(arg.args[1].args[0], Add): # in (2*(x+1)**3-2*(x-1)**3)
                             arg = arg.args[1]
+                        elif isinstance(arg, Pow) and arg.args[1].has(func): # in (3**x-2**x) form
+                            return abs(order1), abs(r)
                         else: # in ((x+1)**3-x**3) form
                             deg1, r = _degree(temp_arg.args[0].args[0], func)
                             deg2, r = _degree(temp_arg.args[0].args[1], func)
@@ -4333,6 +4335,8 @@ def _degree(f, func):
                             arg = temp_arg.args[1]
                         if isinstance(temp_arg.args[1], Pow) and isinstance(temp_arg.args[1].args[0], Add):
                             arg = temp_arg.args[1]
+                        elif isinstance(arg, Pow) and arg.args[1].has(func):
+                            return abs(order1), abs(r)
                         else:
                             deg1, r = _degree(arg.args[0].args[0], func)
                             deg2, r = _degree(arg.args[0].args[1], func)
