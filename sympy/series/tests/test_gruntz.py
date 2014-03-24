@@ -3,7 +3,8 @@ from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.series.order import Order
+from sympy.utilities.pytest import XFAIL, skip, raises
 
 """
 This test suite is testing the limit algorithm using the bottom up approach.
@@ -464,3 +465,7 @@ def test_issue_6682():
 def test_issue_7096():
     from sympy.functions import sign
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+
+
+def test_gh_issue_2865():
+    raises(ValueError, lambda: gruntz(Order(1/x, (x, oo)), x, 0))

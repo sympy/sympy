@@ -72,9 +72,6 @@ def limit(e, z, z0, dir="+"):
                 return limit(inve.as_leading_term(u), u,
                     S.Zero, "+" if z0 is S.Infinity else "-")
 
-    if e.is_Order:
-        return C.Order(limit(e.expr, z, z0), *e.args[1:])
-
     try:
         r = gruntz(e, z, z0, dir)
         if r is S.NaN:

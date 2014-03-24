@@ -2,7 +2,7 @@ from itertools import product as cartes
 
 from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
-                   tan, cot, integrate, Sum, sign)
+                   tan, cot, integrate, Sum, sign, PoleError)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -35,10 +35,9 @@ def test_basic1():
     raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
-    assert limit(Order(2)*x, x, S.NaN) == S.NaN
+    raises(PoleError, lambda: limit(Order(2)*x, x, S.NaN))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
-    assert limit(Order(2)*x, x, S.NaN) == S.NaN
     assert limit(1/(x - 1), x, 1, dir="+") == oo
     assert limit(1/(x - 1), x, 1, dir="-") == -oo
     assert limit(1/(5 - x)**3, x, 5, dir="+") == -oo
@@ -413,3 +412,7 @@ def test_issue_6364():
     a = Symbol('a')
     e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
     assert limit(e, z, 0).simplify() == 2/cos(2*a)
+
+
+def test_gh_issue_2865():
+    raises(PoleError, lambda: limit(Order(1/x, (x, oo)), x, 0))
