@@ -727,3 +727,9 @@ def test_search():
     assert 1 not in sieve
     assert 2**1000 not in sieve
     raises(ValueError, lambda: sieve.search(1))
+
+
+def test_sieve_slice():
+    assert sieve[5] == 11
+    assert list(sieve[5:10]) == [sieve[x] for x in range(5, 10)]
+    assert list(sieve[5:10:2]) == [sieve[x] for x in range(5, 10, 2)]
