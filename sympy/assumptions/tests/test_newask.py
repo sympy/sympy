@@ -220,3 +220,21 @@ def test_abs():
     assert newask(Q.zero(x), Q.zero(abs(x))) is True
     assert newask(Q.nonzero(x), ~Q.zero(abs(x))) is None # x could be complex
     assert newask(Q.zero(abs(x)), Q.zero(x)) is True
+
+def test_imaginary():
+    assert newask(Q.imaginary(2*I)) is True
+    assert newask(Q.imaginary(x*y),Q.imaginary(x)) is None
+    assert newask(Q.imaginary(x*y),Q.imaginary(x) & Q.real(y)) is True
+    assert newask(Q.imaginary(x),Q.real(x)) is False
+    assert newask(Q.imaginary(1)) is False
+    assert newask(Q.imaginary(x*y),Q.real(x) & Q.real(y)) is False
+    assert newask(Q.imaginary(x+y),Q.real(x) & Q.real(y)) is False
+
+def test_real():
+    assert newask(Q.real(x*y),Q.real(x) & Q.real(y)) is True
+    assert newask(Q.real(x+y),Q.real(x) & Q.real(y)) is True
+    assert newask(Q.real(x*y*z),Q.real(x) & Q.real(y) & Q.real(z)) is True
+    assert newask(Q.real(x*y*z),Q.real(x) & Q.real(y)) is None
+    assert newask(Q.real(x*y*z),Q.real(x) & Q.real(y) & Q.imaginary(z)) is False
+    assert newask(Q.real(x+y+z),Q.real(x) & Q.real(y) & Q.real(z)) is True
+    assert newask(Q.real(x+y+z),Q.real(x) & Q.real(y)) is None
