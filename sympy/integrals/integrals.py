@@ -179,7 +179,7 @@ class Integral(AddWithLimits):
         limits = self.limits
         isyms = self.free_symbols
         if len(isyms) == 0:
-            return True 
+            return True
         for xab in limits:
             if len(xab) == 1:
                 isyms.add(xab[0])
