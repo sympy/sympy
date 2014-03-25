@@ -3201,9 +3201,6 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     f = func.func
     r = match
 
-    # A generator of constants
-    constants = new_constants(eq)
-
     # First, set up characteristic equation.
     chareq, symbol = S.Zero, Dummy('x')
 
@@ -3213,6 +3210,10 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
 
     chareq = Poly(chareq, symbol)
     chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
+
+    # A generator of constants
+    constants = list(get_new_constants(eq, num=chareq.degree()*2))
+    constants.reverse()
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)
@@ -3225,19 +3226,19 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
             if isinstance(root, RootOf):
-                gsol += (x**root) * next(constants)
+                gsol += (x**root) * constants.pop()
                 if multiplicity != 1:
                     raise ValueError("Value should be 1")
                 collectterms = [(0, root, 0)] + collectterms
             elif root.is_real:
-                gsol += ln(x)**i*(x**root) * next(constants)
+                gsol += ln(x)**i*(x**root) * constants.pop()
                 collectterms = [(i, root, 0)] + collectterms
             else:
                 reroot = re(root)
                 imroot = im(root)
                 gsol += ln(x)**i * (x**reroot) * (
-                    next(constants) * sin(abs(imroot)*ln(x))
-                    + next(constants) * cos(imroot*ln(x)))
+                    constants.pop() * sin(abs(imroot)*ln(x))
+                    + constants.pop() * cos(imroot*ln(x)))
                 # Preserve ordering (multiplicity, real part, imaginary part)
                 # It will be assumed implicitly when constructing
                 # fundamental solution sets.
@@ -3703,9 +3704,6 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     f = func.func
     r = match
 
-    # A generator of constants
-    constants = new_constants(eq)
-
     # First, set up characteristic equation.
     chareq, symbol = S.Zero, Dummy('x')
 
@@ -3717,6 +3715,10 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
 
     chareq = Poly(chareq, symbol)
     chareqroots = [ RootOf(chareq, k) for k in range(chareq.degree()) ]
+
+    # A generator of constants
+    constants = list(get_new_constants(eq, num=chareq.degree()*2))
+    constants.reverse()
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)
@@ -3730,15 +3732,15 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
             if isinstance(root, RootOf):
-                gsol += exp(root*x) * next(constants)
+                gsol += exp(root*x) * constants.pop()
                 if multiplicity != 1:
                     raise ValueError("Value should be 1")
                 collectterms = [(0, root, 0)] + collectterms
             else:
                 reroot = re(root)
                 imroot = im(root)
-                gsol += x**i*exp(reroot*x) * (next(constants) * sin(abs(imroot) * x) + \
-                    next(constants) * cos(imroot*x))
+                gsol += x**i*exp(reroot*x) * (constants.pop() * sin(abs(imroot) * x) + \
+                    constants.pop() * cos(imroot*x))
                 # This ordering is important
                 collectterms = [(i, reroot, imroot)] + collectterms
     if returns == 'sol':
