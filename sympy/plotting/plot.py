@@ -829,7 +829,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.spines['bottom'].set_position('zero')
             self.ax.spines['top'].set_color('none')
             self.ax.spines['left'].set_smart_bounds(True)
-            self.ax.spines['bottom'].set_smart_bounds(True)
+            self.ax.spines['bottom'].set_smart_bounds(False)
             self.ax.xaxis.set_ticks_position('bottom')
             self.ax.yaxis.set_ticks_position('left')
         elif all(are_3D):
@@ -848,6 +848,7 @@ class MatplotlibBackend(BaseBackend):
             if s.is_2Dline:
                 collection = self.LineCollection(s.get_segments())
                 self.ax.add_collection(collection)
+                self.ax.set_xlim(s.start,s.end)
             elif s.is_contour:
                 self.ax.contour(*s.get_meshes())
             elif s.is_3Dline:
