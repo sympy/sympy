@@ -167,6 +167,6 @@ class TypeC(Standard_Cartan):
 
     def dynkin_diagram(self):
         n = self.n
-        diag = "---".join("0" for i in range (1, n)) + "=<=0\n"
-        diag += "   ".join(str(i) for i in range (1, n+1))
+        diag = "---".join("0" for i in range(1, n)) + "=<=0\n"
+        diag += "   ".join(str(i) for i in range(1, n+1))
         return diag
