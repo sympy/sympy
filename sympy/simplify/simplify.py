@@ -3660,11 +3660,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy import Sum, Product
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
-        return expr.doit()
+        return expr
 
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
         return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
-                         for x in expr.args]).doit()
+                         for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
@@ -3688,7 +3688,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     else:
         expr = shorter(expr2, expr1, expr)
     if not isinstance(expr, Basic):  # XXX: temporary hack
-        return expr.doit()
+        return expr
 
     expr = factor_terms(expr, sign=False)
 
