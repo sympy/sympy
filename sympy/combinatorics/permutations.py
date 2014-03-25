@@ -316,6 +316,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
@@ -348,6 +349,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
@@ -400,6 +402,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2, 6)
         Cycle(1, 2, 6)
@@ -955,6 +958,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
         >>> p = Permutation(2, 3)(4, 5)
@@ -1295,6 +1299,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Permutation
         >>> p = Permutation(1, 2, 9)
         >>> 2^p == p(2) == 9
@@ -1854,6 +1859,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([])
         >>> p.is_Identity

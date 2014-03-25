@@ -95,7 +95,7 @@ will modify the Matrix **in place**.
     >>> M
     [2  3]
 
-.. TODO: This is a mess. See issue 3893.
+.. TODO: This is a mess. See issue 6992.
 
 To insert rows or columns, use ``row_insert`` or ``col_insert``.  These
 operations **do not** operate in place.

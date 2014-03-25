@@ -30,7 +30,7 @@ from sympy.series import limit
 
 
 # TODO get these helper functions into a super class for sum-like
-# objects: Sum, Product, Integral (issue 3662)
+# objects: Sum, Product, Integral (issue 6761)
 
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
@@ -107,7 +107,7 @@ class Integral(AddWithLimits):
 
     @property
     def is_zero(self):
-        """Since Integral doesn't autosimplify it it useful to see if
+        """Since Integral doesn't autosimplify, it is useful to see if
         it would simplify to zero or not in a trivial manner, i.e. when
         the function is 0 or two limits of a definite integral are the same.
 
@@ -305,7 +305,7 @@ class Integral(AddWithLimits):
             SymPyDeprecationWarning(
                 feature="transform(x, f(x), inverse=True)",
                 useinstead="transform(f(x), x)",
-                issue=3380, deprecated_since_version="0.7.2",
+                issue=6479, deprecated_since_version="0.7.2",
             ).warn()
             # in the old style x and u contained the same variable so
             # don't worry about using the old-style feature with the
@@ -631,7 +631,7 @@ class Integral(AddWithLimits):
         """
 
         # differentiate under the integral sign; we do not
-        # check for regularity conditions (TODO), see issue 1116
+        # check for regularity conditions (TODO), see issue 4215
 
         # get limits and the function
         f, limits = self.function, list(self.limits)

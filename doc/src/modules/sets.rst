@@ -8,6 +8,8 @@ Set
 .. autoclass:: Set
    :members:
 
+.. autofunction:: imageset
+
 Elementary Sets
 ---------------
 
@@ -74,4 +76,3 @@ ImageSet
 ^^^^^^^^
 .. autoclass:: ImageSet
    :members:
-

@@ -291,7 +291,7 @@ reverse using ``trigsimp``
 
 .. TODO: It would be much better to teach individual trig rewriting functions
    here, but they don't exist yet.  See
-   https://code.google.com/p/sympy/issues/detail?id=357.
+   https://github.com/sympy/sympy/issues/3456.
 
 Powers
 ======

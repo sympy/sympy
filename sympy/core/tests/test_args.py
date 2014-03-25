@@ -361,9 +361,9 @@ def test_sympy__core__numbers__Rational():
     assert _test_args(Rational(1, 7))
 
 
+@SKIP("abstract class")
 def test_sympy__core__numbers__RationalConstant():
-    from sympy.core.numbers import RationalConstant
-    assert _test_args(RationalConstant())
+    pass
 
 
 def test_sympy__core__numbers__Zero():
@@ -436,7 +436,6 @@ def test_sympy__core__sets__FiniteSet():
     assert _test_args(FiniteSet(x, y, z))
 
 
-@XFAIL
 def test_sympy__core__sets__Interval():
     from sympy.core.sets import Interval
     assert _test_args(Interval(0, 1))
@@ -483,7 +482,6 @@ def test_sympy__sets__fancysets__Integers():
     assert _test_args(Integers())
 
 
-@XFAIL  # This fails for the same reason Interval fails. Not all args are Basic
 def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())
@@ -1432,6 +1430,11 @@ def test_sympy__functions__special__gamma_functions__polygamma():
 def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
     assert _test_args(uppergamma(x, 2))
+
+
+def test_sympy__functions__special__beta_functions__beta():
+    from sympy.functions.special.beta_functions import beta
+    assert _test_args(beta(x, x))
 
 
 @SKIP("abstract class")
@@ -2925,9 +2928,9 @@ def test_sympy__geometry__ellipse__Circle():
     assert _test_args(Circle((0, 1), 2))
 
 
+@SKIP("abstract class")
 def test_sympy__geometry__line__LinearEntity():
-    from sympy.geometry.line import LinearEntity
-    assert _test_args(LinearEntity((0, 1), (2, 3)))
+    pass
 
 
 def test_sympy__geometry__line__Line():

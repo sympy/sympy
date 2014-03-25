@@ -602,7 +602,7 @@ def _doctest(*paths, **kwargs):
     #         "sympy/utilities/benchmarking.py"
     #     ])
 
-    # blacklist these modules until issue 1741 is resolved
+    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py",
         "sympy/utilities/benchmarking.py"
@@ -1530,7 +1530,7 @@ class SymPyDocTestRunner(DocTestRunner):
     tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
-    issue 2041).
+    issue 5140).
 
     See the docstring of the original DocTestRunner for more information.
     """

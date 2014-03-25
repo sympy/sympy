@@ -320,7 +320,7 @@ def test_lambertw():
         Float("0.701338383413663009202120278965", 30), 1e-29)
 
 
-def test_exp_expand():
+def test_exp_expand_NC():
     A, B, C = symbols('A,B,C', commutative=False)
     x, y, z = symbols('x,y,z')
 

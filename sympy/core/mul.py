@@ -103,7 +103,7 @@ class Mul(Expr, AssocOp):
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
               -  Sometimes terms are not combined as one would like:
-                 {c.f. http://code.google.com/p/sympy/issues/detail?id=1497}
+                 {c.f. https://github.com/sympy/sympy/issues/4596}
 
                 >>> from sympy import Mul, sqrt
                 >>> from sympy.abc import x, y, z
@@ -121,7 +121,7 @@ class Mul(Expr, AssocOp):
                 Powers with compound bases may not find a single base to
                 combine with unless all arguments are processed at once.
                 Post-processing may be necessary in such cases.
-                {c.f. http://code.google.com/p/sympy/issues/detail?id=2629}
+                {c.f. https://github.com/sympy/sympy/issues/5728}
 
                 >>> a = sqrt(x*sqrt(y))
                 >>> a**3
@@ -157,7 +157,7 @@ class Mul(Expr, AssocOp):
               create a new Mul, ``M/d[i]`` the args of which will be traversed
               again when it is multiplied by ``n[i]``.
 
-              {c.f. http://code.google.com/p/sympy/issues/detail?id=2607}
+              {c.f. https://github.com/sympy/sympy/issues/5706}
 
               This consideration is moot if the cache is turned off.
 
@@ -551,6 +551,15 @@ class Mul(Expr, AssocOp):
         elif coeff is S.Zero:
             # we know for sure the result will be 0
             return [coeff], [], order_symbols
+
+        # check for straggling Numbers that were produced
+        _new = []
+        for i in c_part:
+            if i.is_Number:
+                coeff *= i
+            else:
+                _new.append(i)
+        c_part = _new
 
         # order commutative part canonically
         _mulsort(c_part)
@@ -1189,7 +1198,7 @@ class Mul(Expr, AssocOp):
 
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
-            # a -1 base (see issue 3322); all we want here are the
+            # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
             if a.is_Pow or a.func is C.exp:
                 return a.as_base_exp()
@@ -1235,7 +1244,7 @@ class Mul(Expr, AssocOp):
                 return int(a/b)
             return 0
 
-        # give Muls in the denominator a chance to be changed (see issue 2552)
+        # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
         rv = None
         n, d = fraction(self)

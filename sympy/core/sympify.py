@@ -95,7 +95,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     The sympification happens with access to everything that is loaded
     by ``from sympy import *``; anything used in a string that is not
     defined by that import will be converted to a symbol. In the following,
-    the ``bitcout`` function is treated as a symbol and the ``O`` is
+    the ``bitcount`` function is treated as a symbol and the ``O`` is
     interpreted as the Order object (used with series) and it raises
     an error when used improperly:
 
@@ -368,7 +368,7 @@ def kernS(s):
     If use of the hack fails, the un-hacked string will be passed to sympify...
     and you get what you get.
 
-    XXX This hack should not be necessary once issue 1497 has been resolved.
+    XXX This hack should not be necessary once issue 4596 has been resolved.
     """
     import re
     from sympy.core.symbol import Symbol

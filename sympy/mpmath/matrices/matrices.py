@@ -26,7 +26,7 @@ class _matrix(object):
     The most basic way to create one is to use the ``matrix`` class directly.
     You can create an empty matrix specifying the dimensions:
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15
         >>> matrix(2)
         matrix(
@@ -754,7 +754,7 @@ class MatrixMethods(object):
         Create square diagonal matrix using given list.
 
         Example:
-        >>> from mpmath import diag, mp
+        >>> from sympy.mpmath import diag, mp
         >>> mp.pretty = False
         >>> diag([1, 2, 3])
         matrix(
@@ -773,7 +773,7 @@ class MatrixMethods(object):
         One given dimension will create square matrix n x n.
 
         Example:
-        >>> from mpmath import zeros, mp
+        >>> from sympy.mpmath import zeros, mp
         >>> mp.pretty = False
         >>> zeros(2)
         matrix(
@@ -799,7 +799,7 @@ class MatrixMethods(object):
         One given dimension will create square matrix n x n.
 
         Example:
-        >>> from mpmath import ones, mp
+        >>> from sympy.mpmath import ones, mp
         >>> mp.pretty = False
         >>> ones(2)
         matrix(
@@ -843,7 +843,7 @@ class MatrixMethods(object):
         n defaults to m.
 
         Example:
-        >>> from mpmath import randmatrix
+        >>> from sympy.mpmath import randmatrix
         >>> randmatrix(2) # doctest:+SKIP
         matrix(
         [['0.53491598236191806', '0.57195669543302752'],
@@ -908,7 +908,7 @@ class MatrixMethods(object):
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> x = matrix([-10, 2, 100])
             >>> norm(x, 1)
@@ -964,7 +964,7 @@ class MatrixMethods(object):
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> A = matrix([[1, -1000], [100, 50]])
             >>> mnorm(A, 1)

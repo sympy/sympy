@@ -113,9 +113,9 @@ class ExpBase(Function):
         if be.is_polar:
             return rv
         besmall = abs(be) <= S.Pi
-        if besmall is True:
+        if besmall == True:
             return rv
-        elif besmall is False and e.is_Rational and e.q == 2:
+        elif besmall == False and e.is_Rational and e.q == 2:
             return -rv
 
     def _eval_expand_power_exp(self, **hints):
@@ -530,7 +530,7 @@ class log(Function):
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        #don't autoexpand Pow or Mul (see the issue 252):
+        #don't autoexpand Pow or Mul (see the issue 3351):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 

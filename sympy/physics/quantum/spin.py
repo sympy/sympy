@@ -1471,7 +1471,7 @@ class CoupledSpinState(SpinState):
         if j.is_number:
             return DirectSumHilbertSpace(*[ ComplexSpace(x) for x in range(int(2*j + 1), 0, -2) ])
         else:
-            # TODO: Need hilbert space fix, see issue 2633
+            # TODO: Need hilbert space fix, see issue 5732
             # Desired behavior:
             #ji = symbols('ji')
             #ret = Sum(ComplexSpace(2*ji + 1), (ji, 0, j))

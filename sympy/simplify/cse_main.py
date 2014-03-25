@@ -45,6 +45,7 @@ def reps_toposort(r):
 
     Examples
     ========
+
     >>> from sympy.simplify.cse_main import reps_toposort
     >>> from sympy.abc import x, y
     >>> from sympy import Eq
@@ -70,6 +71,7 @@ def cse_separate(r, e):
 
     Examples
     ========
+
     >>> from sympy.simplify.cse_main import cse_separate
     >>> from sympy.abc import x, y, z
     >>> from sympy import cos, exp, cse, Eq, symbols

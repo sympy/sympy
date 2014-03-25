@@ -464,7 +464,7 @@ class QuadratureMethods(object):
         Computes a single, double or triple integral over a given
         1D interval, 2D rectangle, or 3D cuboid. A basic example::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = True
             >>> quad(sin, [0, pi])
             2.0
@@ -840,7 +840,7 @@ class QuadratureMethods(object):
         specify the `n`-th zero by providing the *zeros* arguments.
         Below is an example of each::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = True
             >>> f = lambda x: sin(3*x)/(x**2+1)
             >>> quadosc(f, [0,inf], omega=3)

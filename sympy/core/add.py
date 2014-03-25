@@ -348,7 +348,7 @@ class Add(Expr, AssocOp):
 
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
-    # issue 2425.
+    # issue 5524.
 
     def _eval_derivative(self, s):
         return self.func(*[f.diff(s) for f in self.args])

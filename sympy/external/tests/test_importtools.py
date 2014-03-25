@@ -1,6 +1,6 @@
 from sympy.external import import_module
 
-# fixes issue that arose in addressing issue 3434
+# fixes issue that arose in addressing issue 6533
 def test_no_stdlib_collections():
     '''
     make sure we get the right collections when it is not part of a

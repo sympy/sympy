@@ -511,7 +511,7 @@ def test_H31():
 
 
 @XFAIL
-def test_H32():  # issue 3459
+def test_H32():  # issue 6558
     raise NotImplementedError("[A*B*C - (A*B*C)**(-1)]*A*C*B (product \
                               of a non-commuting product and its inverse)")
 
@@ -934,6 +934,7 @@ def test_M28():
 
 
 def test_M29():
+    x = symbols('x', real=True)
     assert solve(abs(x - 1) - 2) == [-1, 3]
 
 
@@ -1515,13 +1516,13 @@ def test_P27():
 @XFAIL
 def test_P28():
     raise NotImplementedError("Generalized eigenvectors not supported \
-https://code.google.com/p/sympy/issues/detail?id=2194")
+https://github.com/sympy/sympy/issues/5293")
 
 
 @XFAIL
 def test_P29():
     raise NotImplementedError("Generalized eigenvectors not supported \
-https://code.google.com/p/sympy/issues/detail?id=2194")
+https://github.com/sympy/sympy/issues/5293")
 
 
 def test_P30():
@@ -1573,7 +1574,7 @@ def test_P34():
                 [0, 0, 0, 0, c, 1],
                 [0, 0, 0, 0, 0, c]])
     # raises exception, sin(M) not supported. exp(M*I) also not supported
-    # https://code.google.com/p/sympy/issues/detail?id=3119
+    # https://github.com/sympy/sympy/issues/6218
     assert sin(M) == Matrix([[sin(a), cos(a), 0, 0, 0, 0],
                              [0, sin(a), 0, 0, 0, 0],
                              [0, 0, sin(b), 0, 0, 0],
@@ -1588,7 +1589,7 @@ def test_P35():
                      [2, 3, 2],
                      [1, 1, 2]])
     # raises exception, sin(M) not supported. exp(M*I) also not supported
-    # https://code.google.com/p/sympy/issues/detail?id=3119
+    # https://github.com/sympy/sympy/issues/6218
     assert sin(M) == eye(3)
 
 
@@ -1779,7 +1780,7 @@ def test_R10():
     assert T2 == factorial(m + n)/(factorial(r)*factorial(m + n - r))
     assert T2 == binomial(m + n, r).rewrite(factorial)
     # rewrite(binomial) is not working.
-    # https://code.google.com/p/sympy/issues/detail?id=4036
+    # https://github.com/sympy/sympy/issues/7135
     T3 = T2.rewrite(binomial)
     assert T3 == binomial(m + n, r)
 
@@ -1791,7 +1792,7 @@ def test_R11():
     Sm = Sum(sk, (k, 0, n))
     T = Sm.doit()
     # Fibonacci simplification not implemented
-    # https://code.google.com/p/sympy/issues/detail?id=4035
+    # https://github.com/sympy/sympy/issues/7134
     assert T == fibonacci(2*n)
 
 
@@ -1845,7 +1846,7 @@ def test_R18():
     k = symbols('k', integer=True, positive=True)
     Sm = Sum(1/(2**k*k**2), (k, 1, oo))
     # returns polylog(2, 1/2),  particular value for 1/2 is not known.
-    # https://code.google.com/p/sympy/issues/detail?id=4033
+    # https://github.com/sympy/sympy/issues/7132
     T = Sm.doit()
     assert T.simplify() == -log(2)**2/2 + pi**2/12
 
@@ -1928,7 +1929,7 @@ def test_S5():
 def test_S6():
     n, k = symbols('n k', integer=True, positive=True)
     # Product raises Infinite recursion error.
-    # https://code.google.com/p/sympy/issues/detail?id=4034
+    # https://github.com/sympy/sympy/issues/7133
     assert (Product(x**2 -2*x*cos(k*pi/n) + 1, (k, 1, n - 1)).doit().simplify()
             == (x**(2*n) - 1)/(x**2 - 1))
 
@@ -1946,7 +1947,7 @@ def test_S8():
     k = symbols('k', integer=True, positive=True)
     Pr = Product(1 - 1/(2*k)**2, (k, 1, oo))
     T = Pr.doit()
-    # T = nan https://code.google.com/p/sympy/issues/detail?id=4037
+    # T = nan https://github.com/sympy/sympy/issues/7136
     assert T.simplify() == 2/pi
 
 
@@ -1955,7 +1956,7 @@ def test_S9():
     k = symbols('k', integer=True, positive=True)
     Pr = Product(1 + (-1)**(k + 1)/(2*k - 1), (k, 1, oo))
     # Product.doit() raises Infinite recursion error.
-    # https://code.google.com/p/sympy/issues/detail?id=4034
+    # https://github.com/sympy/sympy/issues/7133
     T = Pr.doit()
     assert T.simplify() == sqrt(2)
 
@@ -1966,7 +1967,7 @@ def test_S10():
     Pr = Product((k*(k + 1) + 1 + I)/(k*(k + 1) + 1 - I), (k, 0, oo))
     T = Pr.doit()
     # raises OverflowError
-    # https://code.google.com/p/sympy/issues/detail?id=4038
+    # https://github.com/sympy/sympy/issues/7137
     assert T.simplify() == -1
 
 
@@ -2075,7 +2076,7 @@ def test_U4():
 
 @XFAIL
 def test_U5():
-    # https://code.google.com/p/sympy/issues/detail?id=3582
+    # https://github.com/sympy/sympy/issues/6681
     # f(g(x)).diff(x,2) returns Derivative(g(x), x)**2*Subs(Derivative(
     #  f(_xi_1), _xi_1, _xi_1), (_xi_1,), (g(x),)) + Derivative(g(x), x, x)*
     #  Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
@@ -2131,14 +2132,14 @@ def test_U9():
     # to other expressions only if they are atomic, like a symbol or a
     # function.
     # D operator should be added to SymPy
-    # See https://code.google.com/p/sympy/issues/detail?id=1620.
+    # See https://github.com/sympy/sympy/issues/4719.
 
     # raises ValueError: Can't differentiate wrt the variable: x**2 + y**2
     assert s3 == 2*(x + y)*Derivative(g(x**2 + y**2), x**2 + y**2)
 
 
 def test_U10():
-    # see github issue 2519:
+    # see issue 2519:
     assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9, 4)
 
 
@@ -2196,7 +2197,7 @@ supported in SymPy")
 def test_V1():
     x = symbols('x', real=True)
     # integral not calculated
-    # https://code.google.com/p/sympy/issues/detail?id=1113
+    # https://github.com/sympy/sympy/issues/4212
     assert integrate(abs(x), x) == x*abs(x)/2
 
 
@@ -2218,7 +2219,7 @@ def test_V4():
 @slow
 def test_V5():
     # Takes extremely long time
-    # https://code.google.com/p/sympy/issues/detail?id=4050
+    # https://github.com/sympy/sympy/issues/7149
     assert (integrate((3*x - 5)**2/(2*x - 1)**(Rational(7, 2)), x) ==
             (-41 + 80*x - 45*x**2)/(5*(2*x - 1)**Rational(5, 2)))
 
@@ -2267,7 +2268,7 @@ def test_V11():
 def test_V12():
     r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
     # Correct result in python2.7.4 wrong result in python3.3.1
-    # https://code.google.com/p/sympy/issues/detail?id=4058
+    # https://github.com/sympy/sympy/issues/7157
     assert r1 == -1/(tan(x/2) + 2)
 
 
@@ -2283,7 +2284,7 @@ def test_V13():
 def test_V14():
     r1 = integrate(log(abs(x**2 - y**2)), x)
     # I.simplify() raises AttributeError
-    # https://code.google.com/p/sympy/issues/detail?id=4059
+    # https://github.com/sympy/sympy/issues/7158
     assert (r1.simplify() == x*log(abs(x**2  - y**2))
                             + y*log(x + y) - y*log(x - y) - 2*x)
 
@@ -2317,7 +2318,7 @@ def test_V17():
 def test_W1():
     # The function has a pole at y.
     # The integral has a Cauchy principal value of zero but SymPy returns -I*pi
-    # https://code.google.com/p/sympy/issues/detail?id=4060
+    # https://github.com/sympy/sympy/issues/7159
     assert integrate(1/(x - y), (x, y - 1, y + 1)) == 0
 
 
@@ -2325,7 +2326,7 @@ def test_W1():
 def test_W2():
     # The function has a pole at y.
     # The integral is divergent but SymPy returns -2
-    # https://code.google.com/p/sympy/issues/detail?id=4061
+    # https://github.com/sympy/sympy/issues/7160
     # Test case in Macsyma:
     # (c6) errcatch(integrate(1/(x - a)^2, x, a - 1, a + 1));
     # Integral is divergent
@@ -2335,7 +2336,7 @@ def test_W2():
 @XFAIL
 def test_W3():
     # integral is not  calculated
-    # https://code.google.com/p/sympy/issues/detail?id=4062
+    # https://github.com/sympy/sympy/issues/7161
     assert integrate(sqrt(x + 1/x - 2), (x, 0, 1)) == S(4)/3
 
 
@@ -2501,7 +2502,7 @@ def test_W25():
 def test_W26():
     x, y = symbols('x y', real=True)
     # integrate(abs(y - x**2), (y,0,2)) raises ValueError: gamma function pole
-    # https://code.google.com/p/sympy/issues/detail?id=4066
+    # https://github.com/sympy/sympy/issues/7165
     assert integrate(integrate(abs(y - x**2), (y, 0, 2)),
                      (x, -1, 1)) == S(46)/15
 
@@ -2579,7 +2580,7 @@ def test_X8():
     # Puiseux series (terms with fractional degree):
     # => 1/sqrt(x - 3/2 pi) + (x - 3/2 pi)^(3/2) / 12 + O([x - 3/2 pi]^(7/2))
 
-    # see issue 4068:
+    # see issue 7167:
     x = symbols('x', real=True)
     assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
             1/sqrt(x) +x**(S(3)/2)/12 + x**(S(7)/2)/160 + O(x**4))
@@ -2608,7 +2609,7 @@ def test_X12():
     # Result => (x - 1)^a/e^b [1 - (a + 2 b) (x - 1) / 2 + O((x - 1)^2)]
     a, b, x = symbols('a b x', real=True)
     # series returns O(log(x)**2)
-    # https://code.google.com/p/sympy/issues/detail?id=4069
+    # https://github.com/sympy/sympy/issues/7168
     assert (series(log(x)**a*exp(-b*x), x, x0=1, n=2) ==
             (x - 1)**a/exp(b)*(1 - (a + 2*b)*(x - 1)/2 + O((x - 1)**2)))
 
@@ -2629,7 +2630,7 @@ def test_X15():
     # => 0!/x - 1!/x^2 + 2!/x^3 - 3!/x^4 + O(1/x^5)   [Knopp, p. 544]
     x, t = symbols('x t', real=True)
     # raises RuntimeError: maximum recursion depth exceeded
-    # https://code.google.com/p/sympy/issues/detail?id=4065
+    # https://github.com/sympy/sympy/issues/7164
     e1 = integrate(exp(-t)/t, (t, x, oo))
     assert (series(e1, x, x0=oo, n=5) ==
             6/x**4 + 2/x**3 - 1/x**2 + 1/x + O(x**(-5), (x, oo)))
@@ -2814,7 +2815,7 @@ def test_Y5_Y6():
                                 - 4*(Heaviside(t - 1)
                                 - Heaviside(t - 2)), t, s)
     # Laplace transform for diff() not calculated
-    # https://code.google.com/p/sympy/issues/detail?id=4077
+    # https://github.com/sympy/sympy/issues/7176
     assert (F == s**2*LaplaceTransform(y(t), t, s) - s
             + LaplaceTransform(y(t), t, s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
 # TODO implement second part of test case
@@ -2835,7 +2836,7 @@ def test_Y7():
                                           (n, 1, oo)), t, s)
     # returns 2*LaplaceTransform(Sum((-1)**n*Heaviside(-a*n + t),
     #                                (n, 1, oo)), t, s) + 1/s
-    # https://code.google.com/p/sympy/issues/detail?id=4078
+    # https://github.com/sympy/sympy/issues/7177
     assert F == 2*Sum((-1)**n*exp(-a*n*s)/s, (n, 1, oo)) + 1/s
 
 
@@ -2860,7 +2861,7 @@ def test_Y11():
     # => pi cot(pi s)   (0 < Re s < 1)   [Gradshteyn and Ryzhik 17.43(5)]
     x, s = symbols('x s')
     # raises RuntimeError: maximum recursion depth exceeded
-    # https://code.google.com/p/sympy/issues/detail?id=4082
+    # https://github.com/sympy/sympy/issues/7181
     F, _, _ =  mellin_transform(1/(1 - x), x, s)
     assert F == pi*cot(pi*s)
 
@@ -2871,7 +2872,7 @@ def test_Y12():
     # [Gradshteyn and Ryzhik 17.43(16)]
     x, s = symbols('x s')
     # returns Wrong value -2**(s - 4)*gamma(s/2 - 3)/gamma(-s/2 + 1)
-    # https://code.google.com/p/sympy/issues/detail?id=4083
+    # https://github.com/sympy/sympy/issues/7182
     F, _, _ = mellin_transform(besselj(3, x)/x**3, x, s)
     assert F == -2**(s - 4)*gamma(s/2)/gamma(-s/2 + 4)
 
@@ -2932,7 +2933,7 @@ def test_Z5():
     # transform: f(t) = sin(2 t)/8 - t cos(2 t)/4
     C1, C2 = symbols('C1 C2')
     # initial conditions not supported, this is a manual workaround
-    # https://code.google.com/p/sympy/issues/detail?id=1621
+    # https://github.com/sympy/sympy/issues/4720
     eq = Derivative(f(x), x, 2) + 4*f(x) - sin(2*x)
     sol = dsolve(eq, f(x))
     f0 = Lambda(x, sol.rhs)
@@ -2956,7 +2957,7 @@ def test_Z6():
     eq = Derivative(f(t), t, 2) + 4*f(t) - sin(2*t)
     F, _, _ = laplace_transform(eq, t, s)
     # Laplace transform for diff() not calculated
-    # https://code.google.com/p/sympy/issues/detail?id=4077
+    # https://github.com/sympy/sympy/issues/7176
     assert (F == s**2*LaplaceTransform(f(t), t, s) +
             4*LaplaceTransform(f(t), t, s) - 2/(s**2 + 4))
     # rest of test case not implemented

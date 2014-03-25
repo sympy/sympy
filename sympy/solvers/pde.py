@@ -252,6 +252,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     Examples
     ========
+
     >>> from sympy.solvers.pde import classify_pde
     >>> from sympy import Function, diff, Eq
     >>> from sympy.abc import x, y
@@ -413,6 +414,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
     Examples
     ========
+
     >>> from sympy import Function, symbols, diff
     >>> from sympy.solvers.pde import checkpdesol, pdsolve
     >>> x, y = symbols('x y')
@@ -964,7 +966,7 @@ def _separate(eq, dep, others):
         div.add(ext)
     # FIXME: Find lcm() of all the divisors and divide with it, instead of
     # current hack :(
-    # http://code.google.com/p/sympy/issues/detail?id=1498
+    # https://github.com/sympy/sympy/issues/4597
     if len(div) > 0:
         final = 0
         for term in eq.args:

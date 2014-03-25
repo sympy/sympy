@@ -85,7 +85,7 @@ def test_sqrtdenest_rec():
     assert sqrtdenest(z) == z
 
 
-def test_issue3142():
+def test_issue_6241():
     z = sqrt( -320 + 32*sqrt(5) + 64*r15)
     assert sqrtdenest(z) == z
 
@@ -110,7 +110,7 @@ def test_sqrtdenest3():
 
 
 def test_sqrtdenest4():
-    # see Denest_en.pdf in http://code.google.com/p/sympy/issues/detail?id=93
+    # see Denest_en.pdf in https://github.com/sympy/sympy/issues/3192
     z = sqrt(8 - r2*sqrt(5 - r5) - sqrt(3)*(1 + r5))
     z1 = sqrtdenest(z)
     c = sqrt(-r5 + 5)
@@ -144,7 +144,7 @@ def test_sqrt_symbolic_denest():
     assert sqrtdenest(z) == z
 
 
-def test_issue_2758():
+def test_issue_5857():
     from sympy.abc import x, y
     z = sqrt(1/(4*r3 + 7) + 1)
     ans = (r2 + r6)/(r3 + 2)
@@ -169,6 +169,6 @@ def test_subsets():
         [1, 1, 0, 1], [0, 0, 1, 1], [1, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]]
 
 
-def test_issue_2554():
+def test_issue_5653():
     assert sqrtdenest(
         sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))

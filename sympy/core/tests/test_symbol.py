@@ -4,7 +4,6 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
 
 from sympy.core.compatibility import u
 from sympy.utilities.pytest import raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def test_Symbol():
@@ -291,7 +290,7 @@ def test_symbols():
     assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
 
-    # issue 3576
+    # issue 6675
     def sym(s):
         return str(symbols(s))
     assert sym('a0:4') == '(a0, a1, a2, a3)'

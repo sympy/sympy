@@ -62,8 +62,12 @@ class MatrixExpr(Basic):
 
     is_commutative = False
 
-    # The following is adapted from the core Expr object
 
+    def __new__(cls, *args, **kwargs):
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args, **kwargs)
+
+    # The following is adapted from the core Expr object
     def __neg__(self):
         return MatMul(S.NegativeOne, self).doit()
 
@@ -196,8 +200,8 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                (0 <= i) is not False and (i < self.rows) is not False and
-                (0 <= j) is not False and (j < self.cols) is not False)
+                (0 <= i) != False and (i < self.rows) != False and
+                (0 <= j) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -209,7 +213,7 @@ class MatrixExpr(Basic):
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
             i, j = sympify(i), sympify(j)
-            if self.valid_index(i, j) is not False:
+            if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))

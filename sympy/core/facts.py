@@ -458,6 +458,10 @@ class FactKB(dict):
     """
     A simple propositional knowledge base relying on compiled inference rules.
     """
+    def __str__(self):
+        return '{\n%s}' % ',\n'.join(
+            ["\t%s: %s" % i for i in sorted(self.items())])
+
     def __init__(self, rules):
         self.rules = rules
 

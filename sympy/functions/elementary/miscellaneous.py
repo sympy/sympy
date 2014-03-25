@@ -307,14 +307,14 @@ class MinMaxBase(Expr, LatticeOp):
         # variant II: find local zeros
         args = cls._find_localzeros(set(_args), **assumptions)
 
-        _args = frozenset(args)
-
-        if not _args:
+        if not args:
             return cls.identity
-        elif len(_args) == 1:
-            return set(_args).pop()
+        elif len(args) == 1:
+            return args.pop()
         else:
             # base creation
+            # XXX should _args be made canonical with sorting?
+            _args = frozenset(args)
             obj = Expr.__new__(cls, _args, **assumptions)
             obj._argset = _args
             return obj
@@ -374,7 +374,9 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        if (x == y) or isinstance(x > y, bool) or isinstance(x < y, bool):
+        xy = x > y
+        yx = x < y
+        if (x == y) or xy == True or xy == False or yx == True or yx == False:
             return True
         if x.is_Number and y.is_Number:
             return True
@@ -395,15 +397,11 @@ class MinMaxBase(Expr, LatticeOp):
             if cls._rel(x, y):
                 return True
         xy = cls._rel(x, y)
-        if isinstance(xy, bool):
-            if xy:
-                return True
-            return False
+        if xy == True or xy == False:
+            return bool(xy)
         yx = cls._rel_inversed(x, y)
-        if isinstance(yx, bool):
-            if yx:
-                return False  # never occurs?
-            return True
+        if yx == True or yx == False:
+            return not bool(yx)
         return False
 
     def _eval_derivative(self, s):

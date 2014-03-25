@@ -735,7 +735,7 @@ class Wavefunction(Function):
                      or upper in args[ct].free_symbols):
                 continue
 
-            if (args[ct] < lower) is True or (args[ct] > upper) is True:
+            if (args[ct] < lower) == True or (args[ct] > upper) == True:
                 return 0
 
             ct += 1

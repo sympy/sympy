@@ -175,11 +175,11 @@ class Polygon(GeometryEntity):
         if not rv.is_convex:
             sides = rv.sides
             for i, si in enumerate(sides):
-                pts = si[0], si[1]
+                pts = si.p1, si.p2
                 ai = si.arbitrary_point(hit)
                 for j in xrange(i):
                     sj = sides[j]
-                    if sj[0] not in pts and sj[1] not in pts:
+                    if sj.p1 not in pts and sj.p2 not in pts:
                         aj = si.arbitrary_point(hit)
                         tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
                         if tx.is_number and 0 <= tx <= 1:
@@ -1080,6 +1080,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> square = RegularPolygon((0, 0), 1, 4)
         >>> square.area
@@ -1100,6 +1101,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> from sympy import sqrt
         >>> s = square_in_unit_circle = RegularPolygon((0, 0), 1, 4)

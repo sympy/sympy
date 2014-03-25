@@ -60,7 +60,7 @@ def chebyfit(ctx, f, interval, N, error=False):
     Here we use :func:`~mpmath.chebyfit` to generate a low-degree approximation
     of `f(x) = \cos(x)`, valid on the interval `[1, 2]`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> poly, err = chebyfit(cos, [1, 2], 5, error=True)
         >>> nprint(poly)
@@ -162,7 +162,7 @@ def fourier(ctx, f, interval, N):
     the function has odd symmetry), and the sine coefficients are
     rational numbers::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> c, s = fourier(lambda x: x, [-pi, pi], 5)
         >>> nprint(c)
