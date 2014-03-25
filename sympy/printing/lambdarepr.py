@@ -5,7 +5,7 @@ from sympy.utilities import default_sort_key
 
 
 def _find_first_symbol(expr):
-    for atom in expr.atoms():
+    for atom in expr.free_symbols:
         if atom.is_Symbol:
             return atom
     raise ValueError('expression must contain a Symbol: %r' % expr)
