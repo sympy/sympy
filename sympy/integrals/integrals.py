@@ -176,18 +176,16 @@ class Integral(AddWithLimits):
         is_zero
         """
 
-        integrand, limits = self.function, self.limits
-        isyms = integrand.atoms(Symbol)
+        limits = self.limits
+        isyms = self.free_symbols
+        if len(isyms) == 0:
+            return True 
         for xab in limits:
             if len(xab) == 1:
                 isyms.add(xab[0])
                 continue  # it may be removed later
             elif len(xab) == 3 and xab[1] == xab[2]:  # XXX naive equality test
                 return True  # integral collapsed
-            if xab[0] in isyms:
-                # take it out of the symbols since it will be replace
-                # with whatever the limits of the integral are
-                isyms.remove(xab[0])
             # add in the new symbols
             for i in xab[1:]:
                 isyms.update(i.free_symbols)

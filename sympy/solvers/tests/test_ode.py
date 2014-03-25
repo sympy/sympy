@@ -202,6 +202,12 @@ def test_classify_ode():
     assert classify_ode(diff(f(x) + x, x) + diff(f(x), x), f(x),
                         prep=True) == ans
 
+    assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
+        ('separable', '1st_linear', '1st_power_series', 'lie_group',
+         'separable_Integral', '1st_linear_Integral')
+    assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
+        ('separable', '1st_power_series', 'lie_group', 'separable_Integral')
+
 
 def test_ode_order():
     f = Function('f')
@@ -1318,7 +1324,7 @@ def test_issue_2671():
     t = Symbol('t')
     w = Function('w')
     sol = dsolve(w(t).diff(t, 6) - k**6*w(t), w(t))
-    assert len([s for s in sol.atoms(Symbol) if s.name.startswith('C')]) == 6
+    assert len([s for s in sol.free_symbols if s.name.startswith('C')]) == 6
     assert constantsimp((C1*cos(x) + C2*cos(x))*exp(x), x, 2) == \
         C1*cos(x)*exp(x)
     assert constantsimp(C1*cos(x) + C2*cos(x) + C3*sin(x), x, 2) == \

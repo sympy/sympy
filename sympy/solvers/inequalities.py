@@ -476,7 +476,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         else:
             expr, rel = inequality, '=='
 
-        gens = expr.atoms(Symbol)
+        gens = expr.free_symbols
 
         if not gens:
             return False

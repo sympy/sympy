@@ -8,7 +8,7 @@ from sympy import (
     radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
     root, S, separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
     Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
-    expand_multinomial, denom)
+    expand_multinomial, denom, Sum)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
@@ -1173,6 +1173,11 @@ def test_posify():
     modified, reps = posify(orig)
     assert str(modified) == '[_x, n, p]'
     assert [w.subs(reps) for w in modified] == orig
+
+    assert str(Integral(posify(1/x + y)[0],(y, 1, 3)).expand()) == \
+        'Integral(1/_x, (y, 1, 3)) + Integral(_y, (y, 1, 3))'
+    assert str(Sum(posify(1/x**n)[0],(n,1,3)).expand()) == \
+        'Sum(_x**(-n), (n, 1, 3))'
 
 
 def test_powdenest():
