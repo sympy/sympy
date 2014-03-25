@@ -357,28 +357,28 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def new_constants(eq, start=1, prefix='C'):
-    """
-    Yield an infinite sequence constants that do not occur
-    in eq already.
-    """
-    if isinstance(eq, C.Expr):
-        atom_set = eq.atoms(Symbol)
-    elif is_iterable(eq):
-        atom_set = reduce(lambda x, y : x | y,
-            [i.atoms(Symbol) for i in eq], set() )
-    else:
-        raise ValueError("Expected Expr or iterable but got %s"%eq)
-    for Ci in numbered_symbols(prefix=prefix, start=start, cls=Symbol):
-        if Ci not in atom_set:
-            yield Ci
-
-
 def get_new_constants(eq, num=1, start=1, prefix='C'):
     """
     Returns a list of constants that do not occur
     in eq already.
     """
+
+    def new_constants(eq, start=1, prefix='C'):
+        """
+        Yield an infinite sequence constants that do not occur
+        in eq already.
+        """
+        if isinstance(eq, C.Expr):
+            atom_set = eq.atoms(Symbol)
+        elif is_iterable(eq):
+            atom_set = reduce(lambda x, y : x | y,
+                [i.atoms(Symbol) for i in eq], set() )
+        else:
+            raise ValueError("Expected Expr or iterable but got %s"%eq)
+        for Ci in numbered_symbols(prefix=prefix, start=start, cls=Symbol):
+            if Ci not in atom_set:
+                yield Ci
+
     g = new_constants(eq, start=start, prefix=prefix)
     Cs = [ next(g) for i in xrange(num) ]
     return ( Cs[0] if num == 1 else tuple(Cs) )
