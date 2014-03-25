@@ -291,9 +291,10 @@ allhints = (
     "lie_group",
     "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
-    "nth_linear_euler_eq_nonhomogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
+    "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
+    "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
@@ -307,7 +308,7 @@ allhints = (
     "linear_coefficients_Integral",
     "separable_reduced_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
-    "nth_linear_euler_eq_nonhomogeneous_Integral",
+    "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
     )
 
@@ -1153,14 +1154,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if not r[-1]:
                 matching_hints["nth_linear_euler_eq_homogeneous"] = r
             else:
+                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"] = r
+                matching_hints["nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral"] = r
                 e, re = posify(r[-1].subs(x, exp(x)))
                 undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
-                else:
-                    matching_hints["nth_linear_euler_eq_nonhomogeneous"] = r
-                    matching_hints["nth_linear_euler_eq_nonhomogeneous_Integral"] = r
+                    matching_hints["nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"] = r
+
 
     # Order keys based on allhints.
     retlist = [i for i in allhints if i in matching_hints]
@@ -1238,6 +1239,8 @@ def odesimp(eq, func, order, hint):
 
     # First, integrate if the hint allows it.
     eq = _handle_Integral(eq, func, order, hint)
+    if hint.startswith("nth_linear_euler_eq_nonhomogeneous"):
+        eq = simplify(eq)
     if not isinstance(eq, Equality):
         raise TypeError("eq should be an instance of Equality")
 
@@ -3247,35 +3250,50 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
         raise ValueError('Unknown value for key "returns".')
 
 
-def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'):
+def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, order, match, returns='sol'):
     r"""
-    Solves an `n`\th order linear non homogeneous variable-coefficient
-    Cauchy-Euler equidimensional ordinary differential equation.
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    ordinary differential equation using undetermined coefficients.
 
     This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
     \cdots`.
 
     These equations can be solved in a general manner, by substituting
     solutions of the form `x = exp(t)`, and deriving a characteristic equation
-    of form `g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) \cdots` which can be then solved
-    by nth_linear_constant_coeff_variation_of_parameters. If this method hangs, try
-    using "nth_linear_euler_eq_nonhomogeneous_Integral" hint which will then use
-    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` and then
-    simplifying the integrals can be done manually.
+    of form `g(exp(t)) = b_0 f(t) + b_1 f'(t) + b_2 f''(t) \cdots` which can
+    be then solved by nth_linear_constant_coeff_undetermined_coefficients if
+    g(exp(t)) has finite number of lineary independent derivatives.
+
+    Functions that fit this requirement are finite sums functions of the form
+    `a x^i e^{b x} \sin(c x + d)` or `a x^i e^{b x} \cos(c x + d)`, where `i`
+    is a non-negative integer and `a`, `b`, `c`, and `d` are constants.  For
+    example any polynomial in `x`, functions like `x^2 e^{2 x}`, `x \sin(x)`,
+    and `e^x \cos(x)` can all be used.  Products of `\sin`'s and `\cos`'s have
+    a finite number of derivatives, because they can be expanded into `\sin(a
+    x)` and `\cos(b x)` terms.  However, SymPy currently cannot do that
+    expansion, so you will need to manually rewrite the expression in terms of
+    the above to use this method.  So, for example, you will need to manually
+    convert `\sin^2(x)` into `(1 + \cos(2 x))/2` to properly apply the method
+    of undetermined coefficients on it.
+
+    After replacement of x by exp(t), this method works by creating a trial function
+    from the expression and all of its linear independent derivatives and
+    substituting them into the original ODE.  The coefficients for each term
+    will be a system of linear equations, which are be solved for and
+    substituted, giving the solution. If any of the trial functions are linearly
+    dependent on the solution to the homogeneous equation, they are multiplied
+    by sufficient `x` to make them linearly independent.
 
     Examples
     ========
 
-    >>> from sympy import Function, dsolve, Eq, Derivative
+    >>> from sympy import dsolve, Function, Derivative, log
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> dsolve(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x, f(x),
-    ... hint='nth_linear_euler_eq_nonhomogeneous')
-    f(x) == x*(C1 + C2*x - log(x))
-
-    References
-    ==========
-    http://www2.fiu.edu/~aladrog/CauchyEuler
+    >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
+    >>> dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients').expand()
+    f(x) == C1*x + C2*x**2 + log(x)/2 + 3/4
 
     """
     x = func.args[0]
@@ -3291,17 +3309,79 @@ def ode_nth_linear_euler_eq_nonhomogeneous(eq, func, order, match, returns='sol'
     for i in range(1,degree(Poly(chareq, symbol))+1):
         eq += chareq.coeff(symbol**i)*diff(f(x), x, i)
 
-    chareq = Poly(chareq)
-    eq += chareq.coeffs()[-1]*f(x)
+    if chareq.as_coeff_add(symbol)[0]:
+        eq += chareq.as_coeff_add(symbol)[0]*f(x)
     e, re = posify(r[-1].subs(x, exp(x)))
     eq += e.subs(re)
 
     match = _nth_linear_match(eq, f(x), ode_order(eq, f(x)))
-    if 'trialset' in r.keys():
-        match['trialset'] = r['trialset']
-        return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x)).expand()
-    else:
-        return ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match).subs(x, log(x)).replace(f(log(x)), f(x))
+    match['trialset'] = r['trialset']
+    return ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match).subs(x, log(x)).subs(f(log(x)), f(x)).expand()
+
+
+def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, order, match, returns='sol'):
+    r"""
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    ordinary differential equation using variation of parameters.
+
+    This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
+    \cdots`.
+
+    This method works by assuming that the particular solution takes the form
+
+    .. math:: \sum_{x=1}^{n} c_i(x) y_i(x) {a_n} {x^n} \text{,}
+
+    where `y_i` is the `i`\th solution to the homogeneous equation.  The
+    solution is then solved using Wronskian's and Cramer's Rule.  The
+    particular solution is given by multiplying eq given below with `a_n x^{n}`
+
+    .. math:: \sum_{x=1}^n \left( \int \frac{W_i(x)}{W(x)} \,dx
+                \right) y_i(x) \text{,}
+
+    where `W(x)` is the Wronskian of the fundamental system (the system of `n`
+    linearly independent solutions to the homogeneous equation), and `W_i(x)`
+    is the Wronskian of the fundamental system with the `i`\th column replaced
+    with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left (x \right )}]`.
+
+    This method is general enough to solve any `n`\th order inhomogeneous
+    linear differential equation, but sometimes SymPy cannot simplify the
+    Wronskian well enough to integrate it.  If this method hangs, try using the
+    ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
+    simplifying the integrals manually.  Also, prefer using
+    ``nth_linear_constant_coeff_undetermined_coefficients`` when it
+    applies, because it doesn't use integration, making it faster and more
+    reliable.
+
+    Warning, using simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters' in
+    :py:meth:`~sympy.solvers.ode.dsolve` may cause it to hang, because it will
+    not attempt to simplify the Wronskian before integrating.  It is
+    recommended that you only use simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters_Integral' for this
+    method, especially if the solution to the homogeneous equation has
+    trigonometric functions in it.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Derivative
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - x**4
+    >>> dsolve(eq, f(x),
+    ... hint='nth_linear_euler_eq_nonhomogeneous_variation_of_parameters').expand()
+    f(x) == C1*x + C2*x**2 + x**4/6
+
+    """
+    x = func.args[0]
+    f = func.func
+    r = match
+
+    gensol = ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='both')
+    match.update(gensol)
+    r[-1] = r[-1]/r[ode_order(eq, f(x))]
+    sol = _solve_variation_of_parameters(eq, func, order, match)
+    return Eq(f(x), r['sol'].rhs + (sol.rhs - r['sol'].rhs)*r[ode_order(eq, f(x))])
 
 
 def ode_almost_linear(eq, func, order, match):
@@ -4199,7 +4279,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
 
 def _solve_variation_of_parameters(eq, func, order, match):
     r"""
-    Helper function for the method of variation of parameters.
+    Helper function for the method of variation of parameters and nonhomogeneous euler eq.
 
     See the
     :py:meth:`~sympy.solvers.ode.ode_nth_linear_constant_coeff_variation_of_parameters`
