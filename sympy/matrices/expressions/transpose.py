@@ -80,7 +80,7 @@ from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
 
 
-def refine_Transpose(expr, assumptions):
+def refine_Transpose(expr):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
@@ -90,7 +90,7 @@ def refine_Transpose(expr, assumptions):
     ...     print(refine(X.T))
     X
     """
-    if ask(Q.symmetric(expr), assumptions):
+    if ask(Q.symmetric(expr)):
         return expr.arg
 
     return expr

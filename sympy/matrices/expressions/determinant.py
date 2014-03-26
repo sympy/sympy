@@ -57,7 +57,7 @@ from sympy.assumptions.ask import ask, Q
 from sympy.assumptions.refine import handlers_dict
 
 
-def refine_Determinant(expr, assumptions):
+def refine_Determinant(expr):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine, det
     >>> X = MatrixSymbol('X', 2, 2)
@@ -67,11 +67,11 @@ def refine_Determinant(expr, assumptions):
     ...     print(refine(det(X)))
     1
     """
-    if ask(Q.orthogonal(expr.arg), assumptions):
+    if ask(Q.orthogonal(expr.arg)):
         return S.One
-    elif ask(Q.singular(expr.arg), assumptions):
+    elif ask(Q.singular(expr.arg)):
         return S.Zero
-    elif ask(Q.unit_triangular(expr.arg), assumptions):
+    elif ask(Q.unit_triangular(expr.arg)):
         return S.One
 
     return expr
