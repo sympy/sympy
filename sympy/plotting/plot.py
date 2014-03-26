@@ -832,6 +832,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.spines['bottom'].set_smart_bounds(False)
             self.ax.xaxis.set_ticks_position('bottom')
             self.ax.yaxis.set_ticks_position('left')
+            self.xlim=[float("inf"),float("-inf")]
         elif all(are_3D):
             ## mpl_toolkits.mplot3d is necessary for
             ##      projection='3d'
@@ -848,7 +849,6 @@ class MatplotlibBackend(BaseBackend):
             if s.is_2Dline:
                 collection = self.LineCollection(s.get_segments())
                 self.ax.add_collection(collection)
-                self.ax.set_xlim(s.start,s.end)
             elif s.is_contour:
                 self.ax.contour(*s.get_meshes())
             elif s.is_3Dline:
@@ -926,6 +926,11 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_yscale(parent.yscale)
         if parent.xlim:
             self.ax.set_xlim(parent.xlim)
+        else:
+            for s in self.parent._series:
+                self.xlim[0] = min(self.xlim[0],s.start)
+                self.xlim[1] = max(self.xlim[1],s.end)
+            self.ax.set_xlim(self.xlim[0],self.xlim[1])
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
         if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
