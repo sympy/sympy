@@ -458,18 +458,6 @@ def randprime(a, b):
         ========
 
         primerange : Generate all primes in a given range
-
-
-    if a >= b:
-        return
-    a, b = map(int, (a, b))
-    n = random.randint(a - 1, b)
-    p = nextprime(n)
-    if p >= b:
-        p = prevprime(b)
-    if p < a:
-        raise ValueError("no primes exist in the specified range")
-    return p
     """
 
     a = nextprime(a-1)
