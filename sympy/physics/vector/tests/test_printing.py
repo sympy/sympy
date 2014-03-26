@@ -35,16 +35,12 @@ def test_vector_pretty_print():
 
     pp = VectorPrettyPrinter()
 
-    expected = u(' 2\na  \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + b \x1b[94m'
-                 '\x1b[1mn_y\x1b[0;0m\x1b[0;0m + c\u22c5sin(\u03b1) \x1b[9'
-                 '4m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
+    expected = u(' 2\na  n_x + b n_y + c\u22c5sin(\u03b1) n_z')
 
     assert expected == pp.doprint(v)
     assert expected == v._pretty().render()
 
-    expected = u('\u03b1 \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m + sin(\u03c9'
-                 ') \x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m + \u03b1\u22c5'
-                 '\u03b2 \x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;0m')
+    expected = u('\u03b1 n_x + sin(\u03c9) n_y + \u03b1\u22c5\u03b2 n_z')
 
     assert expected == pp.doprint(w)
     assert expected == w._pretty().render()
@@ -128,21 +124,12 @@ def test_vector_latex_with_functions():
 
 def test_dyadic_pretty_print():
 
-    expected = u(' 2\na  \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2297\x1b[94'
-                 'm\x1b[1mn_y\x1b[0;0m\x1b[0;0m + b \x1b[94m\x1b[1mn_y\x1b'
-                 '[0;0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m'
-                 ' + c\u22c5sin(\u03b1) \x1b[94m\x1b[1mn_z\x1b[0;0m\x1b[0;'
-                 '0m\u2297\x1b[94m\x1b[1mn_y\x1b[0;0m\x1b[0;0m')
+    expected = u(' 2\na  n_x\u2297n_y + b n_y\u2297n_y + c\u22c5sin(\u03b1) n_z\u2297n_y')
     result = y._pretty().render()
 
     assert expected == result
 
-    expected = u('\u03b1 \x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m\u2297\x1b[94'
-                 'm\x1b[1mn_x\x1b[0;0m\x1b[0;0m + sin(\u03c9) \x1b[94m\x1b'
-                 '[1mn_y\x1b[0;0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_z\x1b[0;0'
-                 'm\x1b[0;0m + \u03b1\u22c5\u03b2 \x1b[94m\x1b[1mn_z\x1b[0'
-                 ';0m\x1b[0;0m\u2297\x1b[94m\x1b[1mn_x\x1b[0;0m\x1b[0;0m')
-
+    expected = u('\u03b1 n_x\u2297n_x + sin(\u03c9) n_y\u2297n_z + \u03b1\u22c5\u03b2 n_z\u2297n_x')
     result = x._pretty().render()
 
     assert expected == result

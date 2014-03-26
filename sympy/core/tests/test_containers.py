@@ -18,7 +18,7 @@ def test_Tuple():
     st2 = Tuple(*t2)
     assert st2.atoms() == set(t2)
     assert st == st2.subs({p: 1, q: 2, r: 3, s: 4})
-    # issue 2406
+    # issue 5505
     assert all(isinstance(arg, Basic) for arg in st.args)
     assert Tuple(p, 1).subs(p, 0) == Tuple(0, 1)
     assert Tuple(p, Tuple(p, 1)).subs(p, 0) == Tuple(0, Tuple(0, 1))
@@ -63,10 +63,10 @@ def test_Tuple_equality():
 
 
 def test_Tuple_comparision():
-    assert (Tuple(1, 3) >= Tuple(-10, 30)) is True
-    assert (Tuple(1, 3) <= Tuple(-10, 30)) is False
-    assert (Tuple(1, 3) >= Tuple(1, 3)) is True
-    assert (Tuple(1, 3) <= Tuple(1, 3)) is True
+    assert (Tuple(1, 3) >= Tuple(-10, 30)) is S.true
+    assert (Tuple(1, 3) <= Tuple(-10, 30)) is S.false
+    assert (Tuple(1, 3) >= Tuple(1, 3)) is S.true
+    assert (Tuple(1, 3) <= Tuple(1, 3)) is S.true
 
 
 def test_Tuple_tuple_count():
@@ -155,7 +155,7 @@ def test_Dict():
     assert d == Dict(d)
 
 
-def test_issue_2689():
+def test_issue_5788():
     args = [(1, 2), (2, 1)]
     for o in [Dict, Tuple, FiniteSet]:
         # __eq__ and arg handling

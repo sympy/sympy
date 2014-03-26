@@ -106,7 +106,7 @@ def roots_cubic(f):
             return [-aon3]*3
         else:
             if q.is_real:
-                if (q > 0) is True:
+                if (q > 0) == True:
                     u1 = -q**Rational(1, 3)
                 else:
                     u1 = (-q)**Rational(1, 3)

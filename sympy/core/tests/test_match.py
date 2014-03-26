@@ -406,7 +406,7 @@ def test_combine_inverse():
     assert Add._combine_inverse(oo*I, oo*I) == S(0)
 
 
-def test_issue_674():
+def test_issue_3773():
     x = symbols('x')
     z, phi, r = symbols('z phi r')
     c, A, B, N = symbols('c A B N', cls=Wild)
@@ -428,7 +428,7 @@ def test_issue_674():
     assert (-7*x*eq).match(matcher) == {c: -7*x*z, l: 1, N: 2, A: 7}
 
 
-def test_issue_784():
+def test_issue_3883():
     from sympy.abc import gamma, mu, x
     f = (-gamma * (x - mu)**2 - log(gamma) + log(2*pi))/2
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
@@ -437,9 +437,14 @@ def test_issue_784():
         {a: -S(1)/2, b: -(mu - x)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: -S(1)/2, b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
+    g1 = Wild('g1', exclude=[gamma])
+    g2 = Wild('g2', exclude=[gamma])
+    g3 = Wild('g3', exclude=[gamma])
+    assert f.expand().match(g1 * log(gamma) + g2 * gamma + g3) == \
+    {g3: log(2)/2 + log(pi)/2, g1: -S(1)/2, g2: -mu**2/2 + mu*x - x**2/2}
 
 
-def test_issue_1319():
+def test_issue_4418():
     x = Symbol('x')
     a, b, c = symbols('a b c', cls=Wild, exclude=(x,))
     f, g = symbols('f g', cls=Function)
@@ -452,7 +457,7 @@ def test_issue_1319():
         x)*f(x).diff(x) + b*g(x)*f(x).diff(x, x) + c) == {a: 1, b: 1, c: 0}
 
 
-def test_issue_1601():
+def test_issue_4700():
     f = Function('f')
     x = Symbol('x')
     a, b = symbols('a b', cls=Wild, exclude=(f(x),))
@@ -469,7 +474,7 @@ def test_issue_1601():
     assert eq4.match(p) == {a: 0, b: x + sin(x)}
 
 
-def test_issue_2069():
+def test_issue_5168():
     a, b, c = symbols('a b c', cls=Wild)
     x = Symbol('x')
     f = Function('f')
@@ -495,7 +500,7 @@ def test_issue_2069():
     assert (-2*x).match(a*b*f(x)**c) == {a: -2, b: x, c: 0}
 
 
-def test_issue_1460():
+def test_issue_4559():
     x = Symbol('x')
     e = Symbol('e')
     w = Wild('w', exclude=[x])
@@ -545,7 +550,7 @@ def test_issue_1460():
     assert (-e).match(a**2) == {a: I*sqrt(pi)}
 
 
-def test_issue_1784():
+def test_issue_4883():
     a = Wild('a')
     x = Symbol('x')
 
@@ -556,7 +561,7 @@ def test_issue_1784():
             assert eq.match(pat) == {a: 2}
 
 
-def test_issue_1220():
+def test_issue_4319():
     x, y = symbols('x y')
 
     p = -x*(S(1)/8 - y)
@@ -574,7 +579,7 @@ def test_issue_1220():
     ok(Wild("resu", exclude=[x])*x + Wild("rest"))
 
 
-def test_issue_679():
+def test_issue_3778():
     p, c, q = symbols('p c q', cls=Wild)
     x = Symbol('x')
 
@@ -582,17 +587,7 @@ def test_issue_679():
     assert (2*sin(x)).match(sin(p) + sin(q) + c) == {q: x, c: 0, p: x}
 
 
-def test_issue_784():
-    mu, gamma, x = symbols('mu gamma x')
-    f = (- gamma * (x-mu)**2 - log(gamma) + log(2*pi)) / 2
-    g1 = Wild('g1', exclude=[gamma])
-    g2 = Wild('g2', exclude=[gamma])
-    g3 = Wild('g3', exclude=[gamma])
-    assert f.expand().match(g1 * log(gamma) + g2 * gamma + g3) == \
-    {g3: log(2)/2 + log(pi)/2, g1: -S(1)/2, g2: -mu**2/2 + mu*x - x**2/2}
-
-
-def test_issue_3004():
+def test_issue_6103():
     x = Symbol('x')
     a = Wild('a')
     assert (-I*x*oo).match(I*a*oo) == {a: -x}

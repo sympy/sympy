@@ -1,8 +1,7 @@
 from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, cancel, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta,
-    factorial, conjugate, csc)
+    cos, O, lowergamma, exp, erf, exp_polar, harmonic, zeta,conjugate)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
@@ -338,9 +337,3 @@ def test_polygamma_expansion():
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
-
-
-def test_beta_function():
-    x, y = Symbol('x'), Symbol('y')
-    assert beta(x, y) == gamma(x)*gamma(y)/gamma(x + y)
-    assert beta(x, y) == beta(y, x)  # Symmetric

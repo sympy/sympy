@@ -471,6 +471,13 @@ class Interval(Set, EvalfMixin):
 
         start = _sympify(start)
         end = _sympify(end)
+        left_open = _sympify(left_open)
+        right_open = _sympify(right_open)
+
+        if not all(isinstance(a, (type(true), type(false))) for a in [left_open, right_open]):
+            raise NotImplementedError(
+                "left_open and right_open can have only true/false values, "
+                "got %s and %s" % (left_open, right_open))
 
         inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_real=True').
@@ -489,9 +496,9 @@ class Interval(Set, EvalfMixin):
 
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
-            left_open = True
+            left_open = true
         if end == S.Infinity:
-            right_open = True
+            right_open = true
 
         return Basic.__new__(cls, start, end, left_open, right_open)
 
@@ -583,7 +590,6 @@ class Interval(Set, EvalfMixin):
         return expr
 
     def _eval_imageset(self, f):
-        from sympy import Dummy
         from sympy.functions.elementary.miscellaneous import Min, Max
         from sympy.solvers import solve
         from sympy.core.function import diff
@@ -593,23 +599,18 @@ class Interval(Set, EvalfMixin):
         # TODO: handle functions with infinitely many solutions (eg, sin, tan)
         # TODO: handle multivariate functions
 
-        # var and expr are being defined this way to
-        # support Python lambda and not just sympy Lambda
-        try:
-            var = Dummy()
-            expr = f(var)
-            if len(expr.free_symbols) > 1:
-                raise TypeError
-        except TypeError:
-            raise NotImplementedError("Sorry, Multivariate imagesets are"
-                                      " not yet implemented, you are welcome"
-                                      " to add this feature in Sympy")
+        expr = f.expr
+        if len(expr.free_symbols) > 1 or len(f.variables) != 1:
+            return
+        var = f.variables[0]
 
         if not self.start.is_comparable or not self.end.is_comparable:
-            raise NotImplementedError("Sets with non comparable/variable"
-                                      " arguments are not supported")
+            return
 
-        sing = [x for x in singularities(expr, var) if x.is_real and x in self]
+        try:
+            sing = [x for x in singularities(expr, var) if x.is_real and x in self]
+        except NotImplementedError:
+            return
 
         if self.left_open:
             _start = limit(expr, var, self.start, dir="+")
@@ -686,7 +687,7 @@ class Interval(Set, EvalfMixin):
             right = other < self.end
         else:
             right = other <= self.end
-        if right is True:
+        if right == True:
             if self.left_open:
                 return other > self.start
             else:
@@ -697,9 +698,6 @@ class Interval(Set, EvalfMixin):
             left = self.start <= other
         return And(left, right)
 
-    @property
-    def free_symbols(self):
-        return self.start.free_symbols | self.end.free_symbols
 
 class Union(Set, EvalfMixin):
     """
@@ -1310,7 +1308,11 @@ class FiniteSet(Set, EvalfMixin):
 
 
 def imageset(*args):
-    """ Image of set under transformation ``f``
+    r"""
+    Image of set under transformation ``f``.
+
+    If this function can't compute the image, it returns an
+    unevaluated ImageSet object.
 
     .. math::
         { f(x) | x \in self }
@@ -1318,7 +1320,7 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import Interval, Symbol, imageset
+    >>> from sympy import Interval, Symbol, imageset, sin, Lambda
     >>> x = Symbol('x')
 
     >>> imageset(x, 2*x, Interval(0, 2))
@@ -1327,17 +1329,34 @@ def imageset(*args):
     >>> imageset(lambda x: 2*x, Interval(0, 2))
     [0, 4]
 
-    See Also:
-        ImageSet
+    >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
+    ImageSet(Lambda(x, sin(x)), [-2, 1])
+
+    See Also
+    ========
+
+    sympy.sets.fancysets.ImageSet
+
     """
+    from sympy.core import Dummy, Lambda
+    from sympy.sets.fancysets import ImageSet
     if len(args) == 3:
-        from sympy import Lambda
         f = Lambda(*args[:2])
     else:
+        # var and expr are being defined this way to
+        # support Python lambda and not just sympy Lambda
         f = args[0]
+        if not isinstance(f, Lambda):
+            var = Dummy()
+            expr = args[0](var)
+            f = Lambda(var, expr)
     set = args[-1]
 
-    return set._eval_imageset(f)
+    r = set._eval_imageset(f)
+    if r is not None:
+        return r
+
+    return ImageSet(f, set)
 
 
 @dispatch(EmptySet, Set)

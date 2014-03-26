@@ -534,9 +534,9 @@ class Factors(object):
         for factor, exp in self.factors.items():
             if factor in other.factors:
                 lt = (exp < other.factors[factor])
-                if lt is True:
+                if lt == True:
                     factors[factor] = exp
-                elif lt is False:
+                elif lt == False:
                     factors[factor] = other.factors[factor]
 
         return Factors(factors)
@@ -1010,6 +1010,7 @@ def _mask_nc(eq, name=None):
 
     Examples
     ========
+
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
     >>> from sympy import symbols, Mul
     >>> from sympy.core.exprtools import _mask_nc

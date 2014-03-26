@@ -1434,8 +1434,8 @@ class Ray(LinearEntity):
                     rv = o.y >= self.source.y
                 else:
                     rv = o.y <= self.source.y
-                if isinstance(rv, bool):
-                    return rv
+                if rv == True or rv == False:
+                    return bool(rv)
                 raise Undecidable(
                     'Cannot determine if %s is in %s' % (o, self))
             else:
@@ -1504,9 +1504,9 @@ class Segment(LinearEntity):
         p2 = Point(p2)
         if p1 == p2:
             return Point(p1)
-        if (p1.x > p2.x) is True:
+        if (p1.x > p2.x) == True:
             p1, p2 = p2, p1
-        elif (p1.x == p2.x) is (p1.y > p2.y) is True:
+        elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 

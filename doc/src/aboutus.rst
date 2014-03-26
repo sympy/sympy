@@ -249,7 +249,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. CJ Carey: Fix for limits of factorials
 #. Patrick Lacasse: Fix for Piecewise.subs
 #. Ananya H: Bug fix
-#. Tarang Patel: added test for issue 1640
+#. Tarang Patel: added test for issue 4739
 #. Christopher Dembia: improvements to mecahanics documentation
 #. Benjamin Fishbein: added rank method to Matrix
 #. Sean Ge: made KroneckerDelta arguments canonically ordered
@@ -311,8 +311,20 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jonathan Miller: documentation
 #. Edward: update license year
 #. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
-#. Aditya Shah: bug fix
+#. Aditya Shah: bug fix, improvement to parsers
 #. Sambuddha Basu: documentation fix
+#. Zeel Shah: fixes to logic module
+#. Abhinav Chanda: wigner_3j and clebsch_gordan fixes
+#. Jim Crist: lambdify improvments
+#. Sudhanshu Mishra: Added tests for racah() of sympy.physics.wigner module
+#. Rajat Aggarwal: improvements to integration module
+#. Soumya Dipta Biswas: Add support for Equivalent with multiple arguments
+#. Anurag Sharma: improvements to Risch algorithm
+#. Sushant Hiray: taylor_term for sec
+#. Ben Lucato: documentation fixes
+#. Kunal Arora: documentation fixes
+#. Henry Gebhardt: bugfix to ufuncify
+#. dammina: implemented continued fractions functions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

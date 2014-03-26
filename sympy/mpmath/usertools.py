@@ -8,7 +8,7 @@ def monitor(f, input='print', output='print'):
     inputs and outputs to stdout, along with the total evaluation
     count::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 5; mp.pretty = False
         >>> diff(monitor(exp), 1)   # diff will eval f(x-h) and f(x+h)
         in  0 (mpf('0.99999999906867742538452148'),) {}

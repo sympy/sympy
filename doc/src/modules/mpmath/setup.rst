@@ -99,7 +99,7 @@ The tests should finish in about a minute. If you have `psyco <http://psyco.sour
 
 which will cut the running time in half.
 
-If any test fails, please send a detailed bug report to the `mpmath issue tracker <http://code.google.com/p/sympy/issues/list>`_. The tests can also be run with `py.test <http://pylib.org/>`_. This will sometimes generate more useful information in case of a failure.
+If any test fails, please send a detailed bug report to the `mpmath issue tracker <https://github.com/sympy/sympy/issues>`_. The tests can also be run with `py.test <http://pylib.org/>`_. This will sometimes generate more useful information in case of a failure.
 
 To run the tests with support for gmpy disabled, use
 

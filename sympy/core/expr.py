@@ -57,7 +57,9 @@ class Expr(Basic, EvalfMixin):
         else:
             expr, exp = expr, S.One
 
-        if expr.is_Atom:
+        if expr.is_Dummy:
+            args = (expr.sort_key(),)
+        elif expr.is_Atom:
             args = (str(expr),)
         else:
             if expr.is_Add:
@@ -87,7 +89,7 @@ class Expr(Basic, EvalfMixin):
     #
     # **NOTE**:
     # This is a temporary fix, and will eventually be replaced with
-    # something better and more powerful.  See issue 2411.
+    # something better and more powerful.  See issue 5510.
     _op_priority = 10.0
 
     def __pos__(self):
@@ -218,7 +220,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
-            return dif.is_nonnegative
+            return sympify(dif.is_nonnegative)
         return C.GreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -228,7 +230,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
-            return dif.is_nonpositive
+            return sympify(dif.is_nonpositive)
         return C.LessThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -238,7 +240,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
-            return dif.is_positive
+            return sympify(dif.is_positive)
         return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -248,7 +250,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
-            return dif.is_negative
+            return sympify(dif.is_negative)
         return C.StrictLessThan(self, other)
 
     @staticmethod
@@ -559,7 +561,7 @@ class Expr(Basic, EvalfMixin):
 
         if constant is None and (diff.free_symbols or not diff.is_number):
             # e.g. unless the right simplification is done, a symbolic
-            # zero is possible (see expression of issue 3730: without
+            # zero is possible (see expression of issue 6829: without
             # simplification constant will be None).
             return
 
@@ -1884,6 +1886,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
         >>> e.extract_additively(x + 1)
@@ -2019,7 +2022,7 @@ class Expr(Basic, EvalfMixin):
                 return len(negative_args) % 2 == 1
 
             # As a last resort, we choose the one with greater value of .sort_key()
-            return self.sort_key() < negative_self.sort_key()
+            return bool(self.sort_key() < negative_self.sort_key())
 
     def extract_branch_factor(self, allow_half=False):
         """
@@ -2987,6 +2990,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy import pi, E, I, S, Add, Mul, Number
         >>> S(10.5).round()
         11.
@@ -3093,6 +3097,7 @@ def _mag(x):
 
     Examples
     ========
+
     >>> from sympy.core.expr import _mag
     >>> from sympy import Float
     >>> _mag(Float(.1))

@@ -59,6 +59,7 @@ def _primitive_root_prime_iter(p):
 
     Examples
     ========
+
     >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
     >>> list(_primitive_root_prime_iter(19))
     [2, 3, 10, 13, 14, 15]

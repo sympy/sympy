@@ -120,5 +120,5 @@ an `issue ticket`_.
 
 .. _downloads site: https://code.google.com/p/sympy/downloads/list
 .. _#sympy: irc://irc.freenode.net/sympy
-.. _issue ticket: http://code.google.com/p/sympy/issues/list
+.. _issue ticket: https://github.com/sympy/sympy/issues
 .. _mailing list: http://groups.google.com/group/sympy

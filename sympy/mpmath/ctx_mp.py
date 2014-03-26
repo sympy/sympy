@@ -321,7 +321,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
         number, whether either the real or complex part is NaN;
         otherwise return *False*::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isnan(3.14)
             False
             >>> isnan(nan)
@@ -348,7 +348,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
         Return *True* if *x* is a finite number, i.e. neither
         an infinity or a NaN.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isfinite(inf)
             False
             >>> isfinite(-inf)
@@ -474,7 +474,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
         to binary at a much higher precision. If the amount of required
         extra precision is unknown, :func:`~mpmath.autoprec` is convenient::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15
             >>> mp.pretty = True
             >>> besselj(5, 125 * 10**28)    # Exact input
@@ -575,7 +575,7 @@ class MPContext(BaseMPContext, StandardBaseContext):
         The companion function :func:`~mpmath.nprint` prints the result
         instead of returning it.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> nstr([+pi, ldexp(1,-500)])
             '[3.14159, 3.05494e-151]'
             >>> nprint([+pi, ldexp(1,-500)])
@@ -734,7 +734,7 @@ maxterms, or set zeroprec."""
         The argument `x` must be a real floating-point number (or
         possible to convert into one) and `n` must be a Python ``int``.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> ldexp(1, 10)
             mpf('1024.0')
@@ -751,7 +751,7 @@ maxterms, or set zeroprec."""
         `n` a Python integer, and such that `x = y 2^n`. No rounding is
         performed.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> frexp(7.5)
             (mpf('0.9375'), 3)
@@ -773,7 +773,7 @@ maxterms, or set zeroprec."""
 
         An mpmath number is returned::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fneg(2.5)
             mpf('-2.5')
@@ -835,7 +835,7 @@ maxterms, or set zeroprec."""
 
         Using :func:`~mpmath.fadd` with precision and rounding control::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fadd(2, 1e-20)
             mpf('2.0')
@@ -901,7 +901,7 @@ maxterms, or set zeroprec."""
 
         Using :func:`~mpmath.fsub` with precision and rounding control::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fsub(2, 1e-20)
             mpf('2.0')
@@ -967,7 +967,7 @@ maxterms, or set zeroprec."""
 
         The result is an mpmath number::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fmul(2, 5.0)
             mpf('10.0')
@@ -1036,7 +1036,7 @@ maxterms, or set zeroprec."""
 
         The result is an mpmath number::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fdiv(3, 2)
             mpf('1.5')
@@ -1096,7 +1096,7 @@ maxterms, or set zeroprec."""
         an estimate of `\log_2(|x-n|)`. If `d < 0`, `-d` gives the precision
         (measured in bits) lost to cancellation when computing `x-n`.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> n, d = nint_distance(5)
             >>> print(n); print(d)
             5
@@ -1194,7 +1194,7 @@ maxterms, or set zeroprec."""
         infinite products, see :func:`~mpmath.nprod`). The factors will be
         converted to mpmath numbers.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fprod([1, 2, 0.5, 7])
             mpf('7.0')
@@ -1222,7 +1222,7 @@ maxterms, or set zeroprec."""
         Given Python integers `(p, q)`, returns a lazy ``mpf`` representing
         the fraction `p/q`. The value is updated with the precision.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15
             >>> a = fraction(1,100)
             >>> b = mpf(1)/100
