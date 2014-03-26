@@ -59,12 +59,12 @@ from sympy.assumptions.refine import handlers_dict
 
 def refine_Determinant(expr, assumptions):
     """
-    >>> from sympy import MatrixSymbol, Q, assuming, refine
+    >>> from sympy import MatrixSymbol, Q, assuming, refine, det
     >>> X = MatrixSymbol('X', 2, 2)
     >>> det(X)
-    |X|
+    Determinant(X)
     >>> with assuming(Q.orthogonal(X)):
-    ...     print(refine(det(X))
+    ...     print(refine(det(X)))
     1
     """
     if ask(Q.orthogonal(expr.arg), assumptions):
