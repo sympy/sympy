@@ -6,6 +6,7 @@ from sympy.matrices.expressions import Adjoint, Transpose, det
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
+from sympy import refine, Q
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -98,3 +99,7 @@ def test_collapse_MatrixBase():
     A = Matrix([[1, 1], [1, 1]])
     B = Matrix([[1, 2], [3, 4]])
     assert MatMul(A, B).doit() == ImmutableMatrix([[4, 6], [4, 6]])
+
+
+def test_refine():
+    assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D
