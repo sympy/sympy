@@ -357,30 +357,31 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def get_new_constants(eq, num=1, start=1, prefix='C'):
+def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     """
     Returns a list of constants that do not occur
     in eq already.
     """
 
-    def new_constants(eq, start=1, prefix='C'):
+    def numbered_constants(start=1, prefix='C', exclude=[]):
         """
         Yield an infinite sequence constants that do not occur
-        in eq already.
+        in exclude already.
         """
-        if isinstance(eq, C.Expr):
-            atom_set = eq.atoms(Symbol)
-        elif is_iterable(eq):
-            atom_set = reduce(lambda x, y : x | y,
-                [i.atoms(Symbol) for i in eq], set() )
-        else:
-            raise ValueError("Expected Expr or iterable but got %s"%eq)
         for Ci in numbered_symbols(prefix=prefix, start=start, cls=Symbol):
-            if Ci not in atom_set:
+            if Ci not in exclude:
                 yield Ci
 
-    g = new_constants(eq, start=start, prefix=prefix)
-    Cs = [ next(g) for i in xrange(num) ]
+    if isinstance(eq, C.Expr):
+        atom_set = eq.atoms(Symbol)
+    elif is_iterable(eq):
+        atom_set = reduce(lambda x, y : x | y,
+            [i.atoms(Symbol) for i in eq], set() )
+    else:
+        raise ValueError("Expected Expr or iterable but got %s"%eq)
+
+    ncs = numbered_constants(start=start, prefix=prefix, exclude=atom_set)
+    Cs = [ next(ncs) for i in xrange(num) ]
     return ( Cs[0] if num == 1 else tuple(Cs) )
 
 
@@ -1254,7 +1255,7 @@ def odesimp(eq, func, order, constants, hint):
     """
     x = func.args[0]
     f = func.func
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
 
     # First, integrate if the hint allows it.
     eq = _handle_Integral(eq, func, order, hint)
@@ -1313,7 +1314,7 @@ def odesimp(eq, func, order, constants, hint):
             del collectterms
 
             # contract over-expanded exponentials -- this is
-            # a work-around for collect's bad behavior, 2013
+            # a work-around for collect's bad behavior.
             w1, w2 = Wild('w1',exclude=[x]), Wild('w2')
             sol = sol.replace( exp(w1*x)**w2, exp(w1*w2*x) )
             eq[0] = Eq(f(x), sol)
@@ -2135,7 +2136,7 @@ def ode_1st_exact(eq, func, order, match):
     d = r[r['d']]
     global y  # This is the only way to pass dummy y to _handle_Integral
     y = r['y']
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
     # Refer Joel Moses, "Symbolic Integration - The Stormy Decade",
     # Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
     # which gives the method to solve an exact differential equation.
@@ -2288,7 +2289,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     u = Dummy('u')
     u1 = Dummy('u1')  # u1 == f(x)/x
     r = match  # d+e*diff(f(x),x)
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
     xarg = match.get('xarg', 0)
     yarg = match.get('yarg', 0)
     int = C.Integral(
@@ -2384,7 +2385,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     u = Dummy('u')
     u2 = Dummy('u2')  # u2 == x/f(x)
     r = match  # d+e*diff(f(x),x)
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
     xarg = match.get('xarg', 0)  # If xarg present take xarg, else zero
     yarg = match.get('yarg', 0)  # If yarg present take yarg, else zero
     int = C.Integral(
@@ -2544,7 +2545,7 @@ def ode_1st_linear(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match  # a*diff(f(x),x) + b*f(x) + c
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
     t = exp(C.Integral(r[r['b']]/r[r['a']], x))
     tt = C.Integral(t*(-r[r['c']]/r[r['a']]), x)
     f = match.get('u', f(x))  # take almost-linear u if present, else f(x)
@@ -2630,7 +2631,7 @@ def ode_Bernoulli(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match  # a*diff(f(x),x) + b*f(x) + c*f(x)**n, n != 1
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
     t = exp((1 - r[r['n']])*C.Integral(r[r['b']]/r[r['a']], x))
     tt = (r[r['n']] - 1)*C.Integral(t*r[r['c']]/r[r['a']], x)
     return Eq(f(x), ((tt + C1)/t)**(1/(1 - r[r['n']])))
@@ -2680,7 +2681,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     f = func.func
     r = match  # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
     a2, b2, c2, d2 = [r[r[s]] for s in 'a2 b2 c2 d2'.split()]
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
     mu = sqrt(4*d2*b2 - (a2 - c2)**2)
     return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x) + C1))/(2*b2*x))
 
@@ -2751,7 +2752,7 @@ def ode_Liouville(eq, func, order, match):
     f = func.func
     r = match  # f(x).diff(x, 2) + g*f(x).diff(x)**2 + h*f(x).diff(x)
     y = r['y']
-    C1, C2 = get_new_constants(eq, num=2)
+    C1, C2 = get_numbered_constants(eq, num=2)
     int = C.Integral(exp(C.Integral(r['g'], y)), (y, None, f(x)))
     sol = Eq(int + C1*C.Integral(exp(-C.Integral(r['h'], x)), x) + C2, 0)
     return sol
@@ -2795,7 +2796,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    C0, C1 = get_new_constants(eq, num=2)
+    C0, C1 = get_numbered_constants(eq, num=2)
     n = Dummy("n")
     s = Wild("s")
     k = Wild("k", exclude=[x])
@@ -2960,7 +2961,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    C0, C1 = get_new_constants(eq, num=2)
+    C0, C1 = get_numbered_constants(eq, num=2)
     n = Dummy("n")
     m = Dummy("m")  # for solving the indicial equation
     s = Wild("s")
@@ -3212,7 +3213,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
 
     # A generator of constants
-    constants = list(get_new_constants(eq, num=chareq.degree()*2))
+    constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
     constants.reverse()
 
     # Create a dict root: multiplicity or charroots
@@ -3717,7 +3718,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     chareqroots = [ RootOf(chareq, k) for k in range(chareq.degree()) ]
 
     # A generator of constants
-    constants = list(get_new_constants(eq, num=chareq.degree()*2))
+    constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
     constants.reverse()
 
     # Create a dict root: multiplicity or charroots
@@ -4275,7 +4276,7 @@ def ode_separable(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
-    C1 = get_new_constants(eq, num=1)
+    C1 = get_numbered_constants(eq, num=1)
     r = match  # {'m1':m1, 'm2':m2, 'y':y}
     u = r.get('hint', f(x))  # get u from separable_reduced else get f(x)
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
