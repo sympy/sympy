@@ -460,8 +460,8 @@ def randprime(a, b):
         primerange : Generate all primes in a given range
     """
 
-    a = nextprime(a-1)
-    b = prevprime(b+1)
+    a = nextprime(a-2)
+    b = prevprime(b)
     if a > b:
         raise ValueError("no primes exist in the specified range")
     while True:
