@@ -504,6 +504,36 @@ class TIDS(CantSympify):
         return TIDS(components, free, dum)
 
 
+class VTIDS(TIDS):
+    """
+    DEPRECATED: DO NOT USE.
+    """
+
+    def __init__(self, components, free, dum, data):
+        super(VTIDS, self).__init__(components, free, dum)
+        self.data = data
+
+    @staticmethod
+    def parse_data(data):
+        """
+        DEPRECATED: DO NOT USE.
+        """
+        return _TensorDataLazyEvaluator.parse_data(data)
+
+    def correct_signature_from_indices(self, data, indices, free, dum):
+        """
+        DEPRECATED: DO NOT USE.
+        """
+        return _TensorDataLazyEvaluator._correct_signature_from_indices(data, indices, free, dum)
+
+    @staticmethod
+    def flip_index_by_metric(data, metric, pos):
+        """
+        DEPRECATED: DO NOT USE.
+        """
+        return _TensorDataLazyEvaluator._flip_index_by_metric(data, metric, pos)
+
+
 class _TensorDataLazyEvaluator(CantSympify):
     """
     This object contains the logic to associate components data to a tensor
