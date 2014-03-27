@@ -8,7 +8,7 @@ expressions. ``plot_backends`` is a dictionary with all the backends.
 This module gives only the essential. For all the fancy stuff use directly
 the backend. You can get the backend wrapper for every plot from the
 ``_backend`` attribute. Moreover the data series classes have various useful
-methods like ``get_points``, ``get_segments``, ``get_meshes``, etc, that maym
+methods like ``get_points``, ``get_segments``, ``get_meshes``, etc, that may
 be useful if you wish to use another plotting library.
 
 Especially if you need publication ready graphs and this module is not enough
