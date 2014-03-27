@@ -1261,10 +1261,12 @@ class TensorIndexType(Basic):
 
     __repr__ = __str__
 
-    def __del__(self):
+    def _components_data_full_destroy(self):
         """
-        Class destructor. This also destroys components data associated to the
-        ``TensorIndexType``, if any, specifically:
+        EXPERIMENTAL: do not rely on this API method.
+
+        This destroys components data associated to the ``TensorIndexType``, if
+        any, specifically:
 
         * metric tensor data
         * Kronecker tensor data
@@ -2091,10 +2093,12 @@ class TensorHead(Basic):
     def __iter__(self):
         return self.data.flatten().__iter__()
 
-    def __del__(self):
+    def _components_data_full_destroy(self):
         """
-        Destructor of a ``TensorHead`` object, this also check for attached
-        components data, and destroys components data too.
+        EXPERIMENTAL: do not rely on this API method.
+
+        Destroy components data associated to the ``TensorHead`` object, this
+        checks for attached components data, and destroys components data too.
         """
         # do not garbage collect Kronecker tensor (it should be done by
         # ``TensorIndexType`` garbage collection)
