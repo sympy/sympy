@@ -495,7 +495,7 @@ def bernfrac(n):
 
     The first few Bernoulli numbers are exactly::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> for n in range(15):
         ...     p, q = bernfrac(n)
         ...     print("%s %s/%s" % (n, p, q))
@@ -1213,7 +1213,7 @@ def mpf_zeta(s, prec, rnd=round_fast, alt=0):
         a = mpf_gamma(y, wp)
         b = mpf_zeta(y, wp)
         c = mpf_sin_pi(mpf_shift(s, -1), wp)
-        wp2 = wp + (exp+bc)
+        wp2 = wp + max(0,exp+bc)
         pi = mpf_pi(wp+wp2)
         d = mpf_div(mpf_pow(mpf_shift(pi, 1), s, wp2), pi, wp2)
         return mpf_mul(a,mpf_mul(b,mpf_mul(c,d,wp),wp),prec,rnd)
@@ -1309,7 +1309,7 @@ def mpc_zeta(s, prec, rnd=round_fast, alt=0, force=False):
         rsign, rman, rexp, rbc = re
         isign, iman, iexp, ibc = im
         mag = max(rexp+rbc, iexp+ibc)
-        wp2 = wp + mag
+        wp2 = wp + max(0, mag)
         pi = mpf_pi(wp+wp2)
         pi2 = (mpf_shift(pi, 1), fzero)
         d = mpc_div_mpf(mpc_pow(pi2, s, wp2), pi, wp2)
@@ -1792,28 +1792,18 @@ def real_stirling_series(x, prec):
     u = (t*t)>>prec                  # u = 1/x**2
     s = ln_sqrt2pi_fixed(prec) - x
     # Add initial terms of Stirling's series
-    s += t//12
-    t = (t*u)>>prec
-    s -= t//360
-    t = (t*u)>>prec
-    s += t//1260
-    t = (t*u)>>prec
-    s -= t//1680
-    t = (t*u)>>prec
+    s += t//12;            t = (t*u)>>prec
+    s -= t//360;           t = (t*u)>>prec
+    s += t//1260;          t = (t*u)>>prec
+    s -= t//1680;          t = (t*u)>>prec
     if not t: return s
-    s += t//1188
-    t = (t*u)>>prec
-    s -= 691*t//360360
-    t = (t*u)>>prec
-    s += t//156
-    t = (t*u)>>prec
+    s += t//1188;          t = (t*u)>>prec
+    s -= 691*t//360360;    t = (t*u)>>prec
+    s += t//156;           t = (t*u)>>prec
     if not t: return s
-    s -= 3617*t//122400
-    t = (t*u)>>prec
-    s += 43867*t//244188
-    t = (t*u)>>prec
-    s -= 174611*t//125400
-    t = (t*u)>>prec
+    s -= 3617*t//122400;   t = (t*u)>>prec
+    s += 43867*t//244188;  t = (t*u)>>prec
+    s -= 174611*t//125400;  t = (t*u)>>prec
     if not t: return s
     k = 22
     # From here on, the coefficients are growing, so we
@@ -1857,37 +1847,27 @@ def complex_stirling_series(x, y, prec):
     sim = -y
 
     # Add initial terms of Stirling's series
-    sre += tre//12
-    sim += tim//12
+    sre += tre//12; sim += tim//12;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
-    sre -= tre//360
-    sim -= tim//360
+    sre -= tre//360; sim -= tim//360;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
-    sre += tre//1260
-    sim += tim//1260
+    sre += tre//1260; sim += tim//1260;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
-    sre -= tre//1680
-    sim -= tim//1680
+    sre -= tre//1680; sim -= tim//1680;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
     if abs(tre) + abs(tim) < 5: return sre, sim
-    sre += tre//1188
-    sim += tim//1188
+    sre += tre//1188; sim += tim//1188;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
-    sre -= 691*tre//360360
-    sim -= 691*tim//360360
+    sre -= 691*tre//360360; sim -= 691*tim//360360;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
-    sre += tre//156
-    sim += tim//156
+    sre += tre//156; sim += tim//156;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
     if abs(tre) + abs(tim) < 5: return sre, sim
-    sre -= 3617*tre//122400
-    sim -= 3617*tim//122400
+    sre -= 3617*tre//122400; sim -= 3617*tim//122400;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
-    sre += 43867*tre//244188
-    sim += 43867*tim//244188
+    sre += 43867*tre//244188; sim += 43867*tim//244188;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
-    sre -= 174611*tre//125400
-    sim -= 174611*tim//125400
+    sre -= 174611*tre//125400; sim -= 174611*tim//125400;
     tre, tim = ((tre*ure-tim*uim)>>prec), ((tre*uim+tim*ure)>>prec)
     if abs(tre) + abs(tim) < 5: return sre, sim
 
@@ -2399,4 +2379,3 @@ def mpf_gamma_int(n, prec, rnd=round_fast):
     if n < SMALL_FACTORIAL_CACHE_SIZE:
         return mpf_pos(small_factorial_cache[n-1], prec, rnd)
     return mpf_gamma(from_int(n), prec, rnd)
-

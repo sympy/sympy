@@ -1,5 +1,6 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
-    S, Integral, sin, sqrt, conjugate, expand, transpose, symbols, Function)
+    S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
+    Function)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -131,6 +132,11 @@ def test_contains_3():
     assert Order(x**2*y).contains(Order(x*y**2)) is None
 
 
+def test_contains_4():
+    assert Order(sin(1/x**2)).contains(Order(cos(1/x**2))) is None
+    assert Order(cos(1/x**2)).contains(Order(sin(1/x**2))) is None
+
+
 def test_contains():
     assert Order(1, x) not in Order(1)
     assert Order(1) in Order(1, x)
@@ -196,7 +202,7 @@ def test_multivar_3():
     assert (Order(x**2*y) + Order(y*x)) == Order(x*y)
 
 
-def test_issue369():
+def test_issue_3468():
     y = Symbol('y', negative=True)
     z = Symbol('z', complex=True)
 
@@ -290,7 +296,7 @@ def test_oseries():
     assert Order(x).oseries(x) == Order(x)
 
 
-def test_issue_1180():
+def test_issue_4279():
     a, b = symbols('a b')
     assert O(a, a, b) + O(1, a, b) == O(1, a, b)
     assert O(b, a, b) + O(1, a, b) == O(1, a, b)
@@ -300,7 +306,7 @@ def test_issue_1180():
     assert O(1, a, b) + O(a + b, a, b) == O(1, a, b)
 
 
-def test_issue_1756():
+def test_issue_4855():
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
     assert 1/O(x, (x, oo)) != O(1/x, (x, oo))
@@ -332,7 +338,7 @@ def test_order_noncommutative():
     assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
 
 
-def test_issue_3654():
+def test_issue_6753():
     assert (1 + x**2)**10000*O(x) == O(x)
 
 
@@ -373,7 +379,7 @@ def test_order_at_infinity():
     assert Order(x**3, (x, oo)) + Order(exp(2/x), (x, oo)) == Order(x**3, (x, oo))
     assert Order(x**-3, (x, oo)) + Order(exp(2/x), (x, oo)) == Order(exp(2/x), (x, oo))
 
-    # issue 4108
+    # issue 7207
     assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
     assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == y**x
 
@@ -391,8 +397,8 @@ def test_mixing_order_at_zero_and_infinity():
 
 
 def test_order_subs_limits():
-    # issue 234
+    # issue 3333
     assert (1 + Order(x)).subs(x, 1/x) == 1 + Order(1/x, (x, oo))
     assert (1 + Order(x)).limit(x, 0) == 1
-    # issue 2670
+    # issue 5769
     assert ((x + Order(x**2))/x).limit(x, 0) == 1

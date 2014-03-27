@@ -132,14 +132,18 @@ def test_latex_symbols():
     mass, volume = symbols('mass, volume')
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
+    assert latex(Symbol('q1')) == r"q_{1}"
     assert latex(Symbol('q21')) == r"q_{21}"
     assert latex(Symbol('epsilon0')) == r"\epsilon_{0}"
+    assert latex(Symbol('omega1')) == r"\omega_{1}"
     assert latex(Symbol('91')) == r"91"
     assert latex(Symbol('alpha_new')) == r"\alpha_{new}"
     assert latex(Symbol('C^orig')) == r"C^{orig}"
     assert latex(Symbol('x^alpha')) == r"x^{\alpha}"
     assert latex(Symbol('beta^alpha')) == r"\beta^{\alpha}"
     assert latex(Symbol('e^Alpha')) == r"e^{A}"
+    assert latex(Symbol('omega_alpha^beta')) == r"\omega^{\beta}_{\alpha}"
+    assert latex(Symbol('omega') ** Symbol('beta')) == r"\omega^{\beta}"
 
 
 @XFAIL
@@ -176,6 +180,16 @@ def test_latex_functions():
     # not to be confused with the beta function
     assert latex(beta(x)) == r"\beta{\left (x \right )}"
     assert latex(beta) == r"\beta"
+
+    a1 = Function('a_1')
+
+    assert latex(a1) == r"\operatorname{a_{1}}"
+    assert latex(a1(x)) == r"\operatorname{a_{1}}{\left (x \right )}"
+
+    # issue 5868
+    omega1 = Function('omega1')
+    assert latex(omega1) == r"\omega_{1}"
+    assert latex(omega1(x)) == r"\omega_{1}{\left (x \right )}"
 
     assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
@@ -507,7 +521,7 @@ def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
 
 
-def test_issue469():
+def test_issue_3568():
     beta = Symbol(r'\beta')
     y = beta + x
     assert latex(y) in [r'\beta + x', r'x + \beta']
@@ -533,8 +547,13 @@ def test_latex_dict():
     assert latex(D) == '\\begin{Bmatrix}1 : 1, & x : 3, & x^{2} : 2, & x^{3} : 4\\end{Bmatrix}'
 
 
+def test_latex_list():
+    l = [Symbol('omega1'), Symbol('a'), Symbol('alpha')]
+    assert latex(l) == r'\begin{bmatrix}\omega_{1}, & a, & \alpha\end{bmatrix}'
+
+
 def test_latex_rational():
-    #tests issue 874
+    #tests issue 3973
     assert latex(-Rational(1, 2)) == "- \\frac{1}{2}"
     assert latex(Rational(-1, 2)) == "- \\frac{1}{2}"
     assert latex(Rational(1, -2)) == "- \\frac{1}{2}"
@@ -545,7 +564,7 @@ def test_latex_rational():
 
 
 def test_latex_inverse():
-    #tests issue 1030
+    #tests issue 4129
     assert latex(1/x) == "\\frac{1}{x}"
     assert latex(1/(x + y)) == "\\frac{1}{x + y}"
 
@@ -568,7 +587,7 @@ def test_latex_Heaviside():
 def test_latex_KroneckerDelta():
     assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
     assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
-    # issue 3479
+    # issue 6578
     assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{y, x + 1}"
 
 
@@ -625,6 +644,24 @@ def test_latex_Matrix():
     assert latex(M2) == \
         r'\left[\begin{array}{ccccccccccc}' \
         r'0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
+
+
+def test_latex_matrix_with_functions():
+    t = symbols('t')
+    theta1 = symbols('theta1', cls=Function)
+
+    M = Matrix([[sin(theta1(t)), cos(theta1(t))],
+                [cos(theta1(t).diff(t)), sin(theta1(t).diff(t))]])
+
+    expected = (r'\left[\begin{matrix}\sin{\left '
+                r'(\theta_{1}{\left (t \right )} \right )} & '
+                r'\cos{\left (\theta_{1}{\left (t \right )} \right '
+                r')}\\\cos{\left (\frac{d}{d t} \theta_{1}{\left (t '
+                r'\right )} \right )} & \sin{\left (\frac{d}{d t} '
+                r'\theta_{1}{\left (t \right )} \right '
+                r')}\end{matrix}\right]')
+
+    assert latex(M) == expected
 
 
 def test_latex_mul_symbol():
@@ -1184,7 +1221,7 @@ def test_builtin_no_args():
     assert latex(DiracDelta) == r'\delta'
     assert latex(lowergamma) == r'\gamma'
 
-def test_issue_3754():
+def test_issue_6853():
     p = Function('Pi')
     assert latex(p(x)) == r"\Pi{\left (x \right )}"
 

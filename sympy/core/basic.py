@@ -220,7 +220,7 @@ class Basic(with_metaclass(ManagedProperties)):
         return Basic.compare(a, b)
 
     @staticmethod
-    @deprecated(useinstead="default_sort_key", issue=1491, deprecated_since_version="0.7.2")
+    @deprecated(useinstead="default_sort_key", issue=4590, deprecated_since_version="0.7.2")
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
@@ -319,7 +319,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         """
 
-        # XXX: remove this when issue #2070 is fixed
+        # XXX: remove this when issue 5169 is fixed
         def inner_key(arg):
             if isinstance(arg, Basic):
                 return arg.sort_key(order)
@@ -363,7 +363,7 @@ class Basic(with_metaclass(ManagedProperties)):
             else:
                 return False
         if type(self) is not type(other):
-            # issue 3001 a**1.0 == a like a**2.0 == a**2
+            # issue 6100 a**1.0 == a like a**2.0 == a**2
             while isinstance(self, C.Pow) and self.exp == 1:
                 self = self.base
             while isinstance(other, C.Pow) and other.exp == 1:
@@ -451,7 +451,7 @@ class Basic(with_metaclass(ManagedProperties)):
         return self.subs(dummy, tmp) == other.subs(symbol, tmp)
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
-    # regardless of the global setting.  See issue 2388.
+    # regardless of the global setting.  See issue 5487.
     def __repr__(self):
         from sympy.printing import sstr
         return sstr(self, order=None)
@@ -962,6 +962,7 @@ class Basic(with_metaclass(ManagedProperties)):
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
+            kwargs['hack2'] = True
             for old, new in sequence:
                 d = C.Dummy(commutative=new.is_commutative)
                 rv = rv._subs(old, d, **kwargs)
@@ -1059,7 +1060,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if not hasattr(arg, '_eval_subs'):
                     continue
                 arg = arg._subs(old, new, **hints)
-                if arg != args[i]:
+                if not _aresame(arg, args[i]):
                     hit = True
                     args[i] = arg
             if hit:
@@ -1112,6 +1113,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Examples
         ========
+
         >>> from sympy import symbols, pi, exp
         >>> x, y, z = symbols('x y z')
         >>> (1 + x*y).xreplace({x: pi})
@@ -1170,7 +1172,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 return self.func(*args)
         return self
 
-    @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
+    @deprecated(useinstead="has", issue=5488, deprecated_since_version="0.7.2")
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -1760,6 +1762,7 @@ def _atomic(e):
 
     Examples
     ========
+
     >>> from sympy import Derivative, Function, cos
     >>> from sympy.abc import x, y
     >>> from sympy.core.basic import _atomic

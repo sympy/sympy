@@ -1,9 +1,9 @@
-==================================
-Mechanics: Vector & ReferenceFrame
-==================================
+=======================
+Vector & ReferenceFrame
+=======================
 
 
-In :mod:`mechanics`, vectors and reference frames are the "building blocks" of
+In :mod:`vector`, vectors and reference frames are the "building blocks" of
 dynamic systems. This document will describe these mathematically and describe
 how to use them with this module's code.
 
@@ -64,7 +64,7 @@ vector :math:`\mathbf{v}` we can define a unit vector as:
 Note that every vector can be written as the product of a scalar and unit
 vector.
 
-Three vector products are implemented in :mod:`mechanics`: the dot product, the
+Three vector products are implemented in :mod:`vector`: the dot product, the
 cross product, and the outer product.
 
 The dot product operation maps two vectors to a scalar.  It is defined as:
@@ -496,16 +496,16 @@ defining vectors in the more complex forms can vastly slow down formulation of
 the equations of motion and increase their length, sometimes to a point where
 they cannot be shown on screen.
 
-Using Vectors and Reference Frames in SymPy's Mechanics
-=======================================================
+Using Vectors and Reference Frames
+==================================
 
 We have waited until after all of the relevant mathematical relationships have
 been defined for vectors and reference frames to introduce code. This is due to
-how vectors are formed. When starting any problem in :mod:`mechanics`, one of
+how vectors are formed. When starting any problem in :mod:`vector`, one of
 the first steps is defining a reference frame (remember to import
-sympy.physics.mechanics first)::
+sympy.physics.vector first)::
 
-  >>> from sympy.physics.mechanics import *
+  >>> from sympy.physics.vector import *
   >>> N = ReferenceFrame('N')
 
 Now we have created a reference frame, :math:`\mathbf{N}`. To have access to
@@ -520,8 +520,8 @@ vectors::
   >>> N.z
   N.z
 
-Vector Algebra, in Mechanics
-----------------------------
+Vector Algebra, in physics.vector
+---------------------------------
 
 We can now do basic algebraic operations on these vectors.::
 
@@ -545,7 +545,7 @@ Remember to refer to SymPy's Gotchas and Pitfalls when dealing with symbols.::
   >>> x*(N.x + N.y)
   x*N.x + x*N.y
 
-In :mod:`mechanics` multiple interfaces to vector multiplication have been
+In :mod:`vector` multiple interfaces to vector multiplication have been
 implemented, at the operator level, method level, and function level. The
 vector dot product can work as follows: ::
 
@@ -565,7 +565,7 @@ vector dot product can work as follows: ::
 The "official" interface is the function interface; this is what will be used
 in all examples. This is to avoid confusion with the attribute and methods
 being next to each other, and in the case of the operator operation priority.
-The operators used in :mod:`mechanics` for vector multiplication do not posses
+The operators used in :mod:`vector` for vector multiplication do not posses
 the correct order of operations; this can lead to errors. Care with parentheses
 is needed when using operators to represent vector multiplication.
 
@@ -606,8 +606,8 @@ do this::
     [2*x],
     [3*x]])
 
-Vector Calculus, in Mechanics
------------------------------
+Vector Calculus, in physics.vector
+----------------------------------
 
 We have already introduced our first reference frame. We can take the
 derivative in that frame right now, if we desire: ::
@@ -616,7 +616,7 @@ derivative in that frame right now, if we desire: ::
   N.x
 
 SymPy has a ``diff`` function, but it does not currently work with
-:mod:`mechanics` Vectors, so please use ``Vector``'s ``diff`` method.  The
+:mod:`vector` Vectors, so please use ``Vector``'s ``diff`` method.  The
 reason for this is that when differentiating a ``Vector``, the frame of
 reference must be specified in addition to what you are taking the derivative
 with respect to; SymPy's ``diff`` function doesn't fit this mold.
@@ -688,7 +688,7 @@ and ``orientnew`` method help, or in the references [Kane1983]_.
 
 
 Finally, before starting multiframe calculus operations, we will introduce
-another :mod:`mechanics` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
+another :mod:`vector` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
 a shortcut function to create undefined functions of time within SymPy. The
 derivative of such a 'dynamicsymbol' is shown below. ::
 
@@ -698,28 +698,29 @@ derivative of such a 'dynamicsymbol' is shown below. ::
   Derivative(q1(t), t)
 
 The 'dynamicsymbol' printing is not very clear above; we will also introduce a
-few other tools here. We can use ``mprint`` instead of print for
+few other tools here. We can use ``vprint`` instead of print for
 non-interactive sessions. ::
 
   >>> q1
   q1(t)
   >>> q1d = diff(q1, Symbol('t'))
-  >>> mprint(q1)
+  >>> vprint(q1)
   q1
-  >>> mprint(q1d)
+  >>> vprint(q1d)
   q1'
 
-For interactive sessions use ``mechanics_printing``. There also exist analogs
-for SymPy's ``pprint``, ``mpprint``, and ``latex``, ``mlatex``. ::
+For interactive sessions use ``init_vprinting``. There also exist analogs
+for SymPy's ``vprint``, ``vpprint``, and ``latex``, ``vlatex``. ::
 
-  >>> mechanics_printing()
+  >>> from sympy.physics.vector import init_vprinting
+  >>> init_vprinting(pretty_print=False)
   >>> q1
   q1
   >>> q1d
   q1'
 
 A 'dynamicsymbol' should be used to represent any time varying quantity in
-:mod:`mechanics`, whether it is a coordinate, varying position, or force.  The
+:mod:`vector`, whether it is a coordinate, varying position, or force.  The
 primary use of a 'dynamicsymbol' is for speeds and coordinates (of which there
 will be more discussion in the Kinematics Section of the documentation).
 
@@ -742,13 +743,14 @@ vectors from multiple frames: ::
   B.y + N.x
 
 
-How Vectors are Coded in Mechanics
-----------------------------------
+How Vectors are Coded
+---------------------
 
 What follows is a short description of how vectors are defined by the code in
-:mod:`mechanics`. It is provided for those who want to learn more about how
-this part of :mod:`mechanics` works, and does not need to be read to use this
-module; don't read it unless you want to learn how this module was implemented.
+:mod:`vector`. It is provided for those who want to learn more about how
+this part of :mod:`sympy.physics.vector` works, and does not need to be read 
+to use this module; don't read it unless you want to learn how this module was 
+implemented.
 
 Every ``Vector``'s main information is stored in the ``args`` attribute, which
 stores the three measure numbers for each basis vector in a frame, for every

@@ -150,7 +150,7 @@ def separate(expr, deep=False, force=False):
     """
     from sympy.utilities.exceptions import SymPyDeprecationWarning
     SymPyDeprecationWarning(
-        feature="separate()", useinstead="expand_power_base()", issue=3383,
+        feature="separate()", useinstead="expand_power_base()", issue=6482,
         deprecated_since_version="0.7.2", value="Note: in separate() deep "
         "defaults to False, whereas in expand_power_base(), "
         "deep defaults to True.",
@@ -1415,10 +1415,13 @@ def trigsimp(expr, **opts):
             if e.is_Function or e.is_Pow:
                 args = [trigsimp_groebner(x, **opts) for x in args]
             return e.func(*args)
-        return trigsimp_groebner(traverse(ex), **opts)
+        new = traverse(ex)
+        if not isinstance(new, Expr):
+            return new
+        return trigsimp_groebner(new, **opts)
 
     trigsimpfunc = {
-        'fu': (lambda x: fu(x)),
+        'fu': (lambda x: fu(x, **opts)),
         'matching': (lambda x: futrig(x)),
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
@@ -2322,7 +2325,7 @@ def _denest_pow(eq):
     if glogb.func is C.log or not glogb.is_Mul:
         if glogb.args[0].is_Pow or glogb.args[0].func is exp:
             glogb = _denest_pow(glogb.args[0])
-            if (abs(glogb.exp) < 1) is True:
+            if (abs(glogb.exp) < 1) == True:
                 return Pow(glogb.base, glogb.exp*e)
         return eq
 
@@ -3680,7 +3683,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     expr = bottom_up(expr, lambda w: w.normal())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
-    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 3730
+    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
     expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
 
     if ratio is S.Infinity:
@@ -4194,7 +4197,7 @@ def exptrigsimp(expr, simplify=True):
     for ei in ex:
         e2 = ei**-2
         if e2 in ex:
-            a = e2.args[0]/2
+            a = e2.args[0]/2 if not e2 is S.Exp1 else S.Half
             newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
             newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
     ## exp ratios to tan and tanh

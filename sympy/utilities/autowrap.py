@@ -481,6 +481,9 @@ def ufuncify(args, expr, **kwargs):
     else:
         args = list(args)
 
+    # ensure correct order of arguments
+    kwargs['args'] = [y, x] + args[1:] + [m]
+
     # first argument accepts an array
     args[0] = x[i]
     return autowrap(C.Equality(y[i], f(*args)), **kwargs)

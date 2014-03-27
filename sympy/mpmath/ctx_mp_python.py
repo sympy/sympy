@@ -351,7 +351,7 @@ class _constant(_mpf):
         return self.func(prec, rounding)
 
     def __repr__(self):
-        return "<%s: %s~>" % (self.name, self.context.nstr(self))
+        return "<%s: %s~>" % (self.name, self.context.nstr(self(dps=15)))
 
 
 class _mpc(mpnumeric):
@@ -578,7 +578,7 @@ class _mpc(mpnumeric):
 complex_types = (complex, _mpc)
 
 
-class PythonMPContext:
+class PythonMPContext(object):
 
     def __init__(ctx):
         ctx._prec_rounding = [53, round_nearest]
@@ -628,7 +628,7 @@ class PythonMPContext:
         working precision. Strings representing fractions or complex
         numbers are permitted.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> mpmathify(3.5)
             mpf('3.5')
@@ -667,7 +667,7 @@ class PythonMPContext:
         number, whether either the real or complex part is NaN;
         otherwise return *False*::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isnan(3.14)
             False
             >>> isnan(nan)
@@ -694,7 +694,7 @@ class PythonMPContext:
         Return *True* if the absolute value of *x* is infinite;
         otherwise return *False*::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isinf(inf)
             True
             >>> isinf(-inf)
@@ -729,7 +729,7 @@ class PythonMPContext:
         complex number *x* is considered "normal" if its magnitude is
         normal::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isnormal(3)
             True
             >>> isnormal(0)
@@ -766,7 +766,7 @@ class PythonMPContext:
         Return *True* if *x* is integer-valued; otherwise return
         *False*::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> isint(3)
             True
             >>> isint(mpf(3))
@@ -816,7 +816,7 @@ class PythonMPContext:
         faster and produces more accurate results than the builtin
         Python function :func:`sum`.
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> fsum([1, 2, 0.5, 7])
             mpf('10.5')
@@ -870,7 +870,7 @@ class PythonMPContext:
             s = ctx.make_mpc((s, mpf_sum(imag, prec, rnd)))
         else:
             s = ctx.make_mpf(s)
-        if other == 0:
+        if other is 0:
             return s
         else:
             return s + other
@@ -896,7 +896,7 @@ class PythonMPContext:
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> A = [2, 1.5, 3]
             >>> B = [1, -1, 2]
@@ -964,7 +964,7 @@ class PythonMPContext:
             s = ctx.make_mpc((s, mpf_sum(imag, prec, rnd)))
         else:
             s = ctx.make_mpf(s)
-        if other == 0:
+        if other is 0:
             return s
         else:
             return s + other
@@ -1090,7 +1090,7 @@ class PythonMPContext:
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.pretty = True
             >>> mag(10), mag(10.0), mag(mpf(10)), int(ceil(log(10,2)))
             (4, 4, 4, 4)
@@ -1127,3 +1127,16 @@ class PythonMPContext:
             else:
                 raise TypeError("requires an mpf/mpc")
 
+
+# Register with "numbers" ABC
+#     We do not subclass, hence we do not use the @abstractmethod checks. While
+#     this is less invasive it may turn out that we do not actually support
+#     parts of the expected interfaces.  See
+#     http://docs.python.org/2/library/numbers.html for list of abstract
+#     methods.
+try:
+    import numbers
+    numbers.Complex.register(_mpc)
+    numbers.Real.register(_mpf)
+except ImportError:
+    pass

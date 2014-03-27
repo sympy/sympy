@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
+from sympy.core import Basic, S, sympify, Expr, Rational, Symbol, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
@@ -305,7 +305,7 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp, limit
+        from sympy import powsimp, PoleError
         if expr is S.Zero:
             return True
         if expr is S.NaN:
@@ -346,7 +346,10 @@ class Order(Expr):
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                l = limit(ratio, s, point) != 0
+                try:
+                    l = ratio.limit(s, point) != 0
+                except PoleError:
+                    l = None
                 if r is None:
                     r = l
                 else:
@@ -373,7 +376,11 @@ class Order(Expr):
             else:
                 newvars = tuple(newexpr.free_symbols) + \
                     self.variables[:i] + self.variables[i + 1:]
-                newpt = self.point[0]**(new.as_numer_denom()[1].is_number*2 - 1)
+                p = new.as_numer_denom()[1].is_number*2 - 1
+                newpt = self.point[0]**p
+                if not newpt.is_real:
+                    x = Dummy('x')
+                    newpt = (x**p).limit(x, self.point[0])
                 newpt = [newpt]*len(newvars)
             return Order(newexpr, *zip(newvars, newpt))
         return Order(self.expr._subs(old, new), *self.args[1:])

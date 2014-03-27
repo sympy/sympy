@@ -349,7 +349,7 @@ class gegenbauer(OrthogonalPolynomial):
         if not n.is_Number:
             # Handle this before the general sign extraction rule
             if x == S.NegativeOne:
-                if (C.re(a) > S.Half) is True:
+                if (C.re(a) > S.Half) == True:
                     return S.ComplexInfinity
                 else:
                     # No sec function available yet
@@ -666,7 +666,7 @@ class chebyshevt_root(Function):
 
     @classmethod
     def eval(cls, n, k):
-        if not ((0 <= k) is (k < n) is True):
+        if not ((0 <= k) and (k < n)):
             raise ValueError("must have 0 <= k < n, "
                 "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(2*k + 1)/(2*n))
@@ -706,7 +706,7 @@ class chebyshevu_root(Function):
 
     @classmethod
     def eval(cls, n, k):
-        if not ((0 <= k) is (k < n) is True):
+        if not ((0 <= k) and (k < n)):
             raise ValueError("must have 0 <= k < n, "
                 "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(k + 1)/(n + 1))

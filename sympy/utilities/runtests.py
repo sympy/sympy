@@ -30,6 +30,7 @@ import random
 import subprocess
 import signal
 import stat
+from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
@@ -117,23 +118,6 @@ def sys_normcase(f):
     if sys_case_insensitive:  # global defined after call to get_sympy_dir()
         return f.lower()
     return f
-
-
-def isgeneratorfunction(object):
-    """
-    Return True if the object is a user-defined generator function.
-
-    Generator function objects provides same attributes as functions.
-
-    See isfunction.__doc__ for attributes listing.
-
-    Adapted from Python 2.6.
-    """
-    CO_GENERATOR = 0x20
-    if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-            get_function_code(object).co_flags & CO_GENERATOR:
-        return True
-    return False
 
 
 def setup_pprint():
@@ -618,7 +602,7 @@ def _doctest(*paths, **kwargs):
     #         "sympy/utilities/benchmarking.py"
     #     ])
 
-    # blacklist these modules until issue 1741 is resolved
+    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py",
         "sympy/utilities/benchmarking.py"
@@ -1546,7 +1530,7 @@ class SymPyDocTestRunner(DocTestRunner):
     tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
-    issue 2041).
+    issue 5140).
 
     See the docstring of the original DocTestRunner for more information.
     """

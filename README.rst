@@ -140,7 +140,7 @@ diff``, ``git clean -Xn`` and ``git clean -n`` before doing any of those.
 Bugs
 ----
 
-Our issue tracker is at https://code.google.com/p/sympy/issues/list.  Please
+Our issue tracker is at https://github.com/sympy/sympy/issues.  Please
 report any bugs that you find.  Or, even better, fork the repository on GitHub
 and create a pull request.  We welcome all changes, big or small, and we will
 help you make the pull request if you are new to git (just ask on our mailing
@@ -193,7 +193,7 @@ Citation
 
 To cite SymPy in publications use::
 
-    SymPy Development Team (2013). SymPy: Python library for symbolic mathematics
+    SymPy Development Team (2014). SymPy: Python library for symbolic mathematics
     URL http://www.sympy.org.
 
 A BibTeX entry for LaTeX users is::
@@ -201,7 +201,7 @@ A BibTeX entry for LaTeX users is::
     @Manual{,
     title = {SymPy: Python library for symbolic mathematics},
     author = {{SymPy Development Team}},
-    year = {2013},
+    year = {2014},
     url = {http://www.sympy.org},
     }
 

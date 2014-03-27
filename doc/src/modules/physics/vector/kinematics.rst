@@ -1,11 +1,10 @@
 =====================
-Mechanics: Kinematics
+Vector: Kinematics
 =====================
 
-In mechanics, kinematics refers to the motion of bodies (or particles).
-It is the 'a' in 'f=ma'. This document will give some mathematical background
+This document will give some mathematical background
 to describing a system's kinematics as well as how to represent the kinematics
-in :mod:`mechanics`.
+in :mod:`physics.vector`.
 
 Introduction to Kinematics
 ==========================
@@ -415,12 +414,12 @@ another fixed object, such as in the following example:
 .. % rolling disc kinematics here
 
 
-Kinematics in SymPy's Mechanics
-===============================
+Kinematics in physics.vector
+============================
 
 It should be clear by now that the topic of kinematics here has been mostly
 describing the correct way to manipulate vectors into representing the
-velocities of points. Within :mod:`mechanics` there are convenient methods for
+velocities of points. Within :mod:`vector` there are convenient methods for
 storing these velocities associated with frames and points. We'll now revisit
 the above examples and show how to represent them in :mod:`sympy`.
 
@@ -430,8 +429,7 @@ velocity of the frame using the time derivative of the DCM and the angular
 velocity definition. ::
 
   >>> from sympy import Symbol, sin, cos
-  >>> from sympy.physics.mechanics import *
-  >>> mechanics_printing()
+  >>> from sympy.physics.vector import *
   >>> N = ReferenceFrame('N')
   >>> q1 = dynamicsymbols('q1')
   >>> A = N.orientnew('A', 'Axis', [q1, N.x])
@@ -472,7 +470,7 @@ other. This is coded as: ::
   >>> D.ang_vel_in(N)
   u3*C.y - u2*B.z + u1*A.x
 
-In :mod:`mechanics` the shortest path between two frames is used when finding
+In :mod:`vector` the shortest path between two frames is used when finding
 the angular velocity. That would mean if we went back and set: ::
 
   >>> D.set_ang_vel(N, 0)

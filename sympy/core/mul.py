@@ -103,7 +103,7 @@ class Mul(Expr, AssocOp):
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
               -  Sometimes terms are not combined as one would like:
-                 {c.f. http://code.google.com/p/sympy/issues/detail?id=1497}
+                 {c.f. https://github.com/sympy/sympy/issues/4596}
 
                 >>> from sympy import Mul, sqrt
                 >>> from sympy.abc import x, y, z
@@ -121,7 +121,7 @@ class Mul(Expr, AssocOp):
                 Powers with compound bases may not find a single base to
                 combine with unless all arguments are processed at once.
                 Post-processing may be necessary in such cases.
-                {c.f. http://code.google.com/p/sympy/issues/detail?id=2629}
+                {c.f. https://github.com/sympy/sympy/issues/5728}
 
                 >>> a = sqrt(x*sqrt(y))
                 >>> a**3
@@ -157,7 +157,7 @@ class Mul(Expr, AssocOp):
               create a new Mul, ``M/d[i]`` the args of which will be traversed
               again when it is multiplied by ``n[i]``.
 
-              {c.f. http://code.google.com/p/sympy/issues/detail?id=2607}
+              {c.f. https://github.com/sympy/sympy/issues/5706}
 
               This consideration is moot if the cache is turned off.
 
@@ -552,6 +552,15 @@ class Mul(Expr, AssocOp):
             # we know for sure the result will be 0
             return [coeff], [], order_symbols
 
+        # check for straggling Numbers that were produced
+        _new = []
+        for i in c_part:
+            if i.is_Number:
+                coeff *= i
+            else:
+                _new.append(i)
+        c_part = _new
+
         # order commutative part canonically
         _mulsort(c_part)
 
@@ -684,17 +693,24 @@ class Mul(Expr, AssocOp):
                         other.append(a)
             else:
                 other.append(a)
-        addre, addim = expand_mul(addterms, deep=False).as_real_imag()
         m = self.func(*other)
         if hints.get('ignore') == m:
             return None
-        else:
+        if addterms == 1:
+            if m == 1:
+                return (C.re(coeff), C.im(coeff))
+            rem, imm = (C.re(m), C.im(m))
             if coeff.is_real:
-                return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
-            else:
-                re = - C.im(coeff)*C.im(m)
-                im = C.im(coeff)*C.re(m)
-                return (re*addre - im*addim, re*addim + im*addre)
+                return (coeff*rem, coeff*imm)
+            imco = C.im(coeff)
+            return (-imco*imm, imco*rem)
+        addre, addim = expand_mul(addterms, deep=False).as_real_imag()
+        if coeff.is_real:
+            return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
+        else:
+            re = - C.im(coeff)*C.im(m)
+            im = C.im(coeff)*C.re(m)
+            return (re*addre - im*addim, re*addim + im*addre)
 
     @staticmethod
     def _expandsums(sums):
@@ -949,50 +965,39 @@ class Mul(Expr, AssocOp):
         return has_polar and \
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
-    # I*I -> R,  I*I*I -> -I
     def _eval_is_real(self):
+        from sympy.core.logic import fuzzy_not
         im_count = 0
         is_neither = False
+        is_zero = False
         for t in self.args:
             if t.is_imaginary:
                 im_count += 1
                 continue
             t_real = t.is_real
             if t_real:
+                if not is_zero:
+                    is_zero = fuzzy_not(t.is_nonzero)
+                    if is_zero:
+                        return True
                 continue
             elif t_real is False:
                 if is_neither:
-                    return None
+                    return
                 else:
                     is_neither = True
             else:
-                return None
+                return
         if is_neither:
-            return False
-
-        return (im_count % 2 == 0)
+            if im_count % 2 == 0:
+                if is_zero is False:
+                    return False
+        else:
+            return im_count % 2 == 0
 
     def _eval_is_imaginary(self):
-        im_count = 0
-        is_neither = False
-        for t in self.args:
-            if t.is_imaginary:
-                im_count += 1
-                continue
-            t_real = t.is_real
-            if t_real:
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return None
-                else:
-                    is_neither = True
-            else:
-                return None
-        if is_neither:
-            return False
-
-        return (im_count % 2 == 1)
+        if self.is_nonzero:
+            return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
         nc_count = 0
@@ -1193,7 +1198,7 @@ class Mul(Expr, AssocOp):
 
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
-            # a -1 base (see issue 3322); all we want here are the
+            # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
             if a.is_Pow or a.func is C.exp:
                 return a.as_base_exp()
@@ -1239,7 +1244,7 @@ class Mul(Expr, AssocOp):
                 return int(a/b)
             return 0
 
-        # give Muls in the denominator a chance to be changed (see issue 2552)
+        # give Muls in the denominator a chance to be changed (see issue 5651)
         # rv will be the default return value
         rv = None
         n, d = fraction(self)

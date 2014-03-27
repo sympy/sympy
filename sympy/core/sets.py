@@ -231,6 +231,57 @@ class Set(Basic):
         """
         return self._measure
 
+    @property
+    def boundary(self):
+        """
+        The boundary or frontier of a set
+
+        A point x is on the boundary of a set S if
+
+        1.  x is in the closure of S.
+            I.e. Every neighborhood of x contains a point in S.
+        2.  x is not in the interior of S.
+            I.e. There does not exist an open set centered on x contained
+            entirely within S.
+
+        There are the points on the outer rim of S.  If S is open then these
+        points need not actually be contained within S.
+
+        For example, the boundary of an interval is its start and end points.
+        This is true regardless of whether or not the interval is open.
+
+        >>> from sympy import Interval
+        >>> Interval(0, 1).boundary
+        {0, 1}
+
+        >>> Interval(0, 1, True, False).boundary
+        {0, 1}
+        """
+        return self._boundary
+
+    @property
+    def is_open(self):
+        if not Intersection(self, self.boundary):
+            return True
+        # We can't confidently claim that an intersection exists
+        return None
+
+    @property
+    def is_closed(self):
+        return self.subset(self.boundary)
+
+    @property
+    def closure(self):
+        return self + self.boundary
+
+    @property
+    def interior(self):
+        return self - self.boundary
+
+    @property
+    def _boundary(self):
+        raise NotImplementedError()
+
     def _eval_imageset(self, f):
         from sympy.sets.fancysets import ImageSet
         return ImageSet(f, self)
@@ -333,6 +384,9 @@ class ProductSet(Set):
         if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
+        if len(sets) == 1:
+            return sets[0]
+
         return Basic.__new__(cls, *sets, **assumptions)
 
     def _contains(self, element):
@@ -369,6 +423,19 @@ class ProductSet(Set):
         return ProductSet(a.intersect(b)
                 for a, b in zip(self.sets, other.sets))
 
+    def _union(self, other):
+        if not other.is_ProductSet:
+            return None
+        if len(other.args) != len(self.args):
+            return None
+        if self.args[0] == other.args[0]:
+            return self.args[0] * Union(ProductSet(self.args[1:]),
+                                        ProductSet(other.args[1:]))
+        if self.args[-1] == other.args[-1]:
+            return Union(ProductSet(self.args[:-1]),
+                         ProductSet(other.args[:-1])) * self.args[-1]
+        return None
+
     @property
     def sets(self):
         return self.args
@@ -383,6 +450,13 @@ class ProductSet(Set):
         product_sets = (ProductSet(*set) for set in switch_sets)
         # Union of all combinations but this one
         return Union(p for p in product_sets if p != self)
+
+    @property
+    def _boundary(self):
+        return Union(ProductSet(b + b.boundary if i != j else b.boundary
+                                for j, b in enumerate(self.sets))
+                                for i, a in enumerate(self.sets))
+
 
     @property
     def is_real(self):
@@ -450,6 +524,13 @@ class Interval(Set, EvalfMixin):
 
         start = _sympify(start)
         end = _sympify(end)
+        left_open = _sympify(left_open)
+        right_open = _sympify(right_open)
+
+        if not all(isinstance(a, (type(true), type(false))) for a in [left_open, right_open]):
+            raise NotImplementedError(
+                "left_open and right_open can have only true/false values, "
+                "got %s and %s" % (left_open, right_open))
 
         inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_real=True').
@@ -468,9 +549,9 @@ class Interval(Set, EvalfMixin):
 
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
-            left_open = True
+            left_open = true
         if end == S.Infinity:
-            right_open = True
+            right_open = true
 
         return Basic.__new__(cls, start, end, left_open, right_open)
 
@@ -627,6 +708,10 @@ class Interval(Set, EvalfMixin):
         b = Interval(self.end, S.Infinity, not self.right_open, True)
         return Union(a, b)
 
+    @property
+    def _boundary(self):
+        return FiniteSet(self.start, self.end)
+
     def _contains(self, other):
         if self.left_open:
             expr = other > self.start
@@ -641,20 +726,66 @@ class Interval(Set, EvalfMixin):
         return expr
 
     def _eval_imageset(self, f):
-        # Cut out 0, perform image, add back in image of 0
-        if self.contains(0) == True:
-            return imageset(f, self - FiniteSet(0)) + imageset(f, FiniteSet(0))
-
         from sympy.functions.elementary.miscellaneous import Min, Max
-        # TODO: manage left_open and right_open better in case of
-        # non-comparable left/right (e.g. Interval(x, y))
-        _left, _right = f(self.left), f(self.right)
-        left, right = Min(_left, _right), Max(_left, _right)
-        if _right == left: # switch happened
-            left_open, right_open = self.right_open, self.left_open
+        from sympy.solvers import solve
+        from sympy.core.function import diff
+        from sympy.series import limit
+        from sympy.calculus.singularities import singularities
+        # TODO: handle piecewise defined functions
+        # TODO: handle functions with infinitely many solutions (eg, sin, tan)
+        # TODO: handle multivariate functions
+
+        expr = f.expr
+        if len(expr.free_symbols) > 1 or len(f.variables) != 1:
+            return
+        var = f.variables[0]
+
+        if not self.start.is_comparable or not self.end.is_comparable:
+            return
+
+        try:
+            sing = [x for x in singularities(expr, var) if x.is_real and x in self]
+        except NotImplementedError:
+            return
+
+        if self.left_open:
+            _start = limit(expr, var, self.start, dir="+")
+        elif self.start not in sing:
+            _start = f(self.start)
+        if self.right_open:
+            _end = limit(expr, var, self.end, dir="-")
+        elif self.end not in sing:
+            _end = f(self.end)
+
+        if len(sing) == 0:
+            solns = solve(diff(expr, var), var)
+
+            extr = [_start, _end] + [f(x) for x in solns
+                                     if x.is_real and x in self]
+            start, end = Min(*extr), Max(*extr)
+
+            left_open, right_open = False, False
+            if _start <= _end:
+                # the minimum or maximum value can occur simultaneously
+                # on both the edge of the interval and in some interior
+                # point
+                if start == _start and start not in solns:
+                    left_open = self.left_open
+                if end == _end and end not in solns:
+                    right_open = self.right_open
+            else:
+                if start == _end and start not in solns:
+                    left_open = self.right_open
+                if end == _start and end not in solns:
+                    right_open = self.left_open
+
+            return Interval(start, end, left_open, right_open)
         else:
-            left_open, right_open = self.left_open, self.right_open
-        return Interval(left, right, left_open, right_open)
+            return imageset(f, Interval(self.start, sing[0],
+                                        self.left_open, True)) + \
+                Union(*[imageset(f, Interval(sing[i], sing[i + 1]), True, True)
+                        for i in range(1, len(sing) - 1)]) + \
+                imageset(f, Interval(sing[-1], self.end, True, self.right_open))
 
     @property
     def _measure(self):
@@ -665,7 +796,7 @@ class Interval(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return Interval(self.left.evalf(), self.right.evalf(),
-          left_open=self.left_open, right_open=self.right_open)
+                        left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
@@ -692,7 +823,7 @@ class Interval(Set, EvalfMixin):
             right = other < self.end
         else:
             right = other <= self.end
-        if right is True:
+        if right == True:
             if self.left_open:
                 return other > self.start
             else:
@@ -703,9 +834,6 @@ class Interval(Set, EvalfMixin):
             left = self.start <= other
         return And(left, right)
 
-    @property
-    def free_symbols(self):
-        return self.start.free_symbols | self.end.free_symbols
 
 class Union(Set, EvalfMixin):
     """
@@ -877,6 +1005,17 @@ class Union(Set, EvalfMixin):
             # Flip Parity - next time subtract/add if we added/subtracted here
             parity *= -1
         return measure
+
+    @property
+    def _boundary(self):
+        def boundary_of_set(i):
+            """ The boundary of set i minus interior of all other sets """
+            b = self.args[i].boundary
+            for j, a in enumerate(self.args):
+                if j != i:
+                    b = b - a.interior
+            return b
+        return Union(map(boundary_of_set, range(len(self.args))))
 
     def _eval_imageset(self, f):
         return Union(imageset(f, arg) for arg in self.args)
@@ -1112,6 +1251,10 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _eval_imageset(self, f):
         return self
 
+    @property
+    def _boundary(self):
+        return self
+
 class UniversalSet(with_metaclass(Singleton, Set)):
     """
     Represents the set of all things.
@@ -1158,6 +1301,10 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     def _union(self, other):
         return self
+
+    @property
+    def _boundary(self):
+        return EmptySet()
 
 
 class FiniteSet(Set, EvalfMixin):
@@ -1276,6 +1423,10 @@ class FiniteSet(Set, EvalfMixin):
         return Union(intervals, evaluate=False)
 
     @property
+    def _boundary(self):
+        return self
+
+    @property
     def _inf(self):
         from sympy.functions.elementary.miscellaneous import Min
         return Min(*self)
@@ -1332,7 +1483,11 @@ class FiniteSet(Set, EvalfMixin):
 
 
 def imageset(*args):
-    """ Image of set under transformation ``f``
+    r"""
+    Image of set under transformation ``f``.
+
+    If this function can't compute the image, it returns an
+    unevaluated ImageSet object.
 
     .. math::
         { f(x) | x \in self }
@@ -1340,7 +1495,7 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import Interval, Symbol, imageset
+    >>> from sympy import Interval, Symbol, imageset, sin, Lambda
     >>> x = Symbol('x')
 
     >>> imageset(x, 2*x, Interval(0, 2))
@@ -1349,14 +1504,31 @@ def imageset(*args):
     >>> imageset(lambda x: 2*x, Interval(0, 2))
     [0, 4]
 
-    See Also:
-        ImageSet
+    >>> imageset(Lambda(x, sin(x)), Interval(-2, 1))
+    ImageSet(Lambda(x, sin(x)), [-2, 1])
+
+    See Also
+    ========
+
+    sympy.sets.fancysets.ImageSet
+
     """
+    from sympy.core import Dummy, Lambda
+    from sympy.sets.fancysets import ImageSet
     if len(args) == 3:
-        from sympy import Lambda
         f = Lambda(*args[:2])
     else:
+        # var and expr are being defined this way to
+        # support Python lambda and not just sympy Lambda
         f = args[0]
+        if not isinstance(f, Lambda):
+            var = Dummy()
+            expr = args[0](var)
+            f = Lambda(var, expr)
     set = args[-1]
 
-    return set._eval_imageset(f)
+    r = set._eval_imageset(f)
+    if r is not None:
+        return r
+
+    return ImageSet(f, set)

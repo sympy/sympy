@@ -496,9 +496,9 @@ def _TR56(rv, f, g, h, max, pow):
         if not (rv.is_Pow and rv.base.func == f):
             return rv
 
-        if (rv.exp < 0) is True:
+        if (rv.exp < 0) == True:
             return rv
-        if (rv.exp > max) is True:
+        if (rv.exp > max) == True:
             return rv
         if rv.exp == 2:
             return h(g(rv.base.args[0])**2)
@@ -1705,6 +1705,8 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     was = rv
     rv = sympify(rv)
+    if not isinstance(rv, C.Expr):
+        return rv.func(*[fu(a, measure=measure) for a in rv.args])
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = fRL1(rv)
@@ -1790,6 +1792,7 @@ def trig_split(a, b, two=False):
 
     Examples
     ========
+
     >>> from sympy.simplify.fu import trig_split
     >>> from sympy.abc import x, y, z
     >>> from sympy import cos, sin, sqrt

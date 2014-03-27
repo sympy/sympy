@@ -354,7 +354,7 @@ L \
     assert pretty(h4) == ascii_str
     assert upretty(h4) == ucode_str
     assert latex(h4) == r'{\mathcal{L}^2}\left( \left[0, \infty\right) \right)'
-    sT(h4, "L2(Interval(Integer(0), oo, False, True))")
+    sT(h4, "L2(Interval(Integer(0), oo, S.false, S.true))")
     assert str(h1 + h2) == 'H+C(2)'
     ascii_str = \
 """\
@@ -874,7 +874,7 @@ u("""\
     assert upretty(e4) == ucode_str
     assert latex(e4) == \
         r'\left(\left(\mathcal{C}^{1}\otimes \mathcal{C}^{2}\right)\oplus {\mathcal{F}}^{\otimes 2}\right)\otimes \left({\mathcal{L}^2}\left( \left[0, \infty\right) \right)\oplus \mathcal{H}\right)'
-    sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, False, True)),HilbertSpace())))")
+    sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, S.false, S.true)),HilbertSpace())))")
 
 
 def _test_sho1d():

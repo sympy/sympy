@@ -4,7 +4,7 @@ Boolean algebra module for SymPy
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import product
+from itertools import product, islice
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -15,8 +15,7 @@ from sympy.core.function import Application
 from sympy.core.compatibility import ordered, xrange, with_metaclass
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
-
-
+from sympy.utilities.iterables import multiset
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
@@ -477,8 +476,18 @@ class Xor(BooleanFunction):
     """
     def __new__(cls, *args, **options):
         args = [_sympify(arg) for arg in args]
-
-        argset = set(args)
+        argset = multiset(args)  # dictionary
+        args_final=[]
+        # xor is commutative and is false if count of x is even and x
+        # if count of x is odd. Here x can be True, False or any Symbols
+        for x, freq in argset.items():
+            if freq % 2 == 0:
+                argset[x] = false
+            else:
+                argset[x] = x
+        for _, z in argset.items():
+            args_final.append(z)
+        argset = set(args_final)
         truecount = 0
         for x in args:
             if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
@@ -981,23 +990,32 @@ def eliminate_implications(expr):
     Or(B, Not(A))
     >>> eliminate_implications(Equivalent(A, B))
     And(Or(A, Not(B)), Or(B, Not(A)))
+    >>> eliminate_implications(Equivalent(A, B, C))
+    And(Or(A, Not(C)), Or(B, Not(A)), Or(C, Not(B)))
     """
     expr = sympify(expr)
     if expr.is_Atom:
         return expr  # (Atoms are unchanged.)
     args = list(map(eliminate_implications, expr.args))
+
     if expr.func is Implies:
         a, b = args[0], args[-1]
         return (~a) | b
+
     elif expr.func is Equivalent:
-        a, b = args[0], args[-1]
-        return (a | Not(b)) & (b | Not(a))
+        clauses = []
+        for a, b in zip(islice(args, None), islice(args, 1, None)):
+            clauses.append(Or(Not(a), b))
+        a, b = args[-1], args[0]
+        clauses.append(Or(Not(a), b))
+        return And(*clauses)
+
     else:
         return expr.func(*args)
 
 
 @deprecated(
-    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=6550, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
@@ -1410,7 +1428,7 @@ def bool_map(bool1, bool2):
         arguments are only symbols or negated symbols. For example,
         And(x, Not(y), Or(w, Not(z))).
 
-        Basic.match is not robust enough (see issue 1736) so this is
+        Basic.match is not robust enough (see issue 4835) so this is
         a workaround that is valid for simplified boolean expressions
         """
 
@@ -1450,7 +1468,7 @@ def bool_map(bool1, bool2):
 
 
 @deprecated(
-    useinstead="bool_map", issue=4098, deprecated_since_version="0.7.4")
+    useinstead="bool_map", issue=7197, deprecated_since_version="0.7.4")
 def bool_equal(bool1, bool2, info=False):
     """Return True if the two expressions represent the same logical
     behaviour for some correspondence between the variables of each

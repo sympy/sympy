@@ -15,7 +15,7 @@ __all__ = (
 )
 
 
-# Note, see issue 1887.  Ideally, we wouldn't want to subclass both Boolean
+# Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
 
 class Relational(Boolean, Expr, EvalfMixin):
@@ -33,6 +33,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     Examples
     ========
+
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
@@ -153,6 +154,7 @@ class Equality(Relational):
 
     Examples
     ========
+
     >>> from sympy import Eq
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
@@ -169,6 +171,12 @@ class Equality(Relational):
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
 
+    If either object defines an `_eval_Eq` method, it can be used in place of
+    the default algorithm.  If `lhs._eval_Eq(rhs)` or `rhs._eval_Eq(lhs)`
+    returns anything other than None, that return value will be substituted for
+    the Equality.  If None is returned by `_eval_Eq`, an Equality object will
+    be created as usual.
+
     """
     rel_op = '=='
 
@@ -179,13 +187,22 @@ class Equality(Relational):
     def __new__(cls, lhs, rhs=0, **assumptions):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
+        # If one expression has an _eval_Eq, return its results.
+        if hasattr(lhs, '_eval_Eq'):
+            r = lhs._eval_Eq(rhs)
+            if r is not None:
+                return r
+        if hasattr(rhs, '_eval_Eq'):
+            r = rhs._eval_Eq(lhs)
+            if r is not None:
+                return r
         # If expressions have the same structure, they must be equal.
         if lhs == rhs:
-            return True
+            return S.true
         # If one side is real and the other complex, they must be unequal.
         elif (lhs.is_real != rhs.is_real and
                 None not in (lhs.is_real, rhs.is_real)):
-            return False
+            return S.false
         # Otherwise, see if the difference can be evaluated.
         r = cls._eval_sides(lhs, rhs)
         if r is not None:
@@ -195,7 +212,7 @@ class Equality(Relational):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs == rhs
+        return _sympify(lhs == rhs)
 
 Eq = Equality
 
@@ -210,16 +227,24 @@ class Unequality(Relational):
 
     Examples
     ========
+
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
     y != x**2 + x
+
+    See Also
+    ========
+    Equality
 
     Notes
     =====
     This class is not the same as the != operator.  The != operator tests
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
+
+    This class is effectively the inverse of Equality.  As such, it uses the
+    same algorithms, including any available `_eval_Eq` methods.
 
     """
     rel_op = '!='
@@ -231,12 +256,12 @@ class Unequality(Relational):
         rhs = _sympify(rhs)
         is_equal = Equality(lhs, rhs)
         if is_equal == True or is_equal == False:
-            return not is_equal
+            return ~is_equal
         return Relational.__new__(cls, lhs, rhs, **assumptions)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs != rhs
+        return _sympify(lhs != rhs)
 
 Ne = Unequality
 
@@ -528,16 +553,16 @@ class GreaterThan(_Greater):
 
            In Python, there is no way to override the ``and`` operator, or to
            control how it short circuits, so it is impossible to make something
-           like ``x > y > z`` work.  There is an open PEP to change this,
-           :pep:`335`, but until that is implemented, this cannot be made to work.
+           like ``x > y > z`` work.  There was a PEP to change this,
+           :pep:`335`, but it was officially closed in March, 2012.
 
     .. [2] For more information, see these two bug reports:
 
        "Separate boolean and symbolic relationals"
-       `Issue 1887 <http://code.google.com/p/sympy/issues/detail?id=1887>`_
+       `Issue 4986 <https://github.com/sympy/sympy/issues/4986>`_
 
        "It right 0 < x < 1 ?"
-       `Issue 2960 <http://code.google.com/p/sympy/issues/detail?id=2960>`_
+       `Issue 6059 <https://github.com/sympy/sympy/issues/6059>`_
 
     """
     rel_op = '>='
@@ -546,7 +571,7 @@ class GreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs >= rhs
+        return _sympify(lhs >= rhs)
 
 Ge = GreaterThan
 
@@ -559,7 +584,7 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs <= rhs
+        return _sympify(lhs <= rhs)
 
 Le = LessThan
 
@@ -572,7 +597,7 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs > rhs
+        return _sympify(lhs > rhs)
 
 Gt = StrictGreaterThan
 
@@ -585,7 +610,7 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return lhs < rhs
+        return _sympify(lhs < rhs)
 
 Lt = StrictLessThan
 

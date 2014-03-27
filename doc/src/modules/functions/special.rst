@@ -27,8 +27,9 @@ Gamma, Beta and related Functions
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
-
-.. autofunction:: sympy.functions.special.gamma_functions.beta
+.. module:: sympy.functions.special.beta_functions
+.. autoclass:: sympy.functions.special.beta_functions.beta
+   :members:
 
 Error Functions and Fresnel Integrals
 -------------------------------------
@@ -64,6 +65,8 @@ Exponential, Logarithmic and Trigonometric Integrals
 Bessel Type Functions
 ---------------------
 
+.. module:: sympy.functions.special.bessel
+
 .. autoclass:: sympy.functions.special.bessel.BesselBase
    :members:
 
@@ -78,6 +81,17 @@ Bessel Type Functions
 .. autoclass:: sympy.functions.special.bessel.yn
 
 .. autofunction:: sympy.functions.special.bessel.jn_zeros
+
+Airy Functions
+--------------
+
+.. autoclass:: sympy.functions.special.bessel.AiryBase
+   :members:
+
+.. autoclass:: sympy.functions.special.bessel.airyai
+.. autoclass:: sympy.functions.special.bessel.airybi
+.. autoclass:: sympy.functions.special.bessel.airyaiprime
+.. autoclass:: sympy.functions.special.bessel.airybiprime
 
 B-Splines
 ---------

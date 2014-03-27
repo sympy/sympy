@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import decimal
+import fractions
 import math
 import re as regex
 from collections import defaultdict
@@ -45,7 +46,7 @@ def mpf_norm(mpf, prec):
     if not man:
         # hack for mpf_normalize which does not do this;
         # it assumes that if man is zero the result is 0
-        # (see issue 3540)
+        # (see issue 6639)
         if not bc:
             return _mpf_zero
         else:
@@ -69,18 +70,6 @@ def seterr(divide=False):
     if _errdict["divide"] != divide:
         clear_cache()
         _errdict["divide"] = divide
-
-
-def _as_integer_ratio(p):
-    """compatibility implementation for python < 2.6"""
-    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
-    p = [1, -1][neg_pow % 2]*man
-    if expt < 0:
-        q = 2**-expt
-    else:
-        q = 1
-        p *= 2**expt
-    return int(p), int(q)
 
 
 def _decimal_to_Rational_prec(dec):
@@ -885,52 +874,56 @@ class Float(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other
+            return S.false    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
         if other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  ! <=
+            return S.false    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
         if other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other
+            return S.false    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  ! <=
+            return S.false    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__le__(self, other)
 
     def __hash__(self):
@@ -1077,7 +1070,7 @@ class Rational(Number):
                     pass  # error will raise below
 
                 if isinstance(p, (float, Float)):
-                    return Rational(*_as_integer_ratio(p))
+                    return Rational(*float(p).as_integer_ratio())
 
             if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
@@ -1219,7 +1212,10 @@ class Rational(Number):
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p*other.q, self.q*other.p)
+            if self.p and other.p == S.Zero:
+                return S.ComplexInfinity
+            else:
+                return Rational(self.p*other.q, self.q*other.p)
         elif isinstance(other, Float):
             return self*(1/other)
         else:
@@ -1328,17 +1324,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <
+            return S.false    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                return bool(self.p*other.q > self.q*other.p)
+                return _sympify(bool(self.p*other.q > self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_gt(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_gt(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__le__(self)
         return Expr.__gt__(self, other)
@@ -1347,17 +1343,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  not <=
+            return S.false    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                 return bool(self.p*other.q >= self.q*other.p)
+                 return _sympify(bool(self.p*other.q >= self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_ge(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_ge(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__lt__(self)
         return Expr.__ge__(self, other)
@@ -1366,17 +1362,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <
+            return S.false    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                return bool(self.p*other.q < self.q*other.p)
+                return _sympify(bool(self.p*other.q < self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_lt(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_lt(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__ge__(self)
         return Expr.__lt__(self, other)
@@ -1385,17 +1381,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  not <=
+            return S.false    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                return bool(self.p*other.q <= self.q*other.p)
+                return _sympify(bool(self.p*other.q <= self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_le(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_le(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__gt__(self)
         return Expr.__le__(self, other)
@@ -1687,30 +1683,30 @@ class Integer(Rational):
 
     def __gt__(self, other):
         if isinstance(other, integer_types):
-            return (self.p > other)
+            return _sympify(self.p > other)
         elif isinstance(other, Integer):
-            return (self.p > other.p)
+            return _sympify(self.p > other.p)
         return Rational.__gt__(self, other)
 
     def __lt__(self, other):
         if isinstance(other, integer_types):
-            return (self.p < other)
+            return _sympify(self.p < other)
         elif isinstance(other, Integer):
-            return (self.p < other.p)
+            return _sympify(self.p < other.p)
         return Rational.__lt__(self, other)
 
     def __ge__(self, other):
         if isinstance(other, integer_types):
-            return (self.p >= other)
+            return _sympify(self.p >= other)
         elif isinstance(other, Integer):
-            return (self.p >= other.p)
+            return _sympify(self.p >= other.p)
         return Rational.__ge__(self, other)
 
     def __le__(self, other):
         if isinstance(other, integer_types):
-            return (self.p <= other)
+            return _sympify(self.p <= other)
         elif isinstance(other, Integer):
-            return (self.p <= other.p)
+            return _sympify(self.p <= other.p)
         return Rational.__le__(self, other)
 
     def __hash__(self):
@@ -1877,9 +1873,11 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     Examples
     ========
 
-    >>> from sympy import S, Integer
+    >>> from sympy import S, Integer, zoo
     >>> Integer(0) is S.Zero
     True
+    >>> 1/S.Zero
+    zoo
 
     References
     ==========
@@ -1909,7 +1907,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         if expt.is_positive:
             return self
         if expt.is_negative:
-            return S.Infinity
+            return S.ComplexInfinity
         if expt.is_real is False:
             return S.NaN
         # infinities are already handled with pos and neg
@@ -1917,7 +1915,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
         # exponent
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
-            return S.Infinity**terms
+            return S.ComplexInfinity**terms
         if coeff is not S.One:  # there is a Number to discard
             return self**terms
 
@@ -2246,25 +2244,25 @@ class Infinity(with_metaclass(Singleton, Number)):
     def __lt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return False
+        return S.false
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is S.Infinity
+        return _sympify(other is S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is not S.Infinity
+        return _sympify(other is not S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return True
+        return S.true
 
     def __mod__(self, other):
         return S.NaN
@@ -2439,25 +2437,25 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def __lt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is not S.NegativeInfinity
+        return _sympify(other is not S.NegativeInfinity)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return True
+        return S.true
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return False
+        return S.false
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is S.NegativeInfinity
+        return _sympify(other is S.NegativeInfinity)
 
 
 class NaN(with_metaclass(Singleton, Number)):
@@ -2549,16 +2547,16 @@ class NaN(with_metaclass(Singleton, Number)):
         return other is not S.NaN
 
     def __gt__(self, other):
-        return False
+        return S.false
 
     def __ge__(self, other):
-        return False
+        return S.false
 
     def __lt__(self, other):
-        return False
+        return S.false
 
     def __le__(self, other):
-        return False
+        return S.false
 
 nan = S.NaN
 
@@ -2595,7 +2593,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_commutative = True
     is_bounded = False
     is_real = None
-    is_number = False
+    is_number = True
 
     __slots__ = []
 
@@ -2671,41 +2669,41 @@ class NumberSymbol(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <
+            return S.false    # sympy > other  --> not <
         if self is other:
-            return False
+            return S.false
         if isinstance(other, Number):
             approx = self.approximation_interval(other.__class__)
             if approx is not None:
                 l, u = approx
                 if other < l:
-                    return False
+                    return S.false
                 if other > u:
-                    return True
-            return self.evalf() < other
+                    return S.true
+            return _sympify(self.evalf() < other)
         if other.is_real and other.is_number:
             other = other.evalf()
-            return self.evalf() < other
+            return _sympify(self.evalf() < other)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <=
+            return S.false    # sympy > other  --> not <=
         if self is other:
-            return True
+            return S.true
         if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
-            return self.evalf() <= other
+            return _sympify(self.evalf() <= other)
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
-        return (-self) < (-other)
+        return _sympify((-self) < (-other))
 
     def __ge__(self, other):
-        return (-self) <= (-other)
+        return _sympify((-self) <= (-other))
 
     def __int__(self):
         # subclass with appropriate return value
@@ -3099,16 +3097,12 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
 
 I = S.ImaginaryUnit
 
-try:
-    # fractions is only available for python 2.6+
-    import fractions
 
-    def sympify_fractions(f):
-        return Rational(f.numerator, f.denominator)
+def sympify_fractions(f):
+    return Rational(f.numerator, f.denominator)
 
-    converter[fractions.Fraction] = sympify_fractions
-except ImportError:
-    pass
+converter[fractions.Fraction] = sympify_fractions
+
 
 try:
     if HAS_GMPY == 2:

@@ -226,3 +226,15 @@ mpq_3_4 = mpq((3,4))
 mpq_7_4 = mpq((7,4))
 mpq_5_4 = mpq((5,4))
 
+
+# Register with "numbers" ABC
+#     We do not subclass, hence we do not use the @abstractmethod checks. While
+#     this is less invasive it may turn out that we do not actually support
+#     parts of the expected interfaces.  See
+#     http://docs.python.org/2/library/numbers.html for list of abstract
+#     methods.
+try:
+    import numbers
+    numbers.Rational.register(mpq)
+except ImportError:
+    pass

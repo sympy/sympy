@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, xrange
+from sympy.core.compatibility import is_sequence, default_sort_key, xrange, NotIterable
 
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -42,7 +42,7 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
-class DeferredVector(Symbol):
+class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
 
     Examples
@@ -2437,7 +2437,7 @@ class MatrixBase(object):
         if not self:
             return S.One
 
-        M, n = self.copy(), self.rows
+        M, n = self.copy().as_mutable(), self.rows
 
         if n == 1:
             det = M[0, 0]
@@ -2617,7 +2617,7 @@ class MatrixBase(object):
                 feature="'simplified' as a keyword to rref",
                 useinstead="simplify=True, or set simplify equal to your "
                 "own custom simplification function",
-                issue=3382, deprecated_since_version="0.7.2",
+                issue=6481, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(
@@ -2679,7 +2679,7 @@ class MatrixBase(object):
                 feature="'simplified' as a keyword to nullspace",
                 useinstead="simplify=True, or set simplify equal to your "
                 "own custom simplification function",
-                issue=3382, deprecated_since_version="0.7.2",
+                issue=6481, deprecated_since_version="0.7.2",
             ).warn()
             simplify = simplify or True
         simpfunc = simplify if isinstance(

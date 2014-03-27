@@ -490,4 +490,5 @@ def init_session(ipython=None, pretty_print=True, order=None,
         sys.exit('Exiting ...')
     else:
         ip.write(message)
-        ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
+        import atexit
+        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)

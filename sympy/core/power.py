@@ -107,7 +107,7 @@ class Pow(Expr):
     | 0**oo        | 0       | Because for all complex numbers z near        |
     |              |         | 0, z**oo -> 0.                                |
     +--------------+---------+-----------------------------------------------+
-    | 0**-oo       | oo      | This is strictly true, as 0**oo may be        |
+    | 0**-oo       | oo      | This is not strictly true, as 0**oo may be    |
     |              |         | oscillating between positive and negative     |
     |              |         | values or rotating in the complex plane.      |
     |              |         | It is convenient, however, when the base      |
@@ -222,7 +222,7 @@ class Pow(Expr):
                 e.is_real is False and smallarg is False):
             return -self.func(b, e*other)
         if (other.is_integer or
-            e.is_real and (b_nneg or (abs(e) < 1) is True) or
+            e.is_real and (b_nneg or (abs(e) < 1) == True) or
             e.is_real is False and smallarg is True or
                 b.is_polar):
             return self.func(b, e*other)
@@ -243,6 +243,15 @@ class Pow(Expr):
         elif self.base.is_nonpositive:
             if self.exp.is_odd:
                 return False
+        elif self.base.is_imaginary:
+            if self.exp.is_integer:
+                m = self.exp % 4
+                if m.is_zero:
+                    return True
+                if m.is_integer and m.is_zero is False:
+                    return False
+            if self.exp.is_imaginary:
+                return C.log(self.base).is_imaginary
 
     def _eval_is_negative(self):
         if self.base.is_negative:
@@ -288,6 +297,8 @@ class Pow(Expr):
     def _eval_is_real(self):
         real_b = self.base.is_real
         if real_b is None:
+            if self.base.func == C.exp and self.base.args[0].is_imaginary:
+                return self.exp.is_imaginary
             return
         real_e = self.exp.is_real
         if real_e is None:
@@ -314,8 +325,7 @@ class Pow(Expr):
                     return True
                 elif self.exp.is_odd:
                     return False
-            elif (self.exp in [S.ImaginaryUnit, -S.ImaginaryUnit] and
-                  self.base in [S.ImaginaryUnit, -S.ImaginaryUnit]):
+            elif im_e and C.log(self.base).is_imaginary:
                 return True
             elif self.exp.is_Add:
                 c, a = self.exp.as_coeff_Add()
@@ -372,7 +382,7 @@ class Pow(Expr):
                 except ValueError:
                     ok = self.base.is_positive
                 if ok:
-                    # issue 2081
+                    # issue 5180
                     return self.func(new, pow)  # (x**(6*y)).subs(x**(3*y),z)->z**2
         if old.func is C.exp and self.exp.is_real and self.base.is_positive:
             coeff1, terms1 = old.args[0].as_independent(C.Symbol, as_Add=False)
@@ -734,10 +744,17 @@ class Pow(Expr):
             im_part1.subs({a: re, b: im}) + im_part3.subs({a: re, b: -im}))
 
         elif self.exp.is_Rational:
-            # NOTE: This is not totally correct since for x**(p/q) with
-            #       x being imaginary there are actually q roots, but
-            #       only a single one is returned from here.
             re, im = self.base.as_real_imag(deep=deep)
+
+            if im.is_zero and self.exp is S.Half:
+                if re.is_nonnegative:
+                    return self, S.Zero
+                if re.is_nonpositive:
+                    return S.Zero, (-self.base)**self.exp
+
+            # XXX: This is not totally correct since for x**(p/q) with
+            #      x being imaginary there are actually q roots, but
+            #      only a single one is returned from here.
             r = self.func(self.func(re, 2) + self.func(im, 2), S.Half)
             t = C.atan2(im, re)
 
@@ -778,9 +795,8 @@ class Pow(Expr):
             return False
 
         if self.base.has(*syms):
-            return self.base._eval_is_polynomial(syms) and \
-                self.exp.is_Integer and \
-                (self.exp >= 0) is True
+            return bool(self.base._eval_is_polynomial(syms) and
+                self.exp.is_Integer and (self.exp >= 0))
         else:
             return True
 

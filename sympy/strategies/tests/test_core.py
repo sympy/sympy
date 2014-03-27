@@ -49,6 +49,13 @@ def test_do_one():
     rl = do_one(posdec, posdec)
     assert rl(5) == 4
 
+    rl1 = lambda x: 2 if x == 1 else x
+    rl2 = lambda x: 3 if x == 2 else x
+
+    rule = do_one(rl1, rl2)
+    assert rule(1) == 2
+    assert rule(rule(1)) == 3
+
 def test_debug():
     from sympy.core.compatibility import StringIO
     file = StringIO()
@@ -79,11 +86,3 @@ def test_minimize():
 
     rl = minimize(inc, dec, objective=lambda x: -x)
     assert rl(4) == 5
-
-def test_do_one():
-    rl1 = lambda x: 2 if x == 1 else x
-    rl2 = lambda x: 3 if x == 2 else x
-
-    rule = do_one(rl1, rl2)
-    assert rule(1) == 2
-    assert rule(rule(1)) == 3

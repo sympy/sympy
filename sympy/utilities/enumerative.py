@@ -464,7 +464,7 @@ class MultisetPartitionTraverser():
 
     # The decrement_part() method corresponds to step M5 in Knuth's
     # algorithm.  This is the base version for enum_all().  Modified
-    # versions of this this method are needed if we want to restrict
+    # versions of this method are needed if we want to restrict
     # sizes of the partitions produced.
     def decrement_part(self, part):
         """Decrements part (a subrange of pstack), if possible, returning
@@ -737,6 +737,7 @@ class MultisetPartitionTraverser():
 
         Examples
         ========
+
         >>> from sympy.utilities.enumerative import list_visitor
         >>> from sympy.utilities.enumerative import MultisetPartitionTraverser
         >>> m = MultisetPartitionTraverser()
