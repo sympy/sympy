@@ -826,7 +826,6 @@ def test_issue_3940():
         sqrt(pi)*exp(d**2/a)/sqrt(a)
 
 
-
 def test_issue_5413():
     # Note that this is not the same as testing ratint() becuase integrate()
     # pulls out the coefficient.

@@ -13,7 +13,7 @@ def test_nsolve():
     # Testing checks on number of inputs
     raises(TypeError, lambda: nsolve(Eq(2*x, 2)))
     raises(TypeError, lambda: nsolve(Eq(2*x, 2), x, 1, 2))
-    # Issue 1730
+    # issue 4829
     assert nsolve(x**2/(1 - x)/(1 - 2*x)**2 - 100, x, 0)  # doesn't fail
     # multidimensional
     x1 = Symbol('x1')
@@ -48,12 +48,12 @@ def test_nsolve():
         mpf('0.31883011387318591'))
 
 
-def test_issue_3309():
+def test_issue_6408():
     x = Symbol('x')
     assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
 
 
 @XFAIL
-def test_issue_3309_fail():
+def test_issue_6408_fail():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0

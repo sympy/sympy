@@ -153,7 +153,7 @@ def test_exp():
     assert exp(ln2 * 10).ae(1024)
     assert exp(2+2j).ae(cmath.exp(2+2j))
 
-def test_issue_33():
+def test_issue_3132():
     mp.dps = 512
     a = exp(-1)
     b = exp(1)
@@ -621,7 +621,7 @@ def test_root():
     assert root(16,4,4) == 2
     assert root(-125,3,1) == -5
 
-def test_issue_96():
+def test_issue_3195():
     for dps in [20, 80]:
         mp.dps = dps
         r = nthroot(mpf('-1e-20'), 4)

@@ -13,3 +13,5 @@ from .residue_ntheory import is_primitive_root, is_quad_residue, \
     primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter
 from .multinomial import binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients
+from .continued_fraction import continued_fraction_periodic, \
+    continued_fraction_iterator

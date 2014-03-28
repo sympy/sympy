@@ -90,12 +90,14 @@ def runtest_autowrap_matrix_matrix(language, backend):
 def runtest_ufuncify(language, backend):
     has_module('numpy')
     a, b, c = symbols('a b c')
-    f = ufuncify([a, b, c], a*b + c, language=language, backend=backend)
+    fabc = ufuncify([a, b, c], a*b + c, language=language, backend=backend)
+    facb = ufuncify([a, c, b], a*b + c, language=language, backend=backend)
     grid = numpy.linspace(-2, 2, 50)
     for b in numpy.linspace(-5, 4, 3):
         for c in numpy.linspace(-1, 1, 3):
             expected = grid*b + c
-            assert numpy.sum(numpy.abs(expected - f(grid, b, c))) < 1e-13
+            assert numpy.sum(numpy.abs(expected - fabc(grid, b, c))) < 1e-13
+            assert numpy.sum(numpy.abs(expected - facb(grid, c, b))) < 1e-13
 
 #
 # tests of language-backend combinations
@@ -131,7 +133,7 @@ def test_ufuncify_f95_f2py():
 
 # Cython
 
-# See issue 3008.  This XFAIL can be removed if we can accurately determine the
+# See issue 6107.  This XFAIL can be removed if we can accurately determine the
 # correct minimum Cython version required.
 @XFAIL
 def test_wrap_twice_c_cython():

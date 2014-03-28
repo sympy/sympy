@@ -40,7 +40,7 @@ def test_gosper_sum():
     assert gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n)) == \
         (2*factorial(2*n + 1) - factorial(n))/factorial(2*n + 1)
 
-    # issue 2934:
+    # issue 6033:
     assert gosper_sum(
         n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b)), \
         (n, 0, m)) == -a*b*(exp(m*log(a))*exp(m*log(b))*factorial(a)* \

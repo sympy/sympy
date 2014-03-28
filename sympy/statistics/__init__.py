@@ -7,7 +7,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 SymPyDeprecationWarning(
     feature="sympy.statistics",
     useinstead="sympy.stats",
-    issue=3386,
+    issue=6485,
     deprecated_since_version="0.7.2",
 ).warn()
 from .distributions import Normal, Uniform

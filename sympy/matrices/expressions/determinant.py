@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr, S, Q
+from sympy import Basic, Expr, S, Q, sympify
 from .matexpr import ShapeError
 
 
@@ -19,6 +19,7 @@ class Determinant(Expr):
     """
 
     def __new__(cls, mat):
+        mat = sympify(mat)
         if not mat.is_Matrix:
             raise TypeError("Input to Determinant, %s, not a matrix" % str(mat))
 

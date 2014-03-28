@@ -7,6 +7,7 @@ from __future__ import print_function, division
 
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
+from sympy.utilities.decorator import doctest_depends_on
 
 import inspect
 
@@ -143,7 +144,9 @@ def _import(module, reload="False"):
         namespace[sympyname] = namespace[translation]
 
 
-def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True):
+@doctest_depends_on(modules=('numpy'))
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+        dummify=True, use_array=False):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -165,14 +168,18 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     to view the lambdified function or provide "sympy" as the module, you
     should probably set dummify=False.
 
+    If numpy is installed, the default behavior is to substitute Sympy Matrices
+    with numpy.matrix. If you would rather have a numpy.array returned,
+    set use_array=True.
+
     Usage
     =====
 
     (1) Use one of the provided modules:
 
-        >>> from sympy import lambdify, sin, gamma
+        >>> from sympy import lambdify, sin, tan, gamma
         >>> from sympy.utilities.lambdify import lambdastr
-        >>> from sympy.abc import x
+        >>> from sympy.abc import x, y
         >>> f = lambdify(x, sin(x), "math")
 
         Attention: Functions that are not in the math module will throw a name
@@ -183,19 +190,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
 
     (2) Use some other module:
 
-        >> import numpy
-        >> f = lambdify((x,y), tan(x*y), numpy)
+        >>> import numpy
+        >>> f = lambdify((x,y), tan(x*y), numpy)
 
         Attention: There are naming differences between numpy and sympy. So if
                    you simply take the numpy module, e.g. sympy.atan will not be
                    translated to numpy.arctan. Use the modified module instead
                    by passing the string "numpy":
 
-        >> f = lambdify((x,y), tan(x*y), "numpy")
-        >> f(1, 2)
+        >>> f = lambdify((x,y), tan(x*y), "numpy")
+        >>> f(1, 2)
         -2.18503986326
-        >> from numpy import array
-        >> f(array([1, 2, 3]), array([2, 3, 5]))
+        >>> from numpy import array
+        >>> f(array([1, 2, 3]), array([2, 3, 5]))
         [-2.18503986 -0.29100619 -0.8559934 ]
 
     (3) Use a dictionary defining custom functions:
@@ -228,6 +235,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
     >>> row = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> row(1, 2)
     Matrix([[1, 3]])
+    >>> col = lambdify((x, y), Matrix((x, x + y)), use_array=True)
+    >>> col(1, 2)
+    array([[1],
+           [3]])
 
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
@@ -272,6 +283,18 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True, dummify=True
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
+        #If numpy.array should be used instead of numpy.matrix
+        if use_array:
+            NUMPY_TRANSLATIONS.update({"Matrix": "array",
+                "MutableDenseMatrix": "array",
+                "ImmutableMatrix": "array"})
+        else:
+            #Ensures that the translation dict is set back
+            #to matrix if lambdify was already called
+            NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
+                "MutableDenseMatrix": "matrix",
+                "ImmutableMatrix": "matrix"})
+        #Attempt to import numpy
         try:
             _import("numpy")
         except ImportError:
@@ -373,7 +396,8 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            if isinstance(args, Function):
+            #Sub in dummy variables for functions or symbols
+            if isinstance(args, (Function, Symbol)):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
@@ -399,6 +423,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     # Transform args
     def isiter(l):
         return iterable(l, exclude=(str, DeferredVector))
+
     if isiter(args) and any(isiter(i) for i in args):
         from sympy.utilities.iterables import flatten
         import re

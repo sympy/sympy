@@ -2,7 +2,7 @@
 # Reference zeros generated with the aid of scipy.special
 # jn_zero, jnp_zero, yn_zero, ynp_zero
 
-from mpmath import *
+from sympy.mpmath import *
 
 V = 15
 M = 15

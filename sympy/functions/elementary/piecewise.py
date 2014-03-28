@@ -198,7 +198,7 @@ class Piecewise(Function):
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
         # FIXME: Currently complex intervals are not supported.  A possible
-        # replacement algorithm, discussed in issue 2128, can be found in the
+        # replacement algorithm, discussed in issue 5227, can be found in the
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
@@ -209,41 +209,41 @@ class Piecewise(Function):
                 super(Piecewise, self)._eval_interval(sym, a, b))
 
         mul = 1
-        if (a == b) is True:
+        if (a == b) == True:
             return S.Zero
-        elif (a > b) is True:
+        elif (a > b) == True:
             a, b, mul = b, a, -1
-        elif (a <= b) is not True:
+        elif (a <= b) != True:
             newargs = []
             for e, c in self.args:
                 intervals = self._sort_expr_cond(
                     sym, S.NegativeInfinity, S.Infinity, c)
                 values = []
                 for lower, upper, expr in intervals:
-                    if (a < lower) is True:
+                    if (a < lower) == True:
                         mid = lower
                         rep = b
                         val = e._eval_interval(sym, mid, b)
                         val += self._eval_interval(sym, a, mid)
-                    elif (a > upper) is True:
+                    elif (a > upper) == True:
                         mid = upper
                         rep = b
                         val = e._eval_interval(sym, mid, b)
                         val += self._eval_interval(sym, a, mid)
-                    elif (a >= lower) is True and (a <= upper) is True:
+                    elif (a >= lower) == True and (a <= upper) == True:
                         rep = b
                         val = e._eval_interval(sym, a, b)
-                    elif (b < lower) is True:
+                    elif (b < lower) == True:
                         mid = lower
                         rep = a
                         val = e._eval_interval(sym, a, mid)
                         val += self._eval_interval(sym, mid, b)
-                    elif (b > upper) is True:
+                    elif (b > upper) == True:
                         mid = upper
                         rep = a
                         val = e._eval_interval(sym, a, mid)
                         val += self._eval_interval(sym, mid, b)
-                    elif ((b >= lower) is True) and ((b <= upper) is True):
+                    elif ((b >= lower) == True) and ((b <= upper) == True):
                         rep = a
                         val = e._eval_interval(sym, a, b)
                     else:
@@ -365,8 +365,8 @@ class Piecewise(Function):
                         self.__eval_cond(upper == int_expr[n][1]):
                     upper = Min(upper, int_expr[n][0])
                 elif len(int_expr[n][1].free_symbols) and \
-                        (lower >= int_expr[n][0]) is not True and \
-                        (int_expr[n][1] == Min(lower, upper)) is not True:
+                        (lower >= int_expr[n][0]) != True and \
+                        (int_expr[n][1] == Min(lower, upper)) != True:
                     upper = Min(upper, int_expr[n][0])
                 elif self.__eval_cond(upper > int_expr[n][0]) and \
                         self.__eval_cond(upper <= int_expr[n][1]):
@@ -375,7 +375,7 @@ class Piecewise(Function):
                         self.__eval_cond(upper < int_expr[n][1]):
                     int_expr[n][0] = Max(upper, int_expr[n][0])
 
-            if self.__eval_cond(lower >= upper) is not True:  # Is it still an interval?
+            if self.__eval_cond(lower >= upper) != True:  # Is it still an interval?
                 int_expr.append([lower, upper, expr])
             if orig_cond == targetcond:
                 return [(lower, upper, None)]
@@ -409,14 +409,14 @@ class Piecewise(Function):
         holes = []
         curr_low = a
         for int_a, int_b, expr in int_expr:
-            if (curr_low < int_a) is True:
+            if (curr_low < int_a) == True:
                 holes.append([curr_low, Min(b, int_a), default])
-            elif (curr_low >= int_a) is not True:
+            elif (curr_low >= int_a) != True:
                 holes.append([curr_low, Min(b, int_a), default])
             curr_low = Min(b, int_b)
-        if (curr_low < b) is True:
+        if (curr_low < b) == True:
             holes.append([Min(b, curr_low), b, default])
-        elif (curr_low >= b) is not True:
+        elif (curr_low >= b) != True:
             holes.append([Min(b, curr_low), b, default])
 
         if holes and default is not None:
@@ -507,6 +507,15 @@ class Piecewise(Function):
             if diff.is_commutative:
                 return diff.is_zero
         return None
+
+    def as_expr_set_pairs(self):
+        exp_sets = []
+        U = S.UniversalSet
+        for expr, cond in self.args:
+            cond_int = U.intersect(cond.as_set())
+            U = U - cond_int
+            exp_sets.append((expr, cond_int))
+        return exp_sets
 
 
 def piecewise_fold(expr):

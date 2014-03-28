@@ -474,9 +474,9 @@ def _rewrite_gamma(f, s, a, b):
             return c < b_
         if b_ is None:
             return c <= a_
-        if (c >= b_) is True:
+        if (c >= b_) == True:
             return False
-        if (c <= a_) is True:
+        if (c <= a_) == True:
             return True
         if is_numer:
             return None
@@ -620,8 +620,8 @@ def _rewrite_gamma(f, s, a, b):
         elif isinstance(fact, gamma):
             a, b = linear_arg(fact.args[0])
             if is_numer:
-                if (a > 0 and (left(-b/a, is_numer) is False)) or \
-                   (a < 0 and (left(-b/a, is_numer) is True)):
+                if (a > 0 and (left(-b/a, is_numer) == False)) or \
+                   (a < 0 and (left(-b/a, is_numer) == True)):
                     raise NotImplementedError(
                         'Gammas partially over the strip.')
             ugammas += [(a, b)]
@@ -918,9 +918,9 @@ def _simplifyconds(expr, s, a):
         n = power(ex2)
         if n is None:
             return None
-        if n > 0 and (abs(ex1) <= abs(a)**n) is True:
+        if n > 0 and (abs(ex1) <= abs(a)**n) == True:
             return False
-        if n < 0 and (abs(ex1) >= abs(a)**n) is True:
+        if n < 0 and (abs(ex1) >= abs(a)**n) == True:
             return True
 
     def replie(x, y):
@@ -934,13 +934,14 @@ def _simplifyconds(expr, s, a):
         return (x < y)
 
     def replue(x, y):
-        if bigger(x, y) in (True, False):
+        b = bigger(x, y)
+        if b == True or b == False:
             return True
         return Unequality(x, y)
 
     def repl(ex, *args):
-        if isinstance(ex, bool):
-            return ex
+        if ex == True or ex == False:
+            return bool(ex)
         return ex.replace(*args)
     expr = repl(expr, StrictLessThan, replie)
     expr = repl(expr, StrictGreaterThan, lambda x, y: replie(y, x))
@@ -1027,7 +1028,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     conds = conds2
 
     def cnt(expr):
-        if isinstance(expr, bool):
+        if expr == True or expr == False:
             return 0
         return expr.count_ops()
     conds.sort(key=lambda x: (-x[0], cnt(x[1])))
@@ -1037,8 +1038,8 @@ def _laplace_transform(f, t, s_, simplify=True):
     a, aux = conds[0]
 
     def sbs(expr):
-        if isinstance(expr, bool):
-            return expr
+        if expr == S.true or expr == S.false:
+            return bool(expr)
         return expr.subs(s, s_)
     if simplify:
         F = _simplifyconds(F, s, a)

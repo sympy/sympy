@@ -33,6 +33,10 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy.polys.orthopolys import dup_chebyshevt
 
+from sympy.polys.rings import ring
+
+from sympy.polys.ring_series import rs_compose_add
+
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
@@ -256,15 +260,25 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
 
     if op is Add:
         # mp1a = mp1.subs({x: x - y})
-        (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
-        r = p1.compose(p2)
-        mp1a = r.as_expr()
+        if dom == QQ:
+            R, X = ring('X', QQ)
+            p1 = R(dict_from_expr(mp1)[0])
+            p2 = R(dict_from_expr(mp2)[0])
+        else:
+            (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
+            r = p1.compose(p2)
+            mp1a = r.as_expr()
+
     elif op is Mul:
         mp1a = _muly(mp1, x, y)
     else:
         raise NotImplementedError('option not available')
 
-    r = resultant(mp1a, mp2, gens=[y, x])
+    if op is Mul or dom != QQ:
+        r = resultant(mp1a, mp2, gens=[y, x])
+    else:
+        r = rs_compose_add(p1, p2)
+        r = expr_from_dict(r.as_expr_dict(), x)
 
     deg1 = degree(mp1, x)
     deg2 = degree(mp2, y)
