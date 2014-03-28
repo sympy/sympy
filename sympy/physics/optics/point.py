@@ -1,3 +1,17 @@
+"""
+Point class for use in geometrical optics
+
+Contains
+========
+
+Point
+
+"""
+
+#TODO
+#Enhance reflection property
+#Add refraction property
+
 from __future__ import print_function, division
 
 from sympy import Matrix, sqrt
@@ -53,6 +67,16 @@ class Point(object):
         else:
             raise TypeError("Operation not supported for foreign objects")
 
+    def __mul__(self, factor):
+        """Multiply coordinates by a factor"""
+
+        return Point(*[i*sympify(factor) for i in self._coords])
+
+    def __div__(self, divisor):
+        """Divide coordinates by a divisor"""
+
+        return Point(*[i/sympify(factor) for i in self._coords])
+
     @property
     def x(self):
         """
@@ -65,6 +89,7 @@ class Point(object):
         >>> p = Point(2, 1, 3)
         >>> p.x
         2
+
         """
 
         return self._coords[0]
@@ -81,6 +106,7 @@ class Point(object):
         >>> p = Point(2, 1, 3)
         >>> p.y
         1
+
         """
 
         return self._coords[1]
@@ -97,6 +123,7 @@ class Point(object):
         >>> p = Point(2, 1, 3)
         >>> p.z
         3
+
         """
 
         if(len(self._coords) > 2):
@@ -116,6 +143,7 @@ class Point(object):
         >>> p = Point(3, 1, 7)
         >>> p.length
         0
+
         """
         return S.Zero
 
@@ -280,6 +308,56 @@ class Point(object):
                     rational=True)
                 )
             )
+
+    def translate(self, x, y, z=0):
+        """
+        Translate the point by adding provided values to the coordinates.
+
+        Parameters
+        ==========
+
+        x : x value
+        y : y value
+        z : z value(if the point is 3D)
+
+        Examples
+        ========
+
+        >>> from sympy.physics.optics import *
+        >>> p = Point(2, 3, 4)
+        >>> p.translate(2, 0, 0)
+        >>> p
+        Point(4, 3, 4)
+
+        """
+        self._coords = list(self._coords)
+        self._coords[0] += sympify(x)
+        self._coords[1] += sympify(y)
+        if(len(self._coords) > 2):
+            self._coords[2] += sympify(z)
+
+    def reflect(self, **kwargs):
+        """
+        Reflection of point about an axis, line or plane
+
+        Examples
+        ========
+
+        >>> from sympy.physics.optics import *
+        >>> p = Point(2, 3)
+        >>> p.reflect(axis = 'x')
+        >>> p
+        Point(2, -3)
+
+        """
+
+        self._coords = list(self._coords)
+        if(len(self._coords) == 2):
+	        if 'axis' in kwargs:
+	            if kwargs['axis'] == 'x':
+	                self._coords[1] *= -1
+	            elif kwargs['axis'] == 'y':
+	                self._coords[0] *= -1
 
     def __repr__(self):
         if(len(self._coords) > 2):
