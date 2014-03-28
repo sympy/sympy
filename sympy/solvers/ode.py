@@ -406,7 +406,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
           It should be given in the form of ``{f(x0): x1, f(x).diff(x).subs(x, x2):
           x3}`` and so on. For now initial conditions are implemented only for
           power series solutions of first-order differential equations which should
-          be given in the form of ``{f(x0): x1}`` (See Issue 1621). If nothing is
+          be given in the form of ``{f(x0): x1}`` (See issue 4720). If nothing is
           specified for this case ``f(0)`` is assumed to be ``C0`` and the power
           series solution is calculated about 0.
 
@@ -828,7 +828,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         ## Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
         r = collect(
             reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
-        if r and r[c] != 0 and r[n] != 1:  # See issue 1577
+        if r and r[c] != 0 and r[n] != 1:  # See issue 4676
             r['a'] = a
             r['b'] = b
             r['c'] = c
@@ -912,7 +912,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
-                # like f(2*x).diff(x).  See issue 1525 and issue 1620.
+                # like f(2*x).diff(x).  See issue 4624 and issue 4719.
                 pass
 
         # Any first order ODE can be ideally solved by the Lie Group
@@ -1136,7 +1136,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if order == 0:
                 if x in coeff.free_symbols:
                     return False
-                return f(x) not in coeff.atoms()
+                return f(x) not in coeff.free_symbols
             if coeff.is_Mul:
                 if coeff.has(f(x)):
                     return False
@@ -1397,7 +1397,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             msg = ""
         SymPyDeprecationWarning(msg, feature="The order of the "
             "arguments sol and func to checkodesol()",
-            useinstead="checkodesol(ode, sol, func)", issue=3384,
+            useinstead="checkodesol(ode, sol, func)", issue=6483,
         ).warn()
         sol, func = func, sol
     elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):
@@ -2742,6 +2742,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x, y
     >>> f = Function("f")
@@ -2905,6 +2906,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x, y
     >>> f = Function("f")
@@ -3532,6 +3534,7 @@ def ode_1st_power_series(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, Derivative, pprint, exp
     >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
@@ -4156,7 +4159,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
 
     if r.get('simplify', True):
         wr = simplify(wr)  # We need much better simplification for
-                           # some ODEs. See issue 1563, for example.
+                           # some ODEs. See issue 4662, for example.
 
         # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
@@ -4501,6 +4504,7 @@ def _lie_group_remove(coords):
 
     Examples
     ========
+
     >>> from sympy.solvers.ode import _lie_group_remove
     >>> from sympy import Function
     >>> from sympy.abc import x, y

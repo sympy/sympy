@@ -1,7 +1,7 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
-        Or, Q, re, S, sin, sqrt, Symbol, Union)
+        Or, Q, re, S, sin, sqrt, Symbol, Union, Integral, Sum, Function)
 from sympy.assumptions import assuming
 from sympy.abc import x, y
 from sympy.solvers.inequalities import (reduce_inequalities,
@@ -70,9 +70,9 @@ def test_reduce_poly_inequalities_real_relational():
         assert reduce_rational_inequalities(
             [[Le(x**2, 0)]], x, relational=True) == Eq(x, 0)
         assert reduce_rational_inequalities(
-            [[Lt(x**2, 0)]], x, relational=True) is False
+            [[Lt(x**2, 0)]], x, relational=True) == False
         assert reduce_rational_inequalities(
-            [[Ge(x**2, 0)]], x, relational=True) is True
+            [[Ge(x**2, 0)]], x, relational=True) == True
         assert reduce_rational_inequalities(
             [[Gt(x**2, 0)]], x, relational=True) == Or(Lt(x, 0), Gt(x, 0))
         assert reduce_rational_inequalities(
@@ -219,10 +219,19 @@ def test_hacky_inequalities():
     assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
 
 
-def test_issue_3244():
+def test_issue_6343():
     eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
     assert reduce_inequalities(eq, Q.real(x)) == \
         And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
+
+
+def test_issue_5526():
+    assert str(reduce_inequalities(S(0) <= x + Integral(y**2, (y, 1, 3)) - 1, True, [x])) == \
+        '-Integral(y**2, (y, 1, 3)) + 1 <= x'
+    f = Function('f')
+    e = Sum(f(x),(x, 1, 3))
+    assert str(reduce_inequalities(S(0) <= x + e + y**2, True, [x])) == \
+        '-y**2 - Sum(f(x), (x, 1, 3)) <= x'
 
 
 def test_solve_univariate_inequality():
@@ -234,10 +243,10 @@ def test_solve_univariate_inequality():
         Union(Interval(1, 2), Interval(3, oo))
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
         Or(And(S.One <= x, x <= 2), x >= 3)
-    # github's issue #2785:
+    # issue 2785:
     assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
         Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),
               Interval(S(1)/2 + sqrt(5)/2, oo, True, True))
-    # github's issue #2794:
+    # issue 2794:
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)

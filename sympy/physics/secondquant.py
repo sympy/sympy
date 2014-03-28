@@ -2314,7 +2314,7 @@ def evaluate_deltas(e):
         deltas = []
         indices = {}
         for i in e.args:
-            for s in i.atoms():
+            for s in i.free_symbols:
                 if s in indices:
                     indices[s] += 1
                 else:

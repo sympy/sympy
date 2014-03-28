@@ -62,7 +62,7 @@ def idiff(eq, y, x, n=1):
         raise ValueError("expecting x-dependent symbol(s) but got: %s" % y)
 
     f = dict([(s, Function(
-        s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
+        s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
     dydx = Function(y.name)(x).diff(x)
     eq = eq.subs(f)
     derivs = {}

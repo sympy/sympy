@@ -1,6 +1,6 @@
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
-from sympy import erf
+from sympy import erf, Integral
 from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
     InOutArgument)
@@ -48,6 +48,10 @@ def test_Routine_argument_order():
     i = Idx('i', m)
     r = Routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
     assert [ arg.name for arg in r.arguments ] == [B.label, A.label, m]
+
+    expr = Integral(x*y*z, (x, 1, 2), (y, 1, 3))
+    r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
+    assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
 
 
 def test_empty_c_code():

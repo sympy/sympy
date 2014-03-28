@@ -921,7 +921,7 @@ class airyai(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()
@@ -1091,7 +1091,7 @@ class airybi(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()
@@ -1243,7 +1243,7 @@ class airyaiprime(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()
@@ -1401,7 +1401,7 @@ class airybiprime(AiryBase):
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
-        symbs = arg.atoms(Symbol)
+        symbs = arg.free_symbols
 
         if len(symbs) == 1:
             z = symbs.pop()
