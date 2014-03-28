@@ -1451,7 +1451,7 @@ class Mul(Expr, AssocOp):
                 correct_o = o
 
         nuse = n + 1
-        while not correct_o.contains(res.getO()):
+        while res.getO() and not correct_o.contains(res.getO()):
             terms = [t.nseries(x, n=nuse, logx=logx) for t in args]
             res = powsimp(self.func(*([exact] + terms)).expand(), combine='exp', deep=True)
             nuse += 1
