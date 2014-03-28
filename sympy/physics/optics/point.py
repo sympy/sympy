@@ -4,7 +4,8 @@ Point class for use in geometrical optics
 Contains
 ========
 
-Point
+* Point
+* collinear_points
 
 """
 
@@ -19,7 +20,7 @@ from sympy.core import S, sympify
 from sympy.simplify import simplify, nsimplify
 from sympy.core.compatibility import xrange
 
-__all__ = ['Point']
+__all__ = ['Point', 'collinear_points', 'coplanar_points']
 
 
 class Point(object):
@@ -130,91 +131,6 @@ class Point(object):
             return self._coords[2]
         else:
             raise AttributeError("It is a 2-D point")
-
-    @property
-    def length(self):
-        """
-        Treating a Point as a Line, this returns 0 for the length of a Point.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.optics import Point
-        >>> p = Point(3, 1, 7)
-        >>> p.length
-        0
-
-        """
-        return S.Zero
-
-    def is_collinear(*points):
-        """
-        This method tests whether passed points are collinear or not.
-
-        It uses slope method for 2-D points and matrix method for 3-D
-        points.
-
-        Parameters
-        ==========
-
-        points : sequence of Point
-
-        Returns
-        =======
-
-        is_collinear : boolean
-
-        Examples
-        ========
-
-        >>> from sympy.physics.optics import Point
-        >>> p1 = Point(2, 2, 2)
-        >>> p2 = Point(-3, -3, -3)
-        >>> p3 = Point(0, 0, 0)
-        >>> p4 = Point(1, 1, 1)
-        >>> p5 = Point(1, 2, 3)
-        >>> Point.is_collinear(p1, p2, p3, p4)
-        True
-        >>> Point.is_collinear(p1, p2, p3, p4, p5)
-        False
-
-        """
-
-        points = list(set(points))
-        if len(points) == 0:
-            return False
-        if len(points) <= 2:
-            return True  # two points always form a line
-
-        if(len(points[0]._coords) == 2):
-            p1 = points[0]
-            p2 = points[1]
-            v1 = p2 - p1
-            x1, y1 = v1._coords
-            rv = True
-            for p3 in points[2:]:
-                x2, y2 = (p3 - p1)._coords
-                test = simplify(x1*y2 - y1*x2).equals(0)
-                if test is False:
-                    return False
-                if rv and not test:
-                    rv = test
-            return rv
-        else:
-            pv1 = [i - j for i, j in zip(points[0]._coords, points[1]._coords)]
-            pv2 = [i - j for i, j in zip(points[1]._coords, points[2]._coords)]
-            rank = Matrix([pv1, pv2]).rank()
-            if(rank != 1):
-                return False
-            for i in xrange(1, len(points) - 3):
-                pv1 = [i - j for i, j in zip(points[i]._coords,
-                                             points[i + 1]._coords)]
-                pv2 = [i - j for i, j in zip(points[i + 1]._coords,
-                                             points[i + 2]._coords)]
-                rank = Matrix([pv1, pv2]).rank()
-                if(rank != 1):
-                    return False
-            return True
 
     def distance(self, point):
         """
@@ -352,11 +268,11 @@ class Point(object):
         """
 
         if(len(self._coords) == 2):
-	        if 'axis' in kwargs:
-	            if kwargs['axis'] == 'x':
-	                self._coords[1] *= -1
-	            elif kwargs['axis'] == 'y':
-	                self._coords[0] *= -1
+            if 'axis' in kwargs:
+                if kwargs['axis'] == 'x':
+                    self._coords[1] *= -1
+                elif kwargs['axis'] == 'y':
+                    self._coords[0] *= -1
 
     def __repr__(self):
         if(len(self._coords) > 2):
@@ -365,3 +281,118 @@ class Point(object):
         else:
             return "Point(" + repr(self._coords[0]) + ", " + \
                 repr(self._coords[1]) + ")"
+
+
+def collinear_points(*points):
+    """
+    This function tests whether passed points are collinear or not.
+
+    It uses slope method for 2-D points and matrix method for 3-D
+    points.
+
+    Parameters
+    ==========
+
+    points : a set of points
+
+    Returns
+    =======
+
+    boolean
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics import *
+    >>> p1 = Point(2, 2, 2)
+    >>> p2 = Point(-3, -3, -3)
+    >>> p3 = Point(0, 0, 0)
+    >>> p4 = Point(1, 1, 1)
+    >>> p5 = Point(1, 2, 3)
+    >>> collinear_points(p1, p2, p3, p4)
+    True
+    >>> collinear_points(p1, p2, p3, p4, p5)
+    False
+
+    """
+
+    points = list(set(points))
+    if len(points) == 0:
+        return False
+    if len(points) <= 2:
+        return True  # two points always form a line
+
+    if(len(points[0]._coords) == 2):
+        p1 = points[0]
+        p2 = points[1]
+        v1 = p2 - p1
+        x1, y1 = v1._coords
+        rv = True
+        for p3 in points[2:]:
+            x2, y2 = (p3 - p1)._coords
+            test = simplify(x1*y2 - y1*x2).equals(0)
+            if test is False:
+                return False
+            if rv and not test:
+                rv = test
+        return rv
+    else:
+        for i in xrange(0, len(points) - 3):
+            pv1 = [j - k for j, k in zip(points[i]._coords,
+                                         points[i + 1]._coords)]
+            pv2 = [j - k for j, k in zip(points[i + 1]._coords,
+                                         points[i + 2]._coords)]
+            rank = Matrix([pv1, pv2]).rank()
+            if(rank != 1):
+                return False
+        return True
+
+
+def coplanar_points(*points):
+    """
+    This function tests whether passed points are coplanar or not.
+
+    It uses the fact that the triple scalar product of three vectors
+    vanishes iff the vectors are coplanar. Which means that the volume
+    of the solid described by them will have to be zero for coplanarity.
+
+    Parameters
+    ==========
+
+    A set of points 3D points
+
+    Returns
+    =======
+
+    boolean
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics import *
+    >>> p1 = Point(1, 2, 2)
+    >>> p2 = Point(2, 7, 2)
+    >>> p3 = Point(0, 0, 2)
+    >>> p4 = Point(1, 1, 2)
+    >>> p5 = Point(1, 2, 2)
+    >>> coplanar_points(p1, p2, p3, p4, p5)
+    True
+    """
+
+    if(len(points) == 0):
+    	raise Exception("No parameters provided")
+    for point in points:
+        if(len(point._coords) < 3):
+            return True #As 2D points are always coplanar
+    if(len(points) < 4):
+        return True #These cases are always True
+    for i in xrange(0, len(points) - 3):
+        pv1 = [j - k for j, k in zip(points[i]._coords, points[i + 1]._coords)]
+        pv2 = [j - k for j, k in zip(points[i + 1]._coords, points[i + 2]._coords)]
+        print(i)
+        pv3 = [j - k for j, k in zip(points[i + 2]._coords, points[i + 3]._coords)]
+        pv1, pv2, pv3 = Matrix(pv1), Matrix(pv2), Matrix(pv3)
+        stp = pv1.dot(pv2.cross(pv3))
+        if stp != 0:
+            return False
+    return True
