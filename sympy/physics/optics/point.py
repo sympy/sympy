@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Matrix, sqrt, Rational
+from sympy import Matrix, sqrt
 from sympy.core import S, sympify
 from sympy.simplify import simplify, nsimplify
 from sympy.core.compatibility import xrange
