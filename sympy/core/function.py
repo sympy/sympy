@@ -1,6 +1,3 @@
-
-
-
 """
 There are three types of functions implemented in SymPy:
 
