@@ -1,3 +1,6 @@
+
+
+
 """
 There are three types of functions implemented in SymPy:
 
@@ -2333,16 +2336,15 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-                o = C.Symbol(a.func.__name__.upper())
-                if (not expr is true and not expr is false):
+                if (not a is true and
+                    not a is false and
+                    not a.is_Symbol and
+                    not a.__class__.__name__ is 'Basic' and
+                    not a.__class__.__name__ is 'Tuple'):
+                    o = C.Symbol(a.func.__name__.upper())
                     ops.append(o*(len(a.args)-1))
-                    args_len = len(a.args)
-                    aargs = list(a.args)
-                    for i in range(args_len):
-                        if (not aargs[i].is_Symbol and
-                            not  aargs[i] is true and
-                            not  aargs[i] is false):
-                            args.append(aargs[i])
+                if not a.is_Symbol:
+                    args.extend(a.args)
 
     if not ops:
         if visual:
