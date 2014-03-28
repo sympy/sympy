@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
+from sympy import Matrix
 from sympy.core import S, sympify
+from sympy.core.compatibility import xrange
 
 __all__ = ['Point']
 
@@ -23,6 +25,14 @@ class Point(object):
         if ts is not to:
             return False
         return self._coords == other._coords
+
+    def __sub__(self, other):
+        if(len(self._coords) > 2):
+            return Point(self._coords[0] - other._coords[0], self._coords[1]\
+                - other._coords[1], self._coords[2] - other._coords[2])
+        else:
+            return Point(self._coords[0] - other._coords[0], self._coords[1]\
+                - other._coords[1])
 
     @property
     def x(self):
@@ -90,28 +100,42 @@ class Point(object):
         """
         return S.Zero
 
-    def is_collinear(self, *points):
+    def is_collinear(*points):
         points = list(set(points))
-        if(len(self._coords) == 2):
-            if len(points) == 0:
-                return False
-            if len(points) <= 2:
-                return True  # two points always form a line
+        if len(points) == 0:
+            return False
+        if len(points) <= 2:
+            return True  # two points always form a line
+
+        if(len(points[0]._coords) == 2):
             points = [Point(a) for a in points]
             p1 = points[0]
             p2 = points[1]
             v1 = p2 - p1
-            x1, y1 = v1.args
+            x1, y1 = v1._coords
             rv = True
             for p3 in points[2:]:
-                x2, y2 = (p3 - p1).args
+                x2, y2 = (p3 - p1)._coords
                 test = simplify(x1*y2 - y1*x2).equals(0)
                 if test is False:
                     return False
                 if rv and not test:
                     rv = test
             return rv
-        #TODO: 3D collinearity
+        else:
+            #First two position vectors
+            pv1 = [i - j for i, j in zip(points[0]._coords, points[1]._coords)]
+            pv2 = [i - j for i, j in zip(points[1]._coords, points[2]._coords)]
+            rank = Matrix([pv1, pv2]).rank()
+            if(rank != 1):
+                return False
+            for i in xrange(1, len(points) - 3):
+                pv1 = [i - j for i, j in zip(points[i]._coords, points[i + 1]._coords)]
+                pv2 = [i - j for i, j in zip(points[i + 1]._coords, points[i + 2]._coords)]
+                rank = Matrix([pv1, pv2]).rank()
+                if(rank != 1):
+                    return False
+            return True
 
     def __repr__(self):
         if(len(self._coords) > 2):
