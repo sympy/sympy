@@ -118,9 +118,9 @@ before_install:
       sudo apt-get install sagemath-upstream-binary;
     fi
 install:
+  - pip install multipledispatch --use-mirrors;
   - if [[ "${TEST_SAGE}" != "true" ]]; then
       python setup.py install;
-      pip install multipledispatch --use-mirrors;
     fi
 script:
   - bin/test_travis.sh
