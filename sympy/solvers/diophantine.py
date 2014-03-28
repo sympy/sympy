@@ -80,7 +80,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
                     sols.add(merge_solution(var, var_t, sol))
 
         elif eq_type == "univariable":
-            sols = solution
+            sols.add(tuple(solution))
 
     return sols
 
