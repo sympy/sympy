@@ -6,6 +6,7 @@ Contains
 
 * Point
 * collinear_points
+* coplanar_points
 
 """
 
@@ -380,17 +381,21 @@ def coplanar_points(*points):
     """
 
     if(len(points) == 0):
-    	raise Exception("No parameters provided")
+        raise Exception("No parameters provided")
     for point in points:
         if(len(point._coords) < 3):
-            return True #As 2D points are always coplanar
+            return True  # As 2D points are always coplanar
     if(len(points) < 4):
-        return True #These cases are always True
+        return True  # These cases are always True
     for i in xrange(0, len(points) - 3):
         pv1 = [j - k for j, k in zip(points[i]._coords, points[i + 1]._coords)]
-        pv2 = [j - k for j, k in zip(points[i + 1]._coords, points[i + 2]._coords)]
+        pv2 = [j - k for j, k in zip(
+            points[i + 1]._coords,
+            points[i + 2]._coords)]
         print(i)
-        pv3 = [j - k for j, k in zip(points[i + 2]._coords, points[i + 3]._coords)]
+        pv3 = [j - k for j, k in zip(
+            points[i + 2]._coords,
+            points[i + 3]._coords)]
         pv1, pv2, pv3 = Matrix(pv1), Matrix(pv2), Matrix(pv3)
         stp = pv1.dot(pv2.cross(pv3))
         if stp != 0:
