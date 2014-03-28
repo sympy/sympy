@@ -67,9 +67,16 @@ def satisfiable(expr, return_model=True, algorithm="dpll2"):
     """
     Check satisfiability of a propositional sentence.
 
-    return_model:   Return a model when if expression is satisfiable.
-                    Faster when set to False.
-    algorithm:      Select algorithm to use for SAT solving - dpll/dpll2
+
+    Parameters
+    ==========
+
+    return_model: boolean, optional, default: True
+        Returns a model if expression is satisfiable. If only (UN)SAT
+        is required, then set to False
+
+    algorithm: string {'dpll', 'dpll2'}, optional, default: 'dpll2'
+        Select algorithm to use for SAT solving
 
 
     Examples
@@ -85,7 +92,6 @@ def satisfiable(expr, return_model=True, algorithm="dpll2"):
     True
     >>> satisfiable(A & ~A, return_model=False)
     False
-    >>> 
     """
 
     if expr is True:
@@ -112,14 +118,21 @@ def satisfiable(expr, return_model=True, algorithm="dpll2"):
 
 def pl_true(expr, model={}, deep=False):
     """
-    Returns the value of the expression under the given model.
+    Returns whether the given assignment is a model or not.
 
-    If the model does not specify the value for every proposition,
+    If the assignment does not specify the value for every proposition,
     this may return None to indicate 'not obvious'.
 
-    model:  dict containing the symbol, boolean value pair.
-    deep:   gives the value of the expression under partial
-            interpretations correctly. May still return None.
+
+    Parameters
+    ==========
+
+    model: dict, optional, default: {}
+        Mapping of symbols to boolean values to indicate assignment.
+
+    deep: boolean, optional, default: False
+        Gives the value of the expression under partial assignments
+        correctly. May still return None to indicate 'not obvious'.
 
 
     Examples
