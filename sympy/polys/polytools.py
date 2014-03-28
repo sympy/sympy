@@ -4083,7 +4083,7 @@ def degree(f, *gens, **args):
 
     F = sympify(f)
     if F.is_number:
-        if F == 0:
+        if F.is_zero:
             return -S.Infinity
         else:
             return S.Zero

@@ -1155,7 +1155,7 @@ def test_Poly_degree():
     assert Poly(2*y, x, y).degree(gen=y) == 1
     assert Poly(x*y, x, y).degree(gen=y) == 1
 
-    assert degree(1) == 0  # issue 3970
+    assert degree(1) == 0  # issue 7069
     assert degree(1, x) == 0
     assert degree(x, x) == 1
 
