@@ -33,7 +33,7 @@ class Point(object):
             raise Exception("At least two coordinates are required")
         elif(len(args) > 3):
             raise Exception("Maximum three coordinates are allowed")
-        self._coords = args
+        self._coords = list(args)
 
     def __eq__(self, other):
         ts, to = type(self), type(other)
@@ -330,7 +330,7 @@ class Point(object):
         Point(4, 3, 4)
 
         """
-        self._coords = list(self._coords)
+
         self._coords[0] += sympify(x)
         self._coords[1] += sympify(y)
         if(len(self._coords) > 2):
@@ -351,7 +351,6 @@ class Point(object):
 
         """
 
-        self._coords = list(self._coords)
         if(len(self._coords) == 2):
 	        if 'axis' in kwargs:
 	            if kwargs['axis'] == 'x':
