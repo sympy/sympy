@@ -2,7 +2,7 @@ from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
     count_ops, S, And, I, pi, Eq, Or, Not, Xor ,Nand ,Nor, Implies,Equivalent, ITE
 
 x, y, z = symbols('x,y,z')
-
+a, b, c = symbols('a,b,c')
 
 def test_count_ops_non_visual():
     def count(val):
@@ -79,6 +79,7 @@ def test_count_ops_visual():
 
     assert count(Derivative(x, x)) == D
     assert count(Integral(x, x) + 2*x/(1 + x)) == G + DIV + MUL + 2*ADD
+    assert count(Basic()) is S.Zero
 
     assert count({x + 1: sin(x)}) == ADD + SIN
     assert count([x + 1, sin(x) + y, None]) == ADD + SIN + ADD
@@ -87,13 +88,17 @@ def test_count_ops_visual():
     assert count([x + 1, sin(x)*y, None]) == SIN + ADD + MUL
     assert count([]) is S.Zero
 
+    assert count(Basic(x, x + y)) == ADD
+    assert count(Basic(Basic(), Basic(x,x+y))) ==  ADD
     assert count(Or(x,y)) == OR
     assert count(And(x,y)) == AND
+    assert count(Or(x,Or(y,And(z,a)))) == AND + 2*OR
     assert count(Nor(x,y)) == AND
     assert count(Nand(x,y)) == OR
     assert count(Xor(x,y)) == 2*AND + OR
     assert count(Implies(x,y)) == IMPLIES
     assert count(Equivalent(x,y)) == EQUIVALENT
     assert count(ITE(x,y,z)) == 2*AND + OR
+    assert count(And((((x,y+z))))) == ADD
 
     assert count(Eq(x + y, S(2))) == ADD
