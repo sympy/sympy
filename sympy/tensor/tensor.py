@@ -54,6 +54,9 @@ class TIDS(CantSympify):
     To create a ``TIDS`` object via the standard constructor, the required
     arguments are
 
+    WARNING: this class is meant as an internal representation of tensor data
+    structures and should not be directly accessed by end users.
+
     Parameters
     ==========
 
@@ -536,6 +539,9 @@ class VTIDS(TIDS):
 
 class _TensorDataLazyEvaluator(CantSympify):
     """
+    EXPERIMENTAL: do not rely on this class, it may change without deprecation
+    warnings in future versions of SymPy.
+
     This object contains the logic to associate components data to a tensor
     expression. Components data are set via the ``.data`` property of tensor
     expressions, is stored inside this class as a mapping between the tensor

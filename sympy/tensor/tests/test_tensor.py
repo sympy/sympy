@@ -1499,74 +1499,11 @@ def test_valued_non_diagonal_metric():
     mmatrix = Matrix(ndm_matrix)
     assert (NA(n0)*NA(-n0)).data == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
 
-#
-# def test_valued_tensor_strip():
-#     numpy = import_module("numpy")
-#     if numpy is None:
-#         skip("numpy not installed.")
-#
-#     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-#      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
-#
-#     sA = A(i0).strip()
-#     sB = B(-i0).strip()
-#     sAB = AB(i0, i1).strip()
-#
-#     assert sA.data is None
-#     assert sB.data is None
-#     assert sAB.data is None
-#
-#     sthA = A.strip()
-#     sthB = B.strip()
-#     sthAB = AB.strip()
-#
-#     assert sA.data is None
-#     assert sB.data is None
-#     assert sAB.data is None
-
-
-# def test_valued_tensor_applyfunc():
-#     numpy = import_module("numpy")
-#     if numpy is None:
-#         skip("numpy not installed.")
-#
-#     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-#      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
-#
-#     Adata0 = A.data
-#     Bdata0 = B.data
-#
-#     A.data = A(i0).data.applyfunc(lambda x: x**2)
-#     B.data = B(i0).data.applyfunc(lambda x: x**3)
-#
-#     for i in range(4):
-#         assert A(i0)[i] == Adata0[i]**2
-#         assert B(i0)[i] == Bdata0[i]**3
-#
-#     B.data = B(-i0).applyfunc(lambda x: x**3)
-#     for i in range(4):
-#         assert B(i0)[i] == Bdata0[i]**9 * (-1 if i else 1)
-#
-#     Adata1 = A.data
-#     Bdata1 = B.data
-#
-#     A.data = A.data.applyfunc(lambda x: x + 33)
-#     B.data = B.data.applyfunc(lambda x: x + 33)
-#     AB.data = AB.data.applyfunc(lambda x: x + 33)
-#
-#     assert (A(i0)*A(-i0)).expand() == ((E + 33)**2 - (px + 33)**2 - (py + 33)**2 - (pz + 33)**2).expand()
-#     assert B(i0).get_matrix() == Matrix([33, 34, 35, 36])
-#     assert AB(i0, i1).get_matrix() == Matrix([
-#         [34, 33, 33, 33],
-#         [33, 32, 33, 33],
-#         [33, 33, 32, 33],
-#         [33, 33, 33, 32],
-#     ])
 
 def test_valued_assign_numpy_ndarray():
     numpy = import_module("numpy")
     if numpy is None:
-        return
+        skip("numpy not installed.")
 
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
