@@ -245,7 +245,7 @@ def refine_MatMul(expr, assumptions):
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
     >>> expr = X * X.T
-    >>> print expr
+    >>> print(expr)
     X*X'
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(expr))
