@@ -6,7 +6,7 @@ from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer,
 
 from sympy.simplify.simplify import rad_rationalize, _mexpand
 from sympy.ntheory.modular import solve_congruence
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
@@ -98,17 +98,13 @@ def merge_solution(var, var_t, solution):
     original equation. This function converts `(t, t)` into `(t, t, n_{1})`
     where `n_{1}` is an integer parameter.
     """
-    # currently more than 3 parameters are not required.
-    n1, n2, n3 = symbols("n1, n2, n3", Integer=True)
-    params = [n1, n2, n3]
-
     l = []
 
     if None in solution:
         return ()
 
     solution = iter(solution)
-    params = iter(params)
+    params = numbered_symbols("n", Integer=True, start=1)
 
     for v in var:
         if v in var_t:
