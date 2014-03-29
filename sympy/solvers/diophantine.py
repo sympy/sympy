@@ -106,9 +106,8 @@ def merge_solution(var, var_t, solution):
     count1 = 0
     count2 = 0
 
-    for i in solution:
-        if i is None:
-            return ()
+    if None in solution:
+        return ()
 
     for v in var:
         if v in var_t:
@@ -223,7 +222,7 @@ def classify_diop(eq):
     ([x, y], {1: 5, x: 1, x**2: 1, y: 0, y**2: 1, x*y: -1}, 'binary_quadratic')
     """
     # Add Pow to this when we support exponential diophantine equations
-    if not (isinstance(eq, Add) or isinstance(eq, Mul) or isinstance(eq, Symbol)):
+    if not isinstance(eq, (Add, Mul, Symbol)):
         raise TypeError("Equation input format not supported")
 
     eq = eq.expand(force=True)
