@@ -55,3 +55,5 @@ def test_point_2d():
     assert p4 == Point(4, -6)
     p4.reflect(axis = 'y')
     assert p4 == Point(-4, -6)
+    p4.reflect(point = Point(7, 9))
+    assert p4 == Point(18, 24)
