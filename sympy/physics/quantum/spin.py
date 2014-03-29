@@ -773,7 +773,7 @@ class WignerD(Expr):
         if not len(args) == 6:
             raise ValueError('6 parameters expected, got %s' % args)
         args = sympify(args)
-        evaluate = hints.get('evaluate', global_evaluate[0])
+        evaluate = hints.get('evaluate', False)
         if evaluate:
             return Expr.__new__(cls, *args)._eval_wignerd()
         return Expr.__new__(cls, *args)
