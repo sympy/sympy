@@ -2327,20 +2327,16 @@ def count_ops(expr, visual=False):
         if not isinstance(expr, Basic):
             raise TypeError("Invalid type of expr")
         else:
-            true = sympify(True)
-            false = sympify(False)
             ops = []
             args = [expr]
             while args:
                 a = args.pop()
-                if (not a is true and
-                    not a is false and
-                    not a.is_Symbol and
+                if (not a.args is () and
                     not a.__class__.__name__ is 'Basic' and
                     not a.__class__.__name__ is 'Tuple'):
                     o = C.Symbol(a.func.__name__.upper())
                     ops.append(o*(len(a.args)-1))
-                if not a.is_Symbol:
+                if not a.args is ():
                     args.extend(a.args)
 
     if not ops:
