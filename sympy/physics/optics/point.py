@@ -399,7 +399,6 @@ def coplanar_points(*points):
         pv2 = [j - k for j, k in zip(
             points[i + 1]._coords,
             points[i + 2]._coords)]
-        print(i)
         pv3 = [j - k for j, k in zip(
             points[i + 2]._coords,
             points[i + 3]._coords)]
