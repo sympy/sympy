@@ -12,7 +12,6 @@ Contains
 
 #TODO
 #Enhance reflection property
-#Add refraction property
 
 from __future__ import print_function, division
 
@@ -78,6 +77,14 @@ class Point(object):
         """Divide coordinates by a divisor"""
 
         return Point(*[i/sympify(factor) for i in self._coords])
+
+    def __repr__(self):
+        if(len(self._coords) > 2):
+            return "Point(" + repr(self._coords[0]) + ", " + \
+                repr(self._coords[1]) + ", " + repr(self._coords[2]) + ")"
+        else:
+            return "Point(" + repr(self._coords[0]) + ", " + \
+                repr(self._coords[1]) + ")"
 
     @property
     def x(self):
@@ -265,6 +272,9 @@ class Point(object):
         >>> p.reflect(axis = 'x')
         >>> p
         Point(2, -3)
+        >>> p.reflect(point = Point(1, 1))
+        >>> p
+        Point(0, 5)
 
         """
 
@@ -274,14 +284,11 @@ class Point(object):
                     self._coords[1] *= -1
                 elif kwargs['axis'] == 'y':
                     self._coords[0] *= -1
-
-    def __repr__(self):
-        if(len(self._coords) > 2):
-            return "Point(" + repr(self._coords[0]) + ", " + \
-                repr(self._coords[1]) + ", " + repr(self._coords[2]) + ")"
-        else:
-            return "Point(" + repr(self._coords[0]) + ", " + \
-                repr(self._coords[1]) + ")"
+            if 'point' in kwargs:
+                if isinstance(kwargs['point'], Point):
+                    pt = kwargs['point']
+                    self._coords[0] = 2 * pt.x - self.x
+                    self._coords[1] = 2 * pt.y - self.y
 
 
 def collinear_points(*points):
