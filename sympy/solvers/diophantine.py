@@ -103,19 +103,18 @@ def merge_solution(var, var_t, solution):
     params = [n1, n2, n3]
 
     l = []
-    count1 = 0
-    count2 = 0
 
     if None in solution:
         return ()
 
+    solution = iter(solution)
+    params = iter(params)
+
     for v in var:
         if v in var_t:
-            l.append(solution[count1])
-            count1 = count1 + 1
+            l.append(next(solution))
         else:
-            l.append(params[count2])
-            count2 = count2 + 1
+            l.append(next(params))
 
     return tuple(l)
 
