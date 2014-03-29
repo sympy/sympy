@@ -107,7 +107,7 @@ def merge_solution(var, var_t, solution):
     count2 = 0
 
     for i in solution:
-        if i == None:
+        if i is None:
             return ()
 
     for v in var:
