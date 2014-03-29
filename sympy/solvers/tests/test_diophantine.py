@@ -13,8 +13,8 @@ x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", Integer=True)
 
 def test_univariate():
 
-    assert diop_solve((x - 1)*(x - 2)**2) == set([Integer(1), Integer(2)])
-    assert diop_solve((x - 1)*(x - 2)) == set([Integer(1), Integer(2)])
+    assert diop_solve((x - 1)*(x - 2)**2) == set([(Integer(1),), (Integer(2),)])
+    assert diop_solve((x - 1)*(x - 2)) == set([(Integer(1),), (Integer(2),)])
 
 
 def test_linear():

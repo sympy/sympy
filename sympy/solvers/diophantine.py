@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
-    isprime, nextprime, integer_nthroot)
+    isprime, nextprime, integer_nthroot, Expr)
 
 from sympy.simplify.simplify import rad_rationalize, _mexpand
 from sympy.ntheory.modular import solve_congruence
@@ -10,6 +10,10 @@ from sympy.utilities import default_sort_key
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
+
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol
 
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
 'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
@@ -74,13 +78,10 @@ def diophantine(eq, param=symbols("t", Integer=True)):
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type in ["binary_quadratic",  "general_sum_of_squares"]:
+        elif eq_type in ["binary_quadratic",  "general_sum_of_squares", "univariable"]:
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
-
-        elif eq_type == "univariable":
-            sols.add(tuple(solution))
 
     return sols
 
@@ -105,15 +106,17 @@ def merge_solution(var, var_t, solution):
     count1 = 0
     count2 = 0
 
-    if None not in solution:
+    for i in solution:
+        if i == None:
+            return ()
 
-        for v in var:
-            if v in var_t:
-                l.append(solution[count1])
-                count1 = count1 + 1
-            else:
-                l.append(params[count2])
-                count2 = count2 + 1
+    for v in var:
+        if v in var_t:
+            l.append(solution[count1])
+            count1 = count1 + 1
+        else:
+            l.append(params[count2])
+            count2 = count2 + 1
 
     return tuple(l)
 
@@ -178,7 +181,7 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
 
         for soln in l:
             if isinstance(soln, Integer):
-                s.add(soln)
+                s.add((soln,))
         return s
 
     elif eq_type == "general_sum_of_squares":
@@ -219,6 +222,10 @@ def classify_diop(eq):
     >>> classify_diop(x**2 + y**2 - x*y + x + 5)
     ([x, y], {1: 5, x: 1, x**2: 1, y: 0, y**2: 1, x*y: -1}, 'binary_quadratic')
     """
+    # Add Pow to this when we support exponential diophantine equations
+    if not (isinstance(eq, Add) or isinstance(eq, Mul) or isinstance(eq, Symbol)):
+        raise TypeError("Equation input format not supported")
+
     eq = eq.expand(force=True)
     var = list(eq.free_symbols)
     var.sort(key=default_sort_key)
