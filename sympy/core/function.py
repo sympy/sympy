@@ -2331,9 +2331,9 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-                if (not a.args is () and
-                    not a.__class__.__name__ is 'Basic' and
-                    not a.__class__.__name__ is 'Tuple'):
+                if (not a.args == () and
+                    not a.__class__.__name__ == 'Basic' and
+                    not a.__class__.__name__ == 'Tuple'):
                     o = C.Symbol(a.func.__name__.upper())
                     ops.append(o*(len(a.args)-1))
                 if not a.args is ():
