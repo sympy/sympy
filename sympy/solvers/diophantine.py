@@ -11,6 +11,10 @@ from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
 
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol
+
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
 'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
 'diop_ternary_quadratic',  'square_factor', 'descent', 'diop_general_pythagorean',
@@ -218,7 +222,8 @@ def classify_diop(eq):
     >>> classify_diop(x**2 + y**2 - x*y + x + 5)
     ([x, y], {1: 5, x: 1, x**2: 1, y: 0, y**2: 1, x*y: -1}, 'binary_quadratic')
     """
-    if not isinstance(eq, Expr):
+    # Add Pow to this when we support exponential diophantine equations
+    if not (isinstance(eq, Add) or isinstance(eq, Mul) or isinstance(eq, Symbol)):
         raise TypeError("Equation input format not supported")
 
     eq = eq.expand(force=True)
