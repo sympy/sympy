@@ -1706,6 +1706,22 @@ def test_signsimp():
     assert signsimp(Eq(e, 0)) is S.true
     assert Abs(x - 1) == Abs(1 - x)
 
+def test_fibsimp():
+    assert simplify(fibonacci(n) + fibonacci(n - 1)) == fibonacci(n + 1)
+    assert simplify(-fibonacci(n + 1) - fibonacci(n)) == -fibonacci(n + 2)
+
+    assert simplify(fibonacci(n)**2 - fibonacci(n + m)*fibonacci(n - m)) == \
+        (-1)**(n - m) * fibonacci(m)**2
+
+    assert simplify(fibonacci(m)*fibonacci(n + 1) - \
+                   fibonacci(m + 1)*fibonacci(n)) == (-1)**n * fibonacci(m - n)
+
+    assert simplify(fibonacci(n) + fibonacci(n - 1) + fibonacci(n + 2)) == \
+        fibonacci(n + 3)
+
+    assert simplify(fibonacci(n) + fibonacci(n + 1) - fibonacci(m)**2 + \
+                   fibonacci(n + m) * fibonacci(-n + m) + 1 + sin(x)) == \
+        fibonacci(n + 2) - (-1)**(m - n) * fibonacci(n)**2 + 1 + sin(x)
 
 def test_besselsimp():
     from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh, cosine_transform
