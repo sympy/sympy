@@ -226,12 +226,12 @@ def test_issue_6343():
 
 
 def test_issue_5526():
-    assert str(reduce_inequalities(S(0) <= x + Integral(y**2, (y, 1, 3)) - 1, True, [x])) == \
-        '-Integral(y**2, (y, 1, 3)) + 1 <= x'
+    assert reduce_inequalities(S(0) <= x + Integral(y**2, (y, 1, 3)) - 1, True, [x]) == \
+        (-Integral(y**2, (y, 1, 3)) + 1 <= x)
     f = Function('f')
     e = Sum(f(x),(x, 1, 3))
-    assert str(reduce_inequalities(S(0) <= x + e + y**2, True, [x])) == \
-        '-y**2 - Sum(f(x), (x, 1, 3)) <= x'
+    assert reduce_inequalities(S(0) <= x + e + y**2, True, [x]) == \
+        (-y**2 - Sum(f(x), (x, 1, 3)) <= x)
 
 
 def test_solve_univariate_inequality():
