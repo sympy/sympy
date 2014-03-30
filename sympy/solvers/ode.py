@@ -1779,13 +1779,19 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         def _take(i):
             # return the lowest numbered constant symbol that appears in ``i``
             # else return ``i``
+            a = 1
             c = i.free_symbols & con_set
             if c:
-                return min(c, key=str)
+                if i.could_extract_minus_sign():
+                    a = -1
+                return a*min(c, key=str)
             return i
 
         if not (expr.has(x) and x in expr.free_symbols):
-            return constantsymbols[0]
+            a = 1
+            if expr.could_extract_minus_sign():
+                a = -1
+            return a*constantsymbols[0]
 
         # collect terms to get constants together
         new_expr = terms_gcd(expr, clear=False, deep=True, expand=False)
