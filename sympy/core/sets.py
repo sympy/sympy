@@ -752,53 +752,9 @@ class Union(Set, EvalfMixin):
 
         # Reduce sets using known rules
         if evaluate:
-            return Union.reduce(args)
+            return simplify_union(args)
 
         return Basic.__new__(cls, *args)
-
-    @staticmethod
-    def reduce(args):
-        """
-        Simplify a Union using known rules
-
-        We first start with global rules like
-        'Merge all FiniteSets'
-
-        Then we iterate through all pairs and ask the constituent sets if they
-        can simplify themselves with any other constituent
-        """
-
-        # ===== Global Rules =====
-        # Merge all finite sets
-        finite_sets = [x for x in args if x.is_FiniteSet]
-        if len(finite_sets) > 1:
-            finite_set = FiniteSet(x for set in finite_sets for x in set)
-            args = [finite_set] + [x for x in args if not x.is_FiniteSet]
-
-        # ===== Pair-wise Rules =====
-        # Here we depend on rules built into the constituent sets
-        args = set(args)
-        new_args = True
-        while(new_args):
-            for s in args:
-                new_args = False
-                for t in args - set((s,)):
-                    new_set = union_simp(s, t)
-                    # This returns None if s does not know how to intersect
-                    # with t. Returns the newly intersected set otherwise
-                    if new_set is not None:
-                        if not isinstance(new_set, set):
-                            new_set = set((new_set, ))
-                        new_args = (args - set((s, t))).union(new_set)
-                        break
-                if new_args:
-                    args = new_args
-                    break
-
-        if len(args) == 1:
-            return args.pop()
-        else:
-            return Union(args, evaluate=False)
 
     @property
     def _inf(self):
@@ -1359,18 +1315,62 @@ def imageset(*args):
     return ImageSet(f, set)
 
 
+def simplify_union(args):
+    """
+    Simplify a Union using known rules
+
+    We first start with global rules like 'Merge all FiniteSets'
+
+    Then we iterate through all pairs and ask the constituent sets if they
+    can simplify themselves with any other constituent.  This process depends
+    on _simplify_union(a, b) functions.
+    """
+
+    # ===== Global Rules =====
+    # Merge all finite sets
+    finite_sets = [x for x in args if x.is_FiniteSet]
+    if len(finite_sets) > 1:
+        finite_set = FiniteSet(x for set in finite_sets for x in set)
+        args = [finite_set] + [x for x in args if not x.is_FiniteSet]
+
+    # ===== Pair-wise Rules =====
+    # Here we depend on rules built into the constituent sets
+    args = set(args)
+    new_args = True
+    while(new_args):
+        for s in args:
+            new_args = False
+            for t in args - set((s,)):
+                new_set = _simplify_union(s, t)
+                # This returns None if s does not know how to intersect
+                # with t. Returns the newly intersected set otherwise
+                if new_set is not None:
+                    if not isinstance(new_set, set):
+                        new_set = set((new_set, ))
+                    new_args = (args - set((s, t))).union(new_set)
+                    break
+            if new_args:
+                args = new_args
+                break
+
+    if len(args) == 1:
+        return args.pop()
+    else:
+        return Union(args, evaluate=False)
+
+
 @dispatch(EmptySet, Set)
-def union_simp(a, b):
+def _simplify_union(a, b):
     return b
 
 
 @dispatch(UniversalSet, Set)
-def union_simp(a, b):
+def _simplify_union(a, b):
     return a
 
 
 @dispatch(ProductSet, ProductSet)
-def union_simp(a, b):
+def _simplify_union(a, b):
     if len(b.args) != len(a.args):
         return None
     if a.args[0] == b.args[0]:
@@ -1383,7 +1383,7 @@ def union_simp(a, b):
 
 
 @dispatch(Interval, Interval)
-def union_simp(a, b):
+def _simplify_union(a, b):
     """
     This function should only be used internally
 
@@ -1410,7 +1410,7 @@ def union_simp(a, b):
 
 
 @dispatch(Interval, Set)
-def union_simp(a, b):
+def _simplify_union(a, b):
     # If I have open end points and these endpoints are contained in b
     if ((a.left_open and b.contains(a.start) is True) or
             (a.right_open and b.contains(a.end) is True)):
@@ -1424,12 +1424,12 @@ def union_simp(a, b):
 
 
 @dispatch(FiniteSet, FiniteSet)
-def union_simp(a, b):
+def _simplify_union(a, b):
     return FiniteSet(*(a._elements | b._elements))
 
 
 @dispatch(FiniteSet, Set)
-def union_simp(a, b):
+def _simplify_union(a, b):
     # If b set contains one of my elements, remove it from myself
     if any(b.contains(x) is True for x in a):
         return set((
@@ -1439,7 +1439,7 @@ def union_simp(a, b):
 
 
 @dispatch(Set, Set)
-def union_simp(a, b):
+def _simplify_union(a, b):
     return None
 
 
