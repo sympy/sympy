@@ -1327,11 +1327,6 @@ def _simplify_union(a, b):
 
 @dispatch(Interval, Interval)
 def _simplify_union(a, b):
-    """
-    This function should only be used internally
-
-    See Set._union for docstring
-    """
     if a._is_comparable(b):
         from sympy.functions.elementary.miscellaneous import Min, Max
         # Non-overlapping intervals
