@@ -918,7 +918,7 @@ class Intersection(Set):
 
         # Reduce sets using known rules
         if evaluate:
-            return Intersection.reduce(args)
+            return simplify_intersection(args)
 
         return Basic.__new__(cls, *args)
 
@@ -953,63 +953,6 @@ class Intersection(Set):
                 return (x for x in s if x in other)
 
         raise ValueError("None of the constituent sets are iterable")
-
-    @staticmethod
-    def reduce(args):
-        """
-        Simplify an intersection using known rules
-
-        We first start with global rules like
-        'if any empty sets return empty set' and 'distribute any unions'
-
-        Then we iterate through all pairs and ask the constituent sets if they
-        can simplify themselves with any other constituent
-        """
-
-        # ===== Global Rules =====
-        # If any EmptySets return EmptySet
-        if any(s.is_EmptySet for s in args):
-            return S.EmptySet
-
-        # If any FiniteSets see which elements of that finite set occur within
-        # all other sets in the intersection
-        for s in args:
-            if s.is_FiniteSet:
-                return s.__class__(x for x in s
-                        if all(x in other for other in args))
-
-        # If any of the sets are unions, return a Union of Intersections
-        for s in args:
-            if s.is_Union:
-                other_sets = set(args) - set((s,))
-                other = Intersection(other_sets)
-                return Union(Intersection(arg, other) for arg in s.args)
-
-        # At this stage we are guaranteed not to have any
-        # EmptySets, FiniteSets, or Unions in the intersection
-
-        # ===== Pair-wise Rules =====
-        # Here we depend on rules built into the constituent sets
-        args = set(args)
-        new_args = True
-        while(new_args):
-            for s in args:
-                new_args = False
-                for t in args - set((s,)):
-                    new_set = intersection_simp(s, t)
-                    # This returns None if s does not know how to intersect
-                    # with t. Returns the newly intersected set otherwise
-                    if new_set is not None:
-                        new_args = (args - set((s, t))).union(set((new_set, )))
-                        break
-                if new_args:
-                    args = new_args
-                    break
-
-        if len(args) == 1:
-            return args.pop()
-        else:
-            return Intersection(args, evaluate=False)
 
     def as_relational(self, symbol):
         """Rewrite an Intersection in terms of equalities and logic operators"""
@@ -1443,8 +1386,65 @@ def _simplify_union(a, b):
     return None
 
 
+def simplify_intersection(args):
+    """
+    Simplify an intersection using known rules
+
+    We first start with global rules like
+    'if any empty sets return empty set' and 'distribute any unions'
+
+    Then we iterate through all pairs and ask the constituent sets if they
+    can simplify themselves with any other constituent
+    """
+
+    # ===== Global Rules =====
+    # If any EmptySets return EmptySet
+    if any(s.is_EmptySet for s in args):
+        return S.EmptySet
+
+    # If any FiniteSets see which elements of that finite set occur within
+    # all other sets in the intersection
+    for s in args:
+        if s.is_FiniteSet:
+            return s.__class__(x for x in s
+                    if all(x in other for other in args))
+
+    # If any of the sets are unions, return a Union of Intersections
+    for s in args:
+        if s.is_Union:
+            other_sets = set(args) - set((s,))
+            other = Intersection(other_sets)
+            return Union(Intersection(arg, other) for arg in s.args)
+
+    # At this stage we are guaranteed not to have any
+    # EmptySets, FiniteSets, or Unions in the intersection
+
+    # ===== Pair-wise Rules =====
+    # Here we depend on rules built into the constituent sets
+    args = set(args)
+    new_args = True
+    while(new_args):
+        for s in args:
+            new_args = False
+            for t in args - set((s,)):
+                new_set = _simplify_intersection(s, t)
+                # This returns None if s does not know how to intersect
+                # with t. Returns the newly intersected set otherwise
+                if new_set is not None:
+                    new_args = (args - set((s, t))).union(set((new_set, )))
+                    break
+            if new_args:
+                args = new_args
+                break
+
+    if len(args) == 1:
+        return args.pop()
+    else:
+        return Intersection(args, evaluate=False)
+
+
 @dispatch(ProductSet, ProductSet)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     if len(b.args) != len(a.args):
         return S.EmptySet
     return ProductSet(a.intersect(b)
@@ -1452,7 +1452,7 @@ def intersection_simp(a, b):
 
 
 @dispatch(Interval, Interval)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
     if not a._is_comparable(b):
         return None
@@ -1492,21 +1492,21 @@ def intersection_simp(a, b):
     return Interval(start, end, left_open, right_open)
 
 @dispatch(EmptySet, Set)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     return S.EmptySet
 
 @dispatch(UniversalSet, Set)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     return b
 
 @dispatch(FiniteSet, FiniteSet)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     return FiniteSet(*(a._elements & b._elements))
 
 @dispatch(FiniteSet, Set)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     return FiniteSet(el for el in a if el in b)
 
 @dispatch(Set, Set)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     return None

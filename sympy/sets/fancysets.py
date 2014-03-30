@@ -299,12 +299,12 @@ class Range(Set):
 
 
 @dispatch(Naturals, Interval)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     return Intersection(S.Integers, b, Interval(a._inf, S.Infinity))
 
 
 @dispatch(Integers, Interval)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
     if b.measure < S.Infinity:
         s = Range(ceiling(b.left), floor(b.right) + 1)
@@ -312,7 +312,7 @@ def intersection_simp(a, b):
 
 
 @dispatch(Range, Interval)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     from sympy.functions.elementary.integers import floor, ceiling
     from sympy.functions.elementary.miscellaneous import Min, Max
     osup = b.sup
@@ -336,10 +336,10 @@ def intersection_simp(a, b):
 
 
 @dispatch(Range, Naturals)
-def intersection_simp(a, b):
-    return a.intersection_simp(Interval(1, S.Infinity))
+def _simplify_intersection(a, b):
+    return _simplify_intersection(a, Interval(1, S.Infinity))
 
 
 @dispatch(Range, Integers)
-def intersection_simp(a, b):
+def _simplify_intersection(a, b):
     return a
