@@ -2702,8 +2702,8 @@ def ode_Liouville(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
     ... diff(f(x), x)/x, f(x), hint='Liouville'))
-               ________________           ________________
-    [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
+               _________________           _________________
+    [f(x) = -\/ -C1 + C2*log(x) , f(x) = \/ -C1 + C2*log(x) ]
 
     References
     ==========
@@ -4368,10 +4368,10 @@ def ode_lie_group(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
     ... hint='lie_group'))
-           /      2\    2
-           |     x |  -x
-    f(x) = |C1 + --|*e
-           \     2 /
+           /       2\    2
+           |      x |  -x
+    f(x) = |-C1 + --|*e
+           \      2 /
 
 
     References
