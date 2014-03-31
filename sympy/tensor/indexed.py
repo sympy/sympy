@@ -132,7 +132,7 @@ class Indexed(Expr):
     True
 
     """
-    is_commutative = False
+    is_commutative = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
@@ -323,7 +323,7 @@ class IndexedBase(Expr, NotIterable):
     (o, p)
 
     """
-    is_commutative = False
+    is_commutative = True
 
     def __new__(cls, label, shape=None, **kw_args):
         if not isinstance(label, (string_types, Symbol)):
