@@ -383,7 +383,11 @@ def test_latex_brackets():
 def test_latex_indexed():
     Psi_symbol = Symbol('Psi_0', complex=True, real=False)
     Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
-    assert latex(Psi_symbol * conjugate(Psi_symbol)) == latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    symbol_latex = latex(Psi_symbol * conjugate(Psi_symbol))
+    indexed_latex = latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    # \\overline{\\Psi_{0}} \\Psi_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
+    assert symbol_latex.split() == indexed_latex.split() \
+        or symbol_latex.split() == indexed_latex.split()[::-1]
 
 def test_latex_derivatives():
     # regular "d" for ordinary derivatives
