@@ -39,6 +39,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
 from sympy.core import Basic, sympify, Add, S
 from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
+from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify
 from sympy.external import import_module
@@ -512,17 +513,20 @@ class VTIDS(TIDS):
     DEPRECATED: DO NOT USE.
     """
 
+    @deprecated(useinstead="TIDS")
     def __init__(self, components, free, dum, data):
         super(VTIDS, self).__init__(components, free, dum)
         self.data = data
 
     @staticmethod
+    @deprecated(useinstead="TIDS")
     def parse_data(data):
         """
         DEPRECATED: DO NOT USE.
         """
         return _TensorDataLazyEvaluator.parse_data(data)
 
+    @deprecated(useinstead="TIDS")
     def correct_signature_from_indices(self, data, indices, free, dum):
         """
         DEPRECATED: DO NOT USE.
@@ -530,6 +534,7 @@ class VTIDS(TIDS):
         return _TensorDataLazyEvaluator._correct_signature_from_indices(data, indices, free, dum)
 
     @staticmethod
+    @deprecated(useinstead="TIDS")
     def flip_index_by_metric(data, metric, pos):
         """
         DEPRECATED: DO NOT USE.
