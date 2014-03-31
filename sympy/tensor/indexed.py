@@ -43,7 +43,7 @@
 
     >>> x = IndexedBase('x')
     >>> M[i, j]*x[j]
-    M[i, j]*x[j]
+    x[j]*M[i, j]
 
     If the indexed objects will be converted to component based arrays, e.g.
     with the code printers or the autowrap framework, you also need to provide
