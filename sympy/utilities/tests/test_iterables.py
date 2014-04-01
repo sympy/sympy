@@ -482,6 +482,30 @@ def test_necklaces():
         [6,  14,  13,  92],
         [7,  20,  18, 198]])
 
+def test_bracelets():
+    bc = [i for i in bracelets(2, 4)]
+    assert Matrix(bc) == Matrix([
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [0, 3],
+        [1, 1],
+        [1, 2],
+        [1, 3],
+        [2, 2],
+        [2, 3],
+        [3, 3]
+        ])
+    bc = [i for i in bracelets(4, 2)]
+    assert Matrix(bc) == Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+        [0, 0, 1, 1],
+        [0, 1, 0, 1],
+        [0, 1, 1, 1],
+        [1, 1, 1, 1]
+    ])
+
 
 def test_generate_oriented_forest():
     assert list(generate_oriented_forest(5)) == [[0, 1, 2, 3, 4],

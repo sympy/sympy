@@ -6,6 +6,7 @@ from sympy.matrices.expressions import (
     det, ZeroMatrix, Transpose
 )
 from sympy.utilities.pytest import raises
+from sympy import refine, Q
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)
@@ -29,3 +30,8 @@ def test_eval_determinant():
     assert det(Identity(n)) == 1
     assert det(ZeroMatrix(n, n)) == 0
     assert det(Transpose(A)) == det(A)
+
+
+def test_refine():
+    assert refine(det(A), Q.orthogonal(A)) == 1
+    assert refine(det(A), Q.singular(A)) == 0
