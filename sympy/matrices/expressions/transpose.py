@@ -74,3 +74,25 @@ class Transpose(MatrixExpr):
 def transpose(expr):
     """ Matrix transpose """
     return Transpose(expr).doit()
+
+
+from sympy.assumptions.ask import ask, Q
+from sympy.assumptions.refine import handlers_dict
+
+
+def refine_Transpose(expr, assumptions):
+    """
+    >>> from sympy import MatrixSymbol, Q, assuming, refine
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> X.T
+    X'
+    >>> with assuming(Q.symmetric(X)):
+    ...     print(refine(X.T))
+    X
+    """
+    if ask(Q.symmetric(expr), assumptions):
+        return expr.arg
+
+    return expr
+
+handlers_dict['Transpose'] = refine_Transpose
