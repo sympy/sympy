@@ -12,6 +12,13 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     TensorManager, TensExpr, TIDS
 from sympy.utilities.pytest import raises, skip
 
+def _is_equal(arg1, arg2):
+    if isinstance(arg1, TensExpr):
+        return arg1.equals(arg2)
+    elif isinstance(arg2, TensExpr):
+        return arg2.equals(arg1)
+    return arg1 == arg2
+
 
 #################### Tests from tensor_can.py #######################
 def test_canonicalize_no_slot_sym():
@@ -599,8 +606,8 @@ def test_special_eq_ne():
     p, q, r = tensorhead('p,q,r', [Lorentz], [[1]])
 
     t = 0*A(a, b)
-    assert t == 0
-    assert t == S.Zero
+    assert _is_equal(t, 0)
+    assert _is_equal(t, S.Zero)
 
     assert p(i) != A(a, b)
     assert A(a, -a) != A(a, b)
@@ -615,7 +622,7 @@ def test_special_eq_ne():
     assert p(i) - p(i) == 0
     assert p(i) - p(i) == S.Zero
 
-    assert A(a, b) == A(b, a)
+    assert _is_equal(A(a, b), A(b, a))
 
 def test_add2():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -691,20 +698,20 @@ def test_substitute_indices():
 
     A_tmul = A(m, n)
     A_c = A_tmul(m, -m)
-    assert A_c == A(n, -n)
+    assert _is_equal(A_c, A(n, -n))
     ABm = A(i, j)*B(m, n)
     ABc1 = ABm(i, j, -i, -j)
-    assert ABc1 == A(i, -j)*B(-i, j)
+    assert _is_equal(ABc1, A(i, -j)*B(-i, j))
     ABc2 = ABm(i, -i, j, -j)
-    assert ABc2 == A(m, -m)*B(-n, n)
+    assert _is_equal(ABc2, A(m, -m)*B(-n, n))
 
     asum = A(i, j) + B(i, j)
     asc1 = asum(i, -i)
-    assert asc1 == A(i, -i) + B(i, -i)
+    assert _is_equal(asc1, A(i, -i) + B(i, -i))
 
     assert A(i, -i) == A(i, -i)()
     assert A(i, -i) + B(-j, j) == ((A(i, -i) + B(i, -i)))()
-    assert A(i, j)*B(-j, k) == (A(m, -j)*B(j, n))(i, k)
+    assert _is_equal(A(i, j)*B(-j, k), (A(m, -j)*B(j, n))(i, k))
     raises(ValueError, lambda: A(i, -i)(j, k))
 
 def test_riemann_cyclic_replace():
@@ -780,15 +787,15 @@ def test_contract_metric1():
     # g with both indices contracted with another tensor
     t1 = A(a,b)*B(-b,-c)*g(c, -a)
     t2 = t1.contract_metric(g)
-    assert t2 == A(a, b)*B(-b, -a)
+    assert _is_equal(t2, A(a, b)*B(-b, -a))
 
     t1 = A(a,b)*B(-b,-c)*g(c, d)*g(-a, -d)
     t2 = t1.contract_metric(g)
-    assert t2 == A(a,b)*B(-b,-a)
+    assert _is_equal(t2, A(a,b)*B(-b,-a))
 
     t1 = A(a,b)*g(-a,-b)
     t2 = t1.contract_metric(g)
-    assert t2 == A(a, -a)
+    assert _is_equal(t2, A(a, -a))
     assert not t2.free
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
@@ -896,67 +903,67 @@ def test_metric_contract3():
 
     t = C(a0,a1)*B(-a1,-a0)
     t1 = t.contract_metric(C)
-    assert t1 == B(a0, -a0)
+    assert _is_equal(t1, B(a0, -a0))
 
     t = C(a1,a0)*B(-a1,-a0)
     t1 = t.contract_metric(C)
-    assert t1 == -B(a0, -a0)
+    assert _is_equal(t1, -B(a0, -a0))
 
     t = C(a0,-a1)*B(a1,-a0)
     t1 = t.contract_metric(C)
-    assert t1 == -B(a0, -a0)
+    assert _is_equal(t1, -B(a0, -a0))
 
     t = C(-a0,a1)*B(-a1,a0)
     t1 = t.contract_metric(C)
-    assert t1 == -B(a0, -a0)
+    assert _is_equal(t1, -B(a0, -a0))
 
     t = C(-a0,-a1)*B(a1,a0)
     t1 = t.contract_metric(C)
-    assert t1 == B(a0, -a0)
+    assert _is_equal(t1, B(a0, -a0))
 
     t = C(-a1, a0)*B(a1,-a0)
     t1 = t.contract_metric(C)
-    assert t1 == B(a0, -a0)
+    assert _is_equal(t1, B(a0, -a0))
 
     t = C(a0,a1)*psi(-a1)
     t1 = t.contract_metric(C)
-    assert t1 == psi(a0)
+    assert _is_equal(t1, psi(a0))
 
     t = C(a1,a0)*psi(-a1)
     t1 = t.contract_metric(C)
-    assert t1 == -psi(a0)
+    assert _is_equal(t1, -psi(a0))
 
     t = C(a0,a1)*chi(-a0)*psi(-a1)
     t1 = t.contract_metric(C)
-    assert t1 == -chi(a1)*psi(-a1)
+    assert _is_equal(t1, -chi(a1)*psi(-a1))
 
     t = C(a1,a0)*chi(-a0)*psi(-a1)
     t1 = t.contract_metric(C)
-    assert t1 == chi(a1)*psi(-a1)
+    assert _is_equal(t1, chi(a1)*psi(-a1))
 
     t = C(-a1,a0)*chi(-a0)*psi(a1)
     t1 = t.contract_metric(C)
-    assert t1 == chi(-a1)*psi(a1)
+    assert _is_equal(t1, chi(-a1)*psi(a1))
 
     t = C(a0, -a1)*chi(-a0)*psi(a1)
     t1 = t.contract_metric(C)
-    assert t1 == -chi(-a1)*psi(a1)
+    assert _is_equal(t1, -chi(-a1)*psi(a1))
 
     t = C(-a0,-a1)*chi(a0)*psi(a1)
     t1 = t.contract_metric(C)
-    assert t1 == chi(-a1)*psi(a1)
+    assert _is_equal(t1, chi(-a1)*psi(a1))
 
     t = C(-a1,-a0)*chi(a0)*psi(a1)
     t1 = t.contract_metric(C)
-    assert t1 == -chi(-a1)*psi(a1)
+    assert _is_equal(t1, -chi(-a1)*psi(a1))
 
     t = C(-a1,-a0)*B(a0,a2)*psi(a1)
     t1 = t.contract_metric(C)
-    assert t1 == -B(-a1,a2)*psi(a1)
+    assert _is_equal(t1, -B(-a1,a2)*psi(a1))
 
     t = C(a1,a0)*B(-a2,-a0)*psi(-a1)
     t1 = t.contract_metric(C)
-    assert t1 == B(-a2,a1)*psi(-a1)
+    assert _is_equal(t1, B(-a2,a1)*psi(-a1))
 
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_fmt='L')
@@ -1085,8 +1092,8 @@ def test_TensorManager():
     assert t1 == ps*ps + 2*ps*psh + psh*psh
     qs = G(i)*q(-i)
     qsh = GH(ih)*qh(-ih)
-    assert ps*qsh == qsh*ps
-    assert ps*qs != qs*ps
+    assert _is_equal(ps*qsh, qsh*ps)
+    assert not _is_equal(ps*qs, qs*ps)
     n = TensorManager.comm_symbols2i(Gsymbol)
     assert TensorManager.comm_i2symbol(n) == Gsymbol
 
@@ -1179,36 +1186,36 @@ def test_hidden_indices_for_matrix_multiplication():
     B0 = B(-m0)
     B1 = B(m1)
 
-    assert (B1*A0*B0) == B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1)
-    assert (B0*A0) == B(-m0, s0)*A(m0, -s0, -S.auto_right)
-    assert (A0*B0) == A(m0, S.auto_left, s0)*B(-m0, -s0)
+    assert _is_equal((B1*A0*B0), B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1))
+    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, -S.auto_right))
+    assert _is_equal((A0*B0), A(m0, S.auto_left, s0)*B(-m0, -s0))
 
     C = tensorhead('C', [L, L], [[1]*2])
 
-    assert (C(True, True)) == C(L.auto_left, -L.auto_right)
+    assert _is_equal((C(True, True)), C(L.auto_left, -L.auto_right))
 
-    assert (A(m0)*C(m1, -m0)) == A(m2, S.auto_left, -S.auto_right)*C(m1, -m2)
+    assert _is_equal((A(m0)*C(m1, -m0)), A(m2, S.auto_left, -S.auto_right)*C(m1, -m2))
 
-    assert (C(True, True)*C(True, True)) == C(L.auto_left, m0)*C(-m0, -L.auto_right)
+    assert _is_equal((C(True, True)*C(True, True)), C(L.auto_left, m0)*C(-m0, -L.auto_right))
 
-    assert A(m0) == A(m0)
-    assert B(-m1) == B(-m1)
+    assert _is_equal(A(m0), A(m0))
+    assert _is_equal(B(-m1), B(-m1))
 
-    assert A(m0) - A(m0) == 0
+    assert _is_equal(A(m0) - A(m0), 0)
     ts1 = A(m0)*A(m1) + A(m1)*A(m0)
     ts2 = A(m1)*A(m0) + A(m0)*A(m1)
-    assert ts1 == ts2
-    assert A(m0)*A(m1) + A(m1)*A(m0) == A(m1)*A(m0) + A(m0)*A(m1)
+    assert _is_equal(ts1, ts2)
+    assert _is_equal(A(m0)*A(m1) + A(m1)*A(m0), A(m1)*A(m0) + A(m0)*A(m1))
 
-    assert A(m0) == (2*A(m0))/2
-    assert A(m0) == -(-A(m0))
-    assert 2*A(m0) - 3*A(m0) == -A(m0)
-    assert 2*D(m0, m1) - 5*D(m1, m0) == -3*D(m0, m1)
+    assert _is_equal(A(m0), (2*A(m0))/2)
+    assert _is_equal(A(m0), -(-A(m0)))
+    assert _is_equal(2*A(m0) - 3*A(m0), -A(m0))
+    assert _is_equal(2*D(m0, m1) - 5*D(m1, m0), -3*D(m0, m1))
 
     D0 = D(True, True, True, True)
     Aa = A(True, True, True)
 
-    assert D0 * Aa == D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, -S.auto_right)
+    assert _is_equal(D0 * Aa, D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, -S.auto_right))
     assert D(m0, m1) == D(m0, m1, S.auto_left, -S.auto_right)
 
     raises(ValueError, lambda: C(True))
