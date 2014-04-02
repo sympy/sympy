@@ -77,10 +77,10 @@ def transpose(expr):
 
 
 from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
+from sympy.dispatch import dispatch
 
 
-def refine_Transpose(expr):
+def _refine(expr):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
@@ -94,5 +94,3 @@ def refine_Transpose(expr):
         return expr.arg
 
     return expr
-
-handlers_dict['Transpose'] = refine_Transpose

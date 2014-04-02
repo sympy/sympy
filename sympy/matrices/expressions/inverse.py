@@ -65,10 +65,11 @@ class Inverse(MatPow):
 
 
 from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
+from sympy.dispatch import dispatch
 
 
-def refine_Inverse(expr):
+@dispatch(Inverse)
+def _refine(expr):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
@@ -86,5 +87,3 @@ def refine_Inverse(expr):
         raise ValueError("Inverse of singular matrix %s" % expr.arg)
 
     return expr
-
-handlers_dict['Inverse'] = refine_Inverse

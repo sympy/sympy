@@ -237,10 +237,11 @@ def only_squares(*matrices):
 
 
 from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
+from sympy.dispatch import dispatch
 
 
-def refine_MatMul(expr):
+@dispatch(MatMul)
+def _refine(expr):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
@@ -264,6 +265,3 @@ def refine_MatMul(expr):
     newargs.append(last)
 
     return MatMul(*newargs)
-
-
-handlers_dict['MatMul'] = refine_MatMul

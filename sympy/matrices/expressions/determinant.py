@@ -54,10 +54,11 @@ def det(matexpr):
 
 
 from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
+from sympy.dispatch import dispatch
 
 
-def refine_Determinant(expr):
+@dispatch(Determinant)
+def _refine(expr):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine, det
     >>> X = MatrixSymbol('X', 2, 2)
@@ -75,6 +76,3 @@ def refine_Determinant(expr):
         return S.One
 
     return expr
-
-
-handlers_dict['Determinant'] = refine_Determinant
