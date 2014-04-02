@@ -2826,7 +2826,6 @@ def homogeneous_LDS(a):
         for Solving Systems of Linear Diophantine Equations. Information and
         computation, 113(1):143-172, August 1994.
     """
-
     p, q = a.shape
     col_zero = zeros(p, 1)
     row_zero = zeros(1, q)
@@ -2843,7 +2842,6 @@ def homogeneous_LDS(a):
     F = [0] * q
 
     while (len(P) > 0):
-
         n = len(P) - 1
         t = P.pop()
 
@@ -2854,7 +2852,6 @@ def homogeneous_LDS(a):
                 F[i] = Frozen[n, i]
 
             for i in range(q):
-
                 T = Matrix([[t[j] for j in range(q)]])
                 T[i] = T[i] + 1
 
