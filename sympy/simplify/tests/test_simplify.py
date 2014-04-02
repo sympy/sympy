@@ -226,6 +226,10 @@ def test_issue_3210():
         ]
 
 
+def test_issue_7263():
+    assert simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2) == -5857.61 + 6806.25*cos(0.0644444444444444*pi)**2
+
+
 def test_trigsimp_issues():
     a, x, y = symbols('a x y')
 
