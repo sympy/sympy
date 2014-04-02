@@ -80,6 +80,7 @@ from sympy.assumptions.ask import ask, Q
 from sympy.dispatch import dispatch
 
 
+@dispatch(Transpose)
 def _refine(expr):
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine
