@@ -2791,19 +2791,16 @@ def homogeneous_LDS(a):
     `a` is a `p` x `q` matrix containing coefficients of `p` homogeneous
     linear diophantine equations in `q` variables, i.e. of the system,
 
-    `a_{11}x_{1} + a_{12}x_{2} + ... + a_{1q}x_{q} = 0`
+    .. math::
+        a_{11}x_{1} + a_{12}x_{2} + ... + a_{1q}x_{q} = 0
 
-    `a_{21}x_{1} + a_{22}x_{2} + ... + a_{2q}x_{q} = 0`
+        a_{21}x_{1} + a_{22}x_{2} + ... + a_{2q}x_{q} = 0
 
-    `.`
+        \\vdots
 
-    `.`
+        a_{p1}x_{1} + a_{p2}x_{2} + ... + a_{pq}x_{q} = 0
 
-    `.`
-
-    `a_{p1}x_{1} + a_{p2}x_{2} + ... + a_{pq}x_{q} = 0`
-
-    `a_{ij}` is the `ij` th entry of the matrix a.
+    `a_{ij}` is the `ij` th entry of the matrix `a`.
 
     Examples
     ========
@@ -2812,9 +2809,11 @@ def homogeneous_LDS(a):
     >>> from sympy.matrices import Matrix
 
     Let's solve the following homogeneous linear diophantine system:
-    `-x_{1} + x_{2} + 2x_{3} -3x_{4} = 0`
 
-    `-x_{1} + 3x_{2} - 2x_{3} - x_{4} = 0`
+    .. math::
+        -x_{1} + x_{2} + 2x_{3} -3x_{4} = 0
+
+        -x_{1} + 3x_{2} - 2x_{3} - x_{4} = 0
 
     >>> a = Matrix([[-1, 1, 2, -3],[-1, 3, -2, -1]])
     >>> homogeneous_LDS(a)
