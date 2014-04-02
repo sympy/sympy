@@ -7,7 +7,14 @@ def test_add():
         expr = x + x
         assert isinstance(expr, Add)
         assert expr.args == (x, x)
+
+        with evaluate(True):
+            assert (x + x).args == (2, x)
+
+        assert (x + x).args == (x, x)
+
     assert isinstance(x + x, Mul)
+
 
 
 def test_nested():
