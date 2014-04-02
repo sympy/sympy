@@ -2589,9 +2589,6 @@ class TensAdd(TensExpr):
             else:
                 return all(x._coeff == 0 for x in t.args)
 
-    def __eq__(self, other):
-        return self.equals(other)
-
     def __add__(self, other):
         return TensAdd(self, other)
 
@@ -2624,15 +2621,6 @@ class TensAdd(TensExpr):
 
     __truediv__ = __div__
     __truerdiv__ = __rdiv__
-
-    def _hashable_content(self):
-        return tuple(self.args)
-
-    def __hash__(self):
-        return super(TensAdd, self).__hash__()
-
-    def __ne__(self, other):
-        return not (self == other)
 
     def contract_delta(self, delta):
         args = [x.contract_delta(delta) for x in self.args]
@@ -2892,47 +2880,19 @@ class TensMul(TensExpr):
 
     def equals(self, other):
         if other == 0:
-            return self._coeff == 0
+            return self.coeff == 0
         other = sympify(other)
         if not isinstance(other, TensExpr):
             assert not self.components
             return self._coeff == other
-        res = self - other
-        return res == 0
 
-    def _hashable_content(self):
-        # TODO: refactor this, this code has already been used somewhere else
-        if not self.components:
-            return (self.coeff, tuple(self.components), tuple(self.free), tuple(self.dum))
+        def _get_compar_comp(self):
+            t = self.canon_bp()
+            r = (t._coeff, tuple(t.components), \
+                    tuple(sorted(t.free)), tuple(sorted(t.dum)))
+            return r
 
-        new_t, sign = self._tids.sorted_components()
-        coeff = -self.coeff if sign == -1 else self.coeff
-        g, dummies, msym, v = new_t.canon_args()
-        can = canonicalize(g, dummies, msym, *v)
-        if can == 0:
-            return S.Zero
-        t = new_t.perm2tensor(can, True)
-        if can[-1] != len(can) - 1:
-            coeff = -coeff
-
-        r = (coeff, tuple(t.components), \
-                tuple(sorted(t.free)), tuple(sorted(t.dum)))
-        return r
-
-    def __hash__(self):
-        return super(TensMul, self).__hash__()
-
-    def __eq__(self, other):
-        # Basic's equality comparison considers 0 and a zero TensMul
-        # as never equal, here is a workaround:
-        if other == 0 and self.coeff == 0:
-            return True
-
-        # now call the Basic equality method, based on the args:
-        return super(TensMul, self).__eq__(other)
-
-    def __ne__(self, other):
-        return not self == other
+        return _get_compar_comp(self) == _get_compar_comp(other)
 
     def get_indices(self):
         """
