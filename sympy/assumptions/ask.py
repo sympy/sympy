@@ -8,7 +8,6 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 
-
 class Q:
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
@@ -113,6 +112,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
+    from sympy.assumptions.newask import newask
+
     if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("proposition must be a valid logical expression")
 
@@ -124,6 +125,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     else:
         key, expr = Q.is_true, sympify(proposition)
 
+    if isinstance(proposition, (bool, BooleanAtom)):
+        return sympify(proposition)
+
+    newask_result = newask(proposition, assumptions=assumptions, context=context)
+    if newask_result is not None:
+        return newask_result
     assumptions = And(assumptions, And(*context))
     assumptions = to_cnf(assumptions)
 
