@@ -423,6 +423,8 @@ def test_finite_basic():
     assert FiniteSet(x, 1, 5).sup == Max(x, 5)
     assert FiniteSet(x, 1, 5).inf == Min(x, 1)
 
+    assert FiniteSet(EmptySet()) == {}
+
     # Ensure a variety of types can exist in a FiniteSet
     S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
 

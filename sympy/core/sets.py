@@ -1337,7 +1337,7 @@ class FiniteSet(Set, EvalfMixin):
             args = list(map(sympify, args))
 
             if len(args) == 0:
-                return EmptySet()
+                return {}
 
 
         args = frozenset(args)  # remove duplicates
