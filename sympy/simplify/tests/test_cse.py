@@ -1,7 +1,8 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf, IndexedBase, Idx, MatrixSymbol)
+                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
+                   IndexedBase, Idx, MatrixSymbol, Piecewise)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
@@ -290,3 +291,9 @@ def test_cse_MatrixSymbol():
     expr2 = (A.T*A) * A * y
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
+
+def test_Piecewise():
+    f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
+    ans = cse(f)
+    actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
+    assert ans == actual_ans
