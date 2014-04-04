@@ -128,9 +128,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(proposition, (bool, BooleanAtom)):
         return sympify(proposition)
 
-    newask_result = newask(proposition, assumptions=assumptions, context=context)
-    if newask_result is not None:
-        return newask_result
     assumptions = And(assumptions, And(*context))
     assumptions = to_cnf(assumptions)
 
@@ -174,7 +171,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return False
 
     # Failing all else, we do a full logical inference
-    return ask_full_inference(key, local_facts, known_facts_cnf)
+    res = ask_full_inference(key, local_facts, known_facts_cnf)
+    if res is None:
+        return newask(proposition, assumptions=assumptions, context=context)
+    return res
 
 
 def ask_full_inference(proposition, assumptions, known_facts_cnf):
