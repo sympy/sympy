@@ -299,7 +299,7 @@ setup_args = {
     "author_email": 'sympy@googlegroups.com',
     "license": 'BSD',
     "keywords": "Math CAS",
-    "url": 'http://code.google.com/p/sympy',
+    "url": 'http://sympy.org',
     "packages": ['sympy'] + modules + tests,
     "scripts": ['bin/isympy'],
     "ext_modules": [],
