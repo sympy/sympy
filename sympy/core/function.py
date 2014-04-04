@@ -1492,8 +1492,15 @@ class Subs(Expr):
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
+        from sympy.printing import StrPrinter
+        class CustomStrPrinter(StrPrinter):
+            def _print_Dummy(self, expr):
+                return str(expr) + str(expr.dummy_index)
+        def mystr(expr, **settings):
+            p = CustomStrPrinter(settings)
+            return p.doprint(expr)
         while 1:
-            s_pts = dict([(p, Symbol(pre + str(p))) for p in pts])
+            s_pts = dict([(p, Symbol(pre + mystr(p))) for p in pts])
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
             # if any underscore-preppended symbol is already a free symbol
@@ -1504,7 +1511,7 @@ class Subs(Expr):
             # symbols
             if any(r in expr.free_symbols and
                    r in variables and
-                   Symbol(pre + str(point[variables.index(r)])) != r
+                   Symbol(pre + mystr(point[variables.index(r)])) != r
                    for _, r in reps):
                 pre += "_"
                 continue
