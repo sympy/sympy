@@ -2336,7 +2336,7 @@ def count_ops(expr, visual=False):
                     not a.__class__.__name__ == 'Tuple'):
                     o = C.Symbol(a.func.__name__.upper())
                     ops.append(o*(len(a.args)-1))
-                if not a.args is ():
+                if not a.args == ():
                     args.extend(a.args)
 
     if not ops:
