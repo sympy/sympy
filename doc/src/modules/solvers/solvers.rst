@@ -77,3 +77,8 @@ Diophantine Equations (DEs)
 ---------------------------
 
 See :ref:`diophantine-docs`
+
+Inequalities
+------------
+
+See :ref:`inequality-docs`

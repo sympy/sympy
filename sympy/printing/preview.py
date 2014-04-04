@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from os.path import join
 import tempfile
 import shutil
+from io import BytesIO
 
 try:
     from subprocess import STDOUT, CalledProcessError
@@ -10,7 +11,6 @@ try:
 except ImportError:
     pass
 
-from sympy.core.compatibility import cStringIO as StringIO
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from .latex import latex
@@ -70,12 +70,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     is unset. However, if it was set, then 'preview' writes the genereted
     file to this filename instead.
 
-    There is also support for writing to a StringIO like object, which needs
+    There is also support for writing to a BytesIO like object, which needs
     to be passed to the 'outputbuffer' argument.
 
-    >>> from StringIO import StringIO
-    >>> obj = StringIO()
-    >>> preview(x + y, output='png', viewer='StringIO',
+    >>> from io import BytesIO
+    >>> obj = BytesIO()
+    >>> preview(x + y, output='png', viewer='BytesIO',
     ...         outputbuffer=obj)
 
     The LaTeX preamble can be customized by setting the 'preamble' keyword
@@ -139,11 +139,19 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
                     "specified filename", deprecated_since_version="0.7.3",
                     useinstead="viewer=\"file\" and filename=\"desiredname\"",
-                    issue=3919).warn()
+                    issue=7018).warn()
         elif viewer == "StringIO":
+            SymPyDeprecationWarning(feature="The preview() viewer StringIO",
+                useinstead="BytesIO", deprecated_since_version="0.7.4",
+                issue=7083).warn()
+            viewer = "BytesIO"
             if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a StringIO "
+                raise ValueError("outputbuffer has to be a BytesIO "
                                  "compatible object if viewer=\"StringIO\"")
+        elif viewer == "BytesIO":
+            if outputbuffer is None:
+                raise ValueError("outputbuffer has to be a BytesIO "
+                                 "compatible object if viewer=\"BytesIO\"")
         elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
@@ -228,13 +236,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
         if viewer == "file":
             if filename is None:
-                buffer = StringIO()
+                buffer = BytesIO()
                 with open(join(workdir, src), 'rb') as fh:
                     buffer.write(fh.read())
                 return buffer
             else:
                 shutil.move(join(workdir,src), filename)
-        elif viewer == "StringIO":
+        elif viewer == "BytesIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
         elif viewer == "pyglet":

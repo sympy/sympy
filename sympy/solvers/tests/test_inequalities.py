@@ -1,11 +1,12 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
-        Or, Q, re, S, sin, sqrt, Union)
+        Or, Q, re, S, sin, sqrt, Symbol, Union)
 from sympy.assumptions import assuming
 from sympy.abc import x, y
 from sympy.solvers.inequalities import (reduce_inequalities,
-                                        reduce_rational_inequalities)
+                                        reduce_rational_inequalities,
+                                        solve_univariate_inequality)
 from sympy.utilities.pytest import raises
 
 inf = oo.evalf()
@@ -69,9 +70,9 @@ def test_reduce_poly_inequalities_real_relational():
         assert reduce_rational_inequalities(
             [[Le(x**2, 0)]], x, relational=True) == Eq(x, 0)
         assert reduce_rational_inequalities(
-            [[Lt(x**2, 0)]], x, relational=True) is False
+            [[Lt(x**2, 0)]], x, relational=True) == False
         assert reduce_rational_inequalities(
-            [[Ge(x**2, 0)]], x, relational=True) is True
+            [[Ge(x**2, 0)]], x, relational=True) == True
         assert reduce_rational_inequalities(
             [[Gt(x**2, 0)]], x, relational=True) == Or(Lt(x, 0), Gt(x, 0))
         assert reduce_rational_inequalities(
@@ -110,7 +111,7 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_rational_inequalities(
         [[Le(x**2, 0)]], x, relational=True) == And(Eq(re(x), 0), cond)
     assert reduce_rational_inequalities(
-        [[Lt(x**2, 0)]], x, relational=True) is False
+        [[Lt(x**2, 0)]], x, relational=True) == False
     assert reduce_rational_inequalities(
         [[Ge(x**2, 0)]], x, relational=True) == cond
     assert reduce_rational_inequalities([[Gt(x**2, 0)]], x, relational=True) == \
@@ -218,7 +219,25 @@ def test_hacky_inequalities():
     assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)
 
 
-def test_issue_3244():
+def test_issue_6343():
     eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
     assert reduce_inequalities(eq, Q.real(x)) == \
         And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
+
+
+def test_solve_univariate_inequality():
+    x = Symbol('x', real=True)
+    isolve = solve_univariate_inequality
+    assert isolve(x**2 >= 4, x, relational=False) == Union(Interval(-oo, -2), Interval(2, oo))
+    assert isolve(x**2 >= 4, x) == Or(x <= -2, x >= 2)
+    assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x, relational=False) == \
+        Union(Interval(1, 2), Interval(3, oo))
+    assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
+        Or(And(S.One <= x, x <= 2), x >= 3)
+    # issue 2785:
+    assert isolve(x**3 - 2*x - 1 > 0, x, relational=False) == \
+        Union(Interval(-1, -sqrt(5)/2 + S(1)/2, True, True),
+              Interval(S(1)/2 + sqrt(5)/2, oo, True, True))
+    # issue 2794:
+    assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
+        Interval(1, oo, True)

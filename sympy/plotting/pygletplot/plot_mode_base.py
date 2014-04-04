@@ -326,7 +326,8 @@ class PlotModeBase(PlotMode):
                 step_max = max([step_max, i.v_steps])
             v = ['both', 'solid'][step_max > 40]
         #try:
-        assert v in self.styles
+        if v not in self.styles:
+            raise ValueError("v should be there in self.styles")
         if v == self._style:
             return
         self._style = v

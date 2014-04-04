@@ -40,9 +40,9 @@ def test_expand():
     assert (2**(-1 - x)).expand() == Rational(1, 2)*2**(-x)
 
 
-def test_issue350():
+def test_issue_3449():
     #test if powers are simplified correctly
-    #see also issue 896
+    #see also issue 3995
     x = Symbol('x')
     assert ((x**Rational(1, 3))**Rational(2)) == x**Rational(2, 3)
     assert (
@@ -72,7 +72,7 @@ def test_issue350():
     assert (a**Rational(2, 3))**x == (a**(2*x/3)) != (a**x)**Rational(2, 3)
 
 
-def test_issue767():
+def test_issue_3866():
     assert --sqrt(sqrt(5) - 1) == sqrt(sqrt(5) - 1)
 
 
@@ -82,7 +82,7 @@ def test_negative_one():
     assert 1/x**y == x**(-y)
 
 
-def test_issue1263():
+def test_issue_4362():
     neg = Symbol('neg', negative=True)
     nonneg = Symbol('nonneg', nonnegative=True)
     any = Symbol('any')
@@ -213,7 +213,7 @@ def test_zero():
     assert (0**(2 - x)).as_base_exp() == (0, 2 - x)
     assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
-    assert 0**(-2*x*y) == S.Infinity**(x*y)
+    assert 0**(-2*x*y) == S.ComplexInfinity**(x*y)
     assert 0**I == nan
     i = Symbol('i', imaginary=True)
     assert 0**i == nan
@@ -227,7 +227,7 @@ def test_pow_as_base_exp():
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
 
 
-def test_issue_3001():
+def test_issue_6100():
     x = Symbol('x')
     y = Symbol('y')
     assert x**1.0 == x
@@ -246,7 +246,7 @@ def test_issue_3001():
     assert ((x*y)**1.0).func is Pow
 
 
-def test_issue_3109():
+def test_issue_6208():
     from sympy import root, Rational
     I = S.ImaginaryUnit
     assert sqrt(33**(9*I/10)) == -33**(9*I/20)
@@ -258,7 +258,7 @@ def test_issue_3109():
     assert root(exp(5*I), 3).exp == Rational(1, 3)
 
 
-def test_issue_3891():
+def test_issue_6990():
     x = Symbol('x')
     a = Symbol('a')
     b = Symbol('b')
@@ -267,7 +267,7 @@ def test_issue_3891():
         b**2/(8*a**(S(3)/2))) + sqrt(a)
 
 
-def test_issue_2969():
+def test_issue_6068():
     x = Symbol('x')
     assert sqrt(sin(x)).series(x, 0, 7) == \
         sqrt(x) - x**(S(5)/2)/12 + x**(S(9)/2)/1440 - \
@@ -282,13 +282,13 @@ def test_issue_2969():
         x**(S(39)/2)/24192 + O(x**20)
 
 
-def test_issue_3683():
+def test_issue_6782():
     x = Symbol('x')
     assert sqrt(sin(x**3)).series(x, 0, 7) == x**(S(3)/2) + O(x**7)
     assert sqrt(sin(x**4)).series(x, 0, 3) == x**2 + O(x**3)
 
 
-def test_issue_3554():
+def test_issue_6653():
     x = Symbol('x')
     assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 7) == \
         1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + O(x**7)
@@ -297,14 +297,14 @@ def test_issue_3554():
 
 
 @slow
-def test_issue_3554s():
+def test_issue_6653s():
     x = Symbol('x')
     assert (1 / sqrt(1 + cos(x) * sin(x**2))).series(x, 0, 15) == \
         1 - x**2/2 + 5*x**4/8 - 5*x**6/8 + 4039*x**8/5760 - 5393*x**10/6720 + \
         13607537*x**12/14515200 - 532056047*x**14/479001600 + O(x**15)
 
 
-def test_issue_3330():
+def test_issue_6429():
     x = Symbol('x')
     c = Symbol('c')
     f = (c**2 + x)**(0.5)

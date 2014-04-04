@@ -193,6 +193,7 @@ class Curve(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy.geometry.curve import Curve
         >>> from sympy.abc import x
         >>> from sympy import pi
@@ -217,6 +218,7 @@ class Curve(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy.geometry.curve import Curve
         >>> from sympy import pi
         >>> from sympy.abc import x
@@ -234,6 +236,7 @@ class Curve(GeometryEntity):
 
         Examples
         ========
+
         >>> from sympy.geometry.curve import Curve
         >>> from sympy import pi
         >>> from sympy.abc import x

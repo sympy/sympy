@@ -5,6 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
+from sympy.core.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 
@@ -81,7 +82,7 @@ def test_diff_symbols():
     assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
     assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
 
-    # issue 1929
+    # issue 5028
     assert [diff(-z + x/y, sym) for sym in (z, x, y)] == [-1, 1/y, -x/y**2]
     assert diff(f(x, y, z), x, y, z, 2) == Derivative(f(x, y, z), x, y, z, z)
     assert diff(f(x, y, z), x, y, z, 2, evaluate=False) == \
@@ -90,6 +91,37 @@ def test_diff_symbols():
         Derivative(f(x, y, z), x, y, z, z)
     assert Derivative(Derivative(f(x, y, z), x), y)._eval_derivative(z) == \
         Derivative(f(x, y, z), x, y, z)
+
+
+def test_Function():
+    class myfunc(Function):
+        @classmethod
+        def eval(cls, x):
+            return
+
+    assert myfunc.nargs == FiniteSet(1)
+    assert myfunc(x).nargs == FiniteSet(1)
+    raises(TypeError, lambda: myfunc(x, y).nargs)
+
+    class myfunc(Function):
+        @classmethod
+        def eval(cls, *x):
+            return
+
+    assert myfunc.nargs == S.Naturals0
+    assert myfunc(x).nargs == S.Naturals0
+
+def test_nargs():
+    f = Function('f')
+    assert f.nargs == S.Naturals0
+    assert f(1).nargs == S.Naturals0
+    assert Function('f', nargs=2)(1, 2).nargs == FiniteSet(2)
+    assert sin.nargs == FiniteSet(1)
+    assert sin(2).nargs == FiniteSet(1)
+    assert log.nargs == FiniteSet(1, 2)
+    assert log(2).nargs == FiniteSet(1, 2)
+    assert Function('f', nargs=2).nargs == FiniteSet(2)
+    assert Function('f', nargs=0).nargs == FiniteSet(0)
 
 
 def test_Lambda():
@@ -112,7 +144,7 @@ def test_Lambda():
     assert Lambda(x, x**2)(e(x)) == x**4
     assert e(e(x)) == x**4
 
-    assert Lambda((x, y), x + y).nargs == 2
+    assert Lambda((x, y), x + y).nargs == FiniteSet(2)
 
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
@@ -238,8 +270,8 @@ def test_function_comparable_infinities():
 
 
 def test_deriv1():
-    # These all requre derivatives evaluated at a point (issue 1620) to work.
-    # See issue 1525
+    # These all requre derivatives evaluated at a point (issue 4719) to work.
+    # See issue 4624
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
     assert (
@@ -265,7 +297,7 @@ def test_deriv2():
 
 def test_func_deriv():
     assert f(x).diff(x) == Derivative(f(x), x)
-    # issue 1435
+    # issue 4534
     assert f(x, y).diff(x, y) - f(x, y).diff(y, x) == 0
     assert Derivative(f(x, y), x, y).args[1:] == (x, y)
     assert Derivative(f(x, y), y, x).args[1:] == (y, x)
@@ -344,7 +376,7 @@ def test_function__eval_nseries():
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
-    # issue 3626:
+    # issue 6725:
     assert expint(S(3)/2, -x)._eval_nseries(x, 5, None) == \
         2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
@@ -369,7 +401,7 @@ def test_evalf_default():
     assert type(sin(Rational(1, 4))) == sin
 
 
-def test_issue2300():
+def test_issue_5399():
     args = [x, y, S(2), S.Half]
 
     def ok(a):
@@ -405,7 +437,7 @@ def test_fdiff_argument_index_error():
     from sympy.core.function import ArgumentIndexError
 
     class myfunc(Function):
-        nargs = 1
+        nargs = 1  # define since there is no eval routine
 
         def fdiff(self, idx):
             raise ArgumentIndexError
@@ -551,13 +583,15 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-def test_issue_1612():
+def test_issue_4711():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)
 
 
 def test_nfloat():
     from sympy.core.basic import _aresame
+    from sympy.polys.rootoftools import RootOf
+
     x = Symbol("x")
     eq = x**(S(4)/3) + 4*x**(S(1)/3)/3
     assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(S(1)/3))
@@ -573,10 +607,14 @@ def test_nfloat():
     assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
-    # issues 3243
+    # issue 6342
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
     assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
 
-    # issue 3533
+    # issue 6632
     assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
         9.99999999800000e-11
+
+    # issue 7122
+    eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
+    assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'

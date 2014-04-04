@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial)
+    MatrixSymbol, subfactorial, true, false, Equivalent, Xor)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -97,7 +97,7 @@ def test_Exp():
 
 def test_factorial():
     n = Symbol('n', integer=True)
-    assert str(factorial(-2)) == "0"
+    assert str(factorial(-2)) == "zoo"
     assert str(factorial(0)) == "1"
     assert str(factorial(7)) == "5040"
     assert str(factorial(n)) == "factorial(n)"
@@ -163,6 +163,9 @@ def test_Interval():
 
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
+    # issue 2908
+    assert str(Lambda((), 1)) == "Lambda((), 1)"
+    assert str(Lambda((), x)) == "Lambda((), x)"
 
 
 def test_Limit():
@@ -199,6 +202,8 @@ def test_Mul():
     assert str((x + 1)/(y + 2)) == "(x + 1)/(y + 2)"
     assert str(2*x/3) == '2*x/3'
     assert str(-2*x/3) == '-2*x/3'
+    assert str(-1.0*x) == '-1.0*x'
+    assert str(1.0*x) == '1.0*x'
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -227,11 +232,11 @@ def test_Order():
     assert str(O(x**2)) == "O(x**2)"
     assert str(O(x*y)) == "O(x*y, x, y)"
     assert str(O(x, x)) == "O(x)"
-    assert str(O(x, x, 0)) == "O(x)"
-    assert str(O(x, x, oo)) == "O(x, x, oo)"
+    assert str(O(x, (x, 0))) == "O(x)"
+    assert str(O(x, (x, oo))) == "O(x, (x, oo))"
     assert str(O(x, x, y)) == "O(x, x, y)"
-    assert str(O(x, x, y, 0)) == "O(x, x, y)"
-    assert str(O(x, x, y, oo)) == "O(x, x, y, oo)"
+    assert str(O(x, x, y)) == "O(x, x, y)"
+    assert str(O(x, (x, oo), (y, oo))) == "O(x, (x, oo), (y, oo))"
 
 
 def test_Permutation_Cycle():
@@ -539,7 +544,7 @@ def test_tuple():
 
 def test_Unit():
     assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 2461
+    assert str(joule) == "kg*m**2/s**2"  # issue 5560
 
 
 def test_wild_str():
@@ -571,7 +576,7 @@ def test_bug4():
     assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 
-def test_issue922():
+def test_issue_4021():
     e = Integral(x, x) + 1
     assert str(e) == 'Integral(x, x) + 1'
 
@@ -679,7 +684,7 @@ def test_Tr():
     assert str(t) == 'Tr(A*B)'
 
 
-def test_issue3288():
+def test_issue_6387():
     assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
 
 
@@ -692,3 +697,13 @@ def test_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
     assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
+
+def test_true_false():
+    assert str(true) == repr(true) == sstr(true) == "True"
+    assert str(false) == repr(false) == sstr(false) == "False"
+
+def test_Equivalent():
+    assert str(Equivalent(y, x)) == "Equivalent(x, y)"
+
+def test_Xor():
+    assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"

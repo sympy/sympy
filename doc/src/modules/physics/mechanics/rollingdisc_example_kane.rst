@@ -13,7 +13,7 @@ drop out). ::
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
   >>> q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
   >>> r, m, g = symbols('r m g')
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
 
 The kinematics are formed by a series of simple rotations. Each simple rotation
 creates a new frame, and the next rotation is defined by the new frame's basis

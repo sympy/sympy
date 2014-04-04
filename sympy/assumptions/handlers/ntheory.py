@@ -31,7 +31,7 @@ class AskPrimeHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
         # Just use int(expr) once
-        # http://code.google.com/p/sympy/issues/detail?id=1462
+        # https://github.com/sympy/sympy/issues/4561
         # is solved
         if expr.is_number:
             return AskPrimeHandler._number(expr, assumptions)

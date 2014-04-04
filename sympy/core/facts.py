@@ -166,7 +166,8 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
         seen_static_extension = False
 
         for bcond, bimpl in beta_rules:
-            assert isinstance(bcond, And)
+            if not isinstance(bcond, And):
+                raise TypeError("Cond is not And")
             bargs = set(bcond.args)
             for x, (ximpls, bb) in x_impl.items():
                 x_all = ximpls | set([x])
@@ -457,6 +458,10 @@ class FactKB(dict):
     """
     A simple propositional knowledge base relying on compiled inference rules.
     """
+    def __str__(self):
+        return '{\n%s}' % ',\n'.join(
+            ["\t%s: %s" % i for i in sorted(self.items())])
+
     def __init__(self, rules):
         self.rules = rules
 

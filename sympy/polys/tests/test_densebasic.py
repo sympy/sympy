@@ -44,6 +44,8 @@ from sympy.polys.rings import ring
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
 
+from sympy import oo
+
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
 def test_dup_LC():
@@ -94,24 +96,24 @@ def test_dmp_true_LT():
 
 
 def test_dup_degree():
-    assert dup_degree([]) == -1
+    assert dup_degree([]) == -oo
     assert dup_degree([1]) == 0
     assert dup_degree([1, 0]) == 1
     assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 
 def test_dmp_degree():
-    assert dmp_degree([[]], 1) == -1
-    assert dmp_degree([[[]]], 2) == -1
+    assert dmp_degree([[]], 1) == -oo
+    assert dmp_degree([[[]]], 2) == -oo
 
     assert dmp_degree([[1]], 1) == 0
     assert dmp_degree([[2], [1]], 1) == 1
 
 
 def test_dmp_degree_in():
-    assert dmp_degree_in([[[]]], 0, 2) == -1
-    assert dmp_degree_in([[[]]], 1, 2) == -1
-    assert dmp_degree_in([[[]]], 2, 2) == -1
+    assert dmp_degree_in([[[]]], 0, 2) == -oo
+    assert dmp_degree_in([[[]]], 1, 2) == -oo
+    assert dmp_degree_in([[[]]], 2, 2) == -oo
 
     assert dmp_degree_in([[[1]]], 0, 2) == 0
     assert dmp_degree_in([[[1]]], 1, 2) == 0
@@ -130,7 +132,7 @@ def test_dmp_degree_in():
 
 
 def test_dmp_degree_list():
-    assert dmp_degree_list([[[[ ]]]], 3) == (-1, -1, -1, -1)
+    assert dmp_degree_list([[[[ ]]]], 3) == (-oo, -oo, -oo, -oo)
     assert dmp_degree_list([[[[1]]]], 3) == ( 0, 0, 0, 0)
 
     assert dmp_degree_list(f_0, 2) == (2, 2, 2)
@@ -268,6 +270,7 @@ def test_dmp_nth():
 
 
 def test_dmp_ground_nth():
+    assert dmp_ground_nth([[]], (0, 0), 1, ZZ) == 0
     assert dmp_ground_nth([[1], [2], [3]], (0, 0), 1, ZZ) == 3
     assert dmp_ground_nth([[1], [2], [3]], (1, 0), 1, ZZ) == 2
     assert dmp_ground_nth([[1], [2], [3]], (2, 0), 1, ZZ) == 1

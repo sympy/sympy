@@ -23,6 +23,8 @@ class StrPrinter(Printer):
         "full_prec": "auto",
     }
 
+    _relationals = dict()
+
     def parenthesize(self, item, level):
         if precedence(item) <= level:
             return "(%s)" % self._print(item)
@@ -66,6 +68,12 @@ class StrPrinter(Printer):
         if sign == '+':
             sign = ""
         return sign + ' '.join(l)
+
+    def _print_BooleanTrue(self, expr):
+        return "True"
+
+    def _print_BooleanFalse(self, expr):
+        return "False"
 
     def _print_And(self, expr):
         return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
@@ -188,7 +196,7 @@ class StrPrinter(Printer):
             return "Lambda(%s, %s)" % (args.args[0], expr)
         else:
             arg_string = ", ".join(self._print(arg) for arg in args)
-            return "Lambda((%s), %s" % (arg_string, expr)
+            return "Lambda((%s), %s)" % (arg_string, expr)
 
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, key=default_sort_key)
@@ -308,11 +316,11 @@ class StrPrinter(Printer):
         return "Normal(%s, %s)" % (expr.mu, expr.sigma)
 
     def _print_Order(self, expr):
-        if expr.point == S.Zero or not len(expr.variables):
+        if all(p is S.Zero for p in expr.point) or not len(expr.variables):
             if len(expr.variables) <= 1:
                 return 'O(%s)' % self._print(expr.expr)
             else:
-                return 'O(%s)' % self.stringify(expr.args[:-1], ', ', 0)
+                return 'O(%s)' % self.stringify((expr.expr,) + expr.variables, ', ', 0)
         else:
             return 'O(%s)' % self.stringify(expr.args, ', ', 0)
 
@@ -354,16 +362,16 @@ class StrPrinter(Printer):
             return 'Permutation(%s)' % use
 
     def _print_TensorIndex(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensorHead(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensMul(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_TensAdd(self, expr):
-        return expr._pretty()
+        return expr._print()
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % str(a) for a in expr.args]
@@ -547,7 +555,7 @@ class StrPrinter(Printer):
 
     def _print_Relational(self, expr):
         return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
-                           expr.rel_op,
+                           self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
     def _print_RootOf(self, expr):

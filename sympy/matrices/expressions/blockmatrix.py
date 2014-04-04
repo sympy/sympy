@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import ask, Q
-from sympy.core import Tuple, Basic, Add
+from sympy.core import Tuple, Basic, Add, sympify
 from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
@@ -46,6 +46,7 @@ class BlockMatrix(MatrixExpr):
     """
     def __new__(cls, *args):
         from sympy.matrices.immutable import ImmutableMatrix
+        args = map(sympify, args)
         mat = ImmutableMatrix(*args)
 
         obj = Basic.__new__(cls, mat)
@@ -150,12 +151,12 @@ class BlockMatrix(MatrixExpr):
     def _entry(self, i, j):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
-            if (i < numrows) is not False:
+            if (i < numrows) != False:
                 break
             else:
                 i -= numrows
         for col_block, numcols in enumerate(self.colblocksizes):
-            if (j < numcols) is not False:
+            if (j < numcols) != False:
                 break
             else:
                 j -= numcols

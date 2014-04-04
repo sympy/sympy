@@ -190,30 +190,6 @@ def test_aux_dep():
             simplify(frstar_steady.expand()))
 
 
-def test_mat_inv_mul():
-    # Just a quick test to check that KanesMethod._mat_inv_mul works as
-    # intended. Uses SymPy generated primes as matrix entries, so each entry in
-    # each matrix should be symbolic and unique, allowing proper comparison.
-    # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
-    from sympy import Matrix, prime
-    from sympy.physics.mechanics import ReferenceFrame, KanesMethod
-
-    # Just need to create an instance of KanesMethod to get to _mat_inv_mul
-    mat_inv_mul = KanesMethod(ReferenceFrame('N'), [1], [1])._mat_inv_mul
-
-    # going to form 3 matrices
-    # 1 n x n
-    # different n x n
-    # 1 n x 2n
-    n = 3
-    m1 = Matrix(n, n, lambda i, j: prime(i * n + j + 2))
-    m2 = Matrix(n, n, lambda i, j: prime(i * n + j + 5))
-    m3 = Matrix(n, n, lambda i, j: prime(i + j * n + 2))
-
-    assert mat_inv_mul(m1, m2) == m1.inv() * m2
-    assert mat_inv_mul(m1, m3) == m1.inv() * m3
-
-
 def test_non_central_inertia():
     # This tests that the calculation of Fr* does not depend the point
     # about which the inertia of a rigid body is defined. This test solves

@@ -222,8 +222,10 @@ class RandomSymbol(Expr):
     """
 
     def __new__(cls, pspace, symbol):
-        assert isinstance(symbol, Symbol)
-        assert isinstance(pspace, PSpace)
+        if not isinstance(symbol, Symbol):
+            raise TypeError("symbol should be of type Symbol")
+        if not isinstance(pspace, PSpace):
+            raise TypeError("pspace variable should be of type PSpace")
         return Basic.__new__(cls, pspace, symbol)
 
     is_bounded = True
@@ -830,10 +832,10 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
             if condition:  # Check that these values satisfy the condition
                 gd = given_fn(*args)
-                if not isinstance(gd, bool):
+                if gd != True and gd != False:
                     raise ValueError(
                         "Conditions must not contain free symbols")
-                if gd is False:  # If the values don't satisfy then try again
+                if not gd:  # If the values don't satisfy then try again
                     continue
 
             yield fn(*args)
@@ -859,9 +861,9 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
         if condition is not None:  # Check that these values satisfy the condition
             gd = condition.xreplace(d)
-            if not isinstance(gd, bool):
+            if gd != True and gd != False:
                 raise ValueError("Conditions must not contain free symbols")
-            if gd is False:  # If the values don't satisfy then try again
+            if not gd:  # If the values don't satisfy then try again
                 continue
 
         yield expr.xreplace(d)
@@ -887,10 +889,10 @@ def sampling_P(condition, given_condition=None, numsamples=1,
                           numsamples=numsamples, **kwargs)
 
     for x in samples:
-        if not isinstance(x, bool):
+        if x != True and x != False:
             raise ValueError("Conditions must not contain free symbols")
 
-        if x is True:
+        if x:
             count_true += 1
         else:
             count_false += 1
@@ -1033,5 +1035,5 @@ def _value_check(condition, message):
 
     Raises ValueError with message if condition is not True
     """
-    if condition is not True:
+    if condition != True:
         raise ValueError(message)

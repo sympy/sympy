@@ -80,7 +80,74 @@ def integer_nthroot(y, n):
 
 
 class Pow(Expr):
+    """
+    Defines the expression x**y as "x raised to a power y"
 
+    Singleton definitions involving (0, 1, -1, oo, -oo):
+
+    +--------------+---------+-----------------------------------------------+
+    | expr         | value   | reason                                        |
+    +==============+=========+===============================================+
+    | z**0         | 1       | Although arguments over 0**0 exist, see [2].  |
+    +--------------+---------+-----------------------------------------------+
+    | z**1         | z       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | (-oo)**(-1)  | 0       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | (-1)**-1     | -1      |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | S.Zero**-1   | oo      | This is not strictly true, as 0**-1 may be    |
+    |              |         | undefined, but is convenient is some contexts |
+    |              |         | where the base is assumed to be positive.     |
+    +--------------+---------+-----------------------------------------------+
+    | 1**-1        | 1       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | oo**-1       | 0       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | 0**oo        | 0       | Because for all complex numbers z near        |
+    |              |         | 0, z**oo -> 0.                                |
+    +--------------+---------+-----------------------------------------------+
+    | 0**-oo       | oo      | This is not strictly true, as 0**oo may be    |
+    |              |         | oscillating between positive and negative     |
+    |              |         | values or rotating in the complex plane.      |
+    |              |         | It is convenient, however, when the base      |
+    |              |         | is positive.                                  |
+    +--------------+---------+-----------------------------------------------+
+    | 1**oo        | nan     | Because there are various cases where         |
+    | 1**-oo       |         | lim(x(t),t)=1, lim(y(t),t)=oo (or -oo),       |
+    |              |         | but lim( x(t)**y(t), t) != 1.  See [3].       |
+    +--------------+---------+-----------------------------------------------+
+    | (-1)**oo     | nan     | Because of oscillations in the limit.         |
+    | (-1)**(-oo)  |         |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | oo**oo       | oo      |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | oo**-oo      | 0       |                                               |
+    +--------------+---------+-----------------------------------------------+
+    | (-oo)**oo    | nan     |                                               |
+    | (-oo)**-oo   |         |                                               |
+    +--------------+---------+-----------------------------------------------+
+
+    Because symbolic computations are more flexible that floating point
+    calculations and we prefer to never return an incorrect answer,
+    we choose not to conform to all IEEE 754 conventions.  This helps
+    us avoid extra test-case code in the calculation of limits.
+
+    See Also
+    ========
+
+    Infinity
+    NegativeInfinity
+    NaN
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Exponentiation
+    .. [2] http://en.wikipedia.org/wiki/Exponentiation#Zero_to_the_power_of_zero
+    .. [3] http://en.wikipedia.org/wiki/Indeterminate_forms
+
+    """
     is_Pow = True
 
     __slots__ = ['is_commutative']
@@ -98,9 +165,11 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
+            elif b is S.One:
+                if e in (S.NaN, S.Infinity, -S.Infinity):
+                    return S.NaN
+                return S.One
             elif S.NaN in (b, e):
-                if b is S.One:  # already handled e == 0 above
-                    return S.One
                 return S.NaN
             else:
                 # recognize base as E
@@ -146,14 +215,14 @@ class Pow(Expr):
 
         # Special case for when b is nan. See pull req 1714 for details
         if b is S.NaN:
-            smallarg = (abs(e) <= S.Zero)
+            smallarg = abs(e).is_negative
         else:
-            smallarg = (abs(e) <= abs(S.Pi/log(b)))
+            smallarg = (abs(e) - abs(S.Pi/log(b))).is_negative
         if (other.is_Rational and other.q == 2 and
                 e.is_real is False and smallarg is False):
             return -self.func(b, e*other)
         if (other.is_integer or
-            e.is_real and (b_nneg or (abs(e) < 1) is True) or
+            e.is_real and (b_nneg or (abs(e) < 1) == True) or
             e.is_real is False and smallarg is True or
                 b.is_polar):
             return self.func(b, e*other)
@@ -174,6 +243,15 @@ class Pow(Expr):
         elif self.base.is_nonpositive:
             if self.exp.is_odd:
                 return False
+        elif self.base.is_imaginary:
+            if self.exp.is_integer:
+                m = self.exp % 4
+                if m.is_zero:
+                    return True
+                if m.is_integer and m.is_zero is False:
+                    return False
+            if self.exp.is_imaginary:
+                return C.log(self.base).is_imaginary
 
     def _eval_is_negative(self):
         if self.base.is_negative:
@@ -219,6 +297,8 @@ class Pow(Expr):
     def _eval_is_real(self):
         real_b = self.base.is_real
         if real_b is None:
+            if self.base.func == C.exp and self.base.args[0].is_imaginary:
+                return self.exp.is_imaginary
             return
         real_e = self.exp.is_real
         if real_e is None:
@@ -226,12 +306,17 @@ class Pow(Expr):
         if real_b and real_e:
             if self.base.is_positive:
                 return True
-            else:   # negative or zero (or positive)
+            elif self.base.is_nonnegative:
+                if self.exp.is_nonnegative:
+                    return True
+            else:
                 if self.exp.is_integer:
                     return True
                 elif self.base.is_negative:
                     if self.exp.is_Rational:
                         return False
+        if real_e and self.exp.is_negative:
+            return Pow(self.base, -self.exp).is_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:
@@ -240,8 +325,7 @@ class Pow(Expr):
                     return True
                 elif self.exp.is_odd:
                     return False
-            elif (self.exp in [S.ImaginaryUnit, -S.ImaginaryUnit] and
-                  self.base in [S.ImaginaryUnit, -S.ImaginaryUnit]):
+            elif im_e and C.log(self.base).is_imaginary:
                 return True
             elif self.exp.is_Add:
                 c, a = self.exp.as_coeff_Add()
@@ -298,7 +382,7 @@ class Pow(Expr):
                 except ValueError:
                     ok = self.base.is_positive
                 if ok:
-                    # issue 2081
+                    # issue 5180
                     return self.func(new, pow)  # (x**(6*y)).subs(x**(3*y),z)->z**2
         if old.func is C.exp and self.exp.is_real and self.base.is_positive:
             coeff1, terms1 = old.args[0].as_independent(C.Symbol, as_Add=False)
@@ -660,10 +744,17 @@ class Pow(Expr):
             im_part1.subs({a: re, b: im}) + im_part3.subs({a: re, b: -im}))
 
         elif self.exp.is_Rational:
-            # NOTE: This is not totally correct since for x**(p/q) with
-            #       x being imaginary there are actually q roots, but
-            #       only a single one is returned from here.
             re, im = self.base.as_real_imag(deep=deep)
+
+            if im.is_zero and self.exp is S.Half:
+                if re.is_nonnegative:
+                    return self, S.Zero
+                if re.is_nonpositive:
+                    return S.Zero, (-self.base)**self.exp
+
+            # XXX: This is not totally correct since for x**(p/q) with
+            #      x being imaginary there are actually q roots, but
+            #      only a single one is returned from here.
             r = self.func(self.func(re, 2) + self.func(im, 2), S.Half)
             t = C.atan2(im, re)
 
@@ -693,7 +784,7 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if (exp < 0) is True and base.is_number and base.is_real is False:
+        if exp.is_negative and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
             return self.func(base, exp).expand()
@@ -704,9 +795,8 @@ class Pow(Expr):
             return False
 
         if self.base.has(*syms):
-            return self.base._eval_is_polynomial(syms) and \
-                self.exp.is_Integer and \
-                (self.exp >= 0) is True
+            return bool(self.base._eval_is_polynomial(syms) and
+                self.exp.is_Integer and (self.exp >= 0))
         else:
             return True
 
@@ -828,17 +918,14 @@ class Pow(Expr):
                 try:
                     ord = b.as_leading_term(x)
                     cf = C.Order(ord, x).getn()
-                    if cf:
-                        nuse = n + 2*cf
+                    if cf and cf.is_Number:
+                        nuse = n + 2*ceiling(cf)
                     else:
-                       cf = 1
+                        cf = 1
                 except NotImplementedError:
                     pass
 
-                b_orig = b
-                b = b_orig._eval_nseries(x, n=nuse, logx=logx)
-                prefactor = b.as_leading_term(x)
-
+                b_orig, prefactor = b, O(1, x)
                 while prefactor.is_Order:
                     nuse += 1
                     b = b_orig._eval_nseries(x, n=nuse, logx=logx)
@@ -847,31 +934,39 @@ class Pow(Expr):
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
 
-                if rest == 0:
-                    # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
-                    # factor the w**4 out using collect:
-                    return 1/collect(prefactor, x)
                 if rest.is_Order:
                     return 1/prefactor + rest/prefactor + O(x**n, x)
-                n2 = rest.getn()
-                if n2 is not None:
-                    # remove the O - powering this is slow
-                    if logx is not None:
-                        rest = rest.removeO()
 
                 k, l = rest.leadterm(x)
                 if l.is_Rational and l > 0:
                     pass
                 elif l.is_number and l > 0:
                     l = l.evalf()
+                elif l == 0:
+                    k = k.simplify()
+                    if k == 0:
+                        # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
+                        # factor the w**4 out using collect:
+                        return 1/collect(prefactor, x)
+                    else:
+                        raise NotImplementedError()
                 else:
                     raise NotImplementedError()
 
                 if cf < 0:
                     cf = S.One/abs(cf)
 
+                try:
+                    dn = C.Order(1/prefactor, x).getn()
+                    if dn and dn < 0:
+                        pass
+                    else:
+                        dn = 0
+                except NotImplementedError:
+                    dn = 0
+
                 terms = [1/prefactor]
-                for m in xrange(1, ceiling(n/l*cf)):
+                for m in xrange(1, ceiling((n - dn)/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -880,17 +975,13 @@ class Pow(Expr):
                         new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
                 terms.append(O(x**n, x))
-
-                # Append O(...), we know the order.
-                if n2 is None or logx is not None:
-                    terms.append(O(x**n))
                 return powsimp(Add(*terms), deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for
                 # example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                nuse, denominator = n, O(1)
+                nuse, denominator = n, O(1, x)
                 while denominator.is_Order:
                     denominator = (b**(-e))._eval_nseries(x, n=nuse, logx=logx)
                     nuse += 1
@@ -989,7 +1080,7 @@ class Pow(Expr):
                         arg = c*arg.expr
                     res.append(arg)
                 bs = Add(*res)
-                rv = (bs**e).series(x).subs(c, O(1))
+                rv = (bs**e).series(x).subs(c, O(1, x))
                 rv += order
                 return rv
 

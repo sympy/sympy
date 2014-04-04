@@ -48,6 +48,7 @@ if sys.version_info[:2] < (2, 6):
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.calculus',
     'sympy.categories',
     'sympy.combinatorics',
     'sympy.concrete',
@@ -80,6 +81,7 @@ modules = [
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
+    'sympy.physics.vector',
     'sympy.plotting',
     'sympy.plotting.intervalmath',
     'sympy.plotting.pygletplot',
@@ -153,12 +155,13 @@ class clean(Command):
 
     def run(self):
         import os
-        os.system("py.cleanup")
+        os.system("find . -name '*.pyc' | xargs rm -f")
         os.system("rm -f python-build-stamp-2.4")
         os.system("rm -f MANIFEST")
         os.system("rm -rf build")
         os.system("rm -rf dist")
         os.system("rm -rf doc/_build")
+        os.system("rm -f sample.tex")
 
 
 class test_sympy(Command):
@@ -213,33 +216,13 @@ cmdclass = {'test': test_sympy,
             'bench': run_benchmarks,
             'clean': clean,
             'audit': audit}
-if PY3:
-    class build_scripts_python3_suffix(build_scripts):
-        def copy_scripts(self):
-            outfiles, updated_files = build_scripts.copy_scripts(self)
-            for outfile in outfiles:
-                _, copied = self.copy_file(outfile, outfile + "3")
-                if not self.dry_run and copied:
-                    try:
-                        os.unlink(outfile)
-                    except OSError:
-                        pass
-            self.scripts = [outfile + "3" for outfile in outfiles]
-            return outfiles, updated_files
-    cmdclass['build_scripts'] = build_scripts_python3_suffix
-
-if 'setuptools' in sys.modules and PY3:
-    from setuptools.command.develop import develop
-    class develop_python3_suffix(develop):
-        def install_script(self, dist, script_name, script_text, dev_path=None):
-            develop.install_script(self, dist, script_name + "3", script_text, dev_path)
-
-    cmdclass['develop'] = develop_python3_suffix
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
+
 tests = [
     'sympy.assumptions.tests',
+    'sympy.calculus.tests',
     'sympy.categories.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
@@ -254,15 +237,18 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
+    'sympy.liealgebras.tests',
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
+    'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',

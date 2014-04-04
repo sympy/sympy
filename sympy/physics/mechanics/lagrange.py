@@ -2,9 +2,13 @@ from __future__ import print_function, division
 
 __all__ = ['LagrangesMethod']
 
-from sympy import diff, zeros, Matrix, eye, sympify
-from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point)
+from sympy import diff, zeros, Matrix, eye, sympify, Symbol
+from sympy.physics.vector import (dynamicsymbols, ReferenceFrame, Point)
+from sympy.physics.mechanics.functions import _mat_inv_mul
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+import warnings
 
+warnings.simplefilter("always", SymPyDeprecationWarning)
 
 class LagrangesMethod(object):
     """Lagrange's method object.
@@ -221,7 +225,7 @@ class LagrangesMethod(object):
                     if isinstance(w[0], ReferenceFrame):
                         speed = w[0].ang_vel_in(N)
                         self._term4[i] += speed.diff(v, N) & w[1]
-                    if isinstance(w[0], Point):
+                    elif isinstance(w[0], Point):
                         speed = w[0].vel(N)
                         self._term4[i] += speed.diff(v, N) & w[1]
                     else:
@@ -316,19 +320,31 @@ class LagrangesMethod(object):
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
 
-    def rhs(self, method="GE"):
+    def rhs(self, inv_method=None, **kwargs):
         """ Returns equations that can be solved numerically
 
         Parameters
         ==========
 
-        method : string
-            The method by which matrix inversion of mass_matrix_full must be
-            performed such as Gauss Elimination or LU decomposition.
+        inv_method : str
+            The specific sympy inverse matrix calculation method to use. For a
+            list of valid methods, see :py:method:
+            `~sympy.matrices.matrices.MatrixBase.inv`
 
         """
 
-        # TODO- should probably use the matinvmul method from Kane
+        if 'method' in kwargs:
+            #The method kwarg is deprecated in favor of inv_method.
+            SymPyDeprecationWarning(feature="method kwarg",
+                    useinstead="inv_method kwarg",
+                    deprecated_since_version="0.7.6").warn()
+            #For now accept both
+            inv_method = kwargs['method']
 
-        return ((self.mass_matrix_full).inv(method, try_block_diag=True) *
-                self.forcing_full)
+        if inv_method is None:
+            self._rhs = _mat_inv_mul(self.mass_matrix_full,
+                                          self.forcing_full)
+        else:
+            self._rhs = (self.mass_matrix_full.inv(inv_method,
+                         try_block_diag=True) * self.forcing_full)
+        return self._rhs

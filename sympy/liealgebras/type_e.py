@@ -6,8 +6,8 @@ from sympy.matrices import eye
 class TypeE(Standard_Cartan):
 
     def __new__(cls, n):
-        assert n >= 6
-        assert n <= 8
+        if n < 6 or n > 8:
+            raise ValueError("Invalid value of n")
         return Standard_Cartan.__new__(cls, "E", n)
 
     def dimension(self):
@@ -52,6 +52,7 @@ class TypeE(Standard_Cartan):
 
         Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.simple_root(2)

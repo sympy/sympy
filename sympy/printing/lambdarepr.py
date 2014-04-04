@@ -73,6 +73,11 @@ class LambdaPrinter(StrPrinter):
         result = ['(', 'not (', self._print(expr.args[0]), '))']
         return ''.join(result)
 
+    def _print_BooleanTrue(self, expr):
+        return "True"
+
+    def _print_BooleanFalse(self, expr):
+        return "False"
 
 def lambdarepr(expr, **settings):
     """

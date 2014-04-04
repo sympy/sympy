@@ -112,8 +112,6 @@ class lerchphi(Function):
     -s*lerchphi(z, s + 1, a)
     """
 
-    nargs = 3
-
     def _eval_expand_func(self, **hints):
         from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
         z, s, a = self.args
@@ -158,7 +156,7 @@ class lerchphi(Function):
                 *[polylog(s, zet**k*root)._eval_expand_func(**hints)
                   / (unpolarify(zet)**k*root)**m for k in xrange(n)])
 
-        # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
+        # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
         if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
             if z == -1:
@@ -267,8 +265,6 @@ class polylog(Function):
     >>> polylog(s, z).rewrite(lerchphi)
     z*lerchphi(z, s, 1)
     """
-
-    nargs = 2
 
     @classmethod
     def eval(cls, s, z):
@@ -414,8 +410,6 @@ class zeta(Function):
 
     """
 
-    nargs = (1, 2)
-
     @classmethod
     def eval(cls, z, a_=None):
         if a_ is None:
@@ -509,7 +503,6 @@ class dirichlet_eta(Function):
     (-2**(-s + 1) + 1)*zeta(s)
 
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, s):

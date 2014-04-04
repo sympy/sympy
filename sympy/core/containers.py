@@ -94,10 +94,10 @@ class Tuple(Basic):
         return tuple([a._to_mpmath(prec) for a in self.args])
 
     def __lt__(self, other):
-        return self.args < other.args
+        return sympify(self.args < other.args)
 
     def __le__(self, other):
-        return self.args <= other.args
+        return sympify(self.args <= other.args)
 
     # XXX: Basic defines count() as something different, so we can't
     # redefine it here. Originally this lead to cse() test failure.
@@ -247,7 +247,7 @@ class Dict(Basic):
         return sympify(key) in self._dict
 
     def __lt__(self, other):
-        return self.args < other.args
+        return sympify(self.args < other.args)
 
     @property
     def _sorted_args(self):

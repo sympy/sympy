@@ -245,6 +245,7 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
+from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
@@ -405,7 +406,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
           It should be given in the form of ``{f(x0): x1, f(x).diff(x).subs(x, x2):
           x3}`` and so on. For now initial conditions are implemented only for
           power series solutions of first-order differential equations which should
-          be given in the form of ``{f(x0): x1}`` (See Issue 1621). If nothing is
+          be given in the form of ``{f(x0): x1}`` (See issue 4720). If nothing is
           specified for this case ``f(0)`` is assumed to be ``C0`` and the power
           series solution is calculated about 0.
 
@@ -795,7 +796,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     reduced_eq = None
     if eq.is_Add:
         deriv_coef = eq.coeff(f(x).diff(x, order))
-        if deriv_coef != 1:
+        if deriv_coef not in (1, 0):
             r = deriv_coef.match(a*f(x)**c1)
             if r and r[c1]:
                 den = f(x)**r[c1]
@@ -827,7 +828,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         ## Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
         r = collect(
             reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
-        if r and r[c] != 0 and r[n] != 1:  # See issue 1577
+        if r and r[c] != 0 and r[n] != 1:  # See issue 4676
             r['a'] = a
             r['b'] = b
             r['c'] = c
@@ -911,7 +912,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
-                # like f(2*x).diff(x).  See issue 1525 and issue 1620.
+                # like f(2*x).diff(x).  See issue 4624 and issue 4719.
                 pass
 
         # Any first order ODE can be ideally solved by the Lie Group
@@ -1128,7 +1129,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             some K.  We have a few cases, since coeff may have several
             different types.
             """
-            assert order >= 0
+            if order < 0:
+                raise ValueError("order should be greater than 0")
             if coeff == 0:
                 return True
             if order == 0:
@@ -1224,7 +1226,8 @@ def odesimp(eq, func, order, hint):
 
     # First, integrate if the hint allows it.
     eq = _handle_Integral(eq, func, order, hint)
-    assert isinstance(eq, Equality)
+    if not isinstance(eq, Equality):
+        raise TypeError("eq should be an instance of Equality")
 
     # Second, clean up the arbitrary constants.
     # Right now, nth linear hints can put as many as 2*order constants in an
@@ -1394,7 +1397,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             msg = ""
         SymPyDeprecationWarning(msg, feature="The order of the "
             "arguments sol and func to checkodesol()",
-            useinstead="checkodesol(ode, sol, func)", issue=3384,
+            useinstead="checkodesol(ode, sol, func)", issue=6483,
         ).warn()
         sol, func = func, sol
     elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):
@@ -1518,7 +1521,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     ode_or_bool = Eq(lhs, rhs)
                     ode_or_bool = simplify(ode_or_bool)
 
-                    if isinstance(ode_or_bool, bool):
+                    if isinstance(ode_or_bool, (bool, BooleanAtom)):
                         if ode_or_bool:
                             lhs = rhs = S.Zero
                     else:
@@ -2739,6 +2742,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x, y
     >>> f = Function("f")
@@ -2902,6 +2906,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x, y
     >>> f = Function("f")
@@ -3189,7 +3194,8 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
         for i in range(multiplicity):
             if isinstance(root, RootOf):
                 gsol += (x**root) * next(constants)
-                assert multiplicity == 1
+                if multiplicity != 1:
+                    raise ValueError("Value should be 1")
                 collectterms = [(0, root, 0)] + collectterms
             elif root.is_real:
                 gsol += ln(x)**i*(x**root) * next(constants)
@@ -3371,7 +3377,7 @@ def _linear_coeff_match(expr, func):
                     return a1, b1, c1, a2, b2, c2, d
 
     m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
-         fi.nargs == 1 and not fi.args[0].is_Function] or set([expr])
+         len(fi.args) == 1 and not fi.args[0].is_Function] or set([expr])
     m1 = match(m.pop())
     if m1 and all(match(mi) == m1 for mi in m):
         a1, b1, c1, a2, b2, c2, denom = m1
@@ -3528,6 +3534,7 @@ def ode_1st_power_series(eq, func, order, match):
 
     Examples
     ========
+
     >>> from sympy import Function, Derivative, pprint, exp
     >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
@@ -3693,7 +3700,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         for i in range(multiplicity):
             if isinstance(root, RootOf):
                 gsol += exp(root*x) * next(constants)
-                assert multiplicity == 1
+                if multiplicity != 1:
+                    raise ValueError("Value should be 1")
                 collectterms = [(0, root, 0)] + collectterms
             else:
                 reroot = re(root)
@@ -4151,7 +4159,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
 
     if r.get('simplify', True):
         wr = simplify(wr)  # We need much better simplification for
-                           # some ODEs. See issue 1563, for example.
+                           # some ODEs. See issue 4662, for example.
 
         # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
@@ -4496,6 +4504,7 @@ def _lie_group_remove(coords):
 
     Examples
     ========
+
     >>> from sympy.solvers.ode import _lie_group_remove
     >>> from sympy import Function
     >>> from sympy.abc import x, y

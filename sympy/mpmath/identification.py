@@ -32,7 +32,7 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
 
     Find rational approximations for `\pi`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> pslq([-1, pi], tol=0.01)
         [22, 7]
@@ -130,11 +130,13 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     """
 
     n = len(x)
-    assert n >= 2
+    if n < 2:
+        raise ValueError("n cannot be less than 2")
 
     # At too low precision, the algorithm becomes meaningless
     prec = ctx.prec
-    assert prec >= 53
+    if prec < 53:
+        raise ValueError("prec cannot be less than 53")
 
     if verbose and prec // max(2,n) < 5:
         print("Warning: precision for PSLQ may be too low")
@@ -329,7 +331,7 @@ def findpoly(ctx, x, n=1, **kwargs):
     By default (degree `n = 1`), :func:`~mpmath.findpoly` simply finds a linear
     polynomial with a rational root::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> findpoly(0.7)
         [-10, 7]
@@ -413,7 +415,8 @@ def findpoly(ctx, x, n=1, **kwargs):
     idea what is happening can be useful.
     """
     x = ctx.mpf(x)
-    assert n >= 1
+    if n < 1:
+        raise ValueError("n cannot be less than 1")
     if x == 0:
         return [1, 0]
     xs = [ctx.mpf(1)]
@@ -538,7 +541,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
     As a simple example, :func:`~mpmath.identify` will find an algebraic
     formula for the golden ratio::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> identify(phi)
         '((1+sqrt(5))/2)'
@@ -699,22 +702,22 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
 
         >>> from sympy import sympify
         >>> sympify(identify(sqrt(2)))
-        sqrt(2)
+        2**(1/2)
 
     Sometimes :func:`~mpmath.identify` can simplify an expression further than
     a symbolic algorithm::
 
         >>> from sympy import simplify
-        >>> x = sympify('-1/(-3/2+(1/2)*sqrt(5))*sqrt(3/2-1/2*sqrt(5))')
+        >>> x = sympify('-1/(-3/2+(1/2)*5**(1/2))*(3/2-1/2*5**(1/2))**(1/2)')
         >>> x
-        1/sqrt(3/2 - sqrt(5)/2)
+        (3/2 - 5**(1/2)/2)**(-1/2)
         >>> x = simplify(x)
         >>> x
-        2/sqrt(6 - 2*sqrt(5))
+        2/(6 - 2*5**(1/2))**(1/2)
         >>> mp.dps = 30
         >>> x = sympify(identify(x.evalf(30)))
         >>> x
-        1/2 + sqrt(5)/2
+        1/2 + 5**(1/2)/2
 
     (In fact, this functionality is available directly in SymPy as the
     function :func:`~mpmath.nsimplify`, which is essentially a wrapper for

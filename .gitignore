@@ -61,3 +61,6 @@ doc/src/modules/physics/mechanics/*.pdf
 
 # Backup files
 *~
+
+# Temp output of sympy/printing/preview.py:
+sample.tex

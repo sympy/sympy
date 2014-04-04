@@ -438,7 +438,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
                     if any(y is not None for y in yarray):
-                        for i in len(yarray) - 1:
+                        for i in range(len(yarray) - 1):
                             if yarray[i] is not None or yarray[i + 1] is not None:
                                 sample([xarray[i], yarray[i]],
                                     [xarray[i + 1], yarray[i + 1]], depth + 1)
@@ -560,7 +560,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                 y_array = list(map(f_y, param_array))
                 if any(x is not None and y is not None
                         for x, y in zip(x_array, y_array)):
-                    for i in len(y_array) - 1:
+                    for i in range(len(y_array) - 1):
                         if ((x_array[i] is not None and y_array[i] is not None) or
                                 (x_array[i + 1] is not None and y_array[i + 1] is not None)):
                             point_a = [x_array[i], y_array[i]]
@@ -1341,7 +1341,7 @@ def plot_parametric(*args, **kwargs):
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 2, 1)
-    series = [Parametric2DLineSeries(*arg) for arg in plot_expr]
+    series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -1437,7 +1437,7 @@ def plot3d_parametric_line(*args, **kwargs):
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 1)
-    series = [Parametric3DLineSeries(*arg) for arg in plot_expr]
+    series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -1549,7 +1549,7 @@ def plot3d(*args, **kwargs):
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 2)
-    series = [SurfaceOver2DRangeSeries(*arg) for arg in plot_expr]
+    series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -1644,7 +1644,7 @@ def plot3d_parametric_surface(*args, **kwargs):
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 2)
-    series = [ParametricSurfaceSeries(*arg) for arg in plot_expr]
+    series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()
@@ -1669,7 +1669,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         # Multiple expressions same range.
         # The arguments are tuples when the expression length is
         # greater than 1.
-        assert len(args) >= expr_len
+        if len(args) < expr_len:
+            raise ValueError("len(args) should not be less than expr_len")
         for i in range(len(args)):
             if isinstance(args[i], Tuple):
                 break

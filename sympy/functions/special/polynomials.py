@@ -32,7 +32,6 @@ _x = C.Dummy('x')
 class OrthogonalPolynomial(Function):
     """Base class for orthogonal polynomials.
     """
-    nargs = 2
 
     @classmethod
     def _eval_at_order(cls, n, x):
@@ -125,7 +124,6 @@ class jacobi(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
     """
 
-    nargs = 4
 
     @classmethod
     def eval(cls, n, a, b, x):
@@ -332,7 +330,6 @@ class gegenbauer(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
     """
 
-    nargs = 3
 
     @classmethod
     def eval(cls, n, a, x):
@@ -352,7 +349,7 @@ class gegenbauer(OrthogonalPolynomial):
         if not n.is_Number:
             # Handle this before the general sign extraction rule
             if x == S.NegativeOne:
-                if (C.re(a) > S.Half) is True:
+                if (C.re(a) > S.Half) == True:
                     return S.ComplexInfinity
                 else:
                     # No sec function available yet
@@ -666,11 +663,10 @@ class chebyshevt_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, n, k):
-        if not ((0 <= k) is (k < n) is True):
+        if not ((0 <= k) and (k < n)):
             raise ValueError("must have 0 <= k < n, "
                 "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(2*k + 1)/(2*n))
@@ -707,11 +703,10 @@ class chebyshevu_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, n, k):
-        if not ((0 <= k) is (k < n) is True):
+        if not ((0 <= k) and (k < n)):
             raise ValueError("must have 0 <= k < n, "
                 "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(k + 1)/(n + 1))
@@ -869,7 +864,6 @@ class assoc_legendre(Function):
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
-    nargs = 3
 
     @classmethod
     def _eval_at_order(cls, n, m):
@@ -1177,7 +1171,6 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
-    nargs = 3
 
     @classmethod
     def eval(cls, n, alpha, x):

@@ -1,20 +1,19 @@
 """
-There are two types of functions:
-1) defined function like exp or sin that has a name and body
-   (in the sense that function can be evaluated).
-    e = exp
-2) undefined function with a name but no body. Undefined
-   functions can be defined using a Function class as follows:
-       f = Function('f')
-   (the result will be a Function instance)
-3) this isn't implemented yet: anonymous function or lambda function that has
-   no name but has body with dummy variables. Examples of anonymous function
-   creation:
-       f = Lambda(x, exp(x)*x)
-       f = Lambda(exp(x)*x) # free symbols of expr define the number of args
-       f = exp * Lambda(x, x)
-4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
-   works in sympy core, but needs to be ported back to SymPy.
+There are three types of functions implemented in SymPy:
+
+    1) defined functions (in the sense that they can be evaluated) like
+       exp or sin; they have a name and a body:
+           f = exp
+    2) undefined function which have a name but no body. Undefined
+       functions can be defined using a Function class as follows:
+           f = Function('f')
+       (the result will be a Function instance)
+    3) anonymous function (or lambda function) which have a body (defined
+       with dummy variables) but have no name:
+           f = Lambda(x, exp(x)*x)
+           f = Lambda((x, y), exp(x)*y)
+    The fourth type of functions are composites, like (sin + cos)(x); these work in
+    SymPy core, but are not yet part of SymPy.
 
     Examples
     ========
@@ -36,7 +35,7 @@ from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence
+from .compatibility import iterable, is_sequence, as_int, ordered
 from .core import BasicMeta, C
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
@@ -53,6 +52,8 @@ from sympy.utilities.iterables import uniq
 
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
+
+import inspect
 
 
 def _coeff_isneg(a):
@@ -98,6 +99,73 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     """
     _new = type.__new__
 
+    def __init__(cls, *args, **kwargs):
+        if hasattr(cls, 'eval'):
+            evalargspec = inspect.getargspec(cls.eval)
+            if evalargspec.varargs:
+                evalargs = None
+            else:
+                evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
+                if evalargspec.defaults:
+                    # if there are default args then they are optional; the
+                    # fewest args will occur when all defaults are used and
+                    # the most when none are used (i.e. all args are given)
+                    evalargs = tuple(range(
+                        evalargs - len(evalargspec.defaults), evalargs + 1))
+        else:
+            evalargs = None
+        # honor kwarg value or class-defined value before using
+        # the number of arguments in the eval function (if present)
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', evalargs))
+        super(FunctionClass, cls).__init__(args, kwargs)
+
+        # Canonicalize nargs here; change to set in nargs.
+        if is_sequence(nargs):
+            nargs = tuple(ordered(set(nargs)))
+        elif nargs is not None:
+            nargs = (as_int(nargs),)
+        cls._nargs = nargs
+
+    @property
+    def nargs(self):
+        """Return a set of the allowed number of arguments for the function.
+
+        Examples
+        ========
+
+        >>> from sympy.core.function import Function
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+
+        If the function can take any number of arguments, the set of whole
+        numbers is returned:
+
+        >>> Function('f').nargs
+        Naturals0()
+
+        If the function was initialized to accept one or more arguments, a
+        corresponding set will be returned:
+
+        >>> Function('f', nargs=1).nargs
+        {1}
+        >>> Function('f', nargs=(2, 1)).nargs
+        {1, 2}
+
+        The undefined function, after application, also has the nargs
+        attribute; the actual number of arguments is always available by
+        checking the ``args`` attribute:
+
+        >>> f = Function('f')
+        >>> f(1).nargs
+        Naturals0()
+        >>> len(f(1).args)
+        1
+        """
+        from sympy.core.sets import FiniteSet
+        # XXX it would be nice to handle this in __init__ but there are import
+        # problems with trying to import FiniteSet there
+        return FiniteSet(self._nargs) if self._nargs else S.Naturals0
+
     def __repr__(cls):
         return cls.__name__
 
@@ -109,16 +177,20 @@ class Application(with_metaclass(FunctionClass, Basic)):
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
-    __slots__ = []
 
     is_Function = True
 
-    nargs = None
-
     @cacheit
     def __new__(cls, *args, **options):
+        from sympy.sets.fancysets import Naturals0
+        from sympy.core.sets import FiniteSet
+
         args = list(map(sympify, args))
         evaluate = options.pop('evaluate', True)
+        # WildFunction (and anything else like it) may have nargs defined
+        # and we throw that value away here
+        options.pop('nargs', None)
+
         if options:
             raise ValueError("Unknown options: %s" % options)
 
@@ -126,7 +198,24 @@ class Application(with_metaclass(FunctionClass, Basic)):
             evaluated = cls.eval(*args)
             if evaluated is not None:
                 return evaluated
-        return super(Application, cls).__new__(cls, *args)
+
+        obj = super(Application, cls).__new__(cls, *args, **options)
+
+        # make nargs uniform here
+        try:
+            # things passing through here:
+            #  - functions subclassed from Function (e.g. myfunc(1).nargs)
+            #  - functions like cos(1).nargs
+            #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
+            obj.nargs = FiniteSet(obj.nargs) if obj.nargs is not None \
+                else Naturals0()
+        except AttributeError:
+            # things passing through here:
+            #  - WildFunction('f').nargs
+            #  - AppliedUndef with no nargs like Function('f')(1).nargs
+            obj.nargs = FiniteSet(obj._nargs) if obj._nargs is not None \
+                else Naturals0()
+        return obj
 
     @classmethod
     def eval(cls, *args):
@@ -161,10 +250,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and
-            old == self.func and
-            (self.nargs == new.nargs or not new.nargs or
-             isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
+        if (old.is_Function and new.is_Function and old == self.func and
+            len(self.args) in new.nargs):
             return new(*self.args)
 
 
@@ -204,8 +291,6 @@ class Function(Application, Expr):
     >>> from sympy import Function, S, oo, I, sin
     >>> class my_func(Function):
     ...
-    ...     nargs = 1
-    ...
     ...     @classmethod
     ...     def eval(cls, x):
     ...         if x.is_Number:
@@ -231,6 +316,14 @@ class Function(Application, Expr):
     need to be implemented. See source code of some of the already
     implemented functions for more complete examples.
 
+    Also, if the function can take more than one argument, then ``nargs``
+    must be defined, e.g. if ``my_func`` can take one or two arguments
+    then,
+
+    >>> class my_func(Function):
+    ...     nargs = (1, 2)
+    ...
+    >>>
     """
 
     @property
@@ -253,28 +346,23 @@ class Function(Application, Expr):
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
         if cls is Function:
-            return UndefinedFunction(*args)
+            return UndefinedFunction(*args, **options)
 
-        if cls.nargs is not None:
-            if isinstance(cls.nargs, tuple):
-                nargs = cls.nargs
-            else:
-                nargs = (cls.nargs,)
-
-            n = len(args)
-
-            if n not in nargs:
-                # XXX: exception message must be in exactly this format to make
-                # it work with NumPy's functions like vectorize(). The ideal
-                # solution would be just to attach metadata to the exception
-                # and change NumPy to take advantage of this.
-                temp = ('%(name)s takes exactly %(args)s '
-                       'argument%(plural)s (%(given)s given)')
-                raise TypeError(temp % {
-                    'name': cls,
-                    'args': cls.nargs,
-                    'plural': 's'*(n != 1),
-                    'given': n})
+        n = len(args)
+        if n not in cls.nargs:
+            # XXX: exception message must be in exactly this format to
+            # make it work with NumPy's functions like vectorize(). See,
+            # for example, https://github.com/numpy/numpy/issues/1697.
+            # The ideal solution would be just to attach metadata to
+            # the exception and change NumPy to take advantage of this.
+            temp = ('%(name)s takes %(qual)s %(args)s '
+                   'argument%(plural)s (%(given)s given)')
+            raise TypeError(temp % {
+                'name': cls,
+                'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
+                'args': min(cls.nargs),
+                'plural': 's'*(min(cls.nargs) != 1),
+                'given': n})
 
         evaluate = options.get('evaluate', True)
         result = super(Function, cls).__new__(cls, *args, **options)
@@ -307,6 +395,7 @@ class Function(Application, Expr):
 
     @classmethod
     def class_key(cls):
+        from sympy.sets.fancysets import Naturals0
         funcs = {
             'exp': 10,
             'log': 11,
@@ -328,9 +417,7 @@ class Function(Application, Expr):
         try:
             i = funcs[name]
         except KeyError:
-            nargs = cls.nargs
-
-            i = 0 if nargs is None else 10000
+            i = 0 if isinstance(cls.nargs, Naturals0) else 10000
 
         return 4, i, name
 
@@ -461,6 +548,7 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
+        from sympy.core.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded is False for t in args0):
@@ -499,10 +587,9 @@ class Function(Application, Expr):
             s = s.removeO()
             s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
             return s
-        if (self.func.nargs is None
-                or (self.func.nargs == 1 and args0[0])
-                or isinstance(self.func.nargs, tuple)
-                or self.func.nargs > 1):
+        if (self.func.nargs is S.Naturals0
+                or (self.func.nargs == FiniteSet(1) and args0[0])
+                or any(c > 1 for c in self.func.nargs)):
             e = self
             e1 = e.expand()
             if e == e1:
@@ -563,15 +650,10 @@ class Function(Application, Expr):
         """
         Returns the first derivative of the function.
         """
-        if self.nargs is not None:
-            if isinstance(self.nargs, tuple):
-                nargs = self.nargs[-1]
-            else:
-                nargs = self.nargs
-            if not (1 <= argindex <= nargs):
-                raise ArgumentIndexError(self, argindex)
+        if not (1 <= argindex <= len(self.args)):
+            raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
-            # See issue 1525 and issue 1620 and issue 2501
+            # See issue 4624 and issue 4719 and issue 5600
             arg_dummy = C.Dummy('xi_%i' % argindex)
             arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
@@ -612,11 +694,11 @@ class AppliedUndef(Function):
     Base class for expressions resulting from the application of an undefined
     function.
     """
+
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
-        result = super(AppliedUndef, cls).__new__(cls, *args, **options)
-        result.nargs = len(args)
-        return result
+        obj = super(AppliedUndef, cls).__new__(cls, *args, **options)
+        return obj
 
     def _eval_as_leading_term(self, x):
         return self
@@ -626,8 +708,8 @@ class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name):
-        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+    def __new__(mcl, name, **kwargs):
+        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), kwargs)
         ret.__module__ = None
         return ret
 
@@ -645,6 +727,8 @@ class WildFunction(Function, AtomicExpr):
     >>> from sympy.abc import x, y
     >>> F = WildFunction('F')
     >>> f = Function('f')
+    >>> F.nargs
+    Naturals0()
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}
@@ -653,28 +737,48 @@ class WildFunction(Function, AtomicExpr):
     >>> cos(x).match(F)
     {F_: cos(x)}
     >>> f(x, y).match(F)
+    {F_: f(x, y)}
 
-    To match functions with more than 1 arguments, set ``nargs`` to the
-    desired value:
+    To match functions with a given number of arguments, set ``nargs`` to the
+    desired value at instantiation:
 
-    >>> F.nargs = 2
+    >>> F = WildFunction('F', nargs=2)
+    >>> F.nargs
+    {2}
+    >>> f(x).match(F)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
 
+    To match functions with a range of arguments, set ``nargs`` to a tuple
+    containing the desired number of arguments, e.g. if ``nargs = (1, 2)``
+    then functions with 1 or 2 arguments will be matched.
+
+    >>> F = WildFunction('F', nargs=(1, 2))
+    >>> F.nargs
+    {1, 2}
+    >>> f(x).match(F)
+    {F_: f(x)}
+    >>> f(x, y).match(F)
+    {F_: f(x, y)}
+    >>> f(x, y, 1).match(F)
+
     """
 
-    nargs = 1
     include = set()
 
-    def __new__(cls, name, **assumptions):
-        obj = Function.__new__(cls, name, **assumptions)
-        obj.name = name
-        return obj
+    def __init__(cls, name, **assumptions):
+        from sympy.core.sets import Set, FiniteSet
+        cls.name = name
+        nargs = assumptions.pop('nargs', S.Naturals0)
+        if not isinstance(nargs, Set):
+            nargs = FiniteSet(nargs)
+        cls.nargs = nargs
 
     def matches(self, expr, repl_dict={}, old=False):
-        if self.nargs is not None:
-            if not hasattr(expr, 'nargs') or self.nargs != expr.nargs:
-                return None
+        if not isinstance(expr, (AppliedUndef, Function)):
+            return None
+        if len(expr.args) not in self.nargs:
+            return None
 
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
@@ -1158,7 +1262,7 @@ class Derivative(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables and not new.is_Symbol:
-            # Issue 1620
+            # issue 4719
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
@@ -1191,9 +1295,9 @@ class Derivative(Expr):
                     return Derivative(new, *variables)
         return Derivative(*map(lambda x: x._subs(old, new), self.args))
 
-    def _eval_lseries(self, x):
+    def _eval_lseries(self, x, logx):
         dx = self.args[1:]
-        for term in self.args[0].lseries(x):
+        for term in self.args[0].lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
@@ -1239,12 +1343,13 @@ class Lambda(Expr):
 
     """
     is_Function = True
-    __slots__ = []
 
     def __new__(cls, variables, expr):
+        from sympy.core.sets import FiniteSet
         try:
             for v in variables if iterable(variables) else [variables]:
-                assert v.is_Symbol
+                if not v.is_Symbol:
+                    raise TypeError("v is not a symbol")
         except (AssertionError, AttributeError):
             raise ValueError('variable is not a Symbol: %s' % v)
         try:
@@ -1255,6 +1360,7 @@ class Lambda(Expr):
             return S.IdentityFunction
 
         obj = Expr.__new__(cls, Tuple(*variables), S(expr))
+        obj.nargs = FiniteSet(len(variables))
         return obj
 
     @property
@@ -1271,15 +1377,23 @@ class Lambda(Expr):
     def free_symbols(self):
         return self.expr.free_symbols - set(self.variables)
 
-    @property
-    def nargs(self):
-        """The number of arguments that this function takes"""
-        return len(self._args[0])
-
     def __call__(self, *args):
-        if len(args) != self.nargs:
-            raise TypeError('%s takes %d arguments (%d given)' %
-                    (self, self.nargs, len(args)))
+        from sympy.core.sets import FiniteSet
+        n = len(args)
+        if n not in self.nargs:  # Lambda only ever has 1 value in nargs
+            # XXX: exception message must be in exactly this format to
+            # make it work with NumPy's functions like vectorize(). See,
+            # for example, https://github.com/numpy/numpy/issues/1697.
+            # The ideal solution would be just to attach metadata to
+            # the exception and change NumPy to take advantage of this.
+            ## XXX does this apply to Lambda? If not, remove this comment.
+            temp = ('%(name)s takes exactly %(args)s '
+                   'argument%(plural)s (%(given)s given)')
+            raise TypeError(temp % {
+                'name': self,
+                'args': list(self.nargs)[0],
+                'plural': 's'*(list(self.nargs)[0] != 1),
+                'given': n})
         return self.expr.xreplace(dict(list(zip(self.variables, args))))
 
     def __eq__(self, other):
@@ -1520,6 +1634,7 @@ def diff(f, *symbols, **kwargs):
     ========
 
     Derivative
+    sympy.geometry.util.idiff: computes the derivative implicitly
 
     """
     kwargs.setdefault('evaluate', True)
@@ -2209,7 +2324,8 @@ def count_ops(expr, visual=False):
     elif not isinstance(expr, Basic):
         ops = []
     else:  # it's Basic not isinstance(expr, Expr):
-        assert isinstance(expr, Basic)
+        if not isinstance(expr, Basic):
+            raise TypeError("Invalid type of expr")
         ops = [count_ops(a, visual=visual) for a in expr.args]
 
     if not ops:
@@ -2244,7 +2360,8 @@ def nfloat(expr, n=15, exponent=False):
     x**4.0 + y**0.5
 
     """
-    from sympy.core import Pow
+    from sympy.core.power import Pow
+    from sympy.polys.rootoftools import RootOf
 
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
@@ -2263,6 +2380,11 @@ def nfloat(expr, n=15, exponent=False):
         else:
             pass  # pure_complex(rv) is likely True
         return rv
+
+    # watch out for RootOf instances that don't like to have
+    # their exponents replaced with Dummies and also sometimes have
+    # problems with evaluating at low precision (issue 6393)
+    rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
 
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]

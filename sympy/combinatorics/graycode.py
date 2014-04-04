@@ -264,6 +264,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> GrayCode(3, start='100').current
         '100'

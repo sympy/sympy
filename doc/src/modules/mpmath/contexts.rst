@@ -15,7 +15,7 @@ form of an initial parameter called "ctx" visible in the help for the function::
     >>> import mpmath
     >>> help(mpmath.fsum)   # doctest:+SKIP
     Help on method fsum in module mpmath.ctx_mp_python:
-
+    
     fsum(ctx, terms, absolute=False, squared=False) method of mpmath.ctx_mp.MPContext instance
         Calculates a sum containing a finite number of terms (for infinite
         series, see :func:`~mpmath.nsum`). The terms will be converted to
@@ -270,7 +270,7 @@ To take advantage of this feature, simply use the ``fp`` prefix, i.e. write ``fp
     matrix(
     [['7.0', '10.0'],
      ['15.0', '22.0']])
-    >>>
+    >>> 
     >>> type(_[0,0])
     <type 'float'>
     >>> print fp.quad(fp.sin, [0, fp.pi])    # numerical integration
@@ -279,13 +279,13 @@ To take advantage of this feature, simply use the ``fp`` prefix, i.e. write ``fp
 The ``fp`` context wraps Python's ``math`` and ``cmath`` modules for elementary functions. It supports both real and complex numbers and automatically generates complex results for real inputs (``math`` raises an exception)::
 
     >>> fp.sqrt(5)
-    2.2360679774997898
+    2.23606797749979
     >>> fp.sqrt(-5)
-    2.2360679774997898j
+    2.23606797749979j
     >>> fp.sin(10)
-    -0.54402111088936977
+    -0.5440211108893698
     >>> fp.power(-1, 0.25)
-    (0.70710678118654757+0.70710678118654746j)
+    (0.7071067811865476+0.7071067811865475j)
     >>> (-1) ** 0.25
     Traceback (most recent call last):
       ...

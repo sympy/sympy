@@ -9,7 +9,7 @@ from sympy import (
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
-    degree, poly_from_expr, parallel_poly_from_expr
+    degree, poly_from_expr, parallel_poly_from_expr, lcm
 )
 
 from sympy.polys.polyclasses import (
@@ -33,17 +33,23 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy.polys.orthopolys import dup_chebyshevt
 
+from sympy.polys.rings import ring
+
+from sympy.polys.ring_series import rs_compose_add
+
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
-    numbered_symbols, variations, lambdify, public,
+    numbered_symbols, variations, lambdify, public, sift
 )
 
+from sympy.core.exprtools import Factors
 from sympy.simplify.simplify import _mexpand, _is_sum_surds
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
+from sympy.core.compatibility import reduce
 from sympy.core.compatibility import xrange
 
 
@@ -57,7 +63,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     if len(factors) == 1:
         return factors[0]
 
-    points = {}
+    points = {x:v}
     symbols = dom.symbols if hasattr(dom, 'symbols') else []
     t = QQ(1, 10)
 
@@ -72,7 +78,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
             candidates = []
             eps = t**(prec1 // 2)
             for f in factors:
-                if abs(f.as_expr().subs(x, v).subs(points).evalf(prec1)) < eps:
+                if abs(f.as_expr().evalf(prec1, points)) < eps:
                     candidates.append(f)
             if candidates:
                 factors = candidates
@@ -210,7 +216,7 @@ def _minimal_polynomial_sq(p, n, x):
 
 def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     """
-    return the minimal polinomial for ``op(ex1, ex2)``
+    return the minimal polynomial for ``op(ex1, ex2)``
 
     Parameters
     ==========
@@ -254,15 +260,25 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
 
     if op is Add:
         # mp1a = mp1.subs({x: x - y})
-        (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
-        r = p1.compose(p2)
-        mp1a = r.as_expr()
+        if dom == QQ:
+            R, X = ring('X', QQ)
+            p1 = R(dict_from_expr(mp1)[0])
+            p2 = R(dict_from_expr(mp2)[0])
+        else:
+            (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
+            r = p1.compose(p2)
+            mp1a = r.as_expr()
+
     elif op is Mul:
         mp1a = _muly(mp1, x, y)
     else:
         raise NotImplementedError('option not available')
 
-    r = resultant(mp1a, mp2, gens=[y, x])
+    if op is Mul or dom != QQ:
+        r = resultant(mp1a, mp2, gens=[y, x])
+    else:
+        r = rs_compose_add(p1, p2)
+        r = expr_from_dict(r.as_expr_dict(), x)
 
     deg1 = degree(mp1, x)
     deg2 = degree(mp2, y)
@@ -534,7 +550,25 @@ def _minpoly_compose(ex, x, dom):
     if ex.is_Add:
         res = _minpoly_add(x, dom, *ex.args)
     elif ex.is_Mul:
-        res = _minpoly_mul(x, dom, *ex.args)
+        f = Factors(ex).factors
+        r = sift(f.items(), lambda itx: itx[0].is_rational and itx[1].is_rational)
+        if r[True] and dom == QQ:
+            ex1 = Mul(*[bx**ex for bx, ex in r[False] + r[None]])
+            r1 = r[True]
+            dens = [y.q for _, y in r1]
+            lcmdens = reduce(lcm, dens, 1)
+            nums = [base**(y.p*lcmdens // y.q) for base, y in r1]
+            ex2 = Mul(*nums)
+            mp1 = minimal_polynomial(ex1, x)
+            # use the fact that in SymPy canonicalization products of integers
+            # raised to rational powers are organized in relatively prime
+            # bases, and that in ``base**(n/d)`` a perfect power is
+            # simplified with the root
+            mp2 = ex2.q*x**lcmdens - ex2.p
+            ex2 = ex2**Rational(1, lcmdens)
+            res = _minpoly_op_algebraic_element(Mul, ex1, ex2, x, dom, mp1=mp1, mp2=mp2)
+        else:
+            res = _minpoly_mul(x, dom, *ex.args)
     elif ex.is_Pow:
         res = _minpoly_pow(ex.base, ex.exp, x, dom)
     elif ex.__class__ is C.sin:

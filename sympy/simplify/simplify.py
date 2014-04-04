@@ -20,6 +20,7 @@ from sympy.core.rules import Transform
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
     sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
+from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.integers import ceiling
 
 from sympy.utilities.iterables import flatten, has_variety, sift
@@ -149,7 +150,7 @@ def separate(expr, deep=False, force=False):
     """
     from sympy.utilities.exceptions import SymPyDeprecationWarning
     SymPyDeprecationWarning(
-        feature="separate()", useinstead="expand_power_base()", issue=3383,
+        feature="separate()", useinstead="expand_power_base()", issue=6482,
         deprecated_since_version="0.7.2", value="Note: in separate() deep "
         "defaults to False, whereas in expand_power_base(), "
         "deep defaults to True.",
@@ -698,7 +699,8 @@ def _separatevars(expr, force):
 
 def _separatevars_dict(expr, symbols):
     if symbols:
-        assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
+        if not all((t.is_Atom for t in symbols)):
+            raise ValueError("symbols must be Atoms.")
         symbols = list(symbols)
     elif symbols is None:
         return {'coeff': expr}
@@ -883,7 +885,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
                         order=opt.order, polys=True)[1]
 
             S = Poly(r, gens=opt.gens).coeffs()
-            sol = solve(S, Cs + Ds, minimal=True, quick=True)
+            sol = solve(S, Cs + Ds, particular=True, quick=True)
 
             if sol and not all([s == 0 for s in sol.values()]):
                 c = c_hat.subs(sol)
@@ -930,7 +932,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
-            sol = solve(S, ng, minimal=True, quick=False)
+            sol = solve(S, ng, particular=True, quick=False)
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 
@@ -1413,10 +1415,13 @@ def trigsimp(expr, **opts):
             if e.is_Function or e.is_Pow:
                 args = [trigsimp_groebner(x, **opts) for x in args]
             return e.func(*args)
-        return trigsimp_groebner(traverse(ex), **opts)
+        new = traverse(ex)
+        if not isinstance(new, Expr):
+            return new
+        return trigsimp_groebner(new, **opts)
 
     trigsimpfunc = {
-        'fu': (lambda x: fu(x)),
+        'fu': (lambda x: fu(x, **opts)),
         'matching': (lambda x: futrig(x)),
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
@@ -2320,7 +2325,7 @@ def _denest_pow(eq):
     if glogb.func is C.log or not glogb.is_Mul:
         if glogb.args[0].is_Pow or glogb.args[0].func is exp:
             glogb = _denest_pow(glogb.args[0])
-            if (abs(glogb.exp) < 1) is True:
+            if (abs(glogb.exp) < 1) == True:
                 return Pow(glogb.base, glogb.exp*e)
         return eq
 
@@ -3657,8 +3662,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product
 
-    if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
+    if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
+
+    if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+        return expr.func(*[simplify(x, ratio=ratio, measure=measure, fu=fu)
+                         for x in expr.args])
 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
@@ -3674,7 +3683,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     expr = bottom_up(expr, lambda w: w.normal())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
-    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 3730
+    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
     expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
 
     if ratio is S.Infinity:
@@ -3836,7 +3845,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         tolerance = 10**-min([15] +
              [mpmath.libmp.libmpf.prec_to_dps(n._prec)
              for n in expr.atoms(Float)])
-
+    # XXX should prec be set independent of tolerance or should it be computed
+    # from tolerance?
     prec = 30
     bprec = int(prec*3.33)
 
@@ -3873,6 +3883,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
             if full:
                 newexpr = newexpr[0]
             expr = sympify(newexpr)
+            if x and not expr:  # don't let x become 0
+                raise ValueError
             if expr.is_bounded is False and not xv in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
@@ -4185,7 +4197,7 @@ def exptrigsimp(expr, simplify=True):
     for ei in ex:
         e2 = ei**-2
         if e2 in ex:
-            a = e2.args[0]/2
+            a = e2.args[0]/2 if not e2 is S.Exp1 else S.Half
             newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
             newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
     ## exp ratios to tan and tanh

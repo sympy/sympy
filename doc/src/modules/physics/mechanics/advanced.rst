@@ -18,6 +18,12 @@ Numerically Integrating Code
 ----------------------------
 See Future Features: Code Output
 
+Differentiating
+---------------
+Differentiation of very large expressions can take some time in SymPy; it is
+possible for large expressions to take minutes for the derivative to be
+evaluated. This will most commonly come up in linearization.
+
 Choice of Coordinates and Speeds
 --------------------------------
 The Kane object is set up with the assumption that the generalized speeds are
@@ -79,75 +85,6 @@ Kane's equations).
 Advanced Interfaces
 ===================
 
-Here we will cover advanced options in: ``ReferenceFrame``, ``dynamicsymbols``,
-and some associated functionality.
-
-ReferenceFrame
---------------
-``ReferenceFrame`` is shown as having a ``.name`` attribute and ``.x``, ``.y``,
-and ``.z`` attributes for accessing the basis vectors, as well as a fairly
-rigidly defined print output. If you wish to have a different set of indices
-defined, there is an option for this. This will also require a different
-interface for accessing the basis vectors. ::
-
-  >>> from sympy.physics.mechanics import ReferenceFrame, mprint, mpprint, mlatex
-  >>> N = ReferenceFrame('N', indices=['i', 'j', 'k'])
-  >>> N['i']
-  N['i']
-  >>> N.x
-  N['i']
-  >>> mlatex(N.x)
-  '\\mathbf{\\hat{n}_{i}}'
-
-Also, the latex output can have custom strings; rather than just indices
-though, the entirety of each basis vector can be specified. The custom latex
-strings can occur without custom indices, and also overwrites the latex string
-that would be used if there were custom indices. ::
-
-  >>> from sympy.physics.mechanics import ReferenceFrame, mlatex
-  >>> N = ReferenceFrame('N', latexs=['n1','\mathbf{n}_2','cat'])
-  >>> mlatex(N.x)
-  'n1'
-  >>> mlatex(N.y)
-  '\\mathbf{n}_2'
-  >>> mlatex(N.z)
-  'cat'
-
-dynamicsymbols
---------------
-The ``dynamicsymbols`` function also has 'hidden' functionality; the variable
-which is associated with time can be changed, as well as the notation for
-printing derivatives. ::
-
-  >>> from sympy import symbols
-  >>> from sympy.physics.mechanics import dynamicsymbols, mprint
-  >>> q1 = dynamicsymbols('q1')
-  >>> q1
-  q1(t)
-  >>> dynamicsymbols._t = symbols('T')
-  >>> q2 = dynamicsymbols('q2')
-  >>> q2
-  q2(T)
-  >>> q1
-  q1(t)
-  >>> q1d = dynamicsymbols('q1', 1)
-  >>> mprint(q1d)
-  q1'
-  >>> dynamicsymbols._str = 'd'
-  >>> mprint(q1d)
-  q1d
-  >>> dynamicsymbols._str = '\''
-  >>> dynamicsymbols._t = symbols('t')
-
-
-Note that only dynamic symbols created after the change are different. The same
-is not true for the `._str` attribute; this affects the printing output only,
-so dynamic symbols created before or after will print the same way.
-
-Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
-``dynamicsymbols``, along with a number of other important functions and
-methods. Don't mix and match symbols representing time.
-
 Advanced Functionality
 ----------------------
 Remember that the ``Kane`` object supports bodies which have time-varying
@@ -167,23 +104,6 @@ Future Features
 ===============
 
 This will cover the planned features to be added to this submodule.
-
-Code Output
------------
-A function for generating code output for numerical integration is the highest
-priority feature to implement next. There are a number of considerations here.
-
-Code output for C (using the GSL libraries), Fortran 90 (using LSODA), MATLAB,
-and SciPy is the goal. Things to be considered include: use of ``cse`` on large
-expressions for MATLAB and SciPy, which are interpretive. It is currently unclear
-whether compiled languages will benefit from common subexpression elimination,
-especially considering that it is a common part of compiler optimization, and
-there can be a significant time penalty when calling ``cse``.
-
-Care needs to be taken when constructing the strings for these expressions, as
-well as handling of input parameters, and other dynamic symbols. How to deal
-with output quantities when integrating also needs to be decided, with the
-potential for multiple options being considered.
 
 Additional Options on Initialization of Kane, RigidBody, and Particle
 ---------------------------------------------------------------------
@@ -205,4 +125,20 @@ Also possible is including the method which creates a transformation matrix for
 well as a "reference point" for distance to the camera. Development of this
 could also be tied into code output.
 
+Code Output
+-----------
+A function for generating code output for numerical integration is the highest
+priority feature to implement next. There are a number of considerations here.
+
+Code output for C (using the GSL libraries), Fortran 90 (using LSODA), MATLAB,
+and SciPy is the goal. Things to be considered include: use of ``cse`` on large
+expressions for MATLAB and SciPy, which are interpretive. It is currently unclear
+whether compiled languages will benefit from common subexpression elimination,
+especially considering that it is a common part of compiler optimization, and
+there can be a significant time penalty when calling ``cse``.
+
+Care needs to be taken when constructing the strings for these expressions, as
+well as handling of input parameters, and other dynamic symbols. How to deal
+with output quantities when integrating also needs to be decided, with the
+potential for multiple options being considered.
 

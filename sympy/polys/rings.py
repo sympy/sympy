@@ -7,7 +7,7 @@ from types import GeneratorType
 
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, oo
 from sympy.core.sympify import CantSympify, sympify
 from sympy.core.compatibility import is_sequence, reduce, string_types, xrange
 from sympy.ntheory.multinomial import multinomial_coefficients
@@ -438,7 +438,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def add(self, *objs):
         """
-        Add a seqence of polynomials or containers of polynomials.
+        Add a sequence of polynomials or containers of polynomials.
 
         Example
         -------
@@ -464,7 +464,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def mul(self, *objs):
         """
-        Multiply a seqence of polynomials or containers of polynomials.
+        Multiply a sequence of polynomials or containers of polynomials.
 
         Example
         -------
@@ -1527,34 +1527,54 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p1
 
     def degree(f, x=None):
-        """The leading degree in ``x`` or the main variable. """
+        """
+        The leading degree in ``x`` or the main variable.
+
+        Note that the degree of 0 is negative infinity (the SymPy object -oo).
+
+        """
         i = f.ring.index(x)
 
         if not f:
-            return -1
+            return -oo
         else:
             return max([ monom[i] for monom in f.itermonoms() ])
 
     def degrees(f):
-        """A tuple containing leading degrees in all variables. """
+        """
+        A tuple containing leading degrees in all variables.
+
+        Note that the degree of 0 is negative infinity (the SymPy object -oo)
+
+        """
         if not f:
-            return (-1,)*f.ring.ngens
+            return (-oo,)*f.ring.ngens
         else:
             return tuple(map(max, list(zip(*f.itermonoms()))))
 
     def tail_degree(f, x=None):
-        """The tail degree in ``x`` or the main variable. """
+        """
+        The tail degree in ``x`` or the main variable.
+
+        Note that the degree of 0 is negative infinity (the SymPy object -oo)
+
+        """
         i = f.ring.index(x)
 
         if not f:
-            return -1
+            return -oo
         else:
             return min([ monom[i] for monom in f.itermonoms() ])
 
     def tail_degrees(f):
-        """A tuple containing tail degrees in all variables. """
+        """
+        A tuple containing tail degrees in all variables.
+
+        Note that the degree of 0 is negative infinity (the SymPy object -oo)
+
+        """
         if not f:
-            return (-1,)*f.ring.ngens
+            return (-oo,)*f.ring.ngens
         else:
             return tuple(map(min, list(zip(*f.itermonoms()))))
 

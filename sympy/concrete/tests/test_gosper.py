@@ -1,6 +1,6 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
-from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, log, Symbol
+from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, log, Symbol, pi
 from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
@@ -40,7 +40,7 @@ def test_gosper_sum():
     assert gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n)) == \
         (2*factorial(2*n + 1) - factorial(n))/factorial(2*n + 1)
 
-    # issue 2934:
+    # issue 6033:
     assert gosper_sum(
         n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b)), \
         (n, 0, m)) == -a*b*(exp(m*log(a))*exp(m*log(b))*factorial(a)* \
@@ -104,7 +104,7 @@ def test_gosper_sum_AeqB_part1():
         3*m + 2)/(40*27**m*factorial(m)*factorial(m + 1)*factorial(m + 2))
     g1f = (2*m + 1)**2*binomial(2*m, m)**2/(4**(2*m)*(m + 1))
     g1g = -binomial(2*m, m)**2/4**(2*m)
-    g1h = -(2*m + 1)**2*(3*m + 4)*factorial(m - S(1)/2)**2/factorial(m + 1)**2
+    g1h = 4*pi -(2*m + 1)**2*(3*m + 4)*factorial(m - S(1)/2)**2/factorial(m + 1)**2
 
     g = gosper_sum(f1a, (n, 0, m))
     assert g is not None and simplify(g - g1a) == 0
@@ -121,7 +121,9 @@ def test_gosper_sum_AeqB_part1():
     g = gosper_sum(f1g, (n, 0, m))
     assert g is not None and simplify(g - g1g) == 0
     g = gosper_sum(f1h, (n, 0, m))
-    assert g is not None and simplify(g - g1h) == 0
+    # need to call rewrite(gamma) here because we have terms involving
+    # factorial(1/2)
+    assert g is not None and simplify(g - g1h).rewrite(gamma) == 0
 
 
 def test_gosper_sum_AeqB_part2():
