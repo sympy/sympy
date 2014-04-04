@@ -55,13 +55,16 @@ matrix:
         - TEST_DOCTESTS="true"
     - python: "pypy"
       env:
-        - SPLIT="1/3"
+        - SPLIT="1/4"
     - python: "pypy"
       env:
-        - SPLIT="2/3"
+        - SPLIT="2/4"
     - python: "pypy"
       env:
-        - SPLIT="3/3"
+        - SPLIT="3/4"
+    - python: "pypy"
+      env:
+        - SPLIT="4/4"
     - python: 2.7
       env: TEST_SPHINX="true"
     - python: 2.7
