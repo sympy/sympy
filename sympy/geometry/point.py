@@ -218,6 +218,9 @@ class Point(GeometryEntity):
         # Coincident points are irrelevant and can confuse this algorithm.
         # Use only unique points.
         points = list(set(points))
+        if not all(isinstance(p, Point) for p in points):
+            raise TypeError('Must pass only Point objects')
+
         if len(points) == 0:
             return False
         if len(points) <= 2:
