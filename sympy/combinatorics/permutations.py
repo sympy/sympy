@@ -4,6 +4,7 @@ import random
 from collections import defaultdict
 
 from sympy.core import Basic
+from sympy import Tuple
 from sympy.core.compatibility import is_sequence, reduce, xrange
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
@@ -894,7 +895,7 @@ class Permutation(Basic):
             # but do allow the permutation size to be increased
             aform.extend(list(range(len(aform), size)))
         size = len(aform)
-        obj = Basic.__new__(cls, aform)
+        obj = Basic.__new__(cls, Tuple(*aform))
         obj._array_form = aform
         obj._size = size
         return obj
@@ -919,7 +920,7 @@ class Permutation(Basic):
         Permutation([2, 1, 3, 0])
 
         """
-        p = Basic.__new__(Perm, perm)
+        p = Basic.__new__(Perm, Tuple(*perm))
         p._array_form = perm
         p._size = len(perm)
         return p
