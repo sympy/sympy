@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 from sympy.core import Basic
-from sympy import Tuple
+from sympy.core.containers import Tuple
 from sympy.core.compatibility import is_sequence, reduce, xrange
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
