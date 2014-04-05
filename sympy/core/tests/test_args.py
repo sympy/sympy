@@ -2900,10 +2900,7 @@ def test_sympy__tensor__tensor__TensMul():
     assert _test_args(TensMul.from_data(S.One, [p], free, dum))
 
 
-
-@XFAIL
 def test_as_coeff_add():
-    # the ordering of terms in (3*x, 4*x**2) is system-dependent
     assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
 
 
