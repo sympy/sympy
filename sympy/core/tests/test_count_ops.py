@@ -23,6 +23,7 @@ def test_count_ops_non_visual():
     assert count(Implies(x,y)) == 1
     assert count(Equivalent(x,y)) == 1
     assert count(ITE(x,y,z)) == 3
+    assert count(ITE(True,x,y)) == 0
 
 def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
@@ -92,6 +93,7 @@ def test_count_ops_visual():
     assert count(Basic(Basic(), Basic(x,x+y))) ==  ADD
     assert count(Or(x,y)) == OR
     assert count(And(x,y)) == AND
+    assert count(And(x**y,z)) == AND + POW
     assert count(Or(x,Or(y,And(z,a)))) == AND + 2*OR
     assert count(Nor(x,y)) == AND
     assert count(Nand(x,y)) == OR
@@ -99,6 +101,20 @@ def test_count_ops_visual():
     assert count(Implies(x,y)) == IMPLIES
     assert count(Equivalent(x,y)) == EQUIVALENT
     assert count(ITE(x,y,z)) == 2*AND + OR
-    assert count(And((((x,y+z))))) == ADD
+
+    assert count(And((x,y),z)) == AND
+    # It doesn't make much sense but it checks that TUPLE is not counted as an
+    # operation.
 
     assert count(Eq(x + y, S(2))) == ADD
+
+    # The test given below checks the results which comes when logical
+    # functions are given less number of arguments than required and
+    # don't raises an exception. They don't make much sense.
+    assert count(And((x,y+z))) == ADD
+    assert count(Equivalent(x)) == 0     # Equivalent(x) == 0
+    assert count(And(x)) == 0            # And(x) == 0
+    assert count(Nand(And(x,y))) == OR   # Nand(x) == Not(x)
+    assert count(Xor(And(x,y))) == AND   # Xor(x) == x
+    # Any logic function don't check if the argument is an empty tuple
+    assert count(And(x,())) == AND
