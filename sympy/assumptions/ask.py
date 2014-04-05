@@ -145,7 +145,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return
 
     if local_facts is None:
-        return
+        return newask(proposition, assumptions=assumptions, context=context)
+        
 
     # See if there's a straight-forward conclusion we can make for the inference
     if local_facts.is_Atom:
