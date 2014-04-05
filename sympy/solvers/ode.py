@@ -509,8 +509,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     f(x) == C1*sin(3*x) + C2*cos(3*x)
 
     >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
-    >>> dsolve(eq, hint='separable_reduced')
-    f(x) == C1/(C2*x - 1)
     >>> dsolve(eq, hint='1st_exact')
     [f(x) == -acos(C1/cos(x)) + 2*pi, f(x) == acos(C1/cos(x))]
     >>> dsolve(eq, hint='almost_linear')
@@ -1008,15 +1006,18 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     _, u = mul.as_independent(x, f(x))
                     break
             if u and u.has(f(x)):
-                t = Dummy('t')
-                r2 = {'t': t}
-                xpart, ypart = u.as_independent(f(x))
-                test = factor.subs(((u, t), (1/u, 1/t)))
-                free = test.free_symbols
-                if len(free) == 1 and free.pop() == t:
-                    r2.update({'power': xpart.as_base_exp()[1], 'u': test})
-                    matching_hints["separable_reduced"] = r2
-                    matching_hints["separable_reduced_Integral"] = r2
+                h = x**(degree(Poly(u.subs(f(x), y), gen=x)))*f(x)
+                p = Wild('p')
+                if (u/h == 1) or ((u/h).simplify().match(x**p)):
+                    t = Dummy('t')
+                    r2 = {'t': t}
+                    xpart, ypart = u.as_independent(f(x))
+                    test = factor.subs(((u, t), (1/u, 1/t)))
+                    free = test.free_symbols
+                    if len(free) == 1 and free.pop() == t:
+                        r2.update({'power': xpart.as_base_exp()[1], 'u': test})
+                        matching_hints["separable_reduced"] = r2
+                        matching_hints["separable_reduced_Integral"] = r2
 
         ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
         r = collect(eq, [df, f(x)]).match(e*df + d)
