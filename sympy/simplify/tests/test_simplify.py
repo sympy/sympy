@@ -6,7 +6,7 @@ from sympy import (
     Float, fraction, Function, gamma, GoldenRatio, hyper, hyper,
     hypersimp, I, Integer, Integral, integrate, log, logcombine, Matrix,
     Mul, nsimplify, O, oo, ordered, pi, Piecewise, polar_lift, polarify,
-    posify, powdenest, powsimp, radsimp, Rational, ratsimp,
+    posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
     sympify, tan, tanh, trigsimp, Wild, zoo)
@@ -227,7 +227,8 @@ def test_issue_3210():
 
 
 def test_issue_7263():
-    assert simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2) == -5857.61 + 6806.25*cos(0.0644444444444444*pi)**2
+    assert (simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2)).evalf() == \
+        673.447451402970
 
 
 def test_trigsimp_issues():
