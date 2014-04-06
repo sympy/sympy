@@ -998,15 +998,15 @@ def kid_rsa_public_key(a, b, A, B):
     Key generation:
 
     * Select positive integers `a, b, A, B` at random.
-    * Compute `M = a*b - 1`, `e = A*M + a`, `d = B*M + b`, `n = (e*d - 1)  /M`.
+    * Compute `M = a b - 1`, `e = A M + a`, `d = B M + b`, `n = (e d - 1)  /M`.
     * The *public key* is `(n, e)`. Bob sends these to Alice.
     * The *private key* is `d`, which Bob keeps secret.
 
     Encryption: If `m` is the plaintext message then the
-    ciphertext is `c = m*e \pmod n`.
+    ciphertext is `c = m e \pmod n`.
 
     Decryption: If `c` is the ciphertext message then the
-    plaintext is `m = c*d \pmod n`.
+    plaintext is `m = c d \pmod n`.
 
     Examples
     ========
@@ -1026,7 +1026,7 @@ def kid_rsa_public_key(a, b, A, B):
 
 def kid_rsa_private_key(a, b, A, B):
     """
-    Compute `M = a*b - 1`, `e = A*M + a`, `d = B*M + b`, `n = (e*d - 1) / M`.
+    Compute `M = a b - 1`, `e = A M + a`, `d = B M + b`, `n = (e d - 1) / M`.
     The *private key* is `d`, which Bob keeps secret.
 
     Examples
