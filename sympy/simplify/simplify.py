@@ -3703,7 +3703,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if expr.has(fibonacci):
         expr = fibsimp(expr)
-        expr = (-1) * fibsimp((-1)*expr)
+#        expr = (-1) * fibsimp((-1)*expr)
 
     if expr.has(BesselBase):
         expr = besselsimp(expr)
@@ -4368,29 +4368,60 @@ def fibsimp(expr):
     Notes
     =====
     Method looks for ways to simplify expression using Fibonacci identities.
-    Currently it should be able to recognize and simplify with the following
-    relations
+    It successively looks for identities and replaces them with their simplified
+    versions. Currently it is able to recognize and simplify with the following
+    relations in order
+
     * Standard recursive relation
     * Catalan's Identity
     * d'Ocagne's identity
-    It only works if the input expression is an Add object
+
+    It only works if the input expression is an *Add object*. Also arguments
+    of fibonacci should be of type Integer, and non negative.
+
+    Examples 
+    ========
+    
+    The method recognizes the standard recursive identity:
+
+    >>> from sympy.functions.combinatorial.numbers import fibonacci
+    >>> from sympy.simplify.simplify import fibsimp
+    >>> from sympy.abc import m, n, x
+    >>> fibsimp(fibonacci(n) + fibonacci(n - 1))
+    fibonacci(n + 1)
+    
+    As well as two other identities
+
+    >>> fibsimp(fibonacci(n)**2 - fibonacci(n + m)*fibonacci(n - m))
+    (-1)**(-m + n)*fibonacci(m)**2
+
+    >>> fibsimp(fibonacci(m)*fibonacci(n + 1) - fibonacci(m + 1)*fibonacci(n))
+    (-1)**n*fibonacci(m - n)
+    
+    The method is also able to simplify complicated expression by successively
+    looking for identities until it does not find any. 
+
+    >>> fibsimp(-fibonacci(n + 3) - fibonacci(n) - fibonacci(n + 1) - \
+    fibonacci(n)**2 + fibonacci(n + m) * fibonacci(n - m) + 1)
+    -(-1)**(-m + n)*fibonacci(m)**2 - fibonacci(n + 4) + 1
     """
 
     # TODO
     # * Generalize to an arbitrary input expression
-    # * Fix Sum simplification (fibsimp is not called if
-    #   input expr is of type Sum, but code seems to work)
-    # * Write tests
+    #   (by recursively exploring the depth of expr)
+    # * Implement simplification of Sum identities
+    # * Expand to working with real numbers and negative arguments
+    # * More elegant way to look for the negative version
+    #   of identities
 
-    from sympy.concrete.summations import Sum
 
     # Helper method to replace old_terms in the list terms
     # with new_terms
     def replace(terms, old_terms, new_terms):
-        for term in new_terms:
-            terms.append(term)
         for term in old_terms:
             terms.remove(term)
+        for term in new_terms:
+            terms.append(term)
         return terms
 
     def use_identities(terms):
@@ -4400,24 +4431,24 @@ def fibsimp(expr):
 
             # Check for standard recursive identity
             if isinstance(term, fibonacci):
-                old_terms.append(term)
-                if fibonacci(term.args[0] + 1) in fib_terms:
+                if fibonacci(term.args[0] + 1) in terms:
+                    old_terms.append(term)
                     old_terms.append(fibonacci(term.args[0] + 1))
                     new_terms.append(fibonacci(term.args[0] + 2))
-                    simp_terms = replace(terms, old_terms, new_terms)
-                    return use_identities(simp_terms)
-                if fibonacci(term.args[0] - 1) in fib_terms:
+                    simple_terms = replace(terms, old_terms, new_terms)
+                    return use_identities(simple_terms)
+                if fibonacci(term.args[0] - 1) in terms:
+                    old_terms.append(term)
                     old_terms.append(fibonacci(term.args[0] - 1))
                     new_terms.append(fibonacci(term.args[0] + 1))
-                    simp_terms = replace(terms, old_terms, new_terms)
-                    return use_identities(simp_terms)
+                    simple_terms = replace(terms, old_terms, new_terms)
+                    return use_identities(simple_terms)
 
             # Catalan identity
             # Check if we have fibonacci^2
             if isinstance(term, Pow) and \
                isinstance(term.args[0], fibonacci) and \
                term.args[1] == 2:
-                old_terms.append(term)
                 for other_term in terms:
                     # Check if we also have -fibonacci*fibonacci
                     if isinstance(other_term, Mul) and \
@@ -4427,6 +4458,7 @@ def fibsimp(expr):
                         f2 = other_term.args[2]
                         if isinstance(f1, fibonacci) and \
                            isinstance(f2, fibonacci):
+                            old_terms.append(term)
                             old_terms.append(other_term)
                             a1 = f1.args[0]
                             a2 = f2.args[0]
@@ -4435,14 +4467,15 @@ def fibsimp(expr):
                             if (a1 + a2 == 2*a3):
                                 r = (a1 - a2)/2
                                 new_terms.append((-1)**(a3-r)*(fibonacci(r)**2))
-                                simp_terms = replace(terms, old_terms, new_terms)
-                                return use_identities(simp_terms)
+                                simple_terms = replace(terms, old_terms, new_terms)
+                                return use_identities(simple_terms)
+                                old_terms = []
 
             # d'Ocagne's identity
             if isinstance(term, Mul) and len(term.args) == 2 and \
                isinstance(term.args[0], fibonacci) and \
                isinstance(term.args[1], fibonacci):
-                old_terms.append(term)
+
                 a1 = term.args[0].args[0]
                 a2 = term.args[1].args[0]
                 for other_term in terms:
@@ -4451,17 +4484,19 @@ def fibsimp(expr):
                        other_term.args[0] == -1 and \
                        isinstance(other_term.args[1], fibonacci) and \
                        isinstance(other_term.args[2], fibonacci):
+                        old_terms.append(term)
                         old_terms.append(other_term)
                         a3 = other_term.args[1].args[0]
                         a4 = other_term.args[2].args[0]
                         if (a3 - a1 == 1) and (a2 - a4 == 1):
                             new_terms.append((-1)**a4 * fibonacci(a1 - a4))
-                            simp_terms = replace(terms, old_terms, new_terms)
-                            return use_identities(simp_terms)
+                            simple_terms = replace(terms, old_terms, new_terms)
+                            return use_identities(simple_terms)
                         elif (a4 - a1 == 1) and (a2 - a3 == 1):
                             new_terms.append((-1)**a3 * fibonacci(a1 - a3))
-                            simp_terms = replace(terms, old_terms, new_terms)
-                            return use_identities(simp_terms)
+                            simple_terms = replace(terms, old_terms, new_terms)
+                            return use_identities(simple_terms)
+                        old_terms = []
         return terms
 
     # If expr is a sum of terms
@@ -4478,47 +4513,25 @@ def fibsimp(expr):
         # Check for identities to simplify
         fib_terms = use_identities(fib_terms)
         other_terms.extend(fib_terms)
-        return Add(*other_terms)
+        simple_expr = Add(*other_terms)
+        
+        # This piece checks for (-) version of identities
+        simple_expr = (-1)*simple_expr
 
-    # If expr is a Sum (DOES NOT WORK CURRENTLY)
-    if isinstance(expr, Sum):
+        other_terms = []
+        fib_terms = []
 
-        # Do nothing if sum has more than 1 variables
-        if len(expr.variables) > 1:
-            return expr
+        for term in Add.make_args(simple_expr):
+            if (term.has(fibonacci)):
+                fib_terms.append(term)
+            else:
+                other_terms.append(term)
 
-        var = expr.variables[0]
-        lower_limit = expr.limits[0][1]
-        upper_limit = expr.limits[0][2]
-
-        if isinstance(expr.function, fibonacci):
-            arg = expr.function.args[0] # argument(index) of fibonacci
-
-            # Check if the sum is in a canonical form (\sum_{i=0}^n F_i)
-            # Needs generalization for example to the case
-            # \sum_{i=3}^m f(i-3) = \sum_{i=0}^{m-3} f(i)
-            # which should maybe be implemented in Sum_simplify?
-
-            # Apply simplification formulas for sums
-            if arg == var:
-                if lower_limit == 1 or lower_limit == 0:
-                    return fibonacci(upper_limit + 2) - 1
-            elif arg == 2*var + 1:
-                if lower_limit == 0:
-                    return fibonacci(2*(upper_limit + 1))
-            elif arg == 2*var:
-                if lower_limit == 1 or lower_limit == 0:
-                    return fibonacci(2*upper_limit + 1) - 1
-
-
-        if isinstance(expr.function, Pow):
-            if isinstance(expr.function.args[0], fibonacci) and \
-               expr.function.args[1] == 2:
-                arg = expr.function.args[0].args[0]
-                if arg == var:
-                    if lower_limit == 1 or lower_limit == 0:
-                        return fibonacci(upper_limit)* \
-                            fibonacci(upper_limit + 1)
+        fib_terms = use_identities(fib_terms)
+        other_terms.extend(fib_terms)
+        simple_expr = Add(*other_terms)
+        
+        return (-1)*simple_expr
 
     # If nothing happened by now do nothing
     return expr
