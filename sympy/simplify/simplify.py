@@ -3703,7 +3703,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if expr.has(fibonacci):
         expr = fibsimp(expr)
-#        expr = (-1) * fibsimp((-1)*expr)
 
     if expr.has(BesselBase):
         expr = besselsimp(expr)
@@ -4379,9 +4378,9 @@ def fibsimp(expr):
     It only works if the input expression is an *Add object*. Also arguments
     of fibonacci should be of type Integer, and non negative.
 
-    Examples 
+    Examples
     ========
-    
+
     The method recognizes the standard recursive identity:
 
     >>> from sympy.functions.combinatorial.numbers import fibonacci
@@ -4389,7 +4388,7 @@ def fibsimp(expr):
     >>> from sympy.abc import m, n, x
     >>> fibsimp(fibonacci(n) + fibonacci(n - 1))
     fibonacci(n + 1)
-    
+
     As well as two other identities
 
     >>> fibsimp(fibonacci(n)**2 - fibonacci(n + m)*fibonacci(n - m))
@@ -4397,9 +4396,9 @@ def fibsimp(expr):
 
     >>> fibsimp(fibonacci(m)*fibonacci(n + 1) - fibonacci(m + 1)*fibonacci(n))
     (-1)**n*fibonacci(m - n)
-    
+
     The method is also able to simplify complicated expression by successively
-    looking for identities until it does not find any. 
+    looking for identities until it does not find any.
 
     >>> fibsimp(-fibonacci(n + 3) - fibonacci(n) - fibonacci(n + 1) - \
     fibonacci(n)**2 + fibonacci(n + m) * fibonacci(n - m) + 1)
@@ -4514,7 +4513,7 @@ def fibsimp(expr):
         fib_terms = use_identities(fib_terms)
         other_terms.extend(fib_terms)
         simple_expr = Add(*other_terms)
-        
+
         # This piece checks for (-) version of identities
         simple_expr = (-1)*simple_expr
 
@@ -4530,7 +4529,7 @@ def fibsimp(expr):
         fib_terms = use_identities(fib_terms)
         other_terms.extend(fib_terms)
         simple_expr = Add(*other_terms)
-        
+
         return (-1)*simple_expr
 
     # If nothing happened by now do nothing
