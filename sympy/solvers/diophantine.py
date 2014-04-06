@@ -15,6 +15,9 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
 
+from sympy.polys.polytools import Poly
+from sympy.core.relational import Eq
+
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
 'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
 'diop_ternary_quadratic',  'square_factor', 'descent', 'diop_general_pythagorean',
@@ -60,6 +63,10 @@ def diophantine(eq, param=symbols("t", Integer=True)):
 
     diop_solve()
     """
+    eq = eq.as_expr()
+    if isinstance(eq, Eq):
+        eq = eq.lhs - eq.rhs
+
     var = list(eq.expand(force=True).free_symbols)
     var.sort(key=default_sort_key)
 
