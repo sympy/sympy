@@ -2781,7 +2781,7 @@ def homogeneous_LDS(a):
     Solves a system of homogeneous linear diophantine equations when
     given by it's matrix form. This method returns the basis of the
     solution set if the system is solvable. A solution is a vector of
-    natural numbers.All the solutions of the system can be found by
+    natural numbers. All the solutions of the system can be found by
     linear combinations of the basis solutions using natural numbers as
     coefficients.
 
