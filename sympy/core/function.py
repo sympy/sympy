@@ -43,6 +43,7 @@ from .numbers import Rational, Float
 from .rules import Transform
 from .singleton import S
 from .sympify import sympify
+from .finite_diff import apply_finite_difference
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
@@ -1312,6 +1313,30 @@ class Derivative(Expr):
 
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
+
+    def as_finite_diff(self, indep_vals=None, around=None):
+        """
+        -`indep_vals`: strictmonotonically increasing sequence of values of
+            independent vaialbe or symbol instance which will be used as
+            fixed step size in a linear discretization of minimum required length.
+        """
+        for v in self.variables:
+            if v != self.variables[0]: raise ValueError(
+                    "as_finit_diff currently only supported for univariate derivatives")
+        if around == None: around = self.variables[0]
+        order = len(self.variables)
+        if indep_vals == None or not iterable(indep_vals):
+            h = indep_vals or sympify('h')
+            indep_vals_l = [around - h*i for i in range((order+1)//2, 0, -1)]
+            indep_vals_r = [around + h*i for i in range(1, (order+1)//2 + 1)]
+            if order % 1 == 0:
+                indep_vals = indep_vals_l + indep_vals_r
+            else:
+                indep_vals = indep_vals_l + [around] + indep_vals_r
+        if len(indep_vals) < order+1: raise ValueError("To few points for order %d" % order)
+        return apply_finite_difference(order, indep_vals, [
+            self.expr.subs({self.variables[0]: x}) for x in indep_vals], around)
+
 
 
 class Lambda(Expr):

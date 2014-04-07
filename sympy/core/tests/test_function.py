@@ -512,6 +512,12 @@ def test_diff_wrt():
     assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
 
 
+def test_to_finite_diff():
+    x, h = symbols('x h')
+    f = Function('f')
+    assert (f(x).diff(x).as_finite_diff() - (f(x+h)-f(x-h))/(2*h)).simplify() == 0
+
+
 def test_diff_wrt_func_subs():
     assert f(g(x)).diff(x).subs(g, Lambda(x, 2*x)).doit() == f(2*x).diff(x)
 
