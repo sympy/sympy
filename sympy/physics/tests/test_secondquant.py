@@ -457,6 +457,29 @@ def test_contraction():
     assert restr.is_only_above_fermi
 
 
+def test_evaluate_deltas():
+    i, j, k = symbols('i,j,k')
+
+    r = KroneckerDelta(i, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(i, 0) * KroneckerDelta(j, k)
+
+    r = KroneckerDelta(1, j) * KroneckerDelta(j, k)
+    assert evaluate_deltas(r) == KroneckerDelta(1, k)
+
+    r = KroneckerDelta(j, 2) * KroneckerDelta(k, j)
+    assert evaluate_deltas(r) == KroneckerDelta(2, k)
+
+    r = KroneckerDelta(i, 0) * KroneckerDelta(i, j) * KroneckerDelta(j, 1)
+    assert evaluate_deltas(r) == 0
+
+    r = (KroneckerDelta(0, i) * KroneckerDelta(0, j)
+         * KroneckerDelta(1, j) * KroneckerDelta(1, j))
+    assert evaluate_deltas(r) == 0
+
+
 def test_Tensors():
     i, j, k, l = symbols('i j k l', below_fermi=True, cls=Dummy)
     a, b, c, d = symbols('a b c d', above_fermi=True, cls=Dummy)

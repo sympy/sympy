@@ -2325,11 +2325,12 @@ def evaluate_deltas(e):
         for d in deltas:
             # If we do something, and there are more deltas, we should recurse
             # to treat the resulting expression properly
-            if indices[d.killable_index]:
+            if d.killable_index.is_Symbol and indices[d.killable_index]:
                 e = e.subs(d.killable_index, d.preferred_index)
                 if len(deltas) > 1:
                     return evaluate_deltas(e)
-            elif indices[d.preferred_index] and d.indices_contain_equal_information:
+            elif (d.preferred_index.is_Symbol and indices[d.preferred_index]
+                  and d.indices_contain_equal_information):
                 e = e.subs(d.preferred_index, d.killable_index)
                 if len(deltas) > 1:
                     return evaluate_deltas(e)
