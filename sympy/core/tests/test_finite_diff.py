@@ -53,7 +53,7 @@ def test_finite_diff_weights():
 
     # Table 2, p. 703 in doi:10.1090/S0025-5718-1988-0935077-0
     # --------------------------------------------------------
-    xl = [[j/S(2) for j in range(-i*2+1, 0, 2)+range(1,i*2+1, 2)] for i in range(1,5)]
+    xl = [[j/S(2) for j in list(range(-i*2+1, 0, 2))+list(range(1,i*2+1, 2))] for i in range(1,5)]
 
     # d holds all coefficients
     d = [finite_diff_weights({0:1, 1:2, 2:4, 3:4}[i], xl[i], 0) for i in range(4)]
