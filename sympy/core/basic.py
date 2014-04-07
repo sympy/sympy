@@ -1115,19 +1115,6 @@ class Basic(with_metaclass(ManagedProperties)):
                 return self.func(*args)
         return self
 
-    @deprecated(useinstead="has", issue=5488, deprecated_since_version="0.7.2")
-    def __contains__(self, obj):
-        if self == obj:
-            return True
-        for arg in self.args:
-            try:
-                if obj in arg:
-                    return True
-            except TypeError:
-                if obj == arg:
-                    return True
-        return False
-
     @cacheit
     def has(self, *patterns):
         """
