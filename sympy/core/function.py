@@ -1326,7 +1326,7 @@ class Derivative(Expr):
         if around == None: around = self.variables[0]
         order = len(self.variables)
         if indep_vals == None or not iterable(indep_vals):
-            h = indep_vals or sympify('h')
+            h = indep_vals or 1
             indep_vals_l = [around - h*i for i in range((order+1)//2, 0, -1)]
             indep_vals_r = [around + h*i for i in range(1, (order+1)//2 + 1)]
             if order % 1 == 0:
