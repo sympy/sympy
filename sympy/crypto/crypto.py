@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+## Using  UTF-8 for Vigenère cipher section
+
 """
 Classical ciphers and LFSRs
 """
@@ -256,24 +259,24 @@ def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Performs the Vigenere cipher encryption on plaintext ``pt``, and returns the ciphertext.
+    Performs the Vigenère cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     Notes
     =====
 
-    The Vigenere cipher is named after Blaise de Vigenere, a sixteenth
+    The Vigenère cipher is named after Blaise de Vigenère, a sixteenth
     century diplomat and cryptographer, by a historical accident.
-    Vigenere actually invented a different and more complicated cipher.
-    The so-called *Vigenere cipher* was actually invented
+    Vigenère actually invented a different and more complicated cipher.
+    The so-called *Vigenère cipher* was actually invented
     by Giovan Batista Belaso in 1553.
 
     This cipher was used in the 1800's, for example, during the American Civil War.
-    The Confederacy used a brass cipher disk to implement the Vigenere cipher
+    The Confederacy used a brass cipher disk to implement the Vigenère cipher
     (now on display in the NSA Museum in Fort Meade) [1]_.
 
-    The Vigenere cipher is a generalization of the shift cipher.
+    The Vigenère cipher is a generalization of the shift cipher.
     Whereas the shift cipher shifts each letter by the same amount (that amount
-    being the key of the shift cipher) the Vigenere cipher shifts
+    being the key of the shift cipher) the Vigenère cipher shifts
     a letter by an amount determined by the key (which is a word or
     phrase known only to the sender and receiver).
 
@@ -281,7 +284,7 @@ def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     so-called Vigenere cipher is actually a shift cipher with a
     shift of `2` (since "C" is the 2nd letter of the alphabet, if
     you start counting at `0`). If the key was a word with two
-    letters, such as "CA", then the so-called Vigenere cipher will
+    letters, such as "CA", then the so-called Vigenère cipher will
     shift letters in even positions by `2` and letters in odd positions
     are left alone (shifted by `0`, since "A" is the 0th letter, if
     you start counting at `0`).
@@ -318,7 +321,7 @@ def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     This method is called *Kasiski examination* (although it was first discovered
     by Babbage).
 
-    The cipher Vigenere actually discovered is an "auto-key" cipher
+    The cipher Vigenère actually discovered is an "auto-key" cipher
     described as follows.
 
     ALGORITHM:
@@ -377,7 +380,7 @@ def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Decode using the Vigenere cipher.
+    Decode using the Vigenère cipher.
 
     Examples
     ========
