@@ -43,7 +43,7 @@
 
     >>> x = IndexedBase('x')
     >>> M[i, j]*x[j]
-    M[i, j]*x[j]
+    x[j]*M[i, j]
 
     If the indexed objects will be converted to component based arrays, e.g.
     with the code printers or the autowrap framework, you also need to provide
@@ -132,7 +132,7 @@ class Indexed(Expr):
     True
 
     """
-    is_commutative = False
+    is_commutative = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
@@ -323,7 +323,7 @@ class IndexedBase(Expr, NotIterable):
     (o, p)
 
     """
-    is_commutative = False
+    is_commutative = True
 
     def __new__(cls, label, shape=None, **kw_args):
         if not isinstance(label, (string_types, Symbol)):
