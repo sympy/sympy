@@ -1040,6 +1040,8 @@ def test_coeff():
     assert (4*x).coeff(2*x) == 0
     assert (2*x).coeff(2*x) == 1
     assert (-oo*x).coeff(x*oo) == -1
+    assert (10*x).coeff(x, 0) == 0
+    assert (10*x).coeff(10*x, 0) == 0
 
     n1, n2 = symbols('n1 n2', commutative=False)
     assert (n1*n2).coeff(n1) == 1
