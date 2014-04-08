@@ -302,7 +302,7 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
     if (bb + cc - aa) < 0:
         return 0
 
-    maxfact = max(aa + bb - cc, aa + cc - bb, bb + cc - aa, aa + bb + cc + 1)
+    maxfact = int(max(aa + bb - cc, aa + cc - bb, bb + cc - aa, aa + bb + cc + 1))
     _calc_factlist(maxfact)
 
     argsqrt = Integer(_Factlist[int(aa + bb - cc)] *
@@ -369,11 +369,11 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
         _big_delta_coeff(bb, dd, ff, prec)
     if prefac == 0:
         return 0
-    imin = max(aa + bb + ee, cc + dd + ee, aa + cc + ff, bb + dd + ff)
-    imax = min(aa + bb + cc + dd, aa + dd + ee + ff, bb + cc + ee + ff)
+    imin = int(max(aa + bb + ee, cc + dd + ee, aa + cc + ff, bb + dd + ff))
+    imax = int(min(aa + bb + cc + dd, aa + dd + ee + ff, bb + cc + ee + ff))
 
-    maxfact = max(imax + 1, aa + bb + cc + dd, aa + dd + ee + ff,
-                 bb + cc + ee + ff)
+    maxfact = int(max(imax + 1, aa + bb + cc + dd, aa + dd + ee + ff,
+                 bb + cc + ee + ff))
     _calc_factlist(maxfact)
 
     sumres = 0
@@ -530,7 +530,7 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     algebra system [Rasch03]_.
     """
     imin = 0
-    imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
+    imax = int(min(j_1 + j_9, j_2 + j_6, j_4 + j_8))
 
     sumres = 0
     for kk in range(imin, int(imax) + 1):
@@ -659,10 +659,10 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     if (abs(m_1) > l_1) or (abs(m_2) > l_2) or (abs(m_3) > l_3):
         return 0
 
-    imin = max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0)
-    imax = min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3)
+    imin = int(max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0))
+    imax = int(min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3))
 
-    maxfact = max(l_1 + l_2 + l_3 + 1, imax + 1)
+    maxfact = int(max(l_1 + l_2 + l_3 + 1, imax + 1))
     _calc_factlist(maxfact)
 
     argsqrt = (2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
