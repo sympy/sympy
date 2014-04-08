@@ -2,8 +2,10 @@
 
 from __future__ import print_function, division
 
+from sympy.core.singleton import S
 from sympy.core.numbers import igcd, igcdex
 from sympy.core.compatibility import as_int, xrange
+from sympy.core.function import Function
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient
 from random import randint
@@ -866,9 +868,15 @@ def jacobi_symbol(m, n):
     return j
 
 
-def mobius(n):
+class mobius(Function):
     """
-    Möbius Function maps natural number to {-1, 0, 1}
+    Möbius function maps natural number to {-1, 0, 1}
+
+    It is defined as follows:
+        1) `1` if `n = 1`.
+        2) `0` if `n` has a squared prime factor.
+        3) `(-1)^k` if `n` is a square-free positive integer with `k`
+           number of prime factors.
 
     It is an important multiplicative function in number theory
     and combinatorics.  It has applications in mathematical series,
@@ -877,15 +885,8 @@ def mobius(n):
 
     Parameters
     ==========
+
     n : positive integer
-
-    Returns
-    =======
-
-    1) 1 if n == 1
-    2) 0 if n has a squared prime factor.
-    3) (-1)**k if n is a square-free positive integer with k number of
-       prime factors.
 
     Examples
     ========
@@ -903,15 +904,23 @@ def mobius(n):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Möbius_function
+    .. [1] http://en.wikipedia.org/wiki/M%C3%B6bius_function
     .. [2] Thomas Koshy "Elementary Number Theory with Applications"
+
     """
-    n = as_int(n)
-    if n <= 0:
-        raise ValueError("n should be a positive integer")
-    if n == 1:
-        return 1
-    a = factorint(n)
-    if any(i > 1 for i in a.values()):
-        return 0
-    return pow(-1, len(a))
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer:
+            if n.is_positive is not True:
+                raise ValueError("n should be a positive integer")
+        else:
+            raise TypeError("n should be an integer")
+        if n.is_prime:
+            return S.NegativeOne
+        elif n is S.One:
+            return S.One
+        elif n.is_Integer:
+            a = factorint(n)
+            if any(i > 1 for i in a.values()):
+                return S.Zero
+            return S.NegativeOne**len(a)

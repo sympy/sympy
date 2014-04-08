@@ -557,6 +557,13 @@ def test_residue():
     assert mobius(13**2) == 0
     raises(ValueError, lambda: mobius(-3))
 
+    p = Symbol('p', integer=True, positive=True, prime=True)
+    x = Symbol('x', positive=True)
+    i = Symbol('i', integer=True)
+    assert mobius(p) == -1
+    raises(TypeError, lambda: mobius(x))
+    raises(ValueError, lambda: mobius(i))
+
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
