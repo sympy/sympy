@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-## Using  UTF-8 for Vigenère cipher section
 
 """
 Classical ciphers and LFSRs
