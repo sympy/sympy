@@ -43,7 +43,6 @@ from .numbers import Rational, Float
 from .rules import Transform
 from .singleton import S
 from .sympify import sympify
-from .finite_diff import apply_finite_difference
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
@@ -1320,6 +1319,8 @@ class Derivative(Expr):
             independent vaialbe or symbol instance which will be used as
             fixed step size in a linear discretization of minimum required length.
         """
+        from sympy.series.finite_diff import apply_finite_diff
+
         for v in self.variables:
             if v != self.variables[0]: raise ValueError(
                     "as_finit_diff currently only supported for univariate derivatives")

@@ -1,14 +1,21 @@
 from sympy import S, symbols, Function
-from sympy.core.finite_diff import apply_finite_difference, finite_diff_weights
+from sympy.series.finite_diff import apply_finite_diff, finite_diff_weights
 
-def test_apply_finite_difference():
+
+def test_apply_finite_diff():
     x, h = symbols('x h')
     f = Function('f')
-    assert (apply_finite_difference(1, [x-h, x+h], [f(x-h), f(x+h)], x) - \
+    assert (apply_finite_diff(1, [x-h, x+h], [f(x-h), f(x+h)], x) - \
             (f(x+h)-f(x-h))/(2*h)).simplify() == 0
+
+    assert (apply_finite_diff(1, [5, 6, 7], [f(5), f(6), f(7)], 5) -\
+            (-S(3)/2*f(5) + 2*f(6) - S(1)/2*f(7))).simplify() == 0
 
 
 def test_finite_diff_weights():
+
+    d = finite_diff_weights(1, [5, 6, 7], 5)
+    assert d[1][2] == [-S(3)/2, 2, -S(1)/2]
 
     # Table 1, p. 702 in doi:10.1090/S0025-5718-1988-0935077-0
     # --------------------------------------------------------
@@ -53,7 +60,8 @@ def test_finite_diff_weights():
 
     # Table 2, p. 703 in doi:10.1090/S0025-5718-1988-0935077-0
     # --------------------------------------------------------
-    xl = [[j/S(2) for j in list(range(-i*2+1, 0, 2))+list(range(1,i*2+1, 2))] for i in range(1,5)]
+    xl = [[j/S(2) for j in list(range(-i*2+1, 0, 2))+list(range(1,i*2+1, 2))] \
+          for i in range(1,5)]
 
     # d holds all coefficients
     d = [finite_diff_weights({0:1, 1:2, 2:4, 3:4}[i], xl[i], 0) for i in range(4)]
@@ -75,4 +83,4 @@ def test_finite_diff_weights():
                           S(1225)/1024, -S(245)/3072, S(49)/5120, -S(5)/7168]
 
     # Reasonably the rest of the table is also correct... (testing of that
-    # deemed excessive at the momement)
+    # deemed excessive at the moment)

@@ -4,7 +4,7 @@ Series Expansions
 .. module:: sympy.series
 
 The series module implements series expansions as a function and many related
-functions.
+functions. It also provides methods for generating finite difference weights.
 
 Limits
 ------
@@ -186,3 +186,18 @@ Reference
 ^^^^^^^^^
 
 .. autofunction:: sympy.series.residues.residue
+
+Finite difference weights
+-------------------------
+
+This module implements an algorithm for efficient generation of finite
+difference weights for one-dimensinoal univariate functions for
+derivatives from 0 (interpolation) up to arbitrary order.
+
+Reference
+^^^^^^^^^
+
+.. autofunction:: sympy.series.finite_diff.finite_diff_weights
+
+.. autofunction:: sympy.series.finite_diff.apply_finite_diff
+
