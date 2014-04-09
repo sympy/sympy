@@ -161,17 +161,16 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
             if abs(max(err)) < tol:
                 break
             for i in xrange(deg):
-                if not abs(err[i]) < tol:
-                    p = roots[i]
-                    x = f(p)
-                    for j in range(deg):
-                        if i != j:
-                            try:
-                                x /= (p-roots[j])
-                            except ZeroDivisionError:
-                                continue
-                    roots[i] = p - x
-                    err[i] = abs(x)
+                p = roots[i]
+                x = f(p)
+                for j in range(deg):
+                    if i != j:
+                        try:
+                            x /= (p-roots[j])
+                        except ZeroDivisionError:
+                            continue
+                roots[i] = p - x
+                err[i] = abs(x)
         # Remove small imaginary parts
         if cleanup:
             for i in xrange(deg):
