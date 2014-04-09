@@ -27,6 +27,7 @@ from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
 from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc
+from .evaluate import evaluate
 
 # expose singletons
 Catalan = S.Catalan

@@ -7,7 +7,7 @@ libraries, except optionally for plotting support.
 
 See the webpage for more information and documentation:
 
-    http://code.google.com/p/sympy/"""
+    http://sympy.org"""
 
 from __future__ import absolute_import, print_function
 

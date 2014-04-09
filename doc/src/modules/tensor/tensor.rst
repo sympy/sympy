@@ -5,12 +5,6 @@ Tensor
 
 .. module:: sympy.tensor.tensor
 
-.. autoclass:: TIDS
-   :members:
-
-.. autoclass:: VTIDS
-   :members:
-
 .. autoclass:: _TensorManager
    :members:
 
@@ -24,6 +18,8 @@ Tensor
 
 .. autoclass:: TensorSymmetry
    :members:
+
+.. autofunction:: tensorsymmetry
 
 .. autoclass:: TensorType
    :members:

@@ -273,7 +273,7 @@ def ccode(expr, assign_to=None, **settings):
         >>> i = Idx('i', len_y-1)
         >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
         >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
-        'Dy[i] = (y[i + 1] - y[i])*1.0/(t[i + 1] - t[i]);'
+        'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)

@@ -112,13 +112,13 @@ Questions
 =========
 
 If you have a question about installation or SymPy in general, feel free to
-visit the IRC channel at irc.freenode.net, channel `#sympy`_. In addition,
-our `mailing list`_ is an excellent source of community support.
+visit our chat on `Gitter`_. In addition, our `mailing list`_ is an excellent
+source of community support.
 
 If you think there's a bug or you would like to request a feature, please open
 an `issue ticket`_.
 
-.. _downloads site: https://code.google.com/p/sympy/downloads/list
-.. _#sympy: irc://irc.freenode.net/sympy
+.. _downloads site: https://github.com/sympy/sympy/releases
+.. _Gitter: https://gitter.im/sympy/sympy
 .. _issue ticket: https://github.com/sympy/sympy/issues
 .. _mailing list: http://groups.google.com/group/sympy

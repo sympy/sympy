@@ -232,8 +232,8 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     The tuple is ordered so that first item is the classification that
     pdsolve() uses to solve the PDE by default.  In general,
-    classifications at the near the beginning of the list will produce
-    better solutions faster than those near the end, thought there are
+    classifications near the beginning of the list will produce
+    better solutions faster than those near the end, though there are
     always exceptions.  To make pdsolve use a different classification,
     use pdsolve(PDE, func, hint=<classification>).  See also the pdsolve()
     docstring for different meta-hints you can use.

@@ -50,6 +50,11 @@ def __cacheit_nocache(func):
     return func
 
 
+# from sympy.assumptions.assume import global_assumptions  # circular import
+from sympy.core.evaluate import global_evaluate
+_globals = (global_evaluate,)
+
+
 def __cacheit(func):
     """caching decorator.
 
@@ -84,6 +89,8 @@ def __cacheit(func):
         if kw_args:
             keys = sorted(kw_args)
             k.extend([(x, kw_args[x], type(kw_args[x])) for x in keys])
+        if _globals:
+            k.extend([tuple(g) for g in _globals])
         k = tuple(k)
 
         try:

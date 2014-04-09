@@ -15,10 +15,10 @@ License: New BSD License (see the LICENSE file for details) covers all files
 in the sympy repository unless stated otherwise.
 
 Our mailing list is at
-https://groups.google.com/forum/?fromgroups#!forum/sympy.  We are also on IRC
-(`#sympy on Freenode <irc://irc.freenode.net/sympy>`_, note, this channel is
-`logged <http://colabti.org/irclogger/irclogger_logs/sympy>`_).  Feel free to
-ask us anything there. We have a very welcoming and helpful community.
+https://groups.google.com/forum/?fromgroups#!forum/sympy.
+
+We have community chat at `Gitter <https://gitter.im/sympy/sympy>`_. Feel free
+to ask us anything there. We have a very welcoming and helpful community.
 
 Download
 --------
@@ -140,11 +140,11 @@ diff``, ``git clean -Xn`` and ``git clean -n`` before doing any of those.
 Bugs
 ----
 
-Our issue tracker is at https://github.com/sympy/sympy/issues.  Please
-report any bugs that you find.  Or, even better, fork the repository on GitHub
-and create a pull request.  We welcome all changes, big or small, and we will
-help you make the pull request if you are new to git (just ask on our mailing
-list or IRC).
+Our issue tracker is at https://github.com/sympy/sympy/issues.  Please report
+any bugs that you find.  Or, even better, fork the repository on GitHub and
+create a pull request.  We welcome all changes, big or small, and we will help
+you make the pull request if you are new to git (just ask on our mailing list
+or Gitter).
 
 Brief History
 -------------

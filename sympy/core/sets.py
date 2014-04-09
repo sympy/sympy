@@ -8,6 +8,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
+from sympy.core.evaluate import global_evaluate
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
@@ -864,7 +865,7 @@ class Union(Set, EvalfMixin):
     is_Union = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
@@ -1074,7 +1075,7 @@ class Intersection(Set):
     is_Intersection = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
@@ -1329,7 +1330,7 @@ class FiniteSet(Set, EvalfMixin):
     is_iterable = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
         if evaluate:
             if len(args) == 1 and iterable(args[0]):
                 args = args[0]
@@ -1341,6 +1342,8 @@ class FiniteSet(Set, EvalfMixin):
 
 
         args = frozenset(args)  # remove duplicates
+        args = map(sympify, args)
+        args = frozenset(args)
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj

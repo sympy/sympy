@@ -12,6 +12,7 @@ from __future__ import print_function, division
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
+from sympy.core.evaluate import global_evaluate
 from sympy.core.cache import cacheit
 from sympy.functions.combinatorial.factorials import factorial
 
@@ -625,7 +626,9 @@ class euler(Function):
     """
 
     @classmethod
-    def eval(cls, m, evaluate=True):
+    def eval(cls, m, evaluate=None):
+        if evaluate is None:
+            evaluate = global_evaluate[0]
         if not evaluate:
             return
         if m.is_odd:
@@ -748,7 +751,9 @@ class catalan(Function):
     """
 
     @classmethod
-    def eval(cls, n, evaluate=True):
+    def eval(cls, n, evaluate=None):
+        if evaluate is None:
+            evaluate = global_evaluate[0]
         if n.is_Integer and n.is_nonnegative:
             return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
 
