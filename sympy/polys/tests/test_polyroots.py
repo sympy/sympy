@@ -515,6 +515,8 @@ def test_nroots1():
     raises(sympy.mpmath.mp.NoConvergence, lambda: p.nroots(n=3, maxsteps=5))
 
     roots = p.nroots(n=3)
+    # The order of roots matters. They are ordered from smallest to the
+    # largest.
     assert [str(r) for r in roots] == \
             ['-0.999', '-0.996', '-0.991', '-0.983', '-0.973', '-0.961',
             '-0.946', '-0.930', '-0.911', '-0.889', '-0.866', '-0.841',
@@ -531,6 +533,8 @@ def test_nroots2():
     p = Poly(x**5+3*x+1, x)
 
     roots = p.nroots(n=3)
+    # The order of roots matters. The real roots are first, then
+    # complex ones.
     assert [str(r) for r in roots] == \
             ['-0.332', '1.01 - 0.937*I', '1.01 + 0.937*I',
             '-0.839 + 0.944*I', '-0.839 - 0.944*I']
