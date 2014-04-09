@@ -1616,6 +1616,7 @@ def test_zero():
     assert ask(Q.odd(x), Q.zero(x)) is False
     assert ask(Q.zero(x), Q.even(x)) is None
     assert ask(Q.zero(x), Q.odd(x)) is False
+    assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
 @XFAIL
 def test_zero_doesnt_work():
