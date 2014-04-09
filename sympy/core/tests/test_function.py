@@ -512,10 +512,80 @@ def test_diff_wrt():
     assert diff(f(g(x)), g(x)) == Subs(Derivative(f(x), x), (x,), (g(x),))
 
 
-def test_to_finite_diff():
+def test_as_finite_diff():
     x, h = symbols('x h')
     f = Function('f')
-    assert (f(x).diff(x).as_finite_diff() - (f(x+h)-f(x-h))/(2*h)).simplify() == 0
+
+    # Central 1st derivative at gridpoint
+    assert (f(x).diff(x).as_finite_diff([x-2, x-1, x, x+1, x+2]) -\
+            (S(1)/12*(f(x-2) - f(x+2)) + S(2)/3*(f(x+1)-f(x-1)))).simplify() == 0
+
+
+    # Central 1st derivative "half-way"
+    assert (f(x).diff(x).as_finite_diff() -\
+            (f(x+S(1)/2)-f(x-S(1)/2))).simplify() == 0
+    assert (f(x).diff(x).as_finite_diff(h) -\
+            (f(x+h/S(2))-f(x-h/S(2)))/h).simplify() == 0
+    assert (f(x).diff(x).as_finite_diff([x-3*h, x-h, x+h, x+3*h]) -\
+            (S(9)/(8*2*h)*(f(x+h) - f(x-h)) + \
+             S(1)/(24*2*h)*(f(x-3*h) - f(x+3*h)))).simplify() == 0
+
+    # One sided 1st derivative at gridpoint
+    assert (f(x).diff(x).as_finite_diff([0, 1, 2], 0) -\
+            (-S(3)/2*f(0)+2*f(1)-f(2)/2)).simplify() == 0
+    assert (f(x).diff(x).as_finite_diff([x, x+h], x) -\
+            (f(x+h)-f(x))/h).simplify() == 0
+    assert (f(x).diff(x).as_finite_diff([x-h, x, x+h], x-h) -\
+            (-S(3)/(2*h)*f(x-h) + 2/h*f(x) -S(1)/(2*h)*f(x+h))).simplify() == 0
+
+    # One sided 1st derivative "half-way"
+    assert (f(x).diff(x).as_finite_diff([x-h, x+h, x+3*h, x+5*h, x+7*h]) -\
+            1/(2*h)*(-S(11)/(12)*f(x-h) + S(17)/(24)*f(x+h) + S(3)/8*f(x+3*h) +\
+                     -S(5)/24*f(x+5*h)+S(1)/24*f(x+7*h))).simplify() == 0
+
+    # Central 2nd derivative at gridpoint
+    assert (f(x).diff(x, 2).as_finite_diff([x-h, x, x+h]) -\
+            h**-2*(f(x-h) + f(x+h) - 2*f(x))).simplify() == 0
+
+    assert (f(x).diff(x, 2).as_finite_diff([x-2*h, x-h, x, x+h, x+2*h]) -\
+            h**-2*(-S(1)/12*(f(x-2*h) + f(x+2*h)) + S(4)/3*(f(x+h) + f(x-h)) -\
+                 S(5)/2*f(x))).simplify() == 0
+
+
+    # Central 2nd derivative "half-way"
+    assert (f(x).diff(x, 2).as_finite_diff([x-3*h, x-h, x+h, x+3*h]) -\
+            (2*h)**-2*(S(1)/2*(f(x-3*h) + f(x+3*h)) - \
+                       S(1)/2*(f(x+h) + f(x-h)))).simplify() == 0
+
+    # One sided 2nd derivative at gridpoint
+    assert (f(x).diff(x, 2).as_finite_diff([x, x+h, x+2*h, x+3*h]) -\
+            h**-2*(2*f(x) - 5*f(x+h) + 4*f(x+2*h) - f(x+3*h))).simplify() == 0
+
+    # One sided 2nd derivative at "half-way"
+    assert (f(x).diff(x, 2).as_finite_diff([x-h, x+h, x+3*h, x+5*h]) -\
+            (2*h)**-2*(S(3)/2*f(x-h) - S(7)/2*f(x+h) + S(5)/2*f(x+3*h) -\
+                       S(1)/2*f(x+5*h))).simplify() == 0
+
+    # Central 3rd derivative at gridpoint
+    assert (f(x).diff(x, 3).as_finite_diff() -\
+            (-f(x-3/S(2)) + 3*f(x-1/S(2)) - 3*f(x+1/S(2)) + f(x+3/S(2)))).simplify() == 0
+
+    assert (f(x).diff(x, 3).as_finite_diff([
+        x-3*h, x-2*h, x-h, x, x+h, x+2*h, x+3*h]) -\
+            h**-3*(S(1)/8*(f(x-3*h) - f(x+3*h)) - f(x-2*h) + f(x+2*h) +\
+                   S(13)/8*(f(x-h) - f(x+h)))).simplify() == 0
+
+    # Central 3rd derivative at "half-way"
+    assert (f(x).diff(x, 3).as_finite_diff([x-3*h, x-h, x+h, x+3*h]) -\
+            (2*h)**-3*(f(x+3*h)-f(x-3*h)+3*(f(x-h)-f(x+h)))).simplify() == 0
+
+    # One sided 3rd derivative at gridpoint
+    assert (f(x).diff(x, 3).as_finite_diff([x, x+h, x+2*h, x+3*h]) -\
+            h**-3*(f(x+3*h)-f(x)+3*(f(x+h)-f(x+2*h)))).simplify() == 0
+
+    # One sided 3rd derivative at "half-way"
+    assert (f(x).diff(x, 3).as_finite_diff([x-h, x+h, x+3*h, x+5*h]) -\
+            (2*h)**-3*(f(x+5*h)-f(x-h)+3*(f(x+h)-f(x+3*h)))).simplify() == 0
 
 
 def test_diff_wrt_func_subs():

@@ -1315,27 +1315,81 @@ class Derivative(Expr):
 
     def as_finite_diff(self, indep_vals=None, around=None):
         """
-        -`indep_vals`: strictmonotonically increasing sequence of values of
-            independent vaialbe or symbol instance which will be used as
-            fixed step size in a linear discretization of minimum required length.
+        Returns an approxiamtion of the derivative of an univariate function
+        in the form of a finite difference formula. The expression is a
+        weighted sum of the function at a number of discrete values of the
+        independent variable
+
+        Parameters
+        ==========
+        indep_vals: sequence or coefficient, optional
+            discrete values of the independent variable used for generating
+            the finite difference weights. defult: 1
+
+        around: number or Symbol, optional
+            the value of the independent variable at which the derivative is
+            to be approximated. default: the independet variable of the derivative
+
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Function, exp, sqrt
+        >>> x, h = symbols('x h')
+        >>> f = Function('f')
+        >>> f(x).diff(x).as_finite_diff()
+        -f(x - 1/2) + f(x + 1/2)
+
+        The default step size is 1, and the number of points used
+        are by default order+1. We can change the stepsize by passing
+        a symbol as parameter:
+
+        >>> f(x).diff(x).as_finite_diff(h)
+        -f(-h/2 + x)/h + f(h/2 + x)/h
+
+        We can also specify the discretized values to be used in a sequence:
+
+        >>> f(x).diff(x).as_finite_diff([x, x+h, x+2*h])
+        -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
+
+        The algorithm is not restricted to use equidistant spacing, nor
+        do we need to make the approximation around the independent variable,
+        but we can get an expression estimating the derivative at an offset:
+
+        >>> e, sq2 = exp(1), sqrt(2)
+        >>> xl = [x-h, x+h, x+e*h]
+        >>> f(x).diff(x, 1).as_finite_diff(xl, x+h*sq2) # doctest: +SKIP
+        2*h*(-(-sqrt(2)*h/2 + h)/(2*h) + (sqrt(2)*h/2 + h)/(2*h))*\
+        f(E*h + x)/((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h/2 + h)/(2*h) -\
+        (-sqrt(2)*h/2 + E*h)/(2*h))*f(-h + x)/(h + E*h) + ((-sqrt(2)*h/2 +\
+        E*h)/(2*h) - (sqrt(2)*h/2 + h)/(2*h))*f(h + x)/(-h + E*h)
+
+        See also
+        ========
+
+        sympy.series.finite_diff.apply_finite_diff
+        sympy.series.finite_diff.finite_diff_weights
+
         """
         from sympy.series.finite_diff import apply_finite_diff
 
         for v in self.variables:
             if v != self.variables[0]: raise ValueError(
-                    "as_finit_diff currently only supported for univariate derivatives")
+                    "only univariate derivatives supported")
         if around == None: around = self.variables[0]
         order = len(self.variables)
         if indep_vals == None or not iterable(indep_vals):
             h = indep_vals or 1
-            indep_vals_l = [around - h*i for i in range((order+1)//2, 0, -1)]
-            indep_vals_r = [around + h*i for i in range(1, (order+1)//2 + 1)]
-            if order % 1 == 0:
-                indep_vals = indep_vals_l + indep_vals_r
+            if order % 2 == 0:
+                # even order => odd number of points, grid point included
+                indep_vals = [around + h*i for i in range(-order//2,order//2+1)]
             else:
-                indep_vals = indep_vals_l + [around] + indep_vals_r
-        if len(indep_vals) < order+1: raise ValueError("To few points for order %d" % order)
-        return apply_finite_difference(order, indep_vals, [
+                # odd order => even number of points, half-way wrt grid point
+                indep_vals = [around + h*i/S(2) for i in range(-order, order+1,2)]
+
+        if len(indep_vals) < order+1: raise ValueError(
+                "To few points for order %d" % order)
+        return apply_finite_diff(order, indep_vals, [
             self.expr.subs({self.variables[0]: x}) for x in indep_vals], around)
 
 
