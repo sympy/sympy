@@ -11,6 +11,11 @@ def wavefunction(n, x):
     here n can be positive as well as negative
     which can be used to describe the direction of motion of particle
 
+    References:
+    http://www.kinetics.nsc.ru/chichinin/books/spectroscopy/Atkins05.pdf
+    (Page 71-73, Chapter 3 of Molecular Quantum Mechanics by Peter-Atkins)
+    www.science.fau.edu/chemistry/CHM3410/The%20Schrodinger%20Equation2.pdf
+
     Examples
     ========
     >>> from sympy.physics.pring import wavefunction, energy
@@ -42,6 +47,10 @@ def energy(n, m, r):
     E=(n**2 * (hcross)**2) / (2 * m * r**2)
     here n is the quantum number, m is the mass of the particle
     and r is the radius of circle.
+
+    References:
+    http://www.kinetics.nsc.ru/chichinin/books/spectroscopy/Atkins05.pdf
+    (Page 71-73, Chapter 3 of Molecular Quantum Mechanics by Peter-Atkins)
 
     Examples
     ========
