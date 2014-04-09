@@ -2889,15 +2889,3 @@ def ordering(a, b):
     if any(ai <  bi for ai, bi in zip(a, b)):
         return False
     return any(ai >  bi for ai, bi in zip(a, b))
-
-#def ordering(a, b):
-
-#    eq = True
-
-#    for i, a_i in enumerate(a):
-#        if a_i < b[i]:
-#            return False
-#        elif a[i] > b[i]:
-#            eq = False
-
-#    return True and not eq
