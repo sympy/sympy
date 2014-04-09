@@ -125,7 +125,7 @@ def _construct_composite(coeffs, opt):
         all_symbols = set([])
 
         for gen in gens:
-            symbols = gen.free_symbols
+            symbols = gen.atoms(Symbol)
 
             if all_symbols & symbols:
                 return None # there could be algebraic relations between generators

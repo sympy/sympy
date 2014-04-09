@@ -3,7 +3,7 @@
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import ZZ, QQ, RR, EX
 
-from sympy import S, sqrt, sin, Sum, Integral
+from sympy import S, sqrt, sin
 from sympy.abc import x, y
 
 def test_construct_domain():
@@ -101,9 +101,3 @@ def test_composite_option():
 
     assert construct_domain({(1, 0): y}, composite=False) == \
         (EX, {(1, 0): EX(y)})
-
-    assert construct_domain([x/2, Sum(3*y, (y, 1, 3))],composite=False) == \
-        (EX, [EX(x/2), EX(Sum(3*y, (y, 1, 3)))])
-
-    assert construct_domain([Integral(x*y/2, (x, 0, 2)), Sum(3*y, (y, 1, 3))],composite=False) == \
-        (EX, [EX(Integral(x*y/2, (x, 0, 2))), EX(Sum(3*y, (y, 1, 3)))])

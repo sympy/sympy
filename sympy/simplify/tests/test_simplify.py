@@ -1175,9 +1175,9 @@ def test_posify():
     assert str(modified) == '[_x, n, p]'
     assert [w.subs(reps) for w in modified] == orig
 
-    assert str(Integral(posify(1/x + y)[0],(y, 1, 3)).expand()) == \
+    assert str(Integral(posify(1/x + y)[0], (y, 1, 3)).expand()) == \
         'Integral(1/_x, (y, 1, 3)) + Integral(_y, (y, 1, 3))'
-    assert str(Sum(posify(1/x**n)[0],(n,1,3)).expand()) == \
+    assert str(Sum(posify(1/x**n)[0], (n,1,3)).expand()) == \
         'Sum(_x**(-n), (n, 1, 3))'
 
 
