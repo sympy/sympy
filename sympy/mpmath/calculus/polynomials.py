@@ -142,10 +142,11 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
         return []
 
     orig = ctx.prec
-    weps = +ctx.eps
+    # Important: we need to multiply by 1, otherwise the 'tol' will change as
+    # we assign to `ctx.prec` below.
+    tol = ctx.eps*1
     try:
         ctx.prec += extraprec
-        tol = ctx.eps * 128
         deg = len(coeffs) - 1
         # Must be monic
         lead = ctx.convert(coeffs[0])
@@ -176,11 +177,11 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
         # Remove small imaginary parts
         if cleanup:
             for i in xrange(deg):
-                if abs(roots[i]) < weps:
+                if abs(roots[i]) < tol:
                     roots[i] = 0
-                elif abs(ctx._im(roots[i])) < weps:
+                elif abs(ctx._im(roots[i])) < tol:
                     roots[i] = roots[i].real
-                elif abs(ctx._re(roots[i])) < weps:
+                elif abs(ctx._re(roots[i])) < tol:
                     roots[i] = roots[i].imag * 1j
         roots.sort(key=lambda x: (abs(ctx._im(x)), ctx._re(x)))
     finally:
