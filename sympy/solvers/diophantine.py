@@ -2884,15 +2884,20 @@ def minimum(t, B):
     else:
         return not ordering(t, B[-1]) and minimum(t, B[:-1])
 
-
 def ordering(a, b):
 
-    eq = True
+    if any(ai <  bi for ai, bi in zip(a, b)):
+        return False
+    return any(ai >  bi for ai, bi in zip(a, b))
 
-    for i, a_i in enumerate(a):
-        if a_i < b[i]:
-            return False
-        elif a[i] > b[i]:
-            eq = False
+#def ordering(a, b):
 
-    return True and not eq
+#    eq = True
+
+#    for i, a_i in enumerate(a):
+#        if a_i < b[i]:
+#            return False
+#        elif a[i] > b[i]:
+#            eq = False
+
+#    return True and not eq
