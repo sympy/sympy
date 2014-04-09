@@ -385,8 +385,10 @@ def test_latex_indexed():
     Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
     assert latex(Psi_symbol * conjugate(Psi_symbol)) == latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
 
-    gamma = IndexedBase('gamma')
-    assert latex(gamma) == r'\gamma' # Symbol('gamma') gives r'\gamma'
+    # Symbol('gamma') gives r'\gamma'
+    assert latex(IndexedBase('gamma')) == r'\gamma'
+    assert latex(IndexedBase('a b')) == 'a b'
+    assert latex(IndexedBase('a_b')) == 'a_{b}'
 
 
 def test_latex_derivatives():
