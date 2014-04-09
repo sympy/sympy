@@ -144,7 +144,7 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
     orig = ctx.prec
     weps = +ctx.eps
     try:
-        ctx.prec += 10
+        ctx.prec += extraprec
         tol = ctx.eps * 128
         deg = len(coeffs) - 1
         # Must be monic
