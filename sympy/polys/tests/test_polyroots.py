@@ -14,6 +14,7 @@ from sympy.polys.orthopolys import legendre_poly
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import test_numerically
+import sympy
 
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
@@ -510,6 +511,9 @@ def test_root_factors():
 def test_nroots1():
     n = 64
     p = legendre_poly(n, x, polys=True)
+
+    raises(sympy.mpmath.mp.NoConvergence, lambda: p.nroots(n=3, maxsteps=5))
+
     roots = p.nroots(n=3)
     assert [str(r) for r in roots] == \
             ['-0.999', '-0.996', '-0.991', '-0.983', '-0.973', '-0.961',
