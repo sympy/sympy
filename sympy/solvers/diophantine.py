@@ -10,12 +10,6 @@ from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
-
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.symbol import Symbol
-
-from sympy.polys.polytools import Poly
 from sympy.core.relational import Eq
 
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
