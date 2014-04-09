@@ -171,6 +171,8 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
                             continue
                 roots[i] = p - x
                 err[i] = abs(x)
+        if abs(max(err)) >= tol:
+            raise Exception("Didn't converge in maxsteps=%d steps." % maxsteps)
         # Remove small imaginary parts
         if cleanup:
             for i in xrange(deg):
