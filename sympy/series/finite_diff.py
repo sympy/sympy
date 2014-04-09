@@ -78,9 +78,9 @@ def finite_diff_weights(order, x_list, x0):
     The capability to generate weights at arbitrary points can be
     used e.g. to minimize Runge's phenomenon by using Chebyshev nodes:
 
-    >>> from sympy import cos, Symbol, pi, simplify
+    >>> from sympy import cos, symbols, pi, simplify
     >>> from sympy.series import finite_diff_weights
-    >>> N, h = 4, Symbol('h')
+    >>> N, (h, x) = 4, symbols('h x')
     >>> x_list = [x+h*cos(i*pi/(N)) for i in range(N,-1,-1)] # chebyshev nodes
     >>> print(x_list)
     [-h + x, -sqrt(2)*h/2 + x, x, sqrt(2)*h/2 + x, h + x]
@@ -183,7 +183,7 @@ def apply_finite_diff(order, x_list, y_list, x0):
     >>> i = Idx('i')
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
     >>> apply_finite_diff(1, x_list, y_list, x[i])
-    (-1 + (x[i + 1] - x[i])*(-x[i - 1] + x[i])**(-1))*(x[i + 1] - x[i])**(-1)*y[i] + (-x[i - 1] + x[i])*((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i]))**(-1)*y[i + 1] - (x[i + 1] - x[i])*(-x[i - 1] + x[i])**(-1)*(-x[i - 1] + x[i + 1])**(-1)*y[i - 1]
+    (-1 + (x[i + 1] - x[i])/(-x[i - 1] + x[i]))*y[i]/(x[i + 1] - x[i]) + (-x[i - 1] + x[i])*y[i + 1]/((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i])) - (x[i + 1] - x[i])*y[i - 1]/((-x[i - 1] + x[i + 1])*(-x[i - 1] + x[i]))
 
 
     Notes
