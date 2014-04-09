@@ -176,7 +176,9 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
         # Remove small imaginary parts
         if cleanup:
             for i in xrange(deg):
-                if abs(ctx._im(roots[i])) < weps:
+                if abs(roots[i]) < weps:
+                    roots[i] = 0
+                elif abs(ctx._im(roots[i])) < weps:
                     roots[i] = roots[i].real
                 elif abs(ctx._re(roots[i])) < weps:
                     roots[i] = roots[i].imag * 1j
