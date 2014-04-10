@@ -2331,12 +2331,12 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-                if (not a.args == () and
-                    not a.__class__.__name__ == 'Basic' and
-                    not a.__class__.__name__ == 'Tuple'):
+                if a.args:
                     o = C.Symbol(a.func.__name__.upper())
-                    ops.append(o*(len(a.args)-1))
-                if not a.args == ():
+                    if a.is_Boolean:
+                        ops.append(o*(len(a.args)-1))
+                    else:
+                        ops.append(o)
                     args.extend(a.args)
 
     if not ops:
