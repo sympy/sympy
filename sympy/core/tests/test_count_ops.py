@@ -29,8 +29,8 @@ def test_count_ops_visual():
     ADD, MUL, POW, SIN, COS, EXP, AND, D, G = symbols(
         'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
-    OR, AND, IMPLIES, EQUIVALENT = symbols(
-        'Or And Implies Equivalent'.upper())
+    OR, AND, IMPLIES, EQUIVALENT, BASIC, TUPLE = symbols(
+        'Or And Implies Equivalent Basic Tuple'.upper())
 
     def count(val):
         return count_ops(val, visual=True)
@@ -89,8 +89,10 @@ def test_count_ops_visual():
     assert count([x + 1, sin(x)*y, None]) == SIN + ADD + MUL
     assert count([]) is S.Zero
 
-    assert count(Basic(x, x + y)) == ADD
-    assert count(Basic(Basic(), Basic(x,x+y))) ==  ADD
+    assert count(Basic()) == 0
+    assert count(Basic(Basic(),Basic(x,x+y))) == ADD + 2*BASIC
+    assert count(Basic(x, x + y)) == ADD + BASIC
+    assert count(Basic(Basic(), Basic(x,x+y))) ==  ADD + 2*BASIC
     assert count(Or(x,y)) == OR
     assert count(And(x,y)) == AND
     assert count(And(x**y,z)) == AND + POW
@@ -101,9 +103,10 @@ def test_count_ops_visual():
     assert count(Implies(x,y)) == IMPLIES
     assert count(Equivalent(x,y)) == EQUIVALENT
     assert count(ITE(x,y,z)) == 2*AND + OR
+    assert count([Or(x,y), And(x,y), Basic(x+y)]) == ADD + AND + BASIC + OR
 
-    assert count(And((x,y),z)) == AND
-    # It doesn't make much sense but it checks that TUPLE is not counted as an
+    assert count(And((x,y),z)) == AND + TUPLE
+    # It doesn't make much sense but it checks that TUPLE is counted as an
     # operation.
 
     assert count(Eq(x + y, S(2))) == ADD
