@@ -145,15 +145,16 @@ class Polygon(GeometryEntity):
                 got.add(p)
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted(
-                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
+            a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
+            # if flyback lines are desired then the following should
+            # only be done if tuple(sorted((a, b, c))) == (a, b, c)
             if b not in shared and Point.is_collinear(a, b, c):
-                nodup[i] = a
-                nodup[i + 1] = None
                 nodup.pop(i + 1)
+                if a == c:
+                    nodup.pop(i)
             i += 1
 
-        vertices = list(filter(lambda x: x is not None, nodup))
+        vertices = list(nodup)
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
