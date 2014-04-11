@@ -325,6 +325,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kunal Arora: documentation fixes
 #. Henry Gebhardt: bugfix to ufuncify
 #. dammina: implemented continued fractions functions
+#. richierichrawr: documentation fixes
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
