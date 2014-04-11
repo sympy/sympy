@@ -125,7 +125,7 @@ def _construct_composite(coeffs, opt):
         all_symbols = set([])
 
         for gen in gens:
-            symbols = gen.atoms(Symbol)
+            symbols = gen.free_symbols
 
             if all_symbols & symbols:
                 return None # there could be algebraic relations between generators
@@ -230,6 +230,13 @@ def construct_domain(obj, **args):
             coeffs = obj
     else:
         coeffs = [obj]
+
+    from sympy import Integral, Sum
+    for coeff in coeffs:
+        if isinstance(coeff, Integral) or isinstance(coeff, Sum):
+            co = coeff.doit()
+            loc = coeffs.index(coeff)
+            coeffs[loc] = co
 
     coeffs = list(map(sympify, coeffs))
     result = _construct_simple(coeffs, opt)
