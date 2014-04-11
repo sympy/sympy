@@ -4,13 +4,6 @@ from .str import StrPrinter
 from sympy.utilities import default_sort_key
 
 
-def _find_first_symbol(expr):
-    for atom in expr.free_symbols:
-        if atom.is_Symbol:
-            return atom
-    raise ValueError('expression must contain a Symbol: %r' % expr)
-
-
 class LambdaPrinter(StrPrinter):
     """
     This printer converts expressions into strings that can be used by
@@ -40,10 +33,7 @@ class LambdaPrinter(StrPrinter):
             result.append('((')
             result.append(self._print(e))
             result.append(') if (')
-            if isinstance(c, Interval):
-                result.append(self._print(c.contains(_find_first_symbol(e))))
-            else:
-                result.append(self._print(c))
+            result.append(self._print(c))
             result.append(') else (')
             i += 1
         result = result[:-1]
