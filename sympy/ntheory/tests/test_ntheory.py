@@ -732,6 +732,12 @@ def test_search():
     raises(ValueError, lambda: sieve.search(1))
 
 
+def test_sieve_slice():
+    assert sieve[5] == 11
+    assert list(sieve[5:10]) == [sieve[x] for x in range(5, 10)]
+    assert list(sieve[5:10:2]) == [sieve[x] for x in range(5, 10, 2)]
+
+
 def test_continued_fraction():
     raises(ValueError, lambda: cf_p(1, 0, 0))
     raises(ValueError, lambda: cf_p(1, 1, -1))
