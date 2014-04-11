@@ -1,5 +1,6 @@
 from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
     count_ops, S, And, I, pi, Eq, Or, Not, Xor ,Nand ,Nor, Implies,Equivalent, ITE
+from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
 a, b, c = symbols('a,b,c')
@@ -92,7 +93,6 @@ def test_count_ops_visual():
     assert count(Basic()) == 0
     assert count(Basic(Basic(),Basic(x,x+y))) == ADD + 2*BASIC
     assert count(Basic(x, x + y)) == ADD + BASIC
-    assert count(Basic(Basic(), Basic(x,x+y))) ==  ADD + 2*BASIC
     assert count(Or(x,y)) == OR
     assert count(And(x,y)) == AND
     assert count(And(x**y,z)) == AND + POW
@@ -105,9 +105,8 @@ def test_count_ops_visual():
     assert count(ITE(x,y,z)) == 2*AND + OR
     assert count([Or(x,y), And(x,y), Basic(x+y)]) == ADD + AND + BASIC + OR
 
-    assert count(And((x,y),z)) == AND + TUPLE
-    # It doesn't make much sense but it checks that TUPLE is counted as an
-    # operation.
+    assert count(Basic(Tuple(x))) == BASIC + TUPLE
+    #It checks that TUPLE is counted as an operation.
 
     assert count(Eq(x + y, S(2))) == ADD
 
