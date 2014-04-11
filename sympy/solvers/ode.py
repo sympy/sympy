@@ -1134,9 +1134,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if coeff == 0:
                 return True
             if order == 0:
-                if x in coeff.free_symbols:
-                    return False
-                return f(x) not in coeff.free_symbols
+                return x not in coeff.free_symbols
             if coeff.is_Mul:
                 if coeff.has(f(x)):
                     return False
