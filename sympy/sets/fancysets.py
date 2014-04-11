@@ -7,6 +7,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
 from sympy.core.decorators import deprecated
+from sympy.dispatch import dispatch
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -40,12 +41,6 @@ class Naturals(with_metaclass(Singleton, Set)):
     is_iterable = True
     _inf = S.One
     _sup = S.Infinity
-
-    def _intersect(self, other):
-        if other.is_Interval:
-            return Intersection(
-                S.Integers, other, Interval(self._inf, S.Infinity))
-        return None
 
     def _contains(self, other):
         from sympy.assumptions.ask import ask, Q
@@ -113,13 +108,6 @@ class Integers(with_metaclass(Singleton, Set)):
     """
 
     is_iterable = True
-
-    def _intersect(self, other):
-        from sympy.functions.elementary.integers import floor, ceiling
-        if other.is_Interval and other.measure < S.Infinity:
-            s = Range(ceiling(other.left), floor(other.right) + 1)
-            return s.intersect(other)  # take out endpoints if open interval
-        return None
 
     def _contains(self, other):
         from sympy.assumptions.ask import ask, Q
@@ -276,37 +264,6 @@ class Range(Set):
     stop = property(lambda self: self.args[1])
     step = property(lambda self: self.args[2])
 
-    def _intersect(self, other):
-        from sympy.functions.elementary.integers import floor, ceiling
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if other.is_Interval:
-            osup = other.sup
-            oinf = other.inf
-            # if other is [0, 10) we can only go up to 9
-            if osup.is_integer and other.right_open:
-                osup -= 1
-            if oinf.is_integer and other.left_open:
-                oinf += 1
-
-            # Take the most restrictive of the bounds set by the two sets
-            # round inwards
-            inf = ceiling(Max(self.inf, oinf))
-            sup = floor(Min(self.sup, osup))
-            # if we are off the sequence, get back on
-            off = (inf - self.inf) % self.step
-            if off:
-                inf += self.step - off
-
-            return Range(inf, sup + 1, self.step)
-
-        if other == S.Naturals:
-            return self._intersect(Interval(1, S.Infinity))
-
-        if other == S.Integers:
-            return self
-
-        return None
-
     def _contains(self, other):
         from sympy.assumptions.ask import ask, Q
         return (other >= self.inf and other <= self.sup and
@@ -339,3 +296,50 @@ class Range(Set):
     @property
     def _boundary(self):
         return self
+
+
+@dispatch(Naturals, Interval)
+def _simplify_intersection(a, b):
+    return Intersection(S.Integers, b, Interval(a._inf, S.Infinity))
+
+
+@dispatch(Integers, Interval)
+def _simplify_intersection(a, b):
+    from sympy.functions.elementary.integers import floor, ceiling
+    if b.measure < S.Infinity:
+        s = Range(ceiling(b.left), floor(b.right) + 1)
+        return s.intersect(b)  # take out endpoints if open interval
+
+
+@dispatch(Range, Interval)
+def _simplify_intersection(a, b):
+    from sympy.functions.elementary.integers import floor, ceiling
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    osup = b.sup
+    oinf = b.inf
+    # if b is [0, 10) we can only go up to 9
+    if osup.is_integer and b.right_open:
+        osup -= 1
+    if oinf.is_integer and b.left_open:
+        oinf += 1
+
+    # Take the most restrictive of the bounds set by the two sets
+    # round inwards
+    inf = ceiling(Max(a.inf, oinf))
+    sup = floor(Min(a.sup, osup))
+    # if we are off the sequence, get back on
+    off = (inf - a.inf) % a.step
+    if off:
+        inf += a.step - off
+
+    return Range(inf, sup + 1, a.step)
+
+
+@dispatch(Range, Naturals)
+def _simplify_intersection(a, b):
+    return _simplify_intersection(a, Interval(1, S.Infinity))
+
+
+@dispatch(Range, Integers)
+def _simplify_intersection(a, b):
+    return a

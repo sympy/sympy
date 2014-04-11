@@ -14,6 +14,7 @@ from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
 
 from sympy.utilities import default_sort_key
+from sympy.dispatch import dispatch
 
 
 class Set(Basic):
@@ -87,34 +88,6 @@ class Set(Basic):
 
         """
         return Intersection(self, other)
-
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        self._intersect(other) returns a new, intersected set if self knows how
-        to intersect itself with other, otherwise it returns None
-
-        When making a new set class you can be assured that other will not
-        be a Union, FiniteSet, or EmptySet
-
-        Used within the Intersection class
-        """
-        return None
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        self._union(other) returns a new, joined set if self knows how
-        to join itself with other, otherwise it returns None.
-        It may also return a python set of SymPy Sets if they are somehow
-        simpler. If it does this it must be idempotent i.e. the sets returned
-        must return None with _union'ed with each other
-
-        Used within the Union class
-        """
-        return None
 
     @property
     def complement(self):
@@ -411,32 +384,6 @@ class ProductSet(Set):
             return False
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        See Set._intersect for docstring
-        """
-        if not other.is_ProductSet:
-            return None
-        if len(other.args) != len(self.args):
-            return S.EmptySet
-        return ProductSet(a.intersect(b)
-                for a, b in zip(self.sets, other.sets))
-
-    def _union(self, other):
-        if not other.is_ProductSet:
-            return None
-        if len(other.args) != len(self.args):
-            return None
-        if self.args[0] == other.args[0]:
-            return self.args[0] * Union(ProductSet(self.args[1:]),
-                                        ProductSet(other.args[1:]))
-        if self.args[-1] == other.args[-1]:
-            return Union(ProductSet(self.args[:-1]),
-                         ProductSet(other.args[:-1])) * self.args[-1]
-        return None
-
     @property
     def sets(self):
         return self.args
@@ -619,89 +566,6 @@ class Interval(Set, EvalfMixin):
 
         """
         return self._args[3]
-
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        See Set._intersect for docstring
-        """
-        # We only know how to intersect with other intervals
-        if not other.is_Interval:
-            return None
-        # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
-        if not self._is_comparable(other):
-            return None
-
-        empty = False
-
-        if self.start <= other.end and other.start <= self.end:
-            # Get topology right.
-            if self.start < other.start:
-                start = other.start
-                left_open = other.left_open
-            elif self.start > other.start:
-                start = self.start
-                left_open = self.left_open
-            else:
-                start = self.start
-                left_open = self.left_open or other.left_open
-
-            if self.end < other.end:
-                end = self.end
-                right_open = self.right_open
-            elif self.end > other.end:
-                end = other.end
-                right_open = other.right_open
-            else:
-                end = self.end
-                right_open = self.right_open or other.right_open
-
-            if end - start == 0 and (left_open or right_open):
-                empty = True
-        else:
-            empty = True
-
-        if empty:
-            return S.EmptySet
-
-        return Interval(start, end, left_open, right_open)
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        See Set._union for docstring
-        """
-        if other.is_Interval and self._is_comparable(other):
-            from sympy.functions.elementary.miscellaneous import Min, Max
-            # Non-overlapping intervals
-            end = Min(self.end, other.end)
-            start = Max(self.start, other.start)
-            if (end < start or
-               (end == start and (end not in self and end not in other))):
-                return None
-            else:
-                start = Min(self.start, other.start)
-                end = Max(self.end, other.end)
-
-                left_open = ((self.start != start or self.left_open) and
-                             (other.start != start or other.left_open))
-                right_open = ((self.end != end or self.right_open) and
-                              (other.end != end or other.right_open))
-
-                return Interval(start, end, left_open, right_open)
-
-        # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) is True) or
-                (self.right_open and other.contains(self.end) is True)):
-            # Fill in my end points and return
-            open_left = self.left_open and self.start not in other
-            open_right = self.right_open and self.end not in other
-            new_self = Interval(self.start, self.end, open_left, open_right)
-            return set((new_self, other))
-
-        return None
 
     @property
     def _complement(self):
@@ -889,53 +753,9 @@ class Union(Set, EvalfMixin):
 
         # Reduce sets using known rules
         if evaluate:
-            return Union.reduce(args)
+            return simplify_union(args)
 
         return Basic.__new__(cls, *args)
-
-    @staticmethod
-    def reduce(args):
-        """
-        Simplify a Union using known rules
-
-        We first start with global rules like
-        'Merge all FiniteSets'
-
-        Then we iterate through all pairs and ask the constituent sets if they
-        can simplify themselves with any other constituent
-        """
-
-        # ===== Global Rules =====
-        # Merge all finite sets
-        finite_sets = [x for x in args if x.is_FiniteSet]
-        if len(finite_sets) > 1:
-            finite_set = FiniteSet(x for set in finite_sets for x in set)
-            args = [finite_set] + [x for x in args if not x.is_FiniteSet]
-
-        # ===== Pair-wise Rules =====
-        # Here we depend on rules built into the constituent sets
-        args = set(args)
-        new_args = True
-        while(new_args):
-            for s in args:
-                new_args = False
-                for t in args - set((s,)):
-                    new_set = s._union(t)
-                    # This returns None if s does not know how to intersect
-                    # with t. Returns the newly intersected set otherwise
-                    if new_set is not None:
-                        if not isinstance(new_set, set):
-                            new_set = set((new_set, ))
-                        new_args = (args - set((s, t))).union(new_set)
-                        break
-                if new_args:
-                    args = new_args
-                    break
-
-        if len(args) == 1:
-            return args.pop()
-        else:
-            return Union(args, evaluate=False)
 
     @property
     def _inf(self):
@@ -1099,7 +919,7 @@ class Intersection(Set):
 
         # Reduce sets using known rules
         if evaluate:
-            return Intersection.reduce(args)
+            return simplify_intersection(args)
 
         return Basic.__new__(cls, *args)
 
@@ -1135,63 +955,6 @@ class Intersection(Set):
 
         raise ValueError("None of the constituent sets are iterable")
 
-    @staticmethod
-    def reduce(args):
-        """
-        Simplify an intersection using known rules
-
-        We first start with global rules like
-        'if any empty sets return empty set' and 'distribute any unions'
-
-        Then we iterate through all pairs and ask the constituent sets if they
-        can simplify themselves with any other constituent
-        """
-
-        # ===== Global Rules =====
-        # If any EmptySets return EmptySet
-        if any(s.is_EmptySet for s in args):
-            return S.EmptySet
-
-        # If any FiniteSets see which elements of that finite set occur within
-        # all other sets in the intersection
-        for s in args:
-            if s.is_FiniteSet:
-                return s.__class__(x for x in s
-                        if all(x in other for other in args))
-
-        # If any of the sets are unions, return a Union of Intersections
-        for s in args:
-            if s.is_Union:
-                other_sets = set(args) - set((s,))
-                other = Intersection(other_sets)
-                return Union(Intersection(arg, other) for arg in s.args)
-
-        # At this stage we are guaranteed not to have any
-        # EmptySets, FiniteSets, or Unions in the intersection
-
-        # ===== Pair-wise Rules =====
-        # Here we depend on rules built into the constituent sets
-        args = set(args)
-        new_args = True
-        while(new_args):
-            for s in args:
-                new_args = False
-                for t in args - set((s,)):
-                    new_set = s._intersect(t)
-                    # This returns None if s does not know how to intersect
-                    # with t. Returns the newly intersected set otherwise
-                    if new_set is not None:
-                        new_args = (args - set((s, t))).union(set((new_set, )))
-                        break
-                if new_args:
-                    args = new_args
-                    break
-
-        if len(args) == 1:
-            return args.pop()
-        else:
-            return Intersection(args, evaluate=False)
-
     def as_relational(self, symbol):
         """Rewrite an Intersection in terms of equalities and logic operators"""
         return And(*[set.as_relational(symbol) for set in self.args])
@@ -1223,9 +986,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
     """
     is_EmptySet = True
 
-    def _intersect(self, other):
-        return S.EmptySet
-
     @property
     def _complement(self):
         return S.UniversalSet
@@ -1242,9 +1002,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     def __len__(self):
         return 0
-
-    def _union(self, other):
-        return other
 
     def __iter__(self):
         return iter([])
@@ -1283,9 +1040,6 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     is_UniversalSet = True
 
-    def _intersect(self, other):
-        return other
-
     @property
     def _complement(self):
         return S.EmptySet
@@ -1299,9 +1053,6 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     def as_relational(self, symbol):
         return True
-
-    def _union(self, other):
-        return self
 
     @property
     def _boundary(self):
@@ -1350,33 +1101,6 @@ class FiniteSet(Set, EvalfMixin):
 
     def __iter__(self):
         return iter(self.args)
-
-    def _intersect(self, other):
-        """
-        This function should only be used internally
-
-        See Set._intersect for docstring
-        """
-        if isinstance(other, self.__class__):
-            return self.__class__(*(self._elements & other._elements))
-        return self.__class__(el for el in self if el in other)
-
-    def _union(self, other):
-        """
-        This function should only be used internally
-
-        See Set._union for docstring
-        """
-        if other.is_FiniteSet:
-            return FiniteSet(*(self._elements | other._elements))
-
-        # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) is True for x in self):
-            return set((
-                FiniteSet(x for x in self if other.contains(x) is not True),
-                other))
-
-        return None
 
     def _contains(self, other):
         """
@@ -1535,3 +1259,252 @@ def imageset(*args):
         return r
 
     return ImageSet(f, set)
+
+
+def simplify_union(args):
+    """
+    Simplify a Union using known rules
+
+    We first start with global rules like 'Merge all FiniteSets'
+
+    Then we iterate through all pairs and ask the constituent sets if they
+    can simplify themselves with any other constituent.  This process depends
+    on _simplify_union(a, b) functions.
+    """
+
+    # ===== Global Rules =====
+    # Merge all finite sets
+    finite_sets = [x for x in args if x.is_FiniteSet]
+    if len(finite_sets) > 1:
+        finite_set = FiniteSet(x for set in finite_sets for x in set)
+        args = [finite_set] + [x for x in args if not x.is_FiniteSet]
+
+    # ===== Pair-wise Rules =====
+    # Here we depend on rules built into the constituent sets
+    args = set(args)
+    new_args = True
+    while(new_args):
+        for s in args:
+            new_args = False
+            for t in args - set((s,)):
+                new_set = _simplify_union(s, t)
+                # This returns None if s does not know how to intersect
+                # with t. Returns the newly intersected set otherwise
+                if new_set is not None:
+                    if not isinstance(new_set, set):
+                        new_set = set((new_set, ))
+                    new_args = (args - set((s, t))).union(new_set)
+                    break
+            if new_args:
+                args = new_args
+                break
+
+    if len(args) == 1:
+        return args.pop()
+    else:
+        return Union(args, evaluate=False)
+
+
+@dispatch(EmptySet, Set)
+def _simplify_union(a, b):
+    return b
+
+
+@dispatch(UniversalSet, Set)
+def _simplify_union(a, b):
+    return a
+
+
+@dispatch(ProductSet, ProductSet)
+def _simplify_union(a, b):
+    if len(b.args) != len(a.args):
+        return None
+    if a.args[0] == b.args[0]:
+        return a.args[0] * Union(ProductSet(a.args[1:]),
+                                    ProductSet(b.args[1:]))
+    if a.args[-1] == b.args[-1]:
+        return Union(ProductSet(a.args[:-1]),
+                     ProductSet(b.args[:-1])) * a.args[-1]
+    return None
+
+
+@dispatch(Interval, Interval)
+def _simplify_union(a, b):
+    if a._is_comparable(b):
+        from sympy.functions.elementary.miscellaneous import Min, Max
+        # Non-overlapping intervals
+        end = Min(a.end, b.end)
+        start = Max(a.start, b.start)
+        if (end < start or
+           (end == start and (end not in a and end not in b))):
+            return None
+        else:
+            start = Min(a.start, b.start)
+            end = Max(a.end, b.end)
+
+            left_open = ((a.start != start or a.left_open) and
+                         (b.start != start or b.left_open))
+            right_open = ((a.end != end or a.right_open) and
+                          (b.end != end or b.right_open))
+
+            return Interval(start, end, left_open, right_open)
+
+
+@dispatch(Interval, Set)
+def _simplify_union(a, b):
+    # If I have open end points and these endpoints are contained in b
+    if ((a.left_open and b.contains(a.start) is True) or
+            (a.right_open and b.contains(a.end) is True)):
+        # Fill in my end points and return
+        open_left = a.left_open and a.start not in b
+        open_right = a.right_open and a.end not in b
+        new_a = Interval(a.start, a.end, open_left, open_right)
+        return set((new_a, b))
+
+    return None
+
+
+@dispatch(FiniteSet, FiniteSet)
+def _simplify_union(a, b):
+    return FiniteSet(*(a._elements | b._elements))
+
+
+@dispatch(FiniteSet, Set)
+def _simplify_union(a, b):
+    # If b set contains one of my elements, remove it from myself
+    if any(b.contains(x) is True for x in a):
+        return set((
+            FiniteSet(x for x in a if b.contains(x) is not True), b))
+
+    return None
+
+
+@dispatch(Set, Set)
+def _simplify_union(a, b):
+    return None
+
+
+def simplify_intersection(args):
+    """
+    Simplify an intersection using known rules
+
+    We first start with global rules like
+    'if any empty sets return empty set' and 'distribute any unions'
+
+    Then we iterate through all pairs and ask the constituent sets if they
+    can simplify themselves with any other constituent
+    """
+
+    # ===== Global Rules =====
+    # If any EmptySets return EmptySet
+    if any(s.is_EmptySet for s in args):
+        return S.EmptySet
+
+    # If any FiniteSets see which elements of that finite set occur within
+    # all other sets in the intersection
+    for s in args:
+        if s.is_FiniteSet:
+            return s.__class__(x for x in s
+                    if all(x in other for other in args))
+
+    # If any of the sets are unions, return a Union of Intersections
+    for s in args:
+        if s.is_Union:
+            other_sets = set(args) - set((s,))
+            other = Intersection(other_sets)
+            return Union(Intersection(arg, other) for arg in s.args)
+
+    # At this stage we are guaranteed not to have any
+    # EmptySets, FiniteSets, or Unions in the intersection
+
+    # ===== Pair-wise Rules =====
+    # Here we depend on rules built into the constituent sets
+    args = set(args)
+    new_args = True
+    while(new_args):
+        for s in args:
+            new_args = False
+            for t in args - set((s,)):
+                new_set = _simplify_intersection(s, t)
+                # This returns None if s does not know how to intersect
+                # with t. Returns the newly intersected set otherwise
+                if new_set is not None:
+                    new_args = (args - set((s, t))).union(set((new_set, )))
+                    break
+            if new_args:
+                args = new_args
+                break
+
+    if len(args) == 1:
+        return args.pop()
+    else:
+        return Intersection(args, evaluate=False)
+
+
+@dispatch(ProductSet, ProductSet)
+def _simplify_intersection(a, b):
+    if len(b.args) != len(a.args):
+        return S.EmptySet
+    return ProductSet(a.intersect(b)
+            for a, b in zip(a.sets, b.sets))
+
+
+@dispatch(Interval, Interval)
+def _simplify_intersection(a, b):
+    # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
+    if not a._is_comparable(b):
+        return None
+
+    empty = False
+
+    if a.start <= b.end and b.start <= a.end:
+        # Get topology right.
+        if a.start < b.start:
+            start = b.start
+            left_open = b.left_open
+        elif a.start > b.start:
+            start = a.start
+            left_open = a.left_open
+        else:
+            start = a.start
+            left_open = a.left_open or b.left_open
+
+        if a.end < b.end:
+            end = a.end
+            right_open = a.right_open
+        elif a.end > b.end:
+            end = b.end
+            right_open = b.right_open
+        else:
+            end = a.end
+            right_open = a.right_open or b.right_open
+
+        if end - start == 0 and (left_open or right_open):
+            empty = True
+    else:
+        empty = True
+
+    if empty:
+        return S.EmptySet
+
+    return Interval(start, end, left_open, right_open)
+
+@dispatch(EmptySet, Set)
+def _simplify_intersection(a, b):
+    return S.EmptySet
+
+@dispatch(UniversalSet, Set)
+def _simplify_intersection(a, b):
+    return b
+
+@dispatch(FiniteSet, FiniteSet)
+def _simplify_intersection(a, b):
+    return FiniteSet(*(a._elements & b._elements))
+
+@dispatch(FiniteSet, Set)
+def _simplify_intersection(a, b):
+    return FiniteSet(el for el in a if el in b)
+
+@dispatch(Set, Set)
+def _simplify_intersection(a, b):
+    return None
