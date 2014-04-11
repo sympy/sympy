@@ -146,9 +146,12 @@ class Polygon(GeometryEntity):
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
             a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
+            # if flyback lines are desired then the following should
+            # only be done if tuple(sorted((a, b, c))) == (a, b, c)
             if b not in shared and Point.is_collinear(a, b, c):
-                nodup[i] = a
                 nodup.pop(i + 1)
+                if a == c:
+                    nodup.pop(i)
             i += 1
 
         vertices = list(nodup)
