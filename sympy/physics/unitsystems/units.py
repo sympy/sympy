@@ -341,6 +341,13 @@ class UnitSystem(object):
 
         return u
 
+    def __call__(self, unit):
+        """
+        Wrapper to the method print_unit_base
+        """
+
+        return self.print_unit_base(unit)
+
     def get_unit(self, unit):
         """
         Find a specific unit which is part of the system.

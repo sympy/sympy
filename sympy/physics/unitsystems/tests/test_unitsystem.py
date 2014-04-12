@@ -47,6 +47,14 @@ def test_str_repr():
                                         % (m.abbrev_dim, s.abbrev_dim))
 
 
+def test_call():
+    A = Unit(current)
+    Js = Unit(action)
+    mksa = UnitSystem((m, kg, s, A), (Js,))
+
+    assert mksa(Js) == mksa.print_unit_base(Js)
+
+
 def test_get_unit():
     ms = UnitSystem((m, s), (c,))
 
