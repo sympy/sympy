@@ -20,10 +20,10 @@ def evaluate(x):
 
     >>> from sympy.abc import x
     >>> from sympy.core.operations import evaluate
-    >>> print x + x
+    >>> print(x + x)
     2*x
     >>> with evaluate(False):
-    ...     print x + x
+    ...     print(x + x)
     x + x
     """
 
