@@ -18,7 +18,7 @@ import numbers
 
 from sympy.core.compatibility import reduce
 from sympy.core.containers import Tuple, Dict
-from sympy import sympify, nsimplify, Number, Matrix, Expr
+from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr
 
 
 class Dimension(Expr):
@@ -306,6 +306,22 @@ class Dimension(Expr):
 
         for key in self:
             if self[key] != 0:
+                return False
+        else:
+            return True
+
+    @property
+    def has_integer_powers(self):
+        """
+        Check if the dimension object has only integer powers.
+
+        All the dimension powers should be integers, but rational powers may
+        appear in intermediate steps. This method may be used to check that the
+        final result is well-defined.
+        """
+
+        for key in self:
+            if not isinstance(self[key], Integer):
                 return False
         else:
             return True

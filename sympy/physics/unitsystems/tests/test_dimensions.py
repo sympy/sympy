@@ -14,6 +14,9 @@ def test_definition():
     assert length.name == "length"
     assert length.symbol == "L"
 
+    halflength = Dimension(name="length", length=0.5)
+    assert halflength.get('length') == sympify("1/2")
+
 
 def test_dict_properties():
     dic = {"length": sympify(1), "time": sympify(2)}
@@ -57,6 +60,10 @@ def test_properties():
     assert Dimension(length=1).is_dimensionless is False
     assert Dimension().is_dimensionless is True
     assert Dimension(length=0).is_dimensionless is True
+
+    assert Dimension(length=1).has_integer_powers is True
+    assert Dimension(length=-1).has_integer_powers is True
+    assert Dimension(length=1.5).has_integer_powers is False
 
 
 def test_add_sub():
