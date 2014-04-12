@@ -18,7 +18,7 @@ import numbers
 
 from sympy.core.compatibility import reduce
 from sympy.core.containers import Tuple, Dict
-from sympy import sympify, Number, Integer, Matrix, Expr
+from sympy import sympify, nsimplify, Number, Matrix, Expr
 
 
 class Dimension(Expr):
@@ -132,7 +132,9 @@ class Dimension(Expr):
 
         # filter dimensions set to zero; this avoid the following odd result:
         # Dimension(length=1) == Dimension(length=1, mass=0) => False
-        pairs = [pair for pair in pairs if pair[1] != 0]
+        # also simplify to avoid powers such as 2.00000
+        pairs = [(pair[0], nsimplify(pair[1])) for pair in pairs
+                 if pair[1] != 0]
         pairs.sort(key=str)
 
         new = Expr.__new__(cls, Dict(*pairs))
@@ -236,16 +238,12 @@ class Dimension(Expr):
         #TODO: be sure that it works with rational numbers (e.g. when dealing
         #      with dimension under a fraction)
 
-        #TODO: allow exponentiation with expression, like x
+        #TODO: allow exponentiation by an abstract symbol x
         #      (if x.is_number is True)
+        #      this would be a step toward using solve and absract powers
 
         other = sympify(other)
         if isinstance(other, (numbers.Real, Number)):
-            # FIXME: necessary because {'length': 2} != {'length': 2.000'}
-            #        with resp. Integer and Float
-            #        this goes along the fact that we need support for
-            #        fractional powers
-            other = Integer(other)
             return Dimension([(x, y*other) for x, y in self.items()])
         else:
             raise TypeError("Dimensions can be exponentiated only with "

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sympy import Tuple
+from sympy import sympify
 from sympy.physics.unitsystems.dimensions import Dimension
 from sympy.utilities.pytest import raises
 
@@ -16,11 +16,10 @@ def test_definition():
 
 
 def test_dict_properties():
-    dic = {"length": 1, "time": -2}
+    dic = {"length": sympify(1), "time": sympify(2)}
     d = Dimension(dic)
 
     assert d["length"] == 1
-
     assert set(d.items()) == set(dic.items())
 
     assert len(d) == 2
@@ -45,6 +44,7 @@ def test_error_definition():
 
     # non-number with named argument
     raises(TypeError, lambda: Dimension(length=(1, 2)))
+
 
 def test_str():
     assert str(Dimension(length=1)) == "{'length': 1}"

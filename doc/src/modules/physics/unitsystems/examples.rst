@@ -70,14 +70,19 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     >>> from sympy.physics.unitsystems import qsimplify, Unit, Quantity as Q
     >>> from sympy.physics.unitsystems.systems import mks
     >>> m, kg, s = mks["m"], mks["kg"], mks["s"]
-    >>> T = Symbol("T")
+    >>> T, a, M, G = symbols("T a M G")
     >>> venus_a = Q(108208000e3, m)
     >>> solar_mass = Q(1.9891e30, kg)
-    >>> Tr = solve(T**2/venus_a**3 - 4*pi**2 / mks["G"] / solar_mass, T)[1]
-    >>> q = qsimplify(Tr)
+    >>> venus_subs = {"a": venus_a, "M": solar_mass, "G": mks["G"]}
+    >>> Tsol = solve(T**2 / a**3 - 4*pi**2 / G / M, T)[1]
+    >>> q = qsimplify(Tsol.subs(venus_subs))
     >>> day = Unit(s.dim, abbrev="day", factor=86400)
     >>> print(q.convert_to(day))
     224.667 day
 
 We could also have the solar mass and the day as units coming from the
 astrophysical system, but I wanted to show how to create a unit that one needs.
+
+We can see in this example that intermediate dimensions can be ill-defined,
+such as sqrt(G), but one should check that the final result - when all
+dimensions are combined - is well defined.
