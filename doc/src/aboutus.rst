@@ -324,7 +324,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ben Lucato: documentation fixes
 #. Kunal Arora: documentation fixes
 #. Henry Gebhardt: bugfix to ufuncify
-#. dammina: implemented continued fractions functions
+#. Dammina Sahabandu: implemented continued fractions functions
 #. richierichrawr: documentation fixes
 #. John Connor: fixes to ntheory
 #. Juan Luis Cano Rodríguez: fixes to mechanics module
