@@ -2,6 +2,7 @@
 
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
 from sympy.physics.unitsystems.units import Unit, UnitSystem
+from sympy.physics.unitsystems.quantities import Quantity
 from sympy.utilities.pytest import raises
 
 length = Dimension(name="length", symbol="L", length=1)
@@ -53,6 +54,11 @@ def test_call():
     mksa = UnitSystem((m, kg, s, A), (Js,))
 
     assert mksa(Js) == mksa.print_unit_base(Js)
+    assert mksa(Js.dim) == mksa._system(Js.dim)
+
+    q = Quantity(10, Js)
+
+    assert mksa(q) == "%g %s" % (q.factor, mksa(Js))
 
 
 def test_get_unit():

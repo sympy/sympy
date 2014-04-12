@@ -401,6 +401,13 @@ class DimensionSystem(object):
 
         return d
 
+    def __call__(self, unit):
+        """
+        Wrapper to the method print_dim_base
+        """
+
+        return self.print_dim_base(unit)
+
     def get_dim(self, dim):
         """
         Find a specific dimension which is part of the system.

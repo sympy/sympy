@@ -341,12 +341,24 @@ class UnitSystem(object):
 
         return u
 
-    def __call__(self, unit):
+    def __call__(self, other):
         """
-        Wrapper to the method print_unit_base
-        """
+        Display the argument in the current system units (or dimensions).
 
-        return self.print_unit_base(unit)
+        The argument can be a dimension (call print_dim_base of the system),
+        a unit (call print_unit_base) or a quantity
+        """
+        from sympy.physics.unitsystems import Quantity
+
+        if isinstance(other, Dimension):
+            return self._system(other)
+        elif isinstance(other, Unit):
+            return self.print_unit_base(other)
+        elif isinstance(other, Quantity):
+            return "%g %s" % (other.factor, self.print_unit_base(other.unit))
+        else:
+            raise TypeError("System is callable only with unit, dimension "
+                            "or quantity.")
 
     def get_unit(self, unit):
         """

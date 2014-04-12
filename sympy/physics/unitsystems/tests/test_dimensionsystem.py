@@ -53,6 +53,12 @@ def test_str_repr():
             == "<DimensionSystem: ({'length': 1}, {'time': 1})>")
 
 
+def test_call():
+    current = Dimension(name="current", symbol="I", current=1)
+    mksa = DimensionSystem((length, time, mass, current), (action,))
+    assert mksa(action) == mksa.print_dim_base(action)
+
+
 def test_get_dim():
     ms = DimensionSystem((length, time), (velocity,))
 
