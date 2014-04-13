@@ -1454,9 +1454,6 @@ class SymPyDocTestFinder(DocTestFinder):
         Return a DocTest for the given object, if it defines a docstring;
         otherwise, return None.
         """
-
-        lineno = None
-
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
         if isinstance(obj, string_types):
@@ -1466,15 +1463,6 @@ class SymPyDocTestFinder(DocTestFinder):
             # the line number here.
 
             docstring = obj
-
-            matches = re.findall("line \d+", name)
-            assert len(matches) == 1, \
-                "string '%s' does not contain lineno " % name
-
-            # NOTE: this is not the exact linenumber but its better than no
-            # lineno ;)
-            lineno = int(matches[0][5:])
-
         else:
             try:
                 if obj.__doc__ is None:
@@ -1486,24 +1474,24 @@ class SymPyDocTestFinder(DocTestFinder):
             except (TypeError, AttributeError):
                 docstring = ''
 
+        # Find the docstring's location in the file.
+        lineno = self._find_lineno(obj, source_lines)
+
+        if lineno is None:
+            # if None, then _find_lineno couldn't find the docstring.
+            # But IT IS STILL THERE.  Likely it was decorated or something
+            # (i.e., @property docstrings have lineno == None)
+            # TODO: Write our own _find_lineno that is smarter in this regard.
+            # Until then, just give it a dummy lineno.  This is just used for
+            # sorting the tests, so the only bad effect is that they will
+            # appear last instead of in the order that they appear in the file.
+            # lineno is also used to report the offending line of a failing
+            # doctest, which is another reason to fix this.  See issue 1947.
+            lineno = 0
+
         # Don't bother if the docstring is empty.
         if self._exclude_empty and not docstring:
             return None
-
-        # check that properties have a docstring because _find_lineno
-        # assumes it
-        if isinstance(obj, property):
-            if obj.fget.__doc__ is None:
-                return None
-
-        # Find the docstring's location in the file.
-        if lineno is None:
-            # handling of properties is not implemented in _find_lineno so do
-            # it here
-            tobj = obj if not isinstance(obj, property) else obj.fget
-            lineno = self._find_lineno(tobj, source_lines)
-
-        assert lineno is not None
 
         # Return a DocTest for this object.
         if module is None:
