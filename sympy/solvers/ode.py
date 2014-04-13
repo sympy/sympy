@@ -246,7 +246,8 @@ from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
 from sympy.logic.boolalg import BooleanAtom
-from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
+    sign, Piecewise, atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
@@ -3843,10 +3844,10 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
 
     chareq = Poly(chareq, symbol)
     chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    chareq_is_complex = not all([i.is_real for i in chareq.all_coeffs()])
 
     # A generator of constants
     constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
-    constants.reverse()
 
     # Create a dict root: multiplicity or charroots
     charroots = defaultdict(int)
@@ -3857,36 +3858,48 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     # This is necessary for constantsimp to work properly.
     global collectterms
     collectterms = []
+    gensols = []
+    conjugate_roots = [] # used to prevent double-use of conjugate roots
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
             if isinstance(root, RootOf):
-                gsol += exp(root*x) * constants.pop()
+                gensols.append(exp(root*x))
                 if multiplicity != 1:
                     raise ValueError("Value should be 1")
+                # This ordering is important
                 collectterms = [(0, root, 0)] + collectterms
             else:
+                if chareq_is_complex:
+                    gensols.append(x**i*exp(root*x))
+                    collectterms = [(i, root, 0)] + collectterms
+                    continue
                 reroot = re(root)
                 imroot = im(root)
-                gsol += x**i*exp(reroot*x) * (constants.pop() * sin(abs(imroot) * x) + \
-                    constants.pop() * cos(imroot*x))
-                # This ordering is important
-                collectterms = [(i, reroot, imroot)] + collectterms
-    if returns == 'sol':
-        return Eq(f(x), gsol)
-    elif returns in ('list' 'both'):
-        # Create a list of (hopefully) linearly independent solutions
-        gensols = []
-        # Keep track of when to use sin or cos for nonzero imroot
-        for i, reroot, imroot in collectterms:
-            if imroot == 0:
-                gensols.append(x**i*exp(reroot*x))
-            else:
-                if x**i*exp(reroot*x)*sin(abs(imroot)*x) in gensols:
-                    gensols.append(x**i*exp(reroot*x)*cos(imroot*x))
+                if imroot.has(atan2) and reroot.has(atan2):
+                    # Remove this condition when re and im stop returning
+                    # circular atan2 usages.
+                    gensols.append(x**i*exp(root*x))
+                    collectterms = [(i, root, 0)] + collectterms
                 else:
-                    gensols.append(x**i*exp(reroot*x)*sin(abs(imroot)*x))
-        if returns == 'list':
-            return gensols
+                    if root in conjugate_roots:
+                        collectterms = [(i, reroot, imroot)] + collectterms
+                        continue
+                    if imroot == 0:
+                        gensols.append(x**i*exp(reroot*x))
+                        collectterms = [(i, reroot, 0)] + collectterms
+                        continue
+                    conjugate_roots.append(conjugate(root))
+                    gensols.append(x**i*exp(reroot*x) * sin(abs(imroot) * x))
+                    gensols.append(x**i*exp(reroot*x) * cos(    imroot  * x))
+
+                    # This ordering is important
+                    collectterms = [(i, reroot, imroot)] + collectterms
+    if returns == 'list':
+        return gensols
+    elif returns in ('sol' 'both'):
+        gsol = Add(*[i*j for (i,j) in zip(constants, gensols)])
+        if returns == 'sol':
+            return Eq(f(x), gsol)
         else:
             return {'sol': Eq(f(x), gsol), 'list': gensols}
     else:
@@ -3994,7 +4007,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     global collectterms
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply" +
+        " solutions to the homogeneous equation necessary to apply" +
         " undetermined coefficients to " + str(eq) +
         " (number of terms != order)")
     usedsin = set([])

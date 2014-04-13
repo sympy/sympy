@@ -1705,11 +1705,13 @@ def test_heuristic1():
         assert check[0]
 
 
-@XFAIL
 def test_issue_6247():
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
     sol = dsolve(eq, hint = 'separable_reduced')
     assert checkodesol(eq, sol, order=1)[0]
+    eq = f(x).diff(x, x) + 4*f(x)
+    sol = dsolve(eq, f(x), simplify=False)
+    assert sol == Eq(f(x), C1*sin(2*x) + C2*cos(2*x))
 
 
 def test_heuristic2():
@@ -1882,10 +1884,10 @@ def test_user_infinitesimals():
     assert sol == actual_sol, errstr
     raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
 
-@XFAIL
+
 def test_issue_7081():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
-    assert dsolve(eq) == Eq(f(x), (C2 + x**2)/(C1 - x**2))
+    assert dsolve(eq) == Eq(f(x), -((C1 + x**2)/(-C1 + x**2)))
 
 
 def test_2nd_power_series_ordinary():
