@@ -39,8 +39,6 @@ class Unit(Expr):
 
     is_commutative = True
     is_number = False
-    # make sqrt(m**2) --> m
-    is_positive = True
 
     def __new__(cls, dim, abbrev="", factor=1, prefix=None, **assumptions):
         """

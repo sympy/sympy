@@ -82,7 +82,6 @@ def qsimplify(expr):
         else:
             o_args.append(arg)
 
-
     if isinstance(expr, Pow):
         return args[0]**args[1]
     elif isinstance(expr, Add):
