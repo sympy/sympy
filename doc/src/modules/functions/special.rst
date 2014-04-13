@@ -11,13 +11,10 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
    :members:
 
-beta
-----
+Gamma, Beta and related Functions
+---------------------------------
+.. module:: sympy.functions.special.gamma_functions
 
-.. autofunction:: sympy.functions.special.gamma_functions.beta
-
-Gamma and Related Functions
----------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
@@ -30,10 +27,30 @@ Gamma and Related Functions
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
+.. module:: sympy.functions.special.beta_functions
+.. autoclass:: sympy.functions.special.beta_functions.beta
+   :members:
 
-Special Cases of the Incomplete Gamma Functions
------------------------------------------------
+Error Functions and Fresnel Integrals
+-------------------------------------
 .. module:: sympy.functions.special.error_functions
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.erfc
+.. autoclass:: sympy.functions.special.error_functions.erfi
+.. autoclass:: sympy.functions.special.error_functions.erf2
+.. autoclass:: sympy.functions.special.error_functions.erfinv
+.. autoclass:: sympy.functions.special.error_functions.erfcinv
+.. autoclass:: sympy.functions.special.error_functions.erf2inv
+
+.. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
+   :members:
+
+.. autoclass:: fresnels
+.. autoclass:: fresnelc
+
+Exponential, Logarithmic and Trigonometric Integrals
+----------------------------------------------------
 
 .. autoclass:: Ei
 .. autoclass:: expint
@@ -45,25 +62,10 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Shi
 .. autoclass:: Chi
 
-.. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
-   :members:
-
-.. autoclass:: fresnels
-.. autoclass:: fresnelc
-
-Error Functions
----------------
-
-.. autoclass:: sympy.functions.special.error_functions.erf
-.. autoclass:: sympy.functions.special.error_functions.erfc
-.. autoclass:: sympy.functions.special.error_functions.erfi
-.. autoclass:: sympy.functions.special.error_functions.erf2
-.. autoclass:: sympy.functions.special.error_functions.erfinv
-.. autoclass:: sympy.functions.special.error_functions.erfcinv
-.. autoclass:: sympy.functions.special.error_functions.erf2inv
-
 Bessel Type Functions
 ---------------------
+
+.. module:: sympy.functions.special.bessel
 
 .. autoclass:: sympy.functions.special.bessel.BesselBase
    :members:
@@ -79,6 +81,17 @@ Bessel Type Functions
 .. autoclass:: sympy.functions.special.bessel.yn
 
 .. autofunction:: sympy.functions.special.bessel.jn_zeros
+
+Airy Functions
+--------------
+
+.. autoclass:: sympy.functions.special.bessel.AiryBase
+   :members:
+
+.. autoclass:: sympy.functions.special.bessel.airyai
+.. autoclass:: sympy.functions.special.bessel.airybi
+.. autoclass:: sympy.functions.special.bessel.airyaiprime
+.. autoclass:: sympy.functions.special.bessel.airybiprime
 
 B-Splines
 ---------

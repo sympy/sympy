@@ -16,6 +16,11 @@ Finite Types
 .. autofunction:: Hypergeometric
 .. autofunction:: FiniteRV
 
+Discrete Types
+-----------------
+.. autofunction:: Geometric
+.. autofunction:: Poisson
+
 Continuous Types
 -------------------
 

@@ -168,6 +168,7 @@ def smoment(X, n, condition=None, **kwargs):
 
     Examples
     ========
+
     >>> from sympy.stats import skewness, Exponential, smoment
     >>> from sympy import Symbol
     >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)

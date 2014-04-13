@@ -1,6 +1,6 @@
 from sympy import S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 
 def test_sparse_matrix():
@@ -179,7 +179,7 @@ def test_sparse_matrix():
                           (-3, -2,  4, 5, 3),
                           ( 1,  0,  0, 0, 1) )).det() == 123
 
-    # test_submatrix
+    # test_slicing
     m0 = sparse_eye(4)
     assert m0[:3, :3] == sparse_eye(3)
     assert m0[2:4, 0:2] == sparse_zeros(2)
@@ -193,7 +193,7 @@ def test_sparse_matrix():
     assert m2[:, -1] == SparseMatrix(4, 1, [3, 7, 11, 15])
     assert m2[-2:, :] == SparseMatrix([[8, 9, 10, 11], [12, 13, 14, 15]])
 
-    assert SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1]) == Matrix([[4]])
+    assert SparseMatrix([[1, 2], [3, 4]])[[1], [1]] == Matrix([[4]])
 
     # test_submatrix_assignment
     m = sparse_zeros(4)
@@ -461,7 +461,7 @@ def test_errors():
     raises(TypeError,
         lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
     raises(
-        IndexError, lambda: SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2)))
+        IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2])
     raises(TypeError, lambda: SparseMatrix([1, 2, 3]).cross(1))
     raises(IndexError, lambda: SparseMatrix(1, 2, [1, 2])[3])
     raises(ShapeError,
@@ -471,11 +471,6 @@ def test_errors():
 def test_len():
     assert not SparseMatrix()
     assert SparseMatrix() == SparseMatrix([])
-
-
-@XFAIL
-def test_len_different_shapes():
-    assert Matrix() == Matrix([[]])
     assert SparseMatrix() == SparseMatrix([[]])
 
 

@@ -35,12 +35,18 @@ class CodePrinter(StrPrinter):
         lines = []
 
         # Setup loops over non-dummy indices  --  all terms need these
-        indices = self.get_expression_indices(expr, assign_to)
+        if self._settings.get('contract', True):
+            indices = self.get_expression_indices(expr, assign_to)
+        else:
+            indices = []
         openloop, closeloop = self._get_loop_opening_ending(indices)
 
         # Setup loops over dummy indices  --  each term needs separate treatment
         from sympy.tensor import get_contraction_structure
-        d = get_contraction_structure(expr)
+        if self._settings.get('contract', True):
+            d = get_contraction_structure(expr)
+        else:
+            d = {None: (expr,)}
 
         # terms with no summations first
         if None in d:
@@ -48,6 +54,7 @@ class CodePrinter(StrPrinter):
         else:
             # If all terms have summations we must initialize array to Zero
             text = CodePrinter.doprint(self, 0)
+
         # skip redundant assignments
         if text != lhs_printed:
             lines.extend(openloop)
@@ -166,14 +173,14 @@ class CodePrinter(StrPrinter):
             return self._print_not_supported(expr)
         PREC = precedence(expr)
         return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
+                for a in expr.args)
 
     def _print_Equivalent(self, expr):
         if self._operators.get('equivalent') is None:
             return self._print_not_supported(expr)
         PREC = precedence(expr)
         return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
+                for a in expr.args)
 
     def _print_Not(self, expr):
         PREC = precedence(expr)

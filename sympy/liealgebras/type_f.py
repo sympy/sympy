@@ -6,7 +6,8 @@ from sympy.matrices import Matrix
 class TypeF(Standard_Cartan):
 
     def __new__(cls, n):
-        assert n == 4
+        if n != 4:
+            raise ValueError("n should be 4")
         return Standard_Cartan.__new__(cls, "F", 4)
 
     def dimension(self):

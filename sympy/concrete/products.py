@@ -357,6 +357,10 @@ class Product(ExprWithIntLimits):
             else:
                 return f
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import product_simplify
+        return product_simplify(self)
+
     def _eval_transpose(self):
         if self.is_commutative:
             return self.func(self.function.transpose(), *self.limits)

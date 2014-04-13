@@ -6,6 +6,7 @@ from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, xrange
 from sympy.core.logic import fuzzy_and
+from sympy.core.evaluate import global_evaluate
 
 
 class AssocOp(Basic):
@@ -29,7 +30,7 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', True):
+        if not options.pop('evaluate', global_evaluate[0]):
             return cls._from_args(args)
 
         if len(args) == 0:
@@ -412,13 +413,13 @@ class LatticeOp(AssocOp):
     is_commutative = True
 
     def __new__(cls, *args, **options):
-        args = (sympify(arg) for arg in args)
+        args = (_sympify(arg) for arg in args)
         try:
             _args = frozenset(cls._new_args_filter(args))
         except ShortCircuit:
-            return cls.zero
+            return sympify(cls.zero)
         if not _args:
-            return cls.identity
+            return sympify(cls.identity)
         elif len(_args) == 1:
             return set(_args).pop()
         else:

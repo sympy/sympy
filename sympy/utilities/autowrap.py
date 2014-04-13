@@ -179,7 +179,7 @@ def %(name)s():
             printed = ", ".join(
                 [str(res.expr) for res in routine.result_variables])
             # convert OutputArguments to return value like f2py
-            inargs = filter(lambda x: not isinstance(
+            args = filter(lambda x: not isinstance(
                 x, OutputArgument), routine.arguments)
             retvals = []
             for val in routine.result_variables:
@@ -191,7 +191,7 @@ def %(name)s():
             print(DummyWrapper.template % {
                 'name': routine.name,
                 'expr': printed,
-                'args': ", ".join([str(arg.name) for arg in inargs]),
+                'args': ", ".join([str(a.name) for a in args]),
                 'retvals': ", ".join([str(val) for val in retvals])
             }, end="", file=f)
 
@@ -480,6 +480,9 @@ def ufuncify(args, expr, **kwargs):
         args = [args]
     else:
         args = list(args)
+
+    # ensure correct order of arguments
+    kwargs['args'] = [y, x] + args[1:] + [m]
 
     # first argument accepts an array
     args[0] = x[i]

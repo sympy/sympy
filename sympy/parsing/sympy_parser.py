@@ -7,9 +7,12 @@ from .sympy_tokenize import \
     NUMBER, STRING, NAME, OP, ENDMARKER
 
 from keyword import iskeyword
+
+import ast
 import re
 import unicodedata
 
+import sympy
 from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic, C
 
@@ -45,7 +48,7 @@ def _token_callable(token, local_dict, global_dict, nextToken=None):
     func = local_dict.get(token[1])
     if not func:
         func = global_dict.get(token[1])
-    return callable(func)
+    return callable(func) and not isinstance(func, sympy.Symbol)
 
 
 def _add_factorial_tokens(name, result):
@@ -451,7 +454,7 @@ def implicit_application(result, local_dict, global_dict):
     ... standard_transformations, implicit_application)
     >>> transformations = standard_transformations + (implicit_application,)
     >>> parse_expr('cot z + csc z', transformations=transformations)
-    csc(z) + cot(z)
+    cot(z) + csc(z)
     """
     for step in (_group_parentheses(implicit_application),
                  _apply_functions,
@@ -529,6 +532,41 @@ def auto_symbol(tokens, local_dict, global_dict):
             result.append((tokNum, tokVal))
 
         prevTok = (tokNum, tokVal)
+
+    return result
+
+
+def lambda_notation(tokens, local_dict, global_dict):
+    """Substitutes "lambda" with its Sympy equivalent Lambda().
+    However, the conversion doesn't take place if only "lambda"
+    is passed because that is a syntax error.
+
+    """
+    result = []
+    flag = False
+    toknum, tokval = tokens[0]
+    tokLen = len(tokens)
+    if toknum == NAME and tokval == 'lambda':
+        if tokLen == 2:
+            result.extend(tokens)
+        elif tokLen > 2:
+            result.extend([
+                (NAME, 'Lambda'),
+                (OP, '('),
+                (OP, '('),
+                (OP, ')'),
+                (OP, ')'),
+            ])
+            for tokNum, tokVal in tokens[1:]:
+                if tokNum == OP and tokVal == ':':
+                    tokVal = ','
+                    flag = True
+                if flag:
+                    result.insert(-1, (tokNum, tokVal))
+                else:
+                    result.insert(-2, (tokNum, tokVal))
+    else:
+        result.extend(tokens)
 
     return result
 
@@ -657,7 +695,7 @@ def rationalize(tokens, local_dict, global_dict):
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations = (auto_symbol, auto_number, factorial_notation)
+standard_transformations = (lambda_notation, auto_symbol, auto_number, factorial_notation)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):
@@ -691,7 +729,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None):
+               global_dict=None, evaluate=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -747,4 +785,73 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         exec_('from sympy import *', global_dict)
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
+
+    if evaluate is False:
+        code = compile(evaluateFalse(code), '<string>', 'eval')
+
     return eval_expr(code, local_dict, global_dict)
+
+
+def evaluateFalse(s):
+    """
+    Replaces operators with the SymPy equivalent and sets evaluate=False.
+    """
+    node = ast.parse(s)
+    node = EvaluateFalseTransformer().visit(node)
+    # node is a Module, we want an Expression
+    node = ast.Expression(node.body[0].value)
+
+    return ast.fix_missing_locations(node)
+
+
+class EvaluateFalseTransformer(ast.NodeTransformer):
+    operators = {
+        ast.Add: 'Add',
+        ast.Mult: 'Mul',
+        ast.Pow: 'Pow',
+        ast.Sub: 'Add',
+        ast.Div: 'Mul',
+        ast.BitOr: 'Or',
+        ast.BitAnd: 'And',
+        ast.BitXor: 'Not',
+    }
+
+    def flatten(self, args, func):
+        result = []
+        for arg in args:
+            if isinstance(arg, ast.Call) and arg.func.id == func:
+                result.extend(self.flatten(arg.args, func))
+            else:
+                result.append(arg)
+        return result
+
+    def visit_BinOp(self, node):
+        if node.op.__class__ in self.operators:
+            sympy_class = self.operators[node.op.__class__]
+            right = self.visit(node.right)
+
+            if isinstance(node.op, ast.Sub):
+                right = ast.UnaryOp(op=ast.USub(), operand=right)
+            elif isinstance(node.op, ast.Div):
+                right = ast.Call(
+                    func=ast.Name(id='Pow', ctx=ast.Load()),
+                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    starargs=None,
+                    kwargs=None
+                )
+
+            new_node = ast.Call(
+                func=ast.Name(id=sympy_class, ctx=ast.Load()),
+                args=[self.visit(node.left), right],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                starargs=None,
+                kwargs=None
+            )
+
+            if sympy_class in ('Add', 'Mul'):
+                # Denest Add or Mul as appropriate
+                new_node.args = self.flatten(new_node.args, sympy_class)
+
+            return new_node
+        return node

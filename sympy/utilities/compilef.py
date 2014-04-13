@@ -210,7 +210,8 @@ def genfcode(lambdastr, use_cse=False):
     else:
         # eliminate common subexpressions
         subs, finalexpr = cse(sympify(fstr), _gentmpvars())
-        assert len(finalexpr) == 1
+        if len(finalexpr) != 1:
+            raise ValueError("Length should be 1")
         vardec = ''
         cfstr = ''
         for symbol, expr in subs:
@@ -250,7 +251,8 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
     if fprototype:
         fprototype = ctypes.CFUNCTYPE(*fprototype)
     else:
-        assert argcount, 'need argcount if no prototype is specified'
+        if not argcount:
+            raise ValueError("need argcount if no prototype is specified")
         fprototype = ctypes.CFUNCTYPE(*[ctypes.c_double]*(argcount + 1))
     # see libtcc.h for API documentation
     tccstate = libtcc.tcc_new()
@@ -334,8 +336,8 @@ def frange(*args, **kwargs):
         stop = args[2]
     if len(args) == 4:
         step = args[3]
-    assert start + step != start, \
-        'step is too small and would cause an infinite loop'
+    if start + step == start:
+        raise ValueError("step is too small and would cause an infinite loop")
     # determine length of resulting array
     # TODO: do this better
     length = stop - start
@@ -351,7 +353,8 @@ def frange(*args, **kwargs):
             length += 1  # include first one
     if length < 0:
         length = 0
-    assert length == int(length)
+    if length != int(length):
+        raise ValueError("length should be an integer")
     length = int(length)
     # create array
     a = (ctypes.c_double * length)()
@@ -451,11 +454,13 @@ def test_clambdify():
     pf1 = lambdify((x, y), f1, 'math')
     cf1 = clambdify((x, y), f1)
     for i in xrange(10):
-        assert cf1(i, 10 - i) == pf1(i, 10 - i)
+        if cf1(i, 10 - i) != pf1(i, 10 - i):
+            raise ValueError("Values should be equal")
     f2 = (x - y) / z * pi
     pf2 = lambdify((x, y, z), f2, 'math')
     cf2 = clambdify((x, y, z), f2)
-    assert round(pf2(1, 2, 3), 14) == round(cf2(1, 2, 3), 14)
+    if round(pf2(1, 2, 3), 14) != round(cf2(1, 2, 3), 14):
+        raise ValueError("Values should be equal")
     # FIXME: slight difference in precision
 
 
@@ -464,30 +469,43 @@ def test_frange():
     f = eval(fstr)
     a = frange(fstr, 30, 168, 3)
     args = range(30, 168, 3)
-    assert len(a) == len(args)
+    if len(a) != len(args):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert a[i] == f(args[i])
-    assert len(frange('lambda x: x', 0, -10000)) == 0
-    assert len(frange('lambda x: x', -1, -1, 0.0001)) == 0
+        if a[i] != f(args[i]):
+            raise ValueError("Values should be equal")
+    if len(frange('lambda x: x', 0, -10000)) != 0:
+        raise ValueError("Length should be 0")
+    if len(frange('lambda x: x', -1, -1, 0.0001)) != 0:
+        raise ValueError("Length should be 0")
     a = frange('lambda x: x', -5, 5, 0.1)
     b = range(-50, 50)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert int(round(a[i]*10)) == b[i]
+        if int(round(a[i]*10)) != b[i]:
+            raise ValueError("Values should be equal")
     a = frange('lambda x: x', 17, -9, -3)
     b = range(17, -9, -3)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert a[i] == b[i]
+        if a[i] != b[i]:
+            raise ValueError("a and b should be equal")
     a = frange('lambda x: x', 2.7, -3.1, -1.01)
     b = range(270, -310, -101)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert int(round(a[i]*100)) == b[i]
+        if int(round(a[i]*100)) != b[i]:
+            raise ValueError("Values should be equal")
     assert frange('lambda x: x', 0.2, 0.1, -0.1)[0] == 0.2
-    assert len(frange('lambda x: x', 0)) == 0
-    assert len(frange('lambda x: x', 1000, -1)) == 0
-    assert len(frange('lambda x: x', -1.23, 3.21, -0.0000001)) == 0
+    if len(frange('lambda x: x', 0)) != 0:
+        raise ValueError("Length should be 0")
+    if len(frange('lambda x: x', 1000, -1)) != 0:
+        raise ValueError("Length should be 0")
+    if len(frange('lambda x: x', -1.23, 3.21, -0.0000001)) != 0:
+        raise ValueError("Length should be 0")
     try:
         frange()
         assert False
@@ -504,7 +522,8 @@ def test_evalonarray_ctypes():
     a = frange('lambda x: x', 10)
     evalonarray('lambda x: _sin(x)', a)
     for i, j in enumerate(a):
-        assert _sin(i) == j
+        if _sin(i) != j:
+            raise ValueError("Values should be equal")
 # TODO: test for ctypes pointers
 ##    evalonarray('lambda x: asin(x)', ctypes.byref(a), len(a))
 ##    for i, j in enumerater(a):
@@ -516,7 +535,8 @@ def test_evalonarray_numpy():
     a = numpy.arange(10, dtype=float)
     evalonarray('lambda x: x + 1', a)
     for i, j in enumerate(a):
-        assert float(i + 1) == j
+        if float(i + 1) != j:
+            raise ValueError("Values should be equal")
 
 
 def test_use_cse():
@@ -525,9 +545,11 @@ def test_use_cse():
     kwargs = {}
     kwargs['use_cse'] = True
     b = frange(*args, **kwargs)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert a[i] == b[i]
+        if a[i] != b[i]:
+            raise ValueError("a and b should be equal")
 
 
 def benchmark():

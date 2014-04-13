@@ -1,11 +1,11 @@
 Orthogonal polynomials
 ----------------------
 
-An orthogonal polynomial sequence is a sequence of polynomials `P_0(x), P_1(x), \ldots` of degree `0, 1, \ldots`, which are mutually orthogonal in the sense that
+An orthogonal polynomial sequence is a sequence of polynomials `P_0(x), P_1(x), \ldots` of degree `0, 1, \ldots`, which are mutually orthogonal in the sense that 
 
 .. math ::
 
-    \int_S P_n(x) P_m(x) w(x) dx =
+    \int_S P_n(x) P_m(x) w(x) dx = 
     \begin{cases}
     c_n \ne 0 & \text{if $m = n$} \\
     0         & \text{if $m \ne n$}

@@ -61,8 +61,8 @@ def _extract_delta(expr, index):
         return (None, expr)
     if isinstance(expr, KroneckerDelta):
         return (expr, S(1))
-    assert expr.is_Mul
-
+    if not expr.is_Mul:
+        raise ValueError("Incorrect expr")
     delta = None
     terms = []
 
@@ -166,7 +166,7 @@ def deltaproduct(f, limit):
     """
     from sympy.concrete.products import product
 
-    if ((limit[2] - limit[1]) < 0) is True:
+    if ((limit[2] - limit[1]) < 0) == True:
         return S.One
 
     if not f.has(KroneckerDelta):
@@ -284,7 +284,7 @@ def deltasummation(f, limit, no_piecewise=False):
     from sympy.concrete.summations import summation
     from sympy.solvers import solve
 
-    if ((limit[2] - limit[1]) < 0) is True:
+    if ((limit[2] - limit[1]) < 0) == True:
         return S.Zero
 
     if not f.has(KroneckerDelta):

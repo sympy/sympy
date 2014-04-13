@@ -34,7 +34,6 @@ class sinh(HyperbolicFunction):
 
     cosh, tanh, asinh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         """
@@ -150,6 +149,9 @@ class sinh(HyperbolicFunction):
             return (sinh(x)*cosh(y) + sinh(y)*cosh(x)).expand(trig=True)
         return sinh(arg)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        return (C.exp(arg) - C.exp(-arg)) / 2
+
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) - C.exp(-arg)) / 2
 
@@ -196,7 +198,6 @@ class cosh(HyperbolicFunction):
 
     sinh, tanh, acosh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -296,6 +297,9 @@ class cosh(HyperbolicFunction):
             return (cosh(x)*cosh(y) + sinh(x)*sinh(y)).expand(trig=True)
         return cosh(arg)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        return (C.exp(arg) + C.exp(-arg)) / 2
+
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) + C.exp(-arg)) / 2
 
@@ -342,7 +346,6 @@ class tanh(HyperbolicFunction):
 
     sinh, cosh, atanh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -431,6 +434,10 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + C.cos(im)**2
         return (sinh(re)*cosh(re)/denom, C.sin(im)*C.cos(im)/denom)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        return (pos_exp - neg_exp)/(pos_exp + neg_exp)
+
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
@@ -471,7 +478,6 @@ class coth(HyperbolicFunction):
 
     * coth(x) -> Returns the hyperbolic cotangent of x
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -560,6 +566,10 @@ class coth(HyperbolicFunction):
         denom = sinh(re)**2 + C.sin(im)**2
         return (sinh(re)*cosh(re)/denom, -C.sin(im)*C.cos(im)/denom)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        return (pos_exp + neg_exp)/(pos_exp - neg_exp)
+
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
@@ -601,7 +611,6 @@ class asinh(Function):
 
     acosh, atanh, sinh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -686,7 +695,6 @@ class acosh(Function):
 
     asinh, atanh, cosh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -802,7 +810,6 @@ class atanh(Function):
 
     asinh, acosh, tanh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -875,7 +882,6 @@ class acoth(Function):
 
     * acoth(x) -> Returns the inverse hyperbolic cotangent of x
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:

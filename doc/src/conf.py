@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2013 SymPy Development Team'
+copyright = '2014 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -57,9 +57,6 @@ release = version
 #today = ''
 # Else, today_fmt is used as the format for a strftime call.
 today_fmt = '%B %d, %Y'
-
-# Translations:
-locale_dirs = ["../_build/i18n/"]
 
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
@@ -97,7 +94,7 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
-html_favicon = '../logo/SymPy-Favicon.ico'
+html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 # See http://sphinx-doc.org/theming.html#builtin-themes.
 html_theme_options = {
     'collapsiblesidebar': True,
@@ -132,6 +129,7 @@ html_theme_options = {
 
 # If false, no module index is generated.
 #html_use_modindex = True
+html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
 #html_copy_source = True

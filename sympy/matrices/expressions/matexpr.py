@@ -27,16 +27,26 @@ def _sympifyit(arg, retval=None):
 
 
 class MatrixExpr(Basic):
-    """ Matrix Expression Class
-    Matrix Expressions subclass SymPy Expr's so that
-    MatAdd inherits from Add
-    MatMul inherits from Mul
-    MatPow inherits from Pow
+    """ Superclass for Matrix Expressions
 
-    They use _op_priority to gain control with binary operations (+, *, -, **)
-    are used
+    MatrixExprs represent abstract matrices, linear transformations represented
+    within a particular basis.
 
-    They implement operations specific to Matrix Algebra.
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> A = MatrixSymbol('A', 3, 3)
+    >>> y = MatrixSymbol('y', 3, 1)
+    >>> x = (A.T*A).I * A * y
+
+    See Also
+    ========
+        MatrixSymbol
+        MatAdd
+        MatMul
+        Transpose
+        Inverse
     """
 
     _op_priority = 11.0
@@ -52,8 +62,12 @@ class MatrixExpr(Basic):
 
     is_commutative = False
 
-    # The following is adapted from the core Expr object
 
+    def __new__(cls, *args, **kwargs):
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args, **kwargs)
+
+    # The following is adapted from the core Expr object
     def __neg__(self):
         return MatMul(S.NegativeOne, self).doit()
 
@@ -186,8 +200,8 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                (0 <= i) is not False and (i < self.rows) is not False and
-                (0 <= j) is not False and (j < self.cols) is not False)
+                (0 <= i) != False and (i < self.rows) != False and
+                (0 <= j) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -199,7 +213,7 @@ class MatrixExpr(Basic):
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
             i, j = sympify(i), sympify(j)
-            if self.valid_index(i, j) is not False:
+            if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))

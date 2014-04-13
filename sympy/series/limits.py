@@ -72,12 +72,6 @@ def limit(e, z, z0, dir="+"):
                 return limit(inve.as_leading_term(u), u,
                     S.Zero, "+" if z0 is S.Infinity else "-")
 
-    if e.is_Add:
-        if e.is_rational_function(z):
-            rval = Add(*[limit(term, z, z0, dir) for term in e.args])
-            if rval != S.NaN:
-                return rval
-
     if e.is_Order:
         return C.Order(limit(e.expr, z, z0), *e.args[1:])
 
@@ -95,22 +89,29 @@ def heuristics(e, z, z0, dir):
         return limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
 
     rv = None
-    bad = (S.Infinity, S.NegativeInfinity, S.NaN, None)
-    if e.is_Mul:
+    bad = (S.NaN, None)
+
+    if e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
         r = []
         for a in e.args:
-            if not a.is_bounded:
-                r.append(a.limit(z, z0, dir))
-                if r[-1] in bad:
+            try:
+                l = limit(a, z, z0, dir)
+                if l.has(S.Infinity) and l.is_bounded is None:
                     break
+                else:
+                    r.append(l)
+            except PoleError:
+                break
+            if r[-1] in bad:
+                break
         else:
             if r:
-                rv = Mul(*r)
-    if rv is None and (e.is_Add or e.is_Pow or e.is_Function):
-        rv = e.func(*[limit(a, z, z0, dir) for a in e.args])
+                rv = e.func(*r)
+
     if rv in bad:
         msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
         raise PoleError(msg % (e, z, z0, dir))
+
     return rv
 
 

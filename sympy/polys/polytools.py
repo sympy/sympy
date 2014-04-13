@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division
 
-import sys
-
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
@@ -14,6 +12,8 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 from sympy.core.decorators import _sympifyit
+
+from sympy.logic.boolalg import BooleanAtom
 
 from sympy.polys.polyclasses import DMP
 
@@ -1687,6 +1687,8 @@ class Poly(Expr):
         """
         Returns degree of ``f`` in ``x_j``.
 
+        The degree of 0 is negative infinity.
+
         Examples
         ========
 
@@ -1697,6 +1699,8 @@ class Poly(Expr):
         2
         >>> Poly(x**2 + y*x + y, x, y).degree(y)
         1
+        >>> Poly(0, x).degree()
+        -oo
 
         """
         j = f._gen_to_level(gen)
@@ -2486,6 +2490,156 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'discriminant')
 
         return f.per(result, remove=0)
+
+    def dispersionset(f, g=None):
+        r"""Compute the *dispersion set* of two polynomials.
+
+        For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
+        and `\deg g > 0` the dispersion set `\operatorname{J}(f, g)` is defined as:
+
+        .. math::
+            \operatorname{J}(f, g)
+            & := \{a \in \mathbb{N}_0 | \gcd(f(x), g(x+a)) \neq 1\} \\
+            &  = \{a \in \mathbb{N}_0 | \deg \gcd(f(x), g(x+a)) \geq 1\}
+
+        For a single polynomial one defines `\operatorname{J}(f) := \operatorname{J}(f, f)`.
+
+        Examples
+        ========
+
+        >>> from sympy import poly
+        >>> from sympy.polys.dispersion import dispersion, dispersionset
+        >>> from sympy.abc import x
+
+        Dispersion set and dispersion of a simple polynomial:
+
+        >>> fp = poly((x - 3)*(x + 3), x)
+        >>> sorted(dispersionset(fp))
+        [0, 6]
+        >>> dispersion(fp)
+        6
+
+        Note that the definition of the dispersion is not symmetric:
+
+        >>> fp = poly(x**4 - 3*x**2 + 1, x)
+        >>> gp = fp.shift(-3)
+        >>> sorted(dispersionset(fp, gp))
+        [2, 3, 4]
+        >>> dispersion(fp, gp)
+        4
+        >>> sorted(dispersionset(gp, fp))
+        []
+        >>> dispersion(gp, fp)
+        -oo
+
+        Computing the dispersion also works over field extensions:
+
+        >>> from sympy import sqrt
+        >>> fp = poly(x**2 + sqrt(5)*x - 1, x, domain='QQ<sqrt(5)>')
+        >>> gp = poly(x**2 + (2 + sqrt(5))*x + sqrt(5), x, domain='QQ<sqrt(5)>')
+        >>> sorted(dispersionset(fp, gp))
+        [2]
+        >>> sorted(dispersionset(gp, fp))
+        [1, 4]
+
+        We can even perform the computations for polynomials
+        having symbolic coefficients:
+
+        >>> from sympy.abc import a
+        >>> fp = poly(4*x**4 + (4*a + 8)*x**3 + (a**2 + 6*a + 4)*x**2 + (a**2 + 2*a)*x, x)
+        >>> sorted(dispersionset(fp))
+        [0, 1]
+
+        See Also
+        ========
+
+        dispersion
+
+        References
+        ==========
+
+        1. [ManWright94]_
+        2. [Koepf98]_
+        3. [Abramov71]_
+        4. [Man93]_
+        """
+        from sympy.polys.dispersion import dispersionset
+        return dispersionset(f, g)
+
+    def dispersion(f, g=None):
+        r"""Compute the *dispersion* of polynomials.
+
+        For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
+        and `\deg g > 0` the dispersion `\operatorname{dis}(f, g)` is defined as:
+
+        .. math::
+            \operatorname{dis}(f, g)
+            & := \max\{ J(f,g) \cup \{0\} \} \\
+            &  = \max\{ \{a \in \mathbb{N} | \gcd(f(x), g(x+a)) \neq 1\} \cup \{0\} \}
+
+        and for a single polynomial `\operatorname{dis}(f) := \operatorname{dis}(f, f)`.
+
+        Examples
+        ========
+
+        >>> from sympy import poly
+        >>> from sympy.polys.dispersion import dispersion, dispersionset
+        >>> from sympy.abc import x
+
+        Dispersion set and dispersion of a simple polynomial:
+
+        >>> fp = poly((x - 3)*(x + 3), x)
+        >>> sorted(dispersionset(fp))
+        [0, 6]
+        >>> dispersion(fp)
+        6
+
+        Note that the definition of the dispersion is not symmetric:
+
+        >>> fp = poly(x**4 - 3*x**2 + 1, x)
+        >>> gp = fp.shift(-3)
+        >>> sorted(dispersionset(fp, gp))
+        [2, 3, 4]
+        >>> dispersion(fp, gp)
+        4
+        >>> sorted(dispersionset(gp, fp))
+        []
+        >>> dispersion(gp, fp)
+        -oo
+
+        Computing the dispersion also works over field extensions:
+
+        >>> from sympy import sqrt
+        >>> fp = poly(x**2 + sqrt(5)*x - 1, x, domain='QQ<sqrt(5)>')
+        >>> gp = poly(x**2 + (2 + sqrt(5))*x + sqrt(5), x, domain='QQ<sqrt(5)>')
+        >>> sorted(dispersionset(fp, gp))
+        [2]
+        >>> sorted(dispersionset(gp, fp))
+        [1, 4]
+
+        We can even perform the computations for polynomials
+        having symbolic coefficients:
+
+        >>> from sympy.abc import a
+        >>> fp = poly(4*x**4 + (4*a + 8)*x**3 + (a**2 + 6*a + 4)*x**2 + (a**2 + 2*a)*x, x)
+        >>> sorted(dispersionset(fp))
+        [0, 1]
+
+        See Also
+        ========
+
+        dispersionset
+
+        References
+        ==========
+
+        1. [ManWright94]_
+        2. [Koepf98]_
+        3. [Abramov71]_
+        4. [Man93]_
+        """
+        from sympy.polys.dispersion import dispersion
+        return dispersion(f, g)
 
     def cofactors(f, g):
         """
@@ -3785,12 +3939,10 @@ class Poly(Expr):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    if sys.version_info[0] >= 3:
-        def __bool__(f):
-            return not f.is_zero
-    else:
-        def __nonzero__(f):
-            return not f.is_zero
+    def __nonzero__(f):
+        return not f.is_zero
+
+    __bool__ = __nonzero__
 
     def eq(f, g, strict=False):
         if not strict:
@@ -4061,6 +4213,8 @@ def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
 
+    The degree of 0 is negative infinity.
+
     Examples
     ========
 
@@ -4071,6 +4225,8 @@ def degree(f, *gens, **args):
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
+    >>> degree(0, x)
+    -oo
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
@@ -4080,7 +4236,7 @@ def degree(f, *gens, **args):
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    return Integer(F.degree(opt.gen))
+    return sympify(F.degree(opt.gen))
 
 
 @public
@@ -4971,8 +5127,9 @@ def terms_gcd(f, *gens, **args):
     sympy.core.exprtools.gcd_terms, sympy.core.exprtools.factor_terms
 
     """
+    orig = sympify(f)
     if not isinstance(f, Expr) or f.is_Atom:
-        return sympify(f)
+        return orig
 
     if args.get('deep', False):
         new = f.func(*[terms_gcd(a, *gens, **args) for a in f.args])
@@ -5002,6 +5159,10 @@ def terms_gcd(f, *gens, **args):
         coeff = S.One
 
     term = Mul(*[x**j for x, j in zip(f.gens, J)])
+    if coeff == 1:
+        coeff = S.One
+        if term == 1:
+            return orig
 
     if clear:
         return _keep_coeff(coeff, term*f.as_expr())
@@ -5388,7 +5549,7 @@ def _symbolic_factor_list(expr, opt, method):
                 elif _coeff.is_positive:
                     factors.append((_coeff, exp))
                 else:
-                    _factors.append((_coeff, None))
+                    _factors.append((_coeff, S.One))
 
             if exp is S.One:
                 factors.extend(_factors)
@@ -5400,10 +5561,8 @@ def _symbolic_factor_list(expr, opt, method):
                 for f, k in _factors:
                     if f.as_expr().is_positive:
                         factors.append((f, k*exp))
-                    elif k is not None:
-                        other.append((f, k))
                     else:
-                        other.append((f, S.One))
+                        other.append((f, k))
 
                 if len(other) == 1:
                     f, k = other[0]
@@ -6033,7 +6192,7 @@ def cancel(f, *gens, **args):
     f = sympify(f)
 
     if not isinstance(f, (tuple, Tuple)):
-        if f.is_Number or isinstance(f, Relational):
+        if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
             return f
         f = factor_terms(f, radical=True)
         p, q = f.as_numer_denom()
@@ -6066,7 +6225,8 @@ def cancel(f, *gens, **args):
             pot = preorder_traversal(f)
             next(pot)
             for e in pot:
-                if isinstance(e, (tuple, Tuple)):
+                # XXX: This should really skip anything that's not Expr.
+                if isinstance(e, (tuple, Tuple, BooleanAtom)):
                     continue
                 try:
                     reps.append((e, cancel(e)))

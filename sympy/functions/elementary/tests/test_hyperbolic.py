@@ -323,7 +323,7 @@ def test_asinh_series():
 
 
 def test_acosh():
-    # TODO please write more tests  -- see #652
+    # TODO please write more tests  -- see issue 3751
     # From http://functions.wolfram.com/ElementaryFunctions/ArcCosh/03/01/
     # at specific points
     assert acosh(1) == 0
@@ -368,9 +368,9 @@ def test_acosh_series():
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
 
 
-# TODO please write more tests -- see #652
+# TODO please write more tests -- see issue 3751
 def test_atanh():
-    # TODO please write more tests  -- see #652
+    # TODO please write more tests  -- see issue 3751
     # From http://functions.wolfram.com/ElementaryFunctions/ArcTanh/03/01/
     # at specific points
     x = Symbol('x')
@@ -416,11 +416,11 @@ def test_atanh_infinities():
     assert atanh(oo) == -I*pi/2
     assert atanh(-oo) == I*pi/2
 
-# TODO please write more tests -- see #652
+# TODO please write more tests -- see issue 3751
 
 
 def test_acoth():
-    # TODO please write more tests  -- see #652
+    # TODO please write more tests  -- see issue 3751
     # From http://functions.wolfram.com/ElementaryFunctions/ArcCoth/03/01/
     # at specific points
     x = Symbol('x')
@@ -534,13 +534,14 @@ def test_simplifications():
     assert coth(acoth(x)) == x
 
 
-def test_issue1037():
+def test_issue_4136():
     assert cosh(asinh(Integer(3)/2)) == sqrt(Integer(13)/4)
 
 
 def test_sinh_rewrite():
     x = Symbol('x')
-    assert sinh(x).rewrite(exp) == (exp(x) - exp(-x))/2
+    assert sinh(x).rewrite(exp) == (exp(x) - exp(-x))/2 \
+        == sinh(x).rewrite('tractable')
     assert sinh(x).rewrite(cosh) == -I*cosh(x + I*pi/2)
     tanh_half = tanh(S.Half*x)
     assert sinh(x).rewrite(tanh) == 2*tanh_half/(1 - tanh_half**2)
@@ -550,7 +551,8 @@ def test_sinh_rewrite():
 
 def test_cosh_rewrite():
     x = Symbol('x')
-    assert cosh(x).rewrite(exp) == (exp(x) + exp(-x))/2
+    assert cosh(x).rewrite(exp) == (exp(x) + exp(-x))/2 \
+        == cosh(x).rewrite('tractable')
     assert cosh(x).rewrite(sinh) == -I*sinh(x + I*pi/2)
     tanh_half = tanh(S.Half*x)**2
     assert cosh(x).rewrite(tanh) == (1 + tanh_half)/(1 - tanh_half)
@@ -560,7 +562,8 @@ def test_cosh_rewrite():
 
 def test_tanh_rewrite():
     x = Symbol('x')
-    assert tanh(x).rewrite(exp) == (exp(x) - exp(-x))/(exp(x) + exp(-x))
+    assert tanh(x).rewrite(exp) == (exp(x) - exp(-x))/(exp(x) + exp(-x)) \
+        == tanh(x).rewrite('tractable')
     assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2 - x)
     assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2 - x)/cosh(x)
     assert tanh(x).rewrite(coth) == 1/coth(x)
@@ -568,7 +571,8 @@ def test_tanh_rewrite():
 
 def test_coth_rewrite():
     x = Symbol('x')
-    assert coth(x).rewrite(exp) == (exp(x) + exp(-x))/(exp(x) - exp(-x))
+    assert coth(x).rewrite(exp) == (exp(x) + exp(-x))/(exp(x) - exp(-x)) \
+        == coth(x).rewrite('tractable')
     assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2 - x)/sinh(x)
     assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2 - x)
     assert coth(x).rewrite(tanh) == 1/tanh(x)

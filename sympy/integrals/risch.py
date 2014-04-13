@@ -28,7 +28,7 @@ from __future__ import print_function, division
 from sympy import real_roots
 from sympy.abc import z
 from sympy.core.function import Lambda
-from sympy.core.numbers import ilcm
+from sympy.core.numbers import ilcm, oo
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
@@ -735,7 +735,7 @@ def as_poly_1t(p, t, z):
     In other words, z == 1/t will be a dummy variable that Poly can handle
     better.
 
-    See issue 2032.
+    See issue 5131.
 
     Examples
     ========
@@ -754,7 +754,7 @@ def as_poly_1t(p, t, z):
     # (...)*exp(-x).
     pa, pd = frac_in(p, t, cancel=True)
     if not pd.is_monomial:
-        # XXX: Is there a better Poly exception that we could raise here
+        # XXX: Is there a better Poly exception that we could raise here?
         # Either way, if you see this (from the Risch Algorithm) it indicates
         # a bug.
         raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
@@ -765,12 +765,12 @@ def as_poly_1t(p, t, z):
     try:
         t_part = t_part.to_field().exquo(pd)
     except DomainError as e:
-        # Issue 1851
+        # issue 4950
         raise NotImplementedError(e)
-    # Compute the negative degree parts.  Also requires polys11.
+    # Compute the negative degree parts.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
         domain=one_t_part.domain)
-    if r > 0:
+    if 0 < r < oo:
         one_t_part *= Poly(t**r, t)
 
     one_t_part = one_t_part.replace(t, z)  # z will be 1/t
@@ -1279,7 +1279,8 @@ def integrate_primitive_polynomial(p, DE):
 
             try:
                 (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-                assert len(c) == 1
+                if len(c) != 1:
+                    raise ValueError("Length of c should  be 1")
             except NonElementaryIntegralException:
                 return (q, p, False)
 
@@ -1352,6 +1353,9 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     qa = Poly(0, DE.t)
     qd = Poly(1, DE.t)
     b = True
+
+    if p.is_zero:
+        return(qa, qd, b)
 
     with DecrementLevel(DE):
         for i in xrange(-p.degree(z), p.degree(t1) + 1):
@@ -1569,7 +1573,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     handle_first may be either 'exp' or 'log'.  This changes the order in
     which the extension is built, and may result in a different (but
-    equivalent) solution (for an example of this, see issue 2010).  It is also
+    equivalent) solution (for an example of this, see issue 5109).  It is also
     possible that the integral may be computed with one but not the other,
     because not all cases have been implemented yet.  It defaults to 'log' so
     that the outer extension is exponential when possible, because more of the
@@ -1584,6 +1588,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     Examples
     ========
+
     >>> from sympy.integrals.risch import risch_integrate
     >>> from sympy import exp, log, pprint
     >>> from sympy.abc import x

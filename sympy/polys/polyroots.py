@@ -7,11 +7,12 @@ import math
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
 from sympy.core.mul import expand_2arg
+from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im, Abs, cos, sin
+from sympy.functions import exp, sqrt, re, im, Abs, cos, sin, Piecewise
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
@@ -105,7 +106,7 @@ def roots_cubic(f):
             return [-aon3]*3
         else:
             if q.is_real:
-                if (q > 0) is True:
+                if (q > 0) == True:
                     u1 = -q**Rational(1, 3)
                 else:
                     u1 = (-q)**Rational(1, 3)
@@ -206,8 +207,9 @@ def roots_quartic(f):
     The quasisymmetric case solution [6] looks for quartics that have the form
     `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
 
-    Although there is a general solution, simpler results can be obtained for
-    certain values of the coefficients. In all cases, 4 roots are returned:
+    Although no general solution that is always applicable for all
+    coefficients is known to this reviewer, certain conditions are tested
+    to determine the simplest 4 expressions that can be returned:
 
       1) `f = c + a*(a**2/8 - b/2) == 0`
       2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
@@ -283,26 +285,35 @@ def roots_quartic(f):
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
             TH = Rational(1, 3)
-            if p.is_zero:
-                y = -5*e/6 - q**TH
-            elif p.is_number and p.is_comparable:
-                # with p != 0 then u below is not 0
-                root = sqrt(q**2/4 + p**3/27)
-                r = -q/2 + root  # or -q/2 - root
-                u = r**TH  # primary root of solve(x**3-r, x)
-                y = -5*e/6 + u - p/u/3
-            else:
-                raise PolynomialError('cannot return general quartic solution')
-            w = sqrt(e + 2*y)
-            arg1 = 3*e + 2*y
-            arg2 = 2*f/w
-            ans = []
-            for s in [-1, 1]:
-                root = sqrt(-(arg1 + s*arg2))
-                for t in [-1, 1]:
-                    ans.append((s*w - t*root)/2 - aon4)
 
-            return ans
+            def _ans(y):
+                w = sqrt(e + 2*y)
+                arg1 = 3*e + 2*y
+                arg2 = 2*f/w
+                ans = []
+                for s in [-1, 1]:
+                    root = sqrt(-(arg1 + s*arg2))
+                    for t in [-1, 1]:
+                        ans.append((s*w - t*root)/2 - aon4)
+                return ans
+
+            # p == 0 case
+            y1 = -5*e/6 - q**TH
+            if p.is_zero:
+                return _ans(y1)
+
+            # if p != 0 then u below is not 0
+            root = sqrt(q**2/4 + p**3/27)
+            r = -q/2 + root  # or -q/2 - root
+            u = r**TH  # primary root of solve(x**3 - r, x)
+            y2 = -5*e/6 + u - p/u/3
+            if p.is_nonzero:
+                return _ans(y2)
+
+            # sort it out once they know the values of the coefficients
+            return [Piecewise((a1, Eq(p, 0)), (a2, True))
+                for a1, a2 in zip(_ans(y1), _ans(y2))]
+
 
 def roots_binomial(f):
     """Returns a list of roots of a binomial polynomial."""
@@ -413,7 +424,7 @@ def roots_quintic(f):
         f = Poly(f/coeff_5)
     quintic = PolyQuintic(f)
 
-    # Eqn standardised. Algo for solving starts here
+    # Eqn standardized. Algo for solving starts here
     if not f.is_irreducible:
         return result
 

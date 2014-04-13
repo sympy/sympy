@@ -177,8 +177,6 @@ class AntiSymmetricTensor(TensorSymbol):
 
     """
 
-    nargs = 3
-
     def __new__(cls, symbol, upper, lower):
 
         try:
@@ -1368,8 +1366,10 @@ class InnerProduct(Basic):
     is_commutative = True
 
     def __new__(cls, bra, ket):
-        assert isinstance(bra, FockStateBra), 'must be a bra'
-        assert isinstance(ket, FockStateKet), 'must be a key'
+        if not isinstance(bra, FockStateBra):
+            raise TypeError("must be a bra")
+        if not isinstance(ket, FockStateKet):
+            raise TypeError("must be a key")
         return cls.eval(bra, ket)
 
     @classmethod
@@ -1675,7 +1675,6 @@ class Commutator(Function):
     """
 
     is_commutative = False
-    nargs = 2
 
     @classmethod
     def eval(cls, a, b):
@@ -1805,7 +1804,6 @@ class NO(Expr):
     Nothing more, nothing less.
 
     """
-    nargs = 1
     is_commutative = False
 
     def __new__(cls, arg):

@@ -26,7 +26,6 @@ from sympy.core.compatibility import xrange
 
 class ExpBase(Function):
 
-    nargs = 1
     unbranched = True
 
     def inverse(self, argindex=1):
@@ -114,9 +113,9 @@ class ExpBase(Function):
         if be.is_polar:
             return rv
         besmall = abs(be) <= S.Pi
-        if besmall is True:
+        if besmall == True:
             return rv
-        elif besmall is False and e.is_Rational and e.q == 2:
+        elif besmall == False and e.is_Rational and e.q == 2:
             return -rv
 
     def _eval_expand_power_exp(self, **hints):
@@ -395,15 +394,6 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_lseries(self, x):
-        s = self.args[0]
-        yield exp(s.subs(x, 0))
-        from sympy import integrate
-        t = Dummy("t")
-        f = s.subs(x, t)
-        for term in (exp(f)*f.diff(t)).lseries(t):
-            yield integrate(term, (t, 0, x))
-
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
@@ -467,8 +457,6 @@ class log(Function):
 
     exp
     """
-
-    nargs = (1, 2)
 
     def fdiff(self, argindex=1):
         """
@@ -542,7 +530,7 @@ class log(Function):
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        #don't autoexpand Pow or Mul (see the issue 252):
+        #don't autoexpand Pow or Mul (see the issue 3351):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -601,6 +589,10 @@ class log(Function):
                         expr.append(self.func(x)._eval_expand_log(**hints))
                     else:
                         expr.append(a)
+                elif x.is_negative:
+                    a = self.func(-x)
+                    expr.append(a)
+                    nonpos.append(S.NegativeOne)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
@@ -619,6 +611,12 @@ class log(Function):
                 return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
+
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import expand_log, logcombine, simplify
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+        expr = expand_log(expr, deep=True)
+        return min([expr, self], key=measure)
 
     def as_real_imag(self, deep=True, **hints):
         """
@@ -676,8 +674,7 @@ class log(Function):
                 return True
             if arg.is_infinitesimal:
                 return False
-            if arg.is_Number:
-                return arg > 1
+            return (arg - 1).is_positive
 
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
@@ -743,7 +740,6 @@ class LambertW(Function):
     For more information, see:
     http://en.wikipedia.org/wiki/Lambert_W_function
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, x):

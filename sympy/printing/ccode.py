@@ -7,6 +7,8 @@ using the functions defined in math.h where possible.
 A complete code generator, which uses ccode extensively, can be found in
 sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
+
+
 """
 
 from __future__ import print_function, division
@@ -34,6 +36,7 @@ class CCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'contract': True,
     }
 
     def __init__(self, settings={}):
@@ -79,7 +82,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -141,13 +144,15 @@ class CCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
-        inds = [ i.label for i in expr.indices ]
         elem = S.Zero
         offset = S.One
         for i in reversed(range(expr.rank)):
-            elem += offset*inds[i]
+            elem += expr.indices[i]*offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
 
     def _print_Exp1(self, expr):
         return "M_E"
@@ -167,7 +172,7 @@ class CCodePrinter(CodePrinter):
         ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond == True:
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) ? (\n%s\n" %
@@ -236,6 +241,13 @@ def ccode(expr, assign_to=None, **settings):
             constant declarations for the number symbols. If False, the
             same information is returned in a more programmer-friendly
             data structure.
+        contract: optional
+            If True, `Indexed` instances are assumed to obey
+            tensor contraction rules and the corresponding nested
+            loops over indices are generated. Setting contract = False
+            will not generate loops, instead the user is responsible
+            to provide values for the indices in the code. [default=True]
+
 
         Examples
         ========
@@ -253,7 +265,15 @@ def ccode(expr, assign_to=None, **settings):
         ... }
         >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
         'fabs(x) + CEIL(x)'
-
+        >>> from sympy import Eq, IndexedBase, Idx
+        >>> len_y = 5
+        >>> y = IndexedBase('y', shape=(len_y,))
+        >>> t = IndexedBase('t', shape=(len_y,))
+        >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+        >>> i = Idx('i', len_y-1)
+        >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+        >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
+        'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)

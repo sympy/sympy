@@ -14,9 +14,11 @@ from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
+from sympy.core.evaluate import global_evaluate
 
 
 class Point(GeometryEntity):
@@ -74,21 +76,28 @@ class Point(GeometryEntity):
     Point(0.5, 0.25)
 
     """
-
     def __new__(cls, *args, **kwargs):
-        if iterable(args[0]):
-            coords = Tuple(*args[0])
-        elif isinstance(args[0], Point):
-            coords = args[0].args
+        eval = kwargs.get('evaluate', global_evaluate[0])
+        check = True
+        if isinstance(args[0], Point):
+            if not eval:
+                return args[0]
+            args = args[0].args
+            check = False
         else:
-            coords = Tuple(*args)
-
-        if len(coords) != 2:
-            raise NotImplementedError(
-                "Only two dimensional points currently supported")
-        if kwargs.get('evaluate', True):
-            coords = [simplify(nsimplify(c, rational=True)) for c in coords]
-
+            if iterable(args[0]):
+                args = args[0]
+            if len(args) != 2:
+                raise NotImplementedError(
+                    "Only two dimensional points currently supported")
+        coords = Tuple(*args)
+        if check:
+            if any(a.is_number and im(a) for a in coords):
+                raise ValueError('Imaginary args not permitted.')
+        if eval:
+            coords = coords.xreplace(dict(
+                [(f, simplify(nsimplify(f, rational=True)))
+                for f in coords.atoms(Float)]))
         return GeometryEntity.__new__(cls, *coords)
 
     def __hash__(self):
@@ -209,6 +218,9 @@ class Point(GeometryEntity):
         # Coincident points are irrelevant and can confuse this algorithm.
         # Use only unique points.
         points = list(set(points))
+        if not all(isinstance(p, Point) for p in points):
+            raise TypeError('Must pass only Point objects')
+
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -298,29 +310,6 @@ class Point(GeometryEntity):
             # Circle could not be created, because of collinearity of the
             # three points passed in, hence they are not concyclic.
             return False
-
-#       """
-#       # This code is from Maple
-#       def f(u):
-#           dd = u[0]**2 + u[1]**2 + 1
-#           u1 = 2*u[0] / dd
-#           u2 = 2*u[1] / dd
-#           u3 = (dd - 2) / dd
-#           return u1,u2,u3
-
-#       u1,u2,u3 = f(points[0])
-#       v1,v2,v3 = f(points[1])
-#       w1,w2,w3 = f(points[2])
-#       p = [v1 - u1, v2 - u2, v3 - u3]
-#       q = [w1 - u1, w2 - u2, w3 - u3]
-#       r = [p[1]*q[2] - p[2]*q[1], p[2]*q[0] - p[0]*q[2], p[0]*q[1] - p[1]*q[0]]
-#       for ind in xrange(3, len(points)):
-#           s1,s2,s3 = f(points[ind])
-#           test = simplify(r[0]*(s1-u1) + r[1]*(s2-u2) + r[2]*(s3-u3))
-#           if test != 0:
-#               return False
-#       return True
-#       """
 
     def distance(self, p):
         """The Euclidean distance from self to point p.

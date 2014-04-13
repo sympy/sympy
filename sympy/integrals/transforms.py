@@ -52,8 +52,6 @@ class IntegralTransform(Function):
     number and possibly a convergence condition.
     """
 
-    nargs = 3
-
     @property
     def function(self):
         """ The function to be transformed. """
@@ -87,7 +85,7 @@ class IntegralTransform(Function):
     def _collapse_extra(self, extra):
         from sympy import And
         cond = And(*extra)
-        if cond is False:
+        if cond == False:
             raise IntegralTransformError(self.__class__.name, None, '')
 
     def doit(self, **hints):
@@ -270,7 +268,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
         return a, b, aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
-    conds = [x for x in conds if x[2] is not False]
+    conds = [x for x in conds if x[2] != False]
     conds.sort(key=lambda x: (x[0] - x[1], count_ops(x[2])))
 
     if not conds:
@@ -309,7 +307,7 @@ class MellinTransform(IntegralTransform):
             b += [sb]
             cond += [c]
         res = (Max(*a), Min(*b)), And(*cond)
-        if (res[0][0] >= res[0][1]) is True or res[1] is False:
+        if (res[0][0] >= res[0][1]) == True or res[1] == False:
             raise IntegralTransformError(
                 'Mellin', None, 'no combined convergence.')
         return res
@@ -476,9 +474,9 @@ def _rewrite_gamma(f, s, a, b):
             return c < b_
         if b_ is None:
             return c <= a_
-        if (c >= b_) is True:
+        if (c >= b_) == True:
             return False
-        if (c <= a_) is True:
+        if (c <= a_) == True:
             return True
         if is_numer:
             return None
@@ -622,8 +620,8 @@ def _rewrite_gamma(f, s, a, b):
         elif isinstance(fact, gamma):
             a, b = linear_arg(fact.args[0])
             if is_numer:
-                if (a > 0 and (left(-b/a, is_numer) is False)) or \
-                   (a < 0 and (left(-b/a, is_numer) is True)):
+                if (a > 0 and (left(-b/a, is_numer) == False)) or \
+                   (a < 0 and (left(-b/a, is_numer) == True)):
                     raise NotImplementedError(
                         'Gammas partially over the strip.')
             ugammas += [(a, b)]
@@ -668,7 +666,8 @@ def _rewrite_gamma(f, s, a, b):
                 p = abs(S(a))
                 newa = a/p
                 newc = c/p
-                assert a.is_Integer
+                if not a.is_Integer:
+                    raise TypeError("a is not an integer")
                 for k in range(p):
                     gammas += [(newa, newc + k/p)]
                 if is_numer:
@@ -729,7 +728,12 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         if as_meijerg:
             h = G
         else:
-            h = hyperexpand(G)
+            try:
+                h = hyperexpand(G)
+            except NotImplementedError as detail:
+                raise IntegralTransformError(
+                    'Inverse Mellin', F, 'Could not calculate integral')
+
             if h.is_Piecewise and len(h.args) == 3:
                 # XXX we break modularity here!
                 h = Heaviside(x - abs(C))*h.args[0].args[0] \
@@ -743,7 +747,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         cond += [And(Or(len(G.ap) != len(G.bq), 0 >= re(G.nu) + 1),
                      abs(arg(G.argument)) == G.delta*pi)]
         cond = Or(*cond)
-        if cond is False:
+        if cond == False:
             raise IntegralTransformError(
                 'Inverse Mellin', F, 'does not converge')
         return (h*fac).subs(x, x_), cond
@@ -762,8 +766,6 @@ class InverseMellinTransform(IntegralTransform):
     For how to compute inverse Mellin transforms, see the
     :func:`inverse_mellin_transform` docstring.
     """
-
-    nargs = 5
 
     _name = 'Inverse Mellin'
     _none_sentinel = Dummy('None')
@@ -916,9 +918,9 @@ def _simplifyconds(expr, s, a):
         n = power(ex2)
         if n is None:
             return None
-        if n > 0 and (abs(ex1) <= abs(a)**n) is True:
+        if n > 0 and (abs(ex1) <= abs(a)**n) == True:
             return False
-        if n < 0 and (abs(ex1) >= abs(a)**n) is True:
+        if n < 0 and (abs(ex1) >= abs(a)**n) == True:
             return True
 
     def replie(x, y):
@@ -932,13 +934,14 @@ def _simplifyconds(expr, s, a):
         return (x < y)
 
     def replue(x, y):
-        if bigger(x, y) in (True, False):
+        b = bigger(x, y)
+        if b == True or b == False:
             return True
         return Unequality(x, y)
 
     def repl(ex, *args):
-        if isinstance(ex, bool):
-            return ex
+        if ex == True or ex == False:
+            return bool(ex)
         return ex.replace(*args)
     expr = repl(expr, StrictLessThan, replie)
     expr = repl(expr, StrictGreaterThan, lambda x, y: replie(y, x))
@@ -1019,13 +1022,13 @@ def _laplace_transform(f, t, s_, simplify=True):
         return a, aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
-    conds2 = [x for x in conds if x[1] is not False and x[0] != -oo]
+    conds2 = [x for x in conds if x[1] != False and x[0] != -oo]
     if not conds2:
-        conds2 = [x for x in conds if x[1] is not False]
+        conds2 = [x for x in conds if x[1] != False]
     conds = conds2
 
     def cnt(expr):
-        if isinstance(expr, bool):
+        if expr == True or expr == False:
             return 0
         return expr.count_ops()
     conds.sort(key=lambda x: (-x[0], cnt(x[1])))
@@ -1035,8 +1038,8 @@ def _laplace_transform(f, t, s_, simplify=True):
     a, aux = conds[0]
 
     def sbs(expr):
-        if isinstance(expr, bool):
-            return expr
+        if expr == S.true or expr == S.false:
+            return bool(expr)
         return expr.subs(s, s_)
     if simplify:
         F = _simplifyconds(F, s, a)
@@ -1063,13 +1066,6 @@ class LaplaceTransform(IntegralTransform):
         from sympy import Integral, exp
         return Integral(f*exp(-s*t), (t, 0, oo))
 
-    """
-    Class representing unevaluated Laplace transforms.
-
-    For usage of this class, see the :class:`IntegralTransform` docstring.
-    For how to compute Laplace transforms, see the :func:`laplace_transform`
-    docstring.
-    """
     def _collapse_extra(self, extra):
         from sympy import And, Max
         conds = []
@@ -1079,7 +1075,7 @@ class LaplaceTransform(IntegralTransform):
             planes.append(plane)
         cond = And(*conds)
         plane = Max(*planes)
-        if cond is False:
+        if cond == False:
             raise IntegralTransformError(
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
@@ -1199,8 +1195,6 @@ class InverseLaplaceTransform(IntegralTransform):
     For how to compute inverse Laplace transforms, see the
     :func:`inverse_laplace_transform` docstring.
     """
-
-    nargs = 4
 
     _name = 'Inverse Laplace'
     _none_sentinel = Dummy('None')
@@ -1696,8 +1690,6 @@ class HankelTypeTransform(IntegralTransform):
     """
     Base class for Hankel transforms.
     """
-
-    nargs = 4
 
     def doit(self, **hints):
         return self._compute_transform(self.function,

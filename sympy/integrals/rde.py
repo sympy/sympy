@@ -51,17 +51,28 @@ def order_at(a, p, t):
     if p == Poly(t, t):
         return a.as_poly(t).ET()[0][0]
 
-    # TODO: Can this be done more efficiently?
-    # Perhaps using sqf factorization, binary search with an upper bound of
-    # a.degree(t)//p.degree(t), or some other clever method.
-    n = -1
-    p1 = Poly(1, t)
-    r = Poly(0, t)
+    # Uses binary search for calculating the power. power_list collects the tuples
+    # (p^k,k) where each k is some power of 2. After deciding the largest k
+    # such that k is power of 2 and p^k|a the loop iteratively calculates
+    # the actual power.
+    power_list = []
+    p1 = p
+    r = a.rem(p1)
+    tracks_power = 1
     while r.is_zero:
-        n += 1
-        p1 = p1*p
+        power_list.append((p1,tracks_power))
+        p1 = p1*p1
+        tracks_power *= 2
         r = a.rem(p1)
-
+    n = 0
+    product = Poly(1, t)
+    while len(power_list) != 0:
+        final = power_list.pop()
+        productf = product*final[0]
+        r = a.rem(productf)
+        if r.is_zero:
+            n += final[1]
+            product = productf
     return n
 
 
@@ -300,7 +311,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                 except NonElementaryIntegralException:
                     pass
                 else:
-                    assert len(m) == 1
+                    if len(m) != 1:
+                        raise ValueError("Length of m should be 1")
                     n = max(n, m[0])
 
             elif db == da:
@@ -321,7 +333,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         except NonElementaryIntegralException:
                             pass
                         else:
-                            assert len(m) == 1
+                            if len(m) != 1:
+                                raise ValueError("Length of m should be 1")
                             n = max(n, m[0])
 
     elif case == 'exp':
@@ -653,8 +666,10 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             h, b0, c0 = R
             with DecrementLevel(DE):
                 b0, c0 = b0.as_poly(DE.t), c0.as_poly(DE.t)
-                assert b0 is not None  # See above comment
-                assert c0 is not None
+                if b0 is None:  # See above comment
+                    raise ValueError("b0 should be a non-Null value")
+                if c0 is  None:
+                    raise ValueError("c0 should be a non-Null value")
                 y = solve_poly_rde(b0, c0, n, DE).as_poly(DE.t)
             return h + y
 
@@ -663,7 +678,8 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
         # TODO: Is this check necessary, and if so, what should it do if it fails?
         # b comes from the first element returned from spde()
-        assert b.as_poly(DE.t).LC().is_number
+        if not b.as_poly(DE.t).LC().is_number:
+            raise TypeError("Result should be a number")
 
         if parametric:
             raise NotImplementedError("prde_no_cancel_b_equal() is not yet "

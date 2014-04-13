@@ -68,16 +68,28 @@ class DenseMatrix(MatrixBase):
         >>> m[::2]
         [1, 3]
         """
-        if type(key) is tuple:
+        if isinstance(key, tuple):
             i, j = key
-            if type(i) is slice or type(j) is slice:
-                return self.submatrix(key)
-            else:
+            try:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
+            except (TypeError, IndexError):
+                if isinstance(i, slice):
+                    i = range(self.rows)[i]
+                elif is_sequence(i):
+                    pass
+                else:
+                    i = [i]
+                if isinstance(j, slice):
+                    j = range(self.cols)[j]
+                elif is_sequence(j):
+                    pass
+                else:
+                    j = [j]
+                return self.extract(i, j)
         else:
             # row-wise decomposition of matrix
-            if type(key) is slice:
+            if isinstance(key, slice):
                 return self._mat[key]
             return self._mat[a2idx(key)]
 
@@ -515,7 +527,7 @@ class DenseMatrix(MatrixBase):
             SymPyDeprecationWarning(
                 feature="The syntax zeros([%i, %i])" % tuple(r),
                 useinstead="zeros(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
+                issue=6480, deprecated_since_version="0.7.2",
             ).warn()
             r, c = r
         else:
@@ -1239,7 +1251,7 @@ def ones(r, c=None):
         SymPyDeprecationWarning(
             feature="The syntax ones([%i, %i])" % tuple(r),
             useinstead="ones(%i, %i)." % tuple(r),
-            issue=3381, deprecated_since_version="0.7.2",
+            issue=6480, deprecated_since_version="0.7.2",
         ).warn()
         r, c = r
     else:

@@ -53,7 +53,8 @@ def dummy_sgs(dummies, sym, n):
      [0, 1, 2, 3, 4, 5, 7, 6, 8, 9], [0, 1, 4, 5, 2, 3, 6, 7, 8, 9],
      [0, 1, 2, 3, 6, 7, 4, 5, 8, 9]]
     """
-    assert len(dummies) <= n
+    if len(dummies) > n:
+        raise ValueError("List too large")
     res = []
     # exchange of contravariant and covariant indices
     if sym is not None:

@@ -64,7 +64,13 @@ class ExprWithLimits(Expr):
         # Any embedded piecewise functions need to be brought out to the
         # top level so that integration can go into piecewise mode at the
         # earliest possible moment.
-        function = piecewise_fold(sympify(function))
+        function = sympify(function)
+        if hasattr(function, 'func') and function.func is C.Equality:
+            lhs = function.lhs
+            rhs = function.rhs
+            return C.Equality(cls(lhs, *symbols, **assumptions), \
+                cls(rhs, *symbols, **assumptions))
+        function = piecewise_fold(function)
 
         if function is S.NaN:
             return S.NaN
@@ -321,7 +327,8 @@ class ExprWithLimits(Expr):
         return self.func(func, *limits)
 
 class AddWithLimits(ExprWithLimits):
-    r"""Represents unevaluated oriented additions of integer sequences.
+    r"""Represents unevaluated oriented additions.
+        Parent class for Integral and Sum.
     """
 
     def __new__(cls, function, *symbols, **assumptions):
@@ -331,7 +338,13 @@ class AddWithLimits(ExprWithLimits):
         #
         # This constructor only differs from ExprWithLimits
         # in the application of the orientation variable.  Perhaps merge?
-        function = piecewise_fold(sympify(function))
+        function = sympify(function)
+        if hasattr(function, 'func') and function.func is C.Equality:
+            lhs = function.lhs
+            rhs = function.rhs
+            return C.Equality(cls(lhs, *symbols, **assumptions), \
+                cls(rhs, *symbols, **assumptions))
+        function = piecewise_fold(function)
 
         if function is S.NaN:
             return S.NaN

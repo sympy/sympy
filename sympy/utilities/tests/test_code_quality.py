@@ -3,7 +3,8 @@ from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
-import sys
+
+from sympy.core.compatibility import PY3
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -20,8 +21,6 @@ TOP_PATH = abspath(join(SYMPY_PATH, pardir))
 BIN_PATH = join(TOP_PATH, "bin")
 EXAMPLES_PATH = join(TOP_PATH, "examples")
 
-IS_PYTHON_3 = (sys.version_info[0] == 3)
-
 # Error messages
 message_space = "File contains trailing whitespace: %s, line %s."
 message_implicit = "File contains an implicit import: %s, line %s."
@@ -33,6 +32,7 @@ message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\
 message_eof = "File does not end with a newline: %s, line %s"
 message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
+message_duplicate_test = "This is a duplicate test function: %s, line %s"
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -41,6 +41,7 @@ gen_raise_re = re.compile(
     r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
+test_ok_def_re = re.compile(r'^def\s+test_.*:$')
 test_file_re = re.compile(r'.*test_.*\.py$')
 
 def tab_in_leading(s):
@@ -93,10 +94,11 @@ def test_files():
       o there are no general or string exceptions
       o there are no old style raise statements
       o name of arg-less test suite functions start with _ or test_
+      o no duplicate function names that start with test_
     """
 
     def test(fname):
-        if IS_PYTHON_3:
+        if PY3:
             with open(fname, "rt", encoding="utf8") as test_file:
                 test_this_file(fname, test_file)
         else:
@@ -105,9 +107,17 @@ def test_files():
 
     def test_this_file(fname, test_file):
         line = None  # to flag the case where there were no lines in file
+        tests = 0
+        test_set = set()
         for idx, line in enumerate(test_file):
-            if test_file_re.match(fname) and test_suite_def_re.match(line):
-                assert False, message_test_suite_def % (fname, idx + 1)
+            if test_file_re.match(fname):
+                if test_suite_def_re.match(line):
+                    assert False, message_test_suite_def % (fname, idx + 1)
+                if test_ok_def_re.match(line):
+                    tests += 1
+                    test_set.add(line[3:].split('(')[0].strip())
+                    if len(test_set) != tests:
+                        assert False, message_duplicate_test % (fname, idx + 1)
             if line.endswith(" \n") or line.endswith("\t\n"):
                 assert False, message_space % (fname, idx + 1)
             if line.endswith("\r\n"):
@@ -151,6 +161,7 @@ def test_files():
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
         # these __init__.py should be fixed:
         # XXX: not really, they use useful import pattern (DRY)
+        "%(sep)svector%(sep)s__init__.py" % sepd,
         "%(sep)smechanics%(sep)s__init__.py" % sepd,
         "%(sep)squantum%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)s__init__.py" % sepd,
@@ -294,3 +305,30 @@ def test_test_suite_defs():
         assert test_suite_def_re.search(c) is None, c
     for c in candidates_fail:
         assert test_suite_def_re.search(c) is not None, c
+
+
+def test_test_duplicate_defs():
+    candidates_ok = [
+        "def foo():\ndef foo():\n",
+        "def test():\ndef test_():\n",
+        "def test_():\ndef test__():\n",
+    ]
+    candidates_fail = [
+        "def test_():\ndef test_ ():\n",
+        "def test_1():\ndef  test_1():\n",
+    ]
+    ok = (None, 'check')
+    def check(file):
+        tests = 0
+        test_set = set()
+        for idx, line in enumerate(file.splitlines()):
+            if test_ok_def_re.match(line):
+                tests += 1
+                test_set.add(line[3:].split('(')[0].strip())
+                if len(test_set) != tests:
+                    return False, message_duplicate_test % ('check', idx + 1)
+        return None, 'check'
+    for c in candidates_ok:
+        assert check(c) == ok
+    for c in candidates_fail:
+        assert check(c) != ok

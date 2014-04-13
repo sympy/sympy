@@ -113,7 +113,6 @@ def test_sympy__combinatorics__permutations__Permutation():
     assert _test_args(Permutation([0, 1, 2, 3]))
 
 
-@XFAIL
 def test_sympy__combinatorics__perm_groups__PermutationGroup():
     from sympy.combinatorics.permutations import Permutation
     from sympy.combinatorics.perm_groups import PermutationGroup
@@ -362,9 +361,9 @@ def test_sympy__core__numbers__Rational():
     assert _test_args(Rational(1, 7))
 
 
+@SKIP("abstract class")
 def test_sympy__core__numbers__RationalConstant():
-    from sympy.core.numbers import RationalConstant
-    assert _test_args(RationalConstant())
+    pass
 
 
 def test_sympy__core__numbers__Zero():
@@ -437,7 +436,6 @@ def test_sympy__core__sets__FiniteSet():
     assert _test_args(FiniteSet(x, y, z))
 
 
-@XFAIL
 def test_sympy__core__sets__Interval():
     from sympy.core.sets import Interval
     assert _test_args(Interval(0, 1))
@@ -484,7 +482,6 @@ def test_sympy__sets__fancysets__Integers():
     assert _test_args(Integers())
 
 
-@XFAIL  # This fails for the same reason Interval fails. Not all args are Basic
 def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())
@@ -1153,6 +1150,9 @@ def test_sympy__functions__elementary__piecewise__Piecewise():
 def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
     pass
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__ReciprocalTrigonometricFunction():
+    pass
 
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
@@ -1256,6 +1256,30 @@ def test_sympy__functions__special__bessel__jn():
 def test_sympy__functions__special__bessel__yn():
     from sympy.functions.special.bessel import yn
     assert _test_args(yn(0, x))
+
+
+def test_sympy__functions__special__bessel__AiryBase():
+    pass
+
+
+def test_sympy__functions__special__bessel__airyai():
+    from sympy.functions.special.bessel import airyai
+    assert _test_args(airyai(2))
+
+
+def test_sympy__functions__special__bessel__airybi():
+    from sympy.functions.special.bessel import airybi
+    assert _test_args(airybi(2))
+
+
+def test_sympy__functions__special__bessel__airyaiprime():
+    from sympy.functions.special.bessel import airyaiprime
+    assert _test_args(airyaiprime(2))
+
+
+def test_sympy__functions__special__bessel__airybiprime():
+    from sympy.functions.special.bessel import airybiprime
+    assert _test_args(airybiprime(2))
 
 
 def test_sympy__functions__special__elliptic_integrals__elliptic_k():
@@ -1406,6 +1430,11 @@ def test_sympy__functions__special__gamma_functions__polygamma():
 def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
     assert _test_args(uppergamma(x, 2))
+
+
+def test_sympy__functions__special__beta_functions__beta():
+    from sympy.functions.special.beta_functions import beta
+    assert _test_args(beta(x, x))
 
 
 @SKIP("abstract class")
@@ -1747,6 +1776,17 @@ def test_sympy__logic__boolalg__BooleanFunction():
     from sympy.logic.boolalg import BooleanFunction
     assert _test_args(BooleanFunction(1, 2, 3))
 
+@SKIP("abstract class")
+def test_sympy__logic__boolalg__BooleanAtom():
+    pass
+
+def test_sympy__logic__boolalg__BooleanTrue():
+    from sympy.logic.boolalg import true
+    assert _test_args(true)
+
+def test_sympy__logic__boolalg__BooleanFalse():
+    from sympy.logic.boolalg import false
+    assert _test_args(false)
 
 def test_sympy__logic__boolalg__Equivalent():
     from sympy.logic.boolalg import Equivalent
@@ -1847,7 +1887,6 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     assert _test_args(MatAdd(X, Y))
 
 
-@XFAIL
 def test_sympy__matrices__expressions__matexpr__Identity():
     from sympy.matrices.expressions.matexpr import Identity
     assert _test_args(Identity(3))
@@ -1998,9 +2037,9 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
 
-def test_sympy__physics__mechanics__essential__CoordinateSym():
-    from sympy.physics.mechanics import CoordinateSym
-    from sympy.physics.mechanics import ReferenceFrame
+def test_sympy__physics__vector__frame__CoordinateSym():
+    from sympy.physics.vector import CoordinateSym
+    from sympy.physics.vector import ReferenceFrame
     assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
 
 def test_sympy__physics__gaussopt__BeamParameter():
@@ -2914,9 +2953,9 @@ def test_sympy__geometry__ellipse__Circle():
     assert _test_args(Circle((0, 1), 2))
 
 
+@SKIP("abstract class")
 def test_sympy__geometry__line__LinearEntity():
-    from sympy.geometry.line import LinearEntity
-    assert _test_args(LinearEntity((0, 1), (2, 3)))
+    pass
 
 
 def test_sympy__geometry__line__Line():

@@ -48,6 +48,7 @@ if sys.version_info[:2] < (2, 6):
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.calculus',
     'sympy.categories',
     'sympy.combinatorics',
     'sympy.concrete',
@@ -80,6 +81,7 @@ modules = [
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
+    'sympy.physics.vector',
     'sympy.physics.unitsystems',
     'sympy.physics.unitsystems.systems',
     'sympy.plotting',
@@ -155,12 +157,13 @@ class clean(Command):
 
     def run(self):
         import os
-        os.system("py.cleanup")
+        os.system("find . -name '*.pyc' | xargs rm -f")
         os.system("rm -f python-build-stamp-2.4")
         os.system("rm -f MANIFEST")
         os.system("rm -rf build")
         os.system("rm -rf dist")
         os.system("rm -rf doc/_build")
+        os.system("rm -f sample.tex")
 
 
 class test_sympy(Command):
@@ -240,8 +243,10 @@ if 'setuptools' in sys.modules and PY3:
 
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
+
 tests = [
     'sympy.assumptions.tests',
+    'sympy.calculus.tests',
     'sympy.categories.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
@@ -256,16 +261,19 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
+    'sympy.liealgebras.tests',
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.unitsystems.tests',
     'sympy.physics.tests',
+    'sympy.physics.vector.tests',
     'sympy.plotting.intervalmath.tests',
     'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',
@@ -316,7 +324,7 @@ setup_args = {
     "author_email": 'sympy@googlegroups.com',
     "license": 'BSD',
     "keywords": "Math CAS",
-    "url": 'http://code.google.com/p/sympy',
+    "url": 'http://sympy.org',
     "packages": ['sympy'] + modules + tests,
     "scripts": ['bin/isympy'],
     "ext_modules": [],

@@ -1,8 +1,7 @@
 from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, cancel, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta,
-    factorial)
+    cos, O, lowergamma, exp, erf, exp_polar, harmonic, zeta,conjugate)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
@@ -12,7 +11,7 @@ from sympy.utilities.pytest import raises
 x = Symbol('x')
 y = Symbol('y')
 n = Symbol('n', integer=True)
-
+w = Symbol('w', real=True)
 
 def test_gamma():
     assert gamma(nan) == nan
@@ -54,6 +53,9 @@ def test_gamma():
 
     assert gamma(x - 1).expand(func=True) == gamma(x)/(x - 1)
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x + 1)*gamma(x)
+
+    assert conjugate(gamma(x)) == gamma(conjugate(x))
+    assert gamma(w).is_real is True
 
     assert expand_func(gamma(x + Rational(3, 2))) == \
         (x + Rational(1, 2))*gamma(x + Rational(1, 2))
@@ -105,8 +107,6 @@ def test_lowergamma():
     assert tn(lowergamma(S.Half - 3, x, evaluate=False),
               lowergamma(S.Half - 3, x), x)
 
-    assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
-
     assert tn_branch(-3, lowergamma)
     assert tn_branch(-4, lowergamma)
     assert tn_branch(S(1)/3, lowergamma)
@@ -117,6 +117,10 @@ def test_lowergamma():
     assert lowergamma(-2, exp_polar(5*pi*I)*x) == \
         lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
 
+    assert conjugate(lowergamma(x, y)) == lowergamma(conjugate(x), conjugate(y))
+    assert conjugate(lowergamma(x, 0)) == conjugate(lowergamma(x, 0))
+    assert conjugate(lowergamma(x, -oo)) == conjugate(lowergamma(x, -oo))
+
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
     k = Symbol('k', integer=True)
@@ -124,7 +128,7 @@ def test_lowergamma():
         k, y).rewrite(expint) == -y**k*expint(-k + 1, y) + gamma(k)
     k = Symbol('k', integer=True, positive=False)
     assert lowergamma(k, y).rewrite(expint) == lowergamma(k, y)
-
+    assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
 
 def test_uppergamma():
     from sympy import meijerg, exp_polar, I, expint
@@ -144,8 +148,6 @@ def test_uppergamma():
     assert tn(uppergamma(S.Half - 3, x, evaluate=False),
               uppergamma(S.Half - 3, x), x)
 
-    assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
-
     assert tn_branch(-3, uppergamma)
     assert tn_branch(-4, uppergamma)
     assert tn_branch(S(1)/3, uppergamma)
@@ -158,7 +160,13 @@ def test_uppergamma():
         uppergamma(-2, x*exp_polar(I*pi)) - 2*pi*I
 
     assert uppergamma(-2, x) == expint(3, x)/x**2
+
+    assert conjugate(uppergamma(x, y)) == uppergamma(conjugate(x), conjugate(y))
+    assert conjugate(uppergamma(x, 0)) == gamma(conjugate(x))
+    assert conjugate(uppergamma(x, -oo)) == conjugate(uppergamma(x, -oo))
+
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
+    assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
 
 
 def test_polygamma():
@@ -167,6 +175,9 @@ def test_polygamma():
     assert polygamma(n, nan) == nan
 
     assert polygamma(0, oo) == oo
+    assert polygamma(0, -oo) == oo
+    assert polygamma(0, I*oo) == oo
+    assert polygamma(0, -I*oo) == oo
     assert polygamma(1, oo) == 0
     assert polygamma(5, oo) == 0
 
@@ -299,13 +310,17 @@ def test_loggamma():
         pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
     assert s1 == loggamma(x).rewrite('intractable').series(x)
 
+    assert conjugate(loggamma(x)) == loggamma(conjugate(x))
+    assert conjugate(loggamma(0)) == conjugate(loggamma(0))
+    assert conjugate(loggamma(1)) == loggamma(conjugate(1))
+    assert conjugate(loggamma(-oo)) == conjugate(loggamma(-oo))
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real
     assert loggamma(z).is_real is False
 
     def tN(N, M):
-        assert loggamma(1/x)._eval_nseries(x, n=N, logx=None).getn() == M
+        assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
     tN(0, 0)
     tN(1, 1)
     tN(2, 3)
@@ -322,9 +337,3 @@ def test_polygamma_expansion():
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
-
-
-def test_beta_function():
-    x, y = Symbol('x'), Symbol('y')
-    assert beta(x, y) == gamma(x)*gamma(y)/gamma(x + y)
-    assert beta(x, y) == beta(y, x)  # Symmetric

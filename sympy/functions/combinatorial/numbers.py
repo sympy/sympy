@@ -12,6 +12,7 @@ from __future__ import print_function, division
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
+from sympy.core.evaluate import global_evaluate
 from sympy.core.cache import cacheit
 from sympy.functions.combinatorial.factorials import factorial
 
@@ -519,8 +520,6 @@ class harmonic(Function):
     # order and store it in a dictionary
     _functions = {}
 
-    nargs = (1, 2)
-
     @classmethod
     def eval(cls, n, m=None):
         if m is None:
@@ -626,10 +625,10 @@ class euler(Function):
     bell, bernoulli, catalan, fibonacci, harmonic, lucas
     """
 
-    nargs = 1
-
     @classmethod
-    def eval(cls, m, evaluate=True):
+    def eval(cls, m, evaluate=None):
+        if evaluate is None:
+            evaluate = global_evaluate[0]
         if not evaluate:
             return
         if m.is_odd:
@@ -752,7 +751,9 @@ class catalan(Function):
     """
 
     @classmethod
-    def eval(cls, n, evaluate=True):
+    def eval(cls, n, evaluate=None):
+        if evaluate is None:
+            evaluate = global_evaluate[0]
         if n.is_Integer and n.is_nonnegative:
             return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
 
@@ -1056,7 +1057,8 @@ def nC(n, k=None, replacement=False):
             if not replacement:
                 return 2**n
             return sum(nC(n, i, replacement) for i in range(n + 1))
-        assert k >= 0
+        if k < 0:
+            raise ValueError("k cannot be negative")
         if replacement:
             return binomial(n + k - 1, k)
         return binomial(n, k)
@@ -1245,9 +1247,10 @@ def nT(n, k=None):
         sequence - converted to a multiset internally
         multiset - {element: multiplicity}
 
-    Note: the convention for ``nT`` is different than that of ``nC`` and``nP`` in that
+    Note: the convention for ``nT`` is different than that of ``nC`` and
+    ``nP`` in that
     here an integer indicates ``n`` *identical* items instead of a set of
-    length ``n``; this is in keepng with the ``partitions`` function which
+    length ``n``; this is in keeping with the ``partitions`` function which
     treats its integer-``n`` input like a list of ``n`` 1s. One can use
     ``range(n)`` for ``n`` to indicate ``n`` distinct items.
 
@@ -1266,9 +1269,7 @@ def nT(n, k=None):
     >>> nT('aabbc') == sum(_)
     True
 
-    (TODO The following can be activated with >>> when
-    taocp_multiset_permutation is in place.)
-    >> [nT("mississippi", i) for i in range(1, 12)]
+    >>> [nT("mississippi", i) for i in range(1, 12)]
     [1, 74, 609, 1521, 1768, 1224, 579, 197, 50, 9, 1]
 
     Partitions when all items are identical:
@@ -1296,7 +1297,7 @@ def nT(n, k=None):
     sympy.utilities.iterables.multiset_partitions
 
     """
-    from sympy.utilities.iterables import multiset_partitions
+    from sympy.utilities.enumerative import MultisetPartitionTraverser
 
     if isinstance(n, SYMPY_INTS):
         # assert n >= 0
@@ -1334,10 +1335,12 @@ def nT(n, k=None):
         if k is None:
             return bell(N)
         return stirling(N, k)
+    m = MultisetPartitionTraverser()
     if k is None:
-        return sum(nT(n, k) for k in range(1, N + 1))
+        return m.count_partitions(n[_M])
+    # MultisetPartitionTraverser does not have a range-limited count
+    # method, so need to enumerate and count
     tot = 0
-    for p in multiset_partitions(
-            [i for i, j in enumerate(n[_M]) for ii in range(j)]):
-        tot += len(p) == k
+    for discard in m.enum_range(n[_M], k-1, k):
+        tot += 1
     return tot

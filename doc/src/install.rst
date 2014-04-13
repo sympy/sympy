@@ -75,11 +75,11 @@ Although SymPy does not have any hard dependencies, many nice features are
 only enabled when certain libraries are installed.  For example, without
 Matplotlib, only simple text-based plotting is enabled.  With the IPython
 notebook or qtconsole, you can get nicer `\LaTeX` printing by running
-``%loadext sympy.interactive.ipythonprinting``.  An easy way to get all these
-libraries in addition to SymPy is to install `Anaconda
-<http://continuum.io/downloads.html>`_, which is a free Python distribution
-from Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and
-many more useful packages for scientific computing.
+``init_printing()``.  An easy way to get all these libraries in addition to
+SymPy is to install `Anaconda <http://continuum.io/downloads.html>`_, which is
+a free Python distribution from Continuum Analytics that includes SymPy,
+Matplotlib, IPython, NumPy, and many more useful packages for scientific
+computing.
 
 Other Methods
 =============
@@ -112,13 +112,13 @@ Questions
 =========
 
 If you have a question about installation or SymPy in general, feel free to
-visit the IRC channel at irc.freenode.net, channel `#sympy`_. In addition,
-our `mailing list`_ is an excellent source of community support.
+visit our chat on `Gitter`_. In addition, our `mailing list`_ is an excellent
+source of community support.
 
 If you think there's a bug or you would like to request a feature, please open
 an `issue ticket`_.
 
-.. _downloads site: https://code.google.com/p/sympy/downloads/list
-.. _#sympy: irc://irc.freenode.net/sympy
-.. _issue ticket: http://code.google.com/p/sympy/issues/list
+.. _downloads site: https://github.com/sympy/sympy/releases
+.. _Gitter: https://gitter.im/sympy/sympy
+.. _issue ticket: https://github.com/sympy/sympy/issues
 .. _mailing list: http://groups.google.com/group/sympy
