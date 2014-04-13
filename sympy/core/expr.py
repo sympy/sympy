@@ -57,7 +57,9 @@ class Expr(Basic, EvalfMixin):
         else:
             expr, exp = expr, S.One
 
-        if expr.is_Atom:
+        if expr.is_Dummy:
+            args = (expr.sort_key(),)
+        elif expr.is_Atom:
             args = (str(expr),)
         else:
             if expr.is_Add:
@@ -1130,7 +1132,7 @@ class Expr(Basic, EvalfMixin):
                 if not right:
                     return self - Add(*[a*x for a in Add.make_args(c)])
                 return self - Add(*[x*a for a in Add.make_args(c)])
-            return self.as_independent(x, as_Add=not self.is_Mul)[0]
+            return self.as_independent(x, as_Add=True)[0]
 
         # continue with the full method, looking for this power of x:
         x = x**n

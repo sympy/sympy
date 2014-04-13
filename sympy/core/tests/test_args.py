@@ -436,7 +436,6 @@ def test_sympy__core__sets__FiniteSet():
     assert _test_args(FiniteSet(x, y, z))
 
 
-@XFAIL
 def test_sympy__core__sets__Interval():
     from sympy.core.sets import Interval
     assert _test_args(Interval(0, 1))
@@ -483,7 +482,6 @@ def test_sympy__sets__fancysets__Integers():
     assert _test_args(Integers())
 
 
-@XFAIL  # This fails for the same reason Interval fails. Not all args are Basic
 def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())

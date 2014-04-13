@@ -17,6 +17,7 @@ from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
+from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
     sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
@@ -158,7 +159,7 @@ def separate(expr, deep=False, force=False):
     return expand_power_base(sympify(expr), deep=deep, force=force)
 
 
-def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
+def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_term=True):
     """
     Collect additive terms of an expression.
 
@@ -296,6 +297,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
     ========
     collect_const, collect_sqrt, rcollect
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
 
     def make_expression(terms):
         product = []
@@ -1432,7 +1435,7 @@ def trigsimp(expr, **opts):
     return trigsimpfunc(expr)
 
 
-def collect_sqrt(expr, evaluate=True):
+def collect_sqrt(expr, evaluate=None):
     """Return expr with terms having common square roots collected together.
     If ``evaluate`` is False a count indicating the number of sqrt-containing
     terms will be returned and, if non-zero, the terms of the Add will be
@@ -1472,6 +1475,8 @@ def collect_sqrt(expr, evaluate=True):
     ========
     collect, collect_const, rcollect
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
     # this step will help to standardize any complex arguments
     # of sqrts
     coeff, expr = expr.as_content_primitive()
@@ -2590,7 +2595,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
-            assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
             if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
@@ -3473,7 +3477,7 @@ def combsimp(expr):
     return expr
 
 
-def signsimp(expr, evaluate=True):
+def signsimp(expr, evaluate=None):
     """Make all Add sub-expressions canonical wrt sign.
 
     If an Add subexpression, ``a``, can have a sign extracted,
@@ -3512,6 +3516,8 @@ def signsimp(expr, evaluate=True):
     exp(-(x - y))
 
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
     expr = sympify(expr)
     if not isinstance(expr, Expr) or expr.is_Atom:
         return expr

@@ -8,6 +8,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
+from sympy.core.evaluate import global_evaluate
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
@@ -20,11 +21,11 @@ class Set(Basic):
     The base class for any kind of set.
 
     This is not meant to be used directly as a container of items.
-    It does not behave like the builtin set; see FiniteSet for that.
+    It does not behave like the builtin ``set``; see :class:`FiniteSet` for that.
 
-    Real intervals are represented by the Interval class and unions of sets
-    by the Union class. The empty set is represented by the EmptySet class
-    and available as a singleton as S.EmptySet.
+    Real intervals are represented by the :class:`Interval` class and unions of sets
+    by the :class:`Union` class. The empty set is represented by the :class:`EmptySet` class
+    and available as a singleton as ``S.EmptySet``.
     """
     is_number = False
     is_iterable = False
@@ -92,12 +93,12 @@ class Set(Basic):
         This function should only be used internally
 
         self._intersect(other) returns a new, intersected set if self knows how
-        to intersect itself with other, otherwise it returns None
+        to intersect itself with other, otherwise it returns ``None``
 
         When making a new set class you can be assured that other will not
-        be a Union, FiniteSet, or EmptySet
+        be a :class:`Union`, :class:`FiniteSet`, or :class:`EmptySet`
 
-        Used within the Intersection class
+        Used within the :class:`Intersection` class
         """
         return None
 
@@ -106,12 +107,12 @@ class Set(Basic):
         This function should only be used internally
 
         self._union(other) returns a new, joined set if self knows how
-        to join itself with other, otherwise it returns None.
+        to join itself with other, otherwise it returns ``None``.
         It may also return a python set of SymPy Sets if they are somehow
         simpler. If it does this it must be idempotent i.e. the sets returned
-        must return None with _union'ed with each other
+        must return ``None`` with _union'ed with each other
 
-        Used within the Union class
+        Used within the :class:`Union` class
         """
         return None
 
@@ -515,7 +516,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    <http://en.wikipedia.org/wiki/Interval_(mathematics)>
+    http://en.wikipedia.org/wiki/Interval_(mathematics)
     """
     is_Interval = True
     is_real = True
@@ -524,6 +525,13 @@ class Interval(Set, EvalfMixin):
 
         start = _sympify(start)
         end = _sympify(end)
+        left_open = _sympify(left_open)
+        right_open = _sympify(right_open)
+
+        if not all(isinstance(a, (type(true), type(false))) for a in [left_open, right_open]):
+            raise NotImplementedError(
+                "left_open and right_open can have only true/false values, "
+                "got %s and %s" % (left_open, right_open))
 
         inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_real=True').
@@ -542,9 +550,9 @@ class Interval(Set, EvalfMixin):
 
         # Make sure infinite interval end points are open.
         if start == S.NegativeInfinity:
-            left_open = True
+            left_open = true
         if end == S.Infinity:
-            right_open = True
+            right_open = true
 
         return Basic.__new__(cls, start, end, left_open, right_open)
 
@@ -827,13 +835,10 @@ class Interval(Set, EvalfMixin):
             left = self.start <= other
         return And(left, right)
 
-    @property
-    def free_symbols(self):
-        return self.start.free_symbols | self.end.free_symbols
 
 class Union(Set, EvalfMixin):
     """
-    Represents a union of sets as a Set.
+    Represents a union of sets as a :class:`Set`.
 
     Examples
     ========
@@ -855,12 +860,12 @@ class Union(Set, EvalfMixin):
 
     References
     ==========
-    <http://en.wikipedia.org/wiki/Union_(set_theory)>
+    http://en.wikipedia.org/wiki/Union_(set_theory)
     """
     is_Union = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
@@ -891,7 +896,7 @@ class Union(Set, EvalfMixin):
     @staticmethod
     def reduce(args):
         """
-        Simplify a Union using known rules
+        Simplify a :class:`Union` using known rules
 
         We first start with global rules like
         'Merge all FiniteSets'
@@ -1044,7 +1049,7 @@ class Union(Set, EvalfMixin):
 
 class Intersection(Set):
     """
-    Represents an intersection of sets as a Set.
+    Represents an intersection of sets as a :class:`Set`.
 
     Examples
     ========
@@ -1065,12 +1070,12 @@ class Intersection(Set):
 
     References
     ==========
-    <http://en.wikipedia.org/wiki/Intersection_(set_theory)>
+    http://en.wikipedia.org/wiki/Intersection_(set_theory)
     """
     is_Intersection = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
@@ -1325,7 +1330,7 @@ class FiniteSet(Set, EvalfMixin):
     is_iterable = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
         if evaluate:
             if len(args) == 1 and iterable(args[0]):
                 args = args[0]
@@ -1337,6 +1342,8 @@ class FiniteSet(Set, EvalfMixin):
 
 
         args = frozenset(args)  # remove duplicates
+        args = map(sympify, args)
+        args = frozenset(args)
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj

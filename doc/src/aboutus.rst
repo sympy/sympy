@@ -313,10 +313,24 @@ want to be mentioned here, so see our repository history for a full list).
 #. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
 #. Aditya Shah: bug fix, improvement to parsers
 #. Sambuddha Basu: documentation fix
-#. zeel: fixes to logic module
+#. Zeel Shah: fixes to logic module
+#. Abhinav Chanda: wigner_3j and clebsch_gordan fixes
+#. Jim Crist: lambdify improvments
+#. Sudhanshu Mishra: Added tests for racah() of sympy.physics.wigner module
 #. Rajat Aggarwal: improvements to integration module
+#. Soumya Dipta Biswas: Add support for Equivalent with multiple arguments
 #. Anurag Sharma: improvements to Risch algorithm
+#. Sushant Hiray: taylor_term for sec
 #. Ben Lucato: documentation fixes
+#. Kunal Arora: documentation fixes
+#. Henry Gebhardt: bugfix to ufuncify
+#. Dammina Sahabandu: implemented continued fractions functions
+#. Shukla: particle on a ring functions
+#. Ralph Bean: typo
+#. richierichrawr: documentation fixes
+#. John Connor: fixes to ntheory
+#. Juan Luis Cano Rodríguez: fixes to mechanics module
+#. Sahil Shekhawat: fixes to core
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

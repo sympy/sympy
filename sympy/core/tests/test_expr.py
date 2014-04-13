@@ -1040,6 +1040,8 @@ def test_coeff():
     assert (4*x).coeff(2*x) == 0
     assert (2*x).coeff(2*x) == 1
     assert (-oo*x).coeff(x*oo) == -1
+    assert (10*x).coeff(x, 0) == 0
+    assert (10*x).coeff(10*x, 0) == 0
 
     n1, n2 = symbols('n1 n2', commutative=False)
     assert (n1*n2).coeff(n1) == 1
@@ -1173,7 +1175,7 @@ def test_as_powers_dict():
 def test_as_coefficients_dict():
     check = [S(1), x, y, x*y, 1]
     assert [Add(3*x, 2*x, y, 3).as_coefficients_dict()[i] for i in check] == \
-        [3, 5, 1, 0, 0]
+        [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
     assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
@@ -1315,7 +1317,7 @@ def test_expr_sorting():
     exprs = [set([1]), set([1, 2])]
     assert sorted(exprs, key=default_sort_key) == exprs
 
-    a, b = exprs = [Dummy(), Dummy()]
+    a, b = exprs = [Dummy('x'), Dummy('x')]
     assert sorted([b, a], key=default_sort_key) == exprs
 
 

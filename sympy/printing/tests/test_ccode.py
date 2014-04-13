@@ -78,7 +78,7 @@ def test_ccode_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert ccode(g(A[i]), assign_to=A[i]) == (
         "for (int i=0; i<n; i++){\n"
-        "   A[i] = A[i]*(1 + A[i])*(2 + A[i]);\n"
+        "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
     )
 
@@ -168,7 +168,7 @@ def test_ccode_Indexed_without_looking_for_contraction():
     i = Idx('i', len_y-1)
     e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
     code0 = ccode(e.rhs, assign_to=e.lhs, contract=False)
-    assert code0 == 'Dy[i] = (y[%s] - y[i])*1.0/(x[%s] - x[i]);' % (i + 1, i + 1)
+    assert code0 == 'Dy[i] = (y[%s] - y[i])/(x[%s] - x[i]);' % (i + 1, i + 1)
 
 
 def test_ccode_loops_matrix_vector():
@@ -185,7 +185,7 @@ def test_ccode_loops_matrix_vector():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = y[i] + A[%s]*x[j];\n' % (i*n + j) +\
+        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
@@ -228,7 +228,7 @@ def test_ccode_loops_add():
         '}\n'
         'for (int i=0; i<m; i++){\n'
         '   for (int j=0; j<n; j++){\n'
-        '      y[i] = y[i] + A[%s]*x[j];\n' % (i*n + j) +\
+        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )

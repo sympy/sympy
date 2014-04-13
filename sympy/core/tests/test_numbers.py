@@ -21,19 +21,16 @@ def test_integers_cache():
 
     assert python_int in _intcache
     assert hash(python_int) not in _intcache
-    assert sympy_int not in _intcache
 
     sympy_int_int = Integer(sympy_int)
 
     assert python_int in _intcache
     assert hash(python_int) not in _intcache
-    assert sympy_int_int not in _intcache
 
     sympy_hash_int = Integer(hash(python_int))
 
     assert python_int in _intcache
     assert hash(python_int) in _intcache
-    assert sympy_hash_int not in _intcache
 
 
 def test_seterr():
@@ -1328,12 +1325,10 @@ def test_as_content_primitive():
     assert S(3.1).as_content_primitive() == (1, 3.1)
 
 
-@XFAIL
 def test_hashing_sympy_integers():
     # Test for issue 5072
-    # https://github.com/sympy/sympy/issues/5072
-    assert hash(S(4)) == 4
-    assert hash(S(4)) == hash(int(4))
+    assert set([Integer(3)]) == set([int(3)])
+    assert hash(Integer(4)) == hash(int(4))
 
 
 def test_issue_4172():

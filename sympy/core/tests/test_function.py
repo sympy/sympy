@@ -618,3 +618,17 @@ def test_nfloat():
     # issue 7122
     eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
+
+
+def test_issue_7068():
+    from sympy.abc import a, b, f
+    y1 = Dummy('y')
+    y2 = Dummy('y')
+    func1 = f(a + y1 * b)
+    func2 = f(a + y2 * b)
+    func1_y = func1.diff(y1)
+    func2_y = func2.diff(y2)
+    assert func1_y != func2_y
+    z1 = Subs(f(a), a, y1)
+    z2 = Subs(f(a), a, y2)
+    assert z1 != z2

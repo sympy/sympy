@@ -108,6 +108,9 @@ def test_point():
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
     assert Point.is_collinear(p3, p3, p4, p5) is False
+    line = Line(Point(1,0), slope = 1)
+    raises(TypeError, lambda: Point.is_collinear(line))
+    raises(TypeError, lambda: p1_1.is_collinear(line))
 
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
@@ -678,10 +681,14 @@ def test_ellipse_random_point():
 
 
 def test_polygon():
-    t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
-    assert Polygon(Point(0, 0), Point(1, 0), Point(2, 0), Point(3, 3)) == t
-    assert Polygon(Point(1, 0), Point(2, 0), Point(3, 3), Point(0, 0)) == t
-    assert Polygon(Point(2, 0), Point(3, 3), Point(0, 0), Point(1, 0)) == t
+    a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
+    t = Triangle(a, b, c)
+    assert Polygon(a, Point(1, 0), b, c) == t
+    assert Polygon(Point(1, 0), b, c, a) == t
+    assert Polygon(b, c, a, Point(1, 0)) == t
+    # 2 "remove flyback" tests
+    assert Polygon(a, Point(3, 0), b, c) == t
+    assert Polygon(a, b, Point(3, -1), b, c) == t
 
     p1 = Polygon(
         Point(0, 0), Point(3, -1),

@@ -282,7 +282,7 @@ def test_relational_logic_symbols():
 
     assert isinstance((x < y) & (z < t), And)
     assert isinstance((x < y) | (z < t), Or)
-    assert isinstance(~(x < y), Not)
+    assert isinstance(~(x < y), GreaterThan)
     assert isinstance((x < y) >> (z < t), Implies)
     assert isinstance((x < y) << (z < t), Implies)
     assert isinstance((x < y) ^ (z < t), (Or, Xor))
@@ -304,3 +304,12 @@ def test_univariate_relational_as_set():
 def test_multivariate_relational_as_set():
     assert (x*y >= 0).as_set() == Interval(0, oo)*Interval(0, oo) + \
         Interval(-oo, 0)*Interval(-oo, 0)
+
+
+def test_Not():
+    assert Not(Equality(x, y)) == Unequality(x, y)
+    assert Not(Unequality(x, y)) == Equality(x, y)
+    assert Not(StrictGreaterThan(x, y)) == LessThan(x, y)
+    assert Not(StrictLessThan(x, y)) == GreaterThan(x, y)
+    assert Not(GreaterThan(x, y)) == StrictLessThan(x, y)
+    assert Not(LessThan(x, y)) == StrictGreaterThan(x, y)
