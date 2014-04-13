@@ -19,7 +19,7 @@ def evaluate(x):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy.core.operations import evaluate
+    >>> from sympy.core.evaluate import evaluate
     >>> print(x + x)
     2*x
     >>> with evaluate(False):
