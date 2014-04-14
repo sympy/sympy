@@ -227,7 +227,7 @@ def test_nan():
     assert ask(Q.irrational(nan)) is False
     assert ask(Q.imaginary(nan)) is False
     assert ask(Q.positive(nan)) is False
-    assert ask(Q.nonzero(nan)) is True
+    assert ask(Q.nonzero(nan)) is False
     assert ask(Q.zero(nan)) is False
     assert ask(Q.even(nan)) is False
     assert ask(Q.odd(nan)) is False
@@ -475,6 +475,7 @@ def test_I():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is False
     assert ask(Q.antihermitian(z)) is True
+    assert ask(Q.nonzero(z)) is False
 
     z = 1 + I
     assert ask(Q.commutative(z)) is True

@@ -106,6 +106,11 @@ class AppliedPredicate(Boolean):
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
 
+# See Predicate.__new__
+class _sentinel:
+    pass
+
+__test__ = {}
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
@@ -130,14 +135,38 @@ class Predicate(Boolean):
         >>> Q.is_true(S(1) < x)
         Q.is_true(1 < x)
 
+    Documentation
+    =============
+
+    You can add documentation to Predicate instances by assigning the doc
+    parameter.
+
+
     """
 
     is_Atom = True
 
-    def __new__(cls, name, handlers=None):
-        obj = Boolean.__new__(cls)
-        obj.name = name
-        obj.handlers = handlers or []
+    def __new__(cls, name, handlers=None, doc=''):
+        # We want to be able to document the assumptions. This requires
+        # putting docstrings on the instances of Predicate, so that things
+        # like help(Q.positive) work.  However, help() only looks at the
+        # __doc__ of classes, not instances.  To get around this, we create a
+        # custom subclass of Predicate for each instance, and put the
+        # docstring on that.  See http://stackoverflow.com/q/19392252/161801.
+        if name == _sentinel:
+            obj = Boolean.__new__(cls)
+        else:
+            obj = type(name.capitalize() + cls.__name__, (cls,),
+                {})(_sentinel)
+            obj.name = name
+            obj.handlers = handlers or []
+            obj.__class__.__doc__ = doc
+            # Allow these to be doctested
+            # XXX: This should be done better than this. For one thing, the
+            # doctester shows the test as coming from assume.py instead of
+            # ask.py.  Also, we don't need to register user-created predicates
+            # with the doctester.
+            __test__[obj.__class__.__name__] = obj.__class__
         return obj
 
     def _hashable_content(self):
@@ -158,6 +187,22 @@ class Predicate(Boolean):
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
+
+    def __eq__(self, other):
+        # Needed because of the custom logic in __new__
+        if self is other:
+            return True
+
+        if type(self) is type(other):
+            return True
+
+        if self.__class__.__mro__[1:] == other.__class__.__mro__[1:]:
+            return self._hashable_content() == other._hashable_content()
+
+        return False
+
+    def __hash__(self):
+        return super(Predicate, self).__hash__()
 
     def eval(self, expr, assumptions=True):
         """

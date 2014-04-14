@@ -1503,7 +1503,11 @@ class SymPyDocTestFinder(DocTestFinder):
             tobj = obj if not isinstance(obj, property) else obj.fget
             lineno = self._find_lineno(tobj, source_lines)
 
-        assert lineno is not None
+        if lineno is None:
+            # We couldn't find it. We have to put *some* kind of number here,
+            # but if we put a number like 0 it will just add it to some offset
+            # and completely lie
+            lineno = float('nan')
 
         # Return a DocTest for this object.
         if module is None:

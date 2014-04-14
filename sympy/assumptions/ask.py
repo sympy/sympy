@@ -11,31 +11,216 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
 
 class Q:
     """Supported ask keys."""
+
+    # Generic
+    is_true = Predicate('is_true', doc="""
+    Generic predicate
+
+    ``Q.is_true(x)`` is true iff ``x`` is true. This only makes sense if ``x`` is a
+    predicate.
+    """
+    # TODO: we would like for this statement to be true:
+    # In general, ``Q.is_true(x)`` is not needed, as you can just use ``x``
+    # directly, e.g., instead of ``ask(Q.is_true(x))``, you can just write
+    # ``ask(x)``. ``Q.is_true`` is primarily intended for internal use, where
+    # it is useful to have all predicates as ``Predicate``s.
+    """
+    Example
+    =======
+
+    >>> from sympy import ask, Q, symbols
+    >>> x = symbols('x')
+    >>> ask(Q.is_true(True))
+    True
+
+    """
+    )
+
+    # Operators
     antihermitian = Predicate('antihermitian')
-    bounded = Predicate('bounded')
+    hermitian = Predicate('hermitian')
     commutative = Predicate('commutative')
+
+    # Complex numbers
     complex = Predicate('complex')
+    imaginary = Predicate('imaginary')
+
+    ## Number theory
+    integer = Predicate('integer')
+    prime = Predicate('prime')
+    odd = Predicate('odd')
     composite = Predicate('composite')
     even = Predicate('even')
-    extended_real = Predicate('extended_real')
-    hermitian = Predicate('hermitian')
-    imaginary = Predicate('imaginary')
-    infinitesimal = Predicate('infinitesimal')
-    infinity = Predicate('infinity')
-    integer = Predicate('integer')
+
+    ## Algebra
     irrational = Predicate('irrational')
     rational = Predicate('rational')
-    negative = Predicate('negative')
-    nonzero = Predicate('nonzero')
-    positive = Predicate('positive')
-    prime = Predicate('prime')
-    real = Predicate('real')
-    odd = Predicate('odd')
-    is_true = Predicate('is_true')
+    algebraic = Predicate('algebraic')
+    transcendental = Predicate('transcendental')
+
+    ## Real
+    real = Predicate('real', doc=r"""
+    Real number predicate
+
+    ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
+    interval `(-\infty, \infty)`.  Note in particular that the infinities are
+    not real. Use ``Q.extended_real`` if you want to consider those as well.
+
+    A few important facts about reals:
+
+    - Every real number is positive, negative, or zero.  Furthermore, because
+      these sets are pairwise disjoint, each real number is exactly one of
+      those three.
+
+    - Every real number is also complex.
+
+    - Every real number is either rational or irrational.
+
+    - Every real number is either algebraic or transcendental.
+
+    - The facts ``Q.negative``, ``Q.zero``, ``Q.positive``, ``Q.nonnegative``,
+      ``Q.nonpositive``, ``Q.nonzero``, ``Q.integer``, ``Q.rational``, and
+      ``Q.irrational`` all imply ``Q.real``, as do all facts that imply those
+      facts.
+
+    - The facts ``Q.algebraic``, and ``Q.transcendental`` do not imply
+      ``Q.real``; they imply ``Q.complex``. An algebraic or transcendental
+      number may or may not be real.
+
+    - The "non" facts (i.e., ``Q.nonnegative``, ``Q.nonzero``, and
+      ``Q.nonpositive``) are not equivalent to not the fact, but rather, not
+      the fact *and* ``Q.real``.  For example, ``Q.nonnegative`` means
+      ``~Q.negative & Q.real``. So for example, ``I`` is not nonnegative,
+      nonzero, or nonpositive.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, symbols
+    >>> x = symbols('x')
+    >>> ask(Q.real(x), Q.positive(x))
+    True
+    >>> ask(Q.real(0))
+    True
+
+    """)
+
+    # XXX: Add extended_negative
+    negative = Predicate('negative', doc=r"""
+    Negative number predicate
+
+    ``Q.negative(x)`` is true iff ``x`` is a real number and `x < 0`, that is,
+    it is in the interval `(-oo, 0)`.  Note in particular that negative
+    infinity is not negative.
+
+    A few important facts about negative numbers:
+
+    - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
+      thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
+      whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+      negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
+      ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
+      true, whereas ``Q.nonnegative(I)`` is false.
+
+    - See the docstring of ``Q.real`` for more information about related facts.
+
+    Example
+    =======
+
+    >>> from sympy import Q, ask, symbols, I
+    >>> x = symbols('x')
+    >>> ask(Q.negative(x), Q.real(x) & ~Q.positive(x) & ~Q.zero(x))
+    True
+    >>> ask(Q.negative(-1))
+    True
+
+    >>> ask(Q.nonnegative(I))
+    False
+    >>> ask(~Q.negative(I))
+    True
+
+    """)
+    nonzero = Predicate('nonzero', doc=r"""
+    Nonzero real number predicate.
+
+    ``Q.nonzero(x)`` is true iff ``x`` is real and ``x`` is not zero.  Note in
+    particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
+    ``~Q.zero(x)`` if you want the negation of being zero without any real
+    assumptions.
+
+    A few important facts about nonzero numbers:
+
+    - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
+
+    - See the docstring of ``Q.real`` for more information about related
+      facts.
+
+    Example
+    =======
+
+    >>> from sympy import Q, ask, symbols, I
+    >>> x = symbols('x')
+    >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
+    None
+    >>> ask(Q.nonzero(x), Q.positive(x))
+    True
+    >>> ask(Q.nonzero(x), Q.zero(x))
+    False
+    >>> ask(Q.nonzero(0))
+    False
+
+    >>> ask(Q.nonzero(I))
+    False
+    >>> ask(~Q.zero(I))
+    True
+
+    """)
+    positive = Predicate('positive', doc=r"""
+    Positive real number predicate.
+
+    ``Q.positive(x)`` is true iff ``x`` is real and `x > 0`, that is if ``x``
+    is in the interval `(0, \infty)`.  In particular, infinity is not
+    positive.
+
+    A few important facts about negative numbers:
+
+    - Note that ``Q.nonpositive`` and ``~Q.positive`` are *not* the same
+      thing. ``~Q.positive(x)`` simply means that ``x`` is not positive,
+      whereas ``Q.nonpositive(x)`` means that ``x`` is real and not
+      positive, i.e., ``Q.positive(x)`` is logically equivalent to
+      ``Q.negative(x) | Q.zero(x)``.  So for example, ``~Q.positive(I)`` is
+      true, whereas ``Q.nonpositive(I)`` is false.
+
+    - See the docstring of ``Q.real`` for more information about related facts.
+
+    Example
+    =======
+
+    >>> from sympy import Q, ask, symbols, I
+    >>> x = symbols('x')
+    >>> ask(Q.positive(x), Q.real(x) & ~Q.negative(x) & ~Q.zero(x))
+    True
+    >>> ask(Q.positive(1))
+    True
+
+    >>> ask(Q.nonpositive(I))
+    False
+    >>> ask(~Q.positive(I))
+    True
+
+
+    """)
     nonpositive = Predicate('nonpositive')
     nonnegative = Predicate('nonnegative')
     zero = Predicate('zero')
 
+    # Extended complex numbers
+    extended_real = Predicate('extended_real')
+    infinitesimal = Predicate('infinitesimal')
+    infinity = Predicate('infinity')
+    bounded = Predicate('bounded')
+
+    # Matrix
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
     singular = Predicate('singular')
@@ -200,7 +385,7 @@ def register_handler(key, handler):
         True
 
     """
-    if type(key) is Predicate:
+    if isinstance(key, Predicate):
         key = key.name
     try:
         getattr(Q, key).add_handler(handler)
@@ -210,7 +395,7 @@ def register_handler(key, handler):
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
-    if type(key) is Predicate:
+    if isinstance(key, Predicate):
         key = key.name
     getattr(Q, key).remove_handler(handler)
 
