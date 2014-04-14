@@ -1398,8 +1398,6 @@ class SymPyDocTestFinder(DocTestFinder):
                                    source_lines, globs, seen)
                     except KeyboardInterrupt:
                         raise
-                    except ValueError:
-                        raise
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
