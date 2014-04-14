@@ -27,6 +27,13 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     `(x + y)(x - y) = 0` and `x+y = 0` and `x-y = 0` are solved independently
     and combined. Each term is solved by calling ``diop_solve()``.
 
+    Output of ``diophantine()`` is a set of tuples. Each tuple represents a
+    solution of the input equation. In a tuple, solution for each variable is
+    listed according to the alphabetic order of input variables. i.e. if we have
+    an equation with two variables `a` and `b`, first element of the tuple will
+    give the solution for `a` and the second element will give the solution for
+    `b`.
+
     Usage
     =====
 
