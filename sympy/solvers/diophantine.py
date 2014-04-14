@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
-    isprime, nextprime, integer_nthroot, Expr)
+    isprime, nextprime, integer_nthroot, Expr, Pow)
 
 from sympy.simplify.simplify import rad_rationalize, _mexpand
 from sympy.ntheory.modular import solve_congruence
@@ -57,6 +57,9 @@ def diophantine(eq, param=symbols("t", Integer=True)):
 
     diop_solve()
     """
+    if not isinstance(eq, (Add, Mul, Symbol, Poly, Eq, Pow)):
+        raise TypeError("Equation input format not supported")
+
     eq = eq.as_expr()
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
@@ -217,10 +220,6 @@ def classify_diop(eq):
     >>> classify_diop(x**2 + y**2 - x*y + x + 5)
     ([x, y], {1: 5, x: 1, x**2: 1, y: 0, y**2: 1, x*y: -1}, 'binary_quadratic')
     """
-    # Add Pow to this when we support exponential diophantine equations
-    if not isinstance(eq, (Add, Mul, Symbol)):
-        raise TypeError("Equation input format not supported")
-
     eq = eq.expand(force=True)
     var = list(eq.free_symbols)
     var.sort(key=default_sort_key)

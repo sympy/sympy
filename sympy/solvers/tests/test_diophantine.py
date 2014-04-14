@@ -4,12 +4,16 @@ from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, 
     prime_as_sum_of_two_squares, partition, power_representation)
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.utilities import default_sort_key
 from sympy.simplify.simplify import _mexpand
 
+from sympy.functions.elementary.trigonometric import sin
+
 x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", Integer=True)
 
+def test_input_format():
+    raises(TypeError, lambda: diophantine(sin(x)))
 
 def test_univariate():
 
