@@ -3376,7 +3376,9 @@ class Poly(Expr):
         if f.degree() <= 0:
             return []
 
-        # Convert coefficients to integers only (for accuracy)
+        # For integer and rational coefficients, convert them to integers only
+        # (for accuracy). Otherwise just try to convert the coefficients to
+        # mpmath.mpc and raise an exception if the conversion fails.
         if f.rep.dom is ZZ:
             coeffs = [int(coeff) for coeff in f.all_coeffs()]
         elif f.rep.dom is QQ:
@@ -3385,7 +3387,13 @@ class Poly(Expr):
             fac = ilcm(*denoms)
             coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
         else:
-            raise DomainError("Numerical domain expected, got %s" % f.rep.dom)
+            coeffs = [coeff.evalf(n=n).as_real_imag()
+                    for coeff in f.all_coeffs()]
+            try:
+                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
+            except TypeError:
+                raise DomainError("Numerical domain expected, got %s" % \
+                        f.rep.dom)
 
         dps = sympy.mpmath.mp.dps
         sympy.mpmath.mp.dps = n
