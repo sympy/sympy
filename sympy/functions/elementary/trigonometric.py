@@ -1366,6 +1366,12 @@ class asin(Function):
         else:
             return s.is_rational
 
+    def _eval_is_positive(self):
+        if self.args[0].is_positive:
+            return (self.args[0] - 1).is_negative
+        if self.args[0].is_negative:
+            return not (self.args[0] + 1).is_positive
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1506,6 +1512,11 @@ class acos(Function):
         else:
             return s.is_rational
 
+    def _eval_is_positive(self):
+        x = self.args[0]
+        if (x - 1).is_nonpositive and (x + 1).is_nonnegative:
+            return True
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1631,6 +1642,9 @@ class atan(Function):
         else:
             return s.is_rational
 
+    def _eval_is_positive(self):
+        return self.args[0].is_positive
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1735,6 +1749,9 @@ class acot(Function):
                 return False
         else:
             return s.is_rational
+
+    def _eval_is_positive(self):
+        return self.args[0].is_real
 
     @classmethod
     def eval(cls, arg):
