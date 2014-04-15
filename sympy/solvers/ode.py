@@ -3976,7 +3976,7 @@ def _undetermined_coefficients_match(expr, x):
                 return True
             else:
                 return False
-        elif expr.is_Symbol or expr.is_Number:
+        elif expr.is_Symbol or expr.is_number:
             return True
         else:
             return False

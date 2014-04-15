@@ -1120,6 +1120,14 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
 
 
+def test_issue_5787():
+    # This test case is to show the classification of imaginary constants under
+    # nth_linear_constant_coeff_undetermined_coefficients
+    eq = Eq(diff(f(x), x), I*f(x) + S(1)/2 - I)
+    out_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
+    assert out_hint in classify_ode(eq)
+
+
 @XFAIL
 def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
     # Equivalent to eq26 in
