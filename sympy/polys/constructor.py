@@ -231,13 +231,6 @@ def construct_domain(obj, **args):
     else:
         coeffs = [obj]
 
-    from sympy import Integral, Sum
-    for coeff in coeffs:
-        if isinstance(coeff, Integral) or isinstance(coeff, Sum):
-            co = coeff.doit()
-            loc = coeffs.index(coeff)
-            coeffs[loc] = co
-
     coeffs = list(map(sympify, coeffs))
     result = _construct_simple(coeffs, opt)
 
