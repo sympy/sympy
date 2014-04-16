@@ -1284,7 +1284,7 @@ def odesimp(eq, func, order, constants, hint):
             # 'collectterms' gives different orders sometimes, and results
             # differ in collect based on that order.  The
             # sort-reverse trick fixes things, but may fail in the
-            # future. In addition, collect is spliting exponentials with
+            # future. In addition, collect is splitting exponentials with
             # rational powers for no reason.  We have to do a match
             # to fix this using Wilds.
             global collectterms
@@ -1809,7 +1809,7 @@ def constantsimp(expr, constants):
     This function is written specifically to work with
     :py:meth:`~sympy.solvers.ode.dsolve`, and is not intended for general use.
 
-    Simplification is done by "absorbing" the arbitrary constants in to other
+    Simplification is done by "absorbing" the arbitrary constants into other
     arbitrary constants, numbers, and symbols that they are not independent
     of.
 
