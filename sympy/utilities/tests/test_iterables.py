@@ -168,8 +168,8 @@ def test_cartes():
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
     assert isinstance(next(s), Dummy)
-    assert next(numbered_symbols('C', start=1, exclude=[Symbol('C1')])) == \
-        Symbol('C2')
+    assert next(numbered_symbols('C', start=1, exclude=[symbols('C1')])) == \
+        symbols('C2')
 
 
 def test_sift():
