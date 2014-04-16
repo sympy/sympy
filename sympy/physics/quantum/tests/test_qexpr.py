@@ -32,9 +32,6 @@ def test_qexpr_commutative():
     assert q.is_commutative is False
 
 def test_qexpr_commutative_free_symbols():
-    """
-    Simplifying functions rely on that behavior
-    """
     q1 = QExpr(x)
     assert q1.free_symbols.pop().is_commutative is False
 
