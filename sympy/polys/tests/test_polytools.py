@@ -59,8 +59,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
-x, y, z, p, q, r, s, t, u, v, w, a, b, c, d, e = symbols(
-    'x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
+from sympy.abc import a, b, c, d, e, p, q, r, s, t, u, v, w, x, y, z
 
 
 def _epsilon_eq(a, b):
@@ -1981,6 +1980,10 @@ def test_terms_gcd():
         3*x*(x + 1)*(sin(Mul(3, y + 1, evaluate=False)) + 1)
     assert terms_gcd(sin(x + x*y), deep=True) == \
         sin(x*(y + 1))
+
+    eq = Eq(2*x, 2*y + 2*z*y)
+    assert terms_gcd(eq) == eq
+    assert terms_gcd(eq, deep=True) == Eq(2*x, 2*y*(z + 1))
 
 
 def test_trunc():
