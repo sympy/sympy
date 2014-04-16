@@ -556,6 +556,7 @@ def test_asin():
 
     assert asin(0.2).is_real is True
     assert asin(-2).is_real is False
+    assert asin(r).is_real is None
 
     assert asin(-2*I) == -I*asinh(2)
 
@@ -598,6 +599,7 @@ def test_acos():
 
     assert acos(0.2).is_real is True
     assert acos(-2).is_real is False
+    assert acos(r).is_real is None
 
     assert acos(Rational(1, 7), evaluate=False).is_positive is True
     assert acos(Rational(-1, 7), evaluate=False).is_positive is True
