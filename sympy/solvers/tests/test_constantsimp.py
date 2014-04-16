@@ -26,31 +26,31 @@ def test_constant_mul():
     assert constant_renumber(constantsimp(C1*x, [C1]), 'C', 1, 1) == x*C1
     assert constant_renumber(constantsimp(2*C1, [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1*2, [C1]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(y*C1*x, [C1,y]), 'C', 1, 1) == C1*x
-    assert constant_renumber(constantsimp(x*y*C1, [C1,y]), 'C', 1, 1) == x*C1
-    assert constant_renumber(constantsimp(y*x*C1, [C1,y]), 'C', 1, 1) == x*C1
-    assert constant_renumber(constantsimp(C1*x*y, [C1,y]), 'C', 1, 1) == C1*x
-    assert constant_renumber(constantsimp(x*C1*y, [C1,y]), 'C', 1, 1) == x*C1
+    assert constant_renumber(constantsimp(y*C1*x, [C1, y]), 'C', 1, 1) == C1*x
+    assert constant_renumber(constantsimp(x*y*C1, [C1, y]), 'C', 1, 1) == x*C1
+    assert constant_renumber(constantsimp(y*x*C1, [C1, y]), 'C', 1, 1) == x*C1
+    assert constant_renumber(constantsimp(C1*x*y, [C1, y]), 'C', 1, 1) == C1*x
+    assert constant_renumber(constantsimp(x*C1*y, [C1, y]), 'C', 1, 1) == x*C1
     assert constant_renumber(constantsimp(C1*y*(y + 1), [C1]), 'C', 1, 1) == C1*y*(y+1)
     assert constant_renumber(constantsimp(y*C1*(y + 1), [C1]), 'C', 1, 1) == C1*y*(y+1)
     assert constant_renumber(constantsimp(x*(y*C1), [C1]), 'C', 1, 1) == x*y*C1
     assert constant_renumber(constantsimp(x*(C1*y), [C1]), 'C', 1, 1) == x*y*C1
-    assert constant_renumber(constantsimp(C1*(x*y), [C1,y]), 'C', 1, 1) == C1*x
-    assert constant_renumber(constantsimp((x*y)*C1, [C1,y]), 'C', 1, 1) == x*C1
-    assert constant_renumber(constantsimp((y*x)*C1, [C1,y]), 'C', 1, 1) == x*C1
-    assert constant_renumber(constantsimp(y*(y + 1)*C1, [C1,y]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp((C1*x)*y, [C1,y]), 'C', 1, 1) == C1*x
-    assert constant_renumber(constantsimp(y*(x*C1), [C1,y]), 'C', 1, 1) == x*C1
-    assert constant_renumber(constantsimp((x*C1)*y, [C1,y]), 'C', 1, 1) == x*C1
+    assert constant_renumber(constantsimp(C1*(x*y), [C1, y]), 'C', 1, 1) == C1*x
+    assert constant_renumber(constantsimp((x*y)*C1, [C1, y]), 'C', 1, 1) == x*C1
+    assert constant_renumber(constantsimp((y*x)*C1, [C1, y]), 'C', 1, 1) == x*C1
+    assert constant_renumber(constantsimp(y*(y + 1)*C1, [C1, y]), 'C', 1, 1) == C1
+    assert constant_renumber(constantsimp((C1*x)*y, [C1, y]), 'C', 1, 1) == C1*x
+    assert constant_renumber(constantsimp(y*(x*C1), [C1, y]), 'C', 1, 1) == x*C1
+    assert constant_renumber(constantsimp((x*C1)*y, [C1, y]), 'C', 1, 1) == x*C1
     assert constant_renumber(
-        constantsimp(C1*x*y*x*y*2, [C1,y]), 'C', 1, 1) == C1*x**2
-    assert constant_renumber(constantsimp(C1*x*y*z, [C1,y,z]), 'C', 1, 1) == C1*x
+        constantsimp(C1*x*y*x*y*2, [C1, y]), 'C', 1, 1) == C1*x**2
+    assert constant_renumber(constantsimp(C1*x*y*z, [C1, y, z]), 'C', 1, 1) == C1*x
     assert constant_renumber(
-        constantsimp(C1*x*y**2*sin(z), [C1,y,z]), 'C', 1, 1) == C1*x
+        constantsimp(C1*x*y**2*sin(z), [C1, y, z]), 'C', 1, 1) == C1*x
     assert constant_renumber(constantsimp(C1*C1, [C1]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(C1*C2, [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(C2*C2, [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(C1*C1*C2, [C1,C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C1*C2, [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C2*C2, [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C1*C1*C2, [C1, C2]), 'C', 1, 2) == C1
     assert constant_renumber(
         constantsimp(C1*x*2**x, [C1]), 'C', 1, 1) == C1*x*2**x
 
@@ -58,22 +58,22 @@ def test_constant_add():
     assert constant_renumber(constantsimp(C1 + C1, [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1 + 2, [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(2 + C1, [C1]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(C1 + y, [C1,y]), 'C', 1, 1) == C1
+    assert constant_renumber(constantsimp(C1 + y, [C1, y]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1 + x, [C1]), 'C', 1, 1) == C1 + x
     assert constant_renumber(constantsimp(C1 + C1, [C1]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(C1 + C2, [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(C2 + C1, [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(C1 + C2 + C1, [C1,C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C1 + C2, [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C2 + C1, [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C1 + C2 + C1, [C1, C2]), 'C', 1, 2) == C1
 
 
 def test_constant_power_as_base():
     assert constant_renumber(constantsimp(C1**C1, [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(Pow(C1, C1), [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1**C1, [C1]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(C1**C2, [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(C2**C1, [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(C2**C2, [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(C1**y, [C1,y]), 'C', 1, 1) == C1
+    assert constant_renumber(constantsimp(C1**C2, [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C2**C1, [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C2**C2, [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(C1**y, [C1, y]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1**x, [C1]), 'C', 1, 1) == C1**x
     assert constant_renumber(constantsimp(C1**2, [C1]), 'C', 1, 1) == C1
     assert constant_renumber(
@@ -82,15 +82,15 @@ def test_constant_power_as_base():
 
 def test_constant_power_as_exp():
     assert constant_renumber(constantsimp(x**C1, [C1]), 'C', 1, 1) == x**C1
-    assert constant_renumber(constantsimp(y**C1, [C1,y]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(x**y**C1, [C1,y]), 'C', 1, 1) == x**C1
+    assert constant_renumber(constantsimp(y**C1, [C1, y]), 'C', 1, 1) == C1
+    assert constant_renumber(constantsimp(x**y**C1, [C1, y]), 'C', 1, 1) == x**C1
     assert constant_renumber(
         constantsimp((x**y)**C1, [C1]), 'C', 1, 1) == (x**y)**C1
     assert constant_renumber(
-        constantsimp(x**(y**C1), [C1,y]), 'C', 1, 1) == x**C1
-    assert constant_renumber(constantsimp(x**C1**y, [C1,y]), 'C', 1, 1) == x**C1
+        constantsimp(x**(y**C1), [C1, y]), 'C', 1, 1) == x**C1
+    assert constant_renumber(constantsimp(x**C1**y, [C1, y]), 'C', 1, 1) == x**C1
     assert constant_renumber(
-        constantsimp(x**(C1**y), [C1,y]), 'C', 1, 1) == x**C1
+        constantsimp(x**(C1**y), [C1, y]), 'C', 1, 1) == x**C1
     assert constant_renumber(
         constantsimp((x**C1)**y, [C1]), 'C', 1, 1) == (x**C1)**y
     assert constant_renumber(constantsimp(2**C1, [C1]), 'C', 1, 1) == C1
@@ -105,14 +105,14 @@ def test_constant_function():
     assert constant_renumber(constantsimp(sin(C1), [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(f(C1), [C1]), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(f(C1, C1), [C1]), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(f(C1, C2), [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(f(C2, C1), [C1,C2]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(f(C2, C2), [C1,C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(f(C1, C2), [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(f(C2, C1), [C1, C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(f(C2, C2), [C1, C2]), 'C', 1, 2) == C1
     assert constant_renumber(
         constantsimp(f(C1, x), [C1]), 'C', 1, 2) == f(C1, x)
-    assert constant_renumber(constantsimp(f(C1, y), [C1,y]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(f(y, C1), [C1,y]), 'C', 1, 2) == C1
-    assert constant_renumber(constantsimp(f(C1, y, C2), [C1,C2,y]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(f(C1, y), [C1, y]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(f(y, C1), [C1, y]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(f(C1, y, C2), [C1, C2, y]), 'C', 1, 2) == C1
 
 
 def test_constant_function_multiple():
@@ -128,17 +128,17 @@ def test_constant_multiple():
     assert constant_renumber(constantsimp(C1**2*2 + 2, [C1]), 'C', 1, 1) == C1
     assert constant_renumber(
         constantsimp(sin(2*C1) + x + sqrt(2), [C1]), 'C', 1, 1) == C1 + x
-    assert constant_renumber(constantsimp(2*C1 + C2, [C1,C2]), 'C', 1, 2) == C1
+    assert constant_renumber(constantsimp(2*C1 + C2, [C1, C2]), 'C', 1, 2) == C1
 
 def test_constant_repeated():
     assert C1 + C1*x == constant_renumber( C1 + C1*x, 'C', 1, 3)
 
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
-    assert constant_renumber(constantsimp(C1*exp(2*x) + exp(x)*(C2 + C3), [C1,C2,C3]), 'C', 1, 3) == \
+    assert constant_renumber(constantsimp(C1*exp(2*x) + exp(x)*(C2 + C3), [C1, C2, C3]), 'C', 1, 3) == \
         constant_renumber((C1*exp(x) + C2*exp(2*x)), 'C', 1, 2)
     assert constant_renumber(
-        constantsimp(Eq(f(x), I*C1*sinh(x/3) + C2*cosh(x/3)), [C1,C2]),
+        constantsimp(Eq(f(x), I*C1*sinh(x/3) + C2*cosh(x/3)), [C1, C2]),
         'C', 1, 2) == constant_renumber(Eq(f(x), C1*sinh(x/3) + C2*cosh(x/3)), 'C', 1, 2)
     assert constant_renumber(constantsimp(Eq(f(x), acos((-C1)/cos(x))), [C1]), 'C', 1, 1) == \
         Eq(f(x), acos(C1/cos(x)))
@@ -164,10 +164,10 @@ def test_ode_solutions():
 
 @XFAIL
 def test_nonlocal_simplification():
-    assert constantsimp(C1 + C2+x*C2, [C1,C2]) == C1 + C2*x
+    assert constantsimp(C1 + C2+x*C2, [C1, C2]) == C1 + C2*x
 
 
 def test_constant_Eq():
     # C1 on the rhs is well-tested, but the lhs is only tested here
-    assert constantsimp(Eq(C1, 3 + f(x)*x), [C1]) == Eq(x*f(x),C1)
-    assert constantsimp(Eq(C1, 3 * f(x)*x), [C1]) == Eq(f(x)*x,C1)
+    assert constantsimp(Eq(C1, 3 + f(x)*x), [C1]) == Eq(x*f(x), C1)
+    assert constantsimp(Eq(C1, 3 * f(x)*x), [C1]) == Eq(f(x)*x, C1)
