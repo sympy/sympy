@@ -366,26 +366,15 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     in eq already.
     """
 
-    def numbered_constants(start=1, prefix='C', exclude=[]):
-        """
-        Yield an infinite sequence constants that do not occur
-        in exclude already.
-        """
-        for Ci in numbered_symbols(prefix=prefix, start=start, cls=Symbol):
-            if Ci not in exclude:
-                yield Ci
-
     if isinstance(eq, C.Expr):
-        atom_set = eq.atoms(Symbol)
-    elif is_iterable(eq):
-        atom_set = reduce(lambda x, y : x | y,
-            [i.atoms(Symbol) for i in eq], set() )
-    else:
-        raise ValueError("Expected Expr or iterable but got %s"%eq)
+        eq = [eq]
+    elif not is_iterable(eq):
+        raise ValueError("Expected Expr or iterable but got %s" % eq)
 
-    ncs = numbered_constants(start=start, prefix=prefix, exclude=atom_set)
-    Cs = [ next(ncs) for i in xrange(num) ]
-    return ( Cs[0] if num == 1 else tuple(Cs) )
+    atom_set = set.union(*[i.free_symbols for i in eq])
+    ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
+    Cs = [next(ncs) for i in xrange(num)]
+    return (Cs[0] if num == 1 else tuple(Cs))
 
 
 def dsolve(eq, func=None, hint="default", simplify=True,
