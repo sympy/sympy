@@ -331,6 +331,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. John Connor: fixes to ntheory
 #. Juan Luis Cano Rodríguez: fixes to mechanics module
 #. Sahil Shekhawat: fixes to core
+#. Kundan Kumar: fixes to ODE identification of separable_reduced
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
