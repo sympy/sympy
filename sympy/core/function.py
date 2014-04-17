@@ -1313,36 +1313,46 @@ class Derivative(Expr):
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
 
-    def as_finite_diff(self, indep_vals=None, around=None):
+    def as_finite_diff(self, points=1, x0=None, wrt=None):
         """
-        Returns an approxiamtion of the derivative of an univariate function
-        in the form of a finite difference formula. The expression is a
-        weighted sum of the function at a number of discrete values of the
-        independent variable
+        Returns an approximation of the derivative of a function in
+        the form of a finite difference formula. The expression is a
+        weighted sum of the function at a number of discrete values of
+        (one of) the independent variable(s).
 
         Parameters
         ==========
-        indep_vals: sequence or coefficient, optional
-            discrete values of the independent variable used for generating
-            the finite difference weights. defult: 1
 
-        around: number or Symbol, optional
-            the value of the independent variable at which the derivative is
-            to be approximated. default: the independet variable of the derivative
+        points: sequence or coefficient, optional
+            If sequence: discrete values (length >= order+1) of the
+            independent variable used for generating the finite
+            difference weights.
+            If it is a coefficient, it will be used as the step-size
+            for generating an equidistant sequence of length order+1
+            centered around x0. defult: 1 (step-size 1)
+
+        x0: number or Symbol, optional
+            the value of the independent variable (wrt) at which the
+            derivative is to be approximated. default: same as wrt
+
+        wrt: Symbol, optional
+            "with respect to" the variable for which the (partial)
+            derivative is to be approximated for. If not provided it
+            is required that the Derivative is ordinary. default: None
 
 
         Examples
         ========
 
-        >>> from sympy import symbols, Function, exp, sqrt
+        >>> from sympy import symbols, Function, exp, sqrt, Symbol
         >>> x, h = symbols('x h')
         >>> f = Function('f')
         >>> f(x).diff(x).as_finite_diff()
         -f(x - 1/2) + f(x + 1/2)
 
-        The default step size is 1, and the number of points used
-        are by default order+1. We can change the stepsize by passing
-        a symbol as parameter:
+        The default step size and number of points are 1 and ``order + 1``
+        respectively. We can change the step size by passing a symbol
+        as a parameter:
 
         >>> f(x).diff(x).as_finite_diff(h)
         -f(-h/2 + x)/h + f(h/2 + x)/h
@@ -1353,45 +1363,59 @@ class Derivative(Expr):
         -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
 
         The algorithm is not restricted to use equidistant spacing, nor
-        do we need to make the approximation around the independent variable,
-        but we can get an expression estimating the derivative at an offset:
+        do we need to make the approximation around x0, but we can get
+        an expression estimating the derivative at an offset:
 
         >>> e, sq2 = exp(1), sqrt(2)
         >>> xl = [x-h, x+h, x+e*h]
-        >>> f(x).diff(x, 1).as_finite_diff(xl, x+h*sq2) # doctest: +SKIP
-        2*h*(-(-sqrt(2)*h/2 + h)/(2*h) + (sqrt(2)*h/2 + h)/(2*h))*\
-        f(E*h + x)/((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h/2 + h)/(2*h) -\
-        (-sqrt(2)*h/2 + E*h)/(2*h))*f(-h + x)/(h + E*h) + ((-sqrt(2)*h/2 +\
-        E*h)/(2*h) - (sqrt(2)*h/2 + h)/(2*h))*f(h + x)/(-h + E*h)
+        >>> f(x).diff(x, 1).as_finite_diff(xl, x+h*sq2)
+        2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/\
+((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) - \
+(-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + \
+(-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
+
+        Partial derivatives are also supported:
+
+        >>> y = Symbol('y')
+        >>> d2fdxdy=f(x,y).diff(x,y)
+        >>> d2fdxdy.as_finite_diff(wrt=x)
+        -f(x - 1/2, y) + f(x + 1/2, y)
 
         See also
         ========
 
-        sympy.series.finite_diff.apply_finite_diff
-        sympy.series.finite_diff.finite_diff_weights
+        sympy.calculus.finite_diff.apply_finite_diff
+        sympy.calculus.finite_diff.finite_diff_weights
 
         """
-        from sympy.series.finite_diff import apply_finite_diff
+        from sympy.calculus.finite_diff import apply_finite_diff
 
-        for v in self.variables:
-            if v != self.variables[0]: raise ValueError(
-                    "only univariate derivatives supported")
-        if around == None: around = self.variables[0]
-        order = len(self.variables)
-        if indep_vals == None or not iterable(indep_vals):
-            h = indep_vals or 1
+        if wrt is None:
+            wrt = self.variables[0]
+            # we need Derivative to be univariate to guess wrt
+            assert all([v == self.variables[0] for v in self.variables])
+
+        order = self.variables.count(wrt)
+
+        if x0 is None:
+            x0 = wrt
+
+        if not iterable(points):
+            # points is simply the step-size, let's make it a
+            # equidistant sequence centered around x0
             if order % 2 == 0:
                 # even order => odd number of points, grid point included
-                indep_vals = [around + h*i for i in range(-order//2,order//2+1)]
+                points = [x0 + points*i for i
+                          in range(-order//2, order//2 + 1)]
             else:
                 # odd order => even number of points, half-way wrt grid point
-                indep_vals = [around + h*i/S(2) for i in range(-order, order+1,2)]
+                points = [x0 + points*i/S(2) for i
+                          in range(-order, order + 1, 2)]
 
-        if len(indep_vals) < order+1: raise ValueError(
-                "To few points for order %d" % order)
-        return apply_finite_diff(order, indep_vals, [
-            self.expr.subs({self.variables[0]: x}) for x in indep_vals], around)
-
+        if len(points) < order+1:
+            raise ValueError("To few points for order %d" % order)
+        return apply_finite_diff(order, points, [
+            self.expr.subs({wrt: x}) for x in points], x0)
 
 
 class Lambda(Expr):

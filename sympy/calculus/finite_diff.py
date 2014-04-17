@@ -1,25 +1,30 @@
 """
-Finite difference weight generating method (finite_diff_weights)
-and convencience method for estimating a derivative (or interpolate)
-directly from a series of points (apply_finite_diff)
+Finite difference weights
+=========================
 
-References
-==========
-Generation of Finite Difference Formulas on Arbitrarily Spaced Grids, Bengt Fornberg
-Mathematics of compuation, 51, 184, 1988, 699-706 doi:10.1090/S0025-5718-1988-0935077-0
+This module implements an algorithm for efficient generation of finite
+difference weights for ordinary differentials of functions for
+derivatives from 0 (interpolation) up to arbitrary order.
+
+The core algorithm is provided in the finite difference weight generating
+method (finite_diff_weights), and a convenience function for estimating
+a derivative (or interpolate) directly from a series of points
+is also provided (apply_finite_diff).
 
 """
 
 from sympy import S
 
+
 def finite_diff_weights(order, x_list, x0):
     """
     Calculates the finite difference weights for an arbitrarily
     spaced one-dimensional grid (x_list) for derivatives at 'x0'
-    of order 0, 1, ..., up to 'order' using a recursion formula.
+    of order 0, 1, ..., up to 'order' using a recursive formula.
 
     Parameters
     ==========
+
     order : int
         Up to what derivative order weights should be calculated.
         0 corresponds to interpolation.
@@ -32,6 +37,7 @@ def finite_diff_weights(order, x_list, x0):
 
     Returns
     =======
+
     list
         A list of sublists, each corresponding to coefficients for
         increasing derivative order, and each containing lists of
@@ -41,7 +47,7 @@ def finite_diff_weights(order, x_list, x0):
     ========
 
     >>> from sympy import S
-    >>> from sympy.series import finite_diff_weights
+    >>> from sympy.calculus import finite_diff_weights
     >>> finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
     [[[1, 0, 0, 0],
       [1/2, 1/2, 0, 0],
@@ -55,12 +61,13 @@ def finite_diff_weights(order, x_list, x0):
     a higher order derivative). Each sublist contains the most accurate
     formula in the end (all points used).
 
-    Beware of the offset in the lower accuracy formulae when looking at a centered
-    difference:
+    Beware of the offset in the lower accuracy formulae when looking at a
+    centered difference:
 
     >>> from sympy import S
-    >>> from sympy.series import finite_diff_weights
-    >>> finite_diff_weights(1, [-S(5)/2, -S(3)/2, -S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
+    >>> from sympy.calculus import finite_diff_weights
+    >>> finite_diff_weights(1, [-S(5)/2, -S(3)/2, -S(1)/2, S(1)/2,\
+    S(3)/2, S(5)/2], 0)
     [[[1, 0, 0, 0, 0, 0],
       [-3/2, 5/2, 0, 0, 0, 0],
       [3/8, -5/4, 15/8, 0, 0, 0],
@@ -79,57 +86,67 @@ def finite_diff_weights(order, x_list, x0):
     used e.g. to minimize Runge's phenomenon by using Chebyshev nodes:
 
     >>> from sympy import cos, symbols, pi, simplify
-    >>> from sympy.series import finite_diff_weights
+    >>> from sympy.calculus import finite_diff_weights
     >>> N, (h, x) = 4, symbols('h x')
     >>> x_list = [x+h*cos(i*pi/(N)) for i in range(N,-1,-1)] # chebyshev nodes
     >>> print(x_list)
     [-h + x, -sqrt(2)*h/2 + x, x, sqrt(2)*h/2 + x, h + x]
     >>> mycoeffs = finite_diff_weights(1, x_list, 0)[1][4]
     >>> [simplify(c) for c in  mycoeffs]
-    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4, (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4, 6*x/h**2 - 8*x**3/h**4, (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4, (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
+    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,\
+    (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,\
+    6*x/h**2 - 8*x**3/h**4,
+    (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,\
+    (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
     Notes
-    -----
+    =====
+
     If weights for a finite difference approximation
     of the 3rd order derivative is wanted, weights for 0th, 1st
     and 2nd order are calculated "for free", so are formulae using
-    fewer and fewer of the paramters. This is somehting one can
+    fewer and fewer of the paramters. This is something one can
     take advantage of to save computational cost.
 
     See also
     ========
-    sympy.series.finite_diff.apply_finite_diff
+
+    sympy.calculus.finite_diff.apply_finite_diff
 
 
     References
     ==========
 
-    .. [1] Generation of Finite Difference Formulas on Arbitrarily Spaced Grids,
-               Bengt Fornberg; Mathematics of compuation; 51; 184; (1988);
-               699-706; doi:10.1090/S0025-5718-1988-0935077-0
+    .. [1] Generation of Finite Difference Formulas on Arbitrarily Spaced
+            Grids, Bengt Fornberg; Mathematics of compuation; 51; 184;
+            (1988); 699-706; doi:10.1090/S0025-5718-1988-0935077-0
 
     """
-    #The notation below colosely corresponds that used in the paper.
-    if order < 0: raise ValueError("Negtive derivative order illegal.")
-    if int(order) != order: raise ValueError("Non-integer order illegal")
+    # The notation below colosely corresponds that used in the paper.
+    if order < 0:
+        raise ValueError("Negtive derivative order illegal.")
+    if int(order) != order:
+        raise ValueError("Non-integer order illegal")
     M = order
     N = len(x_list) - 1
-    delta = [[[0 for nu in range(N+1)] for n in range(N+1)] for m in range(M+1)]
-    delta[0][0][0]= S(1)
+    delta = [[[0 for nu in range(N+1)] for n in range(N+1)] for
+             m in range(M+1)]
+    delta[0][0][0] = S(1)
     c1 = S(1)
-    for n in range(1,N+1):
+    for n in range(1, N+1):
         c2 = S(1)
-        for nu in range(0,n):
+        for nu in range(0, n):
             c3 = x_list[n]-x_list[nu]
             c2 = c2 * c3
-            if n <= M: delta[n][n-1][nu]=0
-            for m in range(0,min(n,M)+1):
+            if n <= M:
+                delta[n][n-1][nu] = 0
+            for m in range(0, min(n, M)+1):
                 delta[m][n][nu] = (x_list[n]-x0)*delta[m][n-1][nu] -\
                     m*delta[m-1][n-1][nu]
                 delta[m][n][nu] /= c3
-        for m in range(0,min(n,M)+1):
-            delta[m][n][n] = c1/c2*(m*delta[m-1][n-1][n-1] \
-                - (x_list[n-1]-x0)*delta[m][n-1][n-1] )
+        for m in range(0, min(n, M)+1):
+            delta[m][n][n] = c1/c2*(m*delta[m-1][n-1][n-1] -
+                                    (x_list[n-1]-x0)*delta[m][n-1][n-1])
         c1 = c2
     return delta
 
@@ -142,6 +159,7 @@ def apply_finite_diff(order, x_list, y_list, x0):
 
     Parameters
     ==========
+
     order: int
         order of derivative to approximate. 0 corresponds to interpolation.
     x_list: sequence
@@ -156,6 +174,7 @@ def apply_finite_diff(order, x_list, y_list, x0):
 
     Returns
     =======
+
     sympy.core.add.Add or sympy.core.numbers.Number
         The finite difference expression approximating the requested
         derivative order at x0.
@@ -163,26 +182,29 @@ def apply_finite_diff(order, x_list, y_list, x0):
     Examples
     ========
 
-    >>> from sympy.series import apply_finite_diff
+    >>> from sympy.calculus import apply_finite_diff
     >>> cube = lambda arg: (1.0*arg)**3
-    >>> x_list = range(-3,3+1)
-    >>> apply_finite_diff(2, x_list, map(cube, x_list), 2) - 12 # doctest: +SKIP
+    >>> xlist = range(-3,3+1)
+    >>> apply_finite_diff(2, xlist, map(cube, xlist), 2) - 12 # doctest: +SKIP
     -3.55271367880050e-15
 
     we see that the example above only contain rounding errors.
     apply_finite_diff can also be used on more abstract objects:
 
     >>> from sympy import IndexedBase, Idx
-    >>> from sympy.series import apply_finite_diff
+    >>> from sympy.calculus import apply_finite_diff
     >>> x, y = map(IndexedBase, 'xy')
     >>> i = Idx('i')
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
     >>> apply_finite_diff(1, x_list, y_list, x[i])
-    (-1 + (x[i + 1] - x[i])/(-x[i - 1] + x[i]))*y[i]/(x[i + 1] - x[i]) + (-x[i - 1] + x[i])*y[i + 1]/((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i])) - (x[i + 1] - x[i])*y[i - 1]/((-x[i - 1] + x[i + 1])*(-x[i - 1] + x[i]))
+    (-1 + (x[i + 1] - x[i])/(-x[i - 1] + x[i]))*y[i]/(x[i + 1] - x[i]) + \
+    (-x[i - 1] + x[i])*y[i + 1]/((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i])) -\
+    (x[i + 1] - x[i])*y[i - 1]/((-x[i - 1] + x[i + 1])*(-x[i - 1] + x[i]))
 
 
     Notes
     =====
+
     Order = 0 corresponds to interpolation.
     Only supply so many points you think makes sense
     to around x0 when extracting the derivative (the function
@@ -191,13 +213,16 @@ def apply_finite_diff(order, x_list, y_list, x0):
 
     See also
     ========
-    sympy.series.finite_diff.finite_diff_weights
+
+    sympy.calculus.finite_diff.finite_diff_weights
 
     References
     ==========
+
     Fortran 90 implementation with Python interface for numerics: finitediff_
 
     .. _finitediff: https://github.com/bjodah/finitediff
+
     """
 
     # In the original paper the following holds for the notation:
@@ -211,6 +236,6 @@ def apply_finite_diff(order, x_list, y_list, x0):
     delta = finite_diff_weights(order, x_list, x0)
 
     derivative = 0
-    for nu in range(0,len(x_list)):
+    for nu in range(0, len(x_list)):
         derivative += delta[order][N][nu]*y_list[nu]
     return derivative

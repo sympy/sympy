@@ -320,3 +320,54 @@ the result will be shifted to 0. You can easily shift it back with ``subs``.
         (x - 6)    (x - 6)    (x - 6)    (x - 6)
     x + ──────── + ──────── + ──────── + ──────── - 5
           120         24         6          2
+
+Finite differences
+==================
+
+So far we have looked at expressions with analytical derivatives
+and primitive functions respectively. But what if we want to have an
+expression to estimate a derivative of a curve for which we lack a
+closed form representation or which we don't know the functional
+values for yet. One approach would be to use a finite difference
+approach.
+
+To generate approximations to derivatives of arbitrary order from 
+function values evaluated over a sequence of values of the independent
+variable You can use the ``as_finite_diff`` method of ``Derivative``:
+
+
+    >>> f = Function('f')
+    >>> dfdx = f(x).diff(x)
+    >>> dfdx.as_finite_diff()
+    -f(x - 1/2) + f(x + 1/2)
+
+here the first order derivative was approximated around x using a
+minimum number of points (2 for 1st order derivative) evaluated
+equidistantly using a step-size of 1. We can use arbitrary steps
+(possibly containing symbolic expressions)
+
+    >>> f = Function('f')
+    >>> d2fdx2 = f(x).diff(x, 2)
+    >>> h = Symbol('h')
+    >>> d2fdx2.as_finite_diff([-3*h,-h,2*h])
+    f(-3⋅h)   f(-h)   2⋅f(2⋅h)
+    ─────── - ───── + ────────
+         2        2        2  
+      5⋅h      3⋅h     15⋅h   
+        
+If you are just interested in evaluating the weights, you can do so
+manually:
+
+    >>> finite_diff_weights(2, [-3, -1, 2], 0)[-1][-1]
+    [1/5, -1/3, 2/15]
+
+note that we need only need the last element in the last sublist
+returned from finite_diff_weights. The reason for this is that
+finite_diff_weights also generates weights for lower derivatives and
+using fewer points (see the documentation of ``finite_diff_weights``
+for more details).
+
+if using ``finite_diff_weights`` directly looks complicated but the
+``as_finite_diff`` method of ``Derivative`` is not flexible enough,
+you can use ``apply_finite_diff`` which takes order, x_list, y_list
+and x0 as parameters.

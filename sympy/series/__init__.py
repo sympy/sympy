@@ -5,7 +5,6 @@ from .limits import limit, Limit
 from .gruntz import gruntz
 from .series import series
 from .residues import residue
-from .finite_diff import finite_diff_weights, apply_finite_diff
 
 O = Order
 
