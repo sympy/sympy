@@ -1393,7 +1393,9 @@ class Derivative(Expr):
         if wrt is None:
             wrt = self.variables[0]
             # we need Derivative to be univariate to guess wrt
-            assert all([v == self.variables[0] for v in self.variables])
+            if any(v != wrt for v in self.variables):
+                raise ValueError('if the function is not univariate'+
+                                 ' then `wrt` must be given')
 
         order = self.variables.count(wrt)
 
@@ -1413,7 +1415,7 @@ class Derivative(Expr):
                           in range(-order, order + 1, 2)]
 
         if len(points) < order+1:
-            raise ValueError("To few points for order %d" % order)
+            raise ValueError("Too few points for order %d" % order)
         return apply_finite_diff(order, points, [
             self.expr.subs({wrt: x}) for x in points], x0)
 

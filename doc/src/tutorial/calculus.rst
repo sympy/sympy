@@ -333,7 +333,7 @@ approach.
 
 To generate approximations to derivatives of arbitrary order from 
 function values evaluated over a sequence of values of the independent
-variable You can use the ``as_finite_diff`` method of ``Derivative``:
+variable. You can use the ``as_finite_diff`` method of ``Derivative``:
 
 
     >>> f = Function('f')

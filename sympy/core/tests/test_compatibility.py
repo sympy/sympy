@@ -16,9 +16,9 @@ def test_as_int():
 
 
 def test_iterable():
-    assert iterable(0) == False
-    assert iterable(1) == False
-    assert iterable(None) == False
+    assert iterable(0) is False
+    assert iterable(1) is False
+    assert iterable(None) is False
 
 
 def test_ordered():

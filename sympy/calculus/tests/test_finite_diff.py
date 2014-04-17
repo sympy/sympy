@@ -26,7 +26,7 @@ def test_finite_diff_weights():
     d = [finite_diff_weights({0: 0, 1: 2, 2: 4, 3: 4, 4: 4}[i],
                              xl[i], 0) for i in range(5)]
 
-    # Zero:th derivative
+    # Zeroeth derivative
     assert d[0][0][0] == [S(1)]
 
     # First derivative
