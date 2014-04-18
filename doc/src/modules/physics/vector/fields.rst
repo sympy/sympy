@@ -11,13 +11,13 @@ Vectors and Scalars
 In physics, we deal with two kinds of quantities – scalars and vectors.
 
 A scalar is an entity which only has a magnitude – no direction. Examples of 
-scalar quantities include mass, electric charge, temperature, distance etc.
+scalar quantities include mass, electric charge, temperature, distance, etc.
 
 A vector, on the other hand, is an entity that is characterized by a 
 magnitude and a direction. Examples of vector quantities are displacement, 
 velocity, magnetic field, etc.
 
-A scalar can be depicted just by a numeric, for eg. a temperature of 300 K.
+A scalar can be depicted just by a number, for e.g. a temperature of 300 K.
 On the other hand, vectorial quantities like acceleration are usually denoted 
 by a vector. Given a vector :math:`\mathbf{V}`, the magnitude of the 
 corresponding quantity can be calculated as the magnitude of the vector 
@@ -147,7 +147,7 @@ the time differentiation is being done, the output will change/remain the same.
   >>> from sympy.physics.vector import time_derivative
   >>> time_derivative(electric_potential, R)
   0
-  >>> time_derivative(electric_potential, R1)
+  >>> time_derivative(electric_potential, R1).simplify()
   (R1_x*cos(q(t)) - R1_y*sin(q(t)))*(3*R1_x**2*cos(2*q(t)) - R1_x**2 - 
   6*R1_x*R1_y*sin(2*q(t)) - 3*R1_y**2*cos(2*q(t)) - R1_y**2)*Derivative(q(t), t)
 
@@ -182,7 +182,7 @@ To compute the curl of a vector field in :mod:`physics.vector`, you would do
   >>> R = ReferenceFrame('R')
   >>> from sympy.physics.vector import curl
   >>> field = R[0]*R[1]*R[2]*R.x
-  >>> curl(v2, R)
+  >>> curl(field, R)
   R_x*R_y*R.y - R_x*R_z*R.z
 
 Divergence
@@ -245,7 +245,7 @@ Conservative and Solenoidal fields
 In vector calculus, a conservative field is a field that is the gradient of
 some scalar field. Conservative fields have the property that their line 
 integral over any path depends only on the end-points, and is independent 
-of the path followed in the interim. 
+of the path between them. 
 A conservative vector field is also said to be 'irrotational', since the 
 curl of a conservative field is always zero.
 
@@ -255,7 +255,7 @@ energy is conserved.
 To check if a vector field is conservative in :mod:`physics.vector`, use 
 the :mod:`is_conservative` function.
 
-  >>> from sympy.physics.vector import ReferenceFrame
+  >>> from sympy.physics.vector import ReferenceFrame, is_conservative
   >>> R = ReferenceFrame('R')
   >>> field = R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z
   >>> is_conservative(field)
@@ -269,7 +269,7 @@ is zero at all points in space.
 To check if a vector field is solenoidal in :mod:`physics.vector`, use 
 the :mod:`is_solenoidal` function.
 
-  >>> from sympy.physics.vector import ReferenceFrame
+  >>> from sympy.physics.vector import ReferenceFrame, is_solenoidal
   >>> R = ReferenceFrame('R')
   >>> field = R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z
   >>> is_solenoidal(field)
@@ -286,7 +286,7 @@ potential field' corresponding to the aforementioned conservative field.
 
 The :mod:`scalar_potential` function in :mod:`physics.vector` calculates the 
 scalar potential field corresponding to a given conservative vector field in 
-3D space - minus the extra constant of integration, ofcourse.
+3D space - minus the extra constant of integration, of course.
 
 Example of usage - 
 
@@ -303,8 +303,7 @@ The scalar potential difference, or simply 'potential difference',
 corresponding to a conservative vector field can be defined as the difference 
 between the values of its scalar potential function at two points in space. 
 This is useful in calculating a line integral with respect to a conservative 
-function, since it depends only on the endpoints of the path - rather than the 
-path itself.
+function, since it depends only on the endpoints of the path.
 
 This computation is performed as follows in :mod:`physics.vector`.
 
