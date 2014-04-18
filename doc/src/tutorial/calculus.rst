@@ -331,10 +331,8 @@ closed form representation or which we don't know the functional
 values for yet. One approach would be to use a finite difference
 approach.
 
-To generate approximations to derivatives of arbitrary order from 
-function values evaluated over a sequence of values of the independent
-variable. You can use the ``as_finite_diff`` method of ``Derivative``:
-
+You can use the ``as_finite_diff`` method of ``Derivative`` to
+generate approximations to derivatives of arbitrary order:
 
     >>> f = Function('f')
     >>> dfdx = f(x).diff(x)
