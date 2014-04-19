@@ -206,10 +206,7 @@ class FPContext(StandardBaseContext):
         while 1:
             for i in num: t *= (coeffs[i]+k)
             for i in den: t /= (coeffs[i]+k)
-            k += 1
-            t /= k
-            t *= z
-            s += t
+            k += 1; t /= k; t *= z; s += t
             if abs(t) < tol:
                 return s
             if k > maxterms:

@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2013 SymPy Development Team'
+copyright = '2014 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -129,6 +129,7 @@ html_theme_options = {
 
 # If false, no module index is generated.
 #html_use_modindex = True
+html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
 #html_copy_source = True

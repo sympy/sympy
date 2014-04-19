@@ -388,7 +388,7 @@ class LatexPrinter(Printer):
                 return self._print(expr.base, self._print(expr.exp))
             else:
                 if expr.is_commutative and expr.exp == -1:
-                    #solves issue 1030
+                    #solves issue 4129
                     #As Mul always simplify 1/x to x**-1
                     #The objective is achieved with this hack
                     #first we get the latex for -1 * expr,
@@ -442,6 +442,14 @@ class LatexPrinter(Printer):
             tex += self._print(expr.function)
 
         return tex
+
+    def _print_Indexed(self, expr):
+        tex = self._print(expr.base)+'_{%s}' % ','.join(
+            map(self._print, expr.indices))
+        return tex
+
+    def _print_IndexedBase(self, expr):
+        return self._print(expr.label)
 
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
@@ -540,14 +548,14 @@ class LatexPrinter(Printer):
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
-        func = translate(func)
+        func = self._deal_with_super_sub(func)
 
         if func in accepted_latex_functions:
             name = r"\%s" % func
         elif len(func) == 1 or func.startswith('\\'):
             name = func
         else:
-            name = r"\operatorname{%s}" % func.replace("_", r"\_")
+            name = r"\operatorname{%s}" % func
         return name
 
     def _print_Function(self, expr, exp=None):
@@ -754,6 +762,15 @@ class LatexPrinter(Printer):
         else:
             return tex
 
+    def _print_polar_lift(self, expr, exp=None):
+        func = r"\operatorname{polar\_lift}"
+        arg = r"{\left (%s \right )}" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^{%s}%s" % (func, exp, arg)
+        else:
+            return r"%s%s" % (func, arg)
+
     def _print_ExpBase(self, expr, exp=None):
         # TODO should exp_polar be printed differently?
         #      what about exp_polar(0), exp_polar(1)?
@@ -833,6 +850,22 @@ class LatexPrinter(Printer):
             return r"\operatorname{E}_{%s}^{%s}%s" % (nu, exp, tex)
         else:
             return r"\operatorname{E}_{%s}%s" % (nu, tex)
+
+    def _print_fresnels(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^{%s}%s" % (exp, tex)
+        else:
+            return r"S%s" % tex
+
+    def _print_fresnelc(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^{%s}%s" % (exp, tex)
+        else:
+            return r"C%s" % tex
 
     def _print_subfactorial(self, expr, exp=None):
         x = expr.args[0]
@@ -941,21 +974,33 @@ class LatexPrinter(Printer):
     def _print_hankel2(self, expr, exp=None):
         return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
 
-    def _print_fresnels(self, expr, exp=None):
+    def _hprint_airy(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"S^{%s}%s" % (exp, tex)
+            return r"%s^{%s}%s" % (notation, exp, tex)
         else:
-            return r"S%s" % tex
+            return r"%s%s" % (notation, tex)
 
-    def _print_fresnelc(self, expr, exp=None):
+    def _hprint_airy_prime(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"C^{%s}%s" % (exp, tex)
+            return r"{%s^\prime}^{%s}%s" % (notation, exp, tex)
         else:
-            return r"C%s" % tex
+            return r"%s^\prime%s" % (notation, tex)
+
+    def _print_airyai(self, expr, exp=None):
+        return self._hprint_airy(expr, exp, 'Ai')
+
+    def _print_airybi(self, expr, exp=None):
+        return self._hprint_airy(expr, exp, 'Bi')
+
+    def _print_airyaiprime(self, expr, exp=None):
+        return self._hprint_airy_prime(expr, exp, 'Ai')
+
+    def _print_airybiprime(self, expr, exp=None):
+        return self._hprint_airy_prime(expr, exp, 'Bi')
 
     def _print_hyper(self, expr, exp=None):
         tex = r"{{}_{%s}F_{%s}\left(\begin{matrix} %s \\ %s \end{matrix}" \
@@ -1117,7 +1162,14 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        name, supers, subs = split_super_sub(expr.name)
+        return self._deal_with_super_sub(expr.name)
+
+    _print_RandomSymbol = _print_Symbol
+    _print_MatrixSymbol = _print_Symbol
+
+    def _deal_with_super_sub(self, string):
+
+        name, supers, subs = split_super_sub(string)
 
         name = translate(name)
         supers = [translate(sup) for sup in supers]
@@ -1130,8 +1182,6 @@ class LatexPrinter(Printer):
             name += "_{%s}" % " ".join(subs)
 
         return name
-    _print_RandomSymbol = _print_Symbol
-    _print_MatrixSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:

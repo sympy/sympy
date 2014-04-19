@@ -175,7 +175,7 @@ class ExprWithLimits(Expr):
         """
         This method returns the symbols that will exist when the object is
         evaluated. This is useful if one is trying to determine whether the
-        objet contains a certain symbol or not.
+        object contains a certain symbol or not.
 
         Examples
         ========
@@ -186,8 +186,6 @@ class ExprWithLimits(Expr):
         set([y])
         """
         function, limits = self.function, self.limits
-        if function.is_zero:
-            return set()
         isyms = function.free_symbols
         for xab in limits:
             if len(xab) == 1:
@@ -327,7 +325,8 @@ class ExprWithLimits(Expr):
         return self.func(func, *limits)
 
 class AddWithLimits(ExprWithLimits):
-    r"""Represents unevaluated oriented additions of integer sequences.
+    r"""Represents unevaluated oriented additions.
+        Parent class for Integral and Sum.
     """
 
     def __new__(cls, function, *symbols, **assumptions):

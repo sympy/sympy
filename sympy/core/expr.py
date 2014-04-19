@@ -57,7 +57,9 @@ class Expr(Basic, EvalfMixin):
         else:
             expr, exp = expr, S.One
 
-        if expr.is_Atom:
+        if expr.is_Dummy:
+            args = (expr.sort_key(),)
+        elif expr.is_Atom:
             args = (str(expr),)
         else:
             if expr.is_Add:
@@ -87,7 +89,7 @@ class Expr(Basic, EvalfMixin):
     #
     # **NOTE**:
     # This is a temporary fix, and will eventually be replaced with
-    # something better and more powerful.  See issue 2411.
+    # something better and more powerful.  See issue 5510.
     _op_priority = 10.0
 
     def __pos__(self):
@@ -218,7 +220,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
-            return dif.is_nonnegative
+            return sympify(dif.is_nonnegative)
         return C.GreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -228,7 +230,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
-            return dif.is_nonpositive
+            return sympify(dif.is_nonpositive)
         return C.LessThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -238,7 +240,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
-            return dif.is_positive
+            return sympify(dif.is_positive)
         return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
@@ -248,7 +250,7 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
-            return dif.is_negative
+            return sympify(dif.is_negative)
         return C.StrictLessThan(self, other)
 
     @staticmethod
@@ -352,23 +354,11 @@ class Expr(Basic, EvalfMixin):
             # increase the precision up to the default maximum
             # precision to see if we can get any significance
 
-            # get the prec steps (patterned after giant_steps in
-            # libintmath) which approximately doubles the prec
-            # each step
+            from sympy.mpmath.libmp.libintmath import giant_steps
             from sympy.core.evalf import DEFAULT_MAXPREC as target
-            L = [target]
-            start = 2
-            while 1:
-                Li = L[-1]//2 + 2
-                if Li >= L[-1] or Li < start:
-                    if L[-1] != start:
-                        L.append(start)
-                    break
-                L.append(Li)
-            L = L[::-1]
 
             # evaluate
-            for prec in L:
+            for prec in giant_steps(2, target):
                 nmag = abs(self.evalf(prec, subs=reps))
                 if nmag._prec != 1:
                     break
@@ -571,7 +561,7 @@ class Expr(Basic, EvalfMixin):
 
         if constant is None and (diff.free_symbols or not diff.is_number):
             # e.g. unless the right simplification is done, a symbolic
-            # zero is possible (see expression of issue 3730: without
+            # zero is possible (see expression of issue 6829: without
             # simplification constant will be None).
             return
 
@@ -611,11 +601,7 @@ class Expr(Basic, EvalfMixin):
 
                 # try to prove with minimal_polynomial but know when
                 # *not* to use this or else it can take a long time.
-                # Pernici noted the following:
-                # >>> q = -73*sqrt(3) + 1 + 128*sqrt(5) + 1315*sqrt(2)
-                # >>> p = expand(q**3)**Rational(1, 3)
-                # >>> minimal_polynomial(p - q)  # hangs for at least 15 minutes
-                if False:  # change False to condition that assures non-hang
+                if True:  # change True to condition that assures non-hang
                     try:
                         mp = minimal_polynomial(diff)
                         if mp.is_Symbol:
@@ -1146,7 +1132,7 @@ class Expr(Basic, EvalfMixin):
                 if not right:
                     return self - Add(*[a*x for a in Add.make_args(c)])
                 return self - Add(*[x*a for a in Add.make_args(c)])
-            return self.as_independent(x, as_Add=not self.is_Mul)[0]
+            return self.as_independent(x, as_Add=True)[0]
 
         # continue with the full method, looking for this power of x:
         x = x**n
@@ -1863,7 +1849,7 @@ class Expr(Basic, EvalfMixin):
             if quotient.is_Mul and len(quotient.args) == 2:
                 if quotient.args[0].is_Integer and quotient.args[0].is_positive and quotient.args[1] == self:
                     return quotient
-            elif quotient.is_Integer:
+            elif quotient.is_Integer and c.is_Number:
                 return quotient
         elif self.is_Add:
             cs, ps = self.primitive()
@@ -1900,6 +1886,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
         >>> e.extract_additively(x + 1)
@@ -2035,7 +2022,7 @@ class Expr(Basic, EvalfMixin):
                 return len(negative_args) % 2 == 1
 
             # As a last resort, we choose the one with greater value of .sort_key()
-            return self.sort_key() < negative_self.sort_key()
+            return bool(self.sort_key() < negative_self.sort_key())
 
     def extract_branch_factor(self, allow_half=False):
         """
@@ -2748,12 +2735,17 @@ class Expr(Basic, EvalfMixin):
         (1, -2)
 
         """
-        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        l = self.as_leading_term(x)
+        d = C.Dummy('logx')
+        if l.has(C.log(x)):
+            l = l.subs(C.log(x), d)
+        c, e = l.as_coeff_exponent(x)
         if x in c.free_symbols:
             from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
                 cannot compute leadterm(%s, %s). The coefficient
                 should have been free of x but got %s""" % (self, x, c)))
+        c = c.subs(d, C.log(x))
         return c, e
 
     def as_coeff_Mul(self, rational=False):
@@ -2998,6 +2990,7 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
+
         >>> from sympy import pi, E, I, S, Add, Mul, Number
         >>> S(10.5).round()
         11.
@@ -3104,6 +3097,7 @@ def _mag(x):
 
     Examples
     ========
+
     >>> from sympy.core.expr import _mag
     >>> from sympy import Float
     >>> _mag(Float(.1))

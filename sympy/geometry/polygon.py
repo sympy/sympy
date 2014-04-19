@@ -145,15 +145,16 @@ class Polygon(GeometryEntity):
                 got.add(p)
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted(
-                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
+            a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
+            # if flyback lines are desired then the following should
+            # only be done if tuple(sorted((a, b, c))) == (a, b, c)
             if b not in shared and Point.is_collinear(a, b, c):
-                nodup[i] = a
-                nodup[i + 1] = None
                 nodup.pop(i + 1)
+                if a == c:
+                    nodup.pop(i)
             i += 1
 
-        vertices = list(filter(lambda x: x is not None, nodup))
+        vertices = list(nodup)
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -175,11 +176,11 @@ class Polygon(GeometryEntity):
         if not rv.is_convex:
             sides = rv.sides
             for i, si in enumerate(sides):
-                pts = si[0], si[1]
+                pts = si.p1, si.p2
                 ai = si.arbitrary_point(hit)
                 for j in xrange(i):
                     sj = sides[j]
-                    if sj[0] not in pts and sj[1] not in pts:
+                    if sj.p1 not in pts and sj.p2 not in pts:
                         aj = si.arbitrary_point(hit)
                         tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
                         if tx.is_number and 0 <= tx <= 1:
@@ -1080,6 +1081,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> square = RegularPolygon((0, 0), 1, 4)
         >>> square.area
@@ -1100,6 +1102,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> from sympy import sqrt
         >>> s = square_in_unit_circle = RegularPolygon((0, 0), 1, 4)

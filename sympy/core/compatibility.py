@@ -189,10 +189,19 @@ def with_metaclass(meta, *bases):
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
 # I think putting them here also makes it easier to use them in the core.
 
+class NotIterable:
+    """
+    Use this as mixin when creating a class which is not supposed to return
+    true when iterable() is called on its instances. I.e. avoid infinite loop
+    when calling e.g. list() on the instance
+    """
+    pass
 
-def iterable(i, exclude=(string_types, dict)):
+def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
+    True also indicates that the iterator is finite, i.e. you e.g.
+    call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
@@ -554,15 +563,19 @@ def _nodes(e):
 
 
 def ordered(seq, keys=None, default=True, warn=False):
-    """Return an iterator of the seq where keys are used to break ties.
-    Two default keys will be applied after and provided unless ``default``
-    is False. The two keys are _nodes and default_sort_key which will
-    place smaller expressions before larger ones (in terms of Basic nodes)
-    and where there are ties, they will be broken by the default_sort_key.
+    """Return an iterator of the seq where keys are used to break ties in
+    a conservative fashion: if, after applying a key, there are no ties
+    then no other keys will be computed.
+
+    Two default keys will be applied if 1) keys are not provided or 2) the
+    given keys don't resolve all ties (but only if `default` is True). The
+    two keys are `_nodes` (which places smaller expressions before large) and
+    `default_sort_key` which (if the `sort_key` for an object is defined
+    properly) should resolve any ties.
 
     If ``warn`` is True then an error will be raised if there were no
     keys remaining to break ties. This can be used if it was expected that
-    there should be no ties.
+    there should be no ties between items that are not identical.
 
     Examples
     ========
@@ -651,7 +664,11 @@ def ordered(seq, keys=None, default=True, warn=False):
                 d[k] = ordered(d[k], (_nodes, default_sort_key,),
                                default=False, warn=warn)
             elif warn:
-                raise ValueError('not enough keys to break ties')
+                from sympy.utilities.iterables import uniq
+                u = list(uniq(d[k]))
+                if len(u) > 1:
+                    raise ValueError(
+                        'not enough keys to break ties: %s' % u)
         for v in d[k]:
             yield v
         d.pop(k)
@@ -662,7 +679,7 @@ def ordered(seq, keys=None, default=True, warn=False):
 
 # Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
 # For example, int(gmpy.mpz(2**256)) would raise OverflowError.
-# See issue 1881.
+# See issue 4980.
 
 # Minimum version of gmpy changed to 1.13 to allow a single code base to also
 # work with gmpy2.

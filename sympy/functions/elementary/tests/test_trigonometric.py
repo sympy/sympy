@@ -10,7 +10,8 @@ from sympy.core.compatibility import xrange
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
 k = Symbol('k', integer=True)
-
+p = Symbol('p', positive=True)
+n = Symbol('n', negative=True)
 
 def test_sin():
     x, y = symbols('x y')
@@ -268,7 +269,7 @@ def test_cos():
             assert e < 1e-12
 
 
-def test_issue_3091():
+def test_issue_6190():
     c = Float('123456789012345678901234567890.25', '')
     for cls in [sin, cos, tan, cot]:
         assert cls(c*pi) == cls(pi/4)
@@ -475,7 +476,7 @@ def test_cot():
 def test_cot_series():
     assert cot(x).series(x, 0, 9) == \
         1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
-    # issue 3111:
+    # issue 6210:
     assert cot(x**20 + x**21 + x**22).series(x, 0, 4) == \
         x**(-20) - 1/x**19 + x**(-17) - 1/x**16 + x**(-14) - 1/x**13 + \
         x**(-11) - 1/x**10 + x**(-8) - 1/x**7 + x**(-5) - 1/x**4 + \
@@ -555,8 +556,13 @@ def test_asin():
 
     assert asin(0.2).is_real is True
     assert asin(-2).is_real is False
+    assert asin(r).is_real is None
 
     assert asin(-2*I) == -I*asinh(2)
+
+    assert asin(Rational(1, 7), evaluate=False).is_positive is True
+    assert asin(Rational(-1, 7), evaluate=False).is_positive is False
+    assert asin(p).is_positive is None
 
 
 def test_asin_series():
@@ -593,6 +599,12 @@ def test_acos():
 
     assert acos(0.2).is_real is True
     assert acos(-2).is_real is False
+    assert acos(r).is_real is None
+
+    assert acos(Rational(1, 7), evaluate=False).is_positive is True
+    assert acos(Rational(-1, 7), evaluate=False).is_positive is True
+    assert acos(Rational(3, 2), evaluate=False).is_positive is False
+    assert acos(p).is_positive is None
 
 
 def test_acos_series():
@@ -629,6 +641,9 @@ def test_atan():
     assert atan(r).is_real is True
 
     assert atan(-2*I) == -I*atanh(2)
+    assert atan(p).is_positive is True
+    assert atan(n).is_positive is False
+    assert atan(x).is_positive is None
 
 
 def test_atan_rewrite():
@@ -692,6 +707,10 @@ def test_acot():
 
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
+    assert acot(x).is_positive is None
+    assert acot(r).is_positive is True
+    assert acot(p).is_positive is True
+    assert acot(I).is_positive is False
 
 
 def test_acot_rewrite():
@@ -748,7 +767,7 @@ def test_evenodd_rewrite():
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
 
 
-def test_issue1448():
+def test_issue_4547():
     assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
     assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
     assert tan(x).rewrite(cot) == 1/cot(x)
@@ -795,7 +814,7 @@ def test_aseries():
     t(acot, -0.1, '-', 1e-5)
 
 
-def test_issue_1321():
+def test_issue_4420():
     i = Symbol('i', integer=True)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
@@ -938,8 +957,8 @@ def test_real_imag():
 
 @XFAIL
 def test_sin_cos_with_infinity():
-    # Test for issue 2097
-    # http://code.google.com/p/sympy/issues/detail?id=2097
+    # Test for issue 5196
+    # https://github.com/sympy/sympy/issues/5196
     assert sin(oo) == S.NaN
     assert cos(oo) == S.NaN
 
@@ -987,11 +1006,11 @@ def test_sec():
 
     assert sec(0) == 1
     assert sec(pi) == -1
-    assert sec(pi/2) == oo
-    assert sec(-pi/2) == oo
+    assert sec(pi/2) == zoo
+    assert sec(-pi/2) == zoo
     assert sec(pi/6) == 2*sqrt(3)/3
     assert sec(pi/3) == 2
-    assert sec(5*pi/2) == oo
+    assert sec(5*pi/2) == zoo
     assert sec(9*pi/7) == -sec(2*pi/7)
     assert sec(I) == 1/cosh(1)
     assert sec(x*I) == 1/cosh(x)
@@ -1026,17 +1045,22 @@ def test_sec():
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
-    # https://code.google.com/p/sympy/issues/detail?id=4067
+    # https://github.com/sympy/sympy/issues/7166
     assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
 
     assert sec(x).diff(x) == tan(x)*sec(x)
+
+    # Taylor Term checks
+    assert sec(z).taylor_term(4, z) == 5*z**4/24
+    assert sec(z).taylor_term(6, z) == 61*z**6/720
+    assert sec(z).taylor_term(5, z) == 0
 
 
 def test_csc():
     x = symbols('x', real=True)
     z = symbols('z')
 
-    # https://code.google.com/p/sympy/issues/detail?id=3608
+    # https://github.com/sympy/sympy/issues/6707
     cosecant = csc('x')
     alternate = 1/sin('x')
     assert cosecant.equals(alternate) == True
@@ -1044,8 +1068,8 @@ def test_csc():
 
     assert csc.nargs == FiniteSet(1)
 
-    assert csc(0) == oo
-    assert csc(pi) == oo
+    assert csc(0) == zoo
+    assert csc(pi) == zoo
 
     assert csc(pi/2) == 1
     assert csc(-pi/2) == -1
@@ -1094,6 +1118,6 @@ def test_csc():
 def test_csc_rewrite_failing():
     # Move these 2 tests to test_csc() once bugs fixed
     # sin(x).rewrite(pow) raises RuntimeError: maximum recursion depth
-    # https://code.google.com/p/sympy/issues/detail?id=4072
+    # https://github.com/sympy/sympy/issues/7171
     assert csc(x).rewrite(pow) == csc(x)
     assert csc(x).rewrite(sqrt) == csc(x)

@@ -1,11 +1,13 @@
-from sympy import symbols, sympify, Dummy, simplify, Equality, S
+from sympy import (symbols, sympify, Dummy, simplify, Equality, S, Interval,
+                   oo, EmptySet)
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_cnf, is_dnf,
-    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_map, true, false, BooleanAtom
+    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
+    BooleanAtom
 )
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
 
 
@@ -63,6 +65,10 @@ def test_Xor():
 
     assert Xor() is false
     assert Xor(A) == A
+    assert Xor(A, A) is false
+    assert Xor(True, A, A) is true
+    assert Xor(A, A, A, A, A) == A
+    assert Xor(True, False, False, A, B) == And(Or(A, Not(B)), Or(B, Not(A)))
     assert Xor(True) is true
     assert Xor(False) is false
     assert Xor(True, True ) is false
@@ -288,10 +294,12 @@ def test_De_Morgan():
 
 
 def test_eliminate_implications():
-
+    from sympy.abc import A, B, C, D
     assert eliminate_implications(Implies(A, B, evaluate=False)) == (~A) | B
     assert eliminate_implications(
         A >> (C >> Not(B))) == Or(Or(Not(B), Not(C)), Not(A))
+    assert eliminate_implications(Equivalent(A, B, C, D)) == \
+        (~A | B) & (~B | C) & (~C | D) & (~D | A)
 
 
 def test_conjuncts():
@@ -543,3 +551,22 @@ def test_true_false():
         assert ITE(F, T, F) is false
         assert ITE(F, F, T) is true
         assert ITE(F, F, F) is false
+
+
+def test_bool_as_set():
+    x = symbols('x')
+
+    assert And(x <= 2, x >= -2).as_set() == Interval(-2, 2)
+    assert Or(x >= 2, x <= -2).as_set() == Interval(-oo, -2) + Interval(2, oo)
+    assert Not(x > 2).as_set() == Interval(-oo, 2)
+    assert true.as_set() == S.UniversalSet
+    assert false.as_set() == EmptySet()
+
+
+@XFAIL
+def test_multivariate_bool_as_set():
+    x, y = symbols('x,y')
+
+    assert And(x >= 0, y >= 0).as_set() == Interval(0, oo)*Interval(0, oo)
+    assert Or(x >= 0, y >= 0).as_set() == S.UniversalSet - \
+        Interval(-oo, 0, True, True)*Interval(-oo, 0, True, True)

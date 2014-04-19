@@ -378,11 +378,13 @@ class Abs(Function):
 
     @classmethod
     def eval(cls, arg):
+        from sympy.simplify.simplify import signsimp
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
         # handle what we can
+        arg = signsimp(arg, evaluate=False)
         if arg.is_Mul:
             known = []
             unk = []
@@ -830,7 +832,7 @@ class principal_branch(Function):
             if arg == 0:
                 return abs(c)*principal_branch(Mul(*m), period)
             return principal_branch(exp_polar(I*arg)*Mul(*m), period)*abs(c)
-        if arg.is_number and ((abs(arg) < period/2) is True or arg == period/2) \
+        if arg.is_number and ((abs(arg) < period/2) == True or arg == period/2) \
                 and m == ():
             return exp_polar(arg*I)*abs(c)
 

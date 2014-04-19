@@ -43,7 +43,7 @@
 
     >>> x = IndexedBase('x')
     >>> M[i, j]*x[j]
-    M[i, j]*x[j]
+    x[j]*M[i, j]
 
     If the indexed objects will be converted to component based arrays, e.g.
     with the code printers or the autowrap framework, you also need to provide
@@ -109,7 +109,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Expr, Tuple, Symbol, sympify, S
-from sympy.core.compatibility import is_sequence, string_types
+from sympy.core.compatibility import is_sequence, string_types, NotIterable
 
 
 class IndexException(Exception):
@@ -132,7 +132,7 @@ class Indexed(Expr):
     True
 
     """
-    is_commutative = False
+    is_commutative = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
@@ -272,7 +272,7 @@ class Indexed(Expr):
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
 
-class IndexedBase(Expr):
+class IndexedBase(Expr, NotIterable):
     """Represent the base or stem of an indexed object
 
     The IndexedBase class represent an array that contains elements. The main purpose
@@ -323,7 +323,7 @@ class IndexedBase(Expr):
     (o, p)
 
     """
-    is_commutative = False
+    is_commutative = True
 
     def __new__(cls, label, shape=None, **kw_args):
         if not isinstance(label, (string_types, Symbol)):

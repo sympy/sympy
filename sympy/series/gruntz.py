@@ -458,7 +458,7 @@ def calculate_series(e, x, logx=None):
     for t in e.lseries(x, logx=logx):
         t = cancel(t)
 
-        if t:
+        if t.simplify():
             break
 
     return t

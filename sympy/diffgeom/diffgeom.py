@@ -485,15 +485,15 @@ class BaseVectorField(Expr):
     directional derivative (which is also a scalar field).
 
     A base vector field is the same type of operator, however the derivation is
-    specifically done wrt a chosen coordinate.
+    specifically done with respect to a chosen coordinate.
 
     To define a base vector field you need to choose the coordinate system and
     the index of the coordinate.
 
     The use of the vector field after its definition is independent of the
-    coordinate system in which it was defined, however due to limitations in
-    the simplification routines you may arrive at more complicated
-    expression if you use unappropriate coordinate systems.
+    coordinate system in which it was defined, however due to limitations in the
+    simplification routines you may arrive at more complicated expression if you
+    use unappropriate coordinate systems.
 
     Examples
     ========
@@ -601,9 +601,13 @@ class Commutator(Expr):
     >>> e_x, e_y, e_r = R2.e_x, R2.e_y, R2.e_r
     >>> c_xy = Commutator(e_x, e_y)
     >>> c_xr = Commutator(e_x, e_r)
-
     >>> c_xy
     0
+
+    Unfortunately, the current code is not able to compute everything:
+
+    >>> c_xr
+    Commutator(e_x, e_r)
 
     """
     # TODO simplify fails with an error
@@ -756,7 +760,7 @@ class Differential(Expr):
                 for j in range(i + 1, k):
                     c = Commutator(v[i], v[j])
                     if c:  # TODO this is ugly - the Commutator can be Zero and
-                          # this causes the next line to fail
+                        # this causes the next line to fail
                         t = f.rcall(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
                         ret += (-1)**(i + j)*t
             return ret
@@ -794,14 +798,16 @@ class TensorProduct(Expr):
     >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
     1
 
-    You can make partial contaction for instance when 'raising an index'.
+    You can make partial contraction for instance when 'raising an index'.
+    Putting ``None`` in the second argument of ``rcall`` means that the
+    respective position in the tensor product is left as it is.
 
     >>> TP = TensorProduct
     >>> metric = TP(R2.dx, R2.dx) + 3*TP(R2.dy, R2.dy)
     >>> metric.rcall(R2.e_y, None)
     3*dy
 
-    Or automatically pad the args with ``None`` s.
+    Or automatically pad the args with ``None`` without specifying them.
 
     >>> metric.rcall(R2.e_y)
     3*dy
@@ -895,22 +901,43 @@ class WedgeProduct(TensorProduct):
 
 
 class LieDerivative(Expr):
-    """Lie derivative wrt a vector field.
+    """Lie derivative with respect to a vector field.
 
-    The transport operator that defines the Lie derivative is the pushforward
-    of the field to be derived along the integral curve of the field wrt which
-    one derives.
+    The transport operator that defines the Lie derivative is the pushforward of
+    the field to be derived along the integral curve of the field with respect
+    to which one derives.
 
     Examples
     ========
 
-    >>> #TODO
+    >>> from sympy.diffgeom import (LieDerivative, TensorProduct)
+    >>> from sympy.diffgeom.rn import R2
+    >>> LieDerivative(R2.e_x, R2.y)
+    0
+    >>> LieDerivative(R2.e_x, R2.x)
+    1
+    >>> LieDerivative(R2.e_x, R2.e_x)
+    0
+
+    The Lie derivative of a tensor field by another tensor field is equal to
+    their commutator:
+
+    >>> LieDerivative(R2.e_x, R2.e_r)
+    Commutator(e_x, e_r)
+    >>> LieDerivative(R2.e_x + R2.e_y, R2.x)
+    1
+    >>> tp = TensorProduct(R2.dx, R2.dy)
+    >>> LieDerivative(R2.e_x, tp)
+    LieDerivative(e_x, TensorProduct(dx, dy))
+    >>> LieDerivative(R2.e_x, tp).doit()
+    LieDerivative(e_rectangular_0, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
         if contravariant_order(v_field) != 1 or covariant_order(v_field):
-            raise ValueError('Lie derivatives are defined only wrt vector fields.'
-                             ' The supplied argument was not a vector field.')
+            raise ValueError('Lie derivatives are defined only with respect to'
+                             ' vector fields. The supplied argument was not a '
+                             'vector field.')
         if expr_form_ord > 0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
@@ -934,7 +961,7 @@ class LieDerivative(Expr):
 
 
 class BaseCovarDerivativeOp(Expr):
-    """Covariant derivative operator wrt a base vector.
+    """Covariant derivative operator with respect to a base vector.
 
     Examples
     ========
@@ -1025,8 +1052,9 @@ class CovarDerivativeOp(Expr):
         if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
             raise NotImplementedError()
         if contravariant_order(wrt) != 1 or covariant_order(wrt):
-            raise ValueError('Covariant derivatives are defined only wrt vector fields.'
-                             ' The supplied argument was not a vector field.')
+            raise ValueError('Covariant derivatives are defined only with '
+                             'respect to vector fields. The supplied argument '
+                             'was not a vector field.')
         self._wrt = wrt
         self._christoffel = christoffel
         self._args = self._wrt, self._christoffel
@@ -1045,20 +1073,30 @@ class CovarDerivativeOp(Expr):
 # Integral curves on vector fields
 ###############################################################################
 def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False):
-    """Return the series expansion for an integral curve of the field.
+    r"""Return the series expansion for an integral curve of the field.
 
-    Integral curve is a function `gamma` taking a parameter in R to a point
+    Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
 
-    `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
+    `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
 
-    for any value `t` for the parameter and any scalar field `f`.
+    where the given ``vector_field`` is denoted as `V`. This holds for any
+    value `t` for the parameter and any scalar field `f`.
 
-    This function returns a series expansion of `gamma(t)` in terms of the
-    coordinate system `coord_sys`. The equations and expansions are necessarily
+    This equation can also be decomposed of a basis of coordinate functions
+
+    `V(f_i)\big(\gamma(t)\big) = \frac{d}{dt}f_i\big(\gamma(t)\big) \quad \forall i`
+
+    This function returns a series expansion of `\gamma(t)` in terms of the
+    coordinate system ``coord_sys``. The equations and expansions are necessarily
     done in coordinate-system-dependent way as there is no other way to
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
+
+    See Also
+    ========
+
+    intcurve_diffequ
 
     Parameters
     ==========
@@ -1066,16 +1104,14 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     vector_field
         the vector field for which an integral curve will be given
     param
-        the argument of the function `gamma` from R to the curve
+        the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `gamma(0)`
+        the point which coresponds to `\gamma(0)`
     n
         the order to which to expand
     coord_sys
         the coordinate system in which to expand
         coeffs (default False) - if True return a list of elements of the expansion
-
-    See Also: intcurve_diffequ
 
     Examples
     ========
@@ -1136,7 +1172,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
         raise ValueError('The supplied field was not a vector field.')
 
     def iter_vfield(scalar_field, i):
-        """Return `vector_field` called `i` times on `scalar_field`."""
+        """Return ``vector_field`` called `i` times on ``scalar_field``."""
         return reduce(lambda s, v: v.rcall(s), [vector_field, ]*i, scalar_field)
 
     def taylor_terms_per_coord(coord_function):
@@ -1153,20 +1189,26 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 
 
 def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
-    """Return the differential equation for an integral curve of the field.
+    r"""Return the differential equation for an integral curve of the field.
 
-    Integral curve is a function `gamma` taking a parameter in R to a point
+    Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
 
-    `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
+    `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
 
-    for any value `t` for the parameter and any scalar field `f`.
+    where the given ``vector_field`` is denoted as `V`. This holds for any
+    value `t` for the parameter and any scalar field `f`.
 
-    This function returns the differential equation of `gamma(t)` in terms of the
-    coordinate system `coord_sys`. The equations and expansions are necessarily
+    This function returns the differential equation of `\gamma(t)` in terms of the
+    coordinate system ``coord_sys``. The equations and expansions are necessarily
     done in coordinate-system-dependent way as there is no other way to
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
+
+    See Also
+    ========
+
+    intcurve_series
 
     Parameters
     ==========
@@ -1174,17 +1216,15 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     vector_field
         the vector field for which an integral curve will be given
     param
-        the argument of the function `gamma` from R to the curve
+        the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `gamma(0)`
+        the point which coresponds to `\gamma(0)`
     coord_sys
         the coordinate system in which to give the equations
 
     Returns
     =======
     a tuple of (equations, initial conditions)
-
-    See Also: intcurve_series
 
     Examples
     ========

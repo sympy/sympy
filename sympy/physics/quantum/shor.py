@@ -15,6 +15,7 @@ import random
 from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
+from sympy.ntheory import continued_fraction_periodic as continued_fraction
 from sympy.utilities.iterables import variations
 
 from sympy.physics.quantum.gate import Gate
@@ -122,26 +123,6 @@ def ratioize(list, N):
     if len(list) == 1:
         return list[0]
     return list[0] + ratioize(list[1:], N)
-
-
-def continued_fraction(x, y):
-    """This applies the continued fraction expansion to two numbers x/y
-
-    x is the numerator and y is the denominator
-
-    >>> from sympy.physics.quantum.shor import continued_fraction
-    >>> continued_fraction(3, 8)
-    [0, 2, 1, 2]
-    """
-    x = int(x)
-    y = int(y)
-    temp = x//y
-    if temp*y == x:
-        return [temp, ]
-
-    list = continued_fraction(y, x - temp*y)
-    list.insert(0, temp)
-    return list
 
 
 def period_find(a, N):

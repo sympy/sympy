@@ -406,7 +406,7 @@ def centroid(*args):
             c = Point(0, 0)
             for g in args:
                 c += g
-            return c/len(args)
+            den = len(args)
         elif all(isinstance(g, Segment) for g in args):
             c = Point(0, 0)
             L = 0
@@ -414,7 +414,7 @@ def centroid(*args):
                 l = g.length
                 c += g.midpoint*l
                 L += l
-            return c/L
+            den = L
         elif all(isinstance(g, Polygon) for g in args):
             c = Point(0, 0)
             A = 0
@@ -422,4 +422,6 @@ def centroid(*args):
                 a = g.area
                 c += g.centroid*a
                 A += a
-            return c/A
+            den = A
+        c /= den
+        return c.func(*[i.simplify() for i in c.args])

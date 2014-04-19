@@ -98,6 +98,13 @@ class erf(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfinv
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -280,6 +287,12 @@ class erfc(Function):
             return -2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfcinv
 
     @classmethod
     def eval(cls, arg):
@@ -736,6 +749,12 @@ class erfinv(Function):
         else :
             raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erf
+
     @classmethod
     def eval(cls, z):
         if z is S.NaN:
@@ -807,6 +826,12 @@ class erfcinv (Function):
             return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfc
 
     @classmethod
     def eval(cls, z):
@@ -999,7 +1024,7 @@ class Ei(Function):
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
     Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma
+    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
 
     References
     ==========
@@ -1185,7 +1210,7 @@ class expint(Function):
         if n == 0:
             return
         if nu.is_integer:
-            if (nu > 0) is not True:
+            if (nu > 0) != True:
                 return
             return expint(nu, z) \
                 - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
@@ -2062,7 +2087,7 @@ class fresnels(FresnelIntegral):
     See Also
     ========
 
-    fresnelc
+    fresnelc: Fresnel cosine integral.
 
     References
     ==========
@@ -2169,7 +2194,7 @@ class fresnelc(FresnelIntegral):
     See Also
     ========
 
-    fresnels
+    fresnels: Fresnel sine integral.
 
     References
     ==========

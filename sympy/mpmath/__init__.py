@@ -1,4 +1,4 @@
-__version__ = '0.17'
+__version__ = '0.18'
 
 from .usertools import monitor, timing
 
@@ -69,6 +69,7 @@ isinf = mp.isinf
 isnan = mp.isnan
 isnormal = mp.isnormal
 isint = mp.isint
+isfinite = mp.isfinite
 almosteq = mp.almosteq
 nan = mp.nan
 rand = mp.rand
@@ -108,6 +109,8 @@ findpoly = mp.findpoly
 
 richardson = mp.richardson
 shanks = mp.shanks
+levin = mp.levin
+cohen_alt = mp.cohen_alt
 nsum = mp.nsum
 nprod = mp.nprod
 difference = mp.difference
@@ -142,6 +145,7 @@ mnorm = mp.mnorm
 
 lu_solve = mp.lu_solve
 lu = mp.lu
+qr = mp.qr
 unitvector = mp.unitvector
 inverse = mp.inverse
 residual = mp.residual
@@ -150,6 +154,17 @@ cholesky = mp.cholesky
 cholesky_solve = mp.cholesky_solve
 det = mp.det
 cond = mp.cond
+hessenberg = mp.hessenberg
+schur = mp.schur
+eig = mp.eig
+eig_sort = mp.eig_sort
+eigsy = mp.eigsy
+eighe = mp.eighe
+eigh = mp.eigh
+svd_r = mp.svd_r
+svd_c = mp.svd_c
+svd = mp.svd
+gauss_quadrature = mp.gauss_quadrature
 
 expm = mp.expm
 sqrtm = mp.sqrtm
@@ -402,6 +417,8 @@ secondzeta = mp.secondzeta
 nzeros = mp.nzeros
 backlunds = mp.backlunds
 lerchphi = mp.lerchphi
+stirling1 = mp.stirling1
+stirling2 = mp.stirling2
 
 # be careful when changing this name, don't use test*!
 def runtests():
@@ -415,15 +432,13 @@ def runtests():
     importdir = os.path.abspath(testdir + '/../..')
     tests.testit(importdir, testdir)
 
-def doctests():
+def doctests(filter=[]):
     try:
-        import psyco
-        psyco.full()
+        import psyco; psyco.full()
     except ImportError:
         pass
     import sys
     from timeit import default_timer as clock
-    filter = []
     for i, arg in enumerate(sys.argv):
         if '__init__.py' in arg:
             filter = [sn for sn in sys.argv[i+1:] if not sn.startswith("-")]
@@ -443,4 +458,3 @@ def doctests():
 
 if __name__ == '__main__':
     doctests()
-

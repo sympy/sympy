@@ -206,7 +206,7 @@ class sin(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # https://github.com/sympy/sympy/issues/6048
             # transform a sine to a cosine, to avoid redundant code
             if pi_coeff.is_Rational:
                 x = pi_coeff % 2
@@ -417,8 +417,8 @@ class cos(TrigonometricFunction):
                 # useful test case is how "limit(sin(x)/x,x,oo)"
                 # is handled.
                 # See test_sin_cos_with_infinity() an
-                # Test for issue 209
-                # http://code.google.com/p/sympy/issues/detail?id=2097
+                # Test for issue 3308
+                # https://github.com/sympy/sympy/issues/5196
                 # For now, we return un-evaluated.
                 return
 
@@ -444,7 +444,7 @@ class cos(TrigonometricFunction):
                 return None
 
             # cosine formula #####################
-            # http://code.google.com/p/sympy/issues/detail?id=2949
+            # https://github.com/sympy/sympy/issues/6048
             # explicit calculations are preformed for
             # cos(k pi / 8), cos(k pi /10), and cos(k pi / 12)
             # Some other exact values like cos(k pi/15) can be
@@ -834,7 +834,22 @@ class sec(ReciprocalTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    # TODO def taylor_term(n, x, *previous_terms):
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        # Reference Formula:
+        # https://www.efunda.com/math/taylor_series/trig.cfm
+        if n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            a = n//2
+
+            E = C.euler(n)
+            F = C.factorial(n)
+
+            return (-1)**a * E/F * x**n
 
     def _sage_(self):
         import sage.all as sage
@@ -1351,6 +1366,12 @@ class asin(Function):
         else:
             return s.is_rational
 
+    def _eval_is_positive(self):
+        if self.args[0].is_positive:
+            return (self.args[0] - 1).is_negative
+        if self.args[0].is_negative:
+            return not (self.args[0] + 1).is_positive
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1433,7 +1454,8 @@ class asin(Function):
         return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1 - x**2))
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
+        x = self.args[0]
+        return x.is_real and (1 - abs(x)).is_nonnegative
 
     def inverse(self, argindex=1):
         """
@@ -1486,6 +1508,10 @@ class acos(Function):
                 return False
         else:
             return s.is_rational
+
+    def _eval_is_positive(self):
+        x = self.args[0]
+        return (1 - abs(x)).is_nonnegative
 
     @classmethod
     def eval(cls, arg):
@@ -1545,10 +1571,12 @@ class acos(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0] >= -1 and self.args[0] <= 1)
+        x = self.args[0]
+        return x.is_real and (1 - abs(x)).is_nonnegative
 
     def _eval_rewrite_as_log(self, x):
-        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
+        return S.Pi/2 + S.ImaginaryUnit * \
+            C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
 
     def _eval_rewrite_as_asin(self, x):
         return S.Pi/2 - asin(x)
@@ -1607,6 +1635,9 @@ class atan(Function):
                 return False
         else:
             return s.is_rational
+
+    def _eval_is_positive(self):
+        return self.args[0].is_positive
 
     @classmethod
     def eval(cls, arg):
@@ -1712,6 +1743,9 @@ class acot(Function):
                 return False
         else:
             return s.is_rational
+
+    def _eval_is_positive(self):
+        return self.args[0].is_real
 
     @classmethod
     def eval(cls, arg):

@@ -26,7 +26,7 @@ class _matrix(object):
     The most basic way to create one is to use the ``matrix`` class directly.
     You can create an empty matrix specifying the dimensions:
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15
         >>> matrix(2)
         matrix(
@@ -406,9 +406,9 @@ class _matrix(object):
     def __get_element(self, key):
         '''
         Fast extraction of the i,j element from the matrix
-            This function is for private use only because it is unsafe:
-                1. it assumes that ``key`` is an integer tuple (i,j)
-                2. it does not check bounds
+            This function is for private use only because is unsafe:
+                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
+                2. Does not check bounds
         '''
         if key in self.__data:
             return self.__data[key]
@@ -419,9 +419,9 @@ class _matrix(object):
         '''
         Fast assignment of the i,j element in the matrix
             This function is unsafe:
-                1. it assumes that ``key`` is an integer tuple (i,j)
-                2. it does not check bounds
-                3. it does not check the value type
+                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
+                2. Does not check bounds
+                3. Does not check the value type
         '''
         if value: # only store non-zeros
             self.__data[key] = value
@@ -753,8 +753,8 @@ class MatrixMethods(object):
         """
         Create square diagonal matrix using given list.
 
-        Examples:
-        >>> from mpmath import diag, mp
+        Example:
+        >>> from sympy.mpmath import diag, mp
         >>> mp.pretty = False
         >>> diag([1, 2, 3])
         matrix(
@@ -772,8 +772,8 @@ class MatrixMethods(object):
         Create matrix m x n filled with zeros.
         One given dimension will create square matrix n x n.
 
-        Examples:
-        >>> from mpmath import zeros, mp
+        Example:
+        >>> from sympy.mpmath import zeros, mp
         >>> mp.pretty = False
         >>> zeros(2)
         matrix(
@@ -798,8 +798,8 @@ class MatrixMethods(object):
         Create matrix m x n filled with ones.
         One given dimension will create square matrix n x n.
 
-        Examples:
-        >>> from mpmath import ones, mp
+        Example:
+        >>> from sympy.mpmath import ones, mp
         >>> mp.pretty = False
         >>> ones(2)
         matrix(
@@ -842,8 +842,8 @@ class MatrixMethods(object):
         All values are >= min and <max.
         n defaults to m.
 
-        Examples:
-        >>> from mpmath import randmatrix
+        Example:
+        >>> from sympy.mpmath import randmatrix
         >>> randmatrix(2) # doctest:+SKIP
         matrix(
         [['0.53491598236191806', '0.57195669543302752'],
@@ -908,7 +908,7 @@ class MatrixMethods(object):
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> x = matrix([-10, 2, 100])
             >>> norm(x, 1)
@@ -964,7 +964,7 @@ class MatrixMethods(object):
 
         **Examples**
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 15; mp.pretty = False
             >>> A = matrix([[1, -1000], [100, 50]])
             >>> mnorm(A, 1)

@@ -49,7 +49,7 @@ from sympy.utilities import group, sift, public
 import sympy.polys
 import sympy.mpmath
 
-from sympy.polys.domains import FF, QQ
+from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
@@ -2491,6 +2491,156 @@ class Poly(Expr):
 
         return f.per(result, remove=0)
 
+    def dispersionset(f, g=None):
+        r"""Compute the *dispersion set* of two polynomials.
+
+        For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
+        and `\deg g > 0` the dispersion set `\operatorname{J}(f, g)` is defined as:
+
+        .. math::
+            \operatorname{J}(f, g)
+            & := \{a \in \mathbb{N}_0 | \gcd(f(x), g(x+a)) \neq 1\} \\
+            &  = \{a \in \mathbb{N}_0 | \deg \gcd(f(x), g(x+a)) \geq 1\}
+
+        For a single polynomial one defines `\operatorname{J}(f) := \operatorname{J}(f, f)`.
+
+        Examples
+        ========
+
+        >>> from sympy import poly
+        >>> from sympy.polys.dispersion import dispersion, dispersionset
+        >>> from sympy.abc import x
+
+        Dispersion set and dispersion of a simple polynomial:
+
+        >>> fp = poly((x - 3)*(x + 3), x)
+        >>> sorted(dispersionset(fp))
+        [0, 6]
+        >>> dispersion(fp)
+        6
+
+        Note that the definition of the dispersion is not symmetric:
+
+        >>> fp = poly(x**4 - 3*x**2 + 1, x)
+        >>> gp = fp.shift(-3)
+        >>> sorted(dispersionset(fp, gp))
+        [2, 3, 4]
+        >>> dispersion(fp, gp)
+        4
+        >>> sorted(dispersionset(gp, fp))
+        []
+        >>> dispersion(gp, fp)
+        -oo
+
+        Computing the dispersion also works over field extensions:
+
+        >>> from sympy import sqrt
+        >>> fp = poly(x**2 + sqrt(5)*x - 1, x, domain='QQ<sqrt(5)>')
+        >>> gp = poly(x**2 + (2 + sqrt(5))*x + sqrt(5), x, domain='QQ<sqrt(5)>')
+        >>> sorted(dispersionset(fp, gp))
+        [2]
+        >>> sorted(dispersionset(gp, fp))
+        [1, 4]
+
+        We can even perform the computations for polynomials
+        having symbolic coefficients:
+
+        >>> from sympy.abc import a
+        >>> fp = poly(4*x**4 + (4*a + 8)*x**3 + (a**2 + 6*a + 4)*x**2 + (a**2 + 2*a)*x, x)
+        >>> sorted(dispersionset(fp))
+        [0, 1]
+
+        See Also
+        ========
+
+        dispersion
+
+        References
+        ==========
+
+        1. [ManWright94]_
+        2. [Koepf98]_
+        3. [Abramov71]_
+        4. [Man93]_
+        """
+        from sympy.polys.dispersion import dispersionset
+        return dispersionset(f, g)
+
+    def dispersion(f, g=None):
+        r"""Compute the *dispersion* of polynomials.
+
+        For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
+        and `\deg g > 0` the dispersion `\operatorname{dis}(f, g)` is defined as:
+
+        .. math::
+            \operatorname{dis}(f, g)
+            & := \max\{ J(f,g) \cup \{0\} \} \\
+            &  = \max\{ \{a \in \mathbb{N} | \gcd(f(x), g(x+a)) \neq 1\} \cup \{0\} \}
+
+        and for a single polynomial `\operatorname{dis}(f) := \operatorname{dis}(f, f)`.
+
+        Examples
+        ========
+
+        >>> from sympy import poly
+        >>> from sympy.polys.dispersion import dispersion, dispersionset
+        >>> from sympy.abc import x
+
+        Dispersion set and dispersion of a simple polynomial:
+
+        >>> fp = poly((x - 3)*(x + 3), x)
+        >>> sorted(dispersionset(fp))
+        [0, 6]
+        >>> dispersion(fp)
+        6
+
+        Note that the definition of the dispersion is not symmetric:
+
+        >>> fp = poly(x**4 - 3*x**2 + 1, x)
+        >>> gp = fp.shift(-3)
+        >>> sorted(dispersionset(fp, gp))
+        [2, 3, 4]
+        >>> dispersion(fp, gp)
+        4
+        >>> sorted(dispersionset(gp, fp))
+        []
+        >>> dispersion(gp, fp)
+        -oo
+
+        Computing the dispersion also works over field extensions:
+
+        >>> from sympy import sqrt
+        >>> fp = poly(x**2 + sqrt(5)*x - 1, x, domain='QQ<sqrt(5)>')
+        >>> gp = poly(x**2 + (2 + sqrt(5))*x + sqrt(5), x, domain='QQ<sqrt(5)>')
+        >>> sorted(dispersionset(fp, gp))
+        [2]
+        >>> sorted(dispersionset(gp, fp))
+        [1, 4]
+
+        We can even perform the computations for polynomials
+        having symbolic coefficients:
+
+        >>> from sympy.abc import a
+        >>> fp = poly(4*x**4 + (4*a + 8)*x**3 + (a**2 + 6*a + 4)*x**2 + (a**2 + 2*a)*x, x)
+        >>> sorted(dispersionset(fp))
+        [0, 1]
+
+        See Also
+        ========
+
+        dispersionset
+
+        References
+        ==========
+
+        1. [ManWright94]_
+        2. [Koepf98]_
+        3. [Abramov71]_
+        4. [Man93]_
+        """
+        from sympy.polys.dispersion import dispersion
+        return dispersion(f, g)
+
     def cofactors(f, g):
         """
         Returns the GCD of ``f`` and ``g`` and their cofactors.
@@ -3194,9 +3344,18 @@ class Poly(Expr):
         else:
             return group(roots, multiple=False)
 
-    def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
+    def nroots(f, n=15, maxsteps=50, cleanup=True):
         """
         Compute numerical approximations of roots of ``f``.
+
+        Parameters
+        ==========
+
+        n ... the number of digits to calculate
+        maxsteps ... the maximum number of iterations to do
+
+        If the accuracy `n` cannot be reached in `maxsteps`, it will raise an
+        exception. You need to rerun with higher maxsteps.
 
         Examples
         ========
@@ -3217,35 +3376,44 @@ class Poly(Expr):
         if f.degree() <= 0:
             return []
 
-        coeffs = [coeff.evalf(n=n).as_real_imag()
-                  for coeff in f.all_coeffs()]
+        # For integer and rational coefficients, convert them to integers only
+        # (for accuracy). Otherwise just try to convert the coefficients to
+        # mpmath.mpc and raise an exception if the conversion fails.
+        if f.rep.dom is ZZ:
+            coeffs = [int(coeff) for coeff in f.all_coeffs()]
+        elif f.rep.dom is QQ:
+            denoms = [coeff.q for coeff in f.all_coeffs()]
+            from sympy.core.numbers import ilcm
+            fac = ilcm(*denoms)
+            coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
+        else:
+            coeffs = [coeff.evalf(n=n).as_real_imag()
+                    for coeff in f.all_coeffs()]
+            try:
+                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
+            except TypeError:
+                raise DomainError("Numerical domain expected, got %s" % \
+                        f.rep.dom)
 
         dps = sympy.mpmath.mp.dps
         sympy.mpmath.mp.dps = n
 
         try:
-            try:
-                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
-            except TypeError:
-                raise DomainError(
-                    "numerical domain expected, got %s" % f.rep.dom)
+            # We need to add extra precision to guard against losing accuracy.
+            # 10 times the degree of the polynomial seems to work well.
+            roots = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps,
+                    cleanup=cleanup, error=False, extraprec=f.degree()*10)
 
-            result = sympy.mpmath.polyroots(
-                coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
-
-            if error:
-                roots, error = result
-            else:
-                roots, error = result, None
-
-            roots = list(map(sympify, sorted(roots, key=lambda r: (r.real, r.imag))))
+            # Mpmath puts real roots first, then complex ones. SymPy polynomial
+            # module orders roots by their real components (if they are equal,
+            # then by their imaginary components). So we reorder the roots here
+            # to conform to the SymPy ordering.
+            roots = list(map(sympify,
+                sorted(roots, key=lambda r: (r.real, r.imag))))
         finally:
             sympy.mpmath.mp.dps = dps
 
-        if error is not None:
-            return roots, sympify(error)
-        else:
-            return roots
+        return roots
 
     def ground_roots(f):
         """
@@ -5930,7 +6098,7 @@ def real_roots(f, multiple=True):
 
 
 @public
-def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
+def nroots(f, n=15, maxsteps=50, cleanup=True):
     """
     Compute numerical approximations of roots of ``f``.
 
@@ -5952,7 +6120,7 @@ def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
         raise PolynomialError(
             "can't compute numerical roots of %s, not a polynomial" % f)
 
-    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup, error=error)
+    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup)
 
 
 @public

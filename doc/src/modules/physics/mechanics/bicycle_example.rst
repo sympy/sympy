@@ -21,7 +21,7 @@ False (in case it has been set True elsewhere), since it slows down the
 computations::
 
   >>> Vector.simp = False
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
 
 Declaration of Coordinates & Speeds:
 A simple definition for qdots, qd = u,is used in this code.  Speeds are: yaw

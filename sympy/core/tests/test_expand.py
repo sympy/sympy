@@ -52,7 +52,7 @@ def test_expand_non_commutative():
     assert ((A + B)**2).expand() == A**2 + A*B + B*A + B**2
     assert ((A + B)**3).expand() == (A**2*B + B**2*A + A*B**2 + B*A**2 +
                                      A**3 + B**3 + A*B*A + B*A*B)
-    # 3120
+    # issue 6219
     assert ((a*A*B*A**-1)**2).expand() == a**2*A*B**2/A
     # Note that (a*A*B*A**-1)**2 is automatically converted to a**2*(A*B*A**-1)**2
     assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*(A*B*A**-1)**2
@@ -62,7 +62,7 @@ def test_expand_non_commutative():
     assert ((a*A)**2).expand() == a**2*A**2
     assert ((a*A*B)**i).expand() == a**i*(A*B)**i
     assert ((a*A*(B*(A*B/A)**2))**i).expand() == a**i*(A*B*A*B**2/A)**i
-    # 3459
+    # issue 6558
     assert (A*B*(A*B)**-1).expand() == A*B*(A*B)**-1
     assert ((a*A)**i).expand() == a**i*A**i
     assert ((a*A*B*A**-1)**3).expand() == a**3*A*B**3/A
@@ -113,7 +113,7 @@ def test_expand_modulus():
     raises(ValueError, lambda: ((x + y)**11).expand(modulus=x))
 
 
-def test_issue_2644():
+def test_issue_5743():
     assert (x*sqrt(
         x + y)*(1 + sqrt(x + y))).expand() == x**2 + x*y + x*sqrt(x + y)
     assert (x*sqrt(
@@ -131,14 +131,12 @@ def test_expand_frac():
     assert expand_numer(eq, multinomial=False) == eq
 
 
-def test_issue_3022():
+def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     assert cse((eq).expand(complex=True), optimizations='basic') \
-        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, x0**2 + x1**2), (x3,
-        atan2(x1, x0)/2), (x4, sin(x3)), (x5, atan2(0, x2)/4), (x6, sin(x5)),
-        (x7, x4*x6), (x8, cos(x3)), (x9, x6*x8), (x10, cos(x5)), (x11,
-        x10*x4), (x12, x10*x8)], [sqrt(2)*(x11 + I*x11 - x12 + I*x12 + x7 -
-        I*x7 + x9 + I*x9)/(8*pi**(3/2)*x2**(1/4))])''')
+        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, atan2(x1, x0)/2),
+        (x3, sin(x2)), (x4, cos(x2))], [sqrt(2)*(x3 + I*x3 - x4 +
+        I*x4)/(8*pi**(3/2)*(x0**2 + x1**2)**(1/4))])''')
 
 
 def test_expand_power_base():
@@ -219,9 +217,9 @@ def test_expand_arit():
     m = Symbol('m', negative=True)
     assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
     assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
-    # issue 2383
+    # issue 5482
     assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
-    # issue 2506 (2)
+    # issue 5605 (2)
     assert (cos(x + y)**2).expand(trig=True) in [
         (-sin(x)*sin(y) + cos(x)*cos(y))**2,
         sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2
@@ -255,13 +253,13 @@ def test_power_expand():
     assert (A**(a + b)).expand() != A**(a + b)
 
 
-def test_issues_2820_3731():
-    # 2820
+def test_issues_5919_6830():
+    # issue 5919
     n = -1 + 1/x
     z = n/x/(-n)**2 - 1/n/x
     assert expand(z) == 1/(x**2 - 2*x + 1) - 1/(x - 2 + 1/x) - 1/(-x + 1)
 
-    # 3731
+    # issue 6830
     p = (1 + x)**2
     assert expand_multinomial((1 + x*p)**2) == (
         x**2*(x**4 + 4*x**3 + 6*x**2 + 4*x + 1) + 2*x*(x**2 + 2*x + 1) + 1)

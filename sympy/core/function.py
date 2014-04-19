@@ -49,6 +49,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, xrange
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
+from sympy.core.evaluate import global_evaluate
 
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
@@ -164,7 +165,7 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         from sympy.core.sets import FiniteSet
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
-        return FiniteSet(self._nargs) if self._nargs else S.Naturals0
+        return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def __repr__(cls):
         return cls.__name__
@@ -186,7 +187,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
         from sympy.core.sets import FiniteSet
 
         args = list(map(sympify, args))
-        evaluate = options.pop('evaluate', True)
+        evaluate = options.pop('evaluate', global_evaluate[0])
         # WildFunction (and anything else like it) may have nargs defined
         # and we throw that value away here
         options.pop('nargs', None)
@@ -364,7 +365,7 @@ class Function(Application, Expr):
                 'plural': 's'*(min(cls.nargs) != 1),
                 'given': n})
 
-        evaluate = options.get('evaluate', True)
+        evaluate = options.get('evaluate', global_evaluate[0])
         result = super(Function, cls).__new__(cls, *args, **options)
         if not evaluate or not isinstance(result, cls):
             return result
@@ -653,7 +654,7 @@ class Function(Application, Expr):
         if not (1 <= argindex <= len(self.args)):
             raise ArgumentIndexError(self, argindex)
         if not self.args[argindex - 1].is_Symbol:
-            # See issue 1525 and issue 1620 and issue 2501
+            # See issue 4624 and issue 4719 and issue 5600
             arg_dummy = C.Dummy('xi_%i' % argindex)
             arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
@@ -1262,7 +1263,7 @@ class Derivative(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables and not new.is_Symbol:
-            # Issue 1620
+            # issue 4719
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
@@ -1491,8 +1492,15 @@ class Subs(Expr):
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
+        from sympy.printing import StrPrinter
+        class CustomStrPrinter(StrPrinter):
+            def _print_Dummy(self, expr):
+                return str(expr) + str(expr.dummy_index)
+        def mystr(expr, **settings):
+            p = CustomStrPrinter(settings)
+            return p.doprint(expr)
         while 1:
-            s_pts = dict([(p, Symbol(pre + str(p))) for p in pts])
+            s_pts = dict([(p, Symbol(pre + mystr(p))) for p in pts])
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
             # if any underscore-preppended symbol is already a free symbol
@@ -1503,7 +1511,7 @@ class Subs(Expr):
             # symbols
             if any(r in expr.free_symbols and
                    r in variables and
-                   Symbol(pre + str(point[variables.index(r)])) != r
+                   Symbol(pre + mystr(point[variables.index(r)])) != r
                    for _, r in reps):
                 pre += "_"
                 continue
@@ -2326,7 +2334,18 @@ def count_ops(expr, visual=False):
     else:  # it's Basic not isinstance(expr, Expr):
         if not isinstance(expr, Basic):
             raise TypeError("Invalid type of expr")
-        ops = [count_ops(a, visual=visual) for a in expr.args]
+        else:
+            ops = []
+            args = [expr]
+            while args:
+                a = args.pop()
+                if a.args:
+                    o = C.Symbol(a.func.__name__.upper())
+                    if a.is_Boolean:
+                        ops.append(o*(len(a.args)-1))
+                    else:
+                        ops.append(o)
+                    args.extend(a.args)
 
     if not ops:
         if visual:
@@ -2383,7 +2402,7 @@ def nfloat(expr, n=15, exponent=False):
 
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have
-    # problems with evaluating at low precision (issue 3294)
+    # problems with evaluating at low precision (issue 6393)
     rv = rv.xreplace(dict([(ro, ro.n(n)) for ro in rv.atoms(RootOf)]))
 
     if not exponent:

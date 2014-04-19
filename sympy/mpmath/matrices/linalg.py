@@ -433,7 +433,7 @@ class LinearAlgebraMethods(object):
 
         Cholesky decomposition of a positive-definite symmetric matrix::
 
-            >>> from mpmath import *
+            >>> from sympy.mpmath import *
             >>> mp.dps = 25; mp.pretty = True
             >>> A = eye(3) + hilbert(3)
             >>> nprint(A)
@@ -584,3 +584,209 @@ class LinearAlgebraMethods(object):
                 r[j, i] = c[j]
         return r
 
+    def qr(ctx, A, mode = 'full', edps = 10):
+        """
+        Compute a QR factorization $A = QR$ where
+        A is an m x n matrix of real or complex numbers where m >= n
+
+        mode has following meanings:
+        (1) mode = 'raw' returns two matrixes (A, tau) in the
+            internal format used by LAPACK
+        (2) mode = 'skinny' returns the leading n columns of Q
+            and n rows of R
+        (3) Any other value returns the leading m columns of Q
+            and m rows of R
+
+        edps is the increase in mp precision used for calculations
+
+        **Examples**
+
+            >>> from sympy.mpmath import *
+            >>> mp.dps = 15
+            >>> mp.pretty = True
+            >>> A = matrix([[1, 2], [3, 4], [1, 1]])
+            >>> Q, R = qr(A)
+            >>> Q
+            [-0.301511344577764   0.861640436855329   0.408248290463863]
+            [-0.904534033733291  -0.123091490979333  -0.408248290463863]
+            [-0.301511344577764  -0.492365963917331   0.816496580927726]
+            >>> R
+            [-3.3166247903554  -4.52267016866645]
+            [             0.0  0.738548945875996]
+            [             0.0                0.0]
+            >>> Q * R
+            [1.0  2.0]
+            [3.0  4.0]
+            [1.0  1.0]
+            >>> chop(Q.T * Q)
+            [1.0  0.0  0.0]
+            [0.0  1.0  0.0]
+            [0.0  0.0  1.0]
+            >>> B = matrix([[1+0j, 2-3j], [3+j, 4+5j]])
+            >>> Q, R = qr(B)
+            >>> nprint(Q)
+            [     (-0.301511 + 0.0j)   (0.0695795 - 0.95092j)]
+            [(-0.904534 - 0.301511j)  (-0.115966 + 0.278318j)]
+            >>> nprint(R)
+            [(-3.31662 + 0.0j)  (-5.72872 - 2.41209j)]
+            [              0.0       (3.91965 + 0.0j)]
+            >>> Q * R
+            [(1.0 + 0.0j)  (2.0 - 3.0j)]
+            [(3.0 + 1.0j)  (4.0 + 5.0j)]
+            >>> chop(Q.T * Q.conjugate())
+            [1.0  0.0]
+            [0.0  1.0]
+
+        """
+
+        # check values before continuing
+        assert isinstance(A, ctx.matrix)
+        m = A.rows
+        n = A.cols
+        assert n > 1
+        assert m >= n
+        assert edps >= 0
+
+        # check for complex data type
+        cmplx = any(type(x) is ctx.mpc for x in A)
+
+        # temporarily increase the precision and initialize
+        with ctx.extradps(edps):
+            tau = ctx.matrix(n,1)
+            A = A.copy()
+
+            # ---------------
+            # FACTOR MATRIX A
+            # ---------------
+            if cmplx:
+                one = ctx.mpc('1.0', '0.0')
+                zero = ctx.mpc('0.0', '0.0')
+                rzero = ctx.mpf('0.0')
+
+                # main loop to factor A (complex)
+                for j in xrange(0, n):
+                    alpha = A[j,j]
+                    alphr = ctx.re(alpha)
+                    alphi = ctx.im(alpha)
+
+                    if (m-j) >= 2:
+                        xnorm = ctx.fsum( A[i,j]*ctx.conj(A[i,j]) for i in xrange(j+1, m) )
+                        xnorm = ctx.re( ctx.sqrt(xnorm) )
+                    else:
+                        xnorm = rzero
+
+                    if (xnorm == rzero) and (alphi == rzero):
+                        tau[j] = zero
+                        continue
+
+                    if alphr < rzero:
+                        beta = ctx.sqrt(alphr**2 + alphi**2 + xnorm**2)
+                    else:
+                        beta = -ctx.sqrt(alphr**2 + alphi**2 + xnorm**2)
+
+                    tau[j] = ctx.mpc( (beta - alphr) / beta, -alphi / beta )
+                    t = -ctx.conj(tau[j])
+                    za = one / (alpha - beta)
+
+                    for i in xrange(j+1, m):
+                        A[i,j] *= za
+
+                    A[j,j] = one
+                    for k in xrange(j+1, n):
+                        y = ctx.fsum(A[i,j] * ctx.conj(A[i,k]) for i in xrange(j, m))
+                        temp = t * ctx.conj(y)
+                        for i in xrange(j, m):
+                            A[i,k] += A[i,j] * temp
+
+                    A[j,j] = ctx.mpc(beta, '0.0')
+            else:
+                one = ctx.mpf('1.0')
+                zero = ctx.mpf('0.0')
+
+                # main loop to factor A (real)
+                for j in xrange(0, n):
+                    alpha = A[j,j]
+
+                    if (m-j) > 2:
+                        xnorm = ctx.fsum( (A[i,j])**2 for i in xrange(j+1, m) )
+                        xnorm = ctx.sqrt(xnorm)
+                    elif (m-j) == 2:
+                        xnorm = abs( A[m-1,j] )
+                    else:
+                        xnorm = zero
+
+                    if xnorm == zero:
+                        tau[j] = zero
+                        continue
+
+                    if alpha < zero:
+                        beta = ctx.sqrt(alpha**2 + xnorm**2)
+                    else:
+                        beta = -ctx.sqrt(alpha**2 + xnorm**2)
+
+                    tau[j] = (beta - alpha) / beta
+                    t = -tau[j]
+                    da = one / (alpha - beta)
+
+                    for i in xrange(j+1, m):
+                        A[i,j] *= da
+
+                    A[j,j] = one
+                    for k in xrange(j+1, n):
+                        y = ctx.fsum( A[i,j] * A[i,k] for i in xrange(j, m) )
+                        temp = t * y
+                        for i in xrange(j,m):
+                            A[i,k] += A[i,j] * temp
+
+                    A[j,j] = beta
+
+            # return factorization in same internal format as LAPACK
+            if (mode == 'raw') or (mode == 'RAW'):
+                return A, tau
+
+            # ----------------------------------
+            # FORM Q USING BACKWARD ACCUMULATION
+            # ----------------------------------
+
+            # form R before the values are overwritten
+            R = A.copy()
+            for j in xrange(0, n):
+                for i in xrange(j+1, m):
+                    R[i,j] = zero
+
+            # set the value of p (number of columns of Q to return)
+            p = m
+            if (mode == 'skinny') or (mode == 'SKINNY'):
+                p = n
+
+            # add columns to A if needed and initialize
+            A.cols += (p-n)
+            for j in xrange(0, p):
+                A[j,j] = one
+                for i in xrange(0, j):
+                    A[i,j] = zero
+
+            # main loop to form Q
+            for j in xrange(n-1, -1, -1):
+                t = -tau[j]
+                A[j,j] += t
+
+                for k in xrange(j+1, p):
+                    if cmplx:
+                        y = ctx.fsum(A[i,j] * ctx.conj(A[i,k]) for i in xrange(j+1, m))
+                        temp = t * ctx.conj(y)
+                    else:
+                        y = ctx.fsum(A[i,j] * A[i,k] for i in xrange(j+1, m))
+                        temp = t * y
+                    A[j,k] = temp
+                    for i in xrange(j+1, m):
+                        A[i,k] += A[i,j] * temp
+
+                for i in xrange(j+1, m):
+                    A[i, j] *= t
+
+            return A, R[0:p,0:n]
+
+        # ------------------
+        # END OF FUNCTION QR
+        # ------------------

@@ -232,8 +232,8 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     The tuple is ordered so that first item is the classification that
     pdsolve() uses to solve the PDE by default.  In general,
-    classifications at the near the beginning of the list will produce
-    better solutions faster than those near the end, thought there are
+    classifications near the beginning of the list will produce
+    better solutions faster than those near the end, though there are
     always exceptions.  To make pdsolve use a different classification,
     use pdsolve(PDE, func, hint=<classification>).  See also the pdsolve()
     docstring for different meta-hints you can use.
@@ -252,6 +252,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     Examples
     ========
+
     >>> from sympy.solvers.pde import classify_pde
     >>> from sympy import Function, diff, Eq
     >>> from sympy.abc import x, y
@@ -413,6 +414,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
     Examples
     ========
+
     >>> from sympy import Function, symbols, diff
     >>> from sympy.solvers.pde import checkpdesol, pdsolve
     >>> x, y = symbols('x y')
@@ -964,7 +966,7 @@ def _separate(eq, dep, others):
         div.add(ext)
     # FIXME: Find lcm() of all the divisors and divide with it, instead of
     # current hack :(
-    # http://code.google.com/p/sympy/issues/detail?id=1498
+    # https://github.com/sympy/sympy/issues/4597
     if len(div) > 0:
         final = 0
         for term in eq.args:

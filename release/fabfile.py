@@ -138,7 +138,7 @@ def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
     # Needed to build the docs
-    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra")
+    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin")
     # Our Ubuntu is too old to include Python 3.3
     sudo("apt-get -y install python-software-properties")
     sudo("add-apt-repository -y ppa:fkrull/deadsnakes")
@@ -336,7 +336,7 @@ def show_files(file, print_=True):
     Note, this runs locally, not in vagrant.
     """
     # TODO: Test the unarchived name. See
-    # https://code.google.com/p/sympy/issues/detail?id=3988.
+    # https://github.com/sympy/sympy/issues/7087.
     if file == 'source':
         ret = local("tar tf release/{source}".format(**tarball_formatter()), capture=True)
     elif file == 'win':
@@ -397,7 +397,7 @@ git_whitelist = {
     'build.py',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferrably doctested.  See also
-    # https://code.google.com/p/sympy/issues/detail?id=2940.
+    # https://github.com/sympy/sympy/issues/6039.
     'examples/advanced/identitysearch_example.ipynb',
     'examples/beginner/plot_advanced.ipynb',
     'examples/beginner/plot_colors.ipynb',
@@ -645,7 +645,7 @@ def get_tarball_name(file):
         name = "sympy-docs-{type}-{version}"
         if file == 'html-nozip':
             # zip files keep the name of the original zipped directory. See
-            # https://code.google.com/p/sympy/issues/detail?id=3988.
+            # https://github.com/sympy/sympy/issues/7087.
             file = 'html'
         else:
             name += ".{extension}"
@@ -703,6 +703,8 @@ def get_previous_version_tag():
                 parents = local("git rev-list --parents -n 1 " + curtag,
                     capture=True).strip().split()
                 # rev-list prints the current commit and then all its parents
+                # If the tagged commit *is* a merge commit, just comment this
+                # out, and make sure `fab vagrant get_previous_version_tag` is correct
                 assert len(parents) == 2, curtag
                 curcommit = curtag + "^" # The parent of the tagged commit
             else:

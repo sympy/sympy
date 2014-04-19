@@ -1,4 +1,4 @@
-from sympy.physics.mechanics import dynamicsymbols, Point, ReferenceFrame
+from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
 
 
 def test_point_v1pt_theorys():
