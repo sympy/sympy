@@ -197,13 +197,15 @@ class ImplicitSeries(BaseSeries):
 
 
 @doctest_depends_on(modules=('matplotlib',))
-def plot_implicit(expr, *args, **kwargs):
+def plot_implicit(expr, x_var, y_var=None, *args, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
     Arguments
     =========
 
     - ``expr`` : The equation / inequality that is to be plotted.
+    - ``x_var``: The "X" symbol (for the X-axis)
+    - ``y_var``: The "Y" symbol (for the Y-axis)
     - ``(x, xmin, xmax)`` optional, 3-tuple denoting the range of symbol
       ``x``
     - ``(y, ymin, ymax)`` optional, 3-tuple denoting the range of symbol
@@ -243,36 +245,36 @@ def plot_implicit(expr, *args, **kwargs):
 
     Without any ranges for the symbols in the expression
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
+    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5), x, y)
 
     With the range for the symbols
 
-    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
+    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3), x, y,
     ...         (x, -3, 3), (y, -3, 3))
 
     With depth of recursion as argument.
 
-    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
+    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5), x, y,
     ...         (x, -4, 4), (y, -4, 4), depth = 2)
 
     Using mesh grid and not using adaptive meshing.
 
-    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
+    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5), x, y,
     ...         (x, -5, 5), (y, -2, 2), adaptive=False)
 
     Using mesh grid with number of points as input.
 
-    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
+    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5), x, y,
     ...         (x, -5, 5), (y, -2, 2),
     ...         adaptive=False, points=400)
 
     Plotting regions.
 
-    >>> p6 = plot_implicit(y > x**2)
+    >>> p6 = plot_implicit(y > x**2, x, y)
 
     Plotting Using boolean conjunctions.
 
-    >>> p7 = plot_implicit(And(y > x, y > -x))
+    >>> p7 = plot_implicit(And(y > x, y > -x), x, y)
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
@@ -309,29 +311,38 @@ def plot_implicit(expr, *args, **kwargs):
         raise NotImplementedError("Implicit plotting is not implemented for "
                                   "more than 2 variables")
 
+    if len(symbols) == 2 and not y_var:
+        y_var = (free_symbols - set([x_var])).pop()
+
     #Create default ranges if the range is not provided.
     default_range = Tuple(-5, 5)
     if len(args) == 2:
-        var_start_end_x = args[0]
-        var_start_end_y = args[1]
+        if args[0][0].name == x_var.name:
+            var_start_end_x, var_start_end_y = args[0], args[1]
+        else:
+            var_start_end_x, var_start_end_y = args[1], args[0]
+
     elif len(args) == 1:
         if len(free_symbols) == 2:
-            var_start_end_x = args[0]
-            var_start_end_y, = (Tuple(e) + default_range
-                                for e in (free_symbols - range_symbols))
+            if args[0][0].name == x_var.name:
+                var_start_end_x = args[0]
+                var_start_end_y = Tuple(y_var) + default_range
+            else:
+                var_start_end_x = Tuple(x_var) + default_range
+                var_start_end_y = args[0]
         else:
-            var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
+            var_start_end_x = Tuple(x_var) + default_range
             #Create a random symbol
             var_start_end_y = Tuple(Dummy()) + default_range
 
     elif len(args) == 0:
         if len(free_symbols) == 1:
-            var_start_end_x, = (Tuple(e) + default_range for e in free_symbols)
+            var_start_end_x = Tuple(x_var) + default_range
             #create a random symbol
             var_start_end_y = Tuple(Dummy()) + default_range
         else:
-            var_start_end_x, var_start_end_y = (Tuple(e) + default_range
-                                                for e in free_symbols)
+            var_start_end_x = Tuple(x_var) + default_range
+            var_start_end_y = Tuple(y_var) + default_range
 
     use_interval = kwargs.pop('adaptive', True)
     nb_of_points = kwargs.pop('points', 300)
@@ -350,6 +361,9 @@ def plot_implicit(expr, *args, **kwargs):
     #set the x and y limits
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
     kwargs['ylim'] = tuple(float(y) for y in var_start_end_y[1:])
+    # set the x and y labels
+    kwargs['xlabel'] = kwargs.get('xlabel', var_start_end_x[0].name)
+    kwargs['ylabel'] = kwargs.get('ylabel', var_start_end_y[0].name)
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()
