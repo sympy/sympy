@@ -1,13 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow, oo, Tuple
-from sympy.matrices.expressions import MatMul
+from sympy.core import oo
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.inference import satisfiable
-from sympy.logic.boolalg import And, Implies, Equivalent, Or
-from sympy.assumptions.ask import Q
-from sympy.utilities.iterables import sift
+from sympy.logic.boolalg import And
 from sympy.assumptions.ask_generated import known_facts_cnf
 from sympy.assumptions.sathandlers import fact_registry
 
