@@ -677,6 +677,7 @@ def test_is_number():
     # it is possible to get a false negative if the integrand is
     # actually an unsimplified zero, but this is true of is_number in general.
     assert Integral(sin(x)**2 + cos(x)**2 - 1, x).is_number is False
+    assert Integral(f(x), (x, 0, 1)).is_number is True
 
 
 def test_symbols():
@@ -820,7 +821,6 @@ def test_issue_3940():
     a, d = symbols('a d', positive=True)
     assert expand_mul(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == \
         sqrt(pi)*exp(d**2/a)/sqrt(a)
-
 
 
 def test_issue_5413():

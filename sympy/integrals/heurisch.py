@@ -494,7 +494,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         irreducibles = set()
 
         for poly in reducibles:
-            for z in poly.atoms(Symbol):
+            for z in poly.free_symbols:
                 if z in V:
                     break
             else:
@@ -562,7 +562,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             solution = [ (k.as_expr(), v.as_expr()) for k, v in solution.items() ]
             return candidate.subs(solution).subs(list(zip(coeffs, [S.Zero]*len(coeffs))))
 
-    if not (F.atoms(Symbol) - set(V)):
+    if not (F.free_symbols - set(V)):
         solution = _integrate('Q')
 
         if solution is None:
