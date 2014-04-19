@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import oo
+from sympy.core import oo, Tuple
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.inference import satisfiable
