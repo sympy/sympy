@@ -42,6 +42,9 @@ class Point(object):
             return False
         return self._coords == other._coords
 
+    def __hash__(self):
+        return id(self)
+
     def __sub__(self, other):
         """
         Subtract coordinates of one point from other
