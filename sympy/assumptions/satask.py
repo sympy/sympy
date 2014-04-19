@@ -9,9 +9,9 @@ from sympy.logic.boolalg import And, Implies, Equivalent, Or
 from sympy.assumptions.ask import Q
 from sympy.utilities.iterables import sift
 from sympy.assumptions.ask_generated import known_facts_cnf
-from sympy.assumptions.newhandlers import fact_registry
+from sympy.assumptions.sathandlers import fact_registry
 
-def newask(proposition, assumptions=True, context=global_assumptions,
+def satask(proposition, assumptions=True, context=global_assumptions,
     use_known_facts=True, iterations=oo):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
         use_known_facts=use_known_facts, iterations=iterations)

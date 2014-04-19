@@ -1,6 +1,6 @@
 from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 
-from sympy.assumptions.newhandlers import (ClassFactRegistry, AllArgs,
+from sympy.assumptions.sathandlers import (ClassFactRegistry, AllArgs,
     UnevaluatedOnFree, AnyArgs, CheckOldAssump, ExactlyOneArg)
 
 from sympy.utilities.pytest import raises

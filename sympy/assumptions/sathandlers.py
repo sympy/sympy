@@ -90,7 +90,7 @@ class AllArgs(UnevaluatedOnFree):
     Example
     =======
 
-    >>> from sympy.assumptions.newhandlers import AllArgs
+    >>> from sympy.assumptions.sathandlers import AllArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
     >>> a = AllArgs(Q.positive | Q.negative)
@@ -117,7 +117,7 @@ class AnyArgs(UnevaluatedOnFree):
     Example
     =======
 
-    >>> from sympy.assumptions.newhandlers import AnyArgs
+    >>> from sympy.assumptions.sathandlers import AnyArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
     >>> a = AnyArgs(Q.positive & Q.negative)
@@ -144,7 +144,7 @@ class ExactlyOneArg(UnevaluatedOnFree):
     Example
     =======
 
-    >>> from sympy.assumptions.newhandlers import ExactlyOneArg
+    >>> from sympy.assumptions.sathandlers import ExactlyOneArg
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
     >>> a = ExactlyOneArg(Q.positive)

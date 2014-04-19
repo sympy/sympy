@@ -112,7 +112,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
-    from sympy.assumptions.newask import newask
+    from sympy.assumptions.satask import satask
 
     if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("proposition must be a valid logical expression")
@@ -145,8 +145,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return
 
     if local_facts is None:
-        return newask(proposition, assumptions=assumptions, context=context)
-        
+        return satask(proposition, assumptions=assumptions, context=context)
+
 
     # See if there's a straight-forward conclusion we can make for the inference
     if local_facts.is_Atom:
@@ -174,7 +174,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     # Failing all else, we do a full logical inference
     res = ask_full_inference(key, local_facts, known_facts_cnf)
     if res is None:
-        return newask(proposition, assumptions=assumptions, context=context)
+        return satask(proposition, assumptions=assumptions, context=context)
     return res
 
 
