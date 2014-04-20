@@ -525,7 +525,10 @@ class harmonic(Function):
         if m is None:
             m = S.One
         if n == oo:
-            return C.zeta(m)
+            if m is S.One:
+                return S.Infinity
+            else:
+                return C.zeta(m)
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
             if n == 0:
                 return S.Zero
