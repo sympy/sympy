@@ -4,216 +4,408 @@
 Import diagnostics. Run bin/diagnose_imports.py --help for details.
 """
 
+### imports ####################################################################
+
 from __future__ import print_function
 
-if __name__ == "__main__":
+# Doing an import a second time is different from doing it the first time.
+# Since we want to diagnose import processing inside SymPy, we cannot import
+# any SymPy modules; in fact this test is not a normal SymPy test module,
+# it is a standalone program.
 
-    import sys
-    import inspect
-    from sympy.core.compatibility import builtins
+# We do some imports of the Python standard modules.
+# This does obscure the import diagnostics for these modules.
+# This is acceptable since the main purpose of this program is to diagnose
+# the import of SymPy modules.
 
-    import optparse
+# Can't import sympy.core.compatibility.
+# Duplicate of its logic what we need.
+import sys
+PY3 = sys.version_info[0] > 2 # from sympy.core.compatibility
+if PY3:
+    import builtins
+else:
+    import __builtin__ as builtins
 
-    from os.path import abspath, dirname, join, normpath
-    this_file = abspath(__file__)
-    sympy_dir = join(dirname(this_file), '..', '..', '..')
-    sympy_dir = normpath(sympy_dir)
-    sys.path.insert(0, sympy_dir)
+import optparse # No argparse in Python 2.6
+import collections
+import inspect
+import os.path
 
+### Option processing ##########################################################
+
+def parse_options():
     option_parser = optparse.OptionParser(
         usage=
-            "Usage: %prog option [options]\n"
-            "\n"
-            "Import analysis for imports between SymPy modules.")
+            "%prog [options]\n"
+            "Run diagnostics on the imports in a software package.\n"
+            "Later options override earlier ones.",
+        epilog=
+            'If Python encounters the same module again during an import, '
+            'it will do the import (and it will be recorded by this program), '
+            'but Python will not repeat running the module\'s initialization '
+            'code and import statements contained in it.'
+            '-- '
+            'This can not work well for "as" imports '
+            '("from foo import bar as baz") '
+            'because Python does not provide renaming information '
+            'to import hooks. '
+            'WORKAROUND: Avoid renaming imports such as the one above; '
+            'instead, do "import foo" and use "foo.bar" instead of "baz".')
+
+    option_group = optparse.OptionGroup(
+        option_parser,
+        'Scope options',
+        'Define which imports to analyse:')
+    option_group.add_option(
+        '--import',
+        action='store',
+        default='sympy',
+        dest='import_', # import is a keyword, can't use options.import
+        metavar="MODULE",
+        help=
+            'What module to import and analyse')
+    option_group.add_option(
+        '--recursive',
+        action='store',
+        type='choice',
+        choices=['yes', 'no'],
+        default='yes',
+        metavar="yes|no",
+        help=
+            'Whether to analyse imports done inside imports')
+    option_group.add_option(
+        '--exclude',
+        action='append',
+        default=['sympy.mpmath'],
+        help=
+            'A module to avoid analyzing; '
+            'naming a module excludes submodules as well; '
+            'by default, sympy.mpmath is excluded')
+    option_group.add_option(
+        '--include',
+        action='append',
+        default=[],
+        help=
+            'A module to analyze anyway, even if it is listed with --include; '
+            'naming a module includes submodules as well')
+    option_parser.add_option_group(option_group)
+
     option_group = optparse.OptionGroup(
         option_parser,
         'Analysis options',
-        'Options that define what to do. Exactly one of these must be given.')
+        'Define what kind of analysis to run:')
+    option_group.add_option(
+        '--duplicate',
+        action='store_true',
+        default=False,
+        help=
+            'print names imported more than once with the same definition '
+            '(such imports are useless)')
+    option_group.add_option(
+        '--redefinition',
+        action='store_true',
+        default=False,
+        help=
+            'print names imported with two different definitions '
+            '(such imports can be misleading, '
+            'particularly in SymPy '
+            'with its large number of global symbols)')
+    option_group.add_option(
+        '--indirect',
+        action='store_true',
+        default=False,
+        help=
+            'print names imported from a module '
+            'other than the one that the name was defined in '
+            '(every indirect import makes it harder '
+            'to find the origin of a name, or to deal with import cycles)')
     option_group.add_option(
         '--problems',
+        action='store_true',
+        default=False,
         help=
-            'Print all import problems, that is: '
-            'If an import pulls in a package instead of a module '
-            '(e.g. sympy.core instead of sympy.core.add); ' # see ##PACKAGE##
-            'if it imports a symbol that is already present; ' # see ##DUPLICATE##
-            'if it imports a symbol '
-            'from somewhere other than the defining module.', # see ##ORIGIN##
-        action='count')
+            'all analyses that are relevant to a SymPy release; '
+            'currently, these are --duplicate, --redefinition, and --indirect')
     option_group.add_option(
         '--origins',
+        action='store_true',
+        default=False,
         help=
-            'For each imported symbol in each module, '
-            'print the module that defined it. '
-            '(This is useful for import refactoring.)',
-        action='count')
+            'print the defining module for each name, sorted by name')
+    option_group.add_option(
+        '--trace',
+        action='store_true',
+        default=False,
+        help=
+            'print a raw trace of import activities')
     option_parser.add_option_group(option_group)
+
     option_group = optparse.OptionGroup(
         option_parser,
-        'Sort options',
-        'These options define the sort order for output lines. '
-        'At most one of these options is allowed. '
-        'Unsorted output will reflect the order in which imports happened.')
+        'Output options')
     option_group.add_option(
-        '--by-importer',
-        help='Sort output lines by name of importing module.',
-        action='count')
+        '--sort',
+        choices=['no', 'importer', 'imported'],
+        default='no',
+        metavar="no|importer|imported",
+        help=
+            'Sort output lines; '
+            'no: do not sort, '
+            'i.e. print information in the order that it became available; '
+            'importer: sort by importing module\'s name; '
+            'imported: sorty by imported module\'s name')
     option_group.add_option(
-        '--by-origin',
-        help='Sort output lines by name of imported module.',
-        action='count')
+        '--indent',
+        type='int',
+        default=2,
+        help=
+          'How many blanks to indent the output for a subelement; '
+          'default %default')
+    option_group.add_option(
+        '--report',
+        type='choice',
+        choices=['global', 'local', 'calls'],
+        default='calls',
+        metavar="global|local|calls",
+        help=
+            'What lines of code to report; '
+            'global: module level imports; '
+            'local: all imports (module and function level); '
+            'calls: all imports plus all function calls leading to them')
     option_parser.add_option_group(option_group)
+
     (options, args) = option_parser.parse_args()
     if args:
-        option_parser.error(
-            'Unexpected arguments %s (try %s --help)' % (args, sys.argv[0]))
-    if options.problems > 1:
-        option_parser.error('--problems must not be given more than once.')
-    if options.origins > 1:
-        option_parser.error('--origins must not be given more than once.')
-    if options.by_importer > 1:
-        option_parser.error('--by-importer must not be given more than once.')
-    if options.by_origin > 1:
-        option_parser.error('--by-origin must not be given more than once.')
-    options.problems = options.problems == 1
-    options.origins = options.origins == 1
-    options.by_importer = options.by_importer == 1
-    options.by_origin = options.by_origin == 1
-    if not options.problems and not options.origins:
-        option_parser.error(
-            'At least one of --problems and --origins is required')
-    if options.problems and options.origins:
-        option_parser.error(
-            'At most one of --problems and --origins is allowed')
-    if options.by_importer and options.by_origin:
-        option_parser.error(
-            'At most one of --by-importer and --by-origin is allowed')
-    options.by_process = not options.by_importer and not options.by_origin
+        option_parser.error('Unexpected arguments: %s' % ' '.join(args))
+    if options.problems:
+        options.duplicate = True
+        options.redefinition = True
+        options.indirect = True
+    if (not options.duplicate
+        and not options.redefinition
+        and not options.indirect
+        and not options.problems
+        and not options.origins
+        and not options.trace):
+        option_parser.error("At least one analysis option must be given")
+    return options
 
-    builtin_import = builtins.__import__
+### Running the import #########################################################
 
-    class Definition(object):
-        """Information about a symbol's definition."""
-        def __init__(self, name, value, definer):
-            self.name = name
-            self.value = value
-            self.definer = definer
-        def __hash__(self):
-            return hash(self.name)
-        def __eq__(self, other):
-            return self.name == other.name and self.value == other.value
-        def __ne__(self, other):
-            return not (self == other)
-        def __repr__(self):
-            return 'Definition(%s, ..., %s)' % (
-                repr(self.name), repr(self.definer))
+def super_dir(file_name, levels=1):
+    result = os.path.abspath(file_name)
+    for _ in range(levels):
+        result = os.path.join(result, '..')
+    result = os.path.normpath(result)
+    return result
 
-    symbol_definers = {} # Maps each function/variable to name of module to define it
+def sub_dir(dir_name, additional_name):
+    result = os.path.abspath(dir_name)
+    result = os.path.join(result, additional_name)
+    result = os.path.normpath(result)
+    return result
 
-    def in_module(a, b):
-        """Is a the same module as or a submodule of b?"""
-        return a == b or a != None and b != None and a.startswith(b + '.')
+sympy_dir = super_dir(__file__, 3)
+sys.path.insert(0, sympy_dir)
 
-    def relevant(module):
-        """Is module relevant for import checking?
+import_log = None
+"""The ImportLogRecord of the top-level import analyzed."""
 
-        Only imports between relevant modules will be checked."""
-        return in_module(module, 'sympy') and not in_module(module, 'sympy.mpmath')
+# Information from a call stack frame that was active during an import statement.
+# This will be mostly import statements with the occasional function call.
+# The latter get introduced in imports inside functions.
+ImportLogRecord = collections.namedtuple("ImportLogRecord", [
+    'file', # File of statement
+    'line_number', # Line number of statement
+    'imported_module', # None if not an import statement
+    'name_list', # Names in "from" clause
+        # None if there was no such clause (or not an import statement)
+        # List of all names in the module's dict if the name list contained '*'
+    'children', # List of ImportLogRecords that have self as parent
+    ])
 
-    sorted_messages = []
+import_log = None
 
-    def msg(msg, *args):
-        global options, sorted_messages
-        if options.by_process:
-            print(msg % args)
-        else:
-            sorted_messages.append(msg % args)
+_active_log_records = []
+"""The currently active ImportLogRecords."""
 
-    def tracking_import(module, globals=globals(), locals=[], fromlist=None, level=-1):
-        """__import__ wrapper - does not change imports at all, but tracks them.
+_active_import_stack_frames = []
+"""The call stack frames that point to import statements."""
 
-        Default order is implemented by doing output directly.
-        All other orders are implemented by collecting output information into
-        a sorted list that will be emitted after all imports are processed.
+def _import_wrapper(module, globals=globals(), locals=[], fromlist=None, level=-1):
+    """This is a replacement for __import__.
 
-        Indirect imports can only occur after the requested symbol has been
-        imported directly (because the indirect import would not have a module
-        to pick the symbol up from).
-        So this code detects indirect imports by checking whether the symbol in
-        question was already imported.
+    It records the current state in import_log and calls _builtin_import.
+    It is used by recording_import."""
 
-        Keeps the semantics of __import__ unchanged."""
-        global options, symbol_definers
-        caller_frame = inspect.getframeinfo(sys._getframe(1))
-        importer_filename = caller_frame.filename
-        importer_module = globals['__name__']
-        if importer_filename == caller_frame.filename:
-            importer_reference = '%s line %s' % (
-                importer_filename, str(caller_frame.lineno))
-        else:
-            importer_reference = importer_filename
-        result = builtin_import(module, globals, locals, fromlist, level)
-        importee_module = result.__name__
-        # We're only interested if importer and importee are in SymPy
-        if relevant(importer_module) and relevant(importee_module):
-            for symbol in result.__dict__.iterkeys():
-                definition = Definition(
-                    symbol, result.__dict__[symbol], importer_module)
-                if not symbol_definers.has_key(definition):
-                    symbol_definers[definition] = importee_module
-            if hasattr(result, '__path__'):
-                ##PACKAGE##
-                # The existence of __path__ is documented in the tutorial on modules.
-                # Python 3.3 documents this in http://docs.python.org/3.3/reference/import.html
-                if options.by_origin:
-                    msg('Error: %s (a package) is imported by %s',
-                        module, importer_reference)
-                else:
-                    msg('Error: %s contains package import %s',
-                        importer_reference, module)
+    # Find out if there are any stack frames between the next outer import and
+    # the top of _activeLogRecords. If there are, we're inside an import inside
+    # one or more function calls and want to record these stack frames with a
+    # module and name_list of None.
+    global _active_log_records
+    global _active_import_stack_frames
+    my_frame = sys._getframe()
+    importer_frame = sys._getframe(1)
+    frames = []
+    if len(_active_import_stack_frames) > 0:
+        frame = importer_frame.f_back
+        while frame != _active_import_stack_frames[-1]:
+            if frame.f_code.co_filename != my_frame.f_code.co_filename:
+                # Record only if it's not code from this file
+                frames.append(frame)
+            frame = frame.f_back
+        for frame in reversed(frames):
+            _active_log_records.append(ImportLogRecord(
+                file=frame.f_code.co_filename,
+                line_number=frame.f_lineno,
+                imported_module=None,
+                name_list=None,
+                children=[] # Incremental fill-in during nested imports
+                ))
+            if len(_active_log_records) > 1:
+                _active_log_records[-2].children.append(_active_log_records[-1])
+    (file, lineno, _, _, _) = inspect.getframeinfo(importer_frame)
+    _active_log_records.append(ImportLogRecord(
+        file=file,
+        line_number=lineno,
+        imported_module=module,
+        name_list=[], # Filled below
+        children=[], # Incremental fill-in during nested imports
+        ))
+    if len(_active_log_records) > 1:
+        _active_log_records[-2].children.append(_active_log_records[-1])
+    _active_import_stack_frames.append(importer_frame)
+    # Run the import and record the outcome
+    result = None
+    try:
+        result = _builtin_import(module, globals, locals, fromlist, level)
+    finally:
+        try:
+            # Fill in name_list
             if fromlist != None:
-                symbol_list = fromlist
-                if '*' in symbol_list:
-                    if (importer_filename.endswith('__init__.py')
-                        or importer_filename.endswith('__init__.pyc')
-                        or importer_filename.endswith('__init__.pyo')):
-                        # We do not check starred imports inside __init__
-                        # That's the normal "please copy over its imports to my namespace"
-                        symbol_list = []
-                    else:
-                        symbol_list = result.__dict__.iterkeys()
-                for symbol in symbol_list:
-                    if not symbol in result.__dict__:
-                        if options.by_origin:
-                            msg('Error: %s.%s is not defined (yet), but %s tries to import it',
-                                importee_module, symbol, importer_reference)
-                        else:
-                            msg('Error: %s tries to import %s.%s, which did not define it (yet)',
-                                importer_reference, importee_module, symbol)
-                    else:
-                        definition = Definition(
-                            symbol, result.__dict__[symbol], importer_module)
-                        symbol_definer = symbol_definers[definition]
-                        if symbol_definer == importee_module:
-                            ##DUPLICATE##
-                            if options.by_origin:
-                                msg('Error: %s.%s is imported again into %s',
-                                    importee_module, symbol, importer_reference)
-                            else:
-                                msg('Error: %s imports %s.%s again',
-                                      importer_reference, importee_module, symbol)
-                        else:
-                            ##ORIGIN##
-                            if options.by_origin:
-                                msg('Error: %s.%s is imported by %s, which should import %s.%s instead',
-                                      importee_module, symbol, importer_reference, symbol_definer, symbol)
-                            else:
-                                msg('Error: %s imports %s.%s but should import %s.%s instead',
-                                      importer_reference, importee_module, symbol, symbol_definer, symbol)
-        return result
+                # fromlist == None means we have "import <module>"
+                # instead of "from <module> import <name>, ..."
+                # These don't add to the module's global namespace, and hence are
+                # irrelevant for most (but maybe not all) reports.
+                if '*' in fromlist:
+                    # Starred import, equivalent to importing all names that the
+                    # module defines. These are the keys of result.__dict__.
+                    _active_log_records[-1].name_list.extend(result.__dict__.iterkeys())
+                else:
+                    _active_log_records[-1].name_list.extend(fromlist)
+        finally:
+            global import_log
+            for _ in range(len(frames) + 1):
+                import_log = _active_log_records.pop()
+            _active_import_stack_frames.pop()
+    # Return the outcome from the original __import__ in _builtin_import
+    return result
 
-    builtins.__import__ = tracking_import
-    __import__('sympy')
+def recording_import(module):
+    global import_log
+    import_log = None
+    global _builtin_import
+    _builtin_import = builtins.__import__
+    builtins.__import__ = _import_wrapper
+    global _active_log_records
+    _active_log_records = []
+    global _active_import_stack_frames
+    _active_import_stack_frames = []
+    try:
+        __import__(module)
+    finally:
+        builtins.__import__ = _builtin_import
 
-    sorted_messages.sort()
-    for message in sorted_messages:
-        print(message)
+
+### Generating output ##########################################################
+
+def printable_filename(file_name, paths):
+    """file_name, with the values from paths replaced by the keys.
+
+        >>> printable_filename(
+        ...     '/home/john/workspace/sympy/install/sympy.py',
+        ...     {'SYMPY': '/home/john/workspace/sympy/install'})
+        $SYMPY_DIR/sympy.py
+    """
+    for (path_name, path) in paths:
+        if path == os.path.commonprefix([path, file_name]):
+            return os.path.join('$' + path_name, os.path.relpath(file_name, path))
+    return file_name
+
+def dump_log(log_record, depth, options):
+    if log_record == None:
+        return
+    str = '%*s%s line %d' % (
+          depth * options.indent, '',
+          printable_filename(log_record.file, options.paths),
+          log_record.line_number,
+          )
+    if log_record.imported_module != None:
+        str += ': '
+        if log_record.name_list != None:
+            str += 'from %s import %s' % (
+                log_record.imported_module,
+                ', '.join(log_record.name_list))
+        else:
+            str += 'import %s' % log_record.imported_module
+    print(str)
+    if log_record.children != None:
+        for child in log_record.children:
+            dump_log(child, depth + 1, options)
+
+def dump_origins(options):
+    pass # FIXME implement
+
+def report_problems(options):
+    pass # FIXME implement
+
+def report(options):
+    global import_log
+    if options.trace:
+        dump_log(import_log, 0, options)
+    if options.origins:
+        dump_origins(options)
+    if options.duplicate or options.redefinition or options.indirect:
+        report_problems(options)
+
+### Main program ###############################################################
+
+if __name__ == "__main__":
+    options = parse_options()
+    sympy_install_dir = super_dir(sympy_dir)
+    options.paths = [
+        ('PYTHON', super_dir(sys.executable, 2)),
+        ('SYMPY_BIN', sub_dir(sympy_install_dir, 'bin')),
+        ('SYMPY', sympy_dir),
+        ('SYMPY_INSTALL', sympy_install_dir),
+        ]
+    print(options.paths)
+    recording_import(options.import_)
+    report(options)
+
+### Currently unused code ######################################################
+
+def in_module(a, b):
+    """Is a the same module as or a submodule of b?"""
+    return a == b or a != None and b != None and a.startswith(b + '.')
+
+def is_relevant(module):
+    """Is module relevant for import checking?
+
+    Only imports between relevant modules will be checked."""
+    return in_module(module, 'sympy') and not in_module(module, 'sympy.mpmath')
+
+def is_package_init_file(filename):
+    return (filename.endswith('__init__.py')
+        or filename.endswith('__init__.pyc')
+        or filename.endswith('__init__.pyo'))
+
+sorted_messages = []
+
+def msg(msg, *args):
+    global options, sorted_messages
+    if options.by_process:
+        print(msg % args)
+    else:
+        sorted_messages.append(msg % args)
