@@ -80,9 +80,8 @@ def test_bell():
 def test_harmonic():
     n = Symbol("n")
 
-    assert harmonic(3, 1) == harmonic(3)
-
     assert harmonic(n, 0) == n
+    assert harmonic(n, 1) == harmonic(n)
 
     assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1

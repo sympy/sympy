@@ -554,6 +554,8 @@ class harmonic(Function):
 
     @classmethod
     def eval(cls, n, m=None):
+        if m is S.One:
+            return cls(n)
         if m is None:
             m = S.One
 
