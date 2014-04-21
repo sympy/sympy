@@ -4,7 +4,7 @@ from sympy import (bernoulli, Symbol, symbols, Dummy, S, Sum, Rational,
                    oo, zoo, pi, I, simplify, expand_func, harmonic,
                    bell, fibonacci, lucas, euler, catalan, binomial, gamma,
                    sqrt, hyper, log, digamma, trigamma, polygamma, diff,
-                   EulerGamma, factorial, sin, cos, cot, cancel)
+                   EulerGamma, factorial, sin, cos, cot, cancel, zeta)
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -78,15 +78,35 @@ def test_bell():
 
 
 def test_harmonic():
+    n = Symbol("n")
+
+    assert harmonic(3, 1) == harmonic(3)
+
+    assert harmonic(n, 0) == n
+
+    assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1
     assert harmonic(2, 1) == Rational(3, 2)
     assert harmonic(3, 1) == Rational(11, 6)
     assert harmonic(4, 1) == Rational(25, 12)
-    assert harmonic(3, 1) == harmonic(3)
-    assert harmonic(3, 5) == 1 + Rational(1, 2**5) + Rational(1, 3**5)
-    assert harmonic(10, 0) == 10
+    assert harmonic(0, 2) == 0
+    assert harmonic(1, 2) == 1
+    assert harmonic(2, 2) == Rational(5, 4)
+    assert harmonic(3, 2) == Rational(49, 36)
+    assert harmonic(4, 2) == Rational(205, 144)
+    assert harmonic(0, 3) == 0
+    assert harmonic(1, 3) == 1
+    assert harmonic(2, 3) == Rational(9, 8)
+    assert harmonic(3, 3) == Rational(251, 216)
+    assert harmonic(4, 3) == Rational(2035, 1728)
+
+    assert harmonic(oo, -1) == S.NaN
+    assert harmonic(oo, 0) == oo
+    assert harmonic(oo, S.Half) == oo
     assert harmonic(oo, 1) == oo
     assert harmonic(oo, 2) == (pi**2)/6
+    assert harmonic(oo, 3) == zeta(3)
+
 
 def test_harmonic_rational():
     ne = S(6)
