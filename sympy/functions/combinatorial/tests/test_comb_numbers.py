@@ -88,25 +88,7 @@ def test_harmonic():
     assert harmonic(oo, 2) == (pi**2)/6
 
 
-def replace_dummy(expr, sym):
-    dum = expr.atoms(Dummy)
-    if not dum:
-        return expr
-    assert len(dum) == 1
-    return expr.xreplace({dum.pop(): sym})
-
-
-def test_harmonic_rewrite_sum():
-    n = Symbol("n")
-    m = Symbol("m")
-
-    _k = Dummy("k")
-    assert replace_dummy(harmonic(n).rewrite(Sum), _k) == Sum(1/_k, (_k, 1, n))
-    assert replace_dummy(harmonic(n, m).rewrite(Sum), _k) == Sum(_k**(-m), (_k, 1, n))
-
-
-@XFAIL
-def test_harmonic_rewrite_sum_fail():
+def test_harmonic_rewrite_polygamma():
     n = Symbol("n")
     m = Symbol("m")
 
@@ -122,9 +104,32 @@ def test_harmonic_rewrite_sum_fail():
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
 
+
+@XFAIL
+def test_harmonic_rewrite_sum_fail():
+    n = Symbol("n")
+    m = Symbol("m")
+
     _k = Dummy("k")
     assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
     assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
+
+
+def replace_dummy(expr, sym):
+    dum = expr.atoms(Dummy)
+    if not dum:
+        return expr
+    assert len(dum) == 1
+    return expr.xreplace({dum.pop(): sym})
+
+
+def test_harmonic_rewrite_sum():
+    n = Symbol("n")
+    m = Symbol("m")
+
+    _k = Dummy("k")
+    assert replace_dummy(harmonic(n).rewrite(Sum), _k) == Sum(1/_k, (_k, 1, n))
+    assert replace_dummy(harmonic(n, m).rewrite(Sum), _k) == Sum(_k**(-m), (_k, 1, n))
 
 
 def test_euler():
