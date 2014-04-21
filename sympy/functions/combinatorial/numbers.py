@@ -464,6 +464,34 @@ class harmonic(Function):
     >>> harmonic(n).rewrite(Sum)
     Sum(1/_k, (_k, 1, n))
 
+    We can evaluate harmonic numbers for all integral and positive
+    rational arguments:
+
+    >>> from sympy import S, expand_func, simplify
+    >>> harmonic(8)
+    761/280
+    >>> harmonic(11)
+    83711/27720
+
+    >>> H = harmonic(1/S(3))
+    >>> H
+    harmonic(1/3)
+    >>> He = expand_func(H)
+    >>> He
+    -log(6) - sqrt(3)*pi/6 + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1))
+                           + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
+    >>> He.doit()
+    -log(6) - sqrt(3)*pi/6 - log(sqrt(3)/2) + 3
+    >>> H = harmonic(25/S(7))
+    >>> He = simplify(expand_func(H).doit())
+    >>> He
+    log(sin(pi/7)**(-2*cos(pi/7))*sin(2*pi/7)**(2*cos(16*pi/7))*cos(pi/14)**(-2*sin(pi/14))/14)
+    + pi*tan(pi/14)/2 + 30247/9900
+    >>> He.n(40)
+    1.983697455232980674869851942390639915940
+    >>> harmonic(25/S(7)).n(40)
+    1.983697455232980674869851942390639915940
+
     We can rewrite harmonic numbers in terms of polygamma functions:
 
     >>> from sympy import digamma, polygamma
