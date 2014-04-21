@@ -292,10 +292,6 @@ def test_eval():
     assert (O(1)**x).is_Pow
 
 
-def test_oseries():
-    assert Order(x).oseries(x) == Order(x)
-
-
 def test_issue_4279():
     a, b = symbols('a b')
     assert O(a, a, b) + O(1, a, b) == O(1, a, b)

@@ -552,7 +552,6 @@ class cos(TrigonometricFunction):
         return self._eval_rewrite_as_sqrt(arg)
 
     def _eval_rewrite_as_sqrt(self, arg):
-        _EXPAND_INTS = False
 
         def migcdex(x):
             # recursive calcuation of gcd and linear combination
@@ -570,6 +569,7 @@ class cos(TrigonometricFunction):
             return tuple([u] + [v*i for i in g[0:-1] ] + [h])
 
         def ipartfrac(r, factors=None):
+            from sympy.ntheory import factorint
             if isinstance(r, int):
                 return r
             if not isinstance(r, C.Rational):
@@ -635,9 +635,6 @@ class cos(TrigonometricFunction):
             if None == nval:
                 return None
             nval = nval.rewrite(sqrt)
-            if not _EXPAND_INTS:
-                if (isinstance(nval, cos) or isinstance(-nval, cos)):
-                    return None
             x = (2*pi_coeff + 1)/2
             sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
             return sign_cos*sqrt( (1 + nval)/2 )
@@ -648,12 +645,11 @@ class cos(TrigonometricFunction):
             X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls.rewrite(sqrt)
-        if _EXPAND_INTS:
+        else:
             decomp = ipartfrac(pi_coeff)
             X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
-        return None
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
