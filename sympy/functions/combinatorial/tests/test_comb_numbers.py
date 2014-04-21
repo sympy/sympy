@@ -84,7 +84,7 @@ def test_harmonic():
     assert harmonic(3, 1) == harmonic(3)
     assert harmonic(3, 5) == 1 + Rational(1, 2**5) + Rational(1, 3**5)
     assert harmonic(10, 0) == 10
-    assert harmonic(oo, 1) == zoo
+    assert harmonic(oo, 1) == oo
     assert harmonic(oo, 2) == (pi**2)/6
 
 
