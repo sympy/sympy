@@ -556,11 +556,18 @@ class harmonic(Function):
     def eval(cls, n, m=None):
         if m is None:
             m = S.One
-        if n == oo:
-            if m is S.One:
+
+        if m.is_zero:
+            return n
+
+        if n is S.Infinity:
+            if m.is_negative:
+                return S.NaN
+            elif m <= S.One:
                 return S.Infinity
             else:
                 return C.zeta(m)
+
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
             if n == 0:
                 return S.Zero
