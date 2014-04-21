@@ -14,6 +14,10 @@ from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.evaluate import global_evaluate
 from sympy.core.cache import cacheit
+from sympy.core.numbers import pi
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 
 from sympy.mpmath import bernfrac
@@ -571,6 +575,21 @@ class harmonic(Function):
                 elif off.is_Integer and off.is_negative:
                     result = [-S.One/(nnew + i) for i in xrange(0, off, -1)] + [harmonic(nnew)]
                     return Add(*result)
+
+            if n.is_Rational:
+                # Expansions for harmonic numbers at general rational arguments (u + p/q)
+                # Split n as u + p/q with p < q
+                p, q = n.as_numer_denom()
+                u = p // q
+                p = p - u * q
+                if u.is_nonnegative and p.is_positive and q.is_positive and p < q:
+                    k = Dummy("k")
+                    t1 = q * C.Sum(1 / (q * k + p), (k, 0, u))
+                    t2 = 2 * C.Sum(cos((2 * pi * p * k) / S(q)) *
+                                   log(sin((pi * k) / S(q))),
+                                   (k, 1, floor((q - 1) / S(2))))
+                    t3 = (pi / 2) * cot((pi * p) / q) + log(2 * q)
+                    return t1 + t2 - t3
 
         return self
 
