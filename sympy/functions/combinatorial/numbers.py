@@ -15,6 +15,7 @@ from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.evaluate import global_evaluate
 from sympy.core.cache import cacheit
 from sympy.core.numbers import pi
+from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sin, cos, cot
@@ -532,8 +533,12 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    >>> limit(harmonic(m, n), m, oo)
-    zeta(n)
+    However we can not compute the general relation yet:
+
+    >>> limit(harmonic(n, m), n, oo)
+    harmonic(oo, m)
+
+    which equals ``zeta(m)`` for ``m > 1``.
 
     References
     ==========
@@ -562,13 +567,16 @@ class harmonic(Function):
         if m.is_zero:
             return n
 
-        if n is S.Infinity:
+        if n is S.Infinity and m.is_Number:
+            # TODO: Fix for symbolic values of m
             if m.is_negative:
                 return S.NaN
-            elif m <= S.One:
+            elif LessThan(m, S.One):
                 return S.Infinity
-            else:
+            elif StrictGreaterThan(m, S.One):
                 return C.zeta(m)
+            else:
+                return cls
 
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
             if n == 0:
