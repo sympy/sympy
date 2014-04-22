@@ -325,8 +325,6 @@ def test_1st_exact1():
     assert dsolve(eq4, hint='1st_exact') == sol4
     assert dsolve(eq5, hint='1st_exact', simplify=False) == sol5
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
-    # issue 5080 needs to be addressed to test these
-    # assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
@@ -363,6 +361,7 @@ def test_1st_exact3():
     constantsimp() rewrites exp(C1), introducing an inconsistency
         with the second appearance of C1.
     """
+    # issue 5080 needs to be addressed to test these
     eq2 = (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x)
     sol2 = Eq(f(x), exp(C1-x**2 + LambertW(C1*x*exp(x**2))))
     sol2b = Eq(log(f(x)) + x/f(x) + x**2, C1)
@@ -550,6 +549,7 @@ def test_1st_homogeneous_coeff_ode_FAIL():
     """
     constantsimp() incorrectly rewrites
     """
+    # issue 5080 needs to be addressed to test these
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
     sol3 = Eq(f(x), C1*LambertW(C2*x))  # Eq(f(x), x*exp(-LambertW(C1*x) + 1))
     assert dsolve(eq3, hint='1st_homogeneous_coeff_best') == sol3
