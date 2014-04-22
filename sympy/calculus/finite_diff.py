@@ -11,13 +11,15 @@ function (finite_diff_weights), and two convenience functions are provided
 for:
 
 - estimating a derivative (or interpolate) directly from a series of points
-is also provided (``apply_finite_diff``).
-- making a finite difference approximation of a Derivative instance (``as_finite_diff``).
+    is also provided (``apply_finite_diff``).
+- making a finite difference approximation of a Derivative instance
+    (``as_finite_diff``).
 
 """
 
 from sympy import S
 from sympy.core.compatibility import iterable
+
 
 def finite_diff_weights(order, x_list, x0):
     """
@@ -52,11 +54,11 @@ def finite_diff_weights(order, x_list, x0):
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
     >>> finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
-    [[[1, 0, 0, 0],
-      [1/2, 1/2, 0, 0],
-      [3/8, 3/4, -1/8, 0],
-      [5/16, 15/16, -5/16, 1/16]],
-     [[0, 0, 0, 0], [-1, 1, 0, 0], [-1, 1, 0, 0], [-23/24, 7/8, 1/8, -1/24]]]
+    [[[1, 0, 0, 0], \
+[1/2, 1/2, 0, 0], \
+[3/8, 3/4, -1/8, 0], \
+[5/16, 15/16, -5/16, 1/16]], \
+[[0, 0, 0, 0], [-1, 1, 0, 0], [-1, 1, 0, 0], [-23/24, 7/8, 1/8, -1/24]]]
 
     the result is two subslists, the first is for the 0:th derivative
     (interpolation) and the second for the first derivative (we gave
@@ -69,8 +71,8 @@ def finite_diff_weights(order, x_list, x0):
 
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
-    >>> finite_diff_weights(1, [-S(5)/2, -S(3)/2, -S(1)/2, S(1)/2,\
-    S(3)/2, S(5)/2], 0)
+    >>> finite_diff_weights(1, [-S(5)/2, -S(3)/2, -S(1)/2, S(1)/2,
+    ...    S(3)/2, S(5)/2], 0) #doctest: +NORMALIZE_WHITESPACE
     [[[1, 0, 0, 0, 0, 0],
       [-3/2, 5/2, 0, 0, 0, 0],
       [3/8, -5/4, 15/8, 0, 0, 0],
@@ -95,11 +97,11 @@ def finite_diff_weights(order, x_list, x0):
     >>> print(x_list)
     [-h + x, -sqrt(2)*h/2 + x, x, sqrt(2)*h/2 + x, h + x]
     >>> mycoeffs = finite_diff_weights(1, x_list, 0)[1][4]
-    >>> [simplify(c) for c in  mycoeffs]
-    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,\
-    (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,\
+    >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
+    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,
+    (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
     6*x/h**2 - 8*x**3/h**4,
-    (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,\
+    (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
     (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
     Notes
@@ -201,8 +203,8 @@ def apply_finite_diff(order, x_list, y_list, x0):
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
     >>> apply_finite_diff(1, x_list, y_list, x[i])
     (-1 + (x[i + 1] - x[i])/(-x[i - 1] + x[i]))*y[i]/(x[i + 1] - x[i]) + \
-    (-x[i - 1] + x[i])*y[i + 1]/((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i])) -\
-    (x[i + 1] - x[i])*y[i - 1]/((-x[i - 1] + x[i + 1])*(-x[i - 1] + x[i]))
+(-x[i - 1] + x[i])*y[i + 1]/((-x[i - 1] + x[i + 1])*(x[i + 1] - x[i])) - \
+(x[i + 1] - x[i])*y[i - 1]/((-x[i - 1] + x[i + 1])*(-x[i - 1] + x[i]))
 
 
     Notes
@@ -304,10 +306,10 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> xl = [x-h, x+h, x+e*h]
     >>> as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
     2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/\
-    ((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) - \
-    (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + \
-    (-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
-    
+((-h + E*h)*(h + E*h)) + (-(-sqrt(2)*h + h)/(2*h) - \
+(-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + \
+(-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
+
     Partial derivatives are also supported:
 
     >>> y = Symbol('y')
@@ -326,7 +328,7 @@ def as_finite_diff(derivative, points=1, x0=None, wrt=None):
         wrt = derivative.variables[0]
         # we need Derivative to be univariate to guess wrt
         if any(v != wrt for v in derivative.variables):
-            raise ValueError('if the function is not univariate'+
+            raise ValueError('if the function is not univariate' +
                              ' then `wrt` must be given')
 
     order = derivative.variables.count(wrt)

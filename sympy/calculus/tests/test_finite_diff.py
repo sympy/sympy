@@ -1,5 +1,7 @@
 from sympy import S, symbols, Function
-from sympy.calculus.finite_diff import apply_finite_diff, finite_diff_weights, as_finite_diff
+from sympy.calculus.finite_diff import (
+    apply_finite_diff, finite_diff_weights, as_finite_diff
+)
 
 
 def test_apply_finite_diff():
@@ -87,6 +89,7 @@ def test_finite_diff_weights():
     # Reasonably the rest of the table is also correct... (testing of that
     # deemed excessive at the moment)
 
+
 def test_as_finite_diff():
     x, h = symbols('x h')
     f = Function('f')
@@ -147,10 +150,10 @@ def test_as_finite_diff():
             (-f(x - 3/S(2)) + 3*f(x - 1/S(2)) -
              3*f(x + 1/S(2)) + f(x + 3/S(2)))).simplify() == 0
 
-    assert (as_finite_diff(f(x).diff(x, 3), [x - 3*h, x - 2*h, x-h, x,
-                                            x+h, x + 2*h, x + 3*h]) -
-            h**-3 * (S(1)/8*(f(x - 3*h) - f(x + 3*h)) - f(x - 2*h) +
-                     f(x + 2*h) + S(13)/8*(f(x-h) - f(x+h)))).simplify() == 0
+    assert (as_finite_diff(
+        f(x).diff(x, 3), [x - 3*h, x - 2*h, x-h, x, x+h, x + 2*h, x + 3*h]) -
+        h**-3 * (S(1)/8*(f(x - 3*h) - f(x + 3*h)) - f(x - 2*h) +
+                 f(x + 2*h) + S(13)/8*(f(x-h) - f(x+h)))).simplify() == 0
 
     # Central 3rd derivative at "half-way"
     assert (as_finite_diff(f(x).diff(x, 3), [x - 3*h, x-h, x+h, x + 3*h]) -
