@@ -45,7 +45,7 @@
 
 % Turn off header and footer
 \pagestyle{empty}
- 
+
 
 % Redefine section commands to use less space
 \makeatletter
@@ -97,7 +97,7 @@
      \Large{\textbf{Combinatoric CheatSheet \\ Sympy.org}} \\
 \end{center}
 \section{Partition}
-\verb!Path: from sympy.combinatorics.partitions!\\ 
+\verb!Path: from sympy.combinatorics.partitions!\\
 \subsection{Methods}
 \verb!random_integer_partition(n, seed=None)! \\
 Generates a random integer partition summing to n as a list of reverse-sorted integers
@@ -110,8 +110,8 @@ Computes the \verb!m + 1! generalized unrestricted growth strings and returns th
 \verb!RGS_enum(m)! \\
 computes the total number of restricted growth
  strings possible for a superset of size \verb!m!
- 
- 
+
+
 \verb!RGS_unrank(rank, m)! \\
 Gives the unranked restricted growth string for a given superset size
 
@@ -132,20 +132,20 @@ This Class represent abstract partition.
 \verb!sort_key(order=None)!  & Return a canonical key that can be used for sorting.
 \end{tabular}
 
-dump : \\
-Used at the very beginning of a document:
-\verb!\documentclass{!\textit{class}\verb!}!.  Use
-\verb!\begin{document}! to start contents and \verb!\end{document}! to
-end the document.
-\\end dump.
+%dump : \\
+%Used at the very beginning of a document:
+%\verb!\documentclass{!\textit{class}\verb!}!.  Use
+%\verb!\begin{document}! to start contents and \verb!\end{document}! to
+%end the document.
+%\\end dump.
 
-\subsection{Subclass \texttt{IntegerPartition}} 	
+\subsection{Subclass \texttt{IntegerPartition}}
 This class represents an integer partition.
 \newlength{\MyLen}
 \settowidth{\MyLen}{\texttt{letterpaper}/\texttt{a4paper} \ }
 \begin{tabular}{@{}p{\the\MyLen}%
                 @{}p{\linewidth-\the\MyLen}@{}}
-\verb!as_dict()! & Return the partition as a dictionary whose keys are the 
+\verb!as_dict()! & Return the partition as a dictionary whose keys are the
 				partition integers and the values are the multiplicity of that integer \\
 \verb!as_ferrers(char='#')! & Prints the ferrer diagram of a partition\\
 \verb!conjugate! &Computes the conjugate partition of itself\\
@@ -154,7 +154,7 @@ This class represents an integer partition.
 \end{tabular}
 
 \section{Permutation}
-Path \verb!sympy.combinatorics.permutations.Permutation!\\ 
+Path \verb!sympy.combinatorics.permutations.Permutation!\\
 \subsection{Methods}
 \verb!array_form! \\
 This is used to convert from cyclic notation to the canonical notation
@@ -196,7 +196,7 @@ Calculates the permutation from the inversion vector.
 
 
 \verb!from_sequence(i, key=None)!\\
-Return the permutation needed to obtain \verb!i! from the sorted elements of \verb!i!. 
+Return the permutation needed to obtain \verb!i! from the sorted elements of \verb!i!.
 If custom sorting is desired, a key can be given.
 
 \verb!full_cyclic_form!\\
@@ -246,8 +246,8 @@ Returns True if the Permutation is an identity permutation.
 \verb!is_Singleton!\\
 Checks to see if the permutation contains only one number and
  is thus the only possible permutation of this set of numbers.
- 
- 
+
+
  \verb!is_even!\\
 Checks if a permutation is even.
 
@@ -257,7 +257,7 @@ Checks if a permutation is odd.
 
 
 \verb!josephus(m, n, s=1)!\\
-Return as a permutation the shuffling of range(\verb!n!) using the Josephus scheme 
+Return as a permutation the shuffling of range(\verb!n!) using the Josephus scheme
 in which every \verb!m!-th item is selected until all have been chosen.
 
 
@@ -302,12 +302,12 @@ Generates a random permutation of length \verb!n!.
 
 
 \verb!rank(i=None)!\\
-Returns the lexicographic rank of the permutation 
+Returns the lexicographic rank of the permutation
 (default) or the \verb!i!th ranked permutation of self.
 
 
 \verb!rank_nonlex(inv_perm=None)!\\
-This is a linear time ranking algorithm 
+This is a linear time ranking algorithm
 that does not enforce lexicographic order.
 
 
@@ -316,7 +316,7 @@ Returns the Trotter Johnson rank, which we get from the minimal change algorithm
 
 
 \verb!static rmul(*args)!\\
-Return product of Permutations $[a, b, c, ...]$ as the Permutation whose $i$th value is $a(b(c(i)))$.
+Return product of Permutations $[a, b, c, \dots]$ as the Permutation whose $i$th value is $a(b(c(i)))$.
 
 
 \verb!runs()!\\
@@ -689,7 +689,7 @@ The Prufer correspondence is an algorithm that describes the bijection
 \verb!static edges(*runs)!\\
 Return a list of edges and the number of nodes from the given
  runs that connect nodes in an integer-labelled tree.
- 
+
  \verb!next(delta=1)!\\
 Generates the Prufer sequence that is delta beyond the current one.
 
@@ -815,7 +815,7 @@ Gets the subset defined by the \verb!bitlist!.
 
 
 \verb!subset_indices(subset, superset)!\\
-Return indices of subset in superset in a list; 
+Return indices of subset in superset in a list;
 the list is empty if all elements of \verb!subset! are not in \verb!superset!.
 
 
@@ -844,10 +844,10 @@ Finds the subsets of size \verb!k! in lexicographic order.
 \section{Gray Code}
 Path: \verb!sympy.combinatorics.graycode.GrayCode!
 A Gray code is essentially a Hamiltonian walk on a n-dimensional
- cube with edge length of one. The vertices of the cube are 
- represented by vectors whose values are binary. 
- The Hamilton walk visits each vertex exactly once. 
- 
+ cube with edge length of one. The vertices of the cube are
+ represented by vectors whose values are binary.
+ The Hamilton walk visits each vertex exactly once.
+
 \subsection{Methods}
 
 \verb!current!\\
@@ -883,7 +883,7 @@ Skips the bit generation.
 
 
 \verb!unrank(n, rank)!\\
-Unranks an n-bit sized Gray code of rank k. 
+Unranks an n-bit sized Gray code of rank k.
 This method exists so that a derivative GrayCode class can define its own code of a given rank.
 
 
@@ -944,7 +944,7 @@ Path: \verb!sympy.combinatorics.util!
 
 \subsection{Methods}
 \verb!_base_ordering(base, degree)!\\
-Order $\{0,1,...,n?1\}$ so that base points come first and in order
+Order $\{0,1,\dots,n\}$ so that base points come first and in order
 
 
 \verb!_check_cycles_alt_sym(perm)!\\
@@ -956,7 +956,7 @@ Checks for cycles of prime length $p$ with $n/2 < p < n-2$.
 Distribute the group elements \verb!gens! by membership in basic stabilizers.
 
 
-\verb!_handle_precomputed_bsgs(base, strong_gens,!\\ 
+\verb!_handle_precomputed_bsgs(base, strong_gens,!\\
 \verb!transversals=None, basic_orbits=None,!\\
 \verb!strong_gens_distr=None)!\\
 Calculate BSGS-related structures from those present.
