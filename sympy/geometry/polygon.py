@@ -664,11 +664,14 @@ class Polygon(GeometryEntity):
 
         """
         res = []
-        for side in self.sides:
-            inter = side.intersection(o)
+        res = [i for i in self.sides if i in o]
+        if res is not None:
+            return res
+        else:    
+            inter = self.intersection(o)
             if inter is not None:
                 res.extend(inter)
-        return res
+            return list(set(res))
 
     def distance(self, o):
         """
