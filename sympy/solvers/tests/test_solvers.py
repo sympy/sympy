@@ -930,6 +930,13 @@ def test_issue_4463():
         (a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
 
 
+def test_issue_5113():
+    assert solve((x + 5*y - 2, -3*x + 6*y - 15), x, y) == {x: -3, y: 1}
+    assert solve([x + 5*y-2, -3*x + 6*y - 15], x, y) == {x: -3, y: 1}
+    assert solve(set((x + 5*y-2, -3*x + 6*y - 15)), x, y) == {x: -3, y: 1}
+    assert solve(frozenset((x + 5*y - 2, -3*x + 6*y - 15)), x, y) == {x: -3, y: 1}
+
+
 def test_issue_5114():
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 
