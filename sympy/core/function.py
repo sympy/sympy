@@ -503,6 +503,11 @@ class Function(Application, Expr):
             l.append(df * da)
         return Add(*l)
 
+    def _eval_derivative_wrt(self, expr, new_name):
+        new_self = Dummy(new_name)
+        new_expr = expr.subs(self, new_self)
+        return (new_expr, new_self)
+
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 
@@ -1094,18 +1099,14 @@ class Derivative(Expr):
             if unhandled_non_symbol:
                 obj = None
             else:
-                if not is_symbol:
-                    new_v = C.Dummy('xi_%i' % i)
-                    new_v.dummy_index = hash(v)
-                    expr = expr.subs(v, new_v)
-                    old_v = v
-                    v = new_v
-                obj = expr._eval_derivative(v)
-                nderivs += 1
-                if not is_symbol:
+                if is_symbol:
+                    obj = expr._eval_derivative(v)
+                else:
+                    tmp_expr, tmp_v = v._eval_derivative_wrt(expr, 'xi_%i' % i) or (None, None)
+                    obj = tmp_expr._eval_derivative(tmp_v) if tmp_expr is not None else None
                     if obj is not None:
-                        obj = obj.subs(v, old_v)
-                    v = old_v
+                        obj = obj.subs(tmp_v, v)
+                nderivs += 1
 
             if obj is None:
                 unhandled_variables.append(v)
@@ -1219,6 +1220,11 @@ class Derivative(Expr):
         # already been attempted and was not computed, either because it
         # couldn't be or evaluate=False originally.
         return self.func(self.expr, *(self.variables + (v, )), evaluate=False)
+
+    def _eval_derivative_wrt(self, expr, new_name):
+        new_self = Dummy(new_name)
+        new_expr = expr.subs(self, new_self)
+        return (new_expr, new_self)
 
     def doit(self, **hints):
         expr = self.expr

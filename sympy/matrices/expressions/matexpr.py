@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
+from sympy.core import C, S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
@@ -304,6 +304,11 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
     _diff_wrt = True
+
+    def _eval_derivative_wrt(self, expr, new_name):
+        new_self = C.Dummy(new_name)
+        new_expr = expr.subs(self, new_self)
+        return (new_expr, new_self)
 
 
 class MatrixSymbol(MatrixExpr):
