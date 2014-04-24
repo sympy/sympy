@@ -307,8 +307,41 @@ class MatrixElement(Expr):
 
     def _eval_derivative_wrt(self, expr, new_name):
         new_self = C.Dummy(new_name)
-        new_expr = expr.subs(self, new_self)
-        return (new_expr, new_self)
+
+        class ReplaceAmbiguousError(Exception):
+            def __init__(self, value):
+                self.value = value
+
+        def check_equal_index(a, b):
+            if a.equals(b):
+                return True
+            if (a-b).is_constant():
+                return False
+            return None
+
+        def replace_and_check(subexpr):
+            if isinstance(subexpr, MatrixElement):
+                found_ambiguous_arg = False
+                for is_equal in [ subexpr.parent == self.parent, check_equal_index(subexpr.i, self.i), check_equal_index(subexpr.j, self.j) ]:
+                    if is_equal is None:
+                        found_ambiguous_arg = True
+                    elif not is_equal:
+                        return subexpr.func(subexpr.parent, replace_and_check(subexpr.i), replace_and_check(subexpr.j))
+                if found_ambiguous_arg:
+                    raise ReplaceAmbiguousError(subexpr)
+                return new_self
+            if isinstance(subexpr, MatrixSymbol):
+                if subexpr == self.parent:
+                    raise ReplaceAmbiguousError(subexpr)
+                return subexpr
+            if len(subexpr.args) == 0:
+                return subexpr
+            return subexpr.func(*[ replace_and_check(e) for e in subexpr.args ])
+
+        try:
+            return (replace_and_check(expr), new_self)
+        except ReplaceAmbiguousError:
+            return None
 
 
 class MatrixSymbol(MatrixExpr):
