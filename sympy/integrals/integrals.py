@@ -134,6 +134,10 @@ class Integral(AddWithLimits):
         if (self.function.is_zero or
                 any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
             return True
+        free = self.function.free_symbols
+        if any(len(xab) == 2 and xab[1] == 0 and xab[0] not in free for \
+                xab in self.limits):
+            return True
         if not self.free_symbols and self.function.is_number:
             # the integrand is a number and the limits are numerical
             return False
