@@ -11,7 +11,7 @@ from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_variety, has_dups
+from sympy.utilities.iterables import has_variety, has_dups, uniq
 
 from .entity import GeometryEntity
 from .point import Point
@@ -664,14 +664,11 @@ class Polygon(GeometryEntity):
 
         """
         res = []
-        res = [i for i in self.sides if i in o]
-        if res is not None:
-            return res
-        else:    
-            inter = self.intersection(o)
+        for side in self.sides:
+            inter = side.intersection(o)
             if inter is not None:
                 res.extend(inter)
-            return list(set(res))
+        return list(uniq(res))
 
     def distance(self, o):
         """
