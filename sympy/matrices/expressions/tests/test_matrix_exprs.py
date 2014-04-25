@@ -1,4 +1,4 @@
-from sympy.core import S, symbols, Add, Mul
+from sympy.core import S, symbols, diff, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
@@ -195,3 +195,9 @@ def test_indexing():
 
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
+
+def test_issue_7421():
+    i, j, m, n = symbols('i,j,m,n')
+    w = MatrixSymbol('w', n, 1)
+    X = MatrixSymbol('X', m, n)
+    assert type(diff((X*w)[i,0], w[j,0])).__name__ == 'Derivative'
