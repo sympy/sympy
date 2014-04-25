@@ -62,9 +62,6 @@ matrix:
     - python: "pypy"
       env:
         - SPLIT="3/4"
-    - python: "pypy"
-      env:
-        - SPLIT="4/4"
     - python: 2.7
       env: TEST_SPHINX="true"
     - python: 2.7
@@ -93,6 +90,9 @@ matrix:
     - python: 3.3 # Dummy value
       env:
         - TEST_SAGE="true"
+    - python: "pypy"
+      env:
+        - SPLIT="4/4"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;
