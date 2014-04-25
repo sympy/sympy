@@ -173,7 +173,7 @@ class Polygon(GeometryEntity):
         # sides of the polygon...but for now we use the n**2 algorithm
         # and check if any side intersects with any preceding side
         hit = _symbol('hit')
-        if not rv.is_convex:
+        if not rv.is_convex():
             sides = rv.sides
             for i, si in enumerate(sides):
                 pts = si.p1, si.p2
@@ -182,9 +182,9 @@ class Polygon(GeometryEntity):
                     sj = sides[j]
                     if sj.p1 not in pts and sj.p2 not in pts:
                         aj = si.arbitrary_point(hit)
-                        tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
+                        tx = (solve(ai.x - aj.x) or [S.Zero])[0]
                         if tx.is_number and 0 <= tx <= 1:
-                            ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
+                            ty = (solve(ai.y - aj.y) or [S.Zero])[0]
                             if (tx or ty) and ty.is_number and 0 <= ty <= 1:
                                 raise GeometryError(
                                     "Polygon has intersecting sides.")
