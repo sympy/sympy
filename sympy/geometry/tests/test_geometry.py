@@ -686,9 +686,10 @@ def test_polygon():
     assert Polygon(a, Point(1, 0), b, c) == t
     assert Polygon(Point(1, 0), b, c, a) == t
     assert Polygon(b, c, a, Point(1, 0)) == t
-    # 2 "remove flyback" tests
+    # 2 "remove folded" tests
     assert Polygon(a, Point(3, 0), b, c) == t
     assert Polygon(a, b, Point(3, -1), b, c) == t
+    raises(GeometryError, lambda: Polygon((0, 0), (1, 0), (0, 1), (1, 1)))
 
     p1 = Polygon(
         Point(0, 0), Point(3, -1),
