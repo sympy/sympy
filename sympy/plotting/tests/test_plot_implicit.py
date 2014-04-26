@@ -1,6 +1,6 @@
 import warnings
 from sympy import (plot_implicit, cos, Symbol, Eq, sin, re, And, Or, exp, I,
-                   tan, pi)
+                   tan, pi, Circle, Point)
 from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile
 from sympy.utilities.pytest import skip
@@ -30,6 +30,9 @@ def plot_and_save(name):
             (y, -2, 2)).save(tmp_file(name))
     plot_implicit(y <= x**2, (x, -3, 3),
             (y, -1, 5)).save(tmp_file(name))
+    plot_implicit(Circle(Point(0,0), 5).equation(),
+                  (Symbol('x'), -10, 10),
+                  (Symbol('y'), -10, 10)).save(tmp_file(name))
 
     #Test all input args for plot_implicit
     plot_implicit(Eq(y**2, x**3 - x)).save(tmp_file())
