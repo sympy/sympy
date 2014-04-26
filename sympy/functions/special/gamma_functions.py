@@ -799,6 +799,13 @@ class loggamma(Function):
                 return S.Infinity
             elif z.is_positive:
                 return log(gamma(z))
+        elif z.is_rational:
+            p, q = z.as_numer_denom()
+            # Half-integral values:
+            if p.is_positive and q == 2:
+                return log(sqrt(S.Pi) * 2**(1-p) * gamma(p) / gamma((p+1)*S.Half))
+            else:
+                pass
 
     def _eval_nseries(self, x, n, logx=None):
         x0 = self.args[0].limit(x, 0)
