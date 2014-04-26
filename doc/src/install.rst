@@ -74,7 +74,7 @@ only enabled when certain libraries are installed.  For example, without
 Matplotlib, only simple text-based plotting is enabled.  With the IPython
 notebook or qtconsole, you can get nicer `\LaTeX` printing by running
 ``init_printing()``.  An easy way to get all these libraries in addition to
-SymPy is to install `Anaconda <http://continuum.io/downloads.html>`_, which is
+SymPy is to install `Anaconda <http://continuum.io/downloads>`_, which is
 a free Python distribution from Continuum Analytics that includes SymPy,
 Matplotlib, IPython, NumPy, and many more useful packages for scientific
 computing.
