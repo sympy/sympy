@@ -54,11 +54,11 @@ def finite_diff_weights(order, x_list, x0):
     >>> from sympy import S
     >>> from sympy.calculus import finite_diff_weights
     >>> finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
-    [[[1, 0, 0, 0], \
-[1/2, 1/2, 0, 0], \
-[3/8, 3/4, -1/8, 0], \
-[5/16, 15/16, -5/16, 1/16]], \
-[[0, 0, 0, 0], [-1, 1, 0, 0], [-1, 1, 0, 0], [-23/24, 7/8, 1/8, -1/24]]]
+    [[[1, 0, 0, 0],
+    [1/2, 1/2, 0, 0],
+    [3/8, 3/4, -1/8, 0],
+    [5/16, 15/16, -5/16, 1/16]],
+    [[0, 0, 0, 0], [-1, 1, 0, 0], [-1, 1, 0, 0], [-23/24, 7/8, 1/8, -1/24]]]
 
     the result is two subslists, the first is for the 0:th derivative
     (interpolation) and the second for the first derivative (we gave
