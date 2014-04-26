@@ -437,6 +437,25 @@ def test_finite_basic():
     assert A > AandB and B > AandB
 
 
+def test_powerset():
+
+    # EmptySet
+    A = FiniteSet()
+    pset = A.powerset()
+    assert len(pset) == 1
+    assert pset ==  FiniteSet([S.EmptySet])
+
+    # FiniteSets
+    A = FiniteSet([1, 2])
+    pset = A.powerset()
+    assert len(pset) == 2**len(A)
+    assert pset == FiniteSet([FiniteSet(), FiniteSet(1),
+                              FiniteSet(2), A])
+    # Not finite sets
+    I = Interval(0, 1)
+    raises(NotImplementedError, I.powerset)
+
+
 def test_product_basic():
     H, T = 'H', 'T'
     unit_line = Interval(0, 1)

@@ -235,7 +235,7 @@ class GrayCode(Basic):
         of 4 bit Gray codes.
 
         References:
-        [1] http://www-stat.stanford.edu/~susan/courses/s208/node12.html
+        [1] http://statweb.stanford.edu/~susan/courses/s208/node12.html
 
         Examples
         ========

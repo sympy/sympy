@@ -12,8 +12,7 @@ from sympy.core.evaluate import global_evaluate
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
-
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, subsets
 
 
 class Set(Basic):
@@ -216,6 +215,34 @@ class Set(Basic):
             return self.intersect(other) == other
         else:
             raise ValueError("Unknown argument '%s'" % other)
+
+    def _eval_powerset(self):
+        raise NotImplementedError('Power set not defined for: %s' % self.func)
+
+    def powerset(self):
+        """
+        Find the Power set of 'self'.
+
+        Examples
+        ========
+
+        >>> from sympy import FiniteSet, EmptySet
+
+        >>> A = EmptySet()
+        >>> A.powerset()
+        {EmptySet()}
+
+        >>> A = FiniteSet(1, 2)
+        >>> A.powerset() == FiniteSet(FiniteSet(1), FiniteSet(2), FiniteSet(1, 2), EmptySet())
+        True
+
+        References
+        ==========
+
+        http://en.wikipedia.org/wiki/Power_set
+
+        """
+        return self._eval_powerset()
 
     @property
     def measure(self):
@@ -1222,6 +1249,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     http://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
+    is_FiniteSet = True
 
     def _intersect(self, other):
         return S.EmptySet
@@ -1251,6 +1279,9 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     def _eval_imageset(self, f):
         return self
+
+    def _eval_powerset(self):
+        return FiniteSet([self])
 
     @property
     def _boundary(self):
@@ -1471,6 +1502,9 @@ class FiniteSet(Set, EvalfMixin):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
+
+    def _eval_powerset(self):
+        return self.func(self.func(s) for s in subsets(self.args))
 
     def __ge__(self, other):
         return self.subset(other)

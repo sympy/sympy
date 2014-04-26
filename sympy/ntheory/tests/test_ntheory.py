@@ -11,7 +11,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1, \
     sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
-    nthroot_mod, sqrt_mod_iter
+    nthroot_mod, sqrt_mod_iter, mobius
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p
@@ -550,6 +550,19 @@ def test_residue():
     assert jacobi_symbol(2, 1) == 1
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
+
+    assert mobius(13*7) == 1
+    assert mobius(1) == 1
+    assert mobius(13*7*5) == -1
+    assert mobius(13**2) == 0
+    raises(ValueError, lambda: mobius(-3))
+
+    p = Symbol('p', integer=True, positive=True, prime=True)
+    x = Symbol('x', positive=True)
+    i = Symbol('i', integer=True)
+    assert mobius(p) == -1
+    raises(TypeError, lambda: mobius(x))
+    raises(ValueError, lambda: mobius(i))
 
 
 def test_hex_pi_nth_digits():

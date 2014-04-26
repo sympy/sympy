@@ -186,7 +186,7 @@ def test_classify_ode():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', '1st_power_series', 'lie_group',
+        '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
@@ -194,7 +194,6 @@ def test_classify_ode():
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
-        'separable_reduced_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
     #     w/o f(x) given
     assert classify_ode(diff(f(x) + x, x) + diff(f(x), x)) == ans
@@ -1120,6 +1119,14 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq28, sol28, order=1, solve_for_func=False)[0]
 
 
+def test_issue_5787():
+    # This test case is to show the classification of imaginary constants under
+    # nth_linear_constant_coeff_undetermined_coefficients
+    eq = Eq(diff(f(x), x), I*f(x) + S(1)/2 - I)
+    out_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
+    assert out_hint in classify_ode(eq)
+
+
 @XFAIL
 def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
     # Equivalent to eq26 in
@@ -1286,11 +1293,10 @@ def test_issue_4785():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', '1st_power_series',
+        '1st_power_series',
         'lie_group', '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-        '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
-        'separable_reduced_Integral')
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
 
 def test_issue_4825():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
@@ -1387,6 +1393,93 @@ def test_nth_order_linear_euler_eq_homogeneous():
     sols = constant_renumber(sol, 'C', 1, 3)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+
+def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
+    x, t = symbols('x t')
+    a, b, c, d = symbols('a b c d', integer=True)
+    our_hint = "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"
+
+    eq = x**4*diff(f(x), x, 4) - 13*x**2*diff(f(x), x, 2) + 36*f(x)	+ x
+    assert our_hint in classify_ode(eq, f(x))
+
+    eq = a*x**2*diff(f(x), x, 2) + b*x*diff(f(x), x) + c*f(x) + d*log(x)
+    assert our_hint in classify_ode(eq, f(x))
+
+    eq = Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1)
+    sol =  C1 + C2*log(x) + log(x)**2/2
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq, f(x))
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3)
+    sol = x*(C1 + C2*x + Rational(1, 2)*x**2)
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq, f(x))
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x)
+    sol =  C1/x + C2*x**3 - Rational(1, 16)*log(x)/x - Rational(1, 8)*log(x)**2/x
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq, f(x))
+    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x))
+    sol = C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x))
+    sol = C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36)
+    sols = constant_renumber(sol, 'C', 1, 3)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+
+def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
+    x, t = symbols('x, t')
+    a, b, c, d = symbols('a, b, c, d', integer=True)
+    our_hint = "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters"
+
+    eq = Eq(x**2*diff(f(x),x,2) - 8*x*diff(f(x),x) + 12*f(x), x**2)
+    assert our_hint in classify_ode(eq, f(x))
+
+    eq = Eq(a*x**3*diff(f(x),x,3) + b*x**2*diff(f(x),x,2) + c*x*diff(f(x),x) + d*f(x), x*log(x))
+    assert our_hint in classify_ode(eq, f(x))
+
+    eq = Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4)
+    sol = C1*x + C2*x**2 + x**4/6
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = Eq(3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), x**3*exp(x))
+    sol = C1/x**2 + C2*x + x*exp(x)/3 - 4*exp(x)/3 + 8*exp(x)/(3*x) - 8*exp(x)/(3*x**2)
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4*exp(x))
+    sol = C1*x + C2*x**2 + x**2*exp(x) - 2*x*exp(x)
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
+    sol = C1*x + C2*x**2 + log(x)/2 + 3/4
+    sols = constant_renumber(sol, 'C', 1, 2)
+    assert our_hint in classify_ode(eq)
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
 
