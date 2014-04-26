@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand, diff, O)
+    exp_polar, Lambda, expand, diff, O, Expr)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -1622,3 +1622,18 @@ def test_issue_6325():
     assert diff(e, t, 2) == ans
     e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
+
+
+def test_eval_derivative_wrt():
+    class MyClass(Expr):
+        _diff_wrt = True
+
+        def _eval_derivative_wrt(self, expr, new_name):
+            if expr.has(y):
+                return None
+            new_self = Dummy(new_name)
+            new_expr = expr.subs(self, new_self)
+            return (new_expr, new_self)
+
+    assert (x*MyClass()).diff(MyClass()) == x
+    assert (y*MyClass()).diff(MyClass()) == Derivative(y*MyClass(), MyClass())

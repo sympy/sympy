@@ -1,4 +1,4 @@
-from sympy.core import S, symbols, diff, Add, Mul
+from sympy.core import S, symbols, diff, Add, Mul, Derivative
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
@@ -13,6 +13,7 @@ B = MatrixSymbol('B', m, l)
 C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
+w = MatrixSymbol('w', n, 1)
 
 
 def test_shape():
@@ -197,7 +198,5 @@ def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
 
 def test_issue_7421():
-    i, j, m, n = symbols('i,j,m,n')
-    w = MatrixSymbol('w', n, 1)
-    X = MatrixSymbol('X', m, n)
-    assert type(diff((X*w)[i,0], w[j,0])).__name__ == 'Derivative'
+    assert isinstance(diff((D*w)[k,0], w[p,0]), Derivative)
+    assert isinstance(diff(w.T*D*w, w[0,0]), Derivative)
