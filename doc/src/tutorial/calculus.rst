@@ -365,10 +365,10 @@ finite_diff_weights also generates weights for lower derivatives and
 using fewer points (see the documentation of ``finite_diff_weights``
 for more details).
 
-if using ``finite_diff_weights`` directly looks complicated but the
+if using ``finite_diff_weights`` directly looks complicated and the
 ``as_finite_diff`` function operating on ``Derivative`` instances
 is not flexible enough, you can use ``apply_finite_diff`` which
- takes order, x_list, y_list and x0 as parameters:
+takes order, x_list, y_list and x0 as parameters:
 
     >>> x_list = [-3, 1, 2]
     >>> y_list = symbols('a b c')
