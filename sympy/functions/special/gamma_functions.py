@@ -790,10 +790,15 @@ class loggamma(Function):
     .. [3] http://mathworld.wolfram.com/LogGammaFunction.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/LogGamma/
     """
+    @classmethod
+    def eval(cls, z):
+        z = sympify(z)
 
-    nargs = 1  # there is no eval defined so we must define this
-
-    # TODO: Implement various special known values
+        if z.is_integer:
+            if z.is_nonpositive:
+                return S.Infinity
+            elif z.is_positive:
+                return log(gamma(z))
 
     def _eval_nseries(self, x, n, logx=None):
         x0 = self.args[0].limit(x, 0)
