@@ -31,7 +31,7 @@ from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Dummy
+from sympy import Eq, Tuple, sympify, Dummy, Symbol, S
 from sympy.external import import_module
 from sympy.logic.boolalg import BooleanFunction
 from sympy.utilities.decorator import doctest_depends_on
@@ -302,8 +302,8 @@ def plot_implicit(expr, *args, **kwargs):
     elif isinstance(expr, (Equality, GreaterThan, LessThan)):
         has_equality = True
 
-    free_symbols = set(expr.free_symbols)
-    range_symbols = set([t[0] for t in args])
+    free_symbols = set([Symbol(s.name) for s in expr.free_symbols])
+    range_symbols = set([Symbol(S(t[0]).name) for t  in args])
     symbols = set.union(free_symbols, range_symbols)
     if len(symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
