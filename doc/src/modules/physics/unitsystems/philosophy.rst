@@ -250,7 +250,7 @@ The need for a reference
 ========================
 
 It is not possible to define from scratch units and unit systems: one needs
-to define some references, and then build the rest over them. Say another way
+to define some references, and then build the rest over them. Said another way
 we need an origin for the scales of our units (i.e. a unit with factor 1), and
 to be sure that all units of a given dimension are defined consistently we need
 to use the same origin for all of them. This can happend if we want to use

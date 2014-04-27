@@ -2,7 +2,7 @@
 Unit systems
 ============
 
-This module integrates unit systems into sympy, letting user choose which
+This module integrates unit systems into sympy, allowing a user choose which
 system to use when doing his computations and providing utilities to display
 and convert units.
 

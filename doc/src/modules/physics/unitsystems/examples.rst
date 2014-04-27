@@ -43,7 +43,7 @@ should be :math:`L^3 M^{-1} T^{-2}`.
     {'length': 1, 'mass': 1, 'time': -2}
     >>> force == mks["force"]
     True
-    >>> M, r, G = symbols("m r G")
+    >>> M, r, G = symbols("M r G")
     >>> grav_force = F - G * m * M / r**2
     >>> sol = solve(grav_force, G)[0]
     >>> const = dim_simplify(sol.subs({m: mass, M: mass, r: length, F: force}))
