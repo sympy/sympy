@@ -255,7 +255,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Sean Ge: made KroneckerDelta arguments canonically ordered
 #. Ankit Agrawal: Statistical moments
 #. Amit Jamadagni: qapply Rotation to spin states
-#. Björn Dahlgren: Documentation fix
+#. Björn Dahlgren: Implemented finite difference module, minor fixes
 #. Christophe Saint-Jean: fixed and added metrics to galgebra
 #. Demian Wassermann: fix to ccode printer for Piecewise
 #. Khagesh Patel: Addition to matrix expressions
