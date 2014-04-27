@@ -64,12 +64,14 @@ def diophantine(eq, param=symbols("t", Integer=True)):
 
     diop_solve()
     """
-    if not isinstance(eq, (Add, Mul, Symbol, Poly, Eq, Pow)):
-        raise TypeError("Equation input format not supported")
-
-    eq = eq.as_expr()
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
+    if isinstance(eq, Expr):
+        eq = eq.as_expr()
+        if not eq.is_polynomial():
+            raise TypeError("Equation input format not supported")
+    else:
+        raise TypeError("Equation input format not supported")
 
     var = list(eq.expand(force=True).free_symbols)
     var.sort(key=default_sort_key)
