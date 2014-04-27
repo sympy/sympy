@@ -739,17 +739,66 @@ class loggamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, loggamma
-    >>> from sympy.abc import x
+    Several special values are known. For numerical integral
+    arguments we have:
+
+    >>> from sympy import loggamma
+    >>> loggamma(-2)
+    oo
+    >>> loggamma(0)
+    oo
+    >>> loggamma(1)
+    0
+    >>> loggamma(2)
+    0
+    >>> loggamma(3)
+    log(2)
+
+    and for symbolic values:
+
+    >>> from sympy import Symbol
+    >>> n = Symbol("n", integer=True, positive=True)
+    >>> loggamma(n)
+    log(gamma(n))
+    >>> loggamma(-n)
+    oo
+
+    for half-integral values:
+
+    >>> from sympy import S, pi
+    >>> loggamma(S(5)/2)
+    log(3*sqrt(pi)/4)
+    >>> loggamma(n/2)
+    log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + 1/2))
+
+    and general rational arguments:
+
+    >>> from sympy import expand_func
+    >>> L = loggamma(S(16)/3)
+    >>> expand_func(L).doit()
+    -5*log(3) + loggamma(1/3) + log(4) + log(7) + log(10) + log(13)
+    >>> L = loggamma(S(19)/4)
+    >>> expand_func(L).doit()
+    -4*log(4) + loggamma(3/4) + log(3) + log(7) + log(11) + log(15)
+    >>> L = loggamma(S(23)/7)
+    >>> expand_func(L).doit()
+    -3*log(7) + log(2) + loggamma(2/7) + log(9) + log(16)
+
+    The loggamma function has the following limits towards infinity:
+
+    >>> from sympy import oo
+    >>> loggamma(oo)
+    oo
+    >>> loggamma(-oo)
+    zoo
 
     The loggamma function obeys the mirror symmetry
     if `x \in \mathbb{C} \setminus \{-\infty, 0\}`:
 
+    >>> from sympy.abc import x
     >>> from sympy import conjugate
     >>> conjugate(loggamma(x))
     loggamma(conjugate(x))
-    >>> conjugate(loggamma(-oo))
-    conjugate(loggamma(-oo))
 
     Differentiation with respect to x is supported:
 
@@ -766,6 +815,7 @@ class loggamma(Function):
     We can numerically evaluate the gamma function to arbitrary precision
     on the whole complex plane:
 
+    >>> from sympy import I
     >>> loggamma(5).evalf(30)
     3.17805383034794561964694160130
     >>> loggamma(I).evalf(20)
