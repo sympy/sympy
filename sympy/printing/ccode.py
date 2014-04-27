@@ -64,7 +64,6 @@ class CCodePrinter(CodePrinter):
         """
         Actually format the expression as C code.
         """
-
         if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
@@ -136,6 +135,9 @@ class CCodePrinter(CodePrinter):
         else:
             return 'pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))
+
+    def _print_gamma(self, expr):
+        return 'tgamma(%s)' % self._print(expr.args[0])
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
