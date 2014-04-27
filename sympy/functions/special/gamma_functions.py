@@ -803,9 +803,7 @@ class loggamma(Function):
             p, q = z.as_numer_denom()
             # Half-integral values:
             if p.is_positive and q == 2:
-                return log(sqrt(S.Pi) * 2**(1-p) * gamma(p) / gamma((p+1)*S.Half))
-            else:
-                pass
+                return log(sqrt(S.Pi) * 2**(1 - p) * gamma(p) / gamma((p + 1)*S.Half))
 
         if z is S.Infinity:
             return S.Infinity
@@ -813,6 +811,26 @@ class loggamma(Function):
             return S.ComplexInfinity
         if z is S.NaN:
             return S.NaN
+
+    def _eval_expand_func(self, **hints):
+        z = self.args[0]
+
+        if z.is_Rational:
+            p, q = z.as_numer_denom()
+            # General rational arguments (u + p/q)
+            # Split z as n + p/q with p < q
+            n = p // q
+            p = p - n*q
+            if p.is_positive and q.is_positive and p < q:
+                k = Dummy("k")
+                if n.is_positive:
+                    return loggamma(p / q) - n*log(q) + C.Sum(log((k - 1)*q + p), (k, 1, n))
+                elif n.is_negative:
+                    return loggamma(p / q) - n*log(q) + S.Pi*S.ImaginaryUnit*n - C.Sum(log(k*q - p), (k, 1, -n))
+                elif n.is_zero:
+                    return loggamma(p / q)
+
+        return self
 
     def _eval_nseries(self, x, n, logx=None):
         x0 = self.args[0].limit(x, 0)
