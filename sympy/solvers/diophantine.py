@@ -107,7 +107,6 @@ def merge_solution(var, var_t, solution):
     count2 = 0
 
     if None not in solution:
-
         for v in var:
             if v in var_t:
                 l.append(solution[count1])
