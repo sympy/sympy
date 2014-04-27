@@ -10,6 +10,7 @@ from sympy.utilities import default_sort_key
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
+from sympy.solvers.solvers import check_assumptions
 
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
 'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
@@ -114,6 +115,10 @@ def merge_solution(var, var_t, solution):
             else:
                 l.append(params[count2])
                 count2 = count2 + 1
+
+    for val, symb in zip(l, var):
+        if check_assumptions(val, **symb.assumptions0) is False:
+            return tuple()
 
     return tuple(l)
 

@@ -525,6 +525,23 @@ def test_power_representation():
                 break
 
 
+def test_assumptions():
+    """
+    Test whether diophantine respects the assumptions.
+    """
+    #Test case taken from the below so question regarding assumptions in diophantine module
+    #http://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
+    a, b, c, m, n = symbols('a b c m n', integer=True, positive=True)
+
+    a = n ** 2 - m ** 2
+    b = 2 * n * m
+    c = n ** 2 + m ** 2
+
+    diof = diophantine(n ** 2 + m * n - 500)
+
+    assert diof == set([(5, 20), (40, 10), (95, 5), (121, 4), (248, 2), (499, 1)])
+
+
 def check_solutions(eq):
     """
     Determines whether solutions returned by diophantine() satisfy the original
