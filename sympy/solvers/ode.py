@@ -1292,22 +1292,7 @@ def odesimp(eq, func, order, constants, hint):
             # Collect terms to make the solution look nice.
             # This is also necessary for constantsimp to remove unnecessary
             # terms from the particular solution from variation of parameters
-            #
-            # Collect is not behaving reliably here.  The results for
-            # some linear constant-coefficient equations with repeated
-            # roots do not properly simplify all constants sometimes.
-            # 'collectterms' gives different orders sometimes, and results
-            # differ in collect based on that order.  The
-            # sort-reverse trick fixes things, but may fail in the
-            # future. In addition, collect is splitting exponentials with
-            # rational powers for no reason.  We have to do a match
-            # to fix this using Wilds.
             global collectterms
-            try:
-                collectterms.sort()
-                collectterms.reverse()
-            except:
-                pass
             assert len(eq) == 1 and eq[0].lhs == f(x)
             sol = eq[0].rhs
             sol = expand_mul(sol)
@@ -1318,8 +1303,9 @@ def odesimp(eq, func, order, constants, hint):
                 sol = collect(sol, x**i*exp(reroot*x))
             del collectterms
 
-            # contract over-expanded exponentials -- this is
-            # a work-around for collect's bad behavior.
+            # Collect is splitting exponentials with
+            # rational powers for no reason.  We have to do a match
+            # to fix this using Wilds.
             w1, w2 = Wild('w1',exclude=[x]), Wild('w2')
             sol = sol.replace(exp(w1*x)**w2, exp(w1*w2*x))
             eq[0] = Eq(f(x), sol)
