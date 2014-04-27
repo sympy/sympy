@@ -164,7 +164,7 @@ def test_ode_solutions():
         log(C1*f(x)), 0)
     assert [constant_renumber(constantsimp(i, x, 1), 'C', 1, 1) for i in
         [Eq(f(x), sqrt(-C1*x + x**2)), Eq(f(x), -sqrt(-C1*x + x**2))]] == \
-        [Eq(f(x), sqrt(x*(C1 + x))), Eq(f(x), -sqrt(x*(C1 + x)))]
+        [Eq(f(x), sqrt(x*(-C1 + x))), Eq(f(x), -sqrt(x*(-C1 + x)))]
 
 
 def test_constant_Eq():

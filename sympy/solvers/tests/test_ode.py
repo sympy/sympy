@@ -318,7 +318,7 @@ def test_1st_exact1():
     eq4 = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     eq5 = 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x)
     sol1 = [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
-    sol2 = Eq(f(x), C1*exp(-x**2 + LambertW(C2*x*exp(x**2))))
+    sol2 = Eq(f(x), C1*exp(-x**2 + LambertW(-x*exp(-C2 + x**2))))
     sol2b = Eq(log(f(x)) + x/f(x) + x**2, C1)
     sol3 = Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)
     sol4 = Eq(x*cos(f(x)) + f(x)**3/3, C1)
@@ -448,6 +448,7 @@ def test_separable5():
     eq19 = (1 - x)*f(x).diff(x) - x*(f(x) + 1)
     eq20 = f(x)*diff(f(x), x) + x - 3*x*f(x)**2
     eq21 = f(x).diff(x) - exp(x + f(x))
+    eq22 = x*f(x).diff(x) + 1 - f(x)**2
     sol15 = Eq(f(x), -1 + C1*exp(-x**2/2))
     sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
     sol17 = Eq(f(x), C1*exp(-x))
@@ -455,6 +456,7 @@ def test_separable5():
     sol19 = Eq(f(x), (C1*exp(-x) - x + 1)/(x - 1))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
+    sol22 = Eq(f(x), (C2 + x**2)/(C1 - x**2))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17
@@ -462,6 +464,7 @@ def test_separable5():
     assert dsolve(eq19, hint='separable') == sol19
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
     assert dsolve(eq21, hint='separable', simplify=False) == sol21
+    assert dsolve(eq22, hint='separable').simplify() == sol22
     assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]
     assert checkodesol(eq16, sol16, order=1, solve_for_func=False)[0]
     assert checkodesol(eq17, sol17, order=1, solve_for_func=False)[0]
@@ -469,6 +472,7 @@ def test_separable5():
     assert checkodesol(eq19, sol19, order=1, solve_for_func=False)[0]
     assert checkodesol(eq20, sol20, order=1, solve_for_func=False)[0]
     assert checkodesol(eq21, sol21, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq22, sol22, order=1, solve_for_func=False)
 
 
 def test_separable_1_5_checkodesol():
@@ -605,7 +609,7 @@ def test_1st_homogeneous_coeff_ode2():
     eq1 = f(x).diff(x) - f(x)/x + 1/sin(f(x)/x)
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
-    sol1 = [Eq(f(x), x*(-acos(C1 + log(x)) + 2*pi)), Eq(f(x), x*acos(C1 + log(x)))]
+    sol1 = [Eq(f(x), x*(-acos(-C1 + log(x)) + 2*pi)), Eq(f(x), x*acos(-C1 + log(x)))]
     sol2 = Eq(log(f(x)), log(C1) + log(x/f(x)) - log(x**2/f(x)**2 - 1))
     sol3 = Eq(f(x), log((1/(C1 - log(x)))**x))
     # specific hints are applied for speed reasons
@@ -1235,10 +1239,9 @@ def test_Liouville_ODE():
     sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2 = sol1
     sol3 = set(
-        [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
-    sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
-                Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
-    sol5 = Eq(f(x), log(C1 + C2/x))
+        [Eq(f(x), -sqrt(-C1 + C2*log(x))), Eq(f(x), sqrt(-C1 + C2*log(x)))])
+    sol4 = set([Eq(f(x), -sqrt(-C1 + C2*exp(x))*exp(-x/2)), Eq(f(x), sqrt(-C1 + C2*exp(x))*exp(-x/2))])
+    sol5 = Eq(f(x), log(-C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
     sol3s = constant_renumber(sol3, 'C', 1, 2)
@@ -1533,8 +1536,8 @@ def test_exact_enhancement():
 
     eq = (x*f - 1) + df*(x**2 - x*f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
-    assert rhs[0] == x - sqrt(C1 + x**2 - 2*log(x))
-    assert rhs[1] == x + sqrt(C1 + x**2 - 2*log(x))
+    assert rhs[0] == x - sqrt(-C1 + x**2 - 2*log(x))
+    assert rhs[1] == x + sqrt(-C1 + x**2 - 2*log(x))
 
     eq = (x + 2)*sin(f) + df*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
@@ -1658,8 +1661,8 @@ def test_issue_6989():
             ((-k**2*x - k)*exp(-k*x)/k**3, True)
         ))
     assert dsolve(-f(x).diff(x) + x*exp(-k*x), f(x)) == \
-        Eq(f(x), Piecewise((C1 + x**2/2, Eq(k**3, 0)),
-            (C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, True)
+        Eq(f(x), Piecewise((-C1 + x**2/2, Eq(k**3, 0)),
+            (-C1 - x*exp(-k*x)/k - exp(-k*x)/k**2, True)
         ))
 
 
@@ -1848,7 +1851,7 @@ def test_lie_group():
 
     eq = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
     sol = dsolve(eq, f(x), hint='lie_group')
-    assert sol == Eq(f(x), (C1 + x**2/S(2))*exp(-x**2))
+    assert sol == Eq(f(x), (-C1 + x**2/S(2))*exp(-x**2))
     assert checkodesol(eq, sol)[0]
 
     eq = (1 + 2*x)*(f(x).diff(x)) + 2 - 4*exp(-f(x))
@@ -1940,6 +1943,6 @@ def test_2nd_power_series_regular():
 
 
 def test_issue_7093():
-    sol = Eq(f(x), C1 - 2*x*sqrt(x**3)/5)
+    sol = Eq(f(x), -C1 - 2*x*sqrt(x**3)/5)
     eq = Derivative(f(x), x)**2 - x**3
     assert dsolve(eq) == sol and checkodesol(eq, sol) == (True, 0)

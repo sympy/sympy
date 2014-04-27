@@ -1795,13 +1795,19 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         def _take(i):
             # return the lowest numbered constant symbol that appears in ``i``
             # else return ``i``
+            a = 1
             c = i.free_symbols & con_set
             if c:
-                return min(c, key=str)
+                if i.could_extract_minus_sign():
+                    a = -1
+                return a*min(c, key=str)
             return i
 
         if not (expr.has(x) and x in expr.free_symbols):
-            return constantsymbols[0]
+            a = 1
+            if expr.could_extract_minus_sign():
+                a = -1
+            return a*constantsymbols[0]
 
         # collect terms to get constants together
         new_expr = terms_gcd(expr, clear=False, deep=True, expand=False)
@@ -2712,8 +2718,8 @@ def ode_Liouville(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
     ... diff(f(x), x)/x, f(x), hint='Liouville'))
-               ________________           ________________
-    [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
+               _________________           _________________
+    [f(x) = -\/ -C1 + C2*log(x) , f(x) = \/ -C1 + C2*log(x) ]
 
     References
     ==========
@@ -4513,10 +4519,10 @@ def ode_lie_group(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
     ... hint='lie_group'))
-           /      2\    2
-           |     x |  -x
-    f(x) = |C1 + --|*e
-           \     2 /
+           /       2\    2
+           |      x |  -x
+    f(x) = |-C1 + --|*e
+           \      2 /
 
 
     References
