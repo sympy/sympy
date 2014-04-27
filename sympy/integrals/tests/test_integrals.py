@@ -706,6 +706,8 @@ def test_is_zero():
     assert Integral(1, (x, 1, 1)).is_zero
     assert Integral(1, (x, 1, 2)).is_zero is False
     assert Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)).is_zero is None
+    assert Integral(x, (m, 0)).is_zero
+    assert Integral(x + 1/m, (m, 0)).is_zero is None
 
 
 def test_series():
