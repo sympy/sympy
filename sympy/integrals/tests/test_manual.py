@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
                    Derivative, diff, I, sqrt, erf, Piecewise,
-                   Eq, Ne, Q, assuming, symbols, And)
+                   Eq, Ne, Q, assuming, symbols, And, Heaviside, Max)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
@@ -103,6 +103,10 @@ def test_manualintegrate_derivative():
         x * Derivative(x**2 + 2*x + 3, y)
     assert manualintegrate(Derivative(sin(x), x, x, y, x), x) == \
         Derivative(sin(x), x, x, y)
+
+def test_manualintegrate_Heaviside():
+    assert manualintegrate(Heaviside(x), x) == x*Heaviside(x)
+    assert manualintegrate(Heaviside(2*x + 1), x) == (2*x+1)*Heaviside(2*x + 1)/2
 
 def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
