@@ -3,6 +3,18 @@ from sympy.physics.vector import ReferenceFrame, Vector, \
      dynamicsymbols, dot
 from sympy.abc import x, y, z
 
+try:
+    import csympy
+except ImportError:
+    csympy = None
+else:
+    print('Using csympy')
+    x = csympy.Symbol('x')
+    y = csympy.Symbol('y')
+    z = csympy.Symbol('z')
+    sin = csympy.sin
+    cos = csympy.sin
+
 
 Vector.simp = True
 A = ReferenceFrame('A')
@@ -41,7 +53,10 @@ def test_Vector():
     assert dot(v4, A.z) == z - z**2
 
     assert v1.to_matrix(A) == Matrix([[x], [y], [z]])
-    q = symbols('q')
+    if csympy:
+        q = csympy.Symbol('q')
+    else:
+        q = symbols('q')
     B = A.orientnew('B', 'Axis', (q, A.x))
     assert v1.to_matrix(B) == Matrix([[x],
                                       [ y * cos(q) + z * sin(q)],
@@ -122,7 +137,16 @@ def test_Vector_diffs():
 
 
 def test_vector_simplify():
-    x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
+    if csympy:
+        k = csympy.Symbol('k')
+        n = csympy.Symbol('n')
+        m = csympy.Symbol('m')
+        w = csympy.Symbol('w')
+        f = csympy.Symbol('f')
+        s = csympy.Symbol('s')
+        A = csympy.Symbol('A')
+    else:
+        x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
     N = ReferenceFrame('N')
 
     test1 = (1 / x + 1 / y) * N.x
