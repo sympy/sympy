@@ -605,22 +605,22 @@ def dynamicsymbols(names, level=0):
     esses = symbols(names, cls=Function)
     t = dynamicsymbols._t
 
-    def convert(sympy_f, t):
-        csympy_f = csympy.function_symbol(sympy_f.__name__, t)
+    def convert(sympy_f):
+        csympy_f = csympy.sympify(sympy_f)
         for order in [t] * level:
             csympy_f = csympy_f.diff(order)
         return csympy_f
 
     if hasattr(esses, '__iter__'):
         if csympy:
-            esses = [convert(e, t) for e in esses]
+            esses = [convert(e(t)) for e in esses]
             return esses
         else:
             esses = [reduce(diff, [t] * level, e(t)) for e in esses]
             return esses
     else:
         if csympy:
-            return convert(esses, t)
+            return convert(esses(t))
         else:
             return reduce(diff, [t] * level, esses(t))
 
