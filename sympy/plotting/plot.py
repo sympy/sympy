@@ -949,8 +949,8 @@ class MatplotlibBackend(BaseBackend):
         if not parent.axis:
             self.ax.set_axis_off()
         if parent.legend:
-            if self.ax.legend():
-                self.ax.legend_.set_visible(parent.legend)
+            self.ax.legend()
+            self.ax.legend_.set_visible(parent.legend)
         if parent.margin:
             self.ax.set_xmargin(parent.margin)
             self.ax.set_ymargin(parent.margin)

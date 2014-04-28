@@ -221,7 +221,7 @@ def convex_hull(*args):
     [2] Andrew's Monotone Chain Algorithm
     (A.M. Andrew,
     "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-    http://geomalgorithms.com/a10-_hull-1.html
+    http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
 
     See Also
     ========

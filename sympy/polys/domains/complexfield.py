@@ -45,7 +45,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def tolerance(self):
         return self._context.tolerance
 
-    def __init__(self, prec=_default_precision, dps=None, tol=None):
+    def __init__(self, prec=_default_precision, dps=None, tol=False):
         context = MPContext(prec, dps, tol)
         context._parent = self
         self._context = context

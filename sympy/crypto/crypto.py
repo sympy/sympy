@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Classical ciphers and LFSRs
 """
@@ -222,7 +220,7 @@ def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     Performs the substitution cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     Assumes the ``pt`` has only letters taken from ``symbols``.
-    Assumes ``key`` is a permutation of the symbols. This function permutes the
+    Assumes ``key`` is a permutation of the symbols. This funciton permutes the
     letters of the plaintext using the permutation given in ``key``.
     The decription uses the inverse permutation.
     Note that if the permutation in key is order 2 (eg, a transposition) then
@@ -252,38 +250,38 @@ def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 
 ######################################################################
-#################### Vigenère cipher examples ########################
+#################### Vigenere cipher examples ########################
 ######################################################################
 
 
 def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Performs the Vigenère cipher encryption on plaintext ``pt``, and returns the ciphertext.
+    Performs the Vigenere cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     Notes
     =====
 
-    The Vigenère cipher is named after Blaise de Vigenère, a sixteenth
+    The Vigenere cipher is named after Blaise de Vigenere, a sixteenth
     century diplomat and cryptographer, by a historical accident.
-    Vigenère actually invented a different and more complicated cipher.
-    The so-called *Vigenère cipher* was actually invented
+    Vigene`re actually invented a different and more complicated cipher.
+    The so-called *Vigenere cipher* cipher was actually invented
     by Giovan Batista Belaso in 1553.
 
-    This cipher was used in the 1800's, for example, during the American Civil War.
-    The Confederacy used a brass cipher disk to implement the Vigenère cipher
+    This cipher was used in the 1700's, for example, during the American Civil War.
+    The Confederacy used a brass cipher disk to implement the Vigenere cipher
     (now on display in the NSA Museum in Fort Meade) [1]_.
 
-    The Vigenère cipher is a generalization of the shift cipher.
+    The Vigenere cipher is a generalization of the shift cipher.
     Whereas the shift cipher shifts each letter by the same amount (that amount
-    being the key of the shift cipher) the Vigenère cipher shifts
-    a letter by an amount determined by the key (which is a word or
+    being the key of the shift cipher) the Vigenere cipher shifts
+    a letter by an amount determined by the key, which is a word or
     phrase known only to the sender and receiver).
 
     For example, if the key was a single letter, such as "C", then the
     so-called Vigenere cipher is actually a shift cipher with a
     shift of `2` (since "C" is the 2nd letter of the alphabet, if
     you start counting at `0`). If the key was a word with two
-    letters, such as "CA", then the so-called Vigenère cipher will
+    letters, such as "CA", then the so-called Vigenere cipher will
     shift letters in even positions by `2` and letters in odd positions
     are left alone (shifted by `0`, since "A" is the 0th letter, if
     you start counting at `0`).
@@ -320,7 +318,7 @@ def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     This method is called *Kasiski examination* (although it was first discovered
     by Babbage).
 
-    The cipher Vigenère actually discovered is an "auto-key" cipher
+    The cipher Vigenere actually discovered is an "auto-key" cipher
     described as follows.
 
     ALGORITHM:
@@ -379,7 +377,7 @@ def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Decode using the Vigenère cipher.
+    Decode using the Vigenere cipher.
 
     Examples
     ========
@@ -416,7 +414,7 @@ def encipher_hill(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     Notes
     =====
 
-    The Hill cipher [1]_, invented by Lester S. Hill in the 1920's [2]_,
+    The Hill cipher [1]_, invented by Lester S. Hill in 1920's [2]_,
     was the first polygraphic cipher in which it was practical (though barely)
     to operate on more than three symbols at once. The following discussion assumes
     an elementary knowledge of matrices.
@@ -499,7 +497,7 @@ def encipher_hill(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Deciphering is the same as enciphering but using the inverse of the key matrix.
+    Deciphering is the same as ciphering but using the inverse of the key matrix.
 
     Examples
     ========
@@ -905,7 +903,7 @@ def rsa_public_key(p, q, e):
     r"""
     The RSA *public key* is the pair `(n,e)`, where `n`
     is a product of two primes and `e` is relatively
-    prime (coprime) to the Euler totient `\phi(n)`.
+    prime to the Euler totient `\phi(n)`.
 
     Examples
     ========
@@ -1462,8 +1460,8 @@ def elgamal_private_key(digit=10):
     """
     Return three number tuple as private key.
 
-    Elgamal encryption is based on the mathmatical problem
-    called the Discrete Logarithm Problem (DLP). For example,
+    Elgamal encryption is based on mathmatical problem
+    Discrete Logarithm Problem (DLP). For example,
 
     `a^{b} \equiv c \pmod p`
 
@@ -1528,7 +1526,7 @@ def encipher_elgamal(m, puk):
 
     m is plain text message in int. puk is
     public key (p, r, e). In order to encrypt
-    a message, a random number ``a`` between ``2`` and ``p``,
+    a message, random a number ``a`` between ``2`` and ``p``,
     encryped message is `c_{1}` and `c_{2}`
 
     `c_{1} \equiv r^{a} \pmod p`

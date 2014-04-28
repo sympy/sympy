@@ -323,7 +323,7 @@ class PlotModeBase(PlotMode):
             for i in self.intervals:
                 if i.v_steps is None:
                     continue
-                step_max = max([step_max, int(i.v_steps)])
+                step_max = max([step_max, i.v_steps])
             v = ['both', 'solid'][step_max > 40]
         #try:
         if v not in self.styles:

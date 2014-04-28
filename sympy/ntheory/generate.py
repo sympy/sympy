@@ -181,13 +181,9 @@ class Sieve:
 
     def __getitem__(self, n):
         """Return the nth prime number"""
-        if isinstance(n, slice):
-            self.extend_to_no(n.stop)
-            return self._list[n.start - 1:n.stop - 1:n.step]
-        else:
-            n = as_int(n)
-            self.extend_to_no(n)
-            return self._list[n - 1]
+        n = as_int(n)
+        self.extend_to_no(n)
+        return self._list[n - 1]
 
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()

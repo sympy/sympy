@@ -10,8 +10,7 @@ from sympy.core.compatibility import xrange
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
 k = Symbol('k', integer=True)
-p = Symbol('p', positive=True)
-n = Symbol('n', negative=True)
+
 
 def test_sin():
     x, y = symbols('x y')
@@ -556,13 +555,8 @@ def test_asin():
 
     assert asin(0.2).is_real is True
     assert asin(-2).is_real is False
-    assert asin(r).is_real is None
 
     assert asin(-2*I) == -I*asinh(2)
-
-    assert asin(Rational(1, 7), evaluate=False).is_positive is True
-    assert asin(Rational(-1, 7), evaluate=False).is_positive is False
-    assert asin(p).is_positive is None
 
 
 def test_asin_series():
@@ -599,12 +593,6 @@ def test_acos():
 
     assert acos(0.2).is_real is True
     assert acos(-2).is_real is False
-    assert acos(r).is_real is None
-
-    assert acos(Rational(1, 7), evaluate=False).is_positive is True
-    assert acos(Rational(-1, 7), evaluate=False).is_positive is True
-    assert acos(Rational(3, 2), evaluate=False).is_positive is False
-    assert acos(p).is_positive is None
 
 
 def test_acos_series():
@@ -641,9 +629,6 @@ def test_atan():
     assert atan(r).is_real is True
 
     assert atan(-2*I) == -I*atanh(2)
-    assert atan(p).is_positive is True
-    assert atan(n).is_positive is False
-    assert atan(x).is_positive is None
 
 
 def test_atan_rewrite():
@@ -707,10 +692,6 @@ def test_acot():
 
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
-    assert acot(x).is_positive is None
-    assert acot(r).is_positive is True
-    assert acot(p).is_positive is True
-    assert acot(I).is_positive is False
 
 
 def test_acot_rewrite():
@@ -978,7 +959,6 @@ def test_sincos_rewrite_sqrt():
                     assert not c1.has(cos, sin), "fails for %d*pi/%d" % (i, n)
                     assert 1e-3 > abs(sin(x.evalf(5)) - s1.evalf(2)), "fails for %d*pi/%d" % (i, n)
                     assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
-    assert cos(pi/14).rewrite(sqrt) == sqrt(cos(pi/7)/2 + S.Half)
 
 
 @slow

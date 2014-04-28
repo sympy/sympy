@@ -79,8 +79,7 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-[Xypic] http://xy-pic.sourceforge.net/
-
+[Xypic] http://www.tug.org/applications/Xy-pic/
 """
 from __future__ import print_function, division
 

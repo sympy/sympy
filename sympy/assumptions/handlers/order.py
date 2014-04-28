@@ -310,25 +310,3 @@ class AskPositiveHandler(CommonHandler):
         if (expr.i == expr.j
                 and ask(Q.positive_definite(expr.parent), assumptions)):
             return True
-
-    @staticmethod
-    def atan(expr, assumptions):
-        return ask(Q.positive(expr.args[0]), assumptions)
-
-    @staticmethod
-    def asin(expr, assumptions):
-        x = expr.args[0]
-        if ask(Q.positive(x) & Q.nonpositive(x - 1), assumptions):
-            return True
-        if ask(Q.negative(x) & Q.nonnegative(x + 1), assumptions):
-            return False
-
-    @staticmethod
-    def acos(expr, assumptions):
-        x = expr.args[0]
-        if ask(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
-            return True
-
-    @staticmethod
-    def acot(expr, assumptions):
-        return ask(Q.real(expr.args[0]), assumptions)

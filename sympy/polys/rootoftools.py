@@ -334,9 +334,9 @@ class RootOf(Expr):
         if not radicals:
             return None
 
-        if poly.degree() == 2:
+        if radicals and poly.degree() == 2:
             return roots_quadratic(poly)
-        elif poly.length() == 2 and poly.TC():
+        elif radicals and poly.length() == 2 and poly.TC():
             return roots_binomial(poly)
         else:
             return None

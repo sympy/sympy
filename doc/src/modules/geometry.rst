@@ -196,7 +196,7 @@ Geometry Visualization
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The plotting module is capable of plotting geometric entities. See
-`Plotting Geometric Entities <https://github.com/sympy/sympy/wiki>`_ in
+`Plotting Geometric Entities <https://github.com/sympy/sympy/wiki/Plotting-Module>`_ in
 the plotting module entry.
 
 API Reference

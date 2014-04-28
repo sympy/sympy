@@ -78,7 +78,7 @@ For further details on how the arithmetic is implemented, refer to the mpmath so
 Decimal issues
 --------------
 
-Mpmath uses binary arithmetic internally, while most interaction with the user is done via the decimal number system. Translating between binary and decimal numbers is a somewhat subtle matter; many Python novices run into the following "bug" (addressed in the `General Python FAQ <http://docs.python.org/2/faq/design.html#why-are-floating-point-calculations-so-inaccurate>`_)::
+Mpmath uses binary arithmetic internally, while most interaction with the user is done via the decimal number system. Translating between binary and decimal numbers is a somewhat subtle matter; many Python novices run into the following "bug" (addressed in the `General Python FAQ <http://docs.python.org/faq/design.html#why-are-floating-point-calculations-so-inaccurate>`_)::
 
     >>> 1.2 - 1.0
     0.19999999999999996

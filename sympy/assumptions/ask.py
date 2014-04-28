@@ -300,7 +300,7 @@ _handlers = [
     ("real",              "sets.AskRealHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("algebraic",         "sets.AskAlgebraicHandler"),
-    ("is_true",           "common.TautologicalHandler"),
+    ("is_true",           "TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
     ("orthogonal",        "matrices.AskOrthogonalHandler"),

@@ -237,6 +237,12 @@ class Order(Expr):
         obj = Expr.__new__(cls, *args)
         return obj
 
+    def _hashable_content(self):
+        return self.args
+
+    def oseries(self, order):
+        return self
+
     def _eval_nseries(self, x, n, logx):
         return self
 

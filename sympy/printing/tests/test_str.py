@@ -350,7 +350,7 @@ def test_FracField():
 
 
 def test_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ)
+    Ruv, u,v = ring("u,v", ZZ);
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert str(x - x) == "0"
@@ -367,7 +367,7 @@ def test_PolyElement():
 
 
 def test_FracElement():
-    Fuv, u,v = field("u,v", ZZ)
+    Fuv, u,v = field("u,v", ZZ);
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert str(x - x) == "0"

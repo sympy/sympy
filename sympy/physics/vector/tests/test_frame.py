@@ -158,11 +158,3 @@ def test_dcm():
         cos(q1)*cos(q3), sin(q1)*cos(q2)], [sin(q1)*sin(q3) +
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
          cos(q1)*cos(q2)]])
-
-
-def test_orientnew_respects_parent_class():
-    class MyReferenceFrame(ReferenceFrame):
-        pass
-    B = MyReferenceFrame('B')
-    C = B.orientnew('C', 'Axis', [0, B.x])
-    assert isinstance(C, MyReferenceFrame)

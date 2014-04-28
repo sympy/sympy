@@ -106,7 +106,7 @@ def execute_gamma_simplify_tests_for_function(tfunc, D):
     assert _is_tensor_eq(tfunc(t), (-2*G(sigma)*G(rho)*G(nu) + (4-D)*G(nu)*G(rho)*G(sigma)))
 
     t = (G(mu)*G(nu)*G(-mu))
-    assert _is_tensor_eq(tfunc(t), (2-D)*G(nu))
+    assert _is_tensor_eq(tfunc (t), (2-D)*G(nu))
 
     t = (G(mu)*G(nu)*G(rho)*G(-mu))
     assert _is_tensor_eq(tfunc(t), 2*G(nu)*G(rho) + 2*G(rho)*G(nu) - (4-D)*G(nu)*G(rho))

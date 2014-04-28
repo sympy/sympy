@@ -324,15 +324,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ben Lucato: documentation fixes
 #. Kunal Arora: documentation fixes
 #. Henry Gebhardt: bugfix to ufuncify
-#. Dammina Sahabandu: implemented continued fractions functions
-#. Shukla: particle on a ring functions
-#. Ralph Bean: typo
-#. richierichrawr: documentation fixes
-#. John Connor: fixes to ntheory
-#. Juan Luis Cano Rodríguez: fixes to mechanics module
-#. Sahil Shekhawat: fixes to core
-#. Kundan Kumar: fixes to ODE identification of separable_reduced
-#. sevaader: fix to assumptions
+#. dammina: implemented continued fractions functions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -342,7 +334,7 @@ You can find a brief history of SymPy in the README.
 Financial and Infrastructure Support
 ------------------------------------
 
-* `Google <http://www.google.com/about/company/>`_: SymPy has received generous
+* `Google <http://www.google.com/corporate/>`_: SymPy has received generous
   financial support from Google in various years through the `Google Summer of
   Code <http://www.google-melange.com/>`_ program by providing stipends:
 
@@ -354,7 +346,7 @@ Financial and Infrastructure Support
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
   * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
 
-* `Python Software Foundation (PSF) <https://www.python.org/psf/>`_ has hosted
+* `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:
 
   * 3 GSoC 2007 students (Brian, Robert and Jason)
@@ -376,7 +368,7 @@ Financial and Infrastructure Support
   <http://www.google-melange.com/gci/homepage/google/gci2011>`_ 2011.  (`GCI
   2011 <http://www.google-melange.com/gci/org/google/gci2011/sympy>`_)
 
-* `Simula Research Laboratory <https://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
+* `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
 
 * `GitHub <https://github.com/about>`_ is providing us with development
   and collaboration tools

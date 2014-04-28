@@ -222,11 +222,11 @@ class GA_Printer(StrPrinter):
         Basic.__str__ = GA_Printer.Basic__str__
         return
 
-    def __enter__(self):
+    def __enter__ (self):
         GA_Printer._on()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__ (self, type, value, traceback):
         GA_Printer._off()
 
     @staticmethod

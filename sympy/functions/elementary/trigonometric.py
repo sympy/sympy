@@ -165,7 +165,7 @@ class sin(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://planetmath.org/DefinitionsInTrigonometry
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -394,7 +394,7 @@ class cos(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://planetmath.org/DefinitionsInTrigonometry
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -552,6 +552,7 @@ class cos(TrigonometricFunction):
         return self._eval_rewrite_as_sqrt(arg)
 
     def _eval_rewrite_as_sqrt(self, arg):
+        _EXPAND_INTS = False
 
         def migcdex(x):
             # recursive calcuation of gcd and linear combination
@@ -569,7 +570,6 @@ class cos(TrigonometricFunction):
             return tuple([u] + [v*i for i in g[0:-1] ] + [h])
 
         def ipartfrac(r, factors=None):
-            from sympy.ntheory import factorint
             if isinstance(r, int):
                 return r
             if not isinstance(r, C.Rational):
@@ -635,6 +635,9 @@ class cos(TrigonometricFunction):
             if None == nval:
                 return None
             nval = nval.rewrite(sqrt)
+            if not _EXPAND_INTS:
+                if (isinstance(nval, cos) or isinstance(-nval, cos)):
+                    return None
             x = (2*pi_coeff + 1)/2
             sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
             return sign_cos*sqrt( (1 + nval)/2 )
@@ -645,11 +648,12 @@ class cos(TrigonometricFunction):
             X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls.rewrite(sqrt)
-        else:
+        if _EXPAND_INTS:
             decomp = ipartfrac(pi_coeff)
             X = [(x[1], x[0]*S.Pi) for x in zip(decomp, numbered_symbols('z'))]
             pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
             return pcls
+        return None
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -904,7 +908,7 @@ class tan(TrigonometricFunction):
     References
     ==========
 
-    .. [1] http://planetmath.org/DefinitionsInTrigonometry
+    .. [1] http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html
 
     """
 
@@ -1362,12 +1366,6 @@ class asin(Function):
         else:
             return s.is_rational
 
-    def _eval_is_positive(self):
-        if self.args[0].is_positive:
-            return (self.args[0] - 1).is_negative
-        if self.args[0].is_negative:
-            return not (self.args[0] + 1).is_positive
-
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1450,8 +1448,11 @@ class asin(Function):
         return -S.ImaginaryUnit*C.log(S.ImaginaryUnit*x + sqrt(1 - x**2))
 
     def _eval_is_real(self):
-        x = self.args[0]
-        return x.is_real and (1 - abs(x)).is_nonnegative
+        r = self.args[0].is_real and (self.args[0] >= -1 and
+                                      self.args[0] <= 1)
+        if r == True or r == False:
+            r = bool(r)
+        return r
 
     def inverse(self, argindex=1):
         """
@@ -1504,10 +1505,6 @@ class acos(Function):
                 return False
         else:
             return s.is_rational
-
-    def _eval_is_positive(self):
-        x = self.args[0]
-        return (1 - abs(x)).is_nonnegative
 
     @classmethod
     def eval(cls, arg):
@@ -1567,12 +1564,14 @@ class acos(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-        x = self.args[0]
-        return x.is_real and (1 - abs(x)).is_nonnegative
+        r = self.args[0].is_real and (self.args[0] >= -1 and
+                                      self.args[0] <= 1)
+        if r == True or r == False:
+            r = bool(r)
+        return r
 
     def _eval_rewrite_as_log(self, x):
-        return S.Pi/2 + S.ImaginaryUnit * \
-            C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
+        return S.Pi/2 + S.ImaginaryUnit * C.log(S.ImaginaryUnit * x + sqrt(1 - x**2))
 
     def _eval_rewrite_as_asin(self, x):
         return S.Pi/2 - asin(x)
@@ -1631,9 +1630,6 @@ class atan(Function):
                 return False
         else:
             return s.is_rational
-
-    def _eval_is_positive(self):
-        return self.args[0].is_positive
 
     @classmethod
     def eval(cls, arg):
@@ -1739,9 +1735,6 @@ class acot(Function):
                 return False
         else:
             return s.is_rational
-
-    def _eval_is_positive(self):
-        return self.args[0].is_real
 
     @classmethod
     def eval(cls, arg):

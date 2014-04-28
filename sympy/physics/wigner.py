@@ -21,7 +21,7 @@ Credits and Copyright
 
 This code was taken from Sage with the permission of all authors:
 
-https://groups.google.com/forum/#!topic/sage-devel/M4NZdu-7O38
+http://groups.google.com/group/sage-devel/browse_thread/thread/33835976efbb3b7f
 
 AUTHORS:
 

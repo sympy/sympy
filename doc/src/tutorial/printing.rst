@@ -57,7 +57,6 @@ create some common Symbols, setup plotting, and run ``init_printing``.
        >>> x, y, z, t = symbols('x y z t')
        >>> k, m, n = symbols('k m n', integer=True)
        >>> f, g, h = symbols('f g h', cls=Function)
-       >>> init_printing() # doctest: +SKIP
 
        Documentation can be found at http://www.sympy.org
 

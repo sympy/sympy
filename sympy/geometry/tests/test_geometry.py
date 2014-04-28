@@ -681,14 +681,10 @@ def test_ellipse_random_point():
 
 
 def test_polygon():
-    a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
-    t = Triangle(a, b, c)
-    assert Polygon(a, Point(1, 0), b, c) == t
-    assert Polygon(Point(1, 0), b, c, a) == t
-    assert Polygon(b, c, a, Point(1, 0)) == t
-    # 2 "remove flyback" tests
-    assert Polygon(a, Point(3, 0), b, c) == t
-    assert Polygon(a, b, Point(3, -1), b, c) == t
+    t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
+    assert Polygon(Point(0, 0), Point(1, 0), Point(2, 0), Point(3, 3)) == t
+    assert Polygon(Point(1, 0), Point(2, 0), Point(3, 3), Point(0, 0)) == t
+    assert Polygon(Point(2, 0), Point(3, 3), Point(0, 0), Point(1, 0)) == t
 
     p1 = Polygon(
         Point(0, 0), Point(3, -1),
@@ -707,10 +703,7 @@ def test_polygon():
     p5 = Polygon(
         Point(0, 0), Point(4, 4),
         Point(0, 4))
-    p6 = Polygon(
-        Point(-11, 1), Point(-9, 6.6),
-        Point(-4, -3), Point(-8.4, -8.7))
-    r = Ray(Point(-9,6.6), Point(-9,5.5))
+
     #
     # General polygon
     #
@@ -752,7 +745,7 @@ def test_polygon():
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
-    assert p6.intersection(r) == [Point(-9, 33/5), Point(-9, -84/13)]
+
     #
     # Regular polygon
     #

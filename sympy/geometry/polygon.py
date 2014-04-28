@@ -11,7 +11,7 @@ from sympy.matrices import Matrix
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import has_variety, has_dups, uniq
+from sympy.utilities.iterables import has_variety, has_dups
 
 from .entity import GeometryEntity
 from .point import Point
@@ -145,16 +145,15 @@ class Polygon(GeometryEntity):
                 got.add(p)
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
-            # if flyback lines are desired then the following should
-            # only be done if tuple(sorted((a, b, c))) == (a, b, c)
+            a, b, c = sorted(
+                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
             if b not in shared and Point.is_collinear(a, b, c):
+                nodup[i] = a
+                nodup[i + 1] = None
                 nodup.pop(i + 1)
-                if a == c:
-                    nodup.pop(i)
             i += 1
 
-        vertices = list(nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -668,7 +667,7 @@ class Polygon(GeometryEntity):
             inter = side.intersection(o)
             if inter is not None:
                 res.extend(inter)
-        return list(uniq(res))
+        return res
 
     def distance(self, o):
         """

@@ -49,7 +49,7 @@ from sympy.utilities import group, sift, public
 import sympy.polys
 import sympy.mpmath
 
-from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.domains import FF, QQ
 from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
@@ -3344,18 +3344,9 @@ class Poly(Expr):
         else:
             return group(roots, multiple=False)
 
-    def nroots(f, n=15, maxsteps=50, cleanup=True):
+    def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
         """
         Compute numerical approximations of roots of ``f``.
-
-        Parameters
-        ==========
-
-        n ... the number of digits to calculate
-        maxsteps ... the maximum number of iterations to do
-
-        If the accuracy `n` cannot be reached in `maxsteps`, it will raise an
-        exception. You need to rerun with higher maxsteps.
 
         Examples
         ========
@@ -3376,44 +3367,35 @@ class Poly(Expr):
         if f.degree() <= 0:
             return []
 
-        # For integer and rational coefficients, convert them to integers only
-        # (for accuracy). Otherwise just try to convert the coefficients to
-        # mpmath.mpc and raise an exception if the conversion fails.
-        if f.rep.dom is ZZ:
-            coeffs = [int(coeff) for coeff in f.all_coeffs()]
-        elif f.rep.dom is QQ:
-            denoms = [coeff.q for coeff in f.all_coeffs()]
-            from sympy.core.numbers import ilcm
-            fac = ilcm(*denoms)
-            coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
-        else:
-            coeffs = [coeff.evalf(n=n).as_real_imag()
-                    for coeff in f.all_coeffs()]
-            try:
-                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
-            except TypeError:
-                raise DomainError("Numerical domain expected, got %s" % \
-                        f.rep.dom)
+        coeffs = [coeff.evalf(n=n).as_real_imag()
+                  for coeff in f.all_coeffs()]
 
         dps = sympy.mpmath.mp.dps
         sympy.mpmath.mp.dps = n
 
         try:
-            # We need to add extra precision to guard against losing accuracy.
-            # 10 times the degree of the polynomial seems to work well.
-            roots = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*10)
+            try:
+                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
+            except TypeError:
+                raise DomainError(
+                    "numerical domain expected, got %s" % f.rep.dom)
 
-            # Mpmath puts real roots first, then complex ones. SymPy polynomial
-            # module orders roots by their real components (if they are equal,
-            # then by their imaginary components). So we reorder the roots here
-            # to conform to the SymPy ordering.
-            roots = list(map(sympify,
-                sorted(roots, key=lambda r: (r.real, r.imag))))
+            result = sympy.mpmath.polyroots(
+                coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
+
+            if error:
+                roots, error = result
+            else:
+                roots, error = result, None
+
+            roots = list(map(sympify, sorted(roots, key=lambda r: (r.real, r.imag))))
         finally:
             sympy.mpmath.mp.dps = dps
 
-        return roots
+        if error is not None:
+            return roots, sympify(error)
+        else:
+            return roots
 
     def ground_roots(f):
         """
@@ -6098,7 +6080,7 @@ def real_roots(f, multiple=True):
 
 
 @public
-def nroots(f, n=15, maxsteps=50, cleanup=True):
+def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
     """
     Compute numerical approximations of roots of ``f``.
 
@@ -6120,7 +6102,7 @@ def nroots(f, n=15, maxsteps=50, cleanup=True):
         raise PolynomialError(
             "can't compute numerical roots of %s, not a polynomial" % f)
 
-    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup)
+    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
 
 @public

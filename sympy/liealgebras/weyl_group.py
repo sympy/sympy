@@ -387,8 +387,8 @@ class WeylGroup(Basic):
             return self.cartan_type.dynkin_diagram()
 
         if self.cartan_type.series == "B" or self.cartan_type.series ==  "C":
-            diag = "---".join("0" for i in range(1, n)) + "===0\n"
-            diag += "   ".join(str(i) for i in range(1, n+1))
+            diag = "---".join("0" for i in range (1, n)) + "===0\n"
+            diag += "   ".join(str(i) for i in range (1, n+1))
             return diag
 
         if self.cartan_type.series == "F":

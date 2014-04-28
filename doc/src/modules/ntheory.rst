@@ -109,6 +109,3 @@ Ntheory Functions Reference
 
 .. automodule:: sympy.ntheory.continued_fraction
     :members:
-
-.. autoclass:: sympy.ntheory.mobius
-    :members:

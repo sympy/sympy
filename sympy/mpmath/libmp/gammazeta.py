@@ -552,7 +552,7 @@ def bernfrac(n):
        http://mathworld.wolfram.com/vonStaudt-ClausenTheorem.html
 
     2. The Bernoulli Number Page:
-       http://bernoulli.org/
+       http://www.bernoulli.org/
 
     """
     n = int(n)

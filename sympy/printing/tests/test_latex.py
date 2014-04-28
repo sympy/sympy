@@ -744,7 +744,7 @@ def test_latex_Lambda():
 
 
 def test_latex_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ)
+    Ruv, u,v = ring("u,v", ZZ);
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert latex(x - x) == r"0"
@@ -761,7 +761,7 @@ def test_latex_PolyElement():
 
 
 def test_latex_FracElement():
-    Fuv, u,v = field("u,v", ZZ)
+    Fuv, u,v = field("u,v", ZZ);
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert latex(x - x) == r"0"

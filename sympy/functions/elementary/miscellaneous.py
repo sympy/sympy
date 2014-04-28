@@ -232,7 +232,7 @@ def root(arg, n):
     ==========
 
     * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/Real_root
+    * http://en.wikipedia.org/wiki/real_root
     * http://en.wikipedia.org/wiki/Root_of_unity
     * http://en.wikipedia.org/wiki/Principal_value
     * http://mathworld.wolfram.com/CubeRoot.html

@@ -284,7 +284,7 @@ class TanhSinh(QuadratureRule):
 
     Various documents describing the algorithm are available online, e.g.:
 
-      * http://crd-legacy.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf
+      * http://crd.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf
       * http://users.cs.dal.ca/~jborwein/tanh-sinh.pdf
     """
 

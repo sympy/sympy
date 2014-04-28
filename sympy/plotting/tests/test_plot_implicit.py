@@ -1,4 +1,3 @@
-import warnings
 from sympy import (plot_implicit, cos, Symbol, Eq, sin, re, And, Or, exp, I,
                    tan, pi)
 from sympy.plotting.plot import unset_show
@@ -51,11 +50,6 @@ def plot_and_save(name):
     #TODO: catch the warning.
     plot_implicit(Eq(y, re(cos(x) + I*sin(x)))).save(tmp_file(name))
 
-    with warnings.catch_warnings(record=True) as w:
-        plot_implicit(x**2 - 1, legend='An implicit plot').save(tmp_file())
-        assert len(w) == 1
-        assert issubclass(w[-1].category, UserWarning)
-        assert 'No labeled objects found' in str(w[0].message)
 
 def test_matplotlib():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
