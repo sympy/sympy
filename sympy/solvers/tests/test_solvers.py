@@ -91,6 +91,11 @@ def test_guess_transcendental():
 
 
 def test_solve_args():
+    # equation container, issue 5113
+    ans = {x: -3, y: 1}
+    eqs = (x + 5*y - 2, -3*x + 6*y - 15)
+    assert all(solve(container(eqs), x, y) == ans for container in
+        (tuple, list, set, frozenset))
     # implicit symbol to solve for
     assert set(solve(x**2 - 4)) == set([S(2), -S(2)])
     assert solve([x + y - 3, x - y - 5]) == {x: 4, y: -1}
@@ -928,13 +933,6 @@ def test_issue_4463():
     assert solve(((x - 3)*(x - 2))**((x - 3)*(x - 4))) == [2]
     assert solve(
         (a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
-
-
-def test_issue_5113():
-    assert solve((x + 5*y - 2, -3*x + 6*y - 15), x, y) == {x: -3, y: 1}
-    assert solve([x + 5*y-2, -3*x + 6*y - 15], x, y) == {x: -3, y: 1}
-    assert solve(set((x + 5*y-2, -3*x + 6*y - 15)), x, y) == {x: -3, y: 1}
-    assert solve(frozenset((x + 5*y - 2, -3*x + 6*y - 15)), x, y) == {x: -3, y: 1}
 
 
 def test_issue_5114():
