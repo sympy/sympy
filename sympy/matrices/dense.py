@@ -964,7 +964,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l):  # pragma: no cover
+def list2numpy(l, dtype=object):  # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -973,13 +973,13 @@ def list2numpy(l):  # pragma: no cover
     matrix2numpy
     """
     from numpy import empty
-    a = empty(len(l), dtype=object)
+    a = empty(len(l), dtype)
     for i, s in enumerate(l):
         a[i] = s
     return a
 
 
-def matrix2numpy(m):  # pragma: no cover
+def matrix2numpy(m, dtype=object):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -988,7 +988,7 @@ def matrix2numpy(m):  # pragma: no cover
     list2numpy
     """
     from numpy import empty
-    a = empty(m.shape, dtype=object)
+    a = empty(m.shape, dtype)
     for i in range(m.rows):
         for j in range(m.cols):
             a[i, j] = m[i, j]
