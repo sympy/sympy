@@ -1,5 +1,5 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq
-from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
+from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt, gamma
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -86,6 +86,7 @@ def test_ccode_inline_function():
 def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
+    assert ccode(gamma(x)) == "tgamma(x)"
 
 
 def test_ccode_user_functions():

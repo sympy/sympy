@@ -23,6 +23,7 @@ from sympy.printing.precedence import precedence
 known_functions = {
     "ceiling": [(lambda x: True, "ceil")],
     "Abs": [(lambda x: not x.is_integer, "fabs")],
+    "gamma": [(lambda x: True, "tgamma")],
 }
 
 
