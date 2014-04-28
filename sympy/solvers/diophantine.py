@@ -68,10 +68,9 @@ def diophantine(eq, param=symbols("t", Integer=True)):
         eq = eq.lhs - eq.rhs
     if isinstance(eq, Expr):
         eq = eq.as_expr()
-        if not eq.is_polynomial():
-            raise TypeError("Equation input format not supported")
-    else:
+    if not eq.is_polynomial():
         raise TypeError("Equation input format not supported")
+
 
     var = list(eq.expand(force=True).free_symbols)
     var.sort(key=default_sort_key)
