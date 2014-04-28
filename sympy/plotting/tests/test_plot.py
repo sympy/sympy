@@ -211,16 +211,15 @@ def test_experimental_lambify():
     assert Max(2, 5) == 5
     assert Max(7, 5) == 7
 
-#http://code.google.com/p/sympy/issues/detail?id=4041
-def test_append():
+def test_append_issue_7140():
     x = Symbol('x')
     p1 = plot(x)
-    p2 = plot(x**2,x)
-    p3 = plot(x+2)
+    p2 = plot(x**2)
+    p3 = plot(x + 2)
 
     # append a series
     p2.append(p1[0])
-    assert len(p2._series) == 3
+    assert len(p2._series) == 2
 
     with raises(TypeError):
         p1.append(p2)

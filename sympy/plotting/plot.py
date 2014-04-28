@@ -32,6 +32,7 @@ import warnings
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
@@ -204,11 +205,12 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def append(self, arg):
-        """Adds a plot to an existing plot.
+        """Adds an element from a plot's series to an existing plot.
 
-        Example
-        =======
+        Examples
+        ========
 
         Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
         second plot's first series object to the first, use the
@@ -225,19 +227,22 @@ class Plot(object):
         [0]: cartesian line: x**2 for x over (-10.0, 10.0)
         [1]: cartesian line: x for x over (-10.0, 10.0)
 
-        Also, see ``extend`` below.
+        See Also
+        ========
+        extend
+
         """
         if isinstance(arg, BaseSeries):
             self._series.append(arg)
         else:
-            raise TypeError('Can only accept a series '
-                             'as an argument')
+            raise TypeError('Must specify element of plot to append.')
 
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def extend(self, arg):
-        """Adds the series from another plot or a list of series.
+        """Adds all series from another plot.
 
-        Example
-        =======
+        Examples
+        ========
 
         Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
         second plot to the first, use the ``extend`` method, like so:
@@ -253,15 +258,13 @@ class Plot(object):
         [0]: cartesian line: x**2 for x over (-10.0, 10.0)
         [1]: cartesian line: x for x over (-10.0, 10.0)
 
-        Alternatively, you can also specify the list of series objects
-        explicitly, like so:
-
-        ``p1.extend(p2._series)``
         """
         if isinstance(arg, Plot):
             self._series.extend(arg._series)
-        else:
+        elif is_sequence(arg):
             self._series.extend(arg)
+        else:
+            raise TypeError('Expecting Plot or sequence of BaseSeries')
 
 
 ##############################################################################
