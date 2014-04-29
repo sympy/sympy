@@ -90,7 +90,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type in ["binary_quadratic",  "general_sum_of_squares", "univariable"]:
+        elif eq_type in ["binary_quadratic",  "general_sum_of_squares", "univariate"]:
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
@@ -181,7 +181,7 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
 
-    elif eq_type == "univariable":
+    elif eq_type == "univariate":
         l = solve(eq)
         s = set([])
 
@@ -203,7 +203,7 @@ def classify_diop(eq):
     as a list and coefficients are returned as a dict with the key being the
     respective term and the constant term is keyed to Integer(1). Type is an
     element in the set {"linear", "binary_quadratic", "general_pythagorean",
-    "homogeneous_ternary_quadratic", "univariable", "general_sum_of_squares"}
+    "homogeneous_ternary_quadratic", "univariate", "general_sum_of_squares"}
 
     Usage
     =====
@@ -241,7 +241,7 @@ def classify_diop(eq):
             raise TypeError("Coefficients should be Integers")
 
     if len(var) == 1:
-        diop_type = "univariable"
+        diop_type = "univariate"
     elif Poly(eq).total_degree() == 1:
         diop_type = "linear"
     elif Poly(eq).total_degree() == 2 and len(var) == 2:
@@ -1865,7 +1865,7 @@ def diop_ternary_quadratic_normal(eq):
     `ax^2 + by^2 + cz^2 = 0`.
 
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
-    equation will be a quadratic binary or univariable equation. If solvable,
+    equation will be a quadratic binary or univariate equation. If solvable,
     returns a tuple `(x, y, z)` that satisifes the given equation. If the
     equation does not have integer solutions, `(None, None, None)` is returned.
 
