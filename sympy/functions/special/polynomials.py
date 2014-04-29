@@ -1216,3 +1216,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         kern = C.RisingFactorial(
             -n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
         return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))
+
+    def _eval_conjugate(self):
+        n, alpha, x = self.args
+        return self.func(n, alpha.conjugate(), x.conjugate())

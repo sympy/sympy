@@ -260,3 +260,8 @@ def test_laguerre():
         -assoc_laguerre(n - 1, alpha + 1, x)
     #k = Dummy("k")
     #assert diff(assoc_laguerre(n, alpha, x), alpha) == Sum(assoc_laguerre(k, alpha, x)/(-alpha + n), (k, 0, n - 1))
+
+    assert conjugate(laguerre(n, x)) == \
+        laguerre(n, conjugate(x))
+    assert conjugate(assoc_laguerre(n, alpha, x)) == \
+        assoc_laguerre(n, conjugate(alpha), conjugate(x))
