@@ -8,7 +8,7 @@ from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities import default_sort_key
 from sympy.simplify.simplify import _mexpand
 
-x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", Integer=True)
+x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", integer=True)
 
 
 def test_linear():
