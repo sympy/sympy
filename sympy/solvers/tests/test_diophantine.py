@@ -531,11 +531,7 @@ def test_assumptions():
     """
     #Test case taken from the below so question regarding assumptions in diophantine module
     #http://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
-    a, b, c, m, n = symbols('a b c m n', integer=True, positive=True)
-
-    a = n ** 2 - m ** 2
-    b = 2 * n * m
-    c = n ** 2 + m ** 2
+    m, n = symbols('m n', integer=True, positive=True)
 
     diof = diophantine(n ** 2 + m * n - 500)
 
