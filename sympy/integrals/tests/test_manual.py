@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
                    Derivative, diff, I, sqrt, erf, Piecewise,
-                   Eq, Ne, Q, assuming, symbols, And, Heaviside, Max)
+                   Eq, Ne, Q, assuming, symbols, And, Heaviside, Max, S)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
@@ -12,6 +12,7 @@ def test_find_substitutions():
         [(cot(x), 1, -u**6 - 2*u**4 - u**2)]
     assert find_substitutions((sec(x)**2 + tan(x) * sec(x)) / (sec(x) + tan(x)),
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
+    assert find_substitutions(x * exp(-x**2), x, u) == [(-x**2, -S.Half, exp(u))]
 
 def test_manualintegrate_polynomials():
     assert manualintegrate(y, x) == x*y
