@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 import difflib
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple
+from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple, Dummy
 from sympy.core.singleton import S
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
@@ -423,7 +423,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     from sympy.matrices import Matrix
 
     if symbols is None:
-        symbols = numbered_symbols()
+        symbols = numbered_symbols(cls = Dummy)
     else:
         # In case we get passed an iterable with an __iter__ method instead of
         # an actual iterator.
