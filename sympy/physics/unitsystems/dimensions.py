@@ -53,7 +53,7 @@ class Dimension(Expr):
         >>> length**2
         {'length': 2}
 
-    Defining addition-like operations will help when doing dimension analysis.
+    Defining addition-like operations will help when doing dimensional analysis.
 
     Note that two dimensions are equal if they have the same powers, even if
     their names and/or symbols differ.

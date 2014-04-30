@@ -19,7 +19,7 @@ dimensions can not be added. For example time or length are dimensions, but
 also any other things which has some sense for us, like angle, number of
 particles (moles...) or information (bits...).
 
-From this point of view the only trully dimensionless quantity are pure
+From this point of view the only truly dimensionless quantity are pure
 numbers. The idea of being dimensionless is very system-dependent, as can be
 seen from the :math:`(c, \hbar, G)`, in which all units appears to be
 dimensionless in the usual common sense. This is unavoidable for computability
@@ -82,8 +82,8 @@ Linear space representation
 
 It is possible to use the linear space :math:`\mathbf{Z}^n` as a representation
 of the group since the power coefficients :math:`a_i` carry all the
-information one need (we do not distinguish between the element of the group
-and their representation):
+information one needs (we do not distinguish between the element of the group
+and its representation):
 
 .. math::
 
@@ -94,8 +94,8 @@ and their representation):
     \end{pmatrix}.
 
 The change of basis to :math:`d'_i` follows the usual rule of change of basis
-for linear space, the matrix being given by the coefficient
-:math:`P_{ij}`, which are simplfy the coefficient of the new vectors in
+for linear space, the matrix being given by the coefficients
+:math:`P_{ij}`, which are simply the coefficients of the new vectors in
 term of the old basis:
 
 .. math::
@@ -110,7 +110,7 @@ An example
 
 In order to illustrate all this formalism, we end this section with a specific
 example, the MKS system (m, kg, s) with dimensions (L: length, M: mass,
-T: time). Their are represented as (we will always sort the vectors in
+T: time). They are represented as (we will always sort the vectors in
 alphabetic order)
 
 .. math::
@@ -205,7 +205,7 @@ To find the change of basis matrix we just have to take the inverse
 Units
 =====
 
-Units are constructed above dimensions: they give them an ordering, or
+Units are constructed upon dimensions: they give them an ordering, or
 equivalently a magnitude. First one has to choose some origin, usually based
 on some physical measurement. Then the other units of the same dimensions
 follow by simple rescaling (we omit for now the case of unit with offset, such
@@ -216,17 +216,17 @@ to be the meter m, and we define the other units from it: the kilometer is
 :math:`10^3` m, the foot is :math:`0.3048` m, etc.
 
 After defining several units of different dimensions we can form a unit system,
-which basically a dimension system with a notion of scale.
+which is basically a dimension system with a notion of scale.
 
 
 Constants
 =========
 
-Physical constants are really just units. They indicates that we did not
+Physical constants are really just units. They indicate that we did not
 understand that two dimensions are in fact the same. For example we see
 a velocity for the light different from 1 because we do not think that time
 is the same as space (which is normal because of our sense; but it is different
-at the fundamental level). For example before there was the "heat constant"
+at the fundamental level). For example, once there was the "heat constant"
 which allowed to convert between joules and calories since people did not know
 that heat was energy. As soon as they understood it they fixed this constant to
 1 (this is a very schematic story).
@@ -240,8 +240,8 @@ Quantities
 ==========
 
 A quantity is defined from a factor and a unit. According to this construction,
-they are very similar to unit since a the last end a quantity is just a scale
-(made from the quantity and unit factors) and a dimension. What distinguish
+they are very similar to unit since at the very end a quantity is just a scale
+(made from the quantity and unit factors) and a dimension. What distinguishes
 units is that they play the role of some fixed references, and we always have
 a definite number of them.
 
@@ -250,10 +250,10 @@ The need for a reference
 ========================
 
 It is not possible to define from scratch units and unit systems: one needs
-to define some references, and then build the rest over them. Said another way
-we need an origin for the scales of our units (i.e. a unit with factor 1), and
-to be sure that all units of a given dimension are defined consistently we need
-to use the same origin for all of them. This can happend if we want to use
+to define some references, and then build the rest over them. Said in another
+way, we need an origin for the scales of our units (i.e. a unit with factor 1),
+and to be sure that all units of a given dimension are defined consistently we
+need to use the same origin for all of them. This can happend if we want to use
 a derived unit as a base units in another system: we should not define it as
 having a scale 1, because, even if it is inconsistent inside the system, we
 could not convert to the first system since we have two different units (from
@@ -267,8 +267,8 @@ because they ultimately carry a sense.
 Let's use a concrete (and important) example: the case of the mass units.
 We would like to define the gram as the origin. We would like to define the
 gram as the canonical origin for the mass, so we assign it a scale 1. Then we
-can define a system (e.g. in chemistry) that take it as a base unit. Now the
-MKS system prefer to use the kilogram; a naive choice would be to attribute it
+can define a system (e.g. in chemistry) that take it as a base unit. The
+MKS system prefers to use the kilogram; a naive choice would be to attribute it
 a scale if 1 since it is a base, but we see that we could not convert to the
 chemistry system because g and kg have both been given the same factor. So we
 need to define kg as 1000 g, and only then use it as a base in MKS. But as soon
