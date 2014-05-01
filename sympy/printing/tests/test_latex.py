@@ -389,6 +389,12 @@ def test_latex_indexed():
     assert symbol_latex.split() == indexed_latex.split() \
         or symbol_latex.split() == indexed_latex.split()[::-1]
 
+    # Symbol('gamma') gives r'\gamma'
+    assert latex(IndexedBase('gamma')) == r'\gamma'
+    assert latex(IndexedBase('a b')) == 'a b'
+    assert latex(IndexedBase('a_b')) == 'a_{b}'
+
+
 def test_latex_derivatives():
     # regular "d" for ordinary derivatives
     assert latex(diff(x**3, x, evaluate=False)) == \
