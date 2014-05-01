@@ -191,6 +191,8 @@ def test_chebyshev():
     assert chebyshevt(n, 0) == cos(pi*n/2)
     assert chebyshevt(n, 1) == 1
 
+    assert conjugate(chebyshevt(n, x)) == chebyshevt(n, conjugate(x))
+
     assert diff(chebyshevt(n, x), x) == n*chebyshevu(n - 1, x)
 
     X = chebyshevu(n, x)
