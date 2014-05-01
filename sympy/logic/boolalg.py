@@ -199,7 +199,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
         >>> false.as_set()
         EmptySet()
         """
-        from sympy.core.sets import EmptySet
+        from sympy.sets.sets import EmptySet
         return EmptySet()
 
 true = BooleanTrue()
@@ -281,7 +281,7 @@ class And(LatticeOp, BooleanFunction):
         >>> And(x<2, x>-2).as_set()
         (-2, 2)
         """
-        from sympy.core.sets import Intersection
+        from sympy.sets.sets import Intersection
         if len(self.free_symbols) == 1:
             return Intersection(*[arg.as_set() for arg in self.args])
         else:
@@ -343,7 +343,7 @@ class Or(LatticeOp, BooleanFunction):
         >>> Or(x>2, x<-2).as_set()
         (-oo, -2) U (2, oo)
         """
-        from sympy.core.sets import Union
+        from sympy.sets.sets import Union
         if len(self.free_symbols) == 1:
             return Union(*[arg.as_set() for arg in self.args])
         else:

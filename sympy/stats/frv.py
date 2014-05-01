@@ -13,7 +13,7 @@ from itertools import product
 
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple, Piecewise, Eq, Lambda)
-from sympy.core.sets import FiniteSet
+from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
         NamedArgsMixin)
