@@ -501,11 +501,6 @@ def test_args():
     assert (x**y).args[1] == y
 
 
-def test_iter_basic_args():
-    assert list(sin(x*y).iter_basic_args()) == [x*y]
-    assert list((x**y).iter_basic_args()) == [x, y]
-
-
 def test_noncommutative_expand_issue_3757():
     A, B, C = symbols('A,B,C', commutative=False)
     assert A*B - B*A != 0
