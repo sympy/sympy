@@ -124,7 +124,6 @@ class jacobi(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
     """
 
-
     @classmethod
     def eval(cls, n, a, b, x):
         # Simplify to other polynomials
@@ -329,7 +328,6 @@ class gegenbauer(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/GegenbauerPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
     """
-
 
     @classmethod
     def eval(cls, n, a, x):
@@ -663,7 +661,6 @@ class chebyshevt_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-
     @classmethod
     def eval(cls, n, k):
         if not ((0 <= k) and (k < n)):
@@ -864,7 +861,6 @@ class assoc_legendre(Function):
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
-
     @classmethod
     def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
@@ -907,6 +903,10 @@ class assoc_legendre(Function):
         kern = C.factorial(2*n - 2*k)/(2**n*C.factorial(n - k)*C.factorial(
             k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, C.floor((n - m)*S.Half)))
+
+    def _eval_conjugate(self):
+        n, m, x = self.args
+        return self.func(n, m.conjugate(), x.conjugate())
 
 #----------------------------------------------------------------------------
 # Hermite polynomials
@@ -1170,7 +1170,6 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
-
 
     @classmethod
     def eval(cls, n, alpha, x):
