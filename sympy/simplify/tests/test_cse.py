@@ -2,7 +2,8 @@ import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
                    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
-                   IndexedBase, Idx, MatrixSymbol, Piecewise, O)
+                   IndexedBase, Idx, MatrixSymbol, Piecewise, O,
+                   numbered_symbols)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
@@ -56,7 +57,7 @@ def test_postprocess_for_cse():
 def test_cse_single():
     # Simple substitution.
     e = Add(Pow(x + y, 2), sqrt(x + y))
-    substs, reduced = cse([e])
+    substs, reduced = cse([e], dummies=False)
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
@@ -64,28 +65,29 @@ def test_cse_single():
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
     e = Add(Pow(x + y, 2), sqrt(x + y))
-    substs, reduced = cse(e)
+    substs, reduced = cse(e, dummies=False)
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
-    assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
+    assert isinstance(cse(Matrix([[1]]),
+                          dummies=False)[1][0], Matrix)
 
 
 def test_cse_not_possible():
     # No substitution possible.
     e = Add(x, y)
-    substs, reduced = cse([e])
+    substs, reduced = cse([e], dummies=False)
     assert substs == []
     assert reduced == [x + y]
     # issue 6329
     eq = (meijerg((1, 2), (y, 4), (5,), [], x) +
           meijerg((1, 3), (y, 4), (5,), [], x))
-    assert cse(eq) == ([], [eq])
+    assert cse(eq, dummies=False) == ([], [eq])
 
 
 def test_nested_substitution():
     # Substitution within a substitution.
     e = Add(Pow(w*x + y, 2), sqrt(w*x + y))
-    substs, reduced = cse([e])
+    substs, reduced = cse([e], dummies=False)
     assert substs == [(x0, w*x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
@@ -94,97 +96,110 @@ def test_subtraction_opt():
     # Make sure subtraction is optimized.
     e = (x - y)*(z - y) + exp((x - y)*(z - y))
     substs, reduced = cse(
-        [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
+        [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)],
+        dummies=False)
     assert substs == [(x0, (x - y)*(y - z))]
     assert reduced == [-x0 + exp(-x0)]
     e = -(x - y)*(z - y) + exp(-(x - y)*(z - y))
     substs, reduced = cse(
-        [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
+        [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)],
+        dummies=False)
     assert substs == [(x0, (x - y)*(y - z))]
     assert reduced == [x0 + exp(x0)]
     # issue 4077
     n = -1 + 1/x
     e = n/x/(-n)**2 - 1/n/x
-    assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)]) == \
+    assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)],
+               dummies=False) == \
         ([], [0])
 
 
 def test_multiple_expressions():
     e1 = (x + y)*z
     e2 = (x + y)*w
-    substs, reduced = cse([e1, e2])
+    substs, reduced = cse([e1, e2], dummies=False)
     assert substs == [(x0, x + y)]
     assert reduced == [x0*z, x0*w]
     l = [w*x*y + z, w*y]
-    substs, reduced = cse(l)
-    rsubsts, _ = cse(reversed(l))
+    substs, reduced = cse(l, dummies=False)
+    rsubsts, _ = cse(reversed(l), dummies=False)
     assert substs == rsubsts
     assert reduced == [z + x*x0, x0]
     l = [w*x*y, w*x*y + z, w*y]
-    substs, reduced = cse(l)
-    rsubsts, _ = cse(reversed(l))
+    substs, reduced = cse(l, dummies=False)
+    rsubsts, _ = cse(reversed(l), dummies=False)
     assert substs == rsubsts
     assert reduced == [x1, x1 + z, x0]
     l = [(x - z)*(y - z), x - z, y - z]
-    substs, reduced = cse(l)
-    rsubsts, _ = cse(reversed(l))
+    substs, reduced = cse(l, dummies=False)
+    rsubsts, _ = cse(reversed(l), dummies=False)
     assert substs == [(x0, -z), (x1, x + x0), (x2, x0 + y)]
     assert rsubsts == [(x0, -z), (x1, x0 + y), (x2, x + x0)]
     assert reduced == [x1*x2, x1, x2]
     l = [w*y + w + x + y + z, w*x*y]
-    assert cse(l) == ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
-    assert cse([x + y, x + y + z]) == ([(x0, x + y)], [x0, z + x0])
-    assert cse([x + y, x + z]) == ([], [x + y, x + z])
-    assert cse([x*y, z + x*y, x*y*z + 3]) == \
+    assert cse(l, dummies=False) == \
+        ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
+    assert cse([x + y, x + y + z], dummies=False) == \
+        ([(x0, x + y)], [x0, z + x0])
+    assert cse([x + y, x + z], dummies=False) == \
+        ([], [x + y, x + z])
+    assert cse([x*y, z + x*y, x*y*z + 3], dummies=False) == \
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
 @XFAIL # CSE of non-commutative Mul terms is disabled
 def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
-    assert cse(l) == ([], l)
+    assert cse(l, dummies=False) == ([], l)
     l = [A*B*C, A*B]
-    assert cse(l) == ([(x0, A*B)], [x0*C, x0])
+    assert cse(l, dummies=False) == \
+        ([(x0, A*B)], [x0*C, x0])
 
 # Test if CSE of non-commutative Mul terms is disabled
 def test_bypass_non_commutatives():
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
-    assert cse(l) == ([], l)
+    assert cse(l, dummies=False) == ([], l)
     l = [A*B*C, A*B]
-    assert cse(l) == ([], l)
+    assert cse(l, dummies=False) == ([], l)
     l = [B*C, A*B*C]
-    assert cse(l) == ([], l)
+    assert cse(l, dummies=False) == ([], l)
 
 @XFAIL # CSE fails when replacing non-commutative sub-expressions
 def test_non_commutative_order():
     A, B, C = symbols('A B C', commutative=False)
     x0 = symbols('x0', commutative=False)
     l = [B+C, A*(B+C)]
-    assert cse(l) == ([(x0, B+C)], [x0, A*x0])
+    assert cse(l, dummies=False) == \
+        ([(x0, B+C)], [x0, A*x0])
 
 @XFAIL
 def test_powers():
-    assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
+    assert cse(x*y**2 + x*y, dummies=False) == \
+        ([(x0, x*y)], [x0*y + x0])
 
 
 def test_issue_4498():
-    assert cse(w/(x - y) + z/(y - x), optimizations='basic') == \
+    assert cse(w/(x - y) + z/(y - x), optimizations='basic',
+               dummies=False) == \
         ([], [(w - z)/(x - y)])
 
 
 def test_issue_4020():
-    assert cse(x**5 + x**4 + x**3 + x**2, optimizations='basic') \
+    assert cse(x**5 + x**4 + x**3 + x**2, optimizations='basic',
+               dummies=False) \
         == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
 
 
 def test_issue_4203():
-    assert cse(sin(x**x)/x**x) == ([(x0, x**x)], [sin(x0)/x0])
+    assert cse(sin(x**x)/x**x, dummies=False) == \
+        ([(x0, x**x)], [sin(x0)/x0])
 
 
 def test_issue_6263():
     e = Eq(x*(-x + 1) + x*(x - 1), 0)
-    assert cse(e, optimizations='basic') == ([], [True])
+    assert cse(e, optimizations='basic',
+               dummies=False) == ([], [True])
 
 
 def test_dont_cse_tuples():
@@ -194,7 +209,8 @@ def test_dont_cse_tuples():
 
     name_val, (expr,) = cse(
         Subs(f(x, y), (x, y), (0, 1))
-        + Subs(g(x, y), (x, y), (0, 1)))
+        + Subs(g(x, y), (x, y), (0, 1)),
+        dummies=False)
 
     assert name_val == []
     assert expr == (Subs(f(x, y), (x, y), (0, 1))
@@ -202,7 +218,8 @@ def test_dont_cse_tuples():
 
     name_val, (expr,) = cse(
         Subs(f(x, y), (x, y), (0, x + y))
-        + Subs(g(x, y), (x, y), (0, x + y)))
+        + Subs(g(x, y), (x, y), (0, x + y)),
+        dummies=False)
 
     assert name_val == [(x0, x + y)]
     assert expr == Subs(f(x, y), (x, y), (0, x0)) + \
@@ -210,30 +227,40 @@ def test_dont_cse_tuples():
 
 
 def test_pow_invpow():
-    assert cse(1/x**2 + x**2) == \
+    assert cse(1/x**2 + x**2,
+               dummies=False) == \
         ([(x0, x**2)], [x0 + 1/x0])
-    assert cse(x**2 + (1 + 1/x**2)/x**2) == \
+    assert cse(x**2 + (1 + 1/x**2)/x**2,
+               dummies=False) == \
         ([(x0, x**2), (x1, 1/x0)], [x0 + x1*(x1 + 1)])
-    assert cse(1/x**2 + (1 + 1/x**2)*x**2) == \
+    assert cse(1/x**2 + (1 + 1/x**2)*x**2,
+               dummies=False) == \
         ([(x0, x**2), (x1, 1/x0)], [x0*(x1 + 1) + x1])
-    assert cse(cos(1/x**2) + sin(1/x**2)) == \
+    assert cse(cos(1/x**2) + sin(1/x**2),
+               dummies=False) == \
         ([(x0, x**(-2))], [sin(x0) + cos(x0)])
-    assert cse(cos(x**2) + sin(x**2)) == \
+    assert cse(cos(x**2) + sin(x**2),
+               dummies=False) == \
         ([(x0, x**2)], [sin(x0) + cos(x0)])
-    assert cse(y/(2 + x**2) + z/x**2/y) == \
+    assert cse(y/(2 + x**2) + z/x**2/y,
+               dummies=False) == \
         ([(x0, x**2)], [y/(x0 + 2) + z/(x0*y)])
-    assert cse(exp(x**2) + x**2*cos(1/x**2)) == \
+    assert cse(exp(x**2) + x**2*cos(1/x**2),
+               dummies=False) == \
         ([(x0, x**2)], [x0*cos(1/x0) + exp(x0)])
-    assert cse((1 + 1/x**2)/x**2) == \
+    assert cse((1 + 1/x**2)/x**2,
+               dummies=False) == \
         ([(x0, x**(-2))], [x0*(x0 + 1)])
-    assert cse(x**(2*y) + x**(-2*y)) == \
+    assert cse(x**(2*y) + x**(-2*y),
+               dummies=False) == \
         ([(x0, x**(2*y))], [x0 + 1/x0])
 
 
 def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
-        postprocess=cse_main.cse_separate) == \
+               postprocess=cse_main.cse_separate,
+               dummies=False) == \
         [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
         [x0 + exp(x0/x1) + cos(x1), z - 2, x0*x2]]
 
@@ -252,7 +279,7 @@ def test_issue_4499():
         (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
         sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
         -2*a))
-    c = cse(t)
+    c = cse(t, dummies=False)
     ans = (
         [(x0, 2*a), (x1, -b), (x2, x1 + 1), (x3, x0 + x2), (x4, sqrt(z)), (x5,
         B(x0 + x1, x4)), (x6, G(b)), (x7, G(x3)), (x8, -x0), (x9,
@@ -264,7 +291,7 @@ def test_issue_4499():
 
 def test_issue_6169():
     r = RootOf(x**6 - 4*x**5 - 2, 1)
-    assert cse(r) == ([], [r])
+    assert cse(r, dummies=False) == ([], [r])
     # and a check that the right thing is done with the new
     # mechanism
     assert sub_post(sub_pre((-x - y)*z - x - y)) == -z*(x + y) - x - y
@@ -278,7 +305,8 @@ def test_cse_Indexed():
 
     expr1 = (y[i+1]-y[i])/(x[i+1]-x[i])
     expr2 = 1/(x[i+1]-x[i])
-    replacements, reduced_exprs = cse([expr1, expr2])
+    replacements, reduced_exprs = cse([expr1, expr2],
+                                      dummies=False)
     assert len(replacements) > 0
 
 @XFAIL
@@ -289,15 +317,25 @@ def test_cse_MatrixSymbol():
 
     expr1 = (A.T*A).I * A * y
     expr2 = (A.T*A) * A * y
-    replacements, reduced_exprs = cse([expr1, expr2])
+    replacements, reduced_exprs = cse([expr1, expr2],
+                                      dummies=False)
     assert len(replacements) > 0
 
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
-    ans = cse(f)
+    ans = cse(f, dummies=False)
     actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
 
 def test_ignore_order_terms():
     eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
-    assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
+    assert cse(eq, dummies=False) == \
+        ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
+
+def test_name_collision():
+    e = Add(Pow(x0 + y, 2), sqrt(x0 + y))
+    substs, reduced = cse(e)
+    _x0 = substs[0][0]
+    assert _x0 != x0
+    assert substs == [(_x0, x0 + y)]
+    assert reduced == [sqrt(_x0) + _x0**2]
