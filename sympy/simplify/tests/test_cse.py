@@ -57,7 +57,7 @@ def test_postprocess_for_cse():
 def test_cse_single():
     # Simple substitution.
     e = Add(Pow(x + y, 2), sqrt(x + y))
-    substs, reduced = cse([e], symbols = numbered_symbols("x"))
+    substs, reduced = cse([e], symbols=numbered_symbols("x"))
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
@@ -65,29 +65,29 @@ def test_cse_single():
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
     e = Add(Pow(x + y, 2), sqrt(x + y))
-    substs, reduced = cse(e, symbols = numbered_symbols("x"))
+    substs, reduced = cse(e, symbols=numbered_symbols("x"))
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
     assert isinstance(cse(Matrix([[1]]),
-                          symbols = numbered_symbols("x"))[1][0], Matrix)
+                          symbols=numbered_symbols("x"))[1][0], Matrix)
 
 
 def test_cse_not_possible():
     # No substitution possible.
     e = Add(x, y)
-    substs, reduced = cse([e], symbols = numbered_symbols("x"))
+    substs, reduced = cse([e], symbols=numbered_symbols("x"))
     assert substs == []
     assert reduced == [x + y]
     # issue 6329
     eq = (meijerg((1, 2), (y, 4), (5,), [], x) +
           meijerg((1, 3), (y, 4), (5,), [], x))
-    assert cse(eq, symbols = numbered_symbols("x")) == ([], [eq])
+    assert cse(eq, symbols=numbered_symbols("x")) == ([], [eq])
 
 
 def test_nested_substitution():
     # Substitution within a substitution.
     e = Add(Pow(w*x + y, 2), sqrt(w*x + y))
-    substs, reduced = cse([e], symbols = numbered_symbols("x"))
+    substs, reduced = cse([e], symbols=numbered_symbols("x"))
     assert substs == [(x0, w*x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
@@ -97,109 +97,109 @@ def test_subtraction_opt():
     e = (x - y)*(z - y) + exp((x - y)*(z - y))
     substs, reduced = cse(
         [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)],
-        symbols = numbered_symbols("x"))
+        symbols=numbered_symbols("x"))
     assert substs == [(x0, (x - y)*(y - z))]
     assert reduced == [-x0 + exp(-x0)]
     e = -(x - y)*(z - y) + exp(-(x - y)*(z - y))
     substs, reduced = cse(
         [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)],
-        symbols = numbered_symbols("x"))
+        symbols=numbered_symbols("x"))
     assert substs == [(x0, (x - y)*(y - z))]
     assert reduced == [x0 + exp(x0)]
     # issue 4077
     n = -1 + 1/x
     e = n/x/(-n)**2 - 1/n/x
     assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)],
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([], [0])
 
 
 def test_multiple_expressions():
     e1 = (x + y)*z
     e2 = (x + y)*w
-    substs, reduced = cse([e1, e2], symbols = numbered_symbols("x"))
+    substs, reduced = cse([e1, e2], symbols=numbered_symbols("x"))
     assert substs == [(x0, x + y)]
     assert reduced == [x0*z, x0*w]
     l = [w*x*y + z, w*y]
-    substs, reduced = cse(l, symbols = numbered_symbols("x"))
-    rsubsts, _ = cse(reversed(l), symbols = numbered_symbols("x"))
+    substs, reduced = cse(l, symbols=numbered_symbols("x"))
+    rsubsts, _ = cse(reversed(l), symbols=numbered_symbols("x"))
     assert substs == rsubsts
     assert reduced == [z + x*x0, x0]
     l = [w*x*y, w*x*y + z, w*y]
-    substs, reduced = cse(l, symbols = numbered_symbols("x"))
-    rsubsts, _ = cse(reversed(l), symbols = numbered_symbols("x"))
+    substs, reduced = cse(l, symbols=numbered_symbols("x"))
+    rsubsts, _ = cse(reversed(l), symbols=numbered_symbols("x"))
     assert substs == rsubsts
     assert reduced == [x1, x1 + z, x0]
     l = [(x - z)*(y - z), x - z, y - z]
-    substs, reduced = cse(l, symbols = numbered_symbols("x"))
-    rsubsts, _ = cse(reversed(l), symbols = numbered_symbols("x"))
+    substs, reduced = cse(l, symbols=numbered_symbols("x"))
+    rsubsts, _ = cse(reversed(l), symbols=numbered_symbols("x"))
     assert substs == [(x0, -z), (x1, x + x0), (x2, x0 + y)]
     assert rsubsts == [(x0, -z), (x1, x0 + y), (x2, x + x0)]
     assert reduced == [x1*x2, x1, x2]
     l = [w*y + w + x + y + z, w*x*y]
-    assert cse(l, symbols = numbered_symbols("x")) == \
+    assert cse(l, symbols=numbered_symbols("x")) == \
         ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
-    assert cse([x + y, x + y + z], symbols = numbered_symbols("x")) == \
+    assert cse([x + y, x + y + z], symbols=numbered_symbols("x")) == \
         ([(x0, x + y)], [x0, z + x0])
-    assert cse([x + y, x + z], symbols = numbered_symbols("x")) == \
+    assert cse([x + y, x + z], symbols=numbered_symbols("x")) == \
         ([], [x + y, x + z])
-    assert cse([x*y, z + x*y, x*y*z + 3], symbols = numbered_symbols("x")) == \
+    assert cse([x*y, z + x*y, x*y*z + 3], symbols=numbered_symbols("x")) == \
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
 @XFAIL # CSE of non-commutative Mul terms is disabled
 def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
-    assert cse(l, symbols = numbered_symbols("x")) == ([], l)
+    assert cse(l, symbols=numbered_symbols("x")) == ([], l)
     l = [A*B*C, A*B]
-    assert cse(l, symbols = numbered_symbols("x")) == \
+    assert cse(l, symbols=numbered_symbols("x")) == \
         ([(x0, A*B)], [x0*C, x0])
 
 # Test if CSE of non-commutative Mul terms is disabled
 def test_bypass_non_commutatives():
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
-    assert cse(l, symbols = numbered_symbols("x")) == ([], l)
+    assert cse(l, symbols=numbered_symbols("x")) == ([], l)
     l = [A*B*C, A*B]
-    assert cse(l, symbols = numbered_symbols("x")) == ([], l)
+    assert cse(l, symbols=numbered_symbols("x")) == ([], l)
     l = [B*C, A*B*C]
-    assert cse(l, symbols = numbered_symbols("x")) == ([], l)
+    assert cse(l, symbols=numbered_symbols("x")) == ([], l)
 
 @XFAIL # CSE fails when replacing non-commutative sub-expressions
 def test_non_commutative_order():
     A, B, C = symbols('A B C', commutative=False)
     x0 = symbols('x0', commutative=False)
     l = [B+C, A*(B+C)]
-    assert cse(l, symbols = numbered_symbols("x")) == \
+    assert cse(l, symbols=numbered_symbols("x")) == \
         ([(x0, B+C)], [x0, A*x0])
 
 @XFAIL
 def test_powers():
-    assert cse(x*y**2 + x*y, symbols = numbered_symbols("x")) == \
+    assert cse(x*y**2 + x*y, symbols=numbered_symbols("x")) == \
         ([(x0, x*y)], [x0*y + x0])
 
 
 def test_issue_4498():
     assert cse(w/(x - y) + z/(y - x), optimizations='basic',
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([], [(w - z)/(x - y)])
 
 
 def test_issue_4020():
     assert cse(x**5 + x**4 + x**3 + x**2, optimizations='basic',
-               symbols = numbered_symbols("x")) \
+               symbols=numbered_symbols("x")) \
         == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
 
 
 def test_issue_4203():
-    assert cse(sin(x**x)/x**x, symbols = numbered_symbols("x")) == \
+    assert cse(sin(x**x)/x**x, symbols=numbered_symbols("x")) == \
         ([(x0, x**x)], [sin(x0)/x0])
 
 
 def test_issue_6263():
     e = Eq(x*(-x + 1) + x*(x - 1), 0)
     assert cse(e, optimizations='basic',
-               symbols = numbered_symbols("x")) == ([], [True])
+               symbols=numbered_symbols("x")) == ([], [True])
 
 
 def test_dont_cse_tuples():
@@ -210,7 +210,7 @@ def test_dont_cse_tuples():
     name_val, (expr,) = cse(
         Subs(f(x, y), (x, y), (0, 1))
         + Subs(g(x, y), (x, y), (0, 1)),
-        symbols = numbered_symbols("x"))
+        symbols=numbered_symbols("x"))
 
     assert name_val == []
     assert expr == (Subs(f(x, y), (x, y), (0, 1))
@@ -219,7 +219,7 @@ def test_dont_cse_tuples():
     name_val, (expr,) = cse(
         Subs(f(x, y), (x, y), (0, x + y))
         + Subs(g(x, y), (x, y), (0, x + y)),
-        symbols = numbered_symbols("x"))
+        symbols=numbered_symbols("x"))
 
     assert name_val == [(x0, x + y)]
     assert expr == Subs(f(x, y), (x, y), (0, x0)) + \
@@ -228,31 +228,31 @@ def test_dont_cse_tuples():
 
 def test_pow_invpow():
     assert cse(1/x**2 + x**2,
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**2)], [x0 + 1/x0])
     assert cse(x**2 + (1 + 1/x**2)/x**2,
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**2), (x1, 1/x0)], [x0 + x1*(x1 + 1)])
     assert cse(1/x**2 + (1 + 1/x**2)*x**2,
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**2), (x1, 1/x0)], [x0*(x1 + 1) + x1])
     assert cse(cos(1/x**2) + sin(1/x**2),
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**(-2))], [sin(x0) + cos(x0)])
     assert cse(cos(x**2) + sin(x**2),
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**2)], [sin(x0) + cos(x0)])
     assert cse(y/(2 + x**2) + z/x**2/y,
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**2)], [y/(x0 + 2) + z/(x0*y)])
     assert cse(exp(x**2) + x**2*cos(1/x**2),
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**2)], [x0*cos(1/x0) + exp(x0)])
     assert cse((1 + 1/x**2)/x**2,
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**(-2))], [x0*(x0 + 1)])
     assert cse(x**(2*y) + x**(-2*y),
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         ([(x0, x**(2*y))], [x0 + 1/x0])
 
 
@@ -260,7 +260,7 @@ def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
                postprocess=cse_main.cse_separate,
-               symbols = numbered_symbols("x")) == \
+               symbols=numbered_symbols("x")) == \
         [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
         [x0 + exp(x0/x1) + cos(x1), z - 2, x0*x2]]
 
@@ -279,7 +279,7 @@ def test_issue_4499():
         (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
         sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
         -2*a))
-    c = cse(t, symbols = numbered_symbols("x"))
+    c = cse(t, symbols=numbered_symbols("x"))
     ans = (
         [(x0, 2*a), (x1, -b), (x2, x1 + 1), (x3, x0 + x2), (x4, sqrt(z)), (x5,
         B(x0 + x1, x4)), (x6, G(b)), (x7, G(x3)), (x8, -x0), (x9,
@@ -291,7 +291,7 @@ def test_issue_4499():
 
 def test_issue_6169():
     r = RootOf(x**6 - 4*x**5 - 2, 1)
-    assert cse(r, symbols = numbered_symbols("x")) == ([], [r])
+    assert cse(r, symbols=numbered_symbols("x")) == ([], [r])
     # and a check that the right thing is done with the new
     # mechanism
     assert sub_post(sub_pre((-x - y)*z - x - y)) == -z*(x + y) - x - y
@@ -306,7 +306,7 @@ def test_cse_Indexed():
     expr1 = (y[i+1]-y[i])/(x[i+1]-x[i])
     expr2 = 1/(x[i+1]-x[i])
     replacements, reduced_exprs = cse([expr1, expr2],
-                                      symbols = numbered_symbols("x"))
+                                      symbols=numbered_symbols("x"))
     assert len(replacements) > 0
 
 @XFAIL
@@ -318,18 +318,18 @@ def test_cse_MatrixSymbol():
     expr1 = (A.T*A).I * A * y
     expr2 = (A.T*A) * A * y
     replacements, reduced_exprs = cse([expr1, expr2],
-                                      symbols = numbered_symbols("x"))
+                                      symbols=numbered_symbols("x"))
     assert len(replacements) > 0
 
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
-    ans = cse(f, symbols = numbered_symbols("x"))
+    ans = cse(f, symbols=numbered_symbols("x"))
     actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
     assert ans == actual_ans
 
 def test_ignore_order_terms():
     eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
-    assert cse(eq, symbols = numbered_symbols("x")) == \
+    assert cse(eq, symbols=numbered_symbols("x")) == \
         ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
 
 def test_name_collision():
