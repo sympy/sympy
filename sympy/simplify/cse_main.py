@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 import difflib
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple
+from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple, Symbol
 from sympy.core.singleton import S
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
@@ -422,8 +422,16 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     """
     from sympy.matrices import Matrix
 
+    # Handle the case if just one expression was passed.
+    if isinstance(exprs, Basic):
+        exprs = [exprs]
+
+    excluded_symbols = set()
+    for expr in exprs:
+        excluded_symbols.update(expr.atoms(Symbol))
+
     if symbols is None:
-        symbols = numbered_symbols()
+        symbols = numbered_symbols(exclude=excluded_symbols)
     else:
         # In case we get passed an iterable with an __iter__ method instead of
         # an actual iterator.
@@ -433,10 +441,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         optimizations = list()
     elif optimizations == 'basic':
         optimizations = basic_optimizations
-
-    # Handle the case if just one expression was passed.
-    if isinstance(exprs, Basic):
-        exprs = [exprs]
 
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
