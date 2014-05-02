@@ -77,7 +77,9 @@ def cse_separate(r, e):
     >>> from sympy import cos, exp, cse, Eq, symbols
     >>> x0, x1 = symbols('x:2')
     >>> eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
-    >>> cse([eq, Eq(x, z + 1), z - 2], postprocess=cse_separate) in [
+    >>> cse([eq, Eq(x, z + 1), z - 2],
+    ...     postprocess=cse_separate,
+    ...     dummies=False) in [
     ... [[(x0, y + 1), (x, z + 1), (x1, x + 1)],
     ...  [x1 + exp(x1/x0) + cos(x0), z - 2]],
     ... [[(x1, y + 1), (x, z + 1), (x0, x + 1)],
@@ -380,7 +382,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical'):
+        order='canonical', dummies=True):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -409,6 +411,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         ordering will be faster but dependent on expressions hashes, thus
         machine dependent and variable. For large expressions where speed is a
         concern, use the setting order='none'.
+    dummies : boolean
+        If True, cse uses Dummy symbols for replacements.
 
     Returns
     =======
@@ -423,7 +427,10 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     from sympy.matrices import Matrix
 
     if symbols is None:
-        symbols = numbered_symbols(cls = Dummy)
+        if dummies:
+            symbols = numbered_symbols(cls = Dummy)
+        else:
+            symbols = numbered_symbols()
     else:
         # In case we get passed an iterable with an __iter__ method instead of
         # an actual iterator.

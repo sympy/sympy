@@ -410,9 +410,11 @@ def test_derivative_subs():
     assert Derivative(f(x), x).subs(f(x), y).subs(y, f(x)) == \
         Derivative(f(x), x)
     # issues 1986, 1938
-    assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)
+    assert cse(Derivative(f(x), x) + f(x),
+               dummies=False)[1][0].has(Derivative)
     assert cse(Derivative(f(x, y), x) +
-               Derivative(f(x, y), y))[1][0].has(Derivative)
+               Derivative(f(x, y), y),
+               dummies=False)[1][0].has(Derivative)
 
 def test_derivative_subs2():
     x, y, z = symbols('x y z')
@@ -569,7 +571,7 @@ def test_issue_6559():
     x0, x1 = symbols('x0 x1')
     e = -log(-12*sqrt(2) + 17)/24 - log(-2*sqrt(2) + 3)/12 + sqrt(2)/3
     # XXX modify cse so x1 is eliminated and x0 = -sqrt(2)?
-    assert cse(e) == (
+    assert cse(e, dummies=False) == (
         [(x0, sqrt(2))], [x0/3 - log(-12*x0 + 17)/24 - log(-2*x0 + 3)/12])
 
 
