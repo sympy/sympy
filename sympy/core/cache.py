@@ -1,11 +1,12 @@
 """ Caching facility for SymPy """
 from __future__ import print_function, division
-
+from collections import deque
+from weakref import WeakKeyDictionary
 # TODO: refactor CACHE & friends into class?
 
 # global cache registry:
 CACHE = []  # [] of
-            #    (item, {} or tuple of {})
+            # (item, {} or tuple of {})
 
 from sympy.core.decorators import wraps
 
@@ -77,7 +78,7 @@ def __cacheit(func):
        set environment variable SYMPY_USE_CACHE to 'debug'
     """
 
-    func._cache_it_cache = func_cache_it_cache = {}
+    func._cache_it_cache = func_cache_it_cache = WeakKeyDictionary()
     CACHE.append((func, func_cache_it_cache))
 
     @wraps(func)
