@@ -5,6 +5,9 @@ A Python library for symbolic mathematics.
 
 http://sympy.org/
 
+.. image:: https://travis-ci.org/sympy/sympy.svg?branch=master   
+    :target: https://travis-ci.org/sympy/sympy
+
 See the AUTHORS file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs, helped
