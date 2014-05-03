@@ -63,6 +63,9 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
     assert manualintegrate(csc(x) * cot(x), x) == -csc(x)
 
+    assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
+    assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
+
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
     assert manualintegrate(sin(x)**2 * cos(x) **2, x) == \

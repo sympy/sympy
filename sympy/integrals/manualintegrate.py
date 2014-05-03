@@ -121,7 +121,7 @@ def find_substitutions(integrand, symbol, u_var):
         return False
 
     def possible_subterms(term):
-        if isinstance(term, (sympy.sin, sympy.cos, sympy.tan,
+        if isinstance(term, (TrigonometricFunction,
                              sympy.asin, sympy.acos, sympy.atan,
                              sympy.exp, sympy.log, sympy.Heaviside)):
             return [term.args[0]]
