@@ -1318,11 +1318,10 @@ def odesimp(eq, func, order, constants, hint):
                 sol = collect(sol, x**i*exp(reroot*x))
             del collectterms
 
-            # Collect is splitting exponentials with
-            # rational powers for no reason.  We have to do a match
-            # to fix this using Wilds.
-            w1, w2 = Wild('w1',exclude=[x]), Wild('w2')
-            sol = sol.replace(exp(w1*x)**w2, exp(w1*w2*x))
+            # Collect is splitting exponentials with rational powers for
+            # no reason.  We call powsimp to fix.
+            sol = powsimp(sol)
+
             eq[0] = Eq(f(x), sol)
 
     else:
