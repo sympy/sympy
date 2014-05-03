@@ -426,17 +426,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     if isinstance(exprs, Basic):
         exprs = [exprs]
 
-    excluded_symbols = set()
-    for expr in exprs:
-        excluded_symbols.update(expr.atoms(Symbol))
-
-    if symbols is None:
-        symbols = numbered_symbols(exclude=excluded_symbols)
-    else:
-        # In case we get passed an iterable with an __iter__ method instead of
-        # an actual iterator.
-        symbols = iter(symbols)
-
     if optimizations is None:
         optimizations = list()
     elif optimizations == 'basic':
@@ -444,6 +433,16 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
+
+    excluded_symbols = set.union(*[expr.atoms(Symbol) 
+                                   for expr in reduced_exprs])
+
+    if symbols is None:
+        symbols = numbered_symbols(exclude=excluded_symbols)
+    else:
+        # In case we get passed an iterable with an __iter__ method instead of
+        # an actual iterator.
+        symbols = iter(symbols)
 
     # Find other optimization opportunities.
     opt_subs = opt_cse(reduced_exprs, order)
