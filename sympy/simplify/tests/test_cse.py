@@ -301,3 +301,10 @@ def test_Piecewise():
 def test_ignore_order_terms():
     eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
     assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
+
+def test_name_conflict():
+    x0, x2 = symbols("x0 x2")
+    l = [cos(x0 + x2 + y/x), x + 2, x0 + x2 + y/x]
+    substs, reduced = cse(l)
+    assert substs == [(x1, x0 + x2 + y/x)]
+    assert reduced == [cos(x1), x+2, x1]
