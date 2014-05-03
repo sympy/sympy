@@ -9,6 +9,7 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
 from sympy.core.evaluate import global_evaluate
+from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
@@ -199,20 +200,44 @@ class Set(Basic):
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
 
+    @deprecated(useinstead="is_subset", issue=7460, deprecated_since_version="0.7.6")
     def subset(self, other):
         """
         Returns True if 'other' is a subset of 'self'.
+        """
+        return other.is_subset(self)
+
+    def is_subset(self, other):
+        """
+        Returns True if 'self' is a subset of 'other'.
 
         >>> from sympy import Interval
 
-        >>> Interval(0, 1).subset(Interval(0, 0.5))
+        >>> Interval(0, 0.5).is_subset(Interval(0, 1))
         True
-        >>> Interval(0, 1, left_open=True).subset(Interval(0, 1))
+        >>> Interval(0, 1).is_subset(Interval(0, 1, left_open=True))
         False
 
         """
         if isinstance(other, Set):
-            return self.intersect(other) == other
+            return self.intersect(other) == self
+        else:
+            raise ValueError("Unknown argument '%s'" % other)
+
+    def is_superset(self, other):
+        """
+        Returns True if 'self' is a superset of 'other'.
+
+        >>> from sympy import Interval
+
+        >>> Interval(0, 0.5).is_superset(Interval(0, 1))
+        False
+        >>> Interval(0, 1).is_superset(Interval(0, 1, left_open=True))
+        True
+
+        """
+        if isinstance(other, Set):
+            return other.is_subset(self)
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -296,7 +321,7 @@ class Set(Basic):
 
     @property
     def is_closed(self):
-        return self.subset(self.boundary)
+        return self.boundary.is_subset(self)
 
     @property
     def closure(self):
@@ -1507,13 +1532,13 @@ class FiniteSet(Set, EvalfMixin):
         return self.func(self.func(s) for s in subsets(self.args))
 
     def __ge__(self, other):
-        return self.subset(other)
+        return other.is_subset(self)
 
     def __gt__(self, other):
         return self != other and self >= other
 
     def __le__(self, other):
-        return other.subset(self)
+        return self.is_subset(other)
 
     def __lt__(self, other):
         return self != other and other >= self
