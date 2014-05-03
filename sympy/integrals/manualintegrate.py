@@ -202,8 +202,12 @@ def alternatives(*rules):
                 alts.append(result)
         if len(alts) == 1:
             return alts[0]
-        elif len(alts) > 1:
-            return AlternativeRule(alts, *integral)
+        elif alts:
+            doable = [rule for rule in alts if not contains_dont_know(rule)]
+            if doable:
+                return AlternativeRule(doable, *integral)
+            else:
+                return AlternativeRule(alts, *integral)
     return _alternatives
 
 def constant_rule(integral):
