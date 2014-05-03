@@ -434,7 +434,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
 
-    excluded_symbols = set.union(*[expr.atoms(Symbol) 
+    excluded_symbols = set.union(*[expr.atoms(Symbol)
                                    for expr in reduced_exprs])
 
     if symbols is None:
