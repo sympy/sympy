@@ -1,7 +1,7 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
-)
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
+    Difference)
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
@@ -121,6 +121,18 @@ def test_difference():
     assert FiniteSet(1, 2, 3, 4) - S.EmptySet == FiniteSet(1, 2, 3, 4)
     assert Union(Interval(0, 2), FiniteSet(2, 3, 4)) - Interval(1, 3) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
+
+
+def test_Difference():
+    assert Difference(Interval(1, 3), Interval(1, 2)) == Interval(2, 3, True)
+    assert Difference(FiniteSet(1, 3, 4), FiniteSet(3, 4)) == FiniteSet(1)
+    assert Difference(Union(Interval(0, 2),
+                            FiniteSet(2, 3, 4)), Interval(1, 3)) == \
+        Union(Interval(0, 1, False, True), FiniteSet(4))
+
+    assert not 3 in Difference(Interval(0, 5), Interval(1, 4), evaluate=False)
+    assert -1 in Difference(S.Reals, S.Naturals, evaluate=False)
+    assert not 1 in Difference(S.Reals, S.Naturals, evaluate=False)
 
 
 def test_complement():

@@ -11,7 +11,7 @@ from sympy.core.compatibility import iterable, with_metaclass
 from sympy.core.evaluate import global_evaluate
 
 from sympy.mpmath import mpi, mpf
-from sympy.logic.boolalg import And, Or, true, false
+from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import default_sort_key, subsets
 
 
@@ -1222,6 +1222,64 @@ class Intersection(Set):
     def as_relational(self, symbol):
         """Rewrite an Intersection in terms of equalities and logic operators"""
         return And(*[set.as_relational(symbol) for set in self.args])
+
+
+class Difference(Set, EvalfMixin):
+    """
+    Represents the set difference of a set with another set.
+
+    `A - B = {x | x \in A and x \\notin B} `
+
+    Examples
+    ========
+
+        >>> from sympy import Difference, FiniteSet
+        >>> Difference(FiniteSet(0, 1, 2), FiniteSet(1))
+        {0, 2}
+
+    See Also
+    =========
+    Intersection, Union
+
+    References
+    ==========
+    http://mathworld.wolfram.com/SetDifference.html
+    """
+    is_Difference = True
+
+    def __new__(cls, *args, **kwargs):
+
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
+
+        args = list(args)
+
+        if len(args) != 2:
+            raise TypeError("The input must be two Sets")
+
+        if evaluate:
+            return Difference.reduce(args)
+
+        return Basic.__new__(cls, *args)
+
+    @staticmethod
+    def reduce(args):
+        """
+        Simplify a :class:`Difference` using known rules.
+
+        Rules:
+            1. If A is FiniteSet then use the definition
+
+        """
+
+        A = args[0]
+        B = args[1]
+
+        return A.__sub__(B)
+
+    def _contains(self, other):
+        A = self.args[0]
+        B = self.args[1]
+        return And(A.contains(other), Not(B.contains(other)))
 
 
 class EmptySet(with_metaclass(Singleton, Set)):
