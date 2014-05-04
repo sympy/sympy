@@ -115,7 +115,7 @@ def __cacheit(func):
         try:
             hash(k)
         except TypeError: # k is unhashable
-            return func(*args,**kwargs)
+            return func(*args,**kw_args)
         
         # check if we are cached
         try:
