@@ -10,8 +10,8 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
 from sympy.core.compatibility import iterable, xrange
-from sympy.utilities.iterables import numbered_symbols, \
-    sift, topological_sort, ordered
+from sympy.utilities.iterables import filter_symbols, \
+    numbered_symbols, sift, topological_sort, ordered
 
 from . import cse_opts
 
@@ -438,11 +438,13 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
                                    for expr in reduced_exprs])
 
     if symbols is None:
-        symbols = numbered_symbols(exclude=excluded_symbols)
+        symbols = numbered_symbols()
     else:
         # In case we get passed an iterable with an __iter__ method instead of
         # an actual iterator.
         symbols = iter(symbols)
+
+    symbols = filter_symbols(symbols, excluded_symbols)
 
     # Find other optimization opportunities.
     opt_subs = opt_cse(reduced_exprs, order)
