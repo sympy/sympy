@@ -527,6 +527,30 @@ def subsets(seq, k=None, repetition=False):
                 yield i
 
 
+def filter_symbols(iterator, exclude):
+    """
+    Only yield elements from `iterator` that do not occur in `exclude`.
+
+    Parameters
+    ==========
+
+    iterator : iterable
+    iterator to take elements from
+
+    exclude : iterable
+    elements to exclude
+
+    Returns
+    =======
+
+    iterator : iterator
+    filtered iterator
+    """
+    exclude = set(exclude)
+    for s in iterator:
+        if s not in exclude:
+            yield s
+
 def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and

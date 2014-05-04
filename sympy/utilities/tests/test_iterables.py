@@ -6,7 +6,7 @@ from sympy import (
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge,
+    cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
     flatten, generate_bell, generate_derangements, generate_involutions,
     generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
     multiset_combinations, multiset_partitions,
@@ -164,6 +164,10 @@ def test_cartes():
     assert list(cartes('a', repeat=2)) == [('a', 'a')]
     assert list(cartes(list(range(2)))) == [(0,), (1,)]
 
+def test_filter_symbols():
+    s = numbered_symbols()
+    filtered = filter_symbols(s, symbols("x0 x2 x3"))
+    assert take(filtered, 3) == list(symbols("x1 x4 x5"))
 
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
