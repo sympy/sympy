@@ -1,7 +1,7 @@
 """ Caching facility for SymPy """
 from __future__ import print_function, division
 from collections import deque
-from weakref import WeakValueDictionary
+from weakref import WeakValueDictionary,WeakKeyDictionary
 # TODO: refactor CACHE & friends into class?
 
 # global cache registry:
@@ -31,8 +31,12 @@ def print_cache():
             if shown:
                 print('\n*** %i ***\n' % i)
 
-            for k, v in list(kv.items()):
-                print('  %s :\t%s' % (k, v))
+            if hasattr(kv,'items'):
+                for k, v in list(kv.items()):
+                    print('  %s :\t%s' % (k, v))
+            else:
+                for k in kv:
+                    print('  %s  ' % k )
 
 
 def clear_cache():
@@ -77,11 +81,24 @@ def __cacheit(func):
        to force cacheit to check returned results mutability and consistency,
        set environment variable SYMPY_USE_CACHE to 'debug'
     """
+    # Many of the functions which we want to cache have arguments and return
+    # values which are not weak-referenceable.  To get around this, the 
+    # arguments of the function are used as the key in weakValueDict while 
+    # the return values are stored as values in a weakKeyDict.  The dicts 
+    # are linked via a dummy object which is weak-referenceable and hashable.
+    # Messy...
+    func._cache_it_arg2obj = func_cache_it_arg2obj = WeakValueDictionary()
+    func._cache_it_obj2ret = func_cache_it_obj2ret = WeakKeyDictionary()
     # weak references will be deleted when values are removed from deque
-    func._cache_it_cache = func_cache_it_cache = {}
-    # store strong references to values in deque
-    func._cache_it_deque = func_cache_it_deque = deque(maxlen=1000)
-    CACHE.append((func, func_cache_it_cache))
+    func._cache_it_cache = func_cache_it_cache = deque(maxlen=2000)
+
+    CACHE.append((func, (func_cache_it_arg2obj,
+                         func_cache_it_obj2ret,
+                         func_cache_it_cache)))
+
+    # dummy class
+    class Object():
+        pass
 
     @wraps(func)
     def wrapper(*args, **kw_args):
@@ -95,23 +112,25 @@ def __cacheit(func):
         if _globals:
             k.extend([tuple(g) for g in _globals])
         k = tuple(k)
-        if k in func_cache_it_cache:
-            # move 'k' to front of deque
-            func_cache_it_deque.remove(k)
-            func_cache_it_deque.append(k)
-            return func_cache_it_cache[k]
-        r = func(*args, **kw_args)
-
         try:
-            func_cache_it_cache[k] = r
-            if len(func_cache_it_deque) == func_cache_it_deque.maxlen:
-                first_element = func_cache_it_deque.popleft()
-                del func_cache_it_cache[first_element]
-            func_cache_it_deque.append(k)
+            hash(k)
         except TypeError: # k is unhashable
-            # Note, collections.Hashable is not smart enough to be used here.
-            pass
-        return r
+            return func(*args,**kwargs)
+        
+        # check if we are cached
+        try:
+            obj = func_cache_it_arg2obj[k]
+            ret = func_cache_it_obj2ret[obj]
+        except KeyError: # not cached
+            ret = func(*args, **kw_args)
+            obj = Object()
+            func_cache_it_arg2obj[k] = obj
+            func_cache_it_obj2ret[obj] = ret
+
+        # move 'obj' to front of deque
+        func_cache_it_cache.append(obj)
+        return ret
+
     return wrapper
 
 
