@@ -303,8 +303,8 @@ def test_ignore_order_terms():
     assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
 
 def test_name_conflict():
-    x0, x2 = symbols("x0 x2")
-    l = [cos(x0 + x2 + y/x), x + 2, x0 + x2 + y/x]
+    z1 = x0 + y
+    z2 = x2 + x3
+    l = [cos(z1) + z1, cos(z2) + z2, x0 + x2]
     substs, reduced = cse(l)
-    assert substs == [(x1, x0 + x2 + y/x)]
-    assert reduced == [cos(x1), x+2, x1]
+    assert [e.subs(reversed(substs)) for e in reduced] == l
