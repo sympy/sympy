@@ -850,6 +850,24 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     assert checkodesol(eq, sol, order=5, solve_for_func=False)[0]
 
 
+@XFAIL
+def test_noncircularized_real_imaginary_parts():
+    # If this passes, lines numbered 3878-3882 (at the time of this commit)
+    # of sympy/solvers/ode.py for nth_linear_constant_coeff_homogeneous
+    # should be removed.
+    y = sqrt(1+x)
+    i, r = im(y), re(y)
+    assert not (i.has(atan2) and r.has(atan2))
+
+
+@XFAIL
+def test_collect_respecting_exponentials():
+    # If this test passes, lines 1306-1311 (at the time of this commit)
+    # of sympy/solvers/ode.py should be removed.
+    sol = 1 + exp(x/2)
+    assert sol == collect( sol, exp(x/3))
+
+
 def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(g(x), x) == {'test': False}
     assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x) == \
@@ -1621,24 +1639,15 @@ def test_linear_coeff_match():
 
 def test_linear_coefficients():
     f = Function('f')
-    df = f(x).diff(x)
     sol = Eq(f(x), C1/(x**2 + 6*x + 9) - S(3)/2)
-    # XXX if force is not used in solve, the following is returned which,
-    # for C1 = -81/2, will satisfy the original equation. Should there be
-    # another free symbol so a family of solutions can be obtained, e.g.
-    # (C2 + C1*x + ... etc)/(...):
-    # Eq(f(x), (C1 + C1*x - 3*x**3/2 - 27*x**2/2)/(x**3 + 9*x**2 + 27*x + 27))
-    eq = df + (3 + 2*f(x))/(x + 3)
+    eq = f(x).diff(x) + (3 + 2*f(x))/(x + 3)
     assert dsolve(eq, hint='linear_coefficients') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
-@XFAIL
 def test_constantsimp_take_problem():
-    # should this have C1 and C2 or C1 and exp(C1) in addition to x?
-    # see note in test_linear_coefficients above
     c = exp(C1) + 2
-    assert len(Poly(constantsimp(exp(C1) + c + c*x, x, 2)).gens) > 2
+    assert len(Poly(constantsimp(exp(C1) + c + c*x, [C1])).gens) == 2
 
 
 def test_issue_6879():
@@ -1705,11 +1714,13 @@ def test_heuristic1():
         assert check[0]
 
 
-@XFAIL
 def test_issue_6247():
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
     sol = dsolve(eq, hint = 'separable_reduced')
     assert checkodesol(eq, sol, order=1)[0]
+    eq = f(x).diff(x, x) + 4*f(x)
+    sol = dsolve(eq, f(x), simplify=False)
+    assert sol == Eq(f(x), C1*sin(2*x) + C2*cos(2*x))
 
 
 def test_heuristic2():
@@ -1882,10 +1893,10 @@ def test_user_infinitesimals():
     assert sol == actual_sol, errstr
     raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
 
-@XFAIL
+
 def test_issue_7081():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
-    assert dsolve(eq) == Eq(f(x), (C2 + x**2)/(C1 - x**2))
+    assert dsolve(eq) == Eq(f(x), -((C1 + x**2)/(-C1 + x**2)))
 
 
 def test_2nd_power_series_ordinary():
