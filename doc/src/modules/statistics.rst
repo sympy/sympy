@@ -136,5 +136,3 @@ Continuous Probability Distributions
 
 .. autoclass:: sympy.statistics.distributions.PDF
    :members:
-
-
