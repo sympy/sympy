@@ -15,6 +15,7 @@ from __future__ import print_function, division
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
 from sympy.core.compatibility import exec_
+from sympy.utilities.iterables import numbered_symbols
 
 #  We parse the expression string into a tree that identifies functions. Then
 # we translate the names of the functions and we translate also some strings
@@ -255,10 +256,15 @@ class Lambdifier(object):
         self.use_interval = use_interval
 
         # Constructing the argument string
+        # - check
         if not all([isinstance(a, Symbol) for a in args]):
             raise ValueError('The arguments must be Symbols.')
-        else:
-            argstr = ', '.join([str(a) for a in args])
+        # - use numbered symbols
+        syms = numbered_symbols(exclude=expr.free_symbols)
+        newargs = [next(syms) for i in args]
+        expr = expr.xreplace(dict(zip(args, newargs)))
+        argstr = ', '.join([str(a) for a in newargs])
+        del syms, newargs, args
 
         # Constructing the translation dictionaries and making the translation
         self.dict_str = self.get_dict_str()

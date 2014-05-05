@@ -222,12 +222,16 @@ def test_matplotlib():
     else:
         skip("Matplotlib not the default backend")
 
-# Tests for exceptiion handling in experimental_lambdify
+# Tests for exception handling in experimental_lambdify
 def test_experimental_lambify():
     x = Symbol('x')
-    lambdify([x], Max(x, 5))
-    assert Max(2, 5) == 5
-    assert Max(7, 5) == 7
+    f = lambdify([x], Max(x, 5))
+    assert f(2) == 5
+    assert f(7) == 7
+
+    x = Symbol('x-3')
+    f = lambdify([x], x + 1)
+    assert f(1) == 2
 
 def test_append_issue_7140():
     x = Symbol('x')
