@@ -6,6 +6,7 @@ from inspect import getmro
 
 from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types
+from .evaluate import global_evaluate
 
 
 class SympifyError(ValueError):
@@ -49,7 +50,8 @@ class CantSympify(object):
     """
     pass
 
-def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, evaluate=True):
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
+        evaluate=None):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instance of sympy.Rational,
@@ -228,6 +230,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
     try:
         cls = a.__class__
     except AttributeError:  # a is probably an old-style class object

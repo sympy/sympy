@@ -52,7 +52,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Algorithms, Springer, Second Edition, 1997
 
 .. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
-    http://citeseer.ist.psu.edu/ajwa95grbner.html, 1995
+    https://citeseer.ist.psu.edu/myciteseer/login, 1995
 
 .. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
     Systems Theory and Applications, Springer, 2003
@@ -100,7 +100,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Computation and its Application to Indefinite Summation",
     Proceedings of the International Symposium on Symbolic and
     Algebraic Computation, 1994, Pages 175-180
-    http://doi.acm.org/10.1145/190347.190413
+    http://dl.acm.org/citation.cfm?doid=190347.190413
 
 .. [Koepf98] Wolfram Koepf, "Hypergeometric Summation: An Algorithmic Approach
     to Summation and Special Function Identities", Advanced lectures

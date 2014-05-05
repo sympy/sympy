@@ -1,7 +1,8 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf, IndexedBase, Idx, MatrixSymbol)
+                   Matrix, S, cos, sin, Eq, Function, Tuple, RootOf,
+                   IndexedBase, Idx, MatrixSymbol, Piecewise, O)
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
@@ -290,3 +291,27 @@ def test_cse_MatrixSymbol():
     expr2 = (A.T*A) * A * y
     replacements, reduced_exprs = cse([expr1, expr2])
     assert len(replacements) > 0
+
+def test_Piecewise():
+    f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
+    ans = cse(f)
+    actual_ans = ([(x0, -z), (x1, x*y)], [Piecewise((x0+x1, Eq(y, 0)), (x0 - x1, True))])
+    assert ans == actual_ans
+
+def test_ignore_order_terms():
+    eq = exp(x).series(x,0,3) + sin(y+x**3) - 1
+    assert cse(eq) == ([], [sin(x**3 + y) + x + x**2/2 + O(x**3)])
+
+def test_name_conflict():
+    z1 = x0 + y
+    z2 = x2 + x3
+    l = [cos(z1) + z1, cos(z2) + z2, x0 + x2]
+    substs, reduced = cse(l)
+    assert [e.subs(reversed(substs)) for e in reduced] == l
+
+def test_name_conflict_cust_symbols():
+    z1 = x0 + y
+    z2 = x2 + x3
+    l = [cos(z1) + z1, cos(z2) + z2, x0 + x2]
+    substs, reduced = cse(l, symbols("x:10"))
+    assert [e.subs(reversed(substs)) for e in reduced] == l

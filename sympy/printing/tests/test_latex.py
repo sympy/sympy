@@ -383,7 +383,17 @@ def test_latex_brackets():
 def test_latex_indexed():
     Psi_symbol = Symbol('Psi_0', complex=True, real=False)
     Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
-    assert latex(Psi_symbol * conjugate(Psi_symbol)) == latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    symbol_latex = latex(Psi_symbol * conjugate(Psi_symbol))
+    indexed_latex = latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    # \\overline{\\Psi_{0}} \\Psi_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
+    assert symbol_latex.split() == indexed_latex.split() \
+        or symbol_latex.split() == indexed_latex.split()[::-1]
+
+    # Symbol('gamma') gives r'\gamma'
+    assert latex(IndexedBase('gamma')) == r'\gamma'
+    assert latex(IndexedBase('a b')) == 'a b'
+    assert latex(IndexedBase('a_b')) == 'a_{b}'
+
 
 def test_latex_derivatives():
     # regular "d" for ordinary derivatives
@@ -740,7 +750,7 @@ def test_latex_Lambda():
 
 
 def test_latex_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
+    Ruv, u,v = ring("u,v", ZZ)
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert latex(x - x) == r"0"
@@ -757,7 +767,7 @@ def test_latex_PolyElement():
 
 
 def test_latex_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
+    Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert latex(x - x) == r"0"

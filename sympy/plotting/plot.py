@@ -32,6 +32,7 @@ import warnings
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
@@ -204,19 +205,66 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
-    def append(self, *args):
-        """Adds one more graph to the figure."""
-        if len(args) == 1 and isinstance(args[0], BaseSeries):
-            self._series.append(*args)
-        else:
-            self._series.append(Series(*args))
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
+    def append(self, arg):
+        """Adds an element from a plot's series to an existing plot.
 
+        Examples
+        ========
+
+        Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
+        second plot's first series object to the first, use the
+        ``append`` method, like so:
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot
+        >>> x = symbols('x')
+        >>> p1 = plot(x*x)
+        >>> p2 = plot(x)
+        >>> p1.append(p2[0])
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+        [1]: cartesian line: x for x over (-10.0, 10.0)
+
+        See Also
+        ========
+        extend
+
+        """
+        if isinstance(arg, BaseSeries):
+            self._series.append(arg)
+        else:
+            raise TypeError('Must specify element of plot to append.')
+
+    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def extend(self, arg):
-        """Adds the series from another plot or a list of series."""
+        """Adds all series from another plot.
+
+        Examples
+        ========
+
+        Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
+        second plot to the first, use the ``extend`` method, like so:
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot
+        >>> x = symbols('x')
+        >>> p1 = plot(x*x)
+        >>> p2 = plot(x)
+        >>> p1.extend(p2)
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+        [1]: cartesian line: x for x over (-10.0, 10.0)
+
+        """
         if isinstance(arg, Plot):
             self._series.extend(arg._series)
-        else:
+        elif is_sequence(arg):
             self._series.extend(arg)
+        else:
+            raise TypeError('Expecting Plot or sequence of BaseSeries')
 
 
 ##############################################################################
@@ -949,8 +997,8 @@ class MatplotlibBackend(BaseBackend):
         if not parent.axis:
             self.ax.set_axis_off()
         if parent.legend:
-            self.ax.legend()
-            self.ax.legend_.set_visible(parent.legend)
+            if self.ax.legend():
+                self.ax.legend_.set_visible(parent.legend)
         if parent.margin:
             self.ax.set_xmargin(parent.margin)
             self.ax.set_ymargin(parent.margin)

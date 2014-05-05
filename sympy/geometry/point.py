@@ -18,6 +18,7 @@ from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
+from sympy.core.evaluate import global_evaluate
 
 
 class Point(GeometryEntity):
@@ -75,9 +76,8 @@ class Point(GeometryEntity):
     Point(0.5, 0.25)
 
     """
-
     def __new__(cls, *args, **kwargs):
-        eval = kwargs.get('evaluate', True)
+        eval = kwargs.get('evaluate', global_evaluate[0])
         check = True
         if isinstance(args[0], Point):
             if not eval:
@@ -218,6 +218,9 @@ class Point(GeometryEntity):
         # Coincident points are irrelevant and can confuse this algorithm.
         # Use only unique points.
         points = list(set(points))
+        if not all(isinstance(p, Point) for p in points):
+            raise TypeError('Must pass only Point objects')
+
         if len(points) == 0:
             return False
         if len(points) <= 2:

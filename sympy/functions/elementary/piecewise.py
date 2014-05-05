@@ -13,6 +13,10 @@ class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
     def __new__(cls, expr, cond):
+        if cond == True:
+            return Tuple.__new__(cls, expr, true)
+        elif cond == False:
+            return Tuple.__new__(cls, expr, false)
         return Tuple.__new__(cls, expr, cond)
 
     @property

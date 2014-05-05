@@ -618,3 +618,35 @@ def test_nfloat():
     # issue 7122
     eq = cos(3*x**4 + y)*RootOf(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
+
+
+def test_issue_7068():
+    from sympy.abc import a, b, f
+    y1 = Dummy('y')
+    y2 = Dummy('y')
+    func1 = f(a + y1 * b)
+    func2 = f(a + y2 * b)
+    func1_y = func1.diff(y1)
+    func2_y = func2.diff(y2)
+    assert func1_y != func2_y
+    z1 = Subs(f(a), a, y1)
+    z2 = Subs(f(a), a, y2)
+    assert z1 != z2
+
+
+def test_issue_7231():
+    from sympy.abc import a
+    ans1 = f(x).series(x, a)
+    _xi_1 = ans1.atoms(Dummy).pop()
+    res = (f(a) + x*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
+           x**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
+           x**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
+                     (_xi_1,), (a,))/6 +
+           x**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
+                     (_xi_1,), (a,))/24 +
+           x**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1,
+                                _xi_1, _xi_1, _xi_1),
+                     (_xi_1,), (a,))/120 + O(x**6))
+    assert res == ans1
+    ans2 = f(x).series(x, a)
+    assert res == ans2

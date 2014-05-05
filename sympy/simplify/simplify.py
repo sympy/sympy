@@ -17,6 +17,7 @@ from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
+from sympy.core.evaluate import global_evaluate
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
     sin, cos, tan, cot, sinh, cosh, tanh, coth, piecewise_fold, Piecewise)
@@ -158,7 +159,7 @@ def separate(expr, deep=False, force=False):
     return expand_power_base(sympify(expr), deep=deep, force=force)
 
 
-def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
+def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_term=True):
     """
     Collect additive terms of an expression.
 
@@ -296,6 +297,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
     ========
     collect_const, collect_sqrt, rcollect
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
 
     def make_expression(terms):
         product = []
@@ -1432,7 +1435,7 @@ def trigsimp(expr, **opts):
     return trigsimpfunc(expr)
 
 
-def collect_sqrt(expr, evaluate=True):
+def collect_sqrt(expr, evaluate=None):
     """Return expr with terms having common square roots collected together.
     If ``evaluate`` is False a count indicating the number of sqrt-containing
     terms will be returned and, if non-zero, the terms of the Add will be
@@ -1472,6 +1475,8 @@ def collect_sqrt(expr, evaluate=True):
     ========
     collect, collect_const, rcollect
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
     # this step will help to standardize any complex arguments
     # of sqrts
     coeff, expr = expr.as_content_primitive()
@@ -2590,7 +2595,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
-            assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
             if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
@@ -2974,6 +2978,45 @@ def hypersimilar(f, g, k):
 
 from sympy.utilities.timeutils import timethis
 
+class _rf(Function):
+    @classmethod
+    def eval(cls, a, b):
+        if b.is_Integer:
+            if not b:
+                return S.One
+
+            n, result = int(b), S.One
+
+            if n > 0:
+                for i in xrange(n):
+                    result *= a + i
+
+                return result
+            elif n < 0:
+                for i in xrange(1, -n + 1):
+                    result *= a - i
+
+                return 1/result
+        else:
+            if b.is_Add:
+                c, _b = b.as_coeff_Add()
+
+                if c.is_Integer:
+                    if c > 0:
+                        return _rf(a, _b)*_rf(a + _b, c)
+                    elif c < 0:
+                        return _rf(a, _b)/_rf(a + _b + c, -c)
+
+            if a.is_Add:
+                c, _a = a.as_coeff_Add()
+
+                if c.is_Integer:
+                    if c > 0:
+                        return _rf(_a, b)*_rf(_a + b, c)/_rf(_a, c)
+                    elif c < 0:
+                        return _rf(_a, b)*_rf(_a + c, -c)/_rf(_a + b + c, -c)
+
+
 
 @timethis('combsimp')
 def combsimp(expr):
@@ -3035,57 +3078,20 @@ def combsimp(expr):
     # probably makes sense to retain them
     as_gamma = not expr.has(factorial, binomial)
 
-    class rf(Function):
-        @classmethod
-        def eval(cls, a, b):
-            if b.is_Integer:
-                if not b:
-                    return S.One
-
-                n, result = int(b), S.One
-
-                if n > 0:
-                    for i in xrange(n):
-                        result *= a + i
-
-                    return result
-                elif n < 0:
-                    for i in xrange(1, -n + 1):
-                        result *= a - i
-
-                    return 1/result
-            else:
-                if b.is_Add:
-                    c, _b = b.as_coeff_Add()
-
-                    if c.is_Integer:
-                        if c > 0:
-                            return rf(a, _b)*rf(a + _b, c)
-                        elif c < 0:
-                            return rf(a, _b)/rf(a + _b + c, -c)
-
-                if a.is_Add:
-                    c, _a = a.as_coeff_Add()
-
-                    if c.is_Integer:
-                        if c > 0:
-                            return rf(_a, b)*rf(_a + b, c)/rf(_a, c)
-                        elif c < 0:
-                            return rf(_a, b)*rf(_a + c, -c)/rf(_a + b + c, -c)
 
     expr = expr.replace(binomial,
-        lambda n, k: rf((n - k + 1).expand(), k.expand())/rf(1, k.expand()))
+        lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
     expr = expr.replace(factorial,
-        lambda n: rf(1, n.expand()))
+        lambda n: _rf(1, n.expand()))
     expr = expr.rewrite(gamma)
     expr = expr.replace(gamma,
-        lambda n: rf(1, (n - 1).expand()))
+        lambda n: _rf(1, (n - 1).expand()))
 
     if as_gamma:
-        expr = expr.replace(rf,
+        expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
     else:
-        expr = expr.replace(rf,
+        expr = expr.replace(_rf,
             lambda a, b: binomial(a + b - 1, b)*factorial(b))
 
     def rule(n, k):
@@ -3094,7 +3100,7 @@ def combsimp(expr):
         cn, _n = n.as_coeff_Add()
 
         if _n and cn.is_Integer and cn:
-            coeff *= rf(_n + 1, cn)/rf(_n - k + 1, cn)
+            coeff *= _rf(_n + 1, cn)/_rf(_n - k + 1, cn)
             rewrite = True
             n = _n
 
@@ -3104,7 +3110,7 @@ def combsimp(expr):
         if k.is_Add:
             ck, _k = k.as_coeff_Add()
             if _k and ck.is_Integer and ck:
-                coeff *= rf(n - ck - _k + 1, ck)/rf(_k + 1, ck)
+                coeff *= _rf(n - ck - _k + 1, ck)/_rf(_k + 1, ck)
                 rewrite = True
                 k = _k
 
@@ -3122,8 +3128,8 @@ def combsimp(expr):
         def gamma_rat(x):
             # helper to simplify ratios of gammas
             was = x.count(gamma)
-            xx = x.replace(gamma, lambda n: rf(1, (n - 1).expand()
-                ).replace(rf, lambda a, b: gamma(a + b)/gamma(a)))
+            xx = x.replace(gamma, lambda n: _rf(1, (n - 1).expand()
+                ).replace(_rf, lambda a, b: gamma(a + b)/gamma(a)))
             if xx.count(gamma) < was:
                 x = xx
             return x
@@ -3473,7 +3479,7 @@ def combsimp(expr):
     return expr
 
 
-def signsimp(expr, evaluate=True):
+def signsimp(expr, evaluate=None):
     """Make all Add sub-expressions canonical wrt sign.
 
     If an Add subexpression, ``a``, can have a sign extracted,
@@ -3512,6 +3518,8 @@ def signsimp(expr, evaluate=True):
     exp(-(x - y))
 
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
     expr = sympify(expr)
     if not isinstance(expr, Expr) or expr.is_Atom:
         return expr

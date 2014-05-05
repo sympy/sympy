@@ -107,7 +107,7 @@ it in interactive mode (python -i plotting.py)::
 
 And type for instance ``example(7)`` or ``example(11)``.
 
-See also the `Plotting Module <https://github.com/sympy/sympy/wiki/Plotting-Module>`_
+See also the `Plotting Module <https://github.com/sympy/sympy/wiki>`_
 wiki page for screenshots.
 
 

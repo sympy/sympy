@@ -6,7 +6,7 @@ from sympy import (
     Float, fraction, Function, gamma, GoldenRatio, hyper, hyper,
     hypersimp, I, Integer, Integral, integrate, log, logcombine, Matrix,
     Mul, nsimplify, O, oo, ordered, pi, Piecewise, polar_lift, polarify,
-    posify, powdenest, powsimp, radsimp, Rational, ratsimp,
+    posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
     sympify, tan, tanh, trigsimp, Wild, zoo)
@@ -224,6 +224,11 @@ def test_issue_3210():
         sinh(5),
         cosh(5),
         ]
+
+
+def test_issue_7263():
+    assert abs((simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2)).evalf() - \
+            673.447451402970) < 1e-15
 
 
 def test_trigsimp_issues():
@@ -1858,3 +1863,7 @@ def test_issue_2827_trigsimp_methods():
     # watch for E in exptrigsimp, not only exp()
     eq = 1/sqrt(E) + E
     assert exptrigsimp(eq) == eq
+
+
+def test_powsimp_on_numbers():
+    assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4

@@ -394,6 +394,15 @@ def test_dummification():
     raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
     raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
 
+def test_python_keywords():
+    # Test for issue 7452. The automatic dummification should ensure use of
+    # Python reserved keywords as symbol names will create valid lambda
+    # functions. This is an additional regression test.
+    python_if = symbols('if')
+    expr = python_if / 2
+    f = sympy.lambdify(python_if, expr)
+    assert f(4.0) == 2.0
+
 
 #================== Test special printers ==========================
 

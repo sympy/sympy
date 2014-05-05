@@ -914,7 +914,7 @@ class Diagram(Basic):
         >>> d1 == Diagram([f], {f: "unique"})
         True
         """
-        if not self.objects.subset(objects):
+        if not objects.is_subset(self.objects):
             raise ValueError(
                 "Supplied objects should all belong to the diagram.")
 

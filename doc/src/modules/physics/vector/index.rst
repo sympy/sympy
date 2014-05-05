@@ -31,6 +31,7 @@ Guide to Vector
     vectors.rst
     kinematics.rst
     advanced.rst
+    fields.rst
 
 Vector API
 ==========
@@ -42,3 +43,4 @@ Vector API
     api/kinematics.rst
     api/printing.rst
     api/functions.rst
+    api/fieldfunctions.rst

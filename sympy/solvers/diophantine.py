@@ -11,6 +11,7 @@ from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
 from sympy.core.relational import Eq
+from sympy.solvers.solvers import check_assumptions
 
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
 'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
@@ -18,7 +19,7 @@ __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_so
 'diop_general_sum_of_squares', 'partition', 'sum_of_three_squares', 'sum_of_four_squares']
 
 
-def diophantine(eq, param=symbols("t", Integer=True)):
+def diophantine(eq, param=symbols("t", integer=True)):
     """
     Simplify the solution procedure of diophantine equation ``eq`` by
     converting it into a product of terms which should equal zero.
@@ -116,17 +117,20 @@ def merge_solution(var, var_t, solution):
 
     solution = iter(solution)
     params = numbered_symbols("n", Integer=True, start=1)
-
     for v in var:
         if v in var_t:
             l.append(next(solution))
         else:
             l.append(next(params))
 
+    for val, symb in zip(l, var):
+        if check_assumptions(val, **symb.assumptions0) is False:
+            return tuple()
+
     return tuple(l)
 
 
-def diop_solve(eq, param=symbols("t", Integer=True)):
+def diop_solve(eq, param=symbols("t", integer=True)):
     """
     Solves the diophantine equation ``eq``.
 
@@ -329,7 +333,7 @@ def classify_diop(eq):
         raise NotImplementedError("Still not implemented")
 
 
-def diop_linear(eq, param=symbols("t", Integer=True)):
+def diop_linear(eq, param=symbols("t", integer=True)):
     """
     Solves linear diophantine equations.
 
@@ -513,7 +517,7 @@ def divisible(a, b):
     return igcd(int(a), int(b)) == abs(int(b))
 
 
-def diop_quadratic(eq, param=symbols("t", Integer=True)):
+def diop_quadratic(eq, param=symbols("t", integer=True)):
     """
     Solves quadratic diophantine equations.
 
@@ -796,7 +800,7 @@ def is_solution_quad(var, coeff, u, v):
     return _mexpand(Subs(eq, (x, y), (u, v)).doit()) == 0
 
 
-def diop_DN(D, N, t=symbols("t", Integer=True)):
+def diop_DN(D, N, t=symbols("t", integer=True)):
     """
     Solves the equation `x^2 - Dy^2 = N`.
 
@@ -1105,7 +1109,7 @@ def PQa(P_0, Q_0, D):
         Q_i = (D - P_i**2)/Q_i
 
 
-def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
+def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     """
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
 
@@ -1499,7 +1503,7 @@ def check_param(x, y, a, t):
 
     Here ``x`` and ``y`` are functions of ``t``.
     """
-    k, m, n = symbols("k, m, n", Integer=True)
+    k, m, n = symbols("k, m, n", integer=True)
     p = Wild("p", exclude=[k])
     q = Wild("q", exclude=[k])
     ok = False
@@ -1843,7 +1847,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
             return x_p, y_p, z_p
 
     x, y, z = v[:3]
-    r, p, q = symbols("r, p, q", Integer=True)
+    r, p, q = symbols("r, p, q", integer=True)
 
     eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
     eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
@@ -2284,7 +2288,7 @@ def holzer(x_0, y_0, z_0, a, b, c):
     return x_0, y_0, z_0
 
 
-def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
+def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     """
     Solves the general pythagorean equation,
     `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
@@ -2328,7 +2332,7 @@ def _diop_general_pythagorean(var, coeff, t):
         if sign(coeff[v**2]) == -1:
             index = i
 
-    m = symbols(str(t) + "1:" + str(n), Integer=True)
+    m = symbols(str(t) + "1:" + str(n), integer=True)
     l = []
     ith = 0
 
