@@ -152,4 +152,3 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
-
