@@ -496,7 +496,7 @@ class Integral(AddWithLimits):
             if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
                 undone_limits.append(xab)
                 ulj.update(uli)
-                function = self.func(*([function] + [ xab ]))
+                function = self.func(*([function] + [xab]))
                 factored_function = function.factor()
                 if not isinstance(factored_function, Integral):
                     function = factored_function
@@ -566,7 +566,7 @@ class Integral(AddWithLimits):
 
             if antideriv is None:
                 undone_limits.append(xab)
-                function = self.func(*([function] + [ xab ])).factor()
+                function = self.func(*([function] + [xab])).factor()
                 factored_function = function.factor()
                 if not isinstance(factored_function, Integral):
                     function = factored_function
@@ -598,7 +598,8 @@ class Integral(AddWithLimits):
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
                     elif isinstance(antideriv, Add):
-                        function = Add(*[ i._eval_interval(x,a,b) for i in Add.make_args(antideriv)])
+                        function = Add(*[i._eval_interval(x,a,b) for i in
+                            Add.make_args(antideriv)])
                     else:
                         try:
                             function = antideriv._eval_interval(x, a, b)
@@ -606,7 +607,7 @@ class Integral(AddWithLimits):
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
                             undone_limits.append(xab)
-                            function = self.func(*([function] + [ xab ]))
+                            function = self.func(*([function] + [xab]))
                             factored_function = function.factor()
                             if not isinstance(factored_function, Integral):
                                 function = factored_function

@@ -201,7 +201,7 @@ class ExprWithLimits(Expr):
         return isyms
 
     def _eval_interval(self, x, a, b):
-        limits = [ ( i if i[0] != x else (x,a,b) ) for i in self.limits ]
+        limits = [( i if i[0] != x else (x,a,b) ) for i in self.limits]
         integrand = self.function
         return self.func(integrand, *limits)
 

@@ -754,7 +754,7 @@ def test_issue_5167():
         (f(x), Tuple(x), Tuple(y), Tuple(z))
     assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
     assert integrate(Integral(f(x), y), x) == y*Integral(f(x), x)
-    assert integrate(Integral(f(x), x), y) in [ Integral(y*f(x), x), y*Integral(f(x), x)]
+    assert integrate(Integral(f(x), x), y) in [Integral(y*f(x), x), y*Integral(f(x), x)]
     assert integrate(Integral(2, x), x) == x**2
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
@@ -1004,6 +1004,7 @@ def test_issue_4803():
     assert integrate(y/pi*exp(-(x_max - x)/cos(a)), x) == \
         y*exp((x - x_max)/cos(a))*cos(a)/pi
 
+
 def test_issue_4234():
     assert integrate(1/sqrt(1 + tan(x)**2)) == tan(x) / sqrt(1 + tan(x)**2)
 
@@ -1015,8 +1016,11 @@ def test_issue_4492():
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
 
+
 def test_issue_2708():
-    assert Integral(1/log(x), (x, 2, 3)).doit() == \
-        NonElementaryIntegral(1/log(x), (x,2,3))
-    assert integrate(exp(z)+1/log(z), (z, 2, 3)) == \
-        NonElementaryIntegral(1/log(z), (z, 2, 3)) - exp(2) + exp(3)
+    # This test needs to use an integration function that can
+    # not be evaluated in closed form.  Update as needed.
+    f = 1/(a + z + log(z))
+    integral_f = NonElementaryIntegral(f, (z, 2, 3))
+    assert Integral(f, (z, 2, 3)).doit() == integral_f
+    assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
