@@ -141,7 +141,7 @@ a conditional operator in Fortran. Nested piecewise functions would require the
 introduction of temporary variables, which is a type of expression manipulation
 that goes beyond the scope of ``fcode``.
 
-Loops are generated if there are Indexed objects in the expression.  This
+Loops are generated if there are Indexed objects in the expression. This
 also requires use of the assign_to option.
 
     >>> A, B = map(IndexedBase, ['A', 'B'])

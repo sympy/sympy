@@ -131,7 +131,7 @@ passing a customized parameter. Consider the following example.
 >>> diop_solve(2*x + 3*y - 5, m)
 (3*m - 5, -2*m + 5)
 
-Please note that for the moment, user can set the parameter only for linear 
+Please note that for the moment, user can set the parameter only for linear
 Diophantine equations and binary quadratic equations.
 
 Let's try solving a binary quadratic equation which is an equation with two
