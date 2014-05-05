@@ -31,10 +31,12 @@ from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Dummy
+from sympy import Eq, Tuple, sympify, Symbol, Dummy
 from sympy.external import import_module
 from sympy.logic.boolalg import BooleanFunction
+from sympy.polys.polyutils import _sort_gens
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import flatten
 import warnings
 
 
@@ -197,21 +199,22 @@ class ImplicitSeries(BaseSeries):
 
 
 @doctest_depends_on(modules=('matplotlib',))
-def plot_implicit(expr, x_var, y_var=None, *args, **kwargs):
+def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
     Arguments
     =========
 
     - ``expr`` : The equation / inequality that is to be plotted.
-    - ``x_var``: The "X" symbol (for the X-axis)
-    - ``y_var``: The "Y" symbol (for the Y-axis)
-    - ``(x, xmin, xmax)`` optional, 3-tuple denoting the range of symbol
-      ``x``
-    - ``(y, ymin, ymax)`` optional, 3-tuple denoting the range of symbol
-      ``y``
+    - ``x_var`` (optional) : symbol to plot on x-axis or tuple giving symbol
+      and range as ``(symbol, xmin, xmax)``
+    - ``y_var`` (optional) : symbol to plot on y-axis or tuple giving symbol
+      and range as ``(symbol, ymin, ymax)``
 
-    The following arguments can be passed as named parameters.
+    If neither ``x_var`` nor ``y_var`` are given then the free symbols in the
+    expression will be assigned in the order they are sorted.
+
+    The following keyword arguments can also be used:
 
     - ``adaptive``. Boolean. The default value is set to True. It has to be
         set to False if you want to use a mesh grid.
@@ -224,9 +227,9 @@ def plot_implicit(expr, x_var, y_var=None, *args, **kwargs):
 
     - ``title`` string .The title for the plot.
 
-    - ``xlabel`` string. The label for the x - axis
+    - ``xlabel`` string. The label for the x-axis
 
-    - ``ylabel`` string. The label for the y - axis
+    - ``ylabel`` string. The label for the y-axis
 
     plot_implicit, by default, uses interval arithmetic to plot functions. If
     the expression cannot be plotted using interval arithmetic, it defaults to
@@ -245,36 +248,36 @@ def plot_implicit(expr, x_var, y_var=None, *args, **kwargs):
 
     Without any ranges for the symbols in the expression
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5), x, y)
+    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
 
     With the range for the symbols
 
-    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3), x, y,
+    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
     ...         (x, -3, 3), (y, -3, 3))
 
     With depth of recursion as argument.
 
-    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5), x, y,
+    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
     ...         (x, -4, 4), (y, -4, 4), depth = 2)
 
     Using mesh grid and not using adaptive meshing.
 
-    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5), x, y,
+    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
     ...         (x, -5, 5), (y, -2, 2), adaptive=False)
 
     Using mesh grid with number of points as input.
 
-    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5), x, y,
+    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
     ...         (x, -5, 5), (y, -2, 2),
     ...         adaptive=False, points=400)
 
     Plotting regions.
 
-    >>> p6 = plot_implicit(y > x**2, x, y)
+    >>> p6 = plot_implicit(y > x**2)
 
     Plotting Using boolean conjunctions.
 
-    >>> p7 = plot_implicit(And(y > x, y > -x), x, y)
+    >>> p7 = plot_implicit(And(y > x, y > -x))
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
@@ -304,45 +307,31 @@ def plot_implicit(expr, x_var, y_var=None, *args, **kwargs):
     elif isinstance(expr, (Equality, GreaterThan, LessThan)):
         has_equality = True
 
-    free_symbols = set(expr.free_symbols)
-    range_symbols = set([t[0] for t in args])
-    symbols = set.union(free_symbols, range_symbols)
-    if len(symbols) > 2:
+    xyvar = [i for i in (x_var, y_var) if i is not None]
+    free_symbols = expr.free_symbols
+    range_symbols = Tuple(*flatten(xyvar)).free_symbols
+    undeclared = free_symbols - range_symbols
+    if len(free_symbols & range_symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
                                   "more than 2 variables")
 
-    if len(symbols) == 2 and not y_var:
-        y_var = (free_symbols - set([x_var])).pop()
-
     #Create default ranges if the range is not provided.
     default_range = Tuple(-5, 5)
-    if len(args) == 2:
-        if args[0][0].name == x_var.name:
-            var_start_end_x, var_start_end_y = args[0], args[1]
-        else:
-            var_start_end_x, var_start_end_y = args[1], args[0]
+    def _range_tuple(s):
+        if isinstance(s, Symbol):
+            return Tuple(s) + default_range
+        if len(s) == 3:
+            return Tuple(*s)
+        raise ValueError('symbol or `(symbol, min, max)` expected but got %s' % s)
 
-    elif len(args) == 1:
-        if len(free_symbols) == 2:
-            if args[0][0].name == x_var.name:
-                var_start_end_x = args[0]
-                var_start_end_y = Tuple(y_var) + default_range
-            else:
-                var_start_end_x = Tuple(x_var) + default_range
-                var_start_end_y = args[0]
-        else:
-            var_start_end_x = Tuple(x_var) + default_range
-            #Create a random symbol
-            var_start_end_y = Tuple(Dummy()) + default_range
-
-    elif len(args) == 0:
-        if len(free_symbols) == 1:
-            var_start_end_x = Tuple(x_var) + default_range
-            #create a random symbol
-            var_start_end_y = Tuple(Dummy()) + default_range
-        else:
-            var_start_end_x = Tuple(x_var) + default_range
-            var_start_end_y = Tuple(y_var) + default_range
+    if len(xyvar) == 0:
+        xyvar = list(_sort_gens(free_symbols))
+    if len(xyvar) != 2:
+        if xyvar[0] in undeclared:
+            undeclared.remove(xyvar[0])
+        xyvar.append(undeclared.pop() if undeclared else Dummy('arbitrary'))
+    var_start_end_x = _range_tuple(xyvar[0])
+    var_start_end_y = _range_tuple(xyvar[1])
 
     use_interval = kwargs.pop('adaptive', True)
     nb_of_points = kwargs.pop('points', 300)
