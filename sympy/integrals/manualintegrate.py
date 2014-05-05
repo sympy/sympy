@@ -24,7 +24,6 @@ import sympy
 
 from sympy.core.compatibility import reduce
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.simplify import fraction
 from sympy.strategies.core import (switch, identity, do_one, null_safe,
                                    condition, tryit)
 
@@ -115,29 +114,20 @@ def find_substitutions(integrand, symbol, u_var):
 
         substituted = substituted.subs(u, u_var).cancel()
         if symbol not in substituted.free_symbols:
-            _, denom = integrand.as_numer_denom()
-            _, denom2 = substituted.as_numer_denom()
-            denom2 = denom2.subs(u_var, u)
-            constant = denom/denom2
-            return (constant, substituted / constant)
+            return substituted.as_independent(u_var, as_Add=False)
+
         return False
 
     def possible_subterms(term):
-        if any(isinstance(term, cls)
-               for cls in (sympy.sin, sympy.cos, sympy.tan,
-                           sympy.asin, sympy.acos, sympy.atan,
-                           sympy.exp, sympy.log, sympy.Heaviside)):
+        if isinstance(term, (TrigonometricFunction,
+                             sympy.asin, sympy.acos, sympy.atan,
+                             sympy.exp, sympy.log, sympy.Heaviside)):
             return [term.args[0]]
         elif isinstance(term, sympy.Mul):
             r = []
             for u in term.args:
-                numer, denom = fraction(u)
-                if numer == 1:
-                    r.append(denom)
-                    r.extend(possible_subterms(denom))
-                else:
-                    r.append(u)
-                    r.extend(possible_subterms(u))
+                r.append(u)
+                r.extend(possible_subterms(u))
             return r
         elif isinstance(term, sympy.Pow):
             if term.args[1].is_constant(symbol):
@@ -210,8 +200,12 @@ def alternatives(*rules):
                 alts.append(result)
         if len(alts) == 1:
             return alts[0]
-        elif len(alts) > 1:
-            return AlternativeRule(alts, *integral)
+        elif alts:
+            doable = [rule for rule in alts if not contains_dont_know(rule)]
+            if doable:
+                return AlternativeRule(doable, *integral)
+            else:
+                return AlternativeRule(alts, *integral)
     return _alternatives
 
 def constant_rule(integral):
@@ -641,7 +635,7 @@ def substitution_rule(integral):
 
             if sympy.simplify(c - 1) != 0:
                 _, denom = c.as_numer_denom()
-                subrule = ConstantTimesRule(c, substituted, subrule, substituted, symbol)
+                subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
 
                 if denom.free_symbols:
                     piecewise = []

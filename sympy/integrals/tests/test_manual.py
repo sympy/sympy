@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
                    Derivative, diff, I, sqrt, erf, Piecewise,
-                   Eq, Ne, Q, assuming, symbols, And, Heaviside, Max)
+                   Eq, Ne, Q, assuming, symbols, And, Heaviside, Max, S)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
@@ -12,6 +12,7 @@ def test_find_substitutions():
         [(cot(x), 1, -u**6 - 2*u**4 - u**2)]
     assert find_substitutions((sec(x)**2 + tan(x) * sec(x)) / (sec(x) + tan(x)),
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
+    assert find_substitutions(x * exp(-x**2), x, u) == [(-x**2, -S.Half, exp(u))]
 
 def test_manualintegrate_polynomials():
     assert manualintegrate(y, x) == x*y
@@ -61,6 +62,9 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(x) * cos(x), x) in [sin(x) ** 2 / 2, -cos(x)**2 / 2]
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
     assert manualintegrate(csc(x) * cot(x), x) == -csc(x)
+
+    assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
+    assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
 
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
@@ -161,3 +165,6 @@ def test_issue_2850():
         (x*acos(x) - sqrt(-x**2 + 1))*log(x) + Integral(sqrt(-x**2 + 1)/x, x)
     assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - \
             log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
+
+def test_constant_independent_of_symbol():
+    assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))
