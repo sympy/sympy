@@ -114,10 +114,8 @@ def find_substitutions(integrand, symbol, u_var):
 
         substituted = substituted.subs(u, u_var).cancel()
         if symbol not in substituted.free_symbols:
-            constant, _ = substituted.as_coeff_mul(u_var)
+            return substituted.as_independent(u_var, as_Add=False)
 
-            if symbol not in constant.free_symbols:
-                return constant, substituted / constant
         return False
 
     def possible_subterms(term):
