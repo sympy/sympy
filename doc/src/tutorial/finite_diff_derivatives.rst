@@ -2,14 +2,11 @@
 Finite Difference Approximations to Derivatives
 ===============================================
 
-
-
-
 Introduction
 ============
 
 Finite difference approximations to derivatives is quite important in numerical analysis and in
-computational physics. In this tutorial we show how to use SymPy to compute  approx0mations of
+computational physics. In this tutorial we show how to use SymPy to compute  approximations of
 varying accuracy. The hope is that these notes could be useful for the practicing researcher who
 is developing code in some language and needs to be able to efficiently generate finite difference
 formulae for various approximations.
@@ -69,11 +66,11 @@ If we again want to find the first derivative (`c_{1}`), we can do that by elimi
 We show how to do it using SymPy.
 
 	>>> from sympy import *
-	>>> from sympy import symarray, pprint
+	>>> from sympy import  pprint
 	>>> x,x0,h = symbols('x,x_0,h')
 	>>> Fi,Fip1,Fip2 = symbols('F_{i},F_{i+1},F_{i+2}')
 	>>> n = 3 # there are the coefficients c_0=Fi, c_1=dF/dx, c_2=d**2F/dx**2
-	>>> c = symarray('c',(n)).tolist()
+	>>> c = symbols('c:3')
 	>>> def P(x,x0,c,n):
 	...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
 	
@@ -117,16 +114,15 @@ Note that all three coefficients make up the solution. The desired first derivat
 
 	>>> print(together(X[1]))	
 
-It is instructive to compute another three point approximation to the first derivative, except centering the approximation
+It is instructive to compute another three-point approximation to the first derivative, except centering the approximation
 at `x_i` and thus using points at `x_{i-1}`, `x_{i}`, and `x_{i+1}`. So here is how this can be done using the 'brute force' method:
 
 
 	>>> from sympy import *
-	>>> from sympy import symarray
 	>>> x,x0,h = symbols('x,x_i,h')
 	>>> Fi,Fim1,Fip1 = symbols('F_{i},F_{i-1},F_{i+1}')
 	>>> n = 3 # there are the coefficients c_0=Fi, c_1=dF/h, c_2=d**2F/h**2
-	>>> c = symarray('c',(n)).tolist()
+	>>> c = symbols('c:3')
 	>>> # define a polynomial of degree n
 	>>> def P(x,x0,c,n):
 	...    return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
@@ -153,7 +149,7 @@ at `x_i` and thus using points at `x_{i-1}`, `x_{i}`, and `x_{i+1}`. So here is 
 	>>> X =  M.inv() * R
 	>>> # note that all three coefficients make up the solution
 	>>> # the first derivative is coefficient c_1 which is X[1].
-	>>> print "The second order accurate approximation for the first derivative is: "
+	>>> print "The second-order accurate approximation for the first derivative is: "
 	>>> print "dF/dx = ", together(X[1])
 	
 These two examples serve to show how one can directly find second order accurate first derivatives using SymPy.
@@ -170,7 +166,7 @@ order polynomial and see what we get. To this end, we make a set of eight coeffi
 check:
 
 
-    >>> d = symarray('c',(8)).tolist()
+    >>> d = symbols('c:8')
     >>> dfdxcheck = (P(x0+h,x0,d,8) - P(x0-h,x0,d,8))/(2*h)
     >>> print simplify(dfdxcheck) # so the appropriate cancellation of terms involving `h` happens
 
@@ -189,11 +185,10 @@ To obtain it, we can use the same direct approach, except now us the three point
 and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is how it can be done:
 
     >>> from sympy import *
-    >>> from sympy import symarray
     >>> x,xN,h = symbols('x,x_N,h')
     >>> FN,FNm1,FNm2 = symbols('F_{N},F_{N-1},F_{N-2}')
     >>> n = 8 # there are the coefficients c_0=Fi, c_1=dF/h, c_2=d**2F/h**2
-    >>> c = symarray('c',(n)).tolist()
+    >>> c = symbols('c:3')
     >>> # define a polynomial of degree d
     >>> def P(x,x0,c,n):
     ...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
@@ -220,13 +215,16 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
     >>> X =  M.inv() * R
     >>> # note that all three coefficients make up the solution
     >>> # the first derivative is coefficient c_1 which is X[1].
-    >>> print "The second order accurate approx0mation for the first derivative is: "
+    >>> print "The second order accurate approximation for the first derivative is: "
     >>> print "dF/dx = ", together(X[1])
 
 
 	
 Of course, we can devise a similar formula for the value of the derivative at the left end
 of the set of points at `(x_{1},F_{1})` in terms of values at `(x_{2},F_{2})` and `(x_{3},F_{3})`.
+
+Also, we note that output of formats appropriate to Fortran, C, etc. maybe done in the examples
+given above.
 
 Next we show how to perform these and many other discritizations of derivatives, but using a
 much more efficient approach originally due to Bengt Fornberg and now incorported into SymPy.
@@ -236,9 +234,6 @@ Fornberg's Method for Finite Differenced Derivatives
 
 
 In 1988 Bengt Fornberg[1] showed that we can automatically produce a wide variety of derivative
-<<<<<<< Local Changes
-<<<<<<< Local Changes
-<<<<<<< Local Changes
 formulas in a manner which is computationally efficient as well as quite general.  Here we 
 demonstrate how the SymPy implementation can be used in a few select cases.
 
