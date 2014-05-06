@@ -351,8 +351,8 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
     kwargs['ylim'] = tuple(float(y) for y in var_start_end_y[1:])
     # set the x and y labels
-    kwargs['xlabel'] = kwargs.get('xlabel', var_start_end_x[0].name)
-    kwargs['ylabel'] = kwargs.get('ylabel', var_start_end_y[0].name)
+    kwargs.setdefault('xlabel', var_start_end_x[0].name)
+    kwargs.setdefault('ylabel', var_start_end_y[0].name)
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()

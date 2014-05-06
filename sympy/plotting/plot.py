@@ -29,7 +29,7 @@ from itertools import chain
 from collections import Callable
 import warnings
 
-from sympy import sympify, Expr, Tuple, Dummy
+from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
@@ -1254,6 +1254,17 @@ def plot(*args, **kwargs):
 
     """
     args = list(map(sympify, args))
+    free = set()
+    for a in args:
+        if isinstance(a, Expr):
+            free |= a.free_symbols
+            if len(free) > 1:
+                raise ValueError(
+                    'The same variable should be used in all '
+                    'univariate expressions being plotted.')
+    x = free.pop() if free else Symbol('x')
+    kwargs.setdefault('xlabel', x.name)
+    kwargs.setdefault('ylabel', 'f(%s)' % x.name)
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)

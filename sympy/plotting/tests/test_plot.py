@@ -70,6 +70,8 @@ def plot_and_save(name):
     p = plot((x**2, (x, -5, 5)), (x**3, (x, -3, 3)))
     p.save(tmp_file('%s_line_multiple_range' % name))
 
+    raises(ValueError, lambda: plot(x, y))
+
     #parametric 2d plots.
     #Single plot with default range.
     plot_parametric(sin(x), cos(x)).save(tmp_file())
