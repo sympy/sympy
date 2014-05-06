@@ -134,6 +134,8 @@ def test_Difference():
     assert -1 in Difference(S.Reals, S.Naturals, evaluate=False)
     assert not 1 in Difference(S.Reals, S.Naturals, evaluate=False)
 
+    assert -1 in S.Reals - S.Naturals
+
 
 def test_complement():
     assert Interval(0, 1).complement == \

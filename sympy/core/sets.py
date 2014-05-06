@@ -37,6 +37,7 @@ class Set(Basic):
     is_Intersection = None
     is_EmptySet = None
     is_UniversalSet = None
+    is_Difference = False
 
     def sort_key(self, order=None):
         """
@@ -136,7 +137,8 @@ class Set(Basic):
 
     @property
     def _complement(self):
-        raise NotImplementedError("(%s)._complement" % self)
+        return Difference(S.UniversalSet, self, evaluate=False)
+
 
     @property
     def inf(self):
@@ -336,7 +338,11 @@ class Set(Basic):
         return ProductSet([self]*exp)
 
     def __sub__(self, other):
-        return self.intersect(other.complement)
+        other_comp = other.complement
+        if isinstance(other_comp, Difference):
+            return Difference(self, other, evaluate=False)
+        else:
+            return Intersection(self, other_comp)
 
     def __neg__(self):
         return self.complement
@@ -1142,10 +1148,6 @@ class Intersection(Set):
     def _sup(self):
         raise NotImplementedError()
 
-    @property
-    def _complement(self):
-        raise NotImplementedError()
-
     def _eval_imageset(self, f):
         return Intersection(imageset(f, arg) for arg in self.args)
 
@@ -1192,6 +1194,12 @@ class Intersection(Set):
                 other_sets = set(args) - set((s,))
                 other = Intersection(other_sets)
                 return Union(Intersection(arg, other) for arg in s.args)
+
+        for s in args:
+            if s.is_Difference:
+                other_sets = set(args) - set((s,))
+                other = Intersection(other_sets)
+                return Difference(Intersection(*list(other_sets)), s)
 
         # At this stage we are guaranteed not to have any
         # EmptySets, FiniteSets, or Unions in the intersection
@@ -1245,6 +1253,11 @@ class Difference(Set, EvalfMixin):
     ==========
     http://mathworld.wolfram.com/SetDifference.html
     """
+
+    # TODO: make union work with Difference
+    # TODO: write rules to combine Difference with other Difference
+    # TODO: write a printer for Difference
+
     is_Difference = True
 
     def __new__(cls, *args, **kwargs):
