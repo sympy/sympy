@@ -369,6 +369,10 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_four_squares
 
+:func:`homogeneous_LDS`
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.homogeneous_LDS
+
 Internal Functions
 ------------------
 These functions are intended for the internal use in Diophantine module.

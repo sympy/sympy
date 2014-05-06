@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
@@ -11,6 +12,8 @@ from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
 from sympy.solvers.solvers import check_assumptions
+
+from sympy.matrices import zeros, ones
 
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
 'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
@@ -2774,3 +2777,120 @@ def pow_rep_recursive(n_i, k, n_remaining, terms, p):
 
             for t in pow_rep_recursive(n_i - 1, k, n_remaining, terms, p):
                 yield t
+
+
+#---------- Homogeneous linear diophantine system ----------------------------#
+
+def homogeneous_LDS(a):
+    """
+    Solves a system of homogeneous linear diophantine equations when
+    given by it's matrix form. This method returns the basis of the
+    solution set if the system is solvable. A solution is a vector of
+    natural numbers. All the solutions of the system can be found by
+    linear combinations of the basis solutions using natural numbers as
+    coefficients.
+
+    Details
+    =======
+
+    `a` is a `p` x `q` matrix containing coefficients of `p` homogeneous
+    linear diophantine equations in `q` variables, i.e. of the system,
+
+    .. math::
+        a_{11}x_{1} + a_{12}x_{2} + ... + a_{1q}x_{q} = 0
+
+        a_{21}x_{1} + a_{22}x_{2} + ... + a_{2q}x_{q} = 0
+
+        \\vdots
+
+        a_{p1}x_{1} + a_{p2}x_{2} + ... + a_{pq}x_{q} = 0
+
+    `a_{ij}` is the `ij` th entry of the matrix `a`.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import homogeneous_LDS
+    >>> from sympy.matrices import Matrix
+
+    Let's solve the following homogeneous linear diophantine system:
+
+    .. math::
+        -x_{1} + x_{2} + 2x_{3} -3x_{4} = 0
+
+        -x_{1} + 3x_{2} - 2x_{3} - x_{4} = 0
+
+    >>> a = Matrix([[-1, 1, 2, -3],[-1, 3, -2, -1]])
+    >>> homogeneous_LDS(a)
+    [Matrix([[0, 1, 1, 1]]), Matrix([[4, 2, 1, 0]])]
+
+    References
+    ==========
+
+    .. [1] Evelyne Contejean, Herve Devie. An Efficient Incremental Algorithm
+        for Solving Systems of Linear Diophantine Equations. Information and
+        computation, 113(1):143-172, August 1994.
+    """
+    p, q = a.shape
+    col_zero = zeros(p, 1)
+    row_zero = zeros(1, q)
+
+    P = []
+    P.append(zeros(1, q))
+
+    Basis = []
+
+    Frozen = ones(q, q)
+    for i in range(q):
+        Frozen[0, i] = 0;
+
+    F = [0] * q
+
+    while (len(P) > 0):
+        n = len(P) - 1
+        t = P.pop()
+
+        if mul(a, t) == col_zero and t != row_zero:
+            Basis.append(t)
+        else:
+            for i in range(q):
+                F[i] = Frozen[n, i]
+
+            for i in range(q):
+                T = Matrix([[t[j] for j in range(q)]])
+                T[i] = T[i] + 1
+
+                if F[i] == 0 and ((mul(a, t).dot(a[:, i]) < 0 and minimum(T, Basis))
+                                 or t == row_zero):
+                    P.append(T)
+                    n = n + 1
+                    for j in range(q):
+                        Frozen[n - 1, j] = F[j]
+
+                    F[i] = 1
+
+    return Basis
+
+
+def mul(a, t):
+
+    result = zeros(a.shape[0], 1)
+
+    for i in range(a.shape[1]):
+        result += t[i] * a[:, i]
+
+    return result
+
+
+def minimum(t, B):
+
+    if len(B) == 0:
+        return True
+    else:
+        return not ordering(t, B[-1]) and minimum(t, B[:-1])
+
+def ordering(a, b):
+
+    if any(ai <  bi for ai, bi in zip(a, b)):
+        return False
+    return any(ai >  bi for ai, bi in zip(a, b))
