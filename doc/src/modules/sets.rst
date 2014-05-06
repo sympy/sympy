@@ -40,6 +40,11 @@ ProductSet
 .. autoclass:: ProductSet
    :members:
 
+Difference
+^^^^^^^^^^
+.. autoclass:: Difference
+   :members:
+
 Singleton Sets
 --------------
 
