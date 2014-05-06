@@ -17,3 +17,4 @@
    solvers.rst
    matrices.rst
    manipulation.rst
+   finite_diff_derivatives.rst
