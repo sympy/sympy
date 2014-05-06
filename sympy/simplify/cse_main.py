@@ -360,7 +360,10 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
             new_expr = expr
 
         if orig_expr in to_eliminate:
-            sym = next(symbols)
+            try:
+                sym = next(symbols)
+            except StopIteration:
+                raise ValueError("Symbols iterator ran out of symbols.")
             subs[orig_expr] = sym
             replacements.append((sym, new_expr))
             return sym
