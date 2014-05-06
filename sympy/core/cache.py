@@ -3,13 +3,6 @@ from __future__ import print_function, division
 from sympy.core.decorators import wraps
 import types
 from collections import namedtuple
-try:
-    from _thread import RLock
-except:
-    class RLock:
-        'Dummy reentrant lock for builds without threads'
-        def __enter__(self): pass
-        def __exit__(self, exctype, excinst, exctb): pass
 # TODO: refactor CACHE & friends into class?
 
 class _cache(list):
@@ -76,10 +69,8 @@ class _HashedSeq(list):
 from sympy.core.evaluate import global_evaluate
 _globals = global_evaluate
 
-def _make_key(args, kwds, typed,
-             kwd_mark = (object(),),
-             fasttypes = {int, str, frozenset, type(None)},
-             sorted=sorted, tuple=tuple, type=type, len=len):
+def _make_key(args, kwds, kwd_mark = (object(),),
+              sorted=sorted, tuple=tuple, type=type, len=len):
     """Make a cache key from optionally typed positional and keyword arguments
 
     The key is constructed in a way that is flat as possible rather than
@@ -91,19 +82,17 @@ def _make_key(args, kwds, typed,
 
     """
     key = args
+    # type info
+    key += tuple(type(v) for v in args)
     if kwds:
         sorted_items = sorted(kwds.items())
         key += kwd_mark
         for item in sorted_items:
             key += item
-    if typed:
-        key += tuple(type(v) for v in args)
-        if kwds:
-            key += tuple(type(v) for k, v in sorted_items)
+        # type info
+        key += tuple(type(v) for k, v in sorted_items)
     if _globals:
         key += tuple(g for g in _globals)
-    elif len(key) == 1 and type(key[0]) in fasttypes:
-        return key[0]
     return _HashedSeq(key)
 
 class __cacheit(object):
@@ -144,7 +133,6 @@ class __cacheit(object):
         self._cache = {}
         self._hits = self._misses = self._fails = 0
         self._full = False
-        self._lock = RLock()         # because linkedlist updates aren't threadsafe
         self._root = []              # root of the circular doubly linked list
         self._root[:] = [self._root, self._root, None, None]     # initialize by pointing to self
         # append to global cache list
@@ -156,7 +144,7 @@ class __cacheit(object):
     def __call__(self,*args,**kwargs):
         # Size limited caching that tracks accesses by recency
         try:
-            key = self._make_key(args, kwargs, typed=True)
+            key = self._make_key(args, kwargs)
             if key is None:
                 raise TypeError
         except TypeError:
@@ -165,71 +153,61 @@ class __cacheit(object):
             return self.__wrapped__(*args, **kwargs)
         PREV,NEXT,KEY,RESULT = self._PREV,self._NEXT,self._KEY,self._RESULT
 
-        with self._lock:
-            link = self._cache_get(key)
-            if link is not None:
-                # Move the link to the front of the circular queue
-                link_prev, link_next, _key, result = link
-                link_prev[NEXT] = link_next
-                link_next[PREV] = link_prev
-                last = self._root[PREV]
-                last[NEXT] = self._root[PREV] = link
-                link[PREV] = last
-                link[NEXT] = self._root
-                self._hits += 1
-                return result
+        link = self._cache_get(key)
+        if link is not None:
+            # Move the link to the front of the circular queue
+            link_prev, link_next, _key, result = link
+            link_prev[NEXT] = link_next
+            link_next[PREV] = link_prev
+            last = self._root[PREV]
+            last[NEXT] = self._root[PREV] = link
+            link[PREV] = last
+            link[NEXT] = self._root
+            self._hits += 1
+            return result
         result = self.__wrapped__(*args, **kwargs)
-        with self._lock:
-            if key in self._cache:
-                # Getting here means that this same key was added to the
-                # cache while the lock was released.  Since the link
-                # update is already done, we need only return the
-                # computed result and update the count of misses.
-                pass
-            elif self._full:
-                # Use the old self._root to store the new key and result.
-                oldroot = self._root
-                oldroot[KEY] = key
-                oldroot[RESULT] = result
-                # Empty the oldest link and make it the new self._root.
-                # Keep a reference to the old key and old result to
-                # prevent their ref counts from going to zero during the
-                # update. That will prevent potentially arbitrary object
-                # clean-up code (i.e. __del__) from running while we're
-                # still adjusting the links.
-                self._root = oldroot[NEXT]
-                oldkey = self._root[KEY]
-                oldresult = self._root[RESULT]
-                self._root[KEY] = self._root[RESULT] = None
-                # Now update the cache dictionary.
-                del self._cache[oldkey]
-                # Save the potentially reentrant cache[key] assignment
-                # for last, after the self._root and links have been put in
-                # a consistent state.
-                self._cache[key] = oldroot
-            else:
-                # Put result in a new link at the front of the queue.
-                last = self._root[PREV]
-                link = [last, self._root, key, result]
-                last[NEXT] = self._root[PREV] = self._cache[key] = link
-                self._full = (len(self._cache) >= self._maxsize)
-            self._misses += 1
+        if self._full:
+            # Use the old self._root to store the new key and result.
+            oldroot = self._root
+            oldroot[KEY] = key
+            oldroot[RESULT] = result
+            # Empty the oldest link and make it the new self._root.
+            # Keep a reference to the old key and old result to
+            # prevent their ref counts from going to zero during the
+            # update. That will prevent potentially arbitrary object
+            # clean-up code (i.e. __del__) from running while we're
+            # still adjusting the links.
+            self._root = oldroot[NEXT]
+            oldkey = self._root[KEY]
+            oldresult = self._root[RESULT]
+            self._root[KEY] = self._root[RESULT] = None
+            # Now update the cache dictionary.
+            del self._cache[oldkey]
+            # Save the potentially reentrant cache[key] assignment
+            # for last, after the self._root and links have been put in
+            # a consistent state.
+            self._cache[key] = oldroot
+        else:
+            # Put result in a new link at the front of the queue.
+            last = self._root[PREV]
+            link = [last, self._root, key, result]
+            last[NEXT] = self._root[PREV] = self._cache[key] = link
+            self._full = (len(self._cache) >= self._maxsize)
+        self._misses += 1
         return result
 
 
     def cache_info(self):
         """ Report cache statistics """
-        with self._lock:
-            return _CacheInfo(self._hits,self._misses,self._fails,
-                              self._maxsize,len(self._cache))
+        return _CacheInfo(self._hits,self._misses,self._fails,
+                          self._maxsize,len(self._cache))
 
     def cache_clear(self):
         """ Clear the cache and cache statistics """
-        with self._lock:
-            self._cache.clear()
-            self._root[:] = [self._root, self._root, None, None]
-            self._hits = self._misses = self._fails = 0
-            self._full = False
+        self._cache.clear()
+        self._root[:] = [self._root, self._root, None, None]
+        self._hits = self._misses = self._fails = 0
+        self._full = False
 
     def __get__(self,instance,cls):
         """ Ensure proper bound method object creation """
