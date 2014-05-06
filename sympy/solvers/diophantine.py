@@ -2,14 +2,15 @@ from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
-    isprime, nextprime, integer_nthroot)
+    isprime, nextprime, integer_nthroot, Expr, Pow)
 
 from sympy.simplify.simplify import rad_rationalize, _mexpand
 from sympy.ntheory.modular import solve_congruence
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
+from sympy.core.relational import Eq
 from sympy.solvers.solvers import check_assumptions
 
 __all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
@@ -26,6 +27,13 @@ def diophantine(eq, param=symbols("t", integer=True)):
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x+y = 0` and `x-y = 0` are solved independently
     and combined. Each term is solved by calling ``diop_solve()``.
+
+    Output of ``diophantine()`` is a set of tuples. Each tuple represents a
+    solution of the input equation. In a tuple, solution for each variable is
+    listed according to the alphabetic order of input variables. i.e. if we have
+    an equation with two variables `a` and `b`, first element of the tuple will
+    give the solution for `a` and the second element will give the solution for
+    `b`.
 
     Usage
     =====
@@ -57,6 +65,13 @@ def diophantine(eq, param=symbols("t", integer=True)):
 
     diop_solve()
     """
+    if isinstance(eq, Eq):
+        eq = eq.lhs - eq.rhs
+
+    eq = Poly(eq).as_expr()
+    if not eq.is_polynomial() or eq.is_number:
+        raise TypeError("Equation input format not supported")
+
     var = list(eq.expand(force=True).free_symbols)
     var.sort(key=default_sort_key)
 
@@ -75,13 +90,10 @@ def diophantine(eq, param=symbols("t", integer=True)):
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type in ["binary_quadratic",  "general_sum_of_squares"]:
+        elif eq_type in ["binary_quadratic",  "general_sum_of_squares", "univariate"]:
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
-
-        elif eq_type == "univariable":
-            sols = solution
 
     return sols
 
@@ -98,22 +110,18 @@ def merge_solution(var, var_t, solution):
     original equation. This function converts `(t, t)` into `(t, t, n_{1})`
     where `n_{1}` is an integer parameter.
     """
-    # currently more than 3 parameters are not required.
-    n1, n2, n3 = symbols("n1, n2, n3", integer=True)
-    params = [n1, n2, n3]
-
     l = []
-    count1 = 0
-    count2 = 0
 
-    if None not in solution:
-        for v in var:
-            if v in var_t:
-                l.append(solution[count1])
-                count1 = count1 + 1
-            else:
-                l.append(params[count2])
-                count2 = count2 + 1
+    if None in solution:
+        return ()
+
+    solution = iter(solution)
+    params = numbered_symbols("n", Integer=True, start=1)
+    for v in var:
+        if v in var_t:
+            l.append(next(solution))
+        else:
+            l.append(next(params))
 
     for val, symb in zip(l, var):
         if check_assumptions(val, **symb.assumptions0) is False:
@@ -176,13 +184,13 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
 
-    elif eq_type == "univariable":
+    elif eq_type == "univariate":
         l = solve(eq)
         s = set([])
 
         for soln in l:
             if isinstance(soln, Integer):
-                s.add(soln)
+                s.add((soln,))
         return s
 
     elif eq_type == "general_sum_of_squares":
@@ -198,7 +206,7 @@ def classify_diop(eq):
     as a list and coefficients are returned as a dict with the key being the
     respective term and the constant term is keyed to Integer(1). Type is an
     element in the set {"linear", "binary_quadratic", "general_pythagorean",
-    "homogeneous_ternary_quadratic", "univariable", "general_sum_of_squares"}
+    "homogeneous_ternary_quadratic", "univariate", "general_sum_of_squares"}
 
     Usage
     =====
@@ -236,7 +244,7 @@ def classify_diop(eq):
             raise TypeError("Coefficients should be Integers")
 
     if len(var) == 1:
-        diop_type = "univariable"
+        diop_type = "univariate"
     elif Poly(eq).total_degree() == 1:
         diop_type = "linear"
     elif Poly(eq).total_degree() == 2 and len(var) == 2:
@@ -1860,7 +1868,7 @@ def diop_ternary_quadratic_normal(eq):
     `ax^2 + by^2 + cz^2 = 0`.
 
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
-    equation will be a quadratic binary or univariable equation. If solvable,
+    equation will be a quadratic binary or univariate equation. If solvable,
     returns a tuple `(x, y, z)` that satisifes the given equation. If the
     equation does not have integer solutions, `(None, None, None)` is returned.
 
