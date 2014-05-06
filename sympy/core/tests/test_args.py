@@ -463,6 +463,11 @@ def test_sympy__core__sets__Union():
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
 
+def test_sympy__core__sets__Difference():
+    from sympy.core.sets import Difference
+    assert _test_args(Difference(Interval(0, 2), Interval(0, 1)))
+
+
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
