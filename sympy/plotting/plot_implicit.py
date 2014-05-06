@@ -326,11 +326,13 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
 
     if len(xyvar) == 0:
         xyvar = list(_sort_gens(free_symbols))
-    if len(xyvar) != 2:
-        if xyvar[0] in undeclared:
-            undeclared.remove(xyvar[0])
-        xyvar.append(undeclared.pop() if undeclared else Dummy('arbitrary'))
     var_start_end_x = _range_tuple(xyvar[0])
+    x = var_start_end_x[0]
+    if len(xyvar) != 2:
+        if x in undeclared or not undeclared:
+            xyvar.append(Dummy('f(%s)' % x.name))
+        else:
+            xyvar.append(undeclared.pop())
     var_start_end_y = _range_tuple(xyvar[1])
 
     use_interval = kwargs.pop('adaptive', True)
