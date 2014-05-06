@@ -234,5 +234,5 @@ Fornberg's Method for Finite Differenced Derivatives
 
 
 In 1988 Bengt Fornberg[1] showed that we can automatically produce a wide variety of derivative
-formulas in a manner which is computationally efficient as well as quite general.  Here we 
+formulas in a manner which is computationally efficient as well as quite general.  Here we
 demonstrate how the SymPy implementation can be used in a few select cases.
