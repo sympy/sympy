@@ -9,7 +9,7 @@ Introduction
 ============
 
 Finite difference approximations to derivatives is quite important in numerical analysis and in 
-computational physics. In this tutorial we show how to use SymPy to compute  approx0mations of
+computational physics. In this tutorial we show how to use SymPy to compute  approximations of
 varying accuracy. The hope is that these notes could be useful for the practicing researcher who
 is developing code in some language and needs to be able to efficiently generate finite difference
 formulae for various approximations. 
@@ -220,13 +220,16 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
     >>> X =  M.inv() * R
     >>> # note that all three coefficients make up the solution
     >>> # the first derivative is coefficient c_1 which is X[1].
-    >>> print "The second order accurate approx0mation for the first derivative is: "
+    >>> print "The second order accurate approximation for the first derivative is: "
     >>> print "dF/dx = ", together(X[1])
 
 
 	
 Of course, we can devise a similar formula for the value of the derivative at the left end
 of the set of points at `(x_{1},F_{1})` in terms of values at `(x_{2},F_{2})` and `(x_{3},F_{3})`.
+
+In addition to the output above we may output the generated finite difference derivative approximations
+in Fortran, C, etc forms.
 
 Next we show how to perform these and many other discritizations of derivatives, but using a 
 much more efficient approach originally due to Bengt Fornberg and now incorported into SymPy.
