@@ -418,7 +418,7 @@ class List2DSeries(Line2DBaseSeries):
 
 
 class LineOver1DRangeSeries(Line2DBaseSeries):
-    """Representation for a line consisting of a sympy expression over a range."""
+    """Representation for a line consisting of a SymPy expression over a range."""
 
     def __init__(self, expr, var_start_end, **kwargs):
         super(LineOver1DRangeSeries, self).__init__()
@@ -1197,20 +1197,20 @@ def plot(*args, **kwargs):
     ``title`` : str. Title of the plot. It is set to the latex representation of
     the expression, if the plot has only one expression.
 
-    ``xlabel`` : str. Label for the x - axis.
+    ``xlabel`` : str. Label for the x-axis.
 
-    ``ylabel`` : str. Label for the y - axis.
+    ``ylabel`` : str. Label for the y-axis.
 
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
+    ``xscale``: {'linear', 'log'} Sets the scaling of the x-axis.
 
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
+    ``yscale``: {'linear', 'log'} Sets the scaling if the y-axis.
 
     ``axis_center``: tuple of two floats denoting the coordinates of the center or
     {'center', 'auto'}
 
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
+    ``xlim`` : tuple of two floats, denoting the x-axis limits.
 
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
+    ``ylim`` : tuple of two floats, denoting the y-axis limits.
 
     Examples
     ========
@@ -1346,20 +1346,20 @@ def plot_parametric(*args, **kwargs):
 
     Arguments for ``Plot`` class:
 
-    ``xlabel`` : str. Label for the x - axis.
+    ``xlabel`` : str. Label for the x-axis.
 
-    ``ylabel`` : str. Label for the y - axis.
+    ``ylabel`` : str. Label for the y-axis.
 
-    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
+    ``xscale``: {'linear', 'log'} Sets the scaling of the x-axis.
 
-    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
+    ``yscale``: {'linear', 'log'} Sets the scaling if the y-axis.
 
     ``axis_center``: tuple of two floats denoting the coordinates of the center
     or {'center', 'auto'}
 
-    ``xlim`` : tuple of two floats, denoting the x - axis limits.
+    ``xlim`` : tuple of two floats, denoting the x-axis limits.
 
-    ``ylim`` : tuple of two floats, denoting the y - axis limits.
+    ``ylim`` : tuple of two floats, denoting the y-axis limits.
 
     Examples
     ========
@@ -1715,9 +1715,12 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
     Checks the arguments and converts into tuples of the
     form (exprs, ranges)
 
+    Examples
+    ========
+
     >>> from sympy import plot, cos, sin, symbols
     >>> from sympy.plotting.plot import check_arguments
-    >>> x,y,u,v = symbols('x y u v')
+    >>> x = symbols('x')
     >>> check_arguments([cos(x), sin(x)], 2, 1)
         [(cos(x), sin(x), (x, -10, 10))]
 
