@@ -188,7 +188,7 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
     >>> x,xN,h = symbols('x,x_N,h')
     >>> FN,FNm1,FNm2 = symbols('F_{N},F_{N-1},F_{N-2}')
     >>> n = 8 # there are the coefficients c_0=Fi, c_1=dF/h, c_2=d**2F/h**2
-    >>> c = symbols('c:3')
+    >>> c = symbols('c:8')
     >>> # define a polynomial of degree d
     >>> def P(x,x0,c,n):
     ...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
@@ -218,12 +218,10 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
     >>> print "The second order accurate approximation for the first derivative is: "
     >>> print "dF/dx = ", together(X[1])
 
-
-	
 Of course, we can devise a similar formula for the value of the derivative at the left end
 of the set of points at `(x_{1},F_{1})` in terms of values at `(x_{2},F_{2})` and `(x_{3},F_{3})`.
 
-Also, we note that output of formats appropriate to Fortran, C, etc. maybe done in the examples
+Also, we note that output of formats appropriate to Fortran, C, etc. may be done in the examples
 given above.
 
 Next we show how to perform these and many other discritizations of derivatives, but using a
