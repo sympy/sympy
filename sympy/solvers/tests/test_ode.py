@@ -1418,7 +1418,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     a, b, c, d = symbols('a b c d', integer=True)
     our_hint = "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients"
 
-    eq = x**4*diff(f(x), x, 4) - 13*x**2*diff(f(x), x, 2) + 36*f(x)	+ x
+    eq = x**4*diff(f(x), x, 4) - 13*x**2*diff(f(x), x, 2) + 36*f(x) + x
     assert our_hint in classify_ode(eq, f(x))
 
     eq = a*x**2*diff(f(x), x, 2) + b*x*diff(f(x), x) + c*f(x) + d*log(x)

@@ -62,11 +62,11 @@ def go(path, write, report):
         ".cc",
         ".h",
         ".py",
-	".rst",
+        ".rst",
     ]
     for root, dirs, files in os.walk(path):
         for b in [".git", "mpmath"]:
-	    if b in dirs:
+            if b in dirs:
                 dirs.remove(b)
         for file in files:
             if os.path.splitext(file)[1] not in allowed_ext:
