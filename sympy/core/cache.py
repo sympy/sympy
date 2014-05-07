@@ -95,126 +95,129 @@ def _make_key(args, kwds, kwd_mark = (object(),),
         key += tuple(g for g in _globals)
     return _HashedSeq(key)
 
-class __cacheit(object):
-    """caching decorator.
+def __cacheit(maxsize):
 
-       important: the result of cached function must be *immutable*
+    class _lru_cache(object):
+        """caching decorator.
+
+           important: the result of cached function must be *immutable*
 
 
-       Examples
-       ========
+           Examples
+           ========
 
-       >>> from sympy.core.cache import cacheit
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return a+b
+           >>> from sympy.core.cache import cacheit
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return a+b
 
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return [a,b] # <-- WRONG, returns mutable object
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return [a,b] # <-- WRONG, returns mutable object
 
-       to force cacheit to check returned results mutability and consistency,
-       set environment variable SYMPY_USE_CACHE to 'debug'
-    """
+           to force cacheit to check returned results mutability and consistency,
+           set environment variable SYMPY_USE_CACHE to 'debug'
+        """
 
-    def __init__(self,func):
-        wraps(func)(self)
-        if not hasattr(self,'__wrapped__'):
-            setattr(self,'__wrapped__',func)
-        # Users should only access the lru_cache through its public API:
-        #       cache_info, cache_clear, and f.__wrapped__
-        # The internals of the lru_cache are encapsulated for thread safety and
-        # to allow the implementation to change (including a possible C version).
+        def __init__(self,func):
+            wraps(func)(self)
+            if not hasattr(self,'__wrapped__'):
+                setattr(self,'__wrapped__',func)
+            # Users should only access the lru_cache through its public API:
+            #       cache_info, cache_clear, and f.__wrapped__
+            # The internals of the lru_cache are encapsulated for thread safety and
+            # to allow the implementation to change (including a possible C version).
 
-        # Constants shared by all lru cache instances:
-        self._make_key = _make_key         # build a key from the function arguments
-        self._PREV, self._NEXT, self._KEY, self._RESULT = 0, 1, 2, 3   # names for the link fields
-        self._maxsize = 2000
-        self._cache = {}
-        self._hits = self._misses = self._fails = 0
-        self._full = False
-        self._root = []              # root of the circular doubly linked list
-        self._root[:] = [self._root, self._root, None, None]     # initialize by pointing to self
-        # append to global cache list
-        CACHE.append(self)
+            # Constants shared by all lru cache instances:
+            self._make_key = _make_key         # build a key from the function arguments
+            self._PREV, self._NEXT, self._KEY, self._RESULT = 0, 1, 2, 3   # names for the link fields
+            self._maxsize = maxsize
+            self._cache = {}
+            self._hits = self._misses = self._fails = 0
+            self._full = False
+            self._root = []              # root of the circular doubly linked list
+            self._root[:] = [self._root, self._root, None, None]     # initialize by pointing to self
+            # append to global cache list
+            CACHE.append(self)
 
-    def _cache_get(self,key):
-        return self._cache.get(key)
+        def _cache_get(self,key):
+            return self._cache.get(key)
 
-    def __call__(self,*args,**kwargs):
-        # Size limited caching that tracks accesses by recency
-        try:
-            key = self._make_key(args, kwargs)
-            if key is None:
-                raise TypeError
-        except TypeError:
-            # args,kwargs not hashable. mark as fail and return result
-            self._fails += 1
-            return self.__wrapped__(*args, **kwargs)
-        PREV,NEXT,KEY,RESULT = self._PREV,self._NEXT,self._KEY,self._RESULT
+        def __call__(self,*args,**kwargs):
+            # Size limited caching that tracks accesses by recency
+            try:
+                key = self._make_key(args, kwargs)
+                if key is None:
+                    raise TypeError
+            except TypeError:
+                # args,kwargs not hashable. mark as fail and return result
+                self._fails += 1
+                return self.__wrapped__(*args, **kwargs)
+            PREV,NEXT,KEY,RESULT = self._PREV,self._NEXT,self._KEY,self._RESULT
 
-        link = self._cache_get(key)
-        if link is not None:
-            # Move the link to the front of the circular queue
-            link_prev, link_next, _key, result = link
-            link_prev[NEXT] = link_next
-            link_next[PREV] = link_prev
-            last = self._root[PREV]
-            last[NEXT] = self._root[PREV] = link
-            link[PREV] = last
-            link[NEXT] = self._root
-            self._hits += 1
+            link = self._cache_get(key)
+            if link is not None:
+                # Move the link to the front of the circular queue
+                link_prev, link_next, _key, result = link
+                link_prev[NEXT] = link_next
+                link_next[PREV] = link_prev
+                last = self._root[PREV]
+                last[NEXT] = self._root[PREV] = link
+                link[PREV] = last
+                link[NEXT] = self._root
+                self._hits += 1
+                return result
+            result = self.__wrapped__(*args, **kwargs)
+            if self._full:
+                # Use the old self._root to store the new key and result.
+                oldroot = self._root
+                oldroot[KEY] = key
+                oldroot[RESULT] = result
+                # Empty the oldest link and make it the new self._root.
+                # Keep a reference to the old key and old result to
+                # prevent their ref counts from going to zero during the
+                # update. That will prevent potentially arbitrary object
+                # clean-up code (i.e. __del__) from running while we're
+                # still adjusting the links.
+                self._root = oldroot[NEXT]
+                oldkey = self._root[KEY]
+                oldresult = self._root[RESULT]
+                self._root[KEY] = self._root[RESULT] = None
+                # Now update the cache dictionary.
+                del self._cache[oldkey]
+                # Save the potentially reentrant cache[key] assignment
+                # for last, after the self._root and links have been put in
+                # a consistent state.
+                self._cache[key] = oldroot
+            else:
+                # Put result in a new link at the front of the queue.
+                last = self._root[PREV]
+                link = [last, self._root, key, result]
+                last[NEXT] = self._root[PREV] = self._cache[key] = link
+                self._full = (len(self._cache) >= self._maxsize)
+            self._misses += 1
             return result
-        result = self.__wrapped__(*args, **kwargs)
-        if self._full:
-            # Use the old self._root to store the new key and result.
-            oldroot = self._root
-            oldroot[KEY] = key
-            oldroot[RESULT] = result
-            # Empty the oldest link and make it the new self._root.
-            # Keep a reference to the old key and old result to
-            # prevent their ref counts from going to zero during the
-            # update. That will prevent potentially arbitrary object
-            # clean-up code (i.e. __del__) from running while we're
-            # still adjusting the links.
-            self._root = oldroot[NEXT]
-            oldkey = self._root[KEY]
-            oldresult = self._root[RESULT]
-            self._root[KEY] = self._root[RESULT] = None
-            # Now update the cache dictionary.
-            del self._cache[oldkey]
-            # Save the potentially reentrant cache[key] assignment
-            # for last, after the self._root and links have been put in
-            # a consistent state.
-            self._cache[key] = oldroot
-        else:
-            # Put result in a new link at the front of the queue.
-            last = self._root[PREV]
-            link = [last, self._root, key, result]
-            last[NEXT] = self._root[PREV] = self._cache[key] = link
-            self._full = (len(self._cache) >= self._maxsize)
-        self._misses += 1
-        return result
 
 
-    def cache_info(self):
-        """ Report cache statistics """
-        return _CacheInfo(self._hits,self._misses,self._fails,
-                          self._maxsize,len(self._cache))
+        def cache_info(self):
+            """ Report cache statistics """
+            return _CacheInfo(self._hits,self._misses,self._fails,
+                              self._maxsize,len(self._cache))
 
-    def cache_clear(self):
-        """ Clear the cache and cache statistics """
-        self._cache.clear()
-        self._root[:] = [self._root, self._root, None, None]
-        self._hits = self._misses = self._fails = 0
-        self._full = False
+        def cache_clear(self):
+            """ Clear the cache and cache statistics """
+            self._cache.clear()
+            self._root[:] = [self._root, self._root, None, None]
+            self._hits = self._misses = self._fails = 0
+            self._full = False
 
-    def __get__(self,instance,cls):
-        """ Ensure proper bound method object creation """
-        if instance is None:
-            return self
-        else:
-            return types.MethodType(self,instance)
+        def __get__(self,instance,cls):
+            """ Ensure proper bound method object creation """
+            if instance is None:
+                return self
+            else:
+                return types.MethodType(self,instance)
+    return _lru_cache
 
 def __cacheit_debug(func):
     """cacheit + code to check cache consistency"""
@@ -250,11 +253,17 @@ def _getenv(key, default=None):
 
 # SYMPY_USE_CACHE=yes/no/debug
 USE_CACHE = _getenv('SYMPY_USE_CACHE', 'yes').lower()
+# SYMPY_CACHE_SIZE=<some integer>
+try:
+    SYMPY_CACHE_SIZE = int(_getenv('SYMPY_CACHE_SIZE',2000))
+except ValueError:
+    raise RuntimeError(
+        'SYMPY_CACHE_SIZE must be a valid integer. Got: %s' % SYMPY_CACHE_SIZE)
 
 if USE_CACHE == 'no':
     cacheit = __cacheit_nocache
 elif USE_CACHE == 'yes':
-    cacheit = __cacheit
+    cacheit = __cacheit(SYMPY_CACHE_SIZE)
 elif USE_CACHE == 'debug':
     cacheit = __cacheit_debug   # a lot slower
 else:
