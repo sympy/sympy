@@ -462,8 +462,7 @@ PrecisionExhausted
 
 N
 ^
-.. autoclass:: N
-   :members:
+.. autofunction:: N
 
 containers
 ----------
