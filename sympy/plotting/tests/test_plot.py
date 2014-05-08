@@ -6,10 +6,12 @@ from sympy.plotting.plot import unset_show
 from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
+from sympy.core.decorators import wraps
 
 from tempfile import NamedTemporaryFile
 import warnings
 import os
+import sys
 
 
 class MockPrint(object):
@@ -17,8 +19,8 @@ class MockPrint(object):
     def write(self, s):
         pass
 
-
 def disable_print(func, *args, **kwargs):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         sys.stdout = MockPrint()
         func(*args, **kwargs)
