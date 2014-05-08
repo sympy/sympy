@@ -219,32 +219,35 @@ def __cacheit(maxsize):
                 return types.MethodType(self,instance)
     return _lru_cache
 
-def __cacheit_debug(func):
-    """cacheit + code to check cache consistency"""
-    cfunc = __cacheit(func)
+def __cacheit_debug(maxsize):
 
-    @wraps(func)
-    def wrapper(*args, **kw_args):
-        # always call function itself and compare it with cached version
-        r1 = func(*args, **kw_args)
-        r2 = cfunc(*args, **kw_args)
+    def cachit_debug(func):
+        """cacheit + code to check cache consistency"""
+        cfunc = __cacheit(maxsize=maxsize)(func)
 
-        # try to see if the result is immutable
-        #
-        # this works because:
-        #
-        # hash([1,2,3])         -> raise TypeError
-        # hash({'a':1, 'b':2})  -> raise TypeError
-        # hash((1,[2,3]))       -> raise TypeError
-        #
-        # hash((1,2,3))         -> just computes the hash
-        hash(r1), hash(r2)
+        @wraps(func)
+        def wrapper(*args, **kw_args):
+            # always call function itself and compare it with cached version
+            r1 = func(*args, **kw_args)
+            r2 = cfunc(*args, **kw_args)
 
-        # also see if returned values are the same
-        if r1 != r2:
-            raise RuntimeError("Returned values are not the same")
-        return r1
-    return wrapper
+            # try to see if the result is immutable
+            #
+            # this works because:
+            #
+            # hash([1,2,3])         -> raise TypeError
+            # hash({'a':1, 'b':2})  -> raise TypeError
+            # hash((1,[2,3]))       -> raise TypeError
+            #
+            # hash((1,2,3))         -> just computes the hash
+            hash(r1), hash(r2)
+
+            # also see if returned values are the same
+            if r1 != r2:
+                raise RuntimeError("Returned values are not the same")
+            return r1
+        return wrapper
+    return cachit_debug
 
 
 def _getenv(key, default=None):
@@ -265,7 +268,7 @@ if USE_CACHE == 'no':
 elif USE_CACHE == 'yes':
     cacheit = __cacheit(SYMPY_CACHE_SIZE)
 elif USE_CACHE == 'debug':
-    cacheit = __cacheit_debug   # a lot slower
+    cacheit = __cacheit_debug(SYMPY_CACHE_SIZE)   # a lot slower
 else:
     raise RuntimeError(
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
