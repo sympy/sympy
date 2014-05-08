@@ -11,7 +11,22 @@ from tempfile import NamedTemporaryFile
 import warnings
 import os
 
+
+class MockPrint(object):
+
+    def write(self, s):
+        pass
+
+
+def disable_print(func, *args, **kwargs):
+    def wrapper(*args, **kwargs):
+        sys.stdout = MockPrint()
+        func(*args, **kwargs)
+        sys.stdout = sys.__stdout__
+    return wrapper
+
 unset_show()
+
 
 # XXX: We could implement this as a context manager instead
 # That would need rewriting the plot_and_save() function
@@ -229,6 +244,7 @@ def test_experimental_lambify():
     assert Max(2, 5) == 5
     assert Max(7, 5) == 7
 
+@disable_print
 def test_append_issue_7140():
     x = Symbol('x')
     p1 = plot(x)
