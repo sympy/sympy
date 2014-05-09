@@ -1236,7 +1236,8 @@ class Difference(Set, EvalfMixin):
     """
     Represents the set difference of a set with another set.
 
-    `A - B = {x | x \in A and x \\notin B} `
+    `A - B = \{x \in A| x \\notin B\}`
+
 
     Examples
     ========
