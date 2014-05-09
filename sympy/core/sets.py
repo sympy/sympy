@@ -745,8 +745,9 @@ class Interval(Set, EvalfMixin):
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) is True) or
-                (self.right_open and other.contains(self.end) is True)):
+        if ((self.left_open and other.contains(self.start) is True)
+            or (self.right_open and other.contains(self.end) is True)) \
+           and (self.start is not -S.Infinity or self.end is not S.Infinity):
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -973,8 +974,8 @@ class Union(Set, EvalfMixin):
                 new_args = False
                 for t in args - set((s,)):
                     new_set = s._union(t)
-                    # This returns None if s does not know how to intersect
-                    # with t. Returns the newly intersected set otherwise
+                    # This returns None if s does not know how to do union
+                    # with t. Returns the newly unioned set otherwise
                     if new_set is not None:
                         if not isinstance(new_set, set):
                             new_set = set((new_set, ))
@@ -1311,6 +1312,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     @property
     def _boundary(self):
         return self
+
 
 class UniversalSet(with_metaclass(Singleton, Set)):
     """
