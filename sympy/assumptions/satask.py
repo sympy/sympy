@@ -33,7 +33,7 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
 
-def get_relevant_facts(proposition, assumptions=True,
+def get_relevant_facts(proposition, assumptions=(True,),
     context=global_assumptions, use_known_facts=True, exprs=None, relevant_facts=None):
 
     newexprs = set()
