@@ -477,13 +477,19 @@ class Expr(Basic, EvalfMixin):
         failing_number = None
         if wrt == free:
             # try 0 and 1
-            a = self.subs(list(zip(free, [0]*len(free))))
-            if a is S.NaN:
-                a = self._random(None, 0, 0, 0, 0)
+            try:
+                a = self.subs(list(zip(free, [0]*len(free))))
+                if a is S.NaN:
+                    a = self._random(None, 0, 0, 0, 0)
+            except ZeroDivisionError:
+                a = None
             if a is not None and a is not S.NaN:
-                b = self.subs(list(zip(free, [1]*len(free))))
-                if b is S.NaN:
-                    b = self._random(None, 1, 0, 1, 0)
+                try:
+                    b = self.subs(list(zip(free, [1]*len(free))))
+                    if b is S.NaN:
+                        b = self._random(None, 1, 0, 1, 0)
+                except ZeroDivisionError:
+                    b = None
                 if b is not None and b is not S.NaN:
                     if b.equals(a) is False:
                         return False

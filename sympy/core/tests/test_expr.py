@@ -1622,3 +1622,8 @@ def test_issue_6325():
     assert diff(e, t, 2) == ans
     e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
+
+def test_issue_7426():
+    f1 = sympify("a%c")
+    f2 = sympify("x%z")
+    assert f1.equals(f2) is None
