@@ -36,7 +36,6 @@ class Set(Basic):
     is_Union = False
     is_Intersection = None
     is_EmptySet = None
-    is_UniversalSet = None
     is_Difference = False
 
     def sort_key(self, order=None):
@@ -133,8 +132,6 @@ class Set(Basic):
 
         """
         return universal_set - self
-
-    # def _complem
 
     @property
     def inf(self):
@@ -953,6 +950,13 @@ class Union(Set, EvalfMixin):
         else:
             return Union(args, evaluate=False)
 
+    def __sub__(self, other):
+        return Union(s - other for s in self.args)
+
+    def complement(self, universal_set):
+        # DeMorgan's Law
+        return Intersection(s.complement(universal_set) for s in self.args)
+
     @property
     def _inf(self):
         # We use Min so that sup is meaningful in combination with symbolic
@@ -1099,9 +1103,9 @@ class Intersection(Set):
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
 
-        # Intersection of no sets is everything
+        # Intersection of no sets is everything. I doubt it.
         if len(args) == 0:
-            return S.UniversalSet
+            raise TypeError("Intersection expected at least one argument")
 
         args = sorted(args, key=default_sort_key)
 
@@ -1167,8 +1171,11 @@ class Intersection(Set):
         for s in args:
             if s.is_Union:
                 other_sets = set(args) - set((s,))
-                other = Intersection(other_sets)
-                return Union(Intersection(arg, other) for arg in s.args)
+                if len(other_sets) > 0:
+                    other = Intersection(other_sets)
+                    return Union(Intersection(arg, other) for arg in s.args)
+                else:
+                    return Union(arg for arg in s.args)
 
         for s in args:
             if s.is_Difference:
@@ -1287,9 +1294,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
         >>> Interval(1, 2).intersect(S.EmptySet)
         EmptySet()
 
-    See Also
-    ========
-    UniversalSet
 
     References
     ==========

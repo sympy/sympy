@@ -53,11 +53,6 @@ EmptySet
 .. autoclass:: EmptySet
    :members:
 
-UniversalSet
-^^^^^^^^^^^^
-.. autoclass:: UniversalSet
-   :members:
-
 Special Sets
 ------------
 .. automodule:: sympy.sets.fancysets

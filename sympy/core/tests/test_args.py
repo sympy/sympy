@@ -426,11 +426,6 @@ def test_sympy__core__sets__EmptySet():
     assert _test_args(EmptySet())
 
 
-def test_sympy__core__sets__UniversalSet():
-    from sympy.core.sets import UniversalSet
-    assert _test_args(UniversalSet())
-
-
 def test_sympy__core__sets__FiniteSet():
     from sympy.core.sets import FiniteSet
     assert _test_args(FiniteSet(x, y, z))
