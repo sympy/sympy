@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass
-from sympy.core.sets import Set, Interval, Intersection
+from sympy.core.sets import Set, Interval, Intersection, Union, \
+    FiniteSet, Difference
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
@@ -152,6 +153,27 @@ class Reals(with_metaclass(Singleton, Interval)):
 
     def __new__(cls):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
+
+    def __sub__(self, other):
+        if isinstance(other, Interval):
+            a = Interval(S.NegativeInfinity, other.start,
+                         True, not other.left_open)
+            b = Interval(other.end, S.Infinity, not other.right_open, True)
+            return Union(a, b)
+        elif isinstance(other, FiniteSet):
+            # XXX: this will not work for multidimentional FinitSets
+
+            # as there are only numbers involved, a straight sort is sufficient
+            # default_sort_key is not needed
+            args = sorted(other.args)
+
+            intervals = []  # Build up a list of intervals between the elements
+            intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
+            for a, b in zip(args[:-1], args[1:]):
+                intervals.append(Interval(a, b, True, True))  # open intervals
+            intervals.append(Interval(args[-1], S.Infinity, True, True))
+            return Union(intervals, evaluate=False)
+        return Difference(self, other, evaluate=False)
 
 
 class ImageSet(Set):
