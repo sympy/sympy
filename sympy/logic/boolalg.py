@@ -4,10 +4,11 @@ Boolean algebra module for SymPy
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import product
+from itertools import product, islice
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
+from sympy.core.core import C
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp, AssocOp
@@ -411,6 +412,19 @@ class Not(BooleanFunction):
             return And(*[Not(a) for a in arg.args])
         if arg.func is Not:
             return arg.args[0]
+        # Simplify Relational objects.
+        if isinstance(arg, C.Equality):
+            return C.Unequality(*arg.args)
+        if isinstance(arg, C.Unequality):
+            return C.Equality(*arg.args)
+        if isinstance(arg, C.StrictLessThan):
+            return C.GreaterThan(*arg.args)
+        if isinstance(arg, C.StrictGreaterThan):
+            return C.LessThan(*arg.args)
+        if isinstance(arg, C.LessThan):
+            return C.StrictGreaterThan(*arg.args)
+        if isinstance(arg, C.GreaterThan):
+            return C.StrictLessThan(*arg.args)
 
     def as_set(self):
         """
@@ -990,23 +1004,32 @@ def eliminate_implications(expr):
     Or(B, Not(A))
     >>> eliminate_implications(Equivalent(A, B))
     And(Or(A, Not(B)), Or(B, Not(A)))
+    >>> eliminate_implications(Equivalent(A, B, C))
+    And(Or(A, Not(C)), Or(B, Not(A)), Or(C, Not(B)))
     """
     expr = sympify(expr)
     if expr.is_Atom:
         return expr  # (Atoms are unchanged.)
     args = list(map(eliminate_implications, expr.args))
+
     if expr.func is Implies:
         a, b = args[0], args[-1]
         return (~a) | b
+
     elif expr.func is Equivalent:
-        a, b = args[0], args[-1]
-        return (a | Not(b)) & (b | Not(a))
+        clauses = []
+        for a, b in zip(islice(args, None), islice(args, 1, None)):
+            clauses.append(Or(Not(a), b))
+        a, b = args[-1], args[0]
+        clauses.append(Or(Not(a), b))
+        return And(*clauses)
+
     else:
         return expr.func(*args)
 
 
 @deprecated(
-    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=6550, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
@@ -1419,7 +1442,7 @@ def bool_map(bool1, bool2):
         arguments are only symbols or negated symbols. For example,
         And(x, Not(y), Or(w, Not(z))).
 
-        Basic.match is not robust enough (see issue 1736) so this is
+        Basic.match is not robust enough (see issue 4835) so this is
         a workaround that is valid for simplified boolean expressions
         """
 
@@ -1459,7 +1482,7 @@ def bool_map(bool1, bool2):
 
 
 @deprecated(
-    useinstead="bool_map", issue=4098, deprecated_since_version="0.7.4")
+    useinstead="bool_map", issue=7197, deprecated_since_version="0.7.4")
 def bool_equal(bool1, bool2, info=False):
     """Return True if the two expressions represent the same logical
     behaviour for some correspondence between the variables of each

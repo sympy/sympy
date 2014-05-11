@@ -1,7 +1,7 @@
-from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
+from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
                    Derivative, diff, I, sqrt, erf, Piecewise,
-                   Eq, Ne, Q, assuming, symbols, And)
+                   Eq, Ne, Q, assuming, symbols, And, Heaviside, Max, S)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
@@ -12,6 +12,7 @@ def test_find_substitutions():
         [(cot(x), 1, -u**6 - 2*u**4 - u**2)]
     assert find_substitutions((sec(x)**2 + tan(x) * sec(x)) / (sec(x) + tan(x)),
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
+    assert find_substitutions(x * exp(-x**2), x, u) == [(-x**2, -S.Half, exp(u))]
 
 def test_manualintegrate_polynomials():
     assert manualintegrate(y, x) == x*y
@@ -62,6 +63,9 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
     assert manualintegrate(csc(x) * cot(x), x) == -csc(x)
 
+    assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
+    assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
+
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
     assert manualintegrate(sin(x)**2 * cos(x) **2, x) == \
@@ -104,7 +108,11 @@ def test_manualintegrate_derivative():
     assert manualintegrate(Derivative(sin(x), x, x, y, x), x) == \
         Derivative(sin(x), x, x, y)
 
-def test_issue_3700():
+def test_manualintegrate_Heaviside():
+    assert manualintegrate(Heaviside(x), x) == x*Heaviside(x)
+    assert manualintegrate(Heaviside(2*x + 1), x) == (2*x+1)*Heaviside(2*x + 1)/2
+
+def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
     n = Symbol('n', integer=True, positive=True)
 
@@ -124,7 +132,7 @@ def test_manual_true():
     assert integrate(sin(x) * cos(x), x, manual=True) in \
         [sin(x) ** 2 / 2, -cos(x)**2 / 2]
 
-def test_issue_3647():
+def test_issue_6746():
     assert manualintegrate(y**x, x) == \
         Piecewise((x, Eq(log(y), 0)), (y**x/log(y), True))
     assert manualintegrate(y**(n*x), x) == \
@@ -149,3 +157,14 @@ def test_issue_3647():
     with assuming(Q.negative(a)):
         assert manualintegrate(1 / (a + b*x**2), x) == \
             Integral(1/(a + b*x**2), x)
+
+def test_issue_2850():
+    assert manualintegrate(asin(x)*log(x), x) == -x*asin(x) - sqrt(-x**2 + 1) \
+            + (x*asin(x) + sqrt(-x**2 + 1))*log(x) - Integral(sqrt(-x**2 + 1)/x, x)
+    assert manualintegrate(acos(x)*log(x), x) == -x*acos(x) + sqrt(-x**2 + 1) + \
+        (x*acos(x) - sqrt(-x**2 + 1))*log(x) + Integral(sqrt(-x**2 + 1)/x, x)
+    assert manualintegrate(atan(x)*log(x), x) == -x*atan(x) + (x*atan(x) - \
+            log(x**2 + 1)/2)*log(x) + log(x**2 + 1)/2 + Integral(log(x**2 + 1)/x, x)/2
+
+def test_constant_independent_of_symbol():
+    assert manualintegrate(Integral(y, (x, 1, 2)), x) == x*Integral(y, (x, 1, 2))

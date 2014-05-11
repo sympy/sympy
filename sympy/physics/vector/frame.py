@@ -137,12 +137,9 @@ class ReferenceFrame(object):
             self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
                              (name + '[\'' + indices[1] + '\']'),
                              (name + '[\'' + indices[2] + '\']')]
-            self.pretty_vecs = [(u("\033[94m\033[1m") + name.lower() + u("_") +
-                                indices[0] + u("\033[0;0m\x1b[0;0m")),
-                                (u("\033[94m\033[1m") + name.lower() + u("_") +
-                                indices[1] + u("\033[0;0m\x1b[0;0m")),
-                                (u("\033[94m\033[1m") + name.lower() + u("_") +
-                                indices[2] + u("\033[0;0m\x1b[0;0m"))]
+            self.pretty_vecs = [(name.lower() + u("_") + indices[0]),
+                                (name.lower() + u("_") + indices[1]),
+                                (name.lower() + u("_") + indices[2])]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
                                indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
                                (name.lower(), indices[1])),
@@ -152,12 +149,9 @@ class ReferenceFrame(object):
         # Second case, when no custom indices are supplied
         else:
             self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
-            self.pretty_vecs = [(u("\033[94m\033[1m") + name.lower() +
-                                u("_x\033[0;0m\x1b[0;0m")),
-                                (u("\033[94m\033[1m") + name.lower() +
-                                u("_y\033[0;0m\x1b[0;0m")),
-                                (u("\033[94m\033[1m") + name.lower() +
-                                u("_z\033[0;0m\x1b[0;0m"))]
+            self.pretty_vecs = [name.lower() + u("_x"),
+                                name.lower() + u("_y"),
+                                name.lower() + u("_z")]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
                                (r"\mathbf{\hat{%s}_y}" % name.lower()),
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]
@@ -642,7 +636,7 @@ class ReferenceFrame(object):
 
         """
 
-        newframe = ReferenceFrame(newname, variables, indices, latexs)
+        newframe = self.__class__(newname, variables, indices, latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 

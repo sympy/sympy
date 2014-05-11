@@ -602,7 +602,7 @@ def _doctest(*paths, **kwargs):
     #         "sympy/utilities/benchmarking.py"
     #     ])
 
-    # blacklist these modules until issue 1741 is resolved
+    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py",
         "sympy/utilities/benchmarking.py"
@@ -1398,10 +1398,6 @@ class SymPyDocTestFinder(DocTestFinder):
                                    source_lines, globs, seen)
                     except KeyboardInterrupt:
                         raise
-                    except ValueError:
-                        raise
-                    except Exception:
-                        pass
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
@@ -1431,19 +1427,21 @@ class SymPyDocTestFinder(DocTestFinder):
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
-                    inspect.isclass(val) or
-                    isinstance(val, property)):
+                        inspect.isclass(val) or
+                        isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
-                        if val.fget.__module__ != module.__name__:
-                            continue
+                        if hasattr(val.fget, '__module__'):
+                            if val.fget.__module__ != module.__name__:
+                                continue
                     else:
                         if val.__module__ != module.__name__:
                             continue
 
                     assert self._from_module(module, val), \
-                        "%s is not in module %s (valname %s)" % (val, module, valname)
+                        "%s is not in module %s (valname %s)" % (
+                            val, module, valname)
 
                     valname = '%s.%s' % (name, valname)
                     self._find(tests, val, valname, module, source_lines,
@@ -1500,10 +1498,16 @@ class SymPyDocTestFinder(DocTestFinder):
         if lineno is None:
             # handling of properties is not implemented in _find_lineno so do
             # it here
-            tobj = obj if not isinstance(obj, property) else obj.fget
+            if hasattr(obj, 'func_closure') and obj.func_closure is not None:
+                tobj = obj.func_closure[0].cell_contents
+            elif isinstance(obj, property):
+                tobj = obj.fget
+            else:
+                tobj = obj
             lineno = self._find_lineno(tobj, source_lines)
 
-        assert lineno is not None
+        if lineno is None:
+            return None
 
         # Return a DocTest for this object.
         if module is None:
@@ -1530,7 +1534,7 @@ class SymPyDocTestRunner(DocTestRunner):
     tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
-    issue 2041).
+    issue 5140).
 
     See the docstring of the original DocTestRunner for more information.
     """

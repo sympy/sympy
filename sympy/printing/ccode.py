@@ -23,6 +23,7 @@ from sympy.printing.precedence import precedence
 known_functions = {
     "ceiling": [(lambda x: True, "ceil")],
     "Abs": [(lambda x: not x.is_integer, "fabs")],
+    "gamma": [(lambda x: True, "tgamma")],
 }
 
 
@@ -273,7 +274,7 @@ def ccode(expr, assign_to=None, **settings):
         >>> i = Idx('i', len_y-1)
         >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
         >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
-        'Dy[i] = (y[i + 1] - y[i])*1.0/(t[i + 1] - t[i]);'
+        'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)

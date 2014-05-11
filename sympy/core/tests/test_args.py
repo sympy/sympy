@@ -436,7 +436,6 @@ def test_sympy__core__sets__FiniteSet():
     assert _test_args(FiniteSet(x, y, z))
 
 
-@XFAIL
 def test_sympy__core__sets__Interval():
     from sympy.core.sets import Interval
     assert _test_args(Interval(0, 1))
@@ -483,7 +482,6 @@ def test_sympy__sets__fancysets__Integers():
     assert _test_args(Integers())
 
 
-@XFAIL  # This fails for the same reason Interval fails. Not all args are Basic
 def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())
@@ -1434,6 +1432,11 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
     assert _test_args(uppergamma(x, 2))
 
 
+def test_sympy__functions__special__beta_functions__beta():
+    from sympy.functions.special.beta_functions import beta
+    assert _test_args(beta(x, x))
+
+
 @SKIP("abstract class")
 def test_sympy__functions__special__hyper__TupleParametersBase():
     pass
@@ -1904,7 +1907,6 @@ def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
     assert _test_args(MatrixSymbol('A', 3, 5))
 
 
-@XFAIL
 def test_sympy__matrices__expressions__matexpr__ZeroMatrix():
     from sympy.matrices.expressions.matexpr import ZeroMatrix
     assert _test_args(ZeroMatrix(3, 5))
@@ -2898,10 +2900,7 @@ def test_sympy__tensor__tensor__TensMul():
     assert _test_args(TensMul.from_data(S.One, [p], free, dum))
 
 
-
-@XFAIL
 def test_as_coeff_add():
-    # the ordering of terms in (3*x, 4*x**2) is system-dependent
     assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
 
 
@@ -3120,3 +3119,8 @@ def test_sympy__ntheory__factor___totient():
     k = symbols('k', integer=True)
     t = totient(k)
     assert _test_args(t)
+
+
+def test_sympy__ntheory__residue_ntheory__mobius():
+    from sympy.ntheory import mobius
+    assert _test_args(mobius(2))

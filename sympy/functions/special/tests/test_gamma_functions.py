@@ -1,8 +1,7 @@
 from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, cancel, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta,
-    factorial, conjugate, csc)
+    cos, O, lowergamma, exp, erf, exp_polar, harmonic, zeta,conjugate)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
@@ -294,6 +293,54 @@ def test_polygamma_expand_func():
 def test_loggamma():
     raises(TypeError, lambda: loggamma(2, 3))
     raises(ArgumentIndexError, lambda: loggamma(x).fdiff(2))
+
+    assert loggamma(-1) == oo
+    assert loggamma(-2) == oo
+    assert loggamma(0) == oo
+    assert loggamma(1) == 0
+    assert loggamma(2) == 0
+    assert loggamma(3) == log(2)
+    assert loggamma(4) == log(6)
+
+    n = Symbol("n", integer=True, positive=True)
+    assert loggamma(n) == log(gamma(n))
+    assert loggamma(-n) == oo
+    assert loggamma(n/2) == log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + S.Half))
+
+    from sympy import I
+
+    assert loggamma(oo) == oo
+    assert loggamma(-oo) == zoo
+    assert loggamma(I*oo) == zoo
+    assert loggamma(-I*oo) == zoo
+    assert loggamma(zoo) == zoo
+    assert loggamma(nan) == nan
+
+    L = loggamma(S(16)/3)
+    E = -5*log(3) + loggamma(S(1)/3) + log(4) + log(7) + log(10) + log(13)
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(19/S(4))
+    E = -4*log(4) + loggamma(S(3)/4) + log(3) + log(7) + log(11) + log(15)
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(S(23)/7)
+    E = -3*log(7) + log(2) + loggamma(S(2)/7) + log(9) + log(16)
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(19/S(4)-7)
+    E = -log(9) - log(5) + loggamma(S(3)/4) + 3*log(4) - 3*I*pi
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
+    L = loggamma(23/S(7)-6)
+    E = -log(19) - log(12) - log(5) + loggamma(S(2)/7) + 3*log(7) - 3*I*pi
+    assert expand_func(L).doit() == E
+    assert L.n() == E.n()
+
     assert loggamma(x).diff(x) == polygamma(0, x)
     s1 = loggamma(1/(x + sin(x)) + cos(x)).nseries(x, n=4)
     s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2) + \
@@ -338,9 +385,3 @@ def test_polygamma_expansion():
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
-
-
-def test_beta_function():
-    x, y = Symbol('x'), Symbol('y')
-    assert beta(x, y) == gamma(x)*gamma(y)/gamma(x + y)
-    assert beta(x, y) == beta(y, x)  # Symmetric

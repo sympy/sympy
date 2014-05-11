@@ -72,7 +72,7 @@ def test_jscode_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert jscode(g(A[i]), assign_to=A[i]) == (
         "for (var i=0; i<n; i++){\n"
-        "   A[i] = A[i]*(1 + A[i])*(2 + A[i]);\n"
+        "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
     )
 
@@ -156,7 +156,7 @@ def test_jscode_loops_matrix_vector():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = y[i] + A[i*n + j]*x[j];\n'
+        '      y[i] = x[j]*A[i*n + j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -199,7 +199,7 @@ def test_jscode_loops_add():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = y[i] + A[i*n + j]*x[j];\n'
+        '      y[i] = x[j]*A[i*n + j] + y[i];\n'
         '   }\n'
         '}'
     )

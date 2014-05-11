@@ -1181,7 +1181,7 @@ def hyper2d(ctx, a, b, x, y, **kwargs):
     Two separable cases: a product of two geometric series, and a
     product of two Gaussian hypergeometric functions::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> x, y = mpf(0.25), mpf(0.5)
         >>> hyper2d({'m':1,'n':1}, {}, x,y)
@@ -1202,7 +1202,7 @@ def hyper2d(ctx, a, b, x, y, **kwargs):
 
     Six of the 34 Horn functions, G1-G3 and H1-H3::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 10; mp.pretty = True
         >>> x, y = 0.0625, 0.125
         >>> a1,a2,b1,b2,c1,c2,d = 1.1,-1.2,-1.3,-1.4,1.5,-1.6,1.7
@@ -1368,7 +1368,7 @@ def bihyper(ctx, a_s, b_s, z, **kwargs):
 
     The value of `\,_2H_2` at `z = 1` is given by Dougall's formula::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> a,b,c,d = 0.5, 1.5, 2.25, 3.25
         >>> bihyper([a,b],[c,d],1)

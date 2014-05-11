@@ -85,32 +85,31 @@ def test_Eq():
 
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
-    # not create Relational objects.  Therefore, they still return True and
-    # False instead of S.true and S.false.
-    assert (oo > oo) is False
-    assert (oo > -oo) is True
-    assert (oo > 1) is True
-    assert (oo < oo) is False
-    assert (oo < -oo) is False
-    assert (oo < 1) is False
-    assert (oo >= oo) is True
-    assert (oo >= -oo) is True
-    assert (oo >= 1) is True
-    assert (oo <= oo) is True
-    assert (oo <= -oo) is False
-    assert (oo <= 1) is False
-    assert (-oo > oo) is False
-    assert (-oo > -oo) is False
-    assert (-oo > 1) is False
-    assert (-oo < oo) is True
-    assert (-oo < -oo) is False
-    assert (-oo < 1) is True
-    assert (-oo >= oo) is False
-    assert (-oo >= -oo) is True
-    assert (-oo >= 1) is False
-    assert (-oo <= oo) is True
-    assert (-oo <= -oo) is True
-    assert (-oo <= 1) is True
+    # not create Relational objects.
+    assert (oo > oo) is S.false
+    assert (oo > -oo) is S.true
+    assert (oo > 1) is S.true
+    assert (oo < oo) is S.false
+    assert (oo < -oo) is S.false
+    assert (oo < 1) is S.false
+    assert (oo >= oo) is S.true
+    assert (oo >= -oo) is S.true
+    assert (oo >= 1) is S.true
+    assert (oo <= oo) is S.true
+    assert (oo <= -oo) is S.false
+    assert (oo <= 1) is S.false
+    assert (-oo > oo) is S.false
+    assert (-oo > -oo) is S.false
+    assert (-oo > 1) is S.false
+    assert (-oo < oo) is S.true
+    assert (-oo < -oo) is S.false
+    assert (-oo < 1) is S.true
+    assert (-oo >= oo) is S.false
+    assert (-oo >= -oo) is S.true
+    assert (-oo >= 1) is S.false
+    assert (-oo <= oo) is S.true
+    assert (-oo <= -oo) is S.true
+    assert (-oo <= 1) is S.true
 
 
 def test_bool():
@@ -263,7 +262,7 @@ def test_new_relational():
 
 
 def test_relational_bool_output():
-    # http://code.google.com/p/sympy/issues/detail?id=2832
+    # https://github.com/sympy/sympy/issues/5931
     raises(TypeError, lambda: bool(x > 3))
     raises(TypeError, lambda: bool(x >= 3))
     raises(TypeError, lambda: bool(x < 3))
@@ -273,7 +272,7 @@ def test_relational_bool_output():
 
 
 def test_relational_logic_symbols():
-    # See issue 3105
+    # See issue 6204
     assert (x < y) & (z < t) == And(x < y, z < t)
     assert (x < y) | (z < t) == Or(x < y, z < t)
     assert ~(x < y) == Not(x < y)
@@ -283,7 +282,7 @@ def test_relational_logic_symbols():
 
     assert isinstance((x < y) & (z < t), And)
     assert isinstance((x < y) | (z < t), Or)
-    assert isinstance(~(x < y), Not)
+    assert isinstance(~(x < y), GreaterThan)
     assert isinstance((x < y) >> (z < t), Implies)
     assert isinstance((x < y) << (z < t), Implies)
     assert isinstance((x < y) ^ (z < t), (Or, Xor))
@@ -305,3 +304,12 @@ def test_univariate_relational_as_set():
 def test_multivariate_relational_as_set():
     assert (x*y >= 0).as_set() == Interval(0, oo)*Interval(0, oo) + \
         Interval(-oo, 0)*Interval(-oo, 0)
+
+
+def test_Not():
+    assert Not(Equality(x, y)) == Unequality(x, y)
+    assert Not(Unequality(x, y)) == Equality(x, y)
+    assert Not(StrictGreaterThan(x, y)) == LessThan(x, y)
+    assert Not(StrictLessThan(x, y)) == GreaterThan(x, y)
+    assert Not(GreaterThan(x, y)) == StrictLessThan(x, y)
+    assert Not(LessThan(x, y)) == StrictGreaterThan(x, y)

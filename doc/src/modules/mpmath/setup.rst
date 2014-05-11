@@ -7,7 +7,7 @@ Download and installation
 Installer
 .........
 
-The mpmath setup files can be downloaded from the `mpmath download page <http://code.google.com/p/mpmath/downloads/list>`_ or the `Python Package Index <http://pypi.python.org/pypi/mpmath/>`_. Download the source package (available as both .zip and .tar.gz), extract it, open the extracted directory, and run
+The mpmath setup files can be downloaded from the `mpmath download page <http://code.google.com/p/mpmath/downloads/list>`_ or the `Python Package Index <https://pypi.python.org/pypi/mpmath/>`_. Download the source package (available as both .zip and .tar.gz), extract it, open the extracted directory, and run
 
     ``python setup.py install``
 
@@ -20,7 +20,7 @@ from the mpmath website or the Python Package Index. Run the installer and follo
 Using setuptools
 ................
 
-If you have `setuptools <http://pypi.python.org/pypi/setuptools>`_ installed, you can download and install mpmath in one step by running:
+If you have `setuptools <https://pypi.python.org/pypi/setuptools>`_ installed, you can download and install mpmath in one step by running:
 
     ``easy_install mpmath``
 
@@ -38,7 +38,7 @@ Debian and Ubuntu users can install mpmath with
 
     ``sudo apt-get install python-mpmath``
 
-See `debian <http://packages.debian.org/stable/python/python-mpmath>`_ and `ubuntu <https://launchpad.net/ubuntu/+source/mpmath>`_ package information; please verify that you are getting the latest version.
+See `debian <https://packages.debian.org/stable/python/python-mpmath>`_ and `ubuntu <https://launchpad.net/ubuntu/+source/mpmath>`_ package information; please verify that you are getting the latest version.
 
 OpenSUSE
 ........
@@ -99,7 +99,7 @@ The tests should finish in about a minute. If you have `psyco <http://psyco.sour
 
 which will cut the running time in half.
 
-If any test fails, please send a detailed bug report to the `mpmath issue tracker <http://code.google.com/p/sympy/issues/list>`_. The tests can also be run with `py.test <http://pylib.org/>`_. This will sometimes generate more useful information in case of a failure.
+If any test fails, please send a detailed bug report to the `mpmath issue tracker <https://github.com/sympy/sympy/issues>`_. The tests can also be run with `py.test <http://pylib.org/>`_. This will sometimes generate more useful information in case of a failure.
 
 To run the tests with support for gmpy disabled, use
 
@@ -112,7 +112,7 @@ To enable extra diagnostics, use
 Compiling the documentation
 ---------------------------
 
-If you downloaded the source package, the text source for these documentation pages is included in the ``doc`` directory. The documentation can be compiled to pretty HTML using `Sphinx <http://sphinx.pocoo.org/>`_. Go to the ``doc`` directory and run
+If you downloaded the source package, the text source for these documentation pages is included in the ``doc`` directory. The documentation can be compiled to pretty HTML using `Sphinx <http://sphinx-doc.org/>`_. Go to the ``doc`` directory and run
 
     ``python build.py``
 

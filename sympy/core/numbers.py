@@ -46,7 +46,7 @@ def mpf_norm(mpf, prec):
     if not man:
         # hack for mpf_normalize which does not do this;
         # it assumes that if man is zero the result is 0
-        # (see issue 3540)
+        # (see issue 6639)
         if not bc:
             return _mpf_zero
         else:
@@ -874,52 +874,56 @@ class Float(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other
+            return S.false    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
         if other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  ! <=
+            return S.false    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
         if other.is_comparable:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other
+            return S.false    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  ! <=
+            return S.false    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
-            return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
+            return _sympify(bool(
+                mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__le__(self, other)
 
     def __hash__(self):
@@ -1320,17 +1324,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <
+            return S.false    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__le__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                return bool(self.p*other.q > self.q*other.p)
+                return _sympify(bool(self.p*other.q > self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_gt(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_gt(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__le__(self)
         return Expr.__gt__(self, other)
@@ -1339,17 +1343,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  not <=
+            return S.false    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__lt__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                 return bool(self.p*other.q >= self.q*other.p)
+                 return _sympify(bool(self.p*other.q >= self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_ge(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_ge(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__lt__(self)
         return Expr.__ge__(self, other)
@@ -1358,17 +1362,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <
+            return S.false    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                return bool(self.p*other.q < self.q*other.p)
+                return _sympify(bool(self.p*other.q < self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_lt(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_lt(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__ge__(self)
         return Expr.__lt__(self, other)
@@ -1377,17 +1381,17 @@ class Rational(Number):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  -->  not <=
+            return S.false    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Rational):
-                return bool(self.p*other.q <= self.q*other.p)
+                return _sympify(bool(self.p*other.q <= self.q*other.p))
             if isinstance(other, Float):
-                return bool(mlib.mpf_le(
-                    self._as_mpf_val(other._prec), other._mpf_))
+                return _sympify(bool(mlib.mpf_le(
+                    self._as_mpf_val(other._prec), other._mpf_)))
             if other is S.NaN:
                 return other.__gt__(self)
         return Expr.__le__(self, other)
@@ -1679,34 +1683,34 @@ class Integer(Rational):
 
     def __gt__(self, other):
         if isinstance(other, integer_types):
-            return (self.p > other)
+            return _sympify(self.p > other)
         elif isinstance(other, Integer):
-            return (self.p > other.p)
+            return _sympify(self.p > other.p)
         return Rational.__gt__(self, other)
 
     def __lt__(self, other):
         if isinstance(other, integer_types):
-            return (self.p < other)
+            return _sympify(self.p < other)
         elif isinstance(other, Integer):
-            return (self.p < other.p)
+            return _sympify(self.p < other.p)
         return Rational.__lt__(self, other)
 
     def __ge__(self, other):
         if isinstance(other, integer_types):
-            return (self.p >= other)
+            return _sympify(self.p >= other)
         elif isinstance(other, Integer):
-            return (self.p >= other.p)
+            return _sympify(self.p >= other.p)
         return Rational.__ge__(self, other)
 
     def __le__(self, other):
         if isinstance(other, integer_types):
-            return (self.p <= other)
+            return _sympify(self.p <= other)
         elif isinstance(other, Integer):
-            return (self.p <= other.p)
+            return _sympify(self.p <= other.p)
         return Rational.__le__(self, other)
 
     def __hash__(self):
-        return super(Integer, self).__hash__()
+        return hash(self.p)
 
     def __index__(self):
         return self.p
@@ -2240,25 +2244,25 @@ class Infinity(with_metaclass(Singleton, Number)):
     def __lt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return False
+        return S.false
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is S.Infinity
+        return _sympify(other is S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is not S.Infinity
+        return _sympify(other is not S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return True
+        return S.true
 
     def __mod__(self, other):
         return S.NaN
@@ -2433,25 +2437,25 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def __lt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is not S.NegativeInfinity
+        return _sympify(other is not S.NegativeInfinity)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return True
+        return S.true
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return False
+        return S.false
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return other is S.NegativeInfinity
+        return _sympify(other is S.NegativeInfinity)
 
 
 class NaN(with_metaclass(Singleton, Number)):
@@ -2543,16 +2547,16 @@ class NaN(with_metaclass(Singleton, Number)):
         return other is not S.NaN
 
     def __gt__(self, other):
-        return False
+        return S.false
 
     def __ge__(self, other):
-        return False
+        return S.false
 
     def __lt__(self, other):
-        return False
+        return S.false
 
     def __le__(self, other):
-        return False
+        return S.false
 
 nan = S.NaN
 
@@ -2665,41 +2669,41 @@ class NumberSymbol(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <
+            return S.false    # sympy > other  --> not <
         if self is other:
-            return False
+            return S.false
         if isinstance(other, Number):
             approx = self.approximation_interval(other.__class__)
             if approx is not None:
                 l, u = approx
                 if other < l:
-                    return False
+                    return S.false
                 if other > u:
-                    return True
-            return self.evalf() < other
+                    return S.true
+            return _sympify(self.evalf() < other)
         if other.is_real and other.is_number:
             other = other.evalf()
-            return self.evalf() < other
+            return _sympify(self.evalf() < other)
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            return False    # sympy > other  --> not <=
+            return S.false    # sympy > other  --> not <=
         if self is other:
-            return True
+            return S.true
         if other.is_real and other.is_number:
             other = other.evalf()
         if isinstance(other, Number):
-            return self.evalf() <= other
+            return _sympify(self.evalf() <= other)
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
-        return (-self) < (-other)
+        return _sympify((-self) < (-other))
 
     def __ge__(self, other):
-        return (-self) <= (-other)
+        return _sympify((-self) <= (-other))
 
     def __int__(self):
         # subclass with appropriate return value

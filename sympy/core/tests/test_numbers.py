@@ -21,19 +21,16 @@ def test_integers_cache():
 
     assert python_int in _intcache
     assert hash(python_int) not in _intcache
-    assert sympy_int not in _intcache
 
     sympy_int_int = Integer(sympy_int)
 
     assert python_int in _intcache
     assert hash(python_int) not in _intcache
-    assert sympy_int_int not in _intcache
 
     sympy_hash_int = Integer(hash(python_int))
 
     assert python_int in _intcache
     assert hash(python_int) in _intcache
-    assert sympy_hash_int not in _intcache
 
 
 def test_seterr():
@@ -335,10 +332,10 @@ def test_Rational_cmp():
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
 
-    assert (n1 < S.NaN) is False
-    assert (n1 <= S.NaN) is False
-    assert (n1 > S.NaN) is False
-    assert (n1 <= S.NaN) is False
+    assert (n1 < S.NaN) is S.false
+    assert (n1 <= S.NaN) is S.false
+    assert (n1 > S.NaN) is S.false
+    assert (n1 <= S.NaN) is S.false
 
 
 def test_Float():
@@ -1006,25 +1003,25 @@ def test_no_len():
     raises(TypeError, lambda: len(Integer(2)))
 
 
-def test_issue222():
+def test_issue_3321():
     assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
     assert 5 * sqrt(Rational(1, 5)) == sqrt(5)
 
 
-def test_issue593():
+def test_issue_3692():
     assert ((-1)**Rational(1, 6)).expand(complex=True) == I/2 + sqrt(3)/2
     assert ((-5)**Rational(1, 6)).expand(complex=True) == \
         5**Rational(1, 6)*I/2 + 5**Rational(1, 6)*sqrt(3)/2
     assert ((-64)**Rational(1, 6)).expand(complex=True) == I + sqrt(3)
 
 
-def test_issue324():
+def test_issue_3423():
     x = Symbol("x")
     assert sqrt(x - 1).as_base_exp() == (x - 1, S.Half)
     assert sqrt(x - 1) != I*sqrt(1 - x)
 
 
-def test_issue350():
+def test_issue_3449():
     x = Symbol("x", real=True)
     assert sqrt(x**2) == abs(x)
     assert sqrt(x - 1).subs(x, 5) == 2
@@ -1101,7 +1098,7 @@ def test_Rational_factors():
     assert str(F(-25, 14*9, visual=True)) == '-5**2/(2*3**2*7)'
 
 
-def test_issue1008():
+def test_issue_4107():
     assert pi*(E + 10) + pi*(-E - 10) != 0
     assert pi*(E + 10**10) + pi*(-E - 10**10) != 0
     assert pi*(E + 10**20) + pi*(-E - 10**20) != 0
@@ -1169,7 +1166,7 @@ def test_Float_gcd_lcm_cofactors():
         (S.One, Float(2.0), Rational(1, 2))
 
 
-def test_issue1512():
+def test_issue_4611():
     assert abs(pi._evalf(50) - 3.14159265358979) < 1e-10
     assert abs(E._evalf(50) - 2.71828182845905) < 1e-10
     assert abs(Catalan._evalf(50) - 0.915965594177219) < 1e-10
@@ -1279,7 +1276,7 @@ def test_zoo():
     assert Mul.flatten([S(-1), oo, S(0)]) == ([S.NaN], [], None)
 
 
-def test_issue_1023():
+def test_issue_4122():
     x = Symbol('x', nonpositive=True)
     assert (oo + x).is_Add
     x = Symbol('x', bounded=True)
@@ -1328,15 +1325,13 @@ def test_as_content_primitive():
     assert S(3.1).as_content_primitive() == (1, 3.1)
 
 
-@XFAIL
 def test_hashing_sympy_integers():
-    # Test for issue #1973
-    # http://code.google.com/p/sympy/issues/detail?id=1973
-    assert hash(S(4)) == 4
-    assert hash(S(4)) == hash(int(4))
+    # Test for issue 5072
+    assert set([Integer(3)]) == set([int(3)])
+    assert hash(Integer(4)) == hash(int(4))
 
 
-def test_issue_1073():
+def test_issue_4172():
     assert int((E**100).round()) == \
         26881171418161354484126255515800135873611119
     assert int((pi**100).round()) == \
@@ -1387,7 +1382,7 @@ def test_int_NumberSymbols():
         [3, 0, 2, 1, 0]
 
 
-def test_3541():
+def test_issue_6640():
     from sympy.mpmath.libmp.libmpf import (
         _normalize as mpf_normalize, finf, fninf, fzero)
     # fnan is not included because Float no longer returns fnan,
@@ -1397,7 +1392,7 @@ def test_3541():
     assert bool(Float(0)) is False
 
 
-def test_3250():
+def test_issue_6349():
     assert Float('23.e3', '')._prec == 10
     assert Float('23e3', '')._prec == 20
     assert Float('23000', '')._prec == 20

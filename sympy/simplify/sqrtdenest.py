@@ -54,6 +54,7 @@ def is_algebraic(p):
 
     Examples
     ========
+
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import is_algebraic
     >>> from sympy import cos
@@ -123,7 +124,7 @@ def sqrtdenest(expr, max_iter=3):
 
     References
     ==========
-    [1] http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf
+    [1] http://researcher.watson.ibm.com/researcher/files/us-fagin/symb85.pdf
 
     [2] D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
     by Denesting' (available at http://www.cybertester.com/data/denest.pdf)
@@ -144,6 +145,7 @@ def _sqrt_match(p):
 
     Examples
     ========
+
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrt_match
     >>> _sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
@@ -259,6 +261,7 @@ def _sqrtdenest_rec(expr):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrtdenest_rec
     >>> _sqrtdenest_rec(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
@@ -376,6 +379,7 @@ def _sqrt_symbolic_denest(a, b, r):
 
     Examples
     ========
+
     >>> from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest
     >>> from sympy import sqrt, Symbol
     >>> from sympy.abc import x
@@ -478,6 +482,7 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrt_match, sqrt_biquadratic_denest
     >>> z = sqrt((2*sqrt(2) + 4)*sqrt(2 + sqrt(2)) + 5*sqrt(2) + 8)

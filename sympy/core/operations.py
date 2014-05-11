@@ -6,6 +6,7 @@ from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, xrange
 from sympy.core.logic import fuzzy_and
+from sympy.core.evaluate import global_evaluate
 
 
 class AssocOp(Basic):
@@ -29,7 +30,7 @@ class AssocOp(Basic):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
-        if not options.pop('evaluate', True):
+        if not options.pop('evaluate', global_evaluate[0]):
             return cls._from_args(args)
 
         if len(args) == 0:
@@ -161,6 +162,11 @@ class AssocOp(Basic):
         equivalent.
 
         """
+        # make sure expr is Expr if pattern is Expr
+        from .expr import Expr
+        if isinstance(self, Expr) and not isinstance(expr, Expr):
+            return None
+
         # handle simple patterns
         if self == expr:
             return repl_dict

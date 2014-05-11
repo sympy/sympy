@@ -163,7 +163,7 @@ def test_Interval():
 
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
-    # github issue #2908
+    # issue 2908
     assert str(Lambda((), 1)) == "Lambda((), 1)"
     assert str(Lambda((), x)) == "Lambda((), x)"
 
@@ -350,7 +350,7 @@ def test_FracField():
 
 
 def test_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
+    Ruv, u,v = ring("u,v", ZZ)
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert str(x - x) == "0"
@@ -367,7 +367,7 @@ def test_PolyElement():
 
 
 def test_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
+    Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert str(x - x) == "0"
@@ -544,7 +544,7 @@ def test_tuple():
 
 def test_Unit():
     assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 2461
+    assert str(joule) == "kg*m**2/s**2"  # issue 5560
 
 
 def test_wild_str():
@@ -576,7 +576,7 @@ def test_bug4():
     assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 
-def test_issue922():
+def test_issue_4021():
     e = Integral(x, x) + 1
     assert str(e) == 'Integral(x, x) + 1'
 
@@ -684,7 +684,7 @@ def test_Tr():
     assert str(t) == 'Tr(A*B)'
 
 
-def test_issue3288():
+def test_issue_6387():
     assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
 
 

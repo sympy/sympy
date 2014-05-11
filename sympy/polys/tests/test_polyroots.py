@@ -10,8 +10,11 @@ from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
     roots_binomial, preprocess_roots, roots)
 
+from sympy.polys.orthopolys import legendre_poly
+
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import test_numerically
+import sympy
 
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
@@ -88,7 +91,7 @@ def test_roots_quartic():
     eq = x**4 + 2*x**3 + 3*x**2 + x*(z + 11) + 5
     zans = roots_quartic(Poly(eq, x))
     assert all([test_numerically(eq.subs(((x, i), (z, -1))), 0) for i in zans])
-    # but some are (see also issue 1890)
+    # but some are (see also issue 4989)
     # it's ok if the solution is not Piecewise, but the tests below should pass
     eq = Poly(y*x**4 + x**3 - x + z, x)
     ans = roots_quartic(eq)
@@ -504,3 +507,39 @@ def test_root_factors():
         [Poly(x - 1, x), Poly(x + 1, x), Poly(x**2 + 1, x)]
     assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
         [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
+
+def test_nroots1():
+    n = 64
+    p = legendre_poly(n, x, polys=True)
+
+    raises(sympy.mpmath.mp.NoConvergence, lambda: p.nroots(n=3, maxsteps=5))
+
+    roots = p.nroots(n=3)
+    # The order of roots matters. They are ordered from smallest to the
+    # largest.
+    assert [str(r) for r in roots] == \
+            ['-0.999', '-0.996', '-0.991', '-0.983', '-0.973', '-0.961',
+            '-0.946', '-0.930', '-0.911', '-0.889', '-0.866', '-0.841',
+            '-0.813', '-0.784', '-0.753', '-0.720', '-0.685', '-0.649',
+            '-0.611', '-0.572', '-0.531', '-0.489', '-0.446', '-0.402',
+            '-0.357', '-0.311', '-0.265', '-0.217', '-0.170', '-0.121',
+            '-0.0730', '-0.0243', '0.0243', '0.0730', '0.121', '0.170',
+            '0.217', '0.265', '0.311', '0.357', '0.402', '0.446', '0.489',
+            '0.531', '0.572', '0.611', '0.649', '0.685', '0.720', '0.753',
+            '0.784', '0.813', '0.841', '0.866', '0.889', '0.911', '0.930',
+            '0.946', '0.961', '0.973', '0.983', '0.991', '0.996', '0.999']
+
+def test_nroots2():
+    p = Poly(x**5+3*x+1, x)
+
+    roots = p.nroots(n=3)
+    # The order of roots matters. The roots are ordered by their real
+    # components (if they agree, then by their imaginary components).
+    assert [str(r) for r in roots] == \
+            ['-0.839 - 0.944*I', '-0.839 + 0.944*I', '-0.332',
+                '1.01 - 0.937*I', '1.01 + 0.937*I']
+
+    roots = p.nroots(n=5)
+    assert [str(r) for r in roots] == \
+            ['-0.83907 - 0.94385*I', '-0.83907 + 0.94385*I',
+                '-0.33199', '1.0051 - 0.93726*I', '1.0051 + 0.93726*I']

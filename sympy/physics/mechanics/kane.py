@@ -9,7 +9,7 @@ from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
      Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import inertia_of_point_mass
+from sympy.physics.mechanics.functions import inertia_of_point_mass, _mat_inv_mul
 
 class KanesMethod(object):
     """Kane's method object.
@@ -174,29 +174,6 @@ class KanesMethod(object):
         return list(reduce(set.union, [i.atoms(Symbol) for i in inlist]) -
                     set(insyms))
 
-    def _mat_inv_mul(self, A, B):
-        """Internal Function
-
-        Computes A^-1 * B symbolically w/ substitution, where B is not
-        necessarily a vector, but can be a matrix.
-
-        """
-
-        r1, c1 = A.shape
-        r2, c2 = B.shape
-        temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j) + str(r1 * i)))
-        temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j) + str(r2 * i)))
-        for i in range(len(temp1)):
-            if A[i] == 0:
-                temp1[i] = 0
-        for i in range(len(temp2)):
-            if B[i] == 0:
-                temp2[i] = 0
-        temp3 = []
-        for i in range(c2):
-            temp3.append(temp1.LDLsolve(temp2[:, i]))
-        temp3 = Matrix([i.T for i in temp3]).T
-        return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
 
     def _coords(self, qind, qdep=[], coneqs=[]):
         """Supply all the generalized coordinates in a list.
@@ -306,7 +283,7 @@ class KanesMethod(object):
             self._depC = C
             mr1 = B[:, :p]
             ml1 = B[:, p:o]
-            self._Ars = - self._mat_inv_mul(ml1, mr1)
+            self._Ars = - _mat_inv_mul(ml1, mr1)
 
     def _partial_velocity(self, vlist, ulist, frame):
         """Returns the list of partial velocities, replacing qdot's in the
@@ -356,14 +333,14 @@ class KanesMethod(object):
         k_kqdot = (kdeqs.subs(uzero) - f_k).jacobian(Matrix(qdot))
         k_ku = (kdeqs.subs(qdotzero) - f_k).jacobian(Matrix(u))
 
-        self._k_ku = self._mat_inv_mul(k_kqdot, k_ku)
-        self._f_k = self._mat_inv_mul(k_kqdot, f_k)
+        self._k_ku = _mat_inv_mul(k_kqdot, k_ku)
+        self._f_k = _mat_inv_mul(k_kqdot, f_k)
         self._k_kqdot = eye(len(qdot))
         self._qdot_u_map = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
 
-        self._k_ku = self._mat_inv_mul(k_kqdot, k_ku).subs(uaz)
-        self._f_k = self._mat_inv_mul(k_kqdot, f_k).subs(uaz)
+        self._k_ku = _mat_inv_mul(k_kqdot, k_ku).subs(uaz)
+        self._f_k = _mat_inv_mul(k_kqdot, f_k).subs(uaz)
 
     def _form_fr(self, fl):
         """Form the generalized active force.
@@ -706,7 +683,7 @@ class KanesMethod(object):
         # gets multiplied by the jacobian of qd wrt qi, this is extended for
         # the ud's as well. dqd_dqi is computed by taking a taylor expansion of
         # the holonomic constraint equations about q*, treating q* - q as dq,
-        # seperating into dqd (depedent q's) and dqi (independent q's) and the
+        # separating into dqd (depedent q's) and dqi (independent q's) and the
         # rearranging for dqd/dqi. This is again extended for the speeds.
 
         # First case: configuration and motion constraints
@@ -733,10 +710,10 @@ class KanesMethod(object):
             f2_jac_ud = f2.jacobian(ud)
             f2_jac_qdot = f2.jacobian(qdot)
 
-            dqd_dqi = - self._mat_inv_mul(fh_jac_qd, fh_jac_qi)
-            dud_dqi = self._mat_inv_mul(fnh_jac_ud, (fnh_jac_qd *
+            dqd_dqi = - _mat_inv_mul(fh_jac_qd, fh_jac_qi)
+            dud_dqi = _mat_inv_mul(fnh_jac_ud, (fnh_jac_qd *
                                         dqd_dqi - fnh_jac_qi))
-            dud_dui = - self._mat_inv_mul(fnh_jac_ud, fnh_jac_ui)
+            dud_dui = - _mat_inv_mul(fnh_jac_ud, fnh_jac_ui)
             dqdot_dui = - self._k_kqdot.inv() * (fku_jac_ui +
                                                 fku_jac_ud * dud_dui)
             dqdot_dqi = - self._k_kqdot.inv() * (fku_jac_qi + fkf_jac_qi +
@@ -748,7 +725,7 @@ class KanesMethod(object):
             f2_u = f2_jac_ui + f2_jac_ud * dud_dui + f2_jac_qdot * dqdot_dui
         # Second case: configuration constraints only
         elif l != 0:
-            dqd_dqi = - self._mat_inv_mul(fh.jacobian(qd), fh.jacobian(qi))
+            dqd_dqi = - _mat_inv_mul(fh.jacobian(qd), fh.jacobian(qi))
             dqdot_dui = - self._k_kqdot.inv() * fku.jacobian(ui)
             dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
                 fkf.jacobian(qi) + (fku.jacobian(qd) + fkf.jacobian(qd)) *
@@ -761,8 +738,8 @@ class KanesMethod(object):
             f2_u = f2.jacobian(ui) + f2_jac_qdot * dqdot_dui
         # Third case: motion constraints only
         elif m != 0:
-            dud_dqi = self._mat_inv_mul(fnh.jacobian(ud), - fnh.jacobian(qi))
-            dud_dui = - self._mat_inv_mul(fnh.jacobian(ud), fnh.jacobian(ui))
+            dud_dqi = _mat_inv_mul(fnh.jacobian(ud), - fnh.jacobian(qi))
+            dud_dui = - _mat_inv_mul(fnh.jacobian(ud), fnh.jacobian(ui))
             dqdot_dui = - self._k_kqdot.inv() * (fku.jacobian(ui) +
                                                 fku.jacobian(ud) * dud_dui)
             dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
@@ -809,11 +786,13 @@ class KanesMethod(object):
         ==========
 
         inv_method : str
-            The specific sympy inverse matrix calculation method to use.
+            The specific sympy inverse matrix calculation method to use. For a
+            list of valid methods, see :py:method:
+            `~sympy.matrices.matrices.MatrixBase.inv`
 
         """
         if inv_method is None:
-            self._rhs = self._mat_inv_mul(self.mass_matrix_full,
+            self._rhs = _mat_inv_mul(self.mass_matrix_full,
                                           self.forcing_full)
         else:
             self._rhs = (self.mass_matrix_full.inv(inv_method,

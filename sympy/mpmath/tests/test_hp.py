@@ -237,7 +237,7 @@ def test_log_hp():
     # ...7443804441768333470331
     assert res == '44380444176833347033'
 
-    # see issue 105
+    # see issue 3204
     r = log(mpf(3)/2)
     # Mathematica N[Log[3/2], 2000]
     # ...69653749808140753263288

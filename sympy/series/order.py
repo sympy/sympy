@@ -237,12 +237,6 @@ class Order(Expr):
         obj = Expr.__new__(cls, *args)
         return obj
 
-    def _hashable_content(self):
-        return self.args
-
-    def oseries(self, order):
-        return self
-
     def _eval_nseries(self, x, n, logx):
         return self
 
@@ -305,7 +299,7 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp, limit
+        from sympy import powsimp, PoleError
         if expr is S.Zero:
             return True
         if expr is S.NaN:
@@ -346,7 +340,10 @@ class Order(Expr):
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                l = limit(ratio, s, point) != 0
+                try:
+                    l = ratio.limit(s, point) != 0
+                except PoleError:
+                    l = None
                 if r is None:
                     r = l
                 else:

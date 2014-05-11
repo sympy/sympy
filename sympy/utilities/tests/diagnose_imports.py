@@ -158,7 +158,7 @@ if __name__ == "__main__":
             for symbol in result.__dict__.iterkeys():
                 definition = Definition(
                     symbol, result.__dict__[symbol], importer_module)
-                if not symbol_definers.has_key(definition):
+                if not definition in symbol_definers:
                     symbol_definers[definition] = importee_module
             if hasattr(result, '__path__'):
                 ##PACKAGE##

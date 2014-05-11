@@ -186,7 +186,7 @@ def test_latex_functions():
     assert latex(a1) == r"\operatorname{a_{1}}"
     assert latex(a1(x)) == r"\operatorname{a_{1}}{\left (x \right )}"
 
-    # issue #2769
+    # issue 5868
     omega1 = Function('omega1')
     assert latex(omega1) == r"\omega_{1}"
     assert latex(omega1(x)) == r"\omega_{1}{\left (x \right )}"
@@ -383,7 +383,17 @@ def test_latex_brackets():
 def test_latex_indexed():
     Psi_symbol = Symbol('Psi_0', complex=True, real=False)
     Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
-    assert latex(Psi_symbol * conjugate(Psi_symbol)) == latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    symbol_latex = latex(Psi_symbol * conjugate(Psi_symbol))
+    indexed_latex = latex(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    # \\overline{\\Psi_{0}} \\Psi_{0}   vs.   \\Psi_{0} \\overline{\\Psi_{0}}
+    assert symbol_latex.split() == indexed_latex.split() \
+        or symbol_latex.split() == indexed_latex.split()[::-1]
+
+    # Symbol('gamma') gives r'\gamma'
+    assert latex(IndexedBase('gamma')) == r'\gamma'
+    assert latex(IndexedBase('a b')) == 'a b'
+    assert latex(IndexedBase('a_b')) == 'a_{b}'
+
 
 def test_latex_derivatives():
     # regular "d" for ordinary derivatives
@@ -521,7 +531,7 @@ def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
 
 
-def test_issue469():
+def test_issue_3568():
     beta = Symbol(r'\beta')
     y = beta + x
     assert latex(y) in [r'\beta + x', r'x + \beta']
@@ -553,7 +563,7 @@ def test_latex_list():
 
 
 def test_latex_rational():
-    #tests issue 874
+    #tests issue 3973
     assert latex(-Rational(1, 2)) == "- \\frac{1}{2}"
     assert latex(Rational(-1, 2)) == "- \\frac{1}{2}"
     assert latex(Rational(1, -2)) == "- \\frac{1}{2}"
@@ -564,7 +574,7 @@ def test_latex_rational():
 
 
 def test_latex_inverse():
-    #tests issue 1030
+    #tests issue 4129
     assert latex(1/x) == "\\frac{1}{x}"
     assert latex(1/(x + y)) == "\\frac{1}{x + y}"
 
@@ -587,7 +597,7 @@ def test_latex_Heaviside():
 def test_latex_KroneckerDelta():
     assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
     assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
-    # issue 3479
+    # issue 6578
     assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{y, x + 1}"
 
 
@@ -740,7 +750,7 @@ def test_latex_Lambda():
 
 
 def test_latex_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
+    Ruv, u,v = ring("u,v", ZZ)
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert latex(x - x) == r"0"
@@ -757,7 +767,7 @@ def test_latex_PolyElement():
 
 
 def test_latex_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
+    Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert latex(x - x) == r"0"
@@ -1221,7 +1231,7 @@ def test_builtin_no_args():
     assert latex(DiracDelta) == r'\delta'
     assert latex(lowergamma) == r'\gamma'
 
-def test_issue_3754():
+def test_issue_6853():
     p = Function('Pi')
     assert latex(p(x)) == r"\Pi{\left (x \right )}"
 

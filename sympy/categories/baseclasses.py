@@ -203,6 +203,7 @@ class NamedMorphism(Morphism):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
@@ -751,6 +752,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
         >>> from sympy import pretty
@@ -773,6 +775,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
         >>> from sympy import FiniteSet
@@ -801,6 +804,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
@@ -861,6 +865,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
@@ -896,6 +901,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> from sympy import FiniteSet
         >>> A = Object("A")
@@ -908,7 +914,7 @@ class Diagram(Basic):
         >>> d1 == Diagram([f], {f: "unique"})
         True
         """
-        if not self.objects.subset(objects):
+        if not objects.is_subset(self.objects):
             raise ValueError(
                 "Supplied objects should all belong to the diagram.")
 

@@ -3,7 +3,7 @@ from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show
-from sympy.utilities.pytest import skip
+from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
 
@@ -228,3 +228,19 @@ def test_experimental_lambify():
     lambdify([x], Max(x, 5))
     assert Max(2, 5) == 5
     assert Max(7, 5) == 7
+
+def test_append_issue_7140():
+    x = Symbol('x')
+    p1 = plot(x)
+    p2 = plot(x**2)
+    p3 = plot(x + 2)
+
+    # append a series
+    p2.append(p1[0])
+    assert len(p2._series) == 2
+
+    with raises(TypeError):
+        p1.append(p2)
+
+    with raises(TypeError):
+        p1.append(p2._series)

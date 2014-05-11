@@ -318,6 +318,7 @@ def rs_series_from_list(p, c, x, prec, concur=1):
 
     Examples
     ========
+
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
     >>> from sympy.polys.ring_series import rs_series_from_list, rs_trunc

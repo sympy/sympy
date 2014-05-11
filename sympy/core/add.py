@@ -2,8 +2,8 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core.core import C
-from sympy.core.compatibility import reduce, is_sequence
+from sympy.core.basic import C, Basic
+from sympy.core.compatibility import cmp_to_key, reduce, is_sequence
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
@@ -11,13 +11,11 @@ from sympy.core.numbers import ilcm, igcd
 from sympy.core.expr import Expr
 
 
+# Key for sorting commutative args in canonical order
+_args_sortkey = cmp_to_key(Basic.compare)
 def _addsort(args):
     # in-place sorting of args
-
-    # Currently we sort things using hashes, as it is quite fast. A better
-    # solution is not to sort things at all - but this needs some more
-    # fixing.
-    args.sort(key=hash)
+    args.sort(key=_args_sortkey)
 
 
 def _unevaluated_Add(*args):
@@ -348,7 +346,7 @@ class Add(Expr, AssocOp):
 
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
-    # issue 2425.
+    # issue 5524.
 
     def _eval_derivative(self, s):
         return self.func(*[f.diff(s) for f in self.args])

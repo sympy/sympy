@@ -930,7 +930,7 @@ def besseljzero(ctx, v, m, derivative=0):
 
     Initial zeros of the Bessel functions `J_0(z), J_1(z), J_2(z)`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> besseljzero(0,1); besseljzero(0,2); besseljzero(0,3)
         2.404825557695772768621632
@@ -1037,7 +1037,7 @@ def besselyzero(ctx, v, m, derivative=0):
 
     Initial zeros of the Bessel functions `Y_0(z), Y_1(z), Y_2(z)`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> besselyzero(0,1); besselyzero(0,2); besselyzero(0,3)
         0.8935769662791675215848871
