@@ -2844,9 +2844,9 @@ def homogeneous_LDS(a):
     for i in range(q):
         Frozen[0, i] = 0;
 
-    F = [0] * q
+    F = zeros(1, q)
 
-    while (len(P) > 0):
+    while len(P) > 0:
         n = len(P) - 1
         t = P.pop()
 
@@ -2860,7 +2860,7 @@ def homogeneous_LDS(a):
                 T = Matrix([[t[j] for j in range(q)]])
                 T[i] = T[i] + 1
 
-                if F[i] == 0 and ((a*t.T).dot(a[:, i]) < 0 and minimum(T, Basis) or t == row_zero):
+                if F[i] == 0 and ((a*t.T).dot(a[:, i]) < 0 and isminimum(T, Basis) or t == row_zero):
                     P.append(T)
                     n = n + 1
                     for j in range(q):
@@ -2871,15 +2871,15 @@ def homogeneous_LDS(a):
     return Basis
 
 
-def minimum(t, B):
+def isminimum(t, B):
 
     if len(B) == 0:
         return True
     else:
-        return not ordering(t, B[-1]) and minimum(t, B[:-1])
+        return not isordered(t, B[-1]) and isminimum(t, B[:-1])
 
 
-def ordering(a, b):
+def isordered(a, b):
 
     if any(ai <  bi for ai, bi in zip(a, b)):
         return False

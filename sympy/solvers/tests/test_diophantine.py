@@ -582,7 +582,7 @@ def test_homogeneous_LDS():
     #for Solving Systems of Linear Diophantine Equations. Information and
     #computation, 113(1):143-172, August 1994.
 
-    a = Matrix([[-1, 1, 2, -3],[-1, 3, -2, -1]])
+    a = Matrix([[-1, 1, 2, -3], [-1, 3, -2, -1]])
     L = homogeneous_LDS(a)
     assert len(L) == 2
     assert Matrix([[0, 1, 1, 1]]) in L
