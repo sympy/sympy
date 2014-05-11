@@ -559,8 +559,7 @@ class Function(Application, Expr):
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any([t.has(oo, -oo, zoo, nan) for t in a0]):
-                return self._eval_aseries(n, args0, x, logx
-                                          )._eval_nseries(x, n, logx)
+                return self._eval_aseries(n, args0, x, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
             # are supposed to do a power series expansion "around the
             # logarithmic term". e.g.
