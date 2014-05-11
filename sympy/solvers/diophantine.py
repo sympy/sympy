@@ -2850,7 +2850,7 @@ def homogeneous_LDS(a):
         n = len(P) - 1
         t = P.pop()
 
-        if mul(a, t) == col_zero and t != row_zero:
+        if a*t.T == col_zero and t != row_zero:
             Basis.append(t)
         else:
             for i in range(q):
@@ -2860,8 +2860,7 @@ def homogeneous_LDS(a):
                 T = Matrix([[t[j] for j in range(q)]])
                 T[i] = T[i] + 1
 
-                if F[i] == 0 and ((mul(a, t).dot(a[:, i]) < 0 and minimum(T, Basis))
-                                 or t == row_zero):
+                if F[i] == 0 and ((a*t.T).dot(a[:, i]) < 0 and minimum(T, Basis) or t == row_zero):
                     P.append(T)
                     n = n + 1
                     for j in range(q):
@@ -2872,22 +2871,13 @@ def homogeneous_LDS(a):
     return Basis
 
 
-def mul(a, t):
-
-    result = zeros(a.shape[0], 1)
-
-    for i in range(a.shape[1]):
-        result += t[i] * a[:, i]
-
-    return result
-
-
 def minimum(t, B):
 
     if len(B) == 0:
         return True
     else:
         return not ordering(t, B[-1]) and minimum(t, B[:-1])
+
 
 def ordering(a, b):
 
