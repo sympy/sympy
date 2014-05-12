@@ -1198,6 +1198,139 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     else:
         return tuple(retlist)
 
+def classify_sysode(eq, func=None, **kwargs):
+    r"""
+    Returns a list of parameters defining the system of ordinary differential equations
+    in form of dictionary. It will be further used in :py:meth:`~sympy.solvers.ode.dsolve`
+    for solving system of ODEs.
+
+    It returns three parameters, first parameter is 'linearity' which tells
+    whether given equation is linear or Non-linear based on the coefficients
+    of the functions of equations, i.e, coefficients of x, diff(x,t), diff(x,t,t) etc.
+    If the coefficient is constant, then the equation is said to be linear otherwise
+    Non-linear. Second one is order of equation, it provides information about order
+    of differential equations provided. The third parameters is the number of equation
+    in the system.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Eq, symbols, diff
+    >>> from sympy.solvers.ode import classify_sysode
+    >>> from sympy.abc import t
+    >>> f, x, y = symbols('f, x, y', function=True)
+    >>> k, l, m, n = symbols('k, l, m, n', Integer=True)
+    >>> x1 = diff(x(t), t) ; y1 = diff(y(t), t)
+    >>> x2 = diff(x(t), t, t) ; y2 = diff(y(t), t, t)
+    >>> eq = (Eq(5*x1, f(x(t),y(t),t)*x(t) - 6*y(t)), Eq(2*y1, 11*x(t) + 3*y(t)))
+    >>> classify_sysode(eq)
+    {'func_coeff': {(0, 0, 0): -f(x(t), y(t), t), (0, 0, 1): 6, (0, 1, 0): -11, (0, 1, 1): -3,
+    (1, 0, 0): 5, (1, 0, 1): 0, (1, 1, 0): 0, (1, 1, 1): 2},
+    'linearity': 'Non-linear', 'no_of_equation': 2, 'order': 1}
+    >>> eq = (Eq(x2, k*x(t) + l*y(t)), Eq(y2, m*x(t) + n*y(t)))
+    >>> classify_sysode(eq)
+    {'func_coeff': {(0, 0, 0): -k, (0, 0, 1): -l, (0, 1, 0): -m, (0, 1, 1): -n, (1, 0, 0): 0,
+    (1, 0, 1): 0, (1, 1, 0): 0, (1, 1, 1): 0, (2, 0, 0): 1, (2, 0, 1): 0, (2, 1, 0): 0, (2, 1, 1): 1},
+    'linearity': 'linear', 'no_of_equation': 2, 'order': 2}
+
+    """
+
+    # Sympify equations and convert iterables of equations into
+    # a list of equations
+    def _sympify(eq):
+        return list(map(sympify, eq if iterable(eq) else [eq]))
+
+    eq, func = (_sympify(w) for w in [eq, func])
+    for i, fi in enumerate(eq):
+        if isinstance(fi, Equality):
+            eq[i] = fi.lhs - fi.rhs
+    matching_hints = {"no_of_equation":i+1}
+    if i==0:
+        raise ValueError("classify_sysode() woks for systems of ODEs. For"
+        " single ODE equation solving classify_ode should be used")
+
+    t = list(list(eq[i].atoms(Derivative))[0].atoms(Symbol))[0]
+
+    # find all the functions if not given
+    if len(func) < i+1:
+        func = []
+        for j in range(i+1):
+            derivs = eq[j].atoms(Derivative)
+            funcs = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            max_order = 0
+            for fun in funcs:
+                order_ = ode_order(eq[j], fun)
+                if order_ > max_order or (order_ == max_order and eq[j].coeff(diff(fun, t, order_))!=0):
+                    max_order = order_
+                    func_ = fun
+            func.append(func_)
+
+
+    for j in range(i+1):
+        if func[j] and len(func[j].args)!=1:
+            raise ValueError("dsolve() and classify_sysode() work with"
+            "functions of one variable only, not %s" % func[j])
+    if len(func)!=len(eq):
+        raise ValueError("dsolve() and classify_sysode() work with"
+        "number of function being equal to number of equations")
+
+    # find the order of all equation in system of odes
+    order = []
+    for j in range(i+1):
+        order.append(ode_order(eq[j], func[j]))
+    matching_hints["order"] = order[0]
+
+    for j in range(i+1):
+        if order[j]!=order[0]:
+            raise ValueError("It solves only those systems of"
+            "equations whose orders are equal")
+    if not order[0]:
+        return ()
+
+    # find coefficients of terms f(t), diff(f(t),t) and higher derivatives
+    # and similarly for other functions g(t), diff(g(t),t) in all equations.
+    # Here k denotes the order of equation, j denotes the equation number out
+    # of all equations provided, l is used to know the coefficients of all
+    # functions in each equations.
+    df = {}
+    func_coef = {}
+    for j in range(i+1):
+        for k in range(order[0]+1):
+            df[k,j] = diff(func[j], t, k)
+    for j in range(i+1):
+        for l in range(i+1):
+            for k in range(order[0]+1):
+                func_coef[k,j,l] = eq[j].coeff(df[k,l])
+    matching_hints['func_coeff'] = func_coef
+
+    # check a system of equation for linearity
+    matching_hints['linearity'] = None
+    for j in range(i+1):
+        for l in range(i+1):
+            for k in range(order[0]+1):
+                for m in range(i+1):
+                    dep = func_coef[k,j,l].as_independent(df[0,m])[1]
+                    if dep!=1 and dep!=0 and matching_hints['linearity']==None:
+                        matching_hints['linearity'] = 'Non-linear'
+                        break
+            for k in xrange(1,order[0]+1):
+                if func_coef[k,j,l]==0 and (eq[j].as_independent(df[k,l]))[1] and matching_hints['linearity']==None:
+                    matching_hints['linearity'] = 'Non-linear'
+                    break
+            if func_coef[0,j,l]==0 and matching_hints['linearity']==None:
+                coef = eq[j].as_independent(func[l])[1]
+                for xr in xrange(1, ode_order(eq[j],func[l])+1):
+                    coef -= eq[j].as_independent(diff(func[l],t,xr))[1]
+                if coef != 0:
+                    matching_hints['linearity'] = 'Non-linear'
+                    break
+
+    if matching_hints['linearity']==None:
+        matching_hints['linearity'] = 'linear'
+
+    return matching_hints
+
+
 @vectorize(0)
 def odesimp(eq, func, order, constants, hint):
     r"""
