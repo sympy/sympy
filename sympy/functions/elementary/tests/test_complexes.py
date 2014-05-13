@@ -560,7 +560,8 @@ def test_periodic_argument():
     assert periodic_argument(2*p, p) == periodic_argument(p, p)
     assert periodic_argument(pi*p, p) == periodic_argument(p, p)
 
-    assert Abs(polar_lift(1+I)) == Abs(1+I)
+    assert Abs(polar_lift(1 + I)) == Abs(1 + I)
+
 
 @XFAIL
 def test_principal_branch_fail():
