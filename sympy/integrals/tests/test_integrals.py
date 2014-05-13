@@ -283,6 +283,9 @@ def test_issue_3952():
 def test_issue_4516():
     assert integrate(2**x - 2*x, x) == 2**x/log(2) - x**2
 
+def test_issue_7450():
+    ans = integrate(exp(-(1+I)*x), (x, 0, oo))
+    assert re(ans)==S.Half and im(ans) == -S.Half
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
