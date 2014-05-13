@@ -804,6 +804,21 @@ def evalf_atan(v, prec, options):
     return mpf_atan(xre, prec, rnd), None, prec, None
 
 
+def evalf_atan2(v, prec, options):
+    x, y = v.args
+    xre, xim, reacc, imacc = evalf(x, prec + 5, options)
+    if xre is xim is None:
+        return (None,)*4
+    if xim:
+        raise NotImplementedError
+    yre, yim, reacc, imacc = evalf(y, prec + 5, options)
+    if yre is yim is None:
+        return (None,)*4
+    if yim:
+        raise NotImplementedError
+    return mpf_atan(xre, yre, prec, rnd), None, prec, None
+
+
 def evalf_subs(prec, subs):
     """ Change all Float entries in `subs` to have precision prec. """
     newsubs = {}
@@ -1163,6 +1178,7 @@ def _create_evalf_table():
 
         C.log: evalf_log,
         C.atan: evalf_atan,
+        C.atan2: evalf_atan2,
         C.Abs: evalf_abs,
 
         C.re: evalf_re,

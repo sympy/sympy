@@ -1,6 +1,7 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
+                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product,
+                   Abs, polar_lift, atan2)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
 from sympy.mpmath import inf, ninf, nan
@@ -416,3 +417,7 @@ def test_issue_6632_evalf():
     add = (-100000*sqrt(2500000001) + 5000000001)
     assert add.n() == 9.999999998e-11
     assert (add*add).n() == 9.999999996e-21
+
+
+def test_issue_7450():
+    assert atan2(0, Abs(polar_lift(-(1 + I)))).n() == 0
