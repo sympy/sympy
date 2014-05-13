@@ -663,6 +663,9 @@ class polar_lift(Function):
         """ Careful! any evalf of polar numbers is flaky """
         return self.args[0]._eval_evalf(prec)
 
+    def _eval_Abs(self):
+        return Abs(self.args[0], evaluate=True)
+
 
 class periodic_argument(Function):
     """
