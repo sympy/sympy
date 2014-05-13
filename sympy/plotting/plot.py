@@ -877,7 +877,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.spines['bottom'].set_position('zero')
             self.ax.spines['top'].set_color('none')
             self.ax.spines['left'].set_smart_bounds(True)
-            self.ax.spines['bottom'].set_smart_bounds(True)
+            self.ax.spines['bottom'].set_smart_bounds(False)
             self.ax.xaxis.set_ticks_position('bottom')
             self.ax.yaxis.set_ticks_position('left')
         elif all(are_3D):
@@ -973,6 +973,11 @@ class MatplotlibBackend(BaseBackend):
             self.ax.set_yscale(parent.yscale)
         if parent.xlim:
             self.ax.set_xlim(parent.xlim)
+        else:
+            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+                starts = [s.start for s in parent._series]
+                ends = [s.end for s in parent._series]
+                self.ax.set_xlim(min(starts), max(ends))
         if parent.ylim:
             self.ax.set_ylim(parent.ylim)
         if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
