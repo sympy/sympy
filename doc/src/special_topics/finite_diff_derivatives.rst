@@ -45,8 +45,7 @@ First, we use SymPy to derive the approximations by using a rather brute force m
 A Direct Method Using SymPy Matrices
 ====================================
 
-If we let `x_{0} = x_{i}`, evaluate the series at `x_{i+1}=x_{i}+ h` and truncate all terms above `O(h^1)` we can solve for the single coefficient `c_{1}`
-and obtain an approximation to the first derivative:
+If we let `x_{0} = x_{i}`, evaluate the series at `x_{i+1}=x_{i}+ h` and truncate all terms above `O(h^1)` we can solve for the single coefficient `c_{1}` and obtain an approximation to the first derivative:
 
 .. math::
 
@@ -64,8 +63,8 @@ Then we have two equations:
 .. math::
 	F_{i+2} = F_{i} + c_{1}* (2h) + \frac{1}{2}*c_{2}*(2h)^2 + \frac{1}{3!}*c_{3}*(2h)^3 + ...
 
-If we again want to find the first derivative (`c_{1}`), we can do that by eliminating the term involving
- `c_{2}` from the two equations.  We show how to do it using SymPy.
+If we again want to find the first derivative (`c_{1}`), we can do that by eliminating the term involving `c_{2}` from 
+the two equations.  We show how to do it using SymPy.
 
 	>>> from sympy import *
 	>>> from sympy import  pprint
@@ -87,7 +86,7 @@ Coefficients of `c_i` evaluated at `x_i`:
 
 	>>> m11 = P(x0 , x0, c, n).diff(c[0])
 	>>> m12 = P(x0 , x0, c, n).diff(c[1])
-	>>> m13 = P(x0 ,x0, c, n).diff(c[2])
+	>>> m13 = P(x0 , x0, c, n).diff(c[2])
 
 Coefficients of `c_i` evaluated at `x_i + h`:
 
@@ -158,7 +157,7 @@ Now that we have the matrix of coefficients we next form the right-hand-side and
 	>>> print "dF/dx = ", together(X[1])
 
 These two examples serve to show how one can directly find second order accurate first derivatives using SymPy.
-The first example uses values of `x` and `F` at all three points `x_i`,`x_{i+1}`, and `x_{i+2}` whereas the
+The first example uses values of `x` and `F` at all three points `x_i`, `x_{i+1}`, and `x_{i+2}` whereas the
 second example only uses values of `x` at the two points `x_{i-1}` and `x_{i+1}` and thus is a bit more efficient.
 
 From these two simple examples a general rule is that if one wants a first derivative to be accurate to `O(h^{n})`
@@ -179,7 +178,8 @@ check:
 Thus we see that indeed the derivative is `c_1` with the next term in the series of order `h^2`.
 
 However,  it can quickly become rather tedious to generalize the direct method as presented above when attempting
-to generate a derivative approximation to high order,  such as 6 or 8 although the method certainly works.
+to generate a derivative approximation to high order,  such as 6 or 8 although the method certainly works and using 
+the present method is certainly less tedious than performing the calculations by hand.
 
 As we have seen in the discussion above,  the simple centered approximation for the first derivative only uses two
 point values of the `(x_{i},F_{i})` pairs.  This works fine until one encounters the last point in the domain,  say at
@@ -187,7 +187,7 @@ point values of the `(x_{i},F_{i})` pairs.  This works fine until one encounters
 derivative formula will not work. So,  what to do?  Well,  a simple way to handle this is to devise a different formula
 for this last point which uses points for which we do have values. This is the so-called backward difference formula.
 To obtain it,  we can use the same direct approach,  except now us the three points `(x_{N},F_{N})`,  `(x_{N-1},F_{N-1})`,
-and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is how it can be done:
+and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is how it can be done using SymPy:
 
     >>> from sympy import *
     >>> x, xN, h = symbols('x, x_N, h')
@@ -197,9 +197,10 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
     >>> # define a polynomial of degree d
     >>> def P(x, x0, c, n):
     ...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
-    >>> # now we make a matrix consisting of the coefficients
-    >>> # of the c_i in the dth degree polynomial P
-    >>> # coefficients of c_i evaluated at x_i
+
+Now we make a matrix consisting of the coefficients of the `c_i` in the dth 
+degree polynomial P coefficients of `c_i` evaluated at `x_i, x_{i-1},` and `x_{i+1}`:
+
     >>> m11 = P(xN , xN, c, n).diff(c[0])
     >>> m12 = P(xN, xN, c, n).diff(c[1])
     >>> m13 = P(xN , xN, c, n).diff(c[2])
@@ -211,19 +212,23 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
     >>> m31 = P(xN-2*h, xN, c, n).diff(c[0])
     >>> m32 = P(xN-2*h, xN, c, n).diff(c[1])
     >>> m33 = P(xN-2*h, xN, c, n).diff(c[2])
-    >>> # matrixof the coeffcients is 3x3 in this case
+	
+Next we construct the `3 \times 3` matrix of the coeffcients:
+
     >>> M = Matrix([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
     >>> # matrix of the function values...actually a vector of right hand sides
     >>> R = Matrix([[FN], [FNm1], [FNm2]])
 
-Next we invert `M` and write the solution to the `3 \times 3` system.
+Then we invert `M` and write the solution to the `3 \times 3` system.
 
-    >>> # matrix form of the three equations for the c_i is M*C = R
-    >>> # solution directly inverting the 3x3 matrix M:
+The matrix form of the three equations for the c_i is `M*C = R`. The solution is obtained by
+directly inverting `M`:
+
     >>> X =  M.inv() * R
-    >>> # note that all three coefficients make up the solution
-    >>> # the first derivative is coefficient c_1 which is X[1].
-    >>> print "The second order accurate approximation for the first derivative is: "
+
+The first derivative is coefficient `c_1` which is `X[1]`. Thus the second order accurate 
+approximation for the first derivative is:
+
     >>> print "dF/dx = ",  together(X[1])
 
 Of course,  we can devise a similar formula for the value of the derivative at the left end
