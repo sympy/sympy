@@ -335,6 +335,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. sevaader: fix to assumptions
 #. Lennart Fricke: make sure that cse avoids symbol collision
 #. shashank-agg: ensure that the range is correct for multiple plots
+#. carstimon: make Abs(polar_lift(arg)) -> abs(arg)
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

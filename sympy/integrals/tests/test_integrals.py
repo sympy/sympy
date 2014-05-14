@@ -4,7 +4,7 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan, And, Eq, Or
+    Tuple, nan, And, Eq, Or, re, im
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -282,6 +282,11 @@ def test_issue_3952():
 
 def test_issue_4516():
     assert integrate(2**x - 2*x, x) == 2**x/log(2) - x**2
+
+
+def test_issue_7450():
+    ans = integrate(exp(-(1 + I)*x), (x, 0, oo))
+    assert re(ans) == S.Half and im(ans) == -S.Half
 
 
 def test_matrices():
