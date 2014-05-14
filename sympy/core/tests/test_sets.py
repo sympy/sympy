@@ -104,6 +104,9 @@ def test_union():
 
     assert X.is_iterable is False
 
+    assert S.UniversalSet + Interval(0, oo) == S.UniversalSet
+    assert S.UniversalSet + Interval(-oo, 0) == S.UniversalSet
+
 
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
