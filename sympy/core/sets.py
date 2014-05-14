@@ -1450,6 +1450,14 @@ class FiniteSet(Set, EvalfMixin):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
         from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
+    
+    def as_dict(self, other):
+        """Rewrite a FiniteSet as Dictionary. """
+        _list = []
+        for elem in self:
+            _list.append(dict(zip(list(other), list(elem))))
+        
+        return _list    
 
     @property
     def is_real(self):
