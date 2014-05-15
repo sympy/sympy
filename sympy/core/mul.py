@@ -34,8 +34,9 @@ def _mulsort(args):
 
 def _unevaluated_Mul(*args):
     """Return a well-formed unevaluated Mul: Numbers are collected and
-    put in slot 0 and args are sorted. Use this when args have changed
-    but you still want to return an unevaluated Mul.
+    put in slot 0, any arguments that are Muls will be flattened, and args
+    are sorted. Use this when args have changed but you still want to return
+    an unevaluated Mul.
 
     Examples
     ========
@@ -49,12 +50,14 @@ def _unevaluated_Mul(*args):
     >>> a.args[1]
     x
 
-    Beyond the Number being in slot 0, there is no other flattening of
-    arguments, but two unevaluated Muls with the same arguments will
+    Two unevaluated Muls with the same arguments will
     always compare as equal during testing:
 
     >>> m = uMul(sqrt(2), sqrt(3))
     >>> m == uMul(sqrt(3), sqrt(2))
+    True
+    >>> u = Mul(sqrt(3), sqrt(2), evaluate=False)
+    >>> m == uMul(u)
     True
     >>> m == Mul(*m.args)
     False

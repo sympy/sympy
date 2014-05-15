@@ -1922,7 +1922,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             n = n.func(*[handle(a) for a in n.args])
             return _umul(n, 1/d)
         elif n is not S.One:
-            return Mul(n, handle(1/d))
+            return _umul(n, handle(1/d))
         elif d.is_Mul:
             return _umul(*[handle(1/d) for d in d.args])
 

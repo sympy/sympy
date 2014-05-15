@@ -1512,6 +1512,11 @@ def test_radsimp():
     assert radsimp(x/(y + r)/r, symbolic=False) == \
         -x*(-sqrt(2) + 1)/(y + 1 + sqrt(2))
 
+    # issue 7408
+    eq = sqrt(x)/sqrt(y)
+    assert radsimp(eq) == Mul(sqrt(x), sqrt(y), 1/y, evaluate=False)
+    assert radsimp(eq, symbolic=False) == eq
+
 
 def test_radsimp_issue_3214():
     c, p = symbols('c p', positive=True)
