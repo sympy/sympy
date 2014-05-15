@@ -1930,22 +1930,22 @@ def radsimp(expr, symbolic=True, max_terms=4):
         return False
 
     def handle(expr):
-        if expr.is_Atom:
-            return expr
-
+        # Handle first reduces to the case
+        # expr = 1/d, where d is an add, or d is base**p/2.
+        # We do this by recursively calling handle on each piece.
         n, d = fraction(expr)
 
-        if d.is_Atom:
-            if n.is_Atom:
-                pass  # for coverage test
-            else:
-                n = n.func(*[handle(a) for a in n.args])
-            return _umul(n, 1/d)
+        if expr.is_Atom or (d.is_Atom and n.is_Atom):
+            return expr
+        elif not n.is_Atom:
+            n = n.func(*[handle(a) for a in n.args])
+            return _umul(n, handle(1/d))
         elif n is not S.One:
             return _umul(n, handle(1/d))
         elif d.is_Mul:
             return _umul(*[handle(1/d) for d in d.args])
 
+        # By this step, expr is 1/d, and d is not a mul.
         if not symbolic and d.free_symbols:
             return expr
 
