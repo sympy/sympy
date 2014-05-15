@@ -1294,6 +1294,7 @@ def classify_sysode(eq, func=None, **kwargs):
     # functions in each equations.
     df = {}
     func_coef = {}
+    flag = 0
     for j in range(i+1):
         for k in range(order[0]+1):
             df[k,j] = diff(func[j], t, k)
@@ -1301,32 +1302,29 @@ def classify_sysode(eq, func=None, **kwargs):
         for l in range(i+1):
             for k in range(order[0]+1):
                 func_coef[k,j,l] = eq[j].coeff(df[k,l])
+                if flag==0:
+                    if func_coef[k,j,l]==0:
+                        if k==0:
+                            coef = eq[j].as_independent(func[l])[1]
+                            for xr in xrange(1, ode_order(eq[j],func[l])+1):
+                                coef -= eq[j].as_independent(diff(func[l],t,xr))[1]
+                            if coef != 0:
+                                flag = 1
+                        else:
+                            if eq[j].as_independent(df[k,l])[1]:
+                                flag = 1
+                    else:
+                        for m in range(i+1):
+                            dep = func_coef[k,j,l].as_independent(df[0,m])[1]
+                            if dep!=1 and dep!=0:
+                                flag = 1
+
     matching_hints['func_coeff'] = func_coef
 
-    # check a system of equation for linearity
-    matching_hints['linearity'] = None
-    for j in range(i+1):
-        for l in range(i+1):
-            for k in range(order[0]+1):
-                for m in range(i+1):
-                    dep = func_coef[k,j,l].as_independent(df[0,m])[1]
-                    if dep!=1 and dep!=0 and matching_hints['linearity']==None:
-                        matching_hints['linearity'] = 'Non-linear'
-                        break
-            for k in xrange(1,order[0]+1):
-                if func_coef[k,j,l]==0 and (eq[j].as_independent(df[k,l]))[1] and matching_hints['linearity']==None:
-                    matching_hints['linearity'] = 'Non-linear'
-                    break
-            if func_coef[0,j,l]==0 and matching_hints['linearity']==None:
-                coef = eq[j].as_independent(func[l])[1]
-                for xr in xrange(1, ode_order(eq[j],func[l])+1):
-                    coef -= eq[j].as_independent(diff(func[l],t,xr))[1]
-                if coef != 0:
-                    matching_hints['linearity'] = 'Non-linear'
-                    break
-
-    if matching_hints['linearity']==None:
+    if flag == 0:
         matching_hints['linearity'] = 'linear'
+    else:
+        matching_hints['linearity'] = 'Non-linear'
 
     return matching_hints
 
