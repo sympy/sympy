@@ -2003,7 +2003,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             num = powsimp(_num(rterms))
             n *= num
             d *= num
-            d = _mexpand(d)
+            d = powdenest(_mexpand(d), force=symbolic)
             if d.is_Atom:
                 break
 

@@ -10,7 +10,7 @@ from sympy import (
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
     sympify, tan, tanh, trigsimp, Wild, zoo)
-from sympy.core.mul import _keep_coeff
+from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
 from sympy.utilities.pytest import XFAIL, slow
@@ -1514,8 +1514,12 @@ def test_radsimp():
 
     # issue 7408
     eq = sqrt(x)/sqrt(y)
-    assert radsimp(eq) == Mul(sqrt(x), sqrt(y), 1/y, evaluate=False)
+    assert radsimp(eq) == umul(sqrt(x), sqrt(y), 1/y)
     assert radsimp(eq, symbolic=False) == eq
+
+    # issue 7498
+    assert radsimp(sqrt(x)/sqrt(y)**3) == umul(sqrt(x), sqrt(y**3), 1/y**3)
+
 
 
 def test_radsimp_issue_3214():
