@@ -1504,6 +1504,7 @@ def test_radsimp():
     assert radsimp(e/2) == cos(-sqrt(2) + 1)/2
     assert radsimp(1/e) == 1/cos(-sqrt(2) + 1)
     assert radsimp(2/e) == 2/cos(-sqrt(2) + 1)
+    assert fraction(radsimp(e/sqrt(x))) == (sqrt(x)*cos(-sqrt(2)+1), x)
 
     # test that symbolic denominators are not processed
     r = 1 + sqrt(2)
