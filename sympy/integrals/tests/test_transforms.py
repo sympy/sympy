@@ -424,12 +424,12 @@ def test_inverse_mellin_transform():
     # Section 8.4.20
     # TODO this can be further simplified!
     assert simplify(IMT(-2**(2*s)*cos(pi*a/2 - pi*b/2 + pi*s)*gamma(-2*s + 1) *
-                      gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s) /
-                      (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
+                    gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s) /
+                    (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
                     s, x,
-                      (Max(-re(a)/2 - re(b)/2, -re(a)/2 + re(b)/2), S(1)/2))) == \
-        (cos(pi*b)*besselj(b, sqrt(x)) - besselj(-b, sqrt(x)))*besselj(a,
-        sqrt(x))/sin(pi*b)
+                    (Max(-re(a)/2 - re(b)/2, -re(a)/2 + re(b)/2), S(1)/2))) == \
+                    besselj(a, sqrt(x))*-(besselj(-b, sqrt(x)) -
+                    besselj(b, sqrt(x))*cos(pi*b))/sin(pi*b)
     # TODO more
 
     # for coverage
@@ -546,6 +546,8 @@ def test_inverse_laplace_transform():
 
     assert ILT(1/(s*sqrt(s + 1)), s, t) == Heaviside(t)*erf(sqrt(t))
     # TODO can we make erf(t) work?
+
+    assert ILT(1/(s**2*(s**2 + 1)),s,t) == (t - sin(t))*Heaviside(t)
 
 
 def test_fourier_transform():

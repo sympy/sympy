@@ -47,9 +47,12 @@ http://en.wikipedia.org/wiki/Propositional_formula
 http://en.wikipedia.org/wiki/Inference_rule
 http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
+from __future__ import print_function, division
+
 from collections import defaultdict
 
-from logic import Logic, And, Or, Not
+from .logic import Logic, And, Or, Not
+from sympy.core.compatibility import string_types
 
 
 def _base_fact(atom):
@@ -110,7 +113,7 @@ def deduce_alpha_implications(implications):
             res[a] |= res[b]
 
     # Clean up tautologies and check consistency
-    for a, impl in res.iteritems():
+    for a, impl in res.items():
         impl.discard(a)
         na = Not(a)
         if na in impl:
@@ -163,9 +166,10 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
         seen_static_extension = False
 
         for bcond, bimpl in beta_rules:
-            assert isinstance(bcond, And)
+            if not isinstance(bcond, And):
+                raise TypeError("Cond is not And")
             bargs = set(bcond.args)
-            for x, (ximpls, bb) in x_impl.iteritems():
+            for x, (ximpls, bb) in x_impl.items():
                 x_all = ximpls | set([x])
                 # A: ... -> a   B: &(...) -> a  is non-informative
                 if bimpl not in x_all and bargs.issubset(x_all):
@@ -181,7 +185,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
     # attach beta-nodes which can be possibly triggered by an alpha-chain
     for bidx, (bcond, bimpl) in enumerate(beta_rules):
         bargs = set(bcond.args)
-        for x, (ximpls, bb) in x_impl.iteritems():
+        for x, (ximpls, bb) in x_impl.items():
             x_all = ximpls | set([x])
             # A: ... -> a   B: &(...) -> a      (non-informative)
             if bimpl in x_all:
@@ -221,7 +225,7 @@ def rules_2prereq(rules):
        is a. That's because a=T -> b=T, and b=F -> a=F, but a=F -> b=?
     """
     prereq = defaultdict(set)
-    for (a, _), impl in rules.iteritems():
+    for (a, _), impl in rules.items():
         for (i, _) in impl:
             prereq[i].add(a)
     return prereq
@@ -388,7 +392,7 @@ class FactRules(object):
     def __init__(self, rules):
         """Compile rules into internal lookup tables"""
 
-        if isinstance(rules, basestring):
+        if isinstance(rules, string_types):
             rules = rules.splitlines()
 
         # --- parse and process rules ---
@@ -429,7 +433,7 @@ class FactRules(object):
         # build rels (forward chains)
         full_implications = defaultdict(set)
         beta_triggers = defaultdict(set)
-        for k, (impl, betaidxs) in impl_ab.iteritems():
+        for k, (impl, betaidxs) in impl_ab.items():
             full_implications[_as_pair(k)] = set(_as_pair(i) for i in impl)
             beta_triggers[_as_pair(k)] = betaidxs
 
@@ -439,7 +443,7 @@ class FactRules(object):
         # build prereq (backward chains)
         prereq = defaultdict(set)
         rel_prereq = rules_2prereq(full_implications)
-        for k, pitems in rel_prereq.iteritems():
+        for k, pitems in rel_prereq.items():
             prereq[k] |= pitems
         self.prereq = prereq
 
@@ -454,6 +458,10 @@ class FactKB(dict):
     """
     A simple propositional knowledge base relying on compiled inference rules.
     """
+    def __str__(self):
+        return '{\n%s}' % ',\n'.join(
+            ["\t%s: %s" % i for i in sorted(self.items())])
+
     def __init__(self, rules):
         self.rules = rules
 
@@ -488,7 +496,7 @@ class FactKB(dict):
         beta_rules = self.rules.beta_rules
 
         if isinstance(facts, dict):
-            facts = facts.iteritems()
+            facts = facts.items()
 
         while facts:
             beta_maytrigger = set()

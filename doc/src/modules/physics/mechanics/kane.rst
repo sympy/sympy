@@ -114,7 +114,7 @@ below: ::
 
 A dictionary returning the solved :math:`\dot{q}`'s can also be solved for: ::
 
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
   >>> KM.kindiffdict()
   {q1': u1, q2': u2, q3': u3, q4': u4}
 
@@ -133,9 +133,9 @@ or ``(ReferenceFrame, Vector)`` to represent applied forces and torques. ::
   >>> KM = KanesMethod(N, [q], [u], [qd - u])
   >>> (fr, frstar) = KM.kanes_equations(FL, BL)
   >>> KM.mass_matrix
-  [5]
+  Matrix([[5]])
   >>> KM.forcing
-  [7]
+  Matrix([[7]])
 
 When there are motion constraints, the mass matrix is augmented by the
 :math:`k_{dnh}(q, t)` matrix, and the forcing vector by the :math:`f_{dnh}(q,
@@ -146,11 +146,13 @@ include the kinematic differential equations; the mass matrix is of size (n +
 o) x (n + o), or square and the size of all coordinates and speeds. ::
 
   >>> KM.mass_matrix_full
-  [1, 0]
-  [0, 5]
+  Matrix([
+  [1, 0],
+  [0, 5]])
   >>> KM.forcing_full
-  [u]
-  [7]
+  Matrix([
+  [u],
+  [7]])
 
 The forcing vector can be linearized as well; its Jacobian is taken only with
 respect to the independent coordinates and speeds. The linearized forcing
@@ -165,8 +167,9 @@ present. If dynamic symbols appear in the mass matrix or kinematic differential
 equations, an error with be raised. ::
 
   >>> KM.linearize()[0]
-  [0, 1]
-  [0, 0]
+  Matrix([
+  [0, 1],
+  [0, 0]])
 
 Exploration of the provided examples is encouraged in order to gain more
 understanding of the ``KanesMethod`` object.
@@ -231,20 +234,23 @@ initialization. ::
 
 With that the equations of motion can be formed. ::
 
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
   >>> LM.form_lagranges_equations()
-  [2*q1'']
-  [2*q2'']
+  Matrix([
+  [2*q1''],
+  [2*q2'']])
 
 It is possible to obtain the mass matrix and the forcing vector. ::
 
   >>> LM.mass_matrix
-  [2, 0]
-  [0, 2]
+  Matrix([
+  [2, 0],
+  [0, 2]])
 
   >>> LM.forcing
-  [0]
-  [0]
+  Matrix([
+  [0],
+  [0]])
 
 If there are any holonomic or non-holonomic constraints, they must be supplied
 as keyword arguments in a list of expressions which are equal to zero. It
@@ -261,8 +267,9 @@ multipliers are introduced; they are represented by ``lam1`` in this case. In
 general, there will be as many multipliers as there are constraint equations. ::
 
   >>> LM.form_lagranges_equations()
-  [ lam1 + 2*q1'']
-  [-lam1 + 2*q2'']
+  Matrix([
+  [ lam1 + 2*q1''],
+  [-lam1 + 2*q2'']])
 
 Also in the case of systems with constraints, the 'full' mass matrix is
 augmented by the :math:`k_{dc}(q, t)` matrix, and the forcing vector by the
@@ -270,17 +277,19 @@ augmented by the :math:`k_{dc}(q, t)` matrix, and the forcing vector by the
 (2n + o) x (2n + o), i.e. it's a square matrix. ::
 
   >>> LM.mass_matrix_full
-  [1, 0, 0,  0,  0]
-  [0, 1, 0,  0,  0]
-  [0, 0, 2,  0, -1]
-  [0, 0, 0,  2,  1]
-  [0, 0, 1, -1,  0]
+  Matrix([
+  [1, 0, 0,  0,  0],
+  [0, 1, 0,  0,  0],
+  [0, 0, 2,  0, -1],
+  [0, 0, 0,  2,  1],
+  [0, 0, 1, -1,  0]])
   >>> LM.forcing_full
-  [q1']
-  [q2']
-  [  0]
-  [  0]
-  [  0]
+  Matrix([
+  [q1'],
+  [q2'],
+  [  0],
+  [  0],
+  [  0]])
 
 If there are any non-conservative forces or moments acting on the system,
 they must also be supplied as keyword arguments in a list of 2-tuples of the
@@ -295,8 +304,9 @@ below by modifying the example above: ::
   >>> FL = [(P, 7 * N.x)]
   >>> LM = LagrangesMethod(L, [q1, q2], forcelist = FL, frame = N)
   >>> LM.form_lagranges_equations()
-  [2*q1'' - 7]
-  [    2*q2'']
+  Matrix([
+  [2*q1'' - 7],
+  [    2*q2'']])
 
 Exploration of the provided examples is encouraged in order to gain more
 understanding of the ``LagrangesMethod`` object.

@@ -189,44 +189,44 @@ def eq4():
 
 def main():
 
-    print "Initial metric:"
+    print("Initial metric:")
     pprint(gdd)
-    print "-"*40
-    print "Christoffel symbols:"
+    print("-"*40)
+    print("Christoffel symbols:")
     pprint_Gamma_udd(0, 1, 0)
     pprint_Gamma_udd(0, 0, 1)
-    print
+    print()
     pprint_Gamma_udd(1, 0, 0)
     pprint_Gamma_udd(1, 1, 1)
     pprint_Gamma_udd(1, 2, 2)
     pprint_Gamma_udd(1, 3, 3)
-    print
+    print()
     pprint_Gamma_udd(2, 2, 1)
     pprint_Gamma_udd(2, 1, 2)
     pprint_Gamma_udd(2, 3, 3)
-    print
+    print()
     pprint_Gamma_udd(3, 2, 3)
     pprint_Gamma_udd(3, 3, 2)
     pprint_Gamma_udd(3, 1, 3)
     pprint_Gamma_udd(3, 3, 1)
-    print"-"*40
-    print"Ricci tensor:"
+    print("-"*40)
+    print("Ricci tensor:")
     pprint_Rmn_dd(0, 0)
     e = Rmn.dd(1, 1)
     pprint_Rmn_dd(1, 1)
     pprint_Rmn_dd(2, 2)
     pprint_Rmn_dd(3, 3)
-    #print
+    #print()
     #print "scalar curvature:"
     #print curvature(Rmn)
-    print "-"*40
-    print "Solve Einstein's equations:"
+    print("-"*40)
+    print("Solve Einstein's equations:")
     e = e.subs(nu(r), -lam(r)).doit()
     l = dsolve(e, lam(r))
     pprint(l)
     lamsol = solve(l, lam(r))[0]
     metric = gdd.subs(lam(r), lamsol).subs(nu(r), -lamsol)  # .combine()
-    print "metric:"
+    print("metric:")
     pprint(metric)
 
 if __name__ == "__main__":

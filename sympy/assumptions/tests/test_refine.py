@@ -39,6 +39,12 @@ def test_pow():
     assert refine((-1)**(x + y + 2), Q.odd(x)) == (-1)**(y + 1)
     assert refine((-1)**(x + 3)) == (-1)**(x + 1)
 
+    assert refine((-1)**((-1)**x/2 - S.Half), Q.integer(x)) == (-1)**x
+    assert refine((-1)**((-1)**x/2 + S.Half), Q.integer(x)) == (-1)**(x + 1)
+    assert refine((-1)**((-1)**x/2 + 5*S.Half), Q.integer(x)) == (-1)**(x + 1)
+    assert refine((-1)**((-1)**x/2 - 7*S.Half), Q.integer(x)) == (-1)**(x + 1)
+    assert refine((-1)**((-1)**x/2 - 9*S.Half), Q.integer(x)) == (-1)**x
+
     # powers of Abs
     assert refine(Abs(x)**2, Q.real(x)) == x**2
     assert refine(Abs(x)**3, Q.real(x)) == Abs(x)**3

@@ -1,5 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
@@ -146,7 +148,7 @@ class Factors(object):
             if i:
                 factors[I] = S.One*i
             if nc:
-                factors[Mul(*nc, **dict(evaluate=False))] = S.One
+                factors[Mul(*nc, evaluate=False)] = S.One
         else:
             factors = factors.copy()  # /!\ should be dict-like
 
@@ -228,7 +230,7 @@ class Factors(object):
         """
 
         args = []
-        for factor, exp in self.factors.iteritems():
+        for factor, exp in self.factors.items():
             if exp != 1:
                 b, e = factor.as_base_exp()
                 if isinstance(exp, int):
@@ -263,7 +265,7 @@ class Factors(object):
             return Factors(S.Zero)
         factors = dict(self.factors)
 
-        for factor, exp in other.factors.iteritems():
+        for factor, exp in other.factors.items():
             if factor in factors:
                 exp = factors[factor] + exp
 
@@ -296,7 +298,7 @@ class Factors(object):
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
 
-        for factor, self_exp in self.factors.iteritems():
+        for factor, self_exp in self.factors.items():
             try:
                 other_exp = other.factors[factor]
             except KeyError:
@@ -400,7 +402,7 @@ class Factors(object):
             if self.is_zero:
                 return (Factors(S.Zero), Factors())
 
-        for factor, exp in other.factors.iteritems():
+        for factor, exp in other.factors.items():
             if factor in quo:
                 d = quo[factor] - exp
                 if _isnumber(d):
@@ -500,7 +502,7 @@ class Factors(object):
             factors = {}
 
             if other:
-                for factor, exp in self.factors.iteritems():
+                for factor, exp in self.factors.items():
                     factors[factor] = exp*other
 
             return Factors(factors)
@@ -529,10 +531,13 @@ class Factors(object):
 
         factors = {}
 
-        for factor, exp in self.factors.iteritems():
+        for factor, exp in self.factors.items():
             if factor in other.factors:
-                exp = min(exp, other.factors[factor])
-                factors[factor] = exp
+                lt = (exp < other.factors[factor])
+                if lt == True:
+                    factors[factor] = exp
+                elif lt == False:
+                    factors[factor] = other.factors[factor]
 
         return Factors(factors)
 
@@ -558,7 +563,7 @@ class Factors(object):
 
         factors = dict(self.factors)
 
-        for factor, exp in other.factors.iteritems():
+        for factor, exp in other.factors.items():
             if factor in factors:
                 exp = max(exp, factors[factor])
 
@@ -718,7 +723,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
         terms = Add.make_args(terms)
 
-    terms = map(Term, [t for t in terms if t])
+    terms = list(map(Term, [t for t in terms if t]))
 
     # there is some simplification that may happen if we leave this
     # here rather than duplicate it before the mapping of Term onto
@@ -1005,6 +1010,7 @@ def _mask_nc(eq, name=None):
 
     Examples
     ========
+
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
     >>> from sympy import symbols, Mul
     >>> from sympy.core.exprtools import _mask_nc
@@ -1067,7 +1073,7 @@ def _mask_nc(eq, name=None):
     names = numbered_names()
     def Dummy(*args, **kwargs):
         from sympy import Dummy
-        return Dummy(names.next(), *args, **kwargs)
+        return Dummy(next(names), *args, **kwargs)
 
     expr = eq
     if expr.is_commutative:

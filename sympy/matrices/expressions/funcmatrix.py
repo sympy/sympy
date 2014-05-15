@@ -1,4 +1,6 @@
-from matexpr import MatrixExpr
+from __future__ import print_function, division
+
+from .matexpr import MatrixExpr
 from sympy import Basic, sympify
 
 
@@ -12,9 +14,10 @@ class FunctionMatrix(MatrixExpr):
     >>> i, j = symbols('i,j')
     >>> X = FunctionMatrix(3, 3, Lambda((i, j), i + j))
     >>> Matrix(X)
-    [0, 1, 2]
-    [1, 2, 3]
-    [2, 3, 4]
+    Matrix([
+    [0, 1, 2],
+    [1, 2, 3],
+    [2, 3, 4]])
 
     >>> Y = FunctionMatrix(1000, 1000, Lambda((i, j), i + j))
 

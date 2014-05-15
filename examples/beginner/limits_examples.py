@@ -13,7 +13,7 @@ def sqrt3(x):
 
 
 def show(computed, correct):
-    print "computed:", computed, "correct:", correct
+    print("computed:", computed, "correct:", correct)
 
 
 def main():

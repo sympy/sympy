@@ -141,6 +141,10 @@ Properties of numbers
 ^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.isnormal(x)
 
+:func:`isfinite`
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.isfinite(x)
+
 :func:`isint`
 ^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.isint(x, gaussian=False)

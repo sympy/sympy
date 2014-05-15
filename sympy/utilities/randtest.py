@@ -1,5 +1,7 @@
 """ Helpers for randomized testing """
 
+from __future__ import print_function, division
+
 from random import uniform
 import random
 
@@ -58,7 +60,7 @@ def test_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
     f, g, z = Tuple(f, g, z)
     z = [z] if isinstance(z, Symbol) else (f.free_symbols | g.free_symbols)
-    reps = zip(z, [random_complex_number(a, b, c, d) for zi in z])
+    reps = list(zip(z, [random_complex_number(a, b, c, d) for zi in z]))
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()
     return comp(z1, z2, tol)

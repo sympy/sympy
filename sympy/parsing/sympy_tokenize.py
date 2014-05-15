@@ -22,6 +22,8 @@ are the same, except instead of generating tokens, tokeneater is a callback
 function to which the 5 fields described above are passed as 5 arguments,
 each time a new token is found."""
 
+from __future__ import print_function, division
+
 __author__ = 'Ka-Ping Yee <ping@lfw.org>'
 __credits__ = \
     'GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, Skip Montanaro, Raymond Hettinger'
@@ -163,8 +165,8 @@ class StopTokenizing(Exception):
 def printtoken(type, token, srow_scol, erow_ecol, line):  # for testing
     srow, scol = srow_scol
     erow, ecol = erow_ecol
-    print "%d,%d-%d,%d:\t%s\t%s" % \
-        (srow, scol, erow, ecol, tok_name[type], repr(token))
+    print("%d,%d-%d,%d:\t%s\t%s" % \
+        (srow, scol, erow, ecol, tok_name[type], repr(token)))
 
 
 def tokenize(readline, tokeneater=printtoken):
@@ -202,7 +204,8 @@ class Untokenizer:
 
     def add_whitespace(self, start):
         row, col = start
-        assert row <= self.prev_row
+        if row > self.prev_row:
+            raise ValueError("row should not be greater than prev_row")
         col_offset = col - self.prev_col
         if col_offset:
             self.tokens.append(" " * col_offset)
@@ -276,7 +279,8 @@ def untokenize(iterable):
         newcode = untokenize(t1)
         readline = iter(newcode.splitlines(1)).next
         t2 = [tok[:2] for tok in generate_tokens(readline)]
-        assert t1 == t2
+        if t1 != t2:
+            raise ValueError("t1 should be equal to t2")
     """
     ut = Untokenizer()
     return ut.untokenize(iterable)
@@ -393,7 +397,8 @@ def generate_tokens(readline):
                 elif initial in '\r\n':
                     yield (NL if parenlev > 0 else NEWLINE, token, spos, epos, line)
                 elif initial == '#':
-                    assert not token.endswith("\n")
+                    if token.endswith("\n"):
+                        raise ValueError("Token should not end with \n")
                     yield (COMMENT, token, spos, epos, line)
                 elif token in triple_quoted:
                     endprog = endprogs[token]
@@ -403,6 +408,7 @@ def generate_tokens(readline):
                         token = line[start:pos]
                         yield (STRING, token, spos, (lnum, pos), line)
                     else:
+                        strstart = (lnum, start)           # multiple lines
                         contstr = line[start:]
                         contline = line
                         break
@@ -410,6 +416,7 @@ def generate_tokens(readline):
                     token[:2] in single_quoted or \
                         token[:3] in single_quoted:
                     if token[-1] == '\n':                  # continued string
+                        strstart = (lnum, start)
                         endprog = (endprogs[initial] or endprogs[token[1]] or
                                    endprogs[token[2]])
                         contstr, needcont = line[start:], 1

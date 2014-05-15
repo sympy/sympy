@@ -1,5 +1,8 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from sympy.core import S
+from sympy.core.compatibility import xrange
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
@@ -103,7 +106,7 @@ def create_bounds():
 def update_bounds(b, v):
     if v is None:
         return
-    for axis in xrange(3):
+    for axis in range(3):
         b[axis][0] = min([b[axis][0], v[axis]])
         b[axis][1] = max([b[axis][1], v[axis]])
 
@@ -120,7 +123,7 @@ def rinterpolate(a_min, a_max, a_value):
 
 
 def interpolate_color(color1, color2, ratio):
-    return tuple(interpolate(color1[i], color2[i], ratio) for i in xrange(3))
+    return tuple(interpolate(color1[i], color2[i], ratio) for i in range(3))
 
 
 def scale_value(v, v_min, v_len):
@@ -141,7 +144,8 @@ def strided_range(r_min, r_max, stride, max_steps=50):
         xrange(int(r_min - r_max))
     except TypeError:
         return []
-    assert r_min < r_max
+    if r_min > r_max:
+        raise ValueError("r_min can not be greater than r_max")
     r_min_s = (r_min % stride)
     r_max_s = stride - (r_max % stride)
     if abs(r_max_s - stride) < 0.001:
@@ -171,12 +175,12 @@ def parse_option_string(s):
 
 
 def dot_product(v1, v2):
-    return sum(v1[i]*v2[i] for i in xrange(3))
+    return sum(v1[i]*v2[i] for i in range(3))
 
 
 def vec_sub(v1, v2):
-    return tuple(v1[i] - v2[i] for i in xrange(3))
+    return tuple(v1[i] - v2[i] for i in range(3))
 
 
 def vec_mag(v):
-    return sum(v[i]**2 for i in xrange(3))**(0.5)
+    return sum(v[i]**2 for i in range(3))**(0.5)

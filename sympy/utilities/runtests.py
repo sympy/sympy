@@ -11,7 +11,9 @@ Goals:
 * portable
 
 """
-from __future__ import with_statement
+
+from __future__ import print_function, division
+
 import os
 import sys
 import platform
@@ -28,18 +30,14 @@ import random
 import subprocess
 import signal
 import stat
+from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
+from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-# Use sys.stdout encoding for ouput.
-# This was only added to Python's doctest in Python 2.6, so we must duplicate
-# it here to make utf8 files work in Python 2.5.
-pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
-
-IS_PYTHON_3 = (sys.version_info[0] == 3)
 IS_WINDOWS = (os.name == 'nt')
 
 
@@ -48,8 +46,7 @@ class Skipped(Exception):
 
 import __future__
 # add more flags ??
-future_flags = __future__.division.compiler_flag | \
-               __future__.with_statement.compiler_flag
+future_flags = __future__.division.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -59,7 +56,7 @@ def _indent(s, indent=4):
     encoding and the ``backslashreplace`` error handler.
     """
     # After a 2to3 run the below code is bogus, so wrap it with a version check
-    if sys.version_info[0] < 3:
+    if not PY3:
         if isinstance(s, unicode):
             s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
@@ -78,7 +75,7 @@ def _report_failure(self, out, test, example, got):
     s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
     out(self._failure_header(test, example) + s)
 
-if IS_PYTHON_3 and IS_WINDOWS:
+if PY3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
 
 
@@ -121,23 +118,6 @@ def sys_normcase(f):
     if sys_case_insensitive:  # global defined after call to get_sympy_dir()
         return f.lower()
     return f
-
-
-def isgeneratorfunction(object):
-    """
-    Return True if the object is a user-defined generator function.
-
-    Generator function objects provides same attributes as functions.
-
-    See isfunction.__doc__ for attributes listing.
-
-    Adapted from Python 2.6.
-    """
-    CO_GENERATOR = 0x20
-    if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-            object.func_code.co_flags & CO_GENERATOR:
-        return True
-    return False
 
 
 def setup_pprint():
@@ -265,19 +245,19 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Doctests
-        print
+        print()
         if not doctest(*doctest_args, **doctest_kwargs):
             tests_successful = False
 
         # Examples
-        print
+        print()
         sys.path.append("examples")
         from all import run_examples  # examples/all.py
         if not run_examples(*examples_args, **examples_kwargs):
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or sys.version_info[0] == 3):
+        if not (sys.platform == "win32" or PY3):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
@@ -292,7 +272,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             # Return nonzero exit code
             sys.exit(1)
     except KeyboardInterrupt:
-        print
+        print()
         print("DO *NOT* COMMIT!")
         sys.exit(1)
 
@@ -389,6 +369,13 @@ def test(*paths, **kwargs):
 
     >>> sympy.test(tb='no')    # doctest: +SKIP
 
+    The ``split`` option can be passed to split the test run into parts. The
+    split currently only splits the test files, though this may change in the
+    future. ``split`` should be a string of the form 'a/b', which will run
+    part ``a`` of ``b``. For instance, to run the first half of the test suite:
+
+    >>> sympy.test(split='1/2')  # doctest: +SKIP
+
     You can disable running the tests in a separate subprocess using
     ``subprocess=False``.  This is done to support seeding hash randomization,
     which is enabled by default in the Python versions where it is supported.
@@ -454,8 +441,10 @@ def _test(*paths, **kwargs):
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
+    enhance_asserts = kwargs.get("enhance_asserts", False)
+    split = kwargs.get('split', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
-        force_colors=force_colors)
+        force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed)
 
     # Disable warnings for external modules
@@ -470,7 +459,7 @@ def _test(*paths, **kwargs):
     test_files = t.get_test_files('sympy')
 
     if len(paths) == 0:
-        t._testfiles.extend(test_files)
+        matched = test_files
     else:
         paths = convert_to_native_paths(paths)
         matched = []
@@ -480,9 +469,14 @@ def _test(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
-        t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout, slow=slow))
+    if split:
+        matched = split_list(matched, split)
+
+    t._testfiles.extend(matched)
+
+    return int(not t.test(sort=sort, timeout=timeout,
+        slow=slow, enhance_asserts=enhance_asserts))
 
 
 def doctest(*paths, **kwargs):
@@ -520,8 +514,18 @@ def doctest(*paths, **kwargs):
 
     >>> sympy.doctest("polynomial") # doctest: +SKIP
 
+    The ``split`` option can be passed to split the test run into parts. The
+    split currently only splits the test files, though this may change in the
+    future. ``split`` should be a string of the form 'a/b', which will run
+    part ``a`` of ``b``. Note that the regular doctests and the Sphinx
+    doctests are split independently. For instance, to run the first half of
+    the test suite:
+
+    >>> sympy.doctest(split='1/2')  # doctest: +SKIP
+
     The ``subprocess`` and ``verbose`` options are the same as with the function
     ``test()``.  See the docstring of that function for more information.
+
     """
     subprocess = kwargs.pop("subprocess", True)
     if subprocess:
@@ -545,6 +549,7 @@ def _doctest(*paths, **kwargs):
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
+    split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
@@ -556,15 +561,14 @@ def _doctest(*paths, **kwargs):
 
     if import_module('numpy') is None:
         blacklist.extend([
-            "sympy/galgebra/GA.py",
-            "sympy/galgebra/latex_ex.py",
             "sympy/plotting/experimental_lambdify.py",
             "sympy/plotting/plot_implicit.py",
             "examples/advanced/autowrap_integrators.py",
             "examples/advanced/autowrap_ufuncify.py",
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
-            "examples/intermediate/mplot3d.py"
+            "examples/intermediate/mplot3d.py",
+            "doc/src/modules/numeric-computation.rst"
         ])
     else:
         if import_module('matplotlib') is None:
@@ -577,15 +581,14 @@ def _doctest(*paths, **kwargs):
             from sympy.plotting.plot import unset_show
             unset_show()
 
-        # can be removed once a fix for Issue 3696 is merged
-        blacklist.extend(["sympy/galgebra/latex_ex.py"])
-
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
+    if import_module('theano') is None:
+        blacklist.extend(["doc/src/modules/numeric-computation.rst"])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
-        "sympy/galgebra/GA.py",
         "sympy/utilities/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
@@ -599,7 +602,7 @@ def _doctest(*paths, **kwargs):
     #         "sympy/utilities/benchmarking.py"
     #     ])
 
-    # blacklist these modules until issue 1741 is resolved
+    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py",
         "sympy/utilities/benchmarking.py"
@@ -616,7 +619,7 @@ def _doctest(*paths, **kwargs):
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
 
-    r = PyTestReporter(verbose)
+    r = PyTestReporter(verbose, split=split)
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')
@@ -625,7 +628,7 @@ def _doctest(*paths, **kwargs):
     not_blacklisted = [f for f in test_files
                        if not any(b in f for b in blacklist)]
     if len(paths) == 0:
-        t._testfiles.extend(not_blacklisted)
+        matched = not_blacklisted
     else:
         # take only what was requested...but not blacklisted items
         # and allow for partial match anywhere or fnmatch of name
@@ -637,7 +640,11 @@ def _doctest(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
-        t._testfiles.extend(matched)
+
+    if split:
+        matched = split_list(matched, split)
+
+    t._testfiles.extend(matched)
 
     # run the tests and record the result for this *py portion of the tests
     if t._testfiles:
@@ -674,6 +681,9 @@ def _doctest(*paths, **kwargs):
                     matched.append(f)
                     break
 
+    if split:
+        matched = split_list(matched, split)
+
     setup_pprint()
     first_report = True
     for rst_file in matched:
@@ -703,39 +713,64 @@ def _doctest(*paths, **kwargs):
                     r.start(msg=msg)
                 else:
                     r.write_center(msg)
-                    print
+                    print()
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
-            print file_id,
+            print(file_id, end=" ")
                 # get at least the name out so it is know who is being tested
             wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
-            print ''.join(
+            print(''.join(
                 [test_file, ' '*(wid - len(test_file) - len(report)), report])
+            )
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
     # testing the *rst as evidenced by first_report no longer being True.
     if not first_report and failed:
-        print
+        print()
         print("DO *NOT* COMMIT!")
 
     return int(failed)
 
-# The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
-# (which doesn't exist in 2.5-)
-if sys.version_info[:2] > (2, 5):
-    from collections import namedtuple
-    SymPyTestResults = namedtuple('TestResults', 'failed attempted')
-else:
-    SymPyTestResults = lambda a, b: (a, b)
+sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+
+def split_list(l, split):
+    """
+    Splits a list into part a of b
+
+    split should be a string of the form 'a/b'. For instance, '1/3' would give
+    the split one of three.
+
+    If the length of the list is not divisible by the number of splits, the
+    last split will have more items.
+
+    >>> from sympy.utilities.runtests import split_list
+    >>> a = list(range(10))
+    >>> split_list(a, '1/3')
+    [0, 1, 2]
+    >>> split_list(a, '2/3')
+    [3, 4, 5]
+    >>> split_list(a, '3/3')
+    [6, 7, 8, 9]
+    """
+    m = sp.match(split)
+    if not m:
+        raise ValueError("split must be a string of the form a/b where a and b are ints")
+    i, t = map(int, m.groups())
+    return l[(i - 1)*len(l)//t:i*len(l)//t]
+
+
+from collections import namedtuple
+SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,
              extraglobs=None, raise_on_error=False,
              parser=pdoctest.DocTestParser(), encoding=None):
+
     """
     Test examples in the given file.  Return (#failures, #tests).
 
@@ -817,7 +852,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if not IS_PYTHON_3:
+    if not PY3:
         text, filename = pdoctest._load_testfile(
             filename, package, module_relative)
         if encoding is not None:
@@ -874,7 +909,7 @@ class SymPyTests(object):
         self._testfiles = []
         self._seed = seed if seed is not None else random.random()
 
-    def test(self, sort=False, timeout=False, slow=False):
+    def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -889,72 +924,116 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, slow)
+                self.test_file(f, sort, timeout, slow, enhance_asserts)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename, sort=True, timeout=False, slow=False):
-        clear_cache()
-        self._count += 1
-        gl = {'__file__': filename}
-        random.seed(self._seed)
-        try:
-            if IS_PYTHON_3:
-                with open(filename, encoding="utf8") as f:
-                    source = f.read()
-                c = compile(source, filename, 'exec')
-                exec c in gl
-            else:
-                execfile(filename, gl)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except ImportError:
-            self._reporter.import_error(filename, sys.exc_info())
-            return
-        pytestfile = ""
-        if "XFAIL" in gl:
-            pytestfile = inspect.getsourcefile(gl["XFAIL"])
-        pytestfile2 = ""
-        if "slow" in gl:
-            pytestfile2 = inspect.getsourcefile(gl["slow"])
-        disabled = gl.get("disabled", False)
-        if disabled:
-            funcs = []
-        else:
-            # we need to filter only those functions that begin with 'test_'
-            # that are defined in the testing file or in the file where
-            # is defined the XFAIL decorator
-            funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
-                (inspect.getsourcefile(gl[f]) == filename or
-                 inspect.getsourcefile(gl[f]) == pytestfile or
-                 inspect.getsourcefile(gl[f]) == pytestfile2)]
-            if slow:
-                funcs = [f for f in funcs if getattr(f, '_slow', False)]
-            # Sorting of XFAILed functions isn't fixed yet :-(
-            funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
-            i = 0
-            while i < len(funcs):
-                if isgeneratorfunction(funcs[i]):
-                # some tests can be generators, that return the actual
-                # test functions. We unpack it below:
-                    f = funcs.pop(i)
-                    for fg in f():
-                        func = fg[0]
-                        args = fg[1:]
-                        fgw = lambda: func(*args)
-                        funcs.insert(i, fgw)
-                        i += 1
-                else:
-                    i += 1
-            # drop functions that are not selected with the keyword expression:
-            funcs = [x for x in funcs if self.matches(x)]
+    def _enhance_asserts(self, source):
+        from ast import (NodeTransformer, Compare, Name, Store, Load, Tuple,
+            Assign, BinOp, Str, Mod, Assert, parse, fix_missing_locations)
 
-        if not funcs:
-            return
+        ops = {"Eq": '==', "NotEq": '!=', "Lt": '<', "LtE": '<=',
+                "Gt": '>', "GtE": '>=', "Is": 'is', "IsNot": 'is not',
+                "In": 'in', "NotIn": 'not in'}
+
+        class Transform(NodeTransformer):
+            def visit_Assert(self, stmt):
+                if isinstance(stmt.test, Compare):
+                    compare = stmt.test
+                    values = [compare.left] + compare.comparators
+                    names = [ "_%s" % i for i, _ in enumerate(values) ]
+                    names_store = [ Name(n, Store()) for n in names ]
+                    names_load = [ Name(n, Load()) for n in names ]
+                    target = Tuple(names_store, Store())
+                    value = Tuple(values, Load())
+                    assign = Assign([target], value)
+                    new_compare = Compare(names_load[0], compare.ops, names_load[1:])
+                    msg_format = "\n%s " + "\n%s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + "\n%s"
+                    msg = BinOp(Str(msg_format), Mod(), Tuple(names_load, Load()))
+                    test = Assert(new_compare, msg, lineno=stmt.lineno, col_offset=stmt.col_offset)
+                    return [assign, test]
+                else:
+                    return stmt
+
+        tree = parse(source)
+        new_tree = Transform().visit(tree)
+        return fix_missing_locations(new_tree)
+
+    def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
+        funcs = []
+        try:
+            clear_cache()
+            self._count += 1
+            gl = {'__file__': filename}
+            random.seed(self._seed)
+            try:
+                if PY3:
+                    open_file = lambda: open(filename, encoding="utf8")
+                else:
+                    open_file = lambda: open(filename)
+
+                with open_file() as f:
+                    source = f.read()
+
+                if enhance_asserts:
+                    try:
+                        source = self._enhance_asserts(source)
+                    except ImportError:
+                        pass
+
+                code = compile(source, filename, "exec")
+                exec_(code, gl)
+            except (SystemExit, KeyboardInterrupt):
+                raise
+            except ImportError:
+                self._reporter.import_error(filename, sys.exc_info())
+                return
+            pytestfile = ""
+            if "XFAIL" in gl:
+                pytestfile = inspect.getsourcefile(gl["XFAIL"])
+            pytestfile2 = ""
+            if "slow" in gl:
+                pytestfile2 = inspect.getsourcefile(gl["slow"])
+            disabled = gl.get("disabled", False)
+            if not disabled:
+                # we need to filter only those functions that begin with 'test_'
+                # that are defined in the testing file or in the file where
+                # is defined the XFAIL decorator
+                funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
+                    (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
+                    (inspect.getsourcefile(gl[f]) == filename or
+                     inspect.getsourcefile(gl[f]) == pytestfile or
+                     inspect.getsourcefile(gl[f]) == pytestfile2)]
+                if slow:
+                    funcs = [f for f in funcs if getattr(f, '_slow', False)]
+                # Sorting of XFAILed functions isn't fixed yet :-(
+                funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
+                i = 0
+                while i < len(funcs):
+                    if isgeneratorfunction(funcs[i]):
+                    # some tests can be generators, that return the actual
+                    # test functions. We unpack it below:
+                        f = funcs.pop(i)
+                        for fg in f():
+                            func = fg[0]
+                            args = fg[1:]
+                            fgw = lambda: func(*args)
+                            funcs.insert(i, fgw)
+                            i += 1
+                    else:
+                        i += 1
+                # drop functions that are not selected with the keyword expression:
+                funcs = [x for x in funcs if self.matches(x)]
+
+            if not funcs:
+                return
+        except Exception:
+            self._reporter.entering_filename(filename, len(funcs))
+            raise
+
         self._reporter.entering_filename(filename, len(funcs))
         if not sort:
             random.shuffle(funcs)
@@ -1025,7 +1104,7 @@ class SymPyTests(object):
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
 
-        return [sys_normcase(gi) for gi in g]
+        return sorted([sys_normcase(gi) for gi in g])
 
 
 class SymPyDocTests(object):
@@ -1048,7 +1127,7 @@ class SymPyDocTests(object):
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
@@ -1056,7 +1135,7 @@ class SymPyDocTests(object):
     def test_file(self, filename):
         clear_cache()
 
-        from StringIO import StringIO
+        from sympy.core.compatibility import StringIO
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1118,6 +1197,7 @@ class SymPyDocTests(object):
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
+            test.globs['print_function'] = print_function
             try:
                 f, t = runner.run(test, compileflags=future_flags,
                                   out=new.write, clear_globs=False)
@@ -1213,10 +1293,16 @@ class SymPyDocTests(object):
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            vw = '#!/usr/bin/env python\n' \
-                 'import sys\n' \
-                 'if len(sys.argv) <= 1:\n' \
-                 '    exit("wrong number of args")\n'
+            if PY3:
+                vw = '#!/usr/bin/env python3\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
+            else:
+                vw = '#!/usr/bin/env python\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
 
             for viewer in viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
@@ -1272,7 +1358,7 @@ class SymPyDocTestFinder(DocTestFinder):
         add them to ``tests``.
         """
         if self._verbose:
-            print 'Finding tests in %s' % name
+            print('Finding tests in %s' % name)
 
         # If we've already processed this object, then ignore it.
         if id(obj) in seen:
@@ -1312,20 +1398,16 @@ class SymPyDocTestFinder(DocTestFinder):
                                    source_lines, globs, seen)
                     except KeyboardInterrupt:
                         raise
-                    except ValueError:
-                        raise
-                    except Exception:
-                        pass
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
-                if not isinstance(valname, basestring):
+                if not isinstance(valname, string_types):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
                                      "must be strings: %r" %
                                      (type(valname),))
                 if not (inspect.isfunction(val) or inspect.isclass(val) or
                         inspect.ismethod(val) or inspect.ismodule(val) or
-                        isinstance(val, basestring)):
+                        isinstance(val, string_types)):
                     raise ValueError("SymPyDocTestFinder.find: __test__ values "
                                      "must be strings, functions, methods, "
                                      "classes, or modules: %r" %
@@ -1341,54 +1423,29 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, staticmethod):
                     val = getattr(obj, valname)
                 if isinstance(val, classmethod):
-                    val = getattr(obj, valname).im_func
+                    val = getattr(obj, valname).__func__
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
-                    inspect.isclass(val) or
-                    isinstance(val, property)):
+                        inspect.isclass(val) or
+                        isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
-                        if val.fget.__module__ != module.__name__:
-                            continue
+                        if hasattr(val.fget, '__module__'):
+                            if val.fget.__module__ != module.__name__:
+                                continue
                     else:
                         if val.__module__ != module.__name__:
                             continue
 
                     assert self._from_module(module, val), \
-                        "%s is not in module %s (valname %s)" % (val, module, valname)
+                        "%s is not in module %s (valname %s)" % (
+                            val, module, valname)
 
                     valname = '%s.%s' % (name, valname)
                     self._find(tests, val, valname, module, source_lines,
                                globs, seen)
-
-    def _from_module(self, module, object):
-        """
-        Return true if the given object is defined in the given
-        module.
-
-        This is a 1 to 1 copy of _from_module function from the python 2.7.3
-        doctest module. It is needed because the doctest module shipped with
-        py 2.5 is broken (see PR 1969).
-
-        This function should be removed once we drop support for python 2.5.
-
-        """
-        if module is None:
-            return True
-        elif inspect.getmodule(object) is not None:
-            return module is inspect.getmodule(object)
-        elif inspect.isfunction(object):
-            return module.__dict__ is object.func_globals
-        elif inspect.isclass(object):
-            return module.__name__ == object.__module__
-        elif hasattr(object, '__module__'):
-            return module.__name__ == object.__module__
-        elif isinstance(object, property):
-            return True # [XX] no way not be sure.
-        else:
-            raise ValueError("object must be a class or function")
 
     def _get_test(self, obj, name, module, globs, source_lines):
         """
@@ -1400,7 +1457,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
-        if isinstance(obj, basestring):
+        if isinstance(obj, string_types):
             # obj is a string in the case for objects in the polys package.
             # Note that source_lines is a binary string (compiled polys
             # modules), which can't be handled by _find_lineno so determine
@@ -1422,7 +1479,7 @@ class SymPyDocTestFinder(DocTestFinder):
                     docstring = ''
                 else:
                     docstring = obj.__doc__
-                    if not isinstance(docstring, basestring):
+                    if not isinstance(docstring, string_types):
                         docstring = str(docstring)
             except (TypeError, AttributeError):
                 docstring = ''
@@ -1441,10 +1498,16 @@ class SymPyDocTestFinder(DocTestFinder):
         if lineno is None:
             # handling of properties is not implemented in _find_lineno so do
             # it here
-            tobj = obj if not isinstance(obj, property) else obj.fget
+            if hasattr(obj, 'func_closure') and obj.func_closure is not None:
+                tobj = obj.func_closure[0].cell_contents
+            elif isinstance(obj, property):
+                tobj = obj.fget
+            else:
+                tobj = obj
             lineno = self._find_lineno(tobj, source_lines)
 
-        assert lineno is not None
+        if lineno is None:
+            return None
 
         # Return a DocTest for this object.
         if module is None:
@@ -1471,7 +1534,7 @@ class SymPyDocTestRunner(DocTestRunner):
     tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
-    issue 2041).
+    issue 5140).
 
     See the docstring of the original DocTestRunner for more information.
     """
@@ -1522,6 +1585,7 @@ class SymPyDocTestRunner(DocTestRunner):
         linecache.getlines = self.__patched_linecache_getlines
 
         try:
+            test.globs['print_function'] = print_function
             return self.__run(test, compileflags, out)
         finally:
             sys.stdout = save_stdout
@@ -1649,7 +1713,7 @@ class PyTestReporter(Reporter):
     """
 
     def __init__(self, verbose=False, tb="short", colors=True,
-                 force_colors=False):
+                 force_colors=False, split=None):
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
@@ -1663,6 +1727,7 @@ class PyTestReporter(Reporter):
         self._exceptions = []
         self._terminal_width = None
         self._default_width = 80
+        self._split = split
 
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
@@ -1706,7 +1771,7 @@ class PyTestReporter(Reporter):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
-                if sys.version_info[0] > 2:
+                if PY3:
                     stdout = stdout.decode("utf-8")
             except (OSError, IOError):
                 pass
@@ -1809,9 +1874,9 @@ class PyTestReporter(Reporter):
                 sys.stdout.write("\n")
 
         # Avoid UnicodeEncodeError when printing out test failures
-        if IS_PYTHON_3 and IS_WINDOWS:
+        if PY3 and IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
-        elif IS_PYTHON_3 and not sys.stdout.encoding.lower().startswith('utf'):
+        elif PY3 and not sys.stdout.encoding.lower().startswith('utf'):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
                               ).decode(sys.stdout.encoding)
 
@@ -1851,10 +1916,7 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
-            implementation = "CPython"
-        else:
-            implementation = platform.python_implementation()
+        implementation = platform.python_implementation()
         if implementation == 'PyPy':
             implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
         self.write("executable:         %s  (%s) [%s]\n" %
@@ -1881,6 +1943,8 @@ class PyTestReporter(Reporter):
             self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
         else:
             self.write("off\n")
+        if self._split:
+            self.write("split:              %s\n" % self._split)
         self.write('\n')
         self._t_start = clock()
 
@@ -1985,10 +2049,7 @@ class PyTestReporter(Reporter):
         self.write("f", "Green")
 
     def test_xpass(self, v):
-        if sys.version_info[:2] < (2, 6):
-            message = getattr(v, 'message', '')
-        else:
-            message = str(v)
+        message = str(v)
         self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
@@ -2015,10 +2076,7 @@ class PyTestReporter(Reporter):
         char = "s"
         self._skipped += 1
         if v is not None:
-            if sys.version_info[:2] < (2, 6):
-                message = getattr(v, 'message', '')
-            else:
-                message = str(v)
+            message = str(v)
             if message == "KeyboardInterrupt":
                 char = "K"
             elif message == "Timeout":

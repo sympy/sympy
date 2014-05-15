@@ -7,7 +7,7 @@ Introduction
 ------------
 
 The geometry module for SymPy allows one to create two-dimensional geometrical
-entities, such as lines and circles, and query information about these
+entities, such as lines and circles, and query for information about these
 entities. This could include asking the area of an ellipse, checking for
 collinearity of a set of points, or finding the intersection between two lines.
 The primary use case of the module involves entities with numerical values, but
@@ -18,17 +18,17 @@ Available Entities
 
 The following entities are currently available in the geometry module:
 
-* Point
-* Line, Ray, Segment
-* Ellipse, Circle
-* Polygon, RegularPolygon, Triangle
+* ``Point``
+* ``Line``, ``Ray``, ``Segment``
+* ``Ellipse``, ``Circle``
+* ``Polygon``, ``RegularPolygon``, ``Triangle``
 
 Most of the work one will do will be through the properties and methods of
-these entities, but several global methods exist for one's usage:
+these entities, but several global methods exist:
 
-* intersection(entity1, entity2)
-* are_similar(entity1, entity2)
-* convex_hull(points)
+* ``intersection(entity1, entity2)``
+* ``are_similar(entity1, entity2)``
+* ``convex_hull(points)``
 
 For a full API listing and an explanation of the methods and their return
 values please see the list of classes at the end of this document.
@@ -92,8 +92,15 @@ Intersection of medians
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
     [Point(a, b/3)]
 
-An in-depth example: Pappus' Theorem
-------------------------------------
+An in-depth example: Pappus' Hexagon Theorem
+--------------------------------------------
+
+From Wikipedia ([WikiPappus]_):
+
+  Given one set of collinear points `A`, `B`, `C`, and another set of collinear
+  points `a`, `b`, `c`, then the intersection points `X`, `Y`, `Z` of line pairs `Ab` and
+  `aB`, `Ac` and `aC`, `Bc` and `bC` are collinear.
+
 ::
 
     >>> from sympy import *
@@ -130,19 +137,26 @@ An in-depth example: Pappus' Theorem
     >>> Point.is_collinear(pp1, pp2, pp3)
     True
 
+References
+~~~~~~~~~~
+
+.. [WikiPappus] "Pappus's Hexagon Theorem" Wikipedia, the Free Encyclopedia.
+        Web. 26 Apr. 2013.
+        <http://en.wikipedia.org/wiki/Pappus's_hexagon_theorem>
+
 Miscellaneous Notes
 -------------------
 
-* The area property of Polygon and Triangle may return a positive or
+* The area property of ``Polygon`` and ``Triangle`` may return a positive or
   negative value, depending on whether or not the points are oriented
   counter-clockwise or clockwise, respectively. If you always want a
   positive value be sure to use the ``abs`` function.
-* Although Polygon can refer to any type of polygon, the code has been
+* Although ``Polygon`` can refer to any type of polygon, the code has been
   written for simple polygons. Hence, expect potential problems if dealing
   with complex polygons (overlapping sides).
-* Since !SymPy is still in its infancy some things may not simplify
-  properly and hence some things that should return True (e.g.,
-  Point.is_collinear) may not actually do so. Similarly, attempting to find
+* Since SymPy is still in its infancy some things may not simplify
+  properly and hence some things that should return ``True`` (e.g.,
+  ``Point.is_collinear``) may not actually do so. Similarly, attempting to find
   the intersection of entities that do intersect may result in an empty
   result.
 
@@ -182,7 +196,7 @@ Geometry Visualization
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The plotting module is capable of plotting geometric entities. See
-`Plotting Geometric Entities <https://github.com/sympy/sympy/wiki/Plotting-Module>`_ in
+`Plotting Geometric Entities <https://github.com/sympy/sympy/wiki>`_ in
 the plotting module entry.
 
 API Reference

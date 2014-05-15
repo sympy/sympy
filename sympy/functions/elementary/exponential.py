@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
@@ -8,6 +10,7 @@ from sympy.core.mul import Mul
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.core.compatibility import xrange
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -23,7 +26,6 @@ from sympy.ntheory import multiplicity, perfect_power
 
 class ExpBase(Function):
 
-    nargs = 1
     unbranched = True
 
     def inverse(self, argindex=1):
@@ -111,9 +113,9 @@ class ExpBase(Function):
         if be.is_polar:
             return rv
         besmall = abs(be) <= S.Pi
-        if besmall:
+        if besmall == True:
             return rv
-        elif besmall is False and e.is_Rational and e.q == 2:
+        elif besmall == False and e.is_Rational and e.q == 2:
             return -rv
 
     def _eval_expand_power_exp(self, **hints):
@@ -279,6 +281,10 @@ class exp(ExpBase):
             if out:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
+        elif arg.is_Matrix:
+            from sympy import Matrix
+            return arg.exp()
+
     @property
     def base(self):
         """
@@ -388,15 +394,6 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_lseries(self, x):
-        s = self.args[0]
-        yield exp(s.subs(x, 0))
-        from sympy import integrate
-        t = Dummy("t")
-        f = s.subs(x, t)
-        for term in (exp(f)*f.diff(t)).lseries(t):
-            yield integrate(term, (t, 0, x))
-
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
@@ -450,15 +447,16 @@ class exp(ExpBase):
 
 class log(Function):
     """
-    The logarithmic function :math:`ln(x)` or :math:`log(x)`.
+    The natural logarithm function `\ln(x)` or `\log(x)`.
+    Logarithms are taken with the natural base, `e`. To get
+    a logarithm of a different base ``b``, use ``log(x, b)``,
+    which is essentially short-hand for ``log(x)/log(b)``.
 
     See Also
     ========
 
     exp
     """
-
-    nargs = (1, 2)
 
     def fdiff(self, argindex=1):
         """
@@ -473,7 +471,7 @@ class log(Function):
 
     def inverse(self, argindex=1):
         """
-        Returns the inverse function, log(x) (or ln(x)).
+        Returns `e^x`, the inverse function of `\log(x)`.
         """
         return exp
 
@@ -532,7 +530,7 @@ class log(Function):
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        #don't autoexpand Pow or Mul (see the issue 252):
+        #don't autoexpand Pow or Mul (see the issue 3351):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -557,7 +555,7 @@ class log(Function):
     @cacheit
     def taylor_term(n, x, *previous_terms):  # of log(1+x)
         """
-        Returns the next term in the Taylor series expansion of log(1+x).
+        Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
         from sympy import powsimp
         if n < 0:
@@ -591,6 +589,10 @@ class log(Function):
                         expr.append(self.func(x)._eval_expand_log(**hints))
                     else:
                         expr.append(a)
+                elif x.is_negative:
+                    a = self.func(-x)
+                    expr.append(a)
+                    nonpos.append(S.NegativeOne)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
@@ -609,6 +611,12 @@ class log(Function):
                 return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
+
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import expand_log, logcombine, simplify
+        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure))
+        expr = expand_log(expr, deep=True)
+        return min([expr, self], key=measure)
 
     def as_real_imag(self, deep=True, **hints):
         """
@@ -666,8 +674,7 @@ class log(Function):
                 return True
             if arg.is_infinitesimal:
                 return False
-            if arg.is_Number:
-                return arg > 1
+            return (arg - 1).is_positive
 
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
@@ -733,7 +740,6 @@ class LambertW(Function):
     For more information, see:
     http://en.wikipedia.org/wiki/Lambert_W_function
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, x):

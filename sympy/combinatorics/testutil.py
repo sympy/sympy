@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.combinatorics.util import _distribute_gens_by_base
 from sympy.combinatorics import Permutation
 
@@ -41,6 +43,7 @@ def _naive_list_centralizer(self, other, af=False):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.testutil import _naive_list_centralizer
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> D = DihedralGroup(4)
@@ -209,6 +212,7 @@ def canonicalize_naive(g, dummies, sym, *v):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.testutil import canonicalize_naive
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> from sympy.combinatorics import Permutation, PermutationGroup
@@ -286,7 +290,7 @@ def graph_certificate(gr):
     """
     from sympy.combinatorics.permutations import _af_invert
     from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, canonicalize
-    items = gr.items()
+    items = list(gr.items())
     items.sort(key=lambda x: len(x[1]), reverse=True)
     pvert = [x[0] for x in items]
     pvert = _af_invert(pvert)
@@ -313,7 +317,7 @@ def graph_certificate(gr):
     assert len(g) == num_indices
     g += [num_indices, num_indices + 1]
     size = num_indices + 2
-    assert sorted(g) == range(size)
+    assert sorted(g) == list(range(size))
     g = Permutation(g)
     vlen = [0]*(len(vertices[0])+1)
     for neigh in vertices:
@@ -325,6 +329,6 @@ def graph_certificate(gr):
             base, gens = get_symmetric_group_sgs(i)
             v.append((base, gens, n, 0))
     v.reverse()
-    dummies = range(num_indices)
+    dummies = list(range(num_indices))
     can = canonicalize(g, dummies, 0, *v)
     return can

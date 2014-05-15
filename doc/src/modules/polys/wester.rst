@@ -393,7 +393,7 @@ of the basis is a univariate polynomial. Consider the following example::
 The result is an ordinary Python list, so we can easily apply a function to
 all its elements, for example we can factor those elements::
 
-    >>> map(factor, _)
+    >>> list(map(factor, _))
     ⎡ 2    2       10        5        5⎤
     ⎣c  + s  - 1, c  ⋅(c - 1) ⋅(c + 1) ⎦
 
@@ -449,4 +449,3 @@ Literature
 
 .. [Wester1999] Michael J. Wester, A Critique of the Mathematical Abilities of
     CA Systems, 1999, `<http://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_
-

@@ -191,11 +191,11 @@ def main():
     J = zeros(fe.nbf())
     for i in range(0, fe.nbf()):
         Fi = u*fe.N[i]
-        print Fi
+        print(Fi)
         for j in range(0, fe.nbf()):
             uj = us[j]
             integrands = diff(Fi, uj)
-            print integrands
+            print(integrands)
             J[j, i] = t.integrate(integrands)
 
     pprint(J)

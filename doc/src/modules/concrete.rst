@@ -78,6 +78,7 @@ hypergeometric:
     2*(n + 1)*(2*n + 1)
     >>> hypersimp(factorial(n**2), n)
 
+
 Concrete Class Reference
 ------------------------
 .. autoclass:: sympy.concrete.summations.Sum

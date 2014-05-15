@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import pi, I
 from sympy.core.basic import C
 from sympy.core.singleton import S
@@ -122,7 +124,7 @@ class Ynm(Function):
     >>> phi = Symbol("phi")
 
     >>> expand_func(Ynm(n, m, theta, phi))
-    sqrt((2*n + 1)*(-m + n)!/(m + n)!)*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
+    sqrt((2*n + 1)*factorial(-m + n)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
 
     See Also
     ========
@@ -135,9 +137,8 @@ class Ynm(Function):
     .. [1] http://en.wikipedia.org/wiki/Spherical_harmonics
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
+    .. [4] http://dlmf.nist.gov/14.30
     """
-
-    nargs = 4
 
     @classmethod
     def eval(cls, n, m, theta, phi):
@@ -287,8 +288,6 @@ class Znm(Function):
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     """
-
-    nargs = 4
 
     @classmethod
     def eval(cls, n, m, theta, phi):

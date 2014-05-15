@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import time
 import timeit
 
@@ -43,7 +45,7 @@ class TreeNode(object):
         return res
 
     def print_tree(self, level=0, max_depth=None):
-        print "  "*level + str(self)
+        print("  "*level + str(self))
         if max_depth is not None and max_depth <= level:
             return
         for child in self.children():
@@ -52,7 +54,7 @@ class TreeNode(object):
     def print_generic(self, n=50, method="time"):
         slowest = sorted((getattr(node, method)(), node.name()) for node in self.linearize())[-n:]
         for time, name in slowest[::-1]:
-            print "%s %s" % (time, name)
+            print("%s %s" % (time, name))
 
     def print_slowest(self, n=50):
         self.print_generic(n=50, method="time")
@@ -127,4 +129,4 @@ sum = old_sum
 sageall = pp.child(0)
 sageall.write_cachegrind("sympy.cachegrind")
 
-print "Timings saved. Do:\n$ kcachegrind sympy.cachegrind"
+print("Timings saved. Do:\n$ kcachegrind sympy.cachegrind")

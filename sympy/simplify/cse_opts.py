@@ -1,9 +1,10 @@
 """ Optimizations of the expression tree representation for better CSE
 opportunities.
 """
+from __future__ import print_function, division
+
 from sympy.core import Add, Basic, Expr, Mul
 from sympy.core.basic import preorder_traversal
-from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
 from sympy.utilities.iterables import default_sort_key
 
@@ -40,9 +41,3 @@ def sub_post(e):
         e = e.xreplace({node: replacement})
 
     return e
-
-
-default_optimizations = [
-    (sub_pre, sub_post),
-    (factor_terms, None),
-]

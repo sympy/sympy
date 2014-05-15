@@ -1,12 +1,15 @@
 from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
+    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import xrange
 
 
 def test_printmethod():
@@ -64,7 +67,7 @@ def test_fcode_functions():
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
 
 
-#issue 3715
+#issue 6814
 def test_fcode_functions_with_integers():
     x= symbols('x')
     assert fcode(x * log(10)) == "      x*log(10.0d0)"
@@ -155,7 +158,7 @@ def test_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
         "      do i = 1, n\n"
-        "         A(i) = A(i)*(1 + A(i))*(2 + A(i))\n"
+        "         A(i) = (A(i) + 1)*(A(i) + 2)*A(i)\n"
         "      end do"
     )
 
@@ -177,6 +180,176 @@ def test_line_wrapping():
         "      x**10 + x**9 + x**8 + x**7 + x**6 + x**5 + x**4 + x**3 + x**2 + x\n"
         "     @ + 1"
     )
+
+
+def test_fcode_precedence():
+    x, y = symbols("x y")
+    assert fcode(And(x < y, y < x + 1), source_format="free") == \
+        "x < y .and. y < x + 1"
+    assert fcode(Or(x < y, y < x + 1), source_format="free") == \
+        "x < y .or. y < x + 1"
+    assert fcode(Xor(x < y, y < x + 1, evaluate=False),
+        source_format="free") == "x < y .neqv. y < x + 1"
+    assert fcode(Equivalent(x < y, y < x + 1), source_format="free") == \
+        "x < y .eqv. y < x + 1"
+
+
+def test_fcode_Logical():
+    x, y, z = symbols("x y z")
+    # unary Not
+    assert fcode(Not(x), source_format="free") == ".not. x"
+    # binary And
+    assert fcode(And(x, y), source_format="free") == "x .and. y"
+    assert fcode(And(x, Not(y)), source_format="free") == "x .and. .not. y"
+    assert fcode(And(Not(x), y), source_format="free") == "y .and. .not. x"
+    assert fcode(And(Not(x), Not(y)), source_format="free") == \
+        ".not. x .and. .not. y"
+    assert fcode(Not(And(x, y), evaluate=False), source_format="free") == \
+        ".not. (x .and. y)"
+    # binary Or
+    assert fcode(Or(x, y), source_format="free") == "x .or. y"
+    assert fcode(Or(x, Not(y)), source_format="free") == "x .or. .not. y"
+    assert fcode(Or(Not(x), y), source_format="free") == "y .or. .not. x"
+    assert fcode(Or(Not(x), Not(y)), source_format="free") == \
+        ".not. x .or. .not. y"
+    assert fcode(Not(Or(x, y), evaluate=False), source_format="free") == \
+        ".not. (x .or. y)"
+    # mixed And/Or
+    assert fcode(And(Or(y, z), x), source_format="free") == "x .and. (y .or. z)"
+    assert fcode(And(Or(z, x), y), source_format="free") == "y .and. (x .or. z)"
+    assert fcode(And(Or(x, y), z), source_format="free") == "z .and. (x .or. y)"
+    assert fcode(Or(And(y, z), x), source_format="free") == "x .or. y .and. z"
+    assert fcode(Or(And(z, x), y), source_format="free") == "y .or. x .and. z"
+    assert fcode(Or(And(x, y), z), source_format="free") == "z .or. x .and. y"
+    # trinary And
+    assert fcode(And(x, y, z), source_format="free") == "x .and. y .and. z"
+    assert fcode(And(x, y, Not(z)), source_format="free") == \
+        "x .and. y .and. .not. z"
+    assert fcode(And(x, Not(y), z), source_format="free") == \
+        "x .and. z .and. .not. y"
+    assert fcode(And(Not(x), y, z), source_format="free") == \
+        "y .and. z .and. .not. x"
+    assert fcode(Not(And(x, y, z), evaluate=False), source_format="free") == \
+        ".not. (x .and. y .and. z)"
+    # trinary Or
+    assert fcode(Or(x, y, z), source_format="free") == "x .or. y .or. z"
+    assert fcode(Or(x, y, Not(z)), source_format="free") == \
+        "x .or. y .or. .not. z"
+    assert fcode(Or(x, Not(y), z), source_format="free") == \
+        "x .or. z .or. .not. y"
+    assert fcode(Or(Not(x), y, z), source_format="free") == \
+        "y .or. z .or. .not. x"
+    assert fcode(Not(Or(x, y, z), evaluate=False), source_format="free") == \
+        ".not. (x .or. y .or. z)"
+
+
+def test_fcode_Xlogical():
+    x, y, z = symbols("x y z")
+    # binary Xor
+    assert fcode(Xor(x, y, evaluate=False), source_format="free") == \
+        "x .neqv. y"
+    assert fcode(Xor(x, Not(y), evaluate=False), source_format="free") == \
+        "x .neqv. .not. y"
+    assert fcode(Xor(Not(x), y, evaluate=False), source_format="free") == \
+        "y .neqv. .not. x"
+    assert fcode(Xor(Not(x), Not(y), evaluate=False),
+        source_format="free") == ".not. x .neqv. .not. y"
+    assert fcode(Not(Xor(x, y, evaluate=False), evaluate=False),
+        source_format="free") == ".not. (x .neqv. y)"
+    # binary Equivalent
+    assert fcode(Equivalent(x, y), source_format="free") == "x .eqv. y"
+    assert fcode(Equivalent(x, Not(y)), source_format="free") == \
+        "x .eqv. .not. y"
+    assert fcode(Equivalent(Not(x), y), source_format="free") == \
+        "y .eqv. .not. x"
+    assert fcode(Equivalent(Not(x), Not(y)), source_format="free") == \
+        ".not. x .eqv. .not. y"
+    assert fcode(Not(Equivalent(x, y), evaluate=False),
+        source_format="free") == ".not. (x .eqv. y)"
+    # mixed And/Equivalent
+    assert fcode(Equivalent(And(y, z), x), source_format="free") == \
+        "x .eqv. y .and. z"
+    assert fcode(Equivalent(And(z, x), y), source_format="free") == \
+        "y .eqv. x .and. z"
+    assert fcode(Equivalent(And(x, y), z), source_format="free") == \
+        "z .eqv. x .and. y"
+    assert fcode(And(Equivalent(y, z), x), source_format="free") == \
+        "x .and. (y .eqv. z)"
+    assert fcode(And(Equivalent(z, x), y), source_format="free") == \
+        "y .and. (x .eqv. z)"
+    assert fcode(And(Equivalent(x, y), z), source_format="free") == \
+        "z .and. (x .eqv. y)"
+    # mixed Or/Equivalent
+    assert fcode(Equivalent(Or(y, z), x), source_format="free") == \
+        "x .eqv. y .or. z"
+    assert fcode(Equivalent(Or(z, x), y), source_format="free") == \
+        "y .eqv. x .or. z"
+    assert fcode(Equivalent(Or(x, y), z), source_format="free") == \
+        "z .eqv. x .or. y"
+    assert fcode(Or(Equivalent(y, z), x), source_format="free") == \
+        "x .or. (y .eqv. z)"
+    assert fcode(Or(Equivalent(z, x), y), source_format="free") == \
+        "y .or. (x .eqv. z)"
+    assert fcode(Or(Equivalent(x, y), z), source_format="free") == \
+        "z .or. (x .eqv. y)"
+    # mixed Xor/Equivalent
+    assert fcode(Equivalent(Xor(y, z, evaluate=False), x),
+        source_format="free") == "x .eqv. (y .neqv. z)"
+    assert fcode(Equivalent(Xor(z, x, evaluate=False), y),
+        source_format="free") == "y .eqv. (x .neqv. z)"
+    assert fcode(Equivalent(Xor(x, y, evaluate=False), z),
+        source_format="free") == "z .eqv. (x .neqv. y)"
+    assert fcode(Xor(Equivalent(y, z), x, evaluate=False),
+        source_format="free") == "x .neqv. (y .eqv. z)"
+    assert fcode(Xor(Equivalent(z, x), y, evaluate=False),
+        source_format="free") == "y .neqv. (x .eqv. z)"
+    assert fcode(Xor(Equivalent(x, y), z, evaluate=False),
+        source_format="free") == "z .neqv. (x .eqv. y)"
+    # mixed And/Xor
+    assert fcode(Xor(And(y, z), x, evaluate=False), source_format="free") == \
+        "x .neqv. y .and. z"
+    assert fcode(Xor(And(z, x), y, evaluate=False), source_format="free") == \
+        "y .neqv. x .and. z"
+    assert fcode(Xor(And(x, y), z, evaluate=False), source_format="free") == \
+        "z .neqv. x .and. y"
+    assert fcode(And(Xor(y, z, evaluate=False), x), source_format="free") == \
+        "x .and. (y .neqv. z)"
+    assert fcode(And(Xor(z, x, evaluate=False), y), source_format="free") == \
+        "y .and. (x .neqv. z)"
+    assert fcode(And(Xor(x, y, evaluate=False), z), source_format="free") == \
+        "z .and. (x .neqv. y)"
+    # mixed Or/Xor
+    assert fcode(Xor(Or(y, z), x, evaluate=False), source_format="free") == \
+        "x .neqv. y .or. z"
+    assert fcode(Xor(Or(z, x), y, evaluate=False), source_format="free") == \
+        "y .neqv. x .or. z"
+    assert fcode(Xor(Or(x, y), z, evaluate=False), source_format="free") == \
+        "z .neqv. x .or. y"
+    assert fcode(Or(Xor(y, z, evaluate=False), x), source_format="free") == \
+        "x .or. (y .neqv. z)"
+    assert fcode(Or(Xor(z, x, evaluate=False), y), source_format="free") == \
+        "y .or. (x .neqv. z)"
+    assert fcode(Or(Xor(x, y, evaluate=False), z), source_format="free") == \
+        "z .or. (x .neqv. y)"
+    # trinary Xor
+    assert fcode(Xor(x, y, z, evaluate=False), source_format="free") == \
+        "x .neqv. y .neqv. z"
+    assert fcode(Xor(x, y, Not(z), evaluate=False), source_format="free") == \
+        "x .neqv. y .neqv. .not. z"
+    assert fcode(Xor(x, Not(y), z, evaluate=False), source_format="free") == \
+        "x .neqv. z .neqv. .not. y"
+    assert fcode(Xor(Not(x), y, z, evaluate=False), source_format="free") == \
+        "y .neqv. z .neqv. .not. x"
+
+
+def test_fcode_Relational():
+    x, y = symbols("x y")
+    assert fcode(Relational(x, y, "=="), source_format="free") == "x == y"
+    assert fcode(Relational(x, y, "!="), source_format="free") == "x /= y"
+    assert fcode(Relational(x, y, ">="), source_format="free") == "x >= y"
+    assert fcode(Relational(x, y, "<="), source_format="free") == "x <= y"
+    assert fcode(Relational(x, y, ">"), source_format="free") == "x > y"
+    assert fcode(Relational(x, y, "<"), source_format="free") == "x < y"
 
 
 def test_fcode_Piecewise():
@@ -373,7 +546,9 @@ def test_loops():
 
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
-            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'})
+            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'} or
+            code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'} or
+            code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'})
 
 
 def test_dummy_loops():
@@ -392,6 +567,16 @@ def test_dummy_loops():
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
+
+def test_fcode_Indexed_without_looking_for_contraction():
+    len_y = 5
+    y = IndexedBase('y', shape=(len_y,))
+    x = IndexedBase('x', shape=(len_y,))
+    Dy = IndexedBase('Dy', shape=(len_y-1,))
+    i = Idx('i', len_y-1)
+    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    code0 = fcode(e.rhs, assign_to=e.lhs, contract=False)
+    assert code0.endswith('Dy(i) = (y(i + 1) - y(i))/(x(i + 1) - x(i))')
 
 
 def test_derived_classes():

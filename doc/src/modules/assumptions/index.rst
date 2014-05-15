@@ -41,13 +41,12 @@ You can also define a context so you don't have to pass that argument
 each time to function ask(). This is done by using the assuming context manager
 from module sympy.assumptions. ::
 
-     >>> from __future__ import with_statement
      >>> from sympy import *
      >>> x = Symbol('x')
      >>> y = Symbol('y')
      >>> facts = Q.positive(x), Q.positive(y)
      >>> with assuming(*facts):
-     ...     print ask(Q.positive(2*x + y))
+     ...     print(ask(Q.positive(2*x + y)))
      True
 
 Supported predicates

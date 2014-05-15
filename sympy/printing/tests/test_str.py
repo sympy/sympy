@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial)
+    MatrixSymbol, subfactorial, true, false, Equivalent, Xor)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -97,18 +97,18 @@ def test_Exp():
 
 def test_factorial():
     n = Symbol('n', integer=True)
-    assert str(factorial(-2)) == "0"
+    assert str(factorial(-2)) == "zoo"
     assert str(factorial(0)) == "1"
     assert str(factorial(7)) == "5040"
-    assert str(factorial(n)) == "n!"
-    assert str(factorial(2*n)) == "(2*n)!"
-    assert str(factorial(factorial(n))) == '(n!)!'
-    assert str(factorial(factorial2(n))) == '(n!!)!'
-    assert str(factorial2(factorial(n))) == '(n!)!!'
-    assert str(factorial2(factorial2(n))) == '(n!!)!!'
+    assert str(factorial(n)) == "factorial(n)"
+    assert str(factorial(2*n)) == "factorial(2*n)"
+    assert str(factorial(factorial(n))) == 'factorial(factorial(n))'
+    assert str(factorial(factorial2(n))) == 'factorial(factorial2(n))'
+    assert str(factorial2(factorial(n))) == 'factorial2(factorial(n))'
+    assert str(factorial2(factorial2(n))) == 'factorial2(factorial2(n))'
     assert str(subfactorial(3)) == "2"
-    assert str(subfactorial(n)) == "!n"
-    assert str(subfactorial(2*n)) == "!(2*n)"
+    assert str(subfactorial(n)) == "subfactorial(n)"
+    assert str(subfactorial(2*n)) == "subfactorial(2*n)"
 
 
 def test_Function():
@@ -163,6 +163,9 @@ def test_Interval():
 
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
+    # issue 2908
+    assert str(Lambda((), 1)) == "Lambda((), 1)"
+    assert str(Lambda((), x)) == "Lambda((), x)"
 
 
 def test_Limit():
@@ -178,13 +181,18 @@ def test_list():
     assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
 
 
-def test_Matrix():
+def test_Matrix_str():
     M = Matrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
+    M = Matrix([[1]])
+    assert str(M) == sstr(M) == "Matrix([[1]])"
+    M = Matrix([[1, 2]])
+    assert str(M) == sstr(M) ==  "Matrix([[1, 2]])"
     M = Matrix()
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 0, [])"
     M = Matrix(0, 1, lambda i, j: 0)
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 1, [])"
 
 
 def test_Mul():
@@ -194,6 +202,8 @@ def test_Mul():
     assert str((x + 1)/(y + 2)) == "(x + 1)/(y + 2)"
     assert str(2*x/3) == '2*x/3'
     assert str(-2*x/3) == '-2*x/3'
+    assert str(-1.0*x) == '-1.0*x'
+    assert str(1.0*x) == '1.0*x'
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -221,6 +231,12 @@ def test_Order():
     assert str(O(x)) == "O(x)"
     assert str(O(x**2)) == "O(x**2)"
     assert str(O(x*y)) == "O(x*y, x, y)"
+    assert str(O(x, x)) == "O(x)"
+    assert str(O(x, (x, 0))) == "O(x)"
+    assert str(O(x, (x, oo))) == "O(x, (x, oo))"
+    assert str(O(x, x, y)) == "O(x, x, y)"
+    assert str(O(x, x, y)) == "O(x, x, y)"
+    assert str(O(x, (x, oo), (y, oo))) == "O(x, (x, oo), (y, oo))"
 
 
 def test_Permutation_Cycle():
@@ -334,8 +350,8 @@ def test_FracField():
 
 
 def test_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Ruv, u,v = ring("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
@@ -346,15 +362,19 @@ def test_PolyElement():
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1"
     assert str((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == "-(u**2 - 3*u*v + 1)*x**2*y - (u + 1)*x - 1"
 
+    assert str(-(v**2 + v + 1)*x + 3*u*v + 1) == "-(v**2 + v + 1)*x + 3*u*v + 1"
+    assert str(-(v**2 + v + 1)*x - 3*u*v + 1) == "-(v**2 + v + 1)*x - 3*u*v + 1"
+
 
 def test_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
-    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+    Fuv, u,v = field("u,v", ZZ)
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
 
+    assert str(x/3) == "x/3"
     assert str(x/z) == "x/z"
     assert str(x*y/z) == "x*y/z"
     assert str(x/(z*t)) == "x/(z*t)"
@@ -499,7 +519,8 @@ def test_set():
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
 
 
 def test_Sum():
@@ -523,7 +544,7 @@ def test_tuple():
 
 def test_Unit():
     assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 2461
+    assert str(joule) == "kg*m**2/s**2"  # issue 5560
 
 
 def test_wild_str():
@@ -555,7 +576,7 @@ def test_bug4():
     assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 
-def test_issue922():
+def test_issue_4021():
     e = Integral(x, x) + 1
     assert str(e) == 'Integral(x, x) + 1'
 
@@ -663,7 +684,7 @@ def test_Tr():
     assert str(t) == 'Tr(A*B)'
 
 
-def test_issue3288():
+def test_issue_6387():
     assert str(factor(-3.0*z + 3)) == '-3.0*(1.0*z - 1.0)'
 
 
@@ -676,3 +697,13 @@ def test_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
     assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'
+
+def test_true_false():
+    assert str(true) == repr(true) == sstr(true) == "True"
+    assert str(false) == repr(false) == sstr(false) == "False"
+
+def test_Equivalent():
+    assert str(Equivalent(y, x)) == "Equivalent(x, y)"
+
+def test_Xor():
+    assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"

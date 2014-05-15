@@ -8,10 +8,7 @@ from sympy.polys.distributedmodules import (
     sdm_from_vector, sdm_to_vector, sdm_monomial_lcm
 )
 
-from sympy.polys.monomialtools import (
-    lex, grlex, InverseOrder
-)
-
+from sympy.polys.orderings import lex, grlex, InverseOrder
 from sympy.polys.domains import QQ
 
 from sympy.abc import x, y, z

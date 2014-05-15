@@ -389,7 +389,7 @@ this will generate isympy.1 in the current directory. -->
 		<!-- Or use this section to tell about upstream BTS. -->
 		<title>BUGS</title>
 		<para>The upstreams <acronym>BTS</acronym> can be found at <ulink
-                url="http://code.google.com/p/sympy/issues/list">http://code.google.com/p/sympy/issues/list</ulink>
+                url="https://github.com/sympy/sympy/issues">https://github.com/sympy/sympy/issues</ulink>
         Please report all bugs that you find in there, this will help improve
         the overall quality of SymPy.</para>
 	</refsect1>

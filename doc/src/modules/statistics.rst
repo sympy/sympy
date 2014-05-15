@@ -3,9 +3,11 @@ Statistics
 
 .. module:: sympy.statistics
 
-Note: This module has been deprecated. See the stats module.
+.. note ::
 
-The *statistics* module in SymPy implements standard probability distributions
+    This module has been deprecated. See the :mod:`stats <sympy.stats>` module.
+
+The ``statistics`` module in SymPy implements standard probability distributions
 and related tools. Its contents can be imported with the following statement::
 
     >>> from sympy import *
@@ -134,5 +136,3 @@ Continuous Probability Distributions
 
 .. autoclass:: sympy.statistics.distributions.PDF
    :members:
-
-

@@ -10,16 +10,18 @@ the following minimal implementation::
     def getResource(identifier, pkgname=__name__):
         pkgpath = os.path.dirname(sys.modules[pkgname].__file__)
         path = os.path.join(pkgpath, identifier)
-        return file(os.path.normpath(path), mode='rb')
+        return open(os.path.normpath(path), mode='rb')
 
 When a __loader__ is present on the module given by __name__, it will defer
 getResource to its get_data implementation and return it as a file-like
 object (such as StringIO).
 """
 
+from __future__ import print_function, division
+
 import sys
 import os
-from cStringIO import StringIO
+from sympy.core.compatibility import cStringIO as StringIO
 
 
 def get_resource(identifier, pkgname=__name__):
@@ -49,8 +51,8 @@ def get_resource(identifier, pkgname=__name__):
     if loader is not None:
         try:
             data = loader.get_data(path)
-        except IOError:
+        except (IOError,AttributeError):
             pass
         else:
             return StringIO(data)
-    return file(os.path.normpath(path), 'rb')
+    return open(os.path.normpath(path), 'rb')

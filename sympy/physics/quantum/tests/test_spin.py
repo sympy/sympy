@@ -4188,7 +4188,7 @@ def test_rotation():
     answ = [JxKet(1,-1)/2 - sqrt(2)*JxKet(1,0)/2 + JxKet(1,1)/2 ,
        JyKet(1,-1)/2 - sqrt(2)*JyKet(1,0)/2 + JyKet(1,1)/2 ,
        JzKet(1,-1)/2 - sqrt(2)*JzKet(1,0)/2 + JzKet(1,1)/2]
-    fun = [state(1, 1) for state in JxKet, JyKet, JzKet]
+    fun = [state(1, 1) for state in (JxKet, JyKet, JzKet)]
     for state in fun:
         got = qapply(Rotation(0, pi/2, 0)*state)
         assert got in answ
@@ -4208,7 +4208,7 @@ def test_rotation():
        JyKetCoupled(1,1,(1,1))/2 ,
        JzKetCoupled(1,-1,(1,1))/2 - sqrt(2)*JzKetCoupled(1,0,(1,1))/2 +
        JzKetCoupled(1,1,(1,1))/2]
-    fun = [state(1, 1, (1,1)) for state in JxKetCoupled, JyKetCoupled, JzKetCoupled]
+    fun = [state(1, 1, (1,1)) for state in (JxKetCoupled, JyKetCoupled, JzKetCoupled)]
     for state in fun:
         got = qapply(Rotation(0, pi/2, 0)*state)
         assert got in ans

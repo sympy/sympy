@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+from __future__ import print_function, division
+from sympy.core.compatibility import xrange
+
 from random import random
 from sympy import factor, I, Integer, pi, simplify, sin, sqrt, Symbol, sympify
 from sympy.abc import x, y, z
@@ -131,4 +134,4 @@ if __name__ == '__main__':
         t = clock()
         b()
         t = clock() - t
-        print "%s%65s: %f" % (b.__name__, b.__doc__, t)
+        print("%s%65s: %f" % (b.__name__, b.__doc__, t))

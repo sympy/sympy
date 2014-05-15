@@ -8,12 +8,13 @@ Features:
 References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
 """
+from __future__ import print_function, division
+
 from collections import defaultdict
 from heapq import heappush, heappop
 
-from sympy.core import Symbol
-from sympy import Predicate
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr
+from sympy import default_sort_key
+from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
 
 
 def dpll_satisfiable(expr):
@@ -24,16 +25,15 @@ def dpll_satisfiable(expr):
     Examples
     ========
 
-    >>> from sympy import symbols
     >>> from sympy.abc import A, B
-    >>> from sympy.logic.algorithms.dpll import dpll_satisfiable
+    >>> from sympy.logic.algorithms.dpll2 import dpll_satisfiable
     >>> dpll_satisfiable(A & ~B)
     {A: True, B: False}
     >>> dpll_satisfiable(A & ~A)
     False
 
     """
-    symbols = list(expr.atoms(Symbol, Predicate))
+    symbols = sorted(_find_predicates(expr), key=default_sort_key)
     symbols_int_repr = range(1, len(symbols) + 1)
     clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)
@@ -421,19 +421,9 @@ class SATSolver(object):
         self.lit_heap = []
         self.lit_scores = {}
 
-        def _nfloat(a):
-            """Return negative, float value of a.
-
-            If a is zero, don't negate it as this leads to 0.0
-            in Python 2.5. The calls to this can be dropped when
-            support for 2.5 is dropped."""
-            if a:
-                return -float(a)
-            else:
-                return 0.0
         for var in range(1, len(self.variable_set)):
-            self.lit_scores[var] = _nfloat(self.occurrence_count[var])
-            self.lit_scores[-var] = _nfloat(self.occurrence_count[-var])
+            self.lit_scores[var] = float(-self.occurrence_count[var])
+            self.lit_scores[-var] = float(-self.occurrence_count[-var])
             heappush(self.lit_heap, (self.lit_scores[var], var))
             heappush(self.lit_heap, (self.lit_scores[-var], -var))
 

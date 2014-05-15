@@ -1,5 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic
-from sympy.core.compatibility import iterable, as_int
+from sympy.core.compatibility import iterable, as_int, xrange
 from sympy.utilities.iterables import flatten
 
 from collections import defaultdict
@@ -205,7 +207,7 @@ class Prufer(Basic):
         References
         ==========
 
-        - http://hamberg.no/erlend/2010/11/06/prufer-sequence/
+        - http://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
 
         See Also
         ========

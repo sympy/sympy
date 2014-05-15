@@ -4,6 +4,7 @@ from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
+from sympy.utilities import default_sort_key
 from sympy.utilities.randtest import (test_numerically,
          random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
@@ -91,17 +92,18 @@ def test_inflate():
 def test_recursive():
     from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
-    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))
+    r = exp(-(x - a)**2)*exp(-(x - b)**2)
+    e = integrate(r, (x, 0, oo), meijerg=True)
     assert simplify(e.expand()) == (
         sqrt(2)*sqrt(pi)*(
         (erf(sqrt(2)*(a + b)/2) + 1)*exp(-a**2/2 + a*b - b**2/2))/4)
-    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo))
+    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo), meijerg=True)
     assert simplify(e) == (
         sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(2*a + 2*b + c)/4) + 1)*exp(-a**2 - b**2
         + (2*a + 2*b + c)**2/8)/4)
-    assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo))) == \
+    assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
-    assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo))) == \
+    assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 - erf(a + b + c))
 
 
@@ -135,7 +137,7 @@ def test_meijerint():
     sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
     assert simplify(i) == sqrt(pi)*sigma*(erf(mu/(2*sigma)) + 1)
-    assert c is True
+    assert c == True
 
     i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
     # TODO it would be nice to test the condition
@@ -280,7 +282,7 @@ def test_lookup_table():
     table = {}
     _create_lookup_table(table)
     for _, l in sorted(table.items()):
-        for formula, terms, cond, hint in sorted(l):
+        for formula, terms, cond, hint in sorted(l, key=default_sort_key):
             subs = {}
             for a in list(formula.free_symbols) + [z_dummy]:
                 if hasattr(a, 'properties') and a.properties:
@@ -599,12 +601,12 @@ def test_messy():
         Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
 
 
-def test_3023():
+def test_issue_6122():
     assert integrate(exp(-I*x**2), (x, -oo, oo), meijerg=True) == \
         -I*sqrt(pi)*exp(I*pi/4)
 
 
-def test_3153():
+def test_issue_6252():
     expr = 1/x/(a + b*x)**(S(1)/3)
     anti = integrate(expr, x, meijerg=True)
     assert not expr.has(hyper)
@@ -612,7 +614,7 @@ def test_3153():
     # putting in numerical values seems to work...
 
 
-def test_3249():
+def test_issue_6348():
     assert integrate(exp(I*x)/(1 + x**2), (x, -oo, oo)).simplify().rewrite(exp) \
         == pi*exp(-1)
 
@@ -623,5 +625,5 @@ def test_fresnel():
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
 
-def test_3761():
+def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None

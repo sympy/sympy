@@ -46,32 +46,32 @@ def transform(name, X, Y, g_correct=None, recursive=False):
     recursive ... apply recursive trigonometric simplification (use only when
                   needed, as it is an expensive operation)
     """
-    print "_"*80
-    print "Transformation:", name
+    print("_"*80)
+    print("Transformation:", name)
     for x, y in zip(X, Y):
         pprint(Eq(y, x))
     J = X.jacobian(Y)
-    print "Jacobian:"
+    print("Jacobian:")
     pprint(J)
     g = J.T*eye(J.shape[0])*J
 
     g = g.applyfunc(expand)
     #g = g.applyfunc(trigsimp)
-    print "metric tensor g_{ij}:"
+    print("metric tensor g_{ij}:")
     pprint(g)
     if g_correct is not None:
         g = g_correct
-        print "metric tensor g_{ij} specified by hand:"
+        print("metric tensor g_{ij} specified by hand:")
         pprint(g)
-    print "inverse metric tensor g^{ij}:"
+    print("inverse metric tensor g^{ij}:")
     g_inv = g.inv(method="ADJ")
     g_inv = g_inv.applyfunc(simplify)
     pprint(g_inv)
-    print "det g_{ij}:"
+    print("det g_{ij}:")
     g_det = g.det()
     pprint(g_det)
     f = Function("f")(*list(Y))
-    print "Laplace:"
+    print("Laplace:")
     pprint(laplace(f, g_inv, g_det, Y))
 
 

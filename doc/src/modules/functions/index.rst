@@ -1,3 +1,5 @@
+.. _functions:
+
 Functions Module
 ****************
 
@@ -9,6 +11,8 @@ All functions support the methods documented below, inherited from
 .. autoclass:: sympy.core.function.Function
    :noindex:
    :members:
+
+.. _functions-contents:
 
 Contents
 ========

@@ -1,15 +1,19 @@
-from __future__ import with_statement
+from __future__ import print_function, division
 
 from os.path import join
-from subprocess import STDOUT, CalledProcessError
 import tempfile
 import shutil
-from cStringIO import StringIO
+from io import BytesIO
 
-from sympy.core.compatibility import check_output
+try:
+    from subprocess import STDOUT, CalledProcessError
+    from sympy.core.compatibility import check_output
+except ImportError:
+    pass
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
-from latex import latex
+from .latex import latex
 
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -66,12 +70,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     is unset. However, if it was set, then 'preview' writes the genereted
     file to this filename instead.
 
-    There is also support for writing to a StringIO like object, which needs
+    There is also support for writing to a BytesIO like object, which needs
     to be passed to the 'outputbuffer' argument.
 
-    >>> from StringIO import StringIO
-    >>> obj = StringIO()
-    >>> preview(x + y, output='png', viewer='StringIO',
+    >>> from io import BytesIO
+    >>> obj = BytesIO()
+    >>> preview(x + y, output='png', viewer='BytesIO',
     ...         outputbuffer=obj)
 
     The LaTeX preamble can be customized by setting the 'preamble' keyword
@@ -99,7 +103,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, outputTexFile="sample.tex")
+    >>> preview(x + y, outputTexFile="sample.tex")
 
 
     """
@@ -133,12 +137,21 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if viewer == "file":
             if filename is None:
                 SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
-                    "specified filename ", last_supported_version="0.7.3",
-                    use_instead="viewer=\"file\" and filename=\"desiredname\"")
+                    "specified filename", deprecated_since_version="0.7.3",
+                    useinstead="viewer=\"file\" and filename=\"desiredname\"",
+                    issue=7018).warn()
         elif viewer == "StringIO":
+            SymPyDeprecationWarning(feature="The preview() viewer StringIO",
+                useinstead="BytesIO", deprecated_since_version="0.7.4",
+                issue=7083).warn()
+            viewer = "BytesIO"
             if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a StringIO "
+                raise ValueError("outputbuffer has to be a BytesIO "
                                  "compatible object if viewer=\"StringIO\"")
+        elif viewer == "BytesIO":
+            if outputbuffer is None:
+                raise ValueError("outputbuffer has to be a BytesIO "
+                                 "compatible object if viewer=\"BytesIO\"")
         elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
@@ -182,7 +195,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         try:
             check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
                           'texput.tex'], cwd=workdir, stderr=STDOUT)
-        except CalledProcessError, e:
+        except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
                 e.output)
@@ -214,7 +227,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             try:
                 check_output(cmd, cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
+            except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
                     (' '.join(cmd), e.output))
@@ -223,13 +236,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
         if viewer == "file":
             if filename is None:
-                buffer = StringIO()
+                buffer = BytesIO()
                 with open(join(workdir, src), 'rb') as fh:
                     buffer.write(fh.read())
                 return buffer
             else:
                 shutil.move(join(workdir,src), filename)
-        elif viewer == "StringIO":
+        elif viewer == "BytesIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
         elif viewer == "pyglet":
@@ -237,7 +250,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 from pyglet import window, image, gl
                 from pyglet.window import key
             except ImportError:
-                raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+                raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
             if output == "png":
                 from pyglet.image.codecs.png import PNGImageDecoder
@@ -289,13 +302,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         else:
             try:
                 check_output([viewer, src], cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
+            except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %
                     (viewer, src, e.output))
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
-        except OSError, e:
+        except OSError as e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise

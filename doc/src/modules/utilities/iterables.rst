@@ -69,9 +69,9 @@ kbins::
     ['A,BCD', 'AB,CD', 'ABC,D']
     >>> show(kbins("ABC", 2))
     ['A,BC', 'AB,C']
-    >>> show(kbins("ABC", 2, ordered=00))  # same as multiset_partitions
+    >>> show(kbins("ABC", 2, ordered=0))  # same as multiset_partitions
     ['A,BC', 'AB,C', 'AC,B']
-    >>> show(kbins("ABC", 2, ordered=01))
+    >>> show(kbins("ABC", 2, ordered=1))
     ['A,BC', 'A,CB',
      'B,AC', 'B,CA',
      'C,AB', 'C,BA']
@@ -89,4 +89,3 @@ Docstring
 
 .. automodule:: sympy.utilities.iterables
    :members:
-

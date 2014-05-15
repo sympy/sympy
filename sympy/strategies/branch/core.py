@@ -1,5 +1,7 @@
 """ Generic SymPy-Independent Strategies """
-import itertools
+from __future__ import print_function, division
+
+from sympy.core.compatibility import get_function_name
 
 def identity(x):
     yield x
@@ -32,8 +34,8 @@ def debug(brule, file=None):
         file = stdout
 
     def write(brl, expr, result):
-        file.write("Rule: %s\n"%brl.func_name)
-        file.write("In: %s\nOut: %s\n\n"%(expr, result))
+        file.write("Rule: %s\n" % get_function_name(brl))
+        file.write("In: %s\nOut: %s\n\n" % (expr, result))
 
     return onaction(brule, write)
 
@@ -60,7 +62,7 @@ def condition(cond, brule):
 def sfilter(pred, brule):
     """ Yield only those results which satisfy the predicate """
     def filtered_brl(expr):
-        for x in itertools.ifilter(pred, brule(expr)):
+        for x in filter(pred, brule(expr)):
             yield x
     return filtered_brl
 

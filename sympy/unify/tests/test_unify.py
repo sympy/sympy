@@ -1,6 +1,5 @@
 from sympy.unify.core import Compound, Variable, CondVariable, allcombinations
 from sympy.unify import core
-from sympy.core.compatibility import next
 
 a,b,c = 'abc'
 w,x,y,z = map(Variable, 'wxyz')

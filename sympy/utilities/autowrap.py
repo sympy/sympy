@@ -64,7 +64,8 @@ When is this module NOT the best approach?
        don't need the binaries for another project.
 
 """
-from __future__ import with_statement
+
+from __future__ import print_function, division
 
 _doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
 
@@ -152,12 +153,12 @@ class CodeWrapper:
         command.extend(self.flags)
         try:
             retoutput = check_output(command, stderr=STDOUT)
-        except CalledProcessError, e:
+        except CalledProcessError as e:
             raise CodeWrapError(
                 "Error while executing command: %s. Command output is:\n%s" % (
                     " ".join(command), e.output))
         if not self.quiet:
-            print retoutput
+            print(retoutput)
 
 
 class DummyWrapper(CodeWrapper):
@@ -178,7 +179,7 @@ def %(name)s():
             printed = ", ".join(
                 [str(res.expr) for res in routine.result_variables])
             # convert OutputArguments to return value like f2py
-            inargs = filter(lambda x: not isinstance(
+            args = filter(lambda x: not isinstance(
                 x, OutputArgument), routine.arguments)
             retvals = []
             for val in routine.result_variables:
@@ -187,12 +188,12 @@ def %(name)s():
                 else:
                     retvals.append(val.result_var)
 
-            print >> f, DummyWrapper.template % {
+            print(DummyWrapper.template % {
                 'name': routine.name,
                 'expr': printed,
-                'args': ", ".join([str(arg.name) for arg in inargs]),
+                'args': ", ".join([str(a.name) for a in args]),
                 'retvals': ", ".join([str(val) for val in retvals])
-            }
+            }, end="", file=f)
 
     def _process_files(self, routine):
         return
@@ -233,8 +234,8 @@ setup(
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
         with open('setup.py', 'w') as f:
-            print >> f, CythonCodeWrapper.setup_template % {
-                'args': ", ".join(ext_args)}
+            print(CythonCodeWrapper.setup_template % {
+                'args': ", ".join(ext_args)}, file=f)
 
     @classmethod
     def _get_wrapped_function(cls, mod):
@@ -263,32 +264,32 @@ setup(
             prototype = self.generator.get_prototype(routine)
 
             # declare
-            print >> f, 'cdef extern from "%s.h":' % prefix
-            print >> f, '   %s' % prototype
+            print('cdef extern from "%s.h":' % prefix, file=f)
+            print('   %s' % prototype, file=f)
             if empty:
-                print >> f
+                print(file=f)
 
             # wrap
             ret, args_py = self._split_retvals_inargs(routine.arguments)
             args_c = ", ".join([str(a.name) for a in routine.arguments])
-            print >> f, "def %s_c(%s):" % (routine.name,
-                    ", ".join(self._declare_arg(arg) for arg in args_py))
+            print("def %s_c(%s):" % (routine.name,
+                ", ".join(self._declare_arg(arg) for arg in args_py)), file=f)
             for r in ret:
                 if not r in args_py:
-                    print >> f, "   cdef %s" % self._declare_arg(r)
+                    print("   cdef %s" % self._declare_arg(r), file=f)
             rets = ", ".join([str(r.name) for r in ret])
             if routine.results:
                 call = '   return %s(%s)' % (routine.name, args_c)
                 if rets:
-                    print >> f, call + ', ' + rets
+                    print(call + ', ' + rets, file=f)
                 else:
-                    print >> f, call
+                    print(call, file=f)
             else:
-                print >> f, '   %s(%s)' % (routine.name, args_c)
-                print >> f, '   return %s' % rets
+                print('   %s(%s)' % (routine.name, args_c), file=f)
+                print('   return %s' % rets, file=f)
 
             if empty:
-                print >> f
+                print(file=f)
     dump_pyx.extension = "pyx"
 
     def _split_retvals_inargs(self, args):
@@ -319,7 +320,8 @@ class F2PyCodeWrapper(CodeWrapper):
     @property
     def command(self):
         filename = self.filename + '.' + self.generator.code_extension
-        command = ["f2py", "-m", self.module_name, "-c", filename]
+        args = ['-c', '-m', self.module_name, filename]
+        command = [sys.executable, "-c", "import numpy.f2py as f2py2e;f2py2e.main()"]+args
         return command
 
     def _prepare_files(self, routine):
@@ -385,7 +387,7 @@ def autowrap(
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
     try:
         routine = Routine('autofunc', expr, args)
-    except CodeGenArgumentListError, e:
+    except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
         # them to return values anyway.
@@ -403,7 +405,7 @@ def autowrap(
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
-@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
@@ -425,7 +427,7 @@ def binary_function(symfunc, expr, **kwargs):
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
-@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def ufuncify(args, expr, **kwargs):
     """
     Generates a binary ufunc-like lambda function for numpy arrays
@@ -479,6 +481,9 @@ def ufuncify(args, expr, **kwargs):
         args = [args]
     else:
         args = list(args)
+
+    # ensure correct order of arguments
+    kwargs['args'] = [y, x] + args[1:] + [m]
 
     # first argument accepts an array
     args[0] = x[i]

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import expand
 from sympy import diff
 from sympy import Sum
@@ -11,6 +13,7 @@ def finite_diff(expression, variable, increment=1):
 
     Examples
     =========
+
     >>> from sympy.abc import x, y, z, k, n
     >>> from sympy.series.kauers import finite_diff
     >>> from  sympy import Sum
@@ -36,6 +39,7 @@ def finite_diff_kauers(sum):
 
     Examples
     ========
+
     >>> from sympy.series.kauers import finite_diff_kauers
     >>> from sympy import Sum
     >>> from sympy.abc import x, y, m, n, k

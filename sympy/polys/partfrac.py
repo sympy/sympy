@@ -1,16 +1,19 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
+from __future__ import print_function, division
+
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyoptions import allowed_flags, set_defaults
 from sympy.polys.polyerrors import PolynomialError
 
-from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Mul, Expr
+from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Expr
 from sympy.core.basic import preorder_traversal
-from sympy.utilities import numbered_symbols, take, xthreaded
-
+from sympy.utilities import numbered_symbols, take, xthreaded, public
+from sympy.core.compatibility import xrange
 
 @xthreaded
+@public
 def apart(f, x=None, full=False, **options):
     """
     Compute partial fraction decomposition of a rational function.
@@ -56,15 +59,15 @@ def apart(f, x=None, full=False, **options):
     options = set_defaults(options, extension=True)
     try:
         (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
-    except PolynomialError, msg:
+    except PolynomialError as msg:
         if f.is_commutative:
             raise PolynomialError(msg)
         # non-commutative
         if f.is_Mul:
             c, nc = f.args_cnc(split_1=False)
-            nc = Mul(*[apart(i, x=x, full=full, **_options) for i in nc])
+            nc = f.func(*[apart(i, x=x, full=full, **_options) for i in nc])
             if c:
-                c = apart(Mul._from_args(c), x=x, full=full, **_options)
+                c = apart(f.func._from_args(c), x=x, full=full, **_options)
                 return c*nc
             else:
                 return nc
@@ -79,11 +82,11 @@ def apart(f, x=None, full=False, **options):
                         nc.append(apart(i, x=x, full=full, **_options))
                     except NotImplementedError:
                         nc.append(i)
-            return apart(Add(*c), x=x, full=full, **_options) + Add(*nc)
+            return apart(f.func(*c), x=x, full=full, **_options) + f.func(*nc)
         else:
             reps = []
             pot = preorder_traversal(f)
-            pot.next()
+            next(pot)
             for e in pot:
                 try:
                     reps.append((e, apart(e, x=x, full=full, **_options)))
@@ -185,6 +188,7 @@ def apart_full_decomposition(P, Q):
     return assemble_partfrac_list(apart_list(P/Q, P.gens[0]))
 
 
+@public
 def apart_list(f, x=None, dummies=None, **options):
     """
     Compute partial fraction decomposition of a rational function
@@ -382,7 +386,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
             B, g = Q.half_gcdex(D)
             b = (P * B.quo(g)).rem(D)
 
-            Dw = D.subs(x, dummygen.next())
+            Dw = D.subs(x, next(dummygen))
             numer = Lambda(a, b.as_expr().subs(x, a))
             denom = Lambda(a, (x - a))
             exponent = n-j
@@ -392,6 +396,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
     return partial
 
 
+@public
 def assemble_partfrac_list(partial_list):
     r"""Reassemble a full partial fraction decomposition
     from a structured result obtained by the function ``apart_list``.
@@ -456,7 +461,7 @@ def assemble_partfrac_list(partial_list):
     # Rational parts
     for r, nf, df, ex in partial_list[2]:
         if isinstance(r, Poly):
-            # Assemble in case the roots are given implicitely by a polynomials
+            # Assemble in case the roots are given implicitly by a polynomials
             an, nu = nf.variables, nf.expr
             ad, de = df.variables, df.expr
             # Hack to make dummies equal because Lambda created new Dummies

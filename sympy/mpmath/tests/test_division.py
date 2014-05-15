@@ -84,9 +84,7 @@ def test_tight_integer_division():
         b = choice([1, -1]) * randint(1, 1<<randint(10, 100))
         p = a * b
         width = bitcount(abs(b)) - trailing(b)
-        a = fi(a)
-        b = fi(b)
-        p = fi(p)
+        a = fi(a); b = fi(b); p = fi(p)
         for mode in all_modes:
             assert mpf_div(p, a, width, mode) == b
 

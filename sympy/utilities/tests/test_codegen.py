@@ -1,6 +1,5 @@
-from StringIO import StringIO
-
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
+from sympy.core.compatibility import StringIO
 from sympy import erf
 from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
@@ -346,16 +345,16 @@ def test_loops_c():
         '   }\n'
         '   for (int i=0; i<m; i++){\n'
         '      for (int j=0; j<n; j++){\n'
-        '         y[i] = y[i] + %(rhs)s;\n'
+        '         y[i] = %(rhs)s + y[i];\n'
         '      }\n'
         '   }\n'
         '}\n'
     )
 
-    assert (code == expected % {'rhs': 'A[i*n + j]*x[j]'} or
-            code == expected % {'rhs': 'A[j + i*n]*x[j]'} or
-            code == expected % {'rhs': 'x[j]*A[i*n + j]'} or
-            code == expected % {'rhs': 'x[j]*A[j + i*n]'})
+    assert (code == expected % {'rhs': 'A[%s]*x[j]' % (i*n + j)} or
+            code == expected % {'rhs': 'A[%s]*x[j]' % (j + i*n)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (i*n + j)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (j + i*n)})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
@@ -414,16 +413,16 @@ def test_partial_loops_c():
         '   }\n'
         '   for (int i=o; i<%(upperi)s; i++){\n'
         '      for (int j=0; j<n; j++){\n'
-        '         y[i] = y[i] + %(rhs)s;\n'
+        '         y[i] = %(rhs)s + y[i];\n'
         '      }\n'
         '   }\n'
         '}\n'
     ) % {'upperi': m - 4, 'rhs': '%(rhs)s'}
 
-    assert (code == expected % {'rhs': 'A[i*p + j]*x[j]'} or
-            code == expected % {'rhs': 'A[j + i*p]*x[j]'} or
-            code == expected % {'rhs': 'x[j]*A[i*p + j]'} or
-            code == expected % {'rhs': 'x[j]*A[j + i*p]'})
+    assert (code == expected % {'rhs': 'A[%s]*x[j]' % (i*p + j)} or
+            code == expected % {'rhs': 'A[%s]*x[j]' % (j + i*p)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (i*p + j)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (j + i*p)})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
@@ -918,13 +917,14 @@ def test_loops():
         'end do\n'
         'do i = 1, m\n'
         '   do j = 1, n\n'
-        '      y(i) = y(i) + %(rhs)s\n'
+        '      y(i) = %(rhs)s + y(i)\n'
         '   end do\n'
         'end do\n'
         'end subroutine\n'
-    ) % {'rhs': 'A(i, j)*x(j)'}
+    )
 
-    assert expected == code
+    assert code == expected % {'rhs': 'A(i, j)*x(j)'} or\
+        code == expected % {'rhs': 'x(j)*A(i, j)'}
     assert f2 == 'file.h'
     assert interface == (
         'interface\n'
@@ -993,7 +993,7 @@ def test_loops_InOut():
         'INTEGER*4 :: j\n'
         'do i = 1, m\n'
         '   do j = 1, n\n'
-        '      y(i) = y(i) + %(rhs)s\n'
+        '      y(i) = %(rhs)s + y(i)\n'
         '   end do\n'
         'end do\n'
         'end subroutine\n'
@@ -1048,18 +1048,19 @@ def test_partial_loops_f():
         'end do\n'
         'do i = %(ilow)s, %(iup)s\n'
         '   do j = 1, n\n'
-        '      y(i) = y(i) + %(rhs)s\n'
+        '      y(i) = %(rhs)s + y(i)\n'
         '   end do\n'
         'end do\n'
         'end subroutine\n'
     ) % {
-        'rhs': 'A(i, j)*x(j)',
+        'rhs': '%(rhs)s',
         'iup': str(m - 4),
         'ilow': str(1 + o),
         'iup-ilow': str(m - 4 - o)
     }
 
-    assert expected == code
+    assert code == expected % {'rhs': 'A(i, j)*x(j)'} or\
+        code == expected % {'rhs': 'x(j)*A(i, j)'}
 
 
 def test_output_arg_f():
@@ -1098,11 +1099,13 @@ def test_inline_function():
         'REAL*8, intent(out), dimension(1:m) :: y\n'
         'INTEGER*4 :: i\n'
         'do i = 1, m\n'
-        '   y(i) = x(i)*(1 + x(i))\n'
+        '   y(i) = %s*%s\n'
         'end do\n'
         'end subroutine\n'
     )
-    assert code == expected
+    args = ('x(i)', '(x(i) + 1)')
+    assert code == expected % args or\
+        code == expected % args[::-1]
 
 
 def test_check_case():
@@ -1119,6 +1122,6 @@ def test_check_case_false_positive():
     x2 = symbols('x', my_assumption=True)
     try:
         codegen(('test', x1*x2), 'f95', 'prefix')
-    except CodeGenError, e:
+    except CodeGenError as e:
         if e.args[0].startswith("Fortran ignores case."):
             raise AssertionError("This exception should not be raised!")

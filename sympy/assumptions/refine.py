@@ -1,4 +1,6 @@
-from sympy.core import S, Add, Expr
+from __future__ import print_function, division
+
+from sympy.core import S, Add, Expr, Basic
 from sympy.assumptions import Q, ask
 from sympy.core.logic import fuzzy_not
 
@@ -22,6 +24,8 @@ def refine(expr, assumptions=True):
         x
 
     """
+    if not isinstance(expr, Basic):
+        return expr
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial
@@ -109,6 +113,8 @@ def refine_Pow(expr, assumptions):
         if expr.base is S.NegativeOne:
             if expr.exp.is_Add:
 
+                old = expr
+
                 # For powers of (-1) we can remove
                 #  - even terms
                 #  - pairs of odd terms
@@ -137,7 +143,27 @@ def refine_Pow(expr, assumptions):
 
                 if new_coeff != coeff or len(terms) < initial_number_of_terms:
                     terms.add(new_coeff)
-                    return expr.base**(Add(*terms))
+                    expr = expr.base**(Add(*terms))
+
+                # Handle (-1)**((-1)**n/2 + m/2)
+                e2 = 2*expr.exp
+                if ask(Q.even(e2), assumptions):
+                    if e2.could_extract_minus_sign():
+                        e2 *= expr.base
+                if e2.is_Add:
+                    i, p = e2.as_two_terms()
+                    if p.is_Pow and p.base is S.NegativeOne:
+                        if ask(Q.integer(p.exp), assumptions):
+                            i = (i + 1)/2
+                            if ask(Q.even(i), assumptions):
+                                return expr.base**p.exp
+                            elif ask(Q.odd(i), assumptions):
+                                return expr.base**(p.exp + 1)
+                            else:
+                                return expr.base**(p.exp + i)
+
+                if old != expr:
+                    return expr
 
 
 def refine_exp(expr, assumptions):

@@ -2,6 +2,7 @@ from sympy.core import Symbol, Float, Rational, Integer, I, Mul, Pow
 from sympy.functions import exp, factorial, sin
 from sympy.logic import And
 from sympy.series import Limit
+from sympy.utilities.pytest import raises
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError
@@ -72,3 +73,7 @@ def test_global_dict():
     }
     for text, result in inputs.items():
         assert parse_expr(text, global_dict=global_dict) == result
+
+def test_issue_2515():
+    raises(TokenError, lambda: parse_expr('(()'))
+    raises(TokenError, lambda: parse_expr('"""'))

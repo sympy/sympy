@@ -93,14 +93,18 @@ def test_Factors():
     n, d = x**(2 + y), x**2
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors(x**y), Factors())
+    assert f.gcd(d) == Factors()
     d = x**y
     assert f.div(d) == f.normal(d) == (Factors(x**2), Factors())
+    assert f.gcd(d) == Factors(d)
     n = d = 2**x
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors(), Factors())
+    assert f.gcd(d) == Factors(d)
     n, d = 2**x, 2**y
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors({S(2): x}), Factors({S(2): y}))
+    assert f.gcd(d) == Factors()
 
     # extraction of constant only
     n = x**(x + 3)
@@ -197,14 +201,14 @@ def test_gcd_terms():
     assert gcd_terms(arg) == garg
     assert gcd_terms(sin(arg)) == sin(garg)
 
-    # issue 3040-like
+    # issue 6139-like
     alpha, alpha1, alpha2, alpha3 = symbols('alpha:4')
     a = alpha**2 - alpha*x**2 + alpha + x**3 - x*(alpha + 1)
     rep = (alpha, (1 + sqrt(5))/2 + alpha1*x + alpha2*x**2 + alpha3*x**3)
     s = (a/(x - alpha)).subs(*rep).series(x, 0, 1)
     assert simplify(collect(s, x)) == -sqrt(5)/2 - S(3)/2 + O(x)
 
-    # issue 2818
+    # issue 5917
     assert _gcd_terms([S.Zero, S.Zero]) == (0, 0, 1)
     assert _gcd_terms([2*x + 4]) == (2, x + 2, 1)
 
@@ -328,18 +332,18 @@ def test_factor_nc():
     eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
     assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)
 
-    # issue 3435
+    # issue 6534
     assert (2*n + 2*m).factor() == 2*(n + m)
 
-    # issue 3602
+    # issue 6701
     assert factor_nc(n**k + n**(k + 1)) == n**k*(1 + n)
     assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
-    # issue 3819
+    # issue 6918
     assert factor_nc(-n*(2*x**2 + 2*x)) == -2*n*x*(x + 1)
 
 
-def test_issue_3261():
+def test_issue_6360():
     a, b = symbols("a b")
     apb = a + b
     eq = apb + apb**2*(-2*a - 2*b)

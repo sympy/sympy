@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from math import sqrt as _sqrt, acos as _acos
 

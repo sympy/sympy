@@ -80,6 +80,8 @@ and to see the results of some benchmarks.
 
 """
 
+from __future__ import print_function, division
+
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
@@ -208,7 +210,8 @@ def genfcode(lambdastr, use_cse=False):
     else:
         # eliminate common subexpressions
         subs, finalexpr = cse(sympify(fstr), _gentmpvars())
-        assert len(finalexpr) == 1
+        if len(finalexpr) != 1:
+            raise ValueError("Length should be 1")
         vardec = ''
         cfstr = ''
         for symbol, expr in subs:
@@ -248,7 +251,8 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
     if fprototype:
         fprototype = ctypes.CFUNCTYPE(*fprototype)
     else:
-        assert argcount, 'need argcount if no prototype is specified'
+        if not argcount:
+            raise ValueError("need argcount if no prototype is specified")
         fprototype = ctypes.CFUNCTYPE(*[ctypes.c_double]*(argcount + 1))
     # see libtcc.h for API documentation
     tccstate = libtcc.tcc_new()
@@ -310,7 +314,7 @@ def frange(*args, **kwargs):
     >>> frange('lambda x: sqrt(x)', 1, 4) # doctest: +ELLIPSIS
     <__main__.c_double_Array_3 object at ...>
     >>> for i in _:
-    ...     print i
+    ...     print(i)
     ...
     1.0
     1.41421356237
@@ -332,8 +336,8 @@ def frange(*args, **kwargs):
         stop = args[2]
     if len(args) == 4:
         step = args[3]
-    assert start + step != start, \
-        'step is too small and would cause an infinite loop'
+    if start + step == start:
+        raise ValueError("step is too small and would cause an infinite loop")
     # determine length of resulting array
     # TODO: do this better
     length = stop - start
@@ -349,7 +353,8 @@ def frange(*args, **kwargs):
             length += 1  # include first one
     if length < 0:
         length = 0
-    assert length == int(length)
+    if length != int(length):
+        raise ValueError("length should be an integer")
     length = int(length)
     # create array
     a = (ctypes.c_double * length)()
@@ -449,11 +454,13 @@ def test_clambdify():
     pf1 = lambdify((x, y), f1, 'math')
     cf1 = clambdify((x, y), f1)
     for i in xrange(10):
-        assert cf1(i, 10 - i) == pf1(i, 10 - i)
+        if cf1(i, 10 - i) != pf1(i, 10 - i):
+            raise ValueError("Values should be equal")
     f2 = (x - y) / z * pi
     pf2 = lambdify((x, y, z), f2, 'math')
     cf2 = clambdify((x, y, z), f2)
-    assert round(pf2(1, 2, 3), 14) == round(cf2(1, 2, 3), 14)
+    if round(pf2(1, 2, 3), 14) != round(cf2(1, 2, 3), 14):
+        raise ValueError("Values should be equal")
     # FIXME: slight difference in precision
 
 
@@ -462,30 +469,43 @@ def test_frange():
     f = eval(fstr)
     a = frange(fstr, 30, 168, 3)
     args = range(30, 168, 3)
-    assert len(a) == len(args)
+    if len(a) != len(args):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert a[i] == f(args[i])
-    assert len(frange('lambda x: x', 0, -10000)) == 0
-    assert len(frange('lambda x: x', -1, -1, 0.0001)) == 0
+        if a[i] != f(args[i]):
+            raise ValueError("Values should be equal")
+    if len(frange('lambda x: x', 0, -10000)) != 0:
+        raise ValueError("Length should be 0")
+    if len(frange('lambda x: x', -1, -1, 0.0001)) != 0:
+        raise ValueError("Length should be 0")
     a = frange('lambda x: x', -5, 5, 0.1)
     b = range(-50, 50)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert int(round(a[i]*10)) == b[i]
+        if int(round(a[i]*10)) != b[i]:
+            raise ValueError("Values should be equal")
     a = frange('lambda x: x', 17, -9, -3)
     b = range(17, -9, -3)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert a[i] == b[i]
+        if a[i] != b[i]:
+            raise ValueError("a and b should be equal")
     a = frange('lambda x: x', 2.7, -3.1, -1.01)
     b = range(270, -310, -101)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert int(round(a[i]*100)) == b[i]
+        if int(round(a[i]*100)) != b[i]:
+            raise ValueError("Values should be equal")
     assert frange('lambda x: x', 0.2, 0.1, -0.1)[0] == 0.2
-    assert len(frange('lambda x: x', 0)) == 0
-    assert len(frange('lambda x: x', 1000, -1)) == 0
-    assert len(frange('lambda x: x', -1.23, 3.21, -0.0000001)) == 0
+    if len(frange('lambda x: x', 0)) != 0:
+        raise ValueError("Length should be 0")
+    if len(frange('lambda x: x', 1000, -1)) != 0:
+        raise ValueError("Length should be 0")
+    if len(frange('lambda x: x', -1.23, 3.21, -0.0000001)) != 0:
+        raise ValueError("Length should be 0")
     try:
         frange()
         assert False
@@ -502,7 +522,8 @@ def test_evalonarray_ctypes():
     a = frange('lambda x: x', 10)
     evalonarray('lambda x: _sin(x)', a)
     for i, j in enumerate(a):
-        assert _sin(i) == j
+        if _sin(i) != j:
+            raise ValueError("Values should be equal")
 # TODO: test for ctypes pointers
 ##    evalonarray('lambda x: asin(x)', ctypes.byref(a), len(a))
 ##    for i, j in enumerater(a):
@@ -514,7 +535,8 @@ def test_evalonarray_numpy():
     a = numpy.arange(10, dtype=float)
     evalonarray('lambda x: x + 1', a)
     for i, j in enumerate(a):
-        assert float(i + 1) == j
+        if float(i + 1) != j:
+            raise ValueError("Values should be equal")
 
 
 def test_use_cse():
@@ -523,9 +545,11 @@ def test_use_cse():
     kwargs = {}
     kwargs['use_cse'] = True
     b = frange(*args, **kwargs)
-    assert len(a) == len(b)
+    if len(a) != len(b):
+        raise ValueError("Lengths should be equal")
     for i in xrange(len(a)):
-        assert a[i] == b[i]
+        if a[i] != b[i]:
+            raise ValueError("a and b should be equal")
 
 
 def benchmark():
@@ -544,8 +568,8 @@ def benchmark():
         global cf, pf, psyf
         start = time()
         cf = clambdify(var, f)
-        print 'compile time (including sympy overhead): %f s' % (
-            time() - start)
+        print('compile time (including sympy overhead): %f s' % (
+            time() - start))
         pf = lambdify(var, f, 'math')
         psyf = None
         psyco = import_module('psyco')
@@ -560,14 +584,14 @@ def benchmark():
             t3 = Timer(code, 'from __main__ import psyf as f')
         else:
             t3 = None
-        print 'for x = (0, 1, 2, ..., 999)/1000'
-        print '20 times in 3 runs'
-        print 'compiled:      %.4f %.4f %.4f' % tuple(t1.repeat(3, 20))
-        print 'Python lambda: %.4f %.4f %.4f' % tuple(t2.repeat(3, 20))
+        print('for x = (0, 1, 2, ..., 999)/1000')
+        print('20 times in 3 runs')
+        print('compiled:      %.4f %.4f %.4f' % tuple(t1.repeat(3, 20)))
+        print('Python lambda: %.4f %.4f %.4f' % tuple(t2.repeat(3, 20)))
         if t3:
-            print 'Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20))
+            print('Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20)))
 
-    print 'big function:'
+    print('big function:')
     from sympy import _exp, _sin, _cos, pi, lambdify
     x = Symbol('x')
 ##    f1 = diff(_exp(x)**2 - _sin(x)**pi, x) \
@@ -577,33 +601,33 @@ def benchmark():
         + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5
         + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
     fbenchmark(f1)
-    print
-    print 'simple function:'
+    print()
+    print('simple function:')
     y = Symbol('y')
     f2 = sqrt(x*y) + x*5
     fbenchmark(f2, [x, y])
     times = 100000
     fstr = '_exp(_sin(_exp(-x**2)) + sqrt(pi)*_cos(x**5/(x**3-x**2+pi*x)))'
     print
-    print 'frange with f(x) ='
-    print fstr
-    print 'for x=1, ..., %i' % times
-    print 'in 3 runs including full compile time'
+    print('frange with f(x) =')
+    print(fstr)
+    print('for x=1, ..., %i' % times)
+    print('in 3 runs including full compile time')
     t4 = Timer("frange('lambda x: %s', 0, %i)" % (fstr, times),
                'from __main__ import frange')
 
     numpy = import_module('numpy')
 
-    print 'frange:        %.4f %.4f %.4f' % tuple(t4.repeat(3, 1))
+    print('frange:        %.4f %.4f %.4f' % tuple(t4.repeat(3, 1)))
     if numpy:
         t5 = Timer('x = arange(%i); result = %s' % (times, fstr),
                    'from numpy import arange, sqrt, exp, sin, cos, exp, pi')
-        print 'numpy:         %.4f %.4f %.4f' % tuple(t5.repeat(3, 1))
+        print('numpy:         %.4f %.4f %.4f' % tuple(t5.repeat(3, 1)))
     # TODO: integration into fbenchmark
 
 if __name__ == '__main__':
     if __debug__:
-        print 'Running tests...',
+        print('Running tests...',)
         numpy = import_module('numpy')
         test_cexpr()
         test_clambdify()
@@ -614,7 +638,7 @@ if __name__ == '__main__':
         test_use_cse()
         import doctest
         doctest.testmod()
-        print 'OK'
+        print('OK')
         print
-    print 'Running benchmark...'
+    print('Running benchmark...')
     benchmark()

@@ -1,8 +1,8 @@
 Elementary
 ==========
 
-This module implements elementary functions, as well as functions like Abs,
-Max, etc.
+This module implements elementary functions, as well as functions like ``Abs``,
+``Max``, etc.
 
 
 Abs
@@ -84,8 +84,8 @@ atan
 atan2
 -----
 
-This function is like `atan`, but considers the sign of both arguments in
-order to correctly determine the quadrant of its result.
+This function is like `\operatorname{atan}`, but considers the sign of both
+arguments in order to correctly determine the quadrant of its result.
 
 .. autoclass:: sympy.functions.elementary.trigonometric.atan2
    :members:
@@ -229,7 +229,7 @@ Examples::
     >>> Min(1, x)
     Min(1, x)
 
-It is named Min and not min to avoid conflicts with the built-in function min.
+It is named ``Min`` and not ``min`` to avoid conflicts with the built-in function ``min``.
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.Min
    :members:
@@ -240,7 +240,7 @@ Max
 
 Returns the maximum of two (comparable) expressions
 
-It is named Max and not max to avoid conflicts with the built-in function max.
+It is named ``Max`` and not ``max`` to avoid conflicts with the built-in function ``max``.
 
 .. autoclass:: sympy.functions.elementary.miscellaneous.Max
    :members:
@@ -296,7 +296,7 @@ sinh
 sqrt
 ----
 
-Returns the square root of an expression. It is equivalent to raise to Rational(1,2)
+Returns the square root of an expression. It is equivalent to raise to ``Rational(1,2)``.
 
     >>> from sympy.functions import sqrt
     >>> from sympy import Rational
@@ -324,4 +324,3 @@ tanh
 
 .. autoclass:: sympy.functions.elementary.hyperbolic.tanh
    :members:
-

@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
@@ -150,7 +148,7 @@ def test_MatrixSymbol():
     n, m, t = symbols('n,m,t')
     X = MatrixSymbol('X', n, m)
     assert X.shape == (n, m)
-    raises(TypeError, lambda: MatrixSymbol('X', n, m)(t))  # issue 2756
+    raises(TypeError, lambda: MatrixSymbol('X', n, m)(t))  # issue 5855
     assert X.doit() == X
 
 
@@ -194,3 +192,6 @@ def test_indexing():
     A[1, 2]
     A[l, k]
     A[l+1, k+1]
+
+def test_MatrixElement_diff():
+    assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]

@@ -1,4 +1,4 @@
-from diffgeom import (
+from .diffgeom import (
     BaseCovarDerivativeOp, BaseScalarField, BaseVectorField, Commutator,
     contravariant_order, CoordSystem, CovarDerivativeOp, covariant_order,
     Differential, intcurve_diffequ, intcurve_series, LieDerivative,

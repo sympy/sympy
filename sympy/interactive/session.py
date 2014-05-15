@@ -1,5 +1,8 @@
 """Tools for setting up interactive sessions. """
 
+from __future__ import print_function, division
+
+from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -8,6 +11,7 @@ from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
 f, g, h = symbols('f g h', cls=Function)
+init_printing()
 """
 
 verbose_message = """\
@@ -96,7 +100,7 @@ def int_to_Integer(s):
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from StringIO import StringIO
+    from sympy.core.compatibility import StringIO
 
     def _is_int(num):
         """
@@ -272,7 +276,13 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
 
     if IPython.__version__ >= '0.11':
         # use an app to parse the command line, and init config
-        from IPython.frontend.terminal import ipapp
+        # IPython 1.0 deprecates the frontend module, so we import directly
+        # from the terminal module to prevent a deprecation message from being
+        # shown.
+        if IPython.__version__ >= '1.0':
+            from IPython.terminal import ipapp
+        else:
+            from IPython.frontend.terminal import ipapp
         app = ipapp.TerminalIPythonApp()
 
         # don't draw IPython banner during initialization:
@@ -280,7 +290,9 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
         app.initialize(argv)
 
         if auto_symbols:
-            enable_automatic_symbols(app)
+            readline = import_module("readline")
+            if readline:
+                enable_automatic_symbols(app)
         if auto_int_to_Integer:
             enable_automatic_int_sympification(app)
 
@@ -460,8 +472,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
         if not in_ipython:
             mainloop = ip.mainloop
 
-    if auto_symbols and (not ipython or IPython.__version__ < '0.11'):
-        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
+    readline = import_module("readline")
+    if auto_symbols and (not ipython or IPython.__version__ < '0.11' or not readline):
+        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
     if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
@@ -478,4 +491,5 @@ def init_session(ipython=None, pretty_print=True, order=None,
         sys.exit('Exiting ...')
     else:
         ip.write(message)
-        ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
+        import atexit
+        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)

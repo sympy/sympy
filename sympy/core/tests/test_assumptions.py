@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import raises, XFAIL
 from sympy import I, sqrt, log, exp, sin, asin
@@ -318,7 +317,7 @@ def test_I():
 
 
 def test_symbol_real():
-    # issue 749
+    # issue 3848
     a = Symbol('a', real=False)
 
     assert a.is_real is False
@@ -562,7 +561,7 @@ def test_other_symbol():
         x.is_real = False
 
 
-def test_issue726():
+def test_issue_3825():
     """catch: hash instability"""
     x = Symbol("x")
     y = Symbol("y")
@@ -575,7 +574,7 @@ def test_issue726():
     assert h1 == h2
 
 
-def test_issue1723():
+def test_issue_4822():
     z = (-1)**Rational(1, 3)*(1 - I*sqrt(3))
     assert z.is_real in [True, None]
 
@@ -666,7 +665,7 @@ def test_special_is_rational():
 
 
 @XFAIL
-def test_issue_3176():
+def test_issue_6275():
     x = Symbol('x')
     # both zero or both Muls...but neither "change would be very appreciated.
     # This is similar to x/x => 1 even though if x = 0, it is really nan.
@@ -674,6 +673,13 @@ def test_issue_3176():
     if 0*S.Infinity is S.NaN:
         b = Symbol('b', bounded=None)
         assert (b*0).is_zero is None
+
+
+def test_sanitize_assumptions():
+    # issue 6666
+    x = Symbol('x', real=1, positive=0)
+    assert x.is_real is True
+    assert x.is_positive is False
 
 
 def test_special_assumptions():
@@ -688,8 +694,8 @@ def test_special_assumptions():
     assert (z2*z).is_zero is True
 
     e = -3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2
-    assert (e < 0) is False
-    assert (e > 0) is False
+    assert (e < 0) is S.false
+    assert (e > 0) is S.false
     assert (e == 0) is False  # it's not a literal 0
     assert e.equals(0) is True
 
@@ -700,9 +706,13 @@ def test_inconsistent():
            commutative=False))
 
 
-def test_issue_3532():
+def test_issue_6631():
     assert ((-1)**(I)).is_real is True
     assert ((-1)**(I*2)).is_real is True
     assert ((-1)**(I/2)).is_real is True
     assert ((-1)**(I*S.Pi)).is_real is True
     assert (I**(I + 2)).is_real is True
+
+
+def test_issue_2730():
+    assert (1/(1 + I)).is_real is False

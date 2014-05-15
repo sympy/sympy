@@ -1,5 +1,7 @@
+from __future__ import print_function, division
+
 from sympy import ask, Q
-from sympy.core import Tuple, Basic, Add
+from sympy.core import Tuple, Basic, Add, sympify
 from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
@@ -29,20 +31,22 @@ class BlockMatrix(MatrixExpr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
-    >>> print B
-    [X, Z]
-    [0, Y]
+    >>> print(B)
+    Matrix([
+    [X, Z],
+    [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
-    [I, Z]
+    >>> print(C)
+    Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
-    [X, Z + Z*Y]
+    >>> print(block_collapse(C*B))
+    Matrix([[X, Z*Y + Z]])
 
     """
     def __new__(cls, *args):
         from sympy.matrices.immutable import ImmutableMatrix
+        args = map(sympify, args)
         mat = ImmutableMatrix(*args)
 
         obj = Basic.__new__(cls, mat)
@@ -134,23 +138,25 @@ class BlockMatrix(MatrixExpr):
         >>> Z = MatrixSymbol('Z', n, m)
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
-        [X',  0]
-        [Z', Y']
+        Matrix([
+        [X',  0],
+        [Z', Y']])
         >>> _.transpose()
-        [X, Z]
-        [0, Y]
+        Matrix([
+        [X, Z],
+        [0, Y]])
         """
         return self._eval_transpose()
 
     def _entry(self, i, j):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
-            if i < numrows:
+            if (i < numrows) != False:
                 break
             else:
                 i -= numrows
         for col_block, numcols in enumerate(self.colblocksizes):
-            if j < numcols:
+            if (j < numcols) != False:
                 break
             else:
                 j -= numcols
@@ -188,8 +194,9 @@ class BlockDiagMatrix(BlockMatrix):
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> BlockDiagMatrix(X, Y)
-    [X, 0]
-    [0, Y]
+    Matrix([
+    [X, 0],
+    [0, Y]])
 
     """
     def __new__(cls, *mats):
@@ -256,16 +263,17 @@ def block_collapse(expr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
-    >>> print B
-    [X, Z]
-    [0, Y]
+    >>> print(B)
+    Matrix([
+    [X, Z],
+    [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
-    [I, Z]
+    >>> print(C)
+    Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
-    [X, Z + Z*Y]
+    >>> print(block_collapse(C*B))
+    Matrix([[X, Z*Y + Z]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
@@ -426,7 +434,7 @@ def blockcut(expr, rowsizes, colsizes):
     >>> type(B).__name__
     'BlockMatrix'
     >>> ImmutableMatrix(B.blocks[0, 1])
-    [1, 2, 3]
+    Matrix([[1, 2, 3]])
     """
 
     rowbounds = bounds(rowsizes)

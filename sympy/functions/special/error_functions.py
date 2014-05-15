@@ -1,11 +1,15 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
+from __future__ import print_function, division
+
 from sympy.core import Add, S, C, sympify, cacheit, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt, root
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.complexes import polar_lift
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.core.compatibility import xrange
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
@@ -19,7 +23,8 @@ class erf(Function):
     r"""
     The Gauss error function. This function is defined as:
 
-    :math:`\mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t.
 
     Examples
     ========
@@ -85,7 +90,6 @@ class erf(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -93,6 +97,13 @@ class erf(Function):
             return 2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfinv
 
     @classmethod
     def eval(cls, arg):
@@ -202,7 +213,8 @@ class erfc(Function):
     r"""
     Complementary Error Function. The function is defined as:
 
-    :math:`\mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t
 
     Examples
     ========
@@ -268,7 +280,6 @@ class erfc(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -276,6 +287,12 @@ class erfc(Function):
             return -2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfcinv
 
     @classmethod
     def eval(cls, arg):
@@ -382,7 +399,8 @@ class erfi(Function):
     r"""
     Imaginary error function. The function erfi is defined as:
 
-    :math:`\mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t
 
     Examples
     ========
@@ -445,7 +463,6 @@ class erfi(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -550,7 +567,8 @@ class erf2(Function):
     r"""
     Two-argument error function. This function is defined as:
 
-    :math:`\mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t`
+    .. math ::
+        \mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t
 
     Examples
     ========
@@ -608,7 +626,6 @@ class erf2(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
     """
 
-    nargs = 2
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -680,7 +697,8 @@ class erfinv(Function):
     r"""
     Inverse Error Function. The erfinv function is defined as:
 
-    :math:`\mathrm{erf}(x) = y \quad \Rightarrow \quad \mathrm{erfinv}(y) = x`
+    .. math ::
+        \mathrm{erf}(x) = y \quad \Rightarrow \quad \mathrm{erfinv}(y) = x
 
     Examples
     ========
@@ -724,13 +742,18 @@ class erfinv(Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
     """
 
-    nargs = 1
 
     def fdiff(self, argindex =1):
         if argindex == 1:
             return sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else :
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erf
 
     @classmethod
     def eval(cls, z):
@@ -758,7 +781,8 @@ class erfcinv (Function):
     r"""
     Inverse Complementary Error Function. The erfcinv function is defined as:
 
-    :math:`\mathrm{erfc}(x) = y \quad \Rightarrow \quad \mathrm{erfcinv}(y) = x`
+    .. math ::
+        \mathrm{erfc}(x) = y \quad \Rightarrow \quad \mathrm{erfcinv}(y) = x
 
     Examples
     ========
@@ -796,13 +820,18 @@ class erfcinv (Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
     """
 
-    nargs = 1
 
     def fdiff(self, argindex =1):
         if argindex == 1:
             return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfc
 
     @classmethod
     def eval(cls, z):
@@ -822,7 +851,8 @@ class erf2inv(Function):
     r"""
     Two-argument Inverse error function. The erf2inv function is defined as:
 
-    :math:`\mathrm{erf2}(x, w) = y \quad \Rightarrow \quad \mathrm{erf2inv}(x, y) = w`
+    .. math ::
+        \mathrm{erf2}(x, w) = y \quad \Rightarrow \quad \mathrm{erf2inv}(x, y) = w
 
     Examples
     ========
@@ -867,7 +897,6 @@ class erf2inv(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
     """
 
-    nargs = 2
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -906,51 +935,40 @@ class Ei(Function):
     r"""
     The classical exponential integral.
 
-    For the use in SymPy, this function is defined as
+    For use in SymPy, this function is defined as
 
     .. math:: \operatorname{Ei}(x) = \sum_{n=1}^\infty \frac{x^n}{n\, n!}
                                      + \log(x) + \gamma,
 
-    where :math:`\gamma` is the Euler-Mascheroni constant.
+    where `\gamma` is the Euler-Mascheroni constant.
 
-    If :math:`x` is a polar number, this defines an analytic function on the
+    If `x` is a polar number, this defines an analytic function on the
     riemann surface of the logarithm. Otherwise this defines an analytic
-    function in the cut plane :math:`\mathbb{C} \setminus (-\infty, 0]`.
+    function in the cut plane `\mathbb{C} \setminus (-\infty, 0]`.
 
     **Background**
 
-    The name 'exponential integral' comes from the following statement:
+    The name *exponential integral* comes from the following statement:
 
     .. math:: \operatorname{Ei}(x) = \int_{-\infty}^x \frac{e^t}{t} \mathrm{d}t
 
     If the integral is interpreted as a Cauchy principal value, this statement
-    holds for :math:`x > 0` and :math:`\operatorname{Ei}(x)` as defined above.
+    holds for `x > 0` and `\operatorname{Ei}(x)` as defined above.
 
-    Note that we carefully avoided defining :math:`\operatorname{Ei}(x)` for
-    negative real x. This is because above integral formula does not hold for
-    any polar lift of such :math:`x`, indeed all branches of
-    :math:`\operatorname{Ei}(x)` above the negative reals are imaginary.
+    Note that we carefully avoided defining `\operatorname{Ei}(x)` for
+    negative real `x`. This is because above integral formula does not hold for
+    any polar lift of such `x`, indeed all branches of
+    `\operatorname{Ei}(x)` above the negative reals are imaginary.
 
-    However, the following statement holds for all :math:`x \in \mathbb{R}^*`:
+    However, the following statement holds for all `x \in \mathbb{R}^*`:
 
     .. math:: \int_{-\infty}^x \frac{e^t}{t} \mathrm{d}t =
               \frac{\operatorname{Ei}\left(|x|e^{i \arg(x)}\right) +
                     \operatorname{Ei}\left(|x|e^{- i \arg(x)}\right)}{2},
 
     where the integral is again understood to be a principal value if
-    :math:`x > 0`, and :math:`|x|e^{i \arg(x)}`,
-    :math:`|x|e^{- i \arg(x)}` denote two conjugate polar lifts of :math:`x`.
-
-    See Also
-    ========
-
-    expint, sympy.functions.special.gamma_functions.uppergamma
-
-    References
-    ==========
-
-    - Abramowitz & Stegun, section 5: http://www.math.sfu.ca/~cbm/aands/page_228.htm
-    - http://en.wikipedia.org/wiki/Exponential_integral
+    `x > 0`, and `|x|e^{i \arg(x)}`,
+    `|x|e^{- i \arg(x)}` denote two conjugate polar lifts of `x`.
 
     Examples
     ========
@@ -995,9 +1013,28 @@ class Ei(Function):
     >>> Ei(x).rewrite(Shi)
     Chi(x) + Shi(x)
 
+    See Also
+    ========
+
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/6.6
+    .. [2] http://en.wikipedia.org/wiki/Exponential_integral
+    .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
+
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1030,11 +1067,30 @@ class Ei(Function):
     def _eval_rewrite_as_expint(self, z):
         return -expint(1, polar_lift(-1)*z) - I*pi
 
+    def _eval_rewrite_as_li(self, z):
+        if isinstance(z, log):
+            return li(z.args[0])
+        # TODO:
+        # Actually it only holds that:
+        #  Ei(z) = li(exp(z))
+        # for -pi < imag(z) <= pi
+        return li(exp(z))
+
     def _eval_rewrite_as_Si(self, z):
         return Shi(z) + Chi(z)
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
+
+    def _eval_rewrite_as_tractable(self, z):
+        return C.exp(z) * _eis(z)
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_Si(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(Ei, self)._eval_nseries(x, n, logx)
 
 
 class expint(Function):
@@ -1061,20 +1117,6 @@ class expint(Function):
     function of :math:`z`, otherwise there is a branch point at the origin.
     Refer to the incomplete gamma function documentation for details of the
     branching behavior.
-
-    See Also
-    ========
-
-    E1: The classical case, returns expint(1, z).
-    Ei: Another related function called exponential integral.
-    sympy.functions.special.gamma_functions.uppergamma
-
-    References
-    ==========
-
-    - http://dlmf.nist.gov/8.19
-    - http://functions.wolfram.com/GammaBetaErf/ExpIntegralE/
-    - http://en.wikipedia.org/wiki/Exponential_integral
 
     Examples
     ========
@@ -1129,9 +1171,28 @@ class expint(Function):
     >>> expint(nu, z*exp_polar(2*pi*I))
     z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(-nu + 1) + expint(nu, z)
 
+    See Also
+    ========
+
+    Ei: Another related function called exponential integral.
+    E1: The classical case, returns expint(1, z).
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    sympy.functions.special.gamma_functions.uppergamma
+
+    References
+    ==========
+
+    .. [1] http://dlmf.nist.gov/8.19
+    .. [2] http://functions.wolfram.com/GammaBetaErf/ExpIntegralE/
+    .. [3] http://en.wikipedia.org/wiki/Exponential_integral
+
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, nu, z):
@@ -1149,7 +1210,7 @@ class expint(Function):
         if n == 0:
             return
         if nu.is_integer:
-            if (nu > 0) is not True:
+            if (nu > 0) != True:
                 return
             return expint(nu, z) \
                 - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
@@ -1194,6 +1255,17 @@ class expint(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
+    def _eval_nseries(self, x, n, logx):
+        if not self.args[0].has(x):
+            nu = self.args[0]
+            if nu == 1:
+                f = self._eval_rewrite_as_Si(*self.args)
+                return f._eval_nseries(x, n, logx)
+            elif nu.is_Integer and nu > 1:
+                f = self._eval_rewrite_as_Ei(*self.args)
+                return f._eval_nseries(x, n, logx)
+        return super(expint, self)._eval_nseries(x, n, logx)
+
 
 def E1(z):
     """
@@ -1201,9 +1273,250 @@ def E1(z):
 
     This is equivalent to ``expint(1, z)``.
 
+    See Also
+    ========
+
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
     """
     return expint(1, z)
 
+
+class li(Function):
+    r"""
+    The classical logarithmic integral.
+
+    For the use in SymPy, this function is defined as
+
+    .. math:: \operatorname{li}(x) = \int_0^x \frac{1}{\log(t)} \mathrm{d}t \,.
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, li
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> li(0)
+    0
+    >>> li(1)
+    -oo
+    >>> li(oo)
+    oo
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(li(z), z)
+    1/log(z)
+
+    Defining the `li` function via an integral:
+
+
+    The logarithmic integral can also be defined in terms of Ei:
+
+    >>> from sympy import Ei
+    >>> li(z).rewrite(Ei)
+    Ei(log(z))
+    >>> diff(li(z).rewrite(Ei), z)
+    1/log(z)
+
+    We can numerically evaluate the logarithmic integral to arbitrary precision
+    on the whole complex plane (except the singular points):
+
+    >>> li(2).evalf(30)
+    1.04516378011749278484458888919
+
+    >>> li(2*I).evalf(30)
+    1.0652795784357498247001125598 + 3.08346052231061726610939702133*I
+
+    We can even compute Soldner's constant by the help of mpmath:
+
+    >>> from sympy.mpmath import findroot
+    >>> findroot(li, 2)
+    1.45136923488338
+
+    Further transformations include rewriting `li` in terms of
+    the trigonometric integrals `Si`, `Ci`, `Shi` and `Chi`:
+
+    >>> from sympy import Si, Ci, Shi, Chi
+    >>> li(z).rewrite(Si)
+    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
+    >>> li(z).rewrite(Ci)
+    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
+    >>> li(z).rewrite(Shi)
+    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
+    >>> li(z).rewrite(Chi)
+    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
+
+    See Also
+    ========
+
+    Li: Offset logarithmic integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Logarithmic_integral
+    .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
+    .. [3] http://dlmf.nist.gov/6
+    .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
+    """
+
+
+    @classmethod
+    def eval(cls, z):
+        if z is S.Zero:
+            return S.Zero
+        elif z is S.One:
+            return S.NegativeInfinity
+        elif z is S.Infinity:
+            return S.Infinity
+
+    def fdiff(self, argindex=1):
+        arg = self.args[0]
+        if argindex == 1:
+            return S.One / C.log(arg)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_conjugate(self):
+        z = self.args[0]
+        # Exclude values on the branch cut (-oo, 0)
+        if not (z.is_real and z.is_negative):
+            return self.func(z.conjugate())
+
+    def _eval_rewrite_as_Li(self, z):
+        return Li(z) + li(2)
+
+    def _eval_rewrite_as_Ei(self, z):
+        return Ei(C.log(z))
+
+    def _eval_rewrite_as_uppergamma(self, z):
+        from sympy import uppergamma
+        return (-uppergamma(0, -C.log(z)) +
+                S.Half*(C.log(C.log(z)) - C.log(S.One/C.log(z))) - C.log(-C.log(z)))
+
+    def _eval_rewrite_as_Si(self, z):
+        return (Ci(I*C.log(z)) - I*Si(I*C.log(z)) -
+                S.Half*(C.log(S.One/C.log(z)) - C.log(C.log(z))) - C.log(I*C.log(z)))
+
+    _eval_rewrite_as_Ci = _eval_rewrite_as_Si
+
+    def _eval_rewrite_as_Shi(self, z):
+        return (Chi(C.log(z)) - Shi(C.log(z)) - S.Half*(C.log(S.One/C.log(z)) - C.log(C.log(z))))
+
+    _eval_rewrite_as_Chi = _eval_rewrite_as_Shi
+
+    def _eval_rewrite_as_hyper(self, z):
+        return (C.log(z)*hyper((1, 1), (2, 2), C.log(z)) +
+                S.Half*(C.log(C.log(z)) - C.log(S.One/C.log(z))) + S.EulerGamma)
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return (-C.log(-C.log(z)) - S.Half*(C.log(S.One/C.log(z)) - C.log(C.log(z)))
+                - meijerg(((), (1,)), ((0, 0), ()), -C.log(z)))
+
+    def _eval_rewrite_as_tractable(self, z):
+        return z * _eis(C.log(z))
+
+
+class Li(Function):
+    r"""
+    The offset logarithmic integral.
+
+    For the use in SymPy, this function is defined as
+
+    .. math:: \operatorname{Li}(x) = \operatorname{li}(x) - \operatorname{li}(2)
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, Li
+    >>> from sympy.abc import z
+
+    The following special value is known:
+
+    >>> Li(2)
+    0
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(Li(z), z)
+    1/log(z)
+
+    The shifted logarithmic integral can be written in terms of `li(z)`:
+
+    >>> from sympy import li
+    >>> Li(z).rewrite(li)
+    li(z) - li(2)
+
+    We can numerically evaluate the logarithmic integral to arbitrary precision
+    on the whole complex plane (except the singular points):
+
+    >>> Li(2).evalf(30)
+    0
+
+    >>> Li(4).evalf(30)
+    1.92242131492155809316615998938
+
+    See Also
+    ========
+
+    li: Logarithmic integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Logarithmic_integral
+    .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
+    .. [3] http://dlmf.nist.gov/6
+    """
+
+
+    @classmethod
+    def eval(cls, z):
+        if z is S.Infinity:
+            return S.Infinity
+        elif z is 2*S.One:
+            return S.Zero
+
+    def fdiff(self, argindex=1):
+        arg = self.args[0]
+        if argindex == 1:
+            return S.One / C.log(arg)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_evalf(self, prec):
+        return self.rewrite(li).evalf(prec)
+
+    def _eval_rewrite_as_li(self, z):
+        return li(z) - li(2)
+
+    def _eval_rewrite_as_tractable(self, z):
+        return self.rewrite(li).rewrite("tractable", deep=True)
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
@@ -1212,7 +1525,6 @@ def E1(z):
 class TrigonometricIntegral(Function):
     """ Base class for trigonometric integrals. """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1281,19 +1593,6 @@ class Si(TrigonometricIntegral):
 
     It is an entire function.
 
-    See Also
-    ========
-
-    Ci: Cosine integral.
-    Shi: Sinh integral.
-    Chi: Cosh integral.
-    expint: The generalised exponential integral.
-
-    References
-    ==========
-
-    - http://en.wikipedia.org/wiki/Trigonometric_integral
-
     Examples
     ========
 
@@ -1311,7 +1610,7 @@ class Si(TrigonometricIntegral):
     >>> Si(z*exp_polar(2*I*pi))
     Si(z)
 
-    Sine integral behaves much like ordinary sine under multiplication by I:
+    Sine integral behaves much like ordinary sine under multiplication by ``I``:
 
     >>> Si(I*z)
     I*Shi(z)
@@ -1325,6 +1624,23 @@ class Si(TrigonometricIntegral):
     >>> Si(z).rewrite(expint)
     -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
          expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+
+    See Also
+    ========
+
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1350,13 +1666,13 @@ class Ci(TrigonometricIntegral):
     r"""
     Cosine integral.
 
-    This function is defined for positive :math:`x` by
+    This function is defined for positive `x` by
 
     .. math:: \operatorname{Ci}(x) = \gamma + \log{x}
                          + \int_0^x \frac{\cos{t} - 1}{t} \mathrm{d}t
            = -\int_x^\infty \frac{\cos{t}}{t} \mathrm{d}t,
 
-    where :math:`\gamma` is the Euler-Mascheroni constant.
+    where `\gamma` is the Euler-Mascheroni constant.
 
     We have
 
@@ -1364,26 +1680,13 @@ class Ci(TrigonometricIntegral):
         -\frac{\operatorname{E}_1\left(e^{i\pi/2} z\right)
                + \operatorname{E}_1\left(e^{-i \pi/2} z\right)}{2}
 
-    which holds for all polar :math:`z` and thus provides an analytic
+    which holds for all polar `z` and thus provides an analytic
     continuation to the Riemann surface of the logarithm.
 
     The formula also holds as stated
-    for :math:`z \in \mathbb{C}` with :math:`Re(z) > 0`.
+    for `z \in \mathbb{C}` with `\Re(z) > 0`.
     By lifting to the principal branch we obtain an analytic function on the
     cut complex plane.
-
-    See Also
-    ========
-
-    Si: Sine integral.
-    Shi: Sinh integral.
-    Chi: Cosh integral.
-    expint: The generalised exponential integral.
-
-    References
-    ==========
-
-    - http://en.wikipedia.org/wiki/Trigonometric_integral
 
     Examples
     ========
@@ -1391,7 +1694,7 @@ class Ci(TrigonometricIntegral):
     >>> from sympy import Ci
     >>> from sympy.abc import z
 
-    The cosine integral is a primitive of cos(z)/z:
+    The cosine integral is a primitive of `\cos(z)/z`:
 
     >>> Ci(z).diff(z)
     cos(z)/z
@@ -1402,7 +1705,7 @@ class Ci(TrigonometricIntegral):
     >>> Ci(z*exp_polar(2*I*pi))
     Ci(z) + 2*I*pi
 
-    Cosine integral behaves somewhat like ordinary cos under multiplication by I:
+    The cosine integral behaves somewhat like ordinary `\cos` under multiplication by `i`:
 
     >>> from sympy import polar_lift
     >>> Ci(polar_lift(I)*z)
@@ -1415,6 +1718,23 @@ class Ci(TrigonometricIntegral):
     >>> from sympy import expint
     >>> Ci(z).rewrite(expint)
     -expint(1, z*exp_polar(-I*pi/2))/2 - expint(1, z*exp_polar(I*pi/2))/2
+
+    See Also
+    ========
+
+    Si: Sine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1445,26 +1765,13 @@ class Shi(TrigonometricIntegral):
 
     It is an entire function.
 
-    See Also
-    ========
-
-    Si: Sine integral.
-    Ci: Cosine integral.
-    Chi: Cosh integral.
-    expint: The generalised exponential integral.
-
-    References
-    ==========
-
-    - http://en.wikipedia.org/wiki/Trigonometric_integral
-
     Examples
     ========
 
     >>> from sympy import Shi
     >>> from sympy.abc import z
 
-    The Sinh integral is a primitive of sinh(z)/z:
+    The Sinh integral is a primitive of `\sinh(z)/z`:
 
     >>> Shi(z).diff(z)
     sinh(z)/z
@@ -1475,7 +1782,7 @@ class Shi(TrigonometricIntegral):
     >>> Shi(z*exp_polar(2*I*pi))
     Shi(z)
 
-    Sinh integral behaves much like ordinary sinh under multiplication by I:
+    The `\sinh` integral behaves much like ordinary `\sinh` under multiplication by `i`:
 
     >>> Shi(I*z)
     I*Si(z)
@@ -1488,6 +1795,23 @@ class Shi(TrigonometricIntegral):
     >>> from sympy import expint
     >>> Shi(z).rewrite(expint)
     expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+
+    See Also
+    ========
+
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Chi: Hyperbolic cosine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1531,26 +1855,13 @@ class Chi(TrigonometricIntegral):
     By lifting to the principal branch we obtain an analytic function on the
     cut complex plane.
 
-    See Also
-    ========
-
-    Si: Sine integral.
-    Ci: Cosine integral.
-    Shi: Sinh integral.
-    expint: The generalised exponential integral.
-
-    References
-    ==========
-
-    - http://en.wikipedia.org/wiki/Trigonometric_integral
-
     Examples
     ========
 
     >>> from sympy import Chi
     >>> from sympy.abc import z
 
-    The cosh integral is a primitive of cosh(z)/z:
+    The `\cosh` integral is a primitive of `\cosh(z)/z`:
 
     >>> Chi(z).diff(z)
     cosh(z)/z
@@ -1561,7 +1872,7 @@ class Chi(TrigonometricIntegral):
     >>> Chi(z*exp_polar(2*I*pi))
     Chi(z) + 2*I*pi
 
-    Cosh integral behaves somewhat like ordinary cosh under multiplication by I:
+    The `\cosh` integral behaves somewhat like ordinary `\cosh` under multiplication by `i`:
 
     >>> from sympy import polar_lift
     >>> Chi(polar_lift(I)*z)
@@ -1574,6 +1885,23 @@ class Chi(TrigonometricIntegral):
     >>> from sympy import expint
     >>> Chi(z).rewrite(expint)
     -expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+
+    See Also
+    ========
+
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Trigonometric_integral
 
     """
 
@@ -1595,7 +1923,8 @@ class Chi(TrigonometricIntegral):
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
     def _latex(self, printer, exp=None):
-        assert len(self.args) == 1
+        if len(self.args) != 1:
+            raise ValueError("Arg length should be 1")
         if exp:
             return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
                 % (printer._print(exp), printer._print(self.args[0]))
@@ -1603,6 +1932,9 @@ class Chi(TrigonometricIntegral):
             return r'\operatorname{Chi}{\left (%s \right )}' \
                 % printer._print(self.args[0])
 
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\operatorname{Chi}'
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
@@ -1611,7 +1943,6 @@ class Chi(TrigonometricIntegral):
 class FresnelIntegral(Function):
     """ Base class for the Fresnel integrals."""
 
-    nargs = 1
     unbranched = True
 
     @classmethod
@@ -1716,20 +2047,21 @@ class fresnels(FresnelIntegral):
     >>> fresnels(-I*oo)
     I/2
 
-    In general one can pull out factors of -1 and I from the argument:
+    In general one can pull out factors of -1 and `i` from the argument:
+
     >>> fresnels(-z)
     -fresnels(z)
-
     >>> fresnels(I*z)
     -I*fresnels(z)
 
-    The Fresnel S integral obeys the mirror symmetry:
+    The Fresnel S integral obeys the mirror symmetry
+    `\overline{S(z)} = S(\bar{z})`:
 
     >>> from sympy import conjugate
     >>> conjugate(fresnels(z))
     fresnels(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to `z` is supported:
 
     >>> from sympy import diff
     >>> diff(fresnels(z), z)
@@ -1755,7 +2087,7 @@ class fresnels(FresnelIntegral):
     See Also
     ========
 
-    fresnelc
+    fresnelc: Fresnel cosine integral.
 
     References
     ==========
@@ -1764,8 +2096,10 @@ class fresnels(FresnelIntegral):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelS
-    """
+    .. [5] The converging factors for the fresnel integrals
+            by John W. Wrench Jr. and Vicki Alley
 
+    """
     _trigfunc = C.sin
     _sign = -S.One
 
@@ -1791,6 +2125,29 @@ class fresnels(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z):
         return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
                 * meijerg([], [1], [S(3)/4], [S(1)/4, 0], -pi**2*z**4/16))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+
+            # expansion of S(x) = S1(x*sqrt(pi/2)), see reference[5] page 1-8
+            p = [(-1)**k * C.factorial(4*k + 1) /
+                 (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
+                 for k in xrange(0, n)]
+            q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
+                 (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
+                 for k in xrange(1, n)]
+
+            p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
+            q = [-sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
+
+            return S.Half + (C.sin(z**2)*Add(*p) + C.cos(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+
+        # All other points are not handled
+        return super(fresnels, self)._eval_aseries(n, args0, x, logx)
 
 
 class fresnelc(FresnelIntegral):
@@ -1822,20 +2179,21 @@ class fresnelc(FresnelIntegral):
     >>> fresnelc(-I*oo)
     -I/2
 
-    In general one can pull out factors of -1 and I from the argument:
+    In general one can pull out factors of -1 and `i` from the argument:
+
     >>> fresnelc(-z)
     -fresnelc(z)
-
     >>> fresnelc(I*z)
     I*fresnelc(z)
 
-    The Fresnel C integral obeys the mirror symmetry:
+    The Fresnel C integral obeys the mirror symmetry
+    `\overline{C(z)} = C(\bar{z})`:
 
     >>> from sympy import conjugate
     >>> conjugate(fresnelc(z))
     fresnelc(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to `z` is supported:
 
     >>> from sympy import diff
     >>> diff(fresnelc(z), z)
@@ -1861,7 +2219,7 @@ class fresnelc(FresnelIntegral):
     See Also
     ========
 
-    fresnels
+    fresnels: Fresnel sine integral.
 
     References
     ==========
@@ -1870,8 +2228,9 @@ class fresnelc(FresnelIntegral):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
+    .. [5] The converging factors for the fresnel integrals
+            by John W. Wrench Jr. and Vicki Alley
     """
-
     _trigfunc = C.cos
     _sign = S.One
 
@@ -1898,6 +2257,30 @@ class fresnelc(FresnelIntegral):
         return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [S(1)/4], [S(3)/4, 0], -pi**2*z**4/16))
 
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+
+            # expansion of C(x) = C1(x*sqrt(pi/2)), see reference[5] page 1-8
+            p = [(-1)**k * C.factorial(4*k + 1) /
+                 (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
+                 for k in xrange(0, n)]
+            q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
+                 (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
+                 for k in xrange(1, n)]
+
+            p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
+            q = [ sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
+
+            return S.Half + (C.cos(z**2)*Add(*p) + C.sin(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+
+        # All other points are not handled
+        return super(fresnelc, self)._eval_aseries(n, args0, x, logx)
+
+
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################
 ###############################################################################
@@ -1905,11 +2288,10 @@ class fresnelc(FresnelIntegral):
 
 class _erfs(Function):
     """
-    Helper function to make the :math:`erf(z)` function
+    Helper function to make the `\\mathrm{erf}(z)` function
     tractable for the Gruntz algorithm.
     """
 
-    nargs = 1
 
     def _eval_aseries(self, n, args0, x, logx):
         point = args0[0]
@@ -1946,3 +2328,39 @@ class _erfs(Function):
 
     def _eval_rewrite_as_intractable(self, z):
         return (S.One - erf(z))*C.exp(z**2)
+
+
+class _eis(Function):
+    """
+    Helper function to make the `\\mathrm{Ei}(z)` and `\\mathrm{li}(z)` functions
+    tractable for the Gruntz algorithm.
+    """
+
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if args0[0] != S.Infinity:
+            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+
+        z = self.args[0]
+        l = [ C.factorial(k) * (1/z)**(k + 1) for k in xrange(0, n) ]
+        o = C.Order(1/z**(n + 1), x)
+        # It is very inefficient to first add the order and then do the nseries
+        return (Add(*l))._eval_nseries(x, n, logx) + o
+
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            z = self.args[0]
+            return S.One / z - _eis(z)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_intractable(self, z):
+        return C.exp(-z)*Ei(z)
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(_eis, self)._eval_nseries(x, n, logx)

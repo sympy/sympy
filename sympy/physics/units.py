@@ -73,6 +73,8 @@ quantity.)
     602214179000000000000000/mol
 """
 
+from __future__ import print_function, division
+
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
 
@@ -152,7 +154,7 @@ yocto = ten**-24
 
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
-
+sr = steradian = steradians = 1
 
 # Base units
 

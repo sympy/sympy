@@ -1,4 +1,6 @@
-from function import Function
+from __future__ import print_function, division
+
+from .function import Function
 
 
 class Mod(Function):
@@ -19,7 +21,6 @@ class Mod(Function):
     1
 
     """
-    nargs = 2
 
     @classmethod
     def eval(cls, p, q):
@@ -34,7 +35,9 @@ class Mod(Function):
             to be less than q.
             """
 
-            if p == q or p == -q or p.is_Pow and p.exp.is_Integer and p.base == q:
+            if (p == q or p == -q or
+                    p.is_Pow and p.exp.is_Integer and p.base == q or
+                    p.is_integer and q == 1):
                 return S.Zero
 
             if p.is_Number and q.is_Number:
@@ -49,16 +52,16 @@ class Mod(Function):
             else:
                 if type(d) is int:
                     rv = p - d*q
-                    if rv*q < 0:
+                    if (rv*q < 0) == True:
                         rv += q
                     return rv
 
             # by differencec
             d = p - q
-            if (d < 0) is True:
-                if (q < 0) is True:
+            if d.is_negative:
+                if q.is_negative:
                     return d
-                elif (q > 0) is True:
+                elif q.is_positive:
                     return p
 
         rv = doit(p, q)

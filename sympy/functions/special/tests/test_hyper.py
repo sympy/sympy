@@ -1,5 +1,6 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo, Derivative, gamma)
+                   cos, sqrt, symbols, oo, Derivative, gamma, O)
+from sympy.series.limits import limit
 from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (
@@ -98,10 +99,10 @@ def test_radius_of_convergence():
     assert hyper([-1, 1, 3], [-2], z).radius_of_convergence == 0
     assert hyper((-1, 2, 3, 4), [], z).radius_of_convergence == oo
 
-    assert hyper([1, 1], [3], 1).convergence_statement is True
-    assert hyper([1, 1], [2], 1).convergence_statement is False
-    assert hyper([1, 1], [2], -1).convergence_statement is True
-    assert hyper([1, 1], [1], -1).convergence_statement is False
+    assert hyper([1, 1], [3], 1).convergence_statement == True
+    assert hyper([1, 1], [2], 1).convergence_statement == False
+    assert hyper([1, 1], [2], -1).convergence_statement == True
+    assert hyper([1, 1], [1], -1).convergence_statement == False
 
 
 def test_meijer():
@@ -321,3 +322,14 @@ def test_meijerg_eval():
             + meijerg(((0.5,), ()), ((0.5, 0, 0.5), ()), exp_polar(I*pi)/4)) \
         /(2*sqrt(pi))
     assert (expr - pi/exp(1)).n(chop=True) == 0
+
+
+def test_limits():
+    k, x = symbols('k, x')
+    assert hyper((1,), (S(4)/3, S(5)/3), k**2).series(k) == \
+           hyper((1,), (S(4)/3, S(5)/3), 0) + \
+           9*k**2*hyper((2,), (S(7)/3, S(8)/3), 0)/20 + \
+           81*k**4*hyper((3,), (S(10)/3, S(11)/3), 0)/1120 + \
+           O(k**6) # issue 6350
+    assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
+            meijerg(((), ()), ((1,), (0,)), 0) # issue 6052

@@ -1,5 +1,7 @@
 """Implementation of :class:`AlgebraicField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -7,14 +9,16 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 
+from sympy.utilities import public
 
+@public
 class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     """A class for representing algebraic number fields. """
 
     dtype = ANP
 
+    is_AlgebraicField = is_Algebraic = True
     is_Numerical = True
-    is_Algebraic = True
 
     has_assoc_Ring = False
     has_assoc_Field = True
@@ -25,11 +29,13 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         from sympy.polys.numberfields import to_number_field
 
+        self.orig_ext = ext
         self.ext = to_number_field(ext)
         self.mod = self.ext.minpoly.rep
-        self.dom = dom
+        self.domain = self.dom = dom
 
-        self.gens = (self.ext,)
+        self.ngens = 1
+        self.symbols = self.gens = (self.ext,)
         self.unit = self([dom(1), dom(0)])
 
         self.zero = self.dtype.zero(self.mod.rep, dom)
@@ -89,7 +95,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 

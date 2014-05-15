@@ -1,15 +1,14 @@
 """Low-level linear systems solver. """
 
+from __future__ import print_function, division
+
 from sympy.matrices import Matrix, zeros
 
 class RawMatrix(Matrix):
     _sympify = staticmethod(lambda x: x)
 
-def solve_lin_sys(eqs, ring):
-    """Solve a system of linear equations. """
-    assert ring.domain.has_Field
-
-    # transform from equations to matrix form
+def eqs_to_matrix(eqs, ring):
+    """Transform from equations to matrix form. """
     xs = ring.gens
     M = zeros(len(eqs), len(xs)+1, cls=RawMatrix)
 
@@ -18,12 +17,21 @@ def solve_lin_sys(eqs, ring):
             M[j, i] = e_j.coeff(x_i)
         M[j, -1] = -e_j.coeff(1)
 
-    eqs = M
+    return M
+
+def solve_lin_sys(eqs, ring):
+    """Solve a system of linear equations. """
+    assert ring.domain.has_Field
+
+    # transform from equations to matrix form
+    matrix = eqs_to_matrix(eqs, ring)
 
     # solve by row-reduction
-    echelon, pivots = eqs.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
+    echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions
+    xs = ring.gens
+
     if pivots[-1] == len(xs):
         return None
     elif len(pivots) == len(xs):

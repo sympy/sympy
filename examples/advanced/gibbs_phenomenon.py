@@ -137,18 +137,18 @@ def main():
     L = [f/sqrt(pi) for f in L]
 
     f = series(L)
-    print "Fourier series of the step function"
+    print("Fourier series of the step function")
     pprint(f)
     #Plot(f.diff(x), [x, -5, 5, 3000])
     x0 = msolve(f.diff(x), x)
 
-    print "x-value of the maximum:", x0
+    print("x-value of the maximum:", x0)
     max = f.subs(x, x0).evalf()
-    print "y-value of the maximum:", max
+    print("y-value of the maximum:", max)
     g = max*pi/2
-    print "Wilbraham-Gibbs constant        :", g.evalf()
-    print "Wilbraham-Gibbs constant (exact):", \
-        Integral(sin(x)/x, (x, 0, pi)).evalf()
+    print("Wilbraham-Gibbs constant        :", g.evalf())
+    print("Wilbraham-Gibbs constant (exact):", \
+        Integral(sin(x)/x, (x, 0, pi)).evalf())
 
 if __name__ == "__main__":
     main()

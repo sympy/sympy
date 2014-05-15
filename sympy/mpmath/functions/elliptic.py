@@ -94,7 +94,7 @@ def qfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     r"""
     Returns the elliptic nome `q`, given any of `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> qfrom(q=0.25)
         0.25
@@ -125,7 +125,7 @@ def qbarfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the number-theoretic nome `\bar q`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> qbarfrom(qbar=0.25)
         0.25
@@ -156,7 +156,7 @@ def taufrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the elliptic half-period ratio `\tau`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> taufrom(tau=0.5j)
         (0.0 + 0.5j)
@@ -190,7 +190,7 @@ def kfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the elliptic modulus `k`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> kfrom(k=0.25)
         0.25
@@ -235,7 +235,7 @@ def mfrom(ctx, q=None, m=None, k=None, tau=None, qbar=None):
     Returns the elliptic parameter `m`, given any of
     `q, m, k, \tau, \bar{q}`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> mfrom(m=0.25)
         0.25
@@ -374,7 +374,7 @@ def kleinj(ctx, tau=None, **kwargs):
 
     Verifying the functional equation `J(\tau) = J(\tau+1) = J(-\tau^{-1})`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> tau = 0.625+0.75*j
         >>> tau = 0.625+0.75*j
@@ -528,10 +528,7 @@ def RJ_calc(ctx, x, y, z, p, r):
         sp = ctx.sqrt(pm)
         lm = sx*sy + sx*sz + sy*sz
         Am1 = (Am+lm)*g
-        xm = (xm+lm)*g
-        ym = (ym+lm)*g
-        zm = (zm+lm)*g
-        pm = (pm+lm)*g
+        xm = (xm+lm)*g; ym = (ym+lm)*g; zm = (zm+lm)*g; pm = (pm+lm)*g
         dm = (sp+sx) * (sp+sy) * (sp+sz)
         em = delta * ctx.power(4, -3*m) / dm**2
         if pow4 * Q < abs(Am):
@@ -578,7 +575,7 @@ def elliprf(ctx, x, y, z):
 
     Some basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprf(0,1,1); pi/2
         1.570796326794896619231322
@@ -703,7 +700,7 @@ def elliprc(ctx, x, y, pv=True):
 
     Some special values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprc(1,2)*4; elliprc(0,1)*2; +pi
         3.141592653589793238462643
@@ -767,7 +764,7 @@ def elliprj(ctx, x, y, z, p):
 
     Some values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprj(1,1,1,1)
         1.0
@@ -837,7 +834,7 @@ def elliprd(ctx, x, y, z):
 
     **Examples**
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprd(1,2,3)
         0.2904602810289906442326534
@@ -872,7 +869,7 @@ def elliprg(ctx, x, y, z):
 
     Evaluation for real and complex arguments::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> elliprg(0,1,1)*4; +pi
         3.141592653589793238462643
@@ -923,7 +920,7 @@ def ellipf(ctx, phi, m):
 
     .. math ::
 
-        F(\phi,m) = \int_0^{\sin z}
+        F(\phi,m) = \int_0^{\sin \phi}
         \frac{dt}{\left(\sqrt{1-t^2}\right)\left(\sqrt{1-mt^2}\right)}.
 
     The function reduces to a complete elliptic integral of the first kind
@@ -935,7 +932,7 @@ def ellipf(ctx, phi, m):
 
     In the defining integral, it is assumed that the principal branch
     of the square root is taken and that the path of integration avoids
-    crossing any branch cuts. Outside `-\pi/2 \le \Re(z) \le \pi/2`,
+    crossing any branch cuts. Outside `-\pi/2 \le \Re(\phi) \le \pi/2`,
     the function extends quasi-periodically as
 
     .. math ::
@@ -951,7 +948,7 @@ def ellipf(ctx, phi, m):
 
     Basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> ellipf(0,1)
         0.0
@@ -1071,7 +1068,7 @@ def ellipe(ctx, *args):
 
     Basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> ellipe(0)
         1.570796326794896619231322
@@ -1214,7 +1211,7 @@ def ellippi(ctx, *args):
 
     In the defining integral, it is assumed that the principal branch
     of the square root is taken and that the path of integration avoids
-    crossing any branch cuts. Outside `-\pi/2 \le \Re(z) \le \pi/2`,
+    crossing any branch cuts. Outside `-\pi/2 \le \Re(\phi) \le \pi/2`,
     the function extends quasi-periodically as
 
     .. math ::
@@ -1230,7 +1227,7 @@ def ellippi(ctx, *args):
 
     Some basic values and limits::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> ellippi(0,-5); ellipk(-5)
         0.9555039270640439337379334
@@ -1285,6 +1282,19 @@ def ellippi(ctx, *args):
         >>> ellippi(0.5, 5+6j-2*pi, -7-8j)
         (-0.3612856620076747660410167 + 0.5217735339984807829755815j)
 
+    Some degenerate cases::
+
+        >>> ellippi(1,1)
+        +inf
+        >>> ellippi(1,0)
+        +inf
+        >>> ellippi(1,2,0)
+        +inf
+        >>> ellippi(1,2,1)
+        +inf
+        >>> ellippi(1,0,1)
+        0.0
+
     """
     if len(args) == 2:
         n, m = args
@@ -1298,7 +1308,10 @@ def ellippi(ctx, *args):
         if ctx.isnan(n) or ctx.isnan(z) or ctx.isnan(m):
             raise ValueError
         if complete:
-            if m == 0: return ctx.pi/(2*ctx.sqrt(1-n))
+            if m == 0:
+                if n == 1:
+                    return ctx.inf
+                return ctx.pi/(2*ctx.sqrt(1-n))
             if n == 0: return ctx.ellipk(m)
             if ctx.isinf(n) or ctx.isinf(m): return ctx.zero
         else:
@@ -1308,7 +1321,10 @@ def ellippi(ctx, *args):
         if ctx.isinf(n) or ctx.isinf(z) or ctx.isinf(m):
             raise ValueError
     if complete:
-        if m == 1: return -ctx.inf/ctx.sign(n-1)
+        if m == 1:
+            if n == 1:
+                return ctx.inf
+            return -ctx.inf/ctx.sign(n-1)
         away = False
     else:
         x = z.real
@@ -1319,6 +1335,8 @@ def ellippi(ctx, *args):
         d = ctx.nint(x/pi)
         z = z-pi*d
         P = 2*d*ctx.ellippi(n,m)
+        if ctx.isinf(P):
+            return ctx.inf
     else:
         P = 0
     def terms():

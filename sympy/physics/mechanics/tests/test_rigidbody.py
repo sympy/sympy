@@ -1,6 +1,7 @@
 from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer
+from sympy.physics.mechanics import inertia_of_point_mass
 
 
 def test_rigidbody():
@@ -9,8 +10,8 @@ def test_rigidbody():
     A2 = ReferenceFrame('A2')
     P = Point('P')
     P2 = Point('P2')
-    I = Dyadic([])
-    I2 = Dyadic([])
+    I = Dyadic(0)
+    I2 = Dyadic(0)
     B = RigidBody('B', P, A, m, (I, P))
     assert B.mass == m
     assert B.frame == A
@@ -52,3 +53,23 @@ def test_rigidbody2():
     B.set_potential_energy(M * g * h)
     assert B.potential_energy == M * g * h
     assert B.kinetic_energy(N) == (omega**2 + M * v**2) / 2
+
+def test_rigidbody3():
+    q1, q2, q3, q4 = dynamicsymbols('q1:5')
+    p1, p2, p3 = symbols('p1:4')
+    m = symbols('m')
+
+    A = ReferenceFrame('A')
+    B = A.orientnew('B', 'axis', [q1, A.x])
+    O = Point('O')
+    O.set_vel(A, q2*A.x + q3*A.y + q4*A.z)
+    P = O.locatenew('P', p1*B.x + p2*B.y + p3*B.z)
+    I = outer(B.x, B.x)
+
+    rb1 = RigidBody('rb1', P, B, m, (I, P))
+    # I_S/O = I_S/S* + I_S*/O
+    rb2 = RigidBody('rb2', P, B, m,
+                    (I + inertia_of_point_mass(m, P.pos_from(O), B), O))
+
+    assert rb1.central_inertia == rb2.central_inertia
+    assert rb1.angular_momentum(O, A) == rb2.angular_momentum(O, A)

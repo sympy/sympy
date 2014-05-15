@@ -2,6 +2,8 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
+from __future__ import print_function, division
+
 import math
 
 import sympy.mpmath.libmp as libmp
@@ -18,11 +20,11 @@ from sympy.mpmath.libmp.libmpc import _infs_nan
 from sympy.mpmath.libmp.libmpf import dps_to_prec
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
-from sympy.core.compatibility import SYMPY_INTS
-from sympify import sympify
-from core import C
-from singleton import S
-from containers import Tuple
+from .compatibility import SYMPY_INTS
+from .sympify import sympify
+from .core import C
+from .singleton import S
+from .containers import Tuple
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -460,7 +462,7 @@ def evalf_add(v, prec, options):
         acc = complex_accuracy((re, im, re_acc, im_acc))
         if acc >= target_prec:
             if options.get('verbose'):
-                print "ADD: wanted", target_prec, "accurate bits, got", re_acc, im_acc
+                print("ADD: wanted", target_prec, "accurate bits, got", re_acc, im_acc)
             break
         else:
             if (prec - target_prec) > options['maxprec']:
@@ -469,7 +471,7 @@ def evalf_add(v, prec, options):
             prec = prec + max(10 + 2**i, target_prec - acc)
             i += 1
             if options.get('verbose'):
-                print "ADD: restarting with prec", prec
+                print("ADD: restarting with prec", prec)
 
     options['maxprec'] = oldmaxprec
     if iszero(re, scaled=True):
@@ -587,7 +589,7 @@ def evalf_mul(v, prec, options):
             re = mpf_add(A, B, use_prec)
             im = mpf_add(C, D, use_prec)
         if options.get('verbose'):
-            print "MUL: wanted", prec, "accurate bits, got", acc
+            print("MUL: wanted", prec, "accurate bits, got", acc)
         # multiply by I
         if direction & 1:
             re, im = mpf_neg(im), re
@@ -749,8 +751,8 @@ def evalf_trig(v, prec, options):
         accuracy = (xprec - xsize) - gap
         if accuracy < prec:
             if options.get('verbose'):
-                print "SIN/COS", accuracy, "wanted", prec, "gap", gap
-                print to_str(y, 10)
+                print("SIN/COS", accuracy, "wanted", prec, "gap", gap)
+                print(to_str(y, 10))
             if xprec > options.get('maxprec', DEFAULT_MAXPREC):
                 return y, None, accuracy, None
             xprec += gap
@@ -781,7 +783,8 @@ def evalf_log(expr, prec, options):
         arg = C.Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, _, _ = evalf_add(arg, prec, options)
         prec2 = workprec - fastlog(xre)
-        re = mpf_log(mpf_add(xre, fone, prec2), prec, rnd)
+        # xre is now x - 1 so we add 1 back here to calculate x
+        re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
 
     re_acc = prec
 
@@ -1067,10 +1070,14 @@ def hypsum(expr, n, start, prec):
 
 
 def evalf_sum(expr, prec, options):
+    if 'subs' in options:
+        expr = expr.subs(options['subs'])
     func = expr.function
     limits = expr.limits
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
+    if func is S.Zero:
+        return mpf(0), None, None, None
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
@@ -1093,11 +1100,7 @@ def evalf_sum(expr, prec, options):
             if err <= eps:
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
-        try:
-            re, im, re_acc, im_acc = evalf(s, prec2, options)
-        except TypeError:  # issue 3174
-            # when should it try subs if they are in options?
-            raise NotImplementedError
+        re, im, re_acc, im_acc = evalf(s, prec2, options)
         if re_acc is None:
             re_acc = -err
         if im_acc is None:
@@ -1204,10 +1207,10 @@ def evalf(x, prec, options):
         except AttributeError:
             raise NotImplementedError
     if options.get("verbose"):
-        print "### input", x
-        print "### output", to_str(r[0] or fzero, 50)
-        print "### raw", r  # r[0], r[2]
-        print
+        print("### input", x)
+        print("### output", to_str(r[0] or fzero, 50))
+        print("### raw", r ) # r[0], r[2]
+        print()
     chop = options.get('chop', False)
     if chop:
         if chop is True:

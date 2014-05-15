@@ -1,7 +1,10 @@
+from __future__ import print_function, division
+
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
 from sympy.utilities.iterables import (has_dups, default_sort_key)
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -12,7 +15,7 @@ def Eijk(*args, **kwargs):
     """
     Represent the Levi-Civita symbol.
 
-    This is just compatibility wrapper to LeviCivita().
+    This is just compatibility wrapper to ``LeviCivita()``.
 
     See Also
     ========
@@ -80,8 +83,8 @@ class LeviCivita(Function):
 class KroneckerDelta(Function):
     """The discrete, or Kronecker, delta function.
 
-    A function that takes in two integers i and j. It returns 0 if i and j are
-    not equal or it returns 1 if i and j are equal.
+    A function that takes in two integers `i` and `j`. It returns `0` if `i` and `j` are
+    not equal or it returns `1` if `i` and `j` are equal.
 
     Parameters
     ==========
@@ -123,10 +126,8 @@ class KroneckerDelta(Function):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Kronecker_delta
+    .. [1] http://en.wikipedia.org/wiki/Kronecker_delta
     """
-
-    nargs = 2
 
     is_integer = True
 
@@ -162,7 +163,7 @@ class KroneckerDelta(Function):
         elif diff.is_number:
             return S.Zero
         elif i != 0 and diff.is_nonzero:
-            return KroneckerDelta(0, diff.args[0])
+            return cls(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and \
                 j.assumptions0.get("above_fermi"):
@@ -439,3 +440,7 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
+
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\delta'

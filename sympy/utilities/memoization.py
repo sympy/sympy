@@ -1,4 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core.decorators import wraps
+from sympy.core.compatibility import xrange
 
 
 def recurrence_memo(initial):

@@ -1,6 +1,11 @@
+from __future__ import print_function, division
+
 from sympy.core import sympify, Lambda, Dummy, Integer, Rational, oo, Float, pi
+from sympy.core.compatibility import xrange
 from sympy.functions import sqrt, exp, erf
 from sympy.printing import sstr
+from sympy.utilities import default_sort_key
+
 import random
 
 
@@ -31,7 +36,7 @@ class Sample(tuple):
 
     """
     def __new__(cls, sample):
-        s = tuple.__new__(cls, sorted(sample))
+        s = tuple.__new__(cls, sorted(sample, key=default_sort_key))
         s.mean = mean = sum(s) / Integer(len(s))
         s.variance = sum([(x - mean)**2 for x in s]) / Integer(len(s))
         s.stddev = sqrt(s.variance)
@@ -201,7 +206,8 @@ class Normal(ContinuousProbability):
         if p == 1:
             return (-oo, oo)
 
-        assert p <= 1
+        if p > 1:
+            raise ValueError("p cannot be greater than 1")
 
         # In terms of n*sigma, we have n = sqrt(2)*ierf(p). The inverse
         # error function is not yet implemented in SymPy but can easily be
@@ -315,7 +321,8 @@ class Uniform(ContinuousProbability):
 
         """
         p = sympify(p)
-        assert p <= 1
+        if p > 1:
+            raise ValueError("p cannot be greater than 1")
 
         d = (s.b - s.a)*p / 2
         return (s.mean - d, s.mean + d)

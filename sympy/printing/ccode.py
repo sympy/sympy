@@ -7,18 +7,23 @@ using the functions defined in math.h where possible.
 A complete code generator, which uses ccode extensively, can be found in
 sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
+
+
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, C
+from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.core.compatibility import default_sort_key
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
 known_functions = {
     "ceiling": [(lambda x: True, "ceil")],
     "Abs": [(lambda x: not x.is_integer, "fabs")],
+    "gamma": [(lambda x: True, "tgamma")],
 }
 
 
@@ -32,6 +37,7 @@ class CCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'contract': True,
     }
 
     def __init__(self, settings={}):
@@ -60,7 +66,7 @@ class CCodePrinter(CodePrinter):
         Actually format the expression as C code.
         """
 
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("CCodePrinter cannot assign to object of type %s" %
@@ -77,7 +83,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -139,13 +145,15 @@ class CCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
-        inds = [ i.label for i in expr.indices ]
         elem = S.Zero
         offset = S.One
         for i in reversed(range(expr.rank)):
-            elem += offset*inds[i]
+            elem += expr.indices[i]*offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
 
     def _print_Exp1(self, expr):
         return "M_E"
@@ -165,7 +173,7 @@ class CCodePrinter(CodePrinter):
         ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond is True:
+        if expr.args[-1].cond == True:
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) ? (\n%s\n" %
@@ -173,20 +181,6 @@ class CCodePrinter(CodePrinter):
                             self._print(expr.args[-1].expr)))
         code = "%s" + last_line
         return code % ": ".join(ecpairs) + " )"
-
-    def _print_And(self, expr):
-        PREC = precedence(expr)
-        return ' && '.join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Or(self, expr):
-        PREC = precedence(expr)
-        return ' || '.join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return '!' + self.parenthesize(expr.args[0], PREC)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -202,7 +196,7 @@ class CCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -248,6 +242,13 @@ def ccode(expr, assign_to=None, **settings):
             constant declarations for the number symbols. If False, the
             same information is returned in a more programmer-friendly
             data structure.
+        contract: optional
+            If True, `Indexed` instances are assumed to obey
+            tensor contraction rules and the corresponding nested
+            loops over indices are generated. Setting contract = False
+            will not generate loops, instead the user is responsible
+            to provide values for the indices in the code. [default=True]
+
 
         Examples
         ========
@@ -265,7 +266,15 @@ def ccode(expr, assign_to=None, **settings):
         ... }
         >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
         'fabs(x) + CEIL(x)'
-
+        >>> from sympy import Eq, IndexedBase, Idx
+        >>> len_y = 5
+        >>> y = IndexedBase('y', shape=(len_y,))
+        >>> t = IndexedBase('t', shape=(len_y,))
+        >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+        >>> i = Idx('i', len_y-1)
+        >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+        >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
+        'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)
@@ -273,4 +282,4 @@ def ccode(expr, assign_to=None, **settings):
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""
-    print ccode(expr, **settings)
+    print(ccode(expr, **settings))

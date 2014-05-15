@@ -53,16 +53,18 @@ Deutils (Utilities for solving ODE's and PDE's)
 
 .. autofunction:: sympy.solvers.deutils.ode_order
 
-Recurrence Equtions
--------------------
+Recurrence Equations
+--------------------
 
-.. autofunction:: sympy.solvers.recurr.rsolve
+.. module:: sympy.solvers.recurr
 
-.. autofunction:: sympy.solvers.recurr.rsolve_poly
+.. autofunction:: rsolve
 
-.. autofunction:: sympy.solvers.recurr.rsolve_ratio
+.. autofunction:: rsolve_poly
 
-.. autofunction:: sympy.solvers.recurr.rsolve_hyper
+.. autofunction:: rsolve_ratio
+
+.. autofunction:: rsolve_hyper
 
 Systems of Polynomial Equations
 -------------------------------
@@ -71,3 +73,12 @@ Systems of Polynomial Equations
 
 .. autofunction:: sympy.solvers.polysys.solve_triangulated
 
+Diophantine Equations (DEs)
+---------------------------
+
+See :ref:`diophantine-docs`
+
+Inequalities
+------------
+
+See :ref:`inequality-docs`

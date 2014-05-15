@@ -1,12 +1,23 @@
 """Hypergeometric and Meijer G-functions"""
 
+from __future__ import print_function, division
+
 from sympy.core import S, I, pi, oo, ilcm, Mod, C
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import reduce
 from sympy.core.mul import Mul
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
+
+class TupleArg(Tuple):
+    def limit(self, x, xlim, dir='+'):
+        """ Compute limit x->xlim.
+        """
+        from sympy.series.limits import limit
+        return TupleArg(*[limit(f, x, xlim, dir) for f in self.args])
+
 
 # TODO should __new__ accept **options?
 # TODO should constructors should check if parameters are sensible?
@@ -27,7 +38,7 @@ def _prep_tuple(v):
     (7, 8, 9)
     """
     from sympy.simplify.simplify import unpolarify
-    return Tuple(*[unpolarify(x) for x in v])
+    return TupleArg(*[unpolarify(x) for x in v])
 
 
 class TupleParametersBase(Function):
@@ -157,12 +168,11 @@ class hyper(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
-    nargs = 3
 
     def __new__(cls, ap, bq, z):
         # TODO should we check convergence conditions?
@@ -209,12 +219,12 @@ class hyper(TupleParametersBase):
     @property
     def ap(self):
         """ Numerator parameters of the hypergeometric function. """
-        return self.args[0]
+        return Tuple(*self.args[0])
 
     @property
     def bq(self):
         """ Denominator parameters of the hypergeometric function. """
-        return self.args[1]
+        return Tuple(*self.args[1])
 
     @property
     def _diffargs(self):
@@ -243,9 +253,9 @@ class hyper(TupleParametersBase):
         >>> hyper((1, 2), (3, 4), z).radius_of_convergence
         oo
         """
-        if any(a.is_integer and a <= 0 for a in self.ap + self.bq):
-            aints = [a for a in self.ap if a.is_Integer and a <= 0]
-            bints = [a for a in self.bq if a.is_Integer and a <= 0]
+        if any(a.is_integer and (a <= 0) == True for a in self.ap + self.bq):
+            aints = [a for a in self.ap if a.is_Integer and (a <= 0) == True]
+            bints = [a for a in self.bq if a.is_Integer and (a <= 0) == True]
             if len(aints) < len(bints):
                 return S(0)
             popped = False
@@ -286,6 +296,10 @@ class hyper(TupleParametersBase):
         c2 = And(0 <= re(e), re(e) < 1, abs(z) <= 1, Ne(z, 1))
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
+
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.hyperexpand import hyperexpand
+        return hyperexpand(self)
 
 
 class meijerg(TupleParametersBase):
@@ -410,13 +424,12 @@ class meijerg(TupleParametersBase):
     References
     ==========
 
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Meijer_G-function
+    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
+           Volume 1
+    .. [2] http://en.wikipedia.org/wiki/Meijer_G-function
 
     """
 
-    nargs = 3
 
     def __new__(cls, *args):
         if len(args) == 5:
@@ -428,7 +441,7 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
-            return Tuple(_prep_tuple(p[0]), _prep_tuple(p[1]))
+            return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         # TODO should we check convergence conditions?
         return Function.__new__(cls, tr(args[0]), tr(args[1]), args[2])
@@ -637,32 +650,32 @@ class meijerg(TupleParametersBase):
     @property
     def an(self):
         """ First set of numerator parameters. """
-        return self.args[0][0]
+        return Tuple(*self.args[0][0])
 
     @property
     def ap(self):
         """ Combined numerator parameters. """
-        return self.args[0][0] + self.args[0][1]
+        return Tuple(*(self.args[0][0] + self.args[0][1]))
 
     @property
     def aother(self):
         """ Second set of numerator parameters. """
-        return self.args[0][1]
+        return Tuple(*self.args[0][1])
 
     @property
     def bm(self):
         """ First set of denominator parameters. """
-        return self.args[1][0]
+        return Tuple(*self.args[1][0])
 
     @property
     def bq(self):
         """ Combined denominator parameters. """
-        return self.args[1][0] + self.args[1][1]
+        return Tuple(*(self.args[1][0] + self.args[1][1]))
 
     @property
     def bother(self):
         """ Second set of denominator parameters. """
-        return self.args[1][1]
+        return Tuple(*self.args[1][1])
 
     @property
     def _diffargs(self):
@@ -696,14 +709,13 @@ class HyperRep(Function):
     supply the actual functions.
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, *args):
         from sympy import unpolarify
-        nargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
-        if args != nargs:
-            return cls(*nargs)
+        newargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
+        if args != newargs:
+            return cls(*newargs)
 
     @classmethod
     def _expr_small(cls, x):
@@ -729,17 +741,17 @@ class HyperRep(Function):
         from sympy import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
-        nargs = self.args[:-1] + (x,)
+        newargs = self.args[:-1] + (x,)
         if not n.is_Integer:
             minus = True
             n -= S(1)/2
-        nnargs = nargs + (n,)
+        newerargs = newargs + (n,)
         if minus:
-            small = self._expr_small_minus(*nargs)
-            big = self._expr_big_minus(*nnargs)
+            small = self._expr_small_minus(*newargs)
+            big = self._expr_big_minus(*newerargs)
         else:
-            small = self._expr_small(*nargs)
-            big = self._expr_big(*nnargs)
+            small = self._expr_small(*newargs)
+            big = self._expr_big(*newerargs)
 
         if big == small:
             return small
@@ -755,7 +767,6 @@ class HyperRep(Function):
 
 class HyperRep_power1(HyperRep):
     """ Return a representative for hyper([-a], [], z) == (1 - z)**a. """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, x):
@@ -780,7 +791,6 @@ class HyperRep_power1(HyperRep):
 
 class HyperRep_power2(HyperRep):
     """ Return a representative for hyper([a, a - 1/2], [2*a], z). """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, x):
@@ -893,7 +903,6 @@ class HyperRep_asin2(HyperRep):
 
 class HyperRep_sqrts1(HyperRep):
     """ Return a representative for hyper([-a, 1/2 - a], [1/2], z). """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -925,7 +934,6 @@ class HyperRep_sqrts2(HyperRep):
     """ Return a representative for
           sqrt(z)/2*[(1-sqrt(z))**2a - (1 + sqrt(z))**2a]
           == -2*z/(2*a+1) d/dz hyper([-a - 1/2, -a], [1/2], z)"""
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -982,7 +990,6 @@ class HyperRep_cosasin(HyperRep):
     """ Represent hyper([a, -a], [1/2], z) == cos(2*a*asin(sqrt(z))). """
     # Note there are many alternative expressions, e.g. as powers of a sum of
     # square roots.
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):
@@ -1004,7 +1011,6 @@ class HyperRep_cosasin(HyperRep):
 class HyperRep_sinasin(HyperRep):
     """ Represent 2*a*z*hyper([1 - a, 1 + a], [3/2], z)
         == sqrt(z)/sqrt(1-z)*sin(2*a*asin(sqrt(z))) """
-    nargs = 2
 
     @classmethod
     def _expr_small(cls, a, z):

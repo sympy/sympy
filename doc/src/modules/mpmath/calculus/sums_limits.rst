@@ -56,3 +56,12 @@ properties of the algorithms.
 :func:`shanks`
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.shanks
+
+:func:`levin`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.levin
+
+:func:`cohen_alt`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.cohen_alt
+

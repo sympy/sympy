@@ -3,7 +3,7 @@
 from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
     Add, Mul, pi, cos, sin, exp)
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 from sympy.polys.numberfields import (
     minimal_polynomial,
@@ -19,15 +19,18 @@ from sympy.polys.numberfields import (
 from sympy.polys.polyerrors import (
     IsomorphismFailed,
     NotAlgebraic,
+    GeneratorsError,
 )
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
+from sympy.polys.rootoftools import RootOf
+from sympy.polys.polytools import degree
 from sympy.solvers import solve
 
 from sympy.utilities.pytest import skip
 
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 Q = Rational
 
@@ -71,7 +74,6 @@ def test_minimal_polynomial():
     assert minimal_polynomial(
         1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
 
-    raises(NotAlgebraic, lambda: minimal_polynomial(y, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(oo, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(2**y, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(sin(1), x))
@@ -106,7 +108,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(
         a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
-    # issue 2895
+    # issue 5994
     eq = S('''
         -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
         sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
@@ -164,7 +166,7 @@ def test_minimal_polynomial_sq():
 
 
 def test_minpoly_compose():
-    # issue 3769
+    # issue 6868
     eq = S('''
         -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
         sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
@@ -172,7 +174,7 @@ def test_minpoly_compose():
     mp = minimal_polynomial(eq + 3, x)
     assert mp == 8000*x**2 - 48000*x + 71999
 
-    # issue 2789
+    # issue 5888
     assert minimal_polynomial(exp(I*pi/8), x) == x**8 + 1
 
     mp = minimal_polynomial(sin(pi/7) + sqrt(2), x)
@@ -209,8 +211,7 @@ def test_minpoly_compose():
     assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
     assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
 
-    eq = expand((x**5 + 3*x + 1)*(x**3 + 4*x + 1))
-    ex = solve(eq, x)[0]
+    ex = RootOf(x**3 +x*4 + 1, 0)
     mp = minimal_polynomial(ex, x)
     assert mp == x**3 + 4*x + 1
     mp = minimal_polynomial(ex + 1, x)
@@ -231,20 +232,22 @@ def test_minpoly_compose():
     raises(NotAlgebraic, lambda: minimal_polynomial(sin(pi*sqrt(2)), x))
     raises(NotAlgebraic, lambda: minimal_polynomial(exp(I*pi*sqrt(2)), x))
 
-    # issue 2835
+    # issue 5934
     ex = 1/(-36000 - 7200*sqrt(5) + (12*sqrt(10)*sqrt(sqrt(5) + 5) +
         24*sqrt(10)*sqrt(-sqrt(5) + 5))**2) + 1
     raises(ZeroDivisionError, lambda: minimal_polynomial(ex, x))
 
-def test_minpoly_compose1():
-    skip("This test hangs.")
-    # this test hangs because factor_list hangs in minpoly_op_algebraic_number
-    # on a polynomial of degree 96, which is factored by Sage very fast;
-    # one of the factors is the minimal polynomial.
     ex = sqrt(1 + 2**Rational(1,3)) + sqrt(1 + 2**Rational(1,4)) + sqrt(2)
     mp = minimal_polynomial(ex, x)
     assert degree(mp) == 48 and mp.subs({x:0}) == -16630256576
 
+def test_minpoly_issue4014():
+    # see discussion in https://github.com/sympy/sympy/pull/2234
+    from sympy.simplify.simplify import nsimplify
+    r = nsimplify(pi, tolerance=0.000000001)
+    mp = minimal_polynomial(r, x)
+    assert mp == 1768292677839237920489538677417507171630859375*x**109 - \
+    2734577732179183863586489182929671773182898498218854181690460140337930774573792597743853652058046464
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
@@ -673,3 +676,54 @@ def test_isolate():
     assert isolate(-sqrt(2), eps=S(1)/100) == (-S(17)/12, -S(24)/17)
 
     raises(NotImplementedError, lambda: isolate(I))
+
+def test_minpoly_fraction_field():
+    assert minimal_polynomial(1/x, y) == -x*y + 1
+    assert minimal_polynomial(1 / (x + 1), y) == (x + 1)*y - 1
+
+    assert minimal_polynomial(sqrt(x), y) == y**2 - x
+    assert minimal_polynomial(sqrt(x + 1), y) == y**2 - x - 1
+    assert minimal_polynomial(sqrt(x) / x, y) == x*y**2 - 1
+    assert minimal_polynomial(sqrt(2) * sqrt(x), y) == y**2 - 2 * x
+    assert minimal_polynomial(sqrt(2) + sqrt(x), y) == \
+        y**4 + (-2*x - 4)*y**2 + x**2 - 4*x + 4
+
+    assert minimal_polynomial(x**Rational(1,3), y) == y**3 - x
+    assert minimal_polynomial(x**Rational(1,3) + sqrt(x), y) == \
+        y**6 - 3*x*y**4 - 2*x*y**3 + 3*x**2*y**2 - 6*x**2*y - x**3 + x**2
+
+    assert minimal_polynomial(sqrt(x) / z, y) == z**2*y**2 - x
+    assert minimal_polynomial(sqrt(x) / (z + 1), y) == (z**2 + 2*z + 1)*y**2 - x
+
+    assert minimal_polynomial(1/x, y, polys=True) == Poly(-x*y + 1, y)
+    assert minimal_polynomial(1 / (x + 1), y, polys=True) == \
+        Poly((x + 1)*y - 1, y)
+    assert minimal_polynomial(sqrt(x), y, polys=True) == Poly(y**2 - x, y)
+    assert minimal_polynomial(sqrt(x) / z, y, polys=True) == \
+        Poly(z**2*y**2 - x, y)
+
+    # this is (sqrt(1 + x**3)/x).integrate(x).diff(x) - sqrt(1 + x**3)/x
+    a = sqrt(x)/sqrt(1 + x**(-3)) - sqrt(x**3 + 1)/x + 1/(x**(S(5)/2)* \
+        (1 + x**(-3))**(S(3)/2)) + 1/(x**(S(11)/2)*(1 + x**(-3))**(S(3)/2))
+
+    assert minimal_polynomial(a, y) == y
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(exp(x), y))
+    raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x), x))
+    raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x) - y, x))
+    raises(NotImplementedError, lambda: minimal_polynomial(sqrt(x), y, compose=False))
+
+@slow
+def test_minpoly_fraction_field_slow():
+    assert minimal_polynomial(minimal_polynomial(sqrt(x**Rational(1,5) - 1),
+        y).subs(y, sqrt(x**Rational(1,5) - 1)), z) == z
+
+def test_minpoly_domain():
+    assert minimal_polynomial(sqrt(2), x, domain=QQ.algebraic_field(sqrt(2))) == \
+        x - sqrt(2)
+    assert minimal_polynomial(sqrt(8), x, domain=QQ.algebraic_field(sqrt(2))) == \
+        x - 2*sqrt(2)
+    assert minimal_polynomial(sqrt(Rational(3,2)), x,
+        domain=QQ.algebraic_field(sqrt(2))) == 2*x**2 - 3
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(y, x, domain=QQ))

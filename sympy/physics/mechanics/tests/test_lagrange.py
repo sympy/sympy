@@ -50,7 +50,9 @@ def test_disc_on_an_incline_plane():
     coneq = [yd - R * thetad]
     m = LagrangesMethod(L, q, coneq)
     m.form_lagranges_equations()
-    assert m.rhs()[2] == 2*g*sin(alpha)/3
+    rhs = m.rhs()
+    rhs.simplify()
+    assert rhs[2] == 2*g*sin(alpha)/3
 
 
 def test_simp_pen():

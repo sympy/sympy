@@ -8,6 +8,8 @@ This is part of the level 0 of the architecture described in [1].
 
 """
 from sympy.matrices.sparsearith import _binsearch
+from __future__ import print_function, division
+
 from sympy import SparseMatrix
 
 def trace(dok, K):

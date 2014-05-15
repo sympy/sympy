@@ -1,9 +1,12 @@
 """This module implements tools for integrating rational functions. """
 
+from __future__ import print_function, division
+
 from sympy import S, Symbol, symbols, I, log, atan, \
     roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
+from sympy.core.compatibility import xrange
 
 
 def ratint(f, x, **flags):
@@ -203,8 +206,9 @@ def ratint_logpart(f, g, x, t=None):
     a, b = g, f - g.diff()*Poly(t, x)
 
     res, R = resultant(a, b, includePRS=True)
-
     res = Poly(res, t, composite=False)
+
+    assert res, "BUG: resultant(%s, %s) can't be zero" % (a, b)
 
     R_map, H = {}, []
 
@@ -212,7 +216,7 @@ def ratint_logpart(f, g, x, t=None):
         R_map[r.degree()] = r
 
     def _include_sign(c, sqf):
-        if c < 0:
+        if (c < 0) == True:
             h, k = sqf[0]
             sqf[0] = h*c, k
 
@@ -240,7 +244,7 @@ def ratint_logpart(f, g, x, t=None):
                 T = (inv*coeff).rem(q)
                 coeffs.append(T.as_expr())
 
-            h = Poly(dict(zip(h.monoms(), coeffs)), x)
+            h = Poly(dict(list(zip(h.monoms(), coeffs))), x)
 
             H.append((h, q))
 
@@ -343,7 +347,7 @@ def log_to_real(h, q, x, t):
 
     result = S(0)
 
-    for r_u in R_u.iterkeys():
+    for r_u in R_u.keys():
         C = Poly(c.subs({u: r_u}), v)
         R_v = roots(C, filter='R')
 
@@ -371,7 +375,7 @@ def log_to_real(h, q, x, t):
     if len(R_q) != q.count_roots():
         return None
 
-    for r in R_q.iterkeys():
+    for r in R_q.keys():
         result += r*log(h.as_expr().subs(t, r))
 
     return result

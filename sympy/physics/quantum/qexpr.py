@@ -1,8 +1,9 @@
+from __future__ import print_function, division
 
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, string_types, u
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -60,7 +61,7 @@ def __qsympify_sequence_helper(seq):
     if not is_sequence(seq):
         if isinstance(seq, Matrix):
             return seq
-        elif isinstance(seq, basestring):
+        elif isinstance(seq, string_types):
             return Symbol(seq)
         else:
             return sympify(seq)
@@ -93,9 +94,11 @@ class QExpr(Expr):
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u''
+    _label_separator = u('')
 
-    is_commutative = False
+    @property
+    def free_symbols(self):
+        return set([self])
 
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.

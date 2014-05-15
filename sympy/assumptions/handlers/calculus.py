@@ -2,6 +2,8 @@
 This module contains query handlers responsible for calculus queries:
 infinitesimal, bounded, etc.
 """
+from __future__ import print_function, division
+
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
@@ -252,11 +254,11 @@ class AskBoundedHandler(CommonHandler):
             return False
         if base_bounded and exp_bounded:
             return True
-        if abs(expr.base) <= 1 and ask(Q.positive(expr.exp), assumptions):
+        if (abs(expr.base) <= 1) == True and ask(Q.positive(expr.exp), assumptions):
             return True
-        if abs(expr.base) >= 1 and ask(Q.negative(expr.exp), assumptions):
+        if (abs(expr.base) >= 1) == True and ask(Q.negative(expr.exp), assumptions):
             return True
-        if abs(expr.base) >= 1 and exp_bounded is False:
+        if (abs(expr.base) >= 1) == True and exp_bounded is False:
             return False
         return None
 

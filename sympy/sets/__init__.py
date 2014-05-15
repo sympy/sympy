@@ -1,1 +1,1 @@
-from fancysets import TransformationSet, Range
+from .fancysets import TransformationSet, ImageSet, Range

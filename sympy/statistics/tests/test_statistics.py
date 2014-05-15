@@ -12,12 +12,13 @@ from sympy.utilities.tests.test_pickling import check
 
 import warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+warnings.filterwarnings("ignore", message="sympy.statistics has been deprecated since SymPy 0.7.2",
+    category=SymPyDeprecationWarning)
 
 from sympy.statistics.distributions import (Normal, Uniform, Sample, PDF,
     ContinuousProbability)
 
-warnings.filterwarnings("default")
+warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
 x, y, z = symbols('x y z')
 
@@ -79,7 +80,6 @@ def test_fit():
 
 
 def test_sample():
-    from sympy.statistics.distributions import Sample
     s = Sample([0, 1])
     assert str(s) == "Sample([0, 1])"
     assert repr(s) == "Sample([0, 1])"
@@ -132,8 +132,6 @@ def test_printing():
     assert str(Uniform(x + y, y)) == "Uniform(x + y, y)"
 
 def test_pickling():
-    x = Symbol("x")
-    y = Symbol("y")
     for c in (ContinuousProbability, ContinuousProbability(), Normal,
               Normal(x, y), Sample, Sample([1, 3, 4]), Uniform, Uniform(x, y)):
         check(c)

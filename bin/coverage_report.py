@@ -22,6 +22,8 @@ command with
 $ bin/coverage_report.py -c
 
 """
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -107,6 +109,6 @@ if __name__ == '__main__':
 
     make_report(source_dir, **options.__dict__)
 
-    print "The generated coverage report is in covhtml directory."
-    print "Open %s in your web browser to view the report" % os.sep.join(
-        'sympy covhtml index.html'.split())
+    print("The generated coverage report is in covhtml directory.")
+    print("Open %s in your web browser to view the report" % os.sep.join(
+        'sympy covhtml index.html'.split()))

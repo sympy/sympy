@@ -6,7 +6,10 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
+from __future__ import print_function, division
+
 from sympy.core.basic import Basic
+from sympy.core.compatibility import as_int
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
@@ -65,6 +68,15 @@ class Tuple(Basic):
         else:
             return NotImplemented
 
+    def __mul__(self, other):
+        try:
+            n = as_int(other)
+        except ValueError:
+            raise TypeError("Can't multiply sequence by non-integer of type '%s'" % type(other))
+        return self.func(*(self.args*n))
+
+    __rmul__ = __mul__
+
     def __eq__(self, other):
         if isinstance(other, Basic):
             return super(Tuple, self).__eq__(other)
@@ -82,10 +94,39 @@ class Tuple(Basic):
         return tuple([a._to_mpmath(prec) for a in self.args])
 
     def __lt__(self, other):
-        return self.args < other.args
+        return sympify(self.args < other.args)
 
     def __le__(self, other):
-        return self.args <= other.args
+        return sympify(self.args <= other.args)
+
+    # XXX: Basic defines count() as something different, so we can't
+    # redefine it here. Originally this lead to cse() test failure.
+    def tuple_count(self, value):
+        """T.count(value) -> integer -- return number of occurrences of value"""
+        return self.args.count(value)
+
+    def index(self, value, start=None, stop=None):
+        """T.index(value, [start, [stop]]) -> integer -- return first index of value.
+           Raises ValueError if the value is not present."""
+        # XXX: One would expect:
+        #
+        # return self.args.index(value, start, stop)
+        #
+        # here. Any trouble with that? Yes:
+        #
+        # >>> (1,).index(1, None, None)
+        # Traceback (most recent call last):
+        #   File "<stdin>", line 1, in <module>
+        # TypeError: slice indices must be integers or None or have an __index__ method
+        #
+        # See: http://bugs.python.org/issue13340
+
+        if start is None and stop is None:
+            return self.args.index(value)
+        elif stop is None:
+            return self.args.index(value, start)
+        else:
+            return self.args.index(value, start, stop)
 
 converter[tuple] = lambda tup: Tuple(*tup)
 
@@ -135,7 +176,7 @@ class Dict(Basic):
     >>> D = Dict({1: 'one', 2: 'two'})
     >>> for key in D:
     ...    if key == 1:
-    ...        print key, D[key]
+    ...        print('%s %s' % (key, D[key]))
     1 one
 
     The args are sympified so the 1 and 2 are Integers and the values
@@ -206,7 +247,7 @@ class Dict(Basic):
         return sympify(key) in self._dict
 
     def __lt__(self, other):
-        return self.args < other.args
+        return sympify(self.args < other.args)
 
     @property
     def _sorted_args(self):

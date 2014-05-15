@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 class DefaultPrinting(object):
     """
     The default implementation of printing for SymPy classes.
@@ -10,7 +12,7 @@ class DefaultPrinting(object):
     """
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
-    # regardless of the global setting. See issue 2388.
+    # regardless of the global setting. See issue 5487.
     def __str__(self):
         from sympy.printing.str import sstr
         return sstr(self, order=None)
