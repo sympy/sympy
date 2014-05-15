@@ -1911,6 +1911,24 @@ def radsimp(expr, symbolic=True, max_terms=4):
         else:
             raise NotImplementedError
 
+    def ispow2(d, log2=False):
+        if not d.is_Pow:
+            return False
+        e = d.exp
+        if e.is_Rational and e.q == 2 or symbolic and fraction(e)[1] == 2:
+            return True
+        if log2:
+            q = 1
+            if e.is_Rational:
+                q = e.q
+            elif symbolic:
+                d = fraction(e)[1]
+                if d.is_Integer:
+                    q = d
+            if q != 1 and log(q, 2).is_Integer:
+                return True
+        return False
+
     def handle(expr):
         if expr.is_Atom:
             return expr
@@ -1918,8 +1936,10 @@ def radsimp(expr, symbolic=True, max_terms=4):
         n, d = fraction(expr)
 
         if d.is_Atom:
-            # n can't be an Atom since expr is not an Atom
-            n = n.func(*[handle(a) for a in n.args])
+            if n.is_Atom:
+                pass  # for coverage test
+            else:
+                n = n.func(*[handle(a) for a in n.args])
             return _umul(n, 1/d)
         elif n is not S.One:
             return _umul(n, handle(1/d))
@@ -1929,15 +1949,15 @@ def radsimp(expr, symbolic=True, max_terms=4):
         if not symbolic and d.free_symbols:
             return expr
 
-        if d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
-            d2 = sqrtdenest(sqrt(d.base))**d.exp.p
+        if ispow2(d):
+            d2 = sqrtdenest(sqrt(d.base))**fraction(d.exp)[0]
             if d2 != d:
                 return handle(1/d2)
         elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
             # (1/d**i) = (1/d)**i
             return handle(1/d.base)**d.exp
 
-        if not (d.is_Add or d.is_Pow and d.exp.is_Rational and d.exp.q == 2):
+        if not (d.is_Add or ispow2(d)):
             return 1/d.func(*[handle(a) for a in d.args])
 
         # handle 1/d treating d as an Add (though it may not be)
@@ -1965,9 +1985,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 p2 = []
                 other = []
                 for i in Mul.make_args(m):
-                    if i.is_Pow and (i.exp is S.Half or
-                            i.exp.is_Rational and i.exp.q != 1 and
-                            log(i.exp.q, 2).is_Integer):
+                    if ispow2(i, log2=True):
                         p2.append(i.base if i.exp is S.Half else i.base**(2*i.exp))
                     elif i is S.ImaginaryUnit:
                         p2.append(S.NegativeOne)

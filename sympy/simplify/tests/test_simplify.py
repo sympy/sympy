@@ -1520,6 +1520,9 @@ def test_radsimp():
     # issue 7498
     assert radsimp(sqrt(x)/sqrt(y)**3) == umul(sqrt(x), sqrt(y**3), 1/y**3)
 
+    # for coverage
+    eq = sqrt(x)/y**2
+    assert radsimp(eq) == eq
 
 
 def test_radsimp_issue_3214():
