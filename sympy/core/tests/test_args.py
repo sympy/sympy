@@ -426,11 +426,6 @@ def test_sympy__core__sets__EmptySet():
     assert _test_args(EmptySet())
 
 
-def test_sympy__core__sets__UniversalSet():
-    from sympy.core.sets import UniversalSet
-    assert _test_args(UniversalSet())
-
-
 def test_sympy__core__sets__FiniteSet():
     from sympy.core.sets import FiniteSet
     assert _test_args(FiniteSet(x, y, z))
@@ -461,6 +456,11 @@ def test_sympy__core__sets__Intersection():
 def test_sympy__core__sets__Union():
     from sympy.core.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
+
+
+def test_sympy__core__sets__Difference():
+    from sympy.core.sets import Difference
+    assert _test_args(Difference(Interval(0, 2), Interval(0, 1)))
 
 
 def test_sympy__core__trace__Tr():

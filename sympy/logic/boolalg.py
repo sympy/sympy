@@ -144,9 +144,12 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
         >>> from sympy import true
         >>> true.as_set()
-        UniversalSet()
+        (-oo, oo)
         """
-        return S.UniversalSet
+        #XXX: It won't work
+        # It is impossible to have true as a set without having
+        # a universal set
+        return S.Reals
 
 
 class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):

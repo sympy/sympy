@@ -23,7 +23,7 @@ from .function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     expand_trig, expand_complex, expand_multinomial, nfloat, \
     expand_power_base, expand_power_exp
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
-        Intersection, imageset)
+        Intersection, imageset, Difference)
 from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc

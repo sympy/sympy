@@ -40,17 +40,17 @@ ProductSet
 .. autoclass:: ProductSet
    :members:
 
+Difference
+^^^^^^^^^^
+.. autoclass:: Difference
+   :members:
+
 Singleton Sets
 --------------
 
 EmptySet
 ^^^^^^^^
 .. autoclass:: EmptySet
-   :members:
-
-UniversalSet
-^^^^^^^^^^^^
-.. autoclass:: UniversalSet
    :members:
 
 Special Sets

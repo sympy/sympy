@@ -559,7 +559,7 @@ def test_bool_as_set():
     assert And(x <= 2, x >= -2).as_set() == Interval(-2, 2)
     assert Or(x >= 2, x <= -2).as_set() == Interval(-oo, -2) + Interval(2, oo)
     assert Not(x > 2).as_set() == Interval(-oo, 2)
-    assert true.as_set() == S.UniversalSet
+    assert true.as_set() == S.Reals
     assert false.as_set() == EmptySet()
 
 
@@ -568,5 +568,5 @@ def test_multivariate_bool_as_set():
     x, y = symbols('x,y')
 
     assert And(x >= 0, y >= 0).as_set() == Interval(0, oo)*Interval(0, oo)
-    assert Or(x >= 0, y >= 0).as_set() == S.UniversalSet - \
+    assert Or(x >= 0, y >= 0).as_set() == S.Reals*S.Reals - \
         Interval(-oo, 0, True, True)*Interval(-oo, 0, True, True)

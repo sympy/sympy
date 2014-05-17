@@ -12,7 +12,7 @@ from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
-from sympy.logic.boolalg import And, Or, true, false
+from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import default_sort_key, subsets
 
 
@@ -37,7 +37,7 @@ class Set(Basic):
     is_Union = False
     is_Intersection = None
     is_EmptySet = None
-    is_UniversalSet = None
+    is_Difference = False
 
     def sort_key(self, order=None):
         """
@@ -116,8 +116,7 @@ class Set(Basic):
         """
         return None
 
-    @property
-    def complement(self):
+    def complement(self, universal_set):
         """
         The complement of 'self'.
 
@@ -133,11 +132,7 @@ class Set(Basic):
         (-oo, 0) U (1, oo)
 
         """
-        return self._complement
-
-    @property
-    def _complement(self):
-        raise NotImplementedError("(%s)._complement" % self)
+        return universal_set - self
 
     @property
     def inf(self):
@@ -361,13 +356,7 @@ class Set(Basic):
         return ProductSet([self]*exp)
 
     def __sub__(self, other):
-        return self.intersect(other.complement)
-
-    def __neg__(self):
-        return self.complement
-
-    def __invert__(self):
-        return self.complement
+        return Difference(self, other, evaluate=False)
 
     def __contains__(self, other):
         from sympy.assumptions import ask
@@ -493,13 +482,13 @@ class ProductSet(Set):
     def sets(self):
         return self.args
 
-    @property
-    def _complement(self):
+    def __sub__(self, other):
         # For each set consider it or it's complement
         # We need at least one of the sets to be complemented
         # Consider all 2^n combinations.
         # We can conveniently represent these options easily using a ProductSet
-        switch_sets = ProductSet(FiniteSet(s, s.complement) for s in self.sets)
+        switch_sets = ProductSet(FiniteSet(s, s - o) for s, o in
+                                 zip(self.sets, other.sets))
         product_sets = (ProductSet(*set) for set in switch_sets)
         # Union of all combinations but this one
         return Union(p for p in product_sets if p != self)
@@ -755,11 +744,8 @@ class Interval(Set, EvalfMixin):
 
         return None
 
-    @property
-    def _complement(self):
-        a = Interval(S.NegativeInfinity, self.start, True, not self.left_open)
-        b = Interval(self.end, S.Infinity, not self.right_open, True)
-        return Union(a, b)
+    def __sub__(self, other):
+        return Intersection(self, other.complement(S.Reals))
 
     @property
     def _boundary(self):
@@ -989,6 +975,13 @@ class Union(Set, EvalfMixin):
         else:
             return Union(args, evaluate=False)
 
+    def __sub__(self, other):
+        return Union(s - other for s in self.args)
+
+    def complement(self, universal_set):
+        # DeMorgan's Law
+        return Intersection(s.complement(universal_set) for s in self.args)
+
     @property
     def _inf(self):
         # We use Min so that sup is meaningful in combination with symbolic
@@ -1002,14 +995,6 @@ class Union(Set, EvalfMixin):
         # end points.
         from sympy.functions.elementary.miscellaneous import Max
         return Max(*[set.sup for set in self.args])
-
-    @property
-    def _complement(self):
-        # De Morgan's formula.
-        complement = self.args[0].complement
-        for set in self.args[1:]:
-            complement = complement.intersect(set.complement)
-        return complement
 
     def _contains(self, other):
         or_args = [the_set.contains(other) for the_set in self.args]
@@ -1143,9 +1128,9 @@ class Intersection(Set):
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
 
-        # Intersection of no sets is everything
+        # Intersection of no sets is everything. I doubt it.
         if len(args) == 0:
-            return S.UniversalSet
+            raise TypeError("Intersection expected at least one argument")
 
         args = sorted(args, key=default_sort_key)
 
@@ -1165,10 +1150,6 @@ class Intersection(Set):
 
     @property
     def _sup(self):
-        raise NotImplementedError()
-
-    @property
-    def _complement(self):
         raise NotImplementedError()
 
     def _eval_imageset(self, f):
@@ -1215,8 +1196,17 @@ class Intersection(Set):
         for s in args:
             if s.is_Union:
                 other_sets = set(args) - set((s,))
+                if len(other_sets) > 0:
+                    other = Intersection(other_sets)
+                    return Union(Intersection(arg, other) for arg in s.args)
+                else:
+                    return Union(arg for arg in s.args)
+
+        for s in args:
+            if s.is_Difference:
+                other_sets = set(args) - set((s,))
                 other = Intersection(other_sets)
-                return Union(Intersection(arg, other) for arg in s.args)
+                return Difference(Intersection(*list(other_sets)), s)
 
         # At this stage we are guaranteed not to have any
         # EmptySets, FiniteSets, or Unions in the intersection
@@ -1249,6 +1239,70 @@ class Intersection(Set):
         return And(*[set.as_relational(symbol) for set in self.args])
 
 
+class Difference(Set, EvalfMixin):
+    """
+    Represents the set difference of a set with another set.
+
+    `A - B = \{x \in A| x \\notin B\}`
+
+
+    Examples
+    ========
+
+        >>> from sympy import Difference, FiniteSet
+        >>> Difference(FiniteSet(0, 1, 2), FiniteSet(1))
+        {0, 2}
+
+    See Also
+    =========
+    Intersection, Union
+
+    References
+    ==========
+    http://mathworld.wolfram.com/SetDifference.html
+    """
+
+    # TODO: make union work with Difference
+    # TODO: write rules to combine Difference with other Difference
+    # TODO: write a printer for Difference
+
+    is_Difference = True
+
+    def __new__(cls, *args, **kwargs):
+
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
+
+        args = list(args)
+
+        if len(args) != 2:
+            raise TypeError("The input must be two Sets")
+
+        if evaluate:
+            return Difference.reduce(args)
+
+        return Basic.__new__(cls, *args)
+
+    @staticmethod
+    def reduce(args):
+        """
+        Simplify a :class:`Difference` using known rules.
+
+        Rules:
+            1. If A is FiniteSet then use the definition
+
+        """
+
+        A = args[0]
+        B = args[1]
+
+        return A - B
+
+    def _contains(self, other):
+        A = self.args[0]
+        B = self.args[1]
+        return And(A.contains(other), Not(B.contains(other)))
+
+
 class EmptySet(with_metaclass(Singleton, Set)):
     """
     Represents the empty set. The empty set is available as a singleton
@@ -1265,9 +1319,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
         >>> Interval(1, 2).intersect(S.EmptySet)
         EmptySet()
 
-    See Also
-    ========
-    UniversalSet
 
     References
     ==========
@@ -1279,9 +1330,8 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _intersect(self, other):
         return S.EmptySet
 
-    @property
-    def _complement(self):
-        return S.UniversalSet
+    def __sub__(self, other):
+        return S.EmptySet
 
     @property
     def _measure(self):
@@ -1311,57 +1361,6 @@ class EmptySet(with_metaclass(Singleton, Set)):
     @property
     def _boundary(self):
         return self
-
-class UniversalSet(with_metaclass(Singleton, Set)):
-    """
-    Represents the set of all things.
-    The universal set is available as a singleton as S.UniversalSet
-
-    Examples
-    ========
-
-        >>> from sympy import S, Interval
-
-        >>> S.UniversalSet
-        UniversalSet()
-
-        >>> Interval(1, 2).intersect(S.UniversalSet)
-        [1, 2]
-
-    See Also
-    ========
-    EmptySet
-
-    References
-    ==========
-    http://en.wikipedia.org/wiki/Universal_set
-    """
-
-    is_UniversalSet = True
-
-    def _intersect(self, other):
-        return other
-
-    @property
-    def _complement(self):
-        return S.EmptySet
-
-    @property
-    def _measure(self):
-        return S.Infinity
-
-    def _contains(self, other):
-        return True
-
-    def as_relational(self, symbol):
-        return True
-
-    def _union(self, other):
-        return self
-
-    @property
-    def _boundary(self):
-        return EmptySet()
 
 
 class FiniteSet(Set, EvalfMixin):
@@ -1453,33 +1452,6 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_imageset(self, f):
         return FiniteSet(*map(f, self))
-
-    @property
-    def _complement(self):
-        """
-        The complement of a real finite set is the Union of open Intervals
-        between the elements of the set.
-
-        >>> from sympy import FiniteSet
-        >>> FiniteSet(1, 2, 3).complement
-        (-oo, 1) U (1, 2) U (2, 3) U (3, oo)
-
-
-        """
-        if not all(elem.is_number for elem in self):
-            raise ValueError("%s: Complement not defined for symbolic inputs"
-                    % self)
-
-        # as there are only numbers involved, a straight sort is sufficient;
-        # default_sort_key is not needed
-        args = sorted(self.args)
-
-        intervals = []  # Build up a list of intervals between the elements
-        intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
-        for a, b in zip(args[:-1], args[1:]):
-            intervals.append(Interval(a, b, True, True))  # open intervals
-        intervals.append(Interval(args[-1], S.Infinity, True, True))
-        return Union(intervals, evaluate=False)
 
     @property
     def _boundary(self):
