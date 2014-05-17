@@ -9,7 +9,21 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos
 
 
-class mathieus(Function):
+class MathieuBase(Function):
+    """
+    Abstract base class for Mathieu functions.
+
+    This class is meant to reduce code duplication.
+    """
+
+    unbranched = True
+
+    def _eval_conjugate(self):
+        a, q, z = self.args
+        return self.func(a.conjugate(), q.conjugate(), z.conjugate())
+
+
+class mathieus(MathieuBase):
     r"""
     The Mathieu Sine function. This function is one solution
     of the Mathieu differential equation:
@@ -46,11 +60,9 @@ class mathieus(Function):
 
     .. [1] http://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuFunction.html
+    .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuS/
     """
-
-    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 3:
@@ -67,12 +79,8 @@ class mathieus(Function):
         if z.could_extract_minus_sign():
             return -cls(a, q, -z)
 
-    def _eval_conjugate(self):
-        a, q, z = self.args
-        return self.func(a.conjugate(), q.conjugate(), z.conjugate())
 
-
-class mathieuc(Function):
+class mathieuc(MathieuBase):
     r"""
     The Mathieu Cosine function. This function is one solution
     of the Mathieu differential equation:
@@ -109,11 +117,9 @@ class mathieuc(Function):
 
     .. [1] http://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuFunction.html
+    .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuC/
     """
-
-    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 3:
@@ -130,12 +136,8 @@ class mathieuc(Function):
         if z.could_extract_minus_sign():
             return cls(a, q, -z)
 
-    def _eval_conjugate(self):
-        a, q, z = self.args
-        return self.func(a.conjugate(), q.conjugate(), z.conjugate())
 
-
-class mathieusprime(Function):
+class mathieusprime(MathieuBase):
     r"""
     The derivative of the Mathieu Sine function. This function is one
     solution of the Mathieu differential equation:
@@ -172,11 +174,9 @@ class mathieusprime(Function):
 
     .. [1] http://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuFunction.html
+    .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuSPrime/
     """
-
-    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 3:
@@ -193,12 +193,8 @@ class mathieusprime(Function):
         if z.could_extract_minus_sign():
             return cls(a, q, -z)
 
-    def _eval_conjugate(self):
-        a, q, z = self.args
-        return self.func(a.conjugate(), q.conjugate(), z.conjugate())
 
-
-class mathieucprime(Function):
+class mathieucprime(MathieuBase):
     r"""
     The derivative of the Mathieu Cosine function. This function is one
     solution of the Mathieu differential equation:
@@ -235,11 +231,9 @@ class mathieucprime(Function):
 
     .. [1] http://en.wikipedia.org/wiki/Mathieu_function
     .. [2] http://dlmf.nist.gov/28
-    .. [3] http://mathworld.wolfram.com/MathieuFunction.html
+    .. [3] http://mathworld.wolfram.com/MathieuBase.html
     .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuCPrime/
     """
-
-    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 3:
@@ -255,7 +249,3 @@ class mathieucprime(Function):
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
             return -cls(a, q, -z)
-
-    def _eval_conjugate(self):
-        a, q, z = self.args
-        return self.func(a.conjugate(), q.conjugate(), z.conjugate())
