@@ -1153,8 +1153,6 @@ def test_action_verbs():
         (x**y*x**z*y**z).powsimp(combine='all')
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
-    # Not tested because it's deprecated
-    #assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == \
         (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)

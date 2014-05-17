@@ -2919,8 +2919,8 @@ class Expr(Basic, EvalfMixin):
 
     def separate(self, deep=False, force=False):
         """See the separate function in sympy.simplify"""
-        from sympy.simplify import separate
-        return separate(self, deep)
+        from sympy.core.function import expand_power_base
+        return expand_power_base(self, deep=deep, force=force)
 
     def collect(self, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
         """See the collect function in sympy.simplify"""
