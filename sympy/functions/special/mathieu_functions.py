@@ -25,7 +25,7 @@ class MathieuBase(Function):
 
 class mathieus(MathieuBase):
     r"""
-    The Mathieu Sine function. This function is one solution
+    The Mathieu Sine function `S(a,q,z)`. This function is one solution
     of the Mathieu differential equation:
 
     .. math ::
@@ -82,7 +82,7 @@ class mathieus(MathieuBase):
 
 class mathieuc(MathieuBase):
     r"""
-    The Mathieu Cosine function. This function is one solution
+    The Mathieu Cosine function `C(a,q,z)`. This function is one solution
     of the Mathieu differential equation:
 
     .. math ::
@@ -139,8 +139,8 @@ class mathieuc(MathieuBase):
 
 class mathieusprime(MathieuBase):
     r"""
-    The derivative of the Mathieu Sine function. This function is one
-    solution of the Mathieu differential equation:
+    The derivative `S^{\prime}(a,q,z)` of the Mathieu Sine function.
+    This function is one solution of the Mathieu differential equation:
 
     .. math ::
         y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
@@ -196,8 +196,8 @@ class mathieusprime(MathieuBase):
 
 class mathieucprime(MathieuBase):
     r"""
-    The derivative of the Mathieu Cosine function. This function is one
-    solution of the Mathieu differential equation:
+    The derivative `C^{\prime}(a,q,z)` of the Mathieu Cosine function.
+    This function is one solution of the Mathieu differential equation:
 
     .. math ::
         y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
