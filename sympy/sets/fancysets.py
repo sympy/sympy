@@ -224,12 +224,6 @@ class ImageSet(Set):
         return self.base_set.is_iterable
 
 
-@deprecated(useinstead="ImageSet", issue=7057, deprecated_since_version="0.7.4")
-def TransformationSet(*args, **kwargs):
-    """Deprecated alias for the ImageSet constructor."""
-    return ImageSet(*args, **kwargs)
-
-
 class Range(Set):
     """
     Represents a range of integers.
