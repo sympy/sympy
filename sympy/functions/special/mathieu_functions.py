@@ -127,3 +127,63 @@ class mathieuc(Function):
     def _eval_conjugate(self):
         a, q, z = self.args
         return self.func(a.conjugate(), q.conjugate(), z.conjugate())
+
+
+class mathieusprime(Function):
+    r"""
+    The derivative of the Mathieu Sine function. This function is one
+    solution of the Mathieu differential equation:
+
+    .. math ::
+        y(x)^{\prime\prime} + (a - 2 q \cos(2 x) y(x) = 0
+
+    The other solution is the Mathieu Cosine function.
+
+    Examples
+    ========
+
+    >>> from sympy import mathieusprime
+    >>> from sympy.abc import a, q, z
+
+    >>> mathieusprime(a, q, z)
+    mathieusprime(a, q, z)
+
+    >>> mathieusprime(a, 0, z)
+    sqrt(a)*cos(sqrt(a)*z)
+
+    See Also
+    ========
+
+    mathieus: Mathieu sine function
+    mathieuc: Mathieu cosine function
+    mathieucprime: Derivative of Mathieu cosine function
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [2] http://dlmf.nist.gov/28
+    .. [3] http://mathworld.wolfram.com/MathieuFunction.html
+    .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuSPrime/
+    """
+
+    unbranched = True
+
+    def fdiff(self, argindex=1):
+        if argindex == 3:
+            a, q, z = self.args
+            return (2*q*cos(2*z) - a)*mathieus(a, q, z)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, a, q, z):
+        if q.is_Number and q is S.Zero:
+            return sqrt(a)*cos(sqrt(a)*z)
+        # Try to pull out factors of -1
+        if z.could_extract_minus_sign():
+            return cls(a, q, -z)
+
+    def _eval_conjugate(self):
+        a, q, z = self.args
+        return self.func(a.conjugate(), q.conjugate(), z.conjugate())
