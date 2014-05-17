@@ -29,7 +29,7 @@ class mathieus(MathieuBase):
     of the Mathieu differential equation:
 
     .. math ::
-        y(x)^{\prime\prime} + (a - 2 q \cos(2 x) y(x) = 0
+        y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
 
     The other solution is the Mathieu Cosine function.
 
@@ -51,9 +51,9 @@ class mathieus(MathieuBase):
     See Also
     ========
 
-    mathieuc: Mathieu cosine function
-    mathieusprime: Derivative of Mathieu sine function
-    mathieucprime: Derivative of Mathieu cosine function
+    mathieuc: Mathieu cosine function.
+    mathieusprime: Derivative of Mathieu sine function.
+    mathieucprime: Derivative of Mathieu cosine function.
 
     References
     ==========
@@ -86,7 +86,7 @@ class mathieuc(MathieuBase):
     of the Mathieu differential equation:
 
     .. math ::
-        y(x)^{\prime\prime} + (a - 2 q \cos(2 x) y(x) = 0
+        y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
 
     The other solution is the Mathieu Sine function.
 
@@ -143,7 +143,7 @@ class mathieusprime(MathieuBase):
     solution of the Mathieu differential equation:
 
     .. math ::
-        y(x)^{\prime\prime} + (a - 2 q \cos(2 x) y(x) = 0
+        y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
 
     The other solution is the Mathieu Cosine function.
 
@@ -200,7 +200,7 @@ class mathieucprime(MathieuBase):
     solution of the Mathieu differential equation:
 
     .. math ::
-        y(x)^{\prime\prime} + (a - 2 q \cos(2 x) y(x) = 0
+        y(x)^{\prime\prime} + (a - 2 q \cos(2 x)) y(x) = 0
 
     The other solution is the Mathieu Sine function.
 
