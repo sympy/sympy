@@ -22,7 +22,7 @@ class mathieus(Function):
     Examples
     ========
 
-    >>> from sympy import I, oo, mathieus
+    >>> from sympy import diff, mathieus
     >>> from sympy.abc import a, q, z
 
     >>> mathieus(a, q, z)
@@ -30,6 +30,9 @@ class mathieus(Function):
 
     >>> mathieus(a, 0, z)
     sin(sqrt(a)*z)
+
+    >>> diff(mathieus(a, q, z), z)
+    mathieusprime(a, q, z)
 
     See Also
     ========
@@ -82,7 +85,7 @@ class mathieuc(Function):
     Examples
     ========
 
-    >>> from sympy import I, oo, mathieus
+    >>> from sympy import diff, mathieuc
     >>> from sympy.abc import a, q, z
 
     >>> mathieuc(a, q, z)
@@ -90,6 +93,9 @@ class mathieuc(Function):
 
     >>> mathieuc(a, 0, z)
     cos(sqrt(a)*z)
+
+    >>> diff(mathieuc(a, q, z), z)
+    mathieucprime(a, q, z)
 
     See Also
     ========
@@ -142,7 +148,7 @@ class mathieusprime(Function):
     Examples
     ========
 
-    >>> from sympy import mathieusprime
+    >>> from sympy import diff, mathieusprime
     >>> from sympy.abc import a, q, z
 
     >>> mathieusprime(a, q, z)
@@ -150,6 +156,9 @@ class mathieusprime(Function):
 
     >>> mathieusprime(a, 0, z)
     sqrt(a)*cos(sqrt(a)*z)
+
+    >>> diff(mathieusprime(a, q, z), z)
+    (-a + 2*q*cos(2*z))*mathieus(a, q, z)
 
     See Also
     ========
@@ -183,6 +192,69 @@ class mathieusprime(Function):
         # Try to pull out factors of -1
         if z.could_extract_minus_sign():
             return cls(a, q, -z)
+
+    def _eval_conjugate(self):
+        a, q, z = self.args
+        return self.func(a.conjugate(), q.conjugate(), z.conjugate())
+
+
+class mathieucprime(Function):
+    r"""
+    The derivative of the Mathieu Cosine function. This function is one
+    solution of the Mathieu differential equation:
+
+    .. math ::
+        y(x)^{\prime\prime} + (a - 2 q \cos(2 x) y(x) = 0
+
+    The other solution is the Mathieu Sine function.
+
+    Examples
+    ========
+
+    >>> from sympy import diff, mathieucprime
+    >>> from sympy.abc import a, q, z
+
+    >>> mathieucprime(a, q, z)
+    mathieucprime(a, q, z)
+
+    >>> mathieucprime(a, 0, z)
+    -sqrt(a)*sin(sqrt(a)*z)
+
+    >>> diff(mathieucprime(a, q, z), z)
+    (-a + 2*q*cos(2*z))*mathieuc(a, q, z)
+
+    See Also
+    ========
+
+    mathieus: Mathieu sine function
+    mathieuc: Mathieu cosine function
+    mathieusprime: Derivative of Mathieu sine function
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Mathieu_function
+    .. [2] http://dlmf.nist.gov/28
+    .. [3] http://mathworld.wolfram.com/MathieuFunction.html
+    .. [4] http://functions.wolfram.com/MathieuandSpheroidalFunctions/MathieuCPrime/
+    """
+
+    unbranched = True
+
+    def fdiff(self, argindex=1):
+        if argindex == 3:
+            a, q, z = self.args
+            return (2*q*cos(2*z) - a)*mathieuc(a, q, z)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, a, q, z):
+        if q.is_Number and q is S.Zero:
+            return -sqrt(a)*sin(sqrt(a)*z)
+        # Try to pull out factors of -1
+        if z.could_extract_minus_sign():
+            return -cls(a, q, -z)
 
     def _eval_conjugate(self):
         a, q, z = self.args
