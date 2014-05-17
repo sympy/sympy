@@ -43,4 +43,6 @@ from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
 from sympy.functions.special.elliptic_integrals import (elliptic_k,
         elliptic_f, elliptic_e, elliptic_pi)
 from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.mathieu_functions import (mathieus, mathieuc,
+        mathieusprime, mathieucprime)
 ln = log
