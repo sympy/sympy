@@ -536,46 +536,56 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
     f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
     """
-    given_hint = hint  # hint given by the user
-
-    # See the docstring of _desolve for more details.
-    hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
-        x0=x0, n=n, **kwargs)
-
-    eq = hints.pop('eq', eq)
-    all_ = hints.pop('all', False)
-    if all_:
-        retdict = {}
-        failed_hints = {}
-        gethints = classify_ode(eq, dict=True)
-        orderedhints = gethints['ordered_hints']
-        for hint in hints:
-            try:
-                rv = _helper_simplify(eq, hint, hints[hint], simplify)
-            except NotImplementedError as detail:
-                failed_hints[hint] = detail
-            else:
-                retdict[hint] = rv
-        func = hints[hint]['func']
-
-        retdict['best'] = min(list(retdict.values()), key=lambda x:
-            ode_sol_simplicity(x, func, trysolving=not simplify))
-        if given_hint == 'best':
-            return retdict['best']
-        for i in orderedhints:
-            if retdict['best'] == retdict.get(i, None):
-                retdict['best_hint'] = i
-                break
-        retdict['default'] = gethints['default']
-        retdict['order'] = gethints['order']
-        retdict.update(failed_hints)
-        return retdict
-
+    if iterable(eq):
+        match = classify_sysode(eq, func)
+        solvefunc = globals()['sysode_' + match['linearity'] + '_' + str(match['no_of_equation']) + 'eq_order' + str(match['order'])]
+        print(solvefunc)
+        sols = solvefunc(match)
+        up_sols = []
+        for sol in sols:
+            up_sols.append(_handle_integral(sol))
+        return up_sols
     else:
-        # The key 'hint' stores the hint needed to be solved for.
-        hint = hints['hint']
-        return _helper_simplify(eq, hint, hints, simplify)
+        given_hint = hint  # hint given by the user
+
+        # See the docstring of _desolve for more details.
+        hints = _desolve(eq, func=func,
+            hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
+            x0=x0, n=n, **kwargs)
+
+        eq = hints.pop('eq', eq)
+        all_ = hints.pop('all', False)
+        if all_:
+            retdict = {}
+            failed_hints = {}
+            gethints = classify_ode(eq, dict=True)
+            orderedhints = gethints['ordered_hints']
+            for hint in hints:
+                try:
+                    rv = _helper_simplify(eq, hint, hints[hint], simplify)
+                except NotImplementedError as detail:
+                    failed_hints[hint] = detail
+                else:
+                    retdict[hint] = rv
+            func = hints[hint]['func']
+
+            retdict['best'] = min(list(retdict.values()), key=lambda x:
+                ode_sol_simplicity(x, func, trysolving=not simplify))
+            if given_hint == 'best':
+                return retdict['best']
+            for i in orderedhints:
+                if retdict['best'] == retdict.get(i, None):
+                    retdict['best_hint'] = i
+                    break
+            retdict['default'] = gethints['default']
+            retdict['order'] = gethints['order']
+            retdict.update(failed_hints)
+            return retdict
+
+        else:
+            # The key 'hint' stores the hint needed to be solved for.
+            hint = hints['hint']
+            return _helper_simplify(eq, hint, hints, simplify)
 
 def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     r"""
@@ -1249,7 +1259,7 @@ def classify_sysode(eq, func=None, **kwargs):
         raise ValueError("classify_sysode() woks for systems of ODEs. For"
         " single ODE equation solving classify_ode should be used")
 
-    t = list(list(eq[i].atoms(Derivative))[0].atoms(Symbol))[0]
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     # find all the functions if not given
     if len(func) < i+1:
@@ -1298,6 +1308,12 @@ def classify_sysode(eq, func=None, **kwargs):
     for j in range(i+1):
         for k in range(order[0]+1):
             df[k,j] = diff(func[j], t, k)
+
+    # keep highest order term coefficient positive
+    for j in range(i+1):
+        if eq[j].coeff(df[order[j],j]).is_negative:
+            eq[j] = -eq[j]
+
     for j in range(i+1):
         for l in range(i+1):
             for k in range(order[0]+1):
@@ -1321,12 +1337,120 @@ def classify_sysode(eq, func=None, **kwargs):
 
     matching_hints['func_coeff'] = func_coef
 
-    if flag == 0:
+    if not flag:
         matching_hints['linearity'] = 'linear'
     else:
         matching_hints['linearity'] = 'Non-linear'
 
+    if matching_hints['linearity'] == 'linear':
+        if matching_hints['no_of_equation'] == 2:
+            if matching_hints['order'] == 1:
+                type_of_equation = check_linear_2eq_order1(eq, func, func_coef)
+            elif matching_hints['order'] == 2:
+                type_of_equation = check_linear_2eq_order2(eq, func, func_coef)
+            else:
+                type_of_equation = None
+
+        elif matching_hints['no_of_equation'] == 3:
+            if matching_hints['order'] == 1:
+                type_of_equation = check_linear_3eq_order1(eq, func, func_coef)
+            else:
+                type_of_equation = None
+        else:
+            if matching_hints['order'] == 1:
+                type_of_equation = check_linear_neq_order1(eq, func, func_coef)
+            else:
+                type_of_equation = None
+    else:
+        if matching_hints['no_of_equation'] == 2:
+            if matching_hints['order'] == 1:
+                type_of_equation = check_nonlinear_2eq_order1(eq, func, func_coef)
+            if matching_hints['order'] == 2:
+                type_of_equation = check_nonlinear_2eq_order2(eq, func, func_coef)
+            else:
+                type_of_equation = None
+        elif matching_hints['no_of_equation'] == 3:
+            if matching_hints['order'] == 1:
+                type_of_equation = check_nonlinear_3eq_order1(eq, func, func_coef)
+            elif matching_hints['order'] == 2:
+                type_of_equation = check_nonlinear_3eq_order2(eq, func, func_coef)
+            else:
+                type_of_equation = None
+        else:
+            type_of_equation = None
+
+    #matching_hints['type_of_equation'] = type_of_equation
+
     return matching_hints
+
+
+def check_linear_2eq_order1(eq, func, func_coef):
+    a1 = Wild('a1')
+    b1 = Wild('b1')
+    c1 = Wild('c1')
+    d1 = Wild('d1')
+    a2 = Wild('a2')
+    b2 = Wild('b2')
+    c2 = Wild('c2')
+    d2 = Wild('d2')
+    x = func[0].func
+    y = func[1].func
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    r1 = collect(eq[0], [x(t), y(t), diff(x(t),t)], exact=True).match(a1*diff(x(t),t)+b1*x(t)+c1*y(t)+d1)
+    r2 = collect(eq[1], [x(t), y(t), diff(y(t),t)], exact=True).match(a2*diff(y(t),t)+b2*x(t)+c2*y(t)+d2)
+    d1_dep = r1[d1].as_independent(t)[1]
+    d2_dep = r2[d2].as_independent(t)[1]
+    a1_dep = r1[a1].as_independent(t)[1]
+    a2_dep = r2[a2].as_independent(t)[1]
+    b1_dep = r1[b1].as_independent(t)[1]
+    b2_dep = r2[b2].as_independent(t)[1]
+    c1_dep = r1[c1].as_independent(t)[1]
+    c2_dep = r2[c2].as_independent(t)[1]
+    if r1[d1]!=0 or r2[d2]!=0:
+        if (d1_dep==1 or d1_dep==0) and (d2_dep==1 or d2_dep==0):
+            if (a1_dep==0 or a1_dep==1) and (a2_dep==0 or a2_dep==1) and (b1_dep==0 or b1_dep==1) \
+                and (b2_dep==0 or b2_dep==1) and (c1_dep==0 or c1_dep==1) and (c2_dep==0 or c2_dep==1):
+                return "type2"
+        else:
+            return None
+    else:
+        if (a1_dep==0 or a1_dep==1) and (a2_dep==0 or a2_dep==1) and (b1_dep==0 or b1_dep==1) \
+            and (b2_dep==0 or b2_dep==1) and (c1_dep==0 or c1_dep==1) and (c2_dep==0 or c2_dep==1):
+            return "type1"
+        else:
+            if (r1[b1] == r2[c2]) and (r1[c1] == r2[b2]):
+                return "type3"
+            elif (r1[b1] == r2[c2]) and (r1[c1] == -r2[b2]):
+                return "type4"
+            elif (cancel(r2[b2]/r1[c1]).as_independent(t)[1]==0 or cancel(r2[b2]/r1[c1]).as_independent(t)[1]==1) \
+            and (cancel((r2[c2]-r1[b1])/r1[c1]).as_independent(t)[1]==0 or cancel((r2[c2]-r1[b1])/r1[c1]).as_independent(t)[1]==1):
+                return "type5"
+            #elif ():
+            #    return "type6"
+            else:
+                return "type7"
+
+
+def check_linear_2eq_order2(eq, func, func_coef):
+    return None
+
+def check_linear_3eq_order1(eq, func, func_coef):
+    return None
+
+def check_linear_neq_order1(eq, func, func_coef):
+    return None
+
+def check_nonlinear_2eq_order1(eq, func, func_coef):
+    return None
+
+def check_nonlinear_2eq_order2(eq, func, func_coef):
+    return None
+
+def check_nonlinear_3eq_order1(eq, func, func_coef):
+    return None
+
+def check_nonlinear_3eq_order2(eq, func, func_coef):
+    return None
 
 
 @vectorize(0)
@@ -5748,3 +5872,7 @@ def lie_heuristic_linear(match, comp=False):
             xival = xival.subs(onedict)
             etaval = etaval.subs(onedict)
             return [{xi: xival, eta: etaval}]
+
+
+def sysode_linear_2eq_order1(match):
+    pass
