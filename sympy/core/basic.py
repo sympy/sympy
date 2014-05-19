@@ -963,12 +963,16 @@ class Basic(with_metaclass(ManagedProperties)):
             reps = {}
             rv = self
             kwargs['hack2'] = True
+            m = C.Dummy()
             for old, new in sequence:
                 d = C.Dummy(commutative=new.is_commutative)
-                rv = rv._subs(old, d, **kwargs)
-                reps[d] = new
+                # using d*m will keep a straight replacement in a Derivative-
+                # like object's dummy variables
+                rv = rv._subs(old, d*m, **kwargs)
                 if not isinstance(rv, Basic):
                     break
+                reps[d] = new
+            reps[m] = S.One  # get rid of m
             return rv.xreplace(reps)
         else:
             rv = self
