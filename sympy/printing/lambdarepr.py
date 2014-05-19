@@ -31,7 +31,7 @@ class LambdaPrinter(StrPrinter):
         _print_MatrixBase
 
     def _print_Piecewise(self, expr):
-        from sympy.core.sets import Interval
+        from sympy.sets.sets import Interval
         result = []
         i = 0
         for arg in expr.args:
