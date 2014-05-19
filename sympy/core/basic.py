@@ -966,8 +966,9 @@ class Basic(with_metaclass(ManagedProperties)):
             m = C.Dummy()
             for old, new in sequence:
                 d = C.Dummy(commutative=new.is_commutative)
-                # using d*m will keep a straight replacement in a Derivative-
-                # like object's dummy variables
+                # using d*m so Subs will be used on dummy variables
+                # in things like Derivative(f(x, y), x) in which x
+                # is both free and bound
                 rv = rv._subs(old, d*m, **kwargs)
                 if not isinstance(rv, Basic):
                     break
