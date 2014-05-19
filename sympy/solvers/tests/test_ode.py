@@ -26,6 +26,62 @@ h = Function('h')
 # constant_renumber because it will normalize it (constant_renumber causes
 # dsolve() to return different results on different machines)
 
+def test_linear_2eq_order1():
+    x, y, z = symbols('x, y, z', function=True)
+    k, l, m, n = symbols('k, l, m, n', Integer=True)
+    t = Symbol('t')
+    eq1 = (Eq(diff(x(t),t), 9*y(t)), Eq(diff(y(t),t), 12*x(t)))
+    sol1 = "[x(t) == 9*C1*exp(-6*sqrt(3)*t) + 9*C2*exp(6*sqrt(3)*t), "\
+    "y(t) == -6*sqrt(3)*C1*exp(-6*sqrt(3)*t) + 6*sqrt(3)*C2*exp(6*sqrt(3)*t)]"
+    assert str(dsolve(eq1)) == sol1
+
+    eq2 = (Eq(diff(x(t),t), 2*x(t) + 4*y(t)), Eq(diff(y(t),t), 12*x(t) + 41*y(t)))
+    sol2 = "[x(t) == 4*C1*exp(t*(-sqrt(1713)/2 + 43/2)) + 4*C2*exp(t*(sqrt(1713)/2 + 43/2)), "\
+    "y(t) == C1*(-sqrt(1713)/2 + 39/2)*exp(t*(-sqrt(1713)/2 + 43/2)) + C2*(39/2 + sqrt(1713)/2)*exp(t*(sqrt(1713)/2 + 43/2))]"
+    assert str(dsolve(eq2)) == sol2
+
+    eq3 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
+    sol3 = "[x(t) == (C1*sin(sqrt(7)*t/2) + C2*cos(sqrt(7)*t/2))*exp(3*t/2), "\
+    "y(t) == ((C1/2 - sqrt(7)*C2/2)*sin(sqrt(7)*t/2) + (sqrt(7)*C1/2 + C2/2)*cos(sqrt(7)*t/2))*exp(3*t/2)]"
+    assert str(dsolve(eq3)) == sol3
+
+    eq4 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
+    sol4 = "[x(t) == C1*exp(t*(-sqrt(6) + 3)) + C2*exp(t*(sqrt(6) + 3)) + 22/3, "\
+    "y(t) == C1*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) + C2*(2 + sqrt(6))*exp(t*(sqrt(6) + 3)) + 5/3]"
+    assert str(dsolve(eq4)) == sol4
+
+    eq5 = (Eq(diff(x(t),t), x(t) + y(t) + 81), Eq(diff(y(t),t), -2*x(t) + y(t) + 23))
+    sol5 = "[x(t) == (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) + 58/3, "\
+    "y(t) == (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) + 185/3]"
+    assert str(dsolve(eq5)) == sol5
+
+    eq6 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
+    sol6 = "[x(t) == (C1*exp(Integral(2, t)) + C2*exp(-Integral(2, t)))*exp(Integral(5*t, t)), "\
+    "y(t) == (C1*exp(Integral(2, t)) - C2*exp(-Integral(2, t)))*exp(Integral(5*t, t))]"
+    assert str(dsolve(eq6)) == sol6
+
+    eq7 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
+    sol7 = "[x(t) == (C1*cos(Integral(t**2, t)) + C2*sin(Integral(t**2, t)))*exp(Integral(5*t, t)), "\
+    "y(t) == (-C1*sin(Integral(t**2, t)) + C2*cos(Integral(t**2, t)))*exp(Integral(5*t, t))]"
+    assert str(dsolve(eq7)) == sol7
+
+    eq8 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
+    sol8 = "[x(t) == (C1*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + C2*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t)), "\
+    "y(t) == (C1*(-sqrt(77)/2 + 9/2)*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + "\
+    "C2*(sqrt(77)/2 + 9/2)*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t))]"
+    assert str(dsolve(eq8)) == sol8
+
+    eq9 = (Eq(diff(x(t),t), 2*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), 5*(2*t+5*exp(t))*x(t) + 5*(t**2-exp(t))*y(t)))
+    sol9 = "[x(t) == (C1 + Integral(C2*t**2*exp(Integral(t*(-5*t - 2), t))*exp(-5*Integral(exp(t), t)), t))*exp(-Integral(t*(-5*t - 2), t)), "\
+    "y(t) == C1*exp(-5*Integral(exp(t), t)) + 5*(C1 + Integral(C2*t**2*exp(Integral(t*(-5*t - 2), t))*"\
+    "exp(-5*Integral(exp(t), t)), t))*exp(-Integral(t*(-5*t - 2), t))]"
+
+    eq10 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
+    sol10 = "[x(t) == C1*x0 + C2*x0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t), "\
+    "y(t) == C1*y0 + C2(y0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t) + "\
+    "exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0)]"
+    assert str(dsolve(eq9)) == sol9
+
 
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
@@ -203,6 +259,7 @@ def test_classify_ode():
                         prep=True) == ans
 
 
+"""
 def test_classify_sysode():
     # Here x is assumed to be x(t) and y as y(t) for simplicity.
     # Similarly diff(x,t) and diff(y,y) is assumed to be x1 and y1 respectively.
@@ -325,7 +382,7 @@ def test_classify_sysode():
     (2, 2, 1): 0, (2, 1, 1): 1, (2, 2, 0): 1, (0, 1, 0): 0}, \
     'linearity': 'Non-linear', 'order': 2, 'no_of_equation': 3}
     assert classify_sysode(eq17) == sol17
-
+"""
 
 def test_ode_order():
     f = Function('f')
