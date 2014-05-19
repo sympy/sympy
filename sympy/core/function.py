@@ -1026,7 +1026,7 @@ class Derivative(Expr):
             if i == iwas:  # didn't get an update because of bad input
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
-                Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
+                Can\'t calculate %s-th derivative wrt %s.''' % (count, v)))
 
             if all_zero and not count == 0:
                 all_zero = False
