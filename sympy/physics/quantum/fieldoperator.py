@@ -71,15 +71,16 @@ class BosonOperator(Operator):
 
         return Operator.__new__(cls, *args)
 
-    def _eval_commutator(self, other, **hints):
-
-        if isinstance(other, BosonOperator):
-            if self.name == other.name:
-                # [a^\dagger, a] = -1
-                if not self.is_annihilation and other.is_annihilation:
-                    return Integer(-1)
+    def _eval_commutator_BosonOperator(self, other, **hints):
+        if self.name == other.name:
+            # [a^\dagger, a] = -1
+            if not self.is_annihilation and other.is_annihilation:
+                return Integer(-1)
 
         return None
+
+    def _eval_commutator_FermionOperator(self, other, **hints):
+        return Integer(0)
 
     def _eval_adjoint(self):
         return BosonOperator(str(self.name), not self.is_annihilation)
@@ -151,15 +152,16 @@ class FermionOperator(Operator):
 
         return Operator.__new__(cls, *args)
 
-    def _eval_anticommutator(self, other, **hints):
-
-        if isinstance(other, FermionOperator):
-            if self.name == other.name:
-                # {a^\dagger, a} = 1
-                if not self.is_annihilation and other.is_annihilation:
-                    return Integer(1)
+    def _eval_anticommutator_FermionOperator(self, other, **hints):
+        if self.name == other.name:
+            # {a^\dagger, a} = 1
+            if not self.is_annihilation and other.is_annihilation:
+                return Integer(1)
 
         return None
+
+    def _eval_anticommutator_BosonOperator(self, other, **hints):
+        return Integer(0)
 
     def _eval_adjoint(self):
         return FermionOperator(str(self.name), not self.is_annihilation)
