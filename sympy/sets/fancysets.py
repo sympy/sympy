@@ -330,10 +330,6 @@ class Range(Set):
         return (other >= self.inf and other <= self.sup and
                 ask(Q.integer((self.start - other)/self.step)))
 
-    def _eval_imageset(self, f):
-        from sympy.core.sets import FiniteSet
-        return FiniteSet(f(i) for i in self)
-
     def __iter__(self):
         i = self.start
         while(i < self.stop):

@@ -72,7 +72,6 @@ def test_ImageSet_intersection():
     assert n_pi.intersect(Range(10)) == FiniteSet(0)
     assert n_pi.intersect(Interval(0, 10)) == \
         FiniteSet(0, pi, 2*pi, 3*pi)
-    #TODO: add test for functions which are not injection
 
 
 @XFAIL
@@ -121,10 +120,6 @@ def test_Range():
     assert len(Range(10, 38, 10)) == 3
 
     assert Range(0, 0, 5) == S.EmptySet
-
-    # Testing _eval_imageset
-    assert imageset(x, x*pi, Range(3)) == \
-        FiniteSet(0, pi, 2*pi)
 
 
 def test_range_interval_intersection():
