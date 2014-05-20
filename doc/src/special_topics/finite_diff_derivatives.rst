@@ -73,7 +73,7 @@ the two equations.  We show how to do it using SymPy.
 	>>> n = 3 # there are the coefficients c_0=Fi, c_1=dF/dx, c_2=d**2F/dx**2
 	>>> c = symbols('c:3')
 	>>> def P(x, x0, c, n):
-	...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
+	...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in range(n)) )
 
 Vector of right hand sides:
 
@@ -126,7 +126,7 @@ at `x_i` and thus using points at `x_{i-1}`,  `x_{i}`,  and `x_{i+1}`. So here i
 	>>> c = symbols('c:3')
 	>>> # define a polynomial of degree n
 	>>> def P(x, x0, c, n):
-	...    return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
+	...    return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in range(n)) )
 	>>> # now we make a matrix consisting of the coefficients
 	>>> # of the c_i in the nth degree polynomial P
 	>>> # coefficients of c_i evaluated at x_i
@@ -153,8 +153,8 @@ Now that we have the matrix of coefficients we next form the right-hand-side and
 	>>> X =  M.inv() * R
 	>>> # note that all three coefficients make up the solution
 	>>> # the first derivative is coefficient c_1 which is X[1].
-	>>> print "The second-order accurate approximation for the first derivative is: "
-	>>> print "dF/dx = ", together(X[1])
+	>>> print ("The second-order accurate approximation for the first derivative is: ")
+	>>> print( "dF/dx = ", together(X[1]))
 
 These two examples serve to show how one can directly find second order accurate first derivatives using SymPy.
 The first example uses values of `x` and `F` at all three points `x_i`, `x_{i+1}`, and `x_{i+2}` whereas the
@@ -172,7 +172,7 @@ check:
 
     >>> d = symbols('c:8')
     >>> dfdxcheck = (P(x0+h, x0, d, 8) - P(x0-h, x0, d, 8))/(2*h)
-    >>> print simplify(dfdxcheck) # so the appropriate cancellation of terms involving `h` happens
+    >>> print (simplify(dfdxcheck)) # so the appropriate cancellation of terms involving `h` happens
 
 
 Thus we see that indeed the derivative is `c_1` with the next term in the series of order `h^2`.
@@ -196,7 +196,7 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
     >>> c = symbols('c:8')
     >>> # define a polynomial of degree d
     >>> def P(x, x0, c, n):
-    ...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in xrange(n)) )
+    ...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in range(n)) )
 
 Now we make a matrix consisting of the coefficients of the `c_i` in the dth 
 degree polynomial P coefficients of `c_i` evaluated at `x_i, x_{i-1},` and `x_{i+1}`:
@@ -229,7 +229,7 @@ directly inverting `M`:
 The first derivative is coefficient `c_1` which is `X[1]`. Thus the second order accurate 
 approximation for the first derivative is:
 
-    >>> print "dF/dx = ",  together(X[1])
+    >>> print ("dF/dx = ",  together(X[1]))
 
 Of course,  we can devise a similar formula for the value of the derivative at the left end
 of the set of points at `(x_{1},F_{1})` in terms of values at `(x_{2},F_{2})` and `(x_{3},F_{3})`.
