@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import Set, Dict, Tuple
+from sympy.core import Dict, Tuple
+from sympy.sets import Set
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 
@@ -167,6 +168,6 @@ class TypeB(Standard_Cartan):
 
     def dynkin_diagram(self):
         n = self.n
-        diag = "---".join("0" for i in range (1, n)) + "=>=0\n"
-        diag += "   ".join(str(i) for i in range (1, n+1))
+        diag = "---".join("0" for i in range(1, n)) + "=>=0\n"
+        diag += "   ".join(str(i) for i in range(1, n+1))
         return diag

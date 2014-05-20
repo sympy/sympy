@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import Set, Dict, Tuple
+from sympy.core import Dict, Tuple
+from sympy.sets import Set
 from sympy.liealgebras.cartan_type import Standard_Cartan, CartanType
 from sympy.matrices import eye
 

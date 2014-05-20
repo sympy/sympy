@@ -17,7 +17,7 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         sympify, Equality, solve, Lambda, DiracDelta)
 from sympy.core.compatibility import reduce
-from sympy.core.sets import FiniteSet, ProductSet
+from sympy.sets.sets import FiniteSet, ProductSet
 from sympy.abc import x
 
 

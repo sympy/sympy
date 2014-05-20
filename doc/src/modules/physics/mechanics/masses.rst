@@ -37,7 +37,7 @@ separate from their association with masses.
 Inertia
 =======
 
-See the Inertia (Dyadics) section in 'Advanced Topics' part of 
+See the Inertia (Dyadics) section in 'Advanced Topics' part of
 :mod:`physics/vector` docs.
 
 Rigid Body

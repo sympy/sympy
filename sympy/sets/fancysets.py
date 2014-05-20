@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass
-from sympy.core.sets import Set, Interval, Intersection
+from sympy.sets.sets import Set, Interval, Intersection
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify

@@ -59,8 +59,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
-x, y, z, p, q, r, s, t, u, v, w, a, b, c, d, e = symbols(
-    'x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
+from sympy.abc import a, b, c, d, e, p, q, r, s, t, u, v, w, x, y, z
 
 
 def _epsilon_eq(a, b):
@@ -1982,6 +1981,10 @@ def test_terms_gcd():
     assert terms_gcd(sin(x + x*y), deep=True) == \
         sin(x*(y + 1))
 
+    eq = Eq(2*x, 2*y + 2*z*y)
+    assert terms_gcd(eq) == eq
+    assert terms_gcd(eq, deep=True) == Eq(2*x, 2*y*(z + 1))
+
 
 def test_trunc():
     f, g = x**5 + 2*x**4 + 3*x**3 + 4*x**2 + 5*x + 6, x**5 - x**4 + x**2 - x
@@ -2441,7 +2444,7 @@ def test_intervals():
     assert f.intervals(eps=S(1)/100) == f.intervals(eps=0.01) == \
         [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert f.intervals(eps=S(1)/1000) == f.intervals(eps=0.001) == \
-        [((-S(1)/1005, 0), 1), ((S(85)/6, S(85)/6), 1)]
+        [((-S(1)/1002, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert f.intervals(eps=S(1)/10000) == f.intervals(eps=0.0001) == \
         [((-S(1)/1028, -S(1)/1028), 1), ((S(85)/6, S(85)/6), 1)]
 
@@ -2455,7 +2458,7 @@ def test_intervals():
     assert intervals(f, eps=S(1)/100) == intervals(f, eps=0.01) == \
         [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert intervals(f, eps=S(1)/1000) == intervals(f, eps=0.001) == \
-        [((-S(1)/1005, 0), 1), ((S(85)/6, S(85)/6), 1)]
+        [((-S(1)/1002, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert intervals(f, eps=S(1)/10000) == intervals(f, eps=0.0001) == \
         [((-S(1)/1028, -S(1)/1028), 1), ((S(85)/6, S(85)/6), 1)]
 
@@ -2467,10 +2470,10 @@ def test_intervals():
          ((1, S(3)/2), 1), ((S(3)/2, 2), 7)]
 
     assert intervals([x**5 - 200, x**5 - 201]) == \
-        [((S(75)/26, S(101)/35), {0: 1}), ((S(283)/98, S(26)/9), {1: 1})]
+        [((S(75)/26, S(101)/35), {0: 1}), ((S(309)/107, S(26)/9), {1: 1})]
 
     assert intervals([x**5 - 200, x**5 - 201], fast=True) == \
-        [((S(75)/26, S(101)/35), {0: 1}), ((S(283)/98, S(26)/9), {1: 1})]
+        [((S(75)/26, S(101)/35), {0: 1}), ((S(309)/107, S(26)/9), {1: 1})]
 
     assert intervals([x**2 - 200, x**2 - 201]) == \
         [((-S(71)/5, -S(85)/6), {1: 1}), ((-S(85)/6, -14), {0: 1}),
@@ -2654,17 +2657,17 @@ def test_nroots():
     assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
     assert Poly(x**2 + 1, x).nroots() == [-1.0*I, 1.0*I]
 
-    roots, error = Poly(x**2 - 1, x).nroots(error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25
+    roots = Poly(x**2 - 1, x).nroots()
+    assert roots == [-1.0, 1.0]
 
-    roots, error = Poly(x**2 + 1, x).nroots(error=True)
-    assert roots == [-1.0*I, 1.0*I] and error < 1e25
+    roots = Poly(x**2 + 1, x).nroots()
+    assert roots == [-1.0*I, 1.0*I]
 
-    roots, error = Poly(x**2/3 - S(1)/3, x).nroots(error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25
+    roots = Poly(x**2/3 - S(1)/3, x).nroots()
+    assert roots == [-1.0, 1.0]
 
-    roots, error = Poly(x**2/3 + S(1)/3, x).nroots(error=True)
-    assert roots == [-1.0*I, 1.0*I] and error < 1e25
+    roots = Poly(x**2/3 + S(1)/3, x).nroots()
+    assert roots == [-1.0*I, 1.0*I]
 
     assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + 1.0*I, 1.0 - 1.0*I]
     assert Poly(
@@ -2704,8 +2707,8 @@ def test_nroots():
 
     assert nroots(x**2 - 1) == [-1.0, 1.0]
 
-    roots, error = nroots(x**2 - 1, error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25
+    roots = nroots(x**2 - 1)
+    assert roots == [-1.0, 1.0]
 
     assert nroots(x + I) == [-1.0*I]
     assert nroots(x + 2*I) == [-2.0*I]

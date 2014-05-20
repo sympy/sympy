@@ -79,11 +79,13 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-[Xypic] http://www.tug.org/applications/Xy-pic/
+[Xypic] http://xy-pic.sourceforge.net/
+
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, FiniteSet, Dict, Symbol
+from sympy.core import Basic, Dict, Symbol
+from sympy.sets import FiniteSet
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
 from sympy.utilities import default_sort_key

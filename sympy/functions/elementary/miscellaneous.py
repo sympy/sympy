@@ -29,7 +29,7 @@ class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
 
     def __new__(cls):
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         x = C.Dummy('x')
         #construct "by hand" to avoid infinite loop
         obj = Expr.__new__(cls, Tuple(x), x)
@@ -232,7 +232,7 @@ def root(arg, n):
     ==========
 
     * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/real_root
+    * http://en.wikipedia.org/wiki/Real_root
     * http://en.wikipedia.org/wiki/Root_of_unity
     * http://en.wikipedia.org/wiki/Principal_value
     * http://mathworld.wolfram.com/CubeRoot.html

@@ -2155,6 +2155,11 @@ class UniformDistribution(SingleContinuousDistribution):
         result = result(z).subs({Min(z, self.right): z,
                                  Min(z, self.left, self.right): self.left,
                                  Min(z, self.left): self.left})
+        # XXX debug statement to figure out why the substitution may fail
+        margs = z, self.left, self.right, -z, -self.left, -self.right
+        min = self.atoms(Min)
+        if min and all(a in margs for m in min for a in m.args):
+            print(min)
         return Lambda(z, result)
 
     def expectation(self, expr, var, **kwargs):

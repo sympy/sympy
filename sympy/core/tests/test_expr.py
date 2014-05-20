@@ -1468,7 +1468,7 @@ def test_equals():
         assert eq.equals(0)
     assert sqrt(x).equals(0) is False
 
-    # from integrate(x*sqrt(1+2*x), x);
+    # from integrate(x*sqrt(1 + 2*x), x);
     # diff is zero only when assumptions allow
     i = 2*sqrt(2)*x**(S(5)/2)*(1 + 1/(2*x))**(S(5)/2)/5 + \
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
@@ -1622,3 +1622,8 @@ def test_issue_6325():
     assert diff(e, t, 2) == ans
     e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
+
+def test_issue_7426():
+    f1 = a % c
+    f2 = x % z
+    assert f1.equals(f2) == False

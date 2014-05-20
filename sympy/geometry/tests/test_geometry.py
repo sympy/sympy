@@ -1,3 +1,4 @@
+from __future__ import division
 import warnings
 
 from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
@@ -520,8 +521,8 @@ def test_ellipse():
         Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) is False
 
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
-        [Line(Point(0, 0), Point(S(77)/25, S(132)/25)),
-     Line(Point(0, 0), Point(S(33)/5, S(22)/5))]
+        [Line(Point(0, 0), Point(77/25, 132/25)),
+     Line(Point(0, 0), Point(33/5, 22/5))]
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
         [Line(Point(3, 4), Point(3, 5)), Line(Point(3, 4), Point(5, 4))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
@@ -623,7 +624,7 @@ def test_ellipse():
 
     e1 = Ellipse(Point(0, 0), 5, 10)
     e2 = Ellipse(Point(2, 1), 4, 8)
-    a = S(53)/17
+    a = 53/17
     c = 2*sqrt(3991)/17
     ans = [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
     assert e1.intersection(e2) == ans
@@ -638,7 +639,7 @@ def test_ellipse():
     e = Ellipse((1, 2), 3, 2)
     assert e.tangent_lines(Point(10, 0)) == \
         [Line(Point(10, 0), Point(1, 0)),
-        Line(Point(10, 0), Point(S(14)/5, S(18)/5))]
+        Line(Point(10, 0), Point(14/5, 18/5))]
 
     # encloses_point
     e = Ellipse((0, 0), 1, 2)
@@ -662,7 +663,7 @@ def test_ellipse():
     assert e.scale(3, 6) == Ellipse((0, 0), 6, 6)
     assert e.rotate(pi/3) == e
     assert e.rotate(pi/3, (1, 2)) == \
-        Ellipse(Point(S(1)/2 + sqrt(3), -sqrt(3)/2 + 1), 2, 1)
+        Ellipse(Point(1/2 + sqrt(3), -sqrt(3)/2 + 1), 2, 1)
 
     # transformations
     c = Circle((1, 1), 2)
@@ -681,10 +682,22 @@ def test_ellipse_random_point():
 
 
 def test_polygon():
-    t = Triangle(Point(0, 0), Point(2, 0), Point(3, 3))
-    assert Polygon(Point(0, 0), Point(1, 0), Point(2, 0), Point(3, 3)) == t
-    assert Polygon(Point(1, 0), Point(2, 0), Point(3, 3), Point(0, 0)) == t
-    assert Polygon(Point(2, 0), Point(3, 3), Point(0, 0), Point(1, 0)) == t
+    a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
+    t = Triangle(a, b, c)
+    assert Polygon(a, Point(1, 0), b, c) == t
+    assert Polygon(Point(1, 0), b, c, a) == t
+    assert Polygon(b, c, a, Point(1, 0)) == t
+    # 2 "remove folded" tests
+    assert Polygon(a, Point(3, 0), b, c) == t
+    assert Polygon(a, b, Point(3, -1), b, c) == t
+    raises(GeometryError, lambda: Polygon((0, 0), (1, 0), (0, 1), (1, 1)))
+    # remove multiple collinear points
+    assert Polygon(Point(-4, 15), Point(-11, 15), Point(-15, 15),
+        Point(-15, 33/5), Point(-15, -87/10), Point(-15, -15),
+        Point(-42/5, -15), Point(-2, -15), Point(7, -15), Point(15, -15),
+        Point(15, -3), Point(15, 10), Point(15, 15)) == \
+        Polygon(Point(-15,-15), Point(15,-15), Point(15,15), Point(-15,15))
+
 
     p1 = Polygon(
         Point(0, 0), Point(3, -1),
@@ -703,7 +716,10 @@ def test_polygon():
     p5 = Polygon(
         Point(0, 0), Point(4, 4),
         Point(0, 4))
-
+    p6 = Polygon(
+        Point(-11, 1), Point(-9, 6.6),
+        Point(-4, -3), Point(-8.4, -8.7))
+    r = Ray(Point(-9,6.6), Point(-9,5.5))
     #
     # General polygon
     #
@@ -745,7 +761,7 @@ def test_polygon():
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
-
+    assert p6.intersection(r) == [Point(-9, 33/5), Point(-9, -84/13)]
     #
     # Regular polygon
     #
@@ -791,7 +807,7 @@ def test_polygon():
     assert p1 == p1_old
 
     assert p1.area == (-250*sqrt(5) + 1250)/(4*tan(pi/5))
-    assert p1.length == 20*sqrt(-sqrt(5)/8 + S(5)/8)
+    assert p1.length == 20*sqrt(-sqrt(5)/8 + 5/8)
     assert p1.scale(2, 2) == \
         RegularPolygon(p1.center, p1.radius*2, p1._n, p1.rotation)
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3) == \
@@ -1085,9 +1101,9 @@ def test_triangle_kwargs():
 def test_geometry_transforms():
     from sympy import Tuple
     c = Curve((x, x**2), (x, 0, 1))
-    pts = [Point(0, 0), Point(S(1)/2, S(1)/4), Point(1, 1)]
+    pts = [Point(0, 0), Point(1/2, 1/4), Point(1, 1)]
     cout = Curve((2*x - 4, 3*x**2 - 10), (x, 0, 1))
-    pts_out = [Point(-4, -10), Point(-3, -S(37)/4), Point(-2, -7)]
+    pts_out = [Point(-4, -10), Point(-3, -37/4), Point(-2, -7)]
     assert c.scale(2, 3, (4, 5)) == cout
     assert [c.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts
     assert [cout.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts_out
@@ -1101,10 +1117,10 @@ def test_geometry_transforms():
         Ellipse(Point(-8, -10), 6, 9)
     assert Circle((0, 0), 2).scale(3, 3, (4, 5)) == \
         Circle(Point(-8, -10), 6)
-    assert Circle(Point(-8, -10), 6).scale(S(1)/3, S(1)/3, (4, 5)) == \
+    assert Circle(Point(-8, -10), 6).scale(1/3, 1/3, (4, 5)) == \
         Circle((0, 0), 2)
     assert Curve((x + y, 3*x), (x, 0, 1)).subs(y, S.Half) == \
-        Curve((x + S(1)/2, 3*x), (x, 0, 1))
+        Curve((x + 1/2, 3*x), (x, 0, 1))
     assert Curve((x, 3*x), (x, 0, 1)).translate(4, 5) == \
         Curve((x + 4, 3*x + 5), (x, 0, 1))
     assert Circle((0, 0), 2).translate(4, 5) == \

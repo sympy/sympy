@@ -9,11 +9,11 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
 from sympy.core.evaluate import global_evaluate
+from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
-
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, subsets
 
 
 class Set(Basic):
@@ -21,11 +21,11 @@ class Set(Basic):
     The base class for any kind of set.
 
     This is not meant to be used directly as a container of items.
-    It does not behave like the builtin set; see FiniteSet for that.
+    It does not behave like the builtin ``set``; see :class:`FiniteSet` for that.
 
-    Real intervals are represented by the Interval class and unions of sets
-    by the Union class. The empty set is represented by the EmptySet class
-    and available as a singleton as S.EmptySet.
+    Real intervals are represented by the :class:`Interval` class and unions of sets
+    by the :class:`Union` class. The empty set is represented by the :class:`EmptySet` class
+    and available as a singleton as ``S.EmptySet``.
     """
     is_number = False
     is_iterable = False
@@ -93,12 +93,12 @@ class Set(Basic):
         This function should only be used internally
 
         self._intersect(other) returns a new, intersected set if self knows how
-        to intersect itself with other, otherwise it returns None
+        to intersect itself with other, otherwise it returns ``None``
 
         When making a new set class you can be assured that other will not
-        be a Union, FiniteSet, or EmptySet
+        be a :class:`Union`, :class:`FiniteSet`, or :class:`EmptySet`
 
-        Used within the Intersection class
+        Used within the :class:`Intersection` class
         """
         return None
 
@@ -107,12 +107,12 @@ class Set(Basic):
         This function should only be used internally
 
         self._union(other) returns a new, joined set if self knows how
-        to join itself with other, otherwise it returns None.
+        to join itself with other, otherwise it returns ``None``.
         It may also return a python set of SymPy Sets if they are somehow
         simpler. If it does this it must be idempotent i.e. the sets returned
-        must return None with _union'ed with each other
+        must return ``None`` with _union'ed with each other
 
-        Used within the Union class
+        Used within the :class:`Union` class
         """
         return None
 
@@ -200,22 +200,74 @@ class Set(Basic):
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
 
+    @deprecated(useinstead="is_subset", issue=7460, deprecated_since_version="0.7.6")
     def subset(self, other):
         """
         Returns True if 'other' is a subset of 'self'.
+        """
+        return other.is_subset(self)
+
+    def is_subset(self, other):
+        """
+        Returns True if 'self' is a subset of 'other'.
 
         >>> from sympy import Interval
 
-        >>> Interval(0, 1).subset(Interval(0, 0.5))
+        >>> Interval(0, 0.5).is_subset(Interval(0, 1))
         True
-        >>> Interval(0, 1, left_open=True).subset(Interval(0, 1))
+        >>> Interval(0, 1).is_subset(Interval(0, 1, left_open=True))
         False
 
         """
         if isinstance(other, Set):
-            return self.intersect(other) == other
+            return self.intersect(other) == self
         else:
             raise ValueError("Unknown argument '%s'" % other)
+
+    def is_superset(self, other):
+        """
+        Returns True if 'self' is a superset of 'other'.
+
+        >>> from sympy import Interval
+
+        >>> Interval(0, 0.5).is_superset(Interval(0, 1))
+        False
+        >>> Interval(0, 1).is_superset(Interval(0, 1, left_open=True))
+        True
+
+        """
+        if isinstance(other, Set):
+            return other.is_subset(self)
+        else:
+            raise ValueError("Unknown argument '%s'" % other)
+
+    def _eval_powerset(self):
+        raise NotImplementedError('Power set not defined for: %s' % self.func)
+
+    def powerset(self):
+        """
+        Find the Power set of 'self'.
+
+        Examples
+        ========
+
+        >>> from sympy import FiniteSet, EmptySet
+
+        >>> A = EmptySet()
+        >>> A.powerset()
+        {EmptySet()}
+
+        >>> A = FiniteSet(1, 2)
+        >>> A.powerset() == FiniteSet(FiniteSet(1), FiniteSet(2), FiniteSet(1, 2), EmptySet())
+        True
+
+        References
+        ==========
+
+        http://en.wikipedia.org/wiki/Power_set
+
+        """
+        return self._eval_powerset()
 
     @property
     def measure(self):
@@ -269,7 +321,7 @@ class Set(Basic):
 
     @property
     def is_closed(self):
-        return self.subset(self.boundary)
+        return self.boundary.is_subset(self)
 
     @property
     def closure(self):
@@ -516,7 +568,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    <http://en.wikipedia.org/wiki/Interval_(mathematics)>
+    http://en.wikipedia.org/wiki/Interval_(mathematics)
     """
     is_Interval = True
     is_real = True
@@ -838,7 +890,7 @@ class Interval(Set, EvalfMixin):
 
 class Union(Set, EvalfMixin):
     """
-    Represents a union of sets as a Set.
+    Represents a union of sets as a :class:`Set`.
 
     Examples
     ========
@@ -860,7 +912,7 @@ class Union(Set, EvalfMixin):
 
     References
     ==========
-    <http://en.wikipedia.org/wiki/Union_(set_theory)>
+    http://en.wikipedia.org/wiki/Union_(set_theory)
     """
     is_Union = True
 
@@ -896,7 +948,7 @@ class Union(Set, EvalfMixin):
     @staticmethod
     def reduce(args):
         """
-        Simplify a Union using known rules
+        Simplify a :class:`Union` using known rules
 
         We first start with global rules like
         'Merge all FiniteSets'
@@ -1049,7 +1101,7 @@ class Union(Set, EvalfMixin):
 
 class Intersection(Set):
     """
-    Represents an intersection of sets as a Set.
+    Represents an intersection of sets as a :class:`Set`.
 
     Examples
     ========
@@ -1070,7 +1122,7 @@ class Intersection(Set):
 
     References
     ==========
-    <http://en.wikipedia.org/wiki/Intersection_(set_theory)>
+    http://en.wikipedia.org/wiki/Intersection_(set_theory)
     """
     is_Intersection = True
 
@@ -1222,6 +1274,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     http://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
+    is_FiniteSet = True
 
     def _intersect(self, other):
         return S.EmptySet
@@ -1251,6 +1304,9 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     def _eval_imageset(self, f):
         return self
+
+    def _eval_powerset(self):
+        return FiniteSet([self])
 
     @property
     def _boundary(self):
@@ -1472,14 +1528,17 @@ class FiniteSet(Set, EvalfMixin):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
 
+    def _eval_powerset(self):
+        return self.func(self.func(s) for s in subsets(self.args))
+
     def __ge__(self, other):
-        return self.subset(other)
+        return other.is_subset(self)
 
     def __gt__(self, other):
         return self != other and self >= other
 
     def __le__(self, other):
-        return other.subset(self)
+        return self.is_subset(other)
 
     def __lt__(self, other):
         return self != other and other >= self

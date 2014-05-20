@@ -154,7 +154,7 @@ yocto = ten**-24
 
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
-
+sr = steradian = steradians = 1
 
 # Base units
 

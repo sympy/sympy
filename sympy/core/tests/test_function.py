@@ -5,7 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
-from sympy.core.sets import FiniteSet
+from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 
@@ -632,3 +632,21 @@ def test_issue_7068():
     z1 = Subs(f(a), a, y1)
     z2 = Subs(f(a), a, y2)
     assert z1 != z2
+
+
+def test_issue_7231():
+    from sympy.abc import a
+    ans1 = f(x).series(x, a)
+    _xi_1 = ans1.atoms(Dummy).pop()
+    res = (f(a) + x*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
+           x**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
+           x**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
+                     (_xi_1,), (a,))/6 +
+           x**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
+                     (_xi_1,), (a,))/24 +
+           x**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1,
+                                _xi_1, _xi_1, _xi_1),
+                     (_xi_1,), (a,))/120 + O(x**6))
+    assert res == ans1
+    ans2 = f(x).series(x, a)
+    assert res == ans2

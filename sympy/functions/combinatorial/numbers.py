@@ -14,6 +14,11 @@ from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.evaluate import global_evaluate
 from sympy.core.cache import cacheit
+from sympy.core.numbers import pi
+from sympy.core.relational import LessThan, StrictGreaterThan
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 
 from sympy.mpmath import bernfrac
@@ -460,6 +465,34 @@ class harmonic(Function):
     >>> harmonic(n).rewrite(Sum)
     Sum(1/_k, (_k, 1, n))
 
+    We can evaluate harmonic numbers for all integral and positive
+    rational arguments:
+
+    >>> from sympy import S, expand_func, simplify
+    >>> harmonic(8)
+    761/280
+    >>> harmonic(11)
+    83711/27720
+
+    >>> H = harmonic(1/S(3))
+    >>> H
+    harmonic(1/3)
+    >>> He = expand_func(H)
+    >>> He
+    -log(6) - sqrt(3)*pi/6 + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1))
+                           + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
+    >>> He.doit()
+    -log(6) - sqrt(3)*pi/6 - log(sqrt(3)/2) + 3
+    >>> H = harmonic(25/S(7))
+    >>> He = simplify(expand_func(H).doit())
+    >>> He
+    log(sin(pi/7)**(-2*cos(pi/7))*sin(2*pi/7)**(2*cos(16*pi/7))*cos(pi/14)**(-2*sin(pi/14))/14)
+    + pi*tan(pi/14)/2 + 30247/9900
+    >>> He.n(40)
+    1.983697455232980674869851942390639915940
+    >>> harmonic(25/S(7)).n(40)
+    1.983697455232980674869851942390639915940
+
     We can rewrite harmonic numbers in terms of polygamma functions:
 
     >>> from sympy import digamma, polygamma
@@ -500,8 +533,12 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    >>> limit(harmonic(m, n), m, oo)
-    zeta(n)
+    However we can not compute the general relation yet:
+
+    >>> limit(harmonic(n, m), n, oo)
+    harmonic(oo, m)
+
+    which equals ``zeta(m)`` for ``m > 1``.
 
     References
     ==========
@@ -522,10 +559,25 @@ class harmonic(Function):
 
     @classmethod
     def eval(cls, n, m=None):
+        if m is S.One:
+            return cls(n)
         if m is None:
             m = S.One
-        if n == oo:
-            return C.zeta(m)
+
+        if m.is_zero:
+            return n
+
+        if n is S.Infinity and m.is_Number:
+            # TODO: Fix for symbolic values of m
+            if m.is_negative:
+                return S.NaN
+            elif LessThan(m, S.One):
+                return S.Infinity
+            elif StrictGreaterThan(m, S.One):
+                return C.zeta(m)
+            else:
+                return cls
+
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
             if n == 0:
                 return S.Zero
@@ -568,6 +620,21 @@ class harmonic(Function):
                 elif off.is_Integer and off.is_negative:
                     result = [-S.One/(nnew + i) for i in xrange(0, off, -1)] + [harmonic(nnew)]
                     return Add(*result)
+
+            if n.is_Rational:
+                # Expansions for harmonic numbers at general rational arguments (u + p/q)
+                # Split n as u + p/q with p < q
+                p, q = n.as_numer_denom()
+                u = p // q
+                p = p - u * q
+                if u.is_nonnegative and p.is_positive and q.is_positive and p < q:
+                    k = Dummy("k")
+                    t1 = q * C.Sum(1 / (q * k + p), (k, 0, u))
+                    t2 = 2 * C.Sum(cos((2 * pi * p * k) / S(q)) *
+                                   log(sin((pi * k) / S(q))),
+                                   (k, 1, floor((q - 1) / S(2))))
+                    t3 = (pi / 2) * cot((pi * p) / q) + log(2 * q)
+                    return t1 + t2 - t3
 
         return self
 

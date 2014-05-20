@@ -1,5 +1,5 @@
 from sympy.sets.fancysets import ImageSet, Range
-from sympy.core.sets import FiniteSet, Interval, imageset
+from sympy.sets.sets import FiniteSet, Interval, imageset
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
         Rational, sqrt)
 from sympy.utilities.pytest import XFAIL

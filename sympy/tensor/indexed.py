@@ -326,10 +326,13 @@ class IndexedBase(Expr, NotIterable):
     is_commutative = True
 
     def __new__(cls, label, shape=None, **kw_args):
-        if not isinstance(label, (string_types, Symbol)):
+        if isinstance(label, string_types):
+            label = Symbol(label)
+        elif isinstance(label, Symbol):
+            pass
+        else:
             raise TypeError("Base label should be a string or Symbol.")
 
-        label = sympify(label)
         obj = Expr.__new__(cls, label, **kw_args)
         if is_sequence(shape):
             obj._shape = Tuple(*shape)

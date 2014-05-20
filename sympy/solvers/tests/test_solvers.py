@@ -91,6 +91,11 @@ def test_guess_transcendental():
 
 
 def test_solve_args():
+    # equation container, issue 5113
+    ans = {x: -3, y: 1}
+    eqs = (x + 5*y - 2, -3*x + 6*y - 15)
+    assert all(solve(container(eqs), x, y) == ans for container in
+        (tuple, list, set, frozenset))
     # implicit symbol to solve for
     assert set(solve(x**2 - 4)) == set([S(2), -S(2)])
     assert solve([x + y - 3, x - y - 5]) == {x: 4, y: -1}

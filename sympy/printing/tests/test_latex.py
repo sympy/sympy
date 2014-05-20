@@ -389,6 +389,12 @@ def test_latex_indexed():
     assert symbol_latex.split() == indexed_latex.split() \
         or symbol_latex.split() == indexed_latex.split()[::-1]
 
+    # Symbol('gamma') gives r'\gamma'
+    assert latex(IndexedBase('gamma')) == r'\gamma'
+    assert latex(IndexedBase('a b')) == 'a b'
+    assert latex(IndexedBase('a_b')) == 'a_{b}'
+
+
 def test_latex_derivatives():
     # regular "d" for ordinary derivatives
     assert latex(diff(x**3, x, evaluate=False)) == \
@@ -744,7 +750,7 @@ def test_latex_Lambda():
 
 
 def test_latex_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
+    Ruv, u,v = ring("u,v", ZZ)
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert latex(x - x) == r"0"
@@ -761,7 +767,7 @@ def test_latex_PolyElement():
 
 
 def test_latex_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
+    Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert latex(x - x) == r"0"

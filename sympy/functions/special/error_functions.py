@@ -1031,7 +1031,7 @@ class Ei(Function):
 
     .. [1] http://dlmf.nist.gov/6.6
     .. [2] http://en.wikipedia.org/wiki/Exponential_integral
-    .. [3] Abramowitz & Stegun, section 5: http://www.math.sfu.ca/~cbm/aands/page_228.htm
+    .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
 
@@ -2096,8 +2096,10 @@ class fresnels(FresnelIntegral):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelS
-    """
+    .. [5] The converging factors for the fresnel integrals
+            by John W. Wrench Jr. and Vicki Alley
 
+    """
     _trigfunc = C.sin
     _sign = -S.One
 
@@ -2123,6 +2125,29 @@ class fresnels(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z):
         return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
                 * meijerg([], [1], [S(3)/4], [S(1)/4, 0], -pi**2*z**4/16))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+
+            # expansion of S(x) = S1(x*sqrt(pi/2)), see reference[5] page 1-8
+            p = [(-1)**k * C.factorial(4*k + 1) /
+                 (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
+                 for k in xrange(0, n)]
+            q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
+                 (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
+                 for k in xrange(1, n)]
+
+            p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
+            q = [-sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
+
+            return S.Half + (C.sin(z**2)*Add(*p) + C.cos(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+
+        # All other points are not handled
+        return super(fresnels, self)._eval_aseries(n, args0, x, logx)
 
 
 class fresnelc(FresnelIntegral):
@@ -2203,8 +2228,9 @@ class fresnelc(FresnelIntegral):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
+    .. [5] The converging factors for the fresnel integrals
+            by John W. Wrench Jr. and Vicki Alley
     """
-
     _trigfunc = C.cos
     _sign = S.One
 
@@ -2230,6 +2256,30 @@ class fresnelc(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z):
         return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [S(1)/4], [S(3)/4, 0], -pi**2*z**4/16))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+
+            # expansion of C(x) = C1(x*sqrt(pi/2)), see reference[5] page 1-8
+            p = [(-1)**k * C.factorial(4*k + 1) /
+                 (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
+                 for k in xrange(0, n)]
+            q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
+                 (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
+                 for k in xrange(1, n)]
+
+            p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
+            q = [ sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
+
+            return S.Half + (C.cos(z**2)*Add(*p) + C.sin(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+
+        # All other points are not handled
+        return super(fresnelc, self)._eval_aseries(n, args0, x, logx)
+
 
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################

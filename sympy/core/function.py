@@ -162,7 +162,7 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         >>> len(f(1).args)
         1
         """
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
@@ -184,7 +184,7 @@ class Application(with_metaclass(FunctionClass, Basic)):
     @cacheit
     def __new__(cls, *args, **options):
         from sympy.sets.fancysets import Naturals0
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
 
         args = list(map(sympify, args))
         evaluate = options.pop('evaluate', global_evaluate[0])
@@ -549,7 +549,7 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded is False for t in args0):
@@ -559,8 +559,7 @@ class Function(Application, Expr):
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any([t.has(oo, -oo, zoo, nan) for t in a0]):
-                return self._eval_aseries(n, args0, x, logx
-                                          )._eval_nseries(x, n, logx)
+                return self._eval_aseries(n, args0, x, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
             # are supposed to do a power series expansion "around the
             # logarithmic term". e.g.
@@ -768,7 +767,7 @@ class WildFunction(Function, AtomicExpr):
     include = set()
 
     def __init__(cls, name, **assumptions):
-        from sympy.core.sets import Set, FiniteSet
+        from sympy.sets.sets import Set, FiniteSet
         cls.name = name
         nargs = assumptions.pop('nargs', S.Naturals0)
         if not isinstance(nargs, Set):
@@ -1027,7 +1026,7 @@ class Derivative(Expr):
             if i == iwas:  # didn't get an update because of bad input
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
-                Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
+                Can\'t calculate %s-th derivative wrt %s.''' % (count, v)))
 
             if all_zero and not count == 0:
                 all_zero = False
@@ -1346,7 +1345,7 @@ class Lambda(Expr):
     is_Function = True
 
     def __new__(cls, variables, expr):
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         try:
             for v in variables if iterable(variables) else [variables]:
                 if not v.is_Symbol:
@@ -1379,7 +1378,7 @@ class Lambda(Expr):
         return self.expr.free_symbols - set(self.variables)
 
     def __call__(self, *args):
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         n = len(args)
         if n not in self.nargs:  # Lambda only ever has 1 value in nargs
             # XXX: exception message must be in exactly this format to
@@ -2334,7 +2333,18 @@ def count_ops(expr, visual=False):
     else:  # it's Basic not isinstance(expr, Expr):
         if not isinstance(expr, Basic):
             raise TypeError("Invalid type of expr")
-        ops = [count_ops(a, visual=visual) for a in expr.args]
+        else:
+            ops = []
+            args = [expr]
+            while args:
+                a = args.pop()
+                if a.args:
+                    o = C.Symbol(a.func.__name__.upper())
+                    if a.is_Boolean:
+                        ops.append(o*(len(a.args)-1))
+                    else:
+                        ops.append(o)
+                    args.extend(a.args)
 
     if not ops:
         if visual:

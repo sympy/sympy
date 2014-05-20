@@ -421,45 +421,45 @@ def test_sympy__core__relational__Unequality():
     assert _test_args(Unequality(x, 2))
 
 
-def test_sympy__core__sets__EmptySet():
-    from sympy.core.sets import EmptySet
+def test_sympy__sets__sets__EmptySet():
+    from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())
 
 
-def test_sympy__core__sets__UniversalSet():
-    from sympy.core.sets import UniversalSet
+def test_sympy__sets__sets__UniversalSet():
+    from sympy.sets.sets import UniversalSet
     assert _test_args(UniversalSet())
 
 
-def test_sympy__core__sets__FiniteSet():
-    from sympy.core.sets import FiniteSet
+def test_sympy__sets__sets__FiniteSet():
+    from sympy.sets.sets import FiniteSet
     assert _test_args(FiniteSet(x, y, z))
 
 
-def test_sympy__core__sets__Interval():
-    from sympy.core.sets import Interval
+def test_sympy__sets__sets__Interval():
+    from sympy.sets.sets import Interval
     assert _test_args(Interval(0, 1))
 
 
-def test_sympy__core__sets__ProductSet():
-    from sympy.core.sets import ProductSet, Interval
+def test_sympy__sets__sets__ProductSet():
+    from sympy.sets.sets import ProductSet, Interval
     assert _test_args(ProductSet(Interval(0, 1), Interval(0, 1)))
 
 
 @SKIP("does it make sense to test this?")
-def test_sympy__core__sets__Set():
-    from sympy.core.sets import Set
+def test_sympy__sets__sets__Set():
+    from sympy.sets.sets import Set
     assert _test_args(Set())
 
 
-def test_sympy__core__sets__Intersection():
-    from sympy.core.sets import Intersection, Interval
+def test_sympy__sets__sets__Intersection():
+    from sympy.sets.sets import Intersection, Interval
     assert _test_args(Intersection(Interval(0, 3), Interval(2, 4),
         evaluate=False))
 
 
-def test_sympy__core__sets__Union():
-    from sympy.core.sets import Union, Interval
+def test_sympy__sets__sets__Union():
+    from sympy.sets.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
 
@@ -567,19 +567,19 @@ def test_sympy__stats__drv__SingleDiscreteDistribution():
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
-    from sympy.core.sets import FiniteSet
+    from sympy.sets.sets import FiniteSet
     assert _test_args(RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3)))
 
 
 def test_sympy__stats__rv__SingleDomain():
     from sympy.stats.rv import SingleDomain
-    from sympy.core.sets import FiniteSet
+    from sympy.sets.sets import FiniteSet
     assert _test_args(SingleDomain(x, FiniteSet(1, 2, 3)))
 
 
 def test_sympy__stats__rv__ConditionalDomain():
     from sympy.stats.rv import ConditionalDomain, RandomDomain
-    from sympy.core.sets import FiniteSet
+    from sympy.sets.sets import FiniteSet
     D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
     assert _test_args(ConditionalDomain(D, x > 1))
 
@@ -1907,7 +1907,6 @@ def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
     assert _test_args(MatrixSymbol('A', 3, 5))
 
 
-@XFAIL
 def test_sympy__matrices__expressions__matexpr__ZeroMatrix():
     from sympy.matrices.expressions.matexpr import ZeroMatrix
     assert _test_args(ZeroMatrix(3, 5))
@@ -2901,10 +2900,7 @@ def test_sympy__tensor__tensor__TensMul():
     assert _test_args(TensMul.from_data(S.One, [p], free, dum))
 
 
-
-@XFAIL
 def test_as_coeff_add():
-    # the ordering of terms in (3*x, 4*x**2) is system-dependent
     assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
 
 
@@ -3123,3 +3119,8 @@ def test_sympy__ntheory__factor___totient():
     k = symbols('k', integer=True)
     t = totient(k)
     assert _test_args(t)
+
+
+def test_sympy__ntheory__residue_ntheory__mobius():
+    from sympy.ntheory import mobius
+    assert _test_args(mobius(2))

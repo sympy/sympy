@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -28,9 +28,6 @@ from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
-
-# TODO get these helper functions into a super class for sum-like
-# objects: Sum, Product, Integral (issue 6761)
 
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
@@ -133,6 +130,10 @@ class Integral(AddWithLimits):
         """
         if (self.function.is_zero or
                 any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
+            return True
+        free = self.function.free_symbols
+        if any(len(xab) == 2 and xab[1] == 0 and xab[0] not in free for \
+                xab in self.limits):
             return True
         if not self.free_symbols and self.function.is_number:
             # the integrand is a number and the limits are numerical
@@ -493,6 +494,10 @@ class Integral(AddWithLimits):
             if xab[0] in ulj or any(v[0] in uli for v in undone_limits):
                 undone_limits.append(xab)
                 ulj.update(uli)
+                function = self.func(*([function] + [xab]))
+                factored_function = function.factor()
+                if not isinstance(factored_function, Integral):
+                    function = factored_function
                 continue
 
             # There are a number of tradeoffs in using the meijer g method.
@@ -559,15 +564,22 @@ class Integral(AddWithLimits):
 
             if antideriv is None:
                 undone_limits.append(xab)
+                function = self.func(*([function] + [xab])).factor()
+                factored_function = function.factor()
+                if not isinstance(factored_function, Integral):
+                    function = factored_function
+                continue
             else:
                 if len(xab) == 1:
                     function = antideriv
                 else:
                     if len(xab) == 3:
                         x, a, b = xab
-                    if len(xab) == 2:
+                    elif len(xab) == 2:
                         x, b = xab
                         a = None
+                    else:
+                        raise NotImplementedError
 
                     if deep:
                         if isinstance(a, Basic):
@@ -583,6 +595,9 @@ class Integral(AddWithLimits):
 
                         function = antideriv._eval_interval(x, a, b)
                         function = Poly(function, *gens)
+                    elif isinstance(antideriv, Add):
+                        function = Add(*[i._eval_interval(x,a,b) for i in
+                            Add.make_args(antideriv)])
                     else:
                         try:
                             function = antideriv._eval_interval(x, a, b)
@@ -590,9 +605,10 @@ class Integral(AddWithLimits):
                             # This can happen if _eval_interval depends in a
                             # complicated way on limits that cannot be computed
                             undone_limits.append(xab)
-
-        if undone_limits:
-            return self.func(*([function] + undone_limits))
+                            function = self.func(*([function] + [xab]))
+                            factored_function = function.factor()
+                            if not isinstance(factored_function, Integral):
+                                function = factored_function
         return function
 
     def _eval_derivative(self, sym):
@@ -962,7 +978,7 @@ class Integral(AddWithLimits):
             # a product that could have been expanded,
             # so let's try an expansion of the whole
             # thing before giving up; we don't try this
-            # out the outset because there are things
+            # at the outset because there are things
             # that cannot be solved unless they are
             # NOT expanded e.g., x**x*(1+log(x)). There
             # should probably be a checker somewhere in this

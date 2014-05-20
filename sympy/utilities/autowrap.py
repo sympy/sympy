@@ -320,7 +320,8 @@ class F2PyCodeWrapper(CodeWrapper):
     @property
     def command(self):
         filename = self.filename + '.' + self.generator.code_extension
-        command = ["f2py", "-m", self.module_name, "-c", filename]
+        args = ['-c', '-m', self.module_name, filename]
+        command = [sys.executable, "-c", "import numpy.f2py as f2py2e;f2py2e.main()"]+args
         return command
 
     def _prepare_files(self, routine):
@@ -404,7 +405,7 @@ def autowrap(
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
-@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
@@ -426,7 +427,7 @@ def binary_function(symfunc, expr, **kwargs):
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
-@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def ufuncify(args, expr, **kwargs):
     """
     Generates a binary ufunc-like lambda function for numpy arrays

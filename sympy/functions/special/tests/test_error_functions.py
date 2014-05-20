@@ -626,6 +626,20 @@ def test_fresnel():
     assert fresnelc(z).series(z, n=15) == \
         z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
 
+    # issue 6510
+    assert fresnels(z).series(z, S.Infinity) == \
+        (-1/(pi**2*z**3) + O(z**(-6), (z, oo)))*sin(pi*z**2/2) + \
+        (3/(pi**3*z**5) - 1/(pi*z) + O(z**(-6), (z, oo)))*cos(pi*z**2/2) + S.Half
+    assert fresnelc(z).series(z, S.Infinity) == \
+        (-1/(pi**2*z**3) + O(z**(-6), (z, oo)))*cos(pi*z**2/2) + \
+        (-3/(pi**3*z**5) + 1/(pi*z) + O(z**(-6), (z, oo)))*sin(pi*z**2/2) + S.Half
+    assert fresnels(1/z).series(z) == \
+        (-z**3/pi**2 + O(z**6))*sin(pi/(2*z**2)) + (-z/pi + 3*z**5/pi**3 + \
+        O(z**6))*cos(pi/(2*z**2)) + S.Half
+    assert fresnelc(1/z).series(z) == \
+        (-z**3/pi**2 + O(z**6))*cos(pi/(2*z**2)) + (z/pi - 3*z**5/pi**3 + \
+        O(z**6))*sin(pi/(2*z**2)) + S.Half
+
     assert fresnelc(w).is_real is True
 
     assert fresnelc(z).as_real_imag() == \

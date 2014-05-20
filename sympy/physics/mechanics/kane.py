@@ -683,7 +683,7 @@ class KanesMethod(object):
         # gets multiplied by the jacobian of qd wrt qi, this is extended for
         # the ud's as well. dqd_dqi is computed by taking a taylor expansion of
         # the holonomic constraint equations about q*, treating q* - q as dq,
-        # seperating into dqd (depedent q's) and dqi (independent q's) and the
+        # separating into dqd (depedent q's) and dqi (independent q's) and the
         # rearranging for dqd/dqi. This is again extended for the speeds.
 
         # First case: configuration and motion constraints

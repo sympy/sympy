@@ -1911,33 +1911,53 @@ def radsimp(expr, symbolic=True, max_terms=4):
         else:
             raise NotImplementedError
 
-    def handle(expr):
-        if expr.is_Atom:
-            return expr
+    def ispow2(d, log2=False):
+        if not d.is_Pow:
+            return False
+        e = d.exp
+        if e.is_Rational and e.q == 2 or symbolic and fraction(e)[1] == 2:
+            return True
+        if log2:
+            q = 1
+            if e.is_Rational:
+                q = e.q
+            elif symbolic:
+                d = fraction(e)[1]
+                if d.is_Integer:
+                    q = d
+            if q != 1 and log(q, 2).is_Integer:
+                return True
+        return False
 
+    def handle(expr):
+        # Handle first reduces to the case
+        # expr = 1/d, where d is an add, or d is base**p/2.
+        # We do this by recursively calling handle on each piece.
         n, d = fraction(expr)
 
-        if d.is_Atom:
-            # n can't be an Atom since expr is not an Atom
+        if expr.is_Atom or (d.is_Atom and n.is_Atom):
+            return expr
+        elif not n.is_Atom:
             n = n.func(*[handle(a) for a in n.args])
-            return _umul(n, 1/d)
+            return _umul(n, handle(1/d))
         elif n is not S.One:
-            return Mul(n, handle(1/d))
+            return _umul(n, handle(1/d))
         elif d.is_Mul:
             return _umul(*[handle(1/d) for d in d.args])
 
+        # By this step, expr is 1/d, and d is not a mul.
         if not symbolic and d.free_symbols:
             return expr
 
-        if d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
-            d2 = sqrtdenest(sqrt(d.base))**d.exp.p
+        if ispow2(d):
+            d2 = sqrtdenest(sqrt(d.base))**fraction(d.exp)[0]
             if d2 != d:
                 return handle(1/d2)
         elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
             # (1/d**i) = (1/d)**i
             return handle(1/d.base)**d.exp
 
-        if not (d.is_Add or d.is_Pow and d.exp.is_Rational and d.exp.q == 2):
+        if not (d.is_Add or ispow2(d)):
             return 1/d.func(*[handle(a) for a in d.args])
 
         # handle 1/d treating d as an Add (though it may not be)
@@ -1965,9 +1985,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 p2 = []
                 other = []
                 for i in Mul.make_args(m):
-                    if i.is_Pow and (i.exp is S.Half or
-                            i.exp.is_Rational and i.exp.q != 1 and
-                            log(i.exp.q, 2).is_Integer):
+                    if ispow2(i, log2=True):
                         p2.append(i.base if i.exp is S.Half else i.base**(2*i.exp))
                     elif i is S.ImaginaryUnit:
                         p2.append(S.NegativeOne)
@@ -2003,7 +2021,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             num = powsimp(_num(rterms))
             n *= num
             d *= num
-            d = _mexpand(d)
+            d = powdenest(_mexpand(d), force=symbolic)
             if d.is_Atom:
                 break
 
@@ -2978,6 +2996,45 @@ def hypersimilar(f, g, k):
 
 from sympy.utilities.timeutils import timethis
 
+class _rf(Function):
+    @classmethod
+    def eval(cls, a, b):
+        if b.is_Integer:
+            if not b:
+                return S.One
+
+            n, result = int(b), S.One
+
+            if n > 0:
+                for i in xrange(n):
+                    result *= a + i
+
+                return result
+            elif n < 0:
+                for i in xrange(1, -n + 1):
+                    result *= a - i
+
+                return 1/result
+        else:
+            if b.is_Add:
+                c, _b = b.as_coeff_Add()
+
+                if c.is_Integer:
+                    if c > 0:
+                        return _rf(a, _b)*_rf(a + _b, c)
+                    elif c < 0:
+                        return _rf(a, _b)/_rf(a + _b + c, -c)
+
+            if a.is_Add:
+                c, _a = a.as_coeff_Add()
+
+                if c.is_Integer:
+                    if c > 0:
+                        return _rf(_a, b)*_rf(_a + b, c)/_rf(_a, c)
+                    elif c < 0:
+                        return _rf(_a, b)*_rf(_a + c, -c)/_rf(_a + b + c, -c)
+
+
 
 @timethis('combsimp')
 def combsimp(expr):
@@ -3039,57 +3096,20 @@ def combsimp(expr):
     # probably makes sense to retain them
     as_gamma = not expr.has(factorial, binomial)
 
-    class rf(Function):
-        @classmethod
-        def eval(cls, a, b):
-            if b.is_Integer:
-                if not b:
-                    return S.One
-
-                n, result = int(b), S.One
-
-                if n > 0:
-                    for i in xrange(n):
-                        result *= a + i
-
-                    return result
-                elif n < 0:
-                    for i in xrange(1, -n + 1):
-                        result *= a - i
-
-                    return 1/result
-            else:
-                if b.is_Add:
-                    c, _b = b.as_coeff_Add()
-
-                    if c.is_Integer:
-                        if c > 0:
-                            return rf(a, _b)*rf(a + _b, c)
-                        elif c < 0:
-                            return rf(a, _b)/rf(a + _b + c, -c)
-
-                if a.is_Add:
-                    c, _a = a.as_coeff_Add()
-
-                    if c.is_Integer:
-                        if c > 0:
-                            return rf(_a, b)*rf(_a + b, c)/rf(_a, c)
-                        elif c < 0:
-                            return rf(_a, b)*rf(_a + c, -c)/rf(_a + b + c, -c)
 
     expr = expr.replace(binomial,
-        lambda n, k: rf((n - k + 1).expand(), k.expand())/rf(1, k.expand()))
+        lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
     expr = expr.replace(factorial,
-        lambda n: rf(1, n.expand()))
+        lambda n: _rf(1, n.expand()))
     expr = expr.rewrite(gamma)
     expr = expr.replace(gamma,
-        lambda n: rf(1, (n - 1).expand()))
+        lambda n: _rf(1, (n - 1).expand()))
 
     if as_gamma:
-        expr = expr.replace(rf,
+        expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
     else:
-        expr = expr.replace(rf,
+        expr = expr.replace(_rf,
             lambda a, b: binomial(a + b - 1, b)*factorial(b))
 
     def rule(n, k):
@@ -3098,7 +3118,7 @@ def combsimp(expr):
         cn, _n = n.as_coeff_Add()
 
         if _n and cn.is_Integer and cn:
-            coeff *= rf(_n + 1, cn)/rf(_n - k + 1, cn)
+            coeff *= _rf(_n + 1, cn)/_rf(_n - k + 1, cn)
             rewrite = True
             n = _n
 
@@ -3108,7 +3128,7 @@ def combsimp(expr):
         if k.is_Add:
             ck, _k = k.as_coeff_Add()
             if _k and ck.is_Integer and ck:
-                coeff *= rf(n - ck - _k + 1, ck)/rf(_k + 1, ck)
+                coeff *= _rf(n - ck - _k + 1, ck)/_rf(_k + 1, ck)
                 rewrite = True
                 k = _k
 
@@ -3126,8 +3146,8 @@ def combsimp(expr):
         def gamma_rat(x):
             # helper to simplify ratios of gammas
             was = x.count(gamma)
-            xx = x.replace(gamma, lambda n: rf(1, (n - 1).expand()
-                ).replace(rf, lambda a, b: gamma(a + b)/gamma(a)))
+            xx = x.replace(gamma, lambda n: _rf(1, (n - 1).expand()
+                ).replace(_rf, lambda a, b: gamma(a + b)/gamma(a)))
             if xx.count(gamma) < was:
                 x = xx
             return x
