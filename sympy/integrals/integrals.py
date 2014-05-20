@@ -177,21 +177,7 @@ class Integral(AddWithLimits):
         is_zero
         """
 
-        limits = self.limits
-        isyms = self.free_symbols
-        if not isyms:
-            return True
-        for xab in limits:
-            if len(xab) == 1:
-                isyms.add(xab[0])
-                continue  # it may be removed later
-            elif len(xab) == 3 and xab[1] == xab[2]:  # XXX naive equality test
-                return True  # integral collapsed
-            # add in the new symbols
-            for i in xab[1:]:
-                isyms.update(i.free_symbols)
-        # if there are no surviving symbols then the result is a number
-        return len(isyms) == 0
+        return not self.free_symbols
 
     def transform(self, x, u, inverse=False):
         r"""
