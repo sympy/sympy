@@ -4717,3 +4717,103 @@ def test_Tr():
 def test_pretty_Add():
     eq = Mul(-2, x - 2, evaluate=False) + 5
     assert pretty(eq) == '-2*(x - 2) + 5'
+
+def test_pretty_steps_Derivative():
+    ucode = \
+u("""\
+d         \n\
+──(cos(x))\n\
+dx        \n\
+        d    \n\
+-sin(x)⋅──(x)\n\
+        dx   \n\
+-sin(x)\
+""")
+    assert cos(x).diff(x, evaluate=False)._eval_steps() == ucode
+
+    ucode = \
+u("""\
+d                \n\
+──(sin(x)⋅cos(x))\n\
+dx               \n\
+       d                   d         \n\
+sin(x)⋅──(cos(x)) + cos(x)⋅──(sin(x))\n\
+       dx                  dx        \n\
+     2    d          2    d    \n\
+- sin (x)⋅──(x) + cos (x)⋅──(x)\n\
+          dx              dx   \n\
+     2         2   \n\
+- sin (x) + cos (x)\
+""")
+    assert (cos(x) * sin(x)).diff(x, evaluate=False)._eval_steps() == ucode
+
+    ucode = \
+u("""\
+d                  \n\
+──(sin(x) + cos(x))\n\
+dx                 \n\
+d            d         \n\
+──(sin(x)) + ──(cos(x))\n\
+dx           dx        \n\
+         d              d    \n\
+- sin(x)⋅──(x) + cos(x)⋅──(x)\n\
+         dx             dx   \n\
+-sin(x) + cos(x)\
+""")
+    assert (cos(x) + sin(x)).diff(x, evaluate=False)._eval_steps() == ucode
+    ucode = \
+u("""\
+d                  \n\
+──(sin(x)⋅cos(2⋅x))\n\
+dx                 \n\
+       d                       d         \n\
+sin(x)⋅──(cos(2⋅x)) + cos(2⋅x)⋅──(sin(x))\n\
+       dx                      dx        \n\
+                  d                         d    \n\
+- sin(x)⋅sin(2⋅x)⋅──(2⋅x) + cos(x)⋅cos(2⋅x)⋅──(x)\n\
+                  dx                        dx   \n\
+                    d                      \n\
+- 2⋅sin(x)⋅sin(2⋅x)⋅──(x) + cos(x)⋅cos(2⋅x)\n\
+                    dx                     \n\
+-2⋅sin(x)⋅sin(2⋅x) + cos(x)⋅cos(2⋅x)\
+""")
+
+    assert (cos(x * 2) * sin(x)).diff(x, evaluate=False)._eval_steps() == ucode
+    ucode = \
+u("""\
+d ⎛   ⎛ 2⎞⎞\n\
+──⎝cos⎝x ⎠⎠\n\
+dx         \n\
+    ⎛ 2⎞ d ⎛ 2⎞\n\
+-sin⎝x ⎠⋅──⎝x ⎠\n\
+         dx    \n\
+    ⎛                 d    ⎞        \n\
+    ⎜               2⋅──(x)⎟        \n\
+  2 ⎜       d         dx   ⎟    ⎛ 2⎞\n\
+-x ⋅⎜log(x)⋅──(2) + ───────⎟⋅sin⎝x ⎠\n\
+    ⎝       dx         x   ⎠        \n\
+        ⎛ 2⎞\n\
+-2⋅x⋅sin⎝x ⎠\
+""")
+
+    assert cos(x**2).diff(x, evaluate=False)._eval_steps() == ucode
+    ucode = \
+u("""\
+d ⎛              ⎛ 2⎞⎞\n\
+──⎝sin(2⋅x) + cos⎝x ⎠⎠\n\
+dx                    \n\
+d              d ⎛   ⎛ 2⎞⎞\n\
+──(sin(2⋅x)) + ──⎝cos⎝x ⎠⎠\n\
+dx             dx         \n\
+     ⎛ 2⎞ d ⎛ 2⎞            d      \n\
+- sin⎝x ⎠⋅──⎝x ⎠ + cos(2⋅x)⋅──(2⋅x)\n\
+          dx                dx     \n\
+     ⎛                 d    ⎞                           \n\
+     ⎜               2⋅──(x)⎟                           \n\
+   2 ⎜       d         dx   ⎟    ⎛ 2⎞              d    \n\
+- x ⋅⎜log(x)⋅──(2) + ───────⎟⋅sin⎝x ⎠ + 2⋅cos(2⋅x)⋅──(x)\n\
+     ⎝       dx         x   ⎠                      dx   \n\
+         ⎛ 2⎞             \n\
+- 2⋅x⋅sin⎝x ⎠ + 2⋅cos(2⋅x)\
+""")
+    assert (cos(x**2) + sin(x*2)).diff(x, evaluate=False)._eval_steps() == ucode

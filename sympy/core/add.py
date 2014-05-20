@@ -351,6 +351,9 @@ class Add(Expr, AssocOp):
     def _eval_derivative(self, s):
         return self.func(*[f.diff(s) for f in self.args])
 
+    def _step_derivative(self, s):
+        return self.func(*[f.diff(s, evaluate=False, step=False) for f in self.args])
+
     def _eval_nseries(self, x, n, logx):
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         return self.func(*terms)

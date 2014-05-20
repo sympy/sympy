@@ -3088,6 +3088,11 @@ class AtomicExpr(Atom, Expr):
             return S.One
         return S.Zero
 
+    def _step_derivative(self, s):
+        if self==s:
+            return S.One
+        return S.Zero
+
     def _eval_is_polynomial(self, syms):
         return True
 
