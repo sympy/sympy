@@ -4,6 +4,7 @@
 
 from warnings import warn
 
+from sympy.core.compatibility import u
 from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
@@ -95,6 +96,14 @@ class BosonOperator(Operator):
         else:
             return r'Dagger(%s)' % str(self.name)
 
+    def _print_contents_pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = printer._print(self.args[0], *args)
+        if self.is_annihilation:
+            return pform**prettyForm(u('\u2020'))
+        else:
+            return pform
+
 
 class FermionOperator(Operator):
     """A fermionic operator that satisfies {c, Dagger(c)} == 1.
@@ -166,6 +175,14 @@ class FermionOperator(Operator):
             return r'%s' % str(self.name)
         else:
             return r'Dagger(%s)' % str(self.name)
+
+    def _print_contents_pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = printer._print(self.args[0], *args)
+        if self.is_annihilation:
+            return pform**prettyForm(u('\u2020'))
+        else:
+            return pform
 
 
 def _expand_powers(factors):
