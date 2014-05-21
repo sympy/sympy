@@ -2223,16 +2223,6 @@ def inv_quick(M):
     return ret
 
 
-def tsolve(eq, sym):
-    SymPyDeprecationWarning(
-        feature="tsolve()",
-        useinstead="solve()",
-        issue=6484,
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return _tsolve(eq, sym)
-
-
 # these are functions that have multiple inverse values per period
 multi_inverses = {
     sin: lambda x: (asin(x), S.Pi - asin(x)),

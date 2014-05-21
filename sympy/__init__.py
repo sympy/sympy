@@ -51,7 +51,7 @@ from .calculus import *
 # from combinatorics import *
 # This module is slow to import:
 #from physics import units
-from .plotting import plot, Plot, textplot, plot_backends, plot_implicit
+from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
 from .printing import ccode, fcode, jscode, latex, preview

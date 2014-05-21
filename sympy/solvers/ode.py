@@ -235,7 +235,6 @@ from itertools import islice
 
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
@@ -1439,31 +1438,9 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                 raise ValueError(
                     'must pass func arg to checkodesol for this case.')
             func = funcs.pop()
-    # ========== deprecation handling
-    # After the deprecation period this handling section becomes:
-    # ----------
-    # if not is_unfunc(func) or len(func.args) != 1:
-    #     raise ValueError(
-    #         "func must be a function of one variable, not %s" % func)
-    # ----------
-    # assume, during deprecation, that sol and func are reversed
-    if isinstance(sol, AppliedUndef) and len(sol.args) == 1:
-        if isinstance(func, AppliedUndef) and len(func.args) == 1:
-            msg = "If you really do want sol to be just %s, use Eq(%s, 0) " % \
-                (sol, sol) + "instead."
-        else:
-            msg = ""
-        SymPyDeprecationWarning(msg, feature="The order of the "
-            "arguments sol and func to checkodesol()",
-            useinstead="checkodesol(ode, sol, func)", issue=6483,
-        ).warn()
-        sol, func = func, sol
-    elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):
-        from sympy.utilities.misc import filldedent
-        raise ValueError(filldedent('''
-        func (or sol, during deprecation) must be a function
-        of one variable. Got sol = %s, func = %s''' % (sol, func)))
-    # ========== end of deprecation handling
+    if not isinstance(func, AppliedUndef) or len(func.args) != 1:
+        raise ValueError(
+            "func must be a function of one variable, not %s" % func)
     if is_sequence(sol, set):
         return type(sol)([checkodesol(ode, i, order=order, solve_for_func=solve_for_func) for i in sol])
 

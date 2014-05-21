@@ -219,63 +219,6 @@ class Basic(with_metaclass(ManagedProperties)):
 
         return Basic.compare(a, b)
 
-    @staticmethod
-    @deprecated(useinstead="default_sort_key", issue=4590, deprecated_since_version="0.7.2")
-    def compare_pretty(a, b):
-        """
-        Is a > b in the sense of ordering in printing?
-
-        THIS FUNCTION IS DEPRECATED.  Use ``default_sort_key`` instead.
-
-        ::
-
-          yes ..... return 1
-          no ...... return -1
-          equal ... return 0
-
-        Strategy:
-
-        It uses Basic.compare as a fallback, but improves it in many cases,
-        like ``x**3``, ``x**4``, ``O(x**3)`` etc. In those simple cases, it just parses the
-        expression and returns the "sane" ordering such as::
-
-          1 < x < x**2 < x**3 < O(x**4) etc.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x
-        >>> from sympy import Basic, Number
-        >>> Basic._compare_pretty(x, x**2)
-        -1
-        >>> Basic._compare_pretty(x**2, x**2)
-        0
-        >>> Basic._compare_pretty(x**3, x**2)
-        1
-        >>> Basic._compare_pretty(Number(1, 2), Number(1, 3))
-        1
-        >>> Basic._compare_pretty(Number(0), Number(-1))
-        1
-
-        """
-        try:
-            a = _sympify(a)
-        except SympifyError:
-            pass
-
-        try:
-            b = _sympify(b)
-        except SympifyError:
-            pass
-
-        if not isinstance(b, Basic):
-            return +1   # sympy > other
-
-        # now both objects are from SymPy, so we can proceed to usual comparison
-        a = a.sort_key()
-        b = b.sort_key()
-        return (a > b) - (a < b)
-
     @classmethod
     def fromiter(cls, args, **assumptions):
         """
@@ -1176,19 +1119,6 @@ class Basic(with_metaclass(ManagedProperties)):
             if not _aresame(args, self.args):
                 return self.func(*args)
         return self
-
-    @deprecated(useinstead="has", issue=5488, deprecated_since_version="0.7.2")
-    def __contains__(self, obj):
-        if self == obj:
-            return True
-        for arg in self.args:
-            try:
-                if obj in arg:
-                    return True
-            except TypeError:
-                if obj == arg:
-                    return True
-        return False
 
     @cacheit
     def has(self, *patterns):

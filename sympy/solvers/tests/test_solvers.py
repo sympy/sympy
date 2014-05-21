@@ -318,7 +318,7 @@ def test_linear_systemLU():
 # in such a way that a different branch is chosen
 
 
-def test_tsolve():
+def test_solve_transcendental():
     assert solve(exp(x) - 3, x) == [log(3)]
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == set([-b/a, log(3)])
     assert solve(cos(x) - y, x) == [-acos(y) + 2*pi, acos(y)]
