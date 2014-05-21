@@ -66,6 +66,8 @@ Then we have two equations:
 If we again want to find the first derivative (`c_{1}`), we can do that by eliminating the term involving `c_{2}` from 
 the two equations.  We show how to do it using SymPy.
 
+
+	>>> from __future__ import print_function
 	>>> from sympy import *
 	>>> from sympy import  pprint
 	>>> x, x0, h = symbols('x, x_0, h')
@@ -118,6 +120,7 @@ It is instructive to compute another three-point approximation to the first deri
 at `x_i` and thus using points at `x_{i-1}`,  `x_{i}`,  and `x_{i+1}`. So here is how this can be done using the 'brute force' method:
 
 
+	>>> from __future__ import print_function
 	>>> from sympy import *
 	>>> x, x0, h = symbols('x, x_i, h')
 	>>> Fi, Fim1, Fip1 = symbols('F_{i}, F_{i-1}, F_{i+1}')
@@ -188,14 +191,16 @@ for this last point which uses points for which we do have values. This is the s
 To obtain it,  we can use the same direct approach,  except now us the three points `(x_{N},F_{N})`,  `(x_{N-1},F_{N-1})`,
 and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is how it can be done using SymPy:
 
-    >>> from sympy import *
-    >>> x, xN, h = symbols('x, x_N, h')
-    >>> FN, FNm1, FNm2 = symbols('F_{N}, F_{N-1}, F_{N-2}')
-    >>> n = 8 # there are the coefficients c_0=Fi,  c_1=dF/h,  c_2=d**2F/h**2
-    >>> c = symbols('c:8')
-    >>> # define a polynomial of degree d
-    >>> def P(x, x0, c, n):
-    ...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in range(n)) )
+
+	>>> from __future__ import print_function
+	>>> from sympy import *
+	>>> x, xN, h = symbols('x, x_N, h')
+	>>> FN, FNm1, FNm2 = symbols('F_{N}, F_{N-1}, F_{N-2}')
+	>>> n = 8 # there are the coefficients c_0=Fi,  c_1=dF/h,  c_2=d**2F/h**2
+	>>> c = symbols('c:8')
+	>>> # define a polynomial of degree d
+	>>> def P(x, x0, c, n):
+	...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in range(n)) )
 
 Now we make a matrix consisting of the coefficients of the `c_i` in the dth 
 degree polynomial P coefficients of `c_i` evaluated at `x_i, x_{i-1},` and `x_{i+1}`:
