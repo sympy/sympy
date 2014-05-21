@@ -111,7 +111,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
 
 def inertia_of_point_mass(mass, pos_vec, frame):
-    """Inertia dyadic of a point mass realtive to point O.
+    """Inertia dyadic of a point mass relative to point O.
 
     Parameters
     ==========
@@ -149,7 +149,7 @@ def linear_momentum(frame, *body):
     the linear momentum of its constituents. Consider a system, S, comprised of
     a rigid body, A, and a particle, P. The linear momentum of the system, L,
     is equal to the vector sum of the linear momentum of the particle, L1, and
-    the linear momentum of the rigid body, L2, i.e-
+    the linear momentum of the rigid body, L2, i.e.
 
     L = L1 + L2
 
@@ -159,7 +159,7 @@ def linear_momentum(frame, *body):
     frame : ReferenceFrame
         The frame in which linear momentum is desired.
     body1, body2, body3... : Particle and/or RigidBody
-        The body (or bodies) whose kinetic energy is required.
+        The body (or bodies) whose linear momentum is required.
 
     Examples
     ========
@@ -198,8 +198,8 @@ def angular_momentum(point, frame, *body):
     RigidBody's. The angular momentum of such a system is equal to the vector
     sum of the angular momentum of its constituents. Consider a system, S,
     comprised of a rigid body, A, and a particle, P. The angular momentum of
-    the system, H, is equal to the vector sum of the linear momentum of the
-    particle, H1, and the linear momentum of the rigid body, H2, i.e-
+    the system, H, is equal to the vector sum of the angular momentum of the
+    particle, H1, and the angular momentum of the rigid body, H2, i.e.
 
     H = H1 + H2
 
@@ -211,7 +211,7 @@ def angular_momentum(point, frame, *body):
     frame : ReferenceFrame
         The frame in which angular momentum is desired.
     body1, body2, body3... : Particle and/or RigidBody
-        The body (or bodies) whose kinetic energy is required.
+        The body (or bodies) whose angular momentum is required.
 
     Examples
     ========
@@ -378,7 +378,7 @@ def Lagrangian(frame, *body):
         defined to determine the kinetic energy.
 
     body1, body2, body3... : Particle and/or RigidBody
-        The body (or bodies) whose kinetic energy is required.
+        The body (or bodies) whose Lagrangian is required.
 
     Examples
     ========
