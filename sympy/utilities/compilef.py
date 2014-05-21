@@ -100,7 +100,19 @@ if not libtcc:
 
 def __getClosePos(expr, braces, stopchar):
     """
-    Returns the position of the closing bracket in expr.
+    Returns the closing position of the expression which is either the first occurrence of a character
+    in stopchar that is not in braces, the first unmatched closing brace or the end of the expression.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.compilef import __getClosePos
+    >>> __getClosePos('3*x', '()', '+-')
+    2
+    >>> __getClosePos('3 + x) + 2', '()', '+-')
+    2
+    >>> __getClosePos('(3 + x)*y) + 4', '()', '+-')
+    9
     """
     openbraces = 0
     for i, char in enumerate(expr):
