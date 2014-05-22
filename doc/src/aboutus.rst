@@ -340,6 +340,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Zamrath Nizam: replace atoms(Symbol) with free_symbols where appropriate
 #. Benjamin Gudehus: add sampling_density to stats
 #. shaunheilee: modify Poly.factor to return unfactored expr unchanged
+#. Laurentiu Cristian Ion: further modify Poly.factor to ignore radicals
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
