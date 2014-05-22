@@ -101,9 +101,9 @@ class BosonOperator(Operator):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if self.is_annihilation:
-            return pform**prettyForm(u('\u2020'))
-        else:
             return pform
+        else:
+            return pform**prettyForm(u('\u2020'))
 
 
 class FermionOperator(Operator):
@@ -182,9 +182,9 @@ class FermionOperator(Operator):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if self.is_annihilation:
-            return pform**prettyForm(u('\u2020'))
-        else:
             return pform
+        else:
+            return pform**prettyForm(u('\u2020'))
 
 
 def _expand_powers(factors):
