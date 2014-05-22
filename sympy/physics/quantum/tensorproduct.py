@@ -29,6 +29,7 @@ __all__ = [
 
 _combined_printing = False
 
+
 def combined_tensor_printing(combined):
     """Set flag controlling whether tensor products of states should be
     printed as a combined bra/ket or as an explicit tensor product of different
@@ -162,6 +163,33 @@ class TensorProduct(Expr):
         return s
 
     def _pretty(self, printer, *args):
+
+        if (_combined_printing and
+                (all([isinstance(arg, Ket) for arg in self.args]) or
+                 all([isinstance(arg, Bra) for arg in self.args]))):
+
+            length = len(self.args)
+            pform = printer._print('', *args)
+            for i in range(length):
+                next_pform = printer._print('', *args)
+                length_i = len(self.args[i].args)
+                for j in range(length_i):
+                    part_pform = printer._print(self.args[i].args[j], *args)
+                    next_pform = prettyForm(*next_pform.right(part_pform))
+                    if j != length_i - 1:
+                        next_pform = prettyForm(*next_pform.right(', '))
+
+                if len(self.args[i].args) > 1:
+                    next_pform = prettyForm(
+                        *next_pform.parens(left='{', right='}'))
+                pform = prettyForm(*pform.right(next_pform))
+                if i != length - 1:
+                    pform = prettyForm(*pform.right(',' + ' '))
+
+            pform = prettyForm(*pform.left(self.args[0].lbracket))
+            pform = prettyForm(*pform.right(self.args[0].rbracket))
+            return pform
+
         length = len(self.args)
         pform = printer._print('', *args)
         for i in range(length):
@@ -180,8 +208,9 @@ class TensorProduct(Expr):
 
     def _latex(self, printer, *args):
 
-        if all([isinstance(arg, Ket) or isinstance(arg, Bra)
-                for arg in self.args]) and _combined_printing:
+        if (_combined_printing and
+                (all([isinstance(arg, Ket) for arg in self.args]) or
+                 all([isinstance(arg, Bra) for arg in self.args]))):
 
             def _label_wrap(label, nlabels):
                 return label if nlabels == 1 else r"\left\{%s\right\}" % label
