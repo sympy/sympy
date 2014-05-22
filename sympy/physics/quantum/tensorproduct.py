@@ -27,6 +27,23 @@ __all__ = [
 # Tensor product
 #-----------------------------------------------------------------------------
 
+_combined_printing = False
+
+def combined_tensor_printing(combined):
+    """Set flag controlling whether tensor products of states should be
+    printed as a combined bra/ket or as an explicit tensor product of different
+    bra/kets. This is a global setting for all TensorProduct class instances.
+
+    Parameters
+    ----------
+    combine : bool
+        When true, tensor product states are combined into one ket/bra, and
+        when false explicit tensor product notation is used between each
+        ket/bra.
+    """
+    global _combined_printing
+    _combined_printing = combined
+
 
 class TensorProduct(Expr):
     """The tensor product of two or more arguments.
@@ -164,7 +181,7 @@ class TensorProduct(Expr):
     def _latex(self, printer, *args):
 
         if all([isinstance(arg, Ket) or isinstance(arg, Bra)
-                for arg in self.args]):
+                for arg in self.args]) and _combined_printing:
 
             def _label_wrap(label, nlabels):
                 return label if nlabels == 1 else r"\left\{%s\right\}" % label
