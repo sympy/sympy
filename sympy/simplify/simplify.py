@@ -2083,7 +2083,7 @@ def posify(eq):
         return f(eq), dict([(r, s) for s, r in reps.items()])
 
     reps = dict([(s, Dummy(s.name, positive=True))
-                 for s in eq.atoms(Symbol) if s.is_positive is None])
+                 for s in eq.free_symbols if s.is_positive is None])
     eq = eq.subs(reps)
     return eq, dict([(r, s) for s, r in reps.items()])
 
@@ -2161,7 +2161,7 @@ def polarify(eq, subs=True, lift=False):
     eq = _polarify(sympify(eq), lift)
     if not subs:
         return eq
-    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.atoms(Symbol)])
+    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.free_symbols])
     eq = eq.subs(reps)
     return eq, dict([(r, s) for s, r in reps.items()])
 
