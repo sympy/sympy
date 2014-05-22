@@ -145,20 +145,6 @@ expand_denom = denom_expand
 expand_fraction = fraction_expand
 
 
-def separate(expr, deep=False, force=False):
-    """
-    Deprecated wrapper for ``expand_power_base()``.  Use that function instead.
-    """
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
-    SymPyDeprecationWarning(
-        feature="separate()", useinstead="expand_power_base()", issue=6482,
-        deprecated_since_version="0.7.2", value="Note: in separate() deep "
-        "defaults to False, whereas in expand_power_base(), "
-        "deep defaults to True.",
-    ).warn()
-    return expand_power_base(sympify(expr), deep=deep, force=force)
-
-
 def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_term=True):
     """
     Collect additive terms of an expression.

@@ -25,10 +25,6 @@ def test_all_classes_are_tested():
 
     modules = {}
 
-    # Ignore sympy.statistics import warning
-    warnings.filterwarnings("ignore", message="sympy.statistics has been deprecated since SymPy 0.7.2",
-        category=SymPyDeprecationWarning)
-
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
 
