@@ -114,6 +114,7 @@ The solution is obtained by directly inverting the 3x3 matrix M:
 Note that all three coefficients make up the solution. The desired first derivative is coefficient `c_1` which is X[1].
 
 	>>> print(together(X[1]))
+	(4*F_{i+1} - F_{i+2} - 3*F_{i})/(2*h)
 
 It is instructive to compute another three-point approximation to the first derivative,  except centering the approximation
 at `x_i` and thus using points at `x_{i-1}`,  `x_{i}`,  and `x_{i+1}`. So here is how this can be done using the 'brute force' method:
@@ -154,8 +155,10 @@ Now that we have the matrix of coefficients we next form the right-hand-side and
 	>>> X =  M.inv() * R
 	>>> # note that all three coefficients make up the solution
 	>>> # the first derivative is coefficient c_1 which is X[1].
-	>>> print("The second-order accurate approximation for the first derivative is: ")
+	>>> print("The second-order accurate approximation for the first derivative is: ") 
+	The second-order accurate approximation for the first derivative is: 
 	>>> print(together(X[1]))
+	(F_{i+1} - F_{i-1})/(2*h)
 
 These two examples serve to show how one can directly find second order accurate first derivatives using SymPy.
 The first example uses values of `x` and `F` at all three points `x_i`, `x_{i+1}`, and `x_{i+2}` whereas the
@@ -174,7 +177,7 @@ check:
     >>> d = symbols('c:8')
     >>> dfdxcheck = (P(x0+h, x0, d, 8) - P(x0-h, x0, d, 8))/(2*h)
     >>> print(simplify(dfdxcheck)) # so the appropriate cancellation of terms involving `h` happens
-
+    c1 + c3*h**2/6 + c5*h**4/120 + c7*h**6/5040
 
 Thus we see that indeed the derivative is `c_1` with the next term in the series of order `h^2`.
 
@@ -233,7 +236,9 @@ The first derivative is coefficient `c_1` which is `X[1]`. Thus the second order
 approximation for the first derivative is:
 
     >>> print("The first derivative centered at the last point on the right is:")
+    The first derivative centered at the last point on the right is:
     >>> print(together(X[1]))
+    (-4*F_{N-1} + F_{N-2} + 3*F_{N})/(2*h)
 
 Of course,  we can devise a similar formula for the value of the derivative at the left end
 of the set of points at `(x_{1},F_{1})` in terms of values at `(x_{2},F_{2})` and `(x_{3},F_{3})`.
