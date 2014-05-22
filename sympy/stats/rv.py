@@ -633,7 +633,7 @@ class Density(Basic):
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
         if not random_symbols(expr):
-            return Lambda(x, DiracDelta(x-expr))
+            return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
             isinstance(pspace(expr), SinglePSpace)):
@@ -774,7 +774,7 @@ def sample(expr, condition=None, **kwargs):
     >>> from sympy.stats import Die, sample
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
-    >>> die_roll = sample(X+Y+Z) # A random realization of three dice
+    >>> die_roll = sample(X + Y + Z) # A random realization of three dice
     """
     return next(sample_iter(expr, condition, numsamples=1))
 
@@ -976,7 +976,7 @@ def dependent(a, b):
     False
     >>> dependent(2*X + Y, -Y)
     True
-    >>> X, Y = given(Tuple(X, Y), Eq(X+Y,3))
+    >>> X, Y = given(Tuple(X, Y), Eq(X + Y, 3))
     >>> dependent(X, Y)
     True
 
@@ -1012,7 +1012,7 @@ def independent(a, b):
     True
     >>> independent(2*X + Y, -Y)
     False
-    >>> X, Y = given(Tuple(X, Y), Eq(X+Y,3))
+    >>> X, Y = given(Tuple(X, Y), Eq(X + Y, 3))
     >>> independent(X, Y)
     False
 
@@ -1028,9 +1028,12 @@ def pspace_independent(a, b):
     Tests for independence between a and b by checking if their PSpaces have
     overlapping symbols. This is a sufficient but not necessary condition for
     independence and is intended to be used internally.
-    Note:
-    pspace_independent(a,b) implies independent(a,b)
-    independent(a,b) does not imply pspace_independent(a,b)
+
+    Notes
+    =====
+
+    pspace_independent(a, b) implies independent(a, b)
+    independent(a, b) does not imply pspace_independent(a, b)
     """
     a_symbols = pspace(b).symbols
     b_symbols = pspace(a).symbols
