@@ -6,6 +6,7 @@ from sympy import symbols, sin, cos
 from sympy.galgebra import MV, Format
 from sympy.galgebra import xdvi, Get_Program, Print_Function
 
+
 def derivatives_in_spherical_coordinates():
     Print_Function()
     X = (r, th, phi) = symbols('r theta phi')
@@ -25,8 +26,11 @@ def derivatives_in_spherical_coordinates():
     print('-I*(grad^A) =', -MV.I*(grad ^ A))
     print('grad^B =', grad ^ B)
     return
+
+
 def dummy():
     return
+
 
 def main():
     Get_Program()
