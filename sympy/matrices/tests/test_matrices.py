@@ -2371,3 +2371,7 @@ def test_pinv_rank_deficient():
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
     assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])
+
+def test_free_symbols():
+    for M in ImmutableMatrix, ImmutableSparseMatrix, Matrix, SparseMatrix:
+        assert M([[x], [0]]).free_symbols == set([x])
