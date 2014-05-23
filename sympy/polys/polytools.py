@@ -7,7 +7,9 @@ from sympy.core import (
 )
 
 from sympy.core.mul import _keep_coeff
+from sympy.core.numbers import Rational
 from sympy.core.symbol import Symbol
+from sympy.core.function import FunctionClass
 from sympy.core.basic import preorder_traversal
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
@@ -5602,6 +5604,16 @@ def _symbolic_factor(expr, opt, method):
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        if len(factors) == 1 and hasattr(expr, "func") and opt.expand:
+            f, exp = factors[0]
+            # check for things that should not be factored
+            if isinstance(expr.func, FunctionClass):
+                if exp == 1 and f.as_expr() == Poly(expr).as_expr():
+                    factors[0] = (expr, exp)
+            elif getattr(exp, 'q', 1) != 1 and method == 'factor' and \
+                    pow(f, exp).as_expr() == Poly(expr).as_expr():
+                # fractional powers
+                factors[0] = (expr, 1)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
