@@ -1102,6 +1102,9 @@ class MatrixBase(object):
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> from sympy.matrices import Matrix
         >>> Matrix([[x]])
@@ -1119,6 +1122,21 @@ class MatrixBase(object):
         for i in self:
             result.update( i.atoms(*types) )
         return result
+
+    @property
+    def free_symbols(self):
+        """Returns the free symbols within the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x
+        >>> from sympy.matrices import Matrix
+        >>> Matrix([[x], [1]]).free_symbols
+        set([x])
+        """
+
+        return set.union(*[i.free_symbols for i in self])
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
