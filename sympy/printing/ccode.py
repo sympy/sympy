@@ -136,6 +136,9 @@ class CCodePrinter(CodePrinter):
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
+        elif expr.exp.is_integer and expr.exp < 10:
+            # 10 is arbitrarily chosen
+            return '*'.join([self._print(expr.base)]*expr.exp)
         else:
             return 'pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))
