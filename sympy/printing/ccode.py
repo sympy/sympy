@@ -129,6 +129,8 @@ class CCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_Pow(self, expr):
+        if "Pow" in self.known_functions:
+            return self._print_Function(expr)
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
