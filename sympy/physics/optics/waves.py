@@ -1,8 +1,7 @@
 """
 This module has all the classes and functions related to waves in optics.
 
-Contains
-========
+**Contains**
 
 * TWave
 """
@@ -23,8 +22,8 @@ class TWave(Expr):
     they can be changed later with respective methods provided.
 
     It has been represented as :math:`A \times cos(\omega \times t + \phi )`
-    where :math:`A` is amplitude, :math:` \omega ` is angular velocity and
-    :math:` \phi ` is phase angle of the wave.
+    where :math:`A` is amplitude, :math:`\omega` is angular velocity and
+    :math:`\phi` is phase angle of the wave.
 
 
     Arguments
