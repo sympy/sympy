@@ -7,7 +7,7 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass
+from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 
@@ -1371,12 +1371,12 @@ class FiniteSet(Set, EvalfMixin):
     Examples
     ========
 
-        >>> from sympy import FiniteSet
+    >>> from sympy import FiniteSet
 
-        >>> FiniteSet(1, 2, 3, 4)
-        {1, 2, 3, 4}
-        >>> 3 in FiniteSet(1, 2, 3, 4)
-        True
+    >>> FiniteSet(1, 2, 3, 4)
+    {1, 2, 3, 4}
+    >>> 3 in FiniteSet(1, 2, 3, 4)
+    True
 
     References
     ==========
@@ -1395,13 +1395,12 @@ class FiniteSet(Set, EvalfMixin):
 
             if len(args) == 0:
                 return EmptySet()
+        else:
+            args = list(map(sympify, args))
 
-
-        args = frozenset(args)  # remove duplicates
-        args = map(sympify, args)
-        args = frozenset(args)
+        args = list(ordered(frozenset(args)))
         obj = Basic.__new__(cls, *args)
-        obj._elements = args
+        obj._elements = frozenset(args)
         return obj
 
     def __iter__(self):
