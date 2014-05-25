@@ -63,11 +63,11 @@ Usage::
     >>> from sympy.functions import sin, cos, Abs
     >>> from sympy.abc import x
     >>> print_ccode(sin(x)**2 + cos(x)**2)
-    pow(sin(x), 2) + pow(cos(x), 2)
+    sin(x)*sin(x) + cos(x)*cos(x)
     >>> print_ccode(2*x + cos(x), assign_to="result")
     result = 2*x + cos(x);
     >>> print_ccode(Abs(x**2))
-    fabs(pow(x, 2))
+    fabs(pow(x*x))
 
 .. autodata:: sympy.printing.ccode.known_functions
 
