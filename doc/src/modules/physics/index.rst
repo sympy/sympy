@@ -25,3 +25,4 @@ Contents
     vector/index.rst
     mechanics/index.rst
     quantum/index.rst
+    optics/index.rst
