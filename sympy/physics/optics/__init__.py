@@ -12,5 +12,5 @@ __all__ = []
 #    "from sympy.physics.optics import *" is done.
 
 from . import waves
-from .waves import *
+from .waves import TWave
 __all__.extend(waves.__all__)
