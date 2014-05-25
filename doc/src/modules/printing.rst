@@ -67,7 +67,7 @@ Usage::
     >>> print_ccode(2*x + cos(x), assign_to="result")
     result = 2*x + cos(x);
     >>> print_ccode(Abs(x**2))
-    fabs(pow(x*x))
+    fabs(x*x)
 
 .. autodata:: sympy.printing.ccode.known_functions
 
