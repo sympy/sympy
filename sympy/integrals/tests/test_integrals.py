@@ -670,6 +670,7 @@ def test_is_number():
     assert Integral(1, (x, 1)).is_number is True
     assert Integral(1, (x, 1, 2)).is_number is True
     assert Integral(1, (x, 1, y)).is_number is False
+    assert Integral(1, (x, y)).is_number is False
     assert Integral(x, y).is_number is False
     assert Integral(x, (y, 1, x)).is_number is False
     assert Integral(x, (y, 1, 2)).is_number is False
