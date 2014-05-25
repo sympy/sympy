@@ -2909,6 +2909,9 @@ def test_sympy__geometry__point__Point():
     from sympy.geometry.point import Point
     assert _test_args(Point(0, 1))
 
+def test_sympy__geometry__point3d__Point3D():
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(Point3D(0, 1, 2))
 
 def test_sympy__geometry__ellipse__Ellipse():
     from sympy.geometry.ellipse import Ellipse
