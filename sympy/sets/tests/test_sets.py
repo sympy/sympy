@@ -289,6 +289,10 @@ def test_is_subset():
 
     raises(ValueError, lambda: S.EmptySet.is_subset(1))
 
+def test_is_proper_subset():
+    assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
+    assert Interval(0, 3).is_proper_subset(Interval(0, 2)) is False
+    assert S.EmptySet.is_proper_subset(FiniteSet(1, 2, 3)) is True
 
 def test_is_superset():
 
@@ -312,6 +316,10 @@ def test_is_superset():
 
     raises(ValueError, lambda: S.EmptySet.is_superset(1))
 
+def test_is_proper_superset():
+    assert Interval(0, 1).is_proper_superset(Interval(0, 2)) is False
+    assert Interval(0, 3).is_proper_superset(Interval(0, 2)) is True
+    assert FiniteSet(1, 2, 3).is_proper_superset(S.EmptySet) is True
 
 def test_contains():
     assert Interval(0, 2).contains(1) is True
