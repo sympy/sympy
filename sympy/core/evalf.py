@@ -866,6 +866,17 @@ def as_mpmath(x, prec, options):
 def do_integral(expr, prec, options):
     func = expr.args[0]
     x, xlow, xhigh = expr.args[1]
+    if xlow == xhigh:
+        xlow = xhigh = 0
+    elif x not in func.free_symbols:
+        # only the difference in limits matters in this case
+        # so if there is a symbol in common that will cancel
+        # out when taking the difference, then use that
+        # difference
+        if xhigh.free_symbols & xlow.free_symbols:
+            diff = xhigh - xlow
+            if not diff.free_symbols:
+                xlow, xhigh = 0, diff
     orig = mp.prec
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
