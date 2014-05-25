@@ -40,16 +40,24 @@ class TWave(Expr):
     n : Sympifyable
         Refractive index of the medium.
 
+    Raises
+    =======
+
+    ValueError : When niether frequency nor time period is provided.
+    TypeError : When anyting other than TWave objects is added.
+
 
     Examples
     ========
 
-    >>> from sympy import *
-    >>> from sympy.physics.optics import *
+    >>> from sympy import symbols
+    >>> from sympy.physics.optics import TWave
     >>> A1, phi1, A2, phi2, f = symbols('A1, phi1, A2, phi2, f')
     >>> w1 = TWave(A1, f, phi1)
     >>> w2 = TWave(A2, f, phi2)
     >>> w3 = w1 + w2  # Superposition of two waves
+    >>> w3
+    TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f, phi1 + phi2)
     >>> w3.amplitude
     sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2)
     >>> w3.phase
@@ -83,8 +91,11 @@ class TWave(Expr):
             self._frequency = 1/self._time_period
         if frequency is not None:
             self._time_period = 1/self._frequency
+            if time_period is not None:
+                if frequency != 1/time_period:
+                    raise ValueError("frequency and time_period should be consistent.")
         if frequency is None and time_period is None:
-            raise Exception("Either frequency or time period is needed.")
+            raise ValueError("Either frequency or time period is needed.")
 
     @property
     def frequency(self):
@@ -94,8 +105,8 @@ class TWave(Expr):
         Examples
         ========
 
-        >>> from sympy import *
-        >>> from sympy.physics.optics import *
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.frequency
@@ -111,8 +122,8 @@ class TWave(Expr):
         Examples
         ========
 
-        >>> from sympy import *
-        >>> from sympy.physics.optics import *
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.time_period
@@ -129,8 +140,8 @@ class TWave(Expr):
         Examples
         ========
 
-        >>> from sympy import *
-        >>> from sympy.physics.optics import *
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.wavelength
@@ -146,8 +157,8 @@ class TWave(Expr):
         Examples
         ========
 
-        >>> from sympy import *
-        >>> from sympy.physics.optics import *
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.amplitude
@@ -163,8 +174,8 @@ class TWave(Expr):
         Examples
         ========
 
-        >>> from sympy import *
-        >>> from sympy.physics.optics import *
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.phase
@@ -181,8 +192,8 @@ class TWave(Expr):
         Examples
         ========
 
-        >>> from sympy import *
-        >>> from sympy.physics.optics import *
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.speed
@@ -198,8 +209,8 @@ class TWave(Expr):
         Examples
         ========
 
-        >>> from sympy import *
-        >>> from sympy.physics.optics import *
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.angular_velocity
@@ -207,10 +218,31 @@ class TWave(Expr):
         """
         return 2*pi*self._frequency
 
-    def __repr__(self):
-        return repr(self._amplitude*cos(2*pi*self._frequency*Symbol('t') + self._phase))
+    def equation(self, type='cosine'):
+        """
+        Returns equation of the wave.
 
-    __str__ = __repr__
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
+        >>> A, phi, f = symbols('A, phi, f')
+        >>> w = TWave(A, f, phi)
+        >>> w.equation('cosine')
+        A*cos(2*pi*f*t + phi)
+        """
+        if not isinstance(type, str):
+            raise TypeError("type can only be a string.")
+        if type == 'cosine':
+            return self._amplitude*cos(self.angular_velocity*Symbol('t') + self._phase)
+
+    def __str__(self):
+        """String representation of a TWave."""
+        from sympy.printing import sstr
+        return type(self).__name__ + sstr(self.args)
+
+    __repr__ = __str__
 
     def __add__(self, other):
         """
@@ -226,4 +258,4 @@ class TWave(Expr):
                              self._phase + other._phase
                              )
         else:
-            raise TypeError(repr(type(other)) + " and TWave objects can't be added.")
+            raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
