@@ -1,3 +1,5 @@
+from random import randint
+
 from sympy import Matrix, zeros, ones, Integer
 
 from sympy.physics.quantum.matrixutils import (
@@ -80,8 +82,8 @@ def test_matrix_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for random matrix with random values that are floats
-    random_matrix1 = np.random.rand(np.random.rand()*5 + 1, np.random.rand()*5 + 1)
-    random_matrix2 = np.random.rand(np.random.rand()*5 + 1, np.random.rand()*5 + 1)
+    random_matrix1 = np.random.rand(randint(1, 5), randint(1, 5))
+    random_matrix2 = np.random.rand(randint(1, 5), randint(1, 5))
     numpy_product = np.kron(random_matrix1, random_matrix2)
     args = [Matrix(random_matrix1.tolist()), Matrix(random_matrix2.tolist())]
     sympy_product = matrix_tensor_product(*args)
