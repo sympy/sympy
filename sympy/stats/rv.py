@@ -16,7 +16,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         sympify, Equality, solve, Lambda, DiracDelta)
-from sympy.core.compatibility import reduce, ordered
+from sympy.core.compatibility import reduce
 from sympy.sets.sets import FiniteSet, ProductSet
 from sympy.abc import x
 
@@ -394,10 +394,10 @@ class ProductDomain(RandomDomain):
 
 def random_symbols(expr):
     """
-    Returns a sorted list of all RandomSymbols within a SymPy Expression.
+    Returns all RandomSymbols within a SymPy Expression.
     """
     try:
-        return list(ordered(expr.atoms(RandomSymbol), warn=True))
+        return list(expr.atoms(RandomSymbol))
     except AttributeError:
         return []
 
