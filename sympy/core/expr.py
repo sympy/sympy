@@ -2418,11 +2418,10 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
-            s = self.subs(x, 1/x).series(x, n=n, dir=dir)
-            if n is None:
-                return (si.subs(x, 1/x) for si in s)
-            return s.subs(x, 1/x)
+            s = self.aseries(x, n)
+            if x0 is S.NegativeInfinity:
+                return s.subs(x, -x)
+            return s
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
@@ -2667,6 +2666,112 @@ class Expr(Basic, EvalfMixin):
                      from the positive direction so it is available when
                      nseries calls it.""" % self.func)
                      )
+
+    def aseries(self, x, n=6, bound=0, hir=False):
+        """
+        Returns asymptotic expansion for "self". See [3]_
+
+        This is equivalent to ``self.series(x, oo, n)``
+
+        Use the ``hir`` parameter to produce hierarchical series. It stops the recursion
+        at an early level and may provide nicer and more useful results.
+
+        If the most rapidly varying subexpression of a given expression f is f itself,
+        the algorithm tries to find a normalised representation of the mrv set and rewrites f
+        using this normalised representation.
+        Use the ``bound`` parameter to give limit on rewriting coefficients in its normalised form.
+
+        If the expansion contains an order term, it will be either ``O(x**(-n))`` or ``O(w**(-n))``
+        where ``w`` belongs to the most rapidly varying expression of ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, exp
+        >>> from sympy.abc import x, y
+        >>> e = sin(1/x + exp(-x)) - sin(1/x)
+        >>> e.aseries(x)
+        (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+        >>> e.aseries(x, n=3, hir=True)
+        -exp(-2*x)*sin(1/x)/2 + exp(-x)*cos(1/x) + O(exp(-3*x), (x, oo))
+
+        >>> e = exp(exp(x)/(1 - 1/x))
+        >>> e.aseries(x, bound=3)
+        exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
+        >>> e.aseries(x)
+        exp(exp(x)/(1 - 1/x))
+
+        Notes
+        =====
+
+        This algorithm is directly induced from the limit computational algorithm
+        provided by Gruntz. It majorly uses the mrv and rewrite sub-routines.
+        The overall idea of this algorithm is first to look for the most
+        rapidly varying subexpression w of a given expression f and then expands f
+        in a series in w. Then same thing is recursively done on the leading coefficient
+        till we get constant coefficients.
+
+        References
+        ==========
+
+        .. [1] A New Algorithm for Computing Asymptotic Series - Dominik Gruntz
+        .. [2] Gruntz thesis - p90
+        .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
+
+        """
+        from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
+        from sympy.functions import exp, log
+
+        if x.is_positive is x.is_negative is None:
+            xpos = C.Dummy('x', positive=True, finite=True)
+            return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
+
+        omega, exps = mrv(self, x)
+        if x in omega:
+            s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
+            if s.getO():
+                o = C.Order(1/x**n, (x, S.Infinity))
+                return s + o
+            return s
+        d = C.Dummy('d', positive=True)
+        f, logw = rewrite(exps, omega, x, d)
+
+        if self in omega:
+            # Need to find a canonical representative
+            if bound <= 0:
+                return self
+            a = self.exp
+            s = a.aseries(x, n, bound=bound)
+            s = s.func(*[t.removeO() for t in s.args])
+            rep = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            f = exp(self.args[0] - rep.args[0]) / d
+            logw = log(1/rep)
+
+        s = f.series(d, 0, n)
+        # Hierarchical series: break after first recursion
+        if hir:
+            return s.subs(d, exp(logw))
+
+        o = s.getO()
+        terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(d)[1]))
+        s = S.Zero
+        gotO = False
+
+        for t in terms:
+            coeff, expo = t.as_coeff_exponent(d)
+            if coeff.has(x):
+                s1 = coeff.aseries(x, n, bound=bound-1)
+                if gotO and s1.getO():
+                    break
+                elif s1.getO():
+                    gotO = True
+                s += (s1 * d**expo)
+            else:
+                s += t
+        if not o or gotO:
+            return s.subs(d, exp(logw))
+        else:
+            return (s + o).subs(d, exp(logw))
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
