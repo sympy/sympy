@@ -721,6 +721,9 @@ def test_is_zero():
     assert Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)).is_zero is None
     assert Integral(x, (m, 0)).is_zero
     assert Integral(x + 1/m, (m, 0)).is_zero is None
+    i = Integral(m, (m, 1, exp(x)), (x, 0))
+    assert i.is_zero is None and i.doit() == S(1)/4
+    assert Integral(m, (x, 0), (m, 1, exp(x))).is_zero is True
 
 
 def test_series():
