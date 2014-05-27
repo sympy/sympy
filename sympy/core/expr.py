@@ -2468,6 +2468,9 @@ class Expr(Basic, EvalfMixin):
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
+            # Try asymptotic expansion
+            if s1.removeO() == 0:
+                return self.subs(x, 1/x).aseries(x, n, logx, False).subs(x, 1/x)
             try:
                 return collect(s1, x) + o
             except NotImplementedError:
@@ -2645,6 +2648,79 @@ class Expr(Basic, EvalfMixin):
                      from the positive direction so it is available when
                      nseries calls it.""" % self.func)
                      )
+
+    def aseries(self, x, n=6, logx=None, hir=False):
+        """
+        MrvAsympt algorithm to compute asymptotic expansion
+        This algorithm is directly induced from the limit computational algorithm
+        provided by Gruntz. It majorly uses the mrv and rewrite sub-routines.
+
+        Use the ``hir`` parameter to produce hierarchical series. It stops the recursion
+        at an early level and may provide nicer and more useful results.
+
+        Examples
+        ========
+        >>> from sympy.abc import x, y
+        >>> e = sin(1/x + exp(-x)) - sin(1/x)
+        >>> e.aseries(x)
+        (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+        >>> e.aseries(x, n=3, hir=True)
+        -exp(-2*x)*sin(1/x)/2 + exp(-x)*cos(1/x) + O(exp(-3*x), (x, oo))
+
+        References
+        ==========
+        [1] A New Algorithm for Computing Asymptotic Series - Dominik Gruntz
+        [2] Gruntz thesis - p90
+
+        """
+        from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
+        from sympy.functions import exp, log
+
+        omega, exps = mrv(self, x)
+        for t in omega.keys():
+            if t.func is not exp:
+                return self.subs(x, exp(x)).aseries(x, n, logx, hir).subs(x, log(x))
+        d = C.Dummy('d', positive=True)
+        f, logw = rewrite(exps, omega, x, d)
+        if exp(-logw) == self or exp(logw) == self:
+            # Need to find a canonical representative
+            if self.args[0].func is exp:
+                # This will lead to an infinite recursion
+                # We proceed by returning an unchanged expression
+                return self
+            else:
+                # TODO: rewrite self in terms of f
+                (c0, e0) = mrv_leadterm(self.args[0], x)
+                f = exp(c0*x**-e0)
+
+
+        s = f.series(d, 0, n, logx=logx)
+        # Hierarchical series: break after first recursion
+        if hir:
+            return s.subs(d, exp(logw))
+
+        o = s.getO()
+        terms = s.removeO().args
+        def pow_cmp(x, y):
+            return int(x.as_coeff_exponent(d)[1] - y.as_coeff_exponent(d)[1])
+        terms = sorted(terms, cmp=pow_cmp)
+        s = 0
+        gotO = False
+
+        for t in terms:
+            coeff, expo = t.as_coeff_exponent(d)
+            if coeff.has(x):
+                s1 = coeff.series(x, S.Infinity, n, logx=logx)
+                s += (s1 * d**expo)
+                if s1.getO():
+                    gotO = True
+                    break
+            else:
+                s += t
+        if not o or gotO:
+            return s.subs(d, exp(logw))
+        else:
+            return (s + o).subs(d, exp(logw))
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
