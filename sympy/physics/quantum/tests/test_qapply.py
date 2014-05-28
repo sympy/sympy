@@ -83,7 +83,7 @@ def test_outerproduct():
     assert qapply(e) == -hbar**2*mo
     assert qapply(e, ip_doit=False) == -hbar**2*(po.dual*po)*mo
     assert qapply(e).doit() == -hbar**2*mo
-    
+
 
 def test_tensorproduct():
     a = BosonOperator("a")
@@ -95,7 +95,8 @@ def test_tensorproduct():
     bra2 = TensorProduct(BosonFockBra(1), BosonFockBra(2))
     assert qapply(TensorProduct(a, b ** 2) * ket1) == sqrt(2) * ket2
     assert qapply(TensorProduct(a, Dagger(b) * b) * ket1) == 2 * ket3
-    assert qapply(bra1 * TensorProduct(a, b * b), dagger=True) == sqrt(2) * bra2
+    assert qapply(bra1 * TensorProduct(a, b * b),
+                  dagger=True) == sqrt(2) * bra2
     assert qapply(bra2 * ket1).doit() == TensorProduct(1, 1)
     assert qapply(TensorProduct(a, b * b) * ket1) == sqrt(2) * ket2
     assert qapply(Dagger(TensorProduct(a, b * b) * ket1),
