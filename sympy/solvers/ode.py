@@ -3668,8 +3668,8 @@ def ode_1st_power_series(eq, func, order, match):
     The following algorithm is followed, till the required number of terms are
     generated.
 
-    1. F_1 = `h(x, y)`
-    2. F_n+1 = \frac{\partial F_n}{\partial x} + \frac{\partial F_n}{\partial y}F_1
+    1. `F_1 = h(x, y)`
+    2. `F_{n+1} = \frac{\partial F_{n}}{\partial x} + \frac{\partial F_{n}}{\partial y}F_{1}`
 
     Examples
     ========
