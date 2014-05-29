@@ -1553,10 +1553,10 @@ class FiniteSet(Set, EvalfMixin):
 
 
         """
-        for elem in f:
+        for elem in self:
             firstType = _get_list(lambda o: type(o).__name__, elem)
             break
-        for elem in f:
+        for elem in self:
             if(Counter(firstType) != Counter(tree_map(lambda o: type(o).__name__, elem))):
                 return False
         return True
