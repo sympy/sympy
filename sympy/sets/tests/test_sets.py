@@ -439,13 +439,13 @@ def test_EmptySet_as_relational():
     assert S.EmptySet.as_relational(Symbol('x')) is False
 
 
-def test_FiniteSet_is_homogenous():
+def test_FiniteSet_is_homogeneous():
     f = FiniteSet((0, 0), (0, 3), (5, 0), (2, 3))
     g = FiniteSet(FiniteSet(2, 3), FiniteSet(2, FiniteSet(1, 2)))
     x = FiniteSet(FiniteSet(FiniteSet(2, 5), 3, 8), FiniteSet(2, 3, FiniteSet(7, 8)))
-    assert f.is_homogenous == True
-    assert g.is_homogenous == False
-    assert x.is_homogenous == True
+    assert f.is_homogeneous == True
+    assert g.is_homogeneous == False
+    assert x.is_homogeneous == True
 
 
 def test_finite_basic():
