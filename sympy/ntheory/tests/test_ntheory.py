@@ -21,7 +21,8 @@ from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 from sympy.ntheory.continued_fraction import \
     (continued_fraction_periodic as cf_p,
-     continued_fraction_iterator as cf_i)
+     continued_fraction_iterator as cf_i,
+     continued_fraction_convergents as cf_c)
 from sympy.ntheory.egyptian_fraction import egyptian_fraction
 
 from fractions import Fraction
@@ -785,6 +786,12 @@ def test_continued_fraction():
 
     assert take(phi) == [1, 1, 1, 1, 1, 1, 1]
     assert take(pi) == [3, 7, 15, 1, 292, 1, 1]
+
+    assert list(cf_c([1, 6, 1, 8])) == [S(1), S(7)/6, S(8)/7, S(71)/62]
+    assert list(cf_c([2])) == [S(2)]
+    assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), S(3)/2, S(5)/3,
+                                                 S(8)/5, S(13)/8, S(21)/13]
+    assert list(cf_c([1, 6, S(-1)/2, 4])) == [S.One, S(7)/6, S(5)/4, S(3)/2]
 
 
 def test_egyptian_fraction():
