@@ -1317,6 +1317,11 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _measure(self):
         return 0
 
+    @property
+    def is_homogenous(self):
+        """EmptySet is homogenous"""
+        return True
+
     def _contains(self, other):
         return False
 
@@ -1527,6 +1532,15 @@ class FiniteSet(Set, EvalfMixin):
     @property
     def measure(self):
         return 0
+
+    @property
+    def is_homogenous(self):
+        it = iter(self)
+        for first in it:
+            break
+        else:
+            return True  # empty case, note all([]) == True
+        return all((type(x) == type(first) and len(x) == len(first)) for x in it)
 
     def __len__(self):
         return len(self.args)
