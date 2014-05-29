@@ -1231,13 +1231,19 @@ def classify_sysode(eq, func=None, **kwargs):
     in form of dictionary. The dictionary returned is further used in
     :py:meth:`~sympy.solvers.ode.dsolve` for solving system of ODEs.
 
-    It returns six parameters, first parameter is 'is_linear' which tells
+    It returns seven parameters, first parameter is 'is_linear' which tells
     whether given equation is linear or Non-linear based on the coefficients
-    of the functions of equations, i.e, coefficients of x, diff(x,t), diff(x,t,t) etc.
-    If the coefficient is constant, then the equation is said to be linear otherwise
-    Non-linear. Second one is order of equation, it provides information about order
+    of the functions of equations, i.e, coefficients of x, diff(x,t), diff(x,t,t) etc
+    which itself is a parameter named 'func_coeff'.
+    If the coefficient is constant, then the equation is said to be linear and 'is_linear'
+    returns True otherwise 'is_linear' returns False.
+    Second parameter is order of equation, it provides information about order
     of differential equations provided. The third parameters is the number of equation
-    in the system. The other two parameters are the equations of ODEs and its functions.
+    in the system.
+    The forth parameter is 'func_coeff' which has list of coefficient of all function and its
+    differentials. Each is described by three elements, first is equation number,
+    second is function and third is order of function whose coefficients we are calculating.
+    The other two parameters are the equations of ODEs and its functions.
     The other parameter which tells whether given system of ODEs are solvable by current
     solving engine. If it returns a type the it is solvable and result can be obtained
     using dsolve otherwise None is returned.
@@ -1265,15 +1271,15 @@ def classify_sysode(eq, func=None, **kwargs):
     >>> eq = (Eq(5*x1, 12*x(t) - 6*y(t)), Eq(2*y1, 11*x(t) + 3*y(t)))
     >>> classify_sysode(eq)
     {'eq': [-12*x(t) + 6*y(t) + 5*Derivative(x(t), t), -11*x(t) - 3*y(t) + 2*Derivative(y(t), t)],
-    'func': [x(t), y(t)], 'func_coeff': {(0, 0, 0): -12, (0, 0, 1): 6, (0, 1, 0): -11,
-    (0, 1, 1): -3, (1, 0, 0): 5, (1, 0, 1): 0, (1, 1, 0): 0, (1, 1, 1): 2}, 'is_linear': 'True',
-    'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type1'}
+    'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -12, (0, x(t), 1): 5, (0, y(t), 0): 6,
+    (0, y(t), 1): 0, (1, x(t), 0): -11, (1, x(t), 1): 0, (1, y(t), 0): -3, (1, y(t), 1): 2},
+    'is_linear': 'True', 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type1'} 
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
     {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t), t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
-    'func': [x(t), y(t)], 'func_coeff': {(0, 0, 0): -5*t, (0, 0, 1): -t**2, (0, 1, 0): t**2,
-    (0, 1, 1): -5*t, (1, 0, 0): 1, (1, 0, 1): 0, (1, 1, 0): 0, (1, 1, 1): 1}, 'is_linear': 'True',
-    'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type4'}
+    'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
+    (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
+    'is_linear': 'True', 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type4'} 
 
     """
 
@@ -1324,9 +1330,9 @@ def classify_sysode(eq, func=None, **kwargs):
 
     # find coefficients of terms f(t), diff(f(t),t) and higher derivatives
     # and similarly for other functions g(t), diff(g(t),t) in all equations.
-    # Here k denotes the order of equation, j denotes the equation number out
-    # of all equations provided, l is used to know the coefficients of all
-    # functions in each equations.
+    # Here j denotes the equation number, func[l] denotes the function about
+    # which we are taking about and k denotes the order of function func[l]
+    # whose coefficient we are calculating.
     df = {}
     func_coef = {}
     is_nonlinear = 0
@@ -1342,9 +1348,9 @@ def classify_sysode(eq, func=None, **kwargs):
     for j in range(i+1):
         for l in range(i+1):
             for k in range(order[0]+1):
-                func_coef[k,j,l] = collect(eq[j].expand(),[df[k,l]]).coeff(df[k,l])
+                func_coef[j,func[l],k] = collect(eq[j].expand(),[df[k,l]]).coeff(df[k,l])
                 if is_nonlinear == 0:
-                    if func_coef[k,j,l]==0:
+                    if func_coef[j,func[l],k]==0:
                         if k==0:
                             coef = eq[j].as_independent(func[l])[1]
                             for xr in xrange(1, ode_order(eq[j],func[l])+1):
@@ -1356,7 +1362,7 @@ def classify_sysode(eq, func=None, **kwargs):
                                 is_nonlinear = 1
                     else:
                         for m in range(i+1):
-                            dep = func_coef[k,j,l].as_independent(df[0,m])[1]
+                            dep = func_coef[j,func[l],k].as_independent(df[0,m])[1]
                             if dep!=1 and dep!=0:
                                 is_nonlinear = 1
 
@@ -1420,13 +1426,13 @@ def check_linear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     r = dict()
     # for equations Eq(a1*diff(x(t),t), b1*x(t) + c1*y(t) + d1)
-    # and Eq(a2*diff(x(t),t), b2*x(t) + c2*y(t) + d2)
-    r['a1'] = fc[1,0,0]
-    r['a2'] = fc[1,1,1]
-    r['b1'] = -fc[0,0,0]
-    r['b2'] = -fc[0,1,0]
-    r['c1'] = -fc[0,0,1]
-    r['c2'] = -fc[0,1,1]
+    # and Eq(a2*diff(y(t),t), b2*x(t) + c2*y(t) + d2)
+    r['a1'] = fc[0,x(t),1]
+    r['a2'] = fc[1,y(t),1]
+    r['b1'] = -fc[0,x(t),0]
+    r['b2'] = -fc[1,x(t),0]
+    r['c1'] = -fc[0,y(t),0]
+    r['c2'] = -fc[1,y(t),0]
     const = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
@@ -5930,6 +5936,7 @@ def sysode_linear_2eq_order1(match_):
     C1, C2, C3, C4 = symbols('C1:5')
     x = match_['func'][0].func
     y = match_['func'][1].func
+    func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
     l = Symbol('l')
@@ -5938,15 +5945,15 @@ def sysode_linear_2eq_order1(match_):
     for i in range(2):
         eqs = 0
         for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[1,i,i]
+            eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
 
     # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
-    r['a'] = -fc[0,0,0]
-    r['c'] = -fc[0,1,0]
-    r['b'] = -fc[0,0,1]
-    r['d'] = -fc[0,1,1]
+    r['a'] = -fc[0,x(t),0]
+    r['c'] = -fc[1,x(t),0]
+    r['b'] = -fc[0,y(t),0]
+    r['d'] = -fc[1,y(t),0]
     const = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
