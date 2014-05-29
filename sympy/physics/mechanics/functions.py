@@ -8,7 +8,7 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Symbol
+from sympy import sympify, Matrix, Symbol, Derivative, Dummy
 from sympy.core.basic import S
 
 __all__ = ['inertia',
@@ -436,3 +436,13 @@ def _mat_inv_mul(A, B):
         temp3.append(temp1.LDLsolve(temp2[:, i]))
     temp3 = Matrix([i.T for i in temp3]).T
     return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
+
+def _subs_keep_derivs(expr, *args, **kwargs):
+    """ Performs subs exactly as subs normally would be,
+    but doesn't sub in expressions inside Derivatives. """
+
+    ds = expr.atoms(Derivative)
+    gs = [Dummy() for d in ds]
+    dict_to = dict(zip(ds, gs))
+    dict_from = dict(zip(gs, ds))
+    return expr.subs(dict_to).subs(*args, **kwargs).subs(dict_from)

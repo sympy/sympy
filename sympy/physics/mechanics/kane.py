@@ -9,7 +9,9 @@ from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
      Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import inertia_of_point_mass, _mat_inv_mul
+from sympy.physics.mechanics.functions import inertia_of_point_mass, \
+    _mat_inv_mul, _subs_keep_derivs
+from sympy.physics.mechanics.linearize import Linearizer
 
 class KanesMethod(object):
     """Kane's method object.
@@ -173,7 +175,6 @@ class KanesMethod(object):
         """Finds all non-dynamic symbols in the expressions."""
         return list(reduce(set.union, [i.free_symbols for i in inlist]) -
                     set(insyms))
-
 
     def _coords(self, qind, qdep=[], coneqs=[]):
         """Supply all the generalized coordinates in a list.
@@ -519,6 +520,85 @@ class KanesMethod(object):
         self._f_d = zeroeq
         return FRSTAR
 
+    def _general_form(self):
+        """ Forms the general form for a system of constrained equations. The
+        general form is composed of seven separate equations:
+
+        Configuration Constraint:   f_c(q, t)
+        Velocity Constraint:        f_v(q, u, t)
+        Acceleration Constraint:    f_a(q, q', u, u', t)
+        Kinematic Differential Eqs: f_0(q, q', t) + f_1(q, u, t)
+        Dynamic Differential Eqs:   f_2(q, u', t) + f_3(q, q', u, r, t)
+
+        This method returns a tuple of (f_c, f_v, f_a, f_0, f_1, f_2, f_3). """
+
+        # The Kane's method class breaks these into pieces. Need to reassemble
+        f_c = self._f_h
+        if self._f_nh and self._k_nh:
+            f_v = self._f_nh + self._k_nh*Matrix(self._u)
+        else:
+            f_v = Matrix([])
+        if self._f_dnh and self._k_dnh:
+            f_a = self._f_dnh + self._k_dnh*Matrix(self._udot)
+        else:
+            f_a = Matrix([])
+
+        # Dicts to sub to zero, for splitting up expressions
+        u_zero = {i: 0 for i in self._u}
+        ud_zero = {i: 0 for i in self._udot}
+        qd_zero = {i: 0 for i in self._qdot}
+        qd_u_zero = {i: 0 for i in self._qdot + self._u}
+
+        # Break the kinematic differential eqs apart into f_0 and f_1
+        f_0 = self._f_k.subs(u_zero) + self._k_kqdot*Matrix(self._qdot)
+        f_1 = self._f_k.subs(qd_zero) + self._k_ku*Matrix(self._u) 
+
+        # Break the dynamic differential eqs into f_2 and f_3
+        f_2 = _subs_keep_derivs(self._frstar, qd_u_zero)
+        f_3 = self._frstar.subs(ud_zero) + self._fr
+        return (f_c, f_v, f_a, f_0, f_1, f_2, f_3)
+
+    def to_linearizer(self):
+
+        if (self._fr is None) or (self._frstar is None):
+            raise ValueError('Need to compute Fr, Fr* first.')
+
+        # Get required equation and vector components
+        f_c, f_v, f_a, f_0, f_1, f_2, f_3 = self._general_form()
+        q = self._q
+        u = self._u
+        q_i = self._q[:-len(self._qdep)]
+        q_d = self._qdep
+        u_i = self._u[:-len(self._udep)]
+        u_d = self._udep
+        
+        # Form dictionary of auxiliary speeds & and their derivatives,
+        # setting each to 0.
+        uaux = self._uaux
+        uauxdot = [diff(i, dynamicsymbols._t) for i in uaux]
+        uaux_zero = {i: 0 for i in uaux + uauxdot}
+
+        # Checking for dynamic symbols outside the dynamic differential
+        # equations; throws error if there is.
+        insyms = set(q + self._qdot + u + self._udot + uaux + uauxdot)
+        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
+                self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
+            raise ValueError('Cannot have dynamicsymbols outside dynamic \
+                             forcing vector.')
+
+        # Find all other dynamic symbols, forming the forcing vector r.
+        # Sort r to make it canonical.
+        r = list(self._find_dynamicsymbols(self._f_d.subs(uaux_zero), insyms))
+        r.sort(key=default_sort_key)
+
+        # Check for any derivatives of variables in r that are also found in r.
+        for i in r:
+            if diff(i, dynamicsymbols._t) in r:
+                raise ValueError('Cannot have derivatives of specified \
+                                 quantities when linearizing forcing terms.')
+        return Linearizer(f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, q_i, q_d, 
+                u_i, u_d, r)
+
     def kanes_equations(self, FL, BL):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
@@ -566,211 +646,6 @@ class KanesMethod(object):
             return (self._fr, self._frstar)
         else:
             return (fr, frstar)
-
-    def linearize(self):
-        """ Method used to generate linearized equations.
-
-        Note that for linearization, it is assumed that time is not perturbed,
-        but only coordinates and positions. The "forcing" vector's jacobian is
-        computed with respect to the state vector in the form [Qi, Qd, Ui, Ud].
-        This is the "f_lin_A" matrix.
-
-        It also finds any non-state dynamicsymbols and computes the jacobian of
-        the "forcing" vector with respect to them. This is the "f_lin_B"
-        matrix; if this is empty, an empty matrix is created.
-
-        Consider the following:
-        If our equations are: [M]qudot = f, where [M] is the full mass matrix,
-        qudot is a vector of the deriatives of the coordinates and speeds, and
-        f in the full forcing vector, the linearization process is as follows:
-        [M]qudot = [f_lin_A]qu + [f_lin_B]y, where qu is the state vector,
-        f_lin_A is the jacobian of the full forcing vector with respect to the
-        state vector, f_lin_B is the jacobian of the full forcing vector with
-        respect to any non-speed/coordinate dynamicsymbols which show up in the
-        full forcing vector, and y is a vector of those dynamic symbols (each
-        column in f_lin_B corresponds to a row of the y vector, each of which
-        is a non-speed/coordinate dynamicsymbol).
-
-        To get the traditional state-space A and B matrix, you need to multiply
-        the f_lin_A and f_lin_B matrices by the inverse of the mass matrix.
-        Caution needs to be taken when inverting large symbolic matrices;
-        substituting in numerical values before inverting will work better.
-
-        A tuple of (f_lin_A, f_lin_B, other_dynamicsymbols) is returned.
-
-        """
-
-        if (self._fr is None) or (self._frstar is None):
-            raise ValueError('Need to compute Fr, Fr* first.')
-
-        # Note that this is now unneccessary, and it should never be
-        # encountered; I still think it should be in here in case the user
-        # manually sets these matrices incorrectly.
-        for i in self._q:
-            if self._k_kqdot.diff(i) != 0 * self._k_kqdot:
-                raise ValueError('Matrix K_kqdot must not depend on any q.')
-
-        t = dynamicsymbols._t
-        uaux = self._uaux
-        uauxdot = [diff(i, t) for i in uaux]
-        # dictionary of auxiliary speeds & derivatives which are equal to zero
-        subdict = dict(list(zip(uaux + uauxdot, [0] * (len(uaux) + len(uauxdot)))))
-
-        # Checking for dynamic symbols outside the dynamic differential
-        # equations; throws error if there is.
-        insyms = set(
-            self._q + self._qdot + self._u + self._udot + uaux + uauxdot)
-        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
-                                                              self._k_ku,
-                                                              self._f_k,
-                                                              self._k_dnh,
-                                                              self._f_dnh,
-                                                              self._k_d]):
-            raise ValueError('Cannot have dynamicsymbols outside dynamic '
-                             'forcing vector.')
-        other_dyns = list(self._find_dynamicsymbols(self._f_d.subs(subdict),
-                                             insyms))
-
-        # make it canonically ordered so the jacobian is canonical
-        other_dyns.sort(key=default_sort_key)
-
-        for i in other_dyns:
-            if diff(i, dynamicsymbols._t) in other_dyns:
-                raise ValueError('Cannot have derivatives of specified '
-                                 'quantities when linearizing forcing terms.')
-
-        o = len(self._u)  # number of speeds
-        n = len(self._q)  # number of coordinates
-        l = len(self._qdep)  # number of configuration constraints
-        m = len(self._udep)  # number of motion constraints
-        qi = Matrix(self._q[: n - l])  # independent coords
-        qd = Matrix(self._q[n - l: n])  # dependent coords; could be empty
-        ui = Matrix(self._u[: o - m])  # independent speeds
-        ud = Matrix(self._u[o - m: o])  # dependent speeds; could be empty
-        qdot = Matrix(self._qdot)  # time derivatives of coordinates
-
-        # with equations in the form MM udot = forcing, expand that to:
-        # MM_full [q,u].T = forcing_full. This combines coordinates and
-        # speeds together for the linearization, which is necessary for the
-        # linearization process, due to dependent coordinates. f1 is the rows
-        # from the kinematic differential equations, f2 is the rows from the
-        # dynamic differential equations (and differentiated non-holonomic
-        # constraints).
-        f1 = self._k_ku * Matrix(self._u) + self._f_k
-        f2 = self._f_d
-        # Only want to do this if these matrices have been filled in, which
-        # occurs when there are dependent speeds
-        if m != 0:
-            f2 = self._f_d.col_join(self._f_dnh)
-            fnh = self._f_nh + self._k_nh * Matrix(self._u)
-        f1 = f1.subs(subdict)
-        f2 = f2.subs(subdict)
-        fh = self._f_h.subs(subdict)
-        fku = (self._k_ku * Matrix(self._u)).subs(subdict)
-        fkf = self._f_k.subs(subdict)
-
-        # In the code below, we are applying the chain rule by hand on these
-        # things. All the matrices have been changed into vectors (by
-        # multiplying the dynamic symbols which it is paired with), so we can
-        # take the jacobian of them. The basic operation is take the jacobian
-        # of the f1, f2 vectors wrt all of the q's and u's. f1 is a function of
-        # q, u, and t; f2 is a function of q, qdot, u, and t. In the code
-        # below, we are not considering perturbations in t. So if f1 is a
-        # function of the q's, u's but some of the q's or u's could be
-        # dependent on other q's or u's (qd's might be dependent on qi's, ud's
-        # might be dependent on ui's or qi's), so what we do is take the
-        # jacobian of the f1 term wrt qi's and qd's, the jacobian wrt the qd's
-        # gets multiplied by the jacobian of qd wrt qi, this is extended for
-        # the ud's as well. dqd_dqi is computed by taking a taylor expansion of
-        # the holonomic constraint equations about q*, treating q* - q as dq,
-        # separating into dqd (depedent q's) and dqi (independent q's) and the
-        # rearranging for dqd/dqi. This is again extended for the speeds.
-
-        # First case: configuration and motion constraints
-        if (l != 0) and (m != 0):
-            fh_jac_qi = fh.jacobian(qi)
-            fh_jac_qd = fh.jacobian(qd)
-            fnh_jac_qi = fnh.jacobian(qi)
-            fnh_jac_qd = fnh.jacobian(qd)
-            fnh_jac_ui = fnh.jacobian(ui)
-            fnh_jac_ud = fnh.jacobian(ud)
-            fku_jac_qi = fku.jacobian(qi)
-            fku_jac_qd = fku.jacobian(qd)
-            fku_jac_ui = fku.jacobian(ui)
-            fku_jac_ud = fku.jacobian(ud)
-            fkf_jac_qi = fkf.jacobian(qi)
-            fkf_jac_qd = fkf.jacobian(qd)
-            f1_jac_qi = f1.jacobian(qi)
-            f1_jac_qd = f1.jacobian(qd)
-            f1_jac_ui = f1.jacobian(ui)
-            f1_jac_ud = f1.jacobian(ud)
-            f2_jac_qi = f2.jacobian(qi)
-            f2_jac_qd = f2.jacobian(qd)
-            f2_jac_ui = f2.jacobian(ui)
-            f2_jac_ud = f2.jacobian(ud)
-            f2_jac_qdot = f2.jacobian(qdot)
-
-            dqd_dqi = - _mat_inv_mul(fh_jac_qd, fh_jac_qi)
-            dud_dqi = _mat_inv_mul(fnh_jac_ud, (fnh_jac_qd *
-                                        dqd_dqi - fnh_jac_qi))
-            dud_dui = - _mat_inv_mul(fnh_jac_ud, fnh_jac_ui)
-            dqdot_dui = - self._k_kqdot.inv() * (fku_jac_ui +
-                                                fku_jac_ud * dud_dui)
-            dqdot_dqi = - self._k_kqdot.inv() * (fku_jac_qi + fkf_jac_qi +
-                    (fku_jac_qd + fkf_jac_qd) * dqd_dqi + fku_jac_ud * dud_dqi)
-            f1_q = f1_jac_qi + f1_jac_qd * dqd_dqi + f1_jac_ud * dud_dqi
-            f1_u = f1_jac_ui + f1_jac_ud * dud_dui
-            f2_q = (f2_jac_qi + f2_jac_qd * dqd_dqi + f2_jac_qdot * dqdot_dqi +
-                    f2_jac_ud * dud_dqi)
-            f2_u = f2_jac_ui + f2_jac_ud * dud_dui + f2_jac_qdot * dqdot_dui
-        # Second case: configuration constraints only
-        elif l != 0:
-            dqd_dqi = - _mat_inv_mul(fh.jacobian(qd), fh.jacobian(qi))
-            dqdot_dui = - self._k_kqdot.inv() * fku.jacobian(ui)
-            dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
-                fkf.jacobian(qi) + (fku.jacobian(qd) + fkf.jacobian(qd)) *
-                dqd_dqi)
-            f1_q = (f1.jacobian(qi) + f1.jacobian(qd) * dqd_dqi)
-            f1_u = f1.jacobian(ui)
-            f2_jac_qdot = f2.jacobian(qdot)
-            f2_q = (f2.jacobian(qi) + f2.jacobian(qd) * dqd_dqi +
-                    f2.jac_qdot * dqdot_dqi)
-            f2_u = f2.jacobian(ui) + f2_jac_qdot * dqdot_dui
-        # Third case: motion constraints only
-        elif m != 0:
-            dud_dqi = _mat_inv_mul(fnh.jacobian(ud), - fnh.jacobian(qi))
-            dud_dui = - _mat_inv_mul(fnh.jacobian(ud), fnh.jacobian(ui))
-            dqdot_dui = - self._k_kqdot.inv() * (fku.jacobian(ui) +
-                                                fku.jacobian(ud) * dud_dui)
-            dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
-                    fkf.jacobian(qi) + fku.jacobian(ud) * dud_dqi)
-            f1_jac_ud = f1.jacobian(ud)
-            f2_jac_qdot = f2.jacobian(qdot)
-            f2_jac_ud = f2.jacobian(ud)
-            f1_q = f1.jacobian(qi) + f1_jac_ud * dud_dqi
-            f1_u = f1.jacobian(ui) + f1_jac_ud * dud_dui
-            f2_q = (f2.jacobian(qi) + f2_jac_qdot * dqdot_dqi + f2_jac_ud
-                    * dud_dqi)
-            f2_u = (f2.jacobian(ui) + f2_jac_ud * dud_dui + f2_jac_qdot *
-                    dqdot_dui)
-        # Fourth case: No constraints
-        else:
-            dqdot_dui = - self._k_kqdot.inv() * fku.jacobian(ui)
-            dqdot_dqi = - self._k_kqdot.inv() * (fku.jacobian(qi) +
-                    fkf.jacobian(qi))
-            f1_q = f1.jacobian(qi)
-            f1_u = f1.jacobian(ui)
-            f2_jac_qdot = f2.jacobian(qdot)
-            f2_q = f2.jacobian(qi) + f2_jac_qdot * dqdot_dqi
-            f2_u = f2.jacobian(ui) + f2_jac_qdot * dqdot_dui
-        f_lin_A = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
-        if other_dyns:
-            f1_oths = f1.jacobian(other_dyns)
-            f2_oths = f2.jacobian(other_dyns)
-            f_lin_B = -f1_oths.col_join(f2_oths)
-        else:
-            f_lin_B = Matrix([])
-        return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
     def rhs(self, inv_method=None):
         """ Returns the system's equations of motion in first order form.
