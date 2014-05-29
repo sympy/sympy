@@ -14,5 +14,6 @@ from .residue_ntheory import is_primitive_root, is_quad_residue, \
 from .multinomial import binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients
 from .continued_fraction import continued_fraction_periodic, \
-    continued_fraction_iterator
+    continued_fraction_iterator, continued_fraction_rational, \
+    continued_fraction_convergents
 from .egyptian_fraction import egyptian_fraction
