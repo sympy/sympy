@@ -12,6 +12,7 @@ from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
     det_quick, det_perm, det_minor
 
+from sympy.physics.units import cm
 from sympy.polys.rootoftools import RootOf
 
 from sympy.utilities.pytest import slow, XFAIL, raises, skip
@@ -1477,3 +1478,7 @@ def test_real_imag_splitting():
 def test_issue_7110():
     y = -2*x**3 + 4*x**2 - 2*x + 5
     assert any(ask(Q.real(i)) for i in solve(y))
+
+
+def test_units():
+    assert solve(1/x - 1/(2*cm)) == [2*cm]
