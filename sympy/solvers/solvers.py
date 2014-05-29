@@ -153,6 +153,8 @@ def checksol(f, symbol, sol=None, **flags):
            make positive all symbols without assumptions regarding sign.
 
     """
+    from sympy.physics.units import Unit
+
     minimal = flags.get('minimal', False)
 
     if sol is not None:
@@ -181,6 +183,7 @@ def checksol(f, symbol, sol=None, **flags):
     elif isinstance(f, Equality):
         f = f.lhs - f.rhs
 
+
     if not f:
         return True
 
@@ -202,6 +205,8 @@ def checksol(f, symbol, sol=None, **flags):
         attempt += 1
         if attempt == 0:
             val = f.subs(sol)
+            if isinstance(val, Mul):
+                val = val.as_independent(Unit)[0]
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
