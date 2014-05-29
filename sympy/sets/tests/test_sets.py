@@ -438,13 +438,15 @@ def test_Intersection_as_relational():
 def test_EmptySet_as_relational():
     assert S.EmptySet.as_relational(Symbol('x')) is False
 
+
 def test_FiniteSet_is_homogenous():
     f = FiniteSet((0, 0), (0, 3), (5, 0), (2, 3))
-    g = FiniteSet()
-    x = FiniteSet((1, 2, 3), (1, 2))
+    g = FiniteSet(FiniteSet(2, 3), FiniteSet(2, FiniteSet(1, 2)))
+    x = FiniteSet(FiniteSet(FiniteSet(2, 5), 3, 8), FiniteSet(2, 3, FiniteSet(7, 8)))
     assert f.is_homogenous == True
-    assert g.is_homogenous == True
-    assert x.is_homogenous == False
+    assert g.is_homogenous == False
+    assert x.is_homogenous == True
+
 
 def test_finite_basic():
     x = Symbol('x')

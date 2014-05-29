@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from itertools import product
+from collections import Counter, Iterable
 
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
@@ -1533,14 +1534,32 @@ class FiniteSet(Set, EvalfMixin):
     def measure(self):
         return 0
 
-    @property
-    def is_homogenous(self):
-        it = iter(self)
-        for first in it:
-            break
+    def _get_list(f, o):
+        if(isinstance(o, Iterable)):
+            return type(o)(_get_list(f, value) for value in o)
         else:
-            return True  # empty case, note all([]) == True
-        return all((type(x) == type(first) and len(x) == len(first)) for x in it)
+            return f(o)
+
+    @property
+    def is_homogeneous(self):
+        """
+        Checks if a set is homogeneous.
+        
+        >>> from sympy import FiniteSet
+        >>> FiniteSet(1, 2, FiniteSet(4, 3)).is_homogeneous()
+        False
+        >>> FiniteSet(FiniteSet(2, 4), FiniteSet(8, 9)).is_homogeneous()
+        True
+
+
+        """
+        for elem in f:
+            firstType = _get_list(lambda o: type(o).__name__, elem)
+            break
+        for elem in f:
+            if(Counter(firstType) != Counter(tree_map(lambda o: type(o).__name__, elem))):
+                return False
+        return True
 
     def __len__(self):
         return len(self.args)
