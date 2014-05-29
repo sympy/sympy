@@ -419,6 +419,12 @@ def test_Finite_as_relational():
     assert FiniteSet(1, 2).as_relational(x) == Or(Eq(x, 1), Eq(x, 2))
     assert FiniteSet(y, -5).as_relational(x) == Or(Eq(x, y), Eq(x, -5))
 
+def test_Finite_as_dict():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    assert FiniteSet((0, 0), (0, pi), (pi, 0), (pi, pi)).as_dict([x, y]) == [{x: 0, y:0}, {x: 0, y:pi}, {x:pi, y:0}, {x:pi, y:pi}]
+
 
 def test_Union_as_relational():
     x = Symbol('x')

@@ -1539,6 +1539,23 @@ class FiniteSet(Set, EvalfMixin):
         from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
 
+    def as_dict(self, other):
+        """
+	Rewrite Finite set as a dictionary.
+
+	from sympy import FiniteSet, Symbol, pi
+	>>> f = FiniteSet((0, 0), (0, pi), (pi, 0), (pi, pi))
+	>>> x = Symbol('x')
+	>>> y = Symbol('y')
+	>>> print f.as_dict([x, y])
+	[{x: 0, y: 0}, {x: 0, y: pi}, {x: pi, y: 0}, {x: pi, y: pi}]
+	
+	"""
+        _list = []
+        for elem in self:
+            _list.append(dict(zip(other, list(elem))))
+        return _list
+
     @property
     def is_real(self):
         return all(el.is_real for el in self)
