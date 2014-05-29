@@ -3664,9 +3664,8 @@ def ode_1st_power_series(eq, func, order, match):
     .. math:: y(x) = y(x0) + \sum_{n = 1}^{\infty} \frac{F_{n}(x0,b)(x - x0)^n}{n!},
 
     where `y(x0) = b` is the value of y at the initial value of `x0`.
-    
-    To compute the values of the `F_{n}(x0,b)` the following algorithm is followed, until the required number of terms are
-    generated.
+    To compute the values of the `F_{n}(x0,b)` the following algorithm is
+    followed, until the required number of terms are generated.
 
     1. `F_1 = h(x0, b)`
     2. `F_{n+1} = \frac{\partial F_{n}}{\partial x} + \frac{\partial F_{n}}{\partial y}F_{1}`
@@ -5381,12 +5380,12 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
        b] Check if `\xi = \frac{-R}{X}` and `\eta = -\frac{1}{X}` satisfy the PDE.
            If yes, then return `\xi` and `\eta`
 
-       If not, then check if 
+       If not, then check if
 
        a] `\xi = -R,\eta = 1`
-       
+
        b] :math:`\xi = 1, \eta = -\frac{1}{R}`
-       
+
        are solutions.
 
     References
