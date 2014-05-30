@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, solve, simplify, cos, sin, atan
+from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
         dot, cross, inertia, KanesMethod, Particle, RigidBody
 
@@ -71,8 +71,8 @@ def test_linearize_rolling_disc():
     Disc = RigidBody('Disc', CO, C, m, (I_C_CO, CO))
     BL = [Disc]
     FL = [(CO, F_CO)]
-    KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs, 
-            q_dependent=[q6], configuration_constraints=f_c, 
+    KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
+            q_dependent=[q6], configuration_constraints=f_c,
             u_dependent=[u4, u5, u6], velocity_constraints=f_v)
     (fr, fr_star) = KM.kanes_equations(FL, BL)
 
@@ -117,18 +117,17 @@ def test_linearize_rolling_disc():
                     [0, 0, 0, 0, 0, 0, 1, 0],
                     [sin(q1)*q3d, 0, 0, 0, 0, -sin(q1), -cos(q1), 0],
                     [-cos(q1)*q3d, 0, 0, 0, 0, cos(q1), -sin(q1), 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 4/5, 0, 0, 0, 0, 0, 6*q3d/5],
                     [0, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, -2*q3d, 0, 0],
-                    [0, 0, cos(q3)*q3d**2, 0, 0, 0, 2*sin(q3)*q3d, 0],
-                    [0, 4/5, 0, 0, 0, 0, 0, 6*q3d/5],
-                    [0, 0, sin(q3)*q3d**2, 0, 0, 0, -2*cos(q3)*q3d, 0]])
+                    [0, 0, 0, 0, 0, -2*q3d, 0, 0]])
     B_sol = Matrix([])
 
     # Check that linearization is correct
     assert A.subs(upright_nominal) == A_sol
     assert B.subs(upright_nominal) == B_sol
+
+    # Check eigenvalues at critical speed are all zero:
+    assert A.subs(upright_nominal).subs(q3d, 1/sqrt(3)).eigenvals() == {0: 8}
 
 def test_linearize_pendulum_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
@@ -207,7 +206,7 @@ def test_linearize_pendulum_nonminimal():
     # Configuration constraint is length of pendulum
     f_c = Matrix([P.pos_from(pN).magnitude() - L])
 
-    # Velocity constraint is that the velocity in the A.x direction is 
+    # Velocity constraint is that the velocity in the A.x direction is
     # always zero (the pendulum is never getting longer).
     f_v = Matrix([P.vel(N).express(A).dot(A.x)])
     f_v.simplify()
@@ -220,8 +219,8 @@ def test_linearize_pendulum_nonminimal():
     R = m*g*N.x
 
     # Derive the equations of motion using the KanesMethod class.
-    KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], q_dependent=[q2], 
-            u_dependent=[u2], configuration_constraints=f_c, 
+    KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], q_dependent=[q2],
+            u_dependent=[u2], configuration_constraints=f_c,
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
     kdd = KM.kindiffdict()
@@ -229,9 +228,8 @@ def test_linearize_pendulum_nonminimal():
     # Set the trim condition to be straight down, and non-moving
     q_trim = {q1: L, q2: 0}
     u_trim = {u1: 0, u2: 0}
-    
+
     linearizer = KM.to_linearizer()
     A, B = linearizer.linearize(q_trim, u_trim, A_and_B=True)
     # TODO: This results in some nan and zoo (complex infinity) terms.
     # I don't think it should at this trim condition, but I could be wrong
-

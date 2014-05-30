@@ -551,7 +551,7 @@ class KanesMethod(object):
 
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = self._f_k.subs(u_zero) + self._k_kqdot*Matrix(self._qdot)
-        f_1 = self._f_k.subs(qd_zero) + self._k_ku*Matrix(self._u) 
+        f_1 = self._f_k.subs(qd_zero) + self._k_ku*Matrix(self._u)
 
         # Break the dynamic differential eqs into f_2 and f_3
         f_2 = _subs_keep_derivs(self._frstar, qd_u_zero)
@@ -571,7 +571,7 @@ class KanesMethod(object):
         q_d = self._qdep
         u_i = self._u[:-len(self._udep)]
         u_d = self._udep
-        
+
         # Form dictionary of auxiliary speeds & and their derivatives,
         # setting each to 0.
         uaux = self._uaux
@@ -596,7 +596,7 @@ class KanesMethod(object):
             if diff(i, dynamicsymbols._t) in r:
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
-        return Linearizer(f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, q_i, q_d, 
+        return Linearizer(f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, q_i, q_d,
                 u_i, u_d, r)
 
     def kanes_equations(self, FL, BL):

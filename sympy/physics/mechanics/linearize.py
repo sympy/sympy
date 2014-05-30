@@ -4,14 +4,14 @@ __all__ = ['Linearizer']
 
 from sympy import Matrix, eye, zeros
 from sympy.utilities.iterables import flatten
-from sympy.physics.vector import dynamicsymbols 
+from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import _subs_keep_derivs
 
 class Linearizer(object):
     """ This object holds the general model form used as an intermediate
     for the linearize functions"""
 
-    def __init__(self, f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, 
+    def __init__(self, f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u,
             q_i=[], q_d=[], u_i=[], u_d=[], r=[]):
         # Generalized equation form
         self.f_0 = f_0
@@ -36,10 +36,7 @@ class Linearizer(object):
         self.qd = self.q.diff(t)
         self.ud = self.u.diff(t)
 
-    def check_setpoint(self, q_trim, u_trim, r_trim):
-        pass
-
-    def linearize(self, q_trim=None, u_trim=None, qd_trim=None, ud_trim=None, A_and_B=False):
+    def linearize(self, q_trim=None, u_trim=None, qd_trim=None, ud_trim=None, r_trim=None, A_and_B=False):
         """ Linearize the system about the trim conditions. Note that
         q_trim, u_trim, qd_trim, ud_trim must satisfy the equations of motion.
         These may be either symbolic or numeric.
@@ -50,6 +47,7 @@ class Linearizer(object):
         u_trim : dict
         qd_trim : dict
         ud_trim : dict
+        r_trim : dict
             Dictionaries of the trim conditions. These will be substituted in to
             the linearized system before the linearization is complete. Leave blank
             if you want a completely symbolic form. Note that any reduction in symbols
@@ -57,7 +55,7 @@ class Linearizer(object):
             result in faster runtime.
 
         A_and_B : bool
-            If set to True, A and B for forming dx = [A]x + [B]r will returned, 
+            If set to True, A and B for forming dx = [A]x + [B]r will returned,
             where x = [q_ind, u_ind]^T. If set to False, M, A, and B for forming
             [M]x = [A]x + [B]r will be returned. Default is False. """
 
@@ -117,7 +115,7 @@ class Linearizer(object):
         A_uqd = -(f_2 + f_3).jacobian(q)
         A_uud = -f_3.jacobian(u)
 
-        # Build up Mass Matrix 
+        # Build up Mass Matrix
         #     |M_qq    0_nxo|
         # M = |M_uqc   M_uuc|
         #     |M_uqd   M_uud|
@@ -139,7 +137,7 @@ class Linearizer(object):
         C_2 = (eye(o) - Pud * (f_v_jac_u * Pud).inv() * f_v_jac_u) * Pui
 
         # Build up state coefficient matrix A
-        #     |(A_qq + A_qu*C_1)*C_0      A_qu*C_2|
+        #     |(A_qq + A_qu*C_1)*C_0       A_qu*C_2|
         # A = |(A_uqc + A_uuc*C_1)*C_0    A_uuc*C_2|
         #     |(A_uqd + A_uud*C_1)*C_0    A_uud*C_2|
         row1 = ((A_qq + A_qu * C_1) * C_0).row_join(A_qu * C_2)
@@ -162,11 +160,14 @@ class Linearizer(object):
         # kwarg A_and_B indicates to return  A, B for forming the equation
         # dx = [A]x + [B]r, where x = [q_ind, u_ind]^T,
         if A_and_B:
+            P_row1 = Pqi.row_join(zeros(n, o - m))
+            P_row2 = zeros(o, n - l).row_join(Pui)
+            P = P_row1.col_join(P_row2)
             Minv = M_eq.inv()
-            A_cont = Minv*Amat_eq
+            A_cont = P.T*Minv*Amat_eq
             A_cont.simplify()
             if Bmat_eq:
-                B_cont = Minv*Bmat_eq
+                B_cont = P.T*Minv*Bmat_eq
                 B_cont.simplify()
             else:
                 B_cont = Bmat_eq
@@ -179,8 +180,8 @@ class Linearizer(object):
 
 def permutation_matrix(orig_vec, per_vec):
     """ Compute the permutation matrix to change order of
-    orig_vec into order of per_vec 
-    
+    orig_vec into order of per_vec
+
     Parameters
     ==========
     orig_vec : Vector or List
@@ -196,4 +197,3 @@ def permutation_matrix(orig_vec, per_vec):
     for i, j in enumerate(per_list):
         p_matrix[i, j] = 1
     return p_matrix
-
