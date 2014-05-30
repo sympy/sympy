@@ -1,7 +1,7 @@
 from collections import defaultdict
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
-    factorial as fac, pi, GoldenRatio as phi
+    factorial as fac, pi, GoldenRatio as phi, sqrt
 from sympy.core.numbers import Integer, igcd, Rational
 from sympy.core.compatibility import long
 
@@ -22,7 +22,8 @@ from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 from sympy.ntheory.continued_fraction import \
     (continued_fraction_periodic as cf_p,
      continued_fraction_iterator as cf_i,
-     continued_fraction_convergents as cf_c)
+     continued_fraction_convergents as cf_c,
+     continued_fraction_reduce as cf_r)
 from sympy.ntheory.egyptian_fraction import egyptian_fraction
 
 from fractions import Fraction
@@ -796,6 +797,13 @@ def test_continued_fraction():
     assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), S(3)/2, S(5)/3,
                                                  S(8)/5, S(13)/8, S(21)/13]
     assert list(cf_c([1, 6, S(-1)/2, 4])) == [S.One, S(7)/6, S(5)/4, S(3)/2]
+
+    assert cf_r([1, 6, 1, 8]) == S(71)/62
+    assert cf_r([3]) == S(3)
+    assert cf_r([-1, 5, 1, 4]) == S(-24)/29
+    assert (cf_r([0, 1, 1, 7, [24, 8]]) - (sqrt(3) + 2)/7).expand() == 0
+    assert cf_r([1, 5, 9]) == S(55)/46
+    assert (cf_r([[1]]) - (sqrt(5) + 1)/2).expand() == 0
 
 
 def test_egyptian_fraction():
