@@ -6427,7 +6427,6 @@ def sysode_linear_2eq_order2(match_):
     for i in range(2):
         eqs = 0
         for terms in Add.make_args(eq[i]):
-<<<<<<< HEAD
             eqs += terms/fc[i,func[i],2]
         eq[i] = eqs
     # for equations Eq(diff(x(t),t,t), a1*diff(x(t),t)+b1*diff(y(t),t)+c1*x(t)+d1*y(t)+e1)
@@ -6436,29 +6435,13 @@ def sysode_linear_2eq_order2(match_):
     r['b1'] = -fc[0,y(t),1]/fc[0,x(t),2] ; r['b2'] = -fc[1,y(t),1]/fc[1,y(t),2]
     r['c1'] = -fc[0,x(t),0]/fc[0,x(t),2] ; r['c2'] = -fc[1,x(t),0]/fc[1,y(t),2]
     r['d1'] = -fc[0,y(t),0]/fc[0,x(t),2] ; r['d2'] = -fc[1,y(t),0]/fc[1,y(t),2]
-=======
-            eqs += terms/fc[i,func[i],1]
-        eq[i] = eqs
-
-    # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
-    # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
-    r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,x(t),1]
-    r['b1'] = fc[0,y(t),1] ; r['b2'] = fc[1,y(t),1]
-    r['c1'] = fc[0,x(t),0] ; r['c2'] = fc[1,x(t),0]
-    r['d1'] = fc[0,y(t),0] ; r['d2'] = fc[1,y(t),0]
->>>>>>> Added first method for linear system 2nd order 2eqs
     const = [S(0), S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
             if not (j.has(x(t)) or j.has(y(t))):
                 const[i] += j
-<<<<<<< HEAD
     r['e1'] = -const[0]
     r['e2'] = -const[1]
-=======
-    r['e1'] = const[0]
-    r['e2'] = const[1]
->>>>>>> Added first method for linear system 2nd order 2eqs
     if match_['type_of_equation'] == 'type1':
         sol = _linear_2eq_order2_type1(x, y, t, r)
     elif match_['type_of_equation'] == 'type2':
@@ -6493,10 +6476,6 @@ def _linear_2eq_order2_type1(x, y, t, r):
     l = Symbol('l')
     C1, C2, C3, C4 = symbols('C1:5')
     chara_eq = l**4 - (r['a']+r['d'])*l**2 + r['a']*r['d'] - r['b']*r['c']
-<<<<<<< HEAD
-=======
-    print(chara_eq)
->>>>>>> Added first method for linear system 2nd order 2eqs
     l1 = RootOf(chara_eq, 0)
     l2 = RootOf(chara_eq, 1)
     l3 = RootOf(chara_eq, 2)
@@ -6504,29 +6483,18 @@ def _linear_2eq_order2_type1(x, y, t, r):
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D != 0:
-<<<<<<< HEAD
             gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t) + C3*r['b']*exp(l3*t) \
             + C4*r['b']*exp(l4*t)
             gsol2 = C1*(l1**2-r['a'])*exp(l1*t) + C2*(l2**2-r['a'])*exp(l2*t) + \
             C3*(l3**2-r['a'])*exp(l3*t) + C4*(l4**2-r['a'])*exp(l4*t)
-=======
-            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t) + C3*r['b']*exp(l3*t) + C4*r['b']*exp(l4*t)
-            gsol2 = C1*(l1**2-r['a'])*exp(l1*t) + C2*(l2**2-r['a'])*exp(l2*t) + C3*(l3**2-r['a'])*exp(l3*t) + C4*(l4**2-r['a'])*exp(l4*t)
->>>>>>> Added first method for linear system 2nd order 2eqs
         else:
             if r['a'] != r['d']:
                 k = sqrt(2*(r['a']+r['d']))
                 mid = r['b']*t+2*r['b']*k/(r['a']-r['d'])
-<<<<<<< HEAD
                 gsol1 = 2*C1*mid*exp(k*t/2) + 2*C2*mid*exp(-k*t/2) + \
                 2*r['b']*C3*t*exp(k*t/2) + 2*r['b']*C4*t*exp(-k*t/2)
                 gsol2 = C1*(r['d']-r['a'])*t*exp(k*t/2) + C2*(r['d']-r['a'])*t*exp(-k*t/2) + \
                 C3*((r['d']-r['a'])*t+2*k)*exp(k*t/2) + C4*((r['d']-r['a'])*t-2*k)*exp(-k*t/2)
-=======
-                gsol1 = 2*C1*mid*exp(k*t/2)+2*C2*mid*exp(-k*t/2)+2*r['b']*C3*t*exp(k*t/2)+2*r['b']*C4*t*exp(-k*t/2)
-                gsol2 = C1*(r['d']-r['a'])*t*exp(k*t/2)+C2*(r['d']-r['a'])*t*exp(-k*t/2)+ \
-                C3*((r['d']-r['a'])*t+2*k)*exp(k*t/2)+C4*((r['d']-r['a'])*t-2*k)*exp(-k*t/2)
->>>>>>> Added first method for linear system 2nd order 2eqs
             elif r['a'] == r['d'] != 0 and r['b'] == 0:
                 sa = sqrt(r['a'])
                 gsol1 = 2*sa*C1*exp(sa*t) + 2*sa*C2*exp(-sa*t)
@@ -6566,6 +6534,7 @@ def _linear_2eq_order2_type2(x, y, t, r):
             psol = [psol1, psol2]
     return psol
 
+<<<<<<< HEAD
 
 def _linear_2eq_order2_type3(x, y, t, r):
     C1, C2, C3, C4 = symbols('C1:5')
@@ -6873,33 +6842,3 @@ def _linear_neq_order1_type1(match_):
     for i in range(len(eq)):
         sol.append(Eq(func[i],e_vector[i]))
     return sol
-=======
-    return None
-
-def _linear_2eq_order2_type3(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type4(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type5(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type6(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type7(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type8(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type9(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type10(x, y, t, r):
-    return None
-
-def _linear_2eq_order2_type11(x, y, t, r):
-    return None
->>>>>>> Added first method for linear system 2nd order 2eqs
