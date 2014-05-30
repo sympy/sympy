@@ -2779,7 +2779,8 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     recurr = Function("r")
 
     # Generating the recurrence relation which works this way
-    # a] For the second order term the summation begins at n = 2. The coefficient    # p is multiplied with an*(n - 1)*(n - 2)*x**n-2 and a substitution is made such that
+    # a] For the second order term the summation begins at n = 2. The coefficients
+    # p is multiplied with an*(n - 1)*(n - 2)*x**n-2 and a substitution is made such that
     # the exponent of x becomes n.
     # For example, if p is x, then the second degree recurrence term is
     # an*(n - 1)*(n - 2)*x**n-1, substituting (n - 1) as n, it transforms to
