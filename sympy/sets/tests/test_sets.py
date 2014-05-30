@@ -443,9 +443,9 @@ def test_FiniteSet_is_homogeneous():
     f = FiniteSet(FiniteSet(6, 8), FiniteSet(4, 3), FiniteSet(5, 2), FiniteSet(2, 3))
     g = FiniteSet(FiniteSet(2, 3), FiniteSet(2, FiniteSet(3, 2)))
     x = FiniteSet(FiniteSet(FiniteSet(2, 5), 3, 8), FiniteSet(2, 3, FiniteSet(7, 8)))
-    assert f.is_homogeneous == True
-    assert g.is_homogeneous == False
-    assert x.is_homogeneous == True
+    assert f.is_homogeneous is True
+    assert g.is_homogeneous is False
+    assert x.is_homogeneous is True
 
 
 def test_finite_basic():
