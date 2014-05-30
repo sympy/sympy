@@ -1534,9 +1534,10 @@ class FiniteSet(Set, EvalfMixin):
     def measure(self):
         return 0
 
-    def _get_list(f, o):
+    def _get_list(self, f, o):
         if(isinstance(o, Iterable)):
-            return type(o)(_get_list(f, value) for value in o)
+            o = list(o)
+            return type(o)(self._get_list(f, value) for value in o)
         else:
             return f(o)
 
@@ -1544,20 +1545,20 @@ class FiniteSet(Set, EvalfMixin):
     def is_homogeneous(self):
         """
         Checks if a set is homogeneous.
-        
+
         >>> from sympy import FiniteSet
-        >>> FiniteSet(1, 2, FiniteSet(4, 3)).is_homogeneous()
+        >>> FiniteSet(6, 2, FiniteSet(4, 3)).is_homogeneous
         False
-        >>> FiniteSet(FiniteSet(2, 4), FiniteSet(8, 9)).is_homogeneous()
+        >>> FiniteSet(FiniteSet(2, 4), FiniteSet(8, 9)).is_homogeneous
         True
 
 
         """
         for elem in self:
-            firstType = _get_list(lambda o: type(o).__name__, elem)
+            firstType = self._get_list(lambda o: type(o).__name__, elem)
             break
         for elem in self:
-            if(Counter(firstType) != Counter(tree_map(lambda o: type(o).__name__, elem))):
+            if(Counter(firstType) != Counter(self._get_list(lambda o: type(o).__name__, elem))):
                 return False
         return True
 

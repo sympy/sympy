@@ -440,8 +440,8 @@ def test_EmptySet_as_relational():
 
 
 def test_FiniteSet_is_homogeneous():
-    f = FiniteSet((0, 0), (0, 3), (5, 0), (2, 3))
-    g = FiniteSet(FiniteSet(2, 3), FiniteSet(2, FiniteSet(1, 2)))
+    f = FiniteSet(FiniteSet(6, 8), FiniteSet(4, 3), FiniteSet(5, 2), FiniteSet(2, 3))
+    g = FiniteSet(FiniteSet(2, 3), FiniteSet(2, FiniteSet(3, 2)))
     x = FiniteSet(FiniteSet(FiniteSet(2, 5), 3, 8), FiniteSet(2, 3, FiniteSet(7, 8)))
     assert f.is_homogeneous == True
     assert g.is_homogeneous == False
