@@ -141,9 +141,14 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Not(self, e):
+        from sympy import Equivalent, Implies
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
+            if isinstance(arg, Equivalent):
+                return self._print_Equivalent(arg, altchar="\u226d")
+            if isinstance(arg, Implies):
+                return self._print_Implies(arg, altchar="\u219b")
 
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
@@ -203,14 +208,18 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e, sort=True)
 
-    def _print_Implies(self, e):
+    def _print_Implies(self, e, altchar=None):
         if self._use_unicode:
+            if altchar:
+                return self.__print_Boolean(e, u(altchar), sort=False)
             return self.__print_Boolean(e, u("\u2192"), sort=False)
         else:
             return self._print_Function(e)
 
-    def _print_Equivalent(self, e):
+    def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
+            if altchar:
+                return self.__print_Boolean(e, u(altchar))
             return self.__print_Boolean(e, u("\u2261"))
         else:
             return self._print_Function(e, sort=True)
