@@ -711,6 +711,11 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
+        from sympy import Equivalent, Implies
+        if isinstance(e.args[0], Equivalent):
+            return self._print_Equivalent(e.args, "\not\Leftrightarrow")
+        if isinstance(e.args[0], Implies):
+            return self._print_Implies(e.args, "\not\Rightarrow")
         if (e.args[0].is_Boolean):
             return r"\neg (%s)" % self._print(e.args[0])
         else:
@@ -748,10 +753,14 @@ class LatexPrinter(Printer):
 
         return tex
 
-    def _print_Implies(self, e):
+    def _print_Implies(self, e, altchar=None):
+        if altchar:
+            return r"%s %s %s" % (self._print(e.args[0]), altchar, self._print(e.args[1]))
         return r"%s \Rightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
 
-    def _print_Equivalent(self, e):
+    def _print_Equivalent(self, e, altchar=None):
+        if altchar:
+            return r"%s %s %s" % (self._print(e.args[0]), altchar, self._print(e.args[1]))
         return r"%s \Leftrightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
 
     def _print_conjugate(self, expr, exp=None):
