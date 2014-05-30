@@ -1535,10 +1535,13 @@ class FiniteSet(Set, EvalfMixin):
         return 0
 
     def _get_list(self, f, o):
-        if(isinstance(o, Iterable)):
-            o = list(o)
-            return type(o)(self._get_list(f, value) for value in o)
-        else:
+        try:
+            if(isinstance(o, Iterable)):
+                o = list(o)
+                return type(o)(self._get_list(f, value) for value in o)
+            else:
+                return f(o)
+        except TypeError:
             return f(o)
 
     @property
