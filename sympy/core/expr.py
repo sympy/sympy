@@ -2649,17 +2649,26 @@ class Expr(Basic, EvalfMixin):
                      nseries calls it.""" % self.func)
                      )
 
-    def aseries(self, x, n=6, logx=None, hir=False):
+    def aseries(self, x, n=6, logx=None, bound=0, hir=False):
         """
-        MrvAsympt algorithm to compute asymptotic expansion
         This algorithm is directly induced from the limit computational algorithm
         provided by Gruntz. It majorly uses the mrv and rewrite sub-routines.
+        The overall idea of this algorithm is first to look for the most
+        rapidly varying subexpression w of a given expression f and then expands f
+        in a series in w. Then same thing is recursively done on the leading coefficient
+        till we get constant coefficients.
 
         Use the ``hir`` parameter to produce hierarchical series. It stops the recursion
         at an early level and may provide nicer and more useful results.
 
+        If the most rapidly varrying subexpression of a given expression f is f itself,
+        the algorithm tries to find a normalised representation of the mrv set and rewrites f
+        using this normalised representation.
+        Use the ``bound`` parameter to give limit on rewriting coefficients in its normalised form.
+
         Examples
         ========
+
         >>> from sympy.abc import x, y
         >>> e = sin(1/x + exp(-x)) - sin(1/x)
         >>> e.aseries(x)
@@ -2667,32 +2676,40 @@ class Expr(Basic, EvalfMixin):
         >>> e.aseries(x, n=3, hir=True)
         -exp(-2*x)*sin(1/x)/2 + exp(-x)*cos(1/x) + O(exp(-3*x), (x, oo))
 
+        >>> e = exp(exp(x)/(1 - 1/x))
+        >>> e.aseries(x, bound=3)
+        exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
+        >>> e.aseries(x)
+        exp(exp(x)/(1 - 1/x))
+
+
         References
         ==========
-        [1] A New Algorithm for Computing Asymptotic Series - Dominik Gruntz
-        [2] Gruntz thesis - p90
+
+        .. [1] A New Algorithm for Computing Asymptotic Series - Dominik Gruntz
+        .. [2] Gruntz thesis - p90
+        .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
 
         """
         from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
         from sympy.functions import exp, log
 
         omega, exps = mrv(self, x)
-        for t in omega.keys():
-            if t.func is not exp:
-                return self.subs(x, exp(x)).aseries(x, n, logx, hir).subs(x, log(x))
+        if x in omega:
+            return self.subs(x, exp(x)).aseries(x, n, logx, hir).subs(x, log(x))
         d = C.Dummy('d', positive=True)
         f, logw = rewrite(exps, omega, x, d)
-        if exp(-logw) == self or exp(logw) == self:
-            # Need to find a canonical representative
-            if self.args[0].func is exp:
-                # This will lead to an infinite recursion
-                # We proceed by returning an unchanged expression
-                return self
-            else:
-                # TODO: rewrite self in terms of f
-                (c0, e0) = mrv_leadterm(self.args[0], x)
-                f = exp(c0*x**-e0)
 
+        if self in omega:
+            # Need to find a canonical representative
+            if bound <= 0:
+                return self
+            a = self.args[0]
+            s = a.aseries(x, bound=3)
+            s = s.func(*[t.removeO() for t in s.args])
+            rep = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
+            f = exp(self.args[0] - rep.args[0]) / d
+            logw = log(1/rep)
 
         s = f.series(d, 0, n, logx=logx)
         # Hierarchical series: break after first recursion
@@ -2700,7 +2717,11 @@ class Expr(Basic, EvalfMixin):
             return s.subs(d, exp(logw))
 
         o = s.getO()
-        terms = s.removeO().args
+        s = s.removeO()
+        if s.func is Add:
+            terms = s.args
+        else:
+            terms = [s]
         def pow_cmp(x, y):
             return int(x.as_coeff_exponent(d)[1] - y.as_coeff_exponent(d)[1])
         terms = sorted(terms, cmp=pow_cmp)
@@ -2710,7 +2731,7 @@ class Expr(Basic, EvalfMixin):
         for t in terms:
             coeff, expo = t.as_coeff_exponent(d)
             if coeff.has(x):
-                s1 = coeff.series(x, S.Infinity, n, logx=logx)
+                s1 = coeff.aseries(x, n, logx, bound=bound-1)
                 s += (s1 * d**expo)
                 if s1.getO():
                     gotO = True

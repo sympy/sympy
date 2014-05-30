@@ -9,6 +9,8 @@ from sympy.utilities.pytest import raises, XFAIL
 def test_simple():
     e = sin(1/x + exp(-x)) - sin(1/x)
     assert e.aseries(x) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+    assert e.series(x, oo) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+
     e = exp(exp(x)) * (exp(sin(1/x + 1/exp(exp(x)))) - exp(sin(1/x)))
     assert e.aseries(x, n=4) == -1/(2*x**3) + 1/x + 1 + O(x**(-4), (x, oo))
     e = exp(x) * (exp(1/x + exp(-x)) - exp(1/x))
@@ -16,9 +18,14 @@ def test_simple():
     e = exp(sin(1/x + exp(-exp(x)))) - exp(sin(1/x))
     assert e.aseries(x, n=4) == (-1/(2*x**3) + 1/x + 1 + O(x**(-4), (x, oo)))*exp(-exp(x))
 
+    e = exp(exp(x)/(1 - 1/x))
+    assert e.aseries(x) == exp(exp(x)/(1 - 1/x))
+    assert e.aseries(x, bound=3) == exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - \
+            exp(x)/x - exp(x)/x**2)*exp(exp(x))
+
     n = Symbol('n', integer=True)
     e = (sqrt(n)*log(n)**2*exp(sqrt(log(n))*log(log(n))**2*exp(sqrt(log(log(n)))*log(log(log(n)))**3)))/n
-    assert e.aseries(n) == log(n)**2 + exp(exp(sqrt(log(log(n)))*log(log(log(n)))**3)*sqrt(log(n))*log(log(n))**2)/sqrt(n)
+    assert e.aseries(n) == exp(exp(sqrt(log(log(n)))*log(log(log(n)))**3)*sqrt(log(n))*log(log(n))**2)*log(n)**2/sqrt(n)
 
 
 # TODO: add test cases involving special functions
