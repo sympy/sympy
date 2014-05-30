@@ -1457,11 +1457,13 @@ class FiniteSet(Set, EvalfMixin):
     is_iterable = True
 
     def __new__(cls, *args, **kwargs):
+        import types
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         if evaluate:
-            if len(args) == 1 and iterable(args[0]) and \
-               not isinstance(args[0], Set):
+            if len(args) == 1 and (isinstance(args[0], list) or
+                                   isinstance(args[0], types.GeneratorType)):
                 args = args[0]
+
             args = list(map(sympify, args))
 
             if len(args) == 0:
@@ -1599,7 +1601,7 @@ class FiniteSet(Set, EvalfMixin):
         return sorted(self.args, key=default_sort_key)
 
     def _eval_powerset(self):
-        return self.func(self.func(s) for s in subsets(self.args))
+        return self.func(self.func(list(s)) for s in subsets(self.args))
 
     def __ge__(self, other):
         return other.is_subset(self)

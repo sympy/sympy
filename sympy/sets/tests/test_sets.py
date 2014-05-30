@@ -476,6 +476,7 @@ def test_finite_basic():
     # issue 7335
     assert FiniteSet(EmptySet()) != EmptySet()
     assert FiniteSet(FiniteSet(1, 2, 3)) != FiniteSet(1, 2, 3)
+    assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
     S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
