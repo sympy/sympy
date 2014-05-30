@@ -6396,22 +6396,22 @@ def sysode_linear_2eq_order2(match_):
     for i in range(2):
         eqs = 0
         for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],1]
+            eqs += terms/fc[i,func[i],2]
         eq[i] = eqs
 
     # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
-    r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,x(t),1]
-    r['b1'] = fc[0,y(t),1] ; r['b2'] = fc[1,y(t),1]
-    r['c1'] = fc[0,x(t),0] ; r['c2'] = fc[1,x(t),0]
-    r['d1'] = fc[0,y(t),0] ; r['d2'] = fc[1,y(t),0]
+    r['a1'] = -fc[0,x(t),1] ; r['a2'] = -fc[1,x(t),1]
+    r['b1'] = -fc[0,y(t),1] ; r['b2'] = -fc[1,y(t),1]
+    r['c1'] = -fc[0,x(t),0] ; r['c2'] = -fc[1,x(t),0]
+    r['d1'] = -fc[0,y(t),0] ; r['d2'] = -fc[1,y(t),0]
     const = [S(0), S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
             if not (j.has(x(t)) or j.has(y(t))):
                 const[i] += j
-    r['e1'] = const[0]
-    r['e2'] = const[1]
+    r['e1'] = -const[0]
+    r['e2'] = -const[1]
     if match_['type_of_equation'] == 'type1':
         sol = _linear_2eq_order2_type1(x, y, t, r)
     elif match_['type_of_equation'] == 'type2':
@@ -6446,7 +6446,6 @@ def _linear_2eq_order2_type1(x, y, t, r):
     l = Symbol('l')
     C1, C2, C3, C4 = symbols('C1:5')
     chara_eq = l**4 - (r['a']+r['d'])*l**2 + r['a']*r['d'] - r['b']*r['c']
-    print(chara_eq)
     l1 = RootOf(chara_eq, 0)
     l2 = RootOf(chara_eq, 1)
     l3 = RootOf(chara_eq, 2)
@@ -6483,7 +6482,23 @@ def _linear_2eq_order2_type1(x, y, t, r):
     return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
 
 def _linear_2eq_order2_type2(x, y, t, r):
-    return None
+    x0, y0 = symbols('x0, y0')
+    if r['c1']*r['d2'] - r['c2']*r['d1'] != 0:
+        sol = solve((r['c1']*x0+r['d1']*y0+r['e1'], r['c2']*x0+r['d2']*y0+r['e2']), x0, y0)
+        psol = [sol[x0], sol[y0]]
+    elif r['c1']*r['d2'] - r['c2']*r['d1'] == 0 and (r['c1']**2 + r['d1']**2) > 0:
+        k = r['c2']/r['c1']
+        sig = r['c1'] + r['d1']*k
+        if sig != 0:
+            psol1 = r['d1']*sig**-1*(r['e1']*k-r['e2'])*t**2/2 - sig**-2*(r['c1']*r['e1']+r['d1']*r['e2'])
+            psol2 = k*psol1  + (r['e2'] - r['e1']*k)*t**2/2
+            psol = [psol1, psol2]
+        else:
+            psol1 = r['d1']*(r['e2']-r['e1']*k)*t**4/24 + r['e1']*t**2/2
+            psol2 = k*psol1 + (r['e2']-r['e1']*k)*t**2/2
+            psol = [psol1, psol2]
+    return psol
+
 
 def _linear_2eq_order2_type3(x, y, t, r):
     return None
