@@ -1459,9 +1459,9 @@ class FiniteSet(Set, EvalfMixin):
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         if evaluate:
-            if len(args) == 1 and iterable(args[0]):
+            if len(args) == 1 and iterable(args[0]) and \
+               not isinstance(args[0], Set):
                 args = args[0]
-
             args = list(map(sympify, args))
 
             if len(args) == 0:

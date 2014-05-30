@@ -1,6 +1,6 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E, EmptySet
 )
 from sympy.mpmath import mpi
 
@@ -472,6 +472,10 @@ def test_finite_basic():
     assert AorB.inf == 1 and AorB.sup == 5
     assert FiniteSet(x, 1, 5).sup == Max(x, 5)
     assert FiniteSet(x, 1, 5).inf == Min(x, 1)
+
+    # issue 7335
+    assert FiniteSet(EmptySet()) != EmptySet()
+    assert FiniteSet(FiniteSet(1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
     S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
