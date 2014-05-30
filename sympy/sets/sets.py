@@ -1319,8 +1319,8 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return 0
 
     @property
-    def is_homogenous(self):
-        """EmptySet is homogenous"""
+    def is_homogeneous(self):
+        """EmptySet is homogeneous"""
         return True
 
     def _contains(self, other):
