@@ -15,4 +15,5 @@ from .multinomial import binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients
 from .continued_fraction import continued_fraction_periodic, \
     continued_fraction_iterator, continued_fraction_rational, \
-    continued_fraction_convergents
+    continued_fraction_convergents, continued_fraction_periodic_iterator, \
+    continued_fraction_quadratic
