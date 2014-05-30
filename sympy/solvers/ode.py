@@ -233,7 +233,6 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import islice
 
-from sympy import I
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -241,7 +240,7 @@ from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational, NaN, zoo
+from sympy.core.numbers import Rational, NaN, zoo, I
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
@@ -1490,7 +1489,101 @@ def check_linear_2eq_order1(eq, func, func_coef):
                 return "type7"
 
 def check_linear_2eq_order2(eq, func, func_coef):
-    return None
+    x = func[0].func
+    y = func[1].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    r = dict()
+    a = Wild('a', exclude=[1/t])
+    b = Wild('b', exclude=[1/t**2])
+    u = Wild('u', exclude=[t, t**2])
+    v = Wild('v', exclude=[t, t**2])
+    w = Wild('w', exclude=[t, t**2])
+    p = Wild('p', exclude=[t, t**2])
+    r['a1'] = fc[0,x(t),2] ; r['a2'] = fc[1,y(t),2]
+    r['b1'] = fc[0,x(t),1] ; r['b2'] = fc[1,x(t),1]
+    r['c1'] = fc[0,y(t),1] ; r['c2'] = fc[1,y(t),1]
+    r['d1'] = fc[0,x(t),0] ; r['d2'] = fc[1,x(t),0]
+    r['e1'] = fc[0,y(t),0] ; r['e2'] = fc[1,y(t),0]
+    const = [S(0), S(0)]
+    for i in range(2):
+        for j in Add.make_args(eq[i]):
+            if not (j.has(x(t)) or j.has(y(t))):
+                const[i] += j
+    r['f1'] = const[0]
+    r['f2'] = const[1]
+    if r['f1']!=0 or r['f2']!=0:
+        if all(not r[k].has(t) for k in 'a1 a2 d1 d2 e1 e2 f1 f2'.split()) \
+        and r['b1']==r['c1']==r['b2']==r['c2']==0:
+            return "type2"
+
+        elif all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2 d1 d2 e1 e1'.split()):
+            p = [S(0), S(0)] ; q = [S(0), S(0)]
+            for n, e in enumerate([r['f1'], r['f2']]):
+                if e.has(t):
+                    tpart = e.as_independent(t, Mul)[1]
+                    for i in Mul.make_args(tpart):
+                        if i.has(exp):
+                            b, e = i.as_base_exp()
+                            co = e.coeff(t)
+                            if co and not co.has(t) and co.has(I):
+                                p[n] = 1
+                            else:
+                                q[n] = 1
+                        else:
+                            q[n] = 1
+                else:
+                    q[n] = 1
+
+            if p[0]==1 and p[1]==1 and q[0]==0 and q[1]==0:
+                    return "type4"
+            else:
+                return None
+        else:
+            return None
+    else:
+        if r['b1']==r['b2']==r['c1']==r['c2']==0 and all(not r[k].has(t) \
+        for k in 'a1 a2 d1 d2 e1 e2'.split()):
+            return "type1"
+
+        elif r['b1']==r['e1']==r['c2']==r['d2']==0 and all(not r[k].has(t) \
+        for k in 'a1 a2 b2 c1 d1 e2'.split()):
+            return "type3"
+
+        elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
+        (r['d2']/r['a2']).has(t) and not (r['e1']/r['a1']).has(t) and \
+        r['b1']==r['d1']==r['c2']==r['e2']==0:
+            return "type5"
+
+        elif ((r['a1']/r['d1']).expand()).match((p*(u*t**2+v*t+w)**2).expand()) and not \
+        (cancel(r['a1']*r['d2']/(r['a2']*r['d1']))).has(t) and not (r['d1']/r['e1']).has(t) and not \
+        (r['d2']/r['e2']).has(t) and r['b1'] == r['b2'] == r['c1'] == r['c2'] == 0:
+            return "type10"
+
+        elif not cancel(r['d1']/r['e1']).has(t) and not cancel(r['d2']/r['e2']).has(t) and not \
+        cancel(r['d1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['b1']==r['b2']==r['c1']==r['c2']==0:
+            return "type6"
+
+        elif not cancel(r['b1']/r['c1']).has(t) and not cancel(r['b2']/r['c2']).has(t) and not \
+        cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
+            return "type7"
+
+        elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
+        cancel(r['e1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['e1'].has(t) \
+        and r['b1']==r['d1']==r['c2']==r['e2']==0:
+            return "type8"
+
+        elif (r['b1']/r['a1']).match(a/t) and (r['b2']/r['a2']).match(a/t) and not \
+        (r['b1']/r['c1']).has(t) and not (r['b2']/r['c2']).has(t) and \
+        (r['d1']/r['a1']).match(b/t**2) and (r['d2']/r['a2']).match(b/t**2) \
+        and not (r['d1']/r['e1']).has(t) and not (r['d2']/r['e2']).has(t):
+            return "type9"
+
+        elif -r['b1']/r['d1']==-r['c1']/r['e1']==-r['b2']/r['d2']==-r['c2']/r['e2']==t:
+            return "type11"
+
+        else:
+            return None
 
 def check_linear_3eq_order1(eq, func, func_coef):
     return None
@@ -6289,3 +6382,132 @@ def _linear_2eq_order1_type7(x, y, t, r):
         sol1 = C1*x0 + C2*x0*C.Integral(r['b']*F*P/x0**2, t)
         sol2 = C1*y0 + C2(F*P/x0 + y0*C.Integral(r['b']*F*P/x0**2, t))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
+
+
+def sysode_linear_2eq_order2(match_):
+    C1, C2, C3, C4 = symbols('C1:5')
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    func = match_['func']
+    fc = match_['func_coeff']
+    eq = match_['eq']
+    r = dict()
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+
+    # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
+    # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
+    r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,x(t),1]
+    r['b1'] = fc[0,y(t),1] ; r['b2'] = fc[1,y(t),1]
+    r['c1'] = fc[0,x(t),0] ; r['c2'] = fc[1,x(t),0]
+    r['d1'] = fc[0,y(t),0] ; r['d2'] = fc[1,y(t),0]
+    const = [S(0), S(0)]
+    for i in range(2):
+        for j in Add.make_args(eq[i]):
+            if not (j.has(x(t)) or j.has(y(t))):
+                const[i] += j
+    r['e1'] = const[0]
+    r['e2'] = const[1]
+    if match_['type_of_equation'] == 'type1':
+        sol = _linear_2eq_order2_type1(x, y, t, r)
+    elif match_['type_of_equation'] == 'type2':
+        gsol = _linear_2eq_order2_type1(x, y, t, r)
+        psol = _linear_2eq_order2_type2(x, y, t, r)
+        sol = [Eq(x(t), gsol[0].rhs+psol[0]), Eq(y(t), gsol[1].rhs+psol[1])]
+    elif match_['type_of_equation'] == 'type3':
+        sol = _linear_2eq_order2_type3(x, y, t, r)
+    elif match_['type_of_equation'] == 'type4':
+        sol = _linear_2eq_order2_type4(x, y, t, r)
+    elif match_['type_of_equation'] == 'type5':
+        sol = _linear_2eq_order2_type5(x, y, t, r)
+    elif match_['type_of_equation'] == 'type6':
+        sol = _linear_2eq_order2_type6(x, y, t, r)
+    elif match_['type_of_equation'] == 'type7':
+        sol = _linear_2eq_order2_type7(x, y, t, r)
+    elif match_['type_of_equation'] == 'type8':
+        sol = _linear_2eq_order2_type8(x, y, t, r)
+    elif match_['type_of_equation'] == 'type9':
+        sol = _linear_2eq_order2_type9(x, y, t, r)
+    elif match_['type_of_equation'] == 'type10':
+        sol = _linear_2eq_order2_type10(x, y, t, r)
+    elif match_['type_of_equation'] == 'type11':
+        sol = _linear_2eq_order2_type11(x, y, t, r)
+    return sol
+
+def _linear_2eq_order2_type1(x, y, t, r):
+    r['a'] = r['c1']
+    r['b'] = r['d1']
+    r['c'] = r['c2']
+    r['d'] = r['d2']
+    l = Symbol('l')
+    C1, C2, C3, C4 = symbols('C1:5')
+    chara_eq = l**4 - (r['a']+r['d'])*l**2 + r['a']*r['d'] - r['b']*r['c']
+    print(chara_eq)
+    l1 = RootOf(chara_eq, 0)
+    l2 = RootOf(chara_eq, 1)
+    l3 = RootOf(chara_eq, 2)
+    l4 = RootOf(chara_eq, 3)
+    D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
+    if (r['a']*r['d'] - r['b']*r['c']) != 0:
+        if D != 0:
+            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t) + C3*r['b']*exp(l3*t) + C4*r['b']*exp(l4*t)
+            gsol2 = C1*(l1**2-r['a'])*exp(l1*t) + C2*(l2**2-r['a'])*exp(l2*t) + C3*(l3**2-r['a'])*exp(l3*t) + C4*(l4**2-r['a'])*exp(l4*t)
+        else:
+            if r['a'] != r['d']:
+                k = sqrt(2*(r['a']+r['d']))
+                mid = r['b']*t+2*r['b']*k/(r['a']-r['d'])
+                gsol1 = 2*C1*mid*exp(k*t/2)+2*C2*mid*exp(-k*t/2)+2*r['b']*C3*t*exp(k*t/2)+2*r['b']*C4*t*exp(-k*t/2)
+                gsol2 = C1*(r['d']-r['a'])*t*exp(k*t/2)+C2*(r['d']-r['a'])*t*exp(-k*t/2)+ \
+                C3*((r['d']-r['a'])*t+2*k)*exp(k*t/2)+C4*((r['d']-r['a'])*t-2*k)*exp(-k*t/2)
+            elif r['a'] == r['d'] != 0 and r['b'] == 0:
+                sa = sqrt(r['a'])
+                gsol1 = 2*sa*C1*exp(sa*t) + 2*sa*C2*exp(-sa*t)
+                gsol2 = r['c']*C1*t*exp(sa*t)-r['c']*C2*t*exp(-sa*t)+C3*exp(sa*t)+C4*exp(-sa*t)
+            elif r['a'] == r['d'] != 0 and r['c'] == 0:
+                sa = sqrt(r['a'])
+                gsol1 = r['b']*C1*t*exp(sa*t)-r['b']*C2*t*exp(-sa*t)+C3*exp(sa*t)+C4*exp(-sa*t)
+                gsol2 = 2*sa*C1*exp(sa*t) + 2*sa*C2*exp(-sa*t)
+    elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2 + r['b']**2) > 0:
+        k = r['c']/r['a']
+        if r['a'] + r['b']*k != 0:
+            mid = sqrt(r['a'] + r['b']*k)
+            gsol1 = C1*exp(mid*t) + C2*exp(-mid*t) + C3*r['b']*t + C4*r['b']
+            gsol2 = C1*k*exp(mid*t) + C2*k*exp(-mid*t) - C3*r['a']*t - C4*r['a']
+        else:
+            gsol1 = C1*r['b']*t**3 + C2*r['b']*t**2 + C3*t + C4
+            gsol2 = k*gsol1 + 6*C1*t + 2*C2
+    return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
+
+def _linear_2eq_order2_type2(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type3(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type4(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type5(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type6(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type7(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type8(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type9(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type10(x, y, t, r):
+    return None
+
+def _linear_2eq_order2_type11(x, y, t, r):
+    return None
