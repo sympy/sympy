@@ -4,7 +4,7 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, erf2, erf2inv, exp, expand, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -97,6 +97,7 @@ def test_solve_args():
     eqs = (x + 5*y - 2, -3*x + 6*y - 15)
     assert all(solve(container(eqs), x, y) == ans for container in
         (tuple, list, set, frozenset))
+    assert solve(Tuple(*eqs), x, y) == ans
     # implicit symbol to solve for
     assert set(solve(x**2 - 4)) == set([S(2), -S(2)])
     assert solve([x + y - 3, x - y - 5]) == {x: 4, y: -1}
@@ -1482,3 +1483,15 @@ def test_issue_7110():
 
 def test_units():
     assert solve(1/x - 1/(2*cm)) == [2*cm]
+
+
+def test_issue_7547():
+    A, B, V = symbols('A,B,V')
+    eq1 = Eq(630.26*(V - 39.0)*V*(V + 39) - A + B, 0)
+    eq2 = Eq(B, 1.36*10**8*(V - 39))
+    eq3 = Eq(A, 5.75*10**5*V*(V + 39.0))
+    sol = Matrix(nsolve(Tuple(eq1, eq2, eq3), [A, B, V], (0, 0, 0)))
+    assert str(sol) == str(Matrix(
+        [['4442890172.68209'],
+         ['4289299466.1432'],
+         ['70.5389666628177']]))
