@@ -96,7 +96,7 @@ def test_latex_basic():
     assert latex(x | y | z) == r"x \vee y \vee z"
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x, y)) == r"x \Rightarrow y"
-    assert latex(~(x >> ~y)) == r"\neg (x \Rightarrow \neg y)"
+    assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
