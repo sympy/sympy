@@ -709,7 +709,9 @@ def trig_substitution_rule(integral):
                         })
 
                     substep = integral_steps(replaced, theta)
-                    return TrigSubstitutionRule(theta, x_func, replaced, substep, integrand, symbol)
+                    if not contains_dont_know(substep):
+                        return TrigSubstitutionRule(
+                            theta, x_func, replaced, substep, integrand, symbol)
 
 def substitution_rule(integral):
     integrand, symbol = integral
