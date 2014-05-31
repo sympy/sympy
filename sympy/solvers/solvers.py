@@ -2436,7 +2436,11 @@ def nsolve(*args, **kwargs):
         raise TypeError('nsolve expected at most 3 arguments, got %i'
                         % len(args))
     modules = kwargs.get('modules', ['mpmath'])
-    if isinstance(f, (list, tuple)):
+    if iterable(f):
+        f = list(f)
+        for i, fi in enumerate(f):
+            if isinstance(fi, Equality):
+                f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
     if not isinstance(f, Matrix):
         # assume it's a sympy expression
