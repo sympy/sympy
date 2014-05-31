@@ -79,6 +79,7 @@ def test_linear_2eq_order1():
     Eq(y(t), C1*y0 + C2(y0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t) + \
     exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0))]
     assert dsolve(eq10) == sol10
+<<<<<<< HEAD
 
 
 def test_linear_2eq_order2():
@@ -110,6 +111,8 @@ def test_linear_2eq_order2():
     C4*sin(t*(-sqrt(109)/2 + 9/2))), Eq(y(t), -C1*sin(t*(9/2 + sqrt(109)/2)) + C2*cos(t*(9/2 + sqrt(109)/2)) - \
     C3*sin(t*(-sqrt(109)/2 + 9/2)) + C4*cos(t*(-sqrt(109)/2 + 9/2)))]
     assert dsolve(eq3) == sol3
+=======
+>>>>>>> Modification in test cases and is_linear match
 
     eq4 = (Eq(diff(x(t),t,t), 9*t*diff(y(t),t)-9*y(t)), Eq(diff(y(t),t,t),7*t*diff(x(t),t)-7*x(t)))
     sol4 = [Eq(x(t), C3*t + t*Integral((9*C1*exp(3*sqrt(7)*t**2/2) + 9*C2*exp(-3*sqrt(7)*t**2/2))/t**2, t)), \
