@@ -3659,16 +3659,16 @@ def ode_1st_power_series(eq, func, order, match):
     to the solution of a differential equation.
 
     For a first order differential equation `\frac{dy}{dx} = h(x, y)`, a power
-    series solution exists at a point `x = x0` if `h(x, y)` is analytic at `x0`.
+    series solution exists at a point `x = x_{0}` if `h(x, y)` is analytic at `x_{0}`.
     The solution is given by
 
-    .. math:: y(x) = y(x0) + \sum_{n = 1}^{\infty} \frac{F_{n}(x0,b)(x - x0)^n}{n!},
+    .. math:: y(x) = y(x_{0}) + \sum_{n = 1}^{\infty} \frac{F_{n}(x_{0},b)(x - x_{0})^n}{n!},
 
-    where `y(x0) = b` is the value of y at the initial value of `x0`.
-    To compute the values of the `F_{n}(x0,b)` the following algorithm is
+    where `y(x_{0}) = b` is the value of y at the initial value of `x_{0}`.
+    To compute the values of the `F_{n}(x_{0},b)` the following algorithm is
     followed, until the required number of terms are generated.
 
-    1. `F_1 = h(x0, b)`
+    1. `F_1 = h(x_{0}, b)`
     2. `F_{n+1} = \frac{\partial F_{n}}{\partial x} + \frac{\partial F_{n}}{\partial y}F_{1}`
 
     Examples
