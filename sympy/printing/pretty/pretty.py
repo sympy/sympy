@@ -146,9 +146,9 @@ class PrettyPrinter(Printer):
             arg = e.args[0]
             pform = self._print(arg)
             if isinstance(arg, Equivalent):
-                return self._print_Equivalent(arg, altchar="\u2262")
+                return self._print_Equivalent(arg, altchar=u("\u2262"))
             if isinstance(arg, Implies):
-                return self._print_Implies(arg, altchar="\u219b")
+                return self._print_Implies(arg, altchar=u("\u219b"))
 
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
