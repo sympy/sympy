@@ -555,7 +555,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if match['type_of_equation'] is None:
             raise NotImplementedError
         else:
-            if match['is_linear'] == 'True':
+            if match['is_linear'] == True:
                 solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
@@ -1272,13 +1272,13 @@ def classify_sysode(eq, func=None, **kwargs):
     {'eq': [-12*x(t) + 6*y(t) + 5*Derivative(x(t), t), -11*x(t) - 3*y(t) + 2*Derivative(y(t), t)],
     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -12, (0, x(t), 1): 5, (0, y(t), 0): 6,
     (0, y(t), 1): 0, (1, x(t), 0): -11, (1, x(t), 1): 0, (1, y(t), 0): -3, (1, y(t), 1): 2},
-    'is_linear': 'True', 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type1'}
+    'is_linear': True, 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type1'}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
     {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t), t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
     (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
-    'is_linear': 'True', 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type4'} 
+    'is_linear': True, 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type4'}
 
     """
 
@@ -1334,7 +1334,7 @@ def classify_sysode(eq, func=None, **kwargs):
     # whose coefficient we are calculating.
     df = {}
     func_coef = {}
-    is_nonlinear = 0
+    is_linear = 1
     for j in range(i+1):
         for k in range(order[0]+1):
             df[k,j] = diff(func[j], t, k)
@@ -1348,33 +1348,29 @@ def classify_sysode(eq, func=None, **kwargs):
         for l in range(i+1):
             for k in range(order[0]+1):
                 func_coef[j,func[l],k] = collect(eq[j].expand(),[df[k,l]]).coeff(df[k,l])
-                if is_nonlinear == 0:
+                if is_linear == 1:
                     if func_coef[j,func[l],k]==0:
                         if k==0:
                             coef = eq[j].as_independent(func[l])[1]
                             for xr in xrange(1, ode_order(eq[j],func[l])+1):
                                 coef -= eq[j].as_independent(diff(func[l],t,xr))[1]
                             if coef != 0:
-                                is_nonlinear = 1
+                                is_linear = 0
                         else:
                             if eq[j].as_independent(df[k,l])[1]:
-                                is_nonlinear = 1
+                                is_linear = 0
                     else:
                         for m in range(i+1):
                             dep = func_coef[j,func[l],k].as_independent(df[0,m])[1]
                             if dep!=1 and dep!=0:
-                                is_nonlinear = 1
+                                is_linear = 0
 
     matching_hints['func_coeff'] = func_coef
-
-    if not is_nonlinear:
-        matching_hints['is_linear'] = 'True'
-    else:
-        matching_hints['is_linear'] = 'False'
+    matching_hints['is_linear'] = bool(is_linear)
 
     if order.count(order[0]) == len(order):
         order_eq = matching_hints['order'][0]
-        if matching_hints['is_linear'] == 'True':
+        if matching_hints['is_linear'] == True:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_linear_2eq_order1(eq, func, func_coef)
