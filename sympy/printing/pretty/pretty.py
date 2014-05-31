@@ -210,17 +210,13 @@ class PrettyPrinter(Printer):
 
     def _print_Implies(self, e, altchar=None):
         if self._use_unicode:
-            if altchar:
-                return self.__print_Boolean(e, altchar, sort=False)
-            return self.__print_Boolean(e, u("\u2192"), sort=False)
+            return self.__print_Boolean(e, altchar or u("\u2192"), sort=False)
         else:
             return self._print_Function(e)
 
     def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-            if altchar:
-                return self.__print_Boolean(e, altchar)
-            return self.__print_Boolean(e, u("\u2261"))
+            return self.__print_Boolean(e, altchar or u("\u2261"))
         else:
             return self._print_Function(e, sort=True)
 

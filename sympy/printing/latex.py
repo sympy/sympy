@@ -754,14 +754,10 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Implies(self, e, altchar=None):
-        if altchar:
-            return r"%s %s %s" % (self._print(e.args[0]), altchar, self._print(e.args[1]))
-        return r"%s \Rightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
+        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\Rightarrow", self._print(e.args[1]))
 
     def _print_Equivalent(self, e, altchar=None):
-        if altchar:
-            return r"%s %s %s" % (self._print(e.args[0]), altchar, self._print(e.args[1]))
-        return r"%s \equiv %s" % (self._print(e.args[0]), self._print(e.args[1]))
+        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\equiv", self._print(e.args[1]))
 
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])
