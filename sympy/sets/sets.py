@@ -1,14 +1,14 @@
 from __future__ import print_function, division
 
-from itertools import product
-from collections import Counter, Iterable
+from itertools import product, groupby
+from collections import Iterable
 
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass, ordered
+from sympy.core.compatibility import iterable, with_metaclass, ordered, counter
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 
@@ -1561,7 +1561,7 @@ class FiniteSet(Set, EvalfMixin):
             firstType = self._get_list(lambda o: type(o).__name__, elem)
             break
         for elem in self:
-            if(Counter(firstType) != Counter(self._get_list(lambda o: type(o).__name__, elem))):
+            if(counter(firstType) != counter(self._get_list(lambda o: type(o).__name__, elem))):
                 return False
         return True
 
