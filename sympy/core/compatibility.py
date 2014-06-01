@@ -190,7 +190,7 @@ from operator import itemgetter
 from heapq import nlargest
 from itertools import repeat, ifilter
 
-class counter(dict):
+class Counter(dict):
     '''Dict subclass for counting hashable objects.  Sometimes called a bag
     or multiset.  Elements are stored as dictionary keys and their counts
     are stored as dictionary values.
