@@ -4717,3 +4717,12 @@ def test_Tr():
 def test_pretty_Add():
     eq = Mul(-2, x - 2, evaluate=False) + 5
     assert pretty(eq) == '-2*(x - 2) + 5'
+
+
+def test_issue_7179():
+    assert upretty(Not(Equivalent(x, y))) == u('x ≢ y')
+    assert upretty(Not(Implies(x, y))) == u('x ↛ y')
+
+
+def test_issue_7180():
+    assert upretty(Equivalent(x, y)) == u('x ≡ y')
