@@ -3,6 +3,8 @@ from sympy.core.numbers import Integer, Rational
 
 def continued_fraction_periodic(p, q, d=0):
     r"""
+    Find the periodic continued fraction expansion of a quadratic irrational.
+
     Compute the continued fraction expansion of a rational or a
     quadratic irrational number, i.e. `\frac{p + \sqrt{d}}{q}`, where
     `p`, `q` and `d \ge 0` are integers.
@@ -176,9 +178,9 @@ def continued_fraction_iterator(x):
     [-1, 1, 1, 1, 2]
 
     >>> for i, v in enumerate(continued_fraction_iterator(pi)):
-    ...    if i > 7:
-    ...        break
-    ...    print(v)
+    ...     if i > 7:
+    ...         break
+    ...     print(v)
     3
     7
     15
