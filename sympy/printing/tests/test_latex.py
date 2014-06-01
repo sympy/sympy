@@ -13,7 +13,7 @@ from sympy import (
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false)
+    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -96,7 +96,7 @@ def test_latex_basic():
     assert latex(x | y | z) == r"x \vee y \vee z"
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x, y)) == r"x \Rightarrow y"
-    assert latex(~(x >> ~y)) == r"\neg (x \Rightarrow \neg y)"
+    assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
@@ -1254,3 +1254,8 @@ def test_Mul():
 def test_Pow():
     e = Pow(2, 2, evaluate=False)
     assert latex(e)  == r'2^{2}'
+
+
+def test_issue_7180():
+    assert latex(Equivalent(x, y)) == r"x \equiv y"
+    assert latex(Not(Equivalent(x, y))) == r"x \not\equiv y"
