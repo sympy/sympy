@@ -251,6 +251,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
+from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
@@ -1316,10 +1317,10 @@ def classify_sysode(eq, func=None, **kwargs):
         raise ValueError("Number of function given is less than number of equations %s" % func)
 
     matching_hints['func'] = func
-    for j in range(i+1):
-        if func[j] and len(func[j].args)!=1:
+    for funcs in func:
+        if funcs and len(funcs.args)!=1:
             raise ValueError("dsolve() and classify_sysode() work with"
-            "functions of one variable only, not %s" % func[j])
+            "functions of one variable only, not %s" % funcs)
 
     # find the order of all equation in system of odes
     order = []
@@ -6449,15 +6450,18 @@ def _linear_2eq_order2_type1(x, y, t, r):
     D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         if D != 0:
-            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t) + C3*r['b']*exp(l3*t) + C4*r['b']*exp(l4*t)
-            gsol2 = C1*(l1**2-r['a'])*exp(l1*t) + C2*(l2**2-r['a'])*exp(l2*t) + C3*(l3**2-r['a'])*exp(l3*t) + C4*(l4**2-r['a'])*exp(l4*t)
+            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t) + C3*r['b']*exp(l3*t) \
+            + C4*r['b']*exp(l4*t)
+            gsol2 = C1*(l1**2-r['a'])*exp(l1*t) + C2*(l2**2-r['a'])*exp(l2*t) + \
+            C3*(l3**2-r['a'])*exp(l3*t) + C4*(l4**2-r['a'])*exp(l4*t)
         else:
             if r['a'] != r['d']:
                 k = sqrt(2*(r['a']+r['d']))
                 mid = r['b']*t+2*r['b']*k/(r['a']-r['d'])
-                gsol1 = 2*C1*mid*exp(k*t/2)+2*C2*mid*exp(-k*t/2)+2*r['b']*C3*t*exp(k*t/2)+2*r['b']*C4*t*exp(-k*t/2)
-                gsol2 = C1*(r['d']-r['a'])*t*exp(k*t/2)+C2*(r['d']-r['a'])*t*exp(-k*t/2)+ \
-                C3*((r['d']-r['a'])*t+2*k)*exp(k*t/2)+C4*((r['d']-r['a'])*t-2*k)*exp(-k*t/2)
+                gsol1 = 2*C1*mid*exp(k*t/2) + 2*C2*mid*exp(-k*t/2) + \
+                2*r['b']*C3*t*exp(k*t/2) + 2*r['b']*C4*t*exp(-k*t/2)
+                gsol2 = C1*(r['d']-r['a'])*t*exp(k*t/2) + C2*(r['d']-r['a'])*t*exp(-k*t/2) + \
+                C3*((r['d']-r['a'])*t+2*k)*exp(k*t/2) + C4*((r['d']-r['a'])*t-2*k)*exp(-k*t/2)
             elif r['a'] == r['d'] != 0 and r['b'] == 0:
                 sa = sqrt(r['a'])
                 gsol1 = 2*sa*C1*exp(sa*t) + 2*sa*C2*exp(-sa*t)
@@ -6486,7 +6490,8 @@ def _linear_2eq_order2_type2(x, y, t, r):
         k = r['c2']/r['c1']
         sig = r['c1'] + r['d1']*k
         if sig != 0:
-            psol1 = r['d1']*sig**-1*(r['e1']*k-r['e2'])*t**2/2 - sig**-2*(r['c1']*r['e1']+r['d1']*r['e2'])
+            psol1 = r['d1']*sig**-1*(r['e1']*k-r['e2'])*t**2/2 - \
+            sig**-2*(r['c1']*r['e1']+r['d1']*r['e2'])
             psol2 = k*psol1  + (r['e2'] - r['e1']*k)*t**2/2
             psol = [psol1, psol2]
         else:
@@ -6497,25 +6502,103 @@ def _linear_2eq_order2_type2(x, y, t, r):
 
 
 def _linear_2eq_order2_type3(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    if r['b1']**2 - 4*r['c1'] > 0:
+        r['a'] = r['b1'] ; r['b'] = -r['c1']
+        alpha = r['a']/2 + sqrt(r['a']**2 + 4*r['b'])/2
+        beta = r['a']/2 - sqrt(r['a']**2 + 4*r['b'])/2
+        sol1 = C1*cos(alpha*t) + C2*sin(alpha*t) + C3*cos(beta*t) + C4*sin(beta*t)
+        sol2 = -C1*sin(alpha*t) + C2*cos(alpha*t) - C3*sin(beta*t) + C4*cos(beta*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type4(x, y, t, r):
     return None
 
 def _linear_2eq_order2_type5(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    r['a'] = -r['d1'] ; r['b'] = -r['c2']
+    mul = sqrt(abs(r['a']*r['b']))
+    if r['a']*r['b'] > 0:
+        u = C1*r['a']*exp(mul*t**2/2) + C2*r['a']*exp(-mul*t**2/2)
+        v = C1*mul*exp(mul*t**2/2) - C2*mul*exp(-mul*t**2/2)
+    else:
+        u = C1*r['a']*cos(mul*t**2/2) + C2*r['a']*sin(mul*t**2/2)
+        v = -C1*mul*sin(mul*t**2/2) + C2*mul*cos(mul*t**2/2)
+    sol1 = C3*t + t*C.Integral(u/t**2, t)
+    sol2 = C4*t + t*C.Integral(v/t**2, t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type6(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    k = Symbol('k')
+    z = Function('z')
+    num, denum = cancel((r['c1']*x(t) + r['d1']*y(t))/(r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
+    f = r['c1']/num.coeff(x(t))
+    a1 = num.coeff(x(t))
+    b1 = num.coeff(y(t))
+    a2 = denum.coeff(x(t))
+    b2 = denum.coeff(y(t))
+    chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
+    [k1, k2] = [RootOf(chareq, k) for k in xrange(Poly(chareq).degree())]
+    z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
+    z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
+    sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
+    sol2 = (z1 - z2)/(k1 - k2)
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type7(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    k = Symbol('k')
+    num, denum = cancel((r['a1']*x(t) + r['b1']*y(t))/(r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
+    f = r['a1']/num.coeff(x(t))
+    a1 = num.coeff(x(t))
+    b1 = num.coeff(y(t))
+    a2 = denum.coeff(x(t))
+    b2 = denum.coeff(y(t))
+    chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
+    [k1, k2] = [RootOf(chareq, k) for k in xrange(Poly(chareq).degree())]
+    F = C.Integral(f, t)
+    z1 = C1*C.Integral(exp(k1*F), t) + C2
+    z2 = C3*C.Integral(exp(k2*F), t) + C4
+    sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
+    sol2 = (z1 - z2)/(k1 - k2)
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type8(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    num, denum = cancel(r['d1']/r['c2']).as_numer_denom()
+    f = -r['d1']/num
+    a = num
+    b = denum
+    mul = sqrt(abs(a*b))
+    Igral = C.Integral(t*f, t)
+    if a*b > 0:
+        u = C1*a*exp(mul*Igral) + C2*a*exp(-mul*Igral)
+        v = C1*mul*exp(mul*Igral) - C2*mul*exp(-mul*Igral)
+    else:
+        u = C1*a*cos(mul*Igral) + C2*a*sin(mul*Igral)
+        v = -C1*mul*sin(mul*Igral) + C2*mul*cos(mul*Igral)
+    sol1 = C3*t + t*C.Integral(u/t**2, t)
+    sol2 = C4*t + t*C.Integral(v/t**2, t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type9(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    k = Symbol('k')
+    a1 = -r['a1']*t; a2 = -r['a2']*t
+    b1 = -r['b1']*t; b2 = -r['b2']*t
+    c1 = -r['c1']*t**2; c2 = -r['c2']*t**2
+    d1 = -r['d1']*t**2; d2 = -r['d2']*t**2
+    eq = (k**2+(a1-1)*k+c1)*(k**2+(b2-1)*k+d2)-(b1*k+d1)*(a2*k+c2)
+    [k1, k2, k3, k4] = roots_quartic(Poly(eq))
+    sol1 = -C1*(b1*k1+d1)*abs(t)**k1 - C2*(b1*k2+d1)*abs(t)**k2 - \
+    C3*(b1*k3+d1)*abs(t)**k3 - C4*(b1*k4+d1)*abs(t)**k4
+ 
+    a1_ = (a1-1)
+    sol2 = C1*(k1**2+a1_*k1+c1)*abs(t)**k1 + C2*(k2**2+a1_*k2+c1)*abs(t)**k2 + \
+    C3*(k3**2+a1_*k3+c1)*abs(t)**k3 + C4*(k4**2+a1_*k4+c1)*abs(t)**k4
+
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type10(x, y, t, r):
     return None
