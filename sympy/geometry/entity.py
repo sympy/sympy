@@ -18,6 +18,7 @@ from sympy.matrices import eye
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
     "Point",
+    "Point3D",
     "Segment",
     "Ray",
     "Line",
