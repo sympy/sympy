@@ -9,9 +9,10 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             IdentityOperator)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.represent import represent
 from sympy.core.trace import Tr
 from sympy.physics.quantum.spin import JzKet, JzBra
-
+from sympy.matrices import eye
 
 class CustomKet(Ket):
     @classmethod
@@ -82,7 +83,7 @@ def test_unitary():
 
 
 def test_identity():
-    I = IdentityOperator('I')
+    I = IdentityOperator()
     O = Operator('O')
 
     assert isinstance(I, IdentityOperator)
@@ -93,6 +94,8 @@ def test_identity():
     assert qapply(I * O) == O
     assert qapply(O * I) == O
 
+    for n in [2, 3, 5]:
+        assert represent(IdentityOperator(n)) == eye(n)
 
 def test_outer_product():
     k = Ket('k')

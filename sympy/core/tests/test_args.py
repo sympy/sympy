@@ -2283,7 +2283,7 @@ def test_sympy__physics__quantum__operator__HermitianOperator():
 
 def test_sympy__physics__quantum__operator__IdentityOperator():
     from sympy.physics.quantum.operator import IdentityOperator
-    assert _test_args(IdentityOperator('I'))
+    assert _test_args(IdentityOperator(5))
 
 
 def test_sympy__physics__quantum__operator__Operator():

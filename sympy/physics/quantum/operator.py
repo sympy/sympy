@@ -11,10 +11,11 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import Derivative, Expr, Integer
+from sympy import Derivative, Expr, Integer, oo
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
+from sympy.matrices import eye
 
 __all__ = [
     'Operator',
@@ -242,6 +243,13 @@ class IdentityOperator(Operator):
     """An identity operator I that satisfies op * I == I * op == op for any
     operator op.
 
+    Parameters
+    ==========
+
+    N : Integer
+        Optional parameter that specifies the dimension of the Hilbert space
+        of operator. This is used when generating a matrix representation.
+
     Examples
     ========
 
@@ -249,20 +257,19 @@ class IdentityOperator(Operator):
     >>> IdentityOperator()
     I
     """
-
     @property
-    def name(self):
-        return self.args[0]
+    def dimension(self):
+        return self.N
 
     @classmethod
     def default_args(self):
-        return ("I")
+        return (oo,)
 
-    def __new__(cls, *args, **hints):
+    def __init__(self, *args, **hints):
         if not len(args) in [0, 1]:
             raise ValueError('0 or 1 parameters expected, got %s' % args)
 
-        return Operator.__new__(cls, *args)
+        self.N = args[0] if (len(args) == 1 and args[0]) else oo
 
     def _eval_commutator(self, other, **hints):
         return Integer(0)
@@ -283,10 +290,22 @@ class IdentityOperator(Operator):
         return self
 
     def _print_contents_latex(self, printer, *args):
-        return r'{\mathcal{%s}}' % str(self.name)
+        return r'{\mathcal{I}}'
 
     def _print_contents(self, printer, *args):
         return r'%s' % str(self.name)
+
+    def _represent_default_basis(self, **options):
+        if not self.N or self.N == oo:
+            raise NotImplementedError('Cannot represent infinite dimensional' +
+                                      ' identity operator as a matrix')
+
+        format = options.get('format', 'sympy')
+        if format != 'sympy':
+            raise NotImplementedError('Representation in format ' +
+                                      '%s not implemented.' % format)
+
+        return eye(self.N)
 
 
 class OuterProduct(Operator):
