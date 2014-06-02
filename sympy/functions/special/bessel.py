@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
-from sympy import S, C, pi, I, Rational, Symbol, Wild, cacheit, sympify
+from sympy import Add, S, C, pi, I, Rational, Symbol, Wild, cacheit, sympify
+from sympy.functions import Piecewise, arg
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma
@@ -190,11 +192,26 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
+    def _eval_as_leading_term(self, x):
+        nu, z = self.args
+        arg = z.as_leading_term(x)
+        if x in arg.free_symbols:
+            return z**nu
+        else:
+            return self.func(*self.args)
+
     def _eval_is_real(self):
         nu, z = self.args
         if nu.is_integer and z.is_real:
             return True
 
+    def _eval_nseries(self, x, n, logx):
+        nu, z = self.args
+        if z.limit(x, 0) is S.Zero:
+            s = [(-1)**k * z**(2*k) / (C.factorial(k) * C.factorial(nu+k) * 2**(2*k))
+                for k in range(0, n)] + [C.Order(z**n)]
+            return (z/2)**nu * Add(*s)  # removeO fails
+        return super(besselj, self)._eval_nseries(x, n, logx)
 
 class bessely(BesselBase):
     r"""
@@ -269,7 +286,14 @@ class bessely(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
-
+    def _eval_nseries(self, x, n, logx):
+        z = self.argument
+        nu = self.order
+        if z.limit(x, 0) is S.Zero and nu == 0:
+            s = [(-1)**(k+1) * C.harmonic(k) * (z**2/4)**k / C.factorial(k)**2
+                    for k in range(0, n)] + [C.Order(z**n)]
+            return (2/pi) * ((C.log(z/2) + S.EulerGamma)*besselj(0, z) + Add(*s))
+        return super(bessely, self)._eval_nseries(x, n, logx)
 
 class besseli(BesselBase):
     r"""
@@ -941,7 +965,6 @@ class airyai(AiryBase):
                     pf = (d * z**n)**m / (d**m * z**(m*n))
                     newarg = c * d**m * z**(m*n)
                     return S.Half * ((pf + S.One)*airyai(newarg) - (pf - S.One)/sqrt(3)*airybi(newarg))
-
 
 class airybi(AiryBase):
     r"""

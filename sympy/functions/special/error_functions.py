@@ -209,6 +209,16 @@ class erf(Function):
                     self.func(x + x*sqrt(sq)))
         return (re, im)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            s = [(-1)**k * C.factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
+                    for k in range(0, n)] + [C.Order(1/z**n, x)]
+            return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
+        return super(erf, self)._eval_aseries(n, args0, x, logx)
+
 class erfc(Function):
     r"""
     Complementary Error Function. The function is defined as:
@@ -395,6 +405,9 @@ class erfc(Function):
                     self.func(x + x*sqrt(sq)))
         return (re, im)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        return S.One - erf(*self.args)._eval_aseries(n, args0, x, logx)
+
 class erfi(Function):
     r"""
     Imaginary error function. The function erfi is defined as:
@@ -562,6 +575,16 @@ class erfi(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                     self.func(x + x*sqrt(sq)))
         return (re, im)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            s = [C.factorial2(2*k - 1) / (2**k * z**(2*k + 1))
+                    for k in range(0, n)] + [C.Order(1/z**n, x)]
+            return -S.ImaginaryUnit + (exp(z**2)/sqrt(pi)) * Add(*s)
+        return super(erfi, self)._eval_aseries(n, args0, x, logx)
 
 class erf2(Function):
     r"""
@@ -1092,6 +1115,15 @@ class Ei(Function):
             return f._eval_nseries(x, n, logx)
         return super(Ei, self)._eval_nseries(x, n, logx)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            s = [C.factorial(k) / (z)**k for k in range(0, n)] + \
+                    [C.Order(1/z**n, x)]
+            return (exp(z)/z) * Add(*s)
+        return super(Ei, self)._eval_aseries(n, args0, x, logx)
 
 class expint(Function):
     r"""
@@ -1266,6 +1298,15 @@ class expint(Function):
                 return f._eval_nseries(x, n, logx)
         return super(expint, self)._eval_nseries(x, n, logx)
 
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[1]
+        nu = self.args[0]
+
+        if point is S.Infinity:
+            z = self.args[1]
+            s = [(-1)**k * C.RisingFactorial(nu, k) / z**k for k in range(0, n)] + [C.Order(1/z**n, x)]
+            return (exp(-z)/z) * Add(*s)
+        return super(expint, self)._eval_aseries(n, args0, x, logx)
 
 def E1(z):
     """
@@ -1433,6 +1474,10 @@ class li(Function):
     def _eval_rewrite_as_tractable(self, z):
         return z * _eis(C.log(z))
 
+    def _eval_nseries(self, x, n, logx):
+        z = self.args[0]
+        s = [(C.log(z))**k / (C.factorial(k) * k) for k in range(1, n)]
+        return S.EulerGamma + C.log(C.log(z)) + Add(*s)
 
 class Li(Function):
     r"""
@@ -1517,6 +1562,10 @@ class Li(Function):
 
     def _eval_rewrite_as_tractable(self, z):
         return self.rewrite(li).rewrite("tractable", deep=True)
+
+    def _eval_nseries(self, x, n, logx):
+        f = self._eval_rewrite_as_li(*self.args)
+        return f._eval_nseries(x, n, logx)
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
@@ -1661,6 +1710,18 @@ class Si(TrigonometricIntegral):
         # XXX should we polarify z?
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            p = [(-1)**k * C.factorial(2*k) / z**(2*k) for k in range(0, n)] + \
+                    [C.Order(1/z**n, x)]
+            q = [(-1)**k * C.factorial(2*k + 1) / z**(2*k+1) for k in range(0, n)] + \
+                    [C.Order(1/z**n, x)]
+            return pi/2 - (C.cos(z)/z)*Add(*p) - (C.sin(z)/z)*Add(*q)
+        return super(Si, self)._eval_aseries(n, args0, x, logx)
+
 
 class Ci(TrigonometricIntegral):
     r"""
@@ -1753,6 +1814,18 @@ class Ci(TrigonometricIntegral):
 
     def _eval_rewrite_as_expint(self, z):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
+
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            p = [(-1)**k * C.factorial(2*k) / z**(2*k) for k in range(0, n)] + \
+                    [C.Order(1/z**n, x)]
+            q = [(-1)**k * C.factorial(2*k + 1) / z**(2*k+1) for k in range(0, n)] + \
+                    [C.Order(1/z**n, x)]
+            return (C.sin(z)/z)*Add(*p) - (C.cos(z)/z)*Add(*q)
+        return super(Ci, self)._eval_aseries(n, args0, x, logx)
 
 
 class Shi(TrigonometricIntegral):
