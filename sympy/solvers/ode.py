@@ -6566,8 +6566,6 @@ def _linear_2eq_order2_type9(x, y, t, r):
     b1 = -r['b1']*t; b2 = -r['b2']*t
     c1 = -r['c1']*t**2; c2 = -r['c2']*t**2
     d1 = -r['d1']*t**2; d2 = -r['d2']*t**2
-    print(a1, b1, c1, d1)
-    print(a2, b2, c2, d2)
     eq = (k**2+(a1-1)*k+c1)*(k**2+(b2-1)*k+d2)-(b1*k+d1)*(a2*k+c2)
     [k1, k2, k3, k4] = roots_quartic(Poly(eq))
     sol1 = -C1*(b1*k1+d1)*abs(t)**k1 - C2*(b1*k2+d1)*abs(t)**k2 - \
