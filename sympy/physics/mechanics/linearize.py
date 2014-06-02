@@ -95,55 +95,83 @@ class Linearizer(object):
         m = len(f_a)
 
         # Compute permutation matrices
-        Pq = permutation_matrix(q, q_i.col_join(q_d))
-        Pqi = Pq[:, :-l]
-        Pqd = Pq[:, -l:]
-        Pu = permutation_matrix(u, u_i.col_join(u_d))
-        Pui = Pu[:, :-m]
-        Pud = Pu[:, -m:]
+        Pq = permutation_matrix(q, Matrix([q_i, q_d]))
+        if l > 0:
+            Pqi = Pq[:, :-l]
+            Pqd = Pq[:, -l:]
+        else:
+            Pqi = Pq
+            Pqd = Matrix([])
+        Pu = permutation_matrix(u, Matrix([u_i, u_d]))
+        if m > 0:
+            Pui = Pu[:, :-m]
+            Pud = Pu[:, -m:]
+        else:
+            Pui = Pu
+            Pud = Matrix([])
 
         # Block Matrix Definitions
         M_qq = f_0.jacobian(qd)
-        M_uqc = f_a.jacobian(qd)
-        M_uuc = f_a.jacobian(ud)
         M_uqd = f_2.jacobian(qd)
         M_uud = f_2.jacobian(ud)
         A_qq = -(f_0 + f_1).jacobian(q)
         A_qu = -f_1.jacobian(u)
-        A_uqc = -f_a.jacobian(q)
-        A_uuc = -f_a.jacobian(u)
         A_uqd = -(f_2 + f_3).jacobian(q)
         A_uud = -f_3.jacobian(u)
+        # Only form these if there are dependent speeds (m > 0).
+        if m > 0:
+            M_uqc = f_a.jacobian(qd)
+            M_uuc = f_a.jacobian(ud)
+            A_uqc = -f_a.jacobian(q)
+            A_uuc = -f_a.jacobian(u)
 
         # Build up Mass Matrix
         #     |M_qq    0_nxo|
         # M = |M_uqc   M_uuc|
         #     |M_uqd   M_uud|
         row1 = M_qq.row_join(zeros(n, o))
-        row2 = M_uqc.row_join(M_uuc)
+        # The second row only exists if there are motion constraints
+        if m > 0:
+            row2 = M_uqc.row_join(M_uuc)
+        else:
+            row2 = Matrix([])
         row3 = M_uqd.row_join(M_uud)
-        M = row1.col_join(row2).col_join(row3)
+        M = Matrix([row1, row2, row3])
         M_eq = _subs_keep_derivs(M.subs(dtrim), trim)
         M_eq.simplify()
 
-        # Jacobian of constraint matrices
-        f_c_jac_q = f_c.jacobian(q)
-        f_v_jac_q = f_v.jacobian(q)
-        f_v_jac_u = f_v.jacobian(u)
-
-        # Coefficient Matrices
-        C_0 = (eye(n) - Pqd * (f_c_jac_q * Pqd).inv() * f_c_jac_q) * Pqi
-        C_1 = -Pud * (f_v_jac_u * Pud).inv() * f_v_jac_q
-        C_2 = (eye(o) - Pud * (f_v_jac_u * Pud).inv() * f_v_jac_u) * Pui
+        # Build up the coefficient matrices C_0, C_1, and C_2
+        # If there are configuration constraints (l > 0), form C_0 as normal.
+        # If not, C_0 is I_(nxn)
+        if l > 0:
+            f_c_jac_q = f_c.jacobian(q)
+            C_0 = (eye(n) - Pqd * (f_c_jac_q * Pqd).inv() * f_c_jac_q) * Pqi
+        else:
+            C_0 = eye(n)
+        # If there are motion constraints (m > 0), form C_1 and C_2 as normal.
+        # If not, C_1 is 0, and C_2 is I_(oxo)
+        if m > 0:
+            f_v_jac_q = f_v.jacobian(q)
+            f_v_jac_u = f_v.jacobian(u)
+            temp = Pud * (f_v_jac_u * Pud).inv()
+            C_1 = -temp * f_v_jac_q
+            C_2 = (eye(o) - temp * f_v_jac_u) * Pui
+        else:
+            C_1 = 0
+            C_2 = eye(o)
 
         # Build up state coefficient matrix A
         #     |(A_qq + A_qu*C_1)*C_0       A_qu*C_2|
         # A = |(A_uqc + A_uuc*C_1)*C_0    A_uuc*C_2|
         #     |(A_uqd + A_uud*C_1)*C_0    A_uud*C_2|
         row1 = ((A_qq + A_qu * C_1) * C_0).row_join(A_qu * C_2)
-        row2 = ((A_uqc + A_uuc * C_1) * C_0).row_join(A_uuc * C_2)
+        # The second row only exists if there are motion constraints
+        if m > 0:
+            row2 = ((A_uqc + A_uuc * C_1) * C_0).row_join(A_uuc * C_2)
+        else:
+            row2 = Matrix([])
         row3 = ((A_uqd + A_uud * C_1) * C_0).row_join(A_uud * C_2)
-        Amat = row1.col_join(row2).col_join(row3)
+        Amat = Matrix([row1, row2, row3])
         Amat_eq = _subs_keep_derivs(Amat.subs(dtrim), trim)
         Amat_eq.simplify()
 

@@ -567,9 +567,15 @@ class KanesMethod(object):
         f_c, f_v, f_a, f_0, f_1, f_2, f_3 = self._general_form()
         q = self._q
         u = self._u
-        q_i = self._q[:-len(self._qdep)]
+        if self._qdep:
+            q_i = self._q[:-len(self._qdep)]
+        else:
+            q_i = self._q
         q_d = self._qdep
-        u_i = self._u[:-len(self._udep)]
+        if self._udep:
+            u_i = self._u[:-len(self._udep)]
+        else:
+            u_i = self._u
         u_d = self._udep
 
         # Form dictionary of auxiliary speeds & and their derivatives,
@@ -599,6 +605,17 @@ class KanesMethod(object):
         return Linearizer(f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, q_i, q_d,
                 u_i, u_d, r)
 
+    def linearize(self):
+        """ Linearize the equations of motion about a symbolic operating point.
+        
+        Returns M, A, B, r for the linearized form, M*dx = A*x + B*r,
+        where x = [q_independent u_independent]^T 
+        
+        For more fine tuned operation, please see the `Linearizer` class"""
+        linearizer = self.to_linearizer()
+        M, A, B =  linearizer.linearize()
+        return M, A, B, linearizer.r
+        
     def kanes_equations(self, FL, BL):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 

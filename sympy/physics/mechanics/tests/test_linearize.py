@@ -160,16 +160,17 @@ def test_linearize_pendulum_minimal():
     # Solve for eom with kanes method
     KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
-    kdd = KM.kindiffdict()
-    eom = KM.rhs()
-    eom = eom.subs(kdd)
-    eom.simplify()
-    trim_cond = Matrix([0, 0])
 
-    # Perform simple linearization by computing the jacobian of the rhs
-    eom_lin = eom.jacobian([q1, u1]).subs(dict(zip([q1, u1], trim_cond)))
-    eom_lin
-    # TODO: add linearization with Linearizer, compare with above
+    # Linearize with Linearizer Class
+    linearizer = KM.to_linearizer()
+    A, B = linearizer.linearize(A_and_B=True)
+
+    A_sol = Matrix([[0, 1], 
+                    [-9.8*cos(q1)/L, 0]])
+    B_sol = Matrix([])
+
+    assert A == A_sol
+    assert B == B_sol
 
 def test_linearize_pendulum_nonminimal():
     # Create generalized coordinates and speeds for this non-minimal realization
