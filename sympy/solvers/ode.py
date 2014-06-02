@@ -248,8 +248,13 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     sign, Piecewise, atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
+<<<<<<< HEAD
 from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div
+=======
+from sympy.matrices import wronskian
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
+>>>>>>> Added some methods for linear system of 2 eqs for 2nd order
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -6653,6 +6658,7 @@ def _linear_2eq_order2_type9(x, y, t, r):
     b1 = -r['b1']*t; b2 = -r['b2']*t
     c1 = -r['c1']*t**2; c2 = -r['c2']*t**2
     d1 = -r['d1']*t**2; d2 = -r['d2']*t**2
+<<<<<<< HEAD
     eq = (k**2+(a1-1)*k+c1)*(k**2+(b2-1)*k+d2)-(b1*k+d1)*(a2*k+c2)
     [k1, k2, k3, k4] = roots_quartic(Poly(eq))
     sol1 = -C1*(b1*k1+d1)*exp(k1*log(t)) - C2*(b1*k2+d1)*exp(k2*log(t)) - \
@@ -6661,6 +6667,18 @@ def _linear_2eq_order2_type9(x, y, t, r):
     a1_ = (a1-1)
     sol2 = C1*(k1**2+a1_*k1+c1)*exp(k1*log(t)) + C2*(k2**2+a1_*k2+c1)*exp(k2*log(t)) \
     + C3*(k3**2+a1_*k3+c1)*exp(k3*log(t)) + C4*(k4**2+a1_*k4+c1)*exp(k4*log(t))
+=======
+    print(a1, b1, c1, d1)
+    print(a2, b2, c2, d2)
+    eq = (k**2+(a1-1)*k+c1)*(k**2+(b2-1)*k+d2)-(b1*k+d1)*(a2*k+c2)
+    [k1, k2, k3, k4] = roots_quartic(Poly(eq))
+    sol1 = -C1*(b1*k1+d1)*abs(t)**k1 - C2*(b1*k2+d1)*abs(t)**k2 - \
+    C3*(b1*k3+d1)*abs(t)**k3 - C4*(b1*k4+d1)*abs(t)**k4
+ 
+    a1_ = (a1-1)
+    sol2 = C1*(k1**2+a1_*k1+c1)*abs(t)**k1 + C2*(k2**2+a1_*k2+c1)*abs(t)**k2 + \
+    C3*(k3**2+a1_*k3+c1)*abs(t)**k3 + C4*(k4**2+a1_*k4+c1)*abs(t)**k4
+>>>>>>> Added some methods for linear system of 2 eqs for 2nd order
 
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 

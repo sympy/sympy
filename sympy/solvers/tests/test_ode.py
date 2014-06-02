@@ -86,7 +86,10 @@ def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', function=True)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
     t, l = symbols('t, l')
+<<<<<<< HEAD
     x0, y0 = symbols('x0, y0')
+=======
+>>>>>>> Added some methods for linear system of 2 eqs for 2nd order
 
     eq1 = (Eq(diff(x(t),t,t), 5*x(t) + 43*y(t)), Eq(diff(y(t),t,t), x(t) + 9*y(t)))
     sol1 = [Eq(x(t), 43*C1*exp(t*RootOf(l**4 - 14*l**2 + 2, 0)) + 43*C2*exp(t*RootOf(l**4 - 14*l**2 + 2, 1)) + \
@@ -111,6 +114,7 @@ def test_linear_2eq_order2():
     C4*sin(t*(-sqrt(109)/2 + 9/2))), Eq(y(t), -C1*sin(t*(9/2 + sqrt(109)/2)) + C2*cos(t*(9/2 + sqrt(109)/2)) - \
     C3*sin(t*(-sqrt(109)/2 + 9/2)) + C4*cos(t*(-sqrt(109)/2 + 9/2)))]
     assert dsolve(eq3) == sol3
+<<<<<<< HEAD
 =======
 >>>>>>> Modification in test cases and is_linear match
 
@@ -122,11 +126,23 @@ def test_linear_2eq_order2():
     eq5 = (Eq(diff(x(t),t,t), (log(t)+t**2)*diff(x(t),t)+(log(t)+t**2)*3*diff(y(t),t)), Eq(diff(y(t),t,t), \
     (log(t)+t**2)*2*diff(x(t),t)+(log(t)+t**2)*9*diff(y(t),t)))
     sol5 = [Eq(x(t), -sqrt(22)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C2 - \
+=======
+
+    eq5 = (Eq(diff(x(t),t,t), 9*t*diff(y(t),t)-9*y(t)), Eq(diff(y(t),t,t),7*t*diff(x(t),t)-7*x(t)))
+    sol5 = [Eq(x(t), C3*t + t*Integral((9*C1*exp(3*sqrt(7)*t**2/2) + 9*C2*exp(-3*sqrt(7)*t**2/2))/t**2, t)), \
+    Eq(y(t), C4*t + t*Integral((3*sqrt(7)*C1*exp(3*sqrt(7)*t**2/2) - 3*sqrt(7)*C2*exp(-3*sqrt(7)*t**2/2))/t**2, t))]
+    assert dsolve(eq5) == sol5
+
+    eq7 = (Eq(diff(x(t),t,t), (log(t)+t**2)*diff(x(t),t)+(log(t)+t**2)*3*diff(y(t),t)), Eq(diff(y(t),t,t), \
+    (log(t)+t**2)*2*diff(x(t),t)+(log(t)+t**2)*9*diff(y(t),t)))
+    sol7 = [Eq(x(t), -sqrt(22)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C2 - \
+>>>>>>> Added some methods for linear system of 2 eqs for 2nd order
     C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) - C4 - \
     (sqrt(22) + 5)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C2) + \
     (-sqrt(22) + 5)*(C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C4))/88), \
     Eq(y(t), -sqrt(22)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + \
     C2 - C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) - C4)/44)]
+<<<<<<< HEAD
     assert dsolve(eq5) == sol5
 
     eq6 = (Eq(diff(x(t),t,t), log(t)*t*diff(y(t),t) - log(t)*y(t)), Eq(diff(y(t),t,t), log(t)*t*diff(x(t),t) - log(t)*x(t)))
@@ -184,6 +200,16 @@ def test_linear_3eq_order1():
     sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), \
     Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
     assert dsolve(eq6) == sol6
+=======
+    assert dsolve(eq7) == sol7
+
+    eq8 = (Eq(diff(x(t),t,t), log(t)*t*diff(y(t),t) - log(t)*y(t)), Eq(diff(y(t),t,t), log(t)*t*diff(x(t),t) - log(t)*x(t)))
+    sol8 = [Eq(x(t), C3*t + t*Integral((C1*exp(Integral(t*log(t), t)) + \
+    C2*exp(-Integral(t*log(t), t)))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*exp(Integral(t*log(t), t)) - \
+    C2*exp(-Integral(t*log(t), t)))/t**2, t))]
+    assert dsolve(eq8) == sol8
+
+>>>>>>> Added some methods for linear system of 2 eqs for 2nd order
 
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
