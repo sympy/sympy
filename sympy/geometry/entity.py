@@ -22,6 +22,8 @@ ordering_of_classes = [
     "Segment",
     "Ray",
     "Line",
+    "Line3D",
+    "Segment3D",
     "Triangle",
     "RegularPolygon",
     "Polygon",

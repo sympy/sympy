@@ -2942,6 +2942,18 @@ def test_sympy__geometry__line__Segment():
     from sympy.geometry.line import Segment
     assert _test_args(Segment((0, 1), (2, 3)))
 
+@SKIP("abstract class")
+def test_sympy__geometry__line3d__Base():
+    pass
+
+
+def test_sympy__geometry__line3d__Line3D():
+    from sympy.geometry.line3d import Line3D
+    assert _test_args(Line3D((0, 1, 1), (2, 3, 4)))
+
+def test_sympy__geometry__line3d__Segment3D():
+    from sympy.geometry.line3d import Segment3D
+    assert _test_args(Segment3D((0, 1, 1), (2, 3, 4)))
 
 def test_sympy__geometry__polygon__Polygon():
     from sympy.geometry.polygon import Polygon
