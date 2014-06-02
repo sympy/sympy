@@ -68,24 +68,11 @@ def test_linear_2eq_order1():
     assert dsolve(eq7) == sol7
 
     eq8 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + (5*t+9*t**2)*y(t)))
-<<<<<<< HEAD
     sol8 = [Eq(x(t), (C1*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + \
     C2*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t))), \
     Eq(y(t), (C1*(-sqrt(77)/2 + 9/2)*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + \
     C2*(sqrt(77)/2 + 9/2)*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t)))]
     assert dsolve(eq8) == sol8
-=======
-    sol8 = "[x(t) == (C1*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + C2*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t)), "\
-    "y(t) == (C1*(-sqrt(77)/2 + 9/2)*exp((-sqrt(77)/2 + 9/2)*Integral(t**2, t)) + "\
-    "C2*(sqrt(77)/2 + 9/2)*exp((sqrt(77)/2 + 9/2)*Integral(t**2, t)))*exp(Integral(5*t, t))]"
-    assert str(dsolve(eq8)) == sol8
-
-    eq9 = (Eq(diff(x(t),t), 2*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), 5*(2*t+5*exp(t))*x(t) + 5*(t**2-exp(t))*y(t)))
-    sol9 = "[x(t) == (C1 + Integral(C2*t**2*exp(Integral(t*(-5*t - 2), t))*exp(-5*Integral(exp(t), t)), t))*exp(-Integral(t*(-5*t - 2), t)), "\
-    "y(t) == C1*exp(-5*Integral(exp(t), t)) + 5*(C1 + Integral(C2*t**2*exp(Integral(t*(-5*t - 2), t))*"\
-    "exp(-5*Integral(exp(t), t)), t))*exp(-Integral(t*(-5*t - 2), t))]"
-    assert str(dsolve(eq9)) == sol9
->>>>>>> Added first method for linear system 2nd order 2eqs
 
     eq10 = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), (1-t**2)*x(t) + (5*t+9*t**2)*y(t)))
     sol10 = [Eq(x(t), C1*x0 + C2*x0*Integral(t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0**2, t)), \
