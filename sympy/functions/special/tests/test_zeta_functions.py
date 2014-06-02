@@ -65,6 +65,12 @@ def test_zeta_eval():
 def test_zeta_series():
     assert zeta(x, a).series(a, 0, 2) == \
         zeta(x, 0) - x*a*zeta(x + 1, 0) + O(a**2)
+    assert zeta(x).series(x, n=3) == (0.375 - 0.25*2**(-x))/(-2**(-x + 1) + 1)
+
+
+def test_lerchphi_series():
+    assert lerchphi(z, s, a).series(z, 0, 3) == \
+            z**2*(-2*(a + 1)**(-s) + a**(-s))/(-z + 1)**2 - a**(-s)*z/(-z + 1)
 
 
 def test_dirichlet_eta_eval():
