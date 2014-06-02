@@ -88,6 +88,12 @@ class Set(Basic):
         """
         return Intersection(self, other)
 
+    def intersection(self, other):
+        """
+        Alias for :meth:`intersect()`
+        """
+        return self.intersect(other)
+
     def _intersect(self, other):
         """
         This function should only be used internally
@@ -223,6 +229,12 @@ class Set(Basic):
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
+    def issubset(self, other):
+        """
+        Alias for :meth:`is_subset()`
+        """
+        return self.is_subset(other)
+
     def is_proper_subset(self, other):
         """
         Returns True if 'self' is a proper subset of 'other'.
@@ -254,6 +266,12 @@ class Set(Basic):
             return other.is_subset(self)
         else:
             raise ValueError("Unknown argument '%s'" % other)
+
+    def issuperset(self, other):
+        """
+        Alias for :meth:`is_superset()`
+        """
+        return self.is_superset(other)
 
     def is_proper_superset(self, other):
         """
