@@ -2705,7 +2705,7 @@ class Expr(Basic, EvalfMixin):
             if bound <= 0:
                 return self
             a = self.args[0]
-            s = a.aseries(x, bound=3)
+            s = a.aseries(x, bound=bound)
             s = s.func(*[t.removeO() for t in s.args])
             rep = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
             f = exp(self.args[0] - rep.args[0]) / d
@@ -2732,10 +2732,11 @@ class Expr(Basic, EvalfMixin):
             coeff, expo = t.as_coeff_exponent(d)
             if coeff.has(x):
                 s1 = coeff.aseries(x, n, logx, bound=bound-1)
-                s += (s1 * d**expo)
-                if s1.getO():
-                    gotO = True
+                if gotO and s1.getO():
                     break
+                elif s1.getO():
+                    gotO = True
+                s += (s1 * d**expo)
             else:
                 s += t
         if not o or gotO:
