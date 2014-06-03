@@ -289,11 +289,14 @@ class IdentityOperator(Operator):
     def _eval_power(self, exp):
         return self
 
+    def _print_contents(self, printer, *args):
+        return 'I'
+
+    def _print_contents_pretty(self, printer, *args):
+        return prettyForm('I')
+
     def _print_contents_latex(self, printer, *args):
         return r'{\mathcal{I}}'
-
-    def _print_contents(self, printer, *args):
-        return r'%s' % str(self.name)
 
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
