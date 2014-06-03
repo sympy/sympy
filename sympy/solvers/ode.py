@@ -1279,7 +1279,7 @@ def classify_sysode(eq, func=None, **kwargs):
     {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t), t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
     (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
-    'is_linear': 'True', 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type4'} 
+    'is_linear': 'True', 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type4'}
 
     """
 
