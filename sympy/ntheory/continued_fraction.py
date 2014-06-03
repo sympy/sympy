@@ -3,6 +3,8 @@ from sympy.core.numbers import Integer, Rational
 
 def continued_fraction_periodic(p, q, d=0):
     r"""
+    Find the periodic continued fraction expansion of a quadratic irrational.
+
     Compute the continued fraction expansion of a rational or a
     quadratic irrational number, i.e. `\frac{p + \sqrt{d}}{q}`, where
     `p`, `q` and `d \ge 0` are integers.
@@ -91,6 +93,8 @@ def continued_fraction_periodic(p, q, d=0):
 
 def continued_fraction_reduce(cf):
     """
+    Reduce a continued fraction to a rational or quadratic irrational.
+
     Compute the rational or quadratic irrational number from its
     terminating or periodic continued fraction expansion.  The
     continued fraction expansion (cf) should be supplied as a
@@ -123,6 +127,11 @@ def continued_fraction_reduce(cf):
     >>> from sympy.ntheory.continued_fraction import continued_fraction_periodic
     >>> continued_fraction_reduce(continued_fraction_periodic(8, 5, 13))
     (sqrt(13) + 8)/5
+
+    See Also
+    ========
+
+    continued_fraction_iterator, continued_fraction_periodic
 
     """
     from sympy.core.symbol import Dummy
@@ -182,6 +191,11 @@ def continued_fraction_iterator(x):
     1
     1
 
+    See Also
+    ========
+
+    continued_fraction_reduce
+
     References
     ==========
 
@@ -235,6 +249,11 @@ def continued_fraction_convergents(cf):
     103993/33102
     104348/33215
     208341/66317
+
+    See Also
+    ========
+
+    continued_fraction_iterator, continued_fraction_reduce
 
     """
 
