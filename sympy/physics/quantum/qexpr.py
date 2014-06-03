@@ -322,6 +322,25 @@ class QExpr(Expr):
     def doit(self, **kw_args):
         return self
 
+    def _eval_rewrite(self, pattern, rule, **hints):
+        if hints.get('deep', False):
+            args = [ a._eval_rewrite(pattern, rule, **hints)
+                    for a in self.args ]
+        else:
+            args = self.args
+
+        # TODO: Make Basic.rewrite use hints in evaluating
+        # self.rule(*args, **hints), not having hints breaks spin state
+        # (un)coupling on rewrite
+        if pattern is None or isinstance(self, pattern):
+            if hasattr(self, rule):
+                rewritten = getattr(self, rule)(*args, **hints)
+
+                if rewritten is not None:
+                    return rewritten
+
+        return self
+
     #-------------------------------------------------------------------------
     # Represent
     #-------------------------------------------------------------------------
