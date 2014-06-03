@@ -322,25 +322,6 @@ class QExpr(Expr):
     def doit(self, **kw_args):
         return self
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        # TODO: Make Basic.rewrite get the rule using the class name rather
-        # than str(). See L1072 of basic.py.
-        # This will call self.rule(*self.args) for rewriting.
-        if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints)
-                     for a in self.args ]
-        else:
-            args = self.args
-
-        if pattern is None or isinstance(self, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args, **hints)
-
-                if rewritten is not None:
-                    return rewritten
-
-        return self
-
     #-------------------------------------------------------------------------
     # Represent
     #-------------------------------------------------------------------------

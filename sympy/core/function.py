@@ -631,21 +631,6 @@ class Function(Application, Expr):
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        if hints.get('deep', False):
-            args = [a._eval_rewrite(pattern, rule, **hints) for a in self.args]
-        else:
-            args = self.args
-
-        if pattern is None or isinstance(self.func, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
-
-                if rewritten is not None:
-                    return rewritten
-
-        return self.func(*args)
-
     def fdiff(self, argindex=1):
         """
         Returns the first derivative of the function.
