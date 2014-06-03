@@ -1537,8 +1537,7 @@ class FiniteSet(Set, EvalfMixin):
     def _get_list(self, f, o):
         try:
             if(isinstance(o, Iterable)):
-                o = tuple(o)
-                return tuple(type(o)(self._get_list(f, value) for value in o), type(o))
+                return type(o)(self._get_list(f, value) for value in o)
             else:
                 return f(o)
         except TypeError:

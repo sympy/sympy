@@ -214,7 +214,7 @@ except ImportError:    # < 2.7
             '''List the n most common elements and their counts from the most
             common to the least. If n is None, then list all element counts.
 
-            '''        
+            '''
             if n is None:
                 return sorted(self.iteritems(), key=itemgetter(1), reverse=True)
             return nlargest(n, self.iteritems(), key=itemgetter(1))
@@ -239,7 +239,7 @@ except ImportError:    # < 2.7
 
             Source can be an iterable, a dictionary, or another Counter instance.
 
-            '''        
+            '''
             if iterable is not None:
                 if hasattr(iterable, 'iteritems'):
                     if self:
