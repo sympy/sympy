@@ -9,4 +9,3 @@
 
    intro.rst
    finite_diff_derivatives.rst
-   fornberg_efficient_finite_diff_derivatives.rst
