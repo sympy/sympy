@@ -363,6 +363,18 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
+class Elem(MatrixExpr):
+
+    def __new__( cls, M, fn):
+        fn = sympify(fn)
+        if fn.is_Mul and (fn.is_Pow is False):
+            coeffs = fn.as_coefficient(x).args
+            return Elem._scalar_mul(M, *coeffs)
+
+    @staticmethod
+    def _scalar_mul(M, *args):
+        return MatMul(M, *args)
+
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
 
