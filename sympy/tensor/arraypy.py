@@ -2,6 +2,7 @@
 """
 Module "arraypy" describes Multidimentional arrays and Tensors. 
 The module contain arraypy class, tensor class and converting functions: list2arraypy, matrix2arraypy, list2tensor, matrix2tensor.
+Authors: Vladimir Kuzmin, Nastia Konovalenko, Ksenia Merzlakova, Nikolay Smolentsev
 """
 
 from sympy import Symbol
@@ -38,7 +39,7 @@ class arraypy(object):
 		[0,0,0]; [0,0,1]; [0,0,2] etc (for 3-dim array).	
 		"""
 		
-	# main variables declaration
+		# main variables declaration
 		self._name = '0'
 		self._sparse = False
 		self._dims = [1]
@@ -46,7 +47,7 @@ class arraypy(object):
 		self._end_index = [1]
 		
 		j=0
-	# --recognition of constructor arguments--
+		# --recognition of constructor arguments--
 		for i in arg:
 			# for arguments of type: a = arraypy( (3,3) )
 			if isinstance(i, (tuple)):
@@ -54,24 +55,24 @@ class arraypy(object):
 				self._start_index = [0 for j in range(len(self._dims)) ]
 				self._end_index = [j for j in self._dims]
 			
-		# for arguments of type: a = arraypy( 3 )	
+			# for arguments of type: a = arraypy( 3 )	
 			if isinstance(i, int):
 				self._dims[0] = i
 				self._start_index = [0]
 				self._end_index = [i]
 			
-		# for string arguments	
+			# for string arguments	
 			if isinstance(i, str):
 				i = i.strip()
-		# a = arraypy ('sparse')
+				# a = arraypy ('sparse')
 				if i == 'sparse':
 					self._sparse = True
 				
-		# a = arraypy ('0..3, 1..4')	
+				# a = arraypy ('0..3, 1..4')	
 				elif len(i.split('..')) != 1:
 					self._dims = i
 					
-		# splitting the string by commas ','. Length of resultet list will be the rank of array.
+					# splitting the string by commas ','. Length of resultet list will be the rank of array.
 					# '0..3, 1..4'  -> ['0..3' , '1..4']			
 					temp = self._dims.split(',')
 						
@@ -80,13 +81,13 @@ class arraypy(object):
 					
 					k=0
 					for temp_str in temp:
-		# splitting every k-th string by '..'. Resulted digits will be a start index and end index. Difference between end index and start index will be dimension
+						# splitting every k-th string by '..'. Resulted digits will be a start index and end index. Difference between end index and start index will be dimension
 						#['0..3'] -> [['0'], ['3']]
 						temp[k] = temp_str.split('..')       
 						if len(temp[k]) != 2:              
 							raise SyntaxError ('Wrong argument syntax')
 						
-		# cleaning from spaces. If resulted string is digit, then converting it to integer.
+						# cleaning from spaces. If resulted string is digit, then converting it to integer.
 						# [['0'], ['3']] -> [[0], [3]]
 						for j in range(2):
 							temp[k][j] = temp[k][j].strip()  
@@ -102,11 +103,11 @@ class arraypy(object):
 					self._start_index = [temp[k][0]  for k in range(self._rank)]		
 					self._end_index   = [temp[k][1] + 1 for k in range(self._rank)]		
 				
-		# a = arraypy('Py')						
+				# a = arraypy('Py')						
 				else:
 					self._name = i
 			
-	 	# for list arguments		
+			# for list arguments		
 			if isinstance(i, (list)):
 				
 				# a = arraypy( [2, 4, 1] )
@@ -126,7 +127,7 @@ class arraypy(object):
 					self._start_index = tuple( [ i[2] for j in range (i[0]) ] )
 					self._end_index = tuple( [ i[2] + i[1] for j in range(i[0]) ] )
 				
-		# a = arraypy( [(0, 3), (1, 4)] )
+				# a = arraypy( [(0, 3), (1, 4)] )
 				elif isinstance(i[0], tuple):
 					self._dims = []
 					self._start_index = []
@@ -143,27 +144,27 @@ class arraypy(object):
 						self._dims.append(j[1] - j[0] + 1)
 					self._start_index = tuple( self._start_index )
 					self._end_index = tuple( self._end_index )		
-	# rank - length of tuple with dimensions	
+		# rank - length of tuple with dimensions	
 		self._rank = len(self._dims)
 		
 		self._output={}	
 		
-	# check if self._name is not digit (except '0')
+		# check if self._name is not digit (except '0')
 		if self._name[0].isdigit():
 			if self._name.isdigit() and self._name == '0':
 				self._name = int(self._name)
 			else:
 				raise ValueError ('Element name cant start from digits')		
 		
-	# index - is an index of current array element   
+		# index - is an index of current array element   
 		index=[self._start_index[i] for i in range(self._rank)]				
 		
-# counting number of elements in array(equals to number of loops), which is product of every self._dims element	
+		# counting number of elements in array(equals to number of loops), which is product of every self._dims element	
 		self._loop_size=self._dims[0]
 		for i in range(1, self._rank):
 			self._loop_size *= self._dims[i]
 			
-# --setting elements value to dictionary self._output--
+		# --setting elements value to dictionary self._output--
 		if not (self._sparse and self._name == 0):	
 			for i in range(self._loop_size):
 				if isinstance(self._name, str):
@@ -179,7 +180,13 @@ class arraypy(object):
 	def __add__(self, other):
 		"""
 		Overload operator '+'. Returns new arraypy instance, per elemental sum of two arraypy instances. Both arrays must have the same shape and start index.
-		>>> a = list2arraypy([1 for i in range (4)], (2,2))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2arraypy([1 for i in range (4)], (2,2))
 		>>> b = list2arraypy([4 for i in range (4)], (2,2))
 		>>> c = a + b
 		>>> print (c)
@@ -194,13 +201,13 @@ class arraypy(object):
 		if self._start_index !=  other._start_index or self._end_index != other._end_index:
 			raise ValueError ('Both operands must have the same start index and end index')
 		
-# forming list of tuples for arraypy constructor of type a = arraypy( [(a, b), (c, d), ... , (y, z)] )
+		# forming list of tuples for arraypy constructor of type a = arraypy( [(a, b), (c, d), ... , (y, z)] )
 		arg = [(self.start_index[i], self.end_index[i]) for i in range (self._rank)]
 		res = arraypy( arg )
 		
 		index = tuple(copy(self._start_index))
 		
-# per elemental sum
+		# per elemental sum
 		for i in range(self._loop_size):
 			res[index] = self.__getitem__(index) + other[index]			
 			index = self.Next_index(index)
@@ -210,7 +217,13 @@ class arraypy(object):
 	def __sub__(self, other):
 		"""
 		Overloads operator '-'. Returns new arraypy instance, per elemental difference of two arraypy instances. Both arrays must have the same shape and start index.
-		>>> a = list2arraypy([1 for i in range (4)], (2,2))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2arraypy([1 for i in range (4)], (2,2))
 		>>> b = list2arraypy([4 for i in range (4)], (2,2))
 		>>> c = a - b
 		>>> print (c)
@@ -225,13 +238,13 @@ class arraypy(object):
 		if self._start_index !=  other._start_index or self._end_index != other._end_index:
 			raise ValueError ('Both operands must have the same start index and end index')		
 
-# forming list of tuples for arraypy constructor of type a = arraypy( [(a, b), (c, d), ... , (y, z)] )
+		# forming list of tuples for arraypy constructor of type a = arraypy( [(a, b), (c, d), ... , (y, z)] )
 		arg = [(self.start_index[i], self.end_index[i]) for i in range (self._rank)]
 		res = arraypy( arg )
 		
 		index = tuple(copy(self._start_index))
 		
-	# per elemental difference 
+		# per elemental difference 
 		for i in range(self._loop_size):
 			res[index] = self.__getitem__(index) - other[index]			
 			index = self.Next_index(index)
@@ -241,7 +254,13 @@ class arraypy(object):
 	def __getitem__ (self, index):
 		"""
 		Allows to get items from arraypy.
-		>>> a = list2arraypy(range(4), (2,2))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2arraypy(range(4), (2,2))
 		>>> print (a)
 		0 1 
 		2 3 
@@ -255,12 +274,12 @@ class arraypy(object):
 		if len(index) != self._rank :
 			raise ValueError('Wrong number of array axes')
 		
-# check if input index can exist in current indexing
+		# check if input index can exist in current indexing
 		for i in range (self._rank):
 			if index[i] >= self._end_index[i] or index[i] < self._start_index[i]:
 				raise ValueError ('Value ' + str(i) + ' out of border')
 		
-# returning element. If array is sparse and index not in dictionary then return '0'
+		# returning element. If array is sparse and index not in dictionary then return '0'
 		try:
 			if self._sparse:
 				if index in self._output:
@@ -275,10 +294,16 @@ class arraypy(object):
 	def __setitem__ (self, index, value):
 		"""
 		Allows to set items to arraypy.
-		a = arraypy((2,2))
-		a[0,0] = 1
-		a.__setitem__((1,1),1)
-		print (a)
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy((2,2))
+		>>> a[0,0] = 1
+		>>> a.__setitem__((1,1),1)
+		>>> print (a)
 		1 0 
 		0 1 
 		"""		
@@ -288,12 +313,12 @@ class arraypy(object):
 		if len(index) != self._rank :
 			raise ValueError ('Wrong number of array axes')
 		
-# check if input index can exist in current indexing	
+		# check if input index can exist in current indexing	
 		for i in range (self._rank):
 			if index[i] >= self._end_index[i] or index[i] < self._start_index[i]:
 				raise ValueError ('Value ' + str(i) + ' out of border')		
 		
-# setting element. If array is sparse, index in dictionary and value is 0 then poping it from dictionary
+		# setting element. If array is sparse, index in dictionary and value is 0 then poping it from dictionary
 		# If array is sparse, index NOT in dictionary and value is 0 then do nothing
 		try:
 			if self._sparse and value == 0 and index in self._output:
@@ -308,7 +333,13 @@ class arraypy(object):
 	def __len__(self):
 		"""
 		Overload common function len(). Returns number of elements in array.
-		>>> a = arraypy( (3,3) )
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy( (3,3) )
 		>>> len(a)
 		9
 		>>> a.__len__()
@@ -319,7 +350,13 @@ class arraypy(object):
 	def __str__ (self):
 		"""
 		Returns string, allows to use standart functions print() and str().
-		>>> a = arraypy ( (2, 2), 'Py' )
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy ( (2, 2), 'Py' )
 		>>> print (a)
 		Py[0, 0] Py[0, 1] 
 		Py[1, 0] Py[1, 1] 
@@ -328,14 +365,14 @@ class arraypy(object):
 		out_str = ''
 		index = list(copy(self._start_index))
 		
-	# forming output string	
+		# forming output string	
 		for i in range(self._loop_size):
 			if self._sparse and not (tuple(index) in self._output):
 				out_str += '0' + ' '
 			else:
 				out_str += str(self._output[tuple(index)]) + ' '
 			
-	# code below are equal to method .Next_index with few additions.
+			# code below are equal to method .Next_index with few additions.
 			j=self._rank-1
 			index[j] += 1    
 			if (index[j] == self._end_index[j]) and (j != 0):
@@ -352,7 +389,13 @@ class arraypy(object):
 	def __copy__ (self):
 		"""
 		Overload commom python function "copy". Makes right copy of arraypy instance.
-		>>> a = arraypy((2,2))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy((2,2))
 		>>> b = copy(a)
 		>>> c = a
 		>>> id(a)
@@ -363,7 +406,7 @@ class arraypy(object):
 		29528496
 		"""
 		
-# creating new instance of arraypy. All parameters are coping from current array
+		# creating new instance of arraypy. All parameters are coping from current array
 		res = arraypy(self._dims)
 		res._name = self._name 
 		res._sparse = self._sparse
@@ -378,7 +421,13 @@ class arraypy(object):
 		Returns tuple that represents next index of arraypy instance.
 		Input argument - current index.
 		This method allows user to organize loop over whole array.
-		>>> a = arraypy((2,2,2))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy((2,2,2))
 		>>> for i in range(0, len(a)):
 		...     print (idx)
 		...     a[idx] = i*10
@@ -393,23 +442,23 @@ class arraypy(object):
 		(1, 1, 0)
 		(1, 1, 1)
 		
-		If input index will be last possible index, then result will be the first index(equal to ._start_index)
+		# If input index will be last possible index, then result will be the first index(equal to ._start_index)
 		>>> idx = (1,1,1)
 		>>> idx = a.Next_index(idx)
 		>>> print idx
 		(0, 0, 0)
 		"""
-# check if input index can exist in current indexing
+		# check if input index can exist in current indexing
 		index = list(index)		
 		for i in range(0, self._rank):
 			if index[i] >= self._end_index[i] or index[i] < self._start_index[i]:
 				raise IndexError ('Wrong index')			
 		
 		j=self._rank-1
-	# increasing index by 1. (0, 0, 0) -> (0, 0, 1)
+		# increasing index by 1. (0, 0, 0) -> (0, 0, 1)
 		index[j] += 1
 		
-# in index exceeds top border, then index changes thiw way (self._start_index = (0, 0, 0) и self._end_index = (2, 2, 2)):
+		# in index exceeds top border, then index changes thiw way (self._start_index = (0, 0, 0) и self._end_index = (2, 2, 2)):
 		# (0, 0, 1) -> (0, 0, 2) -> (0, 1, 0)
 		# (0, 1, 0) -> (0, 1, 1)
 		# (0, 1, 1) -> (0, 1, 2) - > (0, 2, 0) -> (1, 0, 0)
@@ -420,7 +469,7 @@ class arraypy(object):
 				j -= 1
 				index[j] += 1
 				
-	# if index == (2, 0, 0), then index sets to self._start_index -> (0, 0, 0)
+		# if index == (2, 0, 0), then index sets to self._start_index -> (0, 0, 0)
 		if index[0] >= self._end_index[0]:
 			index = copy(self._start_index)
 		
@@ -431,7 +480,13 @@ class arraypy(object):
 		"""
 		Returns arraypy instance with new shape. Elements number must be suitable to new shape.
 		The only argument of method sets new shape.
-		>>> a = arraypy( '1..2, 1..3', 'Py' )
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy( '1..2, 1..3', 'Py' )
 		>>> a.shape
 		(2, 3)
 		>>> a.start_index
@@ -456,7 +511,7 @@ class arraypy(object):
 		for i in new_shape:
 			prod *=i
 		
-	# if product of shape elements equals to number of elements in array then
+		# if product of shape elements equals to number of elements in array then
 		if (prod == self.__len__()):
 			new_base = arraypy(new_shape)
 			idx1 = self._start_index
@@ -475,7 +530,13 @@ class arraypy(object):
 	def shape (self):
 		"""
 		Returs array shape (dimension).
-		>>> a = arraypy((3,3))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy((3,3))
 		>>> a.shape
 		(3, 3)
 		"""
@@ -485,7 +546,13 @@ class arraypy(object):
 	def start_index(self):
 		"""
 		Returns the first index
-		>>> a = arraypy ( [(0, 2), (1, 3)] )
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy ( [(0, 2), (1, 3)] )
 		>>> a.start_index
 		(0, 1)
 		"""
@@ -495,7 +562,13 @@ class arraypy(object):
 	def end_index(self):
 		"""
 		Returns the last possible index
-		>>> a = arraypy ( [(0, 2), (1, 3)] )
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy ( [(0, 2), (1, 3)] )
 		>>> a.end_index
 		(2, 3)
 		"""
@@ -506,7 +579,13 @@ class arraypy(object):
 	def rank(self):
 		"""
 		Returns rank of arrray
-		a = arraypy ( (3,4,5,6,3) )
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		a = arraypy ( (3,4,5,6,3) )
 		a.rank
 		5
 		"""
@@ -515,23 +594,29 @@ class arraypy(object):
 	def To_matrix(self):
 		"""
 		Converts arraypy to matrix. Can convert only 2-dim array, else will raise error.
-		a = list2arraypy( [1 for i in range(9)], (3,3))
-		b = a.To_matrix()
-		print(b)
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2arraypy( [1 for i in range(9)], (3,3))
+		>>> b = a.To_matrix()
+		>>> print(b)
 		[1, 1, 1]
 		[1, 1, 1]
 		[1, 1, 1]
-		type(b)
+		>>> type(b)
 		<class 'sympy.matrices.matrices.MutableMatrix'>
 		"""
 		if self._rank != 2:
 			raise ValueError ('Dimensions must be of size of 2')
 		
-	# creating matrix of needed shape: self._dims[0] on self._dims[1] 
+		# creating matrix of needed shape: self._dims[0] on self._dims[1] 
 		x = MatrixSymbol(0, self._dims[0], self._dims[1])
 		res_matrix = Matrix(x)
 		
-	# filling matrix with arraypy elements
+		# filling matrix with arraypy elements
 		idx = self._start_index
 		idx = tuple(idx)
 		for i in range(len(res_matrix)):
@@ -543,7 +628,13 @@ class arraypy(object):
 	def To_tensor(self, ind_char):
 		"""
 		Convert arraypy to tensor. Tensor uses arraypy as base. The only parametrer is used to set valency of tensor. Valency tuple length must be equal to shape tuple legth.
-		>>> a = list2arraypy(range(9), (3,3))		
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2arraypy(range(9), (3,3))		
 		>>> b = a.To_tensor((-1,1))
 		>>> type(b)
 		<class '__main__.tensor'>
@@ -553,7 +644,13 @@ class arraypy(object):
 	def To_list(self):
 		"""
 		Conveting arraypy to one-dim list
-		>>> a = arraypy ( (2,2) )
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = arraypy ( (2,2) )
 		>>> a = arraypy ( (2,2), 'Py' )
 		>>> print (a)
 		Py[0, 0] Py[0, 1] 
@@ -628,7 +725,13 @@ class tensor(arraypy):
 	def __add__(self, other):
 		"""
 		Overloads operator "+". But unlike arraypy, it works only with tensors with the same index character.
-		>>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
 		>>> b = list2tensor ([2 for i in range(9)], (3,3), (1,-1))
 		>>> c = a + b
 		>>> print (c) 
@@ -649,7 +752,13 @@ class tensor(arraypy):
 	def __sub__(self, other):
 		"""
 		Overloads operator "-". But unlike arraypy, it works only with tensors with the same index character.
-		>>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
 		>>> b = list2tensor ([2 for i in range(9)], (3,3), (1,-1))
 		>>> c = a - b
 		>>> print (c)
@@ -671,7 +780,12 @@ class tensor(arraypy):
 		Overloads operator "*". Returns tensor product.
 		Rank of resulted tensor is a summary rank of two tensors.
 		
-		>>> a = tensor( arraypy ('1..2', 'X'), 1)
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = tensor( arraypy ('1..2', 'X'), 1)
 		>>> b = tensor( arraypy ('1..2', 'Y'), -1)
 		>>> c = a * b
 		>>> print c
@@ -690,21 +804,21 @@ class tensor(arraypy):
 		if not isinstance(other, tensor):
 			raise TypeError('Second operand must be tensor')
 		
-# forming list of tuples for arraypy constructor of type a = arraypy( [(a, b), (c, d), ... , (y, z)] )
+		# forming list of tuples for arraypy constructor of type a = arraypy( [(a, b), (c, d), ... , (y, z)] )
 		arg = [(self.start_index[i], self.end_index[i]) for i in range (self._rank)]
 		arg = arg + [(other.start_index[i], other.end_index[i]) for i in range(other._rank)]
 		
-	# index charater of resulted tensor will be a concatination of two index characters
+		# index charater of resulted tensor will be a concatination of two index characters
 		res =  tensor ( arraypy(arg), self.ind_char + other.ind_char )
 		
-	# start indexes of: current tensor and other tensor
+		# start indexes of: current tensor and other tensor
 		cur_idx = self.start_index
 		other_idx = other.start_index
 		
-	# loop over current tensor
+		# loop over current tensor
 		for i in range(self.__len__()):
 			
-		# loop over other tensor
+			# loop over other tensor
 			for j in range(len(other)):
 				res[cur_idx + other_idx] = self.__getitem__(cur_idx) * other[other_idx]
 				#other tensor next index
@@ -719,8 +833,14 @@ class tensor(arraypy):
 	def __copy__ (self):
 		"""
 		Overload commom python function "copy". Makes right copy of arraypy object.		
-		a = tensor(arraypy((2,2)), (1,1))
-		b = copy(a)
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = tensor(arraypy((2,2)), (1,1))
+		>>> b = copy(a)
 		>>> c = a
 		>>> id(a)
 		29528496
@@ -736,7 +856,13 @@ class tensor(arraypy):
 	def type_pq(self):
 		"""
 		Returns tuple, that represents valency of the tensor in (P,Q) format, where P is upper (contrvarian) index and Q is lower (covariant).
-		>>> a = arraypy ((3,3,3,3,3)).To_tensor((1, 1, -1, 1, -1))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>> a = arraypy ((3,3,3,3,3)).To_tensor((1, 1, -1, 1, -1))
 		>>> a.type_pq
 		(3, 2)
 		"""
@@ -753,7 +879,13 @@ class tensor(arraypy):
 	def ind_char(self):
 		"""
 		Returns tuple, index caracter.
-		>>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2tensor ([3 for i in range(9)], (3,3), (1,-1))
 		>>> a.ind_char
 		(1, -1)
 		"""
@@ -764,7 +896,13 @@ class tensor(arraypy):
 		Method returns new tensor instance, contract of current tensor. Result tensor rank will be current rank – 2 end valency will be (p - 1, q - 1).  
 		Takes 2 parameters: first and second index number.
 		Index numbers counts from “1”.
-		>>> a = list2tensor(range(27), (3,3,3), (1, -1, 1))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2tensor(range(27), (3,3,3), (1, -1, 1))
 		>>> b = a.Contract(1,2)
 		>>> print (b)
 		36 39 42 
@@ -843,7 +981,7 @@ class tensor(arraypy):
 				old_index[idx1] += 1
 				old_index[idx2] += 1				
 			
-# Finding next index of the current tensor. the code below is similar to method .Next_index with few additions.
+			# Finding next index of the current tensor. the code below is similar to method .Next_index with few additions.
 			k=1
 			j=self._rank-1
 			# input index numbers will be passed (they are changing in code block above)
@@ -861,7 +999,7 @@ class tensor(arraypy):
 						if j > 0:
 							old_index[j] += 1
 			
-# Finding next index of the result tensor. the code below is similar to method .Next_index with few additions.
+			# Finding next index of the result tensor. the code below is similar to method .Next_index with few additions.
 			j=len(new_dims)-1
 			if not new_index == []:	
 				new_index[j] += 1    
@@ -871,7 +1009,7 @@ class tensor(arraypy):
 						j -= 1
 						new_index[j] += 1
 		
-	# creating new arraypy base			
+		# creating new arraypy base			
 		if (self._sparse == True):
 			res_array = arraypy('sparse')
 		else:
@@ -884,7 +1022,7 @@ class tensor(arraypy):
 		
 		res_array._dims = tuple(new_dims)
 		
-	# creating start_index
+		# creating start_index
 		new_start_index = copy(list(self._start_index))
 		new_start_index .pop(idx1)
 		if len(new_start_index) == 1:
@@ -893,7 +1031,7 @@ class tensor(arraypy):
 			new_start_index.pop(idx2)
 		res_array._start_index = tuple(new_start_index)
 		
-	# creating end index
+		# creating end index
 		new_end_index = copy(list(self._end_index))
 		new_end_index .pop(idx1)
 		if len(new_end_index) == 1:
@@ -902,10 +1040,10 @@ class tensor(arraypy):
 			new_end_index.pop(idx2)		
 		res_array._end_index = tuple(new_end_index)
 		
-	# new array rank
+		# new array rank
 		res_array._rank = len(new_dims)
 		
-	# valency of new tensor
+		# valency of new tensor
 		new_valency = copy(list(self._ind_char))
 		new_valency.pop(idx1)
 		if len(new_valency) == 1:
@@ -913,7 +1051,7 @@ class tensor(arraypy):
 		else:		
 			new_valency.pop(idx2)
 		
-	# creating tensor
+		# creating tensor
 		res_tensor = tensor(res_array, tuple(new_valency))
 		
 		return res_tensor
@@ -923,7 +1061,13 @@ class tensor(arraypy):
 		Reshape method are overloaded and now requires 2 arguments.
 		-Shape of new tensor base
 		-Index character of new tensor.
-		>>> a = list2tensor(range(6), (3,2), (1, -1))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2tensor(range(6), (3,2), (1, -1))
 		>>> print (a)
 		0 1 
 		2 3 
@@ -952,7 +1096,7 @@ class tensor(arraypy):
 			for i in ind_char:
 				if i != 1 and i != -1:
 					raise ValueError ('!!!ind_char elements must be 1 or -1')
-	# reshaping arraypy and creating tensor with new base
+		# reshaping arraypy and creating tensor with new base
 		new_base = self.base.Reshape(new_shape)
 		new_tensor = tensor (new_base, ind_char)
 		
@@ -962,7 +1106,13 @@ class tensor(arraypy):
 	def To_arraypy(self):
 		"""
 		Returns arraypy - base of the current tensor object.
-		>>> a = list2tensor (range(9), (3, 3), (1, -1))
+		
+		Examples:    
+		=========
+		    
+		>>> from sympy import *
+		>>> from sympy.tensor.arraypy import *
+    		>>> a = list2tensor (range(9), (3, 3), (1, -1))
 		>>> b = a.To_arraypy
 		>>> type(b)
 		<class '__main__.arraypy'>
@@ -976,7 +1126,6 @@ class tensor(arraypy):
 	def To_tensor(self, ind_char):
 		"""
 		Convert arraypy to tensor.
-		
 		Converting tensor to tensor is not required, so this method is not implemented.
 		"""
 		raise NotImplementedError()
@@ -984,7 +1133,13 @@ class tensor(arraypy):
 def matrix2arraypy(matrix):
 	"""
 	matrix2arraypy converts Matrix instance to arraypy. Matrix class alredy has wide list of usfull methods and functions, which is used in tensor package.
-	>>> a = Matrix(((1,2),(3,4)))
+	
+	Examples:
+	=========
+		    
+	>>> from sympy import *
+	>>> from sympy.tensor.arraypy import *
+    	>>> a = Matrix(((1,2),(3,4)))
 	>>> print (a)
 	[1, 2]
 	[3, 4]
@@ -1012,7 +1167,13 @@ def matrix2tensor(matrix, ind_char = (-1,-1) ):
 	"""
 	Convert Matrix to tensor.
 	Function take 2 arguments. First is a Matrix. The second is a tuple that represents index character. By default it is (-1,-1).
-	>>> a = Matrix(((1,2),(3,4)))
+	
+	Examples:
+	=========
+		    
+	>>> from sympy import *
+	>>> from sympy.tensor.arraypy import *
+    	>>> a = Matrix(((1,2),(3,4)))
 	>>> print (a)
 	[1, 2]
 	[3, 4]
@@ -1039,7 +1200,13 @@ def matrix2tensor(matrix, ind_char = (-1,-1) ):
 def list2arraypy(list_arr, shape = 0):
 	"""
 	Convert list to arraypy.
-	>>> a = list2arraypy(range(3*3), (3,3))
+	
+	Examples:
+	=========
+		    
+	>>> from sympy import *
+	>>> from sympy.tensor.arraypy import *
+    	>>> a = list2arraypy(range(3*3), (3,3))
 	>>> print (a)
 	0 1 2 
 	3 4 5 
@@ -1047,7 +1214,7 @@ def list2arraypy(list_arr, shape = 0):
 	"""
 	if not isinstance(list_arr, list):
 		raise TypeError ('First attr must be list type')
-# checking shape type
+	# checking shape type
 	if shape == 0:
 		shape = len(list_arr)
 	elif isinstance(shape, (tuple, list)):
@@ -1062,7 +1229,7 @@ def list2arraypy(list_arr, shape = 0):
 	else:
 		raise TypeError ('Second attr must be tuple, list or int')
 	
-# creating new arraypy and filling it with list elements
+	# creating new arraypy and filling it with list elements
 	result = arraypy(shape)
 	idx = result._start_index
 	for i in range(len(list_arr)):
@@ -1077,7 +1244,13 @@ def list2tensor (list_arr, shape = 0, ind_char = 0):
 	-a list, which elements will be elements of the tensor base.
 	-a tuple, shape of the new tensor (by default it is 0, which will mean that result tensor will be vector)
 	-a tuple with index character (by default it feels with -1)
-	>>> a = list2tensor([i*2 for i in range(9)], (3,3), (-1,1))
+	
+	Examples:
+	=========
+		    
+	>>> from sympy import *
+	>>> from sympy.tensor.arraypy import *
+    	>>> a = list2tensor([i*2 for i in range(9)], (3,3), (-1,1))
 	>>> type(a)
 	<class '__main__.tensor'>
 	>>> print (a)
@@ -1108,7 +1281,7 @@ def list2tensor (list_arr, shape = 0, ind_char = 0):
 		elif isinstance(shape, int):
 			ind_char = -1
 	
-# creating new tensor and filling it with list elements	
+	# creating new tensor and filling it with list elements	
 	result = tensor(arraypy(shape), ind_char)
 	idx = result._start_index
 	for i in range(len(list_arr)):
@@ -1121,7 +1294,11 @@ def fac(n):
 	Finds factorial of n
 	
 	Examples:
-	>>> fac(1)
+	=========
+		    
+	>>> from sympy import *
+	>>> from sympy.tensor.arraypy import *
+    	>>> fac(1)
 	1
 	>>> fac(3)
 	6
