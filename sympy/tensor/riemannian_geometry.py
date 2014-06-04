@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """ 
-Riemannian_Geometry module contains functions for working with the Riemann tensor fields of geometry: 
-    the scalar product, the Christoffel symbols of the first and second kind, 
-    the covariant derivative, the curvature tensor, the Ricci tensor, scalar and sectional curvature. 
+riemannian_geometry module contains functions for working with the Riemann tensor fields of geometry: 
+the scalar product, the Christoffel symbols of the first and second kind, 
+the covariant derivative, the curvature tensor, the Ricci tensor, scalar and sectional curvature. 
 Functions work with multidimensional arrays arraypy and tensors. 
 Classes and methods tensor and arraypy contained in the module arraypy.
 """ 
@@ -15,21 +15,27 @@ from sympy import Add,diff,symbols,simplify
 # ---------------- scal_prod g(X,Y)--------------------------------
 
 def scal_prod(X, Y, g):
-    """ Returns scalar product of vectors 
-        g(X,Y)=sum_{i,j}([g[i,j]*X[i]*Y[j])
-        Example:
-	========
-	>>> x1, x2 = symbols('x1, x2')
-	>>> X = [1,2]
-	>>> Y = [4,5]
-	>>> A = arraypy((2,2))
-	>>> g = tensor(A,(-1,-1))
-	>>> g[0,0] = cos(x2)**2
-	>>> g[0,1] = 0
-	>>> g[1,0] = 0
-	>>> g[1,1] = 1
-	>>> print g
-	>>> skal = scal_prod(X, Y, g) 
+    """ 
+    Returns the scalar product of vectors 
+    g(X,Y)=sum_{i,j}([g[i,j]*X[i]*Y[j])
+        
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> X = [1,2]
+    >>> Y = [4,5]
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> skal = scal_prod(X, Y, g) 
+    4*cos(theta)**2 + 10 
     """
     
 # Handling of a input argument - metric tensor g
@@ -84,23 +90,30 @@ def scal_prod(X, Y, g):
 # ---------------- Christoffel_1 --------------------------------
 
 def Christoffel_1(g, var, type_output='t'):
-    """Return the Christoffel symbols of tesor type (-1,-1,-1) for the given metric.
-       This returns the Christoffel symbol of first kind that represents the
-       Levi-Civita connection for the given metric.
-       christoffel_1[i,j,k] = (diff(g[j,k],x[i])+diff(g[i,k],x[j])-diff(g[i,j],x[k]))/2.
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> var = [x1, x2]
-       >>> A = arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> christoffel1=Christoffel_1(g, var, 't')
+    """
+    Returns the Christoffel symbols of tesor type (-1,-1,-1) for the given metric.
+    Christoffel_1[i,j,k] = (diff(g[j,k],x[i])+diff(g[i,k],x[j])-diff(g[i,j],x[k]))/2.
+    
+    Examples:
+    ========
 
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> christoffel1=Christoffel_1(g, arg, 't')
+    >>> print christoffel_1
+        0 sin(theta)*cos(theta) 
+	-sin(theta)*cos(theta) 0 
+	-sin(theta)*cos(theta) 0 
+	0 0
     """
 # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
@@ -164,24 +177,31 @@ def Christoffel_1(g, var, type_output='t'):
 # ---------------- Christoffel_2 --------------------------------
 
 def Christoffel_2(g,var, type_output='t'):
-    """Return the Christoffel symbols of tesor type (-1,-1,+1) for the given metric.
-       This returns the Christoffel symbol of second kind that represents the
-       Levi-Civita connection for the given metric.
-       christoffel_2[i,j,k] = 
+    """
+    Returns the Christoffel symbols of tesor type (-1,-1,+1) for the given metric.
+    Christoffel_2[i,j,k] = 
        = Sum_{l}(g^{-1}[k,l]/2*(diff(g[j, l],x[i])+diff(g[i,l],x[j])-diff(g[i,j],x[l]))/2	   
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> var = [x1, x2]
-       >>> A = arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> Christoffel_2(g,var,'a')
 
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> christoffel2=Christoffel_2(g, arg, 't')
+    >>> print christoffel_2
+        0 sin(theta)*cos(theta) 
+	-sin(theta)/cos(theta) 0 
+	-sin(theta)/cos(theta) 0 
+	0 0 
     """	
 # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
@@ -256,23 +276,31 @@ def Christoffel_2(g,var, type_output='t'):
 # ---------------- Covar_der --------------------------------
     
 def Covar_der(X, g, var, type_output='t'):
-    """Return the covariant derivative the vector field.
-       nabla X[i,j] = diff(X[j],x[i])+Sum_{k}(Gamma2[k,i,j]*X[k])
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> var = [x1, x2]
-       >>> A = arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> X = [x1*x2**3,x1-cos(x2)]
-       >>> Covar_der(X, g, var, 't')
     """
-# Handling of input vector arguments var
+    Returns the covariant derivative the vector field.
+    nabla X[i,j] = diff(X[j],x[i])+Sum_{k}(Gamma2[k,i,j]*X[k])
+
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> X = [phi*theta**3,phi-cos(theta)]
+    >>> Nabla=Covar_der(X, g, arg)
+    >>> print Nabla
+        theta**3 - (phi - cos(theta))*sin(theta)/cos(theta) phi*theta**3*sin(theta)*cos(theta) + 1 
+	-phi*theta**3*sin(theta)/cos(theta) + 3*phi*theta**2 sin(theta) 
+    """	
+ # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
 	raise TypeError('The type of vector arguments(var) must be a list, arraypy or tensor')
     if isinstance(var, (tensor,arraypy)):
@@ -352,21 +380,29 @@ def Covar_der(X, g, var, type_output='t'):
 # ---------------- Covar_der_XY --------------------------------
    
 def Covar_der_XY(X, Y, g, var, type_output='t'):
-    """Return the covariant derivative the vector field along another field.
-       nabla_Y(X)[j] = Sum_{i}(nabla X[i,j]*Y[i])
-       Example:
-       >>> x1, x2 = symbols('x1, x2')
-       >>> var = [x1, x2]
-       >>> A = arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> X = [x1*x2**3, x1-cos(x2)]
-       >>> Y = [1, 2, 3]
-       >>> Covar_der_XY(X, Y, g, var, 't')
+    """
+    Returns the covariant derivative the vector field along another field.
+    nabla_Y(X)[j] = Sum_{i}(nabla X[i,j]*Y[i])
+
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> X = [phi,theta]
+    >>> Y = [1, 2]
+    >>> NablaX_Y=Covar_der_XY(X, Y, g, arg)
+    >>> print NablaX_Y
+        -2*phi*sin(theta)/cos(theta) - theta*sin(theta)/cos(theta) + 1 phi*sin(theta)*cos(theta) + 2 
     """
     # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
@@ -468,21 +504,34 @@ def Covar_der_XY(X, Y, g, var, type_output='t'):
 # ---------------- Riemann --------------------------------
 
 def Riemann(g, var, type_output='t'):
-    """Return the Riemann curvature tensor of type (-1,-1,-1,+1)  for the given metric tensor.
-       Riemann[i,j,k,l] = diff(Gamma_2[j,k,l],x[i])-diff(Gamma_2[i,k,l],x[j]) + 
-       + Sum_{p}( Gamma_2[i,p,l]*Gamma_2[j,k,p] -Gamma_2[j,p,l]*Gamma_2[i,k,p]    
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> var = [x1, x2]
-       >>> A = arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> Riemann(g, var, 'a')
+    """
+    Returns the Riemann curvature tensor of type (-1,-1,-1,+1)  for the given metric tensor.
+    Riemann[i,j,k,l] = diff(Gamma_2[j,k,l],x[i])-diff(Gamma_2[i,k,l],x[j]) + Sum_{p}( Gamma_2[i,p,l]*Gamma_2[j,k,p] -Gamma_2[j,p,l]*Gamma_2[i,k,p]    
+
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> R = Riemann(g, arg)
+    >>> print R
+        0 0 
+	0 0 
+	0 -cos(theta)**2 
+	1 0 
+	0 cos(theta)**2 
+	-1 0 
+	0 0 
+	0 0  
     """    
 # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
@@ -549,21 +598,29 @@ def Riemann(g, var, type_output='t'):
 # ---------------- Ricci --------------------------------
 
 def Ricci(riemann, var, type_output='t'):
-    """Return the tensor Ricci of type (-1,-1) for given Riemann curvature tensor.
-       Ricci[j,k] = Sum_{i}(Riemann[i,j,k,i])
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> var = [x1, x2]
-       >>> A = arraypy((2,2))
-       >>> g = Tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> cur = Riemann(g, var, 't')
-       >>> Ric = Ricci(cur, var, 't')
+    """
+    Returns the Ricci tensor of type (-1,-1) for given Riemann curvature tensor.
+    Ricci[j,k] = Sum_{i}(Riemann[i,j,k,i])
+
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> R = Riemann(g, arg)
+    >>> Ric = Ricci(R, arg)
+    >>> print Ric
+       cos(theta)**2 0 
+       0 1 
     """
 # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
@@ -617,21 +674,29 @@ def Ricci(riemann, var, type_output='t'):
 # ---------------- Scal_curv --------------------------------
 
 def Scal_curv(g, ricci, var):
-    """ The scalar curvature (or the Ricci scalar) 
-        is the simplest curvature invariant of a Riemannian manifold.
-	S=sum_{j,k} Ricci[j,k]*g_inv[j,k]
-	Example:
-	========
-	>>> x1, x2 = symbols('x1, x2')
-	>>> arg = [x1, x2]
-	>>> A = arraypy((2,2))
-	>>> g = Tensor(A,(-1,-1))
-	>>> g[0,0] = cos(x2)**2
-	>>> g[0,1] = 0
-	>>> g[1,0] = 0
-	>>> g[1,1] = 1
-	>>> print g
-	>>> Scal_curv(g, r, arg) 
+    """ 
+    TReturns the scalar curvature for given Ricci tensor 
+    S=sum_{j,k} Ricci[j,k]*g_inv[j,k]
+
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> R = Riemann(g, arg)
+    >>> Ric = Ricci(R, arg)
+    >>> S=Scal_curv(g, r, arg)
+    >>> S
+        1 
     """
 # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
@@ -694,25 +759,31 @@ def Scal_curv(g, ricci, var):
 #-----------------K_sigma----------------------------
 
 def K_sigma(X, Y, R, g, var):
-    """Return Sectional curvature of the Riemannian manifold 
-       in the direction two-dimensional area formed by 
+    """
+    Returns the Sectional curvature of the Riemannian manifold in the direction two-dimensional area formed by 
        vectors X, Y  for the given metric tensor R.
        K_sigma = Sum_{i,j,k,r,s}( g[r,s]*Riemann[i,j,k,r] *X[i]*Y[j]*Y[k]X[s])/ (scal_prod(X,X,g)*scal_prod(Y,Y,g) - scal_prod(X,Y,g)^2   
-       Example:
-       ========
-       >>> x1, x2 = symbols('x1, x2')
-       >>> var = [x1, x2]
-       >>> X = [1,2]
-       >>> Y = [3,4]
-       >>> A = arraypy((2,2))
-       >>> g = tensor(A,(-1,-1))
-       >>> g[0,0] = cos(x2)**2
-       >>> g[0,1] = 0
-       >>> g[1,0] = 0
-       >>> g[1,1] = 1
-       >>> print g
-       >>> R = Riemann(g, var)
-       >>> K_sig = K_sigma(X, Y, R, g, var) 
+
+    Examples:
+    =========
+
+    >>> from sympy import *	
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.riemannian_geometry import *
+    >>> phi, theta = symbols('phi, theta')
+    >>> arg = [phi, theta]    
+    >>> X = [1,2]
+    >>> Y = [4,5]
+    >>> A = arraypy((2,2))
+    >>> g = tensor(A,(-1,-1))
+    >>> g[0,0] = cos(theta)**2
+    >>> g[0,1] = 0
+    >>> g[1,0] = 0
+    >>> g[1,1] = 1
+    >>> R = Riemann(g, arg)
+    >>> K = K_sigma(X, Y, R, g, arg)
+    >>> K
+        1
     """    
 # Handling of input vector arguments var
     if not isinstance(var,(list, arraypy, tensor)):
@@ -808,3 +879,4 @@ def K_sigma(X, Y, R, g, var):
 
 # Output  
     return K_sigma
+    
