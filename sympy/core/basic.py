@@ -1543,11 +1543,20 @@ class Basic(with_metaclass(ManagedProperties)):
             if hasattr(self, rule):
                 return getattr(self, rule)()
             return self
-        sargs = self.args
-        terms = [ t._eval_rewrite(pattern, rule, **hints)
-                    if isinstance(t, Basic) else t
-                    for t in sargs ]
-        return self.func(*terms)
+
+        if hints.get('deep', True):
+            args = [ a._eval_rewrite(pattern, rule, **hints)
+                        if isinstance(a, Basic) else a
+                        for a in self.args ]
+        else:
+            args = self.args
+
+        if pattern is None or isinstance(self.func, pattern):
+            if hasattr(self, rule):
+                rewritten = getattr(self, rule)(*args)
+                if rewritten is not None:
+                    return rewritten
+        return self.func(*args)
 
     def rewrite(self, *args, **hints):
         """ Rewrite functions in terms of other functions.
