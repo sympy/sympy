@@ -1883,6 +1883,16 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     assert _test_args(MatAdd(X, Y))
 
 
+def test_sympy__matrices__expressions__matexpr__ElemWise():
+    from sympy.matrices.expressions.matexpr import ElemWise
+    from sympy.matrices.expressions import MatrixSymbol
+    from sympy import Symbol
+    X = MatrixSymbol('X', x, x)
+    k = Symbol('k')
+    f = lambda k: 2*k
+    assert _test_args(ElemWise(X, f(k)))
+
+
 def test_sympy__matrices__expressions__matexpr__Identity():
     from sympy.matrices.expressions.matexpr import Identity
     assert _test_args(Identity(3))

@@ -363,17 +363,40 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
-class Elem(MatrixExpr):
+
+class ElemWise(MatrixExpr):
+    """Symbolic replresentation of an elementwise operation on a matrix
+
+    Represented as ElemWise(A, f(x)) where f(x) is a function in x and
+    A is a MatrixSymbol
+    """
+    function = None
+    Mat      = None
 
     def __new__( cls, M, fn):
-        fn = sympify(fn)
-        if fn.is_Mul and (fn.is_Pow is False):
-            coeffs = fn.as_coefficient(x).args
-            return Elem._scalar_mul(M, *coeffs)
+        x        = Symbol('x')
+        if(type(M) in [MatrixSymbol, MatMul]):
+            ElemWise.function = fn
+            ElemWise.Mat      = M
+            fn = sympify(fn)
+            if fn == x:
+                return M
+            if fn.is_Mul and x in fn.args:
+                args = fn.args
+                coeffs = [elem for elem in args if ( elem.has(x) == False )]
+                return ElemWise._scalar_mul(M, coeffs)
+            else:
+                return super(ElemWise, cls).__new__(cls, M, fn)
+        elif(type(M) == ElemWise):
+            old_func, X = M.function, M.Mat
+            new_func = sympify(fn)
+            return ElemWise(X, new_func.subs(x, old_func))
 
     @staticmethod
-    def _scalar_mul(M, *args):
-        return MatMul(M, *args)
+    def _scalar_mul(M, args):
+        for arg in args:
+            M = M*arg.doit()
+        return M
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
