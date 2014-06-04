@@ -86,6 +86,13 @@ class BosonOperator(Operator):
     def _eval_commutator_FermionOperator(self, other, **hints):
         return Integer(0)
 
+    def _eval_anticommutator_BosonOperator(self, other, **hints):
+        if 'independent' in hints and hints['independent']:
+            # {a, b} = 0
+            return 2 * self * other
+
+        return None
+
     def _eval_anticommutator_FermionOperator(self, other, **hints):
         return 2 * self * other
 
