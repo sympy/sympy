@@ -77,10 +77,17 @@ class BosonOperator(Operator):
             if not self.is_annihilation and other.is_annihilation:
                 return Integer(-1)
 
+        elif 'independent' in hints and hints['independent']:
+            # [a, b] = 0
+            return Integer(0)
+
         return None
 
     def _eval_commutator_FermionOperator(self, other, **hints):
         return Integer(0)
+
+    def _eval_anticommutator_FermionOperator(self, other, **hints):
+        return 2 * self * other
 
     def _eval_adjoint(self):
         return BosonOperator(str(self.name), not self.is_annihilation)
@@ -152,15 +159,29 @@ class FermionOperator(Operator):
 
         return Operator.__new__(cls, *args)
 
+    def _eval_commutator_FermionOperator(self, other, **hints):
+        if 'independent' in hints and hints['independent']:
+            # [c, d] = 0
+            return Integer(0)
+
+        return None
+
     def _eval_anticommutator_FermionOperator(self, other, **hints):
         if self.name == other.name:
             # {a^\dagger, a} = 1
             if not self.is_annihilation and other.is_annihilation:
                 return Integer(1)
 
+        elif 'independent' in hints and hints['independent']:
+            # {c, d} = 2 * c * d, because [c, d] = 0 for independent operators
+            return 2 * self * other
+
         return None
 
     def _eval_anticommutator_BosonOperator(self, other, **hints):
+        return 2 * self * other
+
+    def _eval_commutator_BosonOperator(self, other, **hints):
         return Integer(0)
 
     def _eval_adjoint(self):
