@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Tensor Methods module contains functions for working with tensors: 
-     Creates the symmetric form of input tensor.
-     Creates the asymmetric form of input tensor.
+Creates the symmetric form of input tensor.
+Creates the asymmetric form of input tensor.
 Classes and methods tensor and arraypy contained in the module arraypy.
-
-     """
+"""
 
 from itertools import *
 from sympy.tensor import arraypy, tensor
@@ -18,7 +17,16 @@ def Symmetric(In_Arr):
      Output: symmetric array. Output type - arraypy or tensor, depends of input
      
      Examples:
+     =========
+     
+     >>> from sympy import *
+     >>> from sympy.tensor.arraypy import *
+     >>> from sympy.tensor.tensor_methods import *
      >>> a = list2arraypy(range(9), (3,3))
+     >>> print (a)
+     0 1 2 
+     3 4 5 
+     6 7 8 
      >>> b = Symmetric(a)
      >>> print (b)
      0.0 2.0 4.0 
@@ -63,8 +71,16 @@ def Asymmetric(In_Arr):
      Output: asymmetric array. Output type - arraypy or tensor, depends of input
      
      Examples:
+     =========
      
+     >>> from sympy import *
+     >>> from sympy.tensor.arraypy import *
+     >>> from sympy.tensor.tensor_methods import *
      >>> a = list2arraypy(range(9), (3,3))
+     >>> print (a)
+     0 1 2 
+     3 4 5 
+     6 7 8 
      >>> b = Asymmetric(a)
      >>> print (b)
      0.0 -1.0 -2.0 
@@ -116,14 +132,15 @@ def PermParity(lst):
      Given a permutation of the digits 0..N in order as a list, 
      returns its parity (or sign): +1 for even parity; -1 for odd.
      
-     Example:
+     Examples:
+     =========
+     
      >>> signs=zeros(6)
      >>> temp_i=0
      >>> for p in permutations(range(3)):
              signs[temp_i]=PermParity(list(p))
              print(signs[temp_i], p)
              temp_i+=1
-
     (1.0, (0, 1, 2))
     (-1.0, (0, 2, 1))
     (-1.0, (1, 0, 2))
@@ -144,6 +161,8 @@ def fac(n):
      Finds factorial of n
      
      Examples:
+     =========
+     
      >>> fac(1)
      1
      >>> fac(3)
@@ -155,18 +174,3 @@ def fac(n):
 	  return 1
      return fac(n-1) * n
 
-#====================================================
-#a = arraypy((2,2), 'Py')
-#b1 = Symmetric(a)
-
-#a = arraypy((2,2), 'Py')
-#b = Asymmetric(a)
-#print (a)
-#print (b)
-#print (b1)
-
-##from sympy.tensor1 import *
-##a = list2arraypy(range(9), (3,3))
-#a = arraypy ( [2, 3, 1] )
-#b = Symmetric(a)
-#print (b)
