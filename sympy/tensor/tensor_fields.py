@@ -17,23 +17,21 @@ from sympy import sqrt
 # ---------------- df --------------------------------
 
 def df(f,args,output_type='l'):
-    """ Returns an the 1-form df, differential of function f(x).
-	    Examples
-	    ========
-	    >>> from sympy import *
-	    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
-	    >>> f=x1**2*x2+sin(x2*x3-x2)
-	    >>> args=[x1, x2, x3]
-	    >>> df(f, args, a)   
-	    ========
-	    >>> from sympy import *
-	    >>> x1, x2, x3= symbols('x1 x2 x3')
-	    >>> f=x1**2*x2+sin(x2*x3-x2)
-	    >>> args_t=arraypy([1,3,1]).To_tensor(1)
-	    >>> args_t[1]=x1
-	    >>> args_t[2]=x2
-	    >>> args_t[3]=x3
-	    >>> df(f, args_t, 't') 
+    """ 
+    Returns the 1-form df, differential of function f(x).
+
+    Examples:
+    ========
+
+    >>> from sympy import *
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.tensor_fields import *
+    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
+    >>> args=[x1, x2, x3]
+    >>> f=x1**2*x2+sin(x2*x3-x2)
+    >>> D=df(f,args,'t')   
+    >>> print D
+    2*x1*x2 x1**2 + (x3 - 1)*cos(x2*x3 - x2) x2*cos(x2*x3 - x2)
     """
 # Handling of a vector of arguments
     if not isinstance(args, (list,tensor,arraypy)):
@@ -72,35 +70,22 @@ def df(f,args,output_type='l'):
 # ---------------- grad --------------------------------
 
 def grad(f,args,g=None,output_type=None):
-    """ Returns the vector field Gradient(f(x)) of a function f(x).               
-		Examples
-		========
-		>>> from sympy import *
-		>>> x1, x2, x3 = symbols('x1 x2 x3')
-		>>> f=x1**2*x2+sin(x2*x3-x2)
-		>>> args_t=arraypy([1,3,1]).To_tensor(1)
-		>>> args_t[1]=x1
-		>>> args_t[2]=x2
-		>>> args_t[3]=x3
-		>>> grad(f,args_t,output_type='t')
-		
-		========     
-		>>> from sympy import *
-		>>> x1, x2, x3 = symbols('x1 x2 x3')
-		>>> f=x1**2*x2+sin(x2*x3-x2)
-		>>> var=[x1,x2,x3]
-		>>> g=arraypy([2,3,1])
-		>>> g_t=g.To_tensor((-1,-1))
-		>>> g_t[1,1]=2
-		>>> g_t[1,2]=1
-		>>> g_t[1,3]=0
-		>>> g_t[2,1]=1
-		>>> g_t[2,2]=3
-		>>> g_t[2,3]=0
-		>>> g_t[3,1]=0
-		>>> g_t[3,2]=0
-		>>> g_t[3,3]=1
-		>>> m=grad(f,var,g_t,'a')
+    """
+    Returns the vector field Gradient(f(x)) of a function f(x).               
+
+    Examples:
+    ========
+
+    >>> from sympy import *
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.tensor_fields import *
+    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
+    >>> args=[x1, x2, x3]
+    >>> f=x1**2*x2+sin(x2*x3-x2)
+    >>> g=Matrix([[2,1,0],[1,3,0],[0,0,1]])   
+    >>> Gr=grad(f,args,g)   
+    >>> print Gr
+    -x1**2/5 + 6*x1*x2/5 - (x3 - 1)*cos(x2*x3 - x2)/5 2*x1**2/5 - 2*x1*x2/5 + 2*(x3 - 1)*cos(x2*x3 - x2)/5 x2*cos(x2*x3 - x2)    
     """
 # Handling of a vector of arguments
     if not isinstance(args, (list,tensor,arraypy)):
@@ -172,21 +157,22 @@ def grad(f,args,g=None,output_type=None):
 # ---------------- rot --------------------------------
      
 def rot(X,args,output_type=None):
-    """Returns the vorticity vector field rot(X) of a vector field X in R^3 (curl, rotation, rotor, vorticity)
-	A rotor can be calculated for only in three-dimensional Euclidean space. 
+    """
+    Returns the vorticity vector field rot(X) of a vector field X in R^3 (curl, rotation, rotor, vorticity). The rotor can be calculated for only in three-dimensional Euclidean space. 
     
-	Examples
-	========
-	>>> from sympy import *
-	>>> x1, x2, x3 = symbols('x1 x2 x3')
-	>>> X=arraypy(3)
-	>>> X_t=tensor(X,(1))
-	>>> X_t[0]=x1*x2**3
-	>>> X_t[1]=x2-cos(x3)
-	>>> X_t[2]=x3**3-x1
-	>>> arg=[x1,x2,x3]
-	>>> r=rot(X_t,arg,'t')
-
+    Examples:
+    ========
+    
+    >>> from sympy import *
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.tensor_fields import *
+    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
+    >>> args=[x1, x2, x3]
+    >>> X=[-x1**3+x2**2,9*x2**2+x1,5*x3+x2]
+    >>> g=Matrix([[2,1,0],[1,3,0],[0,0,1]])   
+    >>> R=rot(X,arg)   
+    >>> print R
+    [1, 0, -2*x2 + 1]
     """
 # Handling of a vector of arguments
     if not isinstance(args, (list,tensor,arraypy)):
@@ -260,17 +246,22 @@ def rot(X,args,output_type=None):
 # ---------------- div --------------------------------
 
 def div(X,args,g=None):
-    """ Returns the divergence of a vector field X.
-	Compute divergence of vector field consisting of N elements.
-	
-	Examples
-	========
-	>>> from sympy import *
-	>>> x1, x2, x3 = symbols('x1 x2 x3')
-	>>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
-	>>> g=Matrix([[2,1,0],[1,3,0],[0,0,1]])
-	>>> arg=[x1, x2, x3]
-	>>> div(X,arg,g)
+    """ 
+    Returns the divergence of a vector field X.
+
+    Examples:    
+    ========
+    
+    >>> from sympy import *
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.tensor_fields import *
+    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
+    >>> args=[x1, x2, x3]
+    >>> X=[-x1**3+x2**2,9*x2**2+x1,5*x3+x2]
+    >>> g=Matrix([[2,1,0],[1,3,0],[0,0,1]])   
+    >>> D=div(X,args,g)   
+    >>> print D
+    -3*x1**2 + 18*x2 + 5
     """
 # Handling of a vector of arguments
     if not isinstance(args, (list,tensor,arraypy)):
@@ -321,16 +312,22 @@ def div(X,args,g=None):
 #------------------LieXY-------------------------------
 
 def LieXY(X,Y,args,output_type=None):
-    """ Returns the vector field [X,Y], Lie bracket (commutator) of a vector fields X and Y
+    """ 
+    Returns the vector field [X,Y], Lie bracket (commutator) of a vector fields X and Y
 	
-	Examples
-	========
-	>>> from sympy import *
-	>>> x1, x2, x3 = symbols('x1 x2 x3')
-	>>> X=[-x**3,9*y**2,5*z, 8*h+x]
-	>>> Y=[x1**3*x2**3,x2*x3-sin(x1*x3),x3**3-x1**2]
-	>>> arg=[x1, x2, x3]
-	>>> LieXY(X,Y,arg,'a')
+    Examples:    
+    =========
+    
+    >>> from sympy import *
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.tensor_fields import *
+    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
+    >>> args=[x1, x2, x3]
+    >>> X=[-x1**3+x2**2,9*x2**2+x1,5*x3+x2]
+    >>> Y=[-x1**3+x3**2,x2**2+x1**2,x3+x2]
+    >>> L=LieXY(X,Y,args)   
+    >>> print L
+    [-3*x1**2*(-x1**3 + x2**2) + 3*x1**2*(-x1**3 + x3**2) - 2*x2*(x1**2 + x2**2) + 2*x3*(x2 + 5*x3), x1**3 + 2*x1*(-x1**3 + x2**2) + 2*x2*(x1 + 9*x2**2) - 18*x2*(x1**2 + x2**2) - x3**2, -x1**2 + x1 + 8*x2**2 - 4*x2]
     """
 # Handling of a vector of arguments
     if not isinstance(args, (list,tensor,arraypy)):
@@ -436,24 +433,40 @@ def NotNeedElement (_list, index):
 		if i != index:
 			res.append((_list[i]))
 	return (tuple(res))
-    
+
 
 # ---------------- dw --------------------------------
 def dw(omega, args):
-    """ Returns the exterior differential of a differential form
-	    
-	    Examples
-	    ========
-	    >>> from sympy import *
-	    >>> x1, x2, x3 = symbols('x1 x2 x3')
-	    >>> omega=arraypy([2,3,1]).To_tensor((-1,-1))
-	    >>> omega[1,2]=x3
-	    >>> omega[1,3]=-x2
-	    >>> omega[2,1]=-x3
-	    >>> omega[2,3]=x1
-	    >>> omega[3,1]=x2 
-	    >>> omega[3,2]=-x1
-	    >>> domega=dw(omega, [x1,x2,x3]) 
+    """ 
+    Returns the exterior differential of a differential form
+
+    Examples:    
+    =========
+    
+    >>> from sympy import *
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.tensor_fields import *
+    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
+    >>> args=[x1, x2, x3]
+    >>> om=arraypy((3,3))
+    >>> omega = tensor(om, (-1, -1))
+    >>> omega[0,1]=x3*x2
+    >>> omega[1,0]=-x3*x2
+    >>> omega[0,2]=-x2*x1 
+    >>> omega[2,0]=x2*x1 
+    >>> omega[1,2]=x1*x3
+    >>> omega[2,1]=-x1*x3
+    >>> d_omega = dw(omega, args)  
+    >>> print(d_omega)
+    0 0 0 
+    0 0 x1 + x2 + x3 
+    0 -x1 - x2 - x3 0 
+    0 0 -x1 - x2 - x3 
+    0 0 0 
+    x1 + x2 + x3 0 0 
+    0 x1 + x2 + x3 0 
+    -x1 - x2 - x3 0 0 
+    0 0 0
     """
 # Handling of a vector of arguments
     if not isinstance(args, (list,tensor,arraypy)):
@@ -503,7 +516,8 @@ def dw(omega, args):
 # ---------------- NeedElementK --------------------------------
 
 def NeedElementK (_list, index,k):
-    """The function replaces the item "index" on the element "k". 
+    """
+    The function replaces the item "index" on the element "k". 
     The result is a tuple.
     """
     output = []
@@ -518,84 +532,94 @@ def NeedElementK (_list, index,k):
 # ---------------- Lie_omega --------------------------------
 
 def Lie_w(omega, X, args):
-	"""Returns the Lie derivative of a differential form 
-		
-		Examples
-		========
-		>>> from sympy import *
-		>>> x1, x2, x3 = symbols('x1 x2 x3')
-		>>> omega=arraypy([2,3,1]).To_tensor((-1,-1))
-		>>> omega[1,2]=x3
-		>>> omega[1,3]=-x2
-		>>> omega[2,1]=-x3
-		>>> omega[2,3]=x1
-		>>> omega[3,1]=x2
-		>>> omega[3,2]=-x1
-		>>> arg=[x1, x2, x3]
-		>>> X=[x1*x2**3,x2-cos(x3),x3**3-x1]
-		>>> Lie_w(omega,X,arg)
-	"""
+    """
+    Returns the Lie derivative of a differential form 
+
+    Examples:    
+    =========
+    
+    >>> from sympy import *
+    >>> from sympy.tensor.arraypy import *
+    >>> from sympy.tensor.tensor_fields import *
+    >>> x1, x2, x3, a= symbols('x1 x2 x3 a')
+    >>> args=[x1, x2, x3]
+    >>> X=[1,2,3]
+    >>> om=arraypy((3,3))
+    >>> omega = tensor(om, (-1, -1))
+    >>> omega[0,1]=x3*x2
+    >>> omega[1,0]=-x3*x2
+    >>> omega[0,2]=-x2*x1 
+    >>> omega[2,0]=x2*x1 
+    >>> omega[1,2]=x1*x3
+    >>> omega[2,1]=-x1*x3
+    >>> LwX=Lie_w(omega,X,args)  
+    >>> print(LwX)
+    0 3*x2 + 2*x3 -2*x1 - x2 
+    -3*x2 - 2*x3 0 3*x1 + x3 
+    2*x1 + x2 -3*x1 - x3 0 
+    """
 # Handling of a vector of arguments
-	if not isinstance(args, (list,tensor,arraypy)):
-		raise ValueError('The type of arguments vector must be list, tensor or arraypy')
-	if isinstance(args, (tensor,arraypy)):
-		if len(args.shape)!=1:
-			raise ValueError("The lenght of argument must be 1")	    
-		if isinstance(args,tensor):
-			if args.type_pq != (1,0):
+    if not isinstance(args, (list,tensor,arraypy)):
+	    raise ValueError('The type of arguments vector must be list, tensor or arraypy')
+    if isinstance(args, (tensor,arraypy)):
+	    if len(args.shape)!=1:
+		    raise ValueError("The lenght of argument must be 1")	    
+	    if isinstance(args,tensor):
+		    if args.type_pq != (1,0):
 				raise ValueError('The valency of tensor must be (+1)') 		
-		idx_args=args.start_index[0]
-	if isinstance(args, list):
+	    idx_args=args.start_index[0]
+    if isinstance(args, list):
 		idx_args=0
 
 # Handling of a vector field
-	if not isinstance(X, (list,tensor,arraypy)):
-		raise ValueError('The type of vector fields must be list, tensor or arraypy')	   
-	if isinstance(X, (tensor,arraypy)):
-		if len(X.shape)!=1:
-			raise ValueError("The dim of argument must be 1")
-		if isinstance(X,tensor):
-			if X.type_pq != (1,0):
-				raise ValueError('The valency of tensor must be (+1)') 		
-		idx_X=X.start_index[0]
-	if isinstance(X, list):
+    if not isinstance(X, (list,tensor,arraypy)):
+	    raise ValueError('The type of vector fields must be list, tensor or arraypy')	   
+    if isinstance(X, (tensor,arraypy)):
+	    if len(X.shape)!=1:
+		    raise ValueError("The dim of argument must be 1")
+	    if isinstance(X,tensor):
+		    if X.type_pq != (1,0):
+			    raise ValueError('The valency of tensor must be (+1)') 		
+	    idx_X=X.start_index[0]
+    if isinstance(X, list):
 		idx_X=0
 		
 # Handling of a differential form
-	if not isinstance(omega, (tensor,arraypy)):
-		raise ValueError("Type must be Tensor or arraypy") 
-	idx_omega = omega.start_index[0]	
+    if not isinstance(omega, (tensor,arraypy)):
+	    raise ValueError("Type must be Tensor or arraypy") 
+    idx_omega = omega.start_index[0]	
 
 
 #Define the start index in the output tensor
-	if type(omega)==type(X)==type(args):
-		if idx_omega!=idx_X or idx_omega!=idx_args or idx_X!=idx_args:
-			raise ValueError('The start index of tensor,vector field and vetcor of argements must be equal')
-	if type(omega)==type(X) and idx_omega!=idx_X:
-			raise ValueError('The start index of tensor and vector field must be equal')
-	idx_st=idx_omega
+    if type(omega)==type(X)==type(args):
+	    if idx_omega!=idx_X or idx_omega!=idx_args or idx_X!=idx_args:
+		    raise ValueError('The start index of tensor,vector field and vetcor of argements must be equal')
+    if type(omega)==type(X) and idx_omega!=idx_X:
+		    raise ValueError('The start index of tensor and vector field must be equal')
+    idx_st=idx_omega
 
 #Creating the output array in accordance with start indexes
-	n=omega.shape[0]    # the dimensionality of the input array
-	r=len(omega.shape)  # the rank of the input array
-	a=arraypy([r,n,idx_st])
-	valence_list=[(-1) for k in range(r)]
-	diff_Lie=a.To_tensor(valence_list)
+    n=omega.shape[0]    # the dimensionality of the input array
+    r=len(omega.shape)  # the rank of the input array
+    a=arraypy([r,n,idx_st])
+    valence_list=[(-1) for k in range(r)]
+    diff_Lie=a.To_tensor(valence_list)
 	  
 # Calculation
-	idx = diff_Lie.start_index
-	if isinstance(args,(tensor,arraypy)):
-		args=args.To_list()
-	if isinstance(X,(tensor,arraypy)):
-		X=X.To_list()
+    idx = diff_Lie.start_index
+    if isinstance(args,(tensor,arraypy)):
+	    args=args.To_list()
+    if isinstance(X,(tensor,arraypy)):
+	    X=X.To_list()
 		
-	for p in range(len(diff_Lie)):
-	    for k in range(len(idx)+1):			    
-		    tuple_list_indx = [NeedElementK(idx, f, k+idx_st) for f in range(len(idx))]
-		    diff_omega=diff(omega[idx],args[k])*X[k]
-		    for j in range(len(idx)):
-			    diff_Lie[idx]+=diff(X[k],args[idx[j]-idx_st])*omega[tuple_list_indx[j]]
-		    diff_Lie[idx]=diff_Lie[idx]+diff_omega		    
-	    idx = diff_Lie.Next_index(idx)
+    for p in range(len(diff_Lie)):
+	for k in range(len(idx)+1):			    
+		tuple_list_indx = [NeedElementK(idx, f, k+idx_st) for f in range(len(idx))]
+		diff_omega=diff(omega[idx],args[k])*X[k]
+		for j in range(len(idx)):
+			diff_Lie[idx]+=diff(X[k],args[idx[j]-idx_st])*omega[tuple_list_indx[j]]
+		diff_Lie[idx]=diff_Lie[idx]+diff_omega		    
+	idx = diff_Lie.Next_index(idx)
 # Output
-	return diff_Lie
+    return diff_Lie
+
