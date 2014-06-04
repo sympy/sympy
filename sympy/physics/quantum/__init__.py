@@ -55,6 +55,14 @@ from . import constants
 from .constants import *
 __all__.extend(constants.__all__)
 
-from . import fieldoperator
-from .fieldoperator import *
-__all__.extend(fieldoperator.__all__)
+from . import boson
+from .boson import *
+__all__.extend(boson.__all__)
+
+from . import fermion
+from .fermion import *
+__all__.extend(fermion.__all__)
+
+from . import operatorordering
+from .operatorordering import *
+__all__.extend(operatorordering.__all__)

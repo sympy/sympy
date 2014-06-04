@@ -13,8 +13,8 @@ from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.gate import UGate
-from sympy.physics.quantum.fieldoperator import (BosonOperator, BosonFockKet,
-                                                 BosonFockBra)
+from sympy.physics.quantum.boson import (BosonOperator, BosonFockKet,
+                                         BosonFockBra)
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
 

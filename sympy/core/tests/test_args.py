@@ -2309,45 +2309,45 @@ def test_sympy__physics__quantum__piab__PIABBra():
     assert _test_args(PIABBra('B'))
 
 
-def test_sympy__physics__quantum__fieldoperator__BosonOperator():
-    from sympy.physics.quantum.fieldoperator import BosonOperator
+def test_sympy__physics__quantum__boson__BosonOperator():
+    from sympy.physics.quantum.boson import BosonOperator
     assert _test_args(BosonOperator('a'))
     assert _test_args(BosonOperator('a', False))
 
 
-def test_sympy__physics__quantum__fieldoperator__BosonFockKet():
-    from sympy.physics.quantum.fieldoperator import BosonFockKet
+def test_sympy__physics__quantum__boson__BosonFockKet():
+    from sympy.physics.quantum.boson import BosonFockKet
     assert _test_args(BosonFockKet(1))
 
 
-def test_sympy__physics__quantum__fieldoperator__BosonFockBra():
-    from sympy.physics.quantum.fieldoperator import BosonFockBra
+def test_sympy__physics__quantum__boson__BosonFockBra():
+    from sympy.physics.quantum.boson import BosonFockBra
     assert _test_args(BosonFockBra(1))
 
 
-def test_sympy__physics__quantum__fieldoperator__BosonCoherentKet():
-    from sympy.physics.quantum.fieldoperator import BosonCoherentKet
+def test_sympy__physics__quantum__boson__BosonCoherentKet():
+    from sympy.physics.quantum.boson import BosonCoherentKet
     assert _test_args(BosonCoherentKet(1))
 
 
-def test_sympy__physics__quantum__fieldoperator__BosonCoherentBra():
-    from sympy.physics.quantum.fieldoperator import BosonCoherentBra
+def test_sympy__physics__quantum__boson__BosonCoherentBra():
+    from sympy.physics.quantum.boson import BosonCoherentBra
     assert _test_args(BosonCoherentBra(1))
 
 
-def test_sympy__physics__quantum__fieldoperator__FermionOperator():
-    from sympy.physics.quantum.fieldoperator import FermionOperator
+def test_sympy__physics__quantum__fermion__FermionOperator():
+    from sympy.physics.quantum.fermion import FermionOperator
     assert _test_args(FermionOperator('c'))
     assert _test_args(FermionOperator('c', False))
 
 
-def test_sympy__physics__quantum__fieldoperator__FermionFockKet():
-    from sympy.physics.quantum.fieldoperator import FermionFockKet
+def test_sympy__physics__quantum__fermion__FermionFockKet():
+    from sympy.physics.quantum.fermion import FermionFockKet
     assert _test_args(FermionFockKet(1))
 
 
-def test_sympy__physics__quantum__fieldoperator__FermionFockBra():
-    from sympy.physics.quantum.fieldoperator import FermionFockBra
+def test_sympy__physics__quantum__fermion__FermionFockBra():
+    from sympy.physics.quantum.fermion import FermionFockBra
     assert _test_args(FermionFockBra(1))
 
 
