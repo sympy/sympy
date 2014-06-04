@@ -1,4 +1,6 @@
-from sympy import symbols, Symbol, pi, sqrt, cos
+from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
+    Function, simplify)
+from sympy.abc import x, epsilon, mu
 from sympy.physics.optics import TWave
 
 
@@ -21,3 +23,7 @@ def test_twave():
     assert w3.time_period == 1/f
     assert w3.angular_velocity == 2*pi*f
     assert w3.wavenumber == 2*pi*f*n/c
+    assert simplify(w3.rewrite('sin') - sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
+        + A2**2)*sin(2*pi*f*t + phi1 + phi2 + pi/2)) == 0
+    E = Function('E')
+    assert w3.rewrite('pde') == epsilon*mu*Derivative(E(x, t), t, t) + Derivative(E(x, t), x, x)

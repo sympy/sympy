@@ -10,7 +10,8 @@ from __future__ import print_function, division
 
 __all__ = ['TWave']
 
-from sympy import sympify, pi, cos, sqrt, simplify, Symbol, S
+from sympy import (sympify, pi, sin, cos, sqrt, simplify, Symbol, S, C, I,
+    symbols, Derivative)
 from sympy.core.expr import Expr
 
 
@@ -43,7 +44,7 @@ class TWave(Expr):
     Raises
     =======
 
-    ValueError : When niether frequency nor time period is provided
+    ValueError : When neither frequency nor time period is provided
         or they are not consistent.
     TypeError : When anyting other than TWave objects is added.
 
@@ -258,3 +259,15 @@ class TWave(Expr):
                              )
         else:
             raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
+
+    def _eval_rewrite_as_sin(self, *args):
+        return self._amplitude*sin(self.angular_velocity*Symbol('t') + self._phase + pi/2, evaluate=False)
+
+    def _eval_rewrite_as_cos(self, *args):
+        return self._amplitude*cos(self.angular_velocity*Symbol('t') + self._phase)
+
+    def _eval_rewrite_as_pde(self, *args):
+        from sympy import Function
+        mu, epsilon, x, t = symbols('mu, epsilon, x, t')
+        E = Function('E')
+        return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
