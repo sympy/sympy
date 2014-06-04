@@ -256,7 +256,7 @@ from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify, cse
-from sympy.simplify.simplify import _mexpand, collect_const
+from sympy.simplify.simplify import _mexpand, collect_const, powdenest
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
@@ -1422,12 +1422,9 @@ def check_linear_2eq_order1(eq, func, func_coef):
     r = dict()
     # for equations Eq(a1*diff(x(t),t), b1*x(t) + c1*y(t) + d1)
     # and Eq(a2*diff(y(t),t), b2*x(t) + c2*y(t) + d2)
-    r['a1'] = fc[0,x(t),1]
-    r['a2'] = fc[1,y(t),1]
-    r['b1'] = -fc[0,x(t),0]
-    r['b2'] = -fc[1,x(t),0]
-    r['c1'] = -fc[0,y(t),0]
-    r['c2'] = -fc[1,y(t),0]
+    r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,y(t),1]
+    r['b1'] = -fc[0,x(t),0]/fc[0,x(t),1] ; r['b2'] = -fc[1,x(t),0]/fc[1,y(t),1]
+    r['c1'] = -fc[0,y(t),0]/fc[0,x(t),1] ; r['c2'] = -fc[1,y(t),0]/fc[1,y(t),1]
     const = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
@@ -1440,16 +1437,16 @@ def check_linear_2eq_order1(eq, func, func_coef):
     # Eq(diff(y(t),t), a*[f(t) + a*h(t)]x(t) + a*[g(t) - h(t)]*y(t))
     p = 0
     q = 0
-    p1 = cancel(r['b2']/cancel(r['b2']/r['c2']).as_numer_denom()[0])
-    p2 = cancel(r['b1']/cancel(r['b1']/r['c1']).as_numer_denom()[0])
+    p1 = cancel(r['b2']/(cancel(r['b2']/r['c2']).as_numer_denom()[0]))
+    p2 = cancel(r['b1']/(cancel(r['b1']/r['c1']).as_numer_denom()[0]))
     for n, i in enumerate([p1, p2]):
         for j in Mul.make_args(collect_const(i)):
             if not j.has(t):
                 q = j
-            if q!=0 and n==0:
+            if q and n==0:
                 if ((r['b2']/j - r['b1'])/(r['c1'] - r['c2']/j)) == j:
                     p = 1
-            if q!=0 and n==1:
+            elif q and n==1:
                 if ((r['b1']/j - r['b2'])/(r['c2'] - r['c1']/j)) == j:
                     p = 2
     # End of condition for type 6
@@ -6017,10 +6014,10 @@ def sysode_linear_2eq_order1(match_):
 
     # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
-    r['a'] = -fc[0,x(t),0]
-    r['c'] = -fc[1,x(t),0]
-    r['b'] = -fc[0,y(t),0]
-    r['d'] = -fc[1,y(t),0]
+    r['a'] = -fc[0,x(t),0]/fc[0,x(t),1]
+    r['c'] = -fc[1,x(t),0]/fc[1,y(t),1]
+    r['b'] = -fc[0,y(t),0]/fc[0,x(t),1]
+    r['d'] = -fc[1,y(t),0]/fc[1,y(t),1]
     const = [S(0),S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
@@ -6372,13 +6369,12 @@ def sysode_linear_2eq_order2(match_):
         for terms in Add.make_args(eq[i]):
             eqs += terms/fc[i,func[i],2]
         eq[i] = eqs
-
     # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
-    r['a1'] = -fc[0,x(t),1] ; r['a2'] = -fc[1,x(t),1]
-    r['b1'] = -fc[0,y(t),1] ; r['b2'] = -fc[1,y(t),1]
-    r['c1'] = -fc[0,x(t),0] ; r['c2'] = -fc[1,x(t),0]
-    r['d1'] = -fc[0,y(t),0] ; r['d2'] = -fc[1,y(t),0]
+    r['a1'] = -fc[0,x(t),1]/fc[0,x(t),2] ; r['a2'] = -fc[1,x(t),1]/fc[1,y(t),2]
+    r['b1'] = -fc[0,y(t),1]/fc[0,x(t),2] ; r['b2'] = -fc[1,y(t),1]/fc[1,y(t),2]
+    r['c1'] = -fc[0,x(t),0]/fc[0,x(t),2] ; r['c2'] = -fc[1,x(t),0]/fc[1,y(t),2]
+    r['d1'] = -fc[0,y(t),0]/fc[0,x(t),2] ; r['d2'] = -fc[1,y(t),0]/fc[1,y(t),2]
     const = [S(0), S(0)]
     for i in range(2):
         for j in Add.make_args(eq[i]):
@@ -6489,7 +6485,36 @@ def _linear_2eq_order2_type3(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type4(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    k = Symbol('k')
+    Ra, Ca, Rb, Cb = symbols('Ra, Ca, Rb, Cb')
+    a1 = r['a1'] ; a2 = r['a2']
+    b1 = r['b1'] ; b2 = r['b2']
+    c1 = r['c1'] ; c2 = r['c2']
+    d1 = r['d1'] ; d2 = r['d2']
+    k1 = r['e1'].expand().as_independent(t)[0]
+    k2 = r['e2'].expand().as_independent(t)[0]
+    ew1 = r['e1'].expand().as_independent(t)[1]
+    ew2 = powdenest(ew1).as_base_exp()[1]
+    ew3 = collect(ew2, t).coeff(t)
+    w = cancel(ew3/I)
+    # The particular solution is assumed to be (Ra+I*Ca)*exp(I*w*t) and
+    # (Rb+I*Cb)*exp(I*w*t) for x(t) and y(t) respectively
+    peq1 = (-w**2+c1)*Ra - a1*w*Ca + d1*Rb - b1*w*Cb - k1
+    peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
+    peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
+    peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
+    psol = solve([peq1, peq2, peq3, peq4])
+
+    chareq = (k**2+a1*k+c1)*(k**2+b2*k+d2) - (b1*k+d1)*(a2*k+c2)
+    [k1, k2, k3, k4] = roots_quartic(Poly(chareq))
+    sol1 = -C1*(b1*k1+d1)*exp(k1*t) - C2*(b1*k2+d1)*exp(k2*t) - \
+    C3*(b1*k3+d1)*exp(k3*t) - C4*(b1*k4+d1)*exp(k4*t) + (Ra+I*Ca)*exp(I*w*t)
+
+    a1_ = (a1-1)
+    sol2 = C1*(k1**2+a1_*k1+c1)*exp(k1*t) + C2*(k2**2+a1_*k2+c1)*exp(k2*t) + \
+    C3*(k3**2+a1_*k3+c1)*exp(k3*t) + C4*(k4**2+a1_*k4+c1)*exp(k4*t) + (Rb+I*Cb)*exp(I*w*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type5(x, y, t, r):
     C1, C2, C3, C4 = symbols('C1:5')
@@ -6568,17 +6593,42 @@ def _linear_2eq_order2_type9(x, y, t, r):
     d1 = -r['d1']*t**2; d2 = -r['d2']*t**2
     eq = (k**2+(a1-1)*k+c1)*(k**2+(b2-1)*k+d2)-(b1*k+d1)*(a2*k+c2)
     [k1, k2, k3, k4] = roots_quartic(Poly(eq))
-    sol1 = -C1*(b1*k1+d1)*abs(t)**k1 - C2*(b1*k2+d1)*abs(t)**k2 - \
-    C3*(b1*k3+d1)*abs(t)**k3 - C4*(b1*k4+d1)*abs(t)**k4
- 
+    sol1 = -C1*(b1*k1+d1)*exp(k1*log(t)) - C2*(b1*k2+d1)*exp(k2*log(t)) - \
+    C3*(b1*k3+d1)*exp(k3*log(t)) - C4*(b1*k4+d1)*exp(k4*log(t))
+
     a1_ = (a1-1)
-    sol2 = C1*(k1**2+a1_*k1+c1)*abs(t)**k1 + C2*(k2**2+a1_*k2+c1)*abs(t)**k2 + \
-    C3*(k3**2+a1_*k3+c1)*abs(t)**k3 + C4*(k4**2+a1_*k4+c1)*abs(t)**k4
+    sol2 = C1*(k1**2+a1_*k1+c1)*exp(k1*log(t)) + C2*(k2**2+a1_*k2+c1)*exp(k2*log(t)) \
+    + C3*(k3**2+a1_*k3+c1)*exp(k3*log(t)) + C4*(k4**2+a1_*k4+c1)*exp(k4*log(t))
 
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type10(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    u, v = symbols('u, v', function=True)
+    T = Symbol('T')
+    p = Wild('p', exclude=[t, t**2])
+    q = Wild('q', exclude=[t, t**2])
+    s = Wild('s', exclude=[t, t**2])
+    n = Wild('n', exclude=[t, t**2])
+    num, denum = r['c1'].as_numer_denom()
+    dic = denum.match((n*(p*t**2+q*t+s)**2).expand())
+    eqz = dic[p]*t**2 + dic[q]*t + dic[s]
+    a = num/dic[n]
+    b = cancel(r['d1']*eqz**2)
+    c = cancel(r['c2']*eqz**2)
+    d = cancel(r['d2']*eqz**2)
+    [msol1, msol2] = dsolve([Eq(diff(u(t), t, t), (a - dic[p]*dic[s] + dic[q]**2/4)*u(t) \
+    + b*v(t)), Eq(diff(v(t),t,t), c*u(t) + (d - dic[p]*dic[s] + dic[q]**2/4)*v(t))])
+    sol1 = (msol1.rhs*sqrt(abs(eqz))).subs(t, C.Integral(1/eqz, t))
+    sol2 = (msol2.rhs*sqrt(abs(eqz))).subs(t, C.Integral(1/eqz, t))
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type11(x, y, t, r):
-    return None
+    C1, C2, C3, C4 = symbols('C1:5')
+    u, v = symbols('u, v', function=True)
+    f = -r['c1'] ; g = -r['d1']
+    h = -r['c2'] ; p = -r['d2']
+    [msol1, msol2] = dsolve([Eq(diff(u(t),t), t*f*u(t) + t*g*v(t)), Eq(diff(v(t),t), t*h*u(t) + t*p*v(t))])
+    sol1 = C3*t + t*C.Integral(msol1.rhs/t**2, t)
+    sol2 = C4*t + t*C.Integral(msol2.rhs/t**2, t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2)]
