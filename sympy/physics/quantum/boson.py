@@ -1,6 +1,6 @@
 """Bosonic quantum operators."""
 
-from warnings mport warn
+from warnings import warn
 
 from sympy.core.compatibility import u
 from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
