@@ -20,4 +20,4 @@ def test_twave():
     assert w3.wavelength == c/(f*n)
     assert w3.time_period == 1/f
     assert w3.angular_velocity == 2*pi*f
-    assert w3.equation() == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2)*cos(2*pi*f*t + phi1 + phi2)
+    assert w3.wavenumber == 2*pi*f*n/c

@@ -43,7 +43,8 @@ class TWave(Expr):
     Raises
     =======
 
-    ValueError : When niether frequency nor time period is provided.
+    ValueError : When niether frequency nor time period is provided
+        or they are not consistent.
     TypeError : When anyting other than TWave objects is added.
 
 
@@ -218,9 +219,10 @@ class TWave(Expr):
         """
         return 2*pi*self._frequency
 
-    def equation(self, type='cosine'):
+    @property
+    def wavenumber(self):
         """
-        Returns equation of the wave.
+        Returns wavenumber of the wave.
 
         Examples
         ========
@@ -229,13 +231,10 @@ class TWave(Expr):
         >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
-        >>> w.equation('cosine')
-        A*cos(2*pi*f*t + phi)
+        >>> w.wavenumber
+        2*pi*f*n/c
         """
-        if not isinstance(type, str):
-            raise TypeError("type can only be a string.")
-        if type == 'cosine':
-            return self._amplitude*cos(self.angular_velocity*Symbol('t') + self._phase)
+        return 2*pi/self.wavelength
 
     def __str__(self):
         """String representation of a TWave."""
