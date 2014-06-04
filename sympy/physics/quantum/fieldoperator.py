@@ -179,6 +179,7 @@ class FermionOperator(Operator):
         return None
 
     def _eval_anticommutator_BosonOperator(self, other, **hints):
+        # because fermions and bosons commute
         return 2 * self * other
 
     def _eval_commutator_BosonOperator(self, other, **hints):
@@ -242,10 +243,23 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     n = 0
     while n < len(factors) - 1:
 
-        if isinstance(factors[n], BosonOperator) and factors[n].is_annihilation:
+        if isinstance(factors[n], BosonOperator):
             # boson
             if not isinstance(factors[n + 1], BosonOperator):
                 new_factors.append(factors[n])
+
+            elif factors[n].is_annihilation == factors[n + 1].is_annihilation:
+                if (independent and
+                        str(factors[n].name) > str(factors[n + 1].name)):
+                    new_factors.append(factors[n + 1])
+                    new_factors.append(factors[n])
+                    n += 1
+                else:
+                    new_factors.append(factors[n])
+
+            elif not factors[n].is_annihilation:
+                new_factors.append(factors[n])
+
             else:
                 if factors[n + 1].is_annihilation:
                     new_factors.append(factors[n])
@@ -262,11 +276,23 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                             factors[n + 1] * factors[n] + c.doit())
                     n += 1
 
-        elif (isinstance(factors[n], FermionOperator) and
-              factors[n].is_annihilation):
+        elif isinstance(factors[n], FermionOperator):
             # fermion
             if not isinstance(factors[n + 1], FermionOperator):
                 new_factors.append(factors[n])
+
+            elif factors[n].is_annihilation == factors[n + 1].is_annihilation:
+                if (independent and
+                        str(factors[n].name) > str(factors[n + 1].name)):
+                    new_factors.append(factors[n + 1])
+                    new_factors.append(factors[n])
+                    n += 1
+                else:
+                    new_factors.append(factors[n])
+
+            elif not factors[n].is_annihilation:
+                new_factors.append(factors[n])
+
             else:
                 if factors[n + 1].is_annihilation:
                     new_factors.append(factors[n])
@@ -378,7 +404,8 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
     new_factors = []
     while n < len(factors) - 1:
 
-        if isinstance(factors[n], BosonOperator) and factors[n].is_annihilation:
+        if (isinstance(factors[n], BosonOperator) and
+                factors[n].is_annihilation):
             # boson
             if not isinstance(factors[n + 1], BosonOperator):
                 new_factors.append(factors[n])
@@ -574,7 +601,8 @@ class BosonCoherentKet(Ket):
         if self.alpha == bra.alpha:
             return Integer(1)
         else:
-            return exp(-(abs(self.alpha)**2 + abs(bra.alpha)**2 - 2 * conjugate(bra.alpha) * self.alpha)/2)
+            return exp(-(abs(self.alpha)**2 + abs(bra.alpha)**2 -
+                         2 * conjugate(bra.alpha) * self.alpha)/2)
 
     def _apply_operator_BosonOperator(self, op, **options):
         if op.is_annihilation:
@@ -624,7 +652,7 @@ class FermionFockKet(Ket):
     """
 
     def __new__(cls, n):
-        if not n in [0, 1]:
+        if n not in [0, 1]:
             raise ValueError("n must be 0 or 1")
         return Ket.__new__(cls, n)
 
@@ -668,7 +696,7 @@ class FermionFockBra(Bra):
     """
 
     def __new__(cls, n):
-        if not n in [0, 1]:
+        if n not in [0, 1]:
             raise ValueError("n must be 0 or 1")
         return Bra.__new__(cls, n)
 
