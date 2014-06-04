@@ -6515,7 +6515,6 @@ def _linear_2eq_order2_type1(x, y, t, r):
     return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
 
 def _linear_2eq_order2_type2(x, y, t, r):
-<<<<<<< HEAD
     x0, y0 = symbols('x0, y0')
     if r['c1']*r['d2'] - r['c2']*r['d1'] != 0:
         sol = solve((r['c1']*x0+r['d1']*y0+r['e1'], r['c2']*x0+r['d2']*y0+r['e2']), x0, y0)
@@ -6533,8 +6532,6 @@ def _linear_2eq_order2_type2(x, y, t, r):
             psol2 = k*psol1 + (r['e2']-r['e1']*k)*t**2/2
             psol = [psol1, psol2]
     return psol
-
-<<<<<<< HEAD
 
 def _linear_2eq_order2_type3(x, y, t, r):
     C1, C2, C3, C4 = symbols('C1:5')
