@@ -2651,17 +2651,14 @@ class Expr(Basic, EvalfMixin):
 
     def aseries(self, x, n=6, logx=None, bound=0, hir=False):
         """
-        This algorithm is directly induced from the limit computational algorithm
-        provided by Gruntz. It majorly uses the mrv and rewrite sub-routines.
-        The overall idea of this algorithm is first to look for the most
-        rapidly varying subexpression w of a given expression f and then expands f
-        in a series in w. Then same thing is recursively done on the leading coefficient
-        till we get constant coefficients.
+        Returns the asymptotic expansion of self.
+        series() calls this method if it fails. Use this method directly for optional
+        ``hir`` and ``bound`` parameters.
 
         Use the ``hir`` parameter to produce hierarchical series. It stops the recursion
         at an early level and may provide nicer and more useful results.
 
-        If the most rapidly varrying subexpression of a given expression f is f itself,
+        If the most rapidly varying subexpression of a given expression f is f itself,
         the algorithm tries to find a normalised representation of the mrv set and rewrites f
         using this normalised representation.
         Use the ``bound`` parameter to give limit on rewriting coefficients in its normalised form.
@@ -2682,6 +2679,15 @@ class Expr(Basic, EvalfMixin):
         >>> e.aseries(x)
         exp(exp(x)/(1 - 1/x))
 
+        Notes
+        =====
+
+        This algorithm is directly induced from the limit computational algorithm
+        provided by Gruntz. It majorly uses the mrv and rewrite sub-routines.
+        The overall idea of this algorithm is first to look for the most
+        rapidly varying subexpression w of a given expression f and then expands f
+        in a series in w. Then same thing is recursively done on the leading coefficient
+        till we get constant coefficients.
 
         References
         ==========
@@ -2696,7 +2702,7 @@ class Expr(Basic, EvalfMixin):
 
         omega, exps = mrv(self, x)
         if x in omega:
-            return self.subs(x, exp(x)).aseries(x, n, logx, hir).subs(x, log(x))
+            return self.subs(x, exp(x)).aseries(x, n, logx, bound, hir).subs(x, log(x))
         d = C.Dummy('d', positive=True)
         f, logw = rewrite(exps, omega, x, d)
 
