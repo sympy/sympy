@@ -33,7 +33,7 @@ class FermionOp(Operator):
     ========
 
     >>> from sympy.physics.quantum import Dagger, AntiCommutator
-    >>> from sympy.physics.quantum import FermionOp
+    >>> from sympy.physics.quantum.fermion import FermionOp
     >>> c = FermionOp("c")
     >>> AntiCommutator(c, Dagger(c)).doit()
     1

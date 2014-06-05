@@ -34,7 +34,8 @@ class BosonOp(Operator):
     Examples
     ========
 
-    >>> from sympy.physics.quantum import Dagger, Commutator, BosonOp
+    >>> from sympy.physics.quantum import Dagger, Commutator
+    >>> from sympy.physics.quantum.boson import BosonOp
     >>> a = BosonOp("a")
     >>> Commutator(a, Dagger(a)).doit()
     1

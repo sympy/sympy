@@ -173,8 +173,9 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     Examples
     ========
 
-    >>> from sympy.physics.quantum import normal_ordered_form
-    >>> from sympy.physics.quantum import BosonOp, Dagger
+    >>> from sympy.physics.quantum import Dagger
+    >>> from sympy.physics.quantum.boson import BosonOp
+    >>> from sympy.physics.quantum.operatorordering import normal_ordered_form
     >>> a = BosonOp("a")
     >>> normal_ordered_form(a * Dagger(a))
     1 + Dagger(a)*a
@@ -296,7 +297,9 @@ def normal_order(expr, recursive_limit=10, _recursive_depth=0):
     Examples
     ========
 
-    >>> from sympy.physics.quantum import normal_order, BosonOp, Dagger
+    >>> from sympy.physics.quantum import Dagger
+    >>> from sympy.physics.quantum.boson import BosonOp
+    >>> from sympy.physics.quantum.operatorordering import normal_order
     >>> a = BosonOp("a")
     >>> normal_order(a * Dagger(a))
     Dagger(a)*a
