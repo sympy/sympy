@@ -1,7 +1,7 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
-)
+                   GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
+                   FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
+                   )
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
@@ -67,7 +67,7 @@ def test_union():
     assert Union(Interval(1, 2), S.EmptySet) == Interval(1, 2)
     assert Union(S.EmptySet) == S.EmptySet
 
-    assert Union(Interval(0, 1), [FiniteSet(1.0/n) for n in range(1, 10)]) == \
+    assert Union(Interval(0, 1), [FiniteSet(1.0 / n) for n in range(1, 10)]) == \
         Interval(0, 1)
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
@@ -144,7 +144,7 @@ def test_complement():
               Interval(3, oo, True, True))
 
     assert FiniteSet(0).complement == Union(Interval(-oo, 0, True, True),
-            Interval(0, oo, True, True))
+                                            Interval(0, oo, True, True))
 
     assert (FiniteSet(5) + Interval(S.NegativeInfinity, 0)).complement == \
         Interval(0, 5, True, True) + Interval(5, S.Infinity, True, True)
@@ -216,7 +216,7 @@ def test_intersection():
 
     # Products
     line = Interval(0, 5)
-    i = Intersection(line**2, line**3, evaluate=False)
+    i = Intersection(line ** 2, line ** 3, evaluate=False)
     assert (2, 2) not in i
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
@@ -278,8 +278,10 @@ def test_is_subset():
     assert (Interval(1, 2) + FiniteSet(3)).is_subset(
         (Interval(0, 2, False, True) + FiniteSet(2, 3)))
 
-    assert Interval(3, 4).is_subset(Union(Interval(0, 1), Interval(2, 5))) is True
-    assert Interval(3, 6).is_subset(Union(Interval(0, 1), Interval(2, 5))) is False
+    assert Interval(3, 4).is_subset(
+        Union(Interval(0, 1), Interval(2, 5))) is True
+    assert Interval(3, 6).is_subset(
+        Union(Interval(0, 1), Interval(2, 5))) is False
 
     assert FiniteSet(1, 2, 3, 4).is_subset(Interval(0, 5)) is True
     assert S.EmptySet.is_subset(FiniteSet(1, 2, 3)) is True
@@ -289,10 +291,12 @@ def test_is_subset():
 
     raises(ValueError, lambda: S.EmptySet.is_subset(1))
 
+
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
     assert Interval(0, 3).is_proper_subset(Interval(0, 2)) is False
     assert S.EmptySet.is_proper_subset(FiniteSet(1, 2, 3)) is True
+
 
 def test_is_superset():
 
@@ -306,7 +310,8 @@ def test_is_superset():
     assert (Interval(1, 2) + FiniteSet(3)).is_superset(
         (Interval(0, 2, False, True) + FiniteSet(2, 3))) == False
 
-    assert Interval(3, 4).is_superset(Union(Interval(0, 1), Interval(2, 5))) == False
+    assert Interval(3, 4).is_superset(
+        Union(Interval(0, 1), Interval(2, 5))) == False
 
     assert FiniteSet(1, 2, 3, 4).is_superset(Interval(0, 5)) == False
     assert S.EmptySet.is_superset(FiniteSet(1, 2, 3)) == False
@@ -316,10 +321,12 @@ def test_is_superset():
 
     raises(ValueError, lambda: S.EmptySet.is_superset(1))
 
+
 def test_is_proper_superset():
     assert Interval(0, 1).is_proper_superset(Interval(0, 2)) is False
     assert Interval(0, 3).is_proper_superset(Interval(0, 2)) is True
     assert FiniteSet(1, 2, 3).is_proper_superset(S.EmptySet) is True
+
 
 def test_contains():
     assert Interval(0, 2).contains(1) is True
@@ -420,6 +427,24 @@ def test_Finite_as_relational():
     assert FiniteSet(y, -5).as_relational(x) == Or(Eq(x, y), Eq(x, -5))
 
 
+def test_Finite_as_dict():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = FiniteSet((0, 0), (0, pi), (pi, 0), (pi, pi))
+    g = FiniteSet((0, 0, 1), (0, pi, 2), (pi, 0, 3), (pi, pi, 4))
+    e = FintieSet()
+    assert g.as_dict([x, y, z]) == [{x: 0, z: 1, y: 0}, {x: 0, z: 2, y: pi}, {
+        x: pi, z: 3, y: 0}, {x: pi, z: 4, y: pi}]
+    assert g.as_dict([x, y]) == [
+        {x: 0, y: 0}, {x: 0, y: pi}, {x: pi, y: 0}, {x: pi, y: pi}]
+    assert g.as_dict([x]) == [{x: 0}, {x: 0}, {x: pi}, {x: pi}]
+    assert g.as_dict([]) == [{}, {}, {}, {}]
+    assert f.as_dict([x, y]) == [
+        {x: 0, y: 0}, {x: 0, y: pi}, {x: pi, y: 0}, {x: pi, y: pi}]
+    assert e.as_dict([x, y]) == []
+
+
 def test_Union_as_relational():
     x = Symbol('x')
     assert (Interval(0, 1) + FiniteSet(2)).as_relational(x) == \
@@ -455,7 +480,7 @@ def test_finite_basic():
     assert FiniteSet(x, 1, 5).inf == Min(x, 1)
 
     # Ensure a variety of types can exist in a FiniteSet
-    S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x ** 2, Interval)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -474,12 +499,12 @@ def test_powerset():
     A = FiniteSet()
     pset = A.powerset()
     assert len(pset) == 1
-    assert pset ==  FiniteSet([S.EmptySet])
+    assert pset == FiniteSet([S.EmptySet])
 
     # FiniteSets
     A = FiniteSet([1, 2])
     pset = A.powerset()
-    assert len(pset) == 2**len(A)
+    assert len(pset) == 2 ** len(A)
     assert pset == FiniteSet([FiniteSet(), FiniteSet(1),
                               FiniteSet(2), A])
     # Not finite sets
@@ -500,11 +525,11 @@ def test_product_basic():
     assert 0 not in square
     assert (H, T) in coin ** 2
     assert (.5, .5, .5) in square * unit_line
-    assert (H, 3, 3) in coin * d6* d6
+    assert (H, 3, 3) in coin * d6 * d6
     HH, TT = sympify(H), sympify(T)
-    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
+    assert set(coin ** 2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
 
-    assert (d4*d4).is_subset(d6*d6)
+    assert (d4 * d4).is_subset(d6 * d6)
 
     inf, neginf = S.Infinity, S.NegativeInfinity
     assert square.complement == Union(
@@ -515,11 +540,12 @@ def test_product_basic():
         ((Interval(neginf, 0, True, True) + Interval(1, inf, True, True))
          * (Interval(neginf, 0, True, True) + Interval(1, inf, True, True))))
 
-    assert (Interval(-5, 5)**3).is_subset(Interval(-10, 10)**3)
-    assert not (Interval(-10, 10)**3).is_subset(Interval(-5, 5)**3)
-    assert not (Interval(-5, 5)**2).is_subset(Interval(-10, 10)**3)
+    assert (Interval(-5, 5) ** 3).is_subset(Interval(-10, 10) ** 3)
+    assert not (Interval(-10, 10) ** 3).is_subset(Interval(-5, 5) ** 3)
+    assert not (Interval(-5, 5) ** 2).is_subset(Interval(-10, 10) ** 3)
 
-    assert (Interval(.2, .5)*FiniteSet(.5)).is_subset(square)  # segment in square
+    # segment in square
+    assert (Interval(.2, .5) * FiniteSet(.5)).is_subset(square)
 
 
 def test_real():
@@ -534,7 +560,8 @@ def test_real():
 
     assert all(s.is_real for s in [I, J, A, B, C])
     assert not D.is_real
-    assert all((a + b).is_real for a in [I, J, A, B, C] for b in [I, J, A, B, C])
+    assert all((a + b).is_real for a in [I, J, A, B, C]
+               for b in [I, J, A, B, C])
     assert not any((a + D).is_real for a in [I, J, A, B, C, D])
 
     assert not (I + A + D).is_real
@@ -582,54 +609,57 @@ def test_Interval_free_symbols():
 def test_image_interval():
     from sympy.core.numbers import Rational
     x = Symbol('x', real=True)
-    assert imageset(x, 2*x, Interval(-2, 1)) == Interval(-4, 2)
-    assert imageset(x, 2*x, Interval(-2, 1, True, False)) == \
+    assert imageset(x, 2 * x, Interval(-2, 1)) == Interval(-4, 2)
+    assert imageset(x, 2 * x, Interval(-2, 1, True, False)) == \
         Interval(-4, 2, True, False)
-    assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
+    assert imageset(x, x ** 2, Interval(-2, 1, True, False)) == \
         Interval(0, 4, False, True)
-    assert imageset(x, x**2, Interval(-2, 1)) == Interval(0, 4)
-    assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
+    assert imageset(x, x ** 2, Interval(-2, 1)) == Interval(0, 4)
+    assert imageset(x, x ** 2, Interval(-2, 1, True, False)) == \
         Interval(0, 4, False, True)
-    assert imageset(x, x**2, Interval(-2, 1, True, True)) == \
+    assert imageset(x, x ** 2, Interval(-2, 1, True, True)) == \
         Interval(0, 4, False, True)
-    assert imageset(x, (x - 2)**2, Interval(1, 3)) == Interval(0, 1)
-    assert imageset(x, 3*x**4 - 26*x**3 + 78*x**2 - 90*x, Interval(0, 4)) == \
+    assert imageset(x, (x - 2) ** 2, Interval(1, 3)) == Interval(0, 1)
+    assert imageset(x, 3 * x ** 4 - 26 * x ** 3 + 78 * x ** 2 - 90 * x, Interval(0, 4)) == \
         Interval(-35, 0)  # Multiple Maxima
-    assert imageset(x, x + 1/x, Interval(-oo, oo)) == Interval(-oo, -2) \
+    assert imageset(x, x + 1 / x, Interval(-oo, oo)) == Interval(-oo, -2) \
         + Interval(2, oo)  # Single Infinite discontinuity
-    assert imageset(x, 1/x + 1/(x-1)**2, Interval(0, 2, True, False)) == \
-        Interval(Rational(3, 2), oo, False)  # Multiple Infinite discontinuities
+    assert imageset(x, 1 / x + 1 / (x - 1) ** 2, Interval(0, 2, True, False)) == \
+        Interval(
+            Rational(3, 2), oo, False)  # Multiple Infinite discontinuities
 
     # Test for Python lambda
-    assert imageset(lambda x: 2*x, Interval(-2, 1)) == Interval(-4, 2)
+    assert imageset(lambda x: 2 * x, Interval(-2, 1)) == Interval(-4, 2)
 
 
 @XFAIL  # See: https://github.com/sympy/sympy/pull/2723#discussion_r8659826
 def test_image_Intersection():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
-    assert imageset(x, x**2, Interval(-2, 0).intersect(Interval(x, y))) == \
-           Interval(0, 4).intersect(Interval(Min(x**2, y**2), Max(x**2, y**2)))
+    assert imageset(x, x ** 2, Interval(-2, 0).intersect(Interval(x, y))) == \
+        Interval(0, 4).intersect(
+            Interval(Min(x ** 2, y ** 2), Max(x ** 2, y ** 2)))
 
 
 def test_image_FiniteSet():
     x = Symbol('x', real=True)
-    assert imageset(x, 2*x, FiniteSet(1, 2, 3)) == FiniteSet(2, 4, 6)
+    assert imageset(x, 2 * x, FiniteSet(1, 2, 3)) == FiniteSet(2, 4, 6)
+
 
 def test_image_Union():
     x = Symbol('x', real=True)
-    assert imageset(x, x**2, Interval(-2, 0) + FiniteSet(1, 2, 3)) == \
-            (Interval(0, 4) + FiniteSet(9))
+    assert imageset(x, x ** 2, Interval(-2, 0) + FiniteSet(1, 2, 3)) == \
+        (Interval(0, 4) + FiniteSet(9))
 
 
 def test_image_EmptySet():
     x = Symbol('x', real=True)
-    assert imageset(x, 2*x, S.EmptySet) == S.EmptySet
+    assert imageset(x, 2 * x, S.EmptySet) == S.EmptySet
 
 
 def test_issue_5724():
-    raises(TypeError, lambda: I in Interval(-oo,oo))
-    raises(TypeError, lambda: Interval(-oo,oo).contains(I))
+    raises(TypeError, lambda: I in Interval(-oo, oo))
+    raises(TypeError, lambda: Interval(-oo, oo).contains(I))
     raises(TypeError, lambda: I > 2)
 
 
@@ -638,43 +668,43 @@ def test_boundary():
     y = Symbol('y', real=True)
     assert FiniteSet(1).boundary == FiniteSet(1)
     assert all(Interval(0, 1, left_open, right_open).boundary == FiniteSet(0, 1)
-            for left_open in (true, false) for right_open in (true, false))
+               for left_open in (true, false) for right_open in (true, false))
 
 
 def test_boundary_Union():
     assert (Interval(0, 1) + Interval(2, 3)).boundary == FiniteSet(0, 1, 2, 3)
     assert ((Interval(0, 1, False, True)
-           + Interval(1, 2, True, False)).boundary == FiniteSet(0, 1, 2))
+             + Interval(1, 2, True, False)).boundary == FiniteSet(0, 1, 2))
 
     assert (Interval(0, 1) + FiniteSet(2)).boundary == FiniteSet(0, 1, 2)
     assert Union(Interval(0, 10), Interval(5, 15), evaluate=False).boundary \
-            == FiniteSet(0, 15)
+        == FiniteSet(0, 15)
 
     assert Union(Interval(0, 10), Interval(0, 1), evaluate=False).boundary \
-            == FiniteSet(0, 10)
+        == FiniteSet(0, 10)
     assert Union(Interval(0, 10, True, True),
                  Interval(10, 15, True, True), evaluate=False).boundary \
-            == FiniteSet(0, 10, 15)
+        == FiniteSet(0, 10, 15)
 
 
 @XFAIL
 def test_union_boundary_of_joining_sets():
     """ Testing the boundary of unions is a hard problem """
     assert Union(Interval(0, 10), Interval(10, 15), evaluate=False).boundary \
-            == FiniteSet(0, 15)
+        == FiniteSet(0, 15)
 
 
 def test_boundary_ProductSet():
     open_square = Interval(0, 1, True, True) ** 2
     assert open_square.boundary == (FiniteSet(0, 1) * Interval(0, 1)
-                                  + Interval(0, 1) * FiniteSet(0, 1))
+                                    + Interval(0, 1) * FiniteSet(0, 1))
 
     second_square = Interval(1, 2, True, True) * Interval(0, 1, True, True)
     assert (open_square + second_square).boundary == (
-                FiniteSet(0, 1) * Interval(0, 1)
-              + FiniteSet(1, 2) * Interval(0, 1)
-              + Interval(0, 1) * FiniteSet(0, 1)
-              + Interval(1, 2) * FiniteSet(0, 1))
+        FiniteSet(0, 1) * Interval(0, 1)
+        + FiniteSet(1, 2) * Interval(0, 1)
+        + Interval(0, 1) * FiniteSet(0, 1)
+        + Interval(1, 2) * FiniteSet(0, 1))
 
 
 def test_boundary_ProductSet_line():

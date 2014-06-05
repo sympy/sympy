@@ -17,6 +17,7 @@ from sympy.utilities import default_sort_key, subsets
 
 
 class Set(Basic):
+
     """
     The base class for any kind of set.
 
@@ -388,7 +389,7 @@ class Set(Basic):
     def __pow__(self, exp):
         if not sympify(exp).is_Integer and exp >= 0:
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
-        return ProductSet([self]*exp)
+        return ProductSet([self] * exp)
 
     def __sub__(self, other):
         return self.intersect(other.complement)
@@ -413,6 +414,7 @@ class Set(Basic):
 
 
 class ProductSet(Set):
+
     """
     Represents a Cartesian Product of Sets.
 
@@ -504,7 +506,7 @@ class ProductSet(Set):
         if len(other.args) != len(self.args):
             return S.EmptySet
         return ProductSet(a.intersect(b)
-                for a, b in zip(self.sets, other.sets))
+                          for a, b in zip(self.sets, other.sets))
 
     def _union(self, other):
         if not other.is_ProductSet:
@@ -538,8 +540,7 @@ class ProductSet(Set):
     def _boundary(self):
         return Union(ProductSet(b + b.boundary if i != j else b.boundary
                                 for j, b in enumerate(self.sets))
-                                for i, a in enumerate(self.sets))
-
+                     for i, a in enumerate(self.sets))
 
     @property
     def is_real(self):
@@ -564,6 +565,7 @@ class ProductSet(Set):
 
 
 class Interval(Set, EvalfMixin):
+
     """
     Represents a real interval as a Set.
 
@@ -827,7 +829,8 @@ class Interval(Set, EvalfMixin):
             return
 
         try:
-            sing = [x for x in singularities(expr, var) if x.is_real and x in self]
+            sing = [
+                x for x in singularities(expr, var) if x.is_real and x in self]
         except NotImplementedError:
             return
 
@@ -868,7 +871,8 @@ class Interval(Set, EvalfMixin):
                                         self.left_open, True)) + \
                 Union(*[imageset(f, Interval(sing[i], sing[i + 1]), True, True)
                         for i in range(1, len(sing) - 1)]) + \
-                imageset(f, Interval(sing[-1], self.end, True, self.right_open))
+                imageset(
+                    f, Interval(sing[-1], self.end, True, self.right_open))
 
     @property
     def _measure(self):
@@ -919,6 +923,7 @@ class Interval(Set, EvalfMixin):
 
 
 class Union(Set, EvalfMixin):
+
     """
     Represents a union of sets as a :class:`Set`.
 
@@ -1130,6 +1135,7 @@ class Union(Set, EvalfMixin):
 
 
 class Intersection(Set):
+
     """
     Represents an intersection of sets as a :class:`Set`.
 
@@ -1239,7 +1245,7 @@ class Intersection(Set):
         for s in args:
             if s.is_FiniteSet:
                 return s.__class__(x for x in s
-                        if all(x in other for other in args))
+                                   if all(x in other for other in args))
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1280,6 +1286,7 @@ class Intersection(Set):
 
 
 class EmptySet(with_metaclass(Singleton, Set)):
+
     """
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
@@ -1323,6 +1330,9 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def as_relational(self, symbol):
         return False
 
+    def as_dict(self, other):
+        return []
+
     def __len__(self):
         return 0
 
@@ -1342,7 +1352,9 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def _boundary(self):
         return self
 
+
 class UniversalSet(with_metaclass(Singleton, Set)):
+
     """
     Represents the set of all things.
     The universal set is available as a singleton as S.UniversalSet
@@ -1395,6 +1407,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
 
 class FiniteSet(Set, EvalfMixin):
+
     """
     Represents a finite set of discrete numbers
 
@@ -1497,7 +1510,7 @@ class FiniteSet(Set, EvalfMixin):
         """
         if not all(elem.is_number for elem in self):
             raise ValueError("%s: Complement not defined for symbolic inputs"
-                    % self)
+                             % self)
 
         # as there are only numbers involved, a straight sort is sufficient;
         # default_sort_key is not needed
@@ -1538,6 +1551,23 @@ class FiniteSet(Set, EvalfMixin):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
         from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
+
+    def as_dict(self, other):
+        """
+        Rewrite Finite set as a dictionary.
+
+        from sympy import FiniteSet, Symbol, pi
+        >>> f = FiniteSet((0, 0), (0, pi), (pi, 0), (pi, pi))
+        >>> x = Symbol('x')
+        >>> y = Symbol('y')
+        >>> print f.as_dict([x, y])
+        [{x: 0, y: 0}, {x: 0, y: pi}, {x: pi, y: 0}, {x: pi, y: pi}]
+
+        """
+        _list = []
+        for elem in self:
+            _list.append(dict(zip(other, list(elem))))
+        return _list
 
     @property
     def is_real(self):
