@@ -71,10 +71,21 @@ class BosonOp(Operator):
             if not self.is_annihilation and other.is_annihilation:
                 return Integer(-1)
 
+        elif 'independent' in hints and hints['independent']:
+            # [a, b] = 0
+            return Integer(0)
+
         return None
 
     def _eval_commutator_FermionOp(self, other, **hints):
         return Integer(0)
+
+    def _eval_anticommutator_BosonOp(self, other, **hints):
+        if 'independent' in hints and hints['independent']:
+            # {a, b} = 2 * a * b, because [a, b] = 0
+            return 2 * self * other
+
+        return None
 
     def _eval_adjoint(self):
         return BosonOp(str(self.name), not self.is_annihilation)
