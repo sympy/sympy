@@ -1188,7 +1188,7 @@ class MatrixBase(object):
     _eval_simplify = simplify
 
     def doit(self, **kwargs):
-        return self
+        return self._new(self.rows, self.cols, [i.doit() for i in self._mat])
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
