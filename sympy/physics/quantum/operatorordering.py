@@ -7,7 +7,8 @@ from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator, Dagger
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.physics.quantum import BosonOperator, FermionOperator
+from sympy.physics.quantum.boson import BosonOp
+from sympy.physics.quantum.fermion import FermionOp
 
 __all__ = [
     'normal_order',
@@ -49,9 +50,9 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     n = 0
     while n < len(factors) - 1:
 
-        if isinstance(factors[n], BosonOperator):
+        if isinstance(factors[n], BosonOp):
             # boson
-            if not isinstance(factors[n + 1], BosonOperator):
+            if not isinstance(factors[n + 1], BosonOp):
                 new_factors.append(factors[n])
 
             elif factors[n].is_annihilation == factors[n + 1].is_annihilation:
@@ -82,9 +83,9 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                             factors[n + 1] * factors[n] + c.doit())
                     n += 1
 
-        elif isinstance(factors[n], FermionOperator):
+        elif isinstance(factors[n], FermionOp):
             # fermion
-            if not isinstance(factors[n + 1], FermionOperator):
+            if not isinstance(factors[n + 1], FermionOp):
                 new_factors.append(factors[n])
 
             elif factors[n].is_annihilation == factors[n + 1].is_annihilation:
@@ -173,8 +174,8 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     ========
 
     >>> from sympy.physics.quantum import normal_ordered_form
-    >>> from sympy.physics.quantum import BosonOperator, Dagger
-    >>> a = BosonOperator("a")
+    >>> from sympy.physics.quantum import BosonOp, Dagger
+    >>> a = BosonOp("a")
     >>> normal_ordered_form(a * Dagger(a))
     1 + Dagger(a)*a
     """
@@ -210,10 +211,10 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
     new_factors = []
     while n < len(factors) - 1:
 
-        if (isinstance(factors[n], BosonOperator) and
+        if (isinstance(factors[n], BosonOp) and
                 factors[n].is_annihilation):
             # boson
-            if not isinstance(factors[n + 1], BosonOperator):
+            if not isinstance(factors[n + 1], BosonOp):
                 new_factors.append(factors[n])
             else:
                 if factors[n + 1].is_annihilation:
@@ -225,10 +226,10 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
                         new_factors.append(factors[n + 1] * factors[n])
                     n += 1
 
-        elif (isinstance(factors[n], FermionOperator) and
+        elif (isinstance(factors[n], FermionOp) and
               factors[n].is_annihilation):
             # fermion
-            if not isinstance(factors[n + 1], FermionOperator):
+            if not isinstance(factors[n + 1], FermionOp):
                 new_factors.append(factors[n])
             else:
                 if factors[n + 1].is_annihilation:
@@ -295,8 +296,8 @@ def normal_order(expr, recursive_limit=10, _recursive_depth=0):
     Examples
     ========
 
-    >>> from sympy.physics.quantum import normal_order, BosonOperator, Dagger
-    >>> a = BosonOperator("a")
+    >>> from sympy.physics.quantum import normal_order, BosonOp, Dagger
+    >>> a = BosonOp("a")
     >>> normal_order(a * Dagger(a))
     Dagger(a)*a
     """

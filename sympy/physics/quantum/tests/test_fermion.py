@@ -1,21 +1,21 @@
 from sympy.physics.quantum import Dagger, AntiCommutator, qapply
-from sympy.physics.quantum.fermion import FermionOperator
+from sympy.physics.quantum.fermion import FermionOp
 from sympy.physics.quantum.fermion import FermionFockKet, FermionFockBra
 
 
 def test_fermionoperator():
-    c = FermionOperator('c')
-    d = FermionOperator('d')
+    c = FermionOp('c')
+    d = FermionOp('d')
 
-    assert isinstance(c, FermionOperator)
-    assert isinstance(Dagger(c), FermionOperator)
+    assert isinstance(c, FermionOp)
+    assert isinstance(Dagger(c), FermionOp)
 
     assert c.is_annihilation
     assert not Dagger(c).is_annihilation
 
-    assert FermionOperator("c") == FermionOperator("c")
-    assert FermionOperator("c") != FermionOperator("d")
-    assert FermionOperator("c", True) != FermionOperator("c", False)
+    assert FermionOp("c") == FermionOp("c")
+    assert FermionOp("c") != FermionOp("d")
+    assert FermionOp("c", True) != FermionOp("c", False)
 
     assert AntiCommutator(c, Dagger(c)).doit() == 1
 
@@ -23,7 +23,7 @@ def test_fermionoperator():
 
 
 def test_fermion_states():
-    c = FermionOperator("c")
+    c = FermionOp("c")
 
     # Fock states
     assert (FermionFockBra(0) * FermionFockKet(1)).doit() == 0

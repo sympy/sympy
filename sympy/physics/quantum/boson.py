@@ -10,7 +10,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
 __all__ = [
-    'BosonOperator',
+    'BosonOp',
     'BosonFockKet',
     'BosonFockBra',
     'BosonCoherentKet',
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class BosonOperator(Operator):
+class BosonOp(Operator):
     """A bosonic operator that satisfies [a, Dagger(a)] == 1.
 
     Parameters
@@ -34,8 +34,8 @@ class BosonOperator(Operator):
     Examples
     ========
 
-    >>> from sympy.physics.quantum import Dagger, Commutator, BosonOperator
-    >>> a = BosonOperator("a")
+    >>> from sympy.physics.quantum import Dagger, Commutator, BosonOp
+    >>> a = BosonOp("a")
     >>> Commutator(a, Dagger(a)).doit()
     1
     """
@@ -64,7 +64,7 @@ class BosonOperator(Operator):
 
         return Operator.__new__(cls, *args)
 
-    def _eval_commutator_BosonOperator(self, other, **hints):
+    def _eval_commutator_BosonOp(self, other, **hints):
         if self.name == other.name:
             # [a^\dagger, a] = -1
             if not self.is_annihilation and other.is_annihilation:
@@ -72,11 +72,11 @@ class BosonOperator(Operator):
 
         return None
 
-    def _eval_commutator_FermionOperator(self, other, **hints):
+    def _eval_commutator_FermionOp(self, other, **hints):
         return Integer(0)
 
     def _eval_adjoint(self):
-        return BosonOperator(str(self.name), not self.is_annihilation)
+        return BosonOp(str(self.name), not self.is_annihilation)
 
     def _print_contents_latex(self, printer, *args):
         if self.is_annihilation:
@@ -128,7 +128,7 @@ class BosonFockKet(Ket):
     def _eval_innerproduct_BosonFockBra(self, bra, **hints):
         return KroneckerDelta(self.n, bra.n)
 
-    def _apply_operator_BosonOperator(self, op, **options):
+    def _apply_operator_BosonOp(self, op, **options):
         if op.is_annihilation:
             return sqrt(self.n) * BosonFockKet(self.n - 1)
         else:
@@ -194,7 +194,7 @@ class BosonCoherentKet(Ket):
         else:
             return exp(-(abs(self.alpha)**2 + abs(bra.alpha)**2 - 2 * conjugate(bra.alpha) * self.alpha)/2)
 
-    def _apply_operator_BosonOperator(self, op, **options):
+    def _apply_operator_BosonOp(self, op, **options):
         if op.is_annihilation:
             return self.alpha * self
         else:
@@ -223,7 +223,7 @@ class BosonCoherentBra(Bra):
     def dual_class(self):
         return BosonCoherentKet
 
-    def _apply_operator_BosonOperator(self, op, **options):
+    def _apply_operator_BosonOp(self, op, **options):
         if not op.is_annihilation:
             return self.alpha * self
         else:

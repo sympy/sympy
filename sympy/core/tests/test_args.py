@@ -2309,10 +2309,10 @@ def test_sympy__physics__quantum__piab__PIABBra():
     assert _test_args(PIABBra('B'))
 
 
-def test_sympy__physics__quantum__boson__BosonOperator():
-    from sympy.physics.quantum.boson import BosonOperator
-    assert _test_args(BosonOperator('a'))
-    assert _test_args(BosonOperator('a', False))
+def test_sympy__physics__quantum__boson__BosonOp():
+    from sympy.physics.quantum.boson import BosonOp
+    assert _test_args(BosonOp('a'))
+    assert _test_args(BosonOp('a', False))
 
 
 def test_sympy__physics__quantum__boson__BosonFockKet():
@@ -2335,10 +2335,10 @@ def test_sympy__physics__quantum__boson__BosonCoherentBra():
     assert _test_args(BosonCoherentBra(1))
 
 
-def test_sympy__physics__quantum__fermion__FermionOperator():
-    from sympy.physics.quantum.fermion import FermionOperator
-    assert _test_args(FermionOperator('c'))
-    assert _test_args(FermionOperator('c', False))
+def test_sympy__physics__quantum__fermion__FermionOp():
+    from sympy.physics.quantum.fermion import FermionOp
+    assert _test_args(FermionOp('c'))
+    assert _test_args(FermionOp('c', False))
 
 
 def test_sympy__physics__quantum__fermion__FermionFockKet():

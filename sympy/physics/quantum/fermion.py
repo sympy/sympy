@@ -10,13 +10,13 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
 __all__ = [
-    'FermionOperator',
+    'FermionOp',
     'FermionFockKet',
     'FermionFockBra'
 ]
 
 
-class FermionOperator(Operator):
+class FermionOp(Operator):
     """A fermionic operator that satisfies {c, Dagger(c)} == 1.
 
     Parameters
@@ -33,8 +33,8 @@ class FermionOperator(Operator):
     ========
 
     >>> from sympy.physics.quantum import Dagger, AntiCommutator
-    >>> from sympy.physics.quantum import FermionOperator
-    >>> c = FermionOperator("c")
+    >>> from sympy.physics.quantum import FermionOp
+    >>> c = FermionOp("c")
     >>> AntiCommutator(c, Dagger(c)).doit()
     1
     """
@@ -62,14 +62,14 @@ class FermionOperator(Operator):
 
         return Operator.__new__(cls, *args)
 
-    def _eval_commutator_FermionOperator(self, other, **hints):
+    def _eval_commutator_FermionOp(self, other, **hints):
         if 'independent' in hints and hints['independent']:
             # [c, d] = 0
             return Integer(0)
 
         return None
 
-    def _eval_anticommutator_FermionOperator(self, other, **hints):
+    def _eval_anticommutator_FermionOp(self, other, **hints):
         if self.name == other.name:
             # {a^\dagger, a} = 1
             if not self.is_annihilation and other.is_annihilation:
@@ -81,15 +81,15 @@ class FermionOperator(Operator):
 
         return None
 
-    def _eval_anticommutator_BosonOperator(self, other, **hints):
+    def _eval_anticommutator_BosonOp(self, other, **hints):
         # because fermions and bosons commute
         return 2 * self * other
 
-    def _eval_commutator_BosonOperator(self, other, **hints):
+    def _eval_commutator_BosonOp(self, other, **hints):
         return Integer(0)
 
     def _eval_adjoint(self):
-        return FermionOperator(str(self.name), not self.is_annihilation)
+        return FermionOp(str(self.name), not self.is_annihilation)
 
     def _print_contents_latex(self, printer, *args):
         if self.is_annihilation:
@@ -143,7 +143,7 @@ class FermionFockKet(Ket):
     def _eval_innerproduct_FermionFockBra(self, bra, **hints):
         return KroneckerDelta(self.n, bra.n)
 
-    def _apply_operator_FermionOperator(self, op, **options):
+    def _apply_operator_FermionOp(self, op, **options):
         if op.is_annihilation:
             if self.n == 1:
                 return FermionFockKet(0)

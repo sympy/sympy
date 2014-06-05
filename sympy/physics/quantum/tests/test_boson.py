@@ -1,23 +1,23 @@
 from sympy import sqrt, exp, S, prod
 from sympy.physics.quantum import Dagger, Commutator, qapply
-from sympy.physics.quantum.boson import BosonOperator
+from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.boson import (
     BosonFockKet, BosonFockBra, BosonCoherentKet, BosonCoherentBra)
 
 
 def test_bosonoperator():
-    a = BosonOperator('a')
-    b = BosonOperator('b')
+    a = BosonOp('a')
+    b = BosonOp('b')
 
-    assert isinstance(a, BosonOperator)
-    assert isinstance(Dagger(a), BosonOperator)
+    assert isinstance(a, BosonOp)
+    assert isinstance(Dagger(a), BosonOp)
 
     assert a.is_annihilation
     assert not Dagger(a).is_annihilation
 
-    assert BosonOperator("a") == BosonOperator("a")
-    assert BosonOperator("a") != BosonOperator("c")
-    assert BosonOperator("a", True) != BosonOperator("a", False)
+    assert BosonOp("a") == BosonOp("a")
+    assert BosonOp("a") != BosonOp("c")
+    assert BosonOp("a", True) != BosonOp("a", False)
 
     assert Commutator(a, Dagger(a)).doit() == 1
 
@@ -25,7 +25,7 @@ def test_bosonoperator():
 
 
 def test_boson_states():
-    a = BosonOperator("a")
+    a = BosonOp("a")
 
     # Fock states
     n = 3

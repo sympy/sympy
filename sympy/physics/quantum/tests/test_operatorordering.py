@@ -1,16 +1,16 @@
 from sympy.physics.quantum import Dagger
-from sympy.physics.quantum.boson import BosonOperator
-from sympy.physics.quantum.fermion import FermionOperator
+from sympy.physics.quantum.boson import BosonOp
+from sympy.physics.quantum.fermion import FermionOp
 from sympy.physics.quantum.operatorordering import (normal_order,
                                                  normal_ordered_form)
 
 
 def test_normal_order():
-    a = BosonOperator('a')
-    b = BosonOperator('b')
+    a = BosonOp('a')
+    b = BosonOp('b')
 
-    c = FermionOperator('c')
-    d = FermionOperator('d')
+    c = FermionOp('c')
+    d = FermionOp('d')
 
     assert normal_order(a * Dagger(a)) == Dagger(a) * a
     assert normal_order(Dagger(a) * a) == Dagger(a) * a
@@ -22,11 +22,11 @@ def test_normal_order():
 
 
 def test_normal_ordered_form():
-    a = BosonOperator('a')
-    b = BosonOperator('b')
+    a = BosonOp('a')
+    b = BosonOp('b')
 
-    c = FermionOperator('c')
-    d = FermionOperator('d')
+    c = FermionOp('c')
+    d = FermionOp('d')
 
     assert normal_ordered_form(Dagger(a) * a) == Dagger(a) * a
     assert normal_ordered_form(a * Dagger(a)) == 1 + Dagger(a) * a

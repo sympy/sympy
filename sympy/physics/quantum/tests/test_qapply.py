@@ -13,8 +13,7 @@ from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.gate import UGate
-from sympy.physics.quantum.boson import (BosonOperator, BosonFockKet,
-                                         BosonFockBra)
+from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
@@ -86,8 +85,8 @@ def test_outerproduct():
 
 
 def test_tensorproduct():
-    a = BosonOperator("a")
-    b = BosonOperator("b")
+    a = BosonOp("a")
+    b = BosonOp("b")
     ket1 = TensorProduct(BosonFockKet(1), BosonFockKet(2))
     ket2 = TensorProduct(BosonFockKet(0), BosonFockKet(0))
     ket3 = TensorProduct(BosonFockKet(0), BosonFockKet(2))
