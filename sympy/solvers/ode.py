@@ -540,29 +540,15 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         match = classify_sysode(eq, func)
         eq = match['eq']
         order = match['order']
+        func = match['func']
         t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-
-        # find all the functions if not given
-        if func==None:
-            func = []
-            for eqs in eq:
-                derivs = eqs.atoms(Derivative)
-                funcs = set.union(*[d.atoms(AppliedUndef) for d in derivs])
-                max_order = 0
-                for fun in funcs:
-                    order_ = ode_order(eqs, fun)
-                    if order_ > max_order or (order_ == max_order and eqs.coeff(diff(fun, t, order_))!=0):
-                        max_order = order_
-                        func_ = fun
-                func.append(func_)
-        match['func'] = func
 
         # keep highest order term coefficient positive
         for eqs, funcs in zip(eq, func):
             if eqs.coeff(diff(funcs,t,ode_order(eqs, funcs))).is_negative:
                 eqs = -eqs
         match['eq'] = eq
-        if len(func) < len(eq) and (func != [None]):
+        if len(func) != len(eq) and (func != [None]):
             raise ValueError("Number of function given is less than number of equations %s" % func)
         if len(set(order.values()))!=1:
             raise ValueError("It solves only those systems of"
@@ -1291,13 +1277,13 @@ def classify_sysode(eq, func=None, **kwargs):
     {'eq': [-12*x(t) + 6*y(t) + 5*Derivative(x(t), t), -11*x(t) - 3*y(t) + 2*Derivative(y(t), t)],
     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -12, (0, x(t), 1): 5, (0, y(t), 0): 6,
     (0, y(t), 1): 0, (1, x(t), 0): -11, (1, x(t), 1): 0, (1, y(t), 0): -3, (1, y(t), 1): 2},
-    'is_linear': True, 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type1'}
+    'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t)), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
     {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t), t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
     (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
-    'is_linear': True, 'no_of_equation': 2, 'order': [1, 1], 'type_of_equation': 'type4'}
+    'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type4'}
 
     """
 
@@ -1337,7 +1323,7 @@ def classify_sysode(eq, func=None, **kwargs):
                 order_ = ode_order(eqs_,funcs)
                 if max_order < order_:
                     max_order = order_
-        order[funcs] = max_order 
+        order[funcs] = max_order
     matching_hints['func'] = func
     for funcs in func:
         if funcs and len(funcs.args)!=1:
@@ -1379,7 +1365,19 @@ def classify_sysode(eq, func=None, **kwargs):
     matching_hints['is_linear'] = bool(is_linear)
 
     if len(set(order.values()))==1:
-        order_eq = matching_hints['order'].values()[0]
+        order_eq = list(matching_hints['order'].values())[0]
+        func = []
+        for eqs in eq:
+            derivs = eqs.atoms(Derivative)
+            funcs = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            max_order = 0
+            for fun in funcs:
+                order_ = ode_order(eqs, fun)
+                if order_ > max_order or (order_ == max_order and eqs.coeff(diff(fun, t, order_))!=0):
+                    max_order = order_
+                    func_ = fun
+            func.append(func_)
+        matching_hints['func'] = func
         if matching_hints['is_linear'] == True:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
@@ -1589,43 +1587,10 @@ def check_linear_2eq_order2(eq, func, func_coef):
             return None
 
 def check_linear_3eq_order1(eq, func, func_coef):
-    x = func[0].func
-    y = func[1].func
-    z = func[2].func
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
-    r['a1'] = fc[0,x(t),1]; r['a2'] = fc[1,y(t),1]; r['a3'] = fc[2,z(t),1]
-    r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
-    r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
-    r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
-    if all(not r[k].has(t) for k in 'a1 a2 a3 b1 b2 b3 c1 c2 c3 d1 d2 d3'.split()):
-        if r['c1']==r['d1']==r['d2']==0:
-            return 'type1'
-        elif r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
-        and r['b1'] == r['c2'] == r['d3'] == 0:
-            return 'type2'
-    else:
-        if r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
-        and r['b1'] == r['c2'] == r['d3'] == 0:
-            return 'type5'
-        if all(not (cancel(r['c1']/r[k])).has(t) for k in 'd1 b2 d2 b3 c3'.split()) \
-        and all(not cancel(r['c1']/(r['b1'] - r[k])) for k in 'c2 d3'.split()):
-            return 'type4'
+    return None
 
 def check_linear_neq_order1(eq, func, func_coef):
-    x = func[0].func
-    y = func[1].func
-    z = func[2].func
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
-    leng = len(eq)
-    for i in leng:
-        for j in leng:
-            if (fc[i,func[j],0]/fc[i,func[i],1]).has(t):
-                return None
-    return 'type1'
+    return None
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
     return None
@@ -6412,8 +6377,8 @@ def sysode_linear_2eq_order2(match_):
         for terms in Add.make_args(eq[i]):
             eqs += terms/fc[i,func[i],2]
         eq[i] = eqs
-    # for equations Eq(diff(x(t),t), a*x(t) + b*y(t) + k1)
-    # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
+    # for equations Eq(diff(x(t),t,t), a1*diff(x(t),t)+b1*diff(y(t),t)+c1*x(t)+d1*y(t)+e1)
+    # and Eq(a2*diff(y(t),t,t), a2*diff(x(t),t)+b2*diff(y(t),t)+c2*x(t)+d2*y(t)+e2)
     r['a1'] = -fc[0,x(t),1]/fc[0,x(t),2] ; r['a2'] = -fc[1,x(t),1]/fc[1,y(t),2]
     r['b1'] = -fc[0,y(t),1]/fc[0,x(t),2] ; r['b2'] = -fc[1,y(t),1]/fc[1,y(t),2]
     r['c1'] = -fc[0,x(t),0]/fc[0,x(t),2] ; r['c2'] = -fc[1,x(t),0]/fc[1,y(t),2]
