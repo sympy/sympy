@@ -173,10 +173,8 @@ class Order(Expr):
         if expr is S.NaN:
             return S.NaN
 
-        if not all(p.is_number for p in point):
-            raise NotImplementedError(
-                'Order at symbolic points not supported, '
-                'got %s as a point.' % point)
+        if any(x in p.free_symbols for x in variables for p in point):
+            raise ValueError('Got %s as a point.' % point)
 
         if variables:
             if point[0] is S.Infinity:
@@ -400,8 +398,11 @@ class Order(Expr):
                 syms = new.free_symbols
                 if not syms and new == self.point[i]:
                     del newvars[i], newpt[i]
-                elif len(syms) == 1:
-                    var = syms.pop()
+                elif len(syms) == 1 or old in syms:
+                    if old in syms:
+                        var = self.variables[i]
+                    else:
+                        var = syms.pop()
                     # First, try to substitute self.point in the "new"
                     # expr to see if this is a fixed point.
                     # E.g.  O(y).subs(y, sin(x))
@@ -415,6 +416,10 @@ class Order(Expr):
                         point = d.subs(res[0]).limit(old, self.point[i])
                     newvars[i] = var
                     newpt[i] = point
+                elif old not in syms:
+                    del newvars[i], newpt[i]
+                    newvars.extend(syms)
+                    newpt.extend([S.Zero]*len(syms))
                 else:
                     raise NotImplementedError
             return Order(newexpr, *zip(newvars, newpt))
