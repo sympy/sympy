@@ -2738,7 +2738,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     For simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
     it is sufficient that `\frac{Q(x)}{P(x)}` and `\frac{R(x)}{P(x)}` exists at
-    `x0`. A recurrence relation is obtained by substituting `y` as `\sum_{n=0}^\infty a_{n}x^{n}`,
+    `x_{0}`. A recurrence relation is obtained by substituting `y` as `\sum_{n=0}^\infty a_{n}x^{n}`,
     in the differential equation, and equating the nth term. Using this relation
     various terms can be generated.
 
