@@ -387,18 +387,16 @@ class Order(Expr):
         return result
 
     def _eval_subs(self, old, new):
-        newexpr = self.expr.subs(old, new)
-        if old.is_Symbol and old in self.variables:
+        if old in self.variables:
+            newexpr = self.expr.subs(old, new)
             i = self.variables.index(old)
             newvars = list(self.variables)
             newpt = list(self.point)
-            if isinstance(new, Symbol):
+            if new.is_Symbol:
                 newvars[i] = new
             else:
                 syms = new.free_symbols
-                if not syms and new == self.point[i]:
-                    del newvars[i], newpt[i]
-                elif len(syms) == 1 or old in syms:
+                if len(syms) == 1 or old in syms:
                     if old in syms:
                         var = self.variables[i]
                     else:
@@ -411,19 +409,17 @@ class Order(Expr):
                         from sympy.solvers import solve
                         d = Dummy()
                         res = solve(old - new.subs(var, d), d, dict=True)
-                        point = d.subs(res[0]).subs(old, self.point[i])
-                    if not point.is_real:
                         point = d.subs(res[0]).limit(old, self.point[i])
                     newvars[i] = var
                     newpt[i] = point
                 elif old not in syms:
                     del newvars[i], newpt[i]
-                    newvars.extend(syms)
-                    newpt.extend([S.Zero]*len(syms))
+                    if not syms and new == self.point[i]:
+                        newvars.extend(syms)
+                        newpt.extend([S.Zero]*len(syms))
                 else:
-                    raise NotImplementedError
+                    return
             return Order(newexpr, *zip(newvars, newpt))
-        return Order(newexpr, *self.args[1:])
 
     def _eval_conjugate(self):
         expr = self.expr._eval_conjugate()
