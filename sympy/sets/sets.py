@@ -108,6 +108,29 @@ class Set(Basic):
         """
         return None
 
+    def is_disjoint(self, other):
+        """
+        Returns True if 'self' and 'other' are disjoint
+
+        >>> from sympy import Interval
+        >>> Interval(0, 2).is_disjoint(Interval(1, 2))
+        False
+        >>> Interval(0, 2).is_disjoint(Interval(3, 4))
+        True
+
+        References
+        ==========
+
+        http://en.wikipedia.org/wiki/Disjoint_sets
+        """
+        return self.intersect(other) == S.EmptySet
+
+    def isdisjoint(self, other):
+        """
+        Alias for :meth:`is_disjoint()`
+        """
+        return self.is_disjoint(other)
+
     def _union(self, other):
         """
         This function should only be used internally
