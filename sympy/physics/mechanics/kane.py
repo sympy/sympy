@@ -93,10 +93,10 @@ class KanesMethod(object):
         >>> rhs = MM.inv() * forcing
         >>> rhs
         Matrix([[(-c*u(t) - k*q(t))/m]])
-        >>> KM.linearize()[0]
+        >>> KM.linearize(A_and_B=True)[0]
         Matrix([
-        [ 0,  1],
-        [-k, -c]])
+        [   0,    1],
+        [-k/m, -c/m]])
 
     Please look at the documentation pages for more information on how to
     perform linearization and how to deal with dependent coordinates & speeds,
@@ -559,6 +559,10 @@ class KanesMethod(object):
         return (f_c, f_v, f_a, f_0, f_1, f_2, f_3)
 
     def to_linearizer(self):
+        """ Returns an instance of the Linearizer class, initiated from the
+        data in the KanesMethod class. This may be more desirable than using
+        the linearize class method, as the Linearizer object will allow more
+        efficient recalculation (i.e. about varying operating points """
 
         if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
@@ -605,17 +609,40 @@ class KanesMethod(object):
         return Linearizer(f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, q_i, q_d,
                 u_i, u_d, r)
 
-    def linearize(self):
+    def linearize(self, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
-        
-        Returns M, A, B, r for the linearized form, M*dx = A*x + B*r,
-        where x = [q_independent u_independent]^T 
-        
-        For more fine tuned operation, please see the `Linearizer` class"""
+
+        If kwarg A_and_B is False (default), returns M, A, B, r for the
+        linearized form, M*dx = A*x + B*r, where x = [q_ind u_ind]^T
+
+        If kwarg A_and_B is True, returns A, B, r for the linearized form
+        dx = A*x + B*r, where x = [q_ind u_ind]^T. Note that this is
+        computationally intensive if there are many symbolic parameters. For
+        this reason, it may be more desirable to use the default A_and_B=False,
+        returning M, A, and B. Values may then be substituted in to these
+        matrices, and the state space form found as A = M^-1*A, B = M^-1*B.
+
+        In both cases, r is found as all dynamicsymbols in the equations of
+        motion that are not part of q, u, q', or u'. They are sorted in
+        canonical form.
+
+        The operating points may be also entered using kwargs. The more values
+        you can specify beforehand, the faster this computation will run.
+        Operating points are specified as dictionaries of {symbol: value}. The
+        value may be numeric or symbolic itself. Operating point kwargs are:
+
+        q_op: operating point for q (generalized coordinates)
+        u_op: operating point for u (generalized speeds)
+        qd_op: operating point for d/dt q
+        ud_op: operating point for d/dt u
+        r_op: operating point for forcing vector
+
+        For more documentation, please see the `Linearizer` class"""
+
         linearizer = self.to_linearizer()
-        M, A, B =  linearizer.linearize()
-        return M, A, B, linearizer.r
-        
+        result =  linearizer.linearize(**kwargs)
+        return result + (linearizer.r,)
+
     def kanes_equations(self, FL, BL):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 

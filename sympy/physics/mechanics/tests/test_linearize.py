@@ -88,26 +88,25 @@ def test_linearize_rolling_disc():
 
     # Perform the linearization
     # Precomputed trim condition:
-    eq_q = {q6: -r*cos(q2)}
-    eq_u = {u1: 0,
+    q_op = {q6: -r*cos(q2)}
+    u_op = {u1: 0,
             u2: sin(q2)*q1d + q3d,
             u3: cos(q2)*q1d,
             u4: -r*(sin(q2)*q1d + q3d)*cos(q3),
             u5: 0,
             u6: -r*(sin(q2)*q1d + q3d)*sin(q3)}
-    eq_qd = {q2d: 0,
+    qd_op = {q2d: 0,
             q4d: -r*(sin(q2)*q1d + q3d)*cos(q1),
             q5d: -r*(sin(q2)*q1d + q3d)*sin(q1),
             q6d: 0}
-    eq_ud = {u1d: 4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5,
+    ud_op = {u1d: 4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5,
             u2d: 0,
             u3d: 0,
             u4d: r*(sin(q2)*sin(q3)*q1d*q3d + sin(q3)*q3d**2),
             u5d: r*(4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5),
             u6d: -r*(sin(q2)*cos(q3)*q1d*q3d + cos(q3)*q3d**2)}
 
-    linearizer = KM.to_linearizer()
-    A, B = linearizer.linearize(eq_q, eq_u, eq_qd, eq_ud, A_and_B=True)
+    A, B, inp_vec = KM.linearize(q_op=q_op, u_op=u_op, qd_op=qd_op, ud_op=ud_op, A_and_B=True)
 
     upright_nominal = {q1d: 0, q2: 0, m: 1, r: 1, g: 1}
 
@@ -161,16 +160,11 @@ def test_linearize_pendulum_minimal():
     KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
-    # Linearize with Linearizer Class
-    linearizer = KM.to_linearizer()
-    A, B = linearizer.linearize(A_and_B=True)
+    # Linearize
+    A, B, inp_vec = KM.linearize(A_and_B=True)
 
-    A_sol = Matrix([[0, 1], 
-                    [-9.8*cos(q1)/L, 0]])
-    B_sol = Matrix([])
-
-    assert A == A_sol
-    assert B == B_sol
+    assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert B == Matrix([])
 
 def test_linearize_pendulum_nonminimal():
     # Create generalized coordinates and speeds for this non-minimal realization
@@ -220,17 +214,18 @@ def test_linearize_pendulum_nonminimal():
     R = m*g*N.x
 
     # Derive the equations of motion using the KanesMethod class.
-    KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], q_dependent=[q2],
-            u_dependent=[u2], configuration_constraints=f_c,
+    KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
+            u_dependent=[u1], configuration_constraints=f_c,
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
     kdd = KM.kindiffdict()
 
     # Set the trim condition to be straight down, and non-moving
-    q_trim = {q1: L, q2: 0}
-    u_trim = {u1: 0, u2: 0}
+    q_op = {q1: L, q2: 0}
+    u_op = {u1: 0, u2: 0}
+    ud_op = {u1d: 0, u2d: 0}
 
-    linearizer = KM.to_linearizer()
-    A, B = linearizer.linearize(q_trim, u_trim, A_and_B=True)
-    # TODO: This results in some nan and zoo (complex infinity) terms.
-    # I don't think it should at this trim condition, but I could be wrong
+    A, B, inp_vec = KM.linearize(q_op=q_op, u_op=u_op, ud_op=ud_op, A_and_B=True)
+
+    assert A == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])

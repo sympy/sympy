@@ -159,19 +159,19 @@ class Linearizer(object):
             self.B_u = -self.f_3.jacobian(self.r)
         else:
             self.B_u = Matrix([])
-                
-    def linearize(self, q_trim=None, u_trim=None, qd_trim=None, ud_trim=None, r_trim=None, A_and_B=False):
+
+    def linearize(self, q_op=None, u_op=None, qd_op=None, ud_op=None, r_op=None, A_and_B=False):
         """ Linearize the system about the trim conditions. Note that
-        q_trim, u_trim, qd_trim, ud_trim must satisfy the equations of motion.
+        q_op, u_op, qd_op, ud_op must satisfy the equations of motion.
         These may be either symbolic or numeric.
 
         Parameters
         ==========
-        q_trim : dict
-        u_trim : dict
-        qd_trim : dict
-        ud_trim : dict
-        r_trim : dict
+        q_op : dict
+        u_op : dict
+        qd_op : dict
+        ud_op : dict
+        r_op : dict
             Dictionaries of the trim conditions. These will be substituted in to
             the linearized system before the linearization is complete. Leave blank
             if you want a completely symbolic form. Note that any reduction in symbols
@@ -184,14 +184,14 @@ class Linearizer(object):
             [M]x = [A]x + [B]r will be returned. Default is False. """
 
         # Compose dicts of the trim condition for q, u, and qd, ud
-        if not q_trim: q_trim = dict()
-        if not u_trim: u_trim = dict()
-        if not qd_trim: qd_trim = dict()
-        if not ud_trim: ud_trim = dict()
-        trim = q_trim
-        trim.update(u_trim)
-        dtrim = qd_trim
-        dtrim.update(ud_trim)
+        if not q_op: q_op = dict()
+        if not u_op: u_op = dict()
+        if not qd_op: qd_op = dict()
+        if not ud_op: ud_op = dict()
+        trim = q_op
+        trim.update(u_op)
+        dtrim = qd_op
+        dtrim.update(ud_op)
 
         # Dimension terms
         n = len(self.q)
