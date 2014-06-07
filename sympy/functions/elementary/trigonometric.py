@@ -281,14 +281,6 @@ class sin(TrigonometricFunction):
             else:
                 return (-1)**(n//2) * x**(n)/C.factorial(n)
 
-    def _eval_aseries(self, n, args0, x, logx):
-        if C.im(args0[0]).is_positive:
-            return S.ImaginaryUnit*C.exp(-S.ImaginaryUnit*x)/2
-        elif C.im(args0[0]).is_negative:
-            return -S.ImaginaryUnit*C.exp(S.ImaginaryUnit*x)/2
-        else:
-            return super(sin, self)._eval_aseries(n, args0, x, logx)
-
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
@@ -546,14 +538,6 @@ class cos(TrigonometricFunction):
                 return -p * x**2 / (n*(n - 1))
             else:
                 return (-1)**(n//2)*x**(n)/C.factorial(n)
-
-    def _eval_aseries(self, n, args0, x, logx):
-        if C.im(args0[0]).is_positive:
-            return C.exp(-S.ImaginaryUnit*x)/2
-        elif C.im(args0[0]).is_negative:
-            return C.exp(S.ImaginaryUnit*x)/2
-        else:
-            return super(cos, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -907,16 +891,6 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return (-1)**k*C.euler(2*k)/C.factorial(2*k)*x**(2*k)
 
-    def _eval_aseries(self, n, args0, x, logx):
-        if C.im(args0[0]).is_positive:
-            return (2*C.exp(S.ImaginaryUnit*x)*
-                    C.hyper([1], [], -C.exp(2*S.ImaginaryUnit*x)))
-        elif C.im(args0[0]).is_negative:
-            return (2*C.exp(-S.ImaginaryUnit*x)*
-                    C.hyper([1], [], -C.exp(-2*S.ImaginaryUnit*x)))
-        else:
-            return super(sec, self)._eval_aseries(n, args0, x, logx)
-
     def _sage_(self):
         import sage.all as sage
         return sage.sec(self.args[0]._sage_())
@@ -989,16 +963,6 @@ class csc(ReciprocalTrigonometricFunction):
             k = n//2 + 1
             return ((-1)**(k - 1)*2*(2**(2*k - 1) - 1)*
                     C.bernoulli(2*k)*x**(2*k - 1)/C.factorial(2*k))
-
-    def _eval_aseries(self, n, args0, x, logx):
-        if C.im(args0[0]).is_positive:
-            return -(2*S.ImaginaryUnit*C.exp(S.ImaginaryUnit*x)*
-                     C.hyper([1], [], C.exp(2*S.ImaginaryUnit*x)))
-        elif C.im(args0[0]).is_negative:
-            return (2*S.ImaginaryUnit*C.exp(-S.ImaginaryUnit*x)*
-                    C.hyper([1], [], C.exp(-2*S.ImaginaryUnit*x)))
-        else:
-            return super(csc, self)._eval_aseries(n, args0, x, logx)
 
     def _sage_(self):
         import sage.all as sage
@@ -1134,18 +1098,6 @@ class tan(TrigonometricFunction):
             F = C.factorial(n + 1)
 
             return (-1)**a * b*(b - 1) * B/F * x**n
-
-    def _eval_aseries(self, n, args0, x, logx):
-        if C.im(args0[0]).is_positive:
-            return (S.ImaginaryUnit - 2*S.ImaginaryUnit*
-                    C.exp(2*S.ImaginaryUnit*x)*
-                    C.hyper([1], [], -C.exp(2*S.ImaginaryUnit*x)))
-        elif C.im(args0[0]).is_negative:
-            return (-S.ImaginaryUnit + 2*S.ImaginaryUnit*
-                    C.exp(-2*S.ImaginaryUnit*x)*
-                    C.hyper([1], [], -C.exp(-2*S.ImaginaryUnit*x)))
-        else:
-            return super(tan, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)*2/S.Pi
@@ -1384,18 +1336,6 @@ class cot(TrigonometricFunction):
             F = C.factorial(n + 1)
 
             return (-1)**((n + 1)//2) * 2**(n + 1) * B/F * x**n
-
-    def _eval_aseries(self, n, args0, x, logx):
-        if C.im(args0[0]).is_positive:
-            return (-S.ImaginaryUnit - 2*S.ImaginaryUnit*
-                    C.exp(2*S.ImaginaryUnit*x)*
-                    C.hyper([1], [], C.exp(2*S.ImaginaryUnit*x)))
-        elif C.im(args0[0]).is_negative:
-            return (S.ImaginaryUnit + 2*S.ImaginaryUnit*
-                    C.exp(-2*S.ImaginaryUnit*x)*
-                    C.hyper([1], [], C.exp(-2*S.ImaginaryUnit*x)))
-        else:
-            return super(cot, self)._eval_aseries(n, args0, x, logx)
 
     def _eval_nseries(self, x, n, logx):
         i = self.args[0].limit(x, 0)/S.Pi
