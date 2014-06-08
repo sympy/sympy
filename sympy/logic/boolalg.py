@@ -426,7 +426,7 @@ class Not(BooleanFunction):
     >>> ~x
     Not(x)
     >>> Not(And(Or(A, B), Or(~A, ~B)))
-    Not(And(Or(A, B), Or(Not(A), Not(B)))
+    Not(And(Or(A, B), Or(Not(A), Not(B))))
 
     Notes
     =====
@@ -624,7 +624,7 @@ class Nand(BooleanFunction):
     >>> Nand(True, True)
     False
     >>> Nand(x, y)
-    Or(Not(x), Not(y))
+    Not(And(x, y))
 
     """
     @classmethod
@@ -658,7 +658,7 @@ class Nor(BooleanFunction):
     >>> Nor(False, False)
     True
     >>> Nor(x, y)
-    And(Not(x), Not(y))
+    Not(Or(x, y))
 
     """
     @classmethod
@@ -774,7 +774,7 @@ class Equivalent(BooleanFunction):
             return And(*argset)
         if False in argset:
             argset.discard(False)
-            return Nor(*argset)
+            return And(*[~arg for arg in argset])
         _args = frozenset(argset)
         obj = super(Equivalent, cls).__new__(cls, _args)
         obj._argset = _args
