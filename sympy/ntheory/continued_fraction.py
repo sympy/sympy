@@ -97,6 +97,8 @@ def continued_fraction_iterator(x):
 
     >>> list(continued_fraction_iterator(Rational(3, 8)))
     [0, 2, 1, 2]
+    >>> list(continued_fraction_iterator(Rational(-3, 8)))
+    [-1, 1, 1, 1, 2]
 
     >>> for i, v in enumerate(continued_fraction_iterator(pi)):
     ...    if i > 7:
@@ -117,9 +119,10 @@ def continued_fraction_iterator(x):
     .. [1] http://en.wikipedia.org/wiki/Continued_fraction
 
     """
+    from sympy.functions import floor
 
     while True:
-        i = Integer(x)
+        i = floor(x)
         yield i
         x -= i
         if not x:

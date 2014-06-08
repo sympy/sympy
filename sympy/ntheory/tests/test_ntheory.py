@@ -787,6 +787,9 @@ def test_continued_fraction():
     assert take(phi) == [1, 1, 1, 1, 1, 1, 1]
     assert take(pi) == [3, 7, 15, 1, 292, 1, 1]
 
+    assert list(cf_i(S(17)/12)) == [1, 2, 2, 2]
+    assert list(cf_i(S(-17)/12)) == [-2, 1, 1, 2, 2]
+
     assert list(cf_c([1, 6, 1, 8])) == [S(1), S(7)/6, S(8)/7, S(71)/62]
     assert list(cf_c([2])) == [S(2)]
     assert list(cf_c([1, 1, 1, 1, 1, 1, 1])) == [S.One, S(2), S(3)/2, S(5)/3,
