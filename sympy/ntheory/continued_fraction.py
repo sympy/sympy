@@ -33,10 +33,13 @@ def continued_fraction_periodic(p, q, d=0):
     >>> continued_fraction_periodic(1, 2, 5)
     [[1]]
 
-    If the discriminator is zero then the number will be a rational number:
+    If the discriminator is zero or a perfect square then the number will be a
+    rational number:
 
     >>> continued_fraction_periodic(4, 3, 0)
     [1, 3]
+    >>> continued_fraction_periodic(4, 3, 49)
+    [3, 1, 2]
 
     See Also
     ========
@@ -55,6 +58,7 @@ def continued_fraction_periodic(p, q, d=0):
     from sympy.functions import sqrt
 
     p, q, d = list(map(as_int, [p, q, d]))
+    sd = sqrt(d)
 
     if q == 0:
         raise ValueError("The denominator is zero.")
@@ -62,18 +66,18 @@ def continued_fraction_periodic(p, q, d=0):
     if d < 0:
         raise ValueError("Delta supposed to be a non-negative "
                          "integer, got %d" % d)
-    elif d == 0:
+    elif d == 0 or sd.is_integer:
         # the number is a rational number
-        return list(continued_fraction_iterator(Rational(p, q)))
+        return list(continued_fraction_iterator(Rational(p + sd, q)))
 
     if (d - p**2)%q:
         d *= q**2
+        sd *= q
         p *= abs(q)
         q *= abs(q)
 
     terms = []
     pq = {}
-    sd = sqrt(d)
 
     while (p, q) not in pq:
         pq[(p, q)] = len(terms)

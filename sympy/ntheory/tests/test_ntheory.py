@@ -771,6 +771,7 @@ def test_continued_fraction():
     assert cf_p(27, 32, 0) == [0, 1, 5, 2, 2]
     assert cf_p(1, 2, 5) == [[1]]
     assert cf_p(0, 1, 2) == [1, [2]]
+    assert cf_p(6, 7, 49) == [1, 1, 6]
     assert cf_p(3796, 1387, 0) == [2, 1, 2, 1, 4]
     assert cf_p(3245, 10000) == [0, 3, 12, 4, 13]
     assert cf_p(1932, 2568) == [0, 1, 3, 26, 2]
