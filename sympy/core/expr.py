@@ -2651,7 +2651,7 @@ class Expr(Basic, EvalfMixin):
 
     def aseries(self, x, n=6, logx=None, bound=0, hir=False):
         """
-        Returns the asymptotic expansion of self.
+        Returns the asymptotic expansion for self. Refer [3]
         series() calls this method if it fails. Use this method directly for optional
         ``hir`` and ``bound`` parameters.
 
@@ -2710,8 +2710,8 @@ class Expr(Basic, EvalfMixin):
             # Need to find a canonical representative
             if bound <= 0:
                 return self
-            a = self.args[0]
-            s = a.aseries(x, bound=bound)
+            a = self.exp
+            s = a.aseries(x, n, logx, bound=bound)
             s = s.func(*[t.removeO() for t in s.args])
             rep = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
             f = exp(self.args[0] - rep.args[0]) / d

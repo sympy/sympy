@@ -1,7 +1,4 @@
-from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, oo, sinh,
-    sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, Piecewise, Eq, sign,
-    Derivative)
+from sympy import (Symbol, symbols, exp, log, sqrt, O, oo, sin, cos, PoleError)
 from sympy.abc import x, y, z
 
 from sympy.utilities.pytest import raises, XFAIL
