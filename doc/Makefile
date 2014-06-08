@@ -107,7 +107,7 @@ linkcheck:
 	      "or in _build/linkcheck/output.txt."
 
 livehtml:
-	livereload -b _build/html
+	livereload _build/html
 
 cheatsheet: _build/cheatsheet/cheatsheet.pdf
 
