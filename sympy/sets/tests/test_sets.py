@@ -540,6 +540,11 @@ def test_product_basic():
 
     assert (Interval(.2, .5)*FiniteSet(.5)).is_subset(square)  # segment in square
 
+    assert len(coin*coin*coin) == 8
+    assert len(S.EmptySet*S.EmptySet) == 0
+    assert len(S.EmptySet*coin) == 0
+    raises(TypeError, lambda: len(coin*Interval(0, 2)))
+
 
 def test_real():
     x = Symbol('x', real=True)
