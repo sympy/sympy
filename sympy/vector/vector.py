@@ -147,6 +147,8 @@ class Vector(Expr):
         if isinstance(other, Del):
             vect = self
             def directional_derivative(scalar_field):
+                if isinstance(vect, VectorZero):
+                    return S(0)
                 out = S(0)
                 out += vect.dot(other._i) * \
                        diff(scalar_field, other._x)
