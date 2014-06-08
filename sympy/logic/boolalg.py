@@ -4,7 +4,7 @@ Boolean algebra module for SymPy
 from __future__ import print_function, division
 
 from collections import defaultdict
-from itertools import product, islice
+from itertools import combinations, product
 
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -16,7 +16,8 @@ from sympy.core.function import Application
 from sympy.core.compatibility import ordered, xrange, with_metaclass
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
-from sympy.utilities.iterables import multiset
+
+
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
@@ -225,6 +226,30 @@ class BooleanFunction(Application, Boolean):
     def _eval_simplify(self, ratio, measure):
         return simplify_logic(self)
 
+    def to_nnf(self, simplify=True):
+        return self._to_nnf(*self.args, simplify=simplify)
+
+    @classmethod
+    def _to_nnf(cls, *args, **kwargs):
+        from sympy.logic.inference import is_literal
+        simplify = kwargs.get('simplify', True)
+        argset = set([])
+        for arg in args:
+            if not is_literal(arg):
+                arg = arg.to_nnf(simplify)
+            if simplify:
+                if isinstance(arg, cls):
+                    arg = arg.args
+                else:
+                    arg = (arg,)
+                for a in arg:
+                    if Not(a) in argset:
+                        return cls.zero
+                    argset.add(a)
+            else:
+                argset.add(arg)
+        return cls(*argset)
+
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -364,7 +389,7 @@ class Not(BooleanFunction):
     ========
 
     >>> from sympy.logic.boolalg import Not, And, Or
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, A, B
     >>> Not(True)
     False
     >>> Not(False)
@@ -377,6 +402,8 @@ class Not(BooleanFunction):
     Not(x)
     >>> ~x
     Not(x)
+    >>> Not(And(Or(A, B), Or(~A, ~B)))
+    Not(And(Or(A, B), Or(Not(A), Not(B)))
 
     Notes
     =====
@@ -438,6 +465,40 @@ class Not(BooleanFunction):
                                       " implemented for mutivariate"
                                       " expressions")
 
+    def to_nnf(self, simplify=True):
+        expr = self.args[0]
+        if expr.is_Atom:
+            return self
+
+        func, args = expr.func, expr.args
+
+        if func is And:
+            return Or._to_nnf(*[~arg for arg in args], simplify=simplify)
+
+        if func is Or:
+            return And._to_nnf(*[~arg for arg in args], simplify=simplify)
+
+        if func is Implies:
+            a, b = args
+            return And._to_nnf(a, ~b, simplify=simplify)
+
+        if func is Equivalent:
+            return And._to_nnf(Or(*args), Or(*[~arg for arg in args]), simplify=simplify)
+
+        if func is Xor:
+            result = []
+            for i in xrange(1, len(args)+1, 2):
+                for neg in combinations(args, i):
+                    clause = [~s if s in neg else s for s in args]
+                    result.append(Or(*clause))
+            return And._to_nnf(*result, simplify=simplify)
+
+        if func is ITE:
+            a, b, c = args
+            return And._to_nnf(Or(a, ~c), Or(~a, ~b), simplify=simplify)
+
+        raise ValueError()
+
 
 class Xor(BooleanFunction):
     """
@@ -460,14 +521,12 @@ class Xor(BooleanFunction):
     True
     >>> Xor(True, True)
     False
-
     >>> Xor(True, False, True, True, False)
     True
     >>> Xor(True, False, True, False)
     False
-
     >>> x ^ y
-    Or(And(Not(x), y), And(Not(y), x))
+    Xor(x, y)
 
     Notes
     =====
@@ -510,7 +569,15 @@ class Xor(BooleanFunction):
     @property
     @cacheit
     def args(self):
-        return tuple(ordered(self._argset))
+        return tuple(ordered(self._args))
+
+    def to_nnf(self, simplify=True):
+        args = []
+        for i in xrange(0, len(self.args)+1, 2):
+            for neg in combinations(self.args, i):
+                clause = [~s if s in neg else s for s in self.args]
+                args.append(Or(*clause))
+        return And._to_nnf(*args, simplify=simplify)
 
 
 class Nand(BooleanFunction):
@@ -643,6 +710,10 @@ class Implies(BooleanFunction):
         else:
             return Basic.__new__(cls, *args)
 
+    def to_nnf(self, simplify=True):
+        a, b = self.args
+        return Or._to_nnf(~a, b, simplify=simplify)
+
 
 class Equivalent(BooleanFunction):
     """
@@ -686,11 +757,18 @@ class Equivalent(BooleanFunction):
         obj._argset = _args
         return obj
 
-
     @property
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))
+
+    def to_nnf(self, simplify=True):
+        args = []
+        for a, b in zip(self.args, self.args[1:]):
+            args.append(Or(~a, b))
+        args.append(Or(~self.args[-1], self.args[0]))
+        return And._to_nnf(*args, simplify=simplify)
+
 
 class ITE(BooleanFunction):
     """
@@ -709,7 +787,13 @@ class ITE(BooleanFunction):
     >>> ITE(Or(True, False), And(True, True), Xor(True, True))
     True
     >>> ITE(x, y, z)
-    Or(And(Not(x), z), And(x, y))
+    ITE(x, y, z)
+    >>> ITE(True, x, y)
+    x
+    >>> ITE(False, x, y)
+    y
+    >>> ITE(x, y, y)
+    y
     """
     @classmethod
     def eval(cls, *args):
@@ -723,6 +807,10 @@ class ITE(BooleanFunction):
             return c
         if b == c:
             return b
+
+    def to_nnf(self, simplify=True):
+        a, b, c = self.args
+        return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
 
 ### end class definitions. Some useful methods
 
@@ -816,6 +904,29 @@ def _distribute(info):
         return info[0]
 
 
+def to_nnf(expr, simplify=True):
+    """
+    Converts expr to Negation Normal Form.
+    A logical expression is in Negation Normal Form (NNF) if it
+    contains only And, Or and Not, and Not is applied only to literals.
+    If simpify is True, the result contains no redundant clauses.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import A, B, C, D
+    >>> from sympy.logic.boolalg import Not, Equivalent, to_nnf
+    >>> to_nnf(Not((~A & ~B) | (C & D)))
+    And(Or(A, B), Or(Not(C), Not(D)))
+    >>> to_nnf(Equivalent(A >> B, B >> A))
+    And(Or(A, And(A, Not(B)), Not(B)), Or(And(B, Not(A)), B, Not(A)))
+    """
+    from sympy.logic.inference import is_literal
+    if is_literal(expr):
+        return expr
+    return expr if is_nnf(expr, simplify) else expr.to_nnf(simplify)
+
+
 def to_cnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
@@ -878,6 +989,53 @@ def to_dnf(expr, simplify=False):
 
     expr = eliminate_implications(expr)
     return distribute_or_over_and(expr)
+
+
+def is_nnf(expr, simplified=True):
+    """
+    Checks if expr is in Negation Normal Form.
+    A logical expression is in Negation Normal Form (NNF) if it
+    contains only And, Or and Not, and Not is applied only to literals.
+    If simpified is True, checks if result contains no redundant clauses.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import A, B, C
+    >>> from sympy.logic.boolalg import Not, is_nnf
+    >>> is_nnf(A & B | ~C)
+    True
+    >>> is_nnf((A | ~A) & (B | C))
+    False
+    >>> is_nnf((A | ~A) & (B | C), False)
+    True
+    >>> is_nnf(Not(A & B) | C)
+    False
+    >>> is_nnf((A >> B) & (B >> A))
+    False
+    """
+
+    if expr in (True, False) or expr.is_Atom:
+        return True
+
+    stack = [sympify(expr)]
+
+    while stack:
+        expr = stack.pop()
+        if expr.func == Not:
+            if not expr.args[0].is_Atom:
+                return False
+        elif expr.func not in (And, Or):
+            return False
+        else:
+            argset = set([])
+            for arg in expr.args:
+                if simplified and Not(arg) in argset:
+                    return False
+                argset.add(arg)
+            stack.extend(arg for arg in argset if not arg.is_Atom)
+
+    return True
 
 
 def is_cnf(expr):
@@ -990,25 +1148,7 @@ def eliminate_implications(expr):
     >>> eliminate_implications(Equivalent(A, B, C))
     And(Or(A, Not(C)), Or(B, Not(A)), Or(C, Not(B)))
     """
-    expr = sympify(expr)
-    if expr.is_Atom:
-        return expr  # (Atoms are unchanged.)
-    args = list(map(eliminate_implications, expr.args))
-
-    if expr.func is Implies:
-        a, b = args[0], args[-1]
-        return (~a) | b
-
-    elif expr.func is Equivalent:
-        clauses = []
-        for a, b in zip(islice(args, None), islice(args, 1, None)):
-            clauses.append(Or(Not(a), b))
-        a, b = args[-1], args[0]
-        clauses.append(Or(Not(a), b))
-        return And(*clauses)
-
-    else:
-        return expr.func(*args)
+    return to_nnf(expr)
 
 
 @deprecated(
