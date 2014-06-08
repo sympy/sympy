@@ -13,7 +13,7 @@ class BaseScalar(Dummy):
         obj = super(BaseScalar, cls).__new__(cls, name)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified.")
-        obj._id = (index, Symbol('r'))
+        obj._id = (index, Symbol('R'))
         obj._name = name
 
         return obj

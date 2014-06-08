@@ -1,5 +1,5 @@
 #TODOs: do stress-tests
-from sympy.simplify import simplify
+from sympy.simplify import simplify, trigsimp
 from sympy.core.assumptions import StdFactKB
 from sympy.core.symbol import Dummy
 from sympy.core import S, Add, Mul, sympify, Pow, Symbol, count_ops
@@ -17,7 +17,7 @@ class Vector(Expr):
     """
 
     is_Vector = True
-    _op_priority = 13.0
+    _op_priority = 12.0
 
     @property
     def components(self):
@@ -245,7 +245,7 @@ class BaseVector(Vector, Dummy):
 
     def __new__(cls, name, index):
         #Verify arguments
-        if not (0 <= index <= 2 and index%1 == 0):
+        if not index in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
         if not isinstance(name, str):
             raise ValueError("name must be a valid string")
@@ -260,7 +260,6 @@ class BaseVector(Vector, Dummy):
         assumptions = {}
         assumptions['commutative'] = True
         obj._assumptions = StdFactKB(assumptions)
-
 
         return obj
 
@@ -324,12 +323,10 @@ class VectorAdd(Vector, Add):
         assumptions['commutative'] = True
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
-        print obj
-        print obj.__class__
 
         return obj
 
-    #__init__ = Add.__init__
+    __init__ = Add.__init__
         
 
 class VectorMul(Vector, Mul):
@@ -349,18 +346,18 @@ class VectorMul(Vector, Mul):
             if isinstance(arg, VectorZero):
                 count += 1
                 zeroflag = True
-            elif arg == 0:
+            elif arg == S(0):
                 zeroflag = True
             elif isinstance(arg, BaseVector) or \
                  isinstance(arg, VectorMul):
                 count += 1
-                vect = arg
+                vect = arg._base_vect
                 measure_number *= arg._measure_number
             elif isinstance(arg, VectorAdd):
                 count += 1
                 vect = arg
             else:
-                measure_number *= sympify(arg)
+                measure_number *= arg
         #Make sure incompatible types weren't multipled
         if count > 1:
             raise ValueError("Cannot multiply one vector with another")
@@ -376,6 +373,8 @@ class VectorMul(Vector, Mul):
             return VectorAdd(*newargs)
 
         obj = super(VectorMul, cls).__new__(cls, *args, **options)
+        if isinstance(obj, Add):
+            return VectorAdd(*obj.args)
         obj._base_vect = vect._base_vect
         obj._measure_number = measure_number
         assumptions = {}
@@ -383,10 +382,10 @@ class VectorMul(Vector, Mul):
         obj._assumptions = StdFactKB(assumptions)
         
         obj._components = {vect._base_vect : measure_number}
-        
+
         return obj
         
-    #__init__ = Mul.__init__
+    __init__ = Mul.__init__
 
     def __str__(self, printer=None):
         #TODO: How to use the printer param?
@@ -415,6 +414,12 @@ class VectorZero(Vector, Zero):
         return isinstance(other, VectorZero)
 
     __req__ = __eq__
+
+    def normalize(self):
+        """
+        Returns the normalized version of this vector.
+        """
+        return self
 
 
 def _vect_div(one, other):
