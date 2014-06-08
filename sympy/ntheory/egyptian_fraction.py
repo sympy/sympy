@@ -80,14 +80,22 @@ def egyptian_fraction(r, algorithm="Greedy"):
     """
     x, y = r.as_numer_denom()
 
+    if r <= 0:
+        raise ValueError("Value must be positive")
+
+    prefix = []
+    if x > y:
+        prefix = [1] * int(x//y)
+        x %= y
+
     if algorithm == "Greedy":
-        return egypt_greedy(x, y)
+        return prefix + egypt_greedy(x, y)
     elif algorithm == "Graham Jewett":
-        return egypt_graham_jewett(x, y)
+        return prefix + egypt_graham_jewett(x, y)
     elif algorithm == "Takenouchi":
-        return egypt_takenouchi(x, y)
+        return prefix + egypt_takenouchi(x, y)
     elif algorithm == "Golomb":
-        return egypt_golomb(x, y)
+        return prefix + egypt_golomb(x, y)
     else:
         raise ValueError("Entered invalid algorithm")
 
