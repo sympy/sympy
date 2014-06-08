@@ -66,8 +66,8 @@ take, and you need a catchall function to simplify it.
 Polynomial/Rational Function Simplification
 ===========================================
 
-``expand``
-----------
+expand
+------
 
 ``expand`` is one of the most common simplification functions in SymPy.
 Although it has a lot of scopes, for now, we will consider its function in
@@ -91,8 +91,8 @@ it due to cancellation
     >>> expand((x + 1)*(x - 2) - (x - 1)*x)
     -2
 
-``factor``
-----------
+factor
+------
 
 ``factor`` takes a polynomial and factors it into irreducible factors over the
 rational numbers.  For example:
@@ -127,8 +127,8 @@ is no longer a polynomial over the rationals).
                      2
     (sin(x) + cos(x))
 
-``collect``
------------
+collect
+-------
 
 ``collect`` collects common powers of a term in an expression.  For example
 
@@ -150,8 +150,8 @@ is no longer a polynomial over the rationals).
 .. TODO: Discuss coeff method in more detail in some other section (maybe
    basic expression manipulation tools)
 
-``cancel``
-----------
+cancel
+------
 
 ``cancel`` will take any rational function and put it into the standard
 canonical form, `\frac{p}{q}`, where `p` and `q` are expanded polynomials with
@@ -202,8 +202,8 @@ the denominator of an expression, it can also be used to do the same thing:
 However, if you are only interested in making sure that the expression is in
 canceled form, ``cancel`` is more efficient than ``factor``.
 
-``apart``
----------
+apart
+-----
 
 ``apart`` performs a `partial fraction decomposition
 <http://en.wikipedia.org/wiki/Partial_fraction_decomposition>`_ on a rational
@@ -243,8 +243,8 @@ Trigonometric Simplification
 .. TODO: Can we actually do anything with inverse trig functions,
    simplification wise?
 
-``trigsimp``
-------------
+trigsimp
+--------
 
 To simplify expressions using trigonometric identities, use ``trigsimp``.
 
@@ -268,8 +268,8 @@ To simplify expressions using trigonometric identities, use ``trigsimp``.
 Much like ``simplify``, ``trigsimp`` applies various trigonometric identities to
 the input expression, and then uses a heuristic to return the "best" one.
 
-``expand_trig``
----------------
+expand_trig
+-----------
 
 To expand trigonometric functions, that is, apply the sum or double angle
 identities, use ``expand_trig``.
@@ -365,8 +365,8 @@ but for now, all we need to know are the following.
      >>> sqrt(x) == x**Rational(1, 2)
      True
 
-``powsimp``
------------
+powsimp
+-------
 
 ``powsimp`` applies identities 1 and 2 from above, from left to right.
 
@@ -413,8 +413,8 @@ automatically split apart again.
       ___   ___
     ╲╱ x ⋅╲╱ y
 
-``expand_power_exp`` / ``expand_power_base``
---------------------------------------------
+expand_power_exp / expand_power_base
+------------------------------------
 
 ``expand_power_exp`` and ``expand_power_base`` apply identities 1 and 2 from
 right to left, respectively.
@@ -450,8 +450,8 @@ number, and hence cannot be undone with ``expand_power_exp``.
      5
     x
 
-``powdenest``
--------------
+powdenest
+---------
 
 ``powdenest`` applies identity 3, from left to right.
 
@@ -512,8 +512,8 @@ verified that it does not hold in general for arbitrary complex `x`, for
 example, `\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x
 \neq x + 2\pi i`).
 
-``expand_log``
---------------
+expand_log
+----------
 
 To apply identities 1 and 2 from left to right, use ``expand_log``.  As
 always, the identities will not be applied unless they are valid.
@@ -538,8 +538,8 @@ that can be used to ignore assumptions.
     >>> expand_log(log(z**2), force=True)
     2⋅log(z)
 
-``logcombine``
---------------
+logcombine
+----------
 
 To apply identities 1 and 2 from right to left, use ``logcombine``.
 
@@ -616,8 +616,8 @@ referred to as the `ordinary hypergeometric function
      ├─  ⎜     │ z⎟
     2╵ 1 ⎝ 3   │  ⎠
 
-``rewrite``
------------
+rewrite
+-------
 
 A common way to deal with special functions is to rewrite them in terms of one
 another.  This works for any function in SymPy, not just special functions.
@@ -635,8 +635,8 @@ To rewrite an expression in terms of a function, use
 For some tips on applying more targeted rewriting, see the
 :ref:`tutorial-manipulation` section.
 
-``expand_func``
----------------
+expand_func
+-----------
 
 To expand special functions in terms of some identities, use ``expand_func``.
 For example
@@ -644,8 +644,8 @@ For example
     >>> expand_func(gamma(x + 3))
     x⋅(x + 1)⋅(x + 2)⋅Γ(x)
 
-``hyperexpand``
----------------
+hyperexpand
+-----------
 
 To rewrite ``hyper`` in terms of more standard functions, use
 ``hyperexpand``.
@@ -669,8 +669,8 @@ To rewrite ``hyper`` in terms of more standard functions, use
      z
     ℯ
 
-``combsimp``
-------------
+combsimp
+--------
 
 To simplify combinatorial expressions, use ``combsimp``.
 
