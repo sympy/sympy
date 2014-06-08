@@ -486,8 +486,8 @@ class zeta(Function):
                 return super(zeta, self)._eval_nseries(x, n, logx)
         p = []
         for k in range(0, n):
-            q = [(-1)**i * C.binomial(k, i) * (i+1)**(-x) for i in range(0, k)]
-            t = 1/2**(k+1) * Add(*q)
+            q = [(-1)**i * C.binomial(k, i) / (i+1)**(x) for i in range(0, k)]
+            t = S.Half**(k+1) * Add(*q)
             p.append(t)
         return 1/(1 - 2**(1-x)) * Add(*p)
 
