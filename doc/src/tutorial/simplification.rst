@@ -43,7 +43,7 @@ we wanted to "simplify" `x^2 + 2x + 1` into `(x + 1)^2`:
 We did not get what we want.  There is a function to perform this
 simplification, called ``factor()``, which will be discussed below.
 
-Another pitfall to ``simplify()``, which is that it can be unnecessarily slow,
+Another pitfall to ``simplify()`` is that it can be unnecessarily slow,
 since it tries many kinds of simplifications before picking the best one.  If
 you already know exactly what kind of simplification you are after, it is
 better to apply the specific simplification function(s) that apply those
