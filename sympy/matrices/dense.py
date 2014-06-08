@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import random
 
 from sympy.core.basic import Basic
@@ -12,6 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
+from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.matrices.matrices import (MatrixBase,
     ShapeError, a2idx, classof)
@@ -52,8 +55,9 @@ class DenseMatrix(MatrixBase):
         first column is selected (all rows, column 0):
 
         >>> m[:, 0]
-        [1]
-        [3]
+        Matrix([
+        [1],
+        [3]])
 
         If the slice is not a tuple then it selects from the underlying
         list of elements that are arranged in row order and a list is
@@ -64,26 +68,33 @@ class DenseMatrix(MatrixBase):
         >>> m[::2]
         [1, 3]
         """
-        if type(key) is tuple:
+        if isinstance(key, tuple):
             i, j = key
-            if type(i) is slice or type(j) is slice:
-                return self.submatrix(key)
-            else:
+            try:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
+            except (TypeError, IndexError):
+                if isinstance(i, slice):
+                    i = range(self.rows)[i]
+                elif is_sequence(i):
+                    pass
+                else:
+                    i = [i]
+                if isinstance(j, slice):
+                    j = range(self.cols)[j]
+                elif is_sequence(j):
+                    pass
+                else:
+                    j = [j]
+                return self.extract(i, j)
         else:
             # row-wise decomposition of matrix
-            if type(key) is slice:
+            if isinstance(key, slice):
                 return self._mat[key]
             return self._mat[a2idx(key)]
 
     def __setitem__(self, key, value):
         raise NotImplementedError()
-
-    def __hash__(self):
-        # issue 880 suggests that there should be no hash for a mutable
-        # object...but at least we aren't caching the result
-        return hash((type(self).__name__,) + (self.shape, tuple(self._mat)))
 
     @property
     def is_Identity(self):
@@ -106,9 +117,10 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix, ones
         >>> m = Matrix(3, 3, range(9))
         >>> m
-        [0, 1, 2]
-        [3, 4, 5]
-        [6, 7, 8]
+        Matrix([
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8]])
         >>> m.tolist()
         [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         >>> ones(3, 0).tolist()
@@ -128,7 +140,7 @@ class DenseMatrix(MatrixBase):
         return [self._mat[i: i + self.cols]
             for i in range(0, len(self), self.cols)]
 
-    def row(self, i, f=None):
+    def row(self, i):
         """Elementary row selector.
 
         Examples
@@ -136,7 +148,7 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy import eye
         >>> eye(2).row(0)
-        [1, 0]
+        Matrix([[1, 0]])
 
         See Also
         ========
@@ -148,16 +160,9 @@ class DenseMatrix(MatrixBase):
         row_join
         row_insert
         """
-        if f is None:
-            return self[i, :]
-        SymPyDeprecationWarning(
-            feature="calling .row(i, f)",
-            useinstead=".row_op(i, f)",
-            deprecated_since_version="0.7.2",
-        ).warn()
-        self.row_op(i, f)
+        return self[i, :]
 
-    def col(self, j, f=None):
+    def col(self, j):
         """Elementary column selector.
 
         Examples
@@ -165,8 +170,9 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy import eye
         >>> eye(2).col(0)
-        [1]
-        [0]
+        Matrix([
+        [1],
+        [0]])
 
         See Also
         ========
@@ -178,14 +184,7 @@ class DenseMatrix(MatrixBase):
         col_join
         col_insert
         """
-        if f is None:
-            return self[:, j]
-        SymPyDeprecationWarning(
-            feature="calling .col(j, f)",
-            useinstead=".col_op(j, f)",
-            deprecated_since_version="0.7.2",
-        ).warn()
-        self.col_op(j, f)
+        return self[:, j]
 
     def _eval_trace(self):
         """Calculate the trace of a square matrix.
@@ -203,6 +202,9 @@ class DenseMatrix(MatrixBase):
             trace += self._mat[i*self.cols + i]
         return trace
 
+    def _eval_determinant(self):
+        return self.det()
+
     def _eval_transpose(self):
         """Matrix transposition.
 
@@ -212,11 +214,13 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix, I
         >>> m=Matrix(((1, 2+I), (3, 4)))
         >>> m
-        [1, 2 + I]
-        [3,     4]
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
         >>> m.transpose()
-        [    1, 3]
-        [2 + I, 4]
+        Matrix([
+        [    1, 3],
+        [2 + I, 4]])
         >>> m.T == m.transpose()
         True
 
@@ -437,17 +441,19 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix
         >>> m = Matrix(2, 2, lambda i, j: i*2+j)
         >>> m
-        [0, 1]
-        [2, 3]
+        Matrix([
+        [0, 1],
+        [2, 3]])
         >>> m.applyfunc(lambda i: 2*i)
-        [0, 2]
-        [4, 6]
+        Matrix([
+        [0, 2],
+        [4, 6]])
 
         """
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self._new(self.rows, self.cols, map(f, self._mat))
+        out = self._new(self.rows, self.cols, list(map(f, self._mat)))
         return out
 
     def reshape(self, rows, cols):
@@ -459,14 +465,16 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix
         >>> m = Matrix(2, 3, lambda i, j: 1)
         >>> m
-        [1, 1, 1]
-        [1, 1, 1]
+        Matrix([
+        [1, 1, 1],
+        [1, 1, 1]])
         >>> m.reshape(1, 6)
-        [1, 1, 1, 1, 1, 1]
+        Matrix([[1, 1, 1, 1, 1, 1]])
         >>> m.reshape(3, 2)
-        [1, 1]
-        [1, 1]
-        [1, 1]
+        Matrix([
+        [1, 1],
+        [1, 1],
+        [1, 1]])
 
         """
         if len(self) != rows*cols:
@@ -484,15 +492,16 @@ class DenseMatrix(MatrixBase):
         >>> Y = X.as_mutable()
         >>> Y[1, 1] = 5 # Can set values in Y
         >>> Y
-        [1, 2]
-        [3, 5]
+        Matrix([
+        [1, 2],
+        [3, 5]])
         """
         return Matrix(self)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
-        from immutable import ImmutableMatrix as cls
+        from .immutable import ImmutableMatrix as cls
         if self.rows:
             return cls._new(self.tolist())
         return cls._new(0, self.cols, [])
@@ -500,15 +509,7 @@ class DenseMatrix(MatrixBase):
     @classmethod
     def zeros(cls, r, c=None):
         """Return an r x c matrix of zeros, square if c is omitted."""
-        if is_sequence(r):
-            SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r),
-                useinstead="zeros(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
-            ).warn()
-            r, c = r
-        else:
-            c = r if c is None else c
+        c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
         return cls._new(r, c, [cls._sympify(0)]*r*c)
@@ -605,12 +606,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy import Matrix, I, zeros, ones
         >>> m = Matrix(((1, 2+I), (3, 4)))
         >>> m
-        [1, 2 + I]
-        [3,     4]
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
         >>> m[1, 0] = 9
         >>> m
-        [1, 2 + I]
-        [9,     4]
+        Matrix([
+        [1, 2 + I],
+        [9,     4]])
         >>> m[1, 0] = [[0, 1]]
 
         To replace row r you assign to position r*m where m
@@ -619,18 +622,20 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> M = zeros(4)
         >>> m = M.cols
         >>> M[3*m] = ones(1, m)*2; M
-        [0, 0, 0, 0]
-        [0, 0, 0, 0]
-        [0, 0, 0, 0]
-        [2, 2, 2, 2]
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [2, 2, 2, 2]])
 
         And to replace column c you can assign to position c:
 
         >>> M[2] = ones(m, 1)*4; M
-        [0, 0, 4, 0]
-        [0, 0, 4, 0]
-        [0, 0, 4, 0]
-        [2, 2, 4, 2]
+        Matrix([
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [2, 2, 4, 2]])
         """
         rv = self._setitem(key, value)
         if rv is not None:
@@ -656,14 +661,16 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> I = eye(3)
         >>> I[:3, :2] = M
         >>> I
-        [0, 1, 0]
-        [2, 3, 0]
-        [4, 5, 1]
+        Matrix([
+        [0, 1, 0],
+        [2, 3, 0],
+        [4, 5, 1]])
         >>> I[0, 1] = M
         >>> I
-        [0, 0, 1]
-        [2, 2, 3]
-        [4, 4, 5]
+        Matrix([
+        [0, 0, 1],
+        [2, 2, 3],
+        [4, 4, 5]])
 
         See Also
         ========
@@ -700,14 +707,16 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> I = eye(3)
         >>> I[:2, 0] = [1, 2] # col
         >>> I
-        [1, 0, 0]
-        [2, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
         >>> I[1, :2] = [[3, 4]]
         >>> I
-        [1, 0, 0]
-        [3, 4, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [3, 4, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -728,9 +737,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
-        [1, 0, 0]
-        [2, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -757,9 +767,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
-        [1, 0, 0]
-        [2, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -770,7 +781,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         """
         i0 = i*self.cols
         ri = self._mat[i0: i0 + self.cols]
-        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, range(self.cols)) ]
+        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, list(range(self.cols))) ]
 
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
@@ -782,17 +793,18 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
-        [1, 2, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 2, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
         col
         row_op
         """
-        self._mat[j::self.cols] = map(lambda t: f(*t),
-            zip(self._mat[j::self.cols], range(self.rows)))
+        self._mat[j::self.cols] = list(map(lambda t: f(*t),
+            list(zip(self._mat[j::self.cols], list(range(self.rows))))))
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -803,12 +815,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import Matrix
         >>> M = Matrix([[0, 1], [1, 0]])
         >>> M
-        [0, 1]
-        [1, 0]
+        Matrix([
+        [0, 1],
+        [1, 0]])
         >>> M.row_swap(0, 1)
         >>> M
-        [1, 0]
-        [0, 1]
+        Matrix([
+        [1, 0],
+        [0, 1]])
 
         See Also
         ========
@@ -828,12 +842,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import Matrix
         >>> M = Matrix([[1, 0], [1, 0]])
         >>> M
-        [1, 0]
-        [1, 0]
+        Matrix([
+        [1, 0],
+        [1, 0]])
         >>> M.col_swap(0, 1)
         >>> M
-        [0, 1]
-        [0, 1]
+        Matrix([
+        [0, 1],
+        [0, 1]])
 
         See Also
         ========
@@ -854,8 +870,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> M = eye(3)
         >>> M.row_del(1)
         >>> M
-        [1, 0, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -876,9 +893,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> M = eye(3)
         >>> M.col_del(1)
         >>> M
-        [1, 0]
-        [0, 0]
-        [0, 1]
+        Matrix([
+        [1, 0],
+        [0, 0],
+        [0, 1]])
 
         See Also
         ========
@@ -924,7 +942,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l):  # pragma: no cover
+def list2numpy(l, dtype=object):  # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -933,13 +951,13 @@ def list2numpy(l):  # pragma: no cover
     matrix2numpy
     """
     from numpy import empty
-    a = empty(len(l), dtype=object)
+    a = empty(len(l), dtype)
     for i, s in enumerate(l):
         a[i] = s
     return a
 
 
-def matrix2numpy(m):  # pragma: no cover
+def matrix2numpy(m, dtype=object):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -948,13 +966,13 @@ def matrix2numpy(m):  # pragma: no cover
     list2numpy
     """
     from numpy import empty
-    a = empty(m.shape, dtype=object)
+    a = empty(m.shape, dtype)
     for i in range(m.rows):
         for j in range(m.cols):
             a[i, j] = m[i, j]
     return a
 
-
+@doctest_depends_on(modules=('numpy',))
 def symarray(prefix, shape):  # pragma: no cover
     """Create a numpy ndarray of symbols (as an object array).
 
@@ -977,39 +995,39 @@ def symarray(prefix, shape):  # pragma: no cover
     These doctests require numpy.
 
     >>> from sympy import symarray
-    >>> symarray('', 3) #doctest: +SKIP
-    [_0, _1, _2]
+    >>> symarray('', 3)
+    [_0 _1 _2]
 
     If you want multiple symarrays to contain distinct symbols, you *must*
     provide unique prefixes:
 
-    >>> a = symarray('', 3) #doctest: +SKIP
-    >>> b = symarray('', 3) #doctest: +SKIP
-    >>> a[0] is b[0] #doctest: +SKIP
+    >>> a = symarray('', 3)
+    >>> b = symarray('', 3)
+    >>> a[0] == b[0]
     True
-    >>> a = symarray('a', 3) #doctest: +SKIP
-    >>> b = symarray('b', 3) #doctest: +SKIP
-    >>> a[0] is b[0] #doctest: +SKIP
+    >>> a = symarray('a', 3)
+    >>> b = symarray('b', 3)
+    >>> a[0] == b[0]
     False
 
     Creating symarrays with a prefix:
 
-    >>> symarray('a', 3) #doctest: +SKIP
-    [a_0, a_1, a_2]
+    >>> symarray('a', 3)
+    [a_0 a_1 a_2]
 
     For more than one dimension, the shape must be given as a tuple:
 
-    >>> symarray('a', (2, 3)) #doctest: +SKIP
-    [[a_0_0, a_0_1, a_0_2],
-     [a_1_0, a_1_1, a_1_2]]
-    >>> symarray('a', (2, 3, 2)) #doctest: +SKIP
-    [[[a_0_0_0, a_0_0_1],
-      [a_0_1_0, a_0_1_1],
-      [a_0_2_0, a_0_2_1]],
+    >>> symarray('a', (2, 3))
+    [[a_0_0 a_0_1 a_0_2]
+     [a_1_0 a_1_1 a_1_2]]
+    >>> symarray('a', (2, 3, 2))
+    [[[a_0_0_0 a_0_0_1]
+      [a_0_1_0 a_0_1_1]
+      [a_0_2_0 a_0_2_1]]
     <BLANKLINE>
-     [[a_1_0_0, a_1_0_1],
-      [a_1_1_0, a_1_1_1],
-      [a_1_2_0, a_1_2_1]]]
+     [[a_1_0_0 a_1_0_1]
+      [a_1_1_0 a_1_1_1]
+      [a_1_2_0 a_1_2_1]]]
 
     """
     from numpy import empty, ndindex
@@ -1033,16 +1051,18 @@ def rot_axis3(theta):
 
     >>> theta = pi/3
     >>> rot_axis3(theta)
-    [       1/2, sqrt(3)/2, 0]
-    [-sqrt(3)/2,       1/2, 0]
-    [         0,         0, 1]
+    Matrix([
+    [       1/2, sqrt(3)/2, 0],
+    [-sqrt(3)/2,       1/2, 0],
+    [         0,         0, 1]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis3(pi/2)
-    [ 0, 1, 0]
-    [-1, 0, 0]
-    [ 0, 0, 1]
+    Matrix([
+    [ 0, 1, 0],
+    [-1, 0, 0],
+    [ 0, 0, 1]])
 
     See Also
     ========
@@ -1074,16 +1094,18 @@ def rot_axis2(theta):
 
     >>> theta = pi/3
     >>> rot_axis2(theta)
-    [      1/2, 0, -sqrt(3)/2]
-    [        0, 1,          0]
-    [sqrt(3)/2, 0,        1/2]
+    Matrix([
+    [      1/2, 0, -sqrt(3)/2],
+    [        0, 1,          0],
+    [sqrt(3)/2, 0,        1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis2(pi/2)
-    [0, 0, -1]
-    [0, 1,  0]
-    [1, 0,  0]
+    Matrix([
+    [0, 0, -1],
+    [0, 1,  0],
+    [1, 0,  0]])
 
     See Also
     ========
@@ -1115,16 +1137,18 @@ def rot_axis1(theta):
 
     >>> theta = pi/3
     >>> rot_axis1(theta)
-    [1,          0,         0]
-    [0,        1/2, sqrt(3)/2]
-    [0, -sqrt(3)/2,       1/2]
+    Matrix([
+    [1,          0,         0],
+    [0,        1/2, sqrt(3)/2],
+    [0, -sqrt(3)/2,       1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis1(pi/2)
-    [1,  0, 0]
-    [0,  0, 1]
-    [0, -1, 0]
+    Matrix([
+    [1,  0, 0],
+    [0,  0, 1],
+    [0, -1, 0]])
 
     See Also
     ========
@@ -1146,24 +1170,6 @@ def rot_axis1(theta):
 ###############
 
 
-def matrix_add(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_add(A, B)",
-        useinstead="A + B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A + B
-
-
-def matrix_multiply(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_multiply(A, B)",
-        useinstead="A*B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A*B
-
-
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
@@ -1172,8 +1178,9 @@ def matrix_multiply_elementwise(A, B):
     >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
     >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
     >>> matrix_multiply_elementwise(A, B)
-    [  0, 10, 200]
-    [300, 40,   5]
+    Matrix([
+    [  0, 10, 200],
+    [300, 40,   5]])
 
     See Also
     ========
@@ -1198,17 +1205,9 @@ def ones(r, c=None):
     eye
     diag
     """
-    from dense import Matrix
+    from .dense import Matrix
 
-    if is_sequence(r):
-        SymPyDeprecationWarning(
-            feature="The syntax ones([%i, %i])" % tuple(r),
-            useinstead="ones(%i, %i)." % tuple(r),
-            issue=3381, deprecated_since_version="0.7.2",
-        ).warn()
-        r, c = r
-    else:
-        c = r if c is None else c
+    c = r if c is None else c
     r = as_int(r)
     c = as_int(c)
     return Matrix(r, c, [S.One]*r*c)
@@ -1226,7 +1225,7 @@ def zeros(r, c=None, cls=None):
     diag
     """
     if cls is None:
-        from dense import Matrix as cls
+        from .dense import Matrix as cls
     return cls.zeros(r, c)
 
 
@@ -1260,13 +1259,15 @@ def diag(*values, **kwargs):
 
     >>> from sympy.matrices import diag, Matrix, ones
     >>> diag(1, 2, 3)
-    [1, 0, 0]
-    [0, 2, 0]
-    [0, 0, 3]
+    Matrix([
+    [1, 0, 0],
+    [0, 2, 0],
+    [0, 0, 3]])
     >>> diag(*[1, 2, 3])
-    [1, 0, 0]
-    [0, 2, 0]
-    [0, 0, 3]
+    Matrix([
+    [1, 0, 0],
+    [0, 2, 0],
+    [0, 0, 3]])
 
     The diagonal elements can be matrices; diagonal filling will
     continue on the diagonal from the last element of the matrix:
@@ -1276,25 +1277,28 @@ def diag(*values, **kwargs):
     >>> b = Matrix([[1, 2], [3, 4]])
     >>> c = Matrix([[5, 6]])
     >>> diag(a, 7, b, c)
-    [x, 0, 0, 0, 0, 0]
-    [y, 0, 0, 0, 0, 0]
-    [z, 0, 0, 0, 0, 0]
-    [0, 7, 0, 0, 0, 0]
-    [0, 0, 1, 2, 0, 0]
-    [0, 0, 3, 4, 0, 0]
-    [0, 0, 0, 0, 5, 6]
+    Matrix([
+    [x, 0, 0, 0, 0, 0],
+    [y, 0, 0, 0, 0, 0],
+    [z, 0, 0, 0, 0, 0],
+    [0, 7, 0, 0, 0, 0],
+    [0, 0, 1, 2, 0, 0],
+    [0, 0, 3, 4, 0, 0],
+    [0, 0, 0, 0, 5, 6]])
 
     When diagonal elements are lists, they will be treated as arguments
     to Matrix:
 
     >>> diag([1, 2, 3], 4)
-    [1, 0]
-    [2, 0]
-    [3, 0]
-    [0, 4]
+    Matrix([
+    [1, 0],
+    [2, 0],
+    [3, 0],
+    [0, 4]])
     >>> diag([[1, 2, 3]], 4)
-    [1, 2, 3, 0]
-    [0, 0, 0, 4]
+    Matrix([
+    [1, 2, 3, 0],
+    [0, 0, 0, 4]])
 
     A given band off the diagonal can be made by padding with a
     vertical or horizontal "kerning" vector:
@@ -1302,11 +1306,13 @@ def diag(*values, **kwargs):
     >>> hpad = ones(0, 2)
     >>> vpad = ones(2, 0)
     >>> diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)
-    [0, 0, 4, 0, 0]
-    [0, 0, 0, 5, 0]
-    [1, 0, 0, 0, 6]
-    [0, 2, 0, 0, 0]
-    [0, 0, 3, 0, 0]
+    Matrix([
+    [0, 0, 4, 0, 0],
+    [0, 0, 0, 5, 0],
+    [1, 0, 0, 0, 6],
+    [0, 2, 0, 0, 0],
+    [0, 0, 3, 0, 0]])
+
 
 
     The type is mutable by default but can be made immutable by setting
@@ -1323,11 +1329,11 @@ def diag(*values, **kwargs):
 
     eye
     """
-    from sparse import MutableSparseMatrix
+    from .sparse import MutableSparseMatrix
 
     cls = kwargs.pop('cls', None)
     if cls is None:
-        from dense import Matrix as cls
+        from .dense import Matrix as cls
 
     if kwargs:
         raise ValueError('unrecognized keyword%s: %s' % (
@@ -1373,10 +1379,11 @@ def jordan_cell(eigenval, n):
     >>> from sympy.matrices import jordan_cell
     >>> from sympy.abc import x
     >>> jordan_cell(x, 4)
-    [x, 1, 0, 0]
-    [0, x, 1, 0]
-    [0, 0, x, 1]
-    [0, 0, 0, x]
+    Matrix([
+    [x, 1, 0, 0],
+    [0, x, 1, 0],
+    [0, 0, x, 1],
+    [0, 0, 0, x]])
     """
     n = as_int(n)
     out = zeros(n)
@@ -1508,7 +1515,7 @@ def wronskian(functions, var, method='bareis'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from dense import Matrix
+    from .dense import Matrix
 
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
@@ -1549,9 +1556,9 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from dense import Matrix
+    from .dense import Matrix
 
-    seqs = map(sympify, seqs)
+    seqs = list(map(sympify, seqs))
 
     if not zero:
         f = lambda i, j: seqs[j].subs(n, n + i)
@@ -1624,5 +1631,5 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     else:
         z = int(r*c*percent // 100)
         m._mat[:z] = [S.Zero]*z
-        random.shuffle(m._mat)
+        prng.shuffle(m._mat)
     return m

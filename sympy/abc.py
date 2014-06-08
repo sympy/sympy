@@ -1,13 +1,20 @@
-from core import Symbol
+from __future__ import print_function, division
 
-_latin = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+import string
+
+from .core import Symbol
+from .core.alphabets import greeks
+from .core.compatibility import exec_
+
+_latin = list(string.ascii_letters)
 # COSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
-_greek = 'alpha beta gamma delta epsilon zeta eta theta iota kappa lamda '\
-    'mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega'.split(' ')
+_greek = list(greeks) # make a copy, so we can mutate it
 # Note: We import lamda since lambda is a reserved keyword in Python
+_greek.remove("lambda")
+_greek.append("lamda")
 
 for _s in _latin + _greek:
-    exec "%s = Symbol('%s')" % (_s, _s)
+    exec_("%s = Symbol('%s')" % (_s, _s))
 
 def clashing():
     """Return the clashing-symbols dictionaries.
@@ -37,7 +44,7 @@ def clashing():
     """
 
     ns = {}
-    exec 'from sympy import *' in ns
+    exec_('from sympy import *', ns)
     clash1 = {}
     clash2 = {}
     while ns:

@@ -1,7 +1,7 @@
 from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar,
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -61,7 +61,7 @@ def test_re():
     assert re(x).as_real_imag() == (re(x), 0)
 
     assert re(i*r*x).diff(r) == re(i*x)
-    assert re(i*r*x).diff(i) == -I * im(r*x)
+    assert re(i*r*x).diff(i) == I*r*im(x)
 
     assert re(
         sqrt(a + b*I)) == (a**2 + b**2)**Rational(1, 4)*cos(atan2(b, a)/2)
@@ -215,8 +215,25 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+    x, y = Symbol('x', real=True), Symbol('y')
+    assert sign(x).rewrite(Piecewise) == \
+        Piecewise((1, x > 0), (-1, x < 0), (0, True))
+    assert sign(y).rewrite(Piecewise) == sign(y)
+
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
+
+    eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
+    # if there is a fast way to know when and when you cannot prove an
+    # expression like this is zero then the equality to zero is ok
+    assert sign(eq).func is sign or sign(eq) == 0
+    # but sometimes it's hard to do this so it's better not to load
+    # abs down with tests that will be very slow
+    q = 1 + sqrt(2) - 2*sqrt(3) + 1331*sqrt(6)
+    p = expand(q**3)**Rational(1, 3)
+    d = p - q
+    assert sign(d).func is sign or sign(d) == 0
+
 
 def test_as_real_imag():
     n = pi**1000
@@ -226,13 +243,13 @@ def test_as_real_imag():
     # this should not hang
     assert n.as_real_imag() == (n, 0)
 
-    # issue 3162
+    # issue 6261
     x = Symbol('x')
     assert sqrt(x).as_real_imag() == \
         ((re(x)**2 + im(x)**2)**(S(1)/4)*cos(atan2(im(x), re(x))/2),
      (re(x)**2 + im(x)**2)**(S(1)/4)*sin(atan2(im(x), re(x))/2))
 
-    # issue 754
+    # issue 3853
     a, b = symbols('a,b', real=True)
     assert ((1 + sqrt(a + b*I))/2).as_real_imag() == \
            (
@@ -240,6 +257,9 @@ def test_as_real_imag():
                    1, 4)*cos(atan2(b, a)/2)/2 + Rational(1, 2),
                (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
+    assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
+    i = symbols('i', imaginary=True)
+    assert sqrt(i**2).as_real_imag() == (0, sqrt(-i**2))
 
 @XFAIL
 def test_sign_issue_3068():
@@ -280,6 +300,7 @@ def test_Abs():
 
     x = Symbol('x', real=True)
     n = Symbol('n', integer=True)
+    assert Abs((-1)**n) == 1
     assert x**(2*n) == Abs(x)**(2*n)
     assert Abs(x).diff(x) == sign(x)
     assert abs(x) == Abs(x)  # Python built-in
@@ -293,6 +314,16 @@ def test_Abs():
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
 
+    eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
+    # if there is a fast way to know when and when you cannot prove an
+    # expression like this is zero then the equality to zero is ok
+    assert abs(eq).func is Abs or abs(eq) == 0
+    # but sometimes it's hard to do this so it's better not to load
+    # abs down with tests that will be very slow
+    q = 1 + sqrt(2) - 2*sqrt(3) + 1331*sqrt(6)
+    p = expand(q**3)**Rational(1, 3)
+    d = p - q
+    assert abs(d).func is Abs or abs(d) == 0
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
@@ -302,6 +333,10 @@ def test_Abs_rewrite():
         assert a.subs(x, i) == abs(i)
     y = Symbol('y')
     assert Abs(y).rewrite(Heaviside) == Abs(y)
+
+    x, y = Symbol('x', real=True), Symbol('y')
+    assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
+    assert Abs(y).rewrite(Piecewise) == Abs(y)
 
 
 def test_Abs_real():
@@ -365,6 +400,12 @@ def test_arg():
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
 
+def test_arg_rewrite():
+    assert arg(1 + I) == atan2(1, 1)
+
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
 
 def test_adjoint():
     a = Symbol('a', antihermitian=True)
@@ -457,19 +498,19 @@ def test_transpose():
     assert transpose(-x) == -transpose(x)
 
 
-def test_issue936():
+def test_issue_4035():
     x = Symbol('x')
     assert Abs(x).expand(trig=True) == Abs(x)
     assert sign(x).expand(trig=True) == sign(x)
     assert arg(x).expand(trig=True) == arg(x)
 
 
-def test_issue3206():
+def test_issue_3206():
     x = Symbol('x')
     assert Abs(Abs(x)) == Abs(x)
 
 
-def test_issue1655_derivative_conjugate():
+def test_issue_4754_derivative_conjugate():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')
@@ -519,6 +560,8 @@ def test_periodic_argument():
     assert periodic_argument(2*p, p) == periodic_argument(p, p)
     assert periodic_argument(pi*p, p) == periodic_argument(p, p)
 
+    assert Abs(polar_lift(1 + I)) == Abs(1 + I)
+
 
 @XFAIL
 def test_principal_branch_fail():
@@ -554,7 +597,7 @@ def test_principal_branch():
 
 
 @XFAIL
-def test_issue_3068_3052():
+def test_issue_6167_6151():
     n = pi**1000
     i = int(n)
     assert sign(n - i) == 1

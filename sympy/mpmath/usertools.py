@@ -8,7 +8,7 @@ def monitor(f, input='print', output='print'):
     inputs and outputs to stdout, along with the total evaluation
     count::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 5; mp.pretty = False
         >>> diff(monitor(exp), 1)   # diff will eval f(x-h) and f(x+h)
         in  0 (mpf('0.99999999906867742538452148'),) {}
@@ -80,26 +80,14 @@ def timing(f, *args, **kwargs):
     else:
         g = f
     from timeit import default_timer as clock
-    t1=clock()
-    v=g()
-    t2=clock()
-    t=t2-t1
+    t1=clock(); v=g(); t2=clock(); t=t2-t1
     if t > 0.05 or once:
         return t
     for i in range(3):
-        t1=clock()
+        t1=clock();
         # Evaluate multiple times because the timer function
         # has a significant overhead
-        g()
-        g()
-        g()
-        g()
-        g()
-        g()
-        g()
-        g()
-        g()
-        g()
+        g();g();g();g();g();g();g();g();g();g()
         t2=clock()
         t=min(t,(t2-t1)/10)
     return t

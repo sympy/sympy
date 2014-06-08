@@ -478,9 +478,7 @@ def airyai(ctx, z, derivative=0, **kwargs):
                 # http://functions.wolfram.com/03.07.06.0005.01
                 if ctx._re(z) > 4:
                     ctx.prec += extraprec
-                    w = z**1.5
-                    r = -0.75/w
-                    u = -2*w/3
+                    w = z**1.5; r = -0.75/w; u = -2*w/3
                     ctx.prec -= extraprec
                     C = -ctx.exp(u)/(2*ctx.sqrt(ctx.pi))*ctx.nthroot(z,4)
                     return ([C],[1],[],[],[(-1,6),(7,6)],[],r),
@@ -504,17 +502,10 @@ def airyai(ctx, z, derivative=0, **kwargs):
                 w = z**3/9
                 ctx.prec -= extraprec
                 q13,q23,q43 = ctx.mpq_1_3, ctx.mpq_2_3, ctx.mpq_4_3
-                a1=q13
-                a2=1
-                b1=(1-n)*q13
-                b2=(2-n)*q13
-                b3=1-n*q13
+                a1=q13; a2=1; b1=(1-n)*q13; b2=(2-n)*q13; b3=1-n*q13
                 T1 = [3, z], [n-q23, -n], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
-                a1=q23
-                b1=(2-n)*q13
-                b2=1-n*q13
-                b3=(4-n)*q13
+                a1=q23; b1=(2-n)*q13; b2=1-n*q13; b3=(4-n)*q13
                 T2 = [3, z, -z], [n-q43, -n, 1], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
                 return T1, T2
@@ -529,9 +520,7 @@ def airyai(ctx, z, derivative=0, **kwargs):
                 # the following expansion is better.
                 # TODO: asymptotic series for derivatives
                 ctx.prec += extraprec
-                w = z**1.5
-                r = -0.75/w
-                u = -2*w/3
+                w = z**1.5; r = -0.75/w; u = -2*w/3
                 ctx.prec -= extraprec
                 C = ctx.exp(u)/(2*ctx.sqrt(ctx.pi)*ctx.nthroot(z,4))
                 return ([C],[1],[],[],[(1,6),(5,6)],[],r),
@@ -599,17 +588,10 @@ def airybi(ctx, z, derivative=0, **kwargs):
                 q13,q23,q43 = ctx.mpq_1_3, ctx.mpq_2_3, ctx.mpq_4_3
                 q16 = ctx.mpq_1_6
                 q56 = ctx.mpq_5_6
-                a1=q13
-                a2=1
-                b1=(1-n)*q13
-                b2=(2-n)*q13
-                b3=1-n*q13
+                a1=q13; a2=1; b1=(1-n)*q13; b2=(2-n)*q13; b3=1-n*q13
                 T1 = [3, z], [n-q16, -n], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
-                a1=q23
-                b1=(2-n)*q13
-                b2=1-n*q13
-                b3=(4-n)*q13
+                a1=q23; b1=(2-n)*q13; b2=1-n*q13; b3=(4-n)*q13
                 T2 = [3, z], [n-q56, 1-n], [a1], [b1,b2,b3], \
                     [a1,a2], [b1,b2,b3], w
                 return T1, T2
@@ -634,8 +616,10 @@ def _airy_zero(ctx, which, k, derivative, complex=False):
     def U(t): return t**(2/3.)*(1-7/(t**2*48))
     def T(t): return t**(2/3.)*(1+5/(t**2*48))
     k = int(k)
-    assert k >= 1
-    assert derivative in (0,1)
+    if k < 1:
+        raise ValueError("k cannot be less than 1")
+    if not derivative in (0,1):
+        raise ValueError("Derivative should lie between 0 and 1")
     if which == 0:
         if derivative:
             return ctx.findroot(lambda z: ctx.airyai(z,1),
@@ -782,8 +766,7 @@ def coulombg(ctx, l, eta, z, w=1, chop=True, **kwargs):
         try:
             chi = ctx._coulomb_chi(l, eta)
             jw = ctx.j*w
-            s = ctx.sin(chi)
-            c = ctx.cos(chi)
+            s = ctx.sin(chi); c = ctx.cos(chi)
             C1 = ctx.coulombc(l,eta)
             C2 = ctx.coulombc(l2,eta)
             u = ctx.exp(jw*z)
@@ -849,7 +832,8 @@ def generalized_bisection(ctx,f,a,b,n):
 
     TODO: this can be optimized, e.g. by reusing evaluation points.
     """
-    assert n >= 1
+    if n < 1:
+        raise ValueError("n cannot be less than 1")
     N = n+1
     points = []
     signs = []
@@ -873,9 +857,12 @@ def bessel_zero(ctx, kind, prime, v, m, isoltol=0.01, _interval_cache={}):
         v = ctx.mpf(v)
         m = int(m)
         prime = int(prime)
-        assert v >= 0
-        assert m >= 1
-        assert prime in (0,1)
+        if v < 0:
+            raise ValueError("v cannot be negative")
+        if m < 1:
+            raise ValueError("m cannot be less than 1")
+        if not prime in (0,1):
+            raise ValueError("prime should lie between 0 and 1")
         if kind == 1:
             if prime: f = lambda x: ctx.besselj(v,x,derivative=1)
             else:     f = lambda x: ctx.besselj(v,x)
@@ -943,7 +930,7 @@ def besseljzero(ctx, v, m, derivative=0):
 
     Initial zeros of the Bessel functions `J_0(z), J_1(z), J_2(z)`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> besseljzero(0,1); besseljzero(0,2); besseljzero(0,3)
         2.404825557695772768621632
@@ -1050,7 +1037,7 @@ def besselyzero(ctx, v, m, derivative=0):
 
     Initial zeros of the Bessel functions `Y_0(z), Y_1(z), Y_2(z)`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> besselyzero(0,1); besselyzero(0,2); besselyzero(0,3)
         0.8935769662791675215848871

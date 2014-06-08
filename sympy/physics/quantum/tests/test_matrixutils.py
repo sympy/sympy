@@ -1,3 +1,5 @@
+from random import randint
+
 from sympy import Matrix, zeros, ones, Integer
 
 from sympy.physics.quantum.matrixutils import (
@@ -19,12 +21,12 @@ def test_matrix_to_zero():
     assert matrix_to_zero(m) == m
     assert matrix_to_zero(Matrix([[0, 0], [0, 0]])) == Integer(0)
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 
 
 def test_to_numpy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     result = np.matrix([[1, 2], [3, 4]], dtype='complex')
     assert (to_numpy(m) == result).all()
@@ -32,7 +34,7 @@ def test_to_numpy():
 
 def test_matrix_tensor_product():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     l1 = zeros(4)
     for i in range(16):
@@ -80,8 +82,8 @@ def test_matrix_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for random matrix with random values that are floats
-    random_matrix1 = np.random.rand(np.random.rand()*5 + 1, np.random.rand()*5 + 1)
-    random_matrix2 = np.random.rand(np.random.rand()*5 + 1, np.random.rand()*5 + 1)
+    random_matrix1 = np.random.rand(randint(1, 5), randint(1, 5))
+    random_matrix2 = np.random.rand(randint(1, 5), randint(1, 5))
     numpy_product = np.kron(random_matrix1, random_matrix2)
     args = [Matrix(random_matrix1.tolist()), Matrix(random_matrix2.tolist())]
     sympy_product = matrix_tensor_product(*args)
@@ -100,7 +102,7 @@ scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 def test_to_scipy_sparse():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
     else:
@@ -118,14 +120,14 @@ def test_matrix_zeros_sympy():
 
 def test_matrix_zeros_numpy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     num = matrix_zeros(4, 4, format='numpy')
     assert isinstance(num, numpy_ndarray)
 
 def test_matrix_zeros_scipy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
 

@@ -8,7 +8,7 @@ Welcome to mpmath's documentation!
 Mpmath is a Python library for arbitrary-precision floating-point arithmetic.
 For general information about mpmath, see the project website http://code.google.com/p/mpmath/
 
-These documentation pages include general information as well as docstring listing with extensive use of examples that can be run in the interactive Python interpreter. For quick access to the docstrings of individual functions, use the :ref:`genindex`, or type ``help(mpmath.function_name)`` in the Python interactive prompt.
+These documentation pages include general information as well as docstring listing with extensive use of examples that can be run in the interactive Python interpreter. For quick access to the docstrings of individual functions, use the `index listing <genindex.html>`_, or type ``help(mpmath.function_name)`` in the Python interactive prompt.
 
 Introduction
 ------------

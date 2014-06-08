@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from pyglet.window import Window
 from pyglet.clock import Clock
@@ -25,6 +27,11 @@ class ManagedWindow(Window):
         class, unless you need to take additional arguments.
         Do any OpenGL initialization calls in setup().
         """
+
+        # check if this is run from the doctester
+        if win_args.get('runfromdoctester', False):
+            return
+
         self.win_args = dict(self.default_win_args, **win_args)
         self.Thread = Thread(target=self.__event_loop__)
         self.Thread.start()
@@ -40,8 +47,8 @@ class ManagedWindow(Window):
                 super(ManagedWindow, self).__init__(**self.win_args)
                 self.switch_to()
                 self.setup()
-            except Exception, e:
-                print "Window initialization failed: %s" % (str(e))
+            except Exception as e:
+                print("Window initialization failed: %s" % (str(e)))
                 self.has_exit = True
         finally:
             gl_lock.release()
@@ -59,8 +66,8 @@ class ManagedWindow(Window):
                     self.update(dt)
                     self.draw()
                     self.flip()
-                except Exception, e:
-                    print "Uncaught exception in event loop: %s" % str(e)
+                except Exception as e:
+                    print("Uncaught exception in event loop: %s" % str(e))
                     self.has_exit = True
             finally:
                 gl_lock.release()

@@ -1,3 +1,4 @@
+import sympy
 from sympy.parsing.sympy_parser import (
     parse_expr,
     standard_transformations,
@@ -20,7 +21,15 @@ def test_implicit_multiplication():
         '3sin(x)': '3*sin(x)',
         '(x+1)(x+2)': '(x+1)*(x+2)',
         '(5 x**2)sin(x)': '(5*x**2)*sin(x)',
-        '2 sin(x) cos(x)': '2*sin(x)*cos(x)'
+        '2 sin(x) cos(x)': '2*sin(x)*cos(x)',
+        'pi x': 'pi*x',
+        'x pi': 'x*pi',
+        'E x': 'E*x',
+        'EulerGamma y': 'EulerGamma*y',
+        'E pi': 'E*pi',
+        'pi (x + 2)': 'pi*(x+2)',
+        '(x + 2) pi': '(x+2)*pi',
+        'pi sin(x)': 'pi*sin(x)',
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (split_symbols,
@@ -66,7 +75,8 @@ def test_implicit_application():
 def test_function_exponentiation():
     cases = {
         'sin**2(x)': 'sin(x)**2',
-        'exp^y(z)': 'exp(z)^y'
+        'exp^y(z)': 'exp(z)^y',
+        'sin**2(E^(x))': 'sin(E^(x))**2'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (function_exponentiation,)
@@ -81,6 +91,9 @@ def test_function_exponentiation():
         raises(SyntaxError,
                lambda: parse_expr(case, transformations=transformations2))
 
+    assert parse_expr('x**2', local_dict={ 'x': sympy.Symbol('x') },
+                      transformations=transformations2) == parse_expr('x**2')
+
 
 def test_symbol_splitting():
     # By default Greek letter names should not be split (lambda is a keyword
@@ -94,6 +107,19 @@ def test_symbol_splitting():
     for letter in greek_letters:
         assert(parse_expr(letter, transformations=transformations) ==
                parse_expr(letter))
+
+    # Make sure symbol splitting resolves names
+    transformations += (implicit_multiplication,)
+    local_dict = { 'e': sympy.E }
+    cases = {
+        'xe': 'E*x',
+        'Iy': 'I*y',
+        'ee': 'E*E',
+    }
+    for case, expected in cases.items():
+        assert(parse_expr(case, local_dict=local_dict,
+                          transformations=transformations) ==
+               parse_expr(expected))
 
     # Make sure custom splitting works
     def can_split(symbol):
@@ -145,7 +171,11 @@ def test_all_implicit_steps():
         'sin^2 x**2': 'sin(x**2)**2',  # function raised to a power
         'sin**3(x)': 'sin(x)**3',
         '(factorial)': 'factorial',
-        'tan 3x': 'tan(3*x)'
+        'tan 3x': 'tan(3*x)',
+        'sin^2(3*E^(x))': 'sin(3*E**(x))**2',
+        'sin**2(E^(3x))': 'sin(E**(3*x))**2',
+        'sin^2 (3x*E^(x))': 'sin(3*x*E^x)**2',
+        'pi sin x': 'pi*sin(x)',
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_multiplication_application,)

@@ -3,15 +3,9 @@ Primality testing
 
 """
 
-# prime list to use when number must be tested as a probable prime.
-#>>> list(primerange(2, 200))
-_isprime_fallback_primes = [
-    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-    53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
-    109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167,
-    173, 179, 181, 191, 193, 197, 199]
-#>>> len(_)
-#46
+from __future__ import print_function, division
+from sympy.core.compatibility import xrange
+
 # pseudoprimes that will pass through last mr_safe test
 _pseudos = set([
             669094855201,
@@ -48,28 +42,24 @@ _pseudos = set([
         9157536631454221, 9188353522314541])
 
 
-def _test(n, base):
+def _test(n, base, s, t):
     """Miller-Rabin strong pseudoprime test for one base.
     Return False if n is definitely composite, True if n is
     probably prime, with a probability greater than 3/4.
-    """
-    from sympy.ntheory.factor_ import trailing
 
-    n = int(n)
-    if n < 2:
-        return False
-    # remove powers of 2 from n (= t * 2**s)
-    s = trailing(n - 1)
-    t = n >> s
+    """
     # do the Fermat test
     b = pow(base, t, n)
     if b == 1 or b == n - 1:
         return True
     else:
         for j in xrange(1, s):
-            b = (b**2) % n
+            b = pow(b, 2, n)
             if b == n - 1:
                 return True
+            # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
+            if b == 1:
+                return False
     return False
 
 
@@ -94,10 +84,20 @@ def mr(n, bases):
     False
     >>> mr(479001599, [31, 73])
     True
+
     """
+    from sympy.ntheory.factor_ import trailing
+    from sympy.polys.domains import ZZ
+
     n = int(n)
+    if n < 2:
+        return False
+    # remove powers of 2 from n = t * 2**s + 1
+    s = trailing(n - 1)
+    t = n >> s
     for base in bases:
-        if not _test(n, base):
+        base = ZZ(base)
+        if not _test(n, base, s, t):
             return False
     return True
 
@@ -130,11 +130,9 @@ def _mr_safe(n):
     2. http://www.trnicely.net/misc/mpzspsp.html
     3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
         Accuracy_of_the_test
-    4. http://zdu.spaces.live.com/?_c11_BlogPart_pagedir=
-        Next&_c11_BlogPart_handle=cns!C95152CB25EF2037!
-        138&_c11_BlogPart_BlogPart=blogview&_c=BlogPart
-    5. http://primes.utm.edu/glossary/xpage/Pseudoprime.html
-    6. http://uucode.com/obf/dalbec/alg.html#sprp
+    4. http://primes.utm.edu/glossary/xpage/Pseudoprime.html
+    5. http://uucode.com/obf/dalbec/alg.html#sprp
+
     """
 
     if n < 1373653:
@@ -185,9 +183,9 @@ def isprime(n):
     The function first looks for trivial factors, and if none is found,
     performs a safe Miller-Rabin strong pseudoprime test with bases
     that are known to prove a number prime. Finally, a general Miller-Rabin
-    test is done with the first k bases which, which will report a
-    pseudoprime as a prime with an error of about 4**-k. The current value
-    of k is 46 so the error is about 2 x 10**-28.
+    test is done with the first k bases which will report a pseudoprime as a
+    prime with an error of about 4**-k. The current value of k is 46 so the
+    error is about 2 x 10**-28.
 
     Examples
     ========
@@ -204,6 +202,7 @@ def isprime(n):
     sympy.ntheory.generate.primerange : Generates all primes in a given range
     sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
     sympy.ntheory.generate.prime : Return the nth prime
+
     """
     n = int(n)
     if n < 2:
@@ -222,7 +221,14 @@ def isprime(n):
     try:
         return _mr_safe(n)
     except ValueError:
-        return mr(n, _isprime_fallback_primes)
+        # prime list to use when number must be tested as a probable prime;
+        # these are the 46 primes less than 200
+        bases = [
+            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
+            53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
+            109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167,
+            173, 179, 181, 191, 193, 197, 199]
+        return mr(n, bases)
 
 
 def _mr_safe_helper(_s):
@@ -233,10 +239,11 @@ def _mr_safe_helper(_s):
 
     e.g.
     >>> from sympy.ntheory.primetest import _mr_safe_helper
-    >>> print _mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])")
+    >>> print(_mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])"))
      # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
-    >>> print _mr_safe_helper('return mr(n, [2, 379215, 457083754])')
+    >>> print(_mr_safe_helper('return mr(n, [2, 379215, 457083754])'))
      # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
+
     """
 
     def _info(bases):
@@ -248,6 +255,7 @@ def _mr_safe_helper(_s):
         This info tag should then be appended to any new mr_safe line
         that is added so someone can easily see whether that line satisfies
         the requirements of mr_safe (see docstring there for details).
+
         """
         from sympy.ntheory.factor_ import factorint, trailing
 

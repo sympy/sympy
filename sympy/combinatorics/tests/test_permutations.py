@@ -1,7 +1,7 @@
+from itertools import permutations
+
 from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
-from sympy.core.compatibility import permutations
-
 from sympy.utilities.pytest import raises
 
 rmul = Permutation.rmul
@@ -14,11 +14,11 @@ def test_Permutation():
     # call as bijective
     assert [p(i) for i in range(p.size)] == list(p)
     # call as operator
-    assert p(range(p.size)) == list(p)
+    assert p(list(range(p.size))) == list(p)
     # call as function
     assert list(p(1, 2)) == [0, 2, 1, 3]
     # conversion to list
-    assert list(p) == range(4)
+    assert list(p) == list(range(4))
     assert Permutation(size=4) == Permutation(3)
     assert Permutation(Permutation(3), size=5) == Permutation(4)
     # cycle form with size
@@ -39,7 +39,7 @@ def test_Permutation():
             continue
         assert rmul(a, b, c).array_form != ans
 
-    assert p.support() == range(7)
+    assert p.support() == list(range(7))
     assert q.support() == [0, 2, 3, 4, 5, 6]
     assert Permutation(p.cyclic_form).array_form == p.array_form
     assert p.cardinality == 5040
@@ -63,7 +63,7 @@ def test_Permutation():
     assert Permutation([1, 0]).transpositions() == [(0, 1)]
 
     assert p**13 == p
-    assert q**0 == Permutation(range(q.size))
+    assert q**0 == Permutation(list(range(q.size)))
     assert q**-2 == ~q**2
     assert q**2 == Permutation([5, 1, 0, 6, 3, 2, 4])
     assert q**3 == q**2*q
@@ -80,7 +80,7 @@ def test_Permutation():
     assert (p + q.rank()).rank() == ans.rank()
     assert (p + q.rank())._rank == ans.rank()
     assert (q + p.rank()).rank() == ans.rank()
-    raises(TypeError, lambda: p + Permutation(range(10)))
+    raises(TypeError, lambda: p + Permutation(list(range(10))))
 
     assert (p - q.rank()).rank() == Permutation(0, 6, 3, 1, 2, 5, 4).rank()
     assert p.rank() - q.rank() < 0  # for coverage: make sure mod is used
@@ -237,14 +237,14 @@ def test_ranking():
     a = [Permutation.unrank_trotterjohnson(4, i).array_form for i in range(5)]
     assert a == [[0, 1, 2, 3], [0, 1, 3, 2], [0, 3, 1, 2], [3, 0, 1,
         2], [3, 0, 2, 1] ]
-    assert [Permutation(pa).rank_trotterjohnson() for pa in a] == range(5)
+    assert [Permutation(pa).rank_trotterjohnson() for pa in a] == list(range(5))
     assert Permutation([0, 1, 2, 3]).next_trotterjohnson() == \
         Permutation([0, 1, 3, 2])
 
     assert q.rank_trotterjohnson() == 2283
     assert p.rank_trotterjohnson() == 3389
     assert Permutation([1, 0]).rank_trotterjohnson() == 1
-    a = Permutation(range(3))
+    a = Permutation(list(range(3)))
     b = a
     l = []
     tj = []
@@ -293,13 +293,13 @@ def test_ranking():
             break
     assert ok == [[1, 0], [0, 1], None]
     assert Permutation([3, 2, 0, 1]).next_nonlex() == Permutation([1, 3, 0, 2])
-    assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
+    assert [Permutation(pa).rank_nonlex() for pa in a] == list(range(24))
 
 
 def test_mul():
     a, b = [0, 2, 1, 3], [0, 1, 3, 2]
     assert _af_rmul(a, b) == [0, 2, 3, 1]
-    assert _af_rmuln(a, b, range(4)) == [0, 2, 3, 1]
+    assert _af_rmuln(a, b, list(range(4))) == [0, 2, 3, 1]
     assert rmul(Permutation(a), Permutation(b)).array_form == [0, 2, 3, 1]
 
     a = Permutation([0, 2, 1, 3])
@@ -312,7 +312,7 @@ def test_mul():
     n = 6
     m = 8
     a = [Permutation.unrank_nonlex(n, i).array_form for i in range(m)]
-    h = range(n)
+    h = list(range(n))
     for i in range(m):
         h = _af_rmul(h, a[i])
         h2 = _af_rmuln(*a[:i + 1])
@@ -367,7 +367,7 @@ def test_Cycle():
         Permutation([0, 2, 1, 3])
     assert str(Cycle(1, 2)(4, 5)) == 'Cycle(1, 2)(4, 5)'
     assert str(Cycle(1, 2)) == 'Cycle(1, 2)'
-    assert Cycle(Permutation(range(3))) == Cycle()
+    assert Cycle(Permutation(list(range(3)))) == Cycle()
     assert Cycle(1, 2).list() == [0, 2, 1]
     assert Cycle(1, 2).list(4) == [0, 2, 1, 3]
     raises(TypeError, lambda: Cycle((1, 2)))

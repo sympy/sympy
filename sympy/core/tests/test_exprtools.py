@@ -1,12 +1,15 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple,
-                   Interval, O, symbols, simplify, collect, Sum, Basic, Dict)
+from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
+                   Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
+                   root, exp)
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
+
+from sympy.utilities.pytest import raises
 
 
 def test_decompose_power():
@@ -17,13 +20,14 @@ def test_decompose_power():
 
 
 def test_Factors():
-    assert Factors() == Factors({}) == Factors(1)
-
+    assert Factors() == Factors({}) == Factors(S(1))
     assert Factors().as_expr() == S.One
     assert Factors({x: 2, y: 3, sin(x): 4}).as_expr() == x**2*y**3*sin(x)**4
+    assert Factors(S.Infinity) == Factors({oo: 1})
+    assert Factors(S.NegativeInfinity) == Factors({oo: 1, -1: 1})
 
     a = Factors({x: 5, y: 3, z: 7})
-    b = Factors({y: 4, z: 3, t: 10})
+    b = Factors({      y: 4, z: 3, t: 10})
 
     assert a.mul(b) == a*b == Factors({x: 5, y: 7, z: 10, t: 10})
 
@@ -44,6 +48,84 @@ def test_Factors():
     assert a.normal(b) == (Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
 
     assert Factors(sqrt(2)*x).as_expr() == sqrt(2)*x
+
+    assert Factors(-I)*I == Factors()
+    assert Factors({S(-1): S(3)})*Factors({S(-1): S(1), I: S(5)}) == \
+        Factors(I)
+
+    assert Factors(S(2)**x).div(S(3)**x) == \
+        (Factors({S(2): x}), Factors({S(3): x}))
+    assert Factors(2**(2*x + 2)).div(S(8)) == \
+        (Factors({S(2): 2*x + 2}), Factors({S(8): S(1)}))
+
+    # coverage
+    # /!\ things break if this is not True
+    assert Factors({S(-1): S(3)/2}) == Factors({I: S.One, S(-1): S.One})
+    assert Factors({I: S(1), S(-1): S(1)/3}).as_expr() == I*(-1)**(S(1)/3)
+
+    assert Factors(-1.) == Factors({S(-1): S(1), S(1.): 1})
+    assert Factors(-2.) == Factors({S(-1): S(1), S(2.): 1})
+    assert Factors((-2.)**x) == Factors({S(-2.): x})
+    assert Factors(S(-2)) == Factors({S(-1): S(1), S(2): 1})
+    assert Factors(S.Half) == Factors({S(2): -S.One})
+    assert Factors(S(3)/2) == Factors({S(3): S.One, S(2): S(-1)})
+    assert Factors({I: S(1)}) == Factors(I)
+    assert Factors({-1.0: 2, I: 1}) == Factors({S(1.0): 1, I: 1})
+    assert Factors({S.NegativeOne: -S(3)/2}).as_expr() == I
+    A = symbols('A', commutative=False)
+    assert Factors(2*A**2) == Factors({S(2): 1, A**2: 1})
+    assert Factors(I) == Factors({I: S.One})
+    assert Factors(x).normal(S(2)) == (Factors(x), Factors(S(2)))
+    assert Factors(x).normal(S(0)) == (Factors(), Factors(S(0)))
+    raises(ZeroDivisionError, lambda: Factors(x).div(S(0)))
+    assert Factors(x).mul(S(2)) == Factors(2*x)
+    assert Factors(x).mul(S(0)).is_zero
+    assert Factors(x).mul(1/x).is_one
+    assert Factors(x**sqrt(2)**3).as_expr() == x**(2*sqrt(2))
+    assert Factors(x)**Factors(S(2)) == Factors(x**2)
+    assert Factors(x).gcd(S(0)) == Factors(x)
+    assert Factors(x).lcm(S(0)).is_zero
+    assert Factors(S(0)).div(x) == (Factors(S(0)), Factors())
+    assert Factors(x).div(x) == (Factors(), Factors())
+    assert Factors({x: .2})/Factors({x: .2}) == Factors()
+    assert Factors(x) != Factors()
+    assert Factors(S(0)).normal(x) == (Factors(S(0)), Factors())
+    n, d = x**(2 + y), x**2
+    f = Factors(n)
+    assert f.div(d) == f.normal(d) == (Factors(x**y), Factors())
+    assert f.gcd(d) == Factors()
+    d = x**y
+    assert f.div(d) == f.normal(d) == (Factors(x**2), Factors())
+    assert f.gcd(d) == Factors(d)
+    n = d = 2**x
+    f = Factors(n)
+    assert f.div(d) == f.normal(d) == (Factors(), Factors())
+    assert f.gcd(d) == Factors(d)
+    n, d = 2**x, 2**y
+    f = Factors(n)
+    assert f.div(d) == f.normal(d) == (Factors({S(2): x}), Factors({S(2): y}))
+    assert f.gcd(d) == Factors()
+
+    # extraction of constant only
+    n = x**(x + 3)
+    assert Factors(n).normal(x**-3) == (Factors({x: x + 6}), Factors({}))
+    assert Factors(n).normal(x**3) == (Factors({x: x}), Factors({}))
+    assert Factors(n).normal(x**4) == (Factors({x: x}), Factors({x: 1}))
+    assert Factors(n).normal(x**(y - 3)) == \
+        (Factors({x: x + 6}), Factors({x: y}))
+    assert Factors(n).normal(x**(y + 3)) == (Factors({x: x}), Factors({x: y}))
+    assert Factors(n).normal(x**(y + 4)) == \
+        (Factors({x: x}), Factors({x: y + 1}))
+
+    assert Factors(n).div(x**-3) == (Factors({x: x + 6}), Factors({}))
+    assert Factors(n).div(x**3) == (Factors({x: x}), Factors({}))
+    assert Factors(n).div(x**4) == (Factors({x: x}), Factors({x: 1}))
+    assert Factors(n).div(x**(y - 3)) == \
+        (Factors({x: x + 6}), Factors({x: y}))
+    assert Factors(n).div(x**(y + 3)) == (Factors({x: x}), Factors({x: y}))
+    assert Factors(n).div(x**(y + 4)) == \
+        (Factors({x: x}), Factors({x: y + 1}))
+
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
@@ -119,14 +201,14 @@ def test_gcd_terms():
     assert gcd_terms(arg) == garg
     assert gcd_terms(sin(arg)) == sin(garg)
 
-    # issue 3040-like
+    # issue 6139-like
     alpha, alpha1, alpha2, alpha3 = symbols('alpha:4')
     a = alpha**2 - alpha*x**2 + alpha + x**3 - x*(alpha + 1)
     rep = (alpha, (1 + sqrt(5))/2 + alpha1*x + alpha2*x**2 + alpha3*x**3)
     s = (a/(x - alpha)).subs(*rep).series(x, 0, 1)
     assert simplify(collect(s, x)) == -sqrt(5)/2 - S(3)/2 + O(x)
 
-    # issue 2818
+    # issue 5917
     assert _gcd_terms([S.Zero, S.Zero]) == (0, 0, 1)
     assert _gcd_terms([2*x + 4]) == (2, x + 2, 1)
 
@@ -154,9 +236,14 @@ def test_factor_terms():
         x*(a + 2*b)*(y + 1)
     i = Integral(x, (x, 0, oo))
     assert factor_terms(i) == i
+
+    # check radical extraction
     eq = sqrt(2) + sqrt(10)
     assert factor_terms(eq) == eq
     assert factor_terms(eq, radical=True) == sqrt(2)*(1 + sqrt(5))
+    eq = root(-6, 3) + root(6, 3)
+    assert factor_terms(eq, radical=True) == 6**(S(1)/3)*(1 + (-1)**(S(1)/3))
+
     eq = [x + x*y]
     ans = [x*(y + 1)]
     for c in [list, tuple, set]:
@@ -174,9 +261,16 @@ def test_factor_terms():
     assert factor_terms((1/(x**3 + x**2) + 2/x**2)*y) == \
         y*(2 + 1/(x + 1))/x**2
 
-    assert factor_terms(-x - y) == Mul(-1, x + y, evaluate=False)
-    # if not True, then processes for this in factor_terms is not necessary
+    # if not True, then processesing for this in factor_terms is not necessary
     assert gcd_terms(-x - y) == -x - y
+    assert factor_terms(-x - y) == Mul(-1, x + y, evaluate=False)
+
+    # if not True, then "special" processesing in factor_terms is not necessary
+    assert gcd_terms(exp(Mul(-1, x + 1))) == exp(-x - 1)
+    e = exp(-x - 2) + x
+    assert factor_terms(e) == exp(Mul(-1, x + 2, evaluate=False)) + x
+    assert factor_terms(e, sign=False) == e
+    assert factor_terms(exp(-4*x - 2) - x) == -x + exp(Mul(-2, 2*x + 1, evaluate=False))
 
 
 def test_xreplace():
@@ -238,14 +332,18 @@ def test_factor_nc():
     eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
     assert factor(eq) == x*(1 + Commutator(m, o))*Commutator(m, n)
 
-    # issue 3435
+    # issue 6534
     assert (2*n + 2*m).factor() == 2*(n + m)
 
-    # issue 3602
+    # issue 6701
     assert factor_nc(n**k + n**(k + 1)) == n**k*(1 + n)
     assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
-def test_issue_3261():
+    # issue 6918
+    assert factor_nc(-n*(2*x**2 + 2*x)) == -2*n*x*(x + 1)
+
+
+def test_issue_6360():
     a, b = symbols("a b")
     apb = a + b
     eq = apb + apb**2*(-2*a - 2*b)

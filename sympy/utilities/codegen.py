@@ -74,14 +74,14 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - ...
 
 """
-from __future__ import with_statement
+
+from __future__ import print_function, division
 
 import os
-from StringIO import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -152,7 +152,7 @@ class Routine(object):
         local_vars = set([i.label for i in expressions.atoms(Idx)])
 
         # symbols that should be arguments
-        symbols = expressions.atoms(Symbol) - local_vars
+        symbols = expressions.free_symbols - local_vars
 
         # Decide whether to use output argument or return value
         return_val = []
@@ -213,8 +213,7 @@ class Routine(object):
                     new_sequence.append(arg)
             argument_sequence = new_sequence
 
-            missing = filter(
-                lambda x: x.name not in argument_sequence, arg_list)
+            missing = [x for x in arg_list if x.name not in argument_sequence]
             if missing:
                 raise CodeGenArgumentListError("Argument list didn't specify: %s" %
                         ", ".join([str(m.name) for m in missing]), missing)
@@ -662,26 +661,26 @@ class CCodeGen(CodeGen):
                 files. [DEFAULT=True]
         """
         if header:
-            print >> f, ''.join(self._get_header())
+            print(''.join(self._get_header()), file=f)
         guard_name = "%s__%s__H" % (self.project.replace(
             " ", "_").upper(), prefix.replace("/", "_").upper())
         # include guards
         if empty:
-            print >> f
-        print >> f, "#ifndef %s" % guard_name
-        print >> f, "#define %s" % guard_name
+            print(file=f)
+        print("#ifndef %s" % guard_name, file=f)
+        print("#define %s" % guard_name, file=f)
         if empty:
-            print >> f
+            print(file=f)
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_prototype(routine)
-            print >> f, "%s;" % prototype
+            print("%s;" % prototype, file=f)
         # end if include guards
         if empty:
-            print >> f
-        print >> f, "#endif"
+            print(file=f)
+        print("#endif", file=f)
         if empty:
-            print >> f
+            print(file=f)
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -849,8 +848,8 @@ class FCodeGen(CodeGen):
     def dump_f95(self, routines, f, prefix, header=True, empty=True):
         # check that symbols are unique with ignorecase
         for r in routines:
-            lowercase = set(map(lambda x: str(x).lower(), r.variables))
-            orig_case = set(map(lambda x: str(x), r.variables))
+            lowercase = set([str(x).lower() for x in r.variables])
+            orig_case = set([str(x) for x in r.variables])
             if len(lowercase) < len(orig_case):
                 raise CodeGenError("Fortran ignores case. Got symbols: %s" %
                         (", ".join([str(var) for var in r.variables])))
@@ -882,15 +881,15 @@ class FCodeGen(CodeGen):
                 files. [DEFAULT=True]
         """
         if header:
-            print >> f, ''.join(self._get_header())
+            print(''.join(self._get_header()), file=f)
         if empty:
-            print >> f
+            print(file=f)
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_interface(routine)
             f.write(prototype)
         if empty:
-            print >> f
+            print(file=f)
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -951,22 +950,21 @@ def codegen(
         If omitted, arguments will be ordered alphabetically, but with all
         input aguments first, and then output or in-out arguments.
 
-    >>> from sympy import symbols
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy.abc import x, y, z
     >>> [(c_name, c_code), (h_name, c_header)] = codegen(
     ...     ("f", x+y*z), "C", "test", header=False, empty=False)
-    >>> print c_name
+    >>> print(c_name)
     test.c
-    >>> print c_code,
+    >>> print(c_code)
     #include "test.h"
     #include <math.h>
     double f(double x, double y, double z) {
       return x + y*z;
     }
-    >>> print h_name
+    >>> print(h_name)
     test.h
-    >>> print c_header,
+    >>> print(c_header)
     #ifndef PROJECT__TEST__H
     #define PROJECT__TEST__H
     double f(double x, double y, double z);
@@ -980,7 +978,7 @@ def codegen(
     # Construct the routines based on the name_expression pairs.
     #  mainly the input arguments require some work
     routines = []
-    if isinstance(name_expr[0], basestring):
+    if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.
         name_expr = [name_expr]
 

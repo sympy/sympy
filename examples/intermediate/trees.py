@@ -17,7 +17,7 @@ from sympy import Symbol, Poly
 
 def T(x):
     return x + x**2 + 2*x**3 + 4*x**4 + 9*x**5 + 20*x**6 + 48 * x**7 + \
-        115* x**8 + 286*x**9 + 719*x**10
+        115*x**8 + 286*x**9 + 719*x**10
 
 
 def A(x):
@@ -29,8 +29,8 @@ def main():
     s = Poly(A(x), x)
     num = list(reversed(s.coeffs()))[:11]
 
-    print s.as_expr()
-    print num
+    print(s.as_expr())
+    print(num)
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify, cacheit
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 
@@ -9,14 +11,21 @@ from sympy.functions.elementary.miscellaneous import sqrt
 
 
 class HyperbolicFunction(Function):
-    """Base class for hyperbolic functions. """
+    """
+    Base class for hyperbolic functions.
+
+    See Also
+    ========
+
+    sinh, cosh, tanh, coth
+    """
 
     unbranched = True
 
 
 class sinh(HyperbolicFunction):
-    """
-    The hyperbolic sine function, :math:`\\frac{exp(x) - exp(-x)}{2}`.
+    r"""
+    The hyperbolic sine function, `\frac{e^x - e^{-x}}{2}`.
 
     * sinh(x) -> Returns the hyperbolic sine of x
 
@@ -25,7 +34,6 @@ class sinh(HyperbolicFunction):
 
     cosh, tanh, asinh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         """
@@ -141,6 +149,9 @@ class sinh(HyperbolicFunction):
             return (sinh(x)*cosh(y) + sinh(y)*cosh(x)).expand(trig=True)
         return sinh(arg)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        return (C.exp(arg) - C.exp(-arg)) / 2
+
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) - C.exp(-arg)) / 2
 
@@ -177,8 +188,8 @@ class sinh(HyperbolicFunction):
 
 
 class cosh(HyperbolicFunction):
-    """
-    The hyperbolic cosine function, :math:`\\frac{exp(x) + exp(-x)}{2}`.
+    r"""
+    The hyperbolic cosine function, `\frac{e^x + e^{-x}}{2}`.
 
     * cosh(x) -> Returns the hyperbolic cosine of x
 
@@ -187,19 +198,12 @@ class cosh(HyperbolicFunction):
 
     sinh, tanh, acosh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
             return sinh(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return acosh
 
     @classmethod
     def eval(cls, arg):
@@ -293,6 +297,9 @@ class cosh(HyperbolicFunction):
             return (cosh(x)*cosh(y) + sinh(x)*sinh(y)).expand(trig=True)
         return cosh(arg)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        return (C.exp(arg) + C.exp(-arg)) / 2
+
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) + C.exp(-arg)) / 2
 
@@ -329,8 +336,8 @@ class cosh(HyperbolicFunction):
 
 
 class tanh(HyperbolicFunction):
-    """
-    The hyperbolic tangent function, :math:`\\frac{sinh(x)}{cosh(x)}`.
+    r"""
+    The hyperbolic tangent function, `\frac{\sinh(x)}{\cosh(x)}`.
 
     * tanh(x) -> Returns the hyperbolic tangent of x
 
@@ -339,7 +346,6 @@ class tanh(HyperbolicFunction):
 
     sinh, cosh, atanh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -428,6 +434,10 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + C.cos(im)**2
         return (sinh(re)*cosh(re)/denom, C.sin(im)*C.cos(im)/denom)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        return (pos_exp - neg_exp)/(pos_exp + neg_exp)
+
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
@@ -463,12 +473,11 @@ class tanh(HyperbolicFunction):
 
 
 class coth(HyperbolicFunction):
-    """
-    The hyperbolic tangent function, :math:`\\frac{cosh(x)}{sinh(x)}`.
+    r"""
+    The hyperbolic cotangent function, `\frac{\cosh(x)}{\sinh(x)}`.
 
     * coth(x) -> Returns the hyperbolic cotangent of x
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -557,6 +566,10 @@ class coth(HyperbolicFunction):
         denom = sinh(re)**2 + C.sin(im)**2
         return (sinh(re)*cosh(re)/denom, -C.sin(im)*C.cos(im)/denom)
 
+    def _eval_rewrite_as_tractable(self, arg):
+        neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
+        return (pos_exp + neg_exp)/(pos_exp - neg_exp)
+
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = C.exp(-arg), C.exp(arg)
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
@@ -598,7 +611,6 @@ class asinh(Function):
 
     acosh, atanh, sinh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -661,6 +673,12 @@ class asinh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sinh
+
     def _sage_(self):
         import sage.all as sage
         return sage.asinh(self.args[0]._sage_())
@@ -677,7 +695,6 @@ class acosh(Function):
 
     asinh, atanh, cosh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -771,6 +788,12 @@ class acosh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return cosh
+
     def _sage_(self):
         import sage.all as sage
         return sage.acosh(self.args[0]._sage_())
@@ -787,7 +810,6 @@ class atanh(Function):
 
     asinh, acosh, tanh
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -843,6 +865,12 @@ class atanh(Function):
         else:
             return self.func(arg)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return tanh
+
     def _sage_(self):
         import sage.all as sage
         return sage.atanh(self.args[0]._sage_())
@@ -854,7 +882,6 @@ class acoth(Function):
 
     * acoth(x) -> Returns the inverse hyperbolic cotangent of x
     """
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -911,6 +938,12 @@ class acoth(Function):
             return arg
         else:
             return self.func(arg)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return coth
 
     def _sage_(self):
         import sage.all as sage

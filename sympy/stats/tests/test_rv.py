@@ -120,6 +120,10 @@ def test_Sample():
     E(Sum(1/z**Y, (z, 1, oo)), Y > 2, numsamples=3)
 
 
+    assert all(i in range(1, 7) for i in density(X, numsamples=10))
+    assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+
+
 def test_given():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
@@ -185,3 +189,7 @@ def test_NamedArgsMixin():
 def test_density_constant():
     assert density(3)(2) == 0
     assert density(3)(3) == DiracDelta(0)
+
+def test_real():
+    x = Normal('x', 0, 1)
+    assert x.is_real

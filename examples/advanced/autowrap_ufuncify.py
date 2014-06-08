@@ -33,7 +33,7 @@ from sympy import symbols, legendre, Plot, pprint
 
 def main():
 
-    print __doc__
+    print(__doc__)
 
     x = symbols('x')
 
@@ -43,7 +43,7 @@ def main():
     # set mpmath precision to 20 significant numbers for verification
     mpmath.mp.dps = 20
 
-    print "Compiling legendre ufuncs and checking results:"
+    print("Compiling legendre ufuncs and checking results:")
 
     # Let's also plot the ufunc's we generate
     plot1 = Plot(visible=False)
@@ -51,7 +51,7 @@ def main():
 
         # Setup the SymPy expression to ufuncify
         expr = legendre(n, x)
-        print "The polynomial of degree %i is" % n
+        print("The polynomial of degree %i is" % n)
         pprint(expr)
 
         # This is where the magic happens:
@@ -67,7 +67,7 @@ def main():
             diff = abs(polyvector[j] - precise_val)
             if diff > maxdiff:
                 maxdiff = diff
-        print "The largest error in applied ufunc was %e" % maxdiff
+        print("The largest error in applied ufunc was %e" % maxdiff)
         assert maxdiff < 1e-14
 
         # We can also attach the autowrapped legendre polynomial to a sympy
@@ -75,7 +75,7 @@ def main():
         g = implemented_function('g', binary_poly)
         plot1[n] = g(x), [200]
 
-    print "Here's a plot with values calculated by the wrapped binary functions"
+    print("Here's a plot with values calculated by the wrapped binary functions")
     plot1.show()
 
 if __name__ == '__main__':

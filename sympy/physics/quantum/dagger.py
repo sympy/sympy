@@ -1,5 +1,7 @@
 """Hermitian conjugation."""
 
+from __future__ import print_function, division
+
 from sympy.core import Expr
 from sympy.functions.elementary.complexes import adjoint
 
@@ -59,11 +61,13 @@ class Dagger(adjoint):
         >>> from sympy import Matrix, I
         >>> m = Matrix([[1,I],[2,I]])
         >>> m
-        [1, I]
-        [2, I]
+        Matrix([
+        [1, I],
+        [2, I]])
         >>> Dagger(m)
-        [ 1,  2]
-        [-I, -I]
+        Matrix([
+        [ 1,  2],
+        [-I, -I]])
 
     References
     ==========

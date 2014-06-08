@@ -13,13 +13,13 @@ def main():
     a = sympy.Symbol('a')
     b = sympy.Symbol('b')
     e = sympy.log((a + b)**5)
-    print
+    print()
     pprint(e)
-    print '\n'
+    print('\n')
 
     e = sympy.exp(e)
     pprint(e)
-    print '\n'
+    print('\n')
 
     e = sympy.log(sympy.exp((a + b)**5))
     pprint(e)

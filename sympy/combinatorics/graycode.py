@@ -1,6 +1,7 @@
-from sympy.core import Basic
+from __future__ import print_function, division
 
-from sympy.core.compatibility import bin
+from sympy.core import Basic
+from sympy.core.compatibility import xrange
 
 import random
 
@@ -205,7 +206,7 @@ class GrayCode(Basic):
         >>> for i in a.generate_gray():
         ...     if i == '010':
         ...         a.skip()
-        ...     print i
+        ...     print(i)
         ...
         000
         001
@@ -234,7 +235,7 @@ class GrayCode(Basic):
         of 4 bit Gray codes.
 
         References:
-        [1] http://www-stat.stanford.edu/~susan/courses/s208/node12.html
+        [1] http://statweb.stanford.edu/~susan/courses/s208/node12.html
 
         Examples
         ========
@@ -263,6 +264,7 @@ class GrayCode(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> GrayCode(3, start='100').current
         '100'

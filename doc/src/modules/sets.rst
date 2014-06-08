@@ -1,12 +1,14 @@
 Sets
 ===========
 
-.. automodule:: sympy.core.sets
+.. automodule:: sympy.sets.sets
 
 Set
 ^^^
 .. autoclass:: Set
    :members:
+
+.. autofunction:: imageset
 
 Elementary Sets
 ---------------
@@ -30,7 +32,7 @@ Union
 
 Intersection
 ^^^^^^^^^^^^
-.. autoclass:: Intersection 
+.. autoclass:: Intersection
    :members:
 
 ProductSet
@@ -48,7 +50,7 @@ EmptySet
 
 UniversalSet
 ^^^^^^^^^^^^
-.. autoclass:: UniversalSet 
+.. autoclass:: UniversalSet
    :members:
 
 Special Sets
@@ -57,16 +59,20 @@ Special Sets
 
 Naturals
 ^^^^^^^^
-.. autoclass:: Naturals 
+.. autoclass:: Naturals
+   :members:
+
+Naturals0
+^^^^^^^^^
+.. autoclass:: Naturals0
    :members:
 
 Integers
 ^^^^^^^^
-.. autoclass:: Integers 
+.. autoclass:: Integers
    :members:
 
-TransformationSet
-^^^^^^^^^^^^^^^^^
-.. autoclass:: TransformationSet 
+ImageSet
+^^^^^^^^
+.. autoclass:: ImageSet
    :members:
-

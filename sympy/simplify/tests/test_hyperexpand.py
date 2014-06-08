@@ -1,3 +1,5 @@
+from random import randrange
+
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        MeijerShiftA, MeijerShiftB, MeijerShiftC, MeijerShiftD,
                        MeijerUnShiftA, MeijerUnShiftB, MeijerUnShiftC,
@@ -12,7 +14,6 @@ from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
 from sympy.utilities.pytest import XFAIL, skip, slow
-from random import randrange
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf, exp_polar)
@@ -44,10 +45,8 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     r = hyperexpand(hyper(ap, bq, z))
     if r.has(hyper):
         return False
-
     if not numerical:
         return True
-
     repl = {}
     for n, a in enumerate(r.free_symbols - set([z])):
         repl[a] = randcplx(n)/div
@@ -55,8 +54,9 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     if lowerplane:
         [a, b, c, d] = [2, -2, 3, -1]
     return tn(
-        hyper(ap, bq, z).subs(repl), r.replace(exp_polar, exp).subs(repl), z,
-        a=a, b=b, c=c, d=d)
+        hyper(ap, bq, z).subs(repl),
+        r.replace(exp_polar, exp).subs(repl),
+        z, a=a, b=b, c=c, d=d)
 
 
 def test_roach():
@@ -68,11 +68,11 @@ def test_roach():
     assert can_do([S(1)/3], [-S(2)/3, -S(1)/2, S(1)/2, 1])
     assert can_do([-S(3)/2, -S(1)/2], [-S(5)/2, 1])
     assert can_do([-S(3)/2, ], [-S(1)/2, S(1)/2])  # shine-integral
+    assert can_do([-S(3)/2, -S(1)/2], [2])  # elliptic integrals
 
 
 @XFAIL
 def test_roach_fail():
-    assert can_do([-S(3)/2, -S(1)/2], [2])  # elliptic integrals
     assert can_do([-S(1)/2, 1], [S(1)/4, S(1)/2, S(3)/4])  # PFDD
     assert can_do([S(3)/2], [S(5)/2, 5])  # struve function
     assert can_do([-S(1)/2, S(1)/2, 1], [S(3)/2, S(5)/2])  # polylog, pfdd
@@ -126,7 +126,7 @@ def test_hyperexpand_parametric():
 def test_shifted_sum():
     from sympy import simplify
     assert simplify(hyperexpand(z**4*hyper([2], [3, S('3/2')], -z**2))) \
-        == -S(1)/2 + cos(2*z)/2 + z*sin(2*z) - z**2*cos(2*z)
+        == z*sin(2*z) + (-z**2 + S.Half)*cos(2*z) - S.Half
 
 
 def _randrat():
@@ -385,7 +385,7 @@ def test_meijerg_expand():
     # Testing a bug:
     assert hyperexpand(meijerg([0, 2], [], [], [-1, 1], z)) == \
         Piecewise((0, abs(z) < 1),
-                  (z*(1 - 1/z**2)/2, abs(1/z) < 1),
+                  (z/2 - 1/(2*z), abs(1/z) < 1),
                   (meijerg([0, 2], [], [], [-1, 1], z), True))
 
     # Test that the simplest possible answer is returned:
@@ -624,7 +624,7 @@ def test_hyperexpand_special():
     assert hyperexpand(meijerg([1 - z - a/2], [1 - z + a/2], [b/2], [-b/2], 1)) == \
         gamma(1 - 2*z)*gamma(z + a/2 + b/2)/gamma(1 - z + a/2 - b/2) \
         /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
-    assert hyperexpand(hyper([a], [b], 0)) == 0
+    assert hyperexpand(hyper([a], [b], 0)) == 1
     assert hyper([a], [b], 0) != 0
 
 
@@ -888,6 +888,15 @@ def test_prudnikov_12():
     assert can_do([], [2, S(3)/2, S(3)/2])
 
 
+def test_prudnikov_2F1():
+    h = S.Half
+    # Elliptic integrals
+    for p in [-h, h]:
+        for m in [h, 3*h, 5*h, 7*h]:
+            for n in [1, 2, 3, 4]:
+                assert can_do([p, m], [n])
+
+
 @XFAIL
 def test_prudnikov_fail_2F1():
     assert can_do([a, b], [b + 1])  # incomplete beta function
@@ -912,13 +921,6 @@ def test_prudnikov_fail_2F1():
     assert can_do([a, a + S(1)/2], [c])
     assert can_do([1, b], [c])
     assert can_do([1, b], [S(3)/2])
-
-    h = S.Half
-    # Elliptic integrals
-    for p in [-h, h]:
-        for m in [h, 3*h, 5*h, 7*h]:
-            for n in [1, 2, 3, 4]:
-                assert can_do([p, m], [n])
 
     assert can_do([S(1)/4, S(3)/4], [1])
 

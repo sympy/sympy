@@ -1,10 +1,12 @@
-from sympy.core import I, symbols
+from sympy.core import I, symbols, Basic
 from sympy.functions import adjoint, transpose
-from sympy.matrices import Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix
-from sympy.matrices.expressions import Adjoint, Transpose
+from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
+        eye, zeros, ImmutableMatrix)
+from sympy.matrices.expressions import Adjoint, Transpose, det
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
-        MatMul, xxinv, any_zeros, unpack)
+        MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
+from sympy import refine, Q
 
 n, m, l, k = symbols('n m l k', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -60,3 +62,44 @@ def test_unpack():
     assert unpack(MatMul(A, evaluate=False)) == A
     x = MatMul(A, B)
     assert unpack(x) == x
+
+def test_only_squares():
+    A = MatrixSymbol('A', n, m)
+    C = MatrixSymbol('C', n, n)
+    D = MatrixSymbol('D', n, n)
+
+    assert only_squares(C) == [C]
+    assert only_squares(C, D) == [C, D]
+    assert only_squares(C, A, A.T, D) == [C, A*A.T, D]
+
+def test_determinant():
+    A = MatrixSymbol('A', n, m)
+    C = MatrixSymbol('C', n, n)
+    D = MatrixSymbol('D', n, n)
+
+    assert det(2*C) == 2**n*det(C)
+    assert det(2*C*D) == 2**n*det(C)*det(D)
+    assert det(3*C*A*A.T*D) == 3**n*det(C)*det(A*A.T)*det(D)
+
+def test_doit():
+    C = MatrixSymbol('C', n, n)
+    D = MatrixSymbol('D', n, n)
+
+    assert MatMul(C, 2, D).args == (C, 2, D)
+    assert MatMul(C, 2, D).doit().args == (2, C, D)
+    assert MatMul(C, Transpose(D*C)).args == (C, Transpose(D*C))
+    assert MatMul(C, Transpose(D*C)).doit(deep=True).args == (C, C.T, D.T)
+
+
+def test_matmul_sympify():
+    assert isinstance(MatMul(eye(1), eye(1)).args[0], Basic)
+
+
+def test_collapse_MatrixBase():
+    A = Matrix([[1, 1], [1, 1]])
+    B = Matrix([[1, 2], [3, 4]])
+    assert MatMul(A, B).doit() == ImmutableMatrix([[4, 6], [4, 6]])
+
+
+def test_refine():
+    assert refine(C*C.T*D, Q.orthogonal(C)).doit() == D

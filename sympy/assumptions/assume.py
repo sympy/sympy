@@ -1,6 +1,9 @@
+from __future__ import print_function, division
+
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
 from contextlib import contextmanager
@@ -16,18 +19,18 @@ class AssumptionsContext(set):
     Examples
     ========
 
-        >>> from sympy import AppliedPredicate, Q
-        >>> from sympy.assumptions.assume import global_assumptions
-        >>> global_assumptions
-        AssumptionsContext()
-        >>> from sympy.abc import x
-        >>> global_assumptions.add(Q.real(x))
-        >>> global_assumptions
-        AssumptionsContext([Q.real(x)])
-        >>> global_assumptions.remove(Q.real(x))
-        >>> global_assumptions
-        AssumptionsContext()
-        >>> global_assumptions.clear()
+    >>> from sympy import AppliedPredicate, Q
+    >>> from sympy.assumptions.assume import global_assumptions
+    >>> global_assumptions
+    AssumptionsContext()
+    >>> from sympy.abc import x
+    >>> global_assumptions.add(Q.real(x))
+    >>> global_assumptions
+    AssumptionsContext([Q.real(x)])
+    >>> global_assumptions.remove(Q.real(x))
+    >>> global_assumptions
+    AssumptionsContext()
+    >>> global_assumptions.clear()
 
     """
 
@@ -42,6 +45,9 @@ global_assumptions = AssumptionsContext()
 class AppliedPredicate(Boolean):
     """The class of expressions resulting from applying a Predicate.
 
+    Examples
+    ========
+
     >>> from sympy import Q, Symbol
     >>> x = Symbol('x')
     >>> Q.integer(x)
@@ -53,6 +59,9 @@ class AppliedPredicate(Boolean):
     __slots__ = []
 
     def __new__(cls, predicate, arg):
+        if not isinstance(arg, bool):
+            # XXX: There is not yet a Basic type for True and False
+            arg = _sympify(arg)
         return Boolean.__new__(cls, predicate, arg)
 
     is_Atom = True  # do not attempt to decompose this
@@ -65,11 +74,11 @@ class AppliedPredicate(Boolean):
         Examples
         ========
 
-            >>> from sympy import Q, Symbol
-            >>> x = Symbol('x')
-            >>> a = Q.integer(x + 1)
-            >>> a.arg
-            x + 1
+        >>> from sympy import Q, Symbol
+        >>> x = Symbol('x')
+        >>> a = Q.integer(x + 1)
+        >>> a.arg
+        x + 1
 
         """
         return self._args[1]
@@ -182,15 +191,17 @@ class Predicate(Boolean):
 def assuming(*assumptions):
     """ Context manager for assumptions
 
-    >>> from __future__ import with_statement
+    Examples
+    ========
+
     >>> from sympy.assumptions import assuming, Q, ask
     >>> from sympy.abc import x, y
 
-    >>> print ask(Q.integer(x + y))
+    >>> print(ask(Q.integer(x + y)))
     None
 
-    >>> with assuming(Q.integer(x), Q.integer(y)):  #doctest: +SKIP
-    ...     print ask(Q.integer(x + y))
+    >>> with assuming(Q.integer(x), Q.integer(y)):
+    ...     print(ask(Q.integer(x + y)))
     True
     """
     old_global_assumptions = global_assumptions.copy()

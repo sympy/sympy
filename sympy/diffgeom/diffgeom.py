@@ -1,10 +1,14 @@
+from __future__ import print_function, division
+
+from itertools import permutations
+
 from sympy.matrices import Matrix
 from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
 from sympy.simplify import simplify
-from sympy.core.compatibility import reduce, permutations
+from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
 
 # TODO you are a bit excessive in the use of Dummies
@@ -30,7 +34,7 @@ class Manifold(Basic):
         # other Patch instance on the same manifold.
 
     def _latex(self, printer, *args):
-        return r'\mathbb{%s}' % self.name
+        return r'\mathrm{%s}' % self.name
 
 
 class Patch(Basic):
@@ -48,6 +52,7 @@ class Patch(Basic):
     =========
 
     Define a Manifold and a Patch on that Manifold:
+
     >>> from sympy.diffgeom import Manifold, Patch
     >>> m = Manifold('M', 3)
     >>> p = Patch('P', m)
@@ -98,27 +103,32 @@ class CoordSystem(Basic):
 
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
     >>> polar.coord_tuple_transform_to(rect, [0, 2])
-    [0]
-    [0]
+    Matrix([
+    [0],
+    [0]])
     >>> polar.coord_tuple_transform_to(rect, [2, pi/2])
-    [0]
-    [2]
+    Matrix([
+    [0],
+    [2]])
     >>> rect.coord_tuple_transform_to(polar, [1, 1])
-    [sqrt(2)]
-    [   pi/4]
+    Matrix([
+    [sqrt(2)],
+    [   pi/4]])
 
     Calculate the jacobian of the polar to cartesian transformation:
 
     >>> polar.jacobian(rect, [r, theta])
-    [cos(theta), -r*sin(theta)]
-    [sin(theta),  r*cos(theta)]
+    Matrix([
+    [cos(theta), -r*sin(theta)],
+    [sin(theta),  r*cos(theta)]])
 
     Define a point using coordinates in one of the coordinate systems:
 
     >>> p = polar.point([1, 3*pi/4])
     >>> rect.point_to_coords(p)
-    [-sqrt(2)/2]
-    [ sqrt(2)/2]
+    Matrix([
+    [-sqrt(2)/2],
+    [ sqrt(2)/2]])
 
     Define a basis scalar field (i.e. a coordinate function), that takes a
     point and returns its coordinates. It is an instance of ``BaseScalarField``.
@@ -245,14 +255,14 @@ class CoordSystem(Basic):
         coords = Matrix(coords)
         if self != to_sys:
             transf = self.transforms[to_sys]
-            coords = transf[1].subs(zip(transf[0], coords))
+            coords = transf[1].subs(list(zip(transf[0], coords)))
         return coords
 
     def jacobian(self, to_sys, coords):
         """Return the jacobian matrix of a transformation."""
         with_dummies = self.coord_tuple_transform_to(
             to_sys, self._dummies).jacobian(self._dummies)
-        return with_dummies.subs(zip(self._dummies, coords))
+        return with_dummies.subs(list(zip(self._dummies, coords)))
 
     ##########################################################################
     # Base fields.
@@ -356,11 +366,13 @@ class Point(Basic):
 
     >>> p = Point(polar, [r, 3*pi/4])
     >>> p.coords()
-    [     r]
-    [3*pi/4]
+    Matrix([
+    [     r],
+    [3*pi/4]])
     >>> p.coords(rect)
-    [-sqrt(2)*r/2]
-    [ sqrt(2)*r/2]
+    Matrix([
+    [-sqrt(2)*r/2],
+    [ sqrt(2)*r/2]])
 
     """
     def __init__(self, coord_sys, coords):
@@ -473,15 +485,15 @@ class BaseVectorField(Expr):
     directional derivative (which is also a scalar field).
 
     A base vector field is the same type of operator, however the derivation is
-    specifically done wrt a chosen coordinate.
+    specifically done with respect to a chosen coordinate.
 
     To define a base vector field you need to choose the coordinate system and
     the index of the coordinate.
 
     The use of the vector field after its definition is independent of the
-    coordinate system in which it was defined, however due to limitations in
-    the simplification routines you may arrive at more complicated
-    expression if you use unappropriate coordinate systems.
+    coordinate system in which it was defined, however due to limitations in the
+    simplification routines you may arrive at more complicated expression if you
+    use unappropriate coordinate systems.
 
     Examples
     ========
@@ -549,7 +561,7 @@ class BaseVectorField(Expr):
         # TODO: you need a real dummy function for the next line
         d_funcs = [Function('_#_%s' % i)(d_var) for i,
                    b in enumerate(base_scalars)]
-        d_result = scalar_field.subs(zip(base_scalars, d_funcs))
+        d_result = scalar_field.subs(list(zip(base_scalars, d_funcs)))
         d_result = d_result.diff(d_var)
 
         # Second step: e_x(x) -> 1 and e_x(r) -> cos(atan2(x, y))
@@ -559,11 +571,11 @@ class BaseVectorField(Expr):
         for b in base_scalars:
             jac = self._coord_sys.jacobian(b._coord_sys, coords)
             d_funcs_deriv_sub.append(jac[b._index, self._index])
-        d_result = d_result.subs(zip(d_funcs_deriv, d_funcs_deriv_sub))
+        d_result = d_result.subs(list(zip(d_funcs_deriv, d_funcs_deriv_sub)))
 
         # Remove the dummies
-        result = d_result.subs(zip(d_funcs, base_scalars))
-        result = result.subs(zip(coords, self._coord_sys.coord_functions()))
+        result = d_result.subs(list(zip(d_funcs, base_scalars)))
+        result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()  # XXX doit for the Subs instances
 
 
@@ -589,9 +601,13 @@ class Commutator(Expr):
     >>> e_x, e_y, e_r = R2.e_x, R2.e_y, R2.e_r
     >>> c_xy = Commutator(e_x, e_y)
     >>> c_xr = Commutator(e_x, e_r)
-
     >>> c_xy
     0
+
+    Unfortunately, the current code is not able to compute everything:
+
+    >>> c_xr
+    Commutator(e_x, e_r)
 
     """
     # TODO simplify fails with an error
@@ -744,7 +760,7 @@ class Differential(Expr):
                 for j in range(i + 1, k):
                     c = Commutator(v[i], v[j])
                     if c:  # TODO this is ugly - the Commutator can be Zero and
-                          # this causes the next line to fail
+                        # this causes the next line to fail
                         t = f.rcall(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
                         ret += (-1)**(i + j)*t
             return ret
@@ -756,7 +772,7 @@ class TensorProduct(Expr):
     The tensor product permits the creation of multilinear functionals (i.e.
     higher order tensors) out of lower order forms (e.g. 1-forms). However, the
     higher tensors thus created lack the interesting features provided by the
-    other type of product, the wedge product, namely they are not antisymetric
+    other type of product, the wedge product, namely they are not antisymmetric
     and hence are not form fields.
 
     Examples
@@ -782,14 +798,16 @@ class TensorProduct(Expr):
     >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
     1
 
-    You can make partial contaction for instance when 'raising an index'.
+    You can make partial contraction for instance when 'raising an index'.
+    Putting ``None`` in the second argument of ``rcall`` means that the
+    respective position in the tensor product is left as it is.
 
     >>> TP = TensorProduct
     >>> metric = TP(R2.dx, R2.dx) + 3*TP(R2.dy, R2.dy)
     >>> metric.rcall(R2.e_y, None)
     3*dy
 
-    Or automatically pad the args with ``None``s.
+    Or automatically pad the args with ``None`` without specifying them.
 
     >>> metric.rcall(R2.e_y)
     3*dy
@@ -840,7 +858,7 @@ class TensorProduct(Expr):
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.
 
-    In the context of integration only completely antisymetric forms make
+    In the context of integration only completely antisymmetric forms make
     sense. The wedge product permits the creation of such forms.
 
     Examples
@@ -877,28 +895,49 @@ class WedgeProduct(TensorProduct):
         mul = 1/Mul(*(factorial(o) for o in orders))
         perms = permutations(vector_fields)
         perms_par = (Permutation(
-            p).signature() for p in permutations(range(len(vector_fields))))
+            p).signature() for p in permutations(list(range(len(vector_fields)))))
         tensor_prod = TensorProduct(*self.args)
         return mul*Add(*[tensor_prod(*p[0])*p[1] for p in zip(perms, perms_par)])
 
 
 class LieDerivative(Expr):
-    """Lie derivative wrt a vector field.
+    """Lie derivative with respect to a vector field.
 
-    The transport operator that defines the Lie derivative is the pushforward
-    of the field to be derived along the integral curve of the field wrt which
-    one derives.
+    The transport operator that defines the Lie derivative is the pushforward of
+    the field to be derived along the integral curve of the field with respect
+    to which one derives.
 
     Examples
     ========
 
-    >>> #TODO
+    >>> from sympy.diffgeom import (LieDerivative, TensorProduct)
+    >>> from sympy.diffgeom.rn import R2
+    >>> LieDerivative(R2.e_x, R2.y)
+    0
+    >>> LieDerivative(R2.e_x, R2.x)
+    1
+    >>> LieDerivative(R2.e_x, R2.e_x)
+    0
+
+    The Lie derivative of a tensor field by another tensor field is equal to
+    their commutator:
+
+    >>> LieDerivative(R2.e_x, R2.e_r)
+    Commutator(e_x, e_r)
+    >>> LieDerivative(R2.e_x + R2.e_y, R2.x)
+    1
+    >>> tp = TensorProduct(R2.dx, R2.dy)
+    >>> LieDerivative(R2.e_x, tp)
+    LieDerivative(e_x, TensorProduct(dx, dy))
+    >>> LieDerivative(R2.e_x, tp).doit()
+    LieDerivative(e_rectangular_0, TensorProduct(dx, dy))
     """
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
         if contravariant_order(v_field) != 1 or covariant_order(v_field):
-            raise ValueError('Lie derivatives are defined only wrt vector fields.'
-                             ' The supplied argument was not a vector field.')
+            raise ValueError('Lie derivatives are defined only with respect to'
+                             ' vector fields. The supplied argument was not a '
+                             'vector field.')
         if expr_form_ord > 0:
             return super(LieDerivative, cls).__new__(cls, v_field, expr)
         if expr.atoms(BaseVectorField):
@@ -922,7 +961,7 @@ class LieDerivative(Expr):
 
 
 class BaseCovarDerivativeOp(Expr):
-    """Covariant derivative operator wrt a base vector.
+    """Covariant derivative operator with respect to a base vector.
 
     Examples
     ========
@@ -969,11 +1008,11 @@ class BaseCovarDerivativeOp(Expr):
         # TODO: you need a real dummy function for the next line
         d_funcs = [Function('_#_%s' % i)(wrt_scalar) for i,
                    b in enumerate(vectors)]
-        d_result = field.subs(zip(vectors, d_funcs))
+        d_result = field.subs(list(zip(vectors, d_funcs)))
         d_result = wrt_vector(d_result)
 
         # Second step: backsubstitute the vectors in
-        d_result = d_result.subs(zip(d_funcs, vectors))
+        d_result = d_result.subs(list(zip(d_funcs, vectors)))
 
         # Third step: evaluate the derivatives of the vectors
         derivs = []
@@ -983,7 +1022,7 @@ class BaseCovarDerivativeOp(Expr):
                       for k in range(v._coord_sys.dim)])
             derivs.append(d)
         to_subs = [wrt_vector(d) for d in d_funcs]
-        result = d_result.subs(zip(to_subs, derivs))
+        result = d_result.subs(list(zip(to_subs, derivs)))
 
         return result  # TODO .doit() # XXX doit for the Subs instances
 
@@ -1013,8 +1052,9 @@ class CovarDerivativeOp(Expr):
         if len(set(v._coord_sys for v in wrt.atoms(BaseVectorField))) > 1:
             raise NotImplementedError()
         if contravariant_order(wrt) != 1 or covariant_order(wrt):
-            raise ValueError('Covariant derivatives are defined only wrt vector fields.'
-                             ' The supplied argument was not a vector field.')
+            raise ValueError('Covariant derivatives are defined only with '
+                             'respect to vector fields. The supplied argument '
+                             'was not a vector field.')
         self._wrt = wrt
         self._christoffel = christoffel
         self._args = self._wrt, self._christoffel
@@ -1023,7 +1063,7 @@ class CovarDerivativeOp(Expr):
         vectors = list(self._wrt.atoms(BaseVectorField))
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
                     for v in vectors]
-        return self._wrt.subs(zip(vectors, base_ops)).rcall(field)
+        return self._wrt.subs(list(zip(vectors, base_ops))).rcall(field)
 
     def _latex(self, printer, *args):
         return r'\mathbb{\nabla}_{%s}' % printer._print(self._wrt)
@@ -1033,20 +1073,30 @@ class CovarDerivativeOp(Expr):
 # Integral curves on vector fields
 ###############################################################################
 def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False):
-    """Return the series expansion for an integral curve of the field.
+    r"""Return the series expansion for an integral curve of the field.
 
-    Integral curve is a function `gamma` taking a parameter in R to a point
+    Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
 
-    `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
+    `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
 
-    for any value `t` for the parameter and any scalar field `f`.
+    where the given ``vector_field`` is denoted as `V`. This holds for any
+    value `t` for the parameter and any scalar field `f`.
 
-    This function returns a series expansion of `gamma(t)` in terms of the
-    coordinate system `coord_sys`. The equations and expansions are necessarily
+    This equation can also be decomposed of a basis of coordinate functions
+
+    `V(f_i)\big(\gamma(t)\big) = \frac{d}{dt}f_i\big(\gamma(t)\big) \quad \forall i`
+
+    This function returns a series expansion of `\gamma(t)` in terms of the
+    coordinate system ``coord_sys``. The equations and expansions are necessarily
     done in coordinate-system-dependent way as there is no other way to
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
+
+    See Also
+    ========
+
+    intcurve_diffequ
 
     Parameters
     ==========
@@ -1054,16 +1104,14 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     vector_field
         the vector field for which an integral curve will be given
     param
-        the argument of the function `gamma` from R to the curve
+        the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `gamma(0)`
+        the point which coresponds to `\gamma(0)`
     n
         the order to which to expand
     coord_sys
         the coordinate system in which to expand
         coeffs (default False) - if True return a list of elements of the expansion
-
-    See Also: intcurve_diffequ
 
     Examples
     ========
@@ -1082,42 +1130,49 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     Calculate the series:
 
     >>> intcurve_series(vector_field, t, start_point, n=3)
-    [t + x]
-    [    y]
+    Matrix([
+    [t + x],
+    [    y]])
 
     Or get the elements of the expansion in a list:
 
     >>> series = intcurve_series(vector_field, t, start_point, n=3, coeffs=True)
     >>> series[0]
-    [x]
-    [y]
+    Matrix([
+    [x],
+    [y]])
     >>> series[1]
-    [t]
-    [0]
+    Matrix([
+    [t],
+    [0]])
     >>> series[2]
-    [0]
-    [0]
+    Matrix([
+    [0],
+    [0]])
 
     The series in the polar coordinate system:
 
     >>> series = intcurve_series(vector_field, t, start_point,
     ...             n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
-    [sqrt(x**2 + y**2)]
-    [      atan2(y, x)]
+    Matrix([
+    [sqrt(x**2 + y**2)],
+    [      atan2(y, x)]])
     >>> series[1]
-    [t*x/sqrt(x**2 + y**2)]
-    [   -t*y/(x**2 + y**2)]
+    Matrix([
+    [t*x/sqrt(x**2 + y**2)],
+    [   -t*y/(x**2 + y**2)]])
     >>> series[2]
-    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2]
-    [                                t**2*x*y/(x**2 + y**2)**2]
+    Matrix([
+    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2],
+    [                                t**2*x*y/(x**2 + y**2)**2]])
 
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
 
     def iter_vfield(scalar_field, i):
-        """Return `vector_field` called `i` times on `scalar_field`."""
+        """Return ``vector_field`` called `i` times on ``scalar_field``."""
         return reduce(lambda s, v: v.rcall(s), [vector_field, ]*i, scalar_field)
 
     def taylor_terms_per_coord(coord_function):
@@ -1134,20 +1189,26 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 
 
 def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
-    """Return the differential equation for an integral curve of the field.
+    r"""Return the differential equation for an integral curve of the field.
 
-    Integral curve is a function `gamma` taking a parameter in R to a point
+    Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
 
-    `vector_field(f)(gamma(param)) = diff(f(gamma(t)), t)`
+    `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
 
-    for any value `t` for the parameter and any scalar field `f`.
+    where the given ``vector_field`` is denoted as `V`. This holds for any
+    value `t` for the parameter and any scalar field `f`.
 
-    This function returns the differential equation of `gamma(t)` in terms of the
-    coordinate system `coord_sys`. The equations and expansions are necessarily
+    This function returns the differential equation of `\gamma(t)` in terms of the
+    coordinate system ``coord_sys``. The equations and expansions are necessarily
     done in coordinate-system-dependent way as there is no other way to
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
+
+    See Also
+    ========
+
+    intcurve_series
 
     Parameters
     ==========
@@ -1155,17 +1216,15 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     vector_field
         the vector field for which an integral curve will be given
     param
-        the argument of the function `gamma` from R to the curve
+        the argument of the function `\gamma` from R to the curve
     start_point
-        the point which coresponds to `gamma(0)`
+        the point which coresponds to `\gamma(0)`
     coord_sys
         the coordinate system in which to give the equations
 
     Returns
     =======
     a tuple of (equations, initial conditions)
-
-    See Also: intcurve_series
 
     Examples
     ========
@@ -1218,7 +1277,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
-    d_exprs = Matrix([sympify(expr).subs(zip(args, d_args)) for expr in exprs])
+    d_exprs = Matrix([sympify(expr).subs(list(zip(args, d_args))) for expr in exprs])
     return d_args, d_exprs
 
 
@@ -1346,7 +1405,7 @@ def vectors_in_basis(expr, to_sys):
         jac = cs.jacobian(to_sys, cs.coord_functions())
         new = (jac.T*Matrix(to_sys.base_vectors()))[v._index]
         new_vectors.append(new)
-    return expr.subs(zip(vectors, new_vectors))
+    return expr.subs(list(zip(vectors, new_vectors)))
 
 
 ###############################################################################
@@ -1366,14 +1425,17 @@ def twoform_to_matrix(expr):
     >>> from sympy.diffgeom import twoform_to_matrix, TensorProduct
     >>> TP = TensorProduct
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [1, 0]
-    [0, 1]
+    Matrix([
+    [1, 0],
+    [0, 1]])
     >>> twoform_to_matrix(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [x, 0]
-    [0, 1]
+    Matrix([
+    [x, 0],
+    [0, 1]])
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy) - TP(R2.dx, R2.dy)/2)
-    [   1, 0]
-    [-1/2, 1]
+    Matrix([
+    [   1, 0],
+    [-1/2, 1]])
 
     """
     if covariant_order(expr) != 2 or contravariant_order(expr):
@@ -1416,7 +1478,7 @@ def metric_to_Christoffel_1st(expr):
     coord_sys = expr.atoms(CoordSystem).pop()
     deriv_matrices = [matrix.applyfunc(lambda a: d(a))
                       for d in coord_sys.base_vectors()]
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
                     for j in indices]
@@ -1444,7 +1506,7 @@ def metric_to_Christoffel_2nd(expr):
     """
     ch_1st = metric_to_Christoffel_1st(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     # XXX workaround, inverting a matrix does not work if it contains non
     # symbols
     #matrix = twoform_to_matrix(expr).inv()
@@ -1454,7 +1516,7 @@ def metric_to_Christoffel_2nd(expr):
         s_fields.update(e.atoms(BaseScalarField))
     s_fields = list(s_fields)
     dums = coord_sys._dummies
-    matrix = matrix.subs(zip(s_fields, dums)).inv().subs(zip(dums, s_fields))
+    matrix = matrix.subs(list(zip(s_fields, dums))).inv().subs(list(zip(dums, s_fields)))
     # XXX end of workaround
     christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
                      for k in indices]
@@ -1495,7 +1557,7 @@ def metric_to_Riemann_components(expr):
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     deriv_ch = [[[[d(ch_2nd[i][j][k])
                    for d in coord_sys.base_vectors()]
                   for k in indices]
@@ -1546,7 +1608,7 @@ def metric_to_Ricci_components(expr):
     """
     riemann = metric_to_Riemann_components(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
               for j in indices]
              for i in indices]

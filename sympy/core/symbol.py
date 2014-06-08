@@ -1,15 +1,17 @@
+from __future__ import print_function, division
+
 from sympy.core.assumptions import StdFactKB
-from basic import Basic
-from core import C
-from sympify import sympify
-from singleton import S
-from expr import Expr, AtomicExpr
-from cache import cacheit
-from function import FunctionClass
+from sympy.core.compatibility import string_types
+from .basic import Basic
+from .core import C
+from .sympify import sympify
+from .singleton import S
+from .expr import Expr, AtomicExpr
+from .cache import cacheit
+from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import string
 import re as _re
@@ -69,10 +71,12 @@ class Symbol(AtomicExpr, Boolean):
             raise ValueError(
                 '''Symbol commutativity must be True or False.''')
         assumptions['commutative'] = is_commutative
+        for key in assumptions.keys():
+            assumptions[key] = bool(assumptions[key])
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        if not isinstance(name, basestring):
+        if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
         obj = Expr.__new__(cls)
         obj.name = name
@@ -91,12 +95,12 @@ class Symbol(AtomicExpr, Boolean):
         return {'_assumptions': self._assumptions}
 
     def _hashable_content(self):
-        return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
+        return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
         return dict((key, value) for key, value
-                in self._assumptions.iteritems() if value is not None)
+                in self._assumptions.items() if value is not None)
 
     @cacheit
     def sort_key(self, order=None):
@@ -106,7 +110,7 @@ class Symbol(AtomicExpr, Boolean):
         return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):
-        from function import Function
+        from .function import Function
         return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True, **hints):
@@ -144,9 +148,8 @@ class Dummy(Symbol):
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
-    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
-    >>> Dummy()          # used here to make sure that the doctest passes.
-    _0
+    >>> Dummy() #doctest: +SKIP
+    _Dummy_10
 
     """
 
@@ -158,7 +161,7 @@ class Dummy(Symbol):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = str(Dummy._count)
+            name = "Dummy_" + str(Dummy._count)
 
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
@@ -174,34 +177,82 @@ class Dummy(Symbol):
     def __getstate__(self):
         return {'_assumptions': self._assumptions, 'dummy_index': self.dummy_index}
 
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (
+            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
+
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
 
 
 class Wild(Symbol):
     """
-    A Wild symbol matches anything.
+    A Wild symbol matches anything, or anything
+    without whatever is explicitly excluded.
 
     Examples
     ========
 
     >>> from sympy import Wild, WildFunction, cos, pi
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y, z
     >>> a = Wild('a')
-    >>> b = Wild('b')
-    >>> b.match(a)
-    {a_: b_}
     >>> x.match(a)
     {a_: x}
     >>> pi.match(a)
     {a_: pi}
-    >>> (x**2).match(a)
-    {a_: x**2}
+    >>> (3*x**2).match(a*x)
+    {a_: 3*x}
     >>> cos(x).match(a)
     {a_: cos(x)}
+    >>> b = Wild('b', exclude=[x])
+    >>> (3*x**2).match(b*x)
+    >>> b.match(a)
+    {a_: b_}
     >>> A = WildFunction('A')
     >>> A.match(a)
     {a_: A_}
+
+    Tips
+    ====
+
+    When using Wild, be sure to use the exclude
+    keyword to make the pattern more precise.
+    Without the exclude pattern, you may get matches
+    that are technically correct, but not what you
+    wanted. For example, using the above without
+    exclude:
+
+    >>> from sympy import symbols
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> (2 + 3*y).match(a*x + b*y)
+    {a_: 2/x, b_: 3}
+
+    This is technically correct, because
+    (2/x)*x + 3*y == 2 + 3*y, but you probably
+    wanted it to not match at all. The issue is that
+    you really didn't want a and b to include x and y,
+    and the exclude parameter lets you specify exactly
+    this.  With the exclude parameter, the pattern will
+    not match.
+
+    >>> a = Wild('a', exclude=[x, y])
+    >>> b = Wild('b', exclude=[x, y])
+    >>> (2 + 3*y).match(a*x + b*y)
+
+    Exclude also helps remove ambiguity from matches.
+
+    >>> E = 2*x**3*y*z
+    >>> a, b = symbols('a b', cls=Wild)
+    >>> E.match(a*b)
+    {a_: 2*y*z, b_: x**3}
+    >>> a = Wild('a', exclude=[x, y])
+    >>> E.match(a*b)
+    {a_: z, b_: 2*x**3*y}
+    >>> a = Wild('a', exclude=[x, y, z])
+    >>> E.match(a*b)
+    {a_: 2, b_: x**3*y*z}
+
     """
 
     __slots__ = ['exclude', 'properties']
@@ -364,18 +415,8 @@ def symbols(names, **args):
 
     """
     result = []
-    if 'each_char' in args:
-        if args['each_char']:
-            value = "Tip: ' '.join(s) will transform a string s = 'xyz' to 'x y z'."
-        else:
-            value = ""
-        SymPyDeprecationWarning(
-            feature="each_char in the options to symbols() and var()",
-            useinstead="spaces or commas between symbol names",
-            issue=1919, deprecated_since_version="0.7.0", value=value
-        ).warn()
 
-    if isinstance(names, basestring):
+    if isinstance(names, string_types):
         marker = 0
         literals = ['\,', '\:', '\ ']
         for i in range(len(literals)):
@@ -407,9 +448,6 @@ def symbols(names, **args):
         # split on spaces
         for i in range(len(names) - 1, -1, -1):
             names[i: i + 1] = names[i].split()
-
-        if args.pop('each_char', False) and not as_seq and len(names) == 1:
-            return symbols(tuple(names[0]), **args)
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)

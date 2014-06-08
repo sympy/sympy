@@ -1,8 +1,8 @@
-from sympy import Symbol, Rational, sin, cos, tan, csc, sec, cot
+from sympy.core import Eq, Rational, Symbol
+from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.functions.elementary.exponential import log
+
 x = Symbol('x')
-y = Symbol('y')
 
 
 def test_trigintegrate_odd():
@@ -16,8 +16,24 @@ def test_trigintegrate_odd():
     assert trigintegrate(sin(3*x), x) == -cos(3*x)/3
     assert trigintegrate(cos(3*x), x) == sin(3*x)/3
 
-    assert trigintegrate(sin(y*x), x) == -cos(y*x)/y
-    assert trigintegrate(cos(y*x), x) == sin(y*x)/y
+    y = Symbol('y')
+    assert trigintegrate(sin(y*x), x) == \
+        Piecewise((0, Eq(y, 0)), (-cos(y*x)/y, True))
+    assert trigintegrate(cos(y*x), x) == \
+        Piecewise((x, Eq(y, 0)), (sin(y*x)/y, True))
+    assert trigintegrate(sin(y*x)**2, x) == \
+        Piecewise((0, Eq(y, 0)), ((x*y/2 - sin(x*y)*cos(x*y)/2)/y, True))
+    assert trigintegrate(sin(y*x)*cos(y*x), x) == \
+        Piecewise((0, Eq(y, 0)), (sin(x*y)**2/(2*y), True))
+    assert trigintegrate(cos(y*x)**2, x) == \
+        Piecewise((x, Eq(y, 0)), ((x*y/2 + sin(x*y)*cos(x*y)/2)/y, True))
+
+    y = Symbol('y', positive=True)
+    # TODO: remove conds='none' below. For this to work we would have to rule
+    #       out (e.g. by trying solve) the condition y = 0, incompatible with
+    #       y.is_positive being True.
+    assert trigintegrate(sin(y*x), x, conds='none') == -cos(y*x)/y
+    assert trigintegrate(cos(y*x), x, conds='none') == sin(y*x)/y
 
     assert trigintegrate(sin(x)*cos(x), x) == sin(x)**2/2
     assert trigintegrate(sin(x)*cos(x)**2, x) == -cos(x)**3/3
@@ -41,7 +57,7 @@ def test_trigintegrate_even():
     assert trigintegrate(sin(3*x)**2, x) == x/2 - cos(3*x)*sin(3*x)/6
     assert trigintegrate(cos(3*x)**2, x) == x/2 + cos(3*x)*sin(3*x)/6
     assert trigintegrate(sin(x)**2 * cos(x)**2, x) == \
-        x/8 - cos(2*x)*sin(2*x)/16
+        x/8 - sin(2*x)*cos(2*x)/16
 
     assert trigintegrate(sin(x)**4 * cos(x)**2, x) == \
         x/16 - sin(x) *cos(x)/16 - sin(x)**3*cos(x)/24 + \

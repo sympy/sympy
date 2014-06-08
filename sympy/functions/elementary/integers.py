@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core.function import Function
@@ -11,8 +13,6 @@ from sympy.core.evalf import get_integer_part, PrecisionExhausted
 
 class RoundFunction(Function):
     """The base class for rounding functions."""
-
-    nargs = 1
 
     @classmethod
     def eval(cls, arg):

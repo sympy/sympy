@@ -7,6 +7,7 @@ Demonstrates matrix computations using the Vandermonde matrix.
 """
 
 from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
+from sympy.core.compatibility import xrange
 
 
 def symbol_gen(sym_str):
@@ -62,7 +63,7 @@ def vandermonde(order, dim=1, syms='a b c d'):
     generators = [symbol_gen(syms[i]) for i in range(dim)]
     all_syms = []
     for i in range(rank):
-        row_syms = [g.next() for g in generators]
+        row_syms = [next(g) for g in generators]
         all_syms.append(row_syms)
         for j, term in enumerate(terms):
             v_entry = 1
@@ -87,9 +88,9 @@ def gen_poly(points, order, syms):
             "%d polynomial, given %d points" %
             (V.shape[0], order, dim, num_pts))
     elif num_pts > V.shape[0]:
-        print "gen_poly given %d points but only requires %d, "\
+        print("gen_poly given %d points but only requires %d, "\
             "continuing using the first %d points" % \
-            (num_pts, V.shape[0], V.shape[0])
+            (num_pts, V.shape[0], V.shape[0]))
         num_pts = V.shape[0]
 
     subs_dict = {}
@@ -113,57 +114,57 @@ def gen_poly(points, order, syms):
 def main():
     order = 2
     V, tmp_syms, _ = vandermonde(order)
-    print "Vandermonde matrix of order 2 in 1 dimension"
+    print("Vandermonde matrix of order 2 in 1 dimension")
     pprint(V)
 
-    print '-'*79
-    print "Computing the determinate and comparing to \sum_{0<i<j<=3}(a_j - a_i)"
+    print('-'*79)
+    print("Computing the determinate and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
 
     det_sum = 1
     for j in range(order + 1):
         for i in range(j):
             det_sum *= (tmp_syms[j][0] - tmp_syms[i][0])
 
-    print """
+    print("""
     det(V) = %(det)s
     \sum   = %(sum)s
            = %(sum_expand)s
-    """ % { "det": V.det(),
+    """ % {"det": V.det(),
             "sum": det_sum,
             "sum_expand": det_sum.expand(),
-          }
+          })
 
-    print '-'*79
-    print "Polynomial fitting with a Vandermonde Matrix:"
+    print('-'*79)
+    print("Polynomial fitting with a Vandermonde Matrix:")
     x, y, z = symbols('x,y,z')
 
     points = [(0, 3), (1, 2), (2, 3)]
-    print """
+    print("""
     Quadratic function, represented by 3 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 2, [x]),
-          }
+          })
 
     points = [(0, 1, 1), (1, 0, 0), (1, 1, 0), (Rational(1, 2), 0, 0),
               (0, Rational(1, 2), 0), (Rational(1, 2), Rational(1, 2), 0)]
-    print """
+    print("""
     2D Quadratic function, represented by 6 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 2, [x, y]),
-          }
+          })
 
     points = [(0, 1, 1, 1), (1, 1, 0, 0), (1, 0, 1, 0), (1, 1, 1, 1)]
-    print """
+    print("""
     3D linear function, represented by 4 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 1, [x, y, z]),
-          }
+          })
 
 
 if __name__ == "__main__":

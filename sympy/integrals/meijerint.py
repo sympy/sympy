@@ -25,15 +25,16 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
+from __future__ import print_function, division
+
 from sympy.core import oo, S, pi, Expr
-from sympy.core.compatibility import next
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
@@ -49,7 +50,7 @@ def _create_lookup_table(table):
     """ Add formulae for the function -> meijerg lookup table. """
     def wild(n):
         return Wild(n, exclude=[z])
-    p, q, a, b, c = map(wild, 'pqabc')
+    p, q, a, b, c = list(map(wild, 'pqabc'))
     n = Wild('n', properties=[lambda x: x.is_Integer and x > 0])
     t = p*z**q
 
@@ -71,7 +72,6 @@ def _create_lookup_table(table):
     from sympy import unpolarify, Function, Not
 
     class IsNonPositiveInteger(Function):
-        nargs = 1
 
         @classmethod
         def eval(cls, arg):
@@ -81,7 +81,7 @@ def _create_lookup_table(table):
 
     # Section 8.4.2
     from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
-                       factorial, log, erf, polar_lift)
+                       factorial, log, erf, erfc, erfi, polar_lift)
     # TODO this needs more polar_lift (c/f entry for exp)
     add(Heaviside(t - b)*(t - b)**(a - 1), [a], [], [], [0], t/b,
         gamma(a)*b**(a - 1), And(b > 0))
@@ -190,9 +190,12 @@ def _create_lookup_table(table):
     add(expint(a, t), [], [a], [a - 1, 0], [], t)
 
     # Section 8.4.14
-    # TODO erfc
     add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
     # TODO exp(-x)*erf(I*x) does not work
+    add(erfc(t), [], [1], [0, S(1)/2], [], t**2, 1/sqrt(pi))
+    # This formula for erfi(z) yields a wrong(?) minus sign
+    #add(erfi(t), [1], [], [S(1)/2], [0], -t**2, I/sqrt(pi))
+    add(erfi(t), [S(1)/2], [], [0], [-S(1)/2], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
     add(fresnels(t), [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
@@ -248,6 +251,11 @@ def _create_lookup_table(table):
     add(besselk(a, t), [], [], [a/2, -a/2], [], t**2/4, S(1)/2)
     # TODO many more formulas. should all be derivable
 
+    # Complete elliptic integrals K(z) and E(z)
+    from sympy import elliptic_k, elliptic_e
+    add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
+    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, -S.Half/2)
+
 
 ####################################################################
 # First some helper functions.
@@ -259,7 +267,7 @@ timeit = timethis('meijerg')
 
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
-    if not f.has(x):
+    if x not in f.free_symbols:
         return ()
     elif f.is_Function:
         return (type(f),)
@@ -343,7 +351,7 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if e.has(x))
+    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
 
 
 def _find_splitting_points(expr, x):
@@ -362,7 +370,7 @@ def _find_splitting_points(expr, x):
     set([-3, 0])
     """
     from sympy import Tuple
-    p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
+    p, q = [Wild(n, exclude=[x]) for n in 'pq']
 
     def compute_innermost(expr, res):
         if not isinstance(expr, Expr):
@@ -401,10 +409,10 @@ def _split_mul(f, x):
     for a in args:
         if a == x:
             po *= x
-        elif not a.has(x):
+        elif x not in a.free_symbols:
             fac *= a
         else:
-            if a.is_Pow:
+            if a.is_Pow and x not in a.exp.free_symbols:
                 c, t = a.base.as_coeff_mul(x)
                 if t != (x,):
                     c, t = expand_mul(a.base).as_coeff_mul(x)
@@ -532,7 +540,7 @@ def _dummy(name, token, expr, **kwargs):
     This is for being cache-friendly.
     """
     d = _dummy_(name, token, **kwargs)
-    if expr.has(d):
+    if d in expr.free_symbols:
         return Dummy(name, **kwargs)
     return d
 
@@ -552,7 +560,7 @@ def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
     from sympy import Heaviside, Abs
-    return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
+    return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
 def _condsimp(cond):
@@ -576,7 +584,7 @@ def _condsimp(cond):
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
-    cond = cond.func(*map(_condsimp, cond.args))
+    cond = cond.func(*list(map(_condsimp, cond.args)))
     change = True
     p, q, r = symbols('p q r', cls=Wild)
     rules = [
@@ -597,7 +605,7 @@ def _condsimp(cond):
             if fro.func != cond.func:
                 continue
             for n, arg in enumerate(cond.args):
-                if fro.args[0].has(r):
+                if r in fro.args[0].free_symbols:
                     m = arg.match(fro.args[1])
                     num = 1
                 else:
@@ -605,8 +613,7 @@ def _condsimp(cond):
                     m = arg.match(fro.args[0])
                 if not m:
                     continue
-                otherargs = map(
-                    lambda x: x.subs(m), fro.args[:num] + fro.args[num + 1:])
+                otherargs = [x.subs(m) for x in fro.args[:num] + fro.args[num + 1:]]
                 otherlist = [n]
                 for arg2 in otherargs:
                     for k, arg3 in enumerate(cond.args):
@@ -871,10 +878,10 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     _, s = _get_coeff_exp(po, x)
     _, b1 = _get_coeff_exp(g1.argument, x)
     _, b2 = _get_coeff_exp(g2.argument, x)
-    if b1 < 0:
+    if (b1 < 0) == True:
         b1 = -b1
         g1 = _flip_g(g1)
-    if b2 < 0:
+    if (b2 < 0) == True:
         b2 = -b2
         g2 = _flip_g(g2)
     if not b1.is_Rational or not b2.is_Rational:
@@ -962,7 +969,7 @@ def _check_antecedents(g1, g2, x):
         for a in g1.an:
             for b in g1.bm:
                 diff = a - b
-                if diff > 0 and diff.is_integer:
+                if (diff > 0) == True and diff.is_integer:
                     c1 = False
 
     tmp = []
@@ -1046,7 +1053,7 @@ def _check_antecedents(g1, g2, x):
            And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
            And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
     c15 = Or(*tmp)
-    if _eval_cond(lambda_c > 0) is not False:
+    if _eval_cond(lambda_c > 0) != False:
         c15 = (lambda_c > 0)
 
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
@@ -1059,45 +1066,45 @@ def _check_antecedents(g1, g2, x):
 
     def pr(count):
         _debug('  case %s:' % count, conds[-1])
-    conds += [And(m*n*s*t != 0, bstar > 0, cstar > 0, c1, c2, c3, c10,
+    conds += [And(m*n*s*t != 0, bstar.is_positive is True, cstar.is_positive is True, c1, c2, c3, c10,
                   c12)]  # 1
     pr(1)
-    conds += [And(Eq(u, v), Eq(bstar, 0), cstar > 0, sigma > 0, re(rho) < 1,
+    conds += [And(Eq(u, v), Eq(bstar, 0), cstar.is_positive is True, sigma.is_positive is True, re(rho) < 1,
                   c1, c2, c3, c12)]  # 2
     pr(2)
-    conds += [And(Eq(p, q), Eq(cstar, 0), bstar > 0, omega > 0, re(mu) < 1,
+    conds += [And(Eq(p, q), Eq(cstar, 0), bstar.is_positive is True, omega.is_positive is True, re(mu) < 1,
                   c1, c2, c3, c10)]  # 3
     pr(3)
     conds += [And(Eq(p, q), Eq(u, v), Eq(bstar, 0), Eq(cstar, 0),
-                  sigma > 0, omega > 0, re(mu) < 1, re(rho) < 1,
+                  sigma.is_positive is True, omega.is_positive is True, re(mu) < 1, re(rho) < 1,
                   Ne(sigma, omega), c1, c2, c3)]  # 4
     pr(4)
     conds += [And(Eq(p, q), Eq(u, v), Eq(bstar, 0), Eq(cstar, 0),
-                  sigma > 0, omega > 0, re(mu + rho) < 1,
+                  sigma.is_positive is True, omega.is_positive is True, re(mu + rho) < 1,
                   Ne(omega, sigma), c1, c2, c3)]  # 5
     pr(5)
-    conds += [And(p > q, s > 0, bstar > 0, cstar >= 0,
+    conds += [And(p > q, s.is_positive is True, bstar.is_positive is True, cstar >= 0,
                   c1, c2, c3, c5, c10, c13)]  # 6
     pr(6)
-    conds += [And(p < q, t > 0, bstar > 0, cstar >= 0,
+    conds += [And(p < q, t.is_positive is True, bstar.is_positive is True, cstar >= 0,
                   c1, c2, c3, c4, c10, c13)]  # 7
     pr(7)
-    conds += [And(u > v, m > 0, cstar > 0, bstar >= 0,
+    conds += [And(u > v, m.is_positive is True, cstar.is_positive is True, bstar >= 0,
                   c1, c2, c3, c7, c11, c12)]  # 8
     pr(8)
-    conds += [And(u < v, n > 0, cstar > 0, bstar >= 0,
+    conds += [And(u < v, n.is_positive is True, cstar.is_positive is True, bstar >= 0,
                   c1, c2, c3, c6, c11, c12)]  # 9
     pr(9)
-    conds += [And(p > q, Eq(u, v), Eq(bstar, 0), cstar >= 0, sigma > 0,
+    conds += [And(p > q, Eq(u, v), Eq(bstar, 0), cstar >= 0, sigma.is_positive is True,
                   re(rho) < 1, c1, c2, c3, c5, c13)]  # 10
     pr(10)
-    conds += [And(p < q, Eq(u, v), Eq(bstar, 0), cstar >= 0, sigma > 0,
+    conds += [And(p < q, Eq(u, v), Eq(bstar, 0), cstar >= 0, sigma.is_positive is True,
                   re(rho) < 1, c1, c2, c3, c4, c13)]  # 11
     pr(11)
-    conds += [And(Eq(p, q), u > v, bstar >= 0, Eq(cstar, 0), omega > 0,
+    conds += [And(Eq(p, q), u > v, bstar >= 0, Eq(cstar, 0), omega.is_positive is True,
                   re(mu) < 1, c1, c2, c3, c7, c11)]  # 12
     pr(12)
-    conds += [And(Eq(p, q), u < v, bstar >= 0, Eq(cstar, 0), omega > 0,
+    conds += [And(Eq(p, q), u < v, bstar >= 0, Eq(cstar, 0), omega.is_positive is True,
                   re(mu) < 1, c1, c2, c3, c6, c11)]  # 13
     pr(13)
     conds += [And(p < q, u > v, bstar >= 0, cstar >= 0,
@@ -1112,18 +1119,18 @@ def _check_antecedents(g1, g2, x):
     conds += [And(p < q, u < v, bstar >= 0, cstar >= 0,
                   c1, c2, c3, c4, c6, c9, c11, c13, c14)]  # 17
     pr(17)
-    conds += [And(Eq(t, 0), s > 0, bstar > 0, phi > 0, c1, c2, c10)]  # 18
+    conds += [And(Eq(t, 0), s.is_positive is True, bstar.is_positive is True, phi.is_positive is True, c1, c2, c10)]  # 18
     pr(18)
-    conds += [And(Eq(s, 0), t > 0, bstar > 0, phi < 0, c1, c3, c10)]  # 19
+    conds += [And(Eq(s, 0), t.is_positive is True, bstar.is_positive is True, phi.is_negative is True, c1, c3, c10)]  # 19
     pr(19)
-    conds += [And(Eq(n, 0), m > 0, cstar > 0, phi < 0, c1, c2, c12)]  # 20
+    conds += [And(Eq(n, 0), m.is_positive is True, cstar.is_positive is True, phi.is_negative is True, c1, c2, c12)]  # 20
     pr(20)
-    conds += [And(Eq(m, 0), n > 0, cstar > 0, phi > 0, c1, c3, c12)]  # 21
+    conds += [And(Eq(m, 0), n.is_positive is True, cstar.is_positive is True, phi.is_positive is True, c1, c3, c12)]  # 21
     pr(21)
-    conds += [And(Eq(s*t, 0), bstar > 0, cstar > 0,
+    conds += [And(Eq(s*t, 0), bstar.is_positive is True, cstar.is_positive is True,
                   c1, c2, c3, c10, c12)]  # 22
     pr(22)
-    conds += [And(Eq(m*n, 0), bstar > 0, cstar > 0,
+    conds += [And(Eq(m*n, 0), bstar.is_positive is True, cstar.is_positive is True,
                   c1, c2, c3, c10, c12)]  # 23
     pr(23)
 
@@ -1135,74 +1142,74 @@ def _check_antecedents(g1, g2, x):
     # Then the integral exists.
     mt1_exists = _check_antecedents_1(g1, x, helper=True)
     mt2_exists = _check_antecedents_1(g2, x, helper=True)
-    conds += [And(mt2_exists, Eq(t, 0), u < s, bstar > 0, c10, c1, c2, c3)]
+    conds += [And(mt2_exists, Eq(t, 0), u < s, bstar.is_positive is True, c10, c1, c2, c3)]
     pr('E1')
-    conds += [And(mt2_exists, Eq(s, 0), v < t, bstar > 0, c10, c1, c2, c3)]
+    conds += [And(mt2_exists, Eq(s, 0), v < t, bstar.is_positive is True, c10, c1, c2, c3)]
     pr('E2')
-    conds += [And(mt1_exists, Eq(n, 0), p < m, cstar > 0, c12, c1, c2, c3)]
+    conds += [And(mt1_exists, Eq(n, 0), p < m, cstar.is_positive is True, c12, c1, c2, c3)]
     pr('E3')
-    conds += [And(mt1_exists, Eq(m, 0), q < n, cstar > 0, c12, c1, c2, c3)]
+    conds += [And(mt1_exists, Eq(m, 0), q < n, cstar.is_positive is True, c12, c1, c2, c3)]
     pr('E4')
 
     # Let's short-circuit if this worked ...
     # the rest is corner-cases and terrible to read.
     r = Or(*conds)
-    if _eval_cond(r) is not False:
+    if _eval_cond(r) != False:
         return r
 
-    conds += [And(m + n > p, Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0, cstar < 0,
+    conds += [And(m + n > p, Eq(t, 0), Eq(phi, 0), s.is_positive is True, bstar.is_positive is True, cstar.is_negative is True,
                   abs(arg(omega)) < (m + n - p + 1)*pi,
                   c1, c2, c10, c14, c15)]  # 24
     pr(24)
-    conds += [And(m + n > q, Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0, cstar < 0,
+    conds += [And(m + n > q, Eq(s, 0), Eq(phi, 0), t.is_positive is True, bstar.is_positive is True, cstar.is_negative is True,
                   abs(arg(omega)) < (m + n - q + 1)*pi,
                   c1, c3, c10, c14, c15)]  # 25
     pr(25)
-    conds += [And(Eq(p, q - 1), Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0,
+    conds += [And(Eq(p, q - 1), Eq(t, 0), Eq(phi, 0), s.is_positive is True, bstar.is_positive is True,
                   cstar >= 0, cstar*pi < abs(arg(omega)),
                   c1, c2, c10, c14, c15)]  # 26
     pr(26)
-    conds += [And(Eq(p, q + 1), Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0,
+    conds += [And(Eq(p, q + 1), Eq(s, 0), Eq(phi, 0), t.is_positive is True, bstar.is_positive is True,
                   cstar >= 0, cstar*pi < abs(arg(omega)),
                   c1, c3, c10, c14, c15)]  # 27
     pr(27)
-    conds += [And(p < q - 1, Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0,
+    conds += [And(p < q - 1, Eq(t, 0), Eq(phi, 0), s.is_positive is True, bstar.is_positive is True,
                   cstar >= 0, cstar*pi < abs(arg(omega)),
                   abs(arg(omega)) < (m + n - p + 1)*pi,
                   c1, c2, c10, c14, c15)]  # 28
     pr(28)
     conds += [And(
-        p > q + 1, Eq(s, 0), Eq(phi, 0), t > 0, bstar > 0, cstar >= 0,
+        p > q + 1, Eq(s, 0), Eq(phi, 0), t.is_positive is True, bstar.is_positive is True, cstar >= 0,
                   cstar*pi < abs(arg(omega)),
                   abs(arg(omega)) < (m + n - q + 1)*pi,
                   c1, c3, c10, c14, c15)]  # 29
     pr(29)
-    conds += [And(Eq(n, 0), Eq(phi, 0), s + t > 0, m > 0, cstar > 0, bstar < 0,
+    conds += [And(Eq(n, 0), Eq(phi, 0), s + t > 0, m.is_positive is True, cstar.is_positive is True, bstar.is_negative is True,
                   abs(arg(sigma)) < (s + t - u + 1)*pi,
                   c1, c2, c12, c14, c15)]  # 30
     pr(30)
-    conds += [And(Eq(m, 0), Eq(phi, 0), s + t > v, n > 0, cstar > 0, bstar < 0,
+    conds += [And(Eq(m, 0), Eq(phi, 0), s + t > v, n.is_positive is True, cstar.is_positive is True, bstar.is_negative is True,
                   abs(arg(sigma)) < (s + t - v + 1)*pi,
                   c1, c3, c12, c14, c15)]  # 31
     pr(31)
-    conds += [And(Eq(n, 0), Eq(phi, 0), Eq(u, v - 1), m > 0, cstar > 0,
+    conds += [And(Eq(n, 0), Eq(phi, 0), Eq(u, v - 1), m.is_positive is True, cstar.is_positive is True,
                   bstar >= 0, bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (bstar + 1)*pi,
                   c1, c2, c12, c14, c15)]  # 32
     pr(32)
-    conds += [And(Eq(m, 0), Eq(phi, 0), Eq(u, v + 1), n > 0, cstar > 0,
+    conds += [And(Eq(m, 0), Eq(phi, 0), Eq(u, v + 1), n.is_positive is True, cstar.is_positive is True,
                   bstar >= 0, bstar*pi < abs(arg(sigma)),
                   abs(arg(sigma)) < (bstar + 1)*pi,
                   c1, c3, c12, c14, c15)]  # 33
     pr(33)
     conds += [And(
-        Eq(n, 0), Eq(phi, 0), u < v - 1, m > 0, cstar > 0, bstar >= 0,
+        Eq(n, 0), Eq(phi, 0), u < v - 1, m.is_positive is True, cstar.is_positive is True, bstar >= 0,
         bstar*pi < abs(arg(sigma)),
         abs(arg(sigma)) < (s + t - u + 1)*pi,
         c1, c2, c12, c14, c15)]  # 34
     pr(34)
     conds += [And(
-        Eq(m, 0), Eq(phi, 0), u > v + 1, n > 0, cstar > 0, bstar >= 0,
+        Eq(m, 0), Eq(phi, 0), u > v + 1, n.is_positive is True, cstar.is_positive is True, bstar >= 0,
         bstar*pi < abs(arg(sigma)),
         abs(arg(sigma)) < (s + t - v + 1)*pi,
         c1, c3, c12, c14, c15)]  # 35
@@ -1433,11 +1440,11 @@ def _rewrite_single(f, x, recursive=True):
                 subs = subs_
                 if not isinstance(hint, bool):
                     hint = hint.subs(subs)
-                if hint is False:
+                if hint == False:
                     continue
-                if not isinstance(cond, bool):
+                if not isinstance(cond, (bool, BooleanAtom)):
                     cond = unpolarify(cond.subs(subs))
-                if _eval_cond(cond) is False:
+                if _eval_cond(cond) == False:
                     continue
                 if not isinstance(terms, list):
                     terms = terms(subs)
@@ -1502,7 +1509,7 @@ def _rewrite_single(f, x, recursive=True):
         # (also if the dummy is already in the expression, there is no point in
         #  putting in another one)
         a = _dummy_('a', 'rewrite-single')
-        if not f.has(a) and _is_analytic(f, x):
+        if a not in f.free_symbols and _is_analytic(f, x):
             try:
                 F, strip, _ = mellin_transform(f.subs(x, a*x), x, s,
                                                integrator=my_integrator,
@@ -1569,7 +1576,7 @@ def _rewrite2(f, x):
             g2 = _rewrite_single(fac2, x, recursive)
             if g1 and g2:
                 cond = And(g1[1], g2[1])
-                if cond is not False:
+                if cond != False:
                     return fac, po, g1[0], g2[0], cond
 
 
@@ -1585,7 +1592,7 @@ def meijerint_indefinite(f, x):
     """
     from sympy import hyper, meijerg, count_ops
     results = []
-    for a in list(_find_splitting_points(f, x)) + [S(0)]:
+    for a in sorted(_find_splitting_points(f, x) | set([S(0)]), key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
         if res is None:
             continue
@@ -1630,7 +1637,7 @@ def _meijerint_indefinite_1(f, x):
 
         def tr(p):
             return [a + rho + 1 for a in p]
-        if any(b.is_integer and b <= 0 for b in tr(g.bm)):
+        if any(b.is_integer and (b <= 0) == True for b in tr(g.bm)):
             r = -meijerg(
                 tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
         else:
@@ -1651,7 +1658,7 @@ def _meijerint_indefinite_1(f, x):
 
         cancel is used before mul_expand since it is possible for an
         expression to have an additive constant that doesn't become isolated
-        with simple expansion. Such a situation was identified in issue 3270:
+        with simple expansion. Such a situation was identified in issue 6369:
 
 
         >>> from sympy import sqrt, cancel
@@ -1669,11 +1676,11 @@ def _meijerint_indefinite_1(f, x):
 
     res = piecewise_fold(res)
     if res.is_Piecewise:
-        nargs = []
+        newargs = []
         for expr, cond in res.args:
             expr = _my_unpolarify(_clean(expr))
-            nargs += [(expr, cond)]
-        res = Piecewise(*nargs)
+            newargs += [(expr, cond)]
+        res = Piecewise(*newargs)
     else:
         res = _my_unpolarify(_clean(res))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
@@ -1744,7 +1751,7 @@ def meijerint_definite(f, x, a, b):
             res1, cond1 = res1
             res2, cond2 = res2
             cond = _condsimp(And(cond1, cond2))
-            if cond is False:
+            if cond == False:
                 _debug('  But combined condition is always false.')
                 continue
             res = res1 + res2
@@ -1763,7 +1770,7 @@ def meijerint_definite(f, x, a, b):
     results = []
     if b == oo:
         for split in _find_splitting_points(f, x):
-            if (a - split >= 0) is True:
+            if (a - split >= 0) == True:
                 _debug('Trying x --> x + %s' % split)
                 res = _meijerint_definite_2(f.subs(x, x + split)
                                             *Heaviside(x + split - a), x)
@@ -1843,7 +1850,7 @@ def _meijerint_definite_2(f, x):
     for g, explanation in _guess_expansion(f, x):
         _debug('Trying', explanation)
         res = _meijerint_definite_3(g, x)
-        if res is not None and res[1] is not False:
+        if res is not None and res[1] != False:
             return res
 
 
@@ -1855,7 +1862,7 @@ def _meijerint_definite_3(f, x):
     integral. If this fails, it tries using linearity.
     """
     res = _meijerint_definite_4(f, x)
-    if res is not None and res[1] is not False:
+    if res is not None and res[1] != False:
         return res
     if f.is_Add:
         _debug('Expanding and evaluating all terms.')
@@ -1867,7 +1874,7 @@ def _meijerint_definite_3(f, x):
                 res += r
                 conds += [c]
             c = And(*conds)
-            if c is not False:
+            if c != False:
                 return res, c
 
 
@@ -1904,7 +1911,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                 cond = And(cond, _check_antecedents_1(f, x))
             cond = _my_unpolarify(cond)
             _debug('Result before branch substitutions is:', res)
-            if cond is False:
+            if cond == False:
                 _debug('But cond is always False.')
             else:
                 return _my_unpolarify(hyperexpand(res)), cond
@@ -1929,7 +1936,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                     res += C*_int0oo(f1_, f2_, x)
             _debug('Result before branch substitutions is:', res)
             cond = _my_unpolarify(cond)
-            if cond is False:
+            if cond == False:
                 _debug('But cond is always False (full_pb=%s).' % full_pb)
             else:
                 if only_double:
@@ -1988,7 +1995,7 @@ def meijerint_inversion(f, x, t):
                 if arg2.is_Mul:
                     args += arg2.args
                     continue
-                if not arg.base.has(x):
+                if x not in arg.base.free_symbols:
                     try:
                         a, b = _get_coeff_exp(arg.exp, x)
                     except _CoeffExpValueError:
@@ -2011,7 +2018,7 @@ def meijerint_inversion(f, x, t):
             res += C*_int_inversion(f, x, t)
             cond = And(cond, _check_antecedents_inversion(f, x))
         cond = _my_unpolarify(cond)
-        if cond is False:
+        if cond == False:
             _debug('But cond is always False.')
         else:
             _debug('Result before branch substitution:', res)

@@ -539,7 +539,7 @@ def mpi_to_str(x, dps, use_spaces=True, brackets='[]', mode='brackets', error_dp
 
     **Examples**
 
-        >>> from mpmath import mpi, mp
+        >>> from sympy.mpmath import mpi, mp
         >>> mp.dps = 30
         >>> x = mpi(1, 2)
         >>> mpi_to_str(x, mode='plusminus')
@@ -876,8 +876,7 @@ def mpci_gamma(z, prec, type=0):
 
     # Assume type != 1
     if type == 1:
-        (a1,a2) = mpi_add((a1,a2), mpi_one, wp)
-        z = (a1,a2), (b1,b2)
+        (a1,a2) = mpi_add((a1,a2), mpi_one, wp); z = (a1,a2), (b1,b2)
         type = 0
 
     # Avoid non-monotonic region near the negative real axis

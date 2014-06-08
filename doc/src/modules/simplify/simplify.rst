@@ -13,14 +13,20 @@ collect
 
 .. autofunction:: rcollect
 
-separate
---------
-.. autofunction:: separate
-
 separatevars
 ------------
 
 .. autofunction:: separatevars
+
+nthroot
+-------
+.. autofunction:: nthroot
+
+
+rad_rationalize
+---------------
+.. autofunction:: rad_rationalize
+
 
 radsimp
 -------
@@ -98,6 +104,14 @@ Common Subexpresion Elimination
 cse
 ^^^
 .. autofunction:: cse
+
+opt_cse
+^^^^^^^
+.. autofunction:: sympy.simplify.cse_main.opt_cse
+
+tree_cse
+^^^^^^^^
+.. autofunction:: sympy.simplify.cse_main.tree_cse
 
 Hypergeometric Function Expansion
 ---------------------------------

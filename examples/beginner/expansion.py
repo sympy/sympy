@@ -14,11 +14,11 @@ def main():
     b = sympy.Symbol('b')
     e = (a + b)**5
 
-    print "\nExpression:"
+    print("\nExpression:")
     pprint(e)
-    print '\nExpansion of the above expression:'
+    print('\nExpansion of the above expression:')
     pprint(e.expand())
-    print
+    print()
 
 if __name__ == "__main__":
     main()

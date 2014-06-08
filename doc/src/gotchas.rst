@@ -10,16 +10,16 @@ Introduction
 ============
 
 SymPy runs under the `Python Programming Language
-<http://www.python.org/>`_, so there are some things that may behave
+<https://www.python.org/>`_, so there are some things that may behave
 differently than they do in other, independent computer algebra systems
 like Maple or Mathematica.  These are some of the gotchas and pitfalls
 that you may encounter when using SymPy.  See also the `FAQ
 <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
-remainder of the SymPy Docs, and the `official Python Tutorial
-<http://docs.python.org/tutorial/>`_.
+remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.python.org/3/tutorial/>`_.
+
 
 If you are already familiar with C or Java, you might also want to look
-this `4 minute Python tutorial
+at this `4 minute Python tutorial
 <http://www.nerdparadise.com/tech/python/4minutecrashcourse/>`_.
 
 Ignore ``#doctest: +SKIP`` in the examples.  That has to do with
@@ -33,7 +33,7 @@ Equals Signs (=)
 Single Equals Sign
 ------------------
 
-The equals sign (``=``) is the assignment operator, not an equality.  If
+The equals sign (``=``) is the assignment operator, not equality.  If
 you want to do :math:`x = y`, use ``Eq(x, y)`` for equality.
 Alternatively, all expressions are assumed to equal zero, so you can
 just subtract one side and use ``x - y``.
@@ -44,7 +44,7 @@ For example:
 
     >>> from sympy.abc import x, y
     >>> a = x - y
-    >>> print a
+    >>> print(a)
     x - y
 
 Double Equals Signs
@@ -94,12 +94,12 @@ Consider the following:
     >>> from sympy import Symbol
     >>> a = Symbol('a')  # Symbol, `a`, stored as variable "a"
     >>> b = a + 1        # an expression involving `a` stored as variable "b"
-    >>> print b
+    >>> print(b)
     a + 1
     >>> a = 4            # "a" now points to literal integer 4, not Symbol('a')
-    >>> print a
+    >>> print(a)
     4
-    >>> b                # "b" is still pointing at the expression involving `a`
+    >>> print(b)          # "b" is still pointing at the expression involving `a`
     a + 1
 
 Changing quantity :obj:`a` does not change :obj:`b`; you are not working
@@ -112,14 +112,14 @@ it to.
     >>> from sympy import var
     >>> r, t, d = var('rate time short_life')
     >>> d = r*t
-    >>> print d
+    >>> print(d)
     rate*time
     >>> r = 80
     >>> t = 2
-    >>> print d         # We haven't changed d, only r and t
+    >>> print(d)        # We haven't changed d, only r and t
     rate*time
     >>> d = r*t
-    >>> print d         # Now d is using the current values of r and t
+    >>> print(d)        # Now d is using the current values of r and t
     160
 
 
@@ -128,9 +128,9 @@ functions.  Use the ``def`` operator.  Indent the body of the function.
 See the Python docs for more information on defining functions.
 
     >>> c, d = var('c d')
-    >>> print c
+    >>> print(c)
     c
-    >>> print d
+    >>> print(d)
     d
     >>> def ctimesd():
     ...     """
@@ -141,7 +141,7 @@ See the Python docs for more information on defining functions.
     >>> ctimesd()
     c*d
     >>> c = 2
-    >>> print c
+    >>> print(c)
     2
     >>> ctimesd()
     2*d
@@ -259,7 +259,7 @@ To get a full list of all default names in SymPy do:
     # A big list of all default sympy names and functions follows.
     # Ignore everything that starts and ends with __.
 
-If you have `iPython <http://ipython.scipy.org/moin/>`_ installed and
+If you have `IPython <http://ipython.org/>`_ installed and
 use :command:`isympy`, you can also press the TAB key to get a list of
 all built-in names and to autocomplete.  Also, see `this page
 <http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks>`_ for a
@@ -286,9 +286,9 @@ If you type an expression that just has numbers in it, it will default
 to a Python expression.  Use the :func:`sympify` function, or just
 :func:`S`, to ensure that something is a SymPy expression.
 
-    >>> 6.2  # Python float. Notice the floating point accuracy problems. #doctest: +SKIP
+    >>> 6.2  # Python float. Notice the floating point accuracy problems.
     6.2000000000000002
-    >>> type(6.2)
+    >>> type(6.2)  # <type 'float'> in Python 2.x,  <class 'float'> in Py3k
     <... 'float'>
     >>> S(6.2)  # SymPy Float has no such problems because of arbitrary precision.
     6.20000000000000
@@ -302,7 +302,7 @@ evaluate the two numbers before SymPy has a chance to get
 to them.  The solution is to :func:`sympify` one of the numbers, or use
 :mod:`Rational`.
 
-    >>> x**(1/2)  # evaluates to x**0 or x**0.5 #doctest: +SKIP
+    >>> x**(1/2)  # evaluates to x**0 or x**0.5
     x**0.5
     >>> x**(S(1)/2)  # sympyify one of the ints
     sqrt(x)
@@ -329,9 +329,9 @@ you don't have to worry about this problem:
     Rational.
 
     >>> x = Symbol('x')
-    >>> print solve(7*x -22, x)
+    >>> print(solve(7*x -22, x))
     [22/7]
-    >>> 22/7  # If we just copy and paste we get int 3 or a float #doctest: +SKIP
+    >>> 22/7  # If we just copy and paste we get int 3 or a float
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
@@ -350,7 +350,7 @@ __future__ import division`` to prevent the ``/`` sign from performing
 `integer division <http://en.wikipedia.org/wiki/Integer_division>`_.
 
     >>> from __future__ import division
-    >>> 1/2   # With division imported it evaluates to a python float #doctest: +SKIP
+    >>> 1/2   # With division imported it evaluates to a python float
     0.5
     >>> 1//2  # You can still achieve integer division with //
     0
@@ -358,7 +358,7 @@ __future__ import division`` to prevent the ``/`` sign from performing
     But be careful: you will now receive floats where you might have desired
     a Rational:
 
-    >>> x**(1/2)  #doctest: +SKIP
+    >>> x**(1/2)
     x**0.5
 
 :mod:`Rational` only works for number/number and is only meant for
@@ -377,16 +377,16 @@ You only need to be careful with number/number.
 Evaluating Expressions with Floats and Rationals
 ------------------------------------------------
 
-SymPy keeps track of the precision of Floats. The default precision is
-15 digits. When expressions involving Floats are evaluated, the result
+SymPy keeps track of the precision of ``Float`` objects. The default precision is
+15 digits. When an expression involving a ``Float`` is evaluated, the result
 will be expressed to 15 digits of precision but those digits (depending
 on the numbers involved with the calculation) may not all be significant.
 
-The first issue to keep in mind is how the Float is created: it is created
+The first issue to keep in mind is how the ``Float`` is created: it is created
 with a value and a precision. The precision indicates how precise of a value
-to use when that Float (or an expression it appears in) is evaluated.
+to use when that ``Float`` (or an expression it appears in) is evaluated.
 
-The values can be given as strings, integers, floats, or Rationals.
+The values can be given as strings, integers, floats, or rationals.
 
     - strings and integers are interpreted as exact
 
@@ -394,7 +394,7 @@ The values can be given as strings, integers, floats, or Rationals.
     100.000000000000
     >>> Float('100', 5)
     100.00
-    
+
     - to have the precision match the number of digits, the null string
       can be used for the precision
 
@@ -407,7 +407,7 @@ The values can be given as strings, integers, floats, or Rationals.
 
     >>> s, r = [Float(j, 3) for j in ('0.25', Rational(1, 7))]
     >>> for f in [s, r]:
-    ...     print f
+    ...     print(f)
     0.250
     0.143
 
@@ -423,7 +423,7 @@ to evaluate them to 20 digits, a difference will become apparent:
     0.25000000000000000000
     >>> r.n(20)
     0.14285278320312500000
-    
+
     It is important to realize that although a Float is being displayed in
     decimal at aritrary precision, it is actually stored in binary. Once the
     Float is created, its binary information is set at the given precision.
@@ -439,7 +439,7 @@ feature of calculations with limited precision:
     >>> Float('0.1', 10) + Float('0.1', 3)
     0.2000061035
 
-Although the evalf engine tried to maintain 10 digits of precision (since
+Although the ``evalf`` engine tried to maintain 10 digits of precision (since
 that was the highest precision represented) the 3-digit precision used
 limits the accuracy to about 4 digits -- not all the digits you see
 are significant. evalf doesn't try to keep track of the number of
@@ -457,7 +457,7 @@ unsimplified trig identity, multiplied by a big number:
     >>> abs(big_trig_identity.subs(x, .1).n(2)) > 1000
     True
 
-When the cos and sin terms were evaluated to 15 digits of precision and
+When the `\cos` and `\sin` terms were evaluated to 15 digits of precision and
 multiplied by the big number, they gave a large number that was only
 precise to 15 digits (approximately) and when the 20 digit big number
 was subtracted the result was not zero.
@@ -466,7 +466,7 @@ There are three things that will help you obtain more precise numerical
 values for expressions:
 
     1) Pass the desired substitutions with the call to evaluate. By doing
-    the subs first, the Float values can not be updated as necessary. By
+    the subs first, the ``Float`` values can not be updated as necessary. By
     passing the desired substitutions with the call to evalf the ability
     to re-evaluate as necessary is gained and the results are impressively
     better:
@@ -477,7 +477,7 @@ values for expressions:
     2) Use Rationals, not Floats. During the evaluation process, the
     Rational can be computed to an arbitrary precision while the Float,
     once created -- at a default of 15 digits -- cannot. Compare the
-    value of -1.4e+3 above with the nearly zero value obtained when
+    value of ``-1.4e+3`` above with the nearly zero value obtained when
     replacing x with a Rational representing 1/10 -- before the call
     to evaluate:
 
@@ -505,9 +505,9 @@ demonstrates how this works::
 	def main():
 	    var('x y a b')
 	    expr = 3*x + 4*y
-	    print 'original =', expr
+	    print('original =', expr)
 	    expr_modified = expr.subs({x: a, y: b})
-	    print 'modified =', expr_modified
+	    print('modified =', expr_modified)
 
 	if __name__ == "__main__":
 	    main()
@@ -598,9 +598,9 @@ Example:
     >>> a[0]  # This is the first item
     x
     >>> a[0] = 2  # You can change values of lists after they have been created
-    >>> print a
+    >>> print(a)
     [2, 1]
-    >>> print solve(x**2 + 2*x - 1, x)  # Some functions return lists
+    >>> print(solve(x**2 + 2*x - 1, x)) # Some functions return lists
     [-1 + sqrt(2), -sqrt(2) - 1]
 
 
@@ -692,8 +692,8 @@ a name in the parameters list (usually ``**kwargs`` or
 ``**assumptions``) allow you to add any number of ``key=value`` pairs
 that you want, and they will all be evaluated according to the function.
 
-    sqrt(x**2) doesn't auto simplify to x because x is assumed to be
-    complex by default, and, for example, sqrt((-1)**2) == sqrt(1) == 1 != -1:
+    ``sqrt(x**2)`` doesn't auto simplify to x because x is assumed to be
+    complex by default, and, for example, ``sqrt((-1)**2) == sqrt(1) == 1 != -1``:
 
     >>> sqrt(x**2)
     sqrt(x**2)
@@ -702,12 +702,12 @@ that you want, and they will all be evaluated according to the function.
 
     >>> x = Symbol('x', positive=True)
 
-    The square root will now simplify since it knows that x >= 0:
+    The square root will now simplify since it knows that ``x >= 0``:
 
     >>> sqrt(x**2)
     x
 
-    powsimp has a default argument of combine='all':
+    powsimp has a default argument of ``combine='all'``:
 
     >>> pprint(powsimp(x**n*x**m*y**n*y**m))
          m + n
@@ -719,7 +719,7 @@ that you want, and they will all be evaluated according to the function.
          m + n
     (x*y)
 
-    The non-default options are 'exp', which combines exponents...
+    The non-default options are ``'exp'``, which combines exponents...
 
     >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='exp'))
      m + n  m + n

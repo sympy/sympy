@@ -11,19 +11,10 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
    :members:
 
-beta
-----
+Gamma, Beta and related Functions
+---------------------------------
+.. module:: sympy.functions.special.gamma_functions
 
-.. autofunction:: sympy.functions.special.gamma_functions.beta
-
-erf
----
-
-.. autoclass:: sympy.functions.special.error_functions.erf
-   :members:
-
-Gamma and Related Functions
----------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
@@ -36,19 +27,21 @@ Gamma and Related Functions
    :members:
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
+.. module:: sympy.functions.special.beta_functions
+.. autoclass:: sympy.functions.special.beta_functions.beta
+   :members:
 
-Special Cases of the Incomplete Gamma Functions
------------------------------------------------
+Error Functions and Fresnel Integrals
+-------------------------------------
 .. module:: sympy.functions.special.error_functions
 
-.. autoclass:: erf
-.. autoclass:: Ei
-.. autoclass:: expint
-.. autofunction:: E1
-.. autoclass:: Si
-.. autoclass:: Ci
-.. autoclass:: Shi
-.. autoclass:: Chi
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.erfc
+.. autoclass:: sympy.functions.special.error_functions.erfi
+.. autoclass:: sympy.functions.special.error_functions.erf2
+.. autoclass:: sympy.functions.special.error_functions.erfinv
+.. autoclass:: sympy.functions.special.error_functions.erfcinv
+.. autoclass:: sympy.functions.special.error_functions.erf2inv
 
 .. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
    :members:
@@ -56,14 +49,30 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: fresnels
 .. autoclass:: fresnelc
 
+Exponential, Logarithmic and Trigonometric Integrals
+----------------------------------------------------
+
+.. autoclass:: Ei
+.. autoclass:: expint
+.. autofunction:: E1
+.. autoclass:: li
+.. autoclass:: Li
+.. autoclass:: Si
+.. autoclass:: Ci
+.. autoclass:: Shi
+.. autoclass:: Chi
+
 Bessel Type Functions
 ---------------------
+
+.. module:: sympy.functions.special.bessel
 
 .. autoclass:: sympy.functions.special.bessel.BesselBase
    :members:
 
 .. autoclass:: sympy.functions.special.bessel.besselj
 .. autoclass:: sympy.functions.special.bessel.bessely
+.. _besseli:
 .. autoclass:: sympy.functions.special.bessel.besseli
 .. autoclass:: sympy.functions.special.bessel.besselk
 .. autoclass:: sympy.functions.special.bessel.hankel1
@@ -72,6 +81,17 @@ Bessel Type Functions
 .. autoclass:: sympy.functions.special.bessel.yn
 
 .. autofunction:: sympy.functions.special.bessel.jn_zeros
+
+Airy Functions
+--------------
+
+.. autoclass:: sympy.functions.special.bessel.AiryBase
+   :members:
+
+.. autoclass:: sympy.functions.special.bessel.airyai
+.. autoclass:: sympy.functions.special.bessel.airybi
+.. autoclass:: sympy.functions.special.bessel.airyaiprime
+.. autoclass:: sympy.functions.special.bessel.airybiprime
 
 B-Splines
 ---------
@@ -96,6 +116,15 @@ Hypergeometric Functions
 .. autoclass:: sympy.functions.special.hyper.meijerg
    :members:
 
+Elliptic integrals
+------------------
+.. module:: sympy.functions.special.elliptic_integrals
+
+.. autoclass:: elliptic_k
+.. autoclass:: elliptic_f
+.. autoclass:: elliptic_e
+.. autoclass:: elliptic_pi
+
 Orthogonal Polynomials
 ----------------------
 
@@ -106,6 +135,8 @@ Jacobi Polynomials
 
 .. autoclass:: sympy.functions.special.polynomials.jacobi
    :members:
+
+.. autofunction:: sympy.functions.special.polynomials.jacobi_normalized
 
 Gegenbauer Polynomials
 ++++++++++++++++++++++
@@ -154,13 +185,11 @@ Laguerre Polynomials
 Spherical Harmonics
 -------------------
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Plmcos
+.. autoclass:: sympy.functions.special.spherical_harmonics.Ynm
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm
+.. autofunction:: sympy.functions.special.spherical_harmonics.Ynm_c
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm_c
-
-.. autofunction:: sympy.functions.special.spherical_harmonics.Zlm
+.. autoclass:: sympy.functions.special.spherical_harmonics.Znm
 
 Tensor Functions
 ----------------
@@ -174,4 +203,3 @@ Tensor Functions
 
 .. autoclass:: sympy.functions.special.tensor_functions.KroneckerDelta
    :members:
-

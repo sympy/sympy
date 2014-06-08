@@ -1,12 +1,18 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
+from __future__ import print_function, division
+
+import math
+
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
+from sympy.core.mul import expand_2arg
+from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im, Abs, cos, sin
+from sympy.functions import exp, sqrt, re, im, Abs, cos, sin, Piecewise
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
@@ -15,11 +21,9 @@ from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify, powsimp
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, public
 
-from sympy.core.compatibility import reduce
-
-import math
+from sympy.core.compatibility import reduce, xrange
 
 
 def roots_linear(f):
@@ -80,7 +84,7 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([r0, r1], key=default_sort_key)
+    return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
 
 
 def roots_cubic(f):
@@ -101,10 +105,18 @@ def roots_cubic(f):
         if q is S.Zero:
             return [-aon3]*3
         else:
-            u1 = q**Rational(1, 3)
+            if q.is_real:
+                if (q > 0) == True:
+                    u1 = -q**Rational(1, 3)
+                else:
+                    u1 = (-q)**Rational(1, 3)
+            else:
+                u1 = (-q)**Rational(1, 3)
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
+    elif q.is_real and q < 0:
+        u1 = -(-q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
     else:
         u1 = (q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
 
@@ -113,6 +125,9 @@ def roots_cubic(f):
     u2 = u1*(-S.Half + coeff)
     u3 = u1*(-S.Half - coeff)
 
+    if p is S.Zero:
+        return [u1 - aon3, u2 - aon3, u3 - aon3]
+
     soln = [
         -u1 + pon3/u1 - aon3,
         -u2 + pon3/u2 - aon3,
@@ -120,6 +135,62 @@ def roots_cubic(f):
     ]
 
     return soln
+
+def _roots_quartic_euler(p, q, r, a):
+    """
+    Descartes-Euler solution of the quartic equation
+
+    Parameters
+    ==========
+
+    p, q, r: coefficients of ``x**4 + p*x**2 + q*x + r``
+    a: shift of the roots
+
+    Notes
+    =====
+
+    This is a helper function for ``roots_quartic``.
+
+    Look for solutions of the form ::
+
+      ``x1 = sqrt(R) - sqrt(A + B*sqrt(R))``
+      ``x2 = -sqrt(R) - sqrt(A - B*sqrt(R))``
+      ``x3 = -sqrt(R) + sqrt(A - B*sqrt(R))``
+      ``x4 = sqrt(R) + sqrt(A + B*sqrt(R))``
+
+    To satisfy the quartic equation one must have
+    ``p = -2*(R + A); q = -4*B*R; r = (R - A)**2 - B**2*R``
+    so that ``R`` must satisfy the Descartes-Euler resolvent equation
+    ``64*R**3 + 32*p*R**2 + (4*p**2 - 16*r)*R - q**2 = 0``
+
+    If the resolvent does not have a rational solution, return None;
+    in that case it is likely that the Ferrari method gives a simpler
+    solution.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> from sympy.polys.polyroots import _roots_quartic_euler
+    >>> p, q, r = -S(64)/5, -S(512)/125, -S(1024)/3125
+    >>> _roots_quartic_euler(p, q, r, S(0))[0]
+    -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
+    """
+    from sympy.solvers import solve
+    # solve the resolvent equation
+    x = Symbol('x')
+    eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
+    xsols = list(roots(Poly(eq, x), cubics=False).keys())
+    xsols = [sol for sol in xsols if sol.is_rational]
+    if not xsols:
+        return None
+    R = max(xsols)
+    c1 = sqrt(R)
+    B = -q*c1/(4*R)
+    A = -R - p/2
+    c2 = sqrt(A + B)
+    c3 = sqrt(A - B)
+    return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
 
 
 def roots_quartic(f):
@@ -136,8 +207,9 @@ def roots_quartic(f):
     The quasisymmetric case solution [6] looks for quartics that have the form
     `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
 
-    Although there is a general solution, simpler results can be obtained for
-    certain values of the coefficients. In all cases, 4 roots are returned:
+    Although no general solution that is always applicable for all
+    coefficients is known to this reviewer, certain conditions are tested
+    to determine the simplest 4 expressions that can be returned:
 
       1) `f = c + a*(a**2/8 - b/2) == 0`
       2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
@@ -166,7 +238,7 @@ def roots_quartic(f):
     4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
     6. http://www.statemaster.com/encyclopedia/Quartic-equation
-
+    7. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
     """
     _, a, b, c, d = f.monic().all_coeffs()
 
@@ -192,7 +264,6 @@ def roots_quartic(f):
         f = c + a*(a2/8 - b/2)
         g = d - a*(a*(3*a2/256 - b/16) + c/4)
         aon4 = a/4
-        ans = []
 
         if f is S.Zero:
             y1, y2 = [sqrt(tmp) for tmp in
@@ -202,26 +273,46 @@ def roots_quartic(f):
             y = [S.Zero] + roots([1, 0, e, f], multiple=True)
             return [tmp - aon4 for tmp in y]
         else:
+            # Descartes-Euler method, see [7]
+            sols = _roots_quartic_euler(e, f, g, aon4)
+            if sols:
+                return sols
+            # Ferrari method, see [1, 2]
+            a2 = a**2
+            e = b - 3*a2/8
+            f = c + a*(a2/8 - b/2)
+            g = d - a*(a*(3*a2/256 - b/16) + c/4)
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
             TH = Rational(1, 3)
-            if p is S.Zero:
-                y = -5*e/6 - q**TH
-            else:
-                # with p !=0 then u below is not 0
-                root = sqrt(q**2/4 + p**3/27)
-                r = -q/2 + root  # or -q/2 - root
-                u = r**TH  # primary root of solve(x**3-r, x)
-                y = -5*e/6 + u - p/u/3
-            w = sqrt(e + 2*y)
-            arg1 = 3*e + 2*y
-            arg2 = 2*f/w
-            for s in [-1, 1]:
-                root = sqrt(-(arg1 + s*arg2))
-                for t in [-1, 1]:
-                    ans.append((s*w - t*root)/2 - aon4)
 
-    return ans
+            def _ans(y):
+                w = sqrt(e + 2*y)
+                arg1 = 3*e + 2*y
+                arg2 = 2*f/w
+                ans = []
+                for s in [-1, 1]:
+                    root = sqrt(-(arg1 + s*arg2))
+                    for t in [-1, 1]:
+                        ans.append((s*w - t*root)/2 - aon4)
+                return ans
+
+            # p == 0 case
+            y1 = -5*e/6 - q**TH
+            if p.is_zero:
+                return _ans(y1)
+
+            # if p != 0 then u below is not 0
+            root = sqrt(q**2/4 + p**3/27)
+            r = -q/2 + root  # or -q/2 - root
+            u = r**TH  # primary root of solve(x**3 - r, x)
+            y2 = -5*e/6 + u - p/u/3
+            if p.is_nonzero:
+                return _ans(y2)
+
+            # sort it out once they know the values of the coefficients
+            return [Piecewise((a1, Eq(p, 0)), (a2, True))
+                for a1, a2 in zip(_ans(y1), _ans(y2))]
 
 
 def roots_binomial(f):
@@ -333,7 +424,7 @@ def roots_quintic(f):
         f = Poly(f/coeff_5)
     quintic = PolyQuintic(f)
 
-    # Eqn standardised. Algo for solving starts here
+    # Eqn standardized. Algo for solving starts here
     if not f.is_irreducible:
         return result
 
@@ -465,7 +556,7 @@ def roots_quintic(f):
     result_n = []
     for root in result:
         result_n.append(root.n(5))
-    result_n = sorted(result_n)
+    result_n = sorted(result_n, key=default_sort_key)
 
     prev_entry = None
     for r in result_n:
@@ -485,14 +576,36 @@ def _quintic_simplify(expr):
 
 
 def _integer_basis(poly):
-    """Compute coefficient basis for a polynomial over integers. """
-    monoms, coeffs = zip(*poly.terms())
+    """Compute coefficient basis for a polynomial over integers.
 
-    monoms, = zip(*monoms)
-    coeffs = map(abs, coeffs)
+    Returns the integer ``div`` such that substituting ``x = div*y``
+    ``p(x) = m*q(y)`` where the coefficients of ``q`` are smaller
+    than those of ``p``.
+
+    For example ``x**5 + 512*x + 1024 = 0``
+    with ``div = 4`` becomes ``y**5 + 2*y + 1 = 0``
+
+    Returns the integer ``div`` or ``None`` if there is no possible scaling.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import Poly
+    >>> from sympy.abc import x
+    >>> from sympy.polys.polyroots import _integer_basis
+    >>> p = Poly(x**5 + 512*x + 1024, x, domain='ZZ')
+    >>> _integer_basis(p)
+    4
+    """
+    monoms, coeffs = list(zip(*poly.terms()))
+
+    monoms, = list(zip(*monoms))
+    coeffs = list(map(abs, coeffs))
 
     if coeffs[0] < coeffs[-1]:
         coeffs = list(reversed(coeffs))
+        n = monoms[0]
+        monoms = [n - i for i in reversed(monoms)]
     else:
         return None
 
@@ -502,7 +615,7 @@ def _integer_basis(poly):
     divs = reversed(divisors(gcd_list(coeffs))[1:])
 
     try:
-        div = divs.next()
+        div = next(divs)
     except StopIteration:
         return None
 
@@ -510,7 +623,7 @@ def _integer_basis(poly):
         for monom, coeff in zip(monoms, coeffs):
             if coeff % div**monom != 0:
                 try:
-                    div = divs.next()
+                    div = next(divs)
                 except StopIteration:
                     return None
                 else:
@@ -531,10 +644,11 @@ def preprocess_roots(poly):
     poly = poly.primitive()[1]
     poly = poly.retract()
 
-    if poly.get_domain().is_Poly and all(c.is_monomial for c in poly.rep.coeffs()):
+    # TODO: This is fragile. Figure out how to make this independent of construct_domain().
+    if poly.get_domain().is_Poly and all(c.is_term for c in poly.rep.coeffs()):
         poly = poly.inject()
 
-        strips = zip(*poly.monoms())
+        strips = list(zip(*poly.monoms()))
         gens = list(poly.gens[1:])
 
         base, strips = strips[0], strips[1:]
@@ -588,6 +702,7 @@ def preprocess_roots(poly):
     return coeff, poly
 
 
+@public
 def roots(f, *gens, **flags):
     """
     Computes symbolic roots of a univariate polynomial.
@@ -635,6 +750,7 @@ def roots(f, *gens, **flags):
     {-1: 1, 1: 1}
 
     """
+    from sympy.polys.polytools import to_rational_coeffs
     flags = dict(flags)
 
     auto = flags.pop('auto', True)
@@ -702,7 +818,7 @@ def roots(f, *gens, **flags):
 
         if f.length() == 2:
             if f.degree() == 1:
-                return map(cancel, roots_linear(f))
+                return list(map(cancel, roots_linear(f)))
             else:
                 return roots_binomial(f)
 
@@ -717,9 +833,9 @@ def roots(f, *gens, **flags):
         n = f.degree()
 
         if n == 1:
-            result += map(cancel, roots_linear(f))
+            result += list(map(cancel, roots_linear(f)))
         elif n == 2:
-            result += map(cancel, roots_quadratic(f))
+            result += list(map(cancel, roots_quadratic(f)))
         elif f.is_cyclotomic:
             result += roots_cyclotomic(f)
         elif n == 3 and cubics:
@@ -743,6 +859,9 @@ def roots(f, *gens, **flags):
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
 
+    rescale_x = None
+    translate_x = None
+
     result = {}
 
     if not f.is_ground:
@@ -761,8 +880,20 @@ def roots(f, *gens, **flags):
             _, factors = Poly(f.as_expr()).factor_list()
 
             if len(factors) == 1 and factors[0][1] == 1:
-                for root in _try_decompose(f):
-                    _update_dict(result, root, 1)
+                if f.get_domain().is_EX:
+                    res = to_rational_coeffs(f)
+                    if res:
+                        if res[0] is None:
+                            translate_x, f = res[2:]
+                        else:
+                            rescale_x, f = res[1], res[-1]
+                        result = roots(f)
+                        if not result:
+                            for root in _try_decompose(f):
+                                _update_dict(result, root, 1)
+                else:
+                    for root in _try_decompose(f):
+                        _update_dict(result, root, 1)
             else:
                 for factor, k in factors:
                     for r in _try_heuristics(Poly(factor, f.gen, field=True)):
@@ -771,7 +902,7 @@ def roots(f, *gens, **flags):
     if coeff is not S.One:
         _result, result, = result, {}
 
-        for root, k in _result.iteritems():
+        for root, k in _result.items():
             result[coeff*root] = k
 
     result.update(zeros)
@@ -789,21 +920,31 @@ def roots(f, *gens, **flags):
         except KeyError:
             raise ValueError("Invalid filter: %s" % filter)
 
-        for zero in dict(result).iterkeys():
+        for zero in dict(result).keys():
             if not query(zero):
                 del result[zero]
 
     if predicate is not None:
-        for zero in dict(result).iterkeys():
+        for zero in dict(result).keys():
             if not predicate(zero):
                 del result[zero]
+    if rescale_x:
+        result1 = {}
+        for k, v in result.items():
+            result1[k*rescale_x] = v
+        result = result1
+    if translate_x:
+        result1 = {}
+        for k, v in result.items():
+            result1[k + translate_x] = v
+        result = result1
 
     if not multiple:
         return result
     else:
         zeros = []
 
-        for zero, k in result.iteritems():
+        for zero, k in result.items():
             zeros.extend([zero]*k)
 
         return sorted(zeros, key=default_sort_key)
@@ -843,7 +984,7 @@ def root_factors(f, *gens, **args):
     else:
         factors, N = [], 0
 
-        for r, n in zeros.iteritems():
+        for r, n in zeros.items():
             factors, N = factors + [Poly(x - r, x)]*n, N + n
 
         if N < F.degree():

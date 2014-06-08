@@ -35,7 +35,7 @@ If, for a given session, you wish to add a unit you may do so:
     []
     >>> u.gal = 4*u.quart
     >>> u.gal/u.inch**3
-    924
+    231
 
 To see a given quantity in terms of some other unit, divide by the desired
 unit:
@@ -72,6 +72,8 @@ quantity.)
     >>> u.avogadro_constant
     602214179000000000000000/mol
 """
+
+from __future__ import print_function, division
 
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
@@ -152,7 +154,7 @@ yocto = ten**-24
 
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
-
+sr = steradian = steradians = 1
 
 # Base units
 
@@ -261,7 +263,7 @@ dHg0 = 13.5951  # approx value at 0 C
 mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
-quart = quarts = 231 * inch**3
+quart = quarts = Rational(231, 4) * inch**3
 eV = 1.602176487e-19 * J
 
 # Other convenient units and magnitudes

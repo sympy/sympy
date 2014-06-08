@@ -1,4 +1,6 @@
-from sympy.core import Basic, Integer, Tuple, Dict
+from __future__ import print_function, division
+
+from sympy.core import Basic, Integer, Tuple, Dict, S, sympify
 from sympy.core.sympify import converter as sympify_converter
 
 from sympy.matrices.matrices import MatrixBase
@@ -20,9 +22,10 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     >>> from sympy import eye
     >>> from sympy.matrices import ImmutableMatrix
     >>> ImmutableMatrix(eye(3))
-    [1, 0, 0]
-    [0, 1, 0]
-    [0, 0, 1]
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     >>> _[0, 0] = 42
     Traceback (most recent call last):
     ...
@@ -60,6 +63,21 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of ImmutableMatrix")
 
+    def _eval_Eq(self, other):
+        """Helper method for Equality with matrices.
+
+        Relational automatically converts matrices to ImmutableMatrix
+        instances, so this method only applies here.  Returns True if the
+        matrices are definitively the same, False if they are definitively
+        different, and None if undetermined (e.g. if they contain Symbols).
+        Returning None triggers default handling of Equalities.
+
+        """
+        if not hasattr(other, 'shape') or self.shape != other.shape:
+            return S.false
+        diff = self - other
+        return sympify(diff.is_zero)
+
     adjoint = MatrixBase.adjoint
     conjugate = MatrixBase.conjugate
     # C and T are defined in MatrixExpr...I don't know why C alone
@@ -87,6 +105,9 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __neg__ = MatrixBase.__neg__
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
+# This is included after the class definition as a workaround for issue 7213.
+# See https://github.com/sympy/sympy/issues/7213
+ImmutableMatrix.is_zero = DenseMatrix.is_zero
 
 
 class ImmutableSparseMatrix(Basic, SparseMatrix):
@@ -98,11 +119,12 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     >>> from sympy import eye
     >>> from sympy.matrices.immutable import ImmutableSparseMatrix
     >>> ImmutableSparseMatrix(1, 1, {})
-    [0]
+    Matrix([[0]])
     >>> ImmutableSparseMatrix(eye(3))
-    [1, 0, 0]
-    [0, 1, 0]
-    [0, 0, 1]
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     >>> _[0, 0] = 42
     Traceback (most recent call last):
     ...
@@ -132,3 +154,8 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
     subs = MatrixBase.subs
+
+    def __hash__(self):
+        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
+
+    _eval_Eq = ImmutableMatrix._eval_Eq

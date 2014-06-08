@@ -10,7 +10,7 @@ from sympy.polys.partfrac import (
 )
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
-                   Symbol, Dummy, factor, together, sqrt)
+                   Symbol, Dummy, factor, together, sqrt, Expr)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, a, b, c
 
@@ -109,7 +109,7 @@ def test_apart_undetermined_coeffs():
 
     p = Poly(1, x, domain='ZZ[a,b]')
     q = Poly((x + a)*(x + b), x, domain='ZZ[a,b]')
-    r = 1/((x + b)*(a - b)) + 1/((x + a)*(b - a))
+    r = 1/((a - b)*(b + x)) - 1/((a - b)*(a + x))
 
     assert apart_undetermined_coeffs(p, q) == r
 
@@ -147,3 +147,18 @@ def test_assemble_partfrac_list():
     a = Dummy("a")
     pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(a, a/2), Lambda(a, -a + x), 1)])
     assert assemble_partfrac_list(pfd) == -1/(sqrt(2)*(x + sqrt(2))) + 1/(sqrt(2)*(x - sqrt(2)))
+
+
+def test_noncommutative_pseudomultivariate():
+    class foo(Expr):
+        is_commutative=False
+    e = x/(x + x*y)
+    c = 1/(1 + y)
+    assert apart(e + foo(e)) == c + foo(c)
+    assert apart(e*foo(e)) == c*foo(c)
+
+
+def test_issue_5798():
+    assert apart(
+        2*x/(x**2 + 1) - (x - 1)/(2*(x**2 + 1)) + 1/(2*(x + 1)) - 2/x) == \
+        (3*x + 1)/(x**2 + 1)/2 + 1/(x + 1)/2 - 2/x

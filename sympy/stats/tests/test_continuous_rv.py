@@ -15,12 +15,15 @@ from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor)
+                   floor, expand_func)
 
 
 from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.rv import ProductPSpace
 
 from sympy.utilities.pytest import raises, XFAIL, slow
+
+from sympy.core.compatibility import xrange
 
 oo = S.Infinity
 
@@ -140,7 +143,7 @@ def test_sample():
     z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
-    sym, val = Z.pspace.sample().items()[0]
+    sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
 
 
@@ -191,17 +194,16 @@ def test_beta():
     # Full symbolic solution is too much, test with numeric version
     a, b = 1, 2
     B = Beta('x', a, b)
-    assert E(B) == a / S(a + b)
-    assert variance(B) == (a*b) / S((a + b)**2 * (a + b + 1))
+    assert expand_func(E(B)) == a / S(a + b)
+    assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
 
 
 def test_betaprime():
     alpha = Symbol("alpha", positive=True)
-    beta = Symbol("beta", positive=True)
+    betap = Symbol("beta", positive=True)
 
-    X = BetaPrime('x', alpha, beta)
-    assert density(X)(x) == (x**(alpha - 1)*(x + 1)**(-alpha - beta)
-                          *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
+    X = BetaPrime('x', alpha, betap)
+    assert density(X)(x) == x**(alpha - 1)*(x + 1)**(-alpha - betap)/beta(alpha, betap)
 
 
 def test_cauchy():
@@ -268,17 +270,16 @@ def test_f_distribution():
     d2 = Symbol("d2", positive=True)
 
     X = FDistribution("x", d1, d2)
-    assert density(X)(x) == (d2**(d2/2)*sqrt((x*d1)**d1 *
-        (x*d1 + d2)**(-d1 - d2))*gamma(d1/2 + d2/2)/(x*gamma(d1/2)*gamma(d2/2)))
+    assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
+                             /(x*beta(d1/2, d2/2)))
 
 def test_fisher_z():
     d1 = Symbol("d1", positive=True)
     d2 = Symbol("d2", positive=True)
 
     X = FisherZ("x", d1, d2)
-    assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*
-            (d1*exp(2*x) + d2)**(-d1/2 - d2/2)*
-             exp(x*d1)*gamma(d1/2 + d2/2)/(gamma(d1/2)*gamma(d2/2)))
+    assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*(d1*exp(2*x) + d2)
+                             **(-d1/2 - d2/2)*exp(d1*x)/beta(d1/2, d2/2))
 
 def test_frechet():
     a = Symbol("a", positive=True)
@@ -384,8 +385,7 @@ def test_nakagami():
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
            *gamma(mu + S.Half)/gamma(mu + 1))
     assert simplify(variance(X, meijerg=True)) == (
-        omega*(gamma(mu)*gamma(mu + 1) - gamma(mu + S.Half)**2)/
-        (gamma(mu)*gamma(mu + 1)))
+    omega - omega*gamma(mu + S(1)/2)**2/(gamma(mu)*gamma(mu + 1)))
 
 
 def test_pareto():
@@ -434,8 +434,7 @@ def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
-    assert density(X)(x) == ((x**2/nu + 1)**(-nu/2 - S.Half)
-                        *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
+    assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - 1/2)/(sqrt(nu)*beta(1/2, nu/2))
 
 
 @XFAIL
@@ -468,12 +467,26 @@ def test_uniform():
     assert simplify(E(X)) == l + w/2
     assert simplify(variance(X)) == w**2/12
 
-    assert P(X < l) == 0 and P(X > l + w) == 0
 
     # With numbers all is well
     X = Uniform('x', 3, 5)
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
+
+
+def test_uniform_P():
+    """ This stopped working because SingleContinuousPSpace.compute_density no
+    longer calls integrate on a DiracDelta but rather just solves directly.
+    integrate used to call UniformDistribution.expectation which special-cased
+    subsed out the Min and Max terms that Uniform produces
+
+    I decided to regress on this class for general cleanliness (and I suspect
+    speed) of the algorithm.
+    """
+    l = Symbol('l', real=True, bounded=True)
+    w = Symbol('w', positive=True, bounded=True)
+    X = Uniform('x', l, l + w)
+    assert P(X < l) == 0 and P(X > l + w) == 0
 
 
 @XFAIL
@@ -596,6 +609,7 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
+    assert isinstance(pspace(meas), ProductPSpace)
     #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
     #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
 
@@ -609,3 +623,12 @@ def test_conjugate_priors():
     x = Normal('x', mu, 1)
     assert isinstance(simplify(density(mu, Eq(x, y), evaluate=False)(z)),
             Integral)
+
+def test_difficult_univariate():
+    """ Since using solve in place of deltaintegrate we're able to perform
+    substantially more complex density computations on single continuous random
+    variables """
+    x = Normal('x', 0, 1)
+    assert density(x**3)
+    assert density(exp(x**2))
+    assert density(log(x))

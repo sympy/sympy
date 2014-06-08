@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
-    Matrix, Lambda, exp, Integral, oo, I, Abs)
+    Matrix, Lambda, exp, Integral, oo, I, Abs, Function, true, false)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
@@ -13,11 +13,11 @@ import sympy
 
 MutableDenseMatrix = Matrix
 
-numpy = import_module('numpy', min_python_version=(2, 6))
+numpy = import_module('numpy')
 
-x, y, z = symbols('x,y,z')
+w, x, y, z = symbols('w,x,y,z')
 
-#================== Test different arguments ==============
+#================== Test different arguments =======================
 
 
 def test_no_args():
@@ -72,7 +72,7 @@ def test_atoms():
     f = lambdify(x, I + x, {"I": 1j})
     assert f(1) == 1 + 1j
 
-#================== Test different modules ================
+#================== Test different modules =========================
 
 # high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
 
@@ -120,44 +120,44 @@ def test_number_precision():
     prec = 1e-49  # mpmath precision is around 50 decimal places
     assert -prec < f(0) - sin02 < prec
 
-#================== Test Translations =====================
+#================== Test Translations ==============================
 # We can only check if all translated functions are valid. It has to be checked
 # by hand if they are complete.
 
 
 def test_math_transl():
     from sympy.utilities.lambdify import MATH_TRANSLATIONS
-    for sym, mat in MATH_TRANSLATIONS.iteritems():
+    for sym, mat in MATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert mat in math.__dict__
 
 
 def test_mpmath_transl():
     from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
-    for sym, mat in MPMATH_TRANSLATIONS.iteritems():
+    for sym, mat in MPMATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__ or sym == 'Matrix'
         assert mat in mpmath.__dict__
 
 
 def test_numpy_transl():
     if not numpy:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
-    for sym, nump in NUMPY_TRANSLATIONS.iteritems():
+    for sym, nump in NUMPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
 
 
 def test_numpy_translation_abs():
     if not numpy:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     f = lambdify(x, Abs(x), "numpy")
     assert f(-1) == 1
     assert f(1) == 1
 
-#================== Test some functions ===================
+#================== Test some functions ============================
 
 
 def test_exponentiation():
@@ -190,7 +190,7 @@ def test_trig():
     assert -prec < d[0] + 1 < prec
     assert -prec < d[1] < prec
 
-#================== Test vectors ==========================
+#================== Test vectors ===================================
 
 
 def test_vector_simple():
@@ -259,13 +259,27 @@ def test_matrix():
     assert lambdify(v, J, modules='sympy')(1, 2) == sol
     assert lambdify(v.T, J, modules='sympy')(1, 2) == sol
 
+def test_numpy_matrix():
+    if not numpy:
+        skip("numpy not installed.")
+    A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
+    sol_mat = numpy.matrix([[1, 2], [numpy.sin(3) + 4, 1]])
+    sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
+    #Lambdify array first, to ensure return to matrix as default
+    f_arr = lambdify((x, y, z), A, use_array=True)(1, 2, 3)
+    f_mat = lambdify((x, y, z), A)(1, 2, 3)
+    numpy.testing.assert_allclose(f_mat, sol_mat)
+    numpy.testing.assert_allclose(f_arr, sol_arr)
+    #Check that the types are arrays and matrices
+    assert isinstance(f_mat, numpy.matrix)
+    assert isinstance(f_arr, numpy.ndarray)
 
 def test_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
     assert l(x) == Integral(exp(-x**2), (x, -oo, oo))
 
-#########Test Symbolic###########
+#================== Test symbolic ==================================
 
 
 def test_sym_single_arg():
@@ -360,6 +374,36 @@ def test_lambdify_imps():
     lam = lambdify(x, f(x), d, use_imps=False)
     assert lam(3) == 102
 
+def test_dummification():
+    t = symbols('t')
+    F = Function('F')
+    G = Function('G')
+    #"\alpha" is not a valid python variable name
+    #lambdify should sub in a dummy for it, and return
+    #without a syntax error
+    alpha = symbols(r'\alpha')
+    some_expr = 2 * F(t)**2 / G(t)
+    lam = lambdify((F(t), G(t)), some_expr)
+    assert lam(3, 9) == 2
+    lam = lambdify(sin(t), 2 * sin(t)**2)
+    assert lam(F(t)) == 2 * F(t)**2
+    #Test that \alpha was properly dummified
+    lam = lambdify((alpha, t), 2*alpha + t)
+    assert lam(2, 1) == 5
+    raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
+    raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
+    raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
+
+def test_python_keywords():
+    # Test for issue 7452. The automatic dummification should ensure use of
+    # Python reserved keywords as symbol names will create valid lambda
+    # functions. This is an additional regression test.
+    python_if = symbols('if')
+    expr = python_if / 2
+    f = sympy.lambdify(python_if, expr)
+    assert f(4.0) == 2.0
+
+
 #================== Test special printers ==========================
 
 
@@ -387,3 +431,13 @@ def test_special_printers():
     assert isinstance(func0(), mpi)
     assert isinstance(func1(), mpi)
     assert isinstance(func2(), mpi)
+
+def test_true_false():
+    # We want exact is comparison here, not just ==
+    assert lambdify([], true)() is True
+    assert lambdify([], false)() is False
+
+def test_issue_2790():
+    assert lambdify((x, (y, z)), x + y)(1, (2, 4)) == 3
+    assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
+    assert lambdify(x, x + 1, dummify=False)(1) == 2

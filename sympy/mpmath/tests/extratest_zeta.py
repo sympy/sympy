@@ -1,4 +1,4 @@
-from mpmath import zetazero
+from sympy.mpmath import zetazero
 from timeit import default_timer as clock
 
 def test_zetazero():

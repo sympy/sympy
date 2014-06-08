@@ -1,7 +1,11 @@
+from __future__ import print_function, division
+
 from sympy.core import S, sympify, diff
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.relational import Eq
 from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.piecewise import Piecewise
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
@@ -35,10 +39,8 @@ class DiracDelta(Function):
     References
     ==========
 
-    http://mathworld.wolfram.com/DeltaFunction.html
+    .. [1] http://mathworld.wolfram.com/DeltaFunction.html
     """
-
-    nargs = (1, 2)
 
     is_real = True
 
@@ -48,7 +50,7 @@ class DiracDelta(Function):
             k = 0
             if len(self.args) > 1:
                 k = self.args[1]
-            return DiracDelta(self.args[0], k + 1)
+            return self.func(self.args[0], k + 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -106,7 +108,7 @@ class DiracDelta(Function):
             for r in argroots:
                 #should I care about multiplicities of roots?
                 if r.is_real is not False and not darg.subs(x, r).is_zero:
-                    result += DiracDelta(x - r)/abs(darg.subs(x, r))
+                    result += self.func(x - r)/abs(darg.subs(x, r))
                 else:
                     valid = False
                     break
@@ -153,6 +155,11 @@ class DiracDelta(Function):
         if p:
             return p.degree() == 1
         return False
+
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\delta'
+
 
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
@@ -201,10 +208,9 @@ class Heaviside(Function):
     References
     ==========
 
-    http://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
 
     """
-    nargs = 1
 
     is_real = True
 
@@ -228,3 +234,7 @@ class Heaviside(Function):
             return S.Half
         elif arg.is_positive:
             return S.One
+
+    def _eval_rewrite_as_Piecewise(self, arg):
+        if arg.is_real:
+            return Piecewise((1, arg > 0), (S(1)/2, Eq(arg, 0)), (0, True))

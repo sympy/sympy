@@ -1,6 +1,9 @@
-"Implementation of matrix FGLM Groebner basis conversion algorithm. """
+"""Implementation of matrix FGLM Groebner basis conversion algorithm. """
 
-from sympy.polys.monomialtools import monomial_mul, monomial_div
+from __future__ import print_function, division
+
+from sympy.polys.monomials import monomial_mul, monomial_div
+from sympy.core.compatibility import xrange
 
 def matrix_fglm(F, ring, O_to):
     """
@@ -29,7 +32,7 @@ def matrix_fglm(F, ring, O_to):
     G = []
 
     L = [(i, 0) for i in xrange(ngens)]  # (i, j) corresponds to x_i * S[j]
-    L.sort(key=lambda (k, l): O_to(_incr_k(S[l], k)), reverse=True)
+    L.sort(key=lambda k_l: O_to(_incr_k(S[k_l[1]], k_l[0])), reverse=True)
     t = L.pop()
 
     P = _identity_matrix(len(old_basis), domain)
@@ -55,7 +58,7 @@ def matrix_fglm(F, ring, O_to):
 
             L.extend([(i, s) for i in xrange(ngens)])
             L = list(set(L))
-            L.sort(key=lambda (k, l): O_to(_incr_k(S[l], k)), reverse=True)
+            L.sort(key=lambda k_l: O_to(_incr_k(S[k_l[1]], k_l[0])), reverse=True)
 
         L = [(k, l) for (k, l) in L if all(monomial_div(_incr_k(S[l], k), g.LM) is None for g in G)]
 

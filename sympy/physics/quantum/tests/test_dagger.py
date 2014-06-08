@@ -40,12 +40,12 @@ def test_eval_adjoint():
     d = Dagger(f)
     assert d == I
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 
 
 def test_numpy_dagger():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     a = np.matrix([[1.0, 2.0j], [-1.0j, 2.0]])
     adag = a.copy().transpose().conjugate()
@@ -57,7 +57,7 @@ scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 def test_scipy_sparse_dagger():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
     else:

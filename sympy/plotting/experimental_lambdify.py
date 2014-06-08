@@ -10,8 +10,12 @@ ever support anything else than sympy expressions (no Matrices, dictionaries
 and so on).
 """
 
+from __future__ import print_function, division
+
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
+from sympy.core.compatibility import exec_
+from sympy.utilities.iterables import numbered_symbols
 
 #  We parse the expression string into a tree that identifies functions. Then
 # we translate the names of the functions and we translate also some strings
@@ -70,7 +74,6 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 # good.
 
 from sympy.external import import_module
-np = import_module('numpy')
 import warnings
 
 #TODO debuging output
@@ -109,13 +112,15 @@ class vectorized_lambdify(object):
         self.failure = False
 
     def __call__(self, *args):
+        np = import_module('numpy')
         np_old_err = np.seterr(invalid='raise')
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
             results = self.vector_func(*temp_args)
             results = np.ma.masked_where(
-                np.abs(results.imag) != 0, results.real, copy=False)
-        except Exception, e:
+                                np.abs(results.imag) > 1e-7 * np.abs(results),
+                                results.real, copy=False)
+        except Exception as e:
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
                  and 'unhashable type: \'numpy.ndarray\'' in str(e))
@@ -138,7 +143,8 @@ class vectorized_lambdify(object):
                     self.lambda_func, otypes=[np.complex])
                 results = self.vector_func(*args)
                 results = np.ma.masked_where(
-                    np.abs(results.imag) != 0, results.real, copy=False)
+                                np.abs(results.imag) > 1e-7 * np.abs(results),
+                                results.real, copy=False)
             else:
                 # Complete failure. One last try with no translations, only
                 # wrapping in complex((...).evalf()) and returning the real
@@ -154,7 +160,8 @@ class vectorized_lambdify(object):
                         self.lambda_func, otypes=[np.complex])
                     results = self.vector_func(*args)
                     results = np.ma.masked_where(
-                        np.abs(results.imag) != 0, results.real, copy=False)
+                            np.abs(results.imag) > 1e-7 * np.abs(results),
+                            results.real, copy=False)
                     warnings.warn('The evaluation of the expression is'
                             ' problematic. We are trying a failback method'
                             ' that may still work. Please report this as a bug.')
@@ -189,17 +196,26 @@ class lambdify(object):
                 return None
             else:
                 return result.real
-        except Exception, e:
+        except Exception as e:
             # The exceptions raised by sympy, cmath are not consistent and
             # hence it is not possible to specify all the exceptions that
             # are to be caught. Presently there are no cases for which the code
-            # reaches this block other than ZeroDivisionError. Also the
-            # exception is caught only once. If the exception repeats itself,
+            # reaches this block other than ZeroDivisionError and complex
+            # comparision. Also the exception is caught only once. If the
+            # exception repeats itself,
             # then it is not caught and the corresponding error is raised.
             # XXX: Remove catching all exceptions once the plotting module
             # is heavily tested.
             if isinstance(e, ZeroDivisionError):
                 return None
+            elif isinstance(e, TypeError) and ('no ordering relation is'
+                                               ' defined for complex numbers'
+                                               in str(e)):
+                self.lambda_func = experimental_lambdify(self.args, self.expr,
+                                                         use_evalf=True,
+                                                         use_python_math=True)
+                result = self.lambda_func(args.real)
+                return result
             else:
                 if self.failure:
                     raise e
@@ -213,7 +229,7 @@ class lambdify(object):
                 warnings.warn('The evaluation of the expression is'
                         ' problematic. We are trying a failback method'
                         ' that may still work. Please report this as a bug.')
-                if abs(result.imag) > 0:
+                if abs(result.imag) > 1e-7 * abs(result):
                     return None
                 else:
                     return result.real
@@ -240,10 +256,15 @@ class Lambdifier(object):
         self.use_interval = use_interval
 
         # Constructing the argument string
+        # - check
         if not all([isinstance(a, Symbol) for a in args]):
             raise ValueError('The arguments must be Symbols.')
-        else:
-            argstr = ', '.join([str(a) for a in args])
+        # - use numbered symbols
+        syms = numbered_symbols(exclude=expr.free_symbols)
+        newargs = [next(syms) for i in args]
+        expr = expr.xreplace(dict(zip(args, newargs)))
+        argstr = ', '.join([str(a) for a in newargs])
+        del syms, newargs, args
 
         # Constructing the translation dictionaries and making the translation
         self.dict_str = self.get_dict_str()
@@ -278,9 +299,9 @@ class Lambdifier(object):
 
         # Construct the lambda
         if self.print_lambda:
-            print newexpr
+            print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
-        exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
+        exec_("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
 
     ##############################################################################
@@ -436,22 +457,22 @@ class Lambdifier(object):
         if self.use_np:
             for s in self.numpy_functions_same:
                 dict_fun[s] = 'np.' + s
-            for k, v in self.numpy_functions_different.iteritems():
+            for k, v in self.numpy_functions_different.items():
                 dict_fun[k] = 'np.' + v
         if self.use_python_math:
             for s in self.math_functions_same:
                 dict_fun[s] = 'math.' + s
-            for k, v in self.math_functions_different.iteritems():
+            for k, v in self.math_functions_different.items():
                 dict_fun[k] = 'math.' + v
         if self.use_python_cmath:
             for s in self.cmath_functions_same:
                 dict_fun[s] = 'cmath.' + s
-            for k, v in self.cmath_functions_different.iteritems():
+            for k, v in self.cmath_functions_different.items():
                 dict_fun[k] = 'cmath.' + v
         if self.use_interval:
             for s in self.interval_functions_same:
                 dict_fun[s] = 'imath.' + s
-            for k, v in self.interval_functions_different.iteritems():
+            for k, v in self.interval_functions_different.items():
                 dict_fun[k] = 'imath.' + v
         return dict_fun
 
@@ -538,7 +559,7 @@ class Lambdifier(object):
     def translate_str(self, estr):
         """Translate substrings of estr using in order the dictionaries in
         dict_tuple_str."""
-        for pattern, repl in self.dict_str.iteritems():
+        for pattern, repl in self.dict_str.items():
                 estr = re.sub(pattern, repl, estr)
         return estr
 

@@ -1,8 +1,12 @@
 from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
     cos, sin, Mul, Pow, cse, O)
 from sympy.simplify.simplify import expand_numer, expand
+from sympy.core.function import (
+    expand_power_base, expand_multinomial)
+
 from sympy.utilities.pytest import raises
 from sympy.core.function import expand_power_base
+from sympy.utilities.randtest import test_numerically
 
 from sympy.abc import x, y, z
 
@@ -48,7 +52,7 @@ def test_expand_non_commutative():
     assert ((A + B)**2).expand() == A**2 + A*B + B*A + B**2
     assert ((A + B)**3).expand() == (A**2*B + B**2*A + A*B**2 + B*A**2 +
                                      A**3 + B**3 + A*B*A + B*A*B)
-    # 3120
+    # issue 6219
     assert ((a*A*B*A**-1)**2).expand() == a**2*A*B**2/A
     # Note that (a*A*B*A**-1)**2 is automatically converted to a**2*(A*B*A**-1)**2
     assert ((a*A*B*A**-1)**2).expand(deep=False) == a**2*(A*B*A**-1)**2
@@ -58,7 +62,7 @@ def test_expand_non_commutative():
     assert ((a*A)**2).expand() == a**2*A**2
     assert ((a*A*B)**i).expand() == a**i*(A*B)**i
     assert ((a*A*(B*(A*B/A)**2))**i).expand() == a**i*(A*B*A*B**2/A)**i
-    # 3459
+    # issue 6558
     assert (A*B*(A*B)**-1).expand() == A*B*(A*B)**-1
     assert ((a*A)**i).expand() == a**i*A**i
     assert ((a*A*B*A**-1)**3).expand() == a**3*A*B**3/A
@@ -109,7 +113,7 @@ def test_expand_modulus():
     raises(ValueError, lambda: ((x + y)**11).expand(modulus=x))
 
 
-def test_issue_2644():
+def test_issue_5743():
     assert (x*sqrt(
         x + y)*(1 + sqrt(x + y))).expand() == x**2 + x*y + x*sqrt(x + y)
     assert (x*sqrt(
@@ -127,22 +131,15 @@ def test_expand_frac():
     assert expand_numer(eq, multinomial=False) == eq
 
 
-def test_issue_3022():
+def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
-    r, e = cse((eq).expand(complex=True))
-    assert r == S('''[
-        (x0, re(x)), (x1, im(x)), (x2, sin(atan2(x1, x0)/2)),
-        (x3, cos(atan2(x1, x0)/2)), (x4, x0**2 + x1**2),
-        (x5, sin(atan2(0, x4)/4)), (x6, cos(atan2(0, x4)/4)),
-        (x7, x2*x5), (x8, x3*x5), (x9, x2*x6), (x10, x3*x6)]''')
-    assert e == S('''[
-        sqrt(2)*(-x10 + I*x10 + x7 - I*x7 + x8 + I*x8 + x9 + I*x9)/
-        (8*pi**(3/2)*x4**(1/4))]''')
+    assert cse((eq).expand(complex=True), optimizations='basic') \
+        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, atan2(x1, x0)/2),
+        (x3, sin(x2)), (x4, cos(x2))], [sqrt(2)*(x3 + I*x3 - x4 +
+        I*x4)/(8*pi**(3/2)*(x0**2 + x1**2)**(1/4))])''')
 
 
 def test_expand_power_base():
-    # was test_separate()
-
     assert expand_power_base((x*y*z)**4) == x**4*y**4*z**4
     assert expand_power_base((x*y*z)**x).is_Pow
     assert expand_power_base((x*y*z)**x, force=True) == x**x*y**x*z**x
@@ -218,9 +215,9 @@ def test_expand_arit():
     m = Symbol('m', negative=True)
     assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
     assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
-    # issue 2383
+    # issue 5482
     assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
-    # issue 2506 (2)
+    # issue 5605 (2)
     assert (cos(x + y)**2).expand(trig=True) in [
         (-sin(x)*sin(y) + cos(x)*cos(y))**2,
         sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2
@@ -252,3 +249,60 @@ def test_power_expand():
     B = Symbol('B', commutative=False)
     assert (2**(A + B)).expand() == 2**(A + B)
     assert (A**(a + b)).expand() != A**(a + b)
+
+
+def test_issues_5919_6830():
+    # issue 5919
+    n = -1 + 1/x
+    z = n/x/(-n)**2 - 1/n/x
+    assert expand(z) == 1/(x**2 - 2*x + 1) - 1/(x - 2 + 1/x) - 1/(-x + 1)
+
+    # issue 6830
+    p = (1 + x)**2
+    assert expand_multinomial((1 + x*p)**2) == (
+        x**2*(x**4 + 4*x**3 + 6*x**2 + 4*x + 1) + 2*x*(x**2 + 2*x + 1) + 1)
+    assert expand_multinomial((1 + (y + x)*p)**2) == (
+        2*((x + y)*(x**2 + 2*x + 1)) + (x**2 + 2*x*y + y**2)*
+        (x**4 + 4*x**3 + 6*x**2 + 4*x + 1) + 1)
+    A = Symbol('A', commutative=False)
+    p = (1 + A)**2
+    assert expand_multinomial((1 + x*p)**2) == (
+        x**2*(1 + 4*A + 6*A**2 + 4*A**3 + A**4) + 2*x*(1 + 2*A + A**2) + 1)
+    assert expand_multinomial((1 + (y + x)*p)**2) == (
+        (x + y)*(1 + 2*A + A**2)*2 + (x**2 + 2*x*y + y**2)*
+        (1 + 4*A + 6*A**2 + 4*A**3 + A**4) + 1)
+    assert expand_multinomial((1 + (y + x)*p)**3) == (
+        (x + y)*(1 + 2*A + A**2)*3 + (x**2 + 2*x*y + y**2)*(1 + 4*A +
+        6*A**2 + 4*A**3 + A**4)*3 + (x**3 + 3*x**2*y + 3*x*y**2 + y**3)*(1 + 6*A
+        + 15*A**2 + 20*A**3 + 15*A**4 + 6*A**5 + A**6) + 1)
+    # unevaluate powers
+    eq = (Pow((x + 1)*((A + 1)**2), 2, evaluate=False))
+    # - in this case the base is not an Add so no further
+    #   expansion is done
+    assert expand_multinomial(eq) == \
+        (x**2 + 2*x + 1)*(1 + 4*A + 6*A**2 + 4*A**3 + A**4)
+    # - but here, the expanded base *is* an Add so it gets expanded
+    eq = (Pow(((A + 1)**2), 2, evaluate=False))
+    assert expand_multinomial(eq) == 1 + 4*A + 6*A**2 + 4*A**3 + A**4
+
+    # coverage
+    def ok(a, b, n):
+        e = (a + I*b)**n
+        return test_numerically(e, expand_multinomial(e))
+
+    for a in [2, S.Half]:
+        for b in [3, S(1)/3]:
+            for n in range(2, 6):
+                assert ok(a, b, n)
+
+    assert expand_multinomial((x + 1 + O(z))**2) == \
+        1 + 2*x + x**2 + O(z)
+    assert expand_multinomial((x + 1 + O(z))**3) == \
+        1 + 3*x + 3*x**2 + x**3 + O(z)
+
+    assert expand_multinomial(3**(x + y + 3)) == 27*3**(x + y)
+
+def test_expand_log():
+    t = Symbol('t', positive=True)
+    # after first expansion, -2*log(2) + log(4); then 0 after second
+    assert expand(log(t**2) - log(t**2/4) - 2*log(2)) == 0

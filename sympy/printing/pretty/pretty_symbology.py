@@ -1,7 +1,12 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
+from __future__ import print_function, division
+
 import sys
-warnings = ''
+import warnings
+unicode_warnings = ''
+
+from sympy.core.compatibility import u, unicode
 
 # first, setup unicodedate environment
 try:
@@ -14,16 +19,17 @@ try:
         except KeyError:
             u = None
 
-            global warnings
-            warnings += 'W: no \'%s\' in unocodedata\n' % name
+            global unicode_warnings
+            unicode_warnings += 'No \'%s\' in unicodedata\n' % name
 
         return u
 
 except ImportError:
-    warnings += 'W: no unicodedata available\n'
+    unicode_warnings += 'No unicodedata available\n'
     U = lambda name: None
 
 from sympy.printing.conventions import split_super_sub
+from sympy.core.alphabets import greeks
 
 
 # prefix conventions when constructing tables
@@ -33,7 +39,7 @@ from sympy.printing.conventions import split_super_sub
 # S   - SYMBOL    +
 
 
-__all__ = ['greek', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
+__all__ = ['greek_unicode', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
            'annotated']
 
 
@@ -43,15 +49,14 @@ _use_unicode = False
 def pretty_use_unicode(flag=None):
     """Set whether pretty-printer should use unicode by default"""
     global _use_unicode
-    global warnings
+    global unicode_warnings
     if flag is None:
         return _use_unicode
 
-    if flag and warnings:
+    if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
-        print "I: pprint -- we are going to use unicode, but there are following problems:"
-        print warnings
-        warnings = ''
+        warnings.warn(unicode_warnings)
+        unicode_warnings = ''
 
     use_unicode_prev = _use_unicode
     _use_unicode = flag
@@ -65,9 +70,7 @@ def pretty_try_use_unicode():
         symbols = []
 
         # see, if we can represent greek alphabet
-        for g, G in greek.itervalues():
-            symbols.append(g)
-            symbols.append(G)
+        symbols.extend(greek_unicode.values())
 
         # and atoms
         symbols += atoms_table.values()
@@ -103,15 +106,19 @@ def xstr(*args):
 g = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
 G = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
 
-greek_letters = [
-    'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
-    'iota', 'kappa', 'lamda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho',
-    'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega' ]
+greek_letters = list(greeks) # make a copy
+# deal with Unicode's funny spelling of lambda
+greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek = dict([(l, (g(l), G(l))) for l in greek_letters])
+greek_unicode = dict([(l, (g(l), G(l))) for l in greek_letters])
+greek_unicode = dict((L, g(L)) for L in greek_letters)
+greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
+
 # aliases
-greek['lambda'] = greek['lamda']
+greek_unicode['lambda'] = greek_unicode['lamda']
+greek_unicode['Lambda'] = greek_unicode['Lamda']
+greek_unicode['varsigma'] = u('\u03c2')
 
 digit_2txt = {
     '0':    'ZERO',
@@ -174,6 +181,38 @@ for s in '+-=()':
     sub[s] = SSUB(s)
     sup[s] = SSUP(s)
 
+# Variable modifiers
+# TODO: Is it worth trying to handle faces with, e.g., 'MATHEMATICAL BOLD CAPITAL A'?
+# TODO: Make brackets adjust to height of contents
+modifier_dict = {
+    # Accents
+    'mathring': lambda s: s+u('\u030A'),
+    'ddddot': lambda s: s+u('\u0308\u0308'),
+    'dddot': lambda s: s+u('\u0308\u0307'),
+    'ddot': lambda s: s+u('\u0308'),
+    'dot': lambda s: s+u('\u0307'),
+    'check': lambda s: s+u('\u030C'),
+    'breve': lambda s: s+u('\u0306'),
+    'acute': lambda s: s+u('\u0301'),
+    'grave': lambda s: s+u('\u0300'),
+    'tilde': lambda s: s+u('\u0303'),
+    'hat': lambda s: s+u('\u0302'),
+    'bar': lambda s: s+u('\u0305'),
+    'vec': lambda s: s+u('\u20D7'),
+    'prime': lambda s: s+u(' \u030D'),
+    'prm': lambda s: s+u(' \u030D'),
+    # # Faces -- these are here for some compatibility with latex printing
+    # 'bold': lambda s: s,
+    # 'bm': lambda s: s,
+    # 'cal': lambda s: s,
+    # 'scr': lambda s: s,
+    # 'frak': lambda s: s,
+    # Brackets
+    'norm': lambda s: u('\u2016')+s+u('\u2016'),
+    'avg': lambda s: u('\u27E8')+s+u('\u27E9'),
+    'abs': lambda s: u('\u007C')+s+u('\u007C'),
+    'mag': lambda s: u('\u007C')+s+u('\u007C'),
+}
 
 # VERTICAL OBJECTS
 HUP = lambda symb: U('%s UPPER HOOK' % symb_2txt[symb])
@@ -266,7 +305,8 @@ def xobj(symb, length):
     return: [] of equal-length strings
     """
 
-    assert length > 0
+    if length <= 0:
+        raise ValueError("Length should be greater than 0")
 
     # TODO robustify when no unicodedat available
     if _use_unicode:
@@ -445,16 +485,16 @@ def pretty_symbol(symb_name):
 
     name, sups, subs = split_super_sub(symb_name)
 
-    # let's prettify name
-    gG = greek.get(name.lower())
-    if gG is not None:
-        if name.islower():
-            greek_name = greek.get(name.lower())[0]
-        else:
-            greek_name = greek.get(name.lower())[1]
-        # some letters may not be available
-        if greek_name is not None:
-            name = greek_name
+    def translate(s) :
+        gG = greek_unicode.get(s)
+        if gG is not None:
+            return gG
+        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True) :
+            if s.lower().endswith(key) and len(s)>len(key):
+                return modifier_dict[key](translate(s[:-len(key)]))
+        return s
+
+    name = translate(name)
 
     # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
     # not used at all.
@@ -478,7 +518,11 @@ def pretty_symbol(symb_name):
 
     # glue the results into one string
     if pretty_subs is None:  # nice formatting of sups/subs did not work
-        return symb_name
+        if subs:
+            name += '_'+'_'.join([translate(s) for s in subs])
+        if sups:
+            name += '__'+'__'.join([translate(s) for s in sups])
+        return name
     else:
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
@@ -496,9 +540,9 @@ def annotated(letter):
     information.
     """
     ucode_pics = {
-        'F': (2, 0, 2, 0, u'\u250c\u2500\n\u251c\u2500\n\u2575'),
+        'F': (2, 0, 2, 0, u('\u250c\u2500\n\u251c\u2500\n\u2575')),
         'G': (3, 0, 3, 1,
-              u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
+              u('\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f'))
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),

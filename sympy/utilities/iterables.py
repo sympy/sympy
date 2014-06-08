@@ -1,17 +1,21 @@
+from __future__ import print_function, division
+
 from collections import defaultdict
+from itertools import combinations, permutations, product, product as cartes
 import random
 from operator import gt
 
 from sympy.core.decorators import deprecated
 from sympy.core import Basic, C
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, combinations, combinations_with_replacement,
-    default_sort_key, is_sequence, iterable, permutations,
-    product as cartes, ordered, next, bin
+    as_int, combinations_with_replacement, default_sort_key, is_sequence,
+    iterable, ordered, xrange
 )
+
+from sympy.utilities.enumerative import (
+    multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
 
 
 def flatten(iterable, levels=None, cls=None):
@@ -83,7 +87,7 @@ def unflatten(iter, n=2):
     """
     if n < 1 or len(iter) % n:
         raise ValueError('iter length is not a multiple of %i' % n)
-    return zip(*(iter[i::n] for i in xrange(n)))
+    return list(zip(*(iter[i::n] for i in xrange(n))))
 
 
 def reshape(seq, how):
@@ -93,7 +97,7 @@ def reshape(seq, how):
     ========
 
     >>> from sympy.utilities import reshape
-    >>> seq = range(1, 9)
+    >>> seq = list(range(1, 9))
 
     >>> reshape(seq, [4]) # lists of 4
     [[1, 2, 3, 4], [5, 6, 7, 8]]
@@ -119,7 +123,7 @@ def reshape(seq, how):
     >>> reshape(tuple(seq), ([1], 1, (2,)))
     (([1], 2, (3, 4)), ([5], 6, (7, 8)))
 
-    >>> reshape(range(12), [2, [3], set([2]), (1, (3,), 1)])
+    >>> reshape(list(range(12)), [2, [3], set([2]), (1, (3,), 1)])
     [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
 
     """
@@ -196,7 +200,7 @@ def multiset(seq):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import multiset, group
+    >>> from sympy.utilities.iterables import multiset
     >>> multiset('mississippi')
     {'i': 4, 'm': 1, 'p': 2, 's': 4}
 
@@ -282,16 +286,16 @@ def interactive_traversal(expr):
     END = '\033[0m'
 
     def cprint(*args):
-        print "".join(map(str, args)) + END
+        print("".join(map(str, args)) + END)
 
     def _interactive_traversal(expr, stage):
         if stage > 0:
-            print
+            print()
 
         cprint("Current expression (stage ", BYELLOW, stage, END, "):")
-        print BCYAN
+        print(BCYAN)
         pprint(expr)
-        print END
+        print(END)
 
         if isinstance(expr, Basic):
             if expr.is_Add:
@@ -324,7 +328,7 @@ def interactive_traversal(expr):
             choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
-            print
+            print()
         else:
             if choice == '?':
                 cprint(RED, "%s - select subexpression with the given index" %
@@ -377,7 +381,7 @@ def ibin(n, bits=0, str=False):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import ibin, variations
+    >>> from sympy.utilities.iterables import ibin
     >>> ibin(2)
     [1, 0]
     >>> ibin(2, 4)
@@ -390,7 +394,7 @@ def ibin(n, bits=0, str=False):
 
     >>> bits = 2
     >>> for i in ibin(2, 'all'):
-    ...     print i
+    ...     print(i)
     (0, 0)
     (0, 1)
     (1, 0)
@@ -413,7 +417,7 @@ def ibin(n, bits=0, str=False):
             bits = as_int(bits)
             return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
         except ValueError:
-            return variations(range(2), n, repetition=True)
+            return variations(list(range(2)), n, repetition=True)
     else:
         try:
             bits = as_int(bits)
@@ -456,8 +460,6 @@ def variations(seq, n, repetition=False):
     sympy.core.compatibility.permutations
     sympy.core.compatibility.product
     """
-    from sympy.core.compatibility import permutations, product
-
     if not repetition:
         seq = tuple(seq)
         if len(seq) < n:
@@ -525,10 +527,34 @@ def subsets(seq, k=None, repetition=False):
                 yield i
 
 
-def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
+def filter_symbols(iterator, exclude):
+    """
+    Only yield elements from `iterator` that do not occur in `exclude`.
+
+    Parameters
+    ==========
+
+    iterator : iterable
+    iterator to take elements from
+
+    exclude : iterable
+    elements to exclude
+
+    Returns
+    =======
+
+    iterator : iterator
+    filtered iterator
+    """
+    exclude = set(exclude)
+    for s in iterator:
+        if s not in exclude:
+            yield s
+
+def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
-    increasing subscripts.
+    increasing subscripts provided that they do not occur in `exclude`.
 
     Parameters
     ==========
@@ -549,7 +575,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     sym : Symbol
         The subscripted symbols.
     """
-
+    exclude = set(exclude or [])
     if cls is None:
         # We can't just make the default cls=C.Symbol because it isn't
         # imported yet.
@@ -557,7 +583,9 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
 
     while True:
         name = '%s%s' % (prefix, start)
-        yield cls(name, *args, **assumptions)
+        s = cls(name, *args, **assumptions)
+        if s not in exclude:
+            yield s
         start += 1
 
 
@@ -571,7 +599,7 @@ def capture(func):
     >>> from sympy import pprint
     >>> from sympy.abc import x
     >>> def foo():
-    ...     print 'hello world!'
+    ...     print('hello world!')
     ...
     >>> 'hello' in capture(foo) # foo, not foo()
     True
@@ -579,11 +607,11 @@ def capture(func):
     '2\\n-\\nx\\n'
 
     """
-    import StringIO
+    from sympy.core.compatibility import StringIO
     import sys
 
     stdout = sys.stdout
-    sys.stdout = file = StringIO.StringIO()
+    sys.stdout = file = StringIO()
     try:
         func()
     finally:
@@ -655,9 +683,9 @@ def common_prefix(*seqs):
     """Return the subsequence that is a common start of sequences in ``seqs``.
 
     >>> from sympy.utilities.iterables import common_prefix
-    >>> common_prefix(range(3))
+    >>> common_prefix(list(range(3)))
     [0, 1, 2]
-    >>> common_prefix(range(3), range(4))
+    >>> common_prefix(list(range(3)), list(range(4)))
     [0, 1, 2]
     >>> common_prefix([1, 2, 3], [1, 2, 5])
     [1, 2]
@@ -681,9 +709,9 @@ def common_suffix(*seqs):
     """Return the subsequence that is a common ending of sequences in ``seqs``.
 
     >>> from sympy.utilities.iterables import common_suffix
-    >>> common_suffix(range(3))
+    >>> common_suffix(list(range(3)))
     [0, 1, 2]
-    >>> common_suffix(range(3), range(4))
+    >>> common_suffix(list(range(3)), list(range(4)))
     []
     >>> common_suffix([1, 2, 3], [9, 2, 3])
     [2, 3]
@@ -877,7 +905,7 @@ def rotate_left(x, y):
 
 def rotate_right(x, y):
     """
-    Left rotates a list x by the number of steps specified
+    Right rotates a list x by the number of steps specified
     in y.
 
     Examples
@@ -902,7 +930,7 @@ def multiset_combinations(m, n, g=None):
     ========
 
     >>> from sympy.utilities.iterables import multiset_combinations
-    >>> from sympy.core.compatibility import combinations
+    >>> from itertools import combinations
     >>> [''.join(i) for i in  multiset_combinations('baby', 3)]
     ['abb', 'aby', 'bby']
 
@@ -950,7 +978,7 @@ def multiset_combinations(m, n, g=None):
                         yield rv
 
 
-def multiset_permutations(m, k=None, g=None):
+def multiset_permutations(m, size=None, g=None):
     """
     Return the unique permutations of multiset ``m``.
 
@@ -966,7 +994,6 @@ def multiset_permutations(m, k=None, g=None):
     >>> len(list(multiset_permutations('banana')))
     60
     """
-    size = k
     if g is None:
         if type(m) is dict:
             g = [[k, m[k]] for k in ordered(m)]
@@ -1050,7 +1077,7 @@ def _set_partitions(n):
 
     >>> from sympy.utilities.iterables import _set_partitions, _partition
     >>> for m, q in _set_partitions(3):
-    ...     print m, q, _partition('abc', q, m)
+    ...     print('%s %s %s' % (m, q, _partition('abc', q, m)))
     1 [0, 0, 0] [['a', 'b', 'c']]
     2 [0, 0, 1] [['a', 'b'], ['c']]
     2 [0, 1, 0] [['a', 'c'], ['b']]
@@ -1197,14 +1224,24 @@ def multiset_partitions(multiset, m=None):
     sympy.functions.combinatorial.numbers.nT
     """
 
+    # This function looks at the supplied input and dispatches to
+    # several special-case routines as they apply.
     if type(multiset) is int:
         n = multiset
         if m and m > n:
             return
-        multiset = range(multiset)
+        multiset = list(range(n))
         if m == 1:
             yield [multiset[:]]
             return
+
+        # If m is not None, it can sometimes be faster to use
+        # MultisetPartitionTraverser.enum_range() even for inputs
+        # which are sets.  Since the _set_partitions code is quite
+        # fast, this is only advantageous when the overall set
+        # partitions outnumber those with the desired number of parts
+        # by a large factor.  (At least 60.)  Such a switch is not
+        # currently implemented.
         for nc, q in _set_partitions(n):
             if m is None or nc == m:
                 rv = [[] for i in range(nc)]
@@ -1217,6 +1254,8 @@ def multiset_partitions(multiset, m=None):
         multiset = [multiset]
 
     if not has_variety(multiset):
+        # Only one component, repeated n times.  The resulting
+        # partitions correspond to partitions of integer n.
         n = len(multiset)
         if m and m > n:
             return
@@ -1239,33 +1278,32 @@ def multiset_partitions(multiset, m=None):
             yield [multiset[:]]
             return
 
-        # if there are repeated elements, sort them and define the
-        # canon dictionary that will be used to create the cache key
-        # in case elements of the multiset are not hashable
-        cache = set()
-        canon = {}  # {physical position: position where it appeared first}
-        for i, mi in enumerate(multiset):
-            canon.setdefault(i, canon.get(i, multiset.index(mi)))
-        if len(set(canon.values())) != n:
-            canon = {}
-            for i, mi in enumerate(multiset):
-                canon.setdefault(i, canon.get(i, multiset.index(mi)))
+        # Split the information of the multiset into two lists -
+        # one of the elements themselves, and one (of the same length)
+        # giving the number of repeats for the corresponding element.
+        elements, multiplicities = zip(*group(multiset, False))
+
+        if len(elements) < len(multiset):
+            # General case - multiset with more than one distinct element
+            # and at least one element repeated more than once.
+            if m:
+                mpt = MultisetPartitionTraverser()
+                for state in mpt.enum_range(multiplicities, m-1, m):
+                    yield list_visitor(state, elements)
+            else:
+                for state in multiset_partitions_taocp(multiplicities):
+                    yield list_visitor(state, elements)
         else:
-            canon = None
-
-        for nc, q in _set_partitions(n):
-            if m is None or nc == m:
-                rv = [[] for i in range(nc)]
-                for i in range(n):
-                    rv[q[i]].append(i)
-                if canon:
-                    canonical = tuple(
-                        sorted([tuple([canon[i] for i in j]) for j in rv]))
-                    if canonical in cache:
-                        continue
-                    cache.add(canonical)
-
-                yield [[multiset[j] for j in i] for i in rv]
+            # Set partitions case - no repeated elements. Pretty much
+            # same as int argument case above, with same possible, but
+            # currently unimplemented optimization for some cases when
+            # m is not None
+            for nc, q in _set_partitions(n):
+                if m is None or nc == m:
+                    rv = [[] for i in range(nc)]
+                    for i in range(n):
+                        rv[q[i]].append(i)
+                    yield [[multiset[j] for j in i] for i in rv]
 
 
 def partitions(n, m=None, k=None, size=False):
@@ -1295,7 +1333,7 @@ def partitions(n, m=None, k=None, size=False):
     are limited with k:
 
     >>> for p in partitions(6, k=2):
-    ...     print p
+    ...     print(p)
     {2: 3}
     {1: 2, 2: 2}
     {1: 4, 2: 1}
@@ -1305,7 +1343,7 @@ def partitions(n, m=None, k=None, size=False):
     the returned dict) are limited with m:
 
     >>> for p in partitions(6, m=2):
-    ...     print p
+    ...     print(p)
     ...
     {6: 1}
     {1: 1, 5: 1}
@@ -1420,7 +1458,7 @@ def binary_partitions(n):
 
     >>> from sympy.utilities.iterables import binary_partitions
     >>> for i in binary_partitions(5):
-    ...     print i
+    ...     print(i)
     ...
     [4, 1]
     [2, 2, 1]
@@ -1488,7 +1526,6 @@ def has_variety(seq):
     ========
 
     >>> from sympy.utilities.iterables import has_variety
-    >>> from sympy import Dict, Set
 
     >>> has_variety((1, 2, 1))
     True
@@ -1504,9 +1541,11 @@ def has_variety(seq):
     return False
 
 
-def uniq(seq):
+def uniq(seq, result=None):
     """
-    Yield unique elements from ``seq`` as an iterator.
+    Yield unique elements from ``seq`` as an iterator. The second
+    parameter ``result``  is used internally; it is not necessary to pass
+    anything for this.
 
     Examples
     ========
@@ -1521,47 +1560,40 @@ def uniq(seq):
     >>> list(uniq(x for x in dat))
     [1, 4, 5, 2]
     >>> list(uniq([[1], [2, 1], [1]]))
-    [[1], [2, 1], [1]]
-
+    [[1], [2, 1]]
     """
-    from sympy.core.function import Tuple
-
-    if not hasattr(seq, '__getitem__'):
-        container = list
-    else:
-        container = type(seq)
-
     try:
         seen = set()
-        result = []
-        for s in seq:
+        result = result or []
+        for i, s in enumerate(seq):
             if not (s in seen or seen.add(s)):
                 yield s
     except TypeError:
-        # something was unhashable
-        if not hasattr(seq, '__getitem__'):
+        if s not in result:
             yield s
-            result = [s]
+            result.append(s)
+        if hasattr(seq, '__getitem__'):
+            for s in uniq(seq[i + 1:], result):
+                yield s
         else:
-            result = []
-        for s in seq:
-            for r in result:
-                if s == r:
-                    break
-            else:
+            for s in uniq(seq, result):
                 yield s
 
 
 def generate_bell(n):
-    """
-    Generates the bell permutations of length ``n``.
+    """Return permutations of [0, 1, ..., n - 1] such that each permutation
+    differs from the last by the exchange of a single pair of neighbors.
+    The ``n!`` permutations are returned as an iterator. In order to obtain
+    the next permutation from a random starting permutation, use the
+    ``next_trotterjohnson`` method of the Permutation class (which generates
+    the same sequence in a different manner).
 
     Examples
     ========
 
+    >>> from itertools import permutations
     >>> from sympy.utilities.iterables import generate_bell
-    >>> from sympy import zeros, Matrix, factorial, pprint
-    >>> from sympy.core.compatibility import permutations
+    >>> from sympy import zeros, Matrix
 
     This is the sort of permutation used in the ringing of physical bells,
     and does not produce permutations in lexicographical order. Rather, the
@@ -1573,23 +1605,29 @@ def generate_bell(n):
     >>> list(permutations(range(4)))[:5]
     [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 2, 3, 1), (0, 3, 1, 2)]
     >>> list(generate_bell(4))[:5]
-    [(0, 1, 2, 3), (1, 0, 2, 3), (1, 2, 0, 3), (1, 2, 3, 0), (2, 1, 3, 0)]
+    [(0, 1, 2, 3), (0, 1, 3, 2), (0, 3, 1, 2), (3, 0, 1, 2), (3, 0, 2, 1)]
 
     Notice how the 2nd and 3rd lexicographical permutations have 3 elements
-    out of place whereas each bell permutations always has only two
-    elements out of place relative to the previous permutation.
+    out of place whereas each "bell" permutation always has only two
+    elements out of place relative to the previous permutation (and so the
+    signature (+/-1) of a permutation is opposite of the signature of the
+    previous permutation).
 
     How the position of inversion varies across the elements can be seen
-    by tracing out where the 0 appears in the permutations:
+    by tracing out where the largest number appears in the permutations:
 
     >>> m = zeros(4, 24)
     >>> for i, p in enumerate(generate_bell(4)):
-    ...     m[:, i] = Matrix(list(p))
+    ...     m[:, i] = Matrix([j - 3 for j in list(p)])  # make largest zero
     >>> m.print_nonzero('X')
-    [ XXXXXX  XXXXXX  XXXXXX ]
-    [X XXXX XX XXXX XX XXXX X]
-    [XX XX XXXX XX XXXX XX XX]
     [XXX  XXXXXX  XXXXXX  XXX]
+    [XX XX XXXX XX XXXX XX XX]
+    [X XXXX XX XXXX XX XXXX X]
+    [ XXXXXX  XXXXXX  XXXXXX ]
+
+    See Also
+    ========
+    sympy.combinatorics.Permutation.next_trotterjohnson
 
     References
     ==========
@@ -1597,30 +1635,52 @@ def generate_bell(n):
     * http://en.wikipedia.org/wiki/Method_ringing
     * http://stackoverflow.com/questions/4856615/recursive-permutation/4857018
     * http://programminggeeks.com/bell-algorithm-for-permutation/
-    * http://en.wikipedia.org/wiki/
-      Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+    * http://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
     * Generating involutions, derangements, and relatives by ECO
       Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
     """
-    from sympy.functions.combinatorial.factorials import factorial
-    pos = dir = 1
-    do = factorial(n)
-    p = range(n)
-    yield tuple(p)
-    do -= 1
-    while do:
-        if pos >= n:
-            dir = -dir
-            p[0], p[1] = p[1], p[0]
-        elif pos < 1:
-            dir = -dir
-            p[-2], p[-1] = p[-1], p[-2]
-        else:
-            p[pos - 1], p[pos] = p[pos], p[pos - 1]
-        pos += dir
-        yield tuple(p)
-        do -= 1
+    n = as_int(n)
+    if n < 1:
+        raise ValueError('n must be a positive integer')
+    if n == 1:
+        yield (0,)
+    elif n == 2:
+        yield (0, 1)
+        yield (1, 0)
+    elif n == 3:
+        for li in [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]:
+            yield li
+    else:
+        m = n - 1
+        op = [0] + [-1]*m
+        l = list(range(n))
+        while True:
+            yield tuple(l)
+            # find biggest element with op
+            big = None, -1  # idx, value
+            for i in range(n):
+                if op[i] and l[i] > big[1]:
+                    big = i, l[i]
+            i, _ = big
+            if i is None:
+                break  # there are no ops left
+            # swap it with neighbor in the indicated direction
+            j = i + op[i]
+            l[i], l[j] = l[j], l[i]
+            op[i], op[j] = op[j], op[i]
+            # if it landed at the end or if the neighbor in the same
+            # direction is bigger then turn off op
+            if j == 0 or j == m or l[j + op[j]] > l[j]:
+                op[j] = 0
+            # any element bigger to the left gets +1 op
+            for i in range(j):
+                if l[i] > l[j]:
+                    op[i] = 1
+            # any element bigger to the right gets -1 op
+            for i in range(j + 1, n):
+                if l[i] > l[j]:
+                    op[i] = -1
 
 
 def generate_involutions(n):
@@ -1648,7 +1708,7 @@ def generate_involutions(n):
     >>> len(list(generate_involutions(4)))
     10
     """
-    idx = range(n)
+    idx = list(range(n))
     for p in permutations(idx):
         for i in idx:
             if p[p[i]] != i:
@@ -1739,7 +1799,7 @@ def necklaces(n, k, free=False):
 
     """
     return uniq(minlex(i, directed=not free) for i in
-        variations(range(k), n, repetition=True))
+        variations(list(range(k)), n, repetition=True))
 
 
 def bracelets(n, k):
@@ -1769,7 +1829,7 @@ def generate_oriented_forest(n):
     [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \
     [0, 1, 1, 1], [0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 0, 0], [0, 0, 0, 0]]
     """
-    P = range(-1, n)
+    P = list(range(-1, n))
     while True:
         yield P[1:]
         if P[n] > 0:
@@ -1821,14 +1881,14 @@ def minlex(seq, directed=True, is_set=False, small=None):
     is_str = isinstance(seq, str)
     seq = list(seq)
     if small is None:
-        small = min(seq)
+        small = min(seq, key=default_sort_key)
     if is_set:
         i = seq.index(small)
         if not directed:
             n = len(seq)
             p = (i + 1) % n
             m = (i - 1) % n
-            if seq[p] > seq[m]:
+            if default_sort_key(seq[p]) > default_sort_key(seq[m]):
                 seq = list(reversed(seq))
                 i = n - i - 1
         if i:
@@ -1882,12 +1942,12 @@ def runs(seq, op=gt):
     cycles = []
     seq = iter(seq)
     try:
-        run = [seq.next()]
+        run = [next(seq)]
     except StopIteration:
         return []
     while True:
         try:
-            ei = seq.next()
+            ei = next(seq)
         except StopIteration:
             break
         if op(ei, run[-1]):
@@ -1913,8 +1973,9 @@ def kbins(l, k, ordered=None):
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
 
-    >>> for p in kbins(range(5), 2):
-    ...     print p
+    >>> from __future__ import print_function
+    >>> for p in kbins(list(range(5)), 2):
+    ...     print(p)
     ...
     [[0], [1, 2, 3, 4]]
     [[0, 1], [2, 3, 4]]
@@ -1938,9 +1999,9 @@ def kbins(l, k, ordered=None):
         11 means A == A
 
     >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print 'ordered =', ordered
-    ...     for p in kbins(range(3), 2, ordered=ordered):
-    ...         print '    ', p
+    ...     print('ordered = %s' % ordered)
+    ...     for p in kbins(list(range(3)), 2, ordered=ordered):
+    ...         print('     %s' % p)
     ...
     ordered = None
          [[0], [1, 2]]
@@ -2009,7 +2070,7 @@ def kbins(l, k, ordered=None):
         for p in multiset_partitions(l, k):
             for perm in permutations(p):
                 yield list(perm)
-    elif ordered == 01:
+    elif ordered == 1:
         for kgot, p in partitions(len(l), k, size=True):
             if kgot != k:
                 continue

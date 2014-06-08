@@ -1,5 +1,5 @@
 from sympy import (symbols, MatrixSymbol, Symbol, MatPow, BlockMatrix,
-        Identity, ZeroMatrix, ImmutableMatrix, eye)
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
 from sympy.utilities.pytest import raises
 
 k, l, m, n = symbols('k l m n', integer=True)
@@ -18,8 +18,9 @@ y = MatrixSymbol('x', 2, 1)
 
 def test_symbolic_indexing():
     x12 = X[1, 2]
-    assert x12 == Symbol(X.name + "_12")
-    assert X[i, j] == Symbol(X.name + "_ij")
+    assert all(s in str(x12) for s in ['1', '2', X.name])
+    # We don't care about the exact form of this.  We do want to make sure
+    # that all of these features are present
 
 
 def test_add_index():
@@ -31,8 +32,11 @@ def test_mul_index():
     assert (A*B).as_mutable() == (A.as_mutable() * B.as_mutable())
     X = MatrixSymbol('X', n, m)
     Y = MatrixSymbol('Y', m, k)
-    # Using str to avoid dealing with a Dummy variable
-    assert str((X*Y)[4, 2]) == "Sum(X(4, _k)*Y(_k, 2), (_k, 0, m - 1))"
+
+    result = (X*Y)[4,2]
+    expected = Sum(X[4, i]*Y[i, 2], (i, 0, m - 1))
+    assert result.args[0].dummy_eq(expected.args[0], i)
+    assert result.args[1][1:] == expected.args[1][1:]
 
 
 def test_pow_index():

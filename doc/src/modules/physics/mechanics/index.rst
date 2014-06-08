@@ -10,6 +10,14 @@ Classical Mechanics
    be discussed. :mod:`mechanics` has been written to allow for creation of
    symbolic equations of motion for complicated multibody systems.
 
+Vector
+======
+
+This module derives the vector-related abilities and related functionalities
+from :mod:`physics.vector`. Please have a look at the documentation of
+:mod:`physics.vector` and its necessary API to understand the vector capabilities
+of :mod:`mechanics`.
+
 Mechanics
 =========
 
@@ -67,8 +75,6 @@ Guide to Mechanics
 .. toctree::
     :maxdepth: 2
 
-    vectors.rst
-    kinematics.rst
     masses.rst
     kane.rst
     examples.rst
@@ -81,9 +87,6 @@ Mechanics API
 .. toctree::
     :maxdepth: 2
 
-    api/essential.rst
-    api/functions.rst
-    api/kinematics.rst
     api/part_bod.rst
     api/kane.rst
     api/printing.rst

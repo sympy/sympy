@@ -1,0 +1,17 @@
+\begin{tabular}{cl}
+\ti{M} &  \multicolumn{1}{c}{Result} \\ \hline
+string \ti{M} & \parbox[t]{4in}{Coefficients are symbolic constants with names $\ti{M}^{x_{i}x_{j}}$ where $x_{i}$
+                   and $x_{j}$ are the names
+of the $i^{th}$ and $j^{th}$ coordinates (see output of \ti{Ltrans.py}). } \\ \hline
+list \ti{M} & \parbox[t]{4in}{If \ti{M} is a list of multivectors equal in length to the dimension of the vector space then
+             the linear transformation is $\f{L}{\ebf_{i}} = \ti{M}\mat{i}$. If \ti{M} is a list of lists of scalars where all
+             lists are equal in length to the dimension of the vector space then the linear transformation is
+             $\f{L}{\ebf_{i}} = \ti{M}\mat{i}\mat{j}\ebf_{j}$.} \\ \hline
+dict \ti{M} & \parbox[t]{4in}{If \ti{M} is a dictionary the linear transformation is defined by
+             $\f{L}{\ebf_{i}} = \ti{M}\mat{\ebf_{i}}$. If $\ebf_{i}$ is not in the dictionary then $\f{L}{\ebf_{i}} =0$.} \\ \hline
+rotor \ti{M} & \parbox[t]{4in}{If \ti{M} is a rotor, $\ti{M}\ti{M}^{\R}=1$, the linear transformation is defined by
+               $\f{L}{\ebf_{i}} = \ti{M}\ebf_{i}\ti{M}^{\R}$.} \\ \hline
+multivector function \ti{M} & \parbox[t]{4in}{If \ti{M} is a general multivector function, the function is tested for linearity, and if
+                             linear the coefficients of the linear transformation are calculated from
+                             $\f{L}{\ebf_{i}} = \f{\ti{M}}{\ebf_{i}}$.} \\ \hline
+\end{tabular}

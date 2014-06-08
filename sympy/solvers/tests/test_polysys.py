@@ -21,16 +21,16 @@ def test_solve_poly_system():
         [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]
 
     assert solve_poly_system([y - x**2, y + x**2 + 1], x, y) == \
-        [(I*sqrt(S.Half), -S.Half), (-I*sqrt(S.Half), -S.Half)]
+        [(-I*sqrt(S.Half), -S.Half), (I*sqrt(S.Half), -S.Half)]
 
     f_1 = x**2 + y + z - 1
     f_2 = x + y**2 + z - 1
     f_3 = x + y + z**2 - 1
 
-    a, b = -sqrt(2) - 1, sqrt(2) - 1
+    a, b = sqrt(2) - 1, -sqrt(2) - 1
 
     assert solve_poly_system([f_1, f_2, f_3], x, y, z) == \
-        [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
 
     solution = [(1, -1), (1, 1)]
 
@@ -52,15 +52,15 @@ def test_solve_biquadratic():
     f_2 = (x - 2)**2 + (y - 2)**2 - r**2
 
     assert solve_poly_system([f_1, f_2], x, y) == \
-        [(S(3)/2 + sqrt(-1 + 2*r**2)/2, S(3)/2 - sqrt(-1 + 2*r**2)/2),
-         (S(3)/2 - sqrt(-1 + 2*r**2)/2, S(3)/2 + sqrt(-1 + 2*r**2)/2)]
+        [(S(3)/2 - sqrt(-1 + 2*r**2)/2, S(3)/2 + sqrt(-1 + 2*r**2)/2),
+         (S(3)/2 + sqrt(-1 + 2*r**2)/2, S(3)/2 - sqrt(-1 + 2*r**2)/2)]
 
     f_1 = (x - 1)**2 + (y - 2)**2 - r**2
     f_2 = (x - 1)**2 + (y - 1)**2 - r**2
 
     assert solve_poly_system([f_1, f_2], x, y) == \
-        [(1 + sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2),
-         (1 - sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2)]
+        [(1 - sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2),
+         (1 + sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2)]
 
     query = lambda expr: expr.is_Pow and expr.exp is S.Half
 
@@ -86,7 +86,7 @@ def test_solve_triangualted():
     f_2 = x + y**2 + z - 1
     f_3 = x + y + z**2 - 1
 
-    a, b = -sqrt(2) - 1, sqrt(2) - 1
+    a, b = sqrt(2) - 1, -sqrt(2) - 1
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z) == \
         [(0, 0, 1), (0, 1, 0), (1, 0, 0)]
@@ -94,4 +94,17 @@ def test_solve_triangualted():
     dom = QQ.algebraic_field(sqrt(2))
 
     assert solve_triangulated([f_1, f_2, f_3], x, y, z, domain=dom) == \
-        [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
+
+
+def test_solve_issue_3686():
+    roots = solve_poly_system([((x - 5)**2/250000 + (y - S(5)/10)**2/250000) - 1, x], x, y)
+    assert roots == [(0, S(1)/2 + 15*sqrt(1111)), (0, S(1)/2 - 15*sqrt(1111))]
+
+    roots = solve_poly_system([((x - 5)**2/250000 + (y - 5.0/10)**2/250000) - 1, x], x, y)
+    # TODO: does this really have to be so complicated?!
+    assert len(roots) == 2
+    assert roots[0][0] == 0
+    assert roots[0][1].epsilon_eq(-499.474999374969, 1e12)
+    assert roots[1][0] == 0
+    assert roots[1][1].epsilon_eq(500.474999374969, 1e12)

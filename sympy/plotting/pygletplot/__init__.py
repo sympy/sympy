@@ -1,18 +1,24 @@
 """Plotting module that can plot 2D and 3D functions
 """
+
+from sympy.utilities.decorator import doctest_depends_on
+
 try:
+    @doctest_depends_on(modules=('pyglet',))
     def PygletPlot(*args, **kwargs):
         """
         Plot Examples
         =============
 
-        See examples/plotting.py for many more examples.
+        See examples/advanced/pyglet_plotting.py for many more examples.
 
 
-        >>> from sympy import symbols, Plot
+        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
+        >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
 
         >>> Plot(x*y**3-y*x**3)
+        [0]: -x**3*y + x*y**3, 'mode=cartesian'
 
         >>> p = Plot()
         >>> p[1] = x*y
@@ -31,13 +37,21 @@ try:
         from the defaults for the current coordinate mode:
 
         >>> Plot(x**2) # implies [x,-5,5,100]
+        [0]: x**2, 'mode=cartesian'
+
         >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40]
+        [0]: x**2, 'mode=cartesian'
         >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100]
+        [0]: x**2 - y**2, 'mode=cartesian'
         >>> Plot(x**2, [x,-13,13,100])
+        [0]: x**2, 'mode=cartesian'
         >>> Plot(x**2, [-13,13]) # [x,-13,13,100]
+        [0]: x**2, 'mode=cartesian'
         >>> Plot(x**2, [x,-13,13]) # [x,-13,13,100]
+        [0]: x**2, 'mode=cartesian'
         >>> Plot(1*x, [], [x], mode='cylindrical')
         ... # [unbound_theta,0,2*Pi,40], [x,-1,1,20]
+        [0]: x, 'mode=cartesian'
 
 
         Coordinate Modes
@@ -62,7 +76,7 @@ try:
         1: parametric, cartesian, polar
         2: parametric, cartesian, cylindrical = polar, spherical
 
-        >>> Plot(1, mode='spherical')
+        >>> Plot(1, mode='spherical') # doctest: +SKIP
 
 
         Calculator-like Interface
@@ -72,8 +86,8 @@ try:
         >>> f = x**2
         >>> p[1] = f
         >>> p[2] = f.diff(x)
-        >>> p[3] = f.diff(x).diff(x)
-        >>> p
+        >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
+        >>> p # doctest: +SKIP
         [1]: x**2, 'mode=cartesian'
         [2]: 2*x, 'mode=cartesian'
         [3]: 2, 'mode=cartesian'
@@ -125,6 +139,6 @@ try:
         import plot
         return plot.PygletPlot(*args, **kwargs)
 
-except Exception, e:
+except Exception as e:
     def PygletPlot(*args, **kwargs):
         raise e

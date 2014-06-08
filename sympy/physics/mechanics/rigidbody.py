@@ -1,8 +1,9 @@
+from __future__ import print_function, division
+
 __all__ = ['RigidBody']
 
 from sympy import sympify
-from sympy.physics.mechanics.point import Point
-from sympy.physics.mechanics.essential import ReferenceFrame, Dyadic
+from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
 
 class RigidBody(object):
@@ -99,8 +100,21 @@ class RigidBody(object):
             raise TypeError("RigidBody inertia must be about a Point.")
         self._inertia = I[0]
         self._inertia_point = I[1]
+        # have I S/O, want I S/S*
+        # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
+        # I_S/S* = I_S/O - I_S*/O
+        from sympy.physics.mechanics.functions import inertia_of_point_mass
+        I_Ss_O = inertia_of_point_mass(self.mass,
+                                       self.masscenter.pos_from(I[1]),
+                                       self.frame)
+        self._central_inertia = I[0] - I_Ss_O
 
     inertia = property(get_inertia, set_inertia)
+
+    @property
+    def central_inertia(self):
+        """The body's central inertia dyadic."""
+        return self._central_inertia
 
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
@@ -179,7 +193,7 @@ class RigidBody(object):
 
         """
 
-        return ((self.inertia[0] & self.frame.ang_vel_in(frame)) +
+        return ((self.central_inertia & self.frame.ang_vel_in(frame)) +
                 (point.vel(frame) ^ -self.masscenter.pos_from(point)) *
                 self.mass)
 
@@ -199,8 +213,8 @@ class RigidBody(object):
 
         frame : ReferenceFrame
             The RigidBody's angular velocity and the velocity of it's mass
-            center is typically defined with respect to an inertial frame but
-            any relevant frame in which the velocity is known can be supplied.
+            center are typically defined with respect to an inertial frame but
+            any relevant frame in which the velocities are known can be supplied.
 
         Examples
         ========
@@ -222,7 +236,7 @@ class RigidBody(object):
 
         """
 
-        rotational_KE = (self.frame.ang_vel_in(frame) & (self.inertia[0] &
+        rotational_KE = (self.frame.ang_vel_in(frame) & (self.central_inertia &
                 self.frame.ang_vel_in(frame)) / sympify(2))
 
         translational_KE = (self.mass * (self.masscenter.vel(frame) &

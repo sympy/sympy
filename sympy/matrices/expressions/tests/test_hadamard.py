@@ -1,30 +1,32 @@
-from __future__ import with_statement
-
 from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
 from sympy.matrices import ShapeError, MatrixSymbol
 from sympy.matrices.expressions import HadamardProduct, hadamard_product
 
-def test_HadamardProduct():
-    n, m, k = symbols('n,m,k')
-    Z = MatrixSymbol('Z', n, n)
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', n, m)
-    C = MatrixSymbol('C', m, k)
+n, m, k = symbols('n,m,k')
+Z = MatrixSymbol('Z', n, n)
+A = MatrixSymbol('A', n, m)
+B = MatrixSymbol('B', n, m)
+C = MatrixSymbol('C', m, k)
 
+def test_HadamardProduct():
     assert HadamardProduct(A, B, A).shape == A.shape
 
     raises(ShapeError, lambda: HadamardProduct(A, B.T))
     raises(TypeError,  lambda: HadamardProduct(A, n))
     raises(TypeError,  lambda: HadamardProduct(A, 1))
 
-    assert HadamardProduct(A, 2*B, -A)[1, 1] == -2 * A[1, 1]**2 * B[1, 1]
+    assert HadamardProduct(A, 2*B, -A)[1, 1] == \
+            -2 * A[1, 1] * B[1, 1] * A[1, 1]
 
     mix = HadamardProduct(Z*A, B)*C
     assert mix.shape == (n, k)
 
-    assert HadamardProduct(A, B, A).T == HadamardProduct(A.T, B.T, A.T)
+    assert set(HadamardProduct(A, B, A).T.args) == set((A.T, A.T, B.T))
+
+def test_HadamardProduct_isnt_commutative():
+    assert HadamardProduct(A, B) != HadamardProduct(B, A)
 
 def test_mixed_indexing():
     X = MatrixSymbol('X', 2, 2)
@@ -51,6 +53,5 @@ def test_hadamard():
     assert hadamard_product(A) == A
     assert isinstance(hadamard_product(A, B), HadamardProduct)
     assert hadamard_product(A, B).doit() == hadamard_product(A, B)
-    assert hadamard_product(A, B) == hadamard_product(B, A)
     with raises(ShapeError):
         hadamard_product(A, C)

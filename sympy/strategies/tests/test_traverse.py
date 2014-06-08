@@ -1,5 +1,5 @@
 from sympy.strategies.traverse import (top_down, bottom_up, sall, top_down_once,
-        bottom_up_once)
+        bottom_up_once, expr_fns, basic_fns)
 from sympy import Basic, symbols, Symbol, S
 
 zero_symbols = lambda x: S.Zero if isinstance(x, Symbol) else x
@@ -52,3 +52,13 @@ def test_bottom_up_once():
 
     assert bottom_rl(Basic(1, 2, Basic(3, 4))) == \
                      Basic(1, 2, Basic2(3, 4))
+
+def test_expr_fns():
+    from sympy.strategies.rl import rebuild
+    from sympy import Add
+    x, y = map(Symbol, 'xy')
+    expr = x + y**3
+    e = bottom_up(lambda x: x + 1, expr_fns)(expr)
+    b = bottom_up(lambda x: Basic.__new__(Add, x, 1), basic_fns)(expr)
+
+    assert rebuild(b) == e

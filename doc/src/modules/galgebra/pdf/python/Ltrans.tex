@@ -1,0 +1,75 @@
+
+\documentclass[10pt,fleqn]{report}
+\usepackage[vcentering]{geometry}
+\geometry{papersize={10in,12in},total={9in,11in}}
+
+\pagestyle{empty}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsbsy}
+\usepackage{tensor}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{bm}
+\definecolor{gray}{rgb}{0.95,0.95,0.95}
+\setlength{\parindent}{0pt}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\Adj}{Adj}
+\newcommand{\bfrac}[2]{\displaystyle\frac{#1}{#2}}
+\newcommand{\lp}{\left (}
+\newcommand{\rp}{\right )}
+\newcommand{\paren}[1]{\lp {#1} \rp}
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\llt}{\left <}
+\newcommand{\rgt}{\right >}
+\newcommand{\abs}[1]{\left |{#1}\right | }
+\newcommand{\pdiff}[2]{\bfrac{\partial {#1}}{\partial {#2}}}
+\newcommand{\lbrc}{\left \{}
+\newcommand{\rbrc}{\right \}}
+\newcommand{\W}{\wedge}
+\newcommand{\prm}[1]{{#1}'}
+\newcommand{\ddt}[1]{\bfrac{d{#1}}{dt}}
+\newcommand{\R}{\dagger}
+\newcommand{\deriv}[3]{\bfrac{d^{#3}#1}{d{#2}^{#3}}}
+\newcommand{\grade}[1]{\left < {#1} \right >}
+\newcommand{\f}[2]{{#1}\lp{#2}\rp}
+\newcommand{\eval}[2]{\left . {#1} \right |_{#2}}
+\usepackage{float}
+\floatstyle{plain} % optionally change the style of the new float
+\newfloat{Code}{H}{myc}
+\lstloadlanguages{Python}
+
+\begin{document}
+3d orthogonal ($A,\;B$ are linear transformations)
+\begin{equation*} A = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{x}}\right ) =& A_{xx} \boldsymbol{e_{x}} + A_{yx} \boldsymbol{e_{y}} + A_{zx} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{y}}\right ) =& A_{xy} \boldsymbol{e_{x}} + A_{yy} \boldsymbol{e_{y}} + A_{zy} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{z}}\right ) =& A_{xz} \boldsymbol{e_{x}} + A_{yz} \boldsymbol{e_{y}} + A_{zz} \boldsymbol{e_{z}}  \end{array} \right \} \end{equation*}
+\begin{equation*} \f{\operatorname{mat}}{A} = \left[\begin{matrix}A_{xx} & A_{xy} & A_{xz}\\A_{yx} & A_{yy} & A_{yz}\\A_{zx} & A_{zy} & A_{zz}\end{matrix}\right] \end{equation*}
+\begin{equation*} \f{\det}{A} = A_{xx} A_{yy} A_{zz} - A_{xx} A_{yz} A_{zy} - A_{xy} A_{yx} A_{zz} + A_{xy} A_{yz} A_{zx} + A_{xz} A_{yx} A_{zy} - A_{xz} A_{yy} A_{zx} \end{equation*}
+\begin{equation*} \overline{A} = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{x}}\right ) =& A_{xx} \boldsymbol{e_{x}} + A_{xy} \boldsymbol{e_{y}} + A_{xz} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{y}}\right ) =& A_{yx} \boldsymbol{e_{x}} + A_{yy} \boldsymbol{e_{y}} + A_{yz} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{z}}\right ) =& A_{zx} \boldsymbol{e_{x}} + A_{zy} \boldsymbol{e_{y}} + A_{zz} \boldsymbol{e_{z}}  \end{array} \right \} \end{equation*}
+\begin{equation*} \f{\Tr}{A} = A_{xx} + A_{yy} + A_{zz} \end{equation*}
+\begin{equation*} \f{A}{e_x\W e_y} = \left ( A_{xx} A_{yy} - A_{xy} A_{yx}\right ) \boldsymbol{e_{x}\wedge e_{y}} + \left ( A_{xx} A_{zy} - A_{xy} A_{zx}\right ) \boldsymbol{e_{x}\wedge e_{z}} + \left ( A_{yx} A_{zy} - A_{yy} A_{zx}\right ) \boldsymbol{e_{y}\wedge e_{z}} \end{equation*}
+\begin{equation*} \f{A}{e_x}\W \f{A}{e_y} = \left ( A_{xx} A_{yy} - A_{xy} A_{yx}\right ) \boldsymbol{e_{x}\wedge e_{y}} + \left ( A_{xx} A_{zy} - A_{xy} A_{zx}\right ) \boldsymbol{e_{x}\wedge e_{z}} + \left ( A_{yx} A_{zy} - A_{yy} A_{zx}\right ) \boldsymbol{e_{y}\wedge e_{z}} \end{equation*}
+\begin{equation*} A + B = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{x}}\right ) =& \left ( A_{xx} + B_{xx}\right ) \boldsymbol{e_{x}} + \left ( A_{yx} + B_{yx}\right ) \boldsymbol{e_{y}} + \left ( A_{zx} + B_{zx}\right ) \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{y}}\right ) =& \left ( A_{xy} + B_{xy}\right ) \boldsymbol{e_{x}} + \left ( A_{yy} + B_{yy}\right ) \boldsymbol{e_{y}} + \left ( A_{zy} + B_{zy}\right ) \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{z}}\right ) =& \left ( A_{xz} + B_{xz}\right ) \boldsymbol{e_{x}} + \left ( A_{yz} + B_{yz}\right ) \boldsymbol{e_{y}} + \left ( A_{zz} + B_{zz}\right ) \boldsymbol{e_{z}}  \end{array} \right \} \end{equation*}
+\begin{equation*} AB = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{x}}\right ) =& \left ( A_{xx} B_{xx} + A_{xy} B_{yx} + A_{xz} B_{zx}\right ) \boldsymbol{e_{x}} + \left ( A_{yx} B_{xx} + A_{yy} B_{yx} + A_{yz} B_{zx}\right ) \boldsymbol{e_{y}} + \left ( A_{zx} B_{xx} + A_{zy} B_{yx} + A_{zz} B_{zx}\right ) \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{y}}\right ) =& \left ( A_{xx} B_{xy} + A_{xy} B_{yy} + A_{xz} B_{zy}\right ) \boldsymbol{e_{x}} + \left ( A_{yx} B_{xy} + A_{yy} B_{yy} + A_{yz} B_{zy}\right ) \boldsymbol{e_{y}} + \left ( A_{zx} B_{xy} + A_{zy} B_{yy} + A_{zz} B_{zy}\right ) \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{z}}\right ) =& \left ( A_{xx} B_{xz} + A_{xy} B_{yz} + A_{xz} B_{zz}\right ) \boldsymbol{e_{x}} + \left ( A_{yx} B_{xz} + A_{yy} B_{yz} + A_{yz} B_{zz}\right ) \boldsymbol{e_{y}} + \left ( A_{zx} B_{xz} + A_{zy} B_{yz} + A_{zz} B_{zz}\right ) \boldsymbol{e_{z}}  \end{array} \right \} \end{equation*}
+\begin{equation*} A - B = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{x}}\right ) =& \left ( A_{xx} - B_{xx}\right ) \boldsymbol{e_{x}} + \left ( A_{yx} - B_{yx}\right ) \boldsymbol{e_{y}} + \left ( A_{zx} - B_{zx}\right ) \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{y}}\right ) =& \left ( A_{xy} - B_{xy}\right ) \boldsymbol{e_{x}} + \left ( A_{yy} - B_{yy}\right ) \boldsymbol{e_{y}} + \left ( A_{zy} - B_{zy}\right ) \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{z}}\right ) =& \left ( A_{xz} - B_{xz}\right ) \boldsymbol{e_{x}} + \left ( A_{yz} - B_{yz}\right ) \boldsymbol{e_{y}} + \left ( A_{zz} - B_{zz}\right ) \boldsymbol{e_{z}}  \end{array} \right \} \end{equation*}
+2d general ($A,\;B$ are linear transformations)
+\begin{equation*} A = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{u}}\right ) =& A_{uu} \boldsymbol{e_{u}} + A_{vu} \boldsymbol{e_{v}} \\ L \left ( \boldsymbol{e_{v}}\right ) =& A_{uv} \boldsymbol{e_{u}} + A_{vv} \boldsymbol{e_{v}}  \end{array} \right \} \end{equation*}
+\begin{equation*} \f{\det}{A} = A_{uu} A_{vv} - A_{uv} A_{vu} \end{equation*}
+\begin{equation*} \f{\Tr}{A} = \frac{\left ( e_{u}\cdot e_{u}\right )  \left ( e_{v}\cdot e_{v}\right )  A_{uu}}{\left ( e_{u}\cdot e_{u}\right )  \left ( e_{v}\cdot e_{v}\right )  - \left ( e_{u}\cdot e_{v}\right ) ^{2}} + \frac{\left ( e_{u}\cdot e_{u}\right )  \left ( e_{v}\cdot e_{v}\right )  A_{vv}}{\left ( e_{u}\cdot e_{u}\right )  \left ( e_{v}\cdot e_{v}\right )  - \left ( e_{u}\cdot e_{v}\right ) ^{2}} - \frac{\left ( e_{u}\cdot e_{v}\right ) ^{2} A_{uu}}{\left ( e_{u}\cdot e_{u}\right )  \left ( e_{v}\cdot e_{v}\right )  - \left ( e_{u}\cdot e_{v}\right ) ^{2}} - \frac{\left ( e_{u}\cdot e_{v}\right ) ^{2} A_{vv}}{\left ( e_{u}\cdot e_{u}\right )  \left ( e_{v}\cdot e_{v}\right )  - \left ( e_{u}\cdot e_{v}\right ) ^{2}} \end{equation*}
+\begin{equation*} \f{A}{e_u\W e_v} = \left ( A_{uu} A_{vv} - A_{uv} A_{vu}\right ) \boldsymbol{e_{u}\wedge e_{v}} \end{equation*}
+\begin{equation*} \f{A}{e_u}\W \f{A}{e_v} = \left ( A_{uu} A_{vv} - A_{uv} A_{vu}\right ) \boldsymbol{e_{u}\wedge e_{v}} \end{equation*}
+\begin{equation*} B = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{u}}\right ) =& B_{uu} \boldsymbol{e_{u}} + B_{vu} \boldsymbol{e_{v}} \\ L \left ( \boldsymbol{e_{v}}\right ) =& B_{uv} \boldsymbol{e_{u}} + B_{vv} \boldsymbol{e_{v}}  \end{array} \right \} \end{equation*}
+\begin{equation*} A + B = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{u}}\right ) =& \left ( A_{uu} + B_{uu}\right ) \boldsymbol{e_{u}} + \left ( A_{vu} + B_{vu}\right ) \boldsymbol{e_{v}} \\ L \left ( \boldsymbol{e_{v}}\right ) =& \left ( A_{uv} + B_{uv}\right ) \boldsymbol{e_{u}} + \left ( A_{vv} + B_{vv}\right ) \boldsymbol{e_{v}}  \end{array} \right \} \end{equation*}
+\begin{equation*} AB = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{u}}\right ) =& \left ( A_{uu} B_{uu} + A_{uv} B_{vu}\right ) \boldsymbol{e_{u}} + \left ( A_{vu} B_{uu} + A_{vv} B_{vu}\right ) \boldsymbol{e_{v}} \\ L \left ( \boldsymbol{e_{v}}\right ) =& \left ( A_{uu} B_{uv} + A_{uv} B_{vv}\right ) \boldsymbol{e_{u}} + \left ( A_{vu} B_{uv} + A_{vv} B_{vv}\right ) \boldsymbol{e_{v}}  \end{array} \right \} \end{equation*}
+\begin{equation*} A - B = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{u}}\right ) =& \left ( A_{uu} - B_{uu}\right ) \boldsymbol{e_{u}} + \left ( A_{vu} - B_{vu}\right ) \boldsymbol{e_{v}} \\ L \left ( \boldsymbol{e_{v}}\right ) =& \left ( A_{uv} - B_{uv}\right ) \boldsymbol{e_{u}} + \left ( A_{vv} - B_{vv}\right ) \boldsymbol{e_{v}}  \end{array} \right \} \end{equation*}
+\begin{equation*} a\cdot \f{\overline{A}}{b}-b\cdot \f{\underline{A}}{a} = 0 \end{equation*}
+4d Minkowski spaqce (Space Time)
+\begin{equation*} g = \left[\begin{matrix}1 & 0 & 0 & 0\\0 & -1 & 0 & 0\\0 & 0 & -1 & 0\\0 & 0 & 0 & -1\end{matrix}\right] \end{equation*}
+\begin{equation*} \underline{T} = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{t}}\right ) =& T_{tt} \boldsymbol{e_{t}} + T_{xt} \boldsymbol{e_{x}} + T_{yt} \boldsymbol{e_{y}} + T_{zt} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{x}}\right ) =& T_{tx} \boldsymbol{e_{t}} + T_{xx} \boldsymbol{e_{x}} + T_{yx} \boldsymbol{e_{y}} + T_{zx} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{y}}\right ) =& T_{ty} \boldsymbol{e_{t}} + T_{xy} \boldsymbol{e_{x}} + T_{yy} \boldsymbol{e_{y}} + T_{zy} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{z}}\right ) =& T_{tz} \boldsymbol{e_{t}} + T_{xz} \boldsymbol{e_{x}} + T_{yz} \boldsymbol{e_{y}} + T_{zz} \boldsymbol{e_{z}}  \end{array} \right \} \end{equation*}
+\begin{equation*} \overline{T} = \left \{ \begin{array}{ll} L \left ( \boldsymbol{e_{t}}\right ) =& T_{tt} \boldsymbol{e_{t}} - T_{tx} \boldsymbol{e_{x}} - T_{ty} \boldsymbol{e_{y}} - T_{tz} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{x}}\right ) =& - T_{xt} \boldsymbol{e_{t}} + T_{xx} \boldsymbol{e_{x}} + T_{xy} \boldsymbol{e_{y}} + T_{xz} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{y}}\right ) =& - T_{yt} \boldsymbol{e_{t}} + T_{yx} \boldsymbol{e_{x}} + T_{yy} \boldsymbol{e_{y}} + T_{yz} \boldsymbol{e_{z}} \\ L \left ( \boldsymbol{e_{z}}\right ) =& - T_{zt} \boldsymbol{e_{t}} + T_{zx} \boldsymbol{e_{x}} + T_{zy} \boldsymbol{e_{y}} + T_{zz} \boldsymbol{e_{z}}  \end{array} \right \} \end{equation*}
+\begin{equation*} \f{\mbox{tr}}{\underline{T}} = T_{tt} + T_{xx} + T_{yy} + T_{zz} \end{equation*}
+\begin{equation*} a\cdot \f{\overline{T}}{b}-b\cdot \f{\underline{T}}{a} = 0 \end{equation*}
+
+\end{document}

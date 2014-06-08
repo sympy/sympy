@@ -221,6 +221,14 @@ def test_dmp_subresultants():
 
     assert R.dmp_qq_collins_resultant(f, g) == r.drop(x)
 
+    Rt, t = ring("t", ZZ)
+    Rx, x = ring("x", Rt)
+
+    f = x**6 - 5*x**4 + 5*x**2 + 4
+    g = -6*t*x**5 + x**4 + 20*t*x**3 - 3*x**2 - 10*t*x + 6
+
+    assert Rx.dup_resultant(f, g) == 2930944*t**6 + 2198208*t**4 + 549552*t**2 + 45796
+
 
 def test_dup_discriminant():
     R, x = ring("x", ZZ)
@@ -603,7 +611,7 @@ def test_dmp_content():
 
     f, g, F = 3*y**2 + 2*y + 1, 1, 0
 
-    for i in xrange(0, 5):
+    for i in range(0, 5):
         g *= f
         F += x**i*g
 
@@ -626,7 +634,7 @@ def test_dmp_primitive():
 
     f, g, F = 3*y**2 + 2*y + 1, 1, 0
 
-    for i in xrange(0, 5):
+    for i in range(0, 5):
         g *= f
         F += x**i*g
 

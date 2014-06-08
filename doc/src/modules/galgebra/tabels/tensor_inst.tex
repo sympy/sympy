@@ -1,0 +1,12 @@
+    \begin{tabular}{cl}
+    \ti{f} & \parbox[t]{4in}{Either a string for a general tensor (this option is included mainly for debugging of the \ti{Mlt} class)
+    or a multi-linear
+    function of manifold tangent vectors (multi-vectors of grade one) to scalar. For example one could generate a custom
+    python function such as shown in \ti{TensorDef.py}.}\\
+    \ti{Ga} & Geometric algebra that tensor is associated with. \\
+    \ti{nargs} & \parbox[t]{4in}{If \ti{f} is a string then \ti{nargs} is the number of vector arguments of the tensor.  If \ti{f} is
+    anything other than a string \ti{nargs} is not required since \ti{Mlt} determines the number of vector arguments from \ti{f}.} \\
+    \ti{fct} & \parbox[t]{4in}{if \ti{f} is a string then \ti{fct=True} forces the tensor to be a tensor field (function of the
+    coordinates.  If \ti{f} anything other than a string \ti{fct} is not required since \ti{Mlt} determines whether the tensor is
+    a tensor field from \ti{f}.}
+    \end{tabular}

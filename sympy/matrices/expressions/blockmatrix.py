@@ -1,17 +1,21 @@
-from sympy.core import Tuple, Basic, Add
-from sympy.strategies import typed, canon, debug, do_one, unpack
-from sympy.functions import transpose
+from __future__ import print_function, division
+
+from sympy import ask, Q
+from sympy.core import Tuple, Basic, Add, sympify
+from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
+from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
-from sympy.matrices.expressions.transpose import Transpose
+from sympy.matrices.expressions.transpose import Transpose, transpose
 from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, eye
+from sympy.matrices import Matrix, eye, ShapeError
 
 
 class BlockMatrix(MatrixExpr):
@@ -27,20 +31,22 @@ class BlockMatrix(MatrixExpr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
-    >>> print B
-    [X, Z]
-    [0, Y]
+    >>> print(B)
+    Matrix([
+    [X, Z],
+    [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
-    [I, Z]
+    >>> print(C)
+    Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
-    [X, Z + Z*Y]
+    >>> print(block_collapse(C*B))
+    Matrix([[X, Z*Y + Z]])
 
     """
     def __new__(cls, *args):
         from sympy.matrices.immutable import ImmutableMatrix
+        args = map(sympify, args)
         mat = ImmutableMatrix(*args)
 
         obj = Basic.__new__(cls, mat)
@@ -109,6 +115,16 @@ class BlockMatrix(MatrixExpr):
         raise NotImplementedError(
             "Can't perform trace of irregular blockshape")
 
+    def _eval_determinant(self):
+        if self.blockshape == (2, 2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            if ask(Q.invertible(A)):
+                return det(A)*det(D - C*A.I*B)
+            elif ask(Q.invertible(D)):
+                return det(D)*det(A - B*D.I*C)
+        return Determinant(self)
+
     def transpose(self):
         """Return transpose of matrix.
 
@@ -122,66 +138,25 @@ class BlockMatrix(MatrixExpr):
         >>> Z = MatrixSymbol('Z', n, m)
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
-        [X',  0]
-        [Z', Y']
+        Matrix([
+        [X',  0],
+        [Z', Y']])
         >>> _.transpose()
-        [X, Z]
-        [0, Y]
+        Matrix([
+        [X, Z],
+        [0, Y]])
         """
         return self._eval_transpose()
-
-    def _eval_inverse(self, expand=False):
-        # Inverse of one by one block matrix is easy
-        if self.blockshape == (1, 1):
-            mat = Matrix(1, 1, (self.blocks[0].inverse(),))
-            return BlockMatrix(mat)
-        # Inverse of a two by two block matrix is known
-        elif expand and self.blockshape == (2, 2):
-            # Cite: The Matrix Cookbook Section 9.1.3
-            A11, A12, A21, A22 = (self.blocks[0, 0], self.blocks[0, 1],
-                    self.blocks[1, 0], self.blocks[1, 1])
-            C1 = A11 - A12*A22.I*A21
-            C2 = A22 - A21*A11.I*A12
-            mat = Matrix([[C1.I, (-A11).I*A12*C2.I],
-                [-C2.I*A21*A11.I, C2.I]])
-            return BlockMatrix(mat)
-        else:
-            return Inverse(self)
-
-    def inverse(self, expand=False):
-        """Return inverse of matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
-        >>> from sympy.abc import l, m, n
-        >>> X = MatrixSymbol('X', n, n)
-        >>> BlockMatrix([[X]]).inverse()
-        [X^-1]
-
-        >>> Y = MatrixSymbol('Y', m ,m)
-        >>> Z = MatrixSymbol('Z', n, m)
-        >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
-        >>> B
-        [X, Z]
-        [0, Y]
-        >>> B.inverse(expand=True)
-        [X^-1, (-1)*X^-1*Z*Y^-1]
-        [   0,             Y^-1]
-
-        """
-        return self._eval_inverse(expand)
 
     def _entry(self, i, j):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
-            if i < numrows:
+            if (i < numrows) != False:
                 break
             else:
                 i -= numrows
         for col_block, numcols in enumerate(self.colblocksizes):
-            if j < numcols:
+            if (j < numcols) != False:
                 break
             else:
                 j -= numcols
@@ -219,8 +194,9 @@ class BlockDiagMatrix(BlockMatrix):
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> BlockDiagMatrix(X, Y)
-    [X, 0]
-    [0, Y]
+    Matrix([
+    [X, 0],
+    [0, Y]])
 
     """
     def __new__(cls, *mats):
@@ -287,20 +263,26 @@ def block_collapse(expr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
-    >>> print B
-    [X, Z]
-    [0, Y]
+    >>> print(B)
+    Matrix([
+    [X, Z],
+    [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
-    [I, Z]
+    >>> print(C)
+    Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
-    [X, Z + Z*Y]
+    >>> print(block_collapse(C*B))
+    Matrix([[X, Z*Y + Z]])
     """
-    rule = canon(typed({MatAdd: do_one(bc_matadd, bc_block_plus_ident),
-                        MatMul: do_one(bc_matmul, bc_dist),
-                        BlockMatrix: bc_unpack}))
+    hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
+    rule = exhaust(
+        bottom_up(exhaust(condition(hasbm, typed(
+            {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
+             MatMul: do_one(bc_matmul, bc_dist),
+             Transpose: bc_transpose,
+             Inverse: bc_inverse,
+             BlockMatrix: do_one(bc_unpack, deblock)})))))
     result = rule(expr)
     try:
         return result.doit()
@@ -350,17 +332,84 @@ def bc_dist(expr):
                                               for i in range(B.rows)])
     return expr
 
+
 def bc_matmul(expr):
     factor, matrices = expr.as_coeff_matrices()
+
     i = 0
     while (i+1 < len(matrices)):
         A, B = matrices[i:i+2]
         if isinstance(A, BlockMatrix) and isinstance(B, BlockMatrix):
             matrices[i] = A._blockmul(B)
             matrices.pop(i+1)
+        elif isinstance(A, BlockMatrix):
+            matrices[i] = A._blockmul(BlockMatrix([[B]]))
+            matrices.pop(i+1)
+        elif isinstance(B, BlockMatrix):
+            matrices[i] = BlockMatrix([[A]])._blockmul(B)
+            matrices.pop(i+1)
         else:
             i+=1
     return MatMul(factor, *matrices).doit()
+
+def bc_transpose(expr):
+    return BlockMatrix(block_collapse(expr.arg).blocks.applyfunc(transpose).T)
+
+
+def bc_inverse(expr):
+    expr2 = blockinverse_1x1(expr)
+    if expr != expr2:
+        return expr2
+    return blockinverse_2x2(Inverse(reblock_2x2(expr.arg)))
+
+def blockinverse_1x1(expr):
+    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (1, 1):
+        mat = Matrix([[expr.arg.blocks[0].inverse()]])
+        return BlockMatrix(mat)
+    return expr
+
+def blockinverse_2x2(expr):
+    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2):
+        # Cite: The Matrix Cookbook Section 9.1.3
+        [[A, B],
+         [C, D]] = expr.arg.blocks.tolist()
+
+        return BlockMatrix([[ (A - B*D.I*C).I,  (-A).I*B*(D - C*A.I*B).I],
+                            [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
+    else:
+        return expr
+
+def deblock(B):
+    """ Flatten a BlockMatrix of BlockMatrices """
+    if not isinstance(B, BlockMatrix) or not B.blocks.has(BlockMatrix):
+        return B
+    wrap = lambda x: x if isinstance(x, BlockMatrix) else BlockMatrix([[x]])
+    bb = B.blocks.applyfunc(wrap)  # everything is a block
+
+    from sympy import Matrix
+    try:
+        MM = Matrix(0, sum(bb[0, i].blocks.shape[1] for i in range(bb.shape[1])), [])
+        for row in range(0, bb.shape[0]):
+            M = Matrix(bb[row, 0].blocks)
+            for col in range(1, bb.shape[1]):
+                M = M.row_join(bb[row, col].blocks)
+            MM = MM.col_join(M)
+
+        return BlockMatrix(MM)
+    except ShapeError:
+        return B
+
+
+
+def reblock_2x2(B):
+    """ Reblock a BlockMatrix so that it has 2x2 blocks of block matrices """
+    if not isinstance(B, BlockMatrix) or not all(d > 2 for d in B.blocks.shape):
+        return B
+
+    BM = BlockMatrix  # for brevity's sake
+    return BM([[   B.blocks[0,  0],  BM(B.blocks[0,  1:])],
+               [BM(B.blocks[1:, 0]), BM(B.blocks[1:, 1:])]])
+
 
 def bounds(sizes):
     """ Convert sequence of numbers into pairs of low-high pairs
@@ -385,7 +434,7 @@ def blockcut(expr, rowsizes, colsizes):
     >>> type(B).__name__
     'BlockMatrix'
     >>> ImmutableMatrix(B.blocks[0, 1])
-    [1, 2, 3]
+    Matrix([[1, 2, 3]])
     """
 
     rowbounds = bounds(rowsizes)

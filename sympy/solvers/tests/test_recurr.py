@@ -162,7 +162,7 @@ def test_rsolve():
 
     assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
     assert rsolve(
-        f, y(n), {y(3): 6, y(4): -24}) == -n*(n - 1)*(n - 2)*(-1)**(-n)
+        f, y(n), {y(3): 6, y(4): -24}) == -n*(n - 1)*(n - 2)*(-1)**(n)
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
@@ -170,13 +170,13 @@ def test_rsolve():
 
     assert rsolve(y(n) - a*y(n-2),y(n), \
             {y(1): sqrt(a)*(a + b), y(2): a*(a - b)}).simplify() == \
-            a**(n/2)*((-1)**(n + 1)*b + a)
+            a**(n/2)*(-(-1)**n*b + a)
 
     f = (-16*n**2 + 32*n - 12)*y(n - 1) + (4*n**2 - 12*n + 9)*y(n)
 
     assert expand_func(rsolve(f, y(n), \
-        {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
-        4**n*n*(8*n**3 - 4*n**2 - 2*n + 1)/12
+            {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
+        2**(2*n)*n*(2*n - 1)*(4*n**2 - 1)/12
 
     assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
             (C0*((sqrt(-a**2 + 1) - 1)/a)**n +
@@ -190,3 +190,9 @@ def test_rsolve_raises():
     raises(ValueError, lambda: rsolve(y(n) - x(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - sqrt(n)*y(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - y(n + 1), y(n), {x(0): 0}))
+
+
+def test_issue_6844():
+    f = y(n + 2) - y(n + 1) + y(n)/4
+    assert rsolve(f, y(n)) == 2**(-n)*(C0 + C1*n)
+    assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == 2*2**(-n)*n

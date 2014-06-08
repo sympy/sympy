@@ -1,5 +1,8 @@
 """Tools for setting up interactive sessions. """
 
+from __future__ import print_function, division
+
+from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -8,6 +11,7 @@ from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
 f, g, h = symbols('f g h', cls=Function)
+init_printing()
 """
 
 verbose_message = """\
@@ -81,6 +85,7 @@ def int_to_Integer(s):
     Example
     =======
 
+    >>> from __future__ import division
     >>> from sympy.interactive.session import int_to_Integer
     >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
@@ -89,13 +94,13 @@ def int_to_Integer(s):
     >>> s = 'print (1/2)'
     >>> int_to_Integer(s)
     'print (Integer (1 )/Integer (2 ))'
-    >>> exec(s) #doctest: +SKIP
+    >>> exec(s)
     0.5
     >>> exec(int_to_Integer(s))
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from StringIO import StringIO
+    from sympy.core.compatibility import StringIO
 
     def _is_int(num):
         """
@@ -271,7 +276,13 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
 
     if IPython.__version__ >= '0.11':
         # use an app to parse the command line, and init config
-        from IPython.frontend.terminal import ipapp
+        # IPython 1.0 deprecates the frontend module, so we import directly
+        # from the terminal module to prevent a deprecation message from being
+        # shown.
+        if IPython.__version__ >= '1.0':
+            from IPython.terminal import ipapp
+        else:
+            from IPython.frontend.terminal import ipapp
         app = ipapp.TerminalIPythonApp()
 
         # don't draw IPython banner during initialization:
@@ -279,7 +290,9 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
         app.initialize(argv)
 
         if auto_symbols:
-            enable_automatic_symbols(app)
+            readline = import_module("readline")
+            if readline:
+                enable_automatic_symbols(app)
         if auto_int_to_Integer:
             enable_automatic_int_sympification(app)
 
@@ -364,7 +377,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
     ipython: boolean or None
         If True, printing will initialize for an IPython console;
         if False, printing will initialize for a normal console;
-        The default is None, which does what False does.
+        The default is None, which automatically determines whether we are in
+        an ipython instance or not.
     argv: list of arguments for IPython
         See sympy.bin.isympy for options that can be used to initialize IPython.
 
@@ -411,23 +425,14 @@ def init_session(ipython=None, pretty_print=True, order=None,
 
     in_ipython = False
 
-    if ipython is False:
-        ip = init_python_session()
-        mainloop = ip.interact
-    else:
+    if ipython is not False:
         try:
             import IPython
         except ImportError:
-            if ipython is not True:
-                if not quiet:
-                    print no_ipython
-                ip = init_python_session()
-                mainloop = ip.interact
-            else:
+            if ipython is True:
                 raise RuntimeError("IPython is not available on this system")
+            ip = None
         else:
-            ipython = True
-
             if IPython.__version__ >= '0.11':
                 try:
                     ip = get_ipython()
@@ -437,34 +442,39 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 ip = IPython.ipapi.get()
                 if ip:
                     ip = ip.IP
+        in_ipython = bool(ip)
+        if ipython is None:
+            ipython = in_ipython
 
-            if ip is not None:
-                in_ipython = True
-            else:
-                ip = init_ipython_session(argv=argv,
-                    auto_symbols=auto_symbols, auto_int_to_Integer=auto_int_to_Integer)
+    if ipython is False:
+        ip = init_python_session()
+        mainloop = ip.interact
+    else:
+        if ip is None:
+            ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
+                auto_int_to_Integer=auto_int_to_Integer)
 
-            if IPython.__version__ >= '0.11':
-                # runsource is gone, use run_cell instead, which doesn't
-                # take a symbol arg.  The second arg is `store_history`,
-                # and False means don't add the line to IPython's history.
-                ip.runsource = lambda src, symbol='exec': ip.run_cell(
-                    src, False)
+        if IPython.__version__ >= '0.11':
+            # runsource is gone, use run_cell instead, which doesn't
+            # take a symbol arg.  The second arg is `store_history`,
+            # and False means don't add the line to IPython's history.
+            ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
 
-                #Enable interactive plotting using pylab.
-                try:
-                    ip.enable_pylab(import_all=False)
-                except Exception:
-                    # Causes an import error if matplotlib is not installed.
-                    # Causes other errors (depending on the backend) if there
-                    # is no display, or if there is some problem in the
-                    # backend, so we have a bare "except Exception" here
-                    pass
-            if not in_ipython:
-                mainloop = ip.mainloop
+            #Enable interactive plotting using pylab.
+            try:
+                ip.enable_pylab(import_all=False)
+            except Exception:
+                # Causes an import error if matplotlib is not installed.
+                # Causes other errors (depending on the backend) if there
+                # is no display, or if there is some problem in the
+                # backend, so we have a bare "except Exception" here
+                pass
+        if not in_ipython:
+            mainloop = ip.mainloop
 
-    if auto_symbols and (not ipython or IPython.__version__ < '0.11'):
-        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
+    readline = import_module("readline")
+    if auto_symbols and (not ipython or IPython.__version__ < '0.11' or not readline):
+        raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above with readline support")
     if auto_int_to_Integer and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
@@ -481,4 +491,5 @@ def init_session(ipython=None, pretty_print=True, order=None,
         sys.exit('Exiting ...')
     else:
         ip.write(message)
-        ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
+        import atexit
+        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)

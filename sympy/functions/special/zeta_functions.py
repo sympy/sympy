@@ -1,6 +1,9 @@
 """ Riemann zeta and related function. """
+from __future__ import print_function, division
+
 from sympy.core import Function, S, C, sympify, pi
 from sympy.core.function import ArgumentIndexError
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -11,7 +14,7 @@ class lerchphi(Function):
     r"""
     Lerch transcendent (Lerch phi function).
 
-    For :math:`Re(a) > 0`, :math:`|z| < 1` and :math:`s \in \mathbb{C}`, the
+    For :math:`\operatorname{Re}(a) > 0`, `|z| < 1` and `s \in \mathbb{C}`, the
     Lerch transcendent is defined as
 
     .. math :: \Phi(z, s, a) = \sum_{n=0}^\infty \frac{z^n}{(n + a)^s},
@@ -29,9 +32,9 @@ class lerchphi(Function):
 
     .. math:: \Phi(z, s, a) = z\Phi(z, s, a+1) + a^{-s}.
 
-    This provides the analytic continuation to :math:`Re(a) \le 0`.
+    This provides the analytic continuation to `\operatorname{Re}(a) \le 0`.
 
-    Assume now :math:`Re(a) > 0`. The integral representation
+    Assume now `\operatorname{Re}(a) > 0`. The integral representation
 
     .. math:: \Phi_0(z, s, a) = \int_0^\infty \frac{t^{s-1} e^{-at}}{1 - ze^{-t}}
                                 \frac{\mathrm{d}t}{\Gamma(s)}
@@ -59,10 +62,10 @@ class lerchphi(Function):
     References
     ==========
 
-    - Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
-      Vol. I, New York: McGraw-Hill. Section 1.11.
-    - http://dlmf.nist.gov/25.14
-    - http://en.wikipedia.org/wiki/Lerch_transcendent
+    .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
+           Vol. I, New York: McGraw-Hill. Section 1.11.
+    .. [2] http://dlmf.nist.gov/25.14
+    .. [3] http://en.wikipedia.org/wiki/Lerch_transcendent
 
     Examples
     ========
@@ -109,8 +112,6 @@ class lerchphi(Function):
     -s*lerchphi(z, s + 1, a)
     """
 
-    nargs = 3
-
     def _eval_expand_func(self, **hints):
         from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
         z, s, a = self.args
@@ -155,7 +156,7 @@ class lerchphi(Function):
                 *[polylog(s, zet**k*root)._eval_expand_func(**hints)
                   / (unpolarify(zet)**k*root)**m for k in xrange(n)])
 
-        # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
+        # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
         if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
             # TODO reference?
             if z == -1:
@@ -265,8 +266,6 @@ class polylog(Function):
     z*lerchphi(z, s, 1)
     """
 
-    nargs = 2
-
     @classmethod
     def eval(cls, s, z):
         if z == 1:
@@ -307,12 +306,12 @@ class zeta(Function):
     r"""
     Hurwitz zeta function (or Riemann zeta function).
 
-    For :math:`Re(a) > 0` and :math:`Re(s) > 1`, this function is defined as
+    For `\operatorname{Re}(a) > 0` and `\operatorname{Re}(s) > 1`, this function is defined as
 
     .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},
 
     where the standard choice of argument for :math:`n + a` is used. For fixed
-    :math:`a` with :math:`Re(a) > 0` the Hurwitz zeta function admits a
+    :math:`a` with `\operatorname{Re}(a) > 0` the Hurwitz zeta function admits a
     meromorphic continuation to all of :math:`\mathbb{C}`, it is an unbranched
     function with a simple pole at :math:`s = 1`.
 
@@ -324,7 +323,7 @@ class zeta(Function):
     .. math:: \zeta(s, a) = \Phi(1, s, a).
 
     This formula defines an analytic continuation for all possible values of
-    :math:`s` and :math:`a` (also :math:`Re(a) < 0`), see the documentation of
+    :math:`s` and :math:`a` (also `\operatorname{Re}(a) < 0`), see the documentation of
     :class:`lerchphi` for a description of the branching behavior.
 
     If no value is passed for :math:`a`, by this function assumes a default value
@@ -338,8 +337,8 @@ class zeta(Function):
     References
     ==========
 
-    - http://dlmf.nist.gov/25.11
-    - http://en.wikipedia.org/wiki/Hurwitz_zeta_function
+    .. [1] http://dlmf.nist.gov/25.11
+    .. [2] http://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     Examples
     ========
@@ -352,6 +351,8 @@ class zeta(Function):
     >>> from sympy import zeta
     >>> from sympy.abc import s
     >>> zeta(s, 1)
+    zeta(s)
+    >>> zeta(s)
     zeta(s)
 
     The Riemann zeta function can also be expressed using the Dirichlet eta
@@ -409,14 +410,12 @@ class zeta(Function):
 
     """
 
-    nargs = (1, 2)
-
     @classmethod
     def eval(cls, z, a_=None):
         if a_ is None:
-            z, a = map(sympify, (z, 1))
+            z, a = list(map(sympify, (z, 1)))
         else:
-            z, a = map(sympify, (z, a_))
+            z, a = list(map(sympify, (z, a_)))
 
         if a.is_Number:
             if a is S.NaN:
@@ -476,7 +475,7 @@ class dirichlet_eta(Function):
     r"""
     Dirichlet eta function.
 
-    For :math:`Re(s) > 0`, this function is defined as
+    For `\operatorname{Re}(s) > 0`, this function is defined as
 
     .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^n}{n^s}.
 
@@ -491,7 +490,7 @@ class dirichlet_eta(Function):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Dirichlet_eta_function
+    .. [1] http://en.wikipedia.org/wiki/Dirichlet_eta_function
 
     Examples
     ========
@@ -504,7 +503,6 @@ class dirichlet_eta(Function):
     (-2**(-s + 1) + 1)*zeta(s)
 
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, s):

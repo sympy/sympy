@@ -6,11 +6,15 @@ combinatorial polynomials.
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.combinatorial.factorials import factorial
 
 from sympy.polys.orthopolys import (
     jacobi_poly,
@@ -28,7 +32,6 @@ _x = C.Dummy('x')
 class OrthogonalPolynomial(Function):
     """Base class for orthogonal polynomials.
     """
-    nargs = 2
 
     @classmethod
     def _eval_at_order(cls, n, x):
@@ -78,18 +81,18 @@ class jacobi(OrthogonalPolynomial):
     legendre(n, x)
 
     >>> jacobi(n, S(1)/2, S(1)/2, x)
-    RisingFactorial(3/2, n)*chebyshevu(n, x)/(n + 1)!
+    RisingFactorial(3/2, n)*chebyshevu(n, x)/factorial(n + 1)
 
     >>> jacobi(n, -S(1)/2, -S(1)/2, x)
-    RisingFactorial(1/2, n)*chebyshevt(n, x)/n!
+    RisingFactorial(1/2, n)*chebyshevt(n, x)/factorial(n)
 
     >>> jacobi(n, a, b, -x)
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(n!*gamma(a + 1))
+    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
-    RisingFactorial(a + 1, n)/n!
+    RisingFactorial(a + 1, n)/factorial(n)
 
     >>> conjugate(jacobi(n, a, b, x))
     jacobi(n, conjugate(a), conjugate(b), conjugate(x))
@@ -120,8 +123,6 @@ class jacobi(OrthogonalPolynomial):
     .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
     """
-
-    nargs = 4
 
     @classmethod
     def eval(cls, n, a, b, x):
@@ -200,6 +201,65 @@ class jacobi(OrthogonalPolynomial):
         n, a, b, x = self.args
         return self.func(n, a.conjugate(), b.conjugate(), x.conjugate())
 
+
+def jacobi_normalized(n, a, b, x):
+    r"""
+    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`
+
+    jacobi_normalized(n, alpha, beta, x) gives the nth Jacobi polynomial
+    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.
+
+    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect
+    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.
+
+    This functions returns the polynomials normilzed:
+
+    .. math::
+
+        \int_{-1}^{1}
+          P_m^{\left(\alpha, \beta\right)}(x)
+          P_n^{\left(\alpha, \beta\right)}(x)
+          (1-x)^{\alpha} (1+x)^{\beta} \mathrm{d}x
+        = \delta_{m,n}
+
+    Examples
+    ========
+
+    >>> from sympy import jacobi_normalized
+    >>> from sympy.abc import n,a,b,x
+
+    >>> jacobi_normalized(n, a, b, x)
+    jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))
+
+    See Also
+    ========
+
+    gegenbauer,
+    chebyshevt_root, chebyshevu, chebyshevu_root,
+    legendre, assoc_legendre,
+    hermite,
+    laguerre, assoc_laguerre,
+    sympy.polys.orthopolys.jacobi_poly,
+    sympy.polys.orthopolys.gegenbauer_poly
+    sympy.polys.orthopolys.chebyshevt_poly
+    sympy.polys.orthopolys.chebyshevu_poly
+    sympy.polys.orthopolys.hermite_poly
+    sympy.polys.orthopolys.legendre_poly
+    sympy.polys.orthopolys.laguerre_poly
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Jacobi_polynomials
+    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
+    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
+    """
+    nfactor = (S(2)**(a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
+               / (2*n + a + b + 1) / (factorial(n) * gamma(n + a + b + 1)))
+
+    return jacobi(n, a, b, x) / sqrt(nfactor)
+
+
 #----------------------------------------------------------------------------
 # Gegenbauer polynomials
 #
@@ -269,8 +329,6 @@ class gegenbauer(OrthogonalPolynomial):
     .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/
     """
 
-    nargs = 3
-
     @classmethod
     def eval(cls, n, a, x):
         # For negative n the polynomials vanish
@@ -289,13 +347,13 @@ class gegenbauer(OrthogonalPolynomial):
         if not n.is_Number:
             # Handle this before the general sign extraction rule
             if x == S.NegativeOne:
-                if C.re(a) > S.Half:
+                if (C.re(a) > S.Half) == True:
                     return S.ComplexInfinity
                 else:
                     # No sec function available yet
                     #return (C.cos(S.Pi*(a+n)) * C.sec(S.Pi*a) * C.gamma(2*a+n) /
                     #            (C.gamma(2*a) * C.gamma(n+1)))
-                    return cls
+                    return None
 
             # Symbolic result C^a_n(x)
             # C^a_n(-x)  --->  (-1)**n * C^a_n(x)
@@ -603,12 +661,11 @@ class chebyshevt_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-    nargs = 2
-
     @classmethod
     def eval(cls, n, k):
-        if not 0 <= k < n:
-            raise ValueError("must have 0 <= k < n")
+        if not ((0 <= k) and (k < n)):
+            raise ValueError("must have 0 <= k < n, "
+                "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(2*k + 1)/(2*n))
 
 
@@ -643,12 +700,12 @@ class chebyshevu_root(Function):
     sympy.polys.orthopolys.laguerre_poly
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, n, k):
-        if not 0 <= k < n:
-            raise ValueError("must have 0 <= k < n")
+        if not ((0 <= k) and (k < n)):
+            raise ValueError("must have 0 <= k < n, "
+                "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(k + 1)/(n + 1))
 
 #----------------------------------------------------------------------------
@@ -804,8 +861,6 @@ class assoc_legendre(Function):
     .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/
     """
 
-    nargs = 3
-
     @classmethod
     def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
@@ -848,6 +903,10 @@ class assoc_legendre(Function):
         kern = C.factorial(2*n - 2*k)/(2**n*C.factorial(n - k)*C.factorial(
             k)*C.factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * C.Sum(kern, (k, 0, C.floor((n - m)*S.Half)))
+
+    def _eval_conjugate(self):
+        n, m, x = self.args
+        return self.func(n, m.conjugate(), x.conjugate())
 
 #----------------------------------------------------------------------------
 # Hermite polynomials
@@ -1112,8 +1171,6 @@ class assoc_laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
-    nargs = 3
-
     @classmethod
     def eval(cls, n, alpha, x):
         # L_{n}^{0}(x)  --->  L_{n}(x)
@@ -1158,3 +1215,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         kern = C.RisingFactorial(
             -n, k) / (C.gamma(k + alpha + 1) * C.factorial(k)) * x**k
         return C.gamma(n + alpha + 1) / C.factorial(n) * C.Sum(kern, (k, 0, n))
+
+    def _eval_conjugate(self):
+        n, alpha, x = self.args
+        return self.func(n, alpha.conjugate(), x.conjugate())

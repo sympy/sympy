@@ -1,50 +1,43 @@
 """ Optimizations of the expression tree representation for better CSE
 opportunities.
 """
+from __future__ import print_function, division
+
 from sympy.core import Add, Basic, Expr, Mul
 from sympy.core.basic import preorder_traversal
-from sympy.core.exprtools import factor_terms
+from sympy.core.singleton import S
 from sympy.utilities.iterables import default_sort_key
 
 
-class Neg(Expr):
-    """ Stub to hold negated expression.
-    """
-    __slots__ = []
-
-
 def sub_pre(e):
-    """ Replace y - x with Neg(x - y) if -1 can be extracted from y - x.
+    """ Replace y - x with -(x - y) if -1 can be extracted from y - x.
     """
     reps = [a for a in e.atoms(Add) if a.could_extract_minus_sign()]
 
     # make it canonical
     reps.sort(key=default_sort_key)
 
-    e = e.subs([(a, Mul(-1, -a, evaluate=False)) for a in reps])
-    # now replace any persisting Adds, a, that can have -1 extracted with Neg(-a)
+    e = e.subs([(a, Mul._from_args([S.NegativeOne, -a])) for a in reps])
+    # repeat again for persisting Adds but mark these with a leading 1, -1
+    # e.g. y - x -> 1*-1*(x - y)
     if isinstance(e, Basic):
         negs = {}
         for a in sorted(e.atoms(Add), key=default_sort_key):
             if a in reps or a.could_extract_minus_sign():
-                negs[a] = Neg(-a)
+                negs[a] = Mul._from_args([S.One, S.NegativeOne, -a])
         e = e.xreplace(negs)
     return e
 
 
 def sub_post(e):
-    """ Replace Neg(x) with -x.
+    """ Replace 1*-1*x with -x.
     """
     replacements = []
     for node in preorder_traversal(e):
-        if isinstance(node, Neg):
-            replacements.append((node, -node.args[0]))
+        if isinstance(node, Mul) and \
+            node.args[0] is S.One and node.args[1] is S.NegativeOne:
+            replacements.append((node, -Mul._from_args(node.args[2:])))
     for node, replacement in replacements:
         e = e.xreplace({node: replacement})
 
     return e
-
-default_optimizations = [
-    (sub_pre, sub_post),
-    (factor_terms, None),
-]

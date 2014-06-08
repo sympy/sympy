@@ -50,7 +50,9 @@ def test_disc_on_an_incline_plane():
     coneq = [yd - R * thetad]
     m = LagrangesMethod(L, q, coneq)
     m.form_lagranges_equations()
-    assert m.rhs()[2] == 2*g*sin(alpha)/3
+    rhs = m.rhs()
+    rhs.simplify()
+    assert rhs[2] == 2*g*sin(alpha)/3
 
 
 def test_simp_pen():
@@ -190,9 +192,9 @@ def test_rolling_disc():
     t = symbols('t')
 
     assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
-    assert RHS[4].simplify() == (-8*g*sin(q2(t)) + 5*r*sin(2*q2(t)
-        )*Derivative(q1(t), t)**2 + 12*r*cos(q2(t))*Derivative(q1(t), t
-        )*Derivative(q3(t), t))/(10*r)
+    assert RHS[4].simplify() == (
+        (-8*g*sin(q2(t)) + r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
+        12*cos(q2(t))*Derivative(q3(t), t))*Derivative(q1(t), t))/(10*r))
     assert RHS[5] == (-5*cos(q2(t))*Derivative(q1(t), t) + 6*tan(q2(t)
         )*Derivative(q3(t), t) + 4*Derivative(q1(t), t)/cos(q2(t))
         )*Derivative(q2(t), t)

@@ -1,4 +1,5 @@
 """ Caching facility for SymPy """
+from __future__ import print_function, division
 
 # TODO: refactor CACHE & friends into class?
 
@@ -8,7 +9,6 @@ CACHE = []  # [] of
 
 from sympy.core.decorators import wraps
 
-
 def print_cache():
     """print cache content"""
 
@@ -16,9 +16,9 @@ def print_cache():
         item = str(item)
         head = '='*len(item)
 
-        print head
-        print item
-        print head
+        print(head)
+        print(item)
+        print(head)
 
         if not isinstance(cache, tuple):
             cache = (cache,)
@@ -28,10 +28,10 @@ def print_cache():
 
         for i, kv in enumerate(cache):
             if shown:
-                print '\n*** %i ***\n' % i
+                print('\n*** %i ***\n' % i)
 
-            for k, v in kv.iteritems():
-                print '  %s :\t%s' % (k, v)
+            for k, v in list(kv.items()):
+                print('  %s :\t%s' % (k, v))
 
 
 def clear_cache():
@@ -48,6 +48,11 @@ def clear_cache():
 
 def __cacheit_nocache(func):
     return func
+
+
+# from sympy.assumptions.assume import global_assumptions  # circular import
+from sympy.core.evaluate import global_evaluate
+_globals = (global_evaluate,)
 
 
 def __cacheit(func):
@@ -84,12 +89,20 @@ def __cacheit(func):
         if kw_args:
             keys = sorted(kw_args)
             k.extend([(x, kw_args[x], type(kw_args[x])) for x in keys])
+        if _globals:
+            k.extend([tuple(g) for g in _globals])
         k = tuple(k)
+
         try:
             return func_cache_it_cache[k]
-        except KeyError:
+        except (KeyError, TypeError):
             pass
-        func_cache_it_cache[k] = r = func(*args, **kw_args)
+        r = func(*args, **kw_args)
+        try:
+            func_cache_it_cache[k] = r
+        except TypeError: # k is unhashable
+            # Note, collections.Hashable is not smart enough to be used here.
+            pass
         return r
     return wrapper
 
@@ -116,8 +129,8 @@ def __cacheit_debug(func):
         hash(r1), hash(r2)
 
         # also see if returned values are the same
-        assert r1 == r2
-
+        if r1 != r2:
+            raise RuntimeError("Returned values are not the same")
         return r1
     return wrapper
 

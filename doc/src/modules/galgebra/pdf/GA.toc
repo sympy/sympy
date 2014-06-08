@@ -1,0 +1,35 @@
+\contentsline {chapter}{\numberline {1}What is Geometric Algebra?}{4}{chapter.1}
+\contentsline {section}{\numberline {1.1}Representation of Multivectors in \emph {sympy}}{8}{section.1.1}
+\contentsline {section}{\numberline {1.2}Vector Basis and Metric}{10}{section.1.2}
+\contentsline {section}{\numberline {1.3}Representation and Reduction of Multivector Bases}{12}{section.1.3}
+\contentsline {section}{\numberline {1.4}Base Representation of Multivectors}{14}{section.1.4}
+\contentsline {section}{\numberline {1.5}Blade Representation of Multivectors}{14}{section.1.5}
+\contentsline {section}{\numberline {1.6}Outer and Inner Products, Left and Right Contractions}{15}{section.1.6}
+\contentsline {section}{\numberline {1.7}Reverse of Multivector}{17}{section.1.7}
+\contentsline {section}{\numberline {1.8}Reciprocal Frames}{18}{section.1.8}
+\contentsline {section}{\numberline {1.9}Manifolds and Submanifolds}{19}{section.1.9}
+\contentsline {section}{\numberline {1.10}Geometric Derivative}{20}{section.1.10}
+\contentsline {subsection}{\numberline {1.10.1}Geometric Derivative on a Manifold}{21}{subsection.1.10.1}
+\contentsline {subsection}{\numberline {1.10.2}Normalizing Basis for Derivatives}{22}{subsection.1.10.2}
+\contentsline {subsection}{\numberline {1.10.3}Linear Differential Operators}{23}{subsection.1.10.3}
+\contentsline {section}{\numberline {1.11}Linear Transformations/Outermorphisms}{26}{section.1.11}
+\contentsline {section}{\numberline {1.12}Multilinear Functions (Tensors)}{27}{section.1.12}
+\contentsline {subsection}{\numberline {1.12.1}Multiliner Functions}{27}{subsection.1.12.1}
+\contentsline {subsection}{\numberline {1.12.2}Algebraic Operations}{27}{subsection.1.12.2}
+\contentsline {subsection}{\numberline {1.12.3}Covariant, Contravariant, and Mixed Representations}{28}{subsection.1.12.3}
+\contentsline {subsection}{\numberline {1.12.4}Contraction and Differentiation}{29}{subsection.1.12.4}
+\contentsline {subsection}{\numberline {1.12.5}From Vector to Tensor}{30}{subsection.1.12.5}
+\contentsline {subsection}{\numberline {1.12.6}Parallel Transport and Covariant Deriviatives}{30}{subsection.1.12.6}
+\contentsline {chapter}{\numberline {2}Module Components}{34}{chapter.2}
+\contentsline {section}{\numberline {2.1}Instantiating a Geometric Algebra}{35}{section.2.1}
+\contentsline {section}{\numberline {2.2}Instantiating a Multivector}{37}{section.2.2}
+\contentsline {section}{\numberline {2.3}Basic Multivector Class Functions}{39}{section.2.3}
+\contentsline {section}{\numberline {2.4}Basic Multivector Functions}{42}{section.2.4}
+\contentsline {section}{\numberline {2.5}Multivector Derivatives}{44}{section.2.5}
+\contentsline {section}{\numberline {2.6}Submanifolds}{45}{section.2.6}
+\contentsline {section}{\numberline {2.7}Linear Transformations}{48}{section.2.7}
+\contentsline {section}{\numberline {2.8}Differential Operators}{56}{section.2.8}
+\contentsline {section}{\numberline {2.9}Instantiating a Multi-linear Functions (Tensors)}{58}{section.2.9}
+\contentsline {section}{\numberline {2.10}Basic Multilinear Function Class Functions}{59}{section.2.10}
+\contentsline {section}{\numberline {2.11}Standard Printing}{60}{section.2.11}
+\contentsline {section}{\numberline {2.12}Latex Printing}{61}{section.2.12}

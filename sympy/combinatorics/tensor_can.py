@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.combinatorics.permutations import Permutation, _af_rmul, _af_rmuln,\
     _af_invert, _af_new
 from sympy.combinatorics.perm_groups import PermutationGroup, _orbit, \
@@ -51,12 +53,13 @@ def dummy_sgs(dummies, sym, n):
      [0, 1, 2, 3, 4, 5, 7, 6, 8, 9], [0, 1, 4, 5, 2, 3, 6, 7, 8, 9],
      [0, 1, 2, 3, 6, 7, 4, 5, 8, 9]]
     """
-    assert len(dummies) <= n
+    if len(dummies) > n:
+        raise ValueError("List too large")
     res = []
     # exchange of contravariant and covariant indices
     if sym is not None:
         for j in dummies[::2]:
-            a = range(n + 2)
+            a = list(range(n + 2))
             if sym == 1:
                 a[n] = n + 1
                 a[n + 1] = n
@@ -64,7 +67,7 @@ def dummy_sgs(dummies, sym, n):
             res.append(a)
     # rename dummy indices
     for j in dummies[:-3:2]:
-        a = range(n + 2)
+        a = list(range(n + 2))
         a[j:j + 4] = a[j + 2], a[j + 3], a[j], a[j + 1]
         res.append(a)
     return res
@@ -80,7 +83,7 @@ def _min_dummies(dummies, sym, indices):
     ========
 
     >>> from sympy.combinatorics.tensor_can import _min_dummies
-    >>> _min_dummies([range(2, 8)], [0], range(10))
+    >>> _min_dummies([list(range(2, 8))], [0], list(range(10)))
     [0, 1, 2, 2, 2, 2, 2, 2, 8, 9]
     """
     num_types = len(sym)
@@ -153,9 +156,9 @@ def transversal2coset(size, base, transversal):
             a.append(sorted(transversal[j].values()))
             j += 1
         else:
-            a.append([range(size)])
+            a.append([list(range(size))])
     j = len(a) - 1
-    while a[j] == [range(size)]:
+    while a[j] == [list(range(size))]:
         j -= 1
     return a[:j + 1]
 
@@ -380,17 +383,17 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     >>> base = [0, 2]
     >>> g = Permutation([4,2,0,1,3,5,6,7])
     >>> transversals = get_transversals(base, gens)
-    >>> double_coset_can_rep([range(6)], [0], base, gens, transversals, g)
+    >>> double_coset_can_rep([list(range(6))], [0], base, gens, transversals, g)
     [0, 1, 2, 3, 4, 5, 7, 6]
 
     >>> g = Permutation([4,1,3,0,5,2,6,7])
-    >>> double_coset_can_rep([range(6)], [0], base, gens, transversals, g)
+    >>> double_coset_can_rep([list(range(6))], [0], base, gens, transversals, g)
     0
     """
     size = g.size
     g = g.array_form
     num_dummies = size - 2
-    indices = range(num_dummies)
+    indices = list(range(num_dummies))
     all_metrics_with_sym = all([_ is not None for _ in sym])
     num_types = len(sym)
     dumx = dummies[:]
@@ -406,7 +409,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     for i in range(num_types):
         dsgsx.extend(dummy_sgs(dumx[i], sym[i], num_dummies))
     ginv = _af_invert(g)
-    idn = range(size)
+    idn = list(range(size))
     # TAB = list of entries (s, d, h) where h = _af_rmuln(d,g,s)
     # for short, in the following d*g*s means _af_rmuln(d,g,s)
     TAB = [(idn, idn, g)]
@@ -600,7 +603,7 @@ def canonical_free(base, gens, g, num_free):
 
 
 def _get_map_slots(size, fixed_slots):
-    res = range(size)
+    res = list(range(size))
     pos = 0
     for i in range(size):
         if i in fixed_slots:
@@ -613,7 +616,7 @@ def _get_map_slots(size, fixed_slots):
 def _lift_sgens(size, fixed_slots, free, s):
     a = []
     j = k = 0
-    fd = zip(fixed_slots, free)
+    fd = list(zip(fixed_slots, free))
     fd = [y for x, y in sorted(fd)]
     num_free = len(free)
     for i in range(size):
@@ -785,7 +788,7 @@ def canonicalize(g, dummies, msym, *v):
     for dumx in dummies:
         flat_dummies.extend(dumx)
 
-    if flat_dummies and flat_dummies != range(flat_dummies[0], flat_dummies[-1] + 1):
+    if flat_dummies and flat_dummies != list(range(flat_dummies[0], flat_dummies[-1] + 1)):
         raise ValueError('dummies is not valid')
 
     # slot symmetry of the tensor
@@ -913,13 +916,13 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     """
     s = 2 if signed else 0
     n1 = gens1[0].size - s
-    base = base1[:]
+    base = list(base1)
     base += [x + n1 for x in base2]
     gens1 = [h._array_form for h in gens1]
     gens2 = [h._array_form for h in gens2]
     gens = perm_af_direct_product(gens1, gens2, signed)
     size = len(gens[0])
-    id_af = range(size)
+    id_af = list(range(size))
     gens = [h for h in gens if h != id_af]
     if not gens:
         gens = [id_af]
@@ -945,13 +948,13 @@ def get_symmetric_group_sgs(n, antisym=False):
     ([0, 1], [Permutation(4)(0, 1), Permutation(4)(1, 2)])
     """
     if n == 1:
-        return [], [_af_new(range(3))]
+        return [], [_af_new(list(range(3)))]
     gens = [Permutation(n - 1)(i, i + 1)._array_form for i in range(n - 1)]
     if antisym == 0:
         gens = [x + [n, n + 1] for x in gens]
     else:
         gens = [x + [n + 1, n] for x in gens]
-    base = range(n - 1)
+    base = list(range(n - 1))
     return base, [_af_new(h) for h in gens]
 
 riemann_bsgs = [0, 2], [Permutation(0, 1)(4, 5), Permutation(2, 3)(4, 5),
@@ -1077,7 +1080,7 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
         n = len(list_free_indices)
         size = gens[0].size
         size = n * (gens[0].size - 2) + 2
-        return size, [], [_af_new(range(size))]
+        return size, [], [_af_new(list(range(size)))]
 
     # if any(list_free_indices) one needs to compute the pointwise
     # stabilizer, so G is needed
@@ -1090,17 +1093,17 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     # indices
     no_free = []
     size = gens[0].size
-    id_af = range(size)
+    id_af = list(range(size))
     num_indices = size - 2
     if not list_free_indices[0]:
-        no_free.append(range(num_indices))
+        no_free.append(list(range(num_indices)))
     res_base, res_gens = _get_bsgs(G, base, gens, list_free_indices[0])
     for i in range(1, len(list_free_indices)):
         base1, gens1 = _get_bsgs(G, base, gens, list_free_indices[i])
         res_base, res_gens = bsgs_direct_product(res_base, res_gens,
                                                  base1, gens1, 1)
         if not list_free_indices[i]:
-            no_free.append(range(size - 2, size - 2 + num_indices))
+            no_free.append(list(range(size - 2, size - 2 + num_indices)))
         size += num_indices
     nr = size - 2
     res_gens = [h for h in res_gens if h._array_form != id_af]
@@ -1121,16 +1124,17 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     for i in range(len(no_free) - 1):
         ind1 = no_free[i]
         ind2 = no_free[i + 1]
-        a = range(ind1[0])
+        a = list(range(ind1[0]))
         a.extend(ind2)
         a.extend(ind1)
         base_comm.append(ind1[0])
-        a.extend(range(ind2[-1] + 1, nr))
+        a.extend(list(range(ind2[-1] + 1, nr)))
         if sym == 0:
             a.extend([nr, nr + 1])
         else:
             a.extend([nr + 1, nr])
         res_gens.append(_af_new(a))
+    res_base = list(res_base)
     # each base is ordered; order the union of the two bases
     for i in base_comm:
         if i not in res_base:
@@ -1172,7 +1176,7 @@ def gens_products(*v):
         res_base, res_gens = bsgs_direct_product(res_base, res_gens, base,
                                                  gens, 1)
     res_size = res_gens[0].size
-    id_af = range(res_size)
+    id_af = list(range(res_size))
     res_gens = [h for h in res_gens if h != id_af]
     if not res_gens:
         res_gens = [id_af]

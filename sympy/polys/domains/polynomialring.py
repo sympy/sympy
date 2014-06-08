@@ -1,36 +1,61 @@
 """Implementation of :class:`PolynomialRing` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
-from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
+from sympy.utilities import public
+
+@public
 class PolynomialRing(Ring, CompositeDomain):
     """A class for representing multivariate polynomial rings. """
 
-    is_Poly      = True
+    is_PolynomialRing = is_Poly = True
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring  = True
+    has_assoc_Field = True
 
-    def __init__(self, ring):
+    def __init__(self, domain_or_ring, symbols=None, order=None):
+        from sympy.polys.rings import PolyRing
+
+        if isinstance(domain_or_ring, PolyRing) and symbols is None and order is None:
+            ring = domain_or_ring
+        else:
+            ring = PolyRing(symbols, domain_or_ring, order)
+
+        self.ring = ring
         self.dtype = ring.dtype
-        self.ring  = ring
 
-        self.dom  = ring.domain
-        self.gens = ring.symbols
+        self.gens = ring.gens
+        self.ngens = ring.ngens
+        self.symbols = ring.symbols
+        self.domain = ring.domain
 
-        self.zero = ring.zero
-        self.one  = ring.one
-
+        # TODO: remove this
+        self.dom = self.domain
 
     def new(self, element):
         return self.ring.ring_new(element)
 
+    @property
+    def zero(self):
+        return self.ring.zero
+
+    @property
+    def one(self):
+        return self.ring.one
+
+    @property
+    def order(self):
+        return self.ring.order
+
     def __str__(self):
-        return str(self.dom) + '[' + ','.join(map(str, self.gens)) + ']'
+        return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
+        return hash((self.__class__.__name__, self.dtype, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
@@ -47,27 +72,27 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
         """Convert a Python `Fraction` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
-        if K1.dom == K0:
+        if K1.domain == K0:
             return K1.new(a)
 
     def from_PolynomialRing(K1, a, K0):
@@ -79,8 +104,10 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
-        if K0.denom(a) == 1:
-            return K1.from_PolynomialRing(K0.numer(a), K0.field.ring.to_domain())
+        denom = K0.denom(a)
+
+        if denom.is_ground:
+            return K1.from_PolynomialRing(K0.numer(a)/denom, K0.field.ring.to_domain())
         else:
             return None
 
@@ -88,31 +115,21 @@ class PolynomialRing(Ring, CompositeDomain):
         """Returns a field associated with `self`. """
         return self.ring.to_field().to_domain()
 
-    def poly_ring(self, *symbols): # TODO:, order=lex):
-        """Returns a polynomial ring, i.e. `K[X]`. """
-        from sympy.polys.rings import PolyRing
-        return PolyRing(symbols, self.ring, order).to_domain()
-
-    def frac_field(self, *symbols): # TODO:, order=lex):
-        """Returns a fraction field, i.e. `K(X)`. """
-        from sympy.polys.fields import FracField
-        return FracField(symbols, self.ring, order).to_domain()
-
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """
-        return self.dom.is_positive(a.LC)
+        return self.domain.is_positive(a.LC)
 
     def is_negative(self, a):
         """Returns True if `LC(a)` is negative. """
-        return self.dom.is_negative(a.LC)
+        return self.domain.is_negative(a.LC)
 
     def is_nonpositive(self, a):
         """Returns True if `LC(a)` is non-positive. """
-        return self.dom.is_nonpositive(a.LC)
+        return self.domain.is_nonpositive(a.LC)
 
     def is_nonnegative(self, a):
         """Returns True if `LC(a)` is non-negative. """
-        return self.dom.is_nonnegative(a.LC)
+        return self.domain.is_nonnegative(a.LC)
 
     def gcdex(self, a, b):
         """Extended GCD of `a` and `b`. """
@@ -128,4 +145,4 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def factorial(self, a):
         """Returns factorial of `a`. """
-        return self.dtype(self.dom.factorial(a))
+        return self.dtype(self.domain.factorial(a))

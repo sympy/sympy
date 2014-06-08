@@ -12,8 +12,8 @@ performance with a one-button user interface, i.e.
 
     >>> from sympy.abc import x,y
     >>> expr = ((x - y)**(25)).expand()
-    >>> binary_callable = autowrap(expr)           # doctest: +SKIP
-    >>> binary_callable(1, 2)                      # doctest: +SKIP
+    >>> binary_callable = autowrap(expr)
+    >>> binary_callable(1, 2)
     -1.0
 
 The callable returned from autowrap() is a binary python function, not a
@@ -24,11 +24,11 @@ invoked when a numerical evaluation is requested with evalf(), or with
 lambdify().
 
     >>> from sympy.utilities.autowrap import binary_function
-    >>> f = binary_function('f', expr)             # doctest: +SKIP
-    >>> 2*f(x, y) + y                              # doctest: +SKIP
+    >>> f = binary_function('f', expr)
+    >>> 2*f(x, y) + y
     y + 2*f(x, y)
-    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2}) # doctest: +SKIP
-    0.0
+    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})
+    0.e-110
 
 The idea is that a SymPy user will primarily be interested in working with
 mathematical expressions, and should not have to learn details about wrapping
@@ -64,19 +64,24 @@ When is this module NOT the best approach?
        don't need the binaries for another project.
 
 """
-from __future__ import with_statement
+
+from __future__ import print_function, division
+
+_doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
 
 import sys
 import os
 import shutil
 import tempfile
-import subprocess
+from subprocess import STDOUT, CalledProcessError
 
+from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument,
     CodeGenArgumentListError, Result
 )
 from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.decorator import doctest_depends_on
 from sympy import C
 
 
@@ -146,18 +151,14 @@ class CodeWrapper:
     def _process_files(self, routine):
         command = self.command
         command.extend(self.flags)
-        null = open(os.devnull, 'w')
         try:
-            if self.quiet:
-                retcode = subprocess.call(
-                    command, stdout=null, stderr=subprocess.STDOUT)
-            else:
-                retcode = subprocess.call(command)
-        except OSError:
-            retcode = 1
-        if retcode:
+            retoutput = check_output(command, stderr=STDOUT)
+        except CalledProcessError as e:
             raise CodeWrapError(
-                "Error while executing command: %s" % " ".join(command))
+                "Error while executing command: %s. Command output is:\n%s" % (
+                    " ".join(command), e.output))
+        if not self.quiet:
+            print(retoutput)
 
 
 class DummyWrapper(CodeWrapper):
@@ -178,7 +179,7 @@ def %(name)s():
             printed = ", ".join(
                 [str(res.expr) for res in routine.result_variables])
             # convert OutputArguments to return value like f2py
-            inargs = filter(lambda x: not isinstance(
+            args = filter(lambda x: not isinstance(
                 x, OutputArgument), routine.arguments)
             retvals = []
             for val in routine.result_variables:
@@ -187,12 +188,12 @@ def %(name)s():
                 else:
                     retvals.append(val.result_var)
 
-            print >> f, DummyWrapper.template % {
+            print(DummyWrapper.template % {
                 'name': routine.name,
                 'expr': printed,
-                'args': ", ".join([str(arg.name) for arg in inargs]),
+                'args': ", ".join([str(a.name) for a in args]),
                 'retvals': ", ".join([str(val) for val in retvals])
-            }
+            }, end="", file=f)
 
     def _process_files(self, routine):
         return
@@ -233,8 +234,8 @@ setup(
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
         with open('setup.py', 'w') as f:
-            print >> f, CythonCodeWrapper.setup_template % {
-                'args': ", ".join(ext_args)}
+            print(CythonCodeWrapper.setup_template % {
+                'args': ", ".join(ext_args)}, file=f)
 
     @classmethod
     def _get_wrapped_function(cls, mod):
@@ -261,38 +262,34 @@ setup(
         """
         for routine in routines:
             prototype = self.generator.get_prototype(routine)
-            origname = routine.name
-            routine.name = "%s_c" % origname
-            prototype_c = self.generator.get_prototype(routine)
-            routine.name = origname
 
             # declare
-            print >> f, 'cdef extern from "%s.h":' % prefix
-            print >> f, '   %s' % prototype
+            print('cdef extern from "%s.h":' % prefix, file=f)
+            print('   %s' % prototype, file=f)
             if empty:
-                print >> f
+                print(file=f)
 
             # wrap
             ret, args_py = self._split_retvals_inargs(routine.arguments)
             args_c = ", ".join([str(a.name) for a in routine.arguments])
-            print >> f, "def %s_c(%s):" % (routine.name,
-                    ", ".join(self._declare_arg(arg) for arg in args_py))
+            print("def %s_c(%s):" % (routine.name,
+                ", ".join(self._declare_arg(arg) for arg in args_py)), file=f)
             for r in ret:
                 if not r in args_py:
-                    print >> f, "   cdef %s" % self._declare_arg(r)
+                    print("   cdef %s" % self._declare_arg(r), file=f)
             rets = ", ".join([str(r.name) for r in ret])
             if routine.results:
                 call = '   return %s(%s)' % (routine.name, args_c)
                 if rets:
-                    print >> f, call + ', ' + rets
+                    print(call + ', ' + rets, file=f)
                 else:
-                    print >> f, call
+                    print(call, file=f)
             else:
-                print >> f, '   %s(%s)' % (routine.name, args_c)
-                print >> f, '   return %s' % rets
+                print('   %s(%s)' % (routine.name, args_c), file=f)
+                print('   return %s' % rets, file=f)
 
             if empty:
-                print >> f
+                print(file=f)
     dump_pyx.extension = "pyx"
 
     def _split_retvals_inargs(self, args):
@@ -323,7 +320,8 @@ class F2PyCodeWrapper(CodeWrapper):
     @property
     def command(self):
         filename = self.filename + '.' + self.generator.code_extension
-        command = ["f2py", "-m", self.module_name, "-c", filename]
+        args = ['-c', '-m', self.module_name, filename]
+        command = [sys.executable, "-c", "import numpy.f2py as f2py2e;f2py2e.main()"]+args
         return command
 
     def _prepare_files(self, routine):
@@ -340,6 +338,7 @@ def _get_code_wrapper_class(backend):
     return wrappers[backend.upper()]
 
 
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
     expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
         verbose=False, helpers=[]):
@@ -377,8 +376,8 @@ def autowrap(
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
-    >>> binary_func = autowrap(expr)               # doctest: +SKIP
-    >>> binary_func(1, 4, 2)                       # doctest: +SKIP
+    >>> binary_func = autowrap(expr)
+    >>> binary_func(1, 4, 2)
     -1.0
 
     """
@@ -388,7 +387,7 @@ def autowrap(
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
     try:
         routine = Routine('autofunc', expr, args)
-    except CodeGenArgumentListError, e:
+    except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
         # them to return values anyway.
@@ -406,6 +405,7 @@ def autowrap(
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
@@ -413,21 +413,21 @@ def binary_function(symfunc, expr, **kwargs):
     autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
-    >>> f = binary_function('f', expr)             # doctest: +SKIP
-    >>> type(f)                                    # doctest: +SKIP
-    <class 'sympy.core.function.FunctionClass'>
-    >>> 2*f(x, y)                                  # doctest: +SKIP
+    >>> f = binary_function('f', expr)
+    >>> type(f)
+    <class 'sympy.core.function.UndefinedFunction'>
+    >>> 2*f(x, y)
     2*f(x, y)
-    >>> f(x, y).evalf(2, subs={x: 1, y: 2})        # doctest: +SKIP
+    >>> f(x, y).evalf(2, subs={x: 1, y: 2})
     -1.0
     """
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
-
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def ufuncify(args, expr, **kwargs):
     """
     Generates a binary ufunc-like lambda function for numpy arrays
@@ -457,10 +457,16 @@ def ufuncify(args, expr, **kwargs):
     ========
 
     >>> from sympy.utilities.autowrap import ufuncify
-    >>> from sympy.abc import x, y, z
-    >>> f = ufuncify([x, y], y + x**2)             # doctest: +SKIP
-    >>> f([1, 2, 3], 2)                            # doctest: +SKIP
-    array([  3.,   6.,  11. ])
+    >>> from sympy.abc import x, y
+    >>> import numpy as np
+    >>> f = ufuncify([x, y], y + x**2)
+    >>> f([1, 2, 3], 2)
+    [ 3.  6.  11.]
+    >>> a = f(np.arange(5), 3)
+    >>> isinstance(a, np.ndarray)
+    True
+    >>> print a
+    [ 3. 4. 7. 12. 19.]
 
     """
     y = C.IndexedBase(C.Dummy('y'))
@@ -475,6 +481,9 @@ def ufuncify(args, expr, **kwargs):
         args = [args]
     else:
         args = list(args)
+
+    # ensure correct order of arguments
+    kwargs['args'] = [y, x] + args[1:] + [m]
 
     # first argument accepts an array
     args[0] = x[i]

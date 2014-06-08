@@ -1,5 +1,7 @@
 """Tools to assist importing optional external modules."""
 
+from __future__ import print_function, division
+
 import sys
 
 # Override these in the module to change the default warning behavior.
@@ -77,7 +79,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     >>> numpy = import_module('numpy')
 
-    >>> numpy = import_module('numpy', min_python_version=(2, 6),
+    >>> numpy = import_module('numpy', min_python_version=(2, 7),
     ... warn_old_version=False)
 
     >>> numpy = import_module('numpy', min_module_version='1.5',
@@ -124,13 +126,20 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     try:
         mod = __import__(module, **__import__kwargs)
+
+        ## there's something funny about imports with matplotlib and py3k. doing
+        ##    from matplotlib import collections
+        ## gives python's stdlib collections module. explicitly re-importing
+        ## the module fixes this.
+        from_list = __import__kwargs.get('fromlist', tuple())
+        for submod in from_list:
+            if submod == 'collections' and mod.__name__ == 'matplotlib':
+                __import__(module + '.' + submod)
     except ImportError:
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
         return
-    # TODO: After 2.5 is dropped, use new 'as' keyword
-    #except catch as e:
-    except catch, e:
+    except catch as e:
         if warn_not_installed:
             warnings.warn(
                 "%s module could not be used (%s)" % (module, repr(e)))

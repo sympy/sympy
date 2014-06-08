@@ -1,18 +1,23 @@
-from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
-from sympy.core.compatibility import as_int
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt
-from sympy.simplify import simplify, nsimplify
-from sympy.geometry.exceptions import GeometryError
-from sympy.matrices import Matrix
-from sympy.solvers import solve
-from sympy.utilities.iterables import has_variety, has_dups
+from __future__ import print_function, division
 
-from entity import GeometryEntity
-from point import Point
-from ellipse import Circle
-from line import Line, Segment
-from util import _symbol
+from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
+from sympy.core.compatibility import as_int, xrange
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
+from sympy.geometry.exceptions import GeometryError
+from sympy.logic import And
+from sympy.matrices import Matrix
+from sympy.simplify import simplify
+from sympy.solvers import solve
+from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import has_variety, has_dups, uniq
+
+from .entity import GeometryEntity
+from .point import Point
+from .ellipse import Circle
+from .line import Line, Segment
+from .util import _symbol
 
 import warnings
 
@@ -140,14 +145,15 @@ class Polygon(GeometryEntity):
                 got.add(p)
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
             if b not in shared and Point.is_collinear(a, b, c):
-                nodup[i] = a
-                nodup[i + 1] = None
                 nodup.pop(i + 1)
-            i += 1
+                if a == c:
+                    nodup.pop(i)
+            else:
+                i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(nodup)
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -164,24 +170,33 @@ class Polygon(GeometryEntity):
         # random set of segments since only those sides that are not
         # part of the convex hull can possibly intersect with other
         # sides of the polygon...but for now we use the n**2 algorithm
-        # and check all sides with intersection with any preceding sides
-        hit = _symbol('hit')
-        if not rv.is_convex:
+        # and check if any side intersects with any preceding side,
+        # excluding the ones it is connected to
+        try:
+            convex = rv.is_convex()
+        except ValueError:
+            convex = True
+        if not convex:
             sides = rv.sides
             for i, si in enumerate(sides):
-                pts = si[0], si[1]
-                ai = si.arbitrary_point(hit)
-                for j in xrange(i):
+                pts = si.args
+                # exclude the sides connected to si
+                for j in xrange(1 if i == len(sides) - 1 else 0, i - 1):
                     sj = sides[j]
-                    if sj[0] not in pts and sj[1] not in pts:
-                        aj = si.arbitrary_point(hit)
-                        tx = (solve(ai[0] - aj[0]) or [S.Zero])[0]
-                        if tx.is_number and 0 <= tx <= 1:
-                            ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
-                            if (tx or ty) and ty.is_number and 0 <= ty <= 1:
-                                print ai, aj
-                                raise GeometryError(
-                                    "Polygon has intersecting sides.")
+                    if sj.p1 not in pts and sj.p2 not in pts:
+                        hit = si.intersection(sj)
+                        if not hit:
+                            continue
+                        hit = hit[0]
+                        # don't complain unless the intersection is definite;
+                        # if there are symbols present then the intersection
+                        # might not occur; this may not be necessary since if
+                        # the convex test passed, this will likely pass, too.
+                        # But we are about to raise an error anyway so it
+                        # won't matter too much.
+                        if all(i.is_number for i in hit.args):
+                            raise GeometryError(
+                                "Polygon has intersecting sides.")
 
         return rv
 
@@ -219,6 +234,16 @@ class Polygon(GeometryEntity):
             area += x1*y2 - x2*y1
         return simplify(area) / 2
 
+    @staticmethod
+    def _isright(a, b, c):
+        ba = b - a
+        ca = c - a
+        t_area = simplify(ba.x*ca.y - ca.x*ba.y)
+        res = t_area.is_nonpositive
+        if res is None:
+            raise ValueError("Can't determine orientation")
+        return res
+
     @property
     def angles(self):
         """The internal angle at each vertex.
@@ -249,21 +274,15 @@ class Polygon(GeometryEntity):
 
         """
 
-        def _isright(a, b, c):
-            ba = b - a
-            ca = c - a
-            t_area = ba.x*ca.y - ca.x*ba.y
-            return bool(t_area <= 0)
-
         # Determine orientation of points
         args = self.vertices
-        cw = _isright(args[-1], args[0], args[1])
+        cw = self._isright(args[-1], args[0], args[1])
 
         ret = {}
         for i in xrange(len(args)):
             a, b, c = args[i - 2], args[i - 1], args[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
-            if cw ^ _isright(a, b, c):
+            if cw ^ self._isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
             else:
                 ret[b] = ang
@@ -437,17 +456,11 @@ class Polygon(GeometryEntity):
 
         """
 
-        def _isright(a, b, c):
-            ba = b - a
-            ca = c - a
-            t_area = simplify(ba.x*ca.y - ca.x*ba.y)
-            return bool(t_area <= 0)
-
         # Determine orientation of points
         args = self.vertices
-        cw = _isright(args[-2], args[-1], args[0])
+        cw = self._isright(args[-2], args[-1], args[0])
         for i in xrange(1, len(args)):
-            if cw ^ _isright(args[i - 2], args[i - 1], args[i]):
+            if cw ^ self._isright(args[i - 2], args[i - 1], args[i]):
                 return False
 
         return True
@@ -594,7 +607,7 @@ class Polygon(GeometryEntity):
             pt = s.arbitrary_point(parameter).subs(
                 t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append(
-                (pt, (perim_fraction_start <= t < perim_fraction_end)))
+                (pt, (And(perim_fraction_start <= t, t < perim_fraction_end))))
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
@@ -664,7 +677,7 @@ class Polygon(GeometryEntity):
             inter = side.intersection(o)
             if inter is not None:
                 res.extend(inter)
-        return res
+        return list(uniq(res))
 
     def distance(self, o):
         """
@@ -838,7 +851,7 @@ class Polygon(GeometryEntity):
             e2_angle = pi - support_line.angle_between(Line(
                 e2_current, e2_next))
 
-            if e1_angle < e2_angle:
+            if (e1_angle < e2_angle) is True:
                 support_line = Line(e1_current, e1_next)
                 e1_segment = Segment(e1_current, e1_next)
                 min_dist_current = e1_segment.distance(e2_current)
@@ -852,7 +865,7 @@ class Polygon(GeometryEntity):
                 else:
                     e1_current = e1_next
                     e1_next = e1_connections[e1_next][1]
-            elif e1_angle > e2_angle:
+            elif (e1_angle > e2_angle) is True:
                 support_line = Line(e2_next, e2_current)
                 e2_segment = Segment(e2_current, e2_next)
                 min_dist_current = e2_segment.distance(e1_current)
@@ -1077,6 +1090,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> square = RegularPolygon((0, 0), 1, 4)
         >>> square.area
@@ -1085,7 +1099,7 @@ class RegularPolygon(Polygon):
         True
         """
         c, r, n, rot = self.args
-        return n*self.length**2/(4*tan(pi/n))
+        return sign(r)*n*self.length**2/(4*tan(pi/n))
 
     @property
     def length(self):
@@ -1097,6 +1111,7 @@ class RegularPolygon(Polygon):
 
         Examples
         ========
+
         >>> from sympy.geometry import RegularPolygon
         >>> from sympy import sqrt
         >>> s = square_in_unit_circle = RegularPolygon((0, 0), 1, 4)
@@ -1133,6 +1148,8 @@ class RegularPolygon(Polygon):
         Point(0, 0)
         """
         return self._center
+
+    centroid = center
 
     @property
     def circumcenter(self):
@@ -1512,6 +1529,25 @@ class RegularPolygon(Polygon):
         r *= x
         return self.func(c, r, n, rot)
 
+    def reflect(self, line):
+        """Override GeometryEntity.reflect since this is not made of only
+        points.
+
+        >>> from sympy import RegularPolygon, Line
+
+        >>> RegularPolygon((0, 0), 1, 4).reflect(Line((0, 1), slope=-2))
+        RegularPolygon(Point(4/5, 2/5), -1, 4, acos(3/5))
+
+        """
+        c, r, n, rot = self.args
+        cc = c.reflect(line)
+        v = self.vertices[0]
+        vv = v.reflect(line)
+        # see how much it must get spun at the new center
+        ang = Segment(cc, vv).angle_between(Segment(c, v))
+        rot = (rot + ang + pi) % (2*pi/n)
+        return self.func(cc, -r, n, rot)
+
     @property
     def vertices(self):
         """The vertices of the RegularPolygon.
@@ -1537,7 +1573,7 @@ class RegularPolygon(Polygon):
 
         """
         c = self._center
-        r = self._radius
+        r = abs(self._radius)
         rot = self._rot
         v = 2*S.Pi/self._n
 
@@ -1614,11 +1650,11 @@ class Triangle(Polygon):
     def __new__(cls, *args, **kwargs):
         if len(args) != 3:
             if 'sss' in kwargs:
-                return _sss(*[nsimplify(a) for a in kwargs['sss']])
+                return _sss(*[simplify(a) for a in kwargs['sss']])
             if 'asa' in kwargs:
-                return _asa(*[nsimplify(a) for a in kwargs['asa']])
+                return _asa(*[simplify(a) for a in kwargs['asa']])
             if 'sas' in kwargs:
-                return _sas(*[nsimplify(a) for a in kwargs['sas']])
+                return _sas(*[simplify(a) for a in kwargs['sas']])
             msg = "Triangle instantiates with three points or a valid keyword."
             raise GeometryError(msg)
 
@@ -1636,14 +1672,15 @@ class Triangle(Polygon):
         # remove collinear points
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            a, b, c = sorted(
+                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
             if Point.is_collinear(a, b, c):
                 nodup[i] = a
                 nodup[i + 1] = None
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = list(filter(lambda x: x is not None, nodup))
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -2145,9 +2182,9 @@ class Triangle(Polygon):
         """
         s = self.sides
         v = self.vertices
-        return {v[0]: Segment(s[1].midpoint, v[0]),
-                v[1]: Segment(s[2].midpoint, v[1]),
-                v[2]: Segment(s[0].midpoint, v[2])}
+        return {v[0]: Segment(v[0], s[1].midpoint),
+                v[1]: Segment(v[1], s[2].midpoint),
+                v[2]: Segment(v[2], s[0].midpoint)}
 
     @property
     def medial(self):

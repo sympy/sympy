@@ -1,5 +1,5 @@
 """ The core's core. """
-from sympy.core.compatibility import cmp
+from __future__ import print_function, division
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
@@ -108,8 +108,7 @@ class BasicMeta(BasicType):
             return -1
         n1 = cls.__name__
         n2 = other.__name__
-        c = cmp(n1, n2)
-        if not c:
+        if n1 == n2:
             return 0
 
         UNKNOWN = len(ordering_of_classes) + 1
@@ -122,8 +121,8 @@ class BasicMeta(BasicType):
         except ValueError:
             i2 = UNKNOWN
         if i1 == UNKNOWN and i2 == UNKNOWN:
-            return c
-        return cmp(i1, i2)
+            return (n1 > n2) - (n1 < n2)
+        return (i1 > i2) - (i1 < i2)
 
     def __lt__(cls, other):
         if cls.__cmp__(other) == -1:

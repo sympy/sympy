@@ -1,11 +1,10 @@
-from __future__ import with_statement
-
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.abc import a, b, c, d, k, l, m, n
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.functions.elementary.integers import floor
 from sympy.assumptions import assuming, Q
+
 
 X = MatrixSymbol('X', n, m)
 Y = MatrixSymbol('Y', m, k)
@@ -39,6 +38,7 @@ def test_slicing():
 
     assert X[::2, ::2].shape == (floor(n/2), floor(m/2))
     assert X[2, :] == MatrixSlice(X, 2, (0, m))
+    assert X[k, :] == MatrixSlice(X, k, (0, m))
 
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)
@@ -46,6 +46,7 @@ def test_exceptions():
     raises(IndexError, lambda: X[0:9, 22])
     raises(IndexError, lambda: X[-1:5, 2])
 
+@XFAIL
 def test_symmetry():
     X = MatrixSymbol('x', 10, 10)
     Y = X[:5, 5:]

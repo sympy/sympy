@@ -1,7 +1,9 @@
-import gamma_functions
-import error_functions
-import zeta_functions
-import tensor_functions
-import delta_functions
+from . import gamma_functions
+from . import error_functions
+from . import zeta_functions
+from . import tensor_functions
+from . import delta_functions
+from . import elliptic_integrals
+from . import beta_functions
 
-import polynomials
+from . import polynomials

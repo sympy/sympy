@@ -22,12 +22,13 @@ tests = [
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.specfun.tests',
-    'sympy.statistics.tests',
     'sympy.test_external',
     'sympy.utilities.tests',
     ]
 
 """
+
+from __future__ import print_function
 
 from glob import glob
 
@@ -57,7 +58,7 @@ for x in get_paths():
 g = [".".join(x.split("/")[:-1]) for x in g]
 g = list(set(g))
 g.sort()
-print "tests = ["
+print("tests = [")
 for x in g:
-    print "    '%s'," % x
-print "    ]"
+    print("    '%s'," % x)
+print("    ]")

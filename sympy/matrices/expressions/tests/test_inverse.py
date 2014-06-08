@@ -3,6 +3,7 @@ from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices.expressions import MatrixSymbol, Inverse
 from sympy.matrices import eye, Identity, Matrix, ShapeError
 from sympy.utilities.pytest import raises
+from sympy import refine, Q
 
 n, m, l = symbols('n m l', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -36,3 +37,7 @@ def test_inverse():
 
     assert Inverse(eye(3)).doit() == eye(3)
     assert Inverse(eye(3)).doit(deep=False) == eye(3)
+
+
+def test_refine():
+    assert refine(C.I, Q.orthogonal(C)) == C.T

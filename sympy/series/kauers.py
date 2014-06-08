@@ -1,20 +1,22 @@
+from __future__ import print_function, division
+
 from sympy import expand
 from sympy import diff
-
+from sympy import Sum
 
 def finite_diff(expression, variable, increment=1):
     """
-    Takes as input the expression and the variable used in constructing the expression
-    and returns the diffrence between function's value when the input is incremented
-    to 1 and the original function value. More specifically, it takes as input the
-    function f(x) expression and x used in function expression as variable and returns
-    f(x + 1)-f(x).If you want an increment other than 1, supply it as a
-    third argument to the finite_diff
+    Takes as input a polynomial expression and the variable used to construct
+    it and returns the difference between function's value when the input is
+    incremented to 1 and the original function value. If you want an increment
+    other than one supply it as a third argument.
 
     Examples
     =========
-    >>> from sympy.abc import x, y, z
+
+    >>> from sympy.abc import x, y, z, k, n
     >>> from sympy.series.kauers import finite_diff
+    >>> from  sympy import Sum
     >>> finite_diff(x**2, x)
     2*x + 1
     >>> finite_diff(y**3 + 2*y**2 + 3*y + 4, y)
@@ -28,3 +30,29 @@ def finite_diff(expression, variable, increment=1):
     expression2 = expression.subs(variable, variable + increment)
     expression2 = expression2.expand()
     return expression2 - expression
+
+def finite_diff_kauers(sum):
+    """
+    Takes as input a Sum instance and returns the difference between the sum
+    with the upper index incremented by 1 and the original sum. For example,
+    if S(n) is a sum, then finite_diff_kauers will return S(n + 1) - S(n).
+
+    Examples
+    ========
+
+    >>> from sympy.series.kauers import finite_diff_kauers
+    >>> from sympy import Sum
+    >>> from sympy.abc import x, y, m, n, k
+    >>> finite_diff_kauers(Sum(k, (k, 1, n)))
+    n + 1
+    >>> finite_diff_kauers(Sum(1/k, (k, 1, n)))
+    1/(n + 1)
+    >>> finite_diff_kauers(Sum((x*y**2), (x, 1, n), (y, 1, m)))
+    (m + 1)**2*(n + 1)
+    >>> finite_diff_kauers(Sum((x*y), (x, 1, m), (y, 1, n)))
+    (m + 1)*(n + 1)
+    """
+    function = sum.function
+    for l in sum.limits:
+        function = function.subs(l[0], l[- 1] + 1)
+    return function

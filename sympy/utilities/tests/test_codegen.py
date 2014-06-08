@@ -1,9 +1,9 @@
-from StringIO import StringIO
-
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
-from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
-    CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
-    InOutArgument
+from sympy.core.compatibility import StringIO
+from sympy import erf, Integral
+from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
+    CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
+    InOutArgument)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
@@ -48,6 +48,10 @@ def test_Routine_argument_order():
     i = Idx('i', m)
     r = Routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
     assert [ arg.name for arg in r.arguments ] == [B.label, A.label, m]
+
+    expr = Integral(x*y*z, (x, 1, 2), (y, 1, 3))
+    r = Routine('test', Eq(a, expr), argument_sequence=[z, x, a, y])
+    assert [ arg.name for arg in r.arguments ] == [z, x, a, y]
 
 
 def test_empty_c_code():
@@ -145,7 +149,7 @@ def test_simple_c_header():
 def test_simple_c_codegen():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    result = codegen(("test", (x + y)*z), "C", "file", header=False, empty=False)
+    result = codegen(("test", expr), "C", "file", header=False, empty=False)
     expected = [
         ("file.c",
         "#include \"file.h\"\n"
@@ -181,7 +185,7 @@ def test_no_results_c():
 def test_ansi_math1_codegen():
     # not included: log10
     from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
-        sin, sinh, sqrt, tan, tanh, N, Abs)
+        sin, sinh, sqrt, tan, tanh, Abs)
     x = symbols('x')
     name_expr = [
         ("test_fabs", Abs(x)),
@@ -236,7 +240,7 @@ def test_ansi_math1_codegen():
 
 def test_ansi_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2, N
+    from sympy import atan2
     x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x, y)),
@@ -259,7 +263,7 @@ def test_ansi_math2_codegen():
 
 
 def test_complicated_codegen():
-    from sympy import sin, cos, tan, N
+    from sympy import sin, cos, tan
     x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
@@ -345,16 +349,16 @@ def test_loops_c():
         '   }\n'
         '   for (int i=0; i<m; i++){\n'
         '      for (int j=0; j<n; j++){\n'
-        '         y[i] = y[i] + %(rhs)s;\n'
+        '         y[i] = %(rhs)s + y[i];\n'
         '      }\n'
         '   }\n'
         '}\n'
     )
 
-    assert (code == expected % {'rhs': 'A[i*n + j]*x[j]'} or
-            code == expected % {'rhs': 'A[j + i*n]*x[j]'} or
-            code == expected % {'rhs': 'x[j]*A[i*n + j]'} or
-            code == expected % {'rhs': 'x[j]*A[j + i*n]'})
+    assert (code == expected % {'rhs': 'A[%s]*x[j]' % (i*n + j)} or
+            code == expected % {'rhs': 'A[%s]*x[j]' % (j + i*n)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (i*n + j)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (j + i*n)})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
@@ -413,16 +417,16 @@ def test_partial_loops_c():
         '   }\n'
         '   for (int i=o; i<%(upperi)s; i++){\n'
         '      for (int j=0; j<n; j++){\n'
-        '         y[i] = y[i] + %(rhs)s;\n'
+        '         y[i] = %(rhs)s + y[i];\n'
         '      }\n'
         '   }\n'
         '}\n'
     ) % {'upperi': m - 4, 'rhs': '%(rhs)s'}
 
-    assert (code == expected % {'rhs': 'A[i*p + j]*x[j]'} or
-            code == expected % {'rhs': 'A[j + i*p]*x[j]'} or
-            code == expected % {'rhs': 'x[j]*A[i*p + j]'} or
-            code == expected % {'rhs': 'x[j]*A[j + i*p]'})
+    assert (code == expected % {'rhs': 'A[%s]*x[j]' % (i*p + j)} or
+            code == expected % {'rhs': 'A[%s]*x[j]' % (j + i*p)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (i*p + j)} or
+            code == expected % {'rhs': 'x[j]*A[%s]' % (j + i*p)})
     assert f2 == 'file.h'
     assert interface == (
         '#ifndef PROJECT__FILE__H\n'
@@ -510,6 +514,19 @@ def test_numbersymbol_f_code():
     )
     assert source == expected
 
+def test_erf_f_code():
+    x = symbols('x')
+    routine = Routine("test", erf(x) - erf(-2 * x))
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [routine])
+    expected = (
+        "REAL*8 function test(x)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "test = erf(x) + erf(2.0d0*x)\n"
+        "end function\n"
+    )
+    assert source == expected, source
 
 def test_f_code_argument_order():
     x, y, z = symbols('x,y,z')
@@ -552,7 +569,7 @@ def test_simple_f_codegen():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     result = codegen(
-        ("test", (x + y)*z), "F95", "file", header=False, empty=False)
+        ("test", expr), "F95", "file", header=False, empty=False)
     expected = [
         ("file.f90",
         "REAL*8 function test(x, y, z)\n"
@@ -594,7 +611,7 @@ def test_no_results_f():
 def test_intrinsic_math_codegen():
     # not included: log10
     from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
-            sin, sinh, sqrt, tan, tanh, N, Abs)
+            sin, sinh, sqrt, tan, tanh, Abs)
     x = symbols('x')
     name_expr = [
         ("test_abs", Abs(x)),
@@ -770,7 +787,7 @@ def test_intrinsic_math_codegen():
 
 def test_intrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2, N
+    from sympy import atan2
     x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x, y)),
@@ -815,7 +832,7 @@ def test_intrinsic_math2_codegen():
 
 
 def test_complicated_codegen_f95():
-    from sympy import sin, cos, tan, N
+    from sympy import sin, cos, tan
     x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
@@ -904,13 +921,14 @@ def test_loops():
         'end do\n'
         'do i = 1, m\n'
         '   do j = 1, n\n'
-        '      y(i) = y(i) + %(rhs)s\n'
+        '      y(i) = %(rhs)s + y(i)\n'
         '   end do\n'
         'end do\n'
         'end subroutine\n'
-    ) % {'rhs': 'A(i, j)*x(j)'}
+    )
 
-    assert expected == code
+    assert code == expected % {'rhs': 'A(i, j)*x(j)'} or\
+        code == expected % {'rhs': 'x(j)*A(i, j)'}
     assert f2 == 'file.h'
     assert interface == (
         'interface\n'
@@ -979,7 +997,7 @@ def test_loops_InOut():
         'INTEGER*4 :: j\n'
         'do i = 1, m\n'
         '   do j = 1, n\n'
-        '      y(i) = y(i) + %(rhs)s\n'
+        '      y(i) = %(rhs)s + y(i)\n'
         '   end do\n'
         'end do\n'
         'end subroutine\n'
@@ -1034,18 +1052,19 @@ def test_partial_loops_f():
         'end do\n'
         'do i = %(ilow)s, %(iup)s\n'
         '   do j = 1, n\n'
-        '      y(i) = y(i) + %(rhs)s\n'
+        '      y(i) = %(rhs)s + y(i)\n'
         '   end do\n'
         'end do\n'
         'end subroutine\n'
     ) % {
-        'rhs': 'A(i, j)*x(j)',
+        'rhs': '%(rhs)s',
         'iup': str(m - 4),
         'ilow': str(1 + o),
         'iup-ilow': str(m - 4 - o)
     }
 
-    assert expected == code
+    assert code == expected % {'rhs': 'A(i, j)*x(j)'} or\
+        code == expected % {'rhs': 'x(j)*A(i, j)'}
 
 
 def test_output_arg_f():
@@ -1072,7 +1091,6 @@ def test_inline_function():
     n, m = symbols('n m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
     i = Idx('i', m)
-    j = Idx('j', n)
     p = FCodeGen()
     func = implemented_function('func', Lambda(n, n*(n + 1)))
     routine = Routine('test_inline', Eq(y[i], func(x[i])))
@@ -1085,11 +1103,13 @@ def test_inline_function():
         'REAL*8, intent(out), dimension(1:m) :: y\n'
         'INTEGER*4 :: i\n'
         'do i = 1, m\n'
-        '   y(i) = (1 + x(i))*x(i)\n'
+        '   y(i) = %s*%s\n'
         'end do\n'
         'end subroutine\n'
     )
-    assert code == expected
+    args = ('x(i)', '(x(i) + 1)')
+    assert code == expected % args or\
+        code == expected % args[::-1]
 
 
 def test_check_case():
@@ -1106,6 +1126,6 @@ def test_check_case_false_positive():
     x2 = symbols('x', my_assumption=True)
     try:
         codegen(('test', x1*x2), 'f95', 'prefix')
-    except CodeGenError, e:
+    except CodeGenError as e:
         if e.args[0].startswith("Fortran ignores case."):
             raise AssertionError("This exception should not be raised!")

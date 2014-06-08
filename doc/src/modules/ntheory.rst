@@ -91,8 +91,28 @@ Ntheory Functions Reference
 
 .. autofunction:: is_primitive_root
 
+.. autofunction:: primitive_root
+
+.. autofunction:: sqrt_mod
+
+.. autofunction:: quadratic_residues
+
+.. autofunction:: nthroot_mod
+
+.. autofunction:: is_nthpow_residue
+
 .. autofunction:: is_quad_residue
 
 .. autofunction:: legendre_symbol
 
 .. autofunction:: jacobi_symbol
+
+.. automodule:: sympy.ntheory.continued_fraction
+    :members:
+
+.. autoclass:: sympy.ntheory.mobius
+    :members:
+
+.. module:: sympy.ntheory.egyptian_fraction
+
+.. autofunction:: egyptian_fraction

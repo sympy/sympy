@@ -1,9 +1,11 @@
+from __future__ import print_function, division
+
 from functools import wraps
 
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
-from sympy.core.sympify import SympifyError
-from sympy.functions import transpose, conjugate, adjoint
+from sympy.core.sympify import SympifyError, sympify
+from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 
@@ -25,16 +27,26 @@ def _sympifyit(arg, retval=None):
 
 
 class MatrixExpr(Basic):
-    """ Matrix Expression Class
-    Matrix Expressions subclass SymPy Expr's so that
-    MatAdd inherits from Add
-    MatMul inherits from Mul
-    MatPow inherits from Pow
+    """ Superclass for Matrix Expressions
 
-    They use _op_priority to gain control with binary operations (+, *, -, **)
-    are used
+    MatrixExprs represent abstract matrices, linear transformations represented
+    within a particular basis.
 
-    They implement operations specific to Matrix Algebra.
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> A = MatrixSymbol('A', 3, 3)
+    >>> y = MatrixSymbol('y', 3, 1)
+    >>> x = (A.T*A).I * A * y
+
+    See Also
+    ========
+        MatrixSymbol
+        MatAdd
+        MatMul
+        Transpose
+        Inverse
     """
 
     _op_priority = 11.0
@@ -50,8 +62,12 @@ class MatrixExpr(Basic):
 
     is_commutative = False
 
-    # The following is adapted from the core Expr object
 
+    def __new__(cls, *args, **kwargs):
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args, **kwargs)
+
+    # The following is adapted from the core Expr object
     def __neg__(self):
         return MatMul(S.NegativeOne, self).doit()
 
@@ -132,10 +148,6 @@ class MatrixExpr(Basic):
     def is_square(self):
         return self.rows == self.cols
 
-    def _eval_transpose(self):
-        from sympy.matrices.expressions.transpose import Transpose
-        return Transpose(self)
-
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
         from sympy.matrices.expressions.transpose import Transpose
@@ -144,6 +156,9 @@ class MatrixExpr(Basic):
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)
+
+    def _eval_transpose(self):
+        return Transpose(self)
 
     def _eval_power(self, exp):
         return MatPow(self, exp)
@@ -169,6 +184,7 @@ class MatrixExpr(Basic):
         return conjugate(self)
 
     def transpose(self):
+        from sympy.matrices.expressions.transpose import transpose
         return transpose(self)
 
     T = property(transpose, None, None, 'Matrix transposition.')
@@ -184,7 +200,8 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                0 <= i < self.rows and 0 <= j < self.cols)
+                (0 <= i) != False and (i < self.rows) != False and
+                (0 <= j) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -196,7 +213,7 @@ class MatrixExpr(Basic):
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
             i, j = sympify(i), sympify(j)
-            if self.valid_index(i, j) is not False:
+            if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
@@ -216,9 +233,10 @@ class MatrixExpr(Basic):
         >>> I
         I
         >>> I.as_explicit()
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -244,9 +262,10 @@ class MatrixExpr(Basic):
         >>> I.shape
         (3, 3)
         >>> I.as_mutable()
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -280,6 +299,13 @@ class MatrixExpr(Basic):
         return 1, MatMul(self)
 
 
+class MatrixElement(Expr):
+    parent = property(lambda self: self.args[0])
+    i = property(lambda self: self.args[1])
+    j = property(lambda self: self.args[2])
+    _diff_wrt = True
+
+
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
 
@@ -292,7 +318,7 @@ class MatrixSymbol(MatrixExpr):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    2*A*B + I
+    I + 2*A*B
     """
     is_commutative = False
 
@@ -321,14 +347,7 @@ class MatrixSymbol(MatrixExpr):
         raise TypeError( "%s object is not callable" % self.__class__ )
 
     def _entry(self, i, j):
-        # MatMul _entry will pass us a Dummy and ask that we remember it
-        # so that it can be summed over later. We'll use the function syntax
-        if i.is_Dummy or j.is_Dummy:
-            return Symbol(self.name)(i, j)
-        # If that isn't the case we'd really rather just make a symbol
-        # They are simpler and look much nicer
-        else:
-            return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
+        return MatrixElement(self, i, j)
 
     @property
     def free_symbols(self):
@@ -357,7 +376,7 @@ class Identity(MatrixExpr):
     is_Identity = True
 
     def __new__(cls, n):
-        return super(Identity, cls).__new__(cls, n)
+        return super(Identity, cls).__new__(cls, sympify(n))
 
     @property
     def rows(self):
@@ -389,6 +408,9 @@ class Identity(MatrixExpr):
         else:
             return S.Zero
 
+    def _eval_determinant(self):
+        return S.One
+
 
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
@@ -405,14 +427,6 @@ class ZeroMatrix(MatrixExpr):
 
     def __new__(cls, m, n):
         return super(ZeroMatrix, cls).__new__(cls, m, n)
-
-    @property
-    def rows(self):
-        return self.args[0]
-
-    @property
-    def cols(self):
-        return self.args[1]
 
     @property
     def shape(self):
@@ -434,18 +448,26 @@ class ZeroMatrix(MatrixExpr):
     def _eval_trace(self):
         return S.Zero
 
+    def _eval_determinant(self):
+        return S.Zero
+
     def conjugate(self):
         return self
 
     def _entry(self, i, j):
         return S.Zero
 
+    def __nonzero__(self):
+        return False
+
+    __bool__ = __nonzero__
+
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
-from matmul import MatMul
-from matadd import MatAdd
-from matpow import MatPow
-from transpose import Transpose
-from inverse import Inverse
+from .matmul import MatMul
+from .matadd import MatAdd
+from .matpow import MatPow
+from .transpose import Transpose
+from .inverse import Inverse

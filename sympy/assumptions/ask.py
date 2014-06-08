@@ -1,6 +1,9 @@
 """Module for querying SymPy objects about assumptions."""
+from __future__ import print_function, division
+
 from sympy.core import sympify
-from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
+from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
+    BooleanFunction, true, false, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -29,9 +32,16 @@ class Q:
     real = Predicate('real')
     odd = Predicate('odd')
     is_true = Predicate('is_true')
+    nonpositive = Predicate('nonpositive')
+    nonnegative = Predicate('nonnegative')
+    zero = Predicate('zero')
+
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
+    singular = Predicate('singular')
     orthogonal = Predicate('orthogonal')
+    unitary = Predicate('unitary')
+    normal = Predicate('normal')
     positive_definite = Predicate('positive_definite')
     upper_triangular = Predicate('upper_triangular')
     lower_triangular = Predicate('lower_triangular')
@@ -40,6 +50,9 @@ class Q:
     unit_triangular = Predicate('unit_triangular')
     fullrank = Predicate('fullrank')
     square = Predicate('square')
+    real_elements = Predicate('real_elements')
+    complex_elements = Predicate('complex_elements')
+    integer_elements = Predicate('integer_elements')
 
 
 def _extract_facts(expr, symbol):
@@ -49,15 +62,22 @@ def _extract_facts(expr, symbol):
     Extracts the facts relevant to the symbol from an assumption.
     Returns None if there is nothing to extract.
     """
+    if isinstance(expr, bool):
+        return
     if not expr.has(symbol):
-        return None
+        return
     if isinstance(expr, AppliedPredicate):
         if expr.arg == symbol:
             return expr.func
         else:
             return
-    return expr.func(*filter(lambda x: x is not None,
-                [_extract_facts(arg, symbol) for arg in expr.args]))
+    args = [_extract_facts(arg, symbol) for arg in expr.args]
+    if isinstance(expr, And):
+        args = [x for x in args if x is not None]
+        if args:
+            return expr.func(*args)
+    if args and all(x != None for x in args):
+        return expr.func(*args)
 
 
 def ask(proposition, assumptions=True, context=global_assumptions):
@@ -93,22 +113,34 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
-    assumptions = And(assumptions, And(*context))
+    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
+        raise TypeError("proposition must be a valid logical expression")
+
+    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
+        raise TypeError("assumptions must be a valid logical expression")
+
     if isinstance(proposition, AppliedPredicate):
         key, expr = proposition.func, sympify(proposition.arg)
     else:
         key, expr = Q.is_true, sympify(proposition)
 
+    assumptions = And(assumptions, And(*context))
+    assumptions = to_cnf(assumptions)
+
+    local_facts = _extract_facts(assumptions, expr)
+
+    if local_facts and satisfiable(And(local_facts, known_facts_cnf)) is False:
+        raise ValueError("inconsistent assumptions %s" % assumptions)
+
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
-        return res
+        return bool(res)
 
-    if assumptions is True:
+    if assumptions == True:
         return
 
-    local_facts = _extract_facts(assumptions, expr)
-    if local_facts is None or local_facts is True:
+    if local_facts is None:
         return
 
     # See if there's a straight-forward conclusion we can make for the inference
@@ -209,7 +241,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
     The contents of this file are the return value of
     ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
-    edit this file.
+    edit this file.  Instead, run ./bin/ask_update.py.
     """
 
     from sympy.logic.boolalg import And, Not, Or
@@ -231,14 +263,17 @@ def compute_known_facts(known_facts, known_facts_keys):
     cnf = to_cnf(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
     mapping = single_fact_lookup(known_facts_keys, cnf)
+    items = sorted(mapping.items(), key=str)
+    keys = [str(i[0]) for i in items]
+    values = ['set(%s)' % sorted(i[1], key=str) for i in items]
     m = LINE.join(['\n'.join(
-        wrap("%s: %s" % item,
+        wrap("%s: %s" % (k, v),
             subsequent_indent=HANG,
             break_long_words=False))
-        for item in mapping.items()]) + ','
+        for k, v in zip(keys, values)]) + ','
     return fact_string % (c, m)
 
-# handlers_dict tells us what ask handler we should use
+# handlers tells us what ask handler we should use
 # for a particular key
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
@@ -257,25 +292,32 @@ _handlers = [
     ("rational",          "sets.AskRationalHandler"),
     ("negative",          "order.AskNegativeHandler"),
     ("nonzero",           "order.AskNonZeroHandler"),
+    ("nonpositive",       "order.AskNonPositiveHandler"),
+    ("nonnegative",       "order.AskNonNegativeHandler"),
+    ("zero",              "order.AskZeroHandler"),
     ("positive",          "order.AskPositiveHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("real",              "sets.AskRealHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("algebraic",         "sets.AskAlgebraicHandler"),
-    ("is_true",           "TautologicalHandler"),
+    ("is_true",           "common.TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
     ("orthogonal",        "matrices.AskOrthogonalHandler"),
+    ("unitary",           "matrices.AskUnitaryHandler"),
     ("positive_definite", "matrices.AskPositiveDefiniteHandler"),
     ("upper_triangular",  "matrices.AskUpperTriangularHandler"),
     ("lower_triangular",  "matrices.AskLowerTriangularHandler"),
     ("diagonal",          "matrices.AskDiagonalHandler"),
     ("fullrank",          "matrices.AskFullRankHandler"),
     ("square",            "matrices.AskSquareHandler"),
+    ("integer_elements",  "matrices.AskIntegerElementsHandler"),
+    ("real_elements",     "matrices.AskRealElementsHandler"),
+    ("complex_elements",  "matrices.AskComplexElementsHandler"),
 ]
+
 for name, value in _handlers:
     register_handler(name, _val_template % value)
-
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
                     if not attr.startswith('__')]
@@ -287,6 +329,8 @@ known_facts = And(
     Equivalent(Q.odd, Q.integer & ~Q.even),
     Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
     Implies(Q.integer, Q.rational),
+    Implies(Q.rational, Q.algebraic),
+    Implies(Q.algebraic, Q.complex),
     Implies(Q.imaginary, Q.complex & ~Q.real),
     Implies(Q.imaginary, Q.antihermitian),
     Implies(Q.antihermitian, ~Q.hermitian),
@@ -296,8 +340,18 @@ known_facts = And(
     Equivalent(Q.real, Q.rational | Q.irrational),
     Implies(Q.nonzero, Q.real),
     Equivalent(Q.nonzero, Q.positive | Q.negative),
+    Equivalent(Q.nonpositive, ~Q.positive & Q.real),
+    Equivalent(Q.nonnegative, ~Q.negative & Q.real),
+    Equivalent(Q.zero, Q.real & ~Q.nonzero),
+    Implies(Q.zero, Q.even),
 
     Implies(Q.orthogonal, Q.positive_definite),
+    Implies(Q.orthogonal, Q.unitary),
+    Implies(Q.unitary & Q.real, Q.orthogonal),
+    Implies(Q.unitary, Q.normal),
+    Implies(Q.unitary, Q.invertible),
+    Implies(Q.normal, Q.square),
+    Implies(Q.diagonal, Q.normal),
     Implies(Q.positive_definite, Q.invertible),
     Implies(Q.diagonal, Q.upper_triangular),
     Implies(Q.diagonal, Q.lower_triangular),
@@ -311,6 +365,9 @@ known_facts = And(
     Implies(Q.invertible, Q.square),
     Implies(Q.symmetric, Q.square),
     Implies(Q.fullrank & Q.square, Q.invertible),
+    Equivalent(Q.invertible, ~Q.singular),
+    Implies(Q.integer_elements, Q.real_elements),
+    Implies(Q.real_elements, Q.complex_elements),
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf

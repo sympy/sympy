@@ -6,10 +6,10 @@ Plotting Module
 Introduction
 ------------
 
-The plotting module allows you to plot 2-dimensional and 3-dimensional plots.
-Presently the plots are rendered using ``Matplotlib`` as its backend. It is
+The plotting module allows you to make 2-dimensional and 3-dimensional plots.
+Presently the plots are rendered using ``matplotlib`` as a backend. It is
 also possible to plot 2-dimensional plots using a ``TextBackend`` if you don't
-have ``Matplotlib``.
+have ``matplotlib``.
 
 The plotting module has the following functions:
 
@@ -107,7 +107,7 @@ it in interactive mode (python -i plotting.py)::
 
 And type for instance ``example(7)`` or ``example(11)``.
 
-See also the `Plotting Module <https://github.com/sympy/sympy/wiki/Plotting-Module>`_
+See also the `Plotting Module <https://github.com/sympy/sympy/wiki/Plotting-capabilities>`_
 wiki page for screenshots.
 
 
@@ -143,19 +143,20 @@ Close                    ESCAPE
 Screenshot               F8
 ======================   ========
 
-The mouse can be used to rotate, zoom, and translate by dragging the left, middle, and right mouse buttons respectively.
+The mouse can be used to rotate, zoom, and translate by dragging the left, middle,
+and right mouse buttons respectively.
 
 Coordinate Modes
 ----------------
 
-Plot supports several curvilinear coordinate modes, and they are independent
+``Plot`` supports several curvilinear coordinate modes, and they are independent
 for each plotted function. You can specify a coordinate mode explicitly with
 the 'mode' named argument, but it can be automatically determined for cartesian
 or parametric plots, and therefore must only be specified for polar,
 cylindrical, and spherical modes.
 
-Specifically, Plot(function arguments) and Plot.__setitem__(i, function
-arguments) (accessed using array-index syntax on the Plot instance) will
+Specifically, ``Plot(function arguments)`` and ``Plot.__setitem__(i, function
+arguments)`` (accessed using array-index syntax on the ``Plot`` instance) will
 interpret your arguments as a cartesian plot if you provide one function and a
 parametric plot if you provide two or three functions. Similarly, the arguments
 will be interpreted as a curve is one variable is used, and a surface if two
@@ -256,6 +257,8 @@ the following alternative syntax:
     >>> p[1].color = z,(0.4,0.9), y,(0.4,0.9), x,(0.4,0.9)
 
 You can still use multi-step gradients with three-function color schemes.
+
+.. _plot_geom:
 
 Plotting Geometric Entities
 ---------------------------

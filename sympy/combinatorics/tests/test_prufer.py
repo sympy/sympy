@@ -19,7 +19,7 @@ def test_prufer():
     assert a.prufer_repr == [4, 1, 4, 0]
 
     assert Prufer.edges([0, 1, 2, 3], [1, 4, 5], [1, 4, 6]) == \
-        ([[0, 1], [1, 2], [4, 6], [4, 5], [1, 4], [2, 3]], 7)
+        ([[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]], 7)
     assert Prufer([0]*4).size == Prufer([6]*4).size == 1296
 
     # accept iterables but convert to list of lists

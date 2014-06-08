@@ -1,7 +1,11 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy.core import Symbol, Interval
+from __future__ import print_function, division
+
+from sympy.core import Symbol
+from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.sets.sets import FiniteSet, Union
 from sympy.core.singleton import S
 
 from sympy.assumptions import ask, AppliedPredicate, Q
@@ -90,6 +94,24 @@ def solve_poly_inequality(poly, rel):
     return intervals
 
 
+def solve_poly_inequalities(polys):
+    """Solve polynomial inequalities with rational coefficients.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.inequalities import solve_poly_inequalities
+    >>> from sympy.polys import Poly
+    >>> from sympy.abc import x
+    >>> solve_poly_inequalities(((
+    ... Poly(x**2 - 3), ">"), (
+    ... Poly(-x**2 + 1), ">")))
+    (-oo, -sqrt(3)) U (-1, 1) U (sqrt(3), oo)
+    """
+    from sympy import Union
+    return Union(*[solve_poly_inequality(*p) for p in polys])
+
+
 def solve_rational_inequalities(eqs):
     """Solve a system of rational inequalities with rational coefficients.
 
@@ -172,7 +194,11 @@ def reduce_rational_inequalities(exprs, gen, assume=True, relational=True):
     x == 0
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
-    -2 < x
+    x > -2
+    >>> reduce_rational_inequalities([[(x + 2, ">")]], x)
+    x > -2
+    >>> reduce_rational_inequalities([[x + 2]], x)
+    x == -2
     """
     exact = True
     eqs = []
@@ -190,9 +216,11 @@ def reduce_rational_inequalities(exprs, gen, assume=True, relational=True):
                     expr, rel = expr, '=='
 
             try:
-                (numer, denom), opt = parallel_poly_from_expr(expr.together().as_numer_denom(), gen)
+                (numer, denom), opt = parallel_poly_from_expr(
+                    expr.together().as_numer_denom(), gen)
             except PolynomialError:
-                raise PolynomialError("only polynomials and rational functions are supported in this context")
+                raise PolynomialError("only polynomials and "
+                    "rational functions are supported in this context")
 
             if not opt.domain.is_Exact:
                 numer, denom, exact = numer.to_exact(), denom.to_exact(), False
@@ -200,7 +228,8 @@ def reduce_rational_inequalities(exprs, gen, assume=True, relational=True):
             domain = opt.domain.get_exact()
 
             if not (domain.is_ZZ or domain.is_QQ):
-                raise NotImplementedError("inequality solving is not supported over %s" % opt.domain)
+                raise NotImplementedError(
+                    "inequality solving is not supported over %s" % opt.domain)
 
             _eqs.append(((numer, denom), rel))
 
@@ -245,7 +274,8 @@ def reduce_abs_inequality(expr, rel, gen, assume=True):
     reduce_abs_inequalities
     """
     if not ask(Q.real(gen), assumptions=assume):
-        raise NotImplementedError("can't solve inequalities with absolute values of a complex variable")
+        raise NotImplementedError("can't solve inequalities with absolute "
+            "values of a complex variable")
 
     def _bottom_up_scan(expr):
         exprs = []
@@ -316,7 +346,7 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
     ... (Abs(x + 25) - 13, '>')], x, assume=Q.real(x))
-    And(-2/3 < x, Or(-12 < x, x < -38), x < 4)
+    And(-2/3 < x, Or(x < -38, x > -12), x < 4)
 
     >>> reduce_abs_inequalities([(Abs(x - 4) + Abs(3*x - 5) - 7, '<')], x,
     ... assume=Q.real(x))
@@ -326,10 +356,58 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
     ========
     reduce_abs_inequality
     """
-    return And(*[ reduce_abs_inequality(expr, rel, gen, assume) for expr, rel in exprs ])
+    return And(*[ reduce_abs_inequality(expr, rel, gen, assume)
+        for expr, rel in exprs ])
 
 
-def _solve_inequality(ie, s):
+def solve_univariate_inequality(expr, gen, assume=True, relational=True):
+    """Solves a real univariate inequality.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.inequalities import solve_univariate_inequality
+    >>> from sympy.core.symbol import Symbol
+    >>> x = Symbol('x', real=True)
+
+    >>> solve_univariate_inequality(x**2 >= 4, x)
+    Or(x <= -2, x >= 2)
+    >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
+    (-oo, -2] U [2, oo)
+
+    """
+
+    # Implementation for continous functions
+
+    from sympy.solvers.solvers import solve
+
+    solns = solve(expr.lhs - expr.rhs, gen, assume=assume)
+    oo = S.Infinity
+
+    start = -oo
+
+    sol_sets = [S.EmptySet]
+
+    for x in sorted(s for s in solns if s.is_real):
+        end = x
+        if expr.subs(gen, (start + end)/2 if start != -oo else end - 1):
+            sol_sets.append(Interval(start, end, True, True))
+
+        if expr.subs(gen, x):
+            sol_sets.append(FiniteSet(x))
+
+        start = end
+
+    end = oo
+
+    if expr.subs(gen, start + 1):
+        sol_sets.append(Interval(start, end, True, True))
+
+    rv = Union(*sol_sets)
+    return rv if not relational else rv.as_relational(gen)
+
+
+def _solve_inequality(ie, s, assume=True):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
     if not ie.rel_op in ('>', '>=', '<', '<='):
@@ -337,10 +415,14 @@ def _solve_inequality(ie, s):
     expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)
-    except PolynomialError:
-        raise NotImplementedError
-    if p.degree() != 1:
-        raise NotImplementedError('%s' % ie)
+        if p.degree() != 1:
+            raise NotImplementedError
+    except (PolynomialError, NotImplementedError):
+        try:
+            n, d = expr.as_numer_denom()
+            return reduce_rational_inequalities([[ie]], s, assume=assume)
+        except PolynomialError:
+            return solve_univariate_inequality(ie, s, assume=assume)
     a, b = p.all_coeffs()
     if a.is_positive:
         return ie.func(s, -b/a)
@@ -361,7 +443,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
     >>> reduce_inequalities(S(0) <= x + 3, Q.real(x), [])
-    -3 <= x
+    x >= -3
 
     >>> reduce_inequalities(S(0) <= x + y*2 - 1, True, [x])
     -2*y + 1 <= x
@@ -372,18 +454,18 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     if len(inequalities) == 1 and len(symbols) == 1 \
             and inequalities[0].is_Relational:
         try:
-            return _solve_inequality(inequalities[0], symbols[0])
+            return _solve_inequality(inequalities[0], symbols[0],
+                assume=assume)
         except NotImplementedError:
             pass
 
     poly_part, abs_part, extra_assume = {}, {}, []
 
     for inequality in inequalities:
-        if isinstance(inequality, bool):
-            if inequality is False:
-                return False
-            else:
-                continue
+        if inequality == True:
+            continue
+        elif inequality == False:
+            return False
 
         if isinstance(inequality, AppliedPredicate):
             extra_assume.append(inequality)
@@ -394,7 +476,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         else:
             expr, rel = inequality, '=='
 
-        gens = expr.atoms(Symbol)
+        gens = expr.free_symbols
 
         if not gens:
             return False
@@ -430,10 +512,10 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     poly_reduced = []
     abs_reduced = []
 
-    for gen, exprs in poly_part.iteritems():
+    for gen, exprs in poly_part.items():
         poly_reduced.append(reduce_rational_inequalities([exprs], gen, assume))
 
-    for gen, exprs in abs_part.iteritems():
+    for gen, exprs in abs_part.items():
         abs_reduced.append(reduce_abs_inequalities(exprs, gen, assume))
 
     return And(*(poly_reduced + abs_reduced))

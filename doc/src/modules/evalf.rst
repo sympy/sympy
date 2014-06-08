@@ -46,9 +46,9 @@ expression is a polynomial in expanded form, the coefficients are evaluated:
 You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
-    >>> float(pi) #doctest: +SKIP
+    >>> float(pi)
     3.1415926535...
-    >>> complex(pi+E*I) #doctest: +SKIP
+    >>> complex(pi+E*I)
     (3.1415926535...+2.7182818284...j)
 
 
@@ -137,10 +137,10 @@ subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
     >>> a, b = GoldenRatio**1000/sqrt(5), fibonacci(1000)
-    >>> float(a) #doctest: +SKIP
-    4.34665576869...e+208
-    >>> float(b) #doctest: +SKIP
-    4.34665576869...e+208
+    >>> float(a)
+    4.34665576869e+208
+    >>> float(b)
+    4.34665576869e+208
     >>> float(a) - float(b)
     0.0
 
@@ -161,7 +161,9 @@ Fibonacci number, the following happens:
 
 
 The lack of digits in the returned number indicates that ``N`` failed to achieve
-full accuracy. The result indicates that the magnitude of the expression is something less than 10^84, but that is not a particularly good answer. To force a higher working precision, the ``maxn`` keyword argument can be used:
+full accuracy. The result indicates that the magnitude of the expression is something
+less than 10^84, but that is not a particularly good answer. To force a higher working
+precision, the ``maxn`` keyword argument can be used:
 
     >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5), maxn=500)
     -4.60123853010113e-210
@@ -410,7 +412,7 @@ Here are several more advanced examples:
     2     \/      10    4
     >>> nsimplify(I**I, [pi])
      -pi
-     ---
+     ----
       2
     e
     >>> n = Symbol('n')
@@ -422,6 +424,3 @@ Here are several more advanced examples:
     >>> nsimplify(gamma('1/4')*gamma('3/4'), [pi])
       ___
     \/ 2 *pi
-
-
-

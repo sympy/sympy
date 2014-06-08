@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.logic.utilities import load_file
 from sympy.logic import satisfiable
 import time
@@ -18,16 +20,17 @@ for test in INPUT:
         file_name = "%s/input/%d.cnf" % (input_path, test)
         theory = load_file(file_name)
         start = time.time()
-        assert satisfiable(theory, algorithm=alg)
+        if not satisfiable(theory, algorithm=alg):
+            raise ValueError("Function returned false")
         end = time.time()
         results[test][alg] = end - start
-        print "Test %d in time %.2f seconds for algorithm %s." % (
-            test, end - start, alg)
+        print("Test %d in time %.2f seconds for algorithm %s." %
+            (test, end - start, alg))
 
-print "problem," + ','.join(ALGORITHMS)
+print("problem," + ','.join(ALGORITHMS))
 
 for test in INPUT:
     line = "%d" % test
     for alg in ALGORITHMS:
         line += ",%f" % results[test][alg]
-    print line
+    print(line)

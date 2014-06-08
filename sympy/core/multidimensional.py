@@ -3,6 +3,8 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
+from __future__ import print_function, division
+
 from sympy.core.decorators import wraps
 
 
@@ -23,7 +25,7 @@ def apply_on_element(f, args, kwargs, n):
     # Define reduced function that is only dependend of the specified argument.
     def f_reduced(x):
         if hasattr(x, "__iter__"):
-            return map(f_reduced, x)
+            return list(map(f_reduced, x))
         else:
             if is_arg:
                 args[n] = x
@@ -33,7 +35,7 @@ def apply_on_element(f, args, kwargs, n):
 
     # f_reduced will call itself recursively so that in the end f is applied to
     # all basic elements.
-    return map(f_reduced, structure)
+    return list(map(f_reduced, structure))
 
 
 def iter_copy(structure):
@@ -62,21 +64,26 @@ class vectorize:
     """
     Generalizes a function taking scalars to accept multidimensional arguments.
 
-    For example::
+    For example
 
-      (1) @vectorize(0)
-          def sin(x):
-              ....
+    >>> from sympy import diff, sin, symbols, Function
+    >>> from sympy.core.multidimensional import vectorize
+    >>> x, y, z = symbols('x y z')
+    >>> f, g, h = list(map(Function, 'fgh'))
 
-          sin([1, x, y])
-          --> [sin(1), sin(x), sin(y)]
+    >>> @vectorize(0)
+    ... def vsin(x):
+    ...     return sin(x)
 
-      (2) @vectorize(0,1)
-          def diff(f(y), y)
-              ....
+    >>> vsin([1, x, y])
+    [sin(1), sin(x), sin(y)]
 
-          diff([f(x,y,z),g(x,y,z),h(x,y,z)], [x,y,z])
-          --> [[d/dx f, d/dy f, d/dz f], [d/dx g, d/dy g, d/dz g], [d/dx h, d/dy h, d/dz h]]
+    >>> @vectorize(0, 1)
+    ... def vdiff(f, y):
+    ...     return diff(f, y)
+
+    >>> vdiff([f(x, y, z), g(x, y, z), h(x, y, z)], [x, y, z])
+    [[Derivative(f(x, y, z), x), Derivative(f(x, y, z), y), Derivative(f(x, y, z), z)], [Derivative(g(x, y, z), x), Derivative(g(x, y, z), y), Derivative(g(x, y, z), z)], [Derivative(h(x, y, z), x), Derivative(h(x, y, z), y), Derivative(h(x, y, z), z)]]
     """
     def __init__(self, *mdargs):
         """
@@ -86,7 +93,8 @@ class vectorize:
         If no argument is given, everything is treated multidimensional.
         """
         for a in mdargs:
-            assert isinstance(a, (int, str))
+            if not isinstance(a, (int, str)):
+                raise TypeError("a is of invalid type")
         self.mdargs = mdargs
 
     def __call__(self, f):

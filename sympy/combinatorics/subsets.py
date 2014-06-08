@@ -1,7 +1,10 @@
+from __future__ import print_function, division
+
+from itertools import combinations
+
 from sympy.core import Basic
 from sympy.combinatorics.graycode import GrayCode
-
-from sympy.core.compatibility import bin, combinations
+from sympy.core.compatibility import xrange
 
 
 class Subset(Basic):
@@ -131,17 +134,84 @@ class Subset(Basic):
         """
         Generates the next lexicographically ordered subset.
 
-        NOT IMPLEMENTED
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.next_lexicographic().subset
+        ['d']
+        >>> a = Subset(['d'], ['a','b','c','d'])
+        >>> a.next_lexicographic().subset
+        []
+
+        See Also
+        ========
+        prev_lexicographic
         """
-        raise NotImplementedError()
+        i = self.superset_size - 1
+        indices = Subset.subset_indices(self.subset, self.superset)
+
+        if i in indices:
+            if i - 1 in indices:
+                indices.remove(i - 1)
+            else:
+                indices.remove(i)
+                i = i - 1
+                while not i in indices and i >= 0:
+                    i = i - 1
+                if i >= 0:
+                    indices.remove(i)
+                    indices.append(i+1)
+        else:
+            while i not in indices and i >= 0:
+                i = i - 1
+            indices.append(i + 1)
+
+        ret_set = []
+        super_set = self.superset
+        for i in indices:
+            ret_set.append(super_set[i])
+        return Subset(ret_set, super_set)
 
     def prev_lexicographic(self):
         """
         Generates the previous lexicographically ordered subset.
 
-        NOT YET IMPLEMENTED
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([], ['a','b','c','d'])
+        >>> a.prev_lexicographic().subset
+        ['d']
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.prev_lexicographic().subset
+        ['c']
+
+        See Also
+        ========
+        next_lexicographic
         """
-        raise NotImplementedError()
+        i = self.superset_size - 1
+        indices = Subset.subset_indices(self.subset, self.superset)
+
+        while i not in indices and i >= 0:
+            i = i - 1
+
+        if i - 1 in indices or i == 0:
+            indices.remove(i)
+        else:
+            if i >= 0:
+                indices.remove(i)
+                indices.append(i - 1)
+            indices.append(self.superset_size - 1)
+
+        ret_set = []
+        super_set = self.superset
+        for i in indices:
+            ret_set.append(super_set[i])
+        return Subset(ret_set, super_set)
 
     def iterate_graycode(self, k):
         """

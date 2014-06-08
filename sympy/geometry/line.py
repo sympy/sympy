@@ -8,15 +8,19 @@ Ray
 Segment
 
 """
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify, Dummy
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
+from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
+    sqrt
 from sympy.core.logic import fuzzy_and
-from sympy.simplify import simplify
+from sympy.core.exprtools import factor_terms
+from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
-from entity import GeometryEntity
-from point import Point
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .util import _symbol
 
 # TODO: this should be placed elsewhere and reused in other modules
 
@@ -58,8 +62,9 @@ class LinearEntity(GeometryEntity):
         p1 = Point(p1)
         p2 = Point(p2)
         if p1 == p2:
-            # Rolygon returns lower priority classes...should LinearEntity, too?
-            return p1  # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
+            # if it makes sense to return a Point, handle in subclass
+            raise ValueError(
+                "%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -107,7 +112,7 @@ class LinearEntity(GeometryEntity):
 
     @property
     def coefficients(self):
-        """The coefficients (`a`, `b`, `c`) for the linear equation `ax + by + c = 0`.
+        """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
 
         See Also
         ========
@@ -458,8 +463,20 @@ class LinearEntity(GeometryEntity):
         """
         if p in self:
             return p
-        pl = self.perpendicular_line(p)
-        p2 = Line(self).intersection(pl)[0]
+        a, b, c = self.coefficients
+        if a == 0:  # horizontal
+            p2 = Point(p.x, self.p1.y)
+        elif b == 0:  # vertical
+            p2 = Point(self.p1.x, p.y)
+        else:
+            # ax + by + c = 0
+            y = (-c - a*p.x)/b
+            m = self.slope
+            d2 = 1 + m**2
+            H = p.y - y
+            dx = m*H/d2
+            dy = m*dx
+            p2 = (p.x + dx, y + dy)
         return Segment(p, p2)
 
     @property
@@ -566,9 +583,8 @@ class LinearEntity(GeometryEntity):
         Line and then reforming the linear entity using these
         projections.
         A point P is projected onto a line L by finding the point
-        on L that is closest to P. This is done by creating a
-        perpendicular line through P and L and finding its
-        intersection with L.
+        on L that is closest to P. This point is the intersection
+        of L and the line perpendicular to L that passes through P.
 
         See Also
         ========
@@ -662,6 +678,7 @@ class LinearEntity(GeometryEntity):
                 return [o]
             else:
                 return []
+
         elif isinstance(o, LinearEntity):
             a1, b1, c1 = self.coefficients
             a2, b2, c2 = o.coefficients
@@ -678,10 +695,9 @@ class LinearEntity(GeometryEntity):
                 elif isinstance(self, Ray):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
-                        if self.xdirection == o.xdirection:
-                            if self.source.x < o.source.x:
-                                return [o]
-                            return [self]
+                        if self.xdirection == o.xdirection and \
+                                self.ydirection == o.ydirection:
+                            return [self] if (self.source in o) else [o]
                         # case 2, rays in the opposite directions
                         else:
                             if o.source in self:
@@ -750,30 +766,81 @@ class LinearEntity(GeometryEntity):
                     return True
 
             def inray(self):
+                if self.p1 == inter:
+                    return True
                 sray = Ray(self.p1, inter)
                 if sray.xdirection == self.xdirection and \
                         sray.ydirection == self.ydirection:
                     return True
-            for i in range(2):
-                if isinstance(self, Line):
-                    if isinstance(o, Line):
-                        return [inter]
-                    elif isinstance(o, Ray) and inray(o):
-                        return [inter]
-                    elif isinstance(o, Segment) and inseg(o):
-                        return [inter]
-                elif isinstance(self, Ray) and inray(self):
-                    if isinstance(o, Ray) and inray(o):
-                        return [inter]
-                    elif isinstance(o, Segment) and inseg(o):
-                        return [inter]
-                elif isinstance(self, Segment) and inseg(self):
-                    if isinstance(o, Segment) and inseg(o):
-                        return [inter]
+
+            prec = (Line, Ray, Segment)
+            if prec.index(self.func) > prec.index(o.func):
                 self, o = o, self
+            rv = [inter]
+            if isinstance(self, Line):
+                if isinstance(o, Line):
+                    return rv
+                elif isinstance(o, Ray) and inray(o):
+                    return rv
+                elif isinstance(o, Segment) and inseg(o):
+                    return rv
+            elif isinstance(self, Ray) and inray(self):
+                if isinstance(o, Ray) and inray(o):
+                    return rv
+                elif isinstance(o, Segment) and inseg(o):
+                    return rv
+            elif isinstance(self, Segment) and inseg(self):
+                if isinstance(o, Segment) and inseg(o):
+                    return rv
             return []
 
         return o.intersection(self)
+
+    def arbitrary_point(self, parameter='t'):
+        """A parameterized point on the Line.
+
+        Parameters
+        ==========
+
+        parameter : str, optional
+            The name of the parameter which will be used for the parametric
+            point. The default value is 't'. When this parameter is 0, the
+            first point used to define the line will be returned, and when
+            it is 1 the second point will be returned.
+
+        Returns
+        =======
+
+        point : Point
+
+        Raises
+        ======
+
+        ValueError
+            When ``parameter`` already appears in the Line's definition.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(1, 0), Point(5, 3)
+        >>> l1 = Line(p1, p2)
+        >>> l1.arbitrary_point()
+        Point(4*t + 1, 3*t)
+
+        """
+        t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object '
+            'and cannot be used as a parameter.' % t.name)
+        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
+        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
+        return Point(x, y)
 
     def random_point(self):
         """A random point on a LinearEntity.
@@ -832,7 +899,7 @@ class LinearEntity(GeometryEntity):
 
             a, b, c = self.coefficients
             x = randint(lower, upper)
-            y = simplify((-c - a*x) / b)
+            y = (-c - a*x) / b
         return Point(x, y)
 
     def is_similar(self, other):
@@ -946,67 +1013,29 @@ class Line(LinearEntity):
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point; if it was meant to be a slope it should be given with keyword "slope".')
-            if p1 == p2:
-                raise ValueError('A line requires two distinct points.')
+                raise ValueError('The 2nd argument was not a valid Point. '
+                'If it was a slope, enter it with keyword "slope".')
         elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_bounded is False:
                 # when unbounded slope, don't change x
-                p2 = p1 + Point(0, 1)
+                dx = 0
+                dy = 1
             else:
                 # go over 1 up slope
-                p2 = p1 + Point(1, slope)
+                dx = 1
+                dy = slope
+            # XXX avoiding simplification by adding to coords directly
+            p2 = Point(p1.x + dx, p1.y + dy)
         else:
             raise ValueError('A 2nd Point or keyword "slope" must be used.')
 
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Line.
-
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
-
-        Raises
-        ======
-
-        ValueError
-            When ``parameter`` already appears in the Line's definition.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Line
-        >>> p1, p2 = Point(1, 0), Point(5, 3)
-        >>> l1 = Line(p1, p2)
-        >>> l1.arbitrary_point()
-        Point(4*t + 1, 3*t)
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of line.
+        """The plot interval for the default geometric plot of line. Gives
+        values that will produce a line that is +/- 5 units long (where a
+        unit is the distance between the two points that define the line).
 
         Parameters
         ==========
@@ -1077,6 +1106,7 @@ class Line(LinearEntity):
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
+            o = o.func(*[simplify(i) for i in o.args])
             x, y = Dummy(), Dummy()
             eq = self.equation(x, y)
             if not eq.has(y):
@@ -1092,6 +1122,35 @@ class Line(LinearEntity):
             return False
         else:
             return o.p1 in self and o.p2 in self
+
+    def distance(self, o):
+        """
+        Finds the shortest distance between a line and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> s = Line(p1, p2)
+        >>> s.distance(Point(-1, 1))
+        sqrt(2)
+        """
+        if not isinstance(o, Point):
+            raise NotImplementedError
+        a, b, c = self.coefficients
+        if 0 in (a, b):
+            return self.perpendicular_segment(o).length
+        m = self.slope
+        x = o.x
+        y = m*x - c/b
+        return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
+
 
     def __eq__(self, other):
         """Return True if other is equal to this Line, or False otherwise."""
@@ -1167,7 +1226,10 @@ class Ray(LinearEntity):
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point;\nif it was meant to be an angle it should be given with keyword "angle".')
+                raise ValueError(
+                    'The 2nd argument was not a valid Point;\nif '
+                    'it was meant to be an angle it should be '
+                    'given with keyword "angle".')
             if p1 == p2:
                 raise ValueError('A Ray requires two distinct points.')
         elif angle is not None and pt is None:
@@ -1282,89 +1344,44 @@ class Ray(LinearEntity):
         else:
             return S.NegativeInfinity
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Ray.
 
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
+    def distance(self, o):
+        """
+        Finds the shortest distance between the ray and a point.
 
         Raises
         ======
 
-        ValueError
-            When ``parameter`` already appears in the Ray's definition.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
+        NotImplementedError is raised if o is not a Point
 
         Examples
         ========
 
-        >>> from sympy import Ray, Point, Segment, S, simplify, solve
-        >>> from sympy.abc import t
-        >>> r = Ray(Point(0, 0), Point(2, 3))
-
-        >>> p = r.arbitrary_point(t)
-
-        The parameter `t` used in the arbitrary point maps 0 to the
-        origin of the ray and 1 to the end of the ray at infinity
-        (which will show up as NaN).
-
-        >>> p.subs(t, 0), p.subs(t, 1)
-        (Point(0, 0), Point(oo, oo))
-
-        The unit that `t` moves you is based on the spacing of the
-        points used to define the ray.
-
-        >>> p.subs(t, 1/(S(1) + 1)) # one unit
-        Point(2, 3)
-        >>> p.subs(t, 2/(S(1) + 2)) # two units out
-        Point(4, 6)
-        >>> p.subs(t, S.Half/(S(1) + S.Half)) # half a unit out
-        Point(1, 3/2)
-
-        If you want to be located a distance of 1 from the origin of the
-        ray, what value of `t` is needed?
-
-        a)  Find the unit length and pick `t` accordingly.
-
-            >>> u = Segment(r.p1, p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
-            >>> want = 1
-            >>> t_need = want/u
-            >>> p_want = p.subs(t, t_need/(1 + t_need))
-            >>> simplify(Segment(r.p1, p_want).length)
-            1
-
-        b)  Find the `t` that makes the length from origin to `p` equal to 1.
-
-            >>> l = Segment(r.p1, p).length
-            >>> t_need = solve(l**2 - want**2, t) # use the square to remove abs() if it is there
-            >>> t_need = [w for w in t_need if w.n() > 0][0] # take positive t
-            >>> p_want = p.subs(t, t_need)
-            >>> simplify(Segment(r.p1, p_want).length)
-            1
-
+        >>> from sympy import Point, Ray
+        >>> p1, p2 = Point(0, 0), Point(1, 1)
+        >>> s = Ray(p1, p2)
+        >>> s.distance(Point(-1, -1))
+        sqrt(2)
         """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t/(1 - t)*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t/(1 - t)*(self.p2.y - self.p1.y))
-        return Point(x, y)
+        if not isinstance(o, Point):
+            raise NotImplementedError
+        s = self.perpendicular_segment(o)
+        if isinstance(s, Point):
+            if self.contains(s):
+                return S.Zero
+        else:
+            # since arg-order is arbitrary, find the non-o point
+            non_o = s.p1 if s.p1 != o else s.p2
+            if self.contains(non_o):
+                return Line(self).distance(o)  # = s.length but simpler
+        # the following applies when neither of the above apply
+        return self.source.distance(o)
+
 
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Ray.
+        """The plot interval for the default geometric plot of the Ray. Gives
+        values that will produce a ray that is 10 units long (where a unit is
+        the distance between the two points that define the ray).
 
         Parameters
         ==========
@@ -1384,16 +1401,11 @@ class Ray(LinearEntity):
         >>> from sympy import Point, Ray, pi
         >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
-        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
+        [t, 0, 10]
 
         """
         t = _symbol(parameter)
-        p = self.arbitrary_point(t)
-        # get a t corresponding to length of 10
-        want = 10
-        u = Segment(self.p1, p.subs(t, S.Half)).length  # gives unit length
-        t_need = want/u
-        return [t, 0, t_need/(1 + t_need)]
+        return [t, 0, 10]
 
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
@@ -1422,8 +1434,8 @@ class Ray(LinearEntity):
                     rv = o.y >= self.source.y
                 else:
                     rv = o.y <= self.source.y
-                if isinstance(rv, bool):
-                    return rv
+                if rv == True or rv == False:
+                    return bool(rv)
                 raise Undecidable(
                     'Cannot determine if %s is in %s' % (o, self))
             else:
@@ -1436,7 +1448,7 @@ class Ray(LinearEntity):
 
 
 class Segment(LinearEntity):
-    """An undirected line segment in space.
+    """A undirected line segment in space.
 
     Parameters
     ==========
@@ -1492,70 +1504,15 @@ class Segment(LinearEntity):
         p2 = Point(p2)
         if p1 == p2:
             return Point(p1)
-        if p1.x > p2.x:
+        if (p1.x > p2.x) == True:
             p1, p2 = p2, p1
-        elif p1.x == p2.x and p1.y > p2.y:
+        elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Segment.
-
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
-
-
-        Parameters
-        ==========
-
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        =======
-
-        point : Point
-
-        Raises
-        ======
-
-        ValueError
-            When ``parameter`` already appears in the Segment's definition.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Segment
-        >>> p1, p2 = Point(1, 0), Point(5, 3)
-        >>> s1 = Segment(p1, p2)
-        >>> s1.arbitrary_point()
-        Point(4*t + 1, 3*t)
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
-        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Segment.
+        """The plot interval for the default geometric plot of the Segment gives
+        values that will produce the full segment in a plot.
 
         Parameters
         ==========
@@ -1685,26 +1642,21 @@ class Segment(LinearEntity):
         sqrt(170)
         """
         if isinstance(o, Point):
-            return self._do_point_distance(o)
+            seg_vector = self.p2 - self.p1
+            pt_vector = o - self.p1
+            t = seg_vector.dot(pt_vector)/self.length**2
+            if t >= 1:
+                distance = Point.distance(self.p2, o)
+            elif t <= 0:
+                distance = Point.distance(self.p1, o)
+            else:
+                distance = Point.distance(
+                    self.p1 + Point(t*seg_vector.x, t*seg_vector.y), o)
+            return distance
         raise NotImplementedError()
 
-    def _do_point_distance(self, pt):
-        """Calculates the distance between a point and a line segment."""
-
-        seg_vector = self.p2 - self.p1
-        pt_vector = pt - self.p1
-        t = seg_vector.dot(pt_vector)/self.length**2
-        if t >= 1:
-            distance = Point.distance(self.p2, pt)
-        elif t <= 0:
-            distance = Point.distance(self.p1, pt)
-        else:
-            distance = Point.distance(
-                self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
-        return distance
-
     def __eq__(self, other):
-        """Is the other GeometryEntity equal to this Ray?"""
+        """Is the other GeometryEntity equal to this Segment?"""
         if not isinstance(other, Segment):
             return False
         return (self.p1 == other.p1) and (self.p2 == other.p2)

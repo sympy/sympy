@@ -1,9 +1,13 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C
+from sympy.core.compatibility import u
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import atan, atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -37,7 +41,6 @@ class re(Function):
 
        im
     """
-    nargs = 1
 
     is_real = True
     unbranched = True  # implicitely works on the projection to C
@@ -88,10 +91,10 @@ class re(Function):
 
     def _eval_derivative(self, x):
         if x.is_real or self.args[0].is_real:
-            return re(Derivative(self.args[0], x, **{'evaluate': True}))
+            return re(Derivative(self.args[0], x, evaluate=True))
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
-                * im(Derivative(self.args[0], x, **{'evaluate': True}))
+                * im(Derivative(self.args[0], x, evaluate=True))
 
 
 class im(Function):
@@ -125,8 +128,6 @@ class im(Function):
 
     re
     """
-
-    nargs = 1
 
     is_real = True
     unbranched = True  # implicitely works on the projection to C
@@ -184,10 +185,10 @@ class im(Function):
 
     def _eval_derivative(self, x):
         if x.is_real or self.args[0].is_real:
-            return im(Derivative(self.args[0], x, **{'evaluate': True}))
+            return im(Derivative(self.args[0], x, evaluate=True))
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
-                * re(Derivative(self.args[0], x, **{'evaluate': True}))
+                * re(Derivative(self.args[0], x, evaluate=True))
 
 
 ###############################################################################
@@ -216,8 +217,6 @@ class sign(Function):
 
     Abs, conjugate
     """
-
-    nargs = 1
 
     is_bounded = True
     is_complex = True
@@ -281,11 +280,11 @@ class sign(Function):
     def _eval_derivative(self, x):
         if self.args[0].is_real:
             from sympy.functions.special.delta_functions import DiracDelta
-            return 2 * Derivative(self.args[0], x, **{'evaluate': True}) \
+            return 2 * Derivative(self.args[0], x, evaluate=True) \
                 * DiracDelta(self.args[0])
         elif self.args[0].is_imaginary:
             from sympy.functions.special.delta_functions import DiracDelta
-            return 2 * Derivative(self.args[0], x, **{'evaluate': True}) \
+            return 2 * Derivative(self.args[0], x, evaluate=True) \
                 * DiracDelta(-S.ImaginaryUnit * self.args[0])
 
     def _eval_is_imaginary(self):
@@ -309,6 +308,13 @@ class sign(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
+
+    def _eval_rewrite_as_Piecewise(self, arg):
+        if arg.is_real:
+            return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
+
+    def _eval_simplify(self, ratio, measure):
+        return self.func(self.args[0].factor())
 
 
 class Abs(Function):
@@ -349,8 +355,6 @@ class Abs(Function):
     sign, conjugate
     """
 
-    nargs = 1
-
     is_real = True
     is_negative = False
     unbranched = True
@@ -374,11 +378,13 @@ class Abs(Function):
 
     @classmethod
     def eval(cls, arg):
+        from sympy.simplify.simplify import signsimp
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
         # handle what we can
+        arg = signsimp(arg, evaluate=False)
         if arg.is_Mul:
             known = []
             unk = []
@@ -410,6 +416,8 @@ class Abs(Function):
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
                 return arg
+            if exponent.is_integer and base is S.NegativeOne:
+                return S.One
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
@@ -441,25 +449,25 @@ class Abs(Function):
 
     def _eval_derivative(self, x):
         if self.args[0].is_real or self.args[0].is_imaginary:
-            return Derivative(self.args[0], x, **{'evaluate': True}) \
+            return Derivative(self.args[0], x, evaluate=True) \
                 * sign(conjugate(self.args[0]))
         return (re(self.args[0]) * Derivative(re(self.args[0]), x,
-            **{'evaluate': True}) + im(self.args[0]) * Derivative(im(self.args[0]),
-                x, **{'evaluate': True})) / Abs(self.args[0])
+            evaluate=True) + im(self.args[0]) * Derivative(im(self.args[0]),
+                x, evaluate=True)) / Abs(self.args[0])
 
     def _eval_rewrite_as_Heaviside(self, arg):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
         if arg.is_real:
             return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
-        else:
-            return self
+
+    def _eval_rewrite_as_Piecewise(self, arg):
+        if arg.is_real:
+            return Piecewise((arg, arg >= 0), (-arg, True))
 
 
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
-
-    nargs = 1
 
     is_real = True
     is_bounded = True
@@ -473,9 +481,12 @@ class arg(Function):
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])
-        return (x * Derivative(y, t, **{'evaluate': True}) - y *
-                Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
+        return (x * Derivative(y, t, evaluate=True) - y *
+                    Derivative(x, t, evaluate=True)) / (x**2 + y**2)
 
+    def _eval_rewrite_as_atan2(self, arg):
+        x, y = re(self.args[0]), im(self.args[0])
+        return atan2(y, x)
 
 class conjugate(Function):
     """
@@ -495,8 +506,6 @@ class conjugate(Function):
     sign, Abs
     """
 
-    nargs = 1
-
     @classmethod
     def eval(cls, arg):
         obj = arg._eval_conjugate()
@@ -504,7 +513,7 @@ class conjugate(Function):
             return obj
 
     def _eval_Abs(self):
-        return Abs(self.args[0], **{'evaluate': True})
+        return Abs(self.args[0], evaluate=True)
 
     def _eval_adjoint(self):
         return transpose(self.args[0])
@@ -514,9 +523,9 @@ class conjugate(Function):
 
     def _eval_derivative(self, x):
         if x.is_real:
-            return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+            return conjugate(Derivative(self.args[0], x, evaluate=True))
         elif x.is_imaginary:
-            return -conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+            return -conjugate(Derivative(self.args[0], x, evaluate=True))
 
     def _eval_transpose(self):
         return adjoint(self.args[0])
@@ -526,8 +535,6 @@ class transpose(Function):
     """
     Linear map transposition.
     """
-
-    nargs = 1
 
     @classmethod
     def eval(cls, arg):
@@ -549,8 +556,6 @@ class adjoint(Function):
     """
     Conjugate transpose or Hermite conjugation.
     """
-
-    nargs = 1
 
     @classmethod
     def eval(cls, arg):
@@ -581,7 +586,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u'\u2020')
+            pform = pform**prettyForm(u('\u2020'))
         else:
             pform = pform**prettyForm('+')
         return pform
@@ -619,8 +624,6 @@ class polar_lift(Function):
     sympy.functions.elementary.exponential.exp_polar
     periodic_argument
     """
-
-    nargs = 1
 
     is_polar = True
     is_comparable = False  # Cannot be evalf'd.
@@ -660,6 +663,9 @@ class polar_lift(Function):
         """ Careful! any evalf of polar numbers is flaky """
         return self.args[0]._eval_evalf(prec)
 
+    def _eval_Abs(self):
+        return Abs(self.args[0], evaluate=True)
+
 
 class periodic_argument(Function):
     """
@@ -687,8 +693,6 @@ class periodic_argument(Function):
     polar_lift : Lift argument to the riemann surface of the logarithm
     principal_branch
     """
-
-    nargs = 2
 
     @classmethod
     def _getunbranched(cls, ar):
@@ -785,7 +789,6 @@ class principal_branch(Function):
     periodic_argument
     """
 
-    nargs = 2
     is_polar = True
     is_comparable = False  # cannot always be evalf'd
 
@@ -832,7 +835,7 @@ class principal_branch(Function):
             if arg == 0:
                 return abs(c)*principal_branch(Mul(*m), period)
             return principal_branch(exp_polar(I*arg)*Mul(*m), period)*abs(c)
-        if arg.is_number and ((abs(arg) < period/2) is True or arg == period/2) \
+        if arg.is_number and ((abs(arg) < period/2) == True or arg == period/2) \
                 and m == ():
             return exp_polar(arg*I)*abs(c)
 

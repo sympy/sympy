@@ -113,6 +113,8 @@ def test_exp_rewrite():
     x = symbols('x')
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
+    assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
+    assert exp(1).rewrite(sin) == sinh(1) + cosh(1)
 
 
 def test_exp_leading_term():
@@ -171,6 +173,10 @@ def test_log_base():
     assert log(3**3, 3) == 3
     assert log(5, 1) == zoo
     assert log(1, 1) == nan
+    assert log(Rational(2, 3), 10) == (-log(3) + log(2))/log(10)
+    assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
+    assert log(Rational(2, 3), Rational(2, 5)) == \
+        (-log(3) + log(2))/(-log(5) + log(2))
 
 
 def test_log_symbolic():
@@ -236,6 +242,7 @@ def test_log_assumptions():
     assert log(p).is_zero is None
     assert log(n).is_zero is False
     assert log(0.5).is_negative is True
+    assert log(exp(p) + 1).is_positive
 
 
 def test_log_hashing():
@@ -313,7 +320,7 @@ def test_lambertw():
         Float("0.701338383413663009202120278965", 30), 1e-29)
 
 
-def test_exp_expand():
+def test_exp_expand_NC():
     A, B, C = symbols('A,B,C', commutative=False)
     x, y, z = symbols('x,y,z')
 
@@ -354,14 +361,14 @@ def test_polar():
     assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
 
 def test_log_product():
-    from sympy.abc import i, j, n, m
+    from sympy.abc import n, m
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
     from sympy.concrete import Product, Sum
     f, g = Function('f'), Function('g')
     assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
-            Sum(log(x**i*y**j), (i, 1, n), (j, 1, m))
+            log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
-    assert Eq(simplify(expr), expr)
+    assert simplify(expr) == expr

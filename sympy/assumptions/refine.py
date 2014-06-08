@@ -1,4 +1,6 @@
-from sympy.core import S, Add
+from __future__ import print_function, division
+
+from sympy.core import S, Add, Expr, Basic
 from sympy.assumptions import Q, ask
 from sympy.core.logic import fuzzy_not
 
@@ -22,6 +24,8 @@ def refine(expr, assumptions=True):
         x
 
     """
+    if not isinstance(expr, Basic):
+        return expr
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial
@@ -33,6 +37,8 @@ def refine(expr, assumptions=True):
     new_expr = handler(expr, assumptions)
     if (new_expr is None) or (expr == new_expr):
         return expr
+    if not isinstance(new_expr, Expr):
+        return new_expr
     return refine(new_expr, assumptions)
 
 
@@ -88,7 +94,12 @@ def refine_Pow(expr, assumptions):
 
     """
     from sympy.core import Pow, Rational
+    from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
+    if isinstance(expr.base, Abs):
+        if ask(Q.real(expr.base.args[0]), assumptions) and \
+                ask(Q.even(expr.exp), assumptions):
+            return expr.base.args[0] ** expr.exp
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
             if ask(Q.even(expr.exp), assumptions):
@@ -101,6 +112,8 @@ def refine_Pow(expr, assumptions):
 
         if expr.base is S.NegativeOne:
             if expr.exp.is_Add:
+
+                old = expr
 
                 # For powers of (-1) we can remove
                 #  - even terms
@@ -130,7 +143,27 @@ def refine_Pow(expr, assumptions):
 
                 if new_coeff != coeff or len(terms) < initial_number_of_terms:
                     terms.add(new_coeff)
-                    return expr.base**(Add(*terms))
+                    expr = expr.base**(Add(*terms))
+
+                # Handle (-1)**((-1)**n/2 + m/2)
+                e2 = 2*expr.exp
+                if ask(Q.even(e2), assumptions):
+                    if e2.could_extract_minus_sign():
+                        e2 *= expr.base
+                if e2.is_Add:
+                    i, p = e2.as_two_terms()
+                    if p.is_Pow and p.base is S.NegativeOne:
+                        if ask(Q.integer(p.exp), assumptions):
+                            i = (i + 1)/2
+                            if ask(Q.even(i), assumptions):
+                                return expr.base**p.exp
+                            elif ask(Q.odd(i), assumptions):
+                                return expr.base**(p.exp + 1)
+                            else:
+                                return expr.base**(p.exp + i)
+
+                if old != expr:
+                    return expr
 
 
 def refine_exp(expr, assumptions):
@@ -159,8 +192,27 @@ def refine_exp(expr, assumptions):
                 elif ask(Q.odd(coeff + S.Half), assumptions):
                     return S.ImaginaryUnit
 
+def refine_Relational(expr, assumptions):
+    """
+    Handler for Relational
+
+    >>> from sympy.assumptions.refine import refine_Relational
+    >>> from sympy.assumptions.ask import Q
+    >>> from sympy.abc import x
+    >>> refine_Relational(x<0, ~Q.is_true(x<0))
+    False
+    """
+    return ask(Q.is_true(expr), assumptions)
+
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'exp': refine_exp,
+    'Equality' : refine_Relational,
+    'Unequality' : refine_Relational,
+    'GreaterThan' : refine_Relational,
+    'LessThan' : refine_Relational,
+    'StrictGreaterThan' : refine_Relational,
+    'StrictLessThan' : refine_Relational
 }

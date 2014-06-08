@@ -5,9 +5,9 @@ See examples\mplot2d.py and examples\mplot3d.py for usable 2d and 3d
 graphing functions using matplotlib.
 """
 
-from numpy import repeat, arange, empty, ndarray, array
-from sympy import Symbol, Basic, Rational, I, sympify
-
+from sympy.core.sympify import sympify, SympifyError
+from sympy.external import import_module
+np = import_module('numpy')
 
 def sample2d(f, x_args):
     """
@@ -29,9 +29,9 @@ def sample2d(f, x_args):
 
     x_l = float(x_max - x_min)
     x_d = x_l/float(x_n)
-    X = arange(float(x_min), float(x_max) + x_d, x_d)
+    X = np.arange(float(x_min), float(x_max) + x_d, x_d)
 
-    Y = empty(len(X))
+    Y = np.empty(len(X))
     for i in range(len(X)):
         try:
             Y[i] = float(f.subs(x, X[i]))
@@ -63,33 +63,33 @@ def sample3d(f, x_args, y_args):
 
     x_l = float(x_max - x_min)
     x_d = x_l/float(x_n)
-    x_a = arange(float(x_min), float(x_max) + x_d, x_d)
+    x_a = np.arange(float(x_min), float(x_max) + x_d, x_d)
 
     y_l = float(y_max - y_min)
     y_d = y_l/float(y_n)
-    y_a = arange(float(y_min), float(y_max) + y_d, y_d)
+    y_a = np.arange(float(y_min), float(y_max) + y_d, y_d)
 
     def meshgrid(x, y):
         """
         Taken from matplotlib.mlab.meshgrid.
         """
-        x = array(x)
-        y = array(y)
+        x = np.array(x)
+        y = np.array(y)
         numRows, numCols = len(y), len(x)
         x.shape = 1, numCols
-        X = repeat(x, numRows, 0)
+        X = np.repeat(x, numRows, 0)
 
         y.shape = numRows, 1
-        Y = repeat(y, numCols, 1)
+        Y = np.repeat(y, numCols, 1)
         return X, Y
 
-    X, Y = meshgrid(x_a, y_a)
+    X, Y = np.meshgrid(x_a, y_a)
 
-    Z = ndarray((len(X), len(X[0])))
+    Z = np.ndarray((len(X), len(X[0])))
     for j in range(len(X)):
         for k in range(len(X[0])):
             try:
-                Z[j][k] = float( f.subs(x, X[j][k]).subs(y, Y[j][k]) )
+                Z[j][k] = float(f.subs(x, X[j][k]).subs(y, Y[j][k]))
             except (TypeError, NotImplementedError):
                 Z[j][k] = 0
     return X, Y, Z

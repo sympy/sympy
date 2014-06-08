@@ -1,9 +1,12 @@
 """sympify -- convert objects SymPy internal format"""
 
+from __future__ import print_function, division
+
 from inspect import getmro
 
-from core import all_classes as sympy_classes
-from sympy.core.compatibility import iterable
+from .core import all_classes as sympy_classes
+from .compatibility import iterable, string_types
+from .evaluate import global_evaluate
 
 
 class SympifyError(ValueError):
@@ -47,9 +50,9 @@ class CantSympify(object):
     """
     pass
 
-def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
-    """
-    Converts an arbitrary expression to a type that can be used inside SymPy.
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
+        evaluate=None):
+    """Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instance of sympy.Rational,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
@@ -60,7 +63,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - any object defined in sympy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
-       - booleans, including ``None`` (will leave them unchanged)
+       - booleans, including ``None`` (will leave ``None`` unchanged)
        - lists, sets or tuples containing any of the above
 
     If the argument is already a type that SymPy understands, it will do
@@ -94,7 +97,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     The sympification happens with access to everything that is loaded
     by ``from sympy import *``; anything used in a string that is not
     defined by that import will be converted to a symbol. In the following,
-    the ``bitcout`` function is treated as a symbol and the ``O`` is
+    the ``bitcount`` function is treated as a symbol and the ``O`` is
     interpreted as the Order object (used with series) and it raises
     an error when used improperly:
 
@@ -111,8 +114,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     In order to have ``bitcount`` be recognized it can be imported into a
     namespace dictionary and passed as locals:
 
+    >>> from sympy.core.compatibility import exec_
     >>> ns = {}
-    >>> exec 'from sympy.core.evalf import bitcount' in ns
+    >>> exec_('from sympy.core.evalf import bitcount', ns)
     >>> sympify(s, locals=ns)
     6
 
@@ -122,7 +126,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     >>> from sympy import Symbol
     >>> ns["O"] = Symbol("O")  # method 1
-    >>> exec 'from sympy.abc import O' in ns  # method 2
+    >>> exec_('from sympy.abc import O', ns)  # method 2
     >>> ns.update(dict(O=Symbol("O")))  # method 3
     >>> sympify("O + 1", locals=ns)
     O + 1
@@ -146,12 +150,27 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     explicit conversion has been defined are converted. In the other
     cases, a SympifyError is raised.
 
-    >>> sympify(True)
-    True
-    >>> sympify(True, strict=True)
+    >>> print(sympify(None))
+    None
+    >>> sympify(None, strict=True)
     Traceback (most recent call last):
     ...
-    SympifyError: SympifyError: True
+    SympifyError: SympifyError: None
+
+    Evaluation
+    ----------
+
+    If the option ``evaluate`` is set to ``False``, then arithmetic and
+    operators will be converted into their SymPy equivalents and the
+    ``evaluate=False`` option will be added. Nested ``Add`` or ``Mul`` will
+    be denested first. This is done via an AST transformation that replaces
+    operators with their SymPy equivalents, so if an operand redefines any
+    of those operations, the redefined operators will not be used.
+
+    >>> sympify('2**2 / 3 + 5')
+    19/3
+    >>> sympify('2**2 / 3 + 5', evaluate=False)
+    2**2/3 + 5
 
     Extending
     ---------
@@ -169,8 +188,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...     def __getitem__(self, i): return list(self)[i]
     ...     def _sympy_(self): return Matrix(self)
     >>> sympify(MyList1())
-    [1]
-    [2]
+    Matrix([
+    [1],
+    [2]])
 
     If you do not have control over the class definition you could also use the
     ``converter`` global dictionary. The key is the class and the value is a
@@ -186,8 +206,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     >>> from sympy.core.sympify import converter
     >>> converter[MyList2] = lambda x: Matrix(x)
     >>> sympify(MyList2())
-    [1]
-    [2]
+    Matrix([
+    [1],
+    [2]])
 
     Notes
     =====
@@ -200,24 +221,24 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x
-    >>> -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))
+    >>> -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
     -1
-    >>> sympify('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
+    >>> s = '-2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1'
+    >>> sympify(s)
     -1
-    >>> kernS('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
-    -1 + 2*(-x + 1/x)/(x*(x - 1/x)**2) + 2/(x*(x - 1/x))
-
-    In the last expression, the result is not exactly the same as the
-    entered string, but it is a lot closer.
+    >>> kernS(s)
+    -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
+    if evaluate is None:
+        evaluate = global_evaluate[0]
     try:
         cls = a.__class__
     except AttributeError:  # a is probably an old-style class object
         cls = type(a)
     if cls in sympy_classes:
         return a
-    if cls in (bool, type(None)):
+    if cls is type(None):
         if strict:
             raise SympifyError(a)
         else:
@@ -240,7 +261,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     except AttributeError:
         pass
 
-    if not isinstance(a, basestring):
+    if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
                 return sympify(coerce(a))
@@ -260,7 +281,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if isinstance(a, dict):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a.iteritems()])
+                rational=rational) for x in a.items()])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
@@ -274,8 +295,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     # and try to parse it. If it fails, then we have no luck and
     # return an exception
     try:
+        from .compatibility import unicode
         a = unicode(a)
-    except Exception, exc:
+    except Exception as exc:
         raise SympifyError(a, exc)
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
@@ -292,37 +314,38 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, local_dict=locals, transformations=transformations)
-    except (TokenError, SyntaxError), exc:
+        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
+    except (TokenError, SyntaxError) as exc:
         raise SympifyError('could not parse %r' % a, exc)
 
     return expr
 
 
 def _sympify(a):
-    """Short version of sympify for internal usage for __add__ and __eq__
-       methods where it is ok to allow some things (like Python integers
-       and floats) in the expression. This excludes things (like strings)
-       that are unwise to allow into such an expression.
+    """
+    Short version of sympify for internal usage for __add__ and __eq__ methods
+    where it is ok to allow some things (like Python integers and floats) in
+    the expression. This excludes things (like strings) that are unwise to
+    allow into such an expression.
 
-       >>> from sympy import Integer
-       >>> Integer(1) == 1
-       True
+    >>> from sympy import Integer
+    >>> Integer(1) == 1
+    True
 
-       >>> Integer(1) == '1'
-       False
+    >>> Integer(1) == '1'
+    False
 
-       >>> from sympy import Symbol
-       >>> from sympy.abc import x
-       >>> x + 1
-       x + 1
+    >>> from sympy.abc import x
+    >>> x + 1
+    x + 1
 
-       >>> x + '1'
-       Traceback (most recent call last):
-           ...
-       TypeError: unsupported operand type(s) for +: 'Symbol' and 'str'
+    >>> x + '1'
+    Traceback (most recent call last):
+    ...
+    TypeError: unsupported operand type(s) for +: 'Symbol' and 'str'
 
-       see: sympify
+    see: sympify
+
     """
     return sympify(a, strict=True)
 
@@ -338,30 +361,18 @@ def kernS(s):
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x, y, z
 
-    The 2-arg Mul allows a leading Integer to be distributed and kernS does
-    not prevent that:
+    The 2-arg Mul allows a leading Integer to be distributed but kernS will
+    prevent that:
 
-    >>> 2*(x + y) == kernS('2*(x + y)') == 2*x + 2*y
-    True
-
-    But a Mul with more than 2 args need not have the leading Integer
-    distributed and the kernS version of S will keep that distribution
-    from occuring:
-
-    >>> 2*(x  + y)*z  # the first two arguments undergo the distribution
-    z*(2*x + 2*y)
-    >>> 2*z*(x + y)  # in this form, the Add is not multiplied by an Integer
-    2*z*(x + y)
-    >>> kernS('2*(x + y)*z')  # kernS will stop the distribution in this case
-    2*z*(x + y)
-
-    >>> kernS('E**-(x)')
-    exp(-x)
+    >>> 2*(x + y)
+    2*x + 2*y
+    >>> kernS('2*(x + y)')
+    2*(x + y)
 
     If use of the hack fails, the un-hacked string will be passed to sympify...
     and you get what you get.
 
-    XXX This hack should not be necessary once issue 1497 has been resolved.
+    XXX This hack should not be necessary once issue 4596 has been resolved.
     """
     import re
     from sympy.core.symbol import Symbol
@@ -369,43 +380,43 @@ def kernS(s):
     hit = False
     if '(' in s:
         if s.count('(') != s.count(")"):
-            raise SympifyError('unmatch laft parentheses')
+            raise SympifyError('unmatched left parenthesis')
 
         kern = '_kern'
         while kern in s:
             kern += "_"
-        lparen = 'kern_2'
-        while lparen in s:
-            lparen += "_"
         olds = s
-        s = re.sub(r'(\d *\*|-) *\(', r'\1(%s*%s' % (kern, lparen), s)
-
-        hit = kern in s
-        if hit:
-            # close parentheses after kerns; if this fails there is
-            # either an error in this parsing or in the original string
-            i = 0
-            close = []
-            while True:
-                i = s.find(kern,  i)
-                if i == -1:
+        # digits*( -> digits*kern*(
+        s = re.sub(r'(\d+)( *\* *)\(', r'\1*%s\2(' % kern, s)
+        # negated parenthetical
+        kern2 = kern + "2"
+        while kern2 in s:
+            kern2 += "_"
+        # step 1:  -(...)  -->  kern-kern*(...)
+        target = r'%s-%s*(' % (kern, kern)
+        s = re.sub(r'- *\(', target, s)
+        # step 2: double the matching closing parenthesis
+        # kern-kern*(...)  -->  kern-kern*(...)kern2
+        i = nest = 0
+        while True:
+            j = s.find(target, i)
+            if j == -1:
+                break
+            j = s.find('(')
+            for j in range(j, len(s)):
+                if s[j] == "(":
+                    nest += 1
+                elif s[j] == ")":
+                    nest -= 1
+                if nest == 0:
                     break
-                count = 1  # for the one before the kern
-                for j in range(i + 1, len(s)):
-                    c = s[j]
-                    if c == "(":
-                        count += 1
-                    elif c == ")":
-                        count -= 1
-                    else:
-                        continue
-                    if count == 0:
-                        close.append(j)
-                        i += len(kern)  # continue from the last kern
-                        break
-            for i in reversed(close):
-                s = ')'.join([s[:i], s[i:]])
-            s = s.replace(lparen, "(")
+            s = s[:j] + kern2 + s[j:]
+            i = j
+        # step 3: put in the parentheses
+        # kern-kern*(...)kern2  -->  (-kern*(...))
+        s = s.replace(target, target.replace(kern, "(", 1))
+        s = s.replace(kern2, ')')
+        hit = kern in s
 
     for i in range(2):
         try:
@@ -422,11 +433,12 @@ def kernS(s):
         return expr
 
     rep = {Symbol(kern): 1}
-    if hasattr(expr, 'xreplace'):
-        return expr.xreplace(rep)
-    elif isinstance(expr, (list, tuple, set)):
-        return type(expr)([_clear(e) for e in expr])
-    if hasattr(expr, 'subs'):
-        return expr.subs(rep)
+    def _clear(expr):
+        if isinstance(expr, (list, tuple, set)):
+            return type(expr)([_clear(e) for e in expr])
+        if hasattr(expr, 'subs'):
+            return expr.subs(rep, hack2=True)
+        return expr
+    expr = _clear(expr)
     # hope that kern is not there anymore
     return expr
