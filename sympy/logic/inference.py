@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf
+    conjuncts, to_cnf, true, false
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
@@ -14,7 +14,7 @@ def is_literal(expr):
     Examples
     ========
 
-    >>> from sympy import Symbol, Or
+    >>> from sympy import Or
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import is_literal
     >>> is_literal(A)
@@ -26,11 +26,14 @@ def is_literal(expr):
 
     """
 
-    try:
-        literal_symbol(expr)
+    expr = sympify(expr)
+    if expr in (true, false):
         return True
-    except (ValueError):
-        return False
+    if expr.is_Not and expr.args[0].is_Atom:
+        return True
+    if expr.is_Atom:
+        return True
+    return False
 
 
 def literal_symbol(literal):
