@@ -12,9 +12,11 @@ TODO:
 from __future__ import print_function, division
 
 from sympy import Derivative, Expr
-from sympy.printing.pretty.stringpict import prettyForm
+from sympy.core.function import Function
+from sympy.core.symbol import symbols
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
+from sympy.printing.pretty.stringpict import prettyForm
 
 __all__ = [
     'Operator',
@@ -516,3 +518,51 @@ class DifferentialOperator(Operator):
         )
         pform = prettyForm(*pform.right((label_pform)))
         return pform
+
+
+def diff_op_exp(diff_op):
+    """
+    Exponential map of a differential operator.
+
+    It takes a DifferentialOperator as parameter, returns a DifferentialOperator
+    representing the exponential map, or raises an exception if it failed.
+
+    Notes
+    =====
+
+    TODO
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function
+    >>> from sympy.physics.quantum import DifferentialOperator, Wavefunction
+    >>> from sympy.physics.quantum import qapply
+    >>> from sympy.physics.quantum.operator import diff_op_exp
+    >>> f = Function('f')
+    >>> x = symbols('x')
+    >>> unit_translation_generator = DifferentialOperator(f(x).diff(x), f(x))
+    >>> unit_translation = diff_op_exp(unit_translation_generator)
+    >>> w = Wavefunction(f(x), f(x))
+    >>> qapply(unit_translation * w)
+    Wavefunction(f(x + 1), f(x))
+    >>> a = symbols('a')
+    >>> translation_generator = DifferentialOperator(a * f(x).diff(x), f(x))
+    >>> translation = diff_op_exp(translation_generator)
+    >>> qapply(translation * w)
+    Wavefunction(f(a + x), f(x))
+    """
+    from sympy import pdsolve, Eq, Function, symbols, solve
+    func = Function('func')
+    dfun = diff_op.function
+    arguments = diff_op.function.args
+    t = symbols('t')
+    psol = pdsolve(Eq(func(t, *arguments).diff(t), diff_op.expr.subs(dfun, func(t, *arguments))), func(t, *arguments))
+    Ftransform = psol.args[1]
+    sol_int_args = Ftransform.args
+    avar = symbols('avar')
+    asol = solve([avar * i.subs(t, 0) - j for i, j in zip(sol_int_args, arguments)], avar)[avar]
+    return DifferentialOperator(
+        type(dfun)(*[asol*i.subs(t, 1) for i in sol_int_args]),
+        type(dfun)(*arguments)
+    )
