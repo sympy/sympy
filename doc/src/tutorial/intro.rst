@@ -105,13 +105,13 @@ The Power of Symbolic Computation
 =================================
 
 The real power of a symbolic computation system such as SymPy is the ability
-to do all sorts of computations symbolically.  SymPy can compute derivatives,
-integrals, and limits, solve equations, work with matrices, and much, much
-more, and do it all symbolically.  It includes modules for plotting, printing
-(like 2D pretty printed output of math formulas, or `\LaTeX`), code
-generation, physics, statistics, combinatorics, number theory, geometry,
-logic, and more. Here is a small sampling of the sort of symbolic power SymPy
-is capable of, to whet your appetite.
+to do all sorts of computations symbolically.  SymPy can simplify expressions,
+compute derivatives, integrals, and limits, solve equations, work with
+matrices, and much, much more, and do it all symbolically.  It includes
+modules for plotting, printing (like 2D pretty printed output of math
+formulas, or `\LaTeX`), code generation, physics, statistics, combinatorics,
+number theory, geometry, logic, and more. Here is a small sampling of the sort
+of symbolic power SymPy is capable of, to whet your appetite.
 
    >>> from sympy import *
    >>> x, t, z, nu = symbols('x t z nu')
