@@ -49,7 +49,7 @@ on the bottom right of the screen.
 
 By default, the SymPy Live shell uses `\LaTeX` for output.  If you want the
 output to look more like the output in the documentation, change the
-output format to ``Str`` or ``Unicode``.
+output format to ``Str`` or ``Unicode`` in the settings.
 
 If you wish to modify an example before evaluating it, change the evaluation
 mode to "copy" in the SymPy Live settings.  This will cause clicking on an
