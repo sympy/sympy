@@ -193,20 +193,19 @@ article lists many of them.  What makes SymPy a better choice than the
 alternatives?
 
 First off, SymPy is completely free. It is open source, and licensed under the
-liberal BSD license, so you can even modify the source code and sell if you
-want to.  This contrasts with popular commercial systems like Maple or
+liberal BSD license, so you can even modify the source code and even sell if
+you want to.  This contrasts with popular commercial systems like Maple or
 Mathematica that cost hundreds of dollars in licenses.
 
 Second, SymPy uses Python.  Most computer algebra systems invent their own
 language. Not SymPy. SymPy is written entirely in Python, and is executed
 entirely in Python. This means that if you already know Python, it is much
 easier to get started with SymPy, because you already know the syntax (and if
-you don't know Python, it is really easy to learn).  Plus, we already know
-that Python is a well-designed, battle-tested language.  The SymPy developers
-are confident in their abilities in writing mathematical software, but
-inventing a whole new programming language is a completely different thing.
-By reusing an existing language, we are able to focus on those things that
-matter, the mathematics.
+you don't know Python, it is really easy to learn).  We already know that
+Python is a well-designed, battle-tested language.  The SymPy developers are
+confident in their abilities in writing mathematical software, but programming
+language design is a completely different thing.  By reusing an existing
+language, we are able to focus on those things that matter: the mathematics.
 
 Another computer algebra system, Sage also uses Python as its language.  But
 Sage is large, with a download of over a gigabyte.  An advantage of SymPy is
