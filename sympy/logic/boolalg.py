@@ -381,8 +381,6 @@ class Not(BooleanFunction):
     Notes
     =====
 
-    - De Morgan rules are applied automatically.
-
     - The ``~`` operator is provided as a convenience, but note that its use
       here is different from its normal use in Python, which is bitwise
       not. In particular, ``~a`` and ``Not(a)`` will be different if ``a`` is
@@ -405,12 +403,7 @@ class Not(BooleanFunction):
     def eval(cls, arg):
         if isinstance(arg, Number) or arg in (True, False):
             return false if arg else true
-        # apply De Morgan Rules
-        if arg.func is And:
-            return Or(*[Not(a) for a in arg.args])
-        if arg.func is Or:
-            return And(*[Not(a) for a in arg.args])
-        if arg.func is Not:
+        if arg.is_Not:
             return arg.args[0]
         # Simplify Relational objects.
         if isinstance(arg, C.Equality):
@@ -488,51 +481,36 @@ class Xor(BooleanFunction):
     x
 
     """
-    def __new__(cls, *args, **options):
-        args = [_sympify(arg) for arg in args]
-        argset = multiset(args)  # dictionary
-        args_final=[]
-        # xor is commutative and is false if count of x is even and x
-        # if count of x is odd. Here x can be True, False or any Symbols
-        for x, freq in argset.items():
-            if freq % 2 == 0:
-                argset[x] = false
+    def __new__(cls, *args, **kwargs):
+        argset = set([])
+        args = list(args)
+        while args:
+            arg = args.pop()
+            if isinstance(arg, Number) or arg in (True, False):
+                if arg:
+                    arg = True
+                else:
+                    continue
+            if isinstance(arg, Xor):
+                args.extend(arg.args)
+            elif arg in argset:
+                argset.remove(arg)
             else:
-                argset[x] = x
-        for _, z in argset.items():
-            args_final.append(z)
-        argset = set(args_final)
-        truecount = 0
-        for x in args:
-            if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
-                argset.discard(x)
-                if x:
-                    truecount += 1
-        if len(argset) < 1:
-            return true if truecount % 2 != 0 else false
-        if truecount % 2 != 0:
+                argset.add(arg)
+        if len(argset) == 0:
+            return false
+        elif len(argset) == 1:
+            return sympify(argset.pop())
+        elif True in argset:
+            argset.remove(True)
             return Not(Xor(*argset))
-        _args = frozenset(argset)
-        obj = super(Xor, cls).__new__(cls, *_args, **options)
-        if isinstance(obj, Xor):
-            obj._argset = _args
-        return obj
+        else:
+            return super(Xor, cls).__new__(cls, *argset, **kwargs)
 
     @property
     @cacheit
     def args(self):
         return tuple(ordered(self._argset))
-
-    @classmethod
-    def eval(cls, *args):
-        if not args:
-            return false
-        args = list(args)
-        A = args.pop()
-        while args:
-            B = args.pop()
-            A = Or(And(A, Not(B)), And(Not(A), B))
-        return A
 
 
 class Nand(BooleanFunction):
@@ -735,11 +713,16 @@ class ITE(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
-        args = list(args)
-        if len(args) == 3:
-            return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
-        raise ValueError("ITE expects 3 arguments, but got %d: %s" %
-                         (len(args), str(args)))
+        try:
+            a, b, c = args
+        except ValueError:
+            raise ValueError("ITE expects exactly 3 arguments")
+        if a == True:
+            return b
+        if a == False:
+            return c
+        if b == c:
+            return b
 
 ### end class definitions. Some useful methods
 
