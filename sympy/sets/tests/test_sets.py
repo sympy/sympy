@@ -228,6 +228,11 @@ def test_intersection():
     raises(ValueError, lambda: list(i))
 
 
+def test_is_disjoint():
+    assert Interval(0, 2).is_disjoint(Interval(1, 2)) == False
+    assert Interval(0, 2).is_disjoint(Interval(3, 4)) == True
+
+
 def test_ProductSet_of_single_arg_is_arg():
     assert ProductSet(Interval(0, 1)) == Interval(0, 1)
 
