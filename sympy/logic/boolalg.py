@@ -55,6 +55,29 @@ class Boolean(Basic):
 
     __rxor__ = __xor__
 
+    def equals(self, other):
+        """
+        Returns if the given formulas have the same truth table.
+        For two formulas to be equal they must have the same literals.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import A, B, C
+        >>> from sympy.logic.boolalg import And, Or, Not
+        >>> (A >> B).equals(~B >> ~A)
+        True
+        >>> Not(And(A, B, C)).equals(And(Not(A), Not(B), Not(C)))
+        False
+        >>> Not(And(A, Not(A))).equals(Or(B, Not(B)))
+        False
+        """
+
+        from sympy.logic.inference import satisfiable
+        return self.atoms() == other.atoms() and \
+                not satisfiable(Not(Equivalent(self, other)))
+
+
 # Developer note: There is liable to be some confusion as to when True should
 # be used and when S.true should be used in various contexts throughout SymPy.
 # An important thing to remember is that sympify(True) returns S.true.  This
