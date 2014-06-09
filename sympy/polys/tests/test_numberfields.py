@@ -249,6 +249,10 @@ def test_minpoly_issue4014():
     assert mp == 1768292677839237920489538677417507171630859375*x**109 - \
     2734577732179183863586489182929671773182898498218854181690460140337930774573792597743853652058046464
 
+def test_minpoly_issue7574():
+    ex = -(-1)**Rational(1, 3) + (-1)**Rational(2,3)
+    assert minimal_polynomial(ex, x) == x + 1
+
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
     assert primitive_element(
