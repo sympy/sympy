@@ -1390,6 +1390,8 @@ def classify_sysode(eq, func=None, **kwargs):
             elif matching_hints['no_of_equation'] == 3:
                 if order_eq == 1:
                     type_of_equation = check_linear_3eq_order1(eq, func, func_coef)
+                    if type_of_equation==None:
+                        type_of_equation = check_linear_neq_order1(eq, func, func_coef)
                 else:
                     type_of_equation = None
             else:
@@ -1587,10 +1589,49 @@ def check_linear_2eq_order2(eq, func, func_coef):
             return None
 
 def check_linear_3eq_order1(eq, func, func_coef):
-    return None
+    x = func[0].func
+    y = func[1].func
+    z = func[2].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    r = dict()
+    r['a1'] = fc[0,x(t),1]; r['a2'] = fc[1,y(t),1]; r['a3'] = fc[2,z(t),1]
+    r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
+    r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
+    r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
+    if all(not r[k].has(t) for k in 'a1 a2 a3 b1 b2 b3 c1 c2 c3 d1 d2 d3'.split()):
+        if r['c1']==r['d1']==r['d2']==0:
+            return 'type1'
+        elif r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
+        and r['b1'] == r['c2'] == r['d3'] == 0:
+            return 'type2'
+        else:
+            return None
+    else:
+        if r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
+        and r['b1'] == r['c2'] == r['d3'] == 0:
+            return 'type5'
+        elif all(not (cancel(r['c1']/r[k])).has(t) for k in 'd1 b2 d2 b3 c3'.split()) \
+        and all(not cancel(r['c1']/(r['b1'] - r[k])).has(t) for k in 'c2 d3'.split()):
+            return 'type4'
+        else:
+            return None
 
 def check_linear_neq_order1(eq, func, func_coef):
-    return None
+    x = func[0].func
+    y = func[1].func
+    z = func[2].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    r = dict()
+    leng = len(eq)
+    for i in range(leng):
+        for j in range(leng):
+            if (fc[i,func[j],0]/fc[i,func[i],1]).has(t):
+                return None
+    if len(eq)==3:
+        return 'type6'
+    return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
     return None
@@ -6662,3 +6703,67 @@ def _linear_2eq_order2_type11(x, y, t, r):
     sol1 = C3*t + t*C.Integral(msol1.rhs/t**2, t)
     sol2 = C4*t + t*C.Integral(msol2.rhs/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
+
+def sysode_linear_3eq_order1(match_):
+    C1, C2, C3, C4 = symbols('C1:5')
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    z = match_['func'][2].func
+    func = match_['func']
+    fc = match_['func_coeff']
+    eq = match_['eq']
+    r = dict()
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],2]
+        eq[i] = eqs
+    # for equations Eq(diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
+    # Eq(diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2) and
+    # Eq(a2*diff(y(t),t,t), a3x(t)+b3*y(t)+c3*z(t)+d3)
+    r['a1'] = fc[0,x(t),0]/fc[0,x(t),1]; r['a2'] = fc[1,x(t),0]/fc[1,y(t),1];
+    r['a3'] = fc[2,x(t),0]/fc[2,z(t),1]
+    r['b1'] = fc[0,y(t),0]/fc[0,x(t),1]; r['b2'] = fc[1,y(t),0]/fc[1,y(t),1];
+    r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
+    r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
+    r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
+    const = [S(0), S(0), S(0)]
+    for i in range(2):
+        for j in Add.make_args(eq[i]):
+            if not (j.has(x(t)) or j.has(y(t))):
+                const[i] += j
+    r['d1'] = -const[0]
+    r['d2'] = -const[1]
+    r['d3'] = -const[2]
+    if match_['type_of_equation'] == 'type1':
+        sol = _linear_3eq_order1_type1(x, y, t, r)
+    if match_['type_of_equation'] == 'type2':
+        sol = _linear_3eq_order1_type2(x, y, t, r)
+    if match_['type_of_equation'] == 'type3':
+        sol = _linear_3eq_order1_type3(x, y, t, r)
+    if match_['type_of_equation'] == 'type4':
+        sol = _linear_3eq_order1_type4(x, y, t, r)
+    if match_['type_of_equation'] == 'type5':
+        sol = _linear_3eq_order1_type5(x, y, t, r)
+    if match_['type_of_equation'] == 'type6':
+        sol = _linear_neq_order1_type1(x, y, t, r)
+    return sol
+
+def _linear_3eq_order1_type1(x, y, t, r):
+    C1, C2, C3, C4 = symbols('C1:5')
+    a = r['a1']; b = r['a2']; c = r['b2']
+    d = r['a3']; k = r['b3']; p = r['c3']
+    sol1 = C1*exp(a*t)
+    sol2 = b*C1*exp(a*t)/(a-c) + C2*exp(c*t)
+    sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _linear_3eq_order1_type2(x, y, t, r):
+    C0, C1, C2, C3 = symbols('C0:4')
+    a = r['c2']; b = r['a3']; c = r['b1']
+    k = sqrt(a**2 + b**2 + c**2)
+    sol1 = a*C0 + k*C1*cos(k*t) + (c*C2-b*C3)*sin(k*t)
+    sol2 = b*C0 + k*C2*cos(k*t) + (a*C3-c*C1)*sin(k*t)
+    sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
