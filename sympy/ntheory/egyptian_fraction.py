@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Rational
+import sympy.polys
 from fractions import gcd
 
 
@@ -13,8 +13,8 @@ def egyptian_fraction(r, algorithm="Greedy"):
     ==========
 
     r : Rational
-        a rational number
-    algorithm : { "Greedy", "Graham Jewett", "Takenouchi" }, optional
+        a rational number between 0 and 1
+    algorithm : { "Greedy", "Graham Jewett", "Takenouchi", "Golomb" }, optional
         Denotes the algorithm to be used (the default is "Greedy").
 
     Examples
@@ -28,10 +28,8 @@ def egyptian_fraction(r, algorithm="Greedy"):
     [7, 8, 9, 56, 57, 72, 3192]
     >>> egyptian_fraction(Rational(3, 7), "Takenouchi")
     [4, 7, 28]
-    >>> egyptian_fraction(Rational(9, 5))
-    Traceback (most recent call last):
-    ...
-    ValueError: Value must be between 0 and 1
+    >>> egyptian_fraction(Rational(3, 7), "Golomb")
+    [3, 15, 35]
 
     See Also
     ========
@@ -74,12 +72,19 @@ def egyptian_fraction(r, algorithm="Greedy"):
        Differs from the Graham-Jewett algorithm only in the handling
        of duplicates.  See [3]_.
 
+    4) Golomb's Algorithm
+
+       A method given by Golumb (1962), using modular arithmetic and
+       inverses.  It yields the same results as a method using continued
+       fractions proposed by Bleicher (1972).  See [4]_.
+
     References
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Egyptian_fraction
     .. [2] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
     .. [3] http://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
+    .. [4] http://ami.ektf.hu/uploads/papers/finalpdf/AMI_42_from129to134.pdf
 
     """
     x, y = r.as_numer_denom()
@@ -148,3 +153,12 @@ def egypt_takenouchi(x, y):
         else:
             l[i], l[i + 1] = (k + 1)//2, k*(k + 1)//2
     return sorted(l)
+
+
+def egypt_golomb(x, y):
+    if x == 1:
+        return [y]
+    xp = sympy.polys.ZZ.invert(x, y)
+    rv = [xp*y]
+    rv.extend(egypt_golomb((x*xp - 1)//y, xp))
+    return sorted(rv)
