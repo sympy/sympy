@@ -68,7 +68,7 @@ class Base(GeometryEntity):
         ========
 
         >>> from sympy import Point3D, Line3D
-        >>> p1, p2 = Point(0, 0, 0), Point(5, 3, 1)
+        >>> p1, p2 = Point3D(0, 0, 0), Point3D(5, 3, 1)
         >>> l = Line3D(p1, p2)
         >>> l.p1
         Point3D(0, 0, 0)
@@ -95,8 +95,8 @@ class Base(GeometryEntity):
         Point3D(5, 3, 1)
 
         """
-        return self.args[1]        
-        
+        return self.args[1]
+
     @property
     def direction_ratio(self):
         """The direction ratio of a given line in 3D.
@@ -138,7 +138,7 @@ class Base(GeometryEntity):
         """
         p1, p2 = self.points
         return p1.direction_cosine(p2)
-            
+
     @property
     def length(self):
         """
@@ -181,6 +181,73 @@ class Base(GeometryEntity):
         """
         return (self.p1, self.p2)
 
+    def is_concurrent(*lines):
+        """Is a sequence of linear entities concurrent?
+
+        Two or more linear entities are concurrent if they all
+        intersect at a single point.
+
+        Parameters
+        ==========
+
+        lines : a sequence of linear entities.
+
+        Returns
+        =======
+
+        True : if the set of linear entities are concurrent,
+        False : otherwise.
+
+        Notes
+        =====
+
+        Simply take the first two lines and find their intersection.
+        If there is no intersection, then the first two lines were
+        parallel and had no intersection so concurrency is impossible
+        amongst the whole set. Otherwise, check to see if the
+        intersection point of the first two lines is a member on
+        the rest of the lines. If so, the lines are concurrent.
+
+        See Also
+        ========
+
+        sympy.geometry.util.intersection
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D, Line3D
+        >>> p1, p2 = Point3D(0, 0, 0), Point3D(3, 5, 2)
+        >>> p3, p4 = Point3D(-2, -2, -2), Point3D(0, 2, 1)
+        >>> l1, l2, l3 = Line3D(p1, p2), Line3D(p1, p3), Line3D(p1, p4)
+        >>> l1.is_concurrent(l2, l3)
+        False
+
+        >>> l4 = Line3D(p2, p3)
+        >>> l4.is_concurrent(l2, l3)
+        False
+
+        """
+
+        # Concurrency requires intersection at a single point; One linear
+        # entity cannot be concurrent.
+        if len(lines) <= 1:
+            return False
+
+        try:
+            # Get the intersection (if parallel)
+            p = lines[0].intersection(lines[1])
+            if len(p) == 0:
+                return False
+
+            # Make sure the intersection is on every linear entity
+            for line in lines[2:]:
+                if p[0] not in line:
+                    return False
+            return True
+        except AttributeError:
+            return False
+
     def is_parallel(l1, l2):
         """Are two linear entities parallel?
 
@@ -213,9 +280,9 @@ class Base(GeometryEntity):
 
         """
         if l1 == l2:
-            raise('Enter two distinct lines')
+            ValueError('Enter two distinct lines')
         return l1.direction_cosine == l2.direction_cosine
-        
+
     def is_perpendicular(l1, l2):
         """Are two linear entities perpendicular?
 
@@ -241,12 +308,12 @@ class Base(GeometryEntity):
 
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(-1, 2, 0)
-        >>> l1, l2 = Line3D(p1, p2), Line(p2, p3)
+        >>> l1, l2 = Line3D(p1, p2), Line3D(p2, p3)
         >>> l1.is_perpendicular(l2)
-        True
+        False
 
         >>> p4 = Point3D(5, 3, 7)
-        >>> l3 = Line(p1, p4)
+        >>> l3 = Line3D(p1, p4)
         >>> l1.is_perpendicular(l3)
         False
 
@@ -256,7 +323,7 @@ class Base(GeometryEntity):
             return True
         else:
             return False
-            
+
     def angle_between(l1, l2):
         """The angle formed between the two linear entities.
 
@@ -292,15 +359,15 @@ class Base(GeometryEntity):
 
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(-1, 2, 0)
-        >>> l1, l2 = Line3D(p1, p2), Line(p2, p3)
+        >>> l1, l2 = Line3D(p1, p2), Line3D(p2, p3)
         >>> l1.angle_between(l2)
-        pi/2
+        acos(-sqrt(2)/3)
 
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
         return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
-        
+
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes
         through the point `p`.
@@ -335,7 +402,7 @@ class Base(GeometryEntity):
         """
         d = self.direction_ratio
         return Line3D(p, direction_ratio=d)
-        
+
     def perpendicular_line(self, p):
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
@@ -372,7 +439,7 @@ class Base(GeometryEntity):
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
         d = solve(c)
-        e = a.subs(a.args[0], d.pop())
+        e = a.subs(a.free_symbols.pop(), d.pop())
         return Line3D(p, e)
 
     def perpendicular_segment(self, p):
@@ -423,6 +490,214 @@ class Base(GeometryEntity):
         d = solve(c)
         e = a.subs(a.free_symbols.pop(), d.pop())
         return Segment3D(p, e)
+
+    def projection(self, o):
+        """Project a point, line, ray, or segment onto this linear entity.
+
+        Parameters
+        ==========
+
+        other : Point or LinearEntity (Line, Ray, Segment)
+
+        Returns
+        =======
+
+        projection : Point or LinearEntity (Line, Ray, Segment)
+            The return type matches the type of the parameter ``other``.
+
+        Raises
+        ======
+
+        GeometryError
+            When method is unable to perform projection.
+
+        Notes
+        =====
+
+        A projection involves taking the two points that define
+        the linear entity and projecting those points onto a
+        Line and then reforming the linear entity using these
+        projections.
+        A point P is projected onto a line L by finding the point
+        on L that is closest to P. This point is the intersection
+        of L and the line perpendicular to L that passes through P.
+
+        See Also
+        ========
+
+        sympy.geometry.point3d.Point3D, perpendicular_line
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D, Line3D, Segment3D, Rational
+        >>> p1, p2, p3 = Point3D(0, 0, 1), Point3D(1, 1, 2), Point3D(2, 0, 1)
+        >>> l1 = Line3D(p1, p2)
+        >>> l1.projection(p3)
+        Point3D(2/3, 2/3, 5/3)
+
+        >>> p4, p5 = Point3D(10, 0, 1), Point3D(12, 1, 3)
+        >>> s1 = Segment3D(p4, p5)
+        >>> l1.projection(s1)
+        [Segment3D(Point3D(10/3, 10/3, 13/3), Point3D(5, 5, 6))]
+
+        """
+        tline = Line3D(self.p1, self.p2)
+
+        def _project(p):
+            """Project a point onto the line representing self."""
+            if p in tline:
+                return p
+            l1 = tline.perpendicular_line(p)
+            return tline.intersection(l1)[0]
+
+        projected = None
+        if isinstance(o, Point3D):
+            return _project(o)
+        elif isinstance(o, Base):
+            n_p1 = _project(o.p1)
+            n_p2 = _project(o.p2)
+            if n_p1 == n_p2:
+                projected = n_p1
+            else:
+                projected = o.__class__(n_p1, n_p2)
+
+        # Didn't know how to project so raise an error
+        if projected is None:
+            n1 = self.__class__.__name__
+            n2 = o.__class__.__name__
+            raise GeometryError(
+                "Do not know how to project %s onto %s" % (n2, n1))
+
+        return self.intersection(projected)
+
+    def intersection(self, o):
+        """The intersection with another geometrical entity.
+
+        Parameters
+        ==========
+
+        o : Point or Base
+
+        Returns
+        =======
+
+        intersection : list of geometrical entities
+
+        See Also
+        ========
+
+        sympy.geometry.point3d.Point3D
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D, Line3D, Segment3D
+        >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(1, 1, 1), Point3D(7, 7, 7)
+        >>> l1 = Line3D(p1, p2)
+        >>> l1.intersection(p3)
+        [Point3D(7, 7, 7)]
+
+        >>> l1 = Line3D(Point3D(4,19,12), Point3D(5,25,17))
+        >>> l2 = Line3D(Point3D(-3, -15, -19), direction_ratio=[2,8,8])
+        >>> l1.intersection(l2)
+        [Point3D(1, 1, -3)]
+
+        >>> p6, p7 = Point3D(0, 5, 2), Point3D(2, 6, 3)
+        >>> s1 = Segment3D(p6, p7)
+        >>> l1.intersection(s1)
+        []
+
+        """
+        if isinstance(o, Point3D):
+            if o in self:
+                return [o]
+            else:
+                return []
+
+        elif isinstance(o, Base):
+            if self.direction_cosine == o.direction_cosine:  # assume they are parallel
+                if isinstance(self, Line3D):
+                    if o.p1 in self:
+                        return [o]
+                    return []
+                elif isinstance(o, Line3D):
+                    if self.p1 in o:
+                        return [self]
+                    return []
+                elif isinstance(self, Ray3D):
+                    if isinstance(o, Ray3D):
+                        # case 1, rays in the same direction
+                        if self.xdirection == o.xdirection and \
+                                self.ydirection == o.ydirection and \
+                                self.zdirection == o.zdirection:
+                            return [self] if (self.source in o) else [o]
+                        # case 2, rays in the opposite directions
+                        else:
+                            if o.source in self:
+                                if self.source == o.source:
+                                    return [self.source]
+                                return [Segment3D(o.source, self.source)]
+                            return []
+                    elif isinstance(o, Segment3D):
+                        if o.p1 in self:
+                            if o.p2 in self:
+                                return [o]
+                            return [Segment3D(o.p1, self.source)]
+                        elif o.p2 in self:
+                            return [Segment3D(o.p2, self.source)]
+                        return []
+                elif isinstance(self, Segment3D):
+                    if isinstance(o, Ray3D):
+                        return o.intersection(self)
+                    elif isinstance(o, Segment3D):
+                        # A reminder that the points of Segments are ordered
+                        # in such a way that the following works. See
+                        # Segment.__new__ for details on the ordering.
+                        if self.p1 not in o:
+                            if self.p2 not in o:
+                                # Neither of the endpoints are in o so either
+                                # o is contained in this segment or it isn't
+                                if o in self:
+                                    return [self]
+                                return []
+                            else:
+                                # p1 not in o but p2 is. Either there is a
+                                # segment as an intersection, or they only
+                                # intersect at an endpoint
+                                if self.p2 == o.p1:
+                                    return [o.p1]
+                                return [Segment3D(o.p1, self.p2)]
+                        elif self.p2 not in o:
+                            # p2 not in o but p1 is. Either there is a
+                            # segment as an intersection, or they only
+                            # intersect at an endpoint
+                            if self.p1 == o.p2:
+                                return [o.p2]
+                            return [Segment3D(o.p2, self.p1)]
+
+                        # Both points of self in o so the whole segment
+                        # is in o
+                        return [self]
+
+                # Unknown linear entity
+                return []
+            # If the lines are not parallel the solve their arbitrary points
+            # to obtain the point of intersection
+            a = self.arbitrary_point('t1')
+            b = o.arbitrary_point('t2')
+            c = solve([a.x - b.x, a.y - b.y], [a.free_symbols.pop(), b.free_symbols.pop()])
+            d = solve([a.x - b.x, a.z - b.z], [a.free_symbols.pop(), b.free_symbols.pop()])
+            if c is {}:
+                e = a.subs(a.free_symbols.pop(), c[a.free_symbols.pop()])
+            else:
+                e = a.subs(a.free_symbols.pop(), d[a.free_symbols.pop()])
+            if  e in self and e in o:
+                return [e]
+            else:
+                return []
+
+        return o.intersection(self)
 
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
@@ -491,7 +766,7 @@ class Base(GeometryEntity):
             else:
                 return False
         raise NotImplementedError()
-        
+
     def __contains__(self, other):
         """Return a definitive answer or else raise an error if it cannot
         be determined that other is on the boundaries of self."""
@@ -515,8 +790,8 @@ class Base(GeometryEntity):
         raise NotImplementedError()
 
     def __hash__(self):
-        return super(Base, self).__hash__()    
-        
+        return super(Base, self).__hash__()
+
 class Line3D(Base):
     """An infinite 3D line in space.
 
@@ -559,17 +834,17 @@ class Line3D(Base):
                 pt = Point3D(pt)
             except NotImplementedError:
                 raise ValueError('The 2nd argument was not a valid Point. '
-                'If it was the direction_ratio of the desired line, enter it' 
+                'If it was the direction_ratio of the desired line, enter it'
                 'with keyword "direction_ratio".')
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
         else:
-            raise ValueError('A 2nd Point or keyword "direction_ratio" must' 
+            raise ValueError('A 2nd Point or keyword "direction_ratio" must'
             'be used.')
-            
+
         return Base.__new__(cls, p1, pt, **kwargs)
-        
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of line. Gives
         values that will produce a line that is +/- 5 units long (where a
@@ -598,7 +873,7 @@ class Line3D(Base):
 
         """
         t = _symbol(parameter)
-        return [t, -5, 5]    
+        return [t, -5, 5]
 
     def equation(self, x='x', y='y', z='z', k='k'):
         """The equation of the line in 3D
@@ -611,7 +886,7 @@ class Line3D(Base):
         y : str, optional
             The name to use for the y-axis, default value is 'y'.
         z : str, optional
-            The name to use for the x-axis, default value is 'z'.    
+            The name to use for the x-axis, default value is 'z'.
 
         Returns
         =======
@@ -625,14 +900,14 @@ class Line3D(Base):
         >>> p1, p2 = Point3D(1, 0, 0), Point3D(5, 3, 0)
         >>> l1 = Line3D(p1, p2)
         >>> l1.equation()
-        (-k + x/4 - 1/4, -k + y/3, zoo*z - k)
+        (x/4 - 1/4, y/3, zoo*z, k)
 
         """
         x, y, z, k = _symbol(x), _symbol(y), _symbol(z), _symbol(k)
         p1, p2 = self.points
         a = p1.direction_ratio(p2)
-        return (((x - p1.x)/a[0]) - k, ((y - p1.y)/a[1]) - k, 
-                ((z - p1.z)/a[2]) - k)
+        return (((x - p1.x)/a[0]), ((y - p1.y)/a[1]),
+                ((z - p1.z)/a[2]), k)
 
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
@@ -641,7 +916,7 @@ class Line3D(Base):
             eq = self.equation()
             a = []
             for i in range(3):
-                a.append(eq[i].subs(eq[i].args[0], o.args[i]))
+                a.append(eq[i].subs(eq[i].free_symbols.pop(), o.args[i]))
             if len(set(a)) == 1:
                 return True
             else:
@@ -688,7 +963,7 @@ class Line3D(Base):
         return super(Line3D, self).__hash__()
 
 class Ray3D(Base):
-    
+
     """
     A Ray is a semi-line in the space with a source point and a direction.
 
@@ -699,7 +974,7 @@ class Ray3D(Base):
         The source of the Ray
     p2 : Point or a direction vector
     direction_ratio: Determines the direction in which the Ray propagates.
-        
+
 
     Attributes
     ==========
@@ -724,7 +999,7 @@ class Ray3D(Base):
     >>> from sympy.geometry import Ray3D
     >>> r = Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r
-    Ray(Point3D(2, 3, 4), Point3D(3, 5, 0))
+    Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r.points
     (Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r.source
@@ -748,17 +1023,17 @@ class Ray3D(Base):
                 pt = Point3D(pt)
             except NotImplementedError:
                 raise ValueError('The 2nd argument was not a valid Point. '
-                'If it was the direction_ratio of the desired line, enter it' 
+                'If it was the direction_ratio of the desired line, enter it'
                 'with keyword "direction_ratio".')
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
         else:
-            raise ValueError('A 2nd Point or keyword "direction_ratio" must' 
+            raise ValueError('A 2nd Point or keyword "direction_ratio" must'
             'be used.')
-            
+
         return Base.__new__(cls, p1, pt, **kwargs)
-        
+
     @property
     def source(self):
         """The point from which the ray emanates.
@@ -779,7 +1054,7 @@ class Ray3D(Base):
 
         """
         return self.p1
-        
+
     @property
     def xdirection(self):
         """The x direction of the ray.
@@ -828,7 +1103,7 @@ class Ray3D(Base):
         Examples
         ========
 
-        >>> from sympy import Point, Ray
+        >>> from sympy import Point3D, Ray3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(-1, -1, -1), Point3D(-1, 0, 0)
         >>> r1, r2 = Ray3D(p1, p2), Ray3D(p1, p3)
         >>> r1.ydirection
@@ -843,7 +1118,7 @@ class Ray3D(Base):
             return S.Zero
         else:
             return S.NegativeInfinity
-            
+
     @property
     def zdirection(self):
         """The y direction of the ray.
@@ -877,7 +1152,39 @@ class Ray3D(Base):
             return S.Zero
         else:
             return S.NegativeInfinity
-            
+
+    def distance(self, o):
+        """
+        Finds the shortest distance between the ray and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D, Ray3D
+        >>> p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 2)
+        >>> s = Ray3D(p1, p2)
+        >>> s.distance(Point3D(-1, -1, 2))
+        sqrt(6)
+        """
+        if not isinstance(o, Point3D):
+            raise NotImplementedError
+        s = self.perpendicular_segment(o)
+        if isinstance(s, Point3D):
+            if self.contains(s):
+                return S.Zero
+        else:
+            # since arg-order is arbitrary, find the non-o point
+            non_o = s.p1 if s.p1 != o else s.p2
+            if self.contains(non_o):
+                return Line3D(self).distance(o)  # = s.length but simpler
+        # the following applies when neither of the above apply
+        return self.source.distance(o)
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ray. Gives
         values that will produce a ray that is 10 units long (where a unit is
@@ -899,7 +1206,7 @@ class Ray3D(Base):
         ========
 
         >>> from sympy import Point3D, Ray3D, pi
-        >>> r = Ray((0, 0), angle=pi/4)
+        >>> r = Ray3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
         >>> r.plot_interval()
         [t, 0, 10]
 
@@ -907,15 +1214,50 @@ class Ray3D(Base):
         t = _symbol(parameter)
         return [t, 0, 10]
 
+    def contains(self, o):
+        """Is other GeometryEntity contained in this Ray?"""
+        if isinstance(o, Ray3D):
+            return (Point3D.is_collinear(self.p1, self.p2, o.p1, o.p2) and
+                    self.xdirection == o.xdirection and
+                    self.ydirection == o.ydirection and
+                    self.zdirection == o.zdirection)
+        elif isinstance(o, Segment3D):
+            return o.p1 in self and o.p2 in self
+        elif isinstance(o, Point3D):
+            if Point3D.is_collinear(self.p1, self.p2, o):
+                if self.xdirection is S.Infinity:
+                    rv = o.x >= self.source.x
+                elif self.xdirection is S.NegativeInfinity:
+                    rv = o.x <= self.source.x
+                elif self.ydirection is S.Infinity:
+                    rv = o.y >= self.source.y
+                elif self.ydirection is S.NegativeInfinity:
+                    rv = o.y <= self.source.y
+                elif self.zdirection is S.Infinity:
+                    rv = o.z <= self.source.z
+                else:
+                    rv = o.z <= self.source.z
+                if rv == True or rv == False:
+                    return bool(rv)
+                raise Undecidable(
+                    'Cannot determine if %s is in %s' % (o, self))
+            else:
+                # Points are not collinear, so the rays are not parallel
+                # and hence it is impossible for self to contain o
+                return False
+
+        # No other known entity can be contained in a Ray
+        return False
+
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
-        if not isinstance(other, Ray):
+        if not isinstance(other, Ray3D):
             return False
         return (self.source == other.source) and (other.p2 in self)
 
     def __hash__(self):
-        return super(Ray, self).__hash__()        
-    
+        return super(Ray3D, self).__hash__()
+
 class Segment3D(Base):
     """A undirected line segment in a 3D space.
 
@@ -971,7 +1313,7 @@ class Segment3D(Base):
         elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
             p1, p2 = p2, p1
         return Base.__new__(cls, p1, p2, **kwargs)
-        
+
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Segment gives
         values that will produce the full segment in a plot.
@@ -999,8 +1341,8 @@ class Segment3D(Base):
 
         """
         t = _symbol(parameter)
-        return [t, 0, 1]    
-        
+        return [t, 0, 1]
+
     @property
     def length(self):
         """The length of the line segment.
@@ -1042,4 +1384,69 @@ class Segment3D(Base):
 
         """
         return Point3D.midpoint(self.p1, self.p2)
-        
+
+    def distance(self, o):
+        """
+        Finds the shortest distance between a line segment and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point3D
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D, Segment3D
+        >>> p1, p2 = Point3D(0, 0, 3), Point3D(1, 1, 4)
+        >>> s = Segment3D(p1, p2)
+        >>> s.distance(Point3D(10, 15, 12))
+        sqrt(341)
+        """
+        if isinstance(o, Point3D):
+            seg_vector = self.p2 - self.p1
+            pt_vector = o - self.p1
+            t = seg_vector.dot(pt_vector)/self.length**2
+            if t >= 1:
+                distance = Point3D.distance(self.p2, o)
+            elif t <= 0:
+                distance = Point3D.distance(self.p1, o)
+            else:
+                distance = Point3D.distance(
+                    self.p1 + Point3D(t*seg_vector.x, t*seg_vector.y,
+                                      t*seg_vector.y), o)
+            return distance
+        raise NotImplementedError()
+
+    def contains(self, other):
+        """
+        Is the other GeometryEntity contained within this Segment?
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D, Segment3D
+        >>> p1, p2 = Point3D(0, 1, 1), Point3D(3, 4, 5)
+        >>> s = Segment3D(p1, p2)
+        >>> s2 = Segment3D(p2, p1)
+        >>> s.contains(s2)
+        True
+        """
+        if isinstance(other, Segment3D):
+            return other.p1 in self and other.p2 in self
+        elif isinstance(other, Point3D):
+            if Point3D.is_collinear(self.p1, self.p2, other):
+                if other.distance(self.p1) + other.distance(self.p2) == self.length:
+                    return True
+                else:
+                    return False
+        return False
+
+    def __eq__(self, other):
+        """Is the other GeometryEntity equal to this Segment?"""
+        if not isinstance(other, Segment3D):
+            return False
+        return (self.p1 == other.p1) and (self.p2 == other.p2)
+
+    def __hash__(self):
+        return super(Segment3D, self).__hash__()

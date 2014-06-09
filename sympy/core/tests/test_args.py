@@ -2913,6 +2913,7 @@ def test_sympy__geometry__point3d__Point3D():
     from sympy.geometry.point3d import Point3D
     assert _test_args(Point3D(0, 1, 2))
 
+
 def test_sympy__geometry__ellipse__Ellipse():
     from sympy.geometry.ellipse import Ellipse
     assert _test_args(Ellipse((0, 1), 2, 3))
@@ -2954,6 +2955,10 @@ def test_sympy__geometry__line3d__Line3D():
 def test_sympy__geometry__line3d__Segment3D():
     from sympy.geometry.line3d import Segment3D
     assert _test_args(Segment3D((0, 1, 1), (2, 3, 4)))
+
+def test_sympy__geometry__line3d__Ray3D():
+    from sympy.geometry.line3d import Ray3D
+    assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
 
 def test_sympy__geometry__polygon__Polygon():
     from sympy.geometry.polygon import Polygon

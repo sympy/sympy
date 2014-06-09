@@ -250,7 +250,7 @@ class Point3D(GeometryEntity):
             return True  # two points always form a line
         if len(points) == 3:
             return (points[0].direction_cosine(points[1]) ==
-            points[1].direction_cosine(points[2]))
+            points[0].direction_cosine(points[2]))
 
         # XXX Cross product is used now,
         # If the concept needs to extend to more than three
