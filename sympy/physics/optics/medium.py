@@ -9,7 +9,7 @@ from __future__ import division
 __all__ = ['Medium']
 
 from sympy import Symbol, sympify, sqrt
-from sympy.physics.units import c
+from sympy.physics.units import c, u0, e0
 
 class Medium(Symbol):
 
@@ -43,7 +43,7 @@ class Medium(Symbol):
     >>> m1 = Medium('m1')
     >>> m2 = Medium('m2', epsilon, mu)
     >>> m1.intrinsic_impedance
-    sqrt(mu_0/epsilon_0)
+    149896229*pi*kg*m**2/(1250000*A**2*s**3)
     >>> m2.refractive_index
     299792458*m*sqrt(epsilon*mu)/s
 
@@ -55,10 +55,28 @@ class Medium(Symbol):
 
     """
 
-    def __new__(cls, name, permittivity=Symbol('epsilon_0'), permeability=Symbol('mu_0')):
+    def __new__(cls, name, permittivity=e0, permeability=u0, n=None):
         obj = super(Medium, cls).__new__(cls, name)
         obj._permittivity = sympify(permittivity)
         obj._permeability = sympify(permeability)
+        obj._n = sympify(n)
+        if n is not None:
+            if permittivity != e0 and permeability == u0:
+                obj._permeability = n**2/(c**2*obj._permittivity)
+            if permeability != u0 and permittivity == e0:
+                obj._permittivity = n**2/(c**2*obj._permeability)
+            # XXX: There's issue with precision. Values may be
+            # different slightly.
+            #
+            #if permittivity != u0 and permittivity != e0:
+                # if n != c*sqrt(permittivity*permeability):
+                #    raise ValueError("Values are not consistent.")
+        else:
+            obj._n = c*sqrt(permittivity*permeability)
+        if n is None and permittivity == e0 and permeability == u0:
+            obj._flag = False
+        else:
+            obj._flag = True
         return obj
 
     @property
@@ -79,7 +97,7 @@ class Medium(Symbol):
         >>> from sympy.physics.optics import Medium
         >>> m = Medium('m')
         >>> m.intrinsic_impedance
-        sqrt(mu_0/epsilon_0)
+        149896229*pi*kg*m**2/(1250000*A**2*s**3)
 
         """
         return sqrt(self._permeability/self._permittivity)
@@ -95,7 +113,7 @@ class Medium(Symbol):
         >>> from sympy.physics.optics import Medium
         >>> m = Medium('m')
         >>> m.speed
-        1/sqrt(epsilon_0*mu_0)
+        299792458*m/s
 
         """
         return 1/sqrt(self._permittivity*self._permeability)
@@ -111,7 +129,8 @@ class Medium(Symbol):
         >>> from sympy.physics.optics import Medium
         >>> m = Medium('m')
         >>> m.refractive_index
-        299792458*m*sqrt(epsilon_0*mu_0)/s
+        1
+
         """
         return c/self.speed
 
@@ -126,7 +145,7 @@ class Medium(Symbol):
         >>> from sympy.physics.optics import Medium
         >>> m = Medium('m')
         >>> m.permittivity
-        epsilon_0
+        625000*A**2*s**4/(22468879468420441*pi*kg*m**3)
 
         """
         return self._permittivity
@@ -142,7 +161,7 @@ class Medium(Symbol):
         >>> from sympy.physics.optics import Medium
         >>> m = Medium('m')
         >>> m.permeability
-        mu_0
+        pi*kg*m/(2500000*A**2*s**2)
 
         """
         return self._permeability
@@ -151,14 +170,14 @@ class Medium(Symbol):
         from sympy.printing import sstr
         return type(self).__name__ + sstr(self.args)
 
-    def __le__(self, other):
+    def __lt__(self, other):
         """
         Compares based on refractive index of the medium.
         """
         return self.refractive_index < other.refractive_index
 
-    def __ge__(self, other):
-        return not self.__le__(other)
+    def __gt__(self, other):
+        return not self.__lt__(other)
 
     def __eq__(self, other):
         return self.refractive_index == other.refractive_index
