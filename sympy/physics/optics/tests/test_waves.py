@@ -27,3 +27,4 @@ def test_twave():
         + A2**2)*sin(2*pi*f*t + phi1 + phi2 + pi/2)) == 0
     E = Function('E')
     assert w3.rewrite('pde') == epsilon*mu*Derivative(E(x, t), t, t) + Derivative(E(x, t), x, x)
+    assert w3.rewrite(cos) == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2)*cos(2*pi*f*t + phi1 + phi2)
