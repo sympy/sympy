@@ -14,3 +14,8 @@ __all__ = []
 from . import waves
 from .waves import TWave
 __all__.extend(waves.__all__)
+
+
+from . import medium
+from .medium import Medium
+__all__.extend(medium.__all__)
