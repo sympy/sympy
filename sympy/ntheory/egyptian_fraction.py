@@ -28,6 +28,10 @@ def egyptian_fraction(r, algorithm="Greedy"):
     [7, 8, 9, 56, 57, 72, 3192]
     >>> egyptian_fraction(Rational(3, 7), "Takenouchi")
     [4, 7, 28]
+    >>> egyptian_fraction(Rational(9, 5))
+    Traceback (most recent call last):
+    ...
+    ValueError: Value must be between 0 and 1
 
     See Also
     ========
@@ -80,22 +84,17 @@ def egyptian_fraction(r, algorithm="Greedy"):
     """
     x, y = r.as_numer_denom()
 
-    if r <= 0:
-        raise ValueError("Value must be positive")
-
-    prefix = []
-    if x > y:
-        prefix = [1] * int(x//y)
-        x %= y
+    if not 0 < r < 1:
+        raise ValueError("Value must be between 0 and 1")
 
     if algorithm == "Greedy":
-        return prefix + egypt_greedy(x, y)
+        return egypt_greedy(x, y)
     elif algorithm == "Graham Jewett":
-        return prefix + egypt_graham_jewett(x, y)
+        return egypt_graham_jewett(x, y)
     elif algorithm == "Takenouchi":
-        return prefix + egypt_takenouchi(x, y)
+        return egypt_takenouchi(x, y)
     elif algorithm == "Golomb":
-        return prefix + egypt_golomb(x, y)
+        return egypt_golomb(x, y)
     else:
         raise ValueError("Entered invalid algorithm")
 

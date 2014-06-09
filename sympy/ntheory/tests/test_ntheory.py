@@ -804,3 +804,5 @@ def test_egyptian_fraction():
         [6, 7, 8, 9, 10, 42, 43, 44, 45, 56, 57, 58, 72, 73, 90, 1806, 1807,
          1808, 1892, 1893, 1980, 3192, 3193, 3306, 5256, 3263442, 3263443,
          3267056, 3581556, 10192056, 10650056950806]
+    raises(ValueError, lambda: egyptian_fraction(Rational(-4, 9)))
+    raises(ValueError, lambda: egyptian_fraction(Rational(355, 113), "Takenouchi"))
