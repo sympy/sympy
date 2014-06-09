@@ -2,15 +2,14 @@ from __future__ import print_function, division
 
 __all__ = ['KanesMethod']
 
-from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.core.compatibility import reduce
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
      Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import inertia_of_point_mass, \
-    _mat_inv_mul, _subs_keep_derivs
+from sympy.physics.mechanics.functions import _mat_inv_mul, _subs_keep_derivs
 from sympy.physics.mechanics.linearize import Linearizer
 
 class KanesMethod(object):
@@ -640,7 +639,7 @@ class KanesMethod(object):
         For more documentation, please see the `Linearizer` class"""
 
         linearizer = self.to_linearizer()
-        result =  linearizer.linearize(**kwargs)
+        result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
     def kanes_equations(self, FL, BL):

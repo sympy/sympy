@@ -8,11 +8,11 @@ from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import _subs_keep_derivs
 
 class Linearizer(object):
-    """ This object holds the general model form used as an intermediate
-    for the linearize functions"""
+    """This object holds the general model form used as an intermediate
+    for the linearize functions."""
 
     def __init__(self, f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u,
-            q_i=[], q_d=[], u_i=[], u_d=[], r=[]):
+            q_i=None, q_d=None, u_i=None, u_d=None, r=None):
         # Generalized equation form
         self.f_0 = f_0
         self.f_1 = f_1
@@ -25,11 +25,12 @@ class Linearizer(object):
         # Generalized equation variables
         self.q = Matrix(q)
         self.u = Matrix(u)
-        self.q_i = Matrix(q_i)
-        self.q_d = Matrix(q_d)
-        self.u_i = Matrix(u_i)
-        self.u_d = Matrix(u_d)
-        self.r = Matrix(r)
+        none_handler = lambda x: Matrix(x) if x else Matrix()
+        self.q_i = none_handler(q_i)
+        self.q_d = none_handler(q_d)
+        self.u_i = none_handler(u_i)
+        self.u_d = none_handler(u_d)
+        self.r = none_handler(r)
 
         # Derivatives of generalized equation variables
         t = dynamicsymbols._t
@@ -42,8 +43,7 @@ class Linearizer(object):
         self._form_coefficient_matrices()
 
     def _form_permutation_matrices(self):
-        """ Forms the permutation matrices for this choice of independent
-        coordinates and speeds """
+        """Form the permutation matrices Pq and Pu."""
 
         # Extract dimension variables
         n = len(self.q)
@@ -79,7 +79,7 @@ class Linearizer(object):
             self.P_prime = P_col2
 
     def _form_coefficient_matrices(self):
-        """ Form the coefficient matrices. These only need to be solved for once"""
+        """Form the coefficient matrices C_0, C_1, and C_2."""
 
         # Dimension terms
         n = len(self.q)
@@ -91,7 +91,8 @@ class Linearizer(object):
         # If not, C_0 is I_(nxn). Note that this works even if n=0
         if l > 0:
             f_c_jac_q = self.f_c.jacobian(self.q)
-            self.C_0 = (eye(n) - self.Pqd * (f_c_jac_q * self.Pqd).inv() * f_c_jac_q) * self.Pqi
+            self.C_0 = (eye(n) - self.Pqd * (f_c_jac_q * self.Pqd).inv() *
+                    f_c_jac_q) * self.Pqi
         else:
             self.C_0 = eye(n)
         # If there are motion constraints (m > 0), form C_1 and C_2 as normal.
@@ -111,13 +112,12 @@ class Linearizer(object):
             self.C_2 = eye(o)
 
     def _form_block_matrices(self):
-        """ Form the block matrices. These only need to be solved for once """
+        """Form the block matrices for composing M, A, and B."""
 
         # Dimension terms
         n = len(self.q)
         o = len(self.u)
         s = len(self.r)
-        l = len(self.f_c)
         m = len(self.f_a)
         # Block Matrix Definitions. These are only defined if under certain
         # conditions. If undefined, an empty matrix is used instead
@@ -160,34 +160,32 @@ class Linearizer(object):
         else:
             self.B_u = Matrix([])
 
-    def linearize(self, q_op=None, u_op=None, qd_op=None, ud_op=None, r_op=None, A_and_B=False):
-        """ Linearize the system about the trim conditions. Note that
+    def linearize(self, q_op=None, u_op=None, qd_op=None, ud_op=None,
+            r_op=None, A_and_B=False):
+        """Linearize the system about the trim conditions. Note that
         q_op, u_op, qd_op, ud_op must satisfy the equations of motion.
         These may be either symbolic or numeric.
 
         Parameters
         ==========
-        q_op : dict
-        u_op : dict
-        qd_op : dict
-        ud_op : dict
-        r_op : dict
-            Dictionaries of the trim conditions. These will be substituted in to
-            the linearized system before the linearization is complete. Leave blank
-            if you want a completely symbolic form. Note that any reduction in symbols
-            (whether substituted for numbers or expressions with a common parameter) will
-            result in faster runtime.
+        q_op, u_op, qd_op, ud_op, r_op : dict
+            Dictionaries of the trim conditions. These will be substituted in
+            to the linearized system before the linearization is complete.
+            Leave blank if you want a completely symbolic form. Note that any
+            reduction in symbols (whether substituted for numbers or
+            expressions with a common parameter) will result in faster runtime.
 
         A_and_B : bool
             If set to True, A and B for forming dx = [A]x + [B]r will returned,
-            where x = [q_ind, u_ind]^T. If set to False, M, A, and B for forming
-            [M]x = [A]x + [B]r will be returned. Default is False. """
+            where x = [q_ind, u_ind]^T. If set to False, M, A, and B for
+            forming [M]x = [A]x + [B]r will be returned. Default is False."""
 
         # Compose dicts of the trim condition for q, u, and qd, ud
-        if not q_op: q_op = dict()
-        if not u_op: u_op = dict()
-        if not qd_op: qd_op = dict()
-        if not ud_op: ud_op = dict()
+        op_compose = lambda kw: dict() if not kw else kw
+        q_op = op_compose(q_op)
+        u_op = op_compose(u_op)
+        qd_op = op_compose(qd_op)
+        ud_op = op_compose(ud_op)
         trim = q_op
         trim.update(u_op)
         dtrim = qd_op
@@ -197,7 +195,6 @@ class Linearizer(object):
         n = len(self.q)
         o = len(self.u)
         s = len(self.r)
-        l = len(self.f_c)
         m = len(self.f_a)
 
         # Rename terms to shorten expressions
@@ -301,10 +298,10 @@ class Linearizer(object):
         # dx = [A]x + [B]r, where x = [q_ind, u_ind]^T,
         if A_and_B:
             Minv = M_eq.inv()
-            A_cont = self.P_prime.T*Minv*Amat_eq
+            A_cont = self.P_prime.T * Minv * Amat_eq
             A_cont.simplify()
             if Bmat_eq:
-                B_cont = self.P_prime.T*Minv*Bmat_eq
+                B_cont = self.P_prime.T * Minv * Bmat_eq
                 B_cont.simplify()
             else:
                 B_cont = Bmat_eq
@@ -316,8 +313,8 @@ class Linearizer(object):
 
 
 def permutation_matrix(orig_vec, per_vec):
-    """ Compute the permutation matrix to change order of
-    orig_vec into order of per_vec
+    """Compute the permutation matrix to change order of
+    orig_vec into order of per_vec.
 
     Parameters
     ==========
@@ -325,8 +322,7 @@ def permutation_matrix(orig_vec, per_vec):
         (n x 1) of original symbol ordering
 
     per_vec : Vector or List
-        (n x 1) of desired symbol ordering
-    """
+        (n x 1) of desired symbol ordering"""
     if not isinstance(orig_vec, (list, tuple)):
         orig_list = flatten(orig_vec)
     per_list = [orig_list.index(i) for i in per_vec]
