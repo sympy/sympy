@@ -34,6 +34,9 @@ class Medium(Symbol):
     permeability: Sympifyable
         Magnetic permeability of the space.
 
+    n: Sympifyable
+        Index of refraction of the medium.
+
 
     Examples
     ========
@@ -67,7 +70,6 @@ class Medium(Symbol):
                 obj._permittivity = n**2/(c**2*obj._permeability)
             # XXX: There's issue with precision. Values may be
             # different slightly.
-            #
             #if permittivity != u0 and permittivity != e0:
                 # if n != c*sqrt(permittivity*permeability):
                 #    raise ValueError("Values are not consistent.")
