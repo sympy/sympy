@@ -159,6 +159,7 @@ def test_linear_3eq_order1():
     Eq(y(t), C0 + 5*sqrt(2)*C2*cos(5*sqrt(2)*t) + (-15*C1/4 + 15*C3/4)*sin(5*sqrt(2)*t)), \
     Eq(z(t), C0 + 5*sqrt(2)*C3*cos(5*sqrt(2)*t) + (12*C1/5 - 12*C2/5)*sin(5*sqrt(2)*t))]
 
+<<<<<<< HEAD
     f = t**3 + log(t)
     g = t**2 + sin(t)
     eq4 = (Eq(diff(x(t),t),(4*f+g)*x(t)-f*y(t)-2*f*z(t)), Eq(diff(y(t),t),2*f*x(t)+(f+g)*y(t)-2*f*z(t)), Eq(diff(z(t),t),5*f*x(t)+f*y(t)+(-3*f+g)*z(t)))
@@ -181,6 +182,8 @@ def test_linear_3eq_order1():
     Eq(z(t), C1*exp(2*t) + C2*(sin(t)/2 + 3*cos(t)/2) + C3*(3*sin(t)/2 - cos(t)/2))]
     assert dsolve(eq6) == sol6
 
+=======
+>>>>>>> Methods of linear system of 3eq and 1st order
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
