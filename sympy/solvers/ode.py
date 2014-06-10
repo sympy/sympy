@@ -6726,7 +6726,6 @@ def sysode_linear_3eq_order1(match_):
     r['d2'] = -const[1]
     r['d3'] = -const[2]
     if match_['type_of_equation'] == 'type1':
-<<<<<<< HEAD
         sol = _linear_3eq_order1_type1(x, y, z, t, r)
     if match_['type_of_equation'] == 'type2':
         sol = _linear_3eq_order1_type2(x, y, z, t, r)
