@@ -2,7 +2,7 @@
 
 Contains
 ========
-Base
+LinearEntity3D
 Line3D
 Ray3D
 Segment3D
@@ -10,7 +10,7 @@ Segment3D
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy
+from sympy.core import S, C, sympify, Dummy, nan
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
     sqrt
 from sympy.core.logic import fuzzy_and
@@ -22,8 +22,8 @@ from .entity import GeometryEntity
 from .point3d import Point3D
 from .util import _symbol
 
-class Base(GeometryEntity):
-    """An abstract base class for all linear entities (line, ray and segment)
+class LinearEntity3D(GeometryEntity):
+    """An abstract LinearEntity3D class for all linear entities (line, ray and segment)
     in a 3-dimensional Euclidean space.
 
     Attributes
@@ -221,7 +221,7 @@ class Base(GeometryEntity):
         >>> p3, p4 = Point3D(-2, -2, -2), Point3D(0, 2, 1)
         >>> l1, l2, l3 = Line3D(p1, p2), Line3D(p1, p3), Line3D(p1, p4)
         >>> l1.is_concurrent(l2, l3)
-        False
+        True
 
         >>> l4 = Line3D(p2, p3)
         >>> l4.is_concurrent(l2, l3)
@@ -435,6 +435,8 @@ class Base(GeometryEntity):
         True
 
         """
+        if p in self:
+            return p
         a = self.arbitrary_point()
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -484,6 +486,8 @@ class Base(GeometryEntity):
         Segment3D(Point3D(4/3, 4/3, 4/3), Point3D(4, 0, 0))
 
         """
+        if p in self:
+            return p
         a = self.arbitrary_point()
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -554,7 +558,7 @@ class Base(GeometryEntity):
         projected = None
         if isinstance(o, Point3D):
             return _project(o)
-        elif isinstance(o, Base):
+        elif isinstance(o, LinearEntity3D):
             n_p1 = _project(o.p1)
             n_p2 = _project(o.p2)
             if n_p1 == n_p2:
@@ -577,7 +581,7 @@ class Base(GeometryEntity):
         Parameters
         ==========
 
-        o : Point or Base
+        o : Point or LinearEntity3D
 
         Returns
         =======
@@ -615,8 +619,12 @@ class Base(GeometryEntity):
             else:
                 return []
 
-        elif isinstance(o, Base):
-            if self.direction_cosine == o.direction_cosine:  # assume they are parallel
+        elif isinstance(o, LinearEntity3D):
+            a = self.direction_cosine
+            b = o.direction_cosine
+            a = [abs(i) for i in a]
+            b = [abs(i) for i in b]
+            if a == b:  # assume they are parallel
                 if isinstance(self, Line3D):
                     if o.p1 in self:
                         return [o]
@@ -688,6 +696,10 @@ class Base(GeometryEntity):
             b = o.arbitrary_point('t2')
             c = solve([a.x - b.x, a.y - b.y], [a.free_symbols.pop(), b.free_symbols.pop()])
             d = solve([a.x - b.x, a.z - b.z], [a.free_symbols.pop(), b.free_symbols.pop()])
+            if len(c) == 1:
+                return []
+            if len(d) == 1:
+                return []
             if c is {}:
                 e = a.subs(a.free_symbols.pop(), c[a.free_symbols.pop()])
             else:
@@ -790,9 +802,9 @@ class Base(GeometryEntity):
         raise NotImplementedError()
 
     def __hash__(self):
-        return super(Base, self).__hash__()
+        return super(LinearEntity3D, self).__hash__()
 
-class Line3D(Base):
+class Line3D(LinearEntity3D):
     """An infinite 3D line in space.
 
     A line is declared with two distinct points or a point and direction_ratio
@@ -825,7 +837,7 @@ class Line3D(Base):
     """
 
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
-        if isinstance(p1, Base):
+        if isinstance(p1, LinearEntity3D):
             p1, pt = p1.args
         else:
             p1 = Point3D(p1)
@@ -843,7 +855,7 @@ class Line3D(Base):
             raise ValueError('A 2nd Point or keyword "direction_ratio" must'
             'be used.')
 
-        return Base.__new__(cls, p1, pt, **kwargs)
+        return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of line. Gives
@@ -912,16 +924,21 @@ class Line3D(Base):
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point3D):
-            o = o.func(*[simplify(i) for i in o.args])
-            eq = self.equation()
-            a = []
-            for i in range(3):
-                a.append(eq[i].subs(eq[i].free_symbols.pop(), o.args[i]))
-            if len(set(a)) == 1:
+            if self.arbitrary_point == 0:
                 return True
             else:
-                return False
-        elif not isinstance(o, Base):
+                o = o.func(*[simplify(i) for i in o.args])
+                eq = self.equation()
+                a = []
+                for i in range(3):
+                    k = eq[i].subs(eq[i].free_symbols.pop(), o.args[i])
+                    if k != nan:
+                        a.append(k)
+                if len(set(a)) == 1:
+                    return True
+                else:
+                    return False
+        elif not isinstance(o, LinearEntity3D):
             return False
         elif isinstance(o, Line3D):
             return self.__eq__(o)
@@ -959,11 +976,7 @@ class Line3D(Base):
             return False
         return Point3D.is_collinear(self.p1, self.p2, other.p1, other.p2)
 
-    def __hash__(self):
-        return super(Line3D, self).__hash__()
-
-class Ray3D(Base):
-
+class Ray3D(LinearEntity3D):
     """
     A Ray is a semi-line in the space with a source point and a direction.
 
@@ -1014,7 +1027,7 @@ class Ray3D(Base):
     """
 
     def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
-        if isinstance(p1, Base):
+        if isinstance(p1, LinearEntity3D):
             p1, pt = p1.args
         else:
             p1 = Point3D(p1)
@@ -1032,7 +1045,7 @@ class Ray3D(Base):
             raise ValueError('A 2nd Point or keyword "direction_ratio" must'
             'be used.')
 
-        return Base.__new__(cls, p1, pt, **kwargs)
+        return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
     @property
     def source(self):
@@ -1179,7 +1192,7 @@ class Ray3D(Base):
                 return S.Zero
         else:
             # since arg-order is arbitrary, find the non-o point
-            non_o = s.p1 if s.p1 != o else s.p2
+            non_o = s.p1 if s.p1 == o else s.p2
             if self.contains(non_o):
                 return Line3D(self).distance(o)  # = s.length but simpler
         # the following applies when neither of the above apply
@@ -1255,10 +1268,7 @@ class Ray3D(Base):
             return False
         return (self.source == other.source) and (other.p2 in self)
 
-    def __hash__(self):
-        return super(Ray3D, self).__hash__()
-
-class Segment3D(Base):
+class Segment3D(LinearEntity3D):
     """A undirected line segment in a 3D space.
 
     Parameters
@@ -1312,7 +1322,7 @@ class Segment3D(Base):
             p1, p2 = p2, p1
         elif (p1.x == p2.x) == True and (p1.y > p2.y) == True:
             p1, p2 = p2, p1
-        return Base.__new__(cls, p1, p2, **kwargs)
+        return LinearEntity3D.__new__(cls, p1, p2, **kwargs)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Segment gives
@@ -1447,6 +1457,3 @@ class Segment3D(Base):
         if not isinstance(other, Segment3D):
             return False
         return (self.p1 == other.p1) and (self.p2 == other.p2)
-
-    def __hash__(self):
-        return super(Segment3D, self).__hash__()

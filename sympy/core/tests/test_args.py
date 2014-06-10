@@ -2944,7 +2944,7 @@ def test_sympy__geometry__line__Segment():
     assert _test_args(Segment((0, 1), (2, 3)))
 
 @SKIP("abstract class")
-def test_sympy__geometry__line3d__Base():
+def test_sympy__geometry__line3d__LinearEntity3D():
     pass
 
 
