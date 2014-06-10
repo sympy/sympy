@@ -312,7 +312,7 @@ def test_evalf_fast_series():
               fac(2*n + 1)**5, (n, 0, oo)), 100) == astr
 
 
-def test_evalf_fast_series_issue998():
+def test_evalf_fast_series_issue_4021():
     # Catalan's constant
     assert NS(Sum((-1)**(n - 1)*2**(8*n)*(40*n**2 - 24*n + 3)*fac(2*n)**3*
         fac(n)**2/n**3/(2*n - 1)/fac(4*n)**2, (n, 1, oo))/64, 100) == \
