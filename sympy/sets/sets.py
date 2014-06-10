@@ -1032,7 +1032,7 @@ class Union(Set, EvalfMixin):
         # Merge all finite sets
         finite_sets = [x for x in args if x.is_FiniteSet]
         if len(finite_sets) > 1:
-            finite_set = FiniteSet(x for set in finite_sets for x in set)
+            finite_set = FiniteSet(*[x for s in finite_sets for x in s])
             args = [finite_set] + [x for x in args if not x.is_FiniteSet]
 
         # ===== Pair-wise Rules =====
@@ -1377,7 +1377,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return self
 
     def _eval_powerset(self):
-        return FiniteSet([self])
+        return FiniteSet(self)
 
     @property
     def _boundary(self):
@@ -1501,7 +1501,7 @@ class FiniteSet(Set, EvalfMixin):
         # If other set contains one of my elements, remove it from myself
         if any(other.contains(x) is True for x in self):
             return set((
-                FiniteSet(x for x in self if other.contains(x) is not True),
+                FiniteSet(*[x for x in self if other.contains(x) is not True]),
                 other))
 
         return None
@@ -1575,7 +1575,7 @@ class FiniteSet(Set, EvalfMixin):
         return len(self.args)
 
     def __sub__(self, other):
-        return FiniteSet(el for el in self if el not in other)
+        return FiniteSet(*[el for el in self if el not in other])
 
     def as_relational(self, symbol):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
@@ -1590,7 +1590,7 @@ class FiniteSet(Set, EvalfMixin):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(elem.evalf(prec) for elem in self)
+        return FiniteSet(*[elem.evalf(prec) for elem in self])
 
     def _hashable_content(self):
         return (self._elements,)
