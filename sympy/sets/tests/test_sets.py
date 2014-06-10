@@ -78,7 +78,7 @@ def test_union():
     assert Union(Set()) == Set()
 
     assert FiniteSet(1) + FiniteSet(2) + FiniteSet(3) == FiniteSet(1, 2, 3)
-    assert FiniteSet(['ham']) + FiniteSet(['eggs']) == FiniteSet('ham', 'eggs')
+    assert FiniteSet('ham') + FiniteSet('eggs') == FiniteSet('ham', 'eggs')
     assert FiniteSet(1, 2, 3) + S.EmptySet == FiniteSet(1, 2, 3)
 
     assert FiniteSet(1, 2, 3) & FiniteSet(2, 3, 4) == FiniteSet(2, 3)
@@ -115,7 +115,7 @@ def test_difference():
         Union(Interval(0, 1, False, True), Interval(1, 2, True, False))
 
     assert FiniteSet(1, 2, 3) - FiniteSet(2) == FiniteSet(1, 3)
-    assert FiniteSet('ham', 'eggs') - FiniteSet(['eggs']) == FiniteSet(['ham'])
+    assert FiniteSet('ham', 'eggs') - FiniteSet('eggs') == FiniteSet('ham')
     assert FiniteSet(1, 2, 3, 4) - Interval(2, 10, True, False) == \
         FiniteSet(1, 2)
     assert FiniteSet(1, 2, 3, 4) - S.EmptySet == FiniteSet(1, 2, 3, 4)
@@ -179,8 +179,8 @@ def test_intersect():
         Union(Interval(0, 1), Interval(2, 2))
 
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
-    assert FiniteSet('ham', 'eggs').intersect(FiniteSet(['ham'])) == \
-        FiniteSet(['ham'])
+    assert FiniteSet('ham', 'eggs').intersect(FiniteSet('ham')) == \
+        FiniteSet('ham')
     assert FiniteSet(1, 2, 3, 4, 5).intersect(S.EmptySet) == S.EmptySet
 
     assert Interval(0, 5).intersect(FiniteSet(1, 3)) == FiniteSet(1, 3)
@@ -194,7 +194,7 @@ def test_intersect():
         S.EmptySet
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
         S.EmptySet
-    assert Union(Interval(0, 5), FiniteSet(['Ham'])).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
+    assert Union(Interval(0, 5), FiniteSet('Ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
         FiniteSet(2, 3, 4, 5)
 
     # tests for the intersection alias
@@ -498,14 +498,14 @@ def test_powerset():
     A = FiniteSet()
     pset = A.powerset()
     assert len(pset) == 1
-    assert pset ==  FiniteSet([S.EmptySet])
+    assert pset ==  FiniteSet(S.EmptySet)
 
     # FiniteSets
-    A = FiniteSet([1, 2])
+    A = FiniteSet(1, 2)
     pset = A.powerset()
     assert len(pset) == 2**len(A)
-    assert pset == FiniteSet([FiniteSet(), FiniteSet(1),
-                              FiniteSet(2), A])
+    assert pset == FiniteSet(EmptySet(), FiniteSet(1),
+                              FiniteSet(2), A)
     # Not finite sets
     I = Interval(0, 1)
     raises(NotImplementedError, I.powerset)

@@ -1279,8 +1279,8 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.__class__(x for x in s
-                        if all(x in other for other in args))
+                return s.__class__(*[x for x in s
+                        if all(x in other for other in args)])
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1460,10 +1460,6 @@ class FiniteSet(Set, EvalfMixin):
         import types
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         if evaluate:
-            if len(args) == 1 and (isinstance(args[0], list) or
-                                   isinstance(args[0], types.GeneratorType)):
-                args = args[0]
-
             args = list(map(sympify, args))
 
             if len(args) == 0:
@@ -1601,7 +1597,7 @@ class FiniteSet(Set, EvalfMixin):
         return sorted(self.args, key=default_sort_key)
 
     def _eval_powerset(self):
-        return self.func(self.func(list(s)) for s in subsets(self.args))
+        return self.func(*[self.func(*list(s)) for s in subsets(self.args)])
 
     def __ge__(self, other):
         return other.is_subset(self)
