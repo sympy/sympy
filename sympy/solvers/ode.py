@@ -6736,7 +6736,7 @@ def sysode_linear_3eq_order1(match_):
     if match_['type_of_equation'] == 'type5':
         sol = _linear_3eq_order1_type5(x, y, z, t, r)
     if match_['type_of_equation'] == 'type6':
-        sol = _linear_neq_order1_type1(match_)
+        sol = _linear_neq_order1_type1(x, y, z, t, r)
     return sol
 
 def _linear_3eq_order1_type1(x, y, z, t, r):
