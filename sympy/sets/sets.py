@@ -1457,7 +1457,6 @@ class FiniteSet(Set, EvalfMixin):
     is_iterable = True
 
     def __new__(cls, *args, **kwargs):
-        import types
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         if evaluate:
             args = list(map(sympify, args))
