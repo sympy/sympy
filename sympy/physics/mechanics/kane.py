@@ -543,10 +543,10 @@ class KanesMethod(object):
             f_a = Matrix([])
 
         # Dicts to sub to zero, for splitting up expressions
-        u_zero = {i: 0 for i in self._u}
-        ud_zero = {i: 0 for i in self._udot}
-        qd_zero = {i: 0 for i in self._qdot}
-        qd_u_zero = {i: 0 for i in self._qdot + self._u}
+        u_zero = dict((i, 0) for i in self._u)
+        ud_zero = dict((i, 0) for i in self._udot)
+        qd_zero = dict((i, 0) for i in self._qdot)
+        qd_u_zero = dict((i, 0) for i in self._qdot + self._u)
 
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = self._f_k.subs(u_zero) + self._k_kqdot*Matrix(self._qdot)
@@ -585,7 +585,7 @@ class KanesMethod(object):
         # setting each to 0.
         uaux = self._uaux
         uauxdot = [diff(i, dynamicsymbols._t) for i in uaux]
-        uaux_zero = {i: 0 for i in uaux + uauxdot}
+        uaux_zero = dict((i, 0) for i in uaux + uauxdot)
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
