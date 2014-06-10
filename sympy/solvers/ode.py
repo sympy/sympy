@@ -1605,6 +1605,9 @@ def check_linear_3eq_order1(eq, func, func_coef):
         elif r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
         and r['b1'] == r['c2'] == r['d3'] == 0:
             return 'type2'
+        elif r['b1'] == r['c2'] == r['d3'] == 0 and r['c1']/r['a1'] == -r['d1']/r['a1'] \
+        and r['d2']/r['a2'] == -r['b2']/r['a2'] and r['b3']/r['a3'] == -r['c3']/r['a3']:
+            return 'type3'
         else:
             return None
     else:
@@ -6717,7 +6720,7 @@ def sysode_linear_3eq_order1(match_):
     for i in range(2):
         eqs = 0
         for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],2]
+            eqs += terms/fc[i,func[i],1]
         eq[i] = eqs
     # for equations Eq(diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
     # Eq(diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2) and
@@ -6737,20 +6740,20 @@ def sysode_linear_3eq_order1(match_):
     r['d2'] = -const[1]
     r['d3'] = -const[2]
     if match_['type_of_equation'] == 'type1':
-        sol = _linear_3eq_order1_type1(x, y, t, r)
+        sol = _linear_3eq_order1_type1(x, y, z, t, r)
     if match_['type_of_equation'] == 'type2':
-        sol = _linear_3eq_order1_type2(x, y, t, r)
+        sol = _linear_3eq_order1_type2(x, y, z, t, r)
     if match_['type_of_equation'] == 'type3':
-        sol = _linear_3eq_order1_type3(x, y, t, r)
+        sol = _linear_3eq_order1_type3(x, y, z, t, r)
     if match_['type_of_equation'] == 'type4':
-        sol = _linear_3eq_order1_type4(x, y, t, r)
+        sol = _linear_3eq_order1_type4(x, y, z, t, r)
     if match_['type_of_equation'] == 'type5':
-        sol = _linear_3eq_order1_type5(x, y, t, r)
+        sol = _linear_3eq_order1_type5(x, y, z, t, r)
     if match_['type_of_equation'] == 'type6':
-        sol = _linear_neq_order1_type1(x, y, t, r)
+        sol = _linear_neq_order1_type1(x, y, z, t, r)
     return sol
 
-def _linear_3eq_order1_type1(x, y, t, r):
+def _linear_3eq_order1_type1(x, y, z, t, r):
     C1, C2, C3, C4 = symbols('C1:5')
     a = r['a1']; b = r['a2']; c = r['b2']
     d = r['a3']; k = r['b3']; p = r['c3']
@@ -6759,11 +6762,22 @@ def _linear_3eq_order1_type1(x, y, t, r):
     sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
-def _linear_3eq_order1_type2(x, y, t, r):
+def _linear_3eq_order1_type2(x, y, z, t, r):
     C0, C1, C2, C3 = symbols('C0:4')
     a = r['c2']; b = r['a3']; c = r['b1']
     k = sqrt(a**2 + b**2 + c**2)
     sol1 = a*C0 + k*C1*cos(k*t) + (c*C2-b*C3)*sin(k*t)
     sol2 = b*C0 + k*C2*cos(k*t) + (a*C3-c*C1)*sin(k*t)
     sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _linear_3eq_order1_type3(x, y, z, t, r):
+    C0, C1, C2, C3 = symbols('C0:4')
+    c = sqrt(r['b1']*r['c2'])
+    b = sqrt(r['b1']*r['a3'])
+    a = sqrt(r['c2']*r['a3'])
+    k = sqrt(a**2 + b**2 + c**2)
+    sol1 = C0 + k*C1*cos(k*t) + a**-1*b*c*(C2-C3)*sin(k*t)
+    sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
+    sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
