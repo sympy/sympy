@@ -477,7 +477,6 @@ def test_line():
         p1.y <= p_s1.y and p_s1.y <= p10.y
     s2 = Segment(p10, p1)
 
-    assert hash(s1) == hash(s2)
     p11 = p10.scale(2, 2)
     assert s1.is_similar(Segment(p10, p11))
     assert s1.is_similar(r1) is False
