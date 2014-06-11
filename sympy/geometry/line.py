@@ -1151,15 +1151,17 @@ class Line(LinearEntity):
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
 
+    def equal(self, other):
+        """Returns True if self and other are the same mathematical entities"""
+        if not isinstance(other, Line):
+            return False
+        return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
 
     def __eq__(self, other):
         """Return True if other is equal to this Line, or False otherwise."""
         if not isinstance(other, Line):
             return False
-        return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
-
-    def __hash__(self):
-        return super(Line, self).__hash__()
+        return self.p1 == other.p1 and self.p2 == other.p2
 
 
 class Ray(LinearEntity):
@@ -1411,10 +1413,13 @@ class Ray(LinearEntity):
         """Is the other GeometryEntity equal to this Ray?"""
         if not isinstance(other, Ray):
             return False
-        return (self.source == other.source) and (other.p2 in self)
+        return (self.source == other.source) and (other.p2 == self.p2)
 
-    def __hash__(self):
-        return super(Ray, self).__hash__()
+    def equal(self, other):
+        """Returns True if self and other are the same mathematical entities"""
+        if not isinstance(other, Ray):
+            return False
+        return self.source == other.source and other.p2 in self
 
     def contains(self, o):
         """Is other GeometryEntity contained in this Ray?"""
@@ -1660,9 +1665,6 @@ class Segment(LinearEntity):
         if not isinstance(other, Segment):
             return False
         return (self.p1 == other.p1) and (self.p2 == other.p2)
-
-    def __hash__(self):
-        return super(Segment, self).__hash__()
 
     def contains(self, other):
         """

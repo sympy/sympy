@@ -281,7 +281,14 @@ class LinearEntity3D(GeometryEntity):
         """
         if l1 == l2:
             ValueError('Enter two distinct lines')
-        return l1.direction_cosine == l2.direction_cosine
+        a = l1.direction_cosine
+        b = l2.direction_cosine
+        a = [abs(i) for i in a]
+        b = [abs(i) for i in b]
+        if a == b:
+            return True
+        else:
+            return False
 
     def is_perpendicular(l1, l2):
         """Are two linear entities perpendicular?
@@ -970,11 +977,17 @@ class Line3D(LinearEntity3D):
         a = self.perpendicular_segment(o).length
         return a
 
-    def __eq__(self, other):
-        """Return True if other is equal to this Line, or False otherwise."""
+    def equal(self, other):
+        """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line3D):
             return False
-        return Point3D.is_collinear(self.p1, self.p2, other.p1, other.p2)
+        return Point3D.is_collinear(self.p1, other.p1, self.p2, other.p2)
+
+    def __eq__(self, other):
+        """Return True if other is the same object as self, or False otherwise."""
+        if not isinstance(other, Line3D):
+            return False
+        return self.p1 == other.p1 and self.p2 == other.p2
 
 class Ray3D(LinearEntity3D):
     """
@@ -1262,11 +1275,17 @@ class Ray3D(LinearEntity3D):
         # No other known entity can be contained in a Ray
         return False
 
+    def equal(self, other):
+        """Returns True if self and other are the same mathematical entities"""
+        if not isinstance(other, Ray3D):
+            return False
+        return self.source == other.source and other.p2 in self
+
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
         if not isinstance(other, Ray3D):
             return False
-        return (self.source == other.source) and (other.p2 in self)
+        return (self.source == other.source) and (other.p2 == self.p2)
 
 class Segment3D(LinearEntity3D):
     """A undirected line segment in a 3D space.

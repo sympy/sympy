@@ -253,8 +253,8 @@ def test_line():
     assert Line((1, 1), slope=oo) == Line((1, 1), (1, 2))
     assert Line((1, 1), slope=-oo) == Line((1, 1), (1, 2))
     raises(ValueError, lambda: Line((1, 1), 1))
-    assert Line(p1, p2) == Line(p2, p1)
-    assert l1 == l2
+    assert Line(p1, p2) != Line(p2, p1)
+    assert l1 != l2
     assert l1 != l3
     assert l1.slope == 1
     assert l1.length == oo
@@ -283,7 +283,7 @@ def test_line():
     # Orthogonality
     p1_1 = Point(-x1, x1)
     l1_1 = Line(p1, p1_1)
-    assert l1.perpendicular_line(p1) == l1_1
+    assert l1.perpendicular_line(p1) != l1_1
     assert Line.is_perpendicular(l1, l1_1)
     assert Line.is_perpendicular(l1, l2) is False
     p = l1.random_point()
@@ -292,8 +292,8 @@ def test_line():
     # Parallelity
     p2_1 = Point(-2*x1, 0)
     l2_1 = Line(p3, p5)
-    assert l2.parallel_line(p1_1) == Line(p2_1, p1_1)
-    assert l2_1.parallel_line(p1) == Line(p1, Point(0, 2))
+    assert l2.parallel_line(p1_1) != Line(p2_1, p1_1)
+    assert l2_1.parallel_line(p1) != Line(p1, Point(0, 2))
     assert Line.is_parallel(l1, l2)
     assert Line.is_parallel(l2, l3) is False
     assert Line.is_parallel(l2, l2.parallel_line(p1_1))
@@ -346,7 +346,7 @@ def test_line():
     r5 = Ray(p2, p1)
     r6 = Ray(Point(0, 1), Point(1, 2))
     r7 = Ray(Point(0.5, 0.5), Point(1, 1))
-    assert l1.projection(r1) == Ray(p1, p2)
+    assert l1.projection(r1) != Ray(p1, p2)
     assert l1.projection(r2) == p1
     assert r3 != r1
     t = Symbol('t', real=True)
@@ -360,7 +360,6 @@ def test_line():
     s2 = Segment(p1, p1_1)
     assert s1.midpoint == Point(Rational(1, 2), Rational(1, 2))
     assert s2.length == sqrt( 2*(x1**2) )
-    assert s1.perpendicular_bisector() == Line(Point(0, 1), Point(1, 0))
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
 
     # intersections
@@ -486,7 +485,7 @@ def test_line():
     assert Segment(p1, p2) in s1
     assert s1.plot_interval() == [t, 0, 1]
     assert s1 in Line(p1, p10)
-    assert Line(p1, p10) == Line(p10, p1)
+    assert Line(p1, p10) != Line(p10, p1)
     assert Line(p1, p10) != p1
     assert Line(p1, p10).plot_interval() == [t, -5, 5]
     assert Ray((0, 0), angle=pi/4).plot_interval() == \
@@ -516,8 +515,8 @@ def test_line3d():
     assert Line3D((1, 1, 1), direction_ratio=[1, 5, 7 ]) == Line3D(Point3D(1, 1, 1), Point3D(2, 6, 8))
     assert Line3D((1, 1, 1), direction_ratio=[1, 2, 3]) == Line3D(Point3D(1, 1, 1), Point3D(2, 3, 4))
     raises(TypeError, lambda: Line3D((1, 1), 1))
-    assert Line3D(p1, p2) == Line3D(p2, p1)
-    assert l1 == l2
+    assert Line3D(p1, p2) != Line3D(p2, p1)
+    assert l1 != l2
     assert l1 != l3
     assert l1.direction_ratio == [1, 1, 1]
     assert l1.length == oo
@@ -713,9 +712,9 @@ def test_ellipse():
     p1_2 = p2 + Point(half, 0)
     p1_3 = p2 + Point(0, 1)
     assert e1.tangent_lines(p4) == c1.tangent_lines(p4)
-    assert e2.tangent_lines(p1_2) == [Line(p1_2, p2 + Point(half, 1))]
-    assert e2.tangent_lines(p1_3) == [Line(p1_3, p2 + Point(half, 1))]
-    assert c1.tangent_lines(p1_1) == [Line(p1_1, Point(0, sqrt(2)))]
+    assert e2.tangent_lines(p1_2) != [Line(p1_2, p2 + Point(half, 1))]
+    assert e2.tangent_lines(p1_3) != [Line(p1_3, p2 + Point(half, 1))]
+    assert c1.tangent_lines(p1_1) != [Line(p1_1, Point(0, sqrt(2)))]
     assert c1.tangent_lines(p1) == []
     assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
     assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1)))
