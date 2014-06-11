@@ -774,7 +774,7 @@ def test_issue_4547():
     assert cot(x).fdiff() == -1 - cot(x)**2
 
 
-def test_as_leading_term_issue2173():
+def test_as_leading_term_issue_5272():
     assert sin(x).as_leading_term(x) == x
     assert cos(x).as_leading_term(x) == 1
     assert tan(x).as_leading_term(x) == x

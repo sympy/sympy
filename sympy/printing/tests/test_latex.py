@@ -684,13 +684,13 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
 
 
-def test_latex_issue1282():
+def test_latex_issue_4381():
     y = 4*4**log(2)
     assert latex(y) == r'4 \cdot 4^{\log{\left (2 \right )}}'
     assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left (2 \right )}}}'
 
 
-def test_latex_issue1477():
+def test_latex_issue_4576():
     assert latex(Symbol("beta_13_2")) == r"\beta_{13 2}"
     assert latex(Symbol("beta_132_20")) == r"\beta_{132 20}"
     assert latex(Symbol("beta_13")) == r"\beta_{13}"

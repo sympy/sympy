@@ -518,7 +518,7 @@ def test_issue_4754_derivative_conjugate():
     assert (f(y).conjugate()).diff(y) == -(f(y).diff(y)).conjugate()
 
 
-def test_derivatives_issue1658():
+def test_derivatives_issue_4757():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')

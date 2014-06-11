@@ -1514,7 +1514,7 @@ def test_issue_4825():
         {'default': None, 'order': 0}
 
 
-def test_constant_renumber_order_issue2209():
+def test_constant_renumber_order_issue_5308():
     from sympy.utilities.iterables import variations
 
     assert constant_renumber(C1*x + C2*y, "C", 1, 2) == \

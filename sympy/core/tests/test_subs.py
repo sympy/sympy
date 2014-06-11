@@ -386,7 +386,7 @@ def test_add():
     assert e.subs(-y + 1, x) == ans
 
 
-def test_subs_issue910():
+def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
 
 
