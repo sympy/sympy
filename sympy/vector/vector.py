@@ -140,22 +140,19 @@ class Vector(Expr):
         from sympy.vector.deloperator import Del
         if not isinstance(other, Vector) and not isinstance(other, Del):
             raise TypeError(str(other) + " is not a vector or del operator")
-        if self == Vector.Zero or other == Vector.Zero:
-            return S(0)
 
         #Check if the other is a del operator
         if isinstance(other, Del):
             vect = self
-            def directional_derivative(scalar_field):
-                if isinstance(vect, VectorZero):
-                    return S(0)
-                out = S(0)
-                out += vect.dot(other._i) * \
-                       diff(scalar_field, other._x)
+            def directional_derivative(field):
+                out = vect.dot(other._i) * \
+                      diff(field, other._x)
                 out += vect.dot(other._j) * \
-                       diff(scalar_field, other._y)
+                       diff(field, other._y)
                 out += vect.dot(other._k) * \
-                       diff(scalar_field, other._z)
+                       diff(field, other._z)
+                if out == 0 and isinstance(field, Vector):
+                    out = Vector.Zero
                 return out
             return directional_derivative
 
@@ -245,6 +242,8 @@ class BaseVector(Vector, Dummy):
     Class to denote a base vector.
     """
 
+    is_Atom = True
+
     def __new__(cls, name, index):
         #Verify arguments
         if not index in range(0, 3):
@@ -289,33 +288,35 @@ class VectorAdd(Vector, Add):
 
     def __new__(cls, *args, **options):
         components = {}
-        new_args = []
-        for arg in args:
-            if isinstance(arg, Mul):
-                new_args.append(VectorMul(*(arg.args)))
-            else:
-                new_args.append(arg)
-        args = new_args
+
         #Check each arg and simultaneously learn the components
-        for arg in args:
-            if not (arg == 0 or isinstance(arg, Vector)):
-                raise TypeError(str(arg) +
-                                " cannot be interpreted as a vector")
+        newargs = []
+        for i, arg in enumerate(args):
+            if not isinstance(arg, Vector):
+                if isinstance(arg, Mul):
+                    arg = VectorMul(*(arg.args))
+                elif isinstance(arg, Add):
+                    arg = VectorAdd(*(arg.args))
+                else:
+                    raise TypeError(str(arg) +
+                                    " cannot be interpreted as a vector")
             #If argument is zero, ignore
-            if arg == 0:
+            if arg == Vector.Zero:
                 continue
+            else:
+                newargs.append(arg)
             #Else, update components accordingly
             for x in arg.components:
                 components[x] = components.get(x, 0) + arg.components[x]
-                if components[x] == 0:
-                    del components[x]
+
+        temp = components.keys()
+        for x in temp:
+            if components[x] == 0:
+                del components[x]
 
         #Handle case of zero vector
         if len(components) == 0:
             return Vector.Zero
-
-        #Build new set of args from the components
-        newargs = [VectorMul(x, components[x]) for x in components]
 
         #Build object
         obj = super(VectorAdd, cls).__new__(cls, *newargs, **options)
@@ -353,7 +354,10 @@ class VectorMul(Vector, Mul):
             elif isinstance(arg, BaseVector) or \
                  isinstance(arg, VectorMul):
                 count += 1
-                vect = arg._base_vect
+                try:
+                    vect = arg._base_vect
+                except:
+                    print arg
                 measure_number *= arg._measure_number
             elif isinstance(arg, VectorAdd):
                 count += 1
@@ -368,6 +372,7 @@ class VectorMul(Vector, Mul):
         #Handle zero vector case
         if zeroflag:
             return Vector.Zero
+
         #If one of the args was a VectorAdd, return an
         #appropriate VectorAdd instance
         if isinstance(vect, VectorAdd):
@@ -389,18 +394,7 @@ class VectorMul(Vector, Mul):
         
     __init__ = Mul.__init__
 
-    def __str__(self, printer=None):
-        #TODO: How to use the printer param?
-        if '(' in str(self._measure_number) or \
-           '+' in str(self._measure_number) or \
-           '-' in str(self._measure_number):
-            return '(' + str(self._measure_number) + ')*' + \
-                   str(self._base_vect)
-        else:
-            return str(self._measure_number) + "*" + str(self._base_vect)
-
-    __repr__ = __str__
-    _sympystr = __str__
+    
 
 
 class VectorZero(Vector, Zero):
@@ -416,6 +410,41 @@ class VectorZero(Vector, Zero):
         return isinstance(other, VectorZero)
 
     __req__ = __eq__
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        if isinstance(other, Vector):
+            return other
+        else:
+            raise TypeError(str(other) + " is not a vector")
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        if isinstance(other, Vector):
+            return other
+        else:
+            raise TypeError(str(other) + " is not a vector")
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
+    def __sub__(self, other):
+        if isinstance(other, Vector):
+            return -other
+        else:
+            raise TypeError(str(other) + " is not a vector")
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        if isinstance(other, Vector):
+            return other
+        else:
+            raise TypeError(str(other) + " is not a vector")
+
+    def __neg__(self):
+        return self
 
     def normalize(self):
         """

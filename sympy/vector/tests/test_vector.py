@@ -1,8 +1,8 @@
-from sympy.symbol import symbols
 from sympy.simplify import simplify
-from sympy import pi, sqrt
-from sympy.vector import i, j, k, Vector, BaseVector, VectorAdd, \
-     VectorMul
+from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
+     sin, cos
+from sympy.vector.vector import i, j, k, Vector, BaseVector, VectorAdd, \
+     VectorMul, VectorZero
 
 a, b, c = symbols('a b c')
 
@@ -25,29 +25,39 @@ def test_vector():
     assert isinstance(v1, VectorAdd)
     assert v1 - v1 == Vector.Zero
     assert v1 + Vector.Zero == v1
-    assert v1.dot(i) = a
-    assert v1.dot(j) = b
-    assert v1.dot(k) = c
-    assert i.dot(v2) = a**2
-    assert j.dot(v2) = b**2
-    assert k.dot(v2) = c**2
+    assert v1.dot(i) == a
+    assert v1.dot(j) == b
+    assert v1.dot(k) == c
+    assert i.dot(v2) == a**2
+    assert j.dot(v2) == b**2
+    assert k.dot(v2) == c**2
     assert v3.dot(i) == a**2 + a
     assert v3.dot(j) == b**2 + b
     assert v3.dot(k) == c**2 + c
 
-    assert v1 + v2 = v2 + v1
-    assert v1 - v2 = -1 * (v2 - v1)
-    assert a * v1 = v1 * a
+    assert v1 + v2 == v2 + v1
+    assert v1 - v2 == -1 * (v2 - v1)
+    assert a * v1 == v1 * a
 
     assert isinstance(v5, VectorMul)
+    assert isinstance(v4, Vector)
     assert isinstance(v4, VectorAdd)
     assert isinstance(v4, Vector)
+    assert isinstance(Vector.Zero, VectorZero)
+    assert isinstance(Vector.Zero, Vector)
+    assert isinstance(v1 * 0, VectorZero)
 
     assert v1.to_matrix() == Matrix([[a], [b], [c]])
 
-    assert i.components = {i: 1}
-    assert v5.components = {i: a}
-    assert v1.components = {i: a, j: b, k: c}
+    assert i.components == {i: 1}
+    assert v5.components == {i: a}
+    assert v1.components == {i: a, j: b, k: c}
+
+    assert VectorAdd(v1, Vector.Zero) == v1
+    assert VectorMul(a, v1) == v1*a
+    assert VectorMul(1, i) == i
+    assert VectorAdd(v1, Vector.Zero) == v1
+    assert VectorMul(0, Vector.Zero) == Vector.Zero
 
 
 def test_vector_magnitude_normalize():
@@ -62,8 +72,8 @@ def test_vector_magnitude_normalize():
     assert k.normalize() == k
 
     v1 = a * i
-    assert v1.normalize() == i
-    assert v1.magnitude() == a
+    assert v1.normalize() == (a/sqrt(a**2))*i
+    assert v1.magnitude() == sqrt(a**2)
 
     v2 = a*i + b*j + c*k
     assert v2.magnitude() == sqrt(a**2 + b**2 + c**2)
@@ -91,7 +101,7 @@ def test_vector_simplify():
     assert (test4 & i) == -2 * b
 
     v = (sin(a)+cos(a))**2*i - j
-    assert v.trigsimp() = (2*sin(a + pi/4)**2)*i + (-1)*j
+    assert v.trigsimp() == (2*sin(a + pi/4)**2)*i + (-1)*j
 
     assert simplify(Vector.Zero) == Vector.Zero
 
@@ -100,7 +110,6 @@ def test_vector_dot():
     assert i.dot(Vector.Zero) == 0
     assert Vector.Zero.dot(i) == 0
     assert i & Vector.Zero == 0
-    assert
 
     assert i.dot(i) == 1
     assert i.dot(j) == 0

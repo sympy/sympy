@@ -2,7 +2,9 @@ from sympy.vector.vector import i, j, k, Vector
 from sympy.vector.scalar import x, y, z
 from sympy.vector.deloperator import delop
 from sympy.simplify import simplify
-from sympy.symbols import symbols
+from sympy.core.symbol import symbols
+from sympy.core import S
+from sympy import sin, cos
 
 a, b, c = symbols('a b c')
 
@@ -15,7 +17,7 @@ def test_del_operator():
     assert delop.cross(2*y**2*j) == Vector.Zero
     v = x*y*z * (i + j + k)
     assert delop ^ v == \
-           (-x*y + x*z)*i + (x*y - y*z)*j + (-x*y + y*z)*k
+           (-x*y + x*z)*i + (x*y - y*z)*j + (-x*z + y*z)*k
     assert delop ^ v == delop.cross(v)
     assert delop.cross(2*x**2*j) == 4*x*k
 
@@ -27,7 +29,7 @@ def test_del_operator():
     assert delop & v == x*y + y*z + z*x
     assert delop & v == delop.dot(v)
     assert delop.dot(1/(x*y*z) * (i + j + k)) == \
-           - 1 / (x*y*z**2) - 1 / (x*y**2z) - 1 / (x**2y*z)
+           - 1 / (x*y*z**2) - 1 / (x*y**2*z) - 1 / (x**2*y*z)
     v = x*i + y*j + z*k
     assert delop & v == 3
     assert simplify(delop & v) == 3
@@ -42,7 +44,7 @@ def test_del_operator():
 
     #Tests for directional derivative
     assert (Vector.Zero & delop)(a) == S(0)
-    assert (v & delop)(Vector.Zero) == Vector.Zero
+    assert ((v & delop)(Vector.Zero)) == Vector.Zero
     assert (v & delop)(S(0)) == S(0)
     assert (i & delop)(x) == 1
     assert (j & delop)(y) == 1
@@ -83,27 +85,27 @@ def test_product_rules():
 
     #Second product rule
     lhs = delop(u & v)
-    rhs = u ^ (delop ^ v) + v ^ (delop ^ u) + \
-          (u & delop)(v) + (v & delop)(u)
-    assert simplify(lhs) == simplify(rhs)
+    rhs = (u ^ (delop ^ v)) + (v ^ (delop ^ u)) + \
+          ((u & delop)(v)) + ((v & delop)(u))
+    assert lhs.simplify() == rhs.simplify()
 
     #Third product rule
     lhs = delop & (f*v)
-    rhs = f * (delop & v) + v & (delop(f))
+    rhs = (f * (delop & v)) + (v & (delop(f)))
     assert simplify(lhs) == simplify(rhs)
 
     #Fourth product rule
     lhs = delop & (u ^ v)
-    rhs = v & (delop ^ u) - u & (delop ^ v)
+    rhs = (v & (delop ^ u)) - (u & (delop ^ v))
     assert simplify(lhs) == simplify(rhs)
 
     #Fifth product rule
     lhs = delop ^ (f * v)
-    rhs = (delop(f)) ^ v + f * (delop ^ v)
-    assert simplify(lhs) == simplify(rhs)
+    rhs = ((delop(f)) ^ v) + (f * (delop ^ v))
+    assert lhs.simplify() == rhs.simplify()
 
     #Sixth product rule
     lhs = delop ^ (u ^ v)
     rhs = u * (delop & v) - v * (delop & u) + \
-          (v & delop) * u - (u & delop) * v
-    assert simplify(lhs) == simplify(rhs)
+          (v & delop)(u) - (u & delop)(v)
+    assert lhs.simplify() == rhs.simplify()
