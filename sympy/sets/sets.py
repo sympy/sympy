@@ -1279,7 +1279,7 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.__class__(*[x for x in s
+                return s.func(*[x for x in s
                         if all(x in other for other in args)])
 
         # If any of the sets are unions, return a Union of Intersections
