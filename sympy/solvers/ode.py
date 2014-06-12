@@ -6725,10 +6725,6 @@ def sysode_linear_3eq_order1(match_):
     r['d2'] = -const[1]
     r['d3'] = -const[2]
     if match_['type_of_equation'] == 'type1':
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Methods of linear system of 3eq and 1st order
         sol = _linear_3eq_order1_type1(x, y, z, t, r)
     if match_['type_of_equation'] == 'type2':
         sol = _linear_3eq_order1_type2(x, y, z, t, r)
@@ -6739,11 +6735,7 @@ def sysode_linear_3eq_order1(match_):
     if match_['type_of_equation'] == 'type5':
         sol = _linear_3eq_order1_type5(x, y, z, t, r)
     if match_['type_of_equation'] == 'type6':
-<<<<<<< HEAD
         sol = _linear_neq_order1_type1(match_)
-=======
-        sol = _linear_neq_order1_type1(x, y, z, t, r)
->>>>>>> Methods of linear system of 3eq and 1st order
     return sol
 
 def _linear_3eq_order1_type1(x, y, z, t, r):
@@ -6774,7 +6766,6 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
     sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-<<<<<<< HEAD
 
 def _linear_3eq_order1_type4(x, y, z, t, r):
     u, v, w = symbols('u, v, w', function=True)
@@ -6848,5 +6839,3 @@ def _linear_neq_order1_type1(match_):
     for i in range(len(eq)):
         sol.append(Eq(func[i],e_vector[i]))
     return sol
-=======
->>>>>>> Methods of linear system of 3eq and 1st order
