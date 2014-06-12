@@ -249,7 +249,7 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     sign, Piecewise, atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import wronskian
+from sympy.matrices import wronskian, Matrix, eye, zeros
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
@@ -1627,9 +1627,9 @@ def check_linear_neq_order1(eq, func, func_coef):
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     r = dict()
-    leng = len(eq)
-    for i in range(leng):
-        for j in range(leng):
+    n = len(eq)
+    for i in range(n):
+        for j in range(n):
             if (fc[i,func[j],0]/fc[i,func[i],1]).has(t):
                 return None
     if len(eq)==3:
@@ -6750,7 +6750,7 @@ def sysode_linear_3eq_order1(match_):
     if match_['type_of_equation'] == 'type5':
         sol = _linear_3eq_order1_type5(x, y, z, t, r)
     if match_['type_of_equation'] == 'type6':
-        sol = _linear_neq_order1_type1(x, y, z, t, r)
+        sol = _linear_neq_order1_type1(match_)
     return sol
 
 def _linear_3eq_order1_type1(x, y, z, t, r):
@@ -6781,3 +6781,89 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
     sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def sysode_linear_neq_order1(match_):
+    sol = _linear_neq_order1_type1(match_)
+
+def _linear_neq_order1_type1(match_):
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    n = len(eq)
+    lamda = Symbol('lamda')
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
+    chareq = Poly(M.charpoly(lamda), lamda)
+    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
+    roots = []
+    conjugate_root = []
+    for root in chareqroots:
+        if isinstance(root, RootOf):
+            root = root.evalf()
+        if root.has(I):
+            if root not in conjugate_root:
+                reroot = re(root)
+                imroot = im(root)
+                if not(im(root).is_Integer):
+                    imroot = im(root).evalf(3)
+                if not(re(root).is_Integer):
+                    reroot = re(root).evalf(3)
+                root = reroot + I*imroot
+                conjugate_root.append(conjugate(root))
+        else:
+            if not root.is_Integer:
+                root = root.evalf(3)
+        roots.append(root)
+    charroots = defaultdict(int)
+    for root in roots:
+        if root not in conjugate_root:
+            charroots[root] += 1
+    sols = zeros(n,1)
+    ev = dict()
+    for root, multiplicity in charroots.items():
+        ev[root] = eigen_vector(M, root, multiplicity, t)
+        sols += ev[root]
+    sol = []
+    for i in range(len(eq)):
+        sol.append(Eq(func[i],sols[i]))
+    return sol
+
+def eigen_vector(M, root, multiplicity, t):
+    # A enerator of constants
+    global startnum
+    startnum = 1
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=startnum)
+
+    n = sqrt(len(M))
+    Identity_mat = eye(n)
+    var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
+    M_ = M - root*Identity_mat
+    Mnew = M_*var_mat
+    sol_dict = solve(list(Mnew),var_mat[1:])
+    sol_dict[var_mat[0]] = var_mat[0]
+    e_vector = Matrix(n, 1, lambda i,j: cancel(sol_dict[var_mat[i]]/var_mat[0]))
+    def is_complex(mat):
+        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
+    def is_complex_conjugate(mat):
+        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
+    w = [0 for i in range(multiplicity)]
+    w[0] = e_vector
+    for r in range(1, multiplicity):
+        w_ = Mnew - w[r-1]
+        sol_dict_ = solve(list(w_), var_mat[1:])
+        sol_dict_[var_mat[0]] = var_mat[0]
+        for key, value in sol_dict_.items():
+            sol_dict_[key] = value.subs(var_mat[0],1)
+        w[r] = Matrix(n, 1, lambda i,j: sol_dict_[var_mat[i]])
+    e_vector = zeros(n,1)
+    for i in range(multiplicity):
+        C = next(constants)
+        for j in range(i+1):
+            if w[j].has(I):
+                e_vector += C*is_complex(w[j])*exp(re(root)*t)
+                C = next(constants)
+                e_vector += C*is_complex_conjugate(w[j])*exp(re(root)*t)
+            else:
+                e_vector += C*w[j]*t**(i-j)*exp(root*t)/factorial(i-j)
+    startnum = int(str(C)[1:]) + 1
+    return e_vector
