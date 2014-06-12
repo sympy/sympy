@@ -2766,6 +2766,14 @@ def test_X22():
     raise NotImplementedError("Fourier series not supported")
 
 
+def test_X23():
+    a, b = symbols('a b', positive=True)
+    x = a * b
+    s1 = series(exp(a), a, n=8)
+    s2 = series(exp(x), x, n=8)
+    assert s1.subs(a, x) == s2
+
+
 def test_Y1():
     t = symbols('t', real=True, positive=True)
     w = symbols('w', real=True)
