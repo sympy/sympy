@@ -442,13 +442,15 @@ class LinearEntity3D(GeometryEntity):
         True
 
         """
+        from sympy.core import Symbol
+        t = Symbol('t')
         if p in self:
             return p
-        a = self.arbitrary_point()
+        a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
-        d = solve(c)
-        e = a.subs(a.free_symbols.pop(), d.pop())
+        d = solve(c, t)
+        e = a.subs(t, d[0])
         return Line3D(p, e)
 
     def perpendicular_segment(self, p):
@@ -493,13 +495,15 @@ class LinearEntity3D(GeometryEntity):
         Segment3D(Point3D(4/3, 4/3, 4/3), Point3D(4, 0, 0))
 
         """
+        from sympy.core import Symbol
+        t = Symbol('t')
         if p in self:
             return p
-        a = self.arbitrary_point()
+        a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
-        d = solve(c)
-        e = a.subs(a.free_symbols.pop(), d.pop())
+        d = solve(c, t)
+        e = a.subs(t, d[0])
         return Segment3D(p, e)
 
     def projection(self, o):
@@ -620,6 +624,9 @@ class LinearEntity3D(GeometryEntity):
         []
 
         """
+        from sympy.core import Symbol
+        t1 = Symbol('t1')
+        t2 = Symbol('t2')
         if isinstance(o, Point3D):
             if o in self:
                 return [o]
@@ -668,7 +675,7 @@ class LinearEntity3D(GeometryEntity):
                     elif isinstance(o, Segment3D):
                         # A reminder that the points of Segments are ordered
                         # in such a way that the following works. See
-                        # Segment.__new__ for details on the ordering.
+                        # Segment3D.__new__ for details on the ordering.
                         if self.p1 not in o:
                             if self.p2 not in o:
                                 # Neither of the endpoints are in o so either
@@ -699,18 +706,18 @@ class LinearEntity3D(GeometryEntity):
                 return []
             # If the lines are not parallel the solve their arbitrary points
             # to obtain the point of intersection
-            a = self.arbitrary_point('t1')
-            b = o.arbitrary_point('t2')
-            c = solve([a.x - b.x, a.y - b.y], [a.free_symbols.pop(), b.free_symbols.pop()])
-            d = solve([a.x - b.x, a.z - b.z], [a.free_symbols.pop(), b.free_symbols.pop()])
+            a = self.arbitrary_point(t1)
+            b = o.arbitrary_point(t2)
+            c = solve([a.x - b.x, a.y - b.y], [t1, t2])
+            d = solve([a.x - b.x, a.z - b.z], [t1, t2])
             if len(c) == 1:
                 return []
             if len(d) == 1:
                 return []
             if c is {}:
-                e = a.subs(a.free_symbols.pop(), c[a.free_symbols.pop()])
+                e = a.subs(t1, d[t1])
             else:
-                e = a.subs(a.free_symbols.pop(), d[a.free_symbols.pop()])
+                e = a.subs(t1, c[t1])
             if  e in self and e in o:
                 return [e]
             else:
