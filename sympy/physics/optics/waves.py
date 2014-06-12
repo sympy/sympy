@@ -10,20 +10,23 @@ from __future__ import print_function, division
 
 __all__ = ['TWave']
 
-from sympy import sympify, pi, cos, sqrt, simplify, Symbol, S
+from sympy import (sympify, pi, sin, cos, sqrt, simplify, Symbol, S, C, I,
+    symbols, Derivative)
 from sympy.core.expr import Expr
+from sympy.physics.units import c
 
 
 class TWave(Expr):
 
     r"""
-    This is a simple transverse wave travelling in a two dimensional space.
+    This is a simple transverse sine wave travelling in a one dimensional space.
     Basic properties are required at the time of creation of the object but
     they can be changed later with respective methods provided.
 
-    It has been represented as :math:`A \times cos(\omega \times t + \phi )`
-    where :math:`A` is amplitude, :math:`\omega` is angular velocity and
-    :math:`\phi` is phase angle of the wave.
+    It has been represented as :math:`A \times cos(k*x - \omega \times t + \phi )`
+    where :math:`A` is amplitude, :math:`\omega` is angular velocity, :math:`k`is
+    wavenumber, :math:`x` is a spatial variable to represent the position on the
+    dimension on which the wave propagates and :math:`\phi` is phase angle of the wave.
 
 
     Arguments
@@ -43,7 +46,8 @@ class TWave(Expr):
     Raises
     =======
 
-    ValueError : When niether frequency nor time period is provided.
+    ValueError : When neither frequency nor time period is provided
+        or they are not consistent.
     TypeError : When anyting other than TWave objects is added.
 
 
@@ -63,7 +67,7 @@ class TWave(Expr):
     >>> w3.phase
     phi1 + phi2
     >>> w3.speed
-    c/n
+    299792458*m/(n*s)
     >>> w3.angular_velocity
     2*pi*f
 
@@ -86,7 +90,6 @@ class TWave(Expr):
         self._phase = phase
         self._time_period = time_period
         self._n = n
-        self.c = Symbol('c')  # Speed of light in vacuum
         if time_period is not None:
             self._frequency = 1/self._time_period
         if frequency is not None:
@@ -145,9 +148,9 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.wavelength
-        c/(f*n)
+        299792458*m/(f*n*s)
         """
-        return self.c/(self._frequency*self._n)
+        return c/(self._frequency*self._n)
 
     @property
     def amplitude(self):
@@ -197,7 +200,7 @@ class TWave(Expr):
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
         >>> w.speed
-        c/n
+        299792458*m/(n*s)
         """
         return self.wavelength*self._frequency
 
@@ -218,9 +221,10 @@ class TWave(Expr):
         """
         return 2*pi*self._frequency
 
-    def equation(self, type='cosine'):
+    @property
+    def wavenumber(self):
         """
-        Returns equation of the wave.
+        Returns wavenumber of the wave.
 
         Examples
         ========
@@ -229,13 +233,10 @@ class TWave(Expr):
         >>> from sympy.physics.optics import TWave
         >>> A, phi, f = symbols('A, phi, f')
         >>> w = TWave(A, f, phi)
-        >>> w.equation('cosine')
-        A*cos(2*pi*f*t + phi)
+        >>> w.wavenumber
+        pi*f*n*s/(149896229*m)
         """
-        if not isinstance(type, str):
-            raise TypeError("type can only be a string.")
-        if type == 'cosine':
-            return self._amplitude*cos(self.angular_velocity*Symbol('t') + self._phase)
+        return 2*pi/self.wavelength
 
     def __str__(self):
         """String representation of a TWave."""
@@ -259,3 +260,23 @@ class TWave(Expr):
                              )
         else:
             raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
+
+    def _eval_rewrite_as_sin(self, *args):
+        return self._amplitude*sin(self.wavenumber*Symbol('x')
+            - self.angular_velocity*Symbol('t') + self._phase + pi/2, evaluate=False)
+
+    def _eval_rewrite_as_cos(self, *args):
+        return self._amplitude*cos(self.wavenumber*Symbol('x')
+            - self.angular_velocity*Symbol('t') + self._phase)
+
+    def _eval_rewrite_as_pde(self, *args):
+        from sympy import Function
+        mu, epsilon, x, t = symbols('mu, epsilon, x, t')
+        E = Function('E')
+        return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
+
+    def _eval_rewrite_as_exp(self, *args):
+        from sympy import C, I
+        exp = C.exp
+        return self._amplitude*exp(I*(self.wavenumber*Symbol('x')
+            - self.angular_velocity*Symbol('t') + self._phase))
