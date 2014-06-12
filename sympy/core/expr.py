@@ -2439,7 +2439,9 @@ class Expr(Basic, EvalfMixin):
                 return rv.subs(xpos, x)
 
         if n is not None:  # nseries handling
-            s1 = self._eval_nseries(x, n=n, logx=logx)
+            _x = C.Dummy('x')
+            s0 = self.subs(x, _x)
+            s1 = s0._eval_nseries(_x, n=n, logx=logx)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned
@@ -2448,39 +2450,39 @@ class Expr(Basic, EvalfMixin):
                     # leave o in its current form (e.g. with x*log(x)) so
                     # it eats terms properly, then replace it below
                     if n != 0:
-                        s1 += o.subs(x, x**C.Rational(n, ngot))
+                        s1 += o.subs(_x, _x**C.Rational(n, ngot))
                     else:
-                        s1 += C.Order(1, x)
+                        s1 += C.Order(1, _x)
                 elif ngot < n:
                     # increase the requested number of terms to get the desired
                     # number keep increasing (up to 9) until the received order
                     # is different than the original order and then predict how
                     # many additional terms are needed
                     for more in range(1, 9):
-                        s1 = self._eval_nseries(x, n=n + more, logx=logx)
+                        s1 = s0._eval_nseries(_x, n=n + more, logx=logx)
                         newn = s1.getn()
                         if newn != ngot:
                             ndo = n + (n - ngot)*more/(newn - ngot)
-                            s1 = self._eval_nseries(x, n=ndo, logx=logx)
+                            s1 = s0._eval_nseries(_x, n=ndo, logx=logx)
                             while s1.getn() < n:
-                                s1 = self._eval_nseries(x, n=ndo, logx=logx)
+                                s1 = s0._eval_nseries(_x, n=ndo, logx=logx)
                                 ndo += 1
                             break
                     else:
                         raise ValueError('Could not calculate %s terms for %s'
                                          % (str(n), self))
-                    s1 += C.Order(x**n, x)
+                    s1 += C.Order(_x**n, _x)
                 o = s1.getO()
                 s1 = s1.removeO()
             else:
-                o = C.Order(x**n, x)
+                o = C.Order(_x**n, _x)
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
             try:
-                return collect(s1, x) + o
+                return (collect(s1, _x) + o).subs(_x, x)
             except NotImplementedError:
-                return s1 + o
+                return (s1 + o).subs(_x, x)
 
         else:  # lseries handling
             def yield_lseries(s):
