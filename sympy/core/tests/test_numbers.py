@@ -388,6 +388,12 @@ def test_Float():
     assert Float('0.0').is_unbounded is False
     assert Float('0.0').is_zero is True
 
+    # rationality properties
+    assert Float(1).is_rational is None
+    assert Float(1).is_irrational is None
+    assert sqrt(2).n(15).is_rational is None
+    assert sqrt(2).n(15).is_irrational is None
+
     # do not automatically evalf
     def teq(a):
         assert (a.evalf() == a) is False
