@@ -4,11 +4,18 @@ from sympy import I, Add, Mul, Pow, Integer, exp, sqrt, conjugate
 from sympy.physics.quantum import (Operator, Commutator, AntiCommutator,
                                    Dagger, IdentityOperator, Ket, Bra)
 from sympy.physics.quantum import HilbertSpace, ComplexSpace
+from sympy.physics.quantum.boson import BosonOp
 from sympy.matrices import Matrix
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
+class SigmaOpBase(Operator):
+    """Pauli sigma x operator"""
 
-class SigmaX(Operator):
+    def _eval_commutator_BosonOp(self, other, **hints):
+        return Integer(0)
+
+
+class SigmaX(SigmaOpBase):
     """Pauli sigma x operator"""
 
     def __new__(cls, *args, **hints):
@@ -19,6 +26,9 @@ class SigmaX(Operator):
 
     def _eval_commutator_SigmaZ(self, other, **hints):
         return - 2 * I * SigmaY()
+
+    def _eval_commutator_BosonOp(self, other, **hints):
+        return Integer(0)
 
     def _eval_anticommutator_SigmaY(self, other, **hints):
         return Integer(0)
@@ -75,7 +85,7 @@ class SigmaX(Operator):
                                       format + ' not implemented.')
 
 
-class SigmaY(Operator):
+class SigmaY(SigmaOpBase):
     """Pauli sigma y operator"""
 
     def __new__(cls, *args, **hints):
@@ -142,7 +152,7 @@ class SigmaY(Operator):
                                       format + ' not implemented.')
 
 
-class SigmaZ(Operator):
+class SigmaZ(SigmaOpBase):
     """Pauli sigma z operator"""
 
     def __new__(cls, *args, **hints):
@@ -209,7 +219,7 @@ class SigmaZ(Operator):
                                       format + ' not implemented.')
 
 
-class SigmaMinus(Operator):
+class SigmaMinus(SigmaOpBase):
     """Pauli sigma minus operator"""
 
     def __new__(cls, *args, **hints):
@@ -287,7 +297,7 @@ class SigmaMinus(Operator):
                                       format + ' not implemented.')
 
 
-class SigmaPlus(Operator):
+class SigmaPlus(SigmaOpBase):
     """Pauli sigma plus operator"""
 
     def __new__(cls, *args, **hints):
@@ -328,6 +338,9 @@ class SigmaPlus(Operator):
             return Integer(0)
 
     def __mul__(self, other):
+
+        if other == IdentityOperator(2):
+            return self
 
         if isinstance(other, SigmaX):
             return (IdentityOperator(2) + SigmaZ())/2
