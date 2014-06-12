@@ -2391,7 +2391,7 @@ class Expr(Basic, EvalfMixin):
 
         # from here on it's x0=0 and dir='+' handling
 
-        if x.is_positive is x.is_negative is None:
+        if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
             xpos = C.Dummy('x', positive=True, bounded=True)
             rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
