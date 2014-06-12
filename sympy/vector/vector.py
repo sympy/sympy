@@ -29,6 +29,11 @@ class Vector(Expr):
         Examples
         ========
 
+        >>> from sympy import i, j, k
+        >>> v = 3*i + 4*j + 5*k
+        >>> v.components
+        {k: 5, j: 4, i: 3}
+
         """
         #The '_components' attribute is defined according to the
         #subclass of Vector the instance belongs to.
@@ -134,6 +139,15 @@ class Vector(Expr):
         Examples
         ========
 
+        >>> from sympy.vector import i, j, k
+        >>> i.dot(j)
+        0
+        >>> i & i
+        1
+        >>> v = 3*i + 4*j + 5*k
+        >>> v.dot(k)
+        5
+
         """
 
         #Check special cases
@@ -181,6 +195,15 @@ class Vector(Expr):
 
         Examples
         ========
+
+        >>> from sympy.vector import i, j, k
+        >>> i.cross(j)
+        k
+        >>> i ^ i
+        0
+        >>> v = 3*i + 4*j + 5*k
+        >>> v ^ i
+        5*j + (-4)*k
 
         """
 
@@ -230,6 +253,15 @@ class Vector(Expr):
         Examples
         ========
 
+        >>> from sympy.vector import i, j, k
+        >>> from sympy.abc import a, b, c
+        >>> v = a*i + b*j + c*k
+        >>> v.to_matrix()
+        Matrix([
+        [a],
+        [b],
+        [c]])
+
         """
 
         base_vectors = (i, j, k)
@@ -274,7 +306,6 @@ class BaseVector(Vector, Dummy):
     __req__ = __eq__
 
     def __str__(self, printer=None):
-        #TODO: How to use the printer param?
         return self._name
 
     __repr__ = __str__
@@ -394,7 +425,15 @@ class VectorMul(Vector, Mul):
         
     __init__ = Mul.__init__
 
-    
+    def __str__(self, printer=None):
+        measure_str = self._measure_number.__str__()
+        if '(' in measure_str or '-' in measure_str or \
+           '+' in measure_str:
+            measure_str = '(' + measure_str + ')'
+        return measure_str + '*' + self._base_vect.__str__()
+
+    __repr__ = __str__
+    _sympystr = __str__
 
 
 class VectorZero(Vector, Zero):

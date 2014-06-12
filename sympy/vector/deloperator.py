@@ -1,5 +1,3 @@
-#TODO: Can the Del operator be implemented as a Vector having
-#functions as the 'measure numbers'?
 from sympy.core import Basic
 from sympy import diff
 from sympy.vector.vector import Vector, i, j, k
@@ -29,6 +27,10 @@ class Del(Basic):
         Examples
         ========
 
+        >>> from sympy.vector import x, y, z, delop
+        >>> delop(x*y*z)
+        y*z*i + z*x*j + x*y*k        
+
         """
 
         vx = diff(scalar_field, self._x)
@@ -50,6 +52,13 @@ class Del(Basic):
 
         Examples
         ========
+
+        >>> from sympy.vector import i, j, k, x, y, z, delop
+        >>> v = x*y*z * (i + j + k)
+        >>> delop & v
+        x*y + y*z + z*x
+        >>> delop.dot(i)
+        0
 
         """
 
@@ -74,6 +83,13 @@ class Del(Basic):
 
         Examples
         ========
+
+        >>> from sympy.vector import i, j, k, x, y, z, delop
+        >>> v = x*y*z * (i + j + k)
+        >>> delop ^ v
+        (-x*y + x*z)*i + (x*y - y*z)*j + (-x*z + y*z)*k
+        >>> delop.cross(i)
+        0
 
         """
 

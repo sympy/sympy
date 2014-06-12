@@ -32,7 +32,6 @@ class BaseScalar(Dummy):
         return tuple(self._id).__hash__()
 
     def __str__(self, printer=None):
-        #TODO: How to use printer param?
         return self._name
 
     __repr__ = __str__
