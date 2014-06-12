@@ -1385,6 +1385,10 @@ def trigsimp(expr, **opts):
 
     """
     from sympy.simplify.fu import fu
+    from sympy.vector import Vector
+
+    if isinstance(expr, Vector):
+	return expr.trigsimp()
 
     expr = sympify(expr)
 
@@ -3662,6 +3666,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     """
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
+    from sympy.vector import Vector
+
+    if isinstance(expr, Vector):
+	return expr.simplify(ratio, measure)
 
     original_expr = expr = signsimp(expr)
 

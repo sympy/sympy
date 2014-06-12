@@ -84,6 +84,14 @@ class Vector(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+    @call_highest_priority('__req__')
+    def __eq__(self, other):
+        if isinstance(other, Vector):
+            return self.components == other.components
+        return False
+
+    __req__ = __eq__
+
     def evalf(self, *args):
         v = Vector.Zero
         for x in self.components:
@@ -103,6 +111,9 @@ class Vector(Expr):
 
     def _eval_derivative(self, wrt):
         return self.diff(wrt)
+
+    def as_numer_denom(self):
+        return (self, 1)
 
     def factor(self, *args, **kwargs):
         raise TypeError("Factoring not applicable for Vectors")
@@ -298,10 +309,9 @@ class BaseVector(Vector, Dummy):
 
     @call_highest_priority('__req__')
     def __eq__(self, other):
-        try:
+        if isinstance(other, BaseVector):
             return self._index == other._index
-        except:
-            return False
+        return False
 
     __req__ = __eq__
 
@@ -321,7 +331,6 @@ class VectorAdd(Vector, Add):
         components = {}
 
         #Check each arg and simultaneously learn the components
-        newargs = []
         for i, arg in enumerate(args):
             if not isinstance(arg, Vector):
                 if isinstance(arg, Mul):
@@ -334,8 +343,6 @@ class VectorAdd(Vector, Add):
             #If argument is zero, ignore
             if arg == Vector.Zero:
                 continue
-            else:
-                newargs.append(arg)
             #Else, update components accordingly
             for x in arg.components:
                 components[x] = components.get(x, 0) + arg.components[x]
@@ -348,6 +355,8 @@ class VectorAdd(Vector, Add):
         #Handle case of zero vector
         if len(components) == 0:
             return Vector.Zero
+
+        newargs = [x*components[x] for x in components]
 
         #Build object
         obj = super(VectorAdd, cls).__new__(cls, *newargs, **options)
@@ -399,7 +408,7 @@ class VectorMul(Vector, Mul):
         if count > 1:
             raise ValueError("Cannot multiply one vector with another")
         elif count == 0:
-            raise ValueError("No vectors supplied")
+            return Mul(*args, **options)
         #Handle zero vector case
         if zeroflag:
             return Vector.Zero
