@@ -182,20 +182,6 @@ def test_linear_3eq_order1():
     Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
     assert dsolve(eq6) == sol6
 
-    eq6 = (Eq(diff(x(t),t,t), log(t)*t*diff(y(t),t) - log(t)*y(t)), Eq(diff(y(t),t,t), log(t)*t*diff(x(t),t) - log(t)*x(t)))
-    sol6 = [Eq(x(t), C3*t + t*Integral((C1*exp(Integral(t*log(t), t)) + \
-    C2*exp(-Integral(t*log(t), t)))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*exp(Integral(t*log(t), t)) - \
-    C2*exp(-Integral(t*log(t), t)))/t**2, t))]
-    assert dsolve(eq6) == sol6
-
-    eq7 = (Eq(diff(x(t),t,t), log(t)*(t*diff(x(t),t) - x(t)) + exp(t)*(t*diff(y(t),t) - y(t))), \
-    Eq(diff(y(t),t,t), (t**2)*(t*diff(x(t),t) - x(t)) + (t)*(t*diff(y(t),t) - y(t))))
-    sol7 = [Eq(x(t), C3*t + t*Integral((C1*x0 + C2*x0*Integral(t*exp(t)*exp(Integral(t**2, t))*\
-    exp(Integral(t*log(t), t))/x0**2, t))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*y0 + \
-    C2(y0*Integral(t*exp(t)*exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0**2, t) + \
-    exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0))/t**2, t))]
-    assert dsolve(eq7) == sol7
-
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
