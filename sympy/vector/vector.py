@@ -29,10 +29,10 @@ class Vector(Expr):
         Examples
         ========
 
-        >>> from sympy import i, j, k
+        >>> from sympy.vector import i, j, k
         >>> v = 3*i + 4*j + 5*k
         >>> v.components
-        {k: 5, j: 4, i: 3}
+        {i: 3, j: 4, k: 5}
 
         """
         #The '_components' attribute is defined according to the

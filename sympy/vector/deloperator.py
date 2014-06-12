@@ -29,7 +29,7 @@ class Del(Basic):
 
         >>> from sympy.vector import x, y, z, delop
         >>> delop(x*y*z)
-        y*z*i + z*x*j + x*y*k        
+        x*y*k + x*z*j + y*z*i        
 
         """
 
@@ -56,7 +56,7 @@ class Del(Basic):
         >>> from sympy.vector import i, j, k, x, y, z, delop
         >>> v = x*y*z * (i + j + k)
         >>> delop & v
-        x*y + y*z + z*x
+        x*y + x*z + y*z
         >>> delop.dot(i)
         0
 
