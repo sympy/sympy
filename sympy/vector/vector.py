@@ -344,7 +344,6 @@ class VectorAdd(Vector, Add):
         for i, arg in enumerate(args):
             if not isinstance(arg, Vector):
                 if isinstance(arg, Mul):
-                    print args
                     arg = VectorMul(*(arg.args))
                 elif isinstance(arg, Add):
                     arg = VectorAdd(*(arg.args))
@@ -416,10 +415,7 @@ class VectorMul(Vector, Mul):
             elif isinstance(arg, BaseVector) or \
                  isinstance(arg, VectorMul):
                 count += 1
-                try:
-                    vect = arg._base_vect
-                except:
-                    print arg
+                vect = arg._base_vect
                 measure_number *= arg._measure_number
             elif isinstance(arg, VectorAdd):
                 count += 1
