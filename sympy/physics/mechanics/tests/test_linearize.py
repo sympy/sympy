@@ -1,8 +1,9 @@
-from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt
+from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt, zeros
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
-    dot, cross, inertia, KanesMethod, Particle, RigidBody
+    dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
+    LagrangesMethod
 
-def test_linearize_rolling_disc():
+def test_linearize_rolling_disc_kane():
     # Symbols for time and constant parameters
     t, r, m, g, v = symbols('t r m g v')
 
@@ -123,7 +124,7 @@ def test_linearize_rolling_disc():
     # Check eigenvalues at critical speed are all zero:
     assert A.subs(upright_nominal).subs(q3d, 1/sqrt(3)).eigenvals() == {0: 8}
 
-def test_linearize_pendulum_minimal():
+def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     u1 = dynamicsymbols('u1')                     # Angular velocity
     q1d = dynamicsymbols('q1', 1)                 # Angular velocity
@@ -160,7 +161,7 @@ def test_linearize_pendulum_minimal():
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
 
-def test_linearize_pendulum_nonminimal():
+def test_linearize_pendulum_kane_nonminimal():
     # Create generalized coordinates and speeds for this non-minimal realization
     # q1, q2 = N.x and N.y coordinates of pendulum
     # u1, u2 = N.x and N.y velocities of pendulum
@@ -220,5 +221,80 @@ def test_linearize_pendulum_nonminimal():
 
     A, B, inp_vec = KM.linearize(q_op=q_op, u_op=u_op, ud_op=ud_op, A_and_B=True)
 
+    assert A == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
+def test_linearize_pendulum_lagrange_minimal():
+    q1 = dynamicsymbols('q1')                     # angle of pendulum
+    q1d = dynamicsymbols('q1', 1)                 # Angular velocity
+    L, m, t = symbols('L, m, t')
+    g = 9.8
+
+    # Compose world frame
+    N = ReferenceFrame('N')
+    pN = Point('N*')
+    pN.set_vel(N, 0)
+
+    # A.x is along the pendulum
+    A = N.orientnew('A', 'axis', [q1, N.z])
+    A.set_ang_vel(N, q1d*N.z)
+
+    # Locate point P relative to the origin N*
+    P = pN.locatenew('P', L*A.x)
+    P.v2pt_theory(pN, N, A)
+    pP = Particle('pP', P, m)
+
+    # Solve for eom with Lagranges method
+    Lag = Lagrangian(N, pP)
+    LM = LagrangesMethod(Lag, [q1], forcelist=[(P, m*g*N.x)], frame=N)
+    LM.form_lagranges_equations()
+
+    # Linearize
+    linearizer = LM.to_linearizer([q1], [q1d])
+    A, B = linearizer.linearize(A_and_B=True)
+
+    assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert B == Matrix([])
+
+def test_linearize_pendulum_lagrange_nonminimal():
+    q1, q2 = dynamicsymbols('q1:3')
+    q1d, q2d = dynamicsymbols('q1:3', level=1)
+    L, m, t = symbols('L, m, t')
+    g = 9.8
+    # Compose World Frame
+    N = ReferenceFrame('N')
+    pN = Point('N*')
+    pN.set_vel(N, 0)
+    # A.x is along the pendulum
+    theta1 = atan(q2/q1)
+    A = N.orientnew('A', 'axis', [theta1, N.z])
+    # Create point P, the pendulum mass
+    P = pN.locatenew('P1', q1*N.x + q2*N.y)
+    P.set_vel(N, P.pos_from(pN).dt(N))
+    pP = Particle('pP', P, m)
+    # Constraint Equations
+    f_c = Matrix([q1**2 + q2**2 - L**2])
+    # Calculate the lagrangian, and form the equations of motion
+    Lag = Lagrangian(N, pP)
+    LM = LagrangesMethod(Lag, [q1, q2], hol_coneqs=f_c, forcelist=[(P, m*g*N.x)], frame=N)
+    LM.form_lagranges_equations()
+    # Perform the Linearization
+    q_i = Matrix([q2])
+    q_d = Matrix([q1])
+    u_i = Matrix([q2d])
+    u_d = Matrix([q1d])
+    linearizer = LM.to_linearizer(q_i, u_i, q_d, u_d)
+    # Compose operating point
+    q_op = {q1: L, q2: 0}
+    u_op = {q1d: 0, q2d: 0}
+    ud_op = {q1d.diff(t): 0, q2d.diff(t): 0}
+    # Take advantage of problem structure to solve for lams
+    k = 1
+    mass_matrix = LM.mass_matrix.col_join((-LM.lam_coeffs.row_join(zeros(k, k))))
+    force_matrix = LM.forcing.col_join(LM._f_cd)
+    lam_op_vec = Matrix((mass_matrix.inv()*(-force_matrix))[-k:])
+    lam_op_vec = lam_op_vec.subs(ud_op).subs(u_op).subs(q_op)
+    lam_op = dict(zip(LM.lam_vec, lam_op_vec))
+    A, B = linearizer.linearize(q_op=q_op, u_op=u_op, ud_op=ud_op, lam_op=lam_op, A_and_B=True)
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])

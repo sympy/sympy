@@ -2,9 +2,11 @@ from __future__ import print_function, division
 
 __all__ = ['LagrangesMethod']
 
-from sympy import diff, zeros, Matrix, eye, sympify, Symbol
+from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector import (dynamicsymbols, ReferenceFrame, Point)
-from sympy.physics.mechanics.functions import _mat_inv_mul
+from sympy.physics.mechanics.functions import _mat_inv_mul, _find_dynamicsymbols
+from sympy.physics.mechanics.linearize import Linearizer
+from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 import warnings
 
@@ -96,7 +98,8 @@ class LagrangesMethod(object):
 
     """
 
-    def __init__(self, Lagrangian, q_list, coneqs=None, forcelist=None, frame=None):
+    def __init__(self, Lagrangian, q_list, coneqs=None, forcelist=None,
+            frame=None, hol_coneqs=None, nonhol_coneqs=None):
         """Supply the following for the initialization of LagrangesMethod
 
         Lagrangian : Sympifyable
@@ -105,9 +108,16 @@ class LagrangesMethod(object):
             A list of the generalized coordinates
 
         coneqs : list
+            ** DEPRECATED IN FAVOR OF BELOW **
             A list of the holonomic and non-holonomic constraint equations.
             VERY IMPORTANT NOTE- The holonomic constraints must be
             differentiated with respect to time and then included in coneqs.
+
+        hol_coneqs: list
+            A list of the holonomic constraint equations
+
+        nonhol_coneqs: list
+            A list of the nonholonomic constraint equations
 
         forcelist : list
             Takes a list of (Point, Vector) or (ReferenceFrame, Vector) tuples
@@ -148,7 +158,16 @@ class LagrangesMethod(object):
         self._qdots = [diff(i, dynamicsymbols._t) for i in self._q]
         self._qdoubledots = [diff(i, dynamicsymbols._t) for i in self._qdots]
 
-        self.coneqs = coneqs
+        # Deal with constraint equations
+        if coneqs:
+            self.coneqs = coneqs
+        else:
+            mat_build = lambda x: Matrix(x) if x else Matrix()
+            hol_coneqs = mat_build(hol_coneqs)
+            nonhol_coneqs = mat_build(nonhol_coneqs)
+            self.coneqs = Matrix([hol_coneqs.diff(dynamicsymbols._t),
+                    nonhol_coneqs])
+            self._hol_coneqs = hol_coneqs
 
     def form_lagranges_equations(self):
         """Method to form Lagrange's equations of motion.
@@ -175,7 +194,7 @@ class LagrangesMethod(object):
 
         #term1 and term2 will be there no matter what so leave them as they are
 
-        if self.coneqs is not None:
+        if self.coneqs:
             coneqs = self.coneqs
             #If there are coneqs supplied then the following will be created
             coneqs = list(coneqs)
@@ -275,7 +294,7 @@ class LagrangesMethod(object):
         #THE FIRST TWO ROWS OF THE MATRIX
         row1 = eye(n).row_join(zeros(n, n))
         row2 = zeros(n, n).row_join(self.mass_matrix)
-        if self.coneqs is not None:
+        if self.coneqs:
             m = len(self.coneqs)
             I = eye(n).row_join(zeros(n, n + m))
             below_eye = zeros(n + m, n)
@@ -296,7 +315,7 @@ class LagrangesMethod(object):
         qdd = self._qdoubledots
         qddzero = dict(zip(qdd, [0] * len(qdd)))
 
-        if self.coneqs is not None:
+        if self.coneqs:
             lam = self.lam_vec
             lamzero = dict(zip(lam, [0] * len(lam)))
 
@@ -315,10 +334,53 @@ class LagrangesMethod(object):
 
         if self.eom is None:
             raise ValueError('Need to compute the equations of motion first')
-        if self.coneqs is not None:
+        if self.coneqs:
             return (Matrix(self._qdots)).col_join((self.forcing).col_join(self._f_cd))
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
+
+    def to_linearizer(self, q_ind=None, u_ind=None, q_dep=None, u_dep=None):
+        """ Returns an instance of the Linearizer class, initiated from the
+        data in the LagrangesMethod class. This may be more desirable than using
+        the linearize class method, as the Linearizer object will allow more
+        efficient recalculation (i.e. about varying operating points) """
+        # Compose vectors
+        t = dynamicsymbols._t
+        q = Matrix(self._q)
+        u = Matrix(self._qdots)
+        ud = u.diff(t)
+        # Get vector of lagrange multipliers
+        lams = self.lam_vec
+
+        mat_build = lambda x: Matrix(x) if x else Matrix()
+        q_i = mat_build(q_ind)
+        q_d = mat_build(q_dep)
+        u_i = mat_build(u_ind)
+        u_d = mat_build(u_dep)
+
+        # Compose general form equations
+        f_c = self._hol_coneqs
+        f_v = self.coneqs
+        f_a = f_v.diff(t)
+        f_0 = u
+        f_1 = -u
+        f_2 = self._term1
+        f_3 = -(self._term2 + self._term4)
+        f_4 = -self._term3
+
+        # Find all other dynamic symbols, forming the forcing vector r.
+        # Sort r to make it canonical.
+        insyms = set(Matrix([q, u, ud, lams]))
+        r = list(_find_dynamicsymbols(f_3, insyms))
+        r.sort(key=default_sort_key)
+        # Check for any derivatives of variables in r that are also found in r.
+        for i in r:
+            if diff(i, dynamicsymbols._t) in r:
+                raise ValueError('Cannot have derivatives of specified \
+                                 quantities when linearizing forcing terms.')
+
+        return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
+                q_d, u_i, u_d, r, lams)
 
     def rhs(self, inv_method=None, **kwargs):
         """ Returns equations that can be solved numerically
