@@ -8,6 +8,7 @@ from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy.core.function import Function, Lambda
 
 
 def _sympifyit(arg, retval=None):
