@@ -27,14 +27,10 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
-from distutils.core import setup
-from distutils.core import Command
-from distutils.command.build_scripts import build_scripts
+from distutils.core import setup, Command
 import sys
 import subprocess
 import os
-
-import sympy
 
 PY3 = sys.version_info[0] > 2
 
@@ -183,7 +179,8 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        sympy.utilities.runtests.run_all_tests()
+        from sympy.utilities import runtests
+        runtests.run_all_tests()
 
 
 class run_benchmarks(Command):
@@ -292,9 +289,11 @@ to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.
 SymPy is written entirely in Python and does not require any external libraries.'''
 
+exec(open('sympy/release.py').read())
+
 setup_args = {
     "name": 'sympy',
-    "version": sympy.__version__,
+    "version": __version__,
     "description": 'Computer algebra system (CAS) in Python',
     "long_description": long_description,
     "author": 'SymPy development team',
