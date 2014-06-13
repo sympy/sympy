@@ -135,10 +135,7 @@ class audit(Command):
         except ImportError:
             print("In order to run the audit, you need to have PyFlakes installed.")
             sys.exit(-1)
-        # We don't want to audit external dependencies
-        ext = ('mpmath',)
-        dirs = (os.path.join(*d) for d in
-               (m.split('.') for m in modules) if d[1] not in ext)
+        dirs = (os.path.join(*d) for d in (m.split('.') for m in modules))
         warns = 0
         for dir in dirs:
             for filename in os.listdir(dir):
