@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import sympy.polys
+from sympy import Integer
 from fractions import gcd
 
 
@@ -13,7 +14,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     ==========
 
     r : Rational
-        a rational number between 0 and 1
+        a positive rational number.
     algorithm : { "Greedy", "Graham Jewett", "Takenouchi", "Golomb" }, optional
         Denotes the algorithm to be used (the default is "Greedy").
 
@@ -30,6 +31,8 @@ def egyptian_fraction(r, algorithm="Greedy"):
     [4, 7, 28]
     >>> egyptian_fraction(Rational(3, 7), "Golomb")
     [3, 15, 35]
+    >>> egyptian_fraction(Rational(11, 5), "Golomb")
+    [1, 2, 3, 4, 9, 234, 1118, 2580]
 
     See Also
     ========
@@ -78,6 +81,18 @@ def egyptian_fraction(r, algorithm="Greedy"):
        inverses.  It yields the same results as a method using continued
        fractions proposed by Bleicher (1972).  See [4]_.
 
+    If the given rational is greater than or equal to 1, a greedy algorithm
+    of summing the harmonic sequence 1/1 + 1/2 + 1/3 + ... is used, taking
+    all the unit fractions of this sequence until adding one more would be
+    greater than the given number.  This list of denominators is prefixed
+    to the result from the requested algorithm used on the remainder.  For
+    example, if r is 8/3, using the Greedy algorithm, we get [1, 2, 3, 4,
+    5, 6, 7, 14, 420], where the beginning of the sequence, [1, 2, 3, 4, 5,
+    6, 7] is part of the harmonic sequence summing to 363/140, leaving a
+    remainder of 31/420, which yields [14, 420] by the Greedy algorithm.
+    The result of egyptian_fraction(Rational(8, 3), "Golomb") is [1, 2, 3,
+    4, 5, 6, 7, 14, 574, 2788, 6460, 11590, 33062, 113820], and so on.
+
     References
     ==========
 
@@ -87,19 +102,23 @@ def egyptian_fraction(r, algorithm="Greedy"):
     .. [4] http://ami.ektf.hu/uploads/papers/finalpdf/AMI_42_from129to134.pdf
 
     """
-    x, y = r.as_numer_denom()
 
-    if not 0 < r < 1:
-        raise ValueError("Value must be between 0 and 1")
+    if r <= 0:
+        raise ValueError("Value must be positive")
+
+    prefix, rem = egypt_harmonic(r)
+    if rem == 0:
+        return prefix
+    x, y = rem.as_numer_denom()
 
     if algorithm == "Greedy":
-        return egypt_greedy(x, y)
+        return prefix + egypt_greedy(x, y)
     elif algorithm == "Graham Jewett":
-        return egypt_graham_jewett(x, y)
+        return prefix + egypt_graham_jewett(x, y)
     elif algorithm == "Takenouchi":
-        return egypt_takenouchi(x, y)
+        return prefix + egypt_takenouchi(x, y)
     elif algorithm == "Golomb":
-        return egypt_golomb(x, y)
+        return prefix + egypt_golomb(x, y)
     else:
         raise ValueError("Entered invalid algorithm")
 
@@ -158,7 +177,18 @@ def egypt_takenouchi(x, y):
 def egypt_golomb(x, y):
     if x == 1:
         return [y]
-    xp = sympy.polys.ZZ.invert(x, y)
-    rv = [xp*y]
+    xp = sympy.polys.ZZ.invert(int(x), int(y))
+    rv = [Integer(xp*y)]
     rv.extend(egypt_golomb((x*xp - 1)//y, xp))
     return sorted(rv)
+
+
+def egypt_harmonic(r):
+    rv = []
+    d = Integer(1)
+    acc = Integer(0)
+    while acc + 1/d <= r:
+        acc += 1/d
+        rv.append(d)
+        d += 1
+    return (rv, r - acc)
