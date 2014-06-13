@@ -250,7 +250,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     sign, Piecewise, atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -6782,6 +6782,27 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
+def _linear_3eq_order1_type4(x, y, z, t, r):
+    C0, C1, C2, C3 = symbols('C0:4')
+    u, v, w = symbols('u, v, w', function=True)
+    a2, a3 = cancel(r['b1']/r['c1']).as_numer_denom()
+    f = cancel(r['b1']/a2)
+    b1 = cancel(r['a2']/f); b3 = cancel(r['c2']/f)
+    c1 = cancel(r['a3']/f); c2 = cancel(r['b3']/f)
+    a1, g = div(r['a1'],f)
+    b2 = div(r['b2'],f)[0]
+    c3 = div(r['c3'],f)[0]
+    trans_eq = (diff(u(t),t)-a1*u(t)-a2*v(t)-a3*w(t), diff(v(t),t)-b1*u(t)-\
+    b2*v(t)-b3*w(t), diff(w(t),t)-c1*u(t)-c2*v(t)-c3*w(t))
+    sol = dsolve(trans_eq)
+    sol1 = exp(C.Integral(g,t))*((sol[0].rhs).subs(t, C.Integral(f,t)))
+    sol2 = exp(C.Integral(g,t))*((sol[1].rhs).subs(t, C.Integral(f,t)))
+    sol3 = exp(C.Integral(g,t))*((sol[2].rhs).subs(t, C.Integral(f,t)))
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _linear_3eq_order1_type5(x, y, z, t, r):
+    return None
+
 def sysode_linear_neq_order1(match_):
     sol = _linear_neq_order1_type1(match_)
 
@@ -6802,17 +6823,7 @@ def _linear_neq_order1_type1(match_):
             root = root.evalf()
         if root.has(I):
             if root not in conjugate_root:
-                reroot = re(root)
-                imroot = im(root)
-                if not(im(root).is_Integer):
-                    imroot = im(root).evalf(3)
-                if not(re(root).is_Integer):
-                    reroot = re(root).evalf(3)
-                root = reroot + I*imroot
                 conjugate_root.append(conjugate(root))
-        else:
-            if not root.is_Integer:
-                root = root.evalf(3)
         roots.append(root)
     charroots = defaultdict(int)
     for root in roots:
@@ -6820,19 +6831,18 @@ def _linear_neq_order1_type1(match_):
             charroots[root] += 1
     sols = zeros(n,1)
     ev = dict()
+    startnum = [1]
     for root, multiplicity in charroots.items():
-        ev[root] = eigen_vector(M, root, multiplicity, t)
+        ev[root] = eigen_vector(M, root, multiplicity, t, startnum)
         sols += ev[root]
     sol = []
     for i in range(len(eq)):
         sol.append(Eq(func[i],sols[i]))
     return sol
 
-def eigen_vector(M, root, multiplicity, t):
+def eigen_vector(M, root, multiplicity, t, startnum):
     # A enerator of constants
-    global startnum
-    startnum = 1
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=startnum)
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=startnum[-1])
 
     n = sqrt(len(M))
     Identity_mat = eye(n)
@@ -6865,5 +6875,5 @@ def eigen_vector(M, root, multiplicity, t):
                 e_vector += C*is_complex_conjugate(w[j])*exp(re(root)*t)
             else:
                 e_vector += C*w[j]*t**(i-j)*exp(root*t)/factorial(i-j)
-    startnum = int(str(C)[1:]) + 1
+    startnum.append(int(str(C)[1:]) + 1)
     return e_vector
