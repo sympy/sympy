@@ -2,7 +2,9 @@
 """Distutils based setup script for SymPy.
 
 This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
-python mechanism for installing packages. For the easiest installation
+python mechanism for installing packages.  Optionally, you can use
+Setuptools (http://pythonhosted.org/setuptools/setuptools.html) to automatically
+handle dependencies.  For the easiest installation
 just type the command (you'll probably need root privileges for that):
 
     python setup.py install
@@ -27,7 +29,23 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
-from distutils.core import setup, Command
+mpmath_version = '0.19'
+
+try:
+    from setuptools import setup, Command
+except ImportError:
+    from distutils import setup, Command
+
+    # handle mpmath deps in the hard way:
+    from distutils.version import LooseVersion
+    try:
+        import mpmath
+        if mpmath.__version__ < LooseVersion(mpmath_version):
+            raise ImportError
+    except ImportError:
+        print("Please install the mpmath package with a version >= %s" % mpmath_version)
+        sys.exit(-1)
+
 import sys
 import subprocess
 import os
@@ -333,5 +351,6 @@ setup(name='sympy',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        ]
+        ],
+      install_requires=['mpmath>=%s' % mpmath_version]
       )
