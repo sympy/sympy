@@ -523,13 +523,13 @@ class KanesMethod(object):
         """ Forms the general form for a system of constrained equations. The
         general form is composed of seven separate equations:
 
-        Configuration Constraint:   f_c(q, t)
-        Velocity Constraint:        f_v(q, u, t)
-        Acceleration Constraint:    f_a(q, q', u, u', t)
-        Kinematic Differential Eqs: f_0(q, q', t) + f_1(q, u, t)
-        Dynamic Differential Eqs:   f_2(q, u', t) + f_3(q, q', u, r, t)
+        Configuration constraints:        f_c(q, t)
+        Velocity constraints:             f_v(q, u, t)
+        Acceleration constraints:         f_a(q, q', u, u', t)
+        Kinematic differential equations: f_0(q, q', t) + f_1(q, u, t)
+        Dynamic differential equations:   f_2(q, u', t) + f_3(q, q', u, r, t)
 
-        This method returns a tuple of (f_c, f_v, f_a, f_0, f_1, f_2, f_3). """
+        This method returns a tuple of (f_c, f_v, f_a, f_0, f_1, f_2, f_3)."""
 
         # The Kane's method class breaks these into pieces. Need to reassemble
         f_c = self._f_h
@@ -561,7 +561,7 @@ class KanesMethod(object):
         """ Returns an instance of the Linearizer class, initiated from the
         data in the KanesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
-        efficient recalculation (i.e. about varying operating points """
+        efficient recalculation (i.e. about varying operating points)."""
 
         if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
@@ -571,14 +571,14 @@ class KanesMethod(object):
         q = self._q
         u = self._u
         if self._qdep:
-            q_i = self._q[:-len(self._qdep)]
+            q_i = q[:-len(self._qdep)]
         else:
-            q_i = self._q
+            q_i = q
         q_d = self._qdep
         if self._udep:
-            u_i = self._u[:-len(self._udep)]
+            u_i = u[:-len(self._udep)]
         else:
-            u_i = self._u
+            u_i = u
         u_d = self._udep
 
         # Form dictionary of auxiliary speeds & and their derivatives,
@@ -636,7 +636,7 @@ class KanesMethod(object):
         ud_op: operating point for d/dt u
         r_op: operating point for forcing vector
 
-        For more documentation, please see the `Linearizer` class"""
+        For more documentation, please see the `Linearizer` class."""
 
         linearizer = self.to_linearizer()
         result = linearizer.linearize(**kwargs)

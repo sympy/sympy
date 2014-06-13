@@ -146,7 +146,7 @@ class Linearizer(object):
             self.M_uqc = Matrix([])
             self.A_uqc = Matrix([])
         if n != 0 and o != m:
-            self.M_uqd = self.f_2.jacobian(self.qd)
+            self.M_uqd = self.f_3.jacobian(self.qd)
             self.A_uqd = -(self.f_2 + self.f_3).jacobian(self.q)
         else:
             self.M_uqd = Matrix([])
