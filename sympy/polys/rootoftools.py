@@ -29,8 +29,8 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.domains import QQ
 
-from sympy.mpmath import mp, mpf, mpc, findroot, workprec
-from sympy.mpmath.libmp.libmpf import prec_to_dps
+from mpmath import mp, mpf, mpc, findroot, workprec
+from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify, public
 

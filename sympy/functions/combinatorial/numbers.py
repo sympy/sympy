@@ -20,8 +20,8 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 
-from sympy.mpmath import bernfrac, workprec
-from sympy.mpmath.libmp import ifib as _ifib
+from mpmath import bernfrac, workprec
+from mpmath.libmp import ifib as _ifib
 
 
 def _product(a, b):
@@ -704,7 +704,7 @@ class euler(Function):
         if m.is_odd:
             return S.Zero
         if m.is_Integer and m.is_nonnegative:
-            from sympy.mpmath import mp
+            from mpmath import mp
             m = m._to_mpmath(mp.prec)
             res = mp.eulernum(m, exact=True)
             return Integer(res)
@@ -723,7 +723,7 @@ class euler(Function):
         m = self.args[0]
 
         if m.is_Integer and m.is_nonnegative:
-            from sympy.mpmath import mp
+            from mpmath import mp
             from sympy import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):

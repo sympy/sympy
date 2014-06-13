@@ -9,7 +9,7 @@ from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
 from sympy.matrices import zeros
-from sympy.mpmath.libmp.libintmath import ifac
+from mpmath.libmp.libintmath import ifac
 
 
 def _af_rmul(a, b):

@@ -13,7 +13,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
-    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
+    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
     ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
@@ -21,12 +21,13 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, AlgebraicNumber)
 
+import mpmath
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
 from sympy.utilities.iterables import partitions
-from sympy.mpmath import mpi, mpc
+from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix

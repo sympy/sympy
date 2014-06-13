@@ -8,7 +8,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, xrange
-from sympy.mpmath.libmp import mpf_log, prec_to_dps
+from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
@@ -388,7 +388,7 @@ class Expr(Basic, EvalfMixin):
             # increase the precision up to the default maximum
             # precision to see if we can get any significance
 
-            from sympy.mpmath.libmp.libintmath import giant_steps
+            from mpmath.libmp.libintmath import giant_steps
             from sympy.core.evalf import DEFAULT_MAXPREC as target
 
             # evaluate

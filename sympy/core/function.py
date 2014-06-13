@@ -51,8 +51,8 @@ from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
 
-from sympy import mpmath
-import sympy.mpmath.libmp as mlib
+import mpmath
+import mpmath.libmp as mlib
 
 import inspect
 
@@ -460,7 +460,7 @@ class Function(Application, Expr):
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
             def bad(m):
-                from sympy.mpmath import mpf, mpc
+                from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
                 # if that is 1 (and m[1] is not 1 which would indicate a
                 # power of 2), then the eval failed; so check that none of
@@ -1223,7 +1223,7 @@ class Derivative(Expr):
         When we can represent derivatives at a point, this should be folded
         into the normal evalf. For now, we need a special method.
         """
-        from sympy import mpmath
+        import mpmath
         from sympy.core.expr import Expr
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')

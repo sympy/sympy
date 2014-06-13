@@ -48,7 +48,7 @@ from sympy.core.function import _mexpand
 from sympy.simplify.simplify import _is_sum_surds, _split_gcd
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
-from sympy.mpmath import pslq, mp
+from mpmath import pslq, mp
 
 from sympy.core.compatibility import reduce
 from sympy.core.compatibility import xrange

@@ -9,8 +9,8 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from .printer import Printer
-import sympy.mpmath.libmp as mlib
-from sympy.mpmath.libmp import prec_to_dps, repr_dps
+import mpmath.libmp as mlib
+from mpmath.libmp import prec_to_dps, repr_dps
 
 
 class ReprPrinter(Printer):

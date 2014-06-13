@@ -4,9 +4,9 @@ from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Sum, Product, Integral)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
-from sympy.mpmath import inf, ninf, nan
+from mpmath import inf, ninf, nan
 from sympy.abc import n, x, y
-from sympy.mpmath.libmp.libmpf import from_float
+from mpmath.libmp.libmpf import from_float
 from sympy.utilities.pytest import raises, XFAIL
 
 

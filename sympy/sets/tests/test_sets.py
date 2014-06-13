@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, RootOf)
-from sympy.mpmath import mpi
+from mpmath import mpi
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL

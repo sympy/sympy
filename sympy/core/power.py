@@ -14,7 +14,7 @@ from .logic import fuzzy_bool
 from .compatibility import as_int, xrange
 from .evaluate import global_evaluate
 
-from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
+from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
 
 

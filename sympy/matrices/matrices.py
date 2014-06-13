@@ -1238,7 +1238,7 @@ class MatrixBase(object):
         """Solve the linear system Ax = rhs for x where A = self.
 
         This is for symbolic matrices, for real or complex ones use
-        sympy.mpmath.lu_solve or sympy.mpmath.qr_solve.
+        mpmath.lu_solve or mpmath.qr_solve.
 
         See Also
         ========
@@ -1615,7 +1615,7 @@ class MatrixBase(object):
         to use QRsolve.
 
         This is mainly for educational purposes and symbolic matrices, for real
-        (or complex) matrices use sympy.mpmath.qr_solve.
+        (or complex) matrices use mpmath.qr_solve.
 
         See Also
         ========

@@ -7,7 +7,7 @@ from sympy.polys.polyerrors import ModularGCDFailed
 from sympy.polys.domains import PolynomialRing
 
 from sympy.core.compatibility import xrange
-from sympy.mpmath import sqrt
+from mpmath import sqrt
 from sympy import Dummy
 import random
 

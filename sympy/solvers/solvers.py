@@ -48,7 +48,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq, generate_bell, flatten
 
-from sympy.mpmath import findroot
+from mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
@@ -2428,7 +2428,8 @@ def nsolve(*args, **kwargs):
 
     >>> from sympy import Symbol, nsolve
     >>> import sympy
-    >>> sympy.mpmath.mp.dps = 15
+    >>> import mpmath
+    >>> mpmath.mp.dps = 15
     >>> x1 = Symbol('x1')
     >>> x2 = Symbol('x2')
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1

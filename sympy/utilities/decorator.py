@@ -81,7 +81,7 @@ def conserve_mpmath_dps(func):
     """After the function finishes, resets the value of mpmath.mp.dps to
     the value it had before the function was run."""
     import functools
-    from sympy import mpmath
+    import mpmath
 
     def func_wrapper():
         dps = mpmath.mp.dps

@@ -47,8 +47,8 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import group, sift, public
 
 import sympy.polys
-import sympy.mpmath
-from sympy.mpmath.libmp.libhyper import NoConvergence
+import mpmath
+from mpmath.libmp.libhyper import NoConvergence
 
 from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.constructor import construct_domain
@@ -3403,18 +3403,18 @@ class Poly(Expr):
             coeffs = [coeff.evalf(n=n).as_real_imag()
                     for coeff in f.all_coeffs()]
             try:
-                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
+                coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
             except TypeError:
                 raise DomainError("Numerical domain expected, got %s" % \
                         f.rep.dom)
 
-        dps = sympy.mpmath.mp.dps
-        sympy.mpmath.mp.dps = n
+        dps = mpmath.mp.dps
+        mpmath.mp.dps = n
 
         try:
             # We need to add extra precision to guard against losing accuracy.
             # 10 times the degree of the polynomial seems to work well.
-            roots = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps,
+            roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
                     cleanup=cleanup, error=False, extraprec=f.degree()*10)
 
             # Mpmath puts real roots first, then complex ones (as does all_roots)
@@ -3426,7 +3426,7 @@ class Poly(Expr):
                 'convergence to root failed; try n < %s or maxsteps > %s' % (
                 n, maxsteps))
         finally:
-            sympy.mpmath.mp.dps = dps
+            mpmath.mp.dps = dps
 
         return roots
 

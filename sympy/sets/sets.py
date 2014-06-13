@@ -14,7 +14,7 @@ from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.sets.contains import Contains
 
-from sympy.mpmath import mpi, mpf
+from mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.utilities import default_sort_key, subsets
 
