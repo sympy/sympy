@@ -1388,7 +1388,7 @@ def trigsimp(expr, **opts):
     from sympy.vector import Vector
 
     if isinstance(expr, Vector):
-		return expr.trigsimp(**opts)
+        return expr.trigsimp(**opts)
 
     expr = sympify(expr)
 
@@ -3669,7 +3669,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.vector import Vector
 
     if isinstance(expr, Vector):
-		return expr.simplify(ratio, measure)
+        return expr.simplify(ratio, measure)
 
     original_expr = expr = signsimp(expr)
 
