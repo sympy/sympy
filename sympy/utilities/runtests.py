@@ -472,9 +472,6 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     blacklist = kwargs.get('blacklist', [])
-    blacklist.extend([
-        "sympy/mpmath", # needs to be fixed upstream
-    ])
     blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
@@ -606,8 +603,6 @@ def _doctest(*paths, **kwargs):
     blacklist = kwargs.get("blacklist", [])
     split  = kwargs.get('split', None)
     blacklist.extend([
-        "doc/src/modules/mpmath",  # needs to be fixed upstream
-        "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/physics/gaussopt.py", # raises deprecation warning
