@@ -159,6 +159,28 @@ def test_linear_3eq_order1():
     Eq(y(t), C0 + 5*sqrt(2)*C2*cos(5*sqrt(2)*t) + (-15*C1/4 + 15*C3/4)*sin(5*sqrt(2)*t)), \
     Eq(z(t), C0 + 5*sqrt(2)*C3*cos(5*sqrt(2)*t) + (12*C1/5 - 12*C2/5)*sin(5*sqrt(2)*t))]
 
+    f = t**3 + log(t)
+    g = t**2 + sin(t)
+    eq4 = (Eq(diff(x(t),t),(4*f+g)*x(t)-f*y(t)-2*f*z(t)), Eq(diff(y(t),t),2*f*x(t)+(f+g)*y(t)-2*f*z(t)), Eq(diff(z(t),t),5*f*x(t)+f*y(t)+(-3*f+g)*z(t)))
+    sol4 = [Eq(x(t), (C1*cos(sqrt(3)*Integral(t**3 + log(t), t)) + C2*sin(sqrt(3)*Integral(t**3 + log(t), t)) + \
+    C3*exp(-2*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), (C1*cos(sqrt(3)*Integral(t**3 + \
+    log(t), t)) + C2*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t))), Eq(z(t), \
+    (C1*(-sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/2 + 3*cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
+    C2*(3*sin(sqrt(3)*Integral(t**3 + log(t), t))/2 + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
+    C3*exp(-2*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
+    assert dsolve(eq4) == sol4
+
+    eq5 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
+    sol5 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t) + C3*exp(2*t)), \
+    Eq(y(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t)), \
+    Eq(z(t), 2*C1*exp(2*t) + 2*C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t) + C3*t*exp(2*t) + C3*exp(2*t))]
+    assert dsolve(eq5) == sol5
+
+    eq6 = (Eq(diff(x(t),t),4*x(t) - y(t) - 2*z(t)),Eq(diff(y(t),t),2*x(t) + y(t)- 2*z(t)),Eq(diff(z(t),t),5*x(t)-3*z(t)))
+    sol6 = [Eq(x(t), C1*exp(2*t) + C2*cos(t) + C3*sin(t)), Eq(y(t), C2*cos(t) + C3*sin(t)), \
+    Eq(z(t), C1*exp(2*t) + C2*(sin(t)/2 + 3*cos(t)/2) + C3*(3*sin(t)/2 - cos(t)/2))]
+    assert dsolve(eq6) == sol6
+
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
