@@ -1,4 +1,4 @@
-from sympy.simplify import simplify
+from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
      sin, cos
 from sympy.vector.vector import i, j, k, Vector, BaseVector, VectorAdd, \
@@ -85,8 +85,9 @@ def test_vector_simplify():
 
     test1 = (1 / a + 1 / b) * i
     assert (test1 & i) != (a + b) / (a * b)
-    test1 = test1.simplify()
+    test1 = simplify(test1)
     assert (test1 & i) == (a + b) / (a * b)
+    assert test1.simplify() == simplify(test1)
 
     test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * i
     test2 = simplify(test2)
@@ -97,11 +98,12 @@ def test_vector_simplify():
     assert (test3 & i) == 0
 
     test4 = ((-4 * a * b**2 - 2 * b**3 - 2 * a**2 * b) / (a + b)**2) * i
-    test4 = test4.simplify()
+    test4 = simplify(test4)
     assert (test4 & i) == -2 * b
 
     v = (sin(a)+cos(a))**2*i - j
-    assert v.trigsimp() == (2*sin(a + pi/4)**2)*i + (-1)*j
+    assert trigsimp(v) == (2*sin(a + pi/4)**2)*i + (-1)*j
+    assert trigsimp(v) == v.trigsimp()
 
     assert simplify(Vector.Zero) == Vector.Zero
 

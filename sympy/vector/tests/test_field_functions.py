@@ -87,7 +87,7 @@ def test_product_rules():
     lhs = delop(u & v)
     rhs = (u ^ (delop ^ v)) + (v ^ (delop ^ u)) + \
           ((u & delop)(v)) + ((v & delop)(u))
-    assert lhs.simplify() == rhs.simplify()
+    assert simplify(lhs) == simplify(rhs)
 
     #Third product rule
     lhs = delop & (f*v)
@@ -102,10 +102,10 @@ def test_product_rules():
     #Fifth product rule
     lhs = delop ^ (f * v)
     rhs = ((delop(f)) ^ v) + (f * (delop ^ v))
-    assert lhs.simplify() == rhs.simplify()
+    assert simplify(lhs) == simplify(rhs)
 
     #Sixth product rule
     lhs = delop ^ (u ^ v)
     rhs = u * (delop & v) - v * (delop & u) + \
           (v & delop)(u) - (u & delop)(v)
-    assert lhs.simplify() == rhs.simplify()
+    assert simplify(lhs) == simplify(rhs)

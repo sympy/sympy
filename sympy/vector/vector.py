@@ -1,4 +1,3 @@
-#TODOs: do stress-tests
 from sympy.simplify import simplify, trigsimp
 from sympy.core.assumptions import StdFactKB
 from sympy.core.symbol import Dummy
@@ -100,11 +99,22 @@ class Vector(Expr):
 
     def simplify(self, ratio=1.7, measure=count_ops):
         """ Returns a simplified version of this vector """
-        return _func_over_vector(self, simplify, (ratio, measure))
+        simp_components = {}
+        for x in self.components:
+            simp_components[x] = simplify(self.components[x], \
+                                          ratio, measure)
+        simp_components = [x * simp_components[x] for x in \
+                           simp_components]
+        return VectorAdd(*simp_components)
 
-    def trigsimp(self, *args):
+    def trigsimp(self, **opts):
         """ trigsimp method for vectors """
-        return _func_over_vector(self, trigsimp, args)
+        trig_components = {}
+        for x in self.components:
+            trig_components[x] = trigsimp(self.components[x], **opts)
+        trig_components = [x * trig_components[x] for x in \
+                           trig_components]
+        return VectorAdd(*trig_components)
 
     def _eval_simplify(self, ratio, measure):
         return self.simplify(ratio, measure)
@@ -356,9 +366,8 @@ class VectorAdd(Vector, Add):
         if len(components) == 0:
             return Vector.Zero
 
-        newargs = [x*components[x] for x in components]
-
         #Build object
+        newargs = [x*components[x] for x in components]
         obj = super(VectorAdd, cls).__new__(cls, *newargs, **options)
         if isinstance(obj, Mul):
             return VectorMul(*obj.args)
@@ -370,6 +379,18 @@ class VectorAdd(Vector, Add):
         return obj
 
     __init__ = Add.__init__
+
+    def __str__(self, printer=None):
+        ret_str = ''
+        base_vects = (i, j, k)
+        for x in base_vects:
+            if x in self.components:
+                temp_vect = self.components[x]*x
+                ret_str += temp_vect.__str__() + " + "
+        return ret_str[:-3]
+
+    __repr__ = __str__
+    _sympystr = __str__
         
 
 class VectorMul(Vector, Mul):
@@ -408,7 +429,7 @@ class VectorMul(Vector, Mul):
         if count > 1:
             raise ValueError("Cannot multiply one vector with another")
         elif count == 0:
-            return Mul(*args, **options)
+            raise TypeError("No vectors supplied")
         #Handle zero vector case
         if zeroflag:
             return Vector.Zero
@@ -511,16 +532,6 @@ def _vect_div(one, other):
         return VectorMul(one, Pow(other, S.NegativeOne))
     else:
         raise TypeError("Invalid division involving a vector")
-
-
-def _func_over_vector(vect, func, args):
-    """ Applies a function over all components of a vector. """
-    func_components = {}
-    for x in vect.components:
-        func_components[x] = func(vect.components[x], *args)
-    func_components = [x * func_components[x] for x in \
-                       func_components]
-    return VectorAdd(*func_components)
 
 
 Vector.Zero = VectorZero()

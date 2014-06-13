@@ -1388,7 +1388,7 @@ def trigsimp(expr, **opts):
     from sympy.vector import Vector
 
     if isinstance(expr, Vector):
-	return expr.trigsimp()
+	return expr.trigsimp(**opts)
 
     expr = sympify(expr)
 

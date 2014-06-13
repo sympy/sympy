@@ -29,7 +29,7 @@ class Del(Basic):
 
         >>> from sympy.vector import x, y, z, delop
         >>> delop(x*y*z)
-        x*y*k + x*z*j + y*z*i        
+        y*z*i + x*z*j + x*y*k        
 
         """
 
