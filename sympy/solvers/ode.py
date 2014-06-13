@@ -3051,7 +3051,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     For simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
     it is sufficient that `\frac{Q(x)}{P(x)}` and `\frac{R(x)}{P(x)}` exists at
-    `x0`. A recurrence relation is obtained by substituting `y` as `\sum_{n=0}^\infty anx^n`,
+    `x_{0}`. A recurrence relation is obtained by substituting `y` as `\sum_{n=0}^\infty a_{n}x^{n}`,
     in the differential equation, and equating the nth term. Using this relation
     various terms can be generated.
 
@@ -3092,7 +3092,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     recurr = Function("r")
 
     # Generating the recurrence relation which works this way
-    # a] For the second order term the summation begins at n = 2. The coefficient
+    # a] For the second order term the summation begins at n = 2. The coefficients
     # p is multiplied with an*(n - 1)*(n - 2)*x**n-2 and a substitution is made such that
     # the exponent of x becomes n.
     # For example, if p is x, then the second degree recurrence term is
@@ -3211,9 +3211,9 @@ def ode_2nd_power_series_regular(eq, func, order, match):
         then the existence of one solution is confirmed. The other solution may
         or may not exist.
 
-    The power series solution is of the form `x^{m}\sum_{n=0}^\infty anx^n`. The
+    The power series solution is of the form `x^{m}\sum_{n=0}^\infty a_{n}x^{n}`. The
     coefficients are determined by the following recurrence relation.
-    `an = -\frac{\sum_{k=0}^{n-1} q_{n-k} + (m + k)p_{n-k}}{f(m + n)}`. For the case
+    `a_{n} = -\frac{\sum_{k=0}^{n-1} q_{n-k} + (m + k)p_{n-k}}{f(m + n)}`. For the case
     in which `m1 - m2` is an integer, it can be seen from the recurrence relation
     that for the lower root `m`, when `n` equals the difference of both the
     roots, the denominator becomes zero. So if the numerator is not equal to zero,
@@ -3972,17 +3972,17 @@ def ode_1st_power_series(eq, func, order, match):
     to the solution of a differential equation.
 
     For a first order differential equation `\frac{dy}{dx} = h(x, y)`, a power
-    series solution exists at a point `x = x0` if `h(x, y)` is analytic at `x0`.
+    series solution exists at a point `x = x_{0}` if `h(x, y)` is analytic at `x_{0}`.
     The solution is given by
 
-    .. math:: f(x0) + \sum_{n = 1}^{\infty} \frac{f^n(x)(x0)(x - x0)^n}{n!}
+    .. math:: y(x) = y(x_{0}) + \sum_{n = 1}^{\infty} \frac{F_{n}(x_{0},b)(x - x_{0})^n}{n!},
 
+    where `y(x_{0}) = b` is the value of y at the initial value of `x_{0}`.
+    To compute the values of the `F_{n}(x_{0},b)` the following algorithm is
+    followed, until the required number of terms are generated.
 
-    The following algorithm is followed, till the required number of terms are
-    generated.
-
-    1. F_1 = `h(x, y)`
-    2. F_n+1 = \frac{\partial F_n}{\partial x} + \frac{\partial F_n}{\partial y}F_1
+    1. `F_1 = h(x_{0}, b)`
+    2. `F_{n+1} = \frac{\partial F_{n}}{\partial x} + \frac{\partial F_{n}}{\partial y}F_{1}`
 
     Examples
     ========
@@ -4059,7 +4059,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     characteristic equation and `i` is one of each from 0 to the multiplicity
     of the root - 1 (for example, a root 3 of multiplicity 2 would create the
     terms `C_1 e^{3 x} + C_2 x e^{3 x}`).  The exponential is usually expanded
-    for complex roots using Euler's equation `e{I x} = \cos(x) + I \sin(x)`.
+    for complex roots using Euler's equation `e^{I x} = \cos(x) + I \sin(x)`.
     Complex roots always come in conjugate pairs in polynomials with real
     coefficients, so the two roots will be represented (after simplifying the
     constants) as `e^{a x} \left(C_1 \cos(b x) + C_2 \sin(b x)\right)`.
@@ -5167,7 +5167,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
     .. math:: \xi = f(y), \eta = 0
 
     The success of this heuristic is determined by algebraic factorisation.
-    For the first assumption `\xi = 0` and `eta` to be a function of `x`, the PDE
+    For the first assumption `\xi = 0` and `\eta` to be a function of `x`, the PDE
 
     .. math:: \frac{\partial \eta}{\partial x} + (\frac{\partial \eta}{\partial y}
                 - \frac{\partial \xi}{\partial x})*h
@@ -5270,7 +5270,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
     separable in `x` and `y`, then the separated factors containing `x`
     is `f(x)`, and `g(y)` is obtained by
 
-    .. math:: exp^{\int f\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)\,dy}
+    .. math:: e^{\int f\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)\,dy}
 
     provided `f\frac{\partial}{\partial x}\left(\frac{1}{f*h}\right)` is a function
     of `y` only.
@@ -5694,10 +5694,13 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
        b] Check if `\xi = \frac{-R}{X}` and `\eta = -\frac{1}{X}` satisfy the PDE.
            If yes, then return `\xi` and `\eta`
 
-       If not, check if the following satisfy the ODE
+       If not, then check if
 
-       a] `\xi = -R`, `\eta = 1`
-       b] `\xi = 1`, `\eta = -\frac{1}{R}`
+       a] :math:`\xi = -R,\eta = 1`
+
+       b] :math:`\xi = 1, \eta = -\frac{1}{R}`
+
+       are solutions.
 
     References
     ==========
