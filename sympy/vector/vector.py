@@ -344,6 +344,7 @@ class VectorAdd(Vector, Add):
         for i, arg in enumerate(args):
             if not isinstance(arg, Vector):
                 if isinstance(arg, Mul):
+                    print args
                     arg = VectorMul(*(arg.args))
                 elif isinstance(arg, Add):
                     arg = VectorAdd(*(arg.args))
