@@ -1,6 +1,6 @@
 """Functions for reordering operator expressions."""
 
-from warnings import warn
+import warnings
 
 from sympy.core.compatibility import u
 from sympy import Add, Mul, Pow, Integer, exp, sqrt, conjugate
@@ -116,6 +116,15 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                             -factors[n + 1] * factors[n] + c.doit())
                     n += 1
 
+        elif isinstance(factors[n], Operator):
+
+            if isinstance(factors[n + 1], (BosonOp, FermionOp)):
+                new_factors.append(factors[n + 1])
+                new_factors.append(factors[n])
+                n += 1
+            else:
+                new_factors.append(factors[n])
+
         else:
             new_factors.append(factors[n])
 
@@ -182,7 +191,7 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     """
 
     if _recursive_depth > recursive_limit:
-        warn.warning("Warning: too many recursions, aborting")
+        warnings.warn("Too many recursions, aborting")
         return expr
 
     if isinstance(expr, Add):
@@ -305,7 +314,7 @@ def normal_order(expr, recursive_limit=10, _recursive_depth=0):
     Dagger(a)*a
     """
     if _recursive_depth > recursive_limit:
-        warn.warning("Warning: too many recursions, aborting")
+        warnings.warn("Too many recursions, aborting")
         return expr
 
     if isinstance(expr, Add):
