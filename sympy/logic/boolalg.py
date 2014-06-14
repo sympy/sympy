@@ -254,11 +254,10 @@ class BooleanFunction(Application, Boolean):
 
     @classmethod
     def _to_nnf(cls, *args, **kwargs):
-        from sympy.logic.inference import is_literal
         simplify = kwargs.get('simplify', True)
         argset = set([])
         for arg in args:
-            if not is_literal(arg):
+            if not is_logical_literal(arg):
                 arg = arg.to_nnf(simplify)
             if simplify:
                 if isinstance(arg, cls):
@@ -944,10 +943,9 @@ def to_nnf(expr, simplify=True):
     >>> to_nnf(Equivalent(A >> B, B >> A))
     And(Or(A, And(A, Not(B)), Not(B)), Or(And(B, Not(A)), B, Not(A)))
     """
-    from sympy.logic.inference import is_literal
-    if is_literal(expr):
+    if is_nnf(expr, simplify):
         return expr
-    return expr if is_nnf(expr, simplify) else expr.to_nnf(simplify)
+    return expr.to_nnf(simplify)
 
 
 def to_cnf(expr, simplify=False):
@@ -1038,25 +1036,24 @@ def is_nnf(expr, simplified=True):
     False
     """
 
-    if expr in (True, False) or expr.is_Atom:
+    expr = sympify(expr)
+    if is_logical_literal(expr):
         return True
 
-    stack = [sympify(expr)]
+    stack = [expr]
 
     while stack:
         expr = stack.pop()
-        if expr.func == Not:
-            if not expr.args[0].is_Atom:
-                return False
-        elif expr.func not in (And, Or):
+        if expr.func in (And, Or):
+            if simplified:
+                args = expr.args
+                for arg in args:
+                    if Not(arg) in args:
+                        return False
+            stack.extend(expr.args)
+
+        elif not is_logical_literal(expr):
             return False
-        else:
-            argset = set([])
-            for arg in expr.args:
-                if simplified and Not(arg) in argset:
-                    return False
-                argset.add(arg)
-            stack.extend(arg for arg in argset if not arg.is_Atom)
 
     return True
 
@@ -1172,6 +1169,13 @@ def eliminate_implications(expr):
     And(Or(A, Not(C)), Or(B, Not(A)), Or(C, Not(B)))
     """
     return to_nnf(expr)
+
+
+def is_logical_literal(expr):
+    if expr.func == Not:
+        return not isinstance(expr.args[0], BooleanFunction)
+    else:
+        return not isinstance(expr, BooleanFunction)
 
 
 @deprecated(
