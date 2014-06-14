@@ -161,7 +161,7 @@ class MatrixBase(object):
             flat_list = [cls._sympify(i) for i in flat_list]
 
         # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
+        elif len(args) == 1 and hasattr(args[0], "__array__"):
             # NumPy array or matrix or some other object that implements
             # __array__. So let's first use this method to get a
             # numpy.array() and then make a python list out of it.
@@ -171,8 +171,8 @@ class MatrixBase(object):
                 flat_list = [cls._sympify(i) for i in arr.ravel()]
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
-                rows, cols = 1, arr.shape[0]
-                flat_list = [S.Zero]*cols
+                rows, cols = arr.shape[0], 1
+                flat_list = [S.Zero]*rows
                 for i in range(len(arr)):
                     flat_list[i] = cls._sympify(arr[i])
                 return rows, cols, flat_list
