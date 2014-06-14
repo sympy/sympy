@@ -1611,12 +1611,18 @@ def check_linear_3eq_order1(eq, func, func_coef):
         else:
             return None
     else:
+        for k1 in 'c1 d1 b2 d2 b3 c3'.split():
+            if r[k1] == 0:
+                continue
+            else:
+                if all(not cancel(r[k1]/r[k]).has(t) for k in 'd1 b2 d2 b3 c3'.split() if r[k]!=0) \
+                and all(not cancel(r[k1]/(r['b1'] - r[k])).has(t) for k in 'b1 c2 d3'.split() if r['b1']!=r[k]):
+                    return 'type4'
+                else:
+                    break
         if r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
         and r['b1'] == r['c2'] == r['d3'] == 0:
             return 'type5'
-        elif all(not (cancel(r['c1']/r[k])).has(t) for k in 'd1 b2 d2 b3 c3'.split()) \
-        and all(not cancel(r['c1']/(r['b1'] - r[k])).has(t) for k in 'c2 d3'.split()):
-            return 'type4'
         else:
             return None
 
