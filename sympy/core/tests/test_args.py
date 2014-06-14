@@ -3180,40 +3180,39 @@ def test_sympy__physics__optics__waves__TWave():
 
 
 def test_sympy__vector__vector__BaseVector():
-	from sympy.vector.vector import BaseVector
-	assert _test_args(BaseVector('i', 0))
+    from sympy.vector.vector import BaseVector
+    assert _test_args(BaseVector('i', 0))
 
 
 def test_sympy__vector__vector__VectorAdd():
-	from sympy.vector.vector import i, j, k, VectorAdd, VectorMul
-	from sympy.abc import a, b, c, x, y, z
-	v1 = a*i + b*j + c*k
-	v2 = x*i + y*j + z*k
-	assert _test_args(VectorAdd(v1, v2))
-	assert _test_args(VectorMul(x, v1))
+    from sympy.vector.vector import i, j, k, VectorAdd, VectorMul
+    from sympy.abc import a, b, c, x, y, z
+    v1 = a*i + b*j + c*k
+    v2 = x*i + y*j + z*k
+    assert _test_args(VectorAdd(v1, v2))
+    assert _test_args(VectorMul(x, v1))
 
 
 def test_sympy__vector__vector__VectorMul():
-	from sympy.vector.vector import i, VectorMul
-	from sympy.abc import a
-	assert _test_args(VectorMul(a, i))
+    from sympy.vector.vector import i, VectorMul
+    from sympy.abc import a
+    assert _test_args(VectorMul(a, i))
 
 
 def test_sympy__vector__vector__VectorZero():
-	from sympy.vector.vector import VectorZero
-	assert _test_args(VectorZero())
+    from sympy.vector.vector import VectorZero
+    assert _test_args(VectorZero())
 
 
 def test_sympy__vector__vector__Vector():
-	#Vector is never to be initialized using args
-	pass
+    #Vector is never to be initialized using args
+    pass
 
 def test_sympy__vector__deloperator__Del():
-	from sympy.vector.deloperator import Del
-	assert _test_args(Del())
+    from sympy.vector.deloperator import Del
+    assert _test_args(Del())
 
 
 def test_sympy__vector__scalar__BaseScalar():
-	from sympy.vector.scalar import BaseScalar
-	assert _test_args(BaseScalar('x', 0))
-
+    from sympy.vector.scalar import BaseScalar
+    assert _test_args(BaseScalar('x', 0))

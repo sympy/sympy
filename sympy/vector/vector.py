@@ -75,7 +75,7 @@ class Vector(Expr):
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return _vect_div(self, other)
-    
+
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
         return TypeError("Cannot divide by a vector")
@@ -305,6 +305,11 @@ class BaseVector(Vector, Dummy):
             raise ValueError("name must be a valid string")
         #Initialize an object
         obj = super(BaseVector, cls).__new__(cls, name)
+        #The _id is used for equating purposes, and for hashing
+        #The '1' denotes that this is a Vector, not a Scalar
+        #For now, a Symbol is used in place of an actual CoordSysRect
+        #instance.
+        obj._id = (1, index, Symbol("DefaultSystem"))
         obj._index = index
         obj._components = {obj : S(1)}
         obj._base_vect = obj
@@ -320,8 +325,11 @@ class BaseVector(Vector, Dummy):
     @call_highest_priority('__req__')
     def __eq__(self, other):
         if isinstance(other, BaseVector):
-            return self._index == other._index
+            return self._id == other._id
         return False
+
+    def __hash__(self):
+        return self._id.__hash__()
 
     __req__ = __eq__
 
@@ -391,7 +399,7 @@ class VectorAdd(Vector, Add):
 
     __repr__ = __str__
     _sympystr = __str__
-        
+
 
 class VectorMul(Vector, Mul):
     """
@@ -445,11 +453,11 @@ class VectorMul(Vector, Mul):
         assumptions = {}
         assumptions['commutative'] = True
         obj._assumptions = StdFactKB(assumptions)
-        
+
         obj._components = {vect._base_vect : measure_number}
 
         return obj
-        
+
     __init__ = Mul.__init__
 
     def __str__(self, printer=None):

@@ -145,7 +145,7 @@ def test_vector_cross():
     assert i ^ i == Vector.Zero
     assert i ^ j == k
     assert i ^ k == -j
-    
+
     assert j.cross(i) == -k
     assert j.cross(j) == Vector.Zero
     assert j.cross(k) == i

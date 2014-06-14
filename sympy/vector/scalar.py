@@ -13,7 +13,11 @@ class BaseScalar(Dummy):
         obj = super(BaseScalar, cls).__new__(cls, name)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified.")
-        obj._id = (index, Symbol('R'))
+        #The _id is used for equating purposes, and for hashing
+        #The '0' denotes that this is a Scalar, not a Vector
+        #For now, a Symbol is used in place of an actual CoordSysRect
+        #instance.
+        obj._id = (0, index, Symbol('DefaultSystem'))
         obj._name = name
 
         return obj
@@ -29,7 +33,7 @@ class BaseScalar(Dummy):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return tuple(self._id).__hash__()
+        return self._id.__hash__()
 
     def __str__(self, printer=None):
         return self._name
