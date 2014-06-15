@@ -1404,7 +1404,7 @@ def classify_sysode(eq, func=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_2eq_order1(eq, func, func_coef)
-                if order_eq == 2:
+                elif order_eq == 2:
                     type_of_equation = check_nonlinear_2eq_order2(eq, func, func_coef)
                 else:
                     type_of_equation = None
@@ -1644,6 +1644,59 @@ def check_linear_neq_order1(eq, func, func_coef):
     return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
+    x = func[0].func
+    y = func[1].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    f1 = Wild('f1', exclude=[y(t)])
+    f2 = Wild('f2', exclude=[y(t)])
+    g1 = Wild('g1', exclude=[x(t)])
+    g2 = Wild('g2', exclude=[x(t)])
+    phi = Wild('phi')
+    u, v = symbols('u, v')
+    g = Wild('g')
+    r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
+    r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
+    if not r1 and not r2:
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if not r1 and not r2:
+        r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
+        r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
+    if not r1 and not r2:
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if r1 and r2 and not (r1[f].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t) \
+    or r2[g].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t)):
+        return 'type5'
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    r = eq[0].match(diff(x(t),t) - x(t)**n*f)
+    if r:
+        g = (diff(y(t),t) - eq[1])/r[f]
+    if r and not (g.has(x(t)) or g.subs(y(t),v).has(t) or r[f].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type1'
+    r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
+    if r:
+        g = (diff(y(t),t) - eq[1])/r[f]
+    if r and not (g.has(x(t)) or g.subs(y(t),v).has(t) or r[f].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type2'
+    r1 = eq[0].match(diff(x(t),t) - f1*g1*phi)
+    r2 = eq[1].match(diff(y(t),t) - f2*g2*phi)
+    if r1 and r2 and r1[phi] == r2[phi] and not (r1[f1].subs(x(t),u).has(t) or \
+    r2[f2].subs(x(t),u).has(t) or r1[g1].subs(y(t),v).has(t) or r2[g2].subs(y(t),v).has(t)):
+        return 'type4'
+    g = Wild('g')
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    if r1 and r2 and not (r1[f].subs(x(t),u).subs(y(t),v).has(t) or \
+    r2[g].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type3'
     return None
 
 def check_nonlinear_2eq_order2(eq, func, func_coef):
