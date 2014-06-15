@@ -1334,7 +1334,7 @@ class Lambda(Expr):
         try:
             for v in variables if iterable(variables) else [variables]:
                 if not v.is_Symbol:
-                    raise TypeError("v is not a symbol")
+                    raise TypeError('variable is not a symbol: %s' % v)
         except (AssertionError, AttributeError):
             raise ValueError('variable is not a Symbol: %s' % v)
         try:
