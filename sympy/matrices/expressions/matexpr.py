@@ -374,50 +374,60 @@ class ElemWise(MatrixExpr):
     def __new__( cls, M, fn):
         return Basic.__new__(cls, M, fn)
 
-    def evaluate(self):
+    def doit(self):
         return self._evaluate()
 
     Expression = property(lambda self: self.args[1])
     Matrix = property(lambda self: self.args[0])
 
-    def _evaluate(self):
-        function = self.Expression
-        mat = self.Matrix
-        self._eval_args(function, mat)
-        x = function.variables
-        if function == S.IdentityFunction and type(mat) != ElemWise:
-            return mat
-        if(type(mat) in [MatrixSymbol, MatMul]):
-            return self._evaluate_simple(function, mat, x)
-        elif(type(mat) == ElemWise):
-            new_func, mat = mat.Expression, mat.Matrix
-            old_func = sympify(self.Expression)
-            return ElemWise(mat, new_func.subs(x, old_func(x))).evaluate()
-
-    def _eval_args(self, function, mat):
-        if(type(function) not in [Lambda, Function]):
-            raise ValueError("The 2nd argument should be a sympy function.")
-        if(type(mat) not in [MatrixSymbol, MatMul, ElemWise]):
-            raise ValueError("The first argument should evaluate to a Matrix.")
-
-    def _is_univariate(self, function):
-        return len(function.variables) > 1
-
-    def _evaluate_simple(self, function, mat, x):
-        function = sympify(function)
-        if function.is_Mul:
-            args = function.args
-            coeffs = [elem for elem in args if ( elem.has(x) == False )]
-            return self._scalar_mul(mat, *coeffs)
-        else:
-            return ElemWise(mat, function(x))
-
-    def _scalar_mul(self, M, *args):
-        return MatMul(M, *args).doit()
+    @property
+    def shape(self):
+        return self.Matrix.shape
 
     @property
     def shape(self):
         return self.Matrix.shape
+
+    @property
+    def rows(self):
+        return self.Matrix.rows
+
+    @property
+    def cols(self):
+        return self.Matrix.cols
+
+    def _evaluate(self):
+        function = sympify(self.Expression)
+        mat = self.Matrix
+        self._eval_args(function, mat)
+        x = Symbol('x')
+        if function == IdentityFunction and type(mat) != ElemWise:
+            return mat
+        if(type(mat) in [MatrixSymbol, MatMul]):
+            return self._evaluate_simple(function, mat, x)
+        elif(type(mat) == ElemWise):
+            new_func, mat = sympify(mat.Expression), mat.Matrix
+            old_func = sympify(self.Expression)
+            return ElemWise(mat, new_func(old_func(x))).evaluate()
+
+    def _eval_args(self, function, mat):
+        if(self._is_multivariate(function)):
+            raise TypeError("The function can't be multivariate.")
+        if(type(mat) not in [MatrixSymbol, MatMul, ElemWise]):
+            raise ValueError("The first argument should evaluate to a Matrix.")
+
+    def _is_multivariate(self, function):
+        return False
+
+    def _evaluate_simple(self, function, mat, x):
+        function = sympify(function)
+        return ElemWise(mat, function)
+
+    def _scalar_mul(self, M, *args):
+        return MatMul(M, *args).doit()
+
+    def _entry(self, i, j):
+        return MatrixElement(self, i, j)
 
 
 class Identity(MatrixExpr):
