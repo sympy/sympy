@@ -177,6 +177,8 @@ class Order(Expr):
             raise ValueError('Got %s as a point.' % point)
 
         if variables:
+            if any(p != point[0] for p in point):
+                raise NotImplementedError
             if point[0] is S.Infinity:
                 s = dict([(k, 1/Dummy()) for k in variables])
                 rs = dict([(1/v, 1/k) for k, v in s.items()])
