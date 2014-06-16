@@ -148,6 +148,26 @@ class Integers(with_metaclass(Singleton, Set)):
     def _boundary(self):
         return self
 
+    def _eval_imageset(self, f):
+        from sympy import Wild
+        expr = f.expr
+        if len(f.variables) > 1:
+            return
+        n = f.variables[0]
+
+        a = Wild('a')
+        b = Wild('b')
+
+        match = expr.match(a*n + b)
+        if match[a].is_negative:
+            expr = -expr
+
+        match = expr.match(a*n + b)
+        if match[a] is S.One and match[b].is_integer:
+            expr = expr - match[b]
+
+        return ImageSet(Lambda(n, expr), S.Integers)
+
 
 class Reals(with_metaclass(Singleton, Interval)):
 

@@ -180,12 +180,24 @@ def test_infinitely_indexed_set_1():
     assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(n, 2*n + 1), S.Integers)) == \
             EmptySet()
 
+    # the order of variables decide the sign in the Lambda in the imageset
     assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(n, 3*n), S.Integers)) == \
             ImageSet(Lambda(t, -6*t), S.Integers)
 
     assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(m, 3*m), S.Integers)) == \
             ImageSet(Lambda(t, 6*t), S.Integers)
-    # XXX: the order of variables decide the sign in the Lambda in the imageset
+
+
+def test_infinitely_indexed_set_2():
+    from sympy import exp
+    from sympy.abc import n
+    a = Symbol('a', integer=True)
+    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(n, n + a), S.Integers)
+    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(n, -n + a), S.Integers)
+    assert imageset(Lambda(n, -6*n), S.Integers) == ImageSet(Lambda(n, 6*n), S.Integers)
+    assert imageset(Lambda(n, 2*n + pi), S.Integers) == ImageSet(Lambda(n, 2*n + pi), S.Integers)
+    assert imageset(Lambda(n, pi*n + pi), S.Integers) == ImageSet(Lambda(n, pi*n + pi), S.Integers)
+    assert imageset(Lambda(n, exp(n)), S.Integers) != imageset(Lambda(n, n), S.Integers)
 
 
 @XFAIL
