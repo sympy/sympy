@@ -2651,8 +2651,8 @@ class Expr(Basic, EvalfMixin):
 
     def aseries(self, x, n=6, logx=None, bound=0, hir=False):
         """
-        Returns the asymptotic expansion for self. Refer [3]
-        series() calls this method if it fails. Use this method directly for optional
+        Finds the series expansion of "self" upto O(x**(-n)) at "x = oo". See reference [3]
+        series() calls this method if it fails. Use this method directly for additional
         ``hir`` and ``bound`` parameters.
 
         Use the ``hir`` parameter to produce hierarchical series. It stops the recursion
@@ -2662,6 +2662,9 @@ class Expr(Basic, EvalfMixin):
         the algorithm tries to find a normalised representation of the mrv set and rewrites f
         using this normalised representation.
         Use the ``bound`` parameter to give limit on rewriting coefficients in its normalised form.
+
+        The optional ``logx`` parameter can be used to replace any log(x) in the
+        returned series with a symbolic value to avoid evaluating log(x) at 0.
 
         Examples
         ========
