@@ -2391,11 +2391,10 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
-            s = self.subs(x, 1/x).series(x, n=n, dir=dir)
-            if n is None:
-                return (si.subs(x, 1/x) for si in s)
-            return s.subs(x, 1/x)
+            s = self.aseries(x, n)
+            if x0 is S.NegativeInfinity:
+                return s.subs(x, -x)
+            return s
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
@@ -2468,9 +2467,6 @@ class Expr(Basic, EvalfMixin):
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
-            # Try asymptotic expansion
-            if s1.removeO() == 0:
-                return self.subs(x, 1/x).aseries(x, n, logx, False).subs(x, 1/x)
             try:
                 return collect(s1, x) + o
             except NotImplementedError:
@@ -2649,9 +2645,10 @@ class Expr(Basic, EvalfMixin):
                      nseries calls it.""" % self.func)
                      )
 
-    def aseries(self, x, n=6, logx=None, bound=0, hir=False):
+    def aseries(self, x, n=6, bound=0, hir=False):
         """
-        Finds the series expansion of "self" upto O(x**(-n)) at "x = oo". See reference [3]
+        Returns asymptotic expansion for "self". See [3]_
+
         series() calls this method if it fails. Use this method directly for additional
         ``hir`` and ``bound`` parameters.
 
@@ -2705,7 +2702,7 @@ class Expr(Basic, EvalfMixin):
 
         omega, exps = mrv(self, x)
         if x in omega:
-            return self.subs(x, exp(x)).aseries(x, n, logx, bound, hir).subs(x, log(x))
+            return self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
         d = C.Dummy('d', positive=True)
         f, logw = rewrite(exps, omega, x, d)
 
@@ -2714,13 +2711,13 @@ class Expr(Basic, EvalfMixin):
             if bound <= 0:
                 return self
             a = self.exp
-            s = a.aseries(x, n, logx, bound=bound)
+            s = a.aseries(x, n, bound=bound)
             s = s.func(*[t.removeO() for t in s.args])
             rep = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
             f = exp(self.args[0] - rep.args[0]) / d
             logw = log(1/rep)
 
-        s = f.series(d, 0, n, logx=logx)
+        s = f.series(d, 0, n)
         # Hierarchical series: break after first recursion
         if hir:
             return s.subs(d, exp(logw))
@@ -2740,7 +2737,7 @@ class Expr(Basic, EvalfMixin):
         for t in terms:
             coeff, expo = t.as_coeff_exponent(d)
             if coeff.has(x):
-                s1 = coeff.aseries(x, n, logx, bound=bound-1)
+                s1 = coeff.aseries(x, n, bound=bound-1)
                 if gotO and s1.getO():
                     break
                 elif s1.getO():
