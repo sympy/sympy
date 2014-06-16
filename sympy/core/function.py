@@ -2314,25 +2314,12 @@ def count_ops(expr, visual=False):
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
-   
     elif isinstance(expr, BooleanFunction):
-        from sympy.logic.boolalg import Not, Equivalent, ITE
         ops = []
         for arg in expr.args:
             ops.append(count_ops(arg, visual=True))
-        if isinstance(expr, Equivalent):
-            l = len(expr.args)
-            ops.append(C.Symbol("EQUIVALENT") * (l - 1))
-            if l-2 > 0:
-                ops.append(C.Symbol("AND") * (l - 2))
-        elif isinstance(expr, ITE):
-            ops.append(C.Symbol("ITE"))
-        elif isinstance(expr, Not):
-            ops.append(C.Symbol("NOT"))
-        else:
-            o = C.Symbol(expr.func.__name__.upper())
-            ops.append(o * (len(expr.args) - 1))
-
+        o = C.Symbol(expr.func.__name__.upper())
+        ops.append(o)
     elif not isinstance(expr, Basic):
         ops = []
     else:  # it's Basic not isinstance(expr, Expr):

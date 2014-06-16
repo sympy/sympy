@@ -11,7 +11,7 @@ from sympy.core.cache import cacheit
 from sympy.core.core import C
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
-from sympy.core.operations import LatticeOp, AssocOp
+from sympy.core.operations import LatticeOp
 from sympy.core.function import Application
 from sympy.core.compatibility import ordered, xrange, with_metaclass
 from sympy.core.sympify import converter, _sympify, sympify
@@ -257,7 +257,7 @@ class BooleanFunction(Application, Boolean):
         simplify = kwargs.get('simplify', True)
         argset = set([])
         for arg in args:
-            if not is_logical_literal(arg):
+            if not is_literal(arg):
                 arg = arg.to_nnf(simplify)
             if simplify:
                 if isinstance(arg, cls):
@@ -488,26 +488,27 @@ class Not(BooleanFunction):
                                       " expressions")
 
     def to_nnf(self, simplify=True):
-        expr = self.args[0]
-        if expr.is_Atom:
+        if is_literal(self):
             return self
+
+        expr = self.args[0]
 
         func, args = expr.func, expr.args
 
-        if func is And:
+        if func == And:
             return Or._to_nnf(*[~arg for arg in args], simplify=simplify)
 
-        if func is Or:
+        if func == Or:
             return And._to_nnf(*[~arg for arg in args], simplify=simplify)
 
-        if func is Implies:
+        if func == Implies:
             a, b = args
             return And._to_nnf(a, ~b, simplify=simplify)
 
-        if func is Equivalent:
+        if func == Equivalent:
             return And._to_nnf(Or(*args), Or(*[~arg for arg in args]), simplify=simplify)
 
-        if func is Xor:
+        if func == Xor:
             result = []
             for i in xrange(1, len(args)+1, 2):
                 for neg in combinations(args, i):
@@ -515,11 +516,11 @@ class Not(BooleanFunction):
                     result.append(Or(*clause))
             return And._to_nnf(*result, simplify=simplify)
 
-        if func is ITE:
+        if func == ITE:
             a, b, c = args
             return And._to_nnf(Or(a, ~c), Or(~a, ~b), simplify=simplify)
 
-        raise ValueError()
+        raise ValueError("Illegal operator %s in expression" % func)
 
 
 class Xor(BooleanFunction):
@@ -586,12 +587,14 @@ class Xor(BooleanFunction):
             argset.remove(True)
             return Not(Xor(*argset))
         else:
-            return super(Xor, cls).__new__(cls, *argset, **kwargs)
+            obj = super(Xor, cls).__new__(cls, *argset, **kwargs)
+            obj._argset = frozenset(argset)
+            return obj
 
     @property
     @cacheit
     def args(self):
-        return tuple(ordered(self._args))
+        return tuple(ordered(self._argset))
 
     def to_nnf(self, simplify=True):
         args = []
@@ -1037,7 +1040,7 @@ def is_nnf(expr, simplified=True):
     """
 
     expr = sympify(expr)
-    if is_logical_literal(expr):
+    if is_literal(expr):
         return True
 
     stack = [expr]
@@ -1052,7 +1055,7 @@ def is_nnf(expr, simplified=True):
                         return False
             stack.extend(expr.args)
 
-        elif not is_logical_literal(expr):
+        elif not is_literal(expr):
             return False
 
     return True
@@ -1171,8 +1174,28 @@ def eliminate_implications(expr):
     return to_nnf(expr)
 
 
-def is_logical_literal(expr):
-    if expr.func == Not:
+def is_literal(expr):
+    """
+    Returns True if expr is a literal, else False.
+
+    Examples
+    ========
+
+    >>> from sympy import Or, Q
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.boolalg import is_literal
+    >>> is_literal(A)
+    True
+    >>> is_literal(~A)
+    True
+    >>> is_literal(Q.zero(A))
+    True
+    >>> is_literal(A + B)
+    True
+    >>> is_literal(Or(A, B))
+    False
+    """
+    if isinstance(expr, Not):
         return not isinstance(expr.args[0], BooleanFunction)
     else:
         return not isinstance(expr, BooleanFunction)

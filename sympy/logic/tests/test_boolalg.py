@@ -1,11 +1,11 @@
 from sympy import (symbols, sympify, Dummy, simplify, Equality, S, Interval,
-                   oo, EmptySet)
+                   oo, EmptySet, Q)
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
     distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
     simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom
+    BooleanAtom, is_literal
 )
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
@@ -441,6 +441,18 @@ def test_ITE():
     B = True
     assert ITE(And(A, B), B, C) == C
     assert ITE(Or(A, False), And(B, True), False) is false
+
+
+def test_is_literal():
+    assert is_literal(True) is True
+    assert is_literal(False) is True
+    assert is_literal(A) is True
+    assert is_literal(~A) is True
+    assert is_literal(Or(A, B)) is False
+    assert is_literal(Q.zero(A)) is True
+    assert is_literal(Not(Q.zero(A))) is True
+    assert is_literal(Or(A, B)) is False
+    assert is_literal(And(Q.zero(A), Q.zero(B))) is False
 
 def test_operators():
     # Mostly test __and__, __rand__, and so on

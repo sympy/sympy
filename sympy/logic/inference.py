@@ -2,38 +2,9 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf, true, false
+    conjuncts, to_cnf
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
-
-
-def is_literal(expr):
-    """
-    Returns True if expr is a literal, else False.
-
-    Examples
-    ========
-
-    >>> from sympy import Or
-    >>> from sympy.abc import A, B
-    >>> from sympy.logic.inference import is_literal
-    >>> is_literal(A)
-    True
-    >>> is_literal(~A)
-    True
-    >>> is_literal(Or(A, B))
-    False
-
-    """
-
-    expr = sympify(expr)
-    if expr in (true, false):
-        return True
-    if expr.is_Not and expr.args[0].is_Atom:
-        return True
-    if expr.is_Atom:
-        return True
-    return False
 
 
 def literal_symbol(literal):

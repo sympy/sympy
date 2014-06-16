@@ -96,7 +96,7 @@ def test_count_ops_visual():
     assert count(Or(x,y)) == OR
     assert count(And(x,y)) == AND
     assert count(And(x**y,z)) == AND + POW
-    assert count(Or(x,Or(y,And(z,a)))) == AND + 2*OR
+    assert count(Or(x,Or(y,And(z,a)))) == AND + OR
     assert count(Nor(x,y)) == NOT + OR
     assert count(Nand(x,y)) == NOT + AND
     assert count(Xor(x,y)) == XOR
