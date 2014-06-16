@@ -3,156 +3,220 @@ from __future__ import print_function, division
 from sympy import C, S, symbols, Symbol, collect, Function, Add
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq
+from sympy.functions import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.concrete import Sum
 from sympy.core import Add, Pow
 from sympy.core.expr import Expr
 from sympy.polys.partfrac import apart
-from sympy.solvers import solve
+from sympy.solvers import solve, rsolve
 
+import gc, traceback
 
-class FormalSeries(object):
-    def __new__(self, *args, **kwargs):
-        formula = kwargs.pop("formula", None)
-        if formula:
-            return FormalSeriesFormula(args[0], formula)
+def FormalSeries(x=None, n=0, *args, **kwargs):
+    generator = kwargs.pop("generator", None)
 
-        sequence = kwargs.pop('sequence', None)
-        if sequence:
-            return FormalSeriesSeq(args[0], sequence)
-
-        function = kwargs.pop('function', None)
-        if function:
-            return FormalSeriesFunc(args[0], function)
-
-
-class FormalSeriesBase(Expr):
-    """
-    Formal Power Series base class
-    """
-    def __add__(self, other):
-        it = self.it
-        gen = self.gen + (other.gen).subs(other.it, it)
-        return FormalSeriesFormula(self.sym, (gen, it))
-
-    def __sub__(self, other):
-        it = self.it
-        gen = self.gen - (other.gen).subs(other.it, it)
-        return FormalSeriesFormula(self.sym, (gen, it))
-
-    def __getitem__(self, key):
-        gen, it = self.gen, self.it
-        sym = self.sym
-        if isinstance(key, slice):
-            start = key.start or 0
-            stop = key.stop or 6
-            step = key.step or 1
-            return [self[k] for k in range(start, stop, step)]
-        else:
-            return gen.subs(it, key) * sym**key
-
-    def as_series(self, n=6):
-        sym = self.sym
-        s = self[0:n]
-        return Add(*s) + C.Order(sym**n)
-
-
-class FormalSeriesFunc(FormalSeriesBase):
-    def __init__(self, sym, function):
-        self.gen, self.it = self.findgen(sym, function)
-        self.sym = sym
-
-    def findgen(self, sym, function):
-        for k in range(0, 5):
-            fdiff = function.diff(sym, k)
-            if fdiff.is_rational_function():
-                return self.findgenR(sym, function)  # Integrate k times
-
-        DE, f = self.simpleDE(sym, function)
-        RE = self.DEtoRE(sym, DE, f)
+    formula = kwargs.pop("formula", None)
+    if formula:
         k = Symbol('k', integer=True)
-        return Piecewise((S.One/k, True)), k
+        coeff = formula[0]
+        generator = ((coeff, k), k)
 
-    def simpleDE(self, sym, function):
-        a = symbols('a:4')
-        f = Function('f')(sym)
-
-        # Search for case when k=1
-        eq, DE = self.makeDE(sym, function, f, a, S.One)
-        sol = solve(eq, a[:1], dict=True)
-        if sol and sol[0].values()[0].is_rational_function():
-            return DE.subs(sol[0].keys()[0], sol[0].values()[0])
-
-        for k in range(2, 5):
-            eq, DE = self.makeDE(sym, function, f, a, k)
-            terms = [t.as_independent(sym)[1] for t in eq.as_ordered_terms()]
-            eq = collect(eq, [function.diff(sym, k) for k in range(0, k)])
-            coeff = [t.as_independent(sym)[0] for t in eq.as_ordered_terms()]
-            if self.independentK(sym, terms, k):
-                sol = solve(coeff, a, dict=True)[0]
-                for key, value in sol.iteritems():
-                    DE = DE.subs(key, value)
-                return DE, f
-
-        raise NotImplementedError('Cannot find simple DE')
-
-    def independentK(self, sym, terms, k):
-        summands = []
-        for s in terms:
-            summands += s.as_ordered_terms()
-        summands = list(set(summands))
-        l = len(summands)
-        for i in range(l):
-            for j in range(i+1, l):
-                if (summands[i] / summands[j]).is_rational_function():
-                    return False
-        return True
-
-    def makeDE(self, sym, function, f, a, order):
-        eq = function.diff(sym, order)
-        DE = f.diff(sym, order)
-        for k in range(0, order):
-            eq += a[k] * function.diff(sym, k)
-            DE += a[k] * f.diff(sym, k)
-        return eq, DE
-
-    def DEtoRE(self, sym, DE, f):
-        print (DE)
-        return None
-
-    def findgenR(self, sym, function):
-        gen = S.Zero
-        k = Symbol('k', integer=True)
-        terms = apart(function).as_ordered_terms()
-        for t in terms:
-            c, d = t.as_numer_denom()
-            d, j = d.as_base_exp()
-            a = -d.as_coeff_add()[0]
-            gen += (-1)**j * c * C.binomial(j+k-1, k).rewrite(C.factorial) / a**(j+k)
-        return Piecewise((gen, True)), k
-
-
-class FormalSeriesFormula(FormalSeriesBase):
-    def __init__(self, sym, formula):
-        self.gen, self.it = self.findgen(sym, formula)
-        self.sym = sym
-
-    def findgen(self, sym, formula):
-        if type(formula) != tuple:
-            raise TypeError("Formula should be 'tuple'")
-        gen, it = formula
-        if gen.is_Piecewise:
-            return gen, it
-        return Piecewise((gen, True)), it
-
-
-class FormalSeriesSeq(FormalSeriesBase):
-    def __init__(self, sym, sequence):
-        self.gen, self.it = self.findgen(sym, sequence)
-        self.sym = sym
-
-    def findgen(self, sym, sequence):
+    sequence = kwargs.pop('sequence', None)
+    if sequence:
         k = Symbol('k', integer=True)
         l = len(sequence)
         cond = [(sequence[i], Eq(k%l, i)) for i in range(l)]
-        return Piecewise(*cond), k
+        generator = ((Piecewise(*cond), k), k)
+
+    function = kwargs.pop('function', None)
+    if function:
+        generator = findGen(x, function)
+
+    def compute_tail():
+        return FormalSeries(x, n=n+1, generator=generator)
+
+    coeff, expo = generator[0]
+    k = generator[1]
+    nth_term = (coeff.subs(k, n), expo.subs(k, n))
+
+    return Stream(x, nth_term, compute_tail)
+
+
+def findGenR(x, function):
+    """
+    Finds the generator for a given rational function in x
+    """
+    coeff = S.Zero
+    k = Symbol('k', integer=True)
+    terms = apart(function).as_ordered_terms()
+    for t in terms:
+        c, d = t.as_numer_denom()
+        d, j = d.as_base_exp()
+        a = -d.as_coeff_add()[0]
+        coeff += (-1)**j * c * C.binomial(j+k-1, k).rewrite(C.factorial) / a**(j+k)
+    return ((coeff, k), k)
+
+
+def simpleDE(x, function):
+    """
+    Converts a function into a simple differential equation
+    """
+    def makeDE(x, function, func, k, a):
+        eq = function.diff(x, k)
+        DE = func.diff(x, k)
+        for i in range(0, k):
+            eq += a[i] * function.diff(x, i)
+            DE += a[i] * func.diff(x, i)
+        return eq, DE
+
+    def independent(terms, k):
+        terms = list(set(terms))  # Remove repeating terms
+        if len(terms) == k:
+            return True
+        return False
+
+    a = symbols('a:4')
+    func = Function('f')(x)
+
+    # Solve for case k=1
+    eq, DE = makeDE(x, function, func, S.One, a)
+    sol = solve(eq, a[0])
+    if sol and sol[0].is_rational_function():
+        return DE.subs(a[0], sol[0]), func
+
+    for k in range(2, 5):
+        eq, DE = makeDE(x, function, func, k, a)
+        terms = [t.as_independent(x)[1] for t in eq.as_ordered_terms()]
+        if independent(terms, k):
+            eq = collect(eq, [function.diff(x, i) for i in range(0, k+1)])
+            coeff = [t.as_independent(x)[0] for t in eq.as_ordered_terms()]
+            sol = solve(coeff, a, dict=True)
+            if sol:
+                for key, val in sol[0].iteritems():
+                    DE = DE.subs(key, val)
+            return DE, func
+
+    return DE, func
+
+
+def DEtoRE(x, DE, func):
+    def findOrder(x, derivative, func):
+        order = S.Zero
+        while derivative != func:
+            order += 1
+            derivative = derivative.integrate(x)
+        return order
+
+    k = Symbol('k', integer=True)
+    r = Function('r')
+    RE = S.Zero
+
+    DE = DE.expand()
+    for t in DE.as_ordered_terms():
+        a = t.as_ordered_factors()
+        if len(a) == 1:
+            l = S.Zero
+            j = findOrder(x, a[0], func)
+            RE += C.RisingFactorial(k+1-l, j) * r(k+j-l)
+        else:
+            l = a[0].as_base_exp()[1]
+            j = findOrder(a[1])
+            RE += C.RisingFactorial(k+1-l, j) * r(k+j-l)
+    return RE, r, k
+
+
+def solveRE(x, RE, func, k):
+    sol = rsolve(RE, func(k))
+    print (RE, sol)
+
+
+def findGen(x, function):
+    """
+    Finds the generator for a given function in x
+    """
+    for k in range(0, 5):
+        diff = function.diff(x, k)
+        if diff.is_rational_function():
+            return findGenR(x, function)  # Integrate k times
+
+    DE, func = simpleDE(x, function)
+    RE, func, k = DEtoRE(x, DE, func)
+    generator = solveRE(x, RE, func, k)
+
+    k = Symbol('k', integer=True)
+    return ((S.One/C.factorial(k), k), k)
+
+
+class Stream(Expr):
+    def __init__(self, x, head, compute_tail=lambda: None):
+        self.head = head
+        self._compute_tail = compute_tail
+        self.x = x
+
+    def __add__(self, other):
+        s = sign(other.head[1] - self.head[1])
+        if s == 1:
+            return Stream(self.x, self.head, lambda: self.tail + other)
+        if s == -1:
+            return Stream(self.x, other.head, lambda: self + other.tail)
+        h = (self.head[0] + other.head[0], self.head[1])
+        return Stream(self.x, h, lambda: self.tail + other.tail)
+
+    def __sub__(self, other):
+        s = sign(other.head[1] - self.head[1])
+        if s == 1:
+            return Stream(self.x, self.head, lambda: self.tail - other)
+        if s == -1:
+            return Stream(self.x, other.head, lambda: self - other.tail)
+        h = (self.head[0] - other.head[0], self.head[1])
+        return Stream(self.x, h, lambda: self.tail - other.tail)
+
+    def __mul__(self, other):
+        c1, e1 = self.head
+        c2, e2 = other.head
+        coeff = c1 * c2
+        expo = e1 + e2
+        return Stream(self.x, (coeff, expo), lambda: other.tail.shift(e1).scale(c1) + self.tail.shift(e2).scale(c2) + self.tail * other.tail)
+
+    def __div__(self, other):
+        c1, e1 = self.head
+        c2, e2 = other.head
+        # q is the fixed-point operator
+        def q():
+            return Stream(self.x, (c1/c2, e1-e2), lambda: (self.tail + (other.tail * q()).scale(-1)).scale(S.One/c2).shift(-e2))
+        return q()
+
+    def scale(self, n):
+        coeff = self.head[0] * n
+        expo = self.head[1]
+        return Stream(self.x, (coeff, expo), lambda: self.tail.scale(n))
+
+    def shift(self, n):
+        coeff = self.head[0]
+        expo = self.head[1] + n
+        return Stream(self.x, (coeff, expo), lambda: self.tail.shift(n))
+
+    @property
+    def tail(self):
+        if self._compute_tail is not None:
+            self._tail = self._compute_tail()
+            self._compute_tail = None
+        return self._tail
+
+    @property
+    def term(self):
+        coeff, expo = self.head
+        x = self.x
+        return coeff * x**expo
+
+    def as_series(self, n=6):
+        x = self.x
+        it = self.tail
+        s = self.term
+        while it != None and n > 0:
+            traceback.print_stack()
+            s = s + it.term
+            it = it.tail
+            n = n - 1
+        return s
