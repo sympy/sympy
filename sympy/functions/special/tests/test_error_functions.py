@@ -514,7 +514,7 @@ def test_si():
         x + x**3/18 + x**5/600 + x**7/35280 + O(x**9)
     assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
     assert Si(x).nseries(x, 1, n=3) == \
-        Si(1) + x*sin(1) + x**2*(-sin(1)/2 + cos(1)/2) + O(x**3)
+        Si(1) + (x - 1)*sin(1) + (x - 1)**2*(-sin(1)/2 + cos(1)/2) + O((x - 1)**3, (x, 1))
 
 
 def test_ci():
