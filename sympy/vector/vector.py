@@ -400,6 +400,9 @@ class VectorAdd(Vector, Add):
     __repr__ = __str__
     _sympystr = __str__
 
+    def __hash__(self):
+        tup = tuple([x.__hash__() for x in self.args])
+        return tup.__hash__()
 
 class VectorMul(Vector, Mul):
     """
@@ -469,6 +472,10 @@ class VectorMul(Vector, Mul):
 
     __repr__ = __str__
     _sympystr = __str__
+
+    def __hash__(self):
+        tup = (self._base_vect.__hash__(), self._measure_number)
+        return tup.__hash__()
 
 
 class VectorZero(Vector, Zero):
