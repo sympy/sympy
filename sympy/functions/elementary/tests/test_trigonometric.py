@@ -2,7 +2,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet)
+        conjugate, series, FiniteSet, asec, acsc)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.core.compatibility import xrange
@@ -135,6 +135,7 @@ def test_sin_rewrite():
     assert sin(cot(x)).rewrite(
         exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, cot(3)).n()
     assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
+    assert sin(x).rewrite(csc) == 1/csc(x)
 
 
 def test_sin_expansion():
@@ -303,6 +304,7 @@ def test_cos_rewrite():
     assert cos(cot(x)).rewrite(
         exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, cot(3)).n()
     assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
+    assert cos(x).rewrite(sec) == 1/sec(x)
 
 
 def test_cos_expansion():
@@ -472,6 +474,13 @@ def test_cot():
     assert cot(11*pi/7) == -cot(3*pi/7)
     assert cot(-11*pi/7) == cot(3*pi/7)
 
+    assert cot(x).is_bounded is None
+    assert cot(r).is_bounded is None
+    i = Symbol('i', imaginary=True)
+    assert cot(i).is_bounded is True
+
+    assert cot(x).subs(x, 3*pi) == zoo
+
 
 def test_cot_series():
     assert cot(x).series(x, 0, 9) == \
@@ -577,6 +586,9 @@ def test_asin_rewrite():
     assert asin(x).rewrite(log) == -I*log(I*x + sqrt(1 - x**2))
     assert asin(x).rewrite(atan) == 2*atan(x/(1 + sqrt(1 - x**2)))
     assert asin(x).rewrite(acos) == S.Pi/2 - acos(x)
+    assert asin(x).rewrite(acot) == 2*acot((sqrt(-x**2 + 1) + 1)/x)
+    assert asin(x).rewrite(asec) == -asec(1/x) + pi/2
+    assert asin(x).rewrite(acsc) == acsc(1/x)
 
 
 def test_acos():
@@ -606,6 +618,8 @@ def test_acos():
     assert acos(Rational(3, 2), evaluate=False).is_positive is False
     assert acos(p).is_positive is None
 
+    assert acos(z).conjugate() == acos(conjugate(z))
+
 
 def test_acos_series():
     assert acos(x).series(x, 0, 8) == \
@@ -623,6 +637,9 @@ def test_acos_rewrite():
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
+    assert acos(x).rewrite(acot) == -2*acot((sqrt(-x**2 + 1) + 1)/x) + pi/2
+    assert acos(x).rewrite(asec) == asec(1/x)
+    assert acos(x).rewrite(acsc) == -acsc(1/x) + pi/2
 
 
 def test_atan():
@@ -648,6 +665,11 @@ def test_atan():
 
 def test_atan_rewrite():
     assert atan(x).rewrite(log) == I*log((1 - I*x)/(1 + I*x))/2
+    assert atan(x).rewrite(asin) == (-asin(1/sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
+    assert atan(x).rewrite(acos) == sqrt(x**2)*acos(1/sqrt(x**2 + 1))/x
+    assert atan(x).rewrite(acot) == acot(1/x)
+    assert atan(x).rewrite(asec) == sqrt(x**2)*asec(sqrt(x**2 + 1))/x
+    assert atan(x).rewrite(acsc) == (-acsc(sqrt(x**2 + 1)) + pi/2)*sqrt(x**2)/x
 
 
 def test_atan2():
@@ -715,6 +737,11 @@ def test_acot():
 
 def test_acot_rewrite():
     assert acot(x).rewrite(log) == I*log((x - I)/(x + I))/2
+    assert acot(x).rewrite(asin) == x*(-asin(sqrt(-x**2)/sqrt(-x**2 - 1)) + pi/2)*sqrt(x**(-2))
+    assert acot(x).rewrite(acos) == x*sqrt(x**(-2))*acos(sqrt(-x**2)/sqrt(-x**2 - 1))
+    assert acot(x).rewrite(atan) == atan(1/x)
+    assert acot(x).rewrite(asec) == x*sqrt(x**(-2))*asec(sqrt((x**2 + 1)/x**2))
+    assert acot(x).rewrite(acsc) == x*(-acsc(sqrt((x**2 + 1)/x**2)) + pi/2)*sqrt(x**(-2))
 
 
 def test_attributes():
@@ -1023,6 +1050,7 @@ def test_sec():
     assert sec(x).rewrite(tan) == (tan(x/2)**2 + 1)/(-tan(x/2)**2 + 1)
     assert sec(x).rewrite(pow) == sec(x)
     assert sec(x).rewrite(sqrt) == sec(x)
+    assert sec(z).rewrite(cot) == (cot(z/2)**2 + 1)/(cot(z/2)**2 - 1)
 
     assert sec(z).conjugate() == sec(conjugate(z))
 
@@ -1091,6 +1119,7 @@ def test_csc():
     assert csc(x).rewrite(sin) == 1/sin(x)
     assert csc(x).rewrite(cos) == csc(x)
     assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
+    assert csc(x).rewrite(cot) == (cot(x/2)**2 + 1)/(2*cot(x/2))
 
     assert csc(z).conjugate() == csc(conjugate(z))
 
@@ -1118,6 +1147,48 @@ def test_csc():
             1/x + x/6 + 7*x**3/360 + 31*x**5/15120 + O(x**6)
 
     assert csc(x).diff(x) == -cot(x)*csc(x)
+
+    assert csc(x).taylor_term(2, x) == 0
+    assert csc(x).taylor_term(3, x) == 7*x**3/360
+    assert csc(x).taylor_term(5, x) == 31*x**5/15120
+
+
+def test_asec():
+    assert asec(nan) == nan
+    assert asec(1) == 0
+    assert asec(-1) == pi
+    assert asec(oo) == pi/2
+    assert asec(-oo) == pi/2
+    assert asec(zoo) == pi/2
+
+    assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
+    assert asec(x).as_leading_term(x) == log(x)
+
+    assert asec(x).rewrite(log) == I*log(sqrt(1 - 1/x**2) + I/x) + pi/2
+    assert asec(x).rewrite(asin) == -asin(1/x) + pi/2
+    assert asec(x).rewrite(acos) == acos(1/x)
+    assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
+    assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
+    assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
+
+
+def test_acsc():
+    assert acsc(nan) == nan
+    assert acsc(1) == pi/2
+    assert acsc(-1) == -pi/2
+    assert acsc(oo) == 0
+    assert acsc(-oo) == 0
+    assert acsc(zoo) == 0
+
+    assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
+    assert acsc(x).as_leading_term(x) == log(x)
+
+    assert acsc(x).rewrite(log) == -I*log(sqrt(1 - 1/x**2) + I/x)
+    assert acsc(x).rewrite(asin) == asin(1/x)
+    assert acsc(x).rewrite(acos) == -acos(1/x) + pi/2
+    assert acsc(x).rewrite(atan) == (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
+    assert acsc(x).rewrite(acot) == (-acot(1/sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
+    assert acsc(x).rewrite(asec) == -asec(x) + pi/2
 
 
 @XFAIL
