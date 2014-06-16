@@ -544,19 +544,18 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
         # keep highest order term coefficient positive
-        for eqs, funcs in zip(eq, func):
-            if eqs.coeff(diff(funcs,t,ode_order(eqs, funcs))).is_negative:
-                eqs = -eqs
+        for i in range(len(eq)):
+            if eq[i].coeff(diff(func[i],t,ode_order(eq[i], func[i]))).is_negative:
+                eq[i] = -eq[i]
         match['eq'] = eq
         if len(func) != len(eq) and (func != [None]):
-            raise ValueError("Number of function given is less than number of equations %s" % func)
+            raise ValueError("Number of functions given is less than number of equations %s" % func)
         if len(set(order.values()))!=1:
-            raise ValueError("It solves only those systems of "
-            "equations whose orders are equal")
+            raise ValueError("It solves only those systems of equations whose orders are equal")
         match['order'] = list(order.values())[0]
         if len(set(func))!=len(eq):
                 raise ValueError("dsolve() and classify_sysode() work with"
-                "number of function being equal to number of equations")
+                "number of functions being equal to number of equations")
         if match['type_of_equation'] is None:
             raise NotImplementedError
         else:
@@ -1315,7 +1314,7 @@ def classify_sysode(eq, func=None, **kwargs):
                 func.append(func_)
     func = list(set(func))
     if len(func) < len(eq) and (func != [None]):
-        raise ValueError("Number of function given is less than number of equations %s" % func)
+        raise ValueError("Number of functions given is less than number of equations %s" % func)
     for funcs in func:
         if not order[funcs]:
             max_order = 0
@@ -1339,30 +1338,30 @@ def classify_sysode(eq, func=None, **kwargs):
     # which we are taking about and k denotes the order of function func[l]
     # whose coefficient we are calculating.
     func_coef = {}
-    is_linear = 1
+    is_linear = True
     for j, eqs in enumerate(eq):
         for funcs in func:
             for k in range(order[funcs]+1):
                 func_coef[j,funcs,k] = collect(eqs.expand(),[diff(funcs,t,k)]).coeff(diff(funcs,t,k))
-                if is_linear == 1:
+                if is_linear == True:
                     if func_coef[j,funcs,k]==0:
                         if k==0:
                             coef = eqs.as_independent(funcs)[1]
                             for xr in xrange(1, ode_order(eqs,funcs)+1):
                                 coef -= eqs.as_independent(diff(funcs,t,xr))[1]
                             if coef != 0:
-                                is_linear = 0
+                                is_linear = False
                         else:
                             if eqs.as_independent(diff(funcs,t,k))[1]:
-                                is_linear = 0
+                                is_linear = False
                     else:
                         for funcs_ in func:
                             dep = func_coef[j,funcs,k].as_independent(funcs_)[1]
                             if dep!=1 and dep!=0:
-                                is_linear = 0
+                                is_linear = False
 
     matching_hints['func_coeff'] = func_coef
-    matching_hints['is_linear'] = bool(is_linear)
+    matching_hints['is_linear'] = is_linear
 
     if len(set(order.values()))==1:
         order_eq = list(matching_hints['order'].values())[0]
