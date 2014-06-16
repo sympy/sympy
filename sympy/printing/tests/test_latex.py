@@ -1044,6 +1044,7 @@ def test_Hadamard():
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
+
 def test_boolean_args_order():
     syms = symbols('a:f')
 
@@ -1052,6 +1053,10 @@ def test_boolean_args_order():
 
     expr = Or(*syms)
     assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
+
+    expr = Equivalent(*syms)
+    assert latex(expr) == 'a \\equiv b \\equiv c \\equiv d \\equiv e \\equiv f'
+
 
 def test_imaginary():
     i = sqrt(-1)

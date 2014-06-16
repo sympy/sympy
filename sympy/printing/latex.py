@@ -721,8 +721,7 @@ class LatexPrinter(Printer):
         else:
             return r"\neg %s" % self._print(e.args[0])
 
-    def _print_And(self, e):
-        args = sorted(e.args, key=default_sort_key)
+    def _print_LogOp(self, args, char):
         arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
             tex = r"\left(%s\right)" % self._print(arg)
@@ -731,33 +730,26 @@ class LatexPrinter(Printer):
 
         for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
-                tex += r" \wedge \left(%s\right)" % (self._print(arg))
+                tex += r" %s \left(%s\right)" % (char, self._print(arg))
             else:
-                tex += r" \wedge %s" % (self._print(arg))
+                tex += r" %s %s" % (char, self._print(arg))
 
         return tex
+
+    def _print_And(self, e):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, r"\wedge")
 
     def _print_Or(self, e):
         args = sorted(e.args, key=default_sort_key)
-        arg = args[0]
-        if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(arg)
-        else:
-            tex = r"%s" % self._print(arg)
-
-        for arg in args[1:]:
-            if arg.is_Boolean and not arg.is_Not:
-                tex += r" \vee \left(%s\right)" % (self._print(arg))
-            else:
-                tex += r" \vee %s" % (self._print(arg))
-
-        return tex
+        return self._print_LogOp(args, r"\vee")
 
     def _print_Implies(self, e, altchar=None):
         return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\Rightarrow", self._print(e.args[1]))
 
     def _print_Equivalent(self, e, altchar=None):
-        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\equiv", self._print(e.args[1]))
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, altchar or r"\equiv")
 
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])
