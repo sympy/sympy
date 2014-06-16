@@ -1,7 +1,7 @@
 from sympy.sets.fancysets import ImageSet, Range
-from sympy.sets.sets import FiniteSet, Interval, imageset
+from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-        Rational, sqrt)
+        Rational, sqrt, Eq)
 from sympy.utilities.pytest import XFAIL
 import itertools
 
@@ -168,3 +168,35 @@ def test_intersections():
     assert -5 in S.Integers.intersect(Interval(-oo, 3))
     assert all(x.is_Integer
             for x in take(10, S.Integers.intersect(Interval(3, oo)) ))
+
+
+def test_infinitely_indexed_set_1():
+    from sympy.abc import n, m, t
+    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(m, m), S.Integers)
+
+    assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(m, 2*m + 1), S.Integers)) == \
+            EmptySet()
+
+    assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(n, 2*n + 1), S.Integers)) == \
+            EmptySet()
+
+    assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(n, 3*n), S.Integers)) == \
+            ImageSet(Lambda(t, -6*t), S.Integers)
+
+    assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(m, 3*m), S.Integers)) == \
+            ImageSet(Lambda(t, 6*t), S.Integers)
+    # XXX: the order of variables decide the sign in the Lambda in the imageset
+
+
+@XFAIL
+def test_infinitely_indexed_failed_diophantine():
+    from sympy.abc import n, m, t
+    assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(imageset(Lambda(n, 3*pi*n), S.Integers)) == \
+            ImageSet(Lambda(t, -6*pi*t), S.Integers)
+
+
+@XFAIL
+def test_infinitely_indexed_set_3():
+    from sympy.abc import n
+    assert imageset(Lambda(n, 2*n + 1), S.Integers) == imageset(Lambda(n, 2*n - 1), S.Integers)
+    assert imageset(Lambda(n, 3*n + 2), S.Integers) == imageset(Lambda(n, 3*n - 1), S.Integers)
