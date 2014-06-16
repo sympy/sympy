@@ -2583,7 +2583,8 @@ def test_X8():
     # see issue 7167:
     x = symbols('x', real=True)
     assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
-            1/sqrt(x) +x**(S(3)/2)/12 + x**(S(7)/2)/160 + O(x**4))
+            1/sqrt(x - 3*pi/2) + (x - 3*pi/2)**(S(3)/2)/12 +
+            (x - 3*pi/2)**(S(7)/2)/160 + O((x - 3*pi/2)**4, (x, 3*pi/2)))
 
 
 def test_X9():
