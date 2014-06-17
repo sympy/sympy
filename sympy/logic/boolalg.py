@@ -565,16 +565,16 @@ class Xor(BooleanFunction):
     """
     def __new__(cls, *args, **kwargs):
         argset = set([])
-        args = list(args)
-        while args:
-            arg = args.pop()
+        obj = super(Xor, cls).__new__(cls, *args, **kwargs)
+        for arg in obj._args:
             if isinstance(arg, Number) or arg in (True, False):
                 if arg:
-                    arg = True
+                    arg = true
                 else:
                     continue
             if isinstance(arg, Xor):
-                args.extend(arg.args)
+                for a in arg.args:
+                    argset.remove(a) if a in argset else argset.add(a)
             elif arg in argset:
                 argset.remove(arg)
             else:
@@ -582,12 +582,12 @@ class Xor(BooleanFunction):
         if len(argset) == 0:
             return false
         elif len(argset) == 1:
-            return sympify(argset.pop())
+            return argset.pop()
         elif True in argset:
             argset.remove(True)
             return Not(Xor(*argset))
         else:
-            obj = super(Xor, cls).__new__(cls, *argset, **kwargs)
+            obj._args = tuple(argset)
             obj._argset = frozenset(argset)
             return obj
 
