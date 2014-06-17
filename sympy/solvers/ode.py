@@ -6936,3 +6936,113 @@ def eigen_vector(M, root, multiplicity, t, startnum):
                 e_vector += C*w[j]*t**(i-j)*exp(root*t)/factorial(i-j)
     startnum.append(int(str(C)[1:]) + 1)
     return e_vector
+
+def sysode_nonlinear_2eq_order1(match_):
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    func = match_['func']
+    eq = match_['eq']
+    fc = match_['func_coeff']
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if match_['type_of_equation'] == 'type5':
+        sol = _nonlinear_2eq_order1_type5(x, y, t, eq)
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    if match_['type_of_equation'] == 'type1':
+        sol = _nonlinear_2eq_order1_type1(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type2':
+        sol = _nonlinear_2eq_order1_type2(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type3':
+        sol = _nonlinear_2eq_order1_type3(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type4':
+        sol = _nonlinear_2eq_order1_type4(x, y, t, eq)
+    return sol
+
+def _nonlinear_2eq_order1_type1(x, y, t, eq):
+    C1, C2 = symbols('C1:3')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    u, v, phi = symbols('u, v, phi', function=True)
+    r = eq[0].match(diff(x(t),t) - x(t)**n*f)
+    g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
+    F = r[f].subs(x(t),u).subs(y(t),v)
+    n = r[n]
+    if n!=1:
+        phi = (C1 + (1-n)*C.Integral(1/g, v))**(1/(1-n))
+    else:
+        phi = C1*exp(C.Integral(1/g, v))
+    phi = phi.doit()
+    sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol1 = []
+    for sols in sol2:
+        sol1.append(phi.subs(v, sols))
+    sol1 = list(set(sol1))
+    return [sol1, sol2]
+
+def _nonlinear_2eq_order1_type2(x, y, t, eq):
+    C1, C2 = symbols('C1:3')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    u, v, phi = symbols('u, v, phi', function=True)
+    r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
+    g = (diff(y(t),t) - eq[1])/r[f]
+    F = r[f].subs(x(t),u).subs(y(t),v)
+    n = r[n]
+    if n:
+        phi = -1/n*log(C1 - n*C.Integral(1/g, v))
+    else:
+        phi = C1 + C.Integral(1/g, v)
+    phi = phi.doit()
+    sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol1 = []
+    for sols in sol2:
+        sol1.append(phi.subs(v, sols))
+    sol1 = list(set(sol1))
+    return [sol1, sol2]
+
+def _nonlinear_2eq_order1_type3(x, y, t, eq):
+    C1, C2, C3, C4 = symbols('C1:5')
+    u, v = symbols('u, v', function=True)
+    f = Wild('f')
+    g = Wild('g')
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    F = r1[f].subs(x(t),u).subs(y(t),v)
+    G = r2[g].subs(x(t),u).subs(y(t),v)
+    sol2r = dsolve(Eq(diff(v(u),u), G.subs(v,v(u))/F.subs(v,v(u))))
+    for sol2s in sol2r:
+        sol1 = solve(C.Integral(1/F.subs(v, sol2s.rhs), u).doit() - t - C2, u)
+    sol1 = list(set(sol1))
+    sol2 = []
+    for sols in sol1:
+        sol2.append((sol2s.rhs).subs(u, sols))
+    sol2 = list(set(sol2))
+    return [sol1, sol2]
+
+def _nonlinear_2eq_order1_type4(x, y, t, eq):
+    C1, C2, C3, C4 = symbols('C1:5')
+    u, v = symbols('u, v')
+    f1 = Wild('f1', exclude=[y(t)])
+    f2 = Wild('f2', exclude=[y(t)])
+    g1 = Wild('g1', exclude=[x(t)])
+    g2 = Wild('g2', exclude=[x(t)])
+    phi = Wild('phi')
+    r1 = eq[0].match(diff(x(t),t) - f1*g1*phi)
+    r2 = eq[1].match(diff(y(t),t) - f2*g2*phi)
+    F1 = r1[f1].subs(x(t),u); F2 = r2[f2].subs(x(t),u)
+    G1 = r1[g1].subs(y(t),v); G2 = r2[g2].subs(y(t),v)
+    phi = phi.subs(x(t),u).subs(y(t),v)
+    sol1r = solve(C.Integral(F2/F1, u).doit() - C.Integral(G1/G2,v).doit() - C1, u)
+    sol2r = solve(C.Integral(F2/F1, u).doit() - C.Integral(G1/G2,v).doit() - C1, v)
+    sol2 = []
+    for sols in sol1r:
+        sol2.append(dsolve(diff(v(t),t) - F2.subs(u,sols).subs(v,v(t))*G2.subs(v,v(t))*r1[phi].subs(u,sols).subs(v,v(t))).rhs)
+    sol2 = list(set(sol2))
+    sol1 = []
+    for sols in sol2r:
+        sol1.append(dsolve(diff(u(t),t) - F1.subs(u,u(t))*G1.subs(v,sols).subs(u,u(t))*r1[phi].subs(v,sols).subs(u,u(t))).rhs)
+    sol1 = list(set(sol1))
+    return [sol1, sol2]
