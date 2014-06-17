@@ -4,7 +4,7 @@ C code printer
 The CCodePrinter converts single sympy expressions into single C expressions,
 using the functions defined in math.h where possible.
 
-A complete code generator, which uses ccode extensively, can be found in
+A complete code generator, which uses rcode extensively, can be found in
 sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
 
@@ -29,7 +29,7 @@ known_functions = {
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
-    printmethod = "_ccode"
+    printmethod = "_rcode"
 
     _default_settings = {
         'order': None,
@@ -224,7 +224,7 @@ class CCodePrinter(CodePrinter):
         return pretty
 
 
-def ccode(expr, assign_to=None, **settings):
+def rcode(expr, assign_to=None, **settings):
     r"""Converts an expr to a string of c code
 
         Parameters
@@ -255,18 +255,18 @@ def ccode(expr, assign_to=None, **settings):
         Examples
         ========
 
-        >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs
+        >>> from sympy import rcode, symbols, Rational, sin, ceiling, Abs
         >>> x, tau = symbols(["x", "tau"])
-        >>> ccode((2*tau)**Rational(7,2))
+        >>> rcode((2*tau)**Rational(7,2))
         '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
-        >>> ccode(sin(x), assign_to="s")
+        >>> rcode(sin(x), assign_to="s")
         's = sin(x);'
         >>> custom_functions = {
         ...   "ceiling": "CEIL",
         ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
         ...           (lambda x: x.is_integer, "ABS")]
         ... }
-        >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
+        >>> rcode(Abs(x) + ceiling(x), user_functions=custom_functions)
         'fabs(x) + CEIL(x)'
         >>> from sympy import Eq, IndexedBase, Idx
         >>> len_y = 5
@@ -275,13 +275,13 @@ def ccode(expr, assign_to=None, **settings):
         >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
         >>> i = Idx('i', len_y-1)
         >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
-        >>> ccode(e.rhs, assign_to=e.lhs, contract=False)
+        >>> rcode(e.rhs, assign_to=e.lhs, contract=False)
         'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_ccode(expr, **settings):
+def print_rcode(expr, **settings):
     """Prints C representation of the given expression."""
-    print(ccode(expr, **settings))
+    print(rcode(expr, **settings))
