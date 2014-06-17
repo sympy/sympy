@@ -4,7 +4,6 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    And, Heaviside, Max, S, acos, asinh, acosh)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
-from sympy.utilities.pytest import XFAIL
 
 x, y, u, n, a, b = symbols('x y u n a b')
 
@@ -152,12 +151,13 @@ def test_manualintegrate_inversetrig():
                   (sqrt(-a/b)*acosh(x*sqrt(-b/a))/sqrt(-a), And(a < 0, b > 0)))
 
 
-@XFAIL
 def test_manualintegrate_trig_substitution():
     assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
-        sqrt(16*x**2 - 9) - 3*acos(3/(4*x))
+        Piecewise((sqrt(16*x**2 - 9) - 3*acos(3/(4*x)),
+                   And(x < 3*S.One/4, x > -3*S.One/4)))
     assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
-        -sqrt(-x**2/25 + 1)/(125*x) - (-x**2/25 + 1)**(3*S.Half)/(15*x**3)
+        Piecewise((-sqrt(-x**2/25 + 1)/(125*x) -
+                   (-x**2/25 + 1)**(3*S.Half)/(15*x**3), And(x < 5, x > -5)))
     assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
         ((49*x**2 + 1)**(5*S.Half)/28824005 -
          (49*x**2 + 1)**(3*S.Half)/5764801 +
