@@ -3,7 +3,7 @@
 from sympy import symbols, Q
 from sympy.logic.boolalg import Or, Equivalent, Implies, And
 from sympy.logic.inference import is_literal, literal_symbol, \
-     pl_true, satisfiable, PropKB
+     pl_true, satisfiable, semantic_tableaux, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
@@ -112,6 +112,8 @@ def test_dpll_satisfiable():
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
     assert satisfiable(A & (A >> B) & ~B) is False
+    raises (ValueError, lambda: satisfiable(A | B, algorithm='cdcl'))
+    raises (ValueError, lambda: satisfiable(A & B, return_model="True"))
 
 
 def test_pl_true():
@@ -143,8 +145,40 @@ def test_pl_true():
 def test_pl_true_wrong_input():
     from sympy import pi
     raises(ValueError, lambda: pl_true('John Cleese'))
-    raises(ValueError, lambda: pl_true(42 + pi + pi ** 2))
-    raises(ValueError, lambda: pl_true(42))
+    raises(TypeError, lambda: pl_true(42 + pi + pi ** 2))
+    raises(TypeError, lambda: pl_true(42))
+
+
+def test_pl_true_deep():
+    from sympy.abc import A, B, C
+    assert pl_true(A | B, {A: False}, deep=True) is None
+    assert pl_true(~A & ~B, {A: False}, deep=True) is None
+    assert pl_true(A | B, {A: False, B: False}, deep=True) is False
+    assert pl_true(A & B & (~A | ~B), {A: True}, deep=True) is False
+    assert pl_true((C >> A) >> (B >> A), {C: True}, deep=True) is True
+
+
+def test_semantic_tableaux():
+    from sympy import pi
+    from sympy.abc import A, B, C
+    assert semantic_tableaux(A & B) is True
+    assert semantic_tableaux(A >> (B >> A)) is True
+    assert semantic_tableaux(Equivalent(A, B)) is True
+    assert semantic_tableaux(Implies(False, True)) is True
+    assert semantic_tableaux(A & ~A) is False
+    assert semantic_tableaux(Implies(True, False)) is False
+    raises(TypeError, lambda: semantic_tableaux(pi**2))
+
+    formulas = {
+        A & C & (B >> A) & (B >> (A & C & (~A | ~C))): True,
+        (~A | ~B | (A & B) | (A & B & ~C) | (~A >> (~A | ~B))): True,
+        (A | C & (B >> ~A) | (C & ~(C >> A)) & (B & ~(C >> ~A))): True,
+        (B | C | ~(A >> B)) & (~A & ~C & ~B) & ~((B | A) >> B): False,
+        (C & ~B & ((A | C) >> A) & ((~C >> A) >> (B & (A | C)))): False,
+        (A & ~B & ~C & (B | C | (~A & B)) & (A >> (A & (B | C)))): False
+    }
+    for expr, sat in formulas.items():
+        assert semantic_tableaux(expr) is sat
 
 
 def test_PropKB():
@@ -197,6 +231,8 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+    assert not satisfiable(And(assumptions, facts, query), return_model=False)
+    assert satisfiable(And(assumptions, facts, ~query), return_model=False)
 
 def test_satisfiable_bool():
     assert satisfiable(True) == {}

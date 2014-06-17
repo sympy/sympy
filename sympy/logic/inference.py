@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf
+    BooleanAtom, BooleanFunction, conjuncts, to_cnf, eliminate_implications
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
@@ -63,12 +63,24 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm="dpll2"):
+def satisfiable(expr, return_model=True, algorithm="dpll2"):
     """
     Check satisfiability of a propositional sentence.
-    Returns a model when it succeeds
 
-    Examples:
+
+    Parameters
+    ==========
+
+    return_model: boolean, optional, default: True
+        Returns a model if expression is satisfiable. If only (UN)SAT
+        is required, then set to False
+
+    algorithm: string {'dpll', 'dpll2'}, optional, default: 'dpll2'
+        Select algorithm to use for SAT solving
+
+
+    Examples
+    ========
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -76,59 +88,119 @@ def satisfiable(expr, algorithm="dpll2"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
-
+    >>> satisfiable(A & ~B, return_model=False)
+    True
+    >>> satisfiable(A & ~A, return_model=False)
+    False
     """
+
     if expr is True:
         return {}
     if expr is False:
         return False
-    expr = to_cnf(expr)
-    if algorithm == "dpll":
-        from sympy.logic.algorithms.dpll import dpll_satisfiable
-        return dpll_satisfiable(expr)
-    elif algorithm == "dpll2":
-        from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr)
-    raise NotImplementedError
+
+    if return_model is True:
+        expr = to_cnf(expr)
+        if algorithm == "dpll":
+            from sympy.logic.algorithms.dpll import dpll_satisfiable
+            return dpll_satisfiable(expr)
+        elif algorithm == "dpll2":
+            from sympy.logic.algorithms.dpll2 import dpll_satisfiable
+            return dpll_satisfiable(expr)
+        raise ValueError("'algorithm' must be one of 'dpll', 'dpll2'")
+
+    elif return_model is False:
+        return semantic_tableaux(expr)
+
+    else:
+        raise ValueError("'return_model' must contain a boolean value")
 
 
-def pl_true(expr, model={}):
+def pl_true(expr, model={}, deep=False):
     """
-    Return True if the propositional logic expression is true in the model,
-    and False if it is false. If the model does not specify the value for
-    every proposition, this may return None to indicate 'not obvious';
-    this may happen even when the expression is tautological.
+    Returns whether the given assignment is a model or not.
 
-    The model is implemented as a dict containing the pair symbol, boolean value.
+    If the assignment does not specify the value for every proposition,
+    this may return None to indicate 'not obvious'.
+
+
+    Parameters
+    ==========
+
+    model: dict, optional, default: {}
+        Mapping of symbols to boolean values to indicate assignment.
+
+    deep: boolean, optional, default: False
+        Gives the value of the expression under partial assignments
+        correctly. May still return None to indicate 'not obvious'.
+
 
     Examples
     ========
 
-    >>> from sympy.abc import A, B
+    >>> from sympy.abc import A, B, C
     >>> from sympy.logic.inference import pl_true
-    >>> pl_true( A & B, {A: True, B : True})
+    >>> pl_true(A & B, {A: True, B: True})
     True
-
+    >>> pl_true(A & B, {A: False})
+    False
+    >>> pl_true(A & B, {A: True})
+    >>> pl_true(A >> (B >> A))
+    True
+    >>> pl_true(A & ~A)
+    False
+    >>> pl_true(A & B)
+    >>> pl_true((C >> A) >> (B >> A), {C: True})
+    >>> pl_true((C >> A) >> (B >> A), {C: True}, deep=True)
+    True
+    >>> pl_true(A & B & (~A | ~B), {A: True})
+    >>> pl_true(A & B & (~A | ~B), {A: True}, deep=True)
+    False
+    >>> pl_true(A | B, {A: False}, deep=True)
     """
 
-    if isinstance(expr, bool):
-        return expr
-
     expr = sympify(expr)
+
+    if isinstance(expr, BooleanAtom):
+        return bool(expr)
 
     if expr.is_Symbol:
         return model.get(expr)
 
-    args = expr.args
-    func = expr.func
+    expr = eliminate_implications(expr)
 
-    if func is Not:
-        p = pl_true(args[0], model)
+    if deep:
+        atoms = set()
+        expr = _pl_interpretation(expr, atoms, model)
+        if isinstance(expr, BooleanAtom):
+            return bool(expr)
+        for atom in atoms:
+            model[atom] = True
+
+        if pl_true(expr, model, deep=False):
+            if satisfiable(Not(expr), return_model=False):
+                return None
+            else:
+                return True
+        else:
+            if satisfiable(expr, return_model=False):
+                return None
+            else:
+                return False
+
+    if isinstance(expr, Not):
+        p = pl_true(expr.args[0], model)
         if p is None:
             return None
         else:
             return not p
-    elif func is Or:
+
+    elif isinstance(expr, Or):
+        args = set(expr.args)
+        gen = (arg for arg in args if is_literal(arg))
+        for arg in gen:
+            if Not(arg) in args:
+                return True
         result = False
         for arg in args:
             p = pl_true(arg, model)
@@ -137,7 +209,13 @@ def pl_true(expr, model={}):
             if p is None:
                 result = None
         return result
-    elif func is And:
+
+    elif isinstance(expr, And):
+        args = set(expr.args)
+        gen = (arg for arg in args if is_literal(arg))
+        for arg in gen:
+            if Not(arg) in args:
+                return False
         result = True
         for arg in args:
             p = pl_true(arg, model)
@@ -147,21 +225,90 @@ def pl_true(expr, model={}):
                 result = None
         return result
 
-    elif func is Implies:
-        p, q = args
-        return pl_true(Or(Not(p), q), model)
-
-    elif func is Equivalent:
-        p, q = args
-        pt = pl_true(p, model)
-        if pt is None:
-            return None
-        qt = pl_true(q, model)
-        if qt is None:
-            return None
-        return pt == qt
     else:
-        raise ValueError("Illegal operator in logic expression" + str(expr))
+        raise TypeError("Illegal operator %s" % expr.func)
+
+
+def _pl_interpretation(expr, atoms, i={}):
+    if expr.is_Atom:
+        if isinstance(i.get(expr), bool):
+            return i[expr]
+        else:
+            atoms.add(expr)
+            return expr
+    else:
+        args = [_pl_interpretation(arg, atoms, i) for arg in expr.args]
+        return expr.func(*args)
+
+
+def semantic_tableaux(expr):
+    """
+    Checks satisfiability of a formula using a Semantic Tableaux.
+
+    This method is much faster than a traditional SAT solver, however,
+    it returns only True or False. To obtain a model use 'satisfiable'.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.inference import semantic_tableaux
+    >>> semantic_tableaux(A | B)
+    True
+    >>> semantic_tableaux(A & ~A)
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Method_of_analytic_tableaux
+    """
+
+    expr = sympify(expr)
+    if isinstance(expr, BooleanAtom):
+        return bool(expr)
+    if not isinstance(expr, BooleanFunction):
+        raise TypeError("Illegal propositional expression '%s'" % expr)
+    expr = eliminate_implications(expr)
+
+    s = [set([expr])]
+
+    while s:
+        e = s.pop()
+
+        clause = None
+        flag = False
+
+        for c in e:
+            if c.is_Atom or c.is_Not :
+                if Not(c) in e:
+                    flag = True
+            else:
+                clause = c
+
+        if flag:
+            continue
+        elif clause is None:
+            return True
+        else:
+            e.remove(clause)
+
+        if isinstance(clause, Or):
+            for arg in clause.args[1:]:
+                temp = set(e)
+                temp.add(arg)
+                s.append(temp)
+            e.add(clause.args[0])
+
+        elif isinstance(clause, And):
+            e.update(clause.args)
+
+        else:
+            raise TypeError("Illegal operator %s" % expr.func)
+
+        s.append(e)
+
+    return False
 
 
 class KB(object):
