@@ -1,12 +1,13 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt, gamma
 from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter
+#from sympy.printing.ccode import CCodePrinter
+from sympy.printing.rcode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 
 # import test
-from sympy import ccode
+from sympy import rcode
 
 x, y, z = symbols('x,y,z')
 g = Function('g')
@@ -14,109 +15,109 @@ g = Function('g')
 
 def test_printmethod():
     class fabs(Abs):
-        def _ccode(self, printer):
+        def _rcode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
-    assert ccode(fabs(x)) == "fabs(x)"
+    assert rcode(fabs(x)) == "fabs(x)"
 
 
-def test_ccode_sqrt():
-    assert ccode(sqrt(x)) == "sqrt(x)"
-    assert ccode(x**0.5) == "sqrt(x)"
-    assert ccode(sqrt(x)) == "sqrt(x)"
+def test_rcode_sqrt():
+    assert rcode(sqrt(x)) == "sqrt(x)"
+    assert rcode(x**0.5) == "sqrt(x)"
+    assert rcode(sqrt(x)) == "sqrt(x)"
 
 
-def test_ccode_Pow():
-    assert ccode(x**3) == "pow(x, 3)"
-    assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
-    assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
+def test_rcode_Pow():
+    assert rcode(x**3) == "pow(x, 3)"
+    assert rcode(x**(y**3)) == "pow(x, pow(y, 3))"
+    assert rcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
-    assert ccode(x**-1.0) == '1.0/x'
-    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
+    assert rcode(x**-1.0) == '1.0/x'
+    assert rcode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
                    (lambda base, exp: not exp.is_integer, "pow")]
-    assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
-    assert ccode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
+    assert rcode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
+    assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
 
 
-def test_ccode_constants_mathh():
-    assert ccode(exp(1)) == "M_E"
-    assert ccode(pi) == "M_PI"
-    assert ccode(oo) == "HUGE_VAL"
-    assert ccode(-oo) == "-HUGE_VAL"
+def test_rcode_constants_mathh():
+    assert rcode(exp(1)) == "M_E"
+    assert rcode(pi) == "M_PI"
+    assert rcode(oo) == "HUGE_VAL"
+    assert rcode(-oo) == "-HUGE_VAL"
 
 
-def test_ccode_constants_other():
-    assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
-    assert ccode(
+def test_rcode_constants_other():
+    assert rcode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert rcode(
         2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
-    assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
+    assert rcode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 
-def test_ccode_Rational():
-    assert ccode(Rational(3, 7)) == "3.0L/7.0L"
-    assert ccode(Rational(18, 9)) == "2"
-    assert ccode(Rational(3, -7)) == "-3.0L/7.0L"
-    assert ccode(Rational(-3, -7)) == "3.0L/7.0L"
-    assert ccode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
-    assert ccode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
+def test_rcode_Rational():
+    assert rcode(Rational(3, 7)) == "3.0L/7.0L"
+    assert rcode(Rational(18, 9)) == "2"
+    assert rcode(Rational(3, -7)) == "-3.0L/7.0L"
+    assert rcode(Rational(-3, -7)) == "3.0L/7.0L"
+    assert rcode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
+    assert rcode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
 
 
-def test_ccode_Integer():
-    assert ccode(Integer(67)) == "67"
-    assert ccode(Integer(-1)) == "-1"
+def test_rcode_Integer():
+    assert rcode(Integer(67)) == "67"
+    assert rcode(Integer(-1)) == "-1"
 
 
-def test_ccode_functions():
-    assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+def test_rcode_functions():
+    assert rcode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
 
 
-def test_ccode_inline_function():
+def test_rcode_inline_function():
     x = symbols('x')
     g = implemented_function('g', Lambda(x, 2*x))
-    assert ccode(g(x)) == "2*x"
+    assert rcode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert ccode(
+    assert rcode(
         g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
-    assert ccode(g(A[i]), assign_to=A[i]) == (
+    assert rcode(g(A[i]), assign_to=A[i]) == (
         "for (int i=0; i<n; i++){\n"
         "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
     )
 
 
-def test_ccode_exceptions():
-    assert ccode(ceiling(x)) == "ceil(x)"
-    assert ccode(Abs(x)) == "fabs(x)"
-    assert ccode(gamma(x)) == "tgamma(x)"
+def test_rcode_exceptions():
+    assert rcode(ceiling(x)) == "ceil(x)"
+    assert rcode(Abs(x)) == "fabs(x)"
+    assert rcode(gamma(x)) == "tgamma(x)"
 
 
-def test_ccode_user_functions():
+def test_rcode_user_functions():
     x = symbols('x', integer=False)
     n = symbols('n', integer=True)
     custom_functions = {
         "ceiling": "ceil",
         "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
     }
-    assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
-    assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
-    assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
+    assert rcode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
+    assert rcode(Abs(x), user_functions=custom_functions) == "fabs(x)"
+    assert rcode(Abs(n), user_functions=custom_functions) == "abs(n)"
 
 
-def test_ccode_boolean():
-    assert ccode(x & y) == "x && y"
-    assert ccode(x | y) == "x || y"
-    assert ccode(~x) == "!x"
-    assert ccode(x & y & z) == "x && y && z"
-    assert ccode(x | y | z) == "x || y || z"
-    assert ccode((x & y) | z) == "z || x && y"
-    assert ccode((x | y) & z) == "z && (x || y)"
+def test_rcode_boolean():
+    assert rcode(x & y) == "x && y"
+    assert rcode(x | y) == "x || y"
+    assert rcode(~x) == "!x"
+    assert rcode(x & y & z) == "x && y && z"
+    assert rcode(x | y | z) == "x || y || z"
+    assert rcode((x & y) | z) == "z || x && y"
+    assert rcode((x | y) & z) == "z && (x || y)"
 
 
-def test_ccode_Piecewise():
-    p = ccode(Piecewise((x, x < 1), (x**2, True)))
+def test_rcode_Piecewise():
+    p = rcode(Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
 if (x < 1) {
@@ -129,8 +130,8 @@ else {
     assert p == s
 
 
-def test_ccode_Piecewise_deep():
-    p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
+def test_rcode_Piecewise_deep():
+    p = rcode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
 2*((x < 1) ? (
@@ -143,11 +144,11 @@ def test_ccode_Piecewise_deep():
     assert p == s
 
 
-def test_ccode_settings():
-    raises(TypeError, lambda: ccode(sin(x), method="garbage"))
+def test_rcode_settings():
+    raises(TypeError, lambda: rcode(sin(x), method="garbage"))
 
 
-def test_ccode_Indexed():
+def test_rcode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
@@ -165,18 +166,18 @@ def test_ccode_Indexed():
     assert p._not_c == set()
 
 
-def test_ccode_Indexed_without_looking_for_contraction():
+def test_rcode_Indexed_without_looking_for_contraction():
     len_y = 5
     y = IndexedBase('y', shape=(len_y,))
     x = IndexedBase('x', shape=(len_y,))
     Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
     e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
-    code0 = ccode(e.rhs, assign_to=e.lhs, contract=False)
+    code0 = rcode(e.rhs, assign_to=e.lhs, contract=False)
     assert code0 == 'Dy[i] = (y[%s] - y[i])/(x[%s] - x[i]);' % (i + 1, i + 1)
 
 
-def test_ccode_loops_matrix_vector():
+def test_rcode_loops_matrix_vector():
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -194,7 +195,7 @@ def test_ccode_loops_matrix_vector():
         '   }\n'
         '}'
     )
-    c = ccode(A[i, j]*x[j], assign_to=y[i])
+    c = rcode(A[i, j]*x[j], assign_to=y[i])
     assert c == s
 
 
@@ -212,11 +213,11 @@ def test_dummy_loops():
         '   y[i_%(icount)i] = x[i_%(icount)i];\n'
         '}'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
-    code = ccode(x[i], assign_to=y[i])
+    code = rcode(x[i], assign_to=y[i])
     assert code == expected
 
 
-def test_ccode_loops_add():
+def test_rcode_loops_add():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m = symbols('n m', integer=True)
@@ -237,11 +238,11 @@ def test_ccode_loops_add():
         '   }\n'
         '}'
     )
-    c = ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
+    c = rcode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
     assert c == s
 
 
-def test_ccode_loops_multiple_contractions():
+def test_rcode_loops_multiple_contractions():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
@@ -267,11 +268,11 @@ def test_ccode_loops_multiple_contractions():
         '   }\n'
         '}'
     )
-    c = ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
+    c = rcode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
     assert c == s
 
 
-def test_ccode_loops_addfactor():
+def test_rcode_loops_addfactor():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
@@ -298,11 +299,11 @@ def test_ccode_loops_addfactor():
         '   }\n'
         '}'
     )
-    c = ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
+    c = rcode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
     assert c == s
 
 
-def test_ccode_loops_multiple_terms():
+def test_rcode_loops_multiple_terms():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
@@ -342,7 +343,7 @@ def test_ccode_loops_multiple_terms():
         '   }\n'
         '}\n'
     )
-    c = ccode(
+    c = rcode(
         b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
