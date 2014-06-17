@@ -924,10 +924,10 @@ def test_issue_4420():
 
 
 def test_inverses():
-    raises(AttributeError, lambda: sin(x).inverse())
-    raises(AttributeError, lambda: cos(x).inverse())
     assert tan(x).inverse() == atan
     assert cot(x).inverse() == acot
+    assert sin(x).inverse() == asin
+    assert cos(x).inverse() == acos
     raises(AttributeError, lambda: csc(x).inverse())
     raises(AttributeError, lambda: sec(x).inverse())
     assert asin(x).inverse() == sin

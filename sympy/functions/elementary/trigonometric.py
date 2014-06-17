@@ -175,6 +175,9 @@ class sin(TrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        return asin
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -403,6 +406,9 @@ class cos(TrigonometricFunction):
             return -sin(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return acos
 
     @classmethod
     def eval(cls, arg):
