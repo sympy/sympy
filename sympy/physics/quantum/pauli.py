@@ -11,6 +11,21 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 class SigmaOpBase(Operator):
     """Pauli sigma x operator"""
 
+    @property
+    def name(self):
+        return self.args[0]
+
+    @property
+    def use_name(self):
+        return self.args[0] != False
+
+    @classmethod
+    def default_args(self):
+        return (False,)
+
+    def __new__(cls, *args, **hints):
+        return Operator.__new__(cls, *args, **hints)
+
     def _eval_commutator_BosonOp(self, other, **hints):
         return Integer(0)
 
@@ -19,13 +34,19 @@ class SigmaX(SigmaOpBase):
     """Pauli sigma x operator"""
 
     def __new__(cls, *args, **hints):
-        return Operator.__new__(cls, *args, **hints)
+        return SigmaOpBase.__new__(cls, *args, **hints)
 
     def _eval_commutator_SigmaY(self, other, **hints):
-        return 2 * I * SigmaZ()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return 2 * I * SigmaZ(self.name)
 
     def _eval_commutator_SigmaZ(self, other, **hints):
-        return - 2 * I * SigmaY()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return - 2 * I * SigmaY(self.name)
 
     def _eval_commutator_BosonOp(self, other, **hints):
         return Integer(0)
@@ -40,31 +61,41 @@ class SigmaX(SigmaOpBase):
         return self
 
     def _print_contents_latex(self, printer, *args):
-        return r'{\sigma_x}'
+        if self.use_name:
+            return r'{\sigma_x^{(%s)}}' % str(self.name)
+        else:
+            return r'{\sigma_x}'
 
     def _print_contents(self, printer, *args):
         return 'SigmaX()'
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
-            return SigmaX().__pow__(int(e) % 2)
+            return SigmaX(self.name).__pow__(int(e) % 2)
 
     def __mul__(self, other):
 
-        if isinstance(other, SigmaX):
-            return IdentityOperator(2)
+        if isinstance(other, SigmaOpBase) and self.name != other.name:
+            # Pauli matrices with different labels commute; sort by name
+            if self.name < other.name:
+                return Mul(self, other)
+            else:
+                return Mul(other, self)
 
-        if isinstance(other, SigmaY):
-            return I * SigmaZ()
+        if isinstance(other, SigmaX) and self.name == other.name:
+            return Integer(1)
 
-        if isinstance(other, SigmaZ):
-            return - I * SigmaY()
+        if isinstance(other, SigmaY) and self.name == other.name:
+            return I * SigmaZ(self.name)
 
-        if isinstance(other, SigmaMinus):
-            return (IdentityOperator(2) + SigmaZ())/2
+        if isinstance(other, SigmaZ) and self.name == other.name:
+            return - I * SigmaY(self.name)
 
-        if isinstance(other, SigmaPlus):
-            return (IdentityOperator(2) - SigmaZ())/2
+        if isinstance(other, SigmaMinus) and self.name == other.name:
+            return (Integer(1)/2 + SigmaZ(self.name)/2)
+
+        if isinstance(other, SigmaPlus) and self.name == other.name:
+            return (Integer(1)/2 - SigmaZ(self.name)/2)
 
         if isinstance(other, Mul):
             args1 = tuple(arg for arg in other.args if arg.is_commutative)
@@ -89,13 +120,19 @@ class SigmaY(SigmaOpBase):
     """Pauli sigma y operator"""
 
     def __new__(cls, *args, **hints):
-        return Operator.__new__(cls, *args)
+        return SigmaOpBase.__new__(cls, *args)
 
     def _eval_commutator_SigmaZ(self, other, **hints):
-        return 2 * I * SigmaX()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return 2 * I * SigmaX(self.name)
 
     def _eval_commutator_SigmaX(self, other, **hints):
-        return - 2 * I * SigmaZ()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return - 2 * I * SigmaZ(self.name)
 
     def _eval_anticommutator_SigmaX(self, other, **hints):
         return Integer(0)
@@ -107,31 +144,41 @@ class SigmaY(SigmaOpBase):
         return self
 
     def _print_contents_latex(self, printer, *args):
-        return r'{\sigma_y}'
+        if self.use_name:
+            return r'{\sigma_y^{(%s)}}' % str(self.name)
+        else:
+            return r'{\sigma_y}'
 
     def _print_contents(self, printer, *args):
         return 'SigmaY()'
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
-            return SigmaY().__pow__(int(e) % 2)
+            return SigmaY(self.name).__pow__(int(e) % 2)
 
     def __mul__(self, other):
 
-        if isinstance(other, SigmaX):
-            return - I * SigmaZ()
+        if isinstance(other, SigmaOpBase) and self.name != other.name:
+            # Pauli matrices with different labels commute; sort by name
+            if self.name < other.name:
+                return Mul(self, other)
+            else:
+                return Mul(other, self)
 
-        if isinstance(other, SigmaY):
-            return IdentityOperator(2)
+        if isinstance(other, SigmaX) and self.name == other.name:
+            return - I * SigmaZ(self.name)
 
-        if isinstance(other, SigmaZ):
-            return I * SigmaX()
+        if isinstance(other, SigmaY) and self.name == other.name:
+            return Integer(1)
 
-        if isinstance(other, SigmaMinus):
-            return -I * (IdentityOperator(2) + SigmaZ())/2
+        if isinstance(other, SigmaZ) and self.name == other.name:
+            return I * SigmaX(self.name)
 
-        if isinstance(other, SigmaPlus):
-            return I * (IdentityOperator(2) - SigmaZ())/2
+        if isinstance(other, SigmaMinus) and self.name == other.name:
+            return -I * (Integer(1) + SigmaZ(self.name))/2
+
+        if isinstance(other, SigmaPlus) and self.name == other.name:
+            return I * (Integer(1) - SigmaZ(self.name))/2
 
         if isinstance(other, Mul):
             args1 = tuple(arg for arg in other.args if arg.is_commutative)
@@ -156,13 +203,19 @@ class SigmaZ(SigmaOpBase):
     """Pauli sigma z operator"""
 
     def __new__(cls, *args, **hints):
-        return Operator.__new__(cls, *args)
+        return SigmaOpBase.__new__(cls, *args)
 
     def _eval_commutator_SigmaX(self, other, **hints):
-        return 2 * I * SigmaY()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return 2 * I * SigmaY(self.name)
 
     def _eval_commutator_SigmaY(self, other, **hints):
-        return - 2 * I * SigmaX()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return - 2 * I * SigmaX(self.name)
 
     def _eval_anticommutator_SigmaX(self, other, **hints):
         return Integer(0)
@@ -174,31 +227,41 @@ class SigmaZ(SigmaOpBase):
         return self
 
     def _print_contents_latex(self, printer, *args):
-        return r'{\sigma_z}'
+        if self.use_name:
+            return r'{\sigma_z^{(%s)}}' % str(self.name)
+        else:
+            return r'{\sigma_z}'
 
     def _print_contents(self, printer, *args):
         return 'SigmaZ()'
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
-            return SigmaZ().__pow__(int(e) % 2)
+            return SigmaZ(self.name).__pow__(int(e) % 2)
 
     def __mul__(self, other):
 
-        if isinstance(other, SigmaX):
-            return I * SigmaY()
+        if isinstance(other, SigmaOpBase) and self.name != other.name:
+            # Pauli matrices with different labels commute; sort by name
+            if self.name < other.name:
+                return Mul(self, other)
+            else:
+                return Mul(other, self)
 
-        if isinstance(other, SigmaY):
-            return - I * SigmaX()
+        if isinstance(other, SigmaX) and self.name == other.name:
+            return I * SigmaY(self.name)
 
-        if isinstance(other, SigmaZ):
-            return IdentityOperator(2)
+        if isinstance(other, SigmaY) and self.name == other.name:
+            return - I * SigmaX(self.name)
 
-        if isinstance(other, SigmaMinus):
-            return -(SigmaX() - I * SigmaY())/2  # - SigmaMinus()
+        if isinstance(other, SigmaZ) and self.name == other.name:
+            return Integer(1)
 
-        if isinstance(other, SigmaPlus):
-            return (SigmaX() + I * SigmaY())/2  # SigmaPlus()
+        if isinstance(other, SigmaMinus) and self.name == other.name:
+            return - SigmaMinus(self.name) # -(SigmaX(self.name) - I * SigmaY(self.name))/2  # 
+
+        if isinstance(other, SigmaPlus) and self.name == other.name:
+            return SigmaPlus(self.name) # (SigmaX(self.name) + I * SigmaY(self.name))/2  # 
 
         if isinstance(other, Mul):
             args1 = tuple(arg for arg in other.args if arg.is_commutative)
@@ -223,54 +286,68 @@ class SigmaMinus(SigmaOpBase):
     """Pauli sigma minus operator"""
 
     def __new__(cls, *args, **hints):
-        return Operator.__new__(cls, *args)
+        return SigmaOpBase.__new__(cls, *args)
 
     def _eval_commutator_SigmaX(self, other, **hints):
-        return -SigmaZ()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return -SigmaZ(self.name)
 
     def _eval_commutator_SigmaY(self, other, **hints):
-        return I * SigmaZ()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return I * SigmaZ(self.name)
 
     def _eval_commutator_SigmaZ(self, other, **hints):
         return 2 * self
 
     def _eval_commutator_SigmaMinus(self, other, **hints):
-        return SigmaZ()
+        return SigmaZ(self.name)
 
     def _eval_anticommutator_SigmaZ(self, other, **hints):
         return Integer(0)
 
     def _eval_anticommutator_SigmaX(self, other, **hints):
-        return IdentityOperator(2)
+        return Integer(1)
 
     def _eval_anticommutator_SigmaY(self, other, **hints):
-        return - I * IdentityOperator(2)
+        return - I * Integer(1)
 
     def _eval_anticommutator_SigmaPlus(self, other, **hints):
-        return IdentityOperator(2)
+        return Integer(1)
 
     def _eval_adjoint(self):
-        return SigmaPlus()
+        return SigmaPlus(self.name)
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
             return Integer(0)
 
     def __mul__(self, other):
-        if isinstance(other, SigmaX):
-            return (IdentityOperator(2) - SigmaZ())/2
 
-        if isinstance(other, SigmaY):
-            return - I * (IdentityOperator(2) - SigmaZ())/2
+        if isinstance(other, SigmaOpBase) and self.name != other.name:
+            # Pauli matrices with different labels commute; sort by name
+            if self.name < other.name:
+                return Mul(self, other)
+            else:
+                return Mul(other, self)
 
-        if isinstance(other, SigmaZ):
-            return (SigmaX() - I * SigmaY())/2  # SigmaMinus()
+        if isinstance(other, SigmaX) and self.name == other.name:
+            return (Integer(1) - SigmaZ(self.name))/2
 
-        if isinstance(other, SigmaMinus):
+        if isinstance(other, SigmaY) and self.name == other.name:
+            return - I * (Integer(1) - SigmaZ(self.name))/2
+
+        if isinstance(other, SigmaZ) and self.name == other.name:
+            return SigmaMinus(self.name) # (SigmaX(self.name) - I * SigmaY(self.name))/2  # 
+
+        if isinstance(other, SigmaMinus) and self.name == other.name:
             return Integer(0)
 
-        if isinstance(other, SigmaPlus):
-            return (IdentityOperator(2) - SigmaZ())/2
+        if isinstance(other, SigmaPlus) and self.name == other.name:
+            return Integer(1)/2 - SigmaZ(self.name)/2
 
         if isinstance(other, Mul):
             args1 = tuple(arg for arg in other.args if arg.is_commutative)
@@ -283,7 +360,10 @@ class SigmaMinus(SigmaOpBase):
         return Mul(self, other)
 
     def _print_contents_latex(self, printer, *args):
-        return r'{\sigma_-}'
+        if self.use_name:
+            return r'{\sigma_-^{(%s)}}' % str(self.name)
+        else:
+            return r'{\sigma_-}'
 
     def _print_contents(self, printer, *args):
         return 'SigmaMinus()'
@@ -301,60 +381,76 @@ class SigmaPlus(SigmaOpBase):
     """Pauli sigma plus operator"""
 
     def __new__(cls, *args, **hints):
-        return Operator.__new__(cls, *args)
+        return SigmaOpBase.__new__(cls, *args)
 
     def _eval_commutator_SigmaX(self, other, **hints):
-        return SigmaZ()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return SigmaZ(self.name)
 
     def _eval_commutator_SigmaY(self, other, **hints):
-        return I * SigmaZ()
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return I * SigmaZ(self.name)
 
     def _eval_commutator_SigmaZ(self, other, **hints):
-        return -2 * self
+        if self.name != other.name:
+            return Integer(0)
+        else:
+            return -2 * self
 
     def _eval_commutator_SigmaMinus(self, other, **hints):
-        return SigmaZ()
+        return SigmaZ(self.name)
 
     def _eval_anticommutator_SigmaZ(self, other, **hints):
         return Integer(0)
 
     def _eval_anticommutator_SigmaX(self, other, **hints):
-        return IdentityOperator(2)
+        return Integer(1)
 
     def _eval_anticommutator_SigmaY(self, other, **hints):
-        return I * IdentityOperator(2)
+        return I * Integer(1)
 
     def _eval_anticommutator_SigmaMinus(self, other, **hints):
-        return IdentityOperator(2)
+        return Integer(1)
 
     def _eval_adjoint(self):
-        return SigmaMinus()
+        return SigmaMinus(self.name)
 
     def _eval_mul(self, other):
         return self * other
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
         if e.is_Integer and e.is_positive:
             return Integer(0)
 
     def __mul__(self, other):
 
-        if other == IdentityOperator(2):
+        if other == Integer(1):
             return self
 
-        if isinstance(other, SigmaX):
-            return (IdentityOperator(2) + SigmaZ())/2
+        if isinstance(other, SigmaOpBase) and self.name != other.name:
+            # Pauli matrices with different labels commute; sort by name
+            if self.name < other.name:
+                return Mul(self, other)
+            else:
+                return Mul(other, self)
 
-        if isinstance(other, SigmaY):
-            return I * (IdentityOperator(2) + SigmaZ())/2
+        if isinstance(other, SigmaX) and self.name == other.name:
+            return (Integer(1) + SigmaZ(self.name))/2
 
-        if isinstance(other, SigmaZ):
-            return -(SigmaX() + I * SigmaY())/2  # -SigmaPlus()
+        if isinstance(other, SigmaY) and self.name == other.name:
+            return I * (Integer(1) + SigmaZ(self.name))/2
 
-        if isinstance(other, SigmaMinus):
-            return (IdentityOperator(2) + SigmaZ())/2
+        if isinstance(other, SigmaZ) and self.name == other.name:
+            return -SigmaPlus(self.name) #-(SigmaX(self.name) + I * SigmaY(self.name))/2  # 
 
-        if isinstance(other, SigmaPlus):
+        if isinstance(other, SigmaMinus) and self.name == other.name:
+            return (Integer(1) + SigmaZ(self.name))/2
+
+        if isinstance(other, SigmaPlus) and self.name == other.name:
             return Integer(0)
 
         if isinstance(other, Mul):
@@ -368,7 +464,10 @@ class SigmaPlus(SigmaOpBase):
         return Mul(self, other)
 
     def _print_contents_latex(self, printer, *args):
-        return r'{\sigma_+}'
+        if self.use_name:
+            return r'{\sigma_+^{(%s)}}' % str(self.name)
+        else:
+            return r'{\sigma_+}'
 
     def _print_contents(self, printer, *args):
         return 'SigmaPlus()'
