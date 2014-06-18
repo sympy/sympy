@@ -180,11 +180,7 @@ def test_infinitely_indexed_set_1():
     assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(n, 2*n + 1), S.Integers)) == \
             EmptySet()
 
-    # the order of variables decide the sign in the Lambda in the imageset
     assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(n, 3*n), S.Integers)) == \
-            ImageSet(Lambda(t, -6*t), S.Integers)
-
-    assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(m, 3*m), S.Integers)) == \
             ImageSet(Lambda(t, 6*t), S.Integers)
 
 
