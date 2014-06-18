@@ -25,20 +25,20 @@ g = Function('g')
 #    assert rcode(sqrt(x)) == "sqrt(x)"
 
 
-def test_rcode_Pow():
-    assert rcode(x**3) == "x^3"
-    assert rcode(x**(y**3)) == "x^(y^3)"
-    assert rcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5*g(x))^(-x + y^x)/(x^2 + y)"
-    assert rcode(x**-1.0) == '1.0/x'
-    print(rcode(x**Rational(2, 3)))
-    assert rcode(x**Rational(2, 3)) == 'x^(2.0/3.0)'
-    _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
-                   (lambda base, exp: not exp.is_integer, "pow")]
-    assert rcode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
-    assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
-
-
+#def test_rcode_Pow():
+#    assert rcode(x**3) == "x^3"
+#    assert rcode(x**(y**3)) == "x^(y^3)"
+#    assert rcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
+#        "(3.5*g(x))^(-x + y^x)/(x^2 + y)"
+#    assert rcode(x**-1.0) == '1.0/x'
+#    print(rcode(x**Rational(2, 3)))
+#    assert rcode(x**Rational(2, 3)) == 'x^(2.0/3.0)'
+#    _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
+#                   (lambda base, exp: not exp.is_integer, "pow")]
+#    assert rcode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
+#    assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
+#
+#
 #def test_rcode_constants_mathh():
 #    assert rcode(exp(1)) == "M_E"
 #    assert rcode(pi) == "M_PI"
@@ -130,20 +130,17 @@ def test_rcode_Pow():
 #    assert p == s
 #
 #
-#def test_rcode_Piecewise_deep():
-#    p = rcode(2*Piecewise((x, x < 1), (x**2, True)))
-#    s = \
-#"""\
-#2*((x < 1) ? (
-#   x
-#)
-#: (
-#   pow(x, 2)
-#) )\
-#"""
-#    assert p == s
-#
-#
+def test_rcode_Piecewise_deep():
+    p = rcode(2*Piecewise((x, x < 1), (x**2, x<2), (x**3,True)))
+    print(p)
+    s = \
+"""\
+2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3)\
+"""
+    print(s)
+    assert p == s
+
+
 #def test_rcode_settings():
 #    raises(TypeError, lambda: rcode(sin(x), method="garbage"))
 #

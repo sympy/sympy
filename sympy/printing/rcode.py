@@ -172,17 +172,19 @@ class RCodePrinter(CodePrinter):
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
         # Top level piecewise is handled in doprint()
-        ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+        ecpairs = ["ifelse(%s,%s," % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
+	print("ecpairs=")
+	print(ecpairs)
         last_line = ""
         if expr.args[-1].cond == True:
-            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
+            last_line = "%s)" % self._print(expr.args[-1].expr)
         else:
-            ecpairs.append("(%s) ? (\n%s\n" %
+            ecpairs.append("ifelse(%s,%s)" %
                            (self._print(expr.args[-1].cond),
                             self._print(expr.args[-1].expr)))
         code = "%s" + last_line
-        return code % ": ".join(ecpairs) + " )"
+        return code % "".join(ecpairs) 
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:

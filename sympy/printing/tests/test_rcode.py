@@ -130,14 +130,10 @@ else {
 
 def test_rcode_Piecewise_deep():
     p = rcode(2*Piecewise((x, x < 1), (x**2, True)))
+    print(p)
     s = \
 """\
-2*((x < 1) ? (
-   x
-)
-: (
-   x^2
-) )\
+2*(ifelse(x < 1,x, x^2)) \
 """
     assert p == s
 
