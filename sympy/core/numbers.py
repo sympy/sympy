@@ -940,6 +940,9 @@ class Float(Number):
         import sage.all as sage
         return sage.RealNumber(str(self))
 
+    def __format__(self, format_spec):
+        return format(float(self), format_spec)
+
 # Add sympify converters
 converter[float] = converter[decimal.Decimal] = Float
 
