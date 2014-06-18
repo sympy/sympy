@@ -18,7 +18,7 @@ from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
-from sympy.core.compatibility import reduce, as_int
+from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
@@ -663,16 +663,16 @@ class MatrixBase(object):
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
         align = {
-            'left': str.ljust,
-            'right': str.rjust,
-            'center': str.center,
-            '<': str.ljust,
-            '>': str.rjust,
-            '^': str.center,
+            'left': 'ljust',
+            'right': 'rjust',
+            'center': 'center',
+            '<': 'ljust',
+            '>': 'rjust',
+            '^': 'center',
             }[align]
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
-                row[j] = align(elem, maxlen[j])
+                row[j] = getattr(elem, align)(maxlen[j])
             res[i] = "[" + colsep.join(row) + "]"
         return rowsep.join(res)
 
@@ -1825,7 +1825,7 @@ class MatrixBase(object):
                 # Minimum singular value
                 return Min(*self.singular_values())
 
-            elif (ord is None or isinstance(ord, str) and ord.lower() in
+            elif (ord is None or isinstance(ord, string_types) and ord.lower() in
                     ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)

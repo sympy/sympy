@@ -3,7 +3,7 @@ import collections
 from sympy import (
     Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp)
+    sympify, trigsimp, sstr)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
 from sympy.matrices import (
@@ -11,7 +11,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros)
-from sympy.core.compatibility import long, iterable
+from sympy.core.compatibility import long, iterable, u
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 
@@ -2120,6 +2120,12 @@ def test_issue_3959():
 
 def test_issue_5964():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
+
+
+def test_issue_7604():
+    x, y = symbols(u("x y"))
+    assert sstr(Matrix([[x, 2*y], [y**2, x + 3]])) == \
+        'Matrix([\n[   x,   2*y],\n[y**2, x + 3]])'
 
 
 def test_is_Identity():
