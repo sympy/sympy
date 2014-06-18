@@ -155,5 +155,5 @@ def rebuild(expr):
     """
     try:
         return type(expr)(*list(map(rebuild, expr.args)))
-    except:
+    except Exception:
         return expr

@@ -1159,7 +1159,7 @@ class Union(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         try:
             return Union(set.evalf() for set in self.args)
-        except:
+        except Exception:
             raise TypeError("Not all sets are evalf-able")
 
     def __iter__(self):

@@ -1712,7 +1712,7 @@ def odesimp(eq, func, order, constants, hint):
             try:
                 collectterms.sort(key=default_sort_key)
                 collectterms.reverse()
-            except:
+            except Exception:
                 pass
             assert len(eq) == 1 and eq[0].lhs == f(x)
             sol = eq[0].rhs
@@ -2292,7 +2292,7 @@ def constantsimp(expr, constants):
             else:
                 rexpr = rexpr.subs(*s)
         expr = rexpr
-    except:
+    except Exception:
         pass
     expr = __remove_linear_redundancies(expr, Cs)
 

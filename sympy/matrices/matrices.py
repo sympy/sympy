@@ -4098,7 +4098,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except:
+    except Exception:
         pass
     try:
         import numpy
@@ -4106,7 +4106,7 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except:
+    except Exception:
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 
