@@ -70,33 +70,33 @@ class FiniteField(Field, SimpleDomain):
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
-    def from_FF_python(K1, a, K0=None):
+    def from_FF_python(self, K1, a, K0=None):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_python(a.val, K0.dom))
 
-    def from_ZZ_python(K1, a, K0=None):
+    def from_ZZ_python(self, K1, a, K0=None):
         """Convert Python's ``int`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_python(a, K0))
 
-    def from_QQ_python(K1, a, K0=None):
+    def from_QQ_python(self, K1, a, K0=None):
         """Convert Python's ``Fraction`` to ``dtype``. """
         if a.denominator == 1:
             return K1.from_ZZ_python(a.numerator)
 
-    def from_FF_gmpy(K1, a, K0=None):
+    def from_FF_gmpy(self, K1, a, K0=None):
         """Convert ``ModularInteger(mpz)`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_gmpy(a.val, K0.dom))
 
-    def from_ZZ_gmpy(K1, a, K0=None):
+    def from_ZZ_gmpy(self, K1, a, K0=None):
         """Convert GMPY's ``mpz`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_gmpy(a, K0))
 
-    def from_QQ_gmpy(K1, a, K0=None):
+    def from_QQ_gmpy(self, K1, a, K0=None):
         """Convert GMPY's ``mpq`` to ``dtype``. """
         if a.denominator == 1:
             return K1.from_ZZ_gmpy(a.numerator)
 
-    def from_RealField(K1, a, K0):
+    def from_RealField(self, K1, a, K0):
         """Convert mpmath's ``mpf`` to ``dtype``. """
         p, q = K0.to_rational(a)
 
