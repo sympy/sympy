@@ -229,10 +229,12 @@ class Printer(object):
             raise AttributeError("No order defined.")
 
     def doprint(self, expr):
+        print("p4 in printer")
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
     def _print(self, expr, *args, **kwargs):
+        print("p5 in printer")
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -252,7 +254,9 @@ class Printer(object):
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
             for cls in type(expr).__mro__:
+		print("p6 printer")
                 printmethod = '_print_' + cls.__name__
+		print("printmethod="+printmethod)
                 if hasattr(self, printmethod):
                     return getattr(self, printmethod)(expr, *args, **kwargs)
 
