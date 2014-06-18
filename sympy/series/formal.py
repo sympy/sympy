@@ -11,8 +11,6 @@ from sympy.core.expr import Expr
 from sympy.polys.partfrac import apart
 from sympy.solvers import solve, rsolve
 
-import gc, traceback
-
 def FormalSeries(x=None, n=0, *args, **kwargs):
     generator = kwargs.pop("generator", None)
 
@@ -58,7 +56,7 @@ def findGenR(x, function):
     return ((coeff, k), k)
 
 
-def simpleDE(x, function):
+def simpleDE(x, function, func):
     """
     Converts a function into a simple differential equation
     """
@@ -71,33 +69,49 @@ def simpleDE(x, function):
         return eq, DE
 
     def independent(terms, k):
+        # Improve this
         terms = list(set(terms))  # Remove repeating terms
-        if len(terms) == k:
+        ind = [terms[0]]
+        for t in terms[1:]:
+            flag = True
+            for i in ind:
+                if (t/i).is_rational_function():
+                    flag = False
+                    break
+            if flag:
+                ind.append(t)
+        if len(ind) == k:
             return True
         return False
 
     a = symbols('a:4')
-    func = Function('f')(x)
 
     # Solve for case k=1
     eq, DE = makeDE(x, function, func, S.One, a)
     sol = solve(eq, a[0])
     if sol and sol[0].is_rational_function():
-        return DE.subs(a[0], sol[0]), func
+        return DE.subs(a[0], sol[0])
 
     for k in range(2, 5):
         eq, DE = makeDE(x, function, func, k, a)
         terms = [t.as_independent(x)[1] for t in eq.as_ordered_terms()]
         if independent(terms, k):
             eq = collect(eq, [function.diff(x, i) for i in range(0, k+1)])
-            coeff = [t.as_independent(x)[0] for t in eq.as_ordered_terms()]
+            coeff = []
+            for t in eq.as_ordered_terms():
+                factors = t.as_ordered_factors()
+                c = S.One
+                for f in factors:
+                    if f.is_rational_function():
+                        c *= f
+                coeff.append(c)
             sol = solve(coeff, a, dict=True)
             if sol:
                 for key, val in sol[0].iteritems():
                     DE = DE.subs(key, val)
-            return DE, func
+            return DE
 
-    return DE, func
+    return DE
 
 
 def DEtoRE(x, DE, func):
@@ -140,8 +154,10 @@ def findGen(x, function):
         if diff.is_rational_function():
             return findGenR(x, function)  # Integrate k times
 
-    DE, func = simpleDE(x, function)
-    RE, func, k = DEtoRE(x, DE, func)
+    func = Function('f')(x)
+
+    DE = simpleDE(x, function, func)
+    RE, recurr, k = DEtoRE(x, DE, func)
     generator = solveRE(x, RE, func, k)
 
     k = Symbol('k', integer=True)
