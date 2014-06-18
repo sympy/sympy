@@ -2649,8 +2649,7 @@ class Expr(Basic, EvalfMixin):
         """
         Returns asymptotic expansion for "self". See [3]_
 
-        series() calls this method if it fails. Use this method directly for additional
-        ``hir`` and ``bound`` parameters.
+        This is equivalent to ``self.series(x, oo, n)``
 
         Use the ``hir`` parameter to produce hierarchical series. It stops the recursion
         at an early level and may provide nicer and more useful results.
@@ -2660,8 +2659,8 @@ class Expr(Basic, EvalfMixin):
         using this normalised representation.
         Use the ``bound`` parameter to give limit on rewriting coefficients in its normalised form.
 
-        The optional ``logx`` parameter can be used to replace any log(x) in the
-        returned series with a symbolic value to avoid evaluating log(x) at 0.
+        If the expansion contains an order term, it will be either ``O(x**(-n))`` or ``O(w**(-n))``
+        where ``w`` belongs to the most rapidly varying expression of ``self``.
 
         Examples
         ========
@@ -2723,15 +2722,9 @@ class Expr(Basic, EvalfMixin):
             return s.subs(d, exp(logw))
 
         o = s.getO()
-        s = s.removeO()
-        if s.func is Add:
-            terms = s.args
-        else:
-            terms = [s]
-        def pow_cmp(x, y):
-            return int(x.as_coeff_exponent(d)[1] - y.as_coeff_exponent(d)[1])
-        terms = sorted(terms, cmp=pow_cmp)
-        s = 0
+        terms = s.removeO().as_ordered_terms()
+        terms = sorted(terms, cmp=lambda x, y: int(x.as_coeff_exponent(d)[1] - y.as_coeff_exponent(d)[1]))
+        s = S.Zero
         gotO = False
 
         for t in terms:

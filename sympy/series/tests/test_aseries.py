@@ -14,6 +14,10 @@ def test_simple():
     assert e.aseries(x, n=4) == 1/(6*x**3) + 1/(2*x**2) + 1/x + 1 + O(x**(-4), (x, oo))
     e = exp(sin(1/x + exp(-exp(x)))) - exp(sin(1/x))
     assert e.aseries(x, n=4) == (-1/(2*x**3) + 1/x + 1 + O(x**(-4), (x, oo)))*exp(-exp(x))
+    e3 = lambda x: exp(exp(exp(x)))
+    e = e3(x)/e3(x-1/e3(x))
+    assert e.aseries(x, n=3) == 1 + exp(x + exp(x))*exp(-exp(exp(x))) + ((-exp(x)/2 - 1/2)*exp(x + exp(x)) + \
+            exp(2*x + 2*exp(x))/2)*exp(-2*exp(exp(x))) + O(exp(-3*exp(exp(x))), (x, oo))
 
     e = exp(exp(x)/(1 - 1/x))
     assert e.aseries(x) == exp(exp(x)/(1 - 1/x))
