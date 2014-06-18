@@ -2252,7 +2252,7 @@ class Expr(Basic, EvalfMixin):
         return False
 
     def is_algebraic_expr(self, *syms):
-        '''
+        """
         This tests whether a given expression is algebraic or not, in the
         given symbols, syms. When syms is not given, all free symbols
         will be used. The rational function does not have to be in expanded
@@ -2292,7 +2292,7 @@ class Expr(Basic, EvalfMixin):
 
         - http://en.wikipedia.org/wiki/Algebraic_expression
 
-        '''
+        """
         if syms:
             syms = set(map(sympify, syms))
         else:
