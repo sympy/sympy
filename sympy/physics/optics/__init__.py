@@ -14,3 +14,7 @@ __all__ = []
 from . import waves
 from .waves import TWave
 __all__.extend(waves.__all__)
+
+from . import gaussopt
+from .gaussopt import *
+__all__.extend(gaussopt.__all__)

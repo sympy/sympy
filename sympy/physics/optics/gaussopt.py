@@ -24,6 +24,26 @@ image distance
 
 from __future__ import print_function, division
 
+__all__ = [
+    'RayTransferMatrix',
+    'FreeSpace',
+    'FlatRefraction',
+    'CurvedRefraction',
+    'FlatMirror',
+    'CurvedMirror',
+    'ThinLens',
+    'GeometricRay',
+    'BeamParameter',
+    'waist2rayleigh',
+    'rayleigh2waist',
+    'geometric_conj_ab',
+    'geometric_conj_af',
+    'geometric_conj_bf',
+    'gaussian_conj',
+    'conjugate_gauss_beams',
+]
+
+
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
     together)
 from sympy.utilities.misc import filldedent
@@ -48,7 +68,7 @@ class RayTransferMatrix(Matrix):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import RayTransferMatrix, ThinLens
+    >>> from sympy.physics.optics import RayTransferMatrix, ThinLens
     >>> from sympy import Symbol, Matrix
 
     >>> mat = RayTransferMatrix(1, 2, 3, 4)
@@ -124,7 +144,7 @@ class RayTransferMatrix(Matrix):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
         >>> mat.A
         1
@@ -139,7 +159,7 @@ class RayTransferMatrix(Matrix):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
         >>> mat.B
         2
@@ -154,7 +174,7 @@ class RayTransferMatrix(Matrix):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
         >>> mat.C
         3
@@ -169,7 +189,7 @@ class RayTransferMatrix(Matrix):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import RayTransferMatrix
+        >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
         >>> mat.D
         4
@@ -194,7 +214,7 @@ class FreeSpace(RayTransferMatrix):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import FreeSpace
+    >>> from sympy.physics.optics import FreeSpace
     >>> from sympy import symbols
     >>> d = symbols('d')
     >>> FreeSpace(d)
@@ -224,7 +244,7 @@ class FlatRefraction(RayTransferMatrix):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import FlatRefraction
+    >>> from sympy.physics.optics import FlatRefraction
     >>> from sympy import symbols
     >>> n1, n2 = symbols('n1 n2')
     >>> FlatRefraction(n1, n2)
@@ -256,7 +276,7 @@ class CurvedRefraction(RayTransferMatrix):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import CurvedRefraction
+    >>> from sympy.physics.optics import CurvedRefraction
     >>> from sympy import symbols
     >>> R, n1, n2 = symbols('R n1 n2')
     >>> CurvedRefraction(R, n1, n2)
@@ -281,7 +301,7 @@ class FlatMirror(RayTransferMatrix):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import FlatMirror
+    >>> from sympy.physics.optics import FlatMirror
     >>> FlatMirror()
     Matrix([
     [1, 0],
@@ -308,7 +328,7 @@ class CurvedMirror(RayTransferMatrix):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import CurvedMirror
+    >>> from sympy.physics.optics import CurvedMirror
     >>> from sympy import symbols
     >>> R = symbols('R')
     >>> CurvedMirror(R)
@@ -338,7 +358,7 @@ class ThinLens(RayTransferMatrix):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import ThinLens
+    >>> from sympy.physics.optics import ThinLens
     >>> from sympy import symbols
     >>> f = symbols('f')
     >>> ThinLens(f)
@@ -369,7 +389,7 @@ class GeometricRay(Matrix):
     Examples
     =======
 
-    >>> from sympy.physics.gaussopt import GeometricRay, FreeSpace
+    >>> from sympy.physics.optics import GeometricRay, FreeSpace
     >>> from sympy import symbols, Matrix
     >>> d, h, angle = symbols('d, h, angle')
 
@@ -415,7 +435,7 @@ class GeometricRay(Matrix):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import GeometricRay
+        >>> from sympy.physics.optics import GeometricRay
         >>> from sympy import symbols
         >>> h, angle = symbols('h, angle')
         >>> gRay = GeometricRay(h, angle)
@@ -432,7 +452,7 @@ class GeometricRay(Matrix):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import GeometricRay
+        >>> from sympy.physics.optics import GeometricRay
         >>> from sympy import symbols
         >>> h, angle = symbols('h, angle')
         >>> gRay = GeometricRay(h, angle)
@@ -461,7 +481,7 @@ class BeamParameter(Expr):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import BeamParameter
+    >>> from sympy.physics.optics import BeamParameter
     >>> p = BeamParameter(530e-9, 1, w=1e-3)
     >>> p.q
     1 + 1.88679245283019*I*pi
@@ -473,7 +493,7 @@ class BeamParameter(Expr):
     >>> p.z_r.n()
     5.92753330865999
 
-    >>> from sympy.physics.gaussopt import FreeSpace
+    >>> from sympy.physics.optics import FreeSpace
     >>> fs = FreeSpace(10)
     >>> p1 = fs*p
     >>> p.w.n()
@@ -520,7 +540,7 @@ class BeamParameter(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.q
         1 + 1.88679245283019*I*pi
@@ -535,7 +555,7 @@ class BeamParameter(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.radius
         0.2809/pi**2 + 1
@@ -555,7 +575,7 @@ class BeamParameter(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.w
         0.001*sqrt(0.2809/pi**2 + 1)
@@ -575,7 +595,7 @@ class BeamParameter(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.w_0
         0.00100000000000000
@@ -590,7 +610,7 @@ class BeamParameter(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.divergence
         0.00053/pi
@@ -605,7 +625,7 @@ class BeamParameter(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.gouy
         atan(0.53/pi)
@@ -623,7 +643,7 @@ class BeamParameter(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.gaussopt import BeamParameter
+        >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.waist_approximation_limit
         1.06e-6/pi
@@ -647,7 +667,7 @@ def waist2rayleigh(w, wavelen):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import waist2rayleigh
+    >>> from sympy.physics.optics import waist2rayleigh
     >>> from sympy import symbols
     >>> w, wavelen = symbols('w wavelen')
     >>> waist2rayleigh(w, wavelen)
@@ -668,7 +688,7 @@ def rayleigh2waist(z_r, wavelen):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import rayleigh2waist
+    >>> from sympy.physics.optics import rayleigh2waist
     >>> from sympy import symbols
     >>> z_r, wavelen = symbols('z_r wavelen')
     >>> rayleigh2waist(z_r, wavelen)
@@ -693,7 +713,7 @@ def geometric_conj_ab(a, b):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import geometric_conj_ab
+    >>> from sympy.physics.optics import geometric_conj_ab
     >>> from sympy import symbols
     >>> a, b = symbols('a b')
     >>> geometric_conj_ab(a, b)
@@ -722,7 +742,7 @@ def geometric_conj_af(a, f):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import geometric_conj_af, geometric_conj_bf
+    >>> from sympy.physics.optics.gaussopt import geometric_conj_af, geometric_conj_bf
     >>> from sympy import symbols
     >>> a, b, f = symbols('a b f')
     >>> geometric_conj_af(a, f)
@@ -758,7 +778,7 @@ def gaussian_conj(s_in, z_r_in, f):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import gaussian_conj
+    >>> from sympy.physics.optics import gaussian_conj
     >>> from sympy import symbols
     >>> s_in, z_r_in, f = symbols('s_in z_r_in f')
 
@@ -800,7 +820,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     Examples
     ========
 
-    >>> from sympy.physics.gaussopt import conjugate_gauss_beams
+    >>> from sympy.physics.optics import conjugate_gauss_beams
     >>> from sympy import symbols, factor
     >>> l, w_i, w_o, f = symbols('l w_i w_o f')
 
