@@ -182,6 +182,107 @@ def test_linear_3eq_order1():
     Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
     assert dsolve(eq6) == sol6
 
+def test_linear_2eq_order2():
+    x, y, z = symbols('x, y, z', function=True)
+    k, l, m, n = symbols('k, l, m, n', Integer=True)
+    t, l = symbols('t, l')
+    x0, y0 = symbols('x0, y0')
+
+    eq1 = (Eq(diff(x(t),t,t), 5*x(t) + 43*y(t)), Eq(diff(y(t),t,t), x(t) + 9*y(t)))
+    sol1 = [Eq(x(t), 43*C1*exp(t*RootOf(l**4 - 14*l**2 + 2, 0)) + 43*C2*exp(t*RootOf(l**4 - 14*l**2 + 2, 1)) + \
+    43*C3*exp(t*RootOf(l**4 - 14*l**2 + 2, 2)) + 43*C4*exp(t*RootOf(l**4 - 14*l**2 + 2, 3))), \
+    Eq(y(t), C1*(RootOf(l**4 - 14*l**2 + 2, 0)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 0)) + \
+    C2*(RootOf(l**4 - 14*l**2 + 2, 1)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 1)) + \
+    C3*(RootOf(l**4 - 14*l**2 + 2, 2)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 2)) + \
+    C4*(RootOf(l**4 - 14*l**2 + 2, 3)**2 - 5)*exp(t*RootOf(l**4 - 14*l**2 + 2, 3)))]
+    assert dsolve(eq1) == sol1
+
+    eq2 = (Eq(diff(x(t),t,t), 8*x(t)+3*y(t)+31), Eq(diff(y(t),t,t), 9*x(t)+7*y(t)+12))
+    sol2 = [Eq(x(t), 3*C1*exp(t*RootOf(l**4 - 15*l**2 + 29, 0)) + 3*C2*exp(t*RootOf(l**4 - 15*l**2 + 29, 1)) + \
+    3*C3*exp(t*RootOf(l**4 - 15*l**2 + 29, 2)) + 3*C4*exp(t*RootOf(l**4 - 15*l**2 + 29, 3)) - 181/29), \
+    Eq(y(t), C1*(RootOf(l**4 - 15*l**2 + 29, 0)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 0)) + \
+    C2*(RootOf(l**4 - 15*l**2 + 29, 1)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 1)) + \
+    C3*(RootOf(l**4 - 15*l**2 + 29, 2)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 2)) + \
+    C4*(RootOf(l**4 - 15*l**2 + 29, 3)**2 - 8)*exp(t*RootOf(l**4 - 15*l**2 + 29, 3)) + 183/29)]
+    assert dsolve(eq2) == sol2
+
+    eq3 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 3*diff(x(t),t) + 8*y(t),0))
+    sol3 = [Eq(x(t), C1*cos(t*(9/2 + sqrt(109)/2)) + C2*sin(t*(9/2 + sqrt(109)/2)) + C3*cos(t*(-sqrt(109)/2 + 9/2)) + \
+    C4*sin(t*(-sqrt(109)/2 + 9/2))), Eq(y(t), -C1*sin(t*(9/2 + sqrt(109)/2)) + C2*cos(t*(9/2 + sqrt(109)/2)) - \
+    C3*sin(t*(-sqrt(109)/2 + 9/2)) + C4*cos(t*(-sqrt(109)/2 + 9/2)))]
+    assert dsolve(eq3) == sol3
+
+    eq4 = (Eq(diff(x(t),t,t), 9*t*diff(y(t),t)-9*y(t)), Eq(diff(y(t),t,t),7*t*diff(x(t),t)-7*x(t)))
+    sol4 = [Eq(x(t), C3*t + t*Integral((9*C1*exp(3*sqrt(7)*t**2/2) + 9*C2*exp(-3*sqrt(7)*t**2/2))/t**2, t)), \
+    Eq(y(t), C4*t + t*Integral((3*sqrt(7)*C1*exp(3*sqrt(7)*t**2/2) - 3*sqrt(7)*C2*exp(-3*sqrt(7)*t**2/2))/t**2, t))]
+    assert dsolve(eq4) == sol4
+
+    eq5 = (Eq(diff(x(t),t,t), (log(t)+t**2)*diff(x(t),t)+(log(t)+t**2)*3*diff(y(t),t)), Eq(diff(y(t),t,t), \
+    (log(t)+t**2)*2*diff(x(t),t)+(log(t)+t**2)*9*diff(y(t),t)))
+    sol5 = [Eq(x(t), -sqrt(22)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C2 - \
+    C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) - C4 - \
+    (sqrt(22) + 5)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C2) + \
+    (-sqrt(22) + 5)*(C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C4))/88), \
+    Eq(y(t), -sqrt(22)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + \
+    C2 - C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) - C4)/44)]
+    assert dsolve(eq5) == sol5
+
+    eq6 = (Eq(diff(x(t),t,t), log(t)*t*diff(y(t),t) - log(t)*y(t)), Eq(diff(y(t),t,t), log(t)*t*diff(x(t),t) - log(t)*x(t)))
+    sol6 = [Eq(x(t), C3*t + t*Integral((C1*exp(Integral(t*log(t), t)) + \
+    C2*exp(-Integral(t*log(t), t)))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*exp(Integral(t*log(t), t)) - \
+    C2*exp(-Integral(t*log(t), t)))/t**2, t))]
+    assert dsolve(eq6) == sol6
+
+    eq7 = (Eq(diff(x(t),t,t), log(t)*(t*diff(x(t),t) - x(t)) + exp(t)*(t*diff(y(t),t) - y(t))), \
+    Eq(diff(y(t),t,t), (t**2)*(t*diff(x(t),t) - x(t)) + (t)*(t*diff(y(t),t) - y(t))))
+    sol7 = [Eq(x(t), C3*t + t*Integral((C1*x0 + C2*x0*Integral(t*exp(t)*exp(Integral(t**2, t))*\
+    exp(Integral(t*log(t), t))/x0**2, t))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*y0 + \
+    C2(y0*Integral(t*exp(t)*exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0**2, t) + \
+    exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0))/t**2, t))]
+    assert dsolve(eq7) == sol7
+
+def test_linear_3eq_order1():
+    x, y, z = symbols('x, y, z', function=True)
+    t = Symbol('t')
+    eq1 = (Eq(diff(x(t),t), 21*x(t)), Eq(diff(y(t),t), 17*x(t)+3*y(t)), Eq(diff(z(t),t), 5*x(t)+7*y(t)+9*z(t)))
+    sol1 = [Eq(x(t), C1*exp(-21*t)), Eq(y(t), 17*C1*exp(-21*t)/18 + C2*exp(-3*t)), \
+    Eq(z(t), 209*C1*exp(-21*t)/216 - 7*C2*exp(-3*t)/6 + C3*exp(-9*t))]
+    assert dsolve(eq1) == sol1
+
+    eq2 = (Eq(diff(x(t),t),3*y(t)-11*z(t)),Eq(diff(y(t),t),7*z(t)-3*x(t)),Eq(diff(z(t),t),11*x(t)-7*y(t)))
+    sol2 = [Eq(x(t), -7*C0 + sqrt(179)*C1*cos(sqrt(179)*t) + (-3*C2 + 11*C3)*sin(sqrt(179)*t)), \
+    Eq(y(t), -11*C0 + sqrt(179)*C2*cos(sqrt(179)*t) + (3*C1 - 7*C3)*sin(sqrt(179)*t)), \
+    Eq(z(t), -3*C0 + sqrt(179)*C3*cos(sqrt(179)*t) + (-11*C1 + 7*C2)*sin(sqrt(179)*t))]
+    assert dsolve(eq2) == sol2
+
+    eq3 = (Eq(3*diff(x(t),t),4*5*(y(t)-z(t))),Eq(4*diff(y(t),t),3*5*(z(t)-x(t))),Eq(5*diff(z(t),t),3*4*(x(t)-y(t))))
+    sol3 = [Eq(x(t), C0 + 5*sqrt(2)*C1*cos(5*sqrt(2)*t) + (20*C2/3 - 20*C3/3)*sin(5*sqrt(2)*t)), \
+    Eq(y(t), C0 + 5*sqrt(2)*C2*cos(5*sqrt(2)*t) + (-15*C1/4 + 15*C3/4)*sin(5*sqrt(2)*t)), \
+    Eq(z(t), C0 + 5*sqrt(2)*C3*cos(5*sqrt(2)*t) + (12*C1/5 - 12*C2/5)*sin(5*sqrt(2)*t))]
+
+    f = t**3 + log(t)
+    g = t**2 + sin(t)
+    eq4 = (Eq(diff(x(t),t),(4*f+g)*x(t)-f*y(t)-2*f*z(t)), Eq(diff(y(t),t),2*f*x(t)+(f+g)*y(t)-2*f*z(t)), Eq(diff(z(t),t),5*f*x(t)+f*y(t)+(-3*f+g)*z(t)))
+    sol4 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
+    + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - \
+    sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), \
+    (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
+    C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
+    exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
+    Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
+    assert dsolve(eq4) == sol4
+
+    eq5 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
+    sol5 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t) + C3*exp(2*t)), \
+    Eq(y(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t)), \
+    Eq(z(t), 2*C1*exp(2*t) + 2*C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t) + C3*t*exp(2*t) + C3*exp(2*t))]
+    assert dsolve(eq5) == sol5
+
+    eq6 = (Eq(diff(x(t),t),4*x(t) - y(t) - 2*z(t)),Eq(diff(y(t),t),2*x(t) + y(t)- 2*z(t)),Eq(diff(z(t),t),5*x(t)-3*z(t)))
+    sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), \
+    Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
+    assert dsolve(eq6) == sol6
+
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
