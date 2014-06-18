@@ -22,8 +22,8 @@ class Medium(Symbol):
     waves propagate in it.
 
 
-    Prameters
-    =========
+    Parameters
+    ==========
 
     name: string
         The display name of the Medium.
@@ -58,27 +58,24 @@ class Medium(Symbol):
 
     """
 
-    def __new__(cls, name, permittivity=e0, permeability=u0, n=None):
+    def __new__(cls, name, permittivity=None, permeability=None, n=None):
         obj = super(Medium, cls).__new__(cls, name)
         obj._permittivity = sympify(permittivity)
         obj._permeability = sympify(permeability)
         obj._n = sympify(n)
         if n is not None:
-            if permittivity != e0 and permeability == u0:
+            if permittivity != None and permeability == None:
                 obj._permeability = n**2/(c**2*obj._permittivity)
-            if permeability != u0 and permittivity == e0:
+            if permeability != None and permittivity == None:
                 obj._permittivity = n**2/(c**2*obj._permeability)
-            # XXX: There's issue with precision. Values may be
-            # different slightly.
-            #if permittivity != u0 and permittivity != e0:
-                # if n != c*sqrt(permittivity*permeability):
-                #    raise ValueError("Values are not consistent.")
-        else:
+            if permittivity != None and permittivity != None:
+                if abs(n - c*sqrt(obj._permittivity*obj._permeability)) > 1e-6:
+                   raise ValueError("Values are not consistent.")
+        elif permittivity is not None and permeability is not None:
             obj._n = c*sqrt(permittivity*permeability)
-        if n is None and permittivity == e0 and permeability == u0:
-            obj._flag = False
-        else:
-            obj._flag = True
+        elif permittivity is None and permeability is None:
+            obj._permittivity = e0
+            obj._permeability = u0
         return obj
 
     @property

@@ -30,9 +30,7 @@ def test_medium():
     assert m4 < m1
     m5 = Medium('m5', permittivity=710*10**(-12)*s**4*A**2/(m**3*kg), n=1.33)
     assert simplify(m5.intrinsic_impedance - 6.24845417765552*kg*m**2/(A**2*s**3)) == 0
-    # XXX: This is supposed to be zero but it turns out to be
-    # very close to zero and not zero.
-    # assert simplify(m5.speed - 225407863.157895*m/s) == 0
+    assert abs(m5.speed - 225407863.157895*m/s) < 1e-6*m/s
     assert simplify(m5.refractive_index - 1.33000000000000) == 0
     assert simplify(m5.permittivity - 7.1e-10*A**2*s**4/(kg*m**3)) == 0
     assert simplify(m5.permeability - 2.77206575232851e-8*kg*m/(A**2*s**2)) == 0
