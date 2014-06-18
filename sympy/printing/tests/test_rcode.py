@@ -1,8 +1,7 @@
 from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt, gamma
 from sympy.utilities.pytest import raises
-#from sympy.printing.ccode import CCodePrinter
-from sympy.printing.rcode import CCodePrinter
+from sympy.printing.rcode import RCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 
@@ -153,7 +152,7 @@ def test_rcode_Indexed():
     from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
-    p = CCodePrinter()
+    p = RCodePrinter()
     p._not_c = set()
 
     x = IndexedBase('x')[j]

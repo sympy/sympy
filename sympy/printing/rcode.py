@@ -1,7 +1,7 @@
 """
 C code printer
 
-The CCodePrinter converts single sympy expressions into single C expressions,
+The RCodePrinter converts single sympy expressions into single C expressions,
 using the functions defined in math.h where possible.
 
 A complete code generator, which uses rcode extensively, can be found in
@@ -19,7 +19,7 @@ from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
-# Used in CCodePrinter._print_Function(self)
+# Used in RCodePrinter._print_Function(self)
 known_functions = {
     "ceiling": [(lambda x: True, "ceil")],
     "Abs": [(lambda x: not x.is_integer, "fabs")],
@@ -27,7 +27,7 @@ known_functions = {
 }
 
 
-class CCodePrinter(CodePrinter):
+class RCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_rcode"
 
@@ -69,7 +69,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("CCodePrinter cannot assign to object of type %s" %
+            raise TypeError("RCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
         # keep a set of expressions that are not strictly translatable to C
@@ -279,7 +279,7 @@ def rcode(expr, assign_to=None, **settings):
         'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
-    return CCodePrinter(settings).doprint(expr, assign_to)
+    return RCodePrinter(settings).doprint(expr, assign_to)
 
 
 def print_rcode(expr, **settings):
