@@ -236,7 +236,7 @@ def dmp_sqf_part(f, u, K):
         return dup_sqf_part(f, K)
 
     if K.is_FiniteField:
-        return dmp_gf_sqf_part(f, u, K)
+        return dmp_gf_sqf_part(f, K)
 
     if dmp_zero_p(f, u):
         return f
