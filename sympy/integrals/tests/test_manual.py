@@ -4,6 +4,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    And, Heaviside, Max, S, acos, asinh, acosh)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
+from sympy.utilities.pytest import XFAIL
 
 x, y, u, n, a, b = symbols('x y u n a b')
 
@@ -143,6 +144,8 @@ def test_manualintegrate_inversetrig():
                   (sqrt(a/b)*asinh(x*sqrt(b/a))/sqrt(a), And(a > 0, b > 0)),
                   (sqrt(-a/b)*acosh(x*sqrt(-b/a))/sqrt(-a), And(a < 0, b > 0)))
 
+
+@XFAIL
 def test_manualintegrate_trig_substitution():
     assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
         sqrt(16*x**2 - 9) - 3*acos(3/(4*x))

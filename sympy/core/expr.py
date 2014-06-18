@@ -2266,7 +2266,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import Symbol, sqrt
-        >>> x = Symbol('x')
+        >>> x = Symbol('x', real=True)
         >>> sqrt(1 + x).is_rational_function()
         False
         >>> sqrt(1 + x).is_algebraic_expr()
@@ -2276,8 +2276,8 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be an algebraic
         expression to become one.
 
-        >>> from sympy import sin, factor
-        >>> a = sqrt(sin(x)**2 + 2*sin(x) + 1)/(sin(x) + 1)
+        >>> from sympy import exp, factor
+        >>> a = sqrt(exp(x)**2 + 2*exp(x) + 1)/(exp(x) + 1)
         >>> a.is_algebraic_expr(x)
         False
         >>> factor(a).is_algebraic_expr()
