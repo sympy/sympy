@@ -11,7 +11,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
-C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C1:11')
+C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 x, y, z = symbols('x:z', real=True)
 f = Function('f')
 g = Function('g')
@@ -139,6 +139,48 @@ def test_linear_2eq_order2():
     C2(y0*Integral(t*exp(t)*exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0**2, t) + \
     exp(Integral(t**2, t))*exp(Integral(t*log(t), t))/x0))/t**2, t))]
     assert dsolve(eq7) == sol7
+
+def test_linear_3eq_order1():
+    x, y, z = symbols('x, y, z', function=True)
+    t = Symbol('t')
+    eq1 = (Eq(diff(x(t),t), 21*x(t)), Eq(diff(y(t),t), 17*x(t)+3*y(t)), Eq(diff(z(t),t), 5*x(t)+7*y(t)+9*z(t)))
+    sol1 = [Eq(x(t), C1*exp(-21*t)), Eq(y(t), 17*C1*exp(-21*t)/18 + C2*exp(-3*t)), \
+    Eq(z(t), 209*C1*exp(-21*t)/216 - 7*C2*exp(-3*t)/6 + C3*exp(-9*t))]
+    assert dsolve(eq1) == sol1
+
+    eq2 = (Eq(diff(x(t),t),3*y(t)-11*z(t)),Eq(diff(y(t),t),7*z(t)-3*x(t)),Eq(diff(z(t),t),11*x(t)-7*y(t)))
+    sol2 = [Eq(x(t), -7*C0 + sqrt(179)*C1*cos(sqrt(179)*t) + (-3*C2 + 11*C3)*sin(sqrt(179)*t)), \
+    Eq(y(t), -11*C0 + sqrt(179)*C2*cos(sqrt(179)*t) + (3*C1 - 7*C3)*sin(sqrt(179)*t)), \
+    Eq(z(t), -3*C0 + sqrt(179)*C3*cos(sqrt(179)*t) + (-11*C1 + 7*C2)*sin(sqrt(179)*t))]
+    assert dsolve(eq2) == sol2
+
+    eq3 = (Eq(3*diff(x(t),t),4*5*(y(t)-z(t))),Eq(4*diff(y(t),t),3*5*(z(t)-x(t))),Eq(5*diff(z(t),t),3*4*(x(t)-y(t))))
+    sol3 = [Eq(x(t), C0 + 5*sqrt(2)*C1*cos(5*sqrt(2)*t) + (20*C2/3 - 20*C3/3)*sin(5*sqrt(2)*t)), \
+    Eq(y(t), C0 + 5*sqrt(2)*C2*cos(5*sqrt(2)*t) + (-15*C1/4 + 15*C3/4)*sin(5*sqrt(2)*t)), \
+    Eq(z(t), C0 + 5*sqrt(2)*C3*cos(5*sqrt(2)*t) + (12*C1/5 - 12*C2/5)*sin(5*sqrt(2)*t))]
+
+    f = t**3 + log(t)
+    g = t**2 + sin(t)
+    eq4 = (Eq(diff(x(t),t),(4*f+g)*x(t)-f*y(t)-2*f*z(t)), Eq(diff(y(t),t),2*f*x(t)+(f+g)*y(t)-2*f*z(t)), Eq(diff(z(t),t),5*f*x(t)+f*y(t)+(-3*f+g)*z(t)))
+    sol4 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
+    + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - \
+    sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), \
+    (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
+    C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
+    exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
+    Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
+    assert dsolve(eq4) == sol4
+
+    eq5 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
+    sol5 = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t) + C3*exp(2*t)), \
+    Eq(y(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t)), \
+    Eq(z(t), 2*C1*exp(2*t) + 2*C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t) + C3*t*exp(2*t) + C3*exp(2*t))]
+    assert dsolve(eq5) == sol5
+
+    eq6 = (Eq(diff(x(t),t),4*x(t) - y(t) - 2*z(t)),Eq(diff(y(t),t),2*x(t) + y(t)- 2*z(t)),Eq(diff(z(t),t),5*x(t)-3*z(t)))
+    sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), \
+    Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
+    assert dsolve(eq6) == sol6
 
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.

@@ -248,8 +248,8 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     sign, Piecewise, atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
+from sympy.matrices import wronskian, Matrix, eye, zeros
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -1389,6 +1389,8 @@ def classify_sysode(eq, func=None, **kwargs):
             elif matching_hints['no_of_equation'] == 3:
                 if order_eq == 1:
                     type_of_equation = check_linear_3eq_order1(eq, func, func_coef)
+                    if type_of_equation==None:
+                        type_of_equation = check_linear_neq_order1(eq, func, func_coef)
                 else:
                     type_of_equation = None
             else:
@@ -1586,10 +1588,58 @@ def check_linear_2eq_order2(eq, func, func_coef):
             return None
 
 def check_linear_3eq_order1(eq, func, func_coef):
-    return None
+    x = func[0].func
+    y = func[1].func
+    z = func[2].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    r = dict()
+    r['a1'] = fc[0,x(t),1]; r['a2'] = fc[1,y(t),1]; r['a3'] = fc[2,z(t),1]
+    r['b1'] = fc[0,x(t),0]; r['b2'] = fc[1,x(t),0]; r['b3'] = fc[2,x(t),0]
+    r['c1'] = fc[0,y(t),0]; r['c2'] = fc[1,y(t),0]; r['c3'] = fc[2,y(t),0]
+    r['d1'] = fc[0,z(t),0]; r['d2'] = fc[1,z(t),0]; r['d3'] = fc[2,z(t),0]
+    if all(not r[k].has(t) for k in 'a1 a2 a3 b1 b2 b3 c1 c2 c3 d1 d2 d3'.split()):
+        if r['c1']==r['d1']==r['d2']==0:
+            return 'type1'
+        elif r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
+        and r['b1'] == r['c2'] == r['d3'] == 0:
+            return 'type2'
+        elif r['b1'] == r['c2'] == r['d3'] == 0 and r['c1']/r['a1'] == -r['d1']/r['a1'] \
+        and r['d2']/r['a2'] == -r['b2']/r['a2'] and r['b3']/r['a3'] == -r['c3']/r['a3']:
+            return 'type3'
+        else:
+            return None
+    else:
+        for k1 in 'c1 d1 b2 d2 b3 c3'.split():
+            if r[k1] == 0:
+                continue
+            else:
+                if all(not cancel(r[k1]/r[k]).has(t) for k in 'd1 b2 d2 b3 c3'.split() if r[k]!=0) \
+                and all(not cancel(r[k1]/(r['b1'] - r[k])).has(t) for k in 'b1 c2 d3'.split() if r['b1']!=r[k]):
+                    return 'type4'
+                else:
+                    break
+        if r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
+        and r['b1'] == r['c2'] == r['d3'] == 0:
+            return 'type5'
+        else:
+            return None
 
 def check_linear_neq_order1(eq, func, func_coef):
-    return None
+    x = func[0].func
+    y = func[1].func
+    z = func[2].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    r = dict()
+    n = len(eq)
+    for i in range(n):
+        for j in range(n):
+            if (fc[i,func[j],0]/fc[i,func[i],1]).has(t):
+                return None
+    if len(eq)==3:
+        return 'type6'
+    return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
     return None
@@ -6483,7 +6533,6 @@ def _linear_2eq_order2_type2(x, y, t, r):
             psol = [psol1, psol2]
     return psol
 
-
 def _linear_2eq_order2_type3(x, y, t, r):
     C1, C2, C3, C4 = symbols('C1:5')
     if r['b1']**2 - 4*r['c1'] > 0:
@@ -6642,3 +6691,151 @@ def _linear_2eq_order2_type11(x, y, t, r):
     sol1 = C3*t + t*C.Integral(msol1.rhs/t**2, t)
     sol2 = C4*t + t*C.Integral(msol2.rhs/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
+
+def sysode_linear_3eq_order1(match_):
+    C1, C2, C3, C4 = symbols('C1:5')
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    z = match_['func'][2].func
+    func = match_['func']
+    fc = match_['func_coeff']
+    eq = match_['eq']
+    r = dict()
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    # for equations Eq(diff(x(t),t), a1*x(t)+b1*y(t)+c1*z(t)+d1),
+    # Eq(diff(y(t),t), a2*x(t)+b2*y(t)+c2*z(t)+d2) and
+    # Eq(a2*diff(y(t),t,t), a3x(t)+b3*y(t)+c3*z(t)+d3)
+    r['a1'] = fc[0,x(t),0]/fc[0,x(t),1]; r['a2'] = fc[1,x(t),0]/fc[1,y(t),1];
+    r['a3'] = fc[2,x(t),0]/fc[2,z(t),1]
+    r['b1'] = fc[0,y(t),0]/fc[0,x(t),1]; r['b2'] = fc[1,y(t),0]/fc[1,y(t),1];
+    r['b3'] = fc[2,y(t),0]/fc[2,z(t),1]
+    r['c1'] = fc[0,z(t),0]/fc[0,x(t),1]; r['c2'] = fc[1,z(t),0]/fc[1,y(t),1];
+    r['c3'] = fc[2,z(t),0]/fc[2,z(t),1]
+    const = [S(0), S(0), S(0)]
+    for i in range(2):
+        for j in Add.make_args(eq[i]):
+            if not (j.has(x(t)) or j.has(y(t))):
+                const[i] += j
+    r['d1'] = -const[0]
+    r['d2'] = -const[1]
+    r['d3'] = -const[2]
+    if match_['type_of_equation'] == 'type1':
+        sol = _linear_3eq_order1_type1(x, y, z, t, r)
+    if match_['type_of_equation'] == 'type2':
+        sol = _linear_3eq_order1_type2(x, y, z, t, r)
+    if match_['type_of_equation'] == 'type3':
+        sol = _linear_3eq_order1_type3(x, y, z, t, r)
+    if match_['type_of_equation'] == 'type4':
+        sol = _linear_3eq_order1_type4(x, y, z, t, r)
+    if match_['type_of_equation'] == 'type5':
+        sol = _linear_3eq_order1_type5(x, y, z, t, r)
+    if match_['type_of_equation'] == 'type6':
+        sol = _linear_neq_order1_type1(match_)
+    return sol
+
+def _linear_3eq_order1_type1(x, y, z, t, r):
+    C1, C2, C3, C4 = symbols('C1:5')
+    a = r['a1']; b = r['a2']; c = r['b2']
+    d = r['a3']; k = r['b3']; p = r['c3']
+    sol1 = C1*exp(a*t)
+    sol2 = b*C1*exp(a*t)/(a-c) + C2*exp(c*t)
+    sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _linear_3eq_order1_type2(x, y, z, t, r):
+    C0, C1, C2, C3 = symbols('C0:4')
+    a = r['c2']; b = r['a3']; c = r['b1']
+    k = sqrt(a**2 + b**2 + c**2)
+    sol1 = a*C0 + k*C1*cos(k*t) + (c*C2-b*C3)*sin(k*t)
+    sol2 = b*C0 + k*C2*cos(k*t) + (a*C3-c*C1)*sin(k*t)
+    sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _linear_3eq_order1_type3(x, y, z, t, r):
+    C0, C1, C2, C3 = symbols('C0:4')
+    c = sqrt(r['b1']*r['c2'])
+    b = sqrt(r['b1']*r['a3'])
+    a = sqrt(r['c2']*r['a3'])
+    k = sqrt(a**2 + b**2 + c**2)
+    sol1 = C0 + k*C1*cos(k*t) + a**-1*b*c*(C2-C3)*sin(k*t)
+    sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
+    sol3 = C0 + k*C3*cos(k*t) + a*b*c**-1*(C1-C2)*sin(k*t)
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _linear_3eq_order1_type4(x, y, z, t, r):
+    u, v, w = symbols('u, v, w', function=True)
+    a2, a3 = cancel(r['b1']/r['c1']).as_numer_denom()
+    f = cancel(r['b1']/a2)
+    b1 = cancel(r['a2']/f); b3 = cancel(r['c2']/f)
+    c1 = cancel(r['a3']/f); c2 = cancel(r['b3']/f)
+    a1, g = div(r['a1'],f)
+    b2 = div(r['b2'],f)[0]
+    c3 = div(r['c3'],f)[0]
+    trans_eq = (diff(u(t),t)-a1*u(t)-a2*v(t)-a3*w(t), diff(v(t),t)-b1*u(t)-\
+    b2*v(t)-b3*w(t), diff(w(t),t)-c1*u(t)-c2*v(t)-c3*w(t))
+    sol = dsolve(trans_eq)
+    sol1 = exp(C.Integral(g,t))*((sol[0].rhs).subs(t, C.Integral(f,t)))
+    sol2 = exp(C.Integral(g,t))*((sol[1].rhs).subs(t, C.Integral(f,t)))
+    sol3 = exp(C.Integral(g,t))*((sol[2].rhs).subs(t, C.Integral(f,t)))
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _linear_3eq_order1_type5(x, y, z, t, r):
+    return None
+
+def sysode_linear_neq_order1(match_):
+    sol = _linear_neq_order1_type1(match_)
+
+def _linear_neq_order1_type1(match_):
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    n = len(eq)
+    lamda = Symbol('lamda')
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+    M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
+    evector = M.eigenvects(simplify=True)
+    def is_complex(mat, root):
+        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
+    def is_complex_conjugate(mat, root):
+        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
+    conjugate_root = []
+    e_vector = zeros(n,1)
+    for evects in evector:
+        if evects[0] not in conjugate_root:
+            # If number of column of an eigenvector is not equal to the multiplicity
+            # of its eigenvalue then the legt eigenvectors are calculated
+            if len(evects[2])!=evects[1]:
+                var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
+                Mnew = (M - evects[0]*eye(evects[2][-1].rows))*var_mat
+                w = [0 for i in range(evects[1])]
+                w[0] = evects[2][-1]
+                for r in range(1, evects[1]):
+                    w_ = Mnew - w[r-1]
+                    sol_dict = solve(list(w_), var_mat[1:])
+                    sol_dict[var_mat[0]] = var_mat[0]
+                    for key, value in sol_dict.items():
+                        sol_dict[key] = value.subs(var_mat[0],1)
+                    w[r] = Matrix(n, 1, lambda i,j: sol_dict[var_mat[i]])
+                    evects[2].append(w[r])
+            for i in range(evects[1]):
+                C = next(constants)
+                for j in range(i+1):
+                    if evects[0].has(I):
+                        evects[2][j] = simplify(evects[2][j])
+                        e_vector += C*is_complex(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
+                        C = next(constants)
+                        e_vector += C*is_complex_conjugate(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
+                    else:
+                        e_vector += C*evects[2][j]*t**(i-j)*exp(evects[0]*t)/factorial(i-j)
+            if evects[0].has(I):
+                conjugate_root.append(conjugate(evects[0]))
+    sol = []
+    for i in range(len(eq)):
+        sol.append(Eq(func[i],e_vector[i]))
+    return sol
