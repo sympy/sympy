@@ -10,7 +10,7 @@ from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import oo, zoo
+from sympy.core.numbers import oo, zoo, Rational
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
@@ -1186,6 +1186,36 @@ class Ellipse(GeometryEntity):
                 return self._do_ellipse_intersection(o)
 
         return o.intersection(self)
+
+    def evolute(self, x='x', y='y'):
+        """The equation of evolute of the ellipse.
+
+        Parameters
+        ==========
+
+        x : str, optional
+            Label for the x-axis. Default value is 'x'.
+        y : str, optional
+            Label for the y-axis. Default value is 'y'.
+
+        Returns
+        =======
+
+        equation : sympy expression
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ellipse
+        >>> e1 = Ellipse(Point(1, 0), 3, 2)
+        >>> e1.evolute()
+        3**(2/3)*x**(2/3) + 2**(2/3)*y**(2/3) - 5**(2/3)
+        """
+        x = _symbol(x)
+        y = _symbol(y)
+        return (self.hradius*x)**Rational(2, 3) + \
+        (self.vradius*y)**Rational(2, 3) -\
+        (self.hradius**2 - self.vradius**2)**Rational(2, 3)
 
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this ellipse?"""
