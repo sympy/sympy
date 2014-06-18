@@ -466,10 +466,10 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         else:
             if len(solved) == 1:
                 result = checkpdesol(pde, Eq(func, solved[0]),
-                    order=order, solve_for_func=False)
+                    solve_for_func=False)
             else:
                 result = checkpdesol(pde, [Eq(func, t) for t in solved],
-                order=order, solve_for_func=False)
+                solve_for_func=False)
 
     # The first method includes direct substitution of the solution in
     # the PDE and simplifying.
