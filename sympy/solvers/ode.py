@@ -6769,7 +6769,6 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _linear_3eq_order1_type4(x, y, z, t, r):
-    C0, C1, C2, C3 = symbols('C0:4')
     u, v, w = symbols('u, v, w', function=True)
     a2, a3 = cancel(r['b1']/r['c1']).as_numer_denom()
     f = cancel(r['b1']/a2)
@@ -6799,67 +6798,45 @@ def _linear_neq_order1_type1(match_):
     n = len(eq)
     lamda = Symbol('lamda')
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
     M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
-    chareq = Poly(M.charpoly(lamda), lamda)
-    chareqroots = [RootOf(chareq, k) for k in range(chareq.degree())]
-    roots = []
+    evector = M.eigenvects(simplify=True)
+    def is_complex(mat, root):
+        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
+    def is_complex_conjugate(mat, root):
+        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
     conjugate_root = []
-    for root in chareqroots:
-        if isinstance(root, RootOf):
-            root = root.evalf()
-        if root.has(I):
-            if root not in conjugate_root:
-                conjugate_root.append(conjugate(root))
-        roots.append(root)
-    charroots = defaultdict(int)
-    for root in roots:
-        if root not in conjugate_root:
-            charroots[root] += 1
-    sols = zeros(n,1)
-    ev = dict()
-    startnum = [1]
-    for root, multiplicity in charroots.items():
-        ev[root] = eigen_vector(M, root, multiplicity, t, startnum)
-        sols += ev[root]
+    e_vector = zeros(n,1)
+    for evects in evector:
+        if evects[0] not in conjugate_root:
+            # If number of column of an eigenvector is not equal to the multiplicity
+            # of its eigenvalue then the legt eigenvectors are calculated
+            if len(evects[2])!=evects[1]:
+                var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
+                Mnew = (M - evects[0]*eye(evects[2][-1].rows))*var_mat
+                w = [0 for i in range(evects[1])]
+                w[0] = evects[2][-1]
+                for r in range(1, evects[1]):
+                    w_ = Mnew - w[r-1]
+                    sol_dict = solve(list(w_), var_mat[1:])
+                    sol_dict[var_mat[0]] = var_mat[0]
+                    for key, value in sol_dict.items():
+                        sol_dict[key] = value.subs(var_mat[0],1)
+                    w[r] = Matrix(n, 1, lambda i,j: sol_dict[var_mat[i]])
+                    evects[2].append(w[r])
+            for i in range(evects[1]):
+                C = next(constants)
+                for j in range(i+1):
+                    if evects[0].has(I):
+                        evects[2][j] = simplify(evects[2][j])
+                        e_vector += C*is_complex(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
+                        C = next(constants)
+                        e_vector += C*is_complex_conjugate(evects[2][j], evects[0])*t**(i-j)*exp(re(evects[0])*t)/factorial(i-j)
+                    else:
+                        e_vector += C*evects[2][j]*t**(i-j)*exp(evects[0]*t)/factorial(i-j)
+            if evects[0].has(I):
+                conjugate_root.append(conjugate(evects[0]))
     sol = []
     for i in range(len(eq)):
-        sol.append(Eq(func[i],sols[i]))
+        sol.append(Eq(func[i],e_vector[i]))
     return sol
-
-def eigen_vector(M, root, multiplicity, t, startnum):
-    # A enerator of constants
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=startnum[-1])
-
-    n = sqrt(len(M))
-    Identity_mat = eye(n)
-    var_mat = Matrix(n, 1, lambda i,j: Symbol('x'+str(i)))
-    M_ = M - root*Identity_mat
-    Mnew = M_*var_mat
-    sol_dict = solve(list(Mnew),var_mat[1:])
-    sol_dict[var_mat[0]] = var_mat[0]
-    e_vector = Matrix(n, 1, lambda i,j: cancel(sol_dict[var_mat[i]]/var_mat[0]))
-    def is_complex(mat):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*cos(im(root)*t) - im(mat[i])*sin(im(root)*t))
-    def is_complex_conjugate(mat):
-        return Matrix(n, 1, lambda i,j: re(mat[i])*sin(abs(im(root))*t) + im(mat[i])*cos(im(root)*t)*abs(im(root))/im(root))
-    w = [0 for i in range(multiplicity)]
-    w[0] = e_vector
-    for r in range(1, multiplicity):
-        w_ = Mnew - w[r-1]
-        sol_dict_ = solve(list(w_), var_mat[1:])
-        sol_dict_[var_mat[0]] = var_mat[0]
-        for key, value in sol_dict_.items():
-            sol_dict_[key] = value.subs(var_mat[0],1)
-        w[r] = Matrix(n, 1, lambda i,j: sol_dict_[var_mat[i]])
-    e_vector = zeros(n,1)
-    for i in range(multiplicity):
-        C = next(constants)
-        for j in range(i+1):
-            if w[j].has(I):
-                e_vector += C*is_complex(w[j])*exp(re(root)*t)
-                C = next(constants)
-                e_vector += C*is_complex_conjugate(w[j])*exp(re(root)*t)
-            else:
-                e_vector += C*w[j]*t**(i-j)*exp(root*t)/factorial(i-j)
-    startnum.append(int(str(C)[1:]) + 1)
-    return e_vector
