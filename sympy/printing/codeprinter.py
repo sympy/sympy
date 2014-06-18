@@ -117,7 +117,7 @@ class CodePrinter(StrPrinter):
             dummies = {None: (expr,)}
         openloop, closeloop = self._get_loop_opening_ending(indices)
 
-        # terms with no summations first
+       # terms with no summations first
         if None in dummies:
             text = StrPrinter.doprint(self, Add(*dummies[None]))
         else:

@@ -1,8 +1,7 @@
 """
-C code printer
+R code printer
 
-The RCodePrinter converts single sympy expressions into single C expressions,
-using the functions defined in math.h where possible.
+The RCodePrinter converts single sympy expressions into single R expressions,
 
 A complete code generator, which uses rcode extensively, can be found in
 sympy.utilities.codegen. The codegen module can be used to generate complete
@@ -63,7 +62,7 @@ class RCodePrinter(CodePrinter):
 
     def doprint(self, expr, assign_to=None):
         """
-        Actually format the expression as C code.
+        Actually format the expression as R code.
         """
 
         if isinstance(assign_to, string_types):
@@ -91,6 +90,7 @@ class RCodePrinter(CodePrinter):
                 lines.extend(code0)
                 lines.append("}")
         else:
+	    print("p2")
             code0 = self._doprint_a_piece(expr, assign_to)
             lines.extend(code0)
 
@@ -137,12 +137,12 @@ class RCodePrinter(CodePrinter):
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return 'pow(%s, %s)' % (self._print(expr.base),
-                                 self._print(expr.exp))
+            return '%s^%s' % (self.parenthesize(expr.base, PREC),
+                                 self.parenthesize(expr.exp, PREC))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d.0L/%d.0L' % (p, q)
+        return '%d.0/%d.0' % (p, q)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -279,6 +279,7 @@ def rcode(expr, assign_to=None, **settings):
         'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
+    print("p1")
     return RCodePrinter(settings).doprint(expr, assign_to)
 
 
