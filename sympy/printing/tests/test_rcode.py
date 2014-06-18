@@ -24,19 +24,18 @@ def test_rcode_sqrt():
     assert rcode(x**0.5) == "sqrt(x)"
     assert rcode(sqrt(x)) == "sqrt(x)"
 
-
 def test_rcode_Pow():
-    assert rcode(x**3) == "pow(x, 3)"
-    assert rcode(x**(y**3)) == "pow(x, pow(y, 3))"
+    assert rcode(x**3) == "x^3"
+    assert rcode(x**(y**3)) == "x^(y^3)"
     assert rcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+        "(3.5*g(x))^(-x + y^x)/(x^2 + y)"
     assert rcode(x**-1.0) == '1.0/x'
-    assert rcode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
+    print(rcode(x**Rational(2, 3)))
+    assert rcode(x**Rational(2, 3)) == 'x^(2.0/3.0)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
                    (lambda base, exp: not exp.is_integer, "pow")]
     assert rcode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
     assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
-
 
 def test_rcode_constants_mathh():
     assert rcode(exp(1)) == "M_E"
@@ -53,12 +52,12 @@ def test_rcode_constants_other():
 
 
 def test_rcode_Rational():
-    assert rcode(Rational(3, 7)) == "3.0L/7.0L"
+    assert rcode(Rational(3, 7)) == "3.0/7.0"
     assert rcode(Rational(18, 9)) == "2"
-    assert rcode(Rational(3, -7)) == "-3.0L/7.0L"
-    assert rcode(Rational(-3, -7)) == "3.0L/7.0L"
-    assert rcode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
-    assert rcode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
+    assert rcode(Rational(3, -7)) == "-3.0/7.0"
+    assert rcode(Rational(-3, -7)) == "3.0/7.0"
+    assert rcode(x + Rational(3, 7)) == "x + 3.0/7.0"
+    assert rcode(Rational(3, 7)*x) == "(3.0/7.0)*x"
 
 
 def test_rcode_Integer():
@@ -67,7 +66,7 @@ def test_rcode_Integer():
 
 
 def test_rcode_functions():
-    assert rcode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+    assert rcode(sin(x) ** cos(x)) == "sin(x)^cos(x)"
 
 
 def test_rcode_inline_function():
@@ -123,7 +122,7 @@ if (x < 1) {
    x
 }
 else {
-   pow(x, 2)
+   x^2
 }\
 """
     assert p == s
@@ -137,7 +136,7 @@ def test_rcode_Piecewise_deep():
    x
 )
 : (
-   pow(x, 2)
+   x^2
 ) )\
 """
     assert p == s
