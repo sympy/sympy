@@ -7,32 +7,6 @@ from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
 
-def is_literal(expr):
-    """
-    Returns True if expr is a literal, else False.
-
-    Examples
-    ========
-
-    >>> from sympy import Symbol, Or
-    >>> from sympy.abc import A, B
-    >>> from sympy.logic.inference import is_literal
-    >>> is_literal(A)
-    True
-    >>> is_literal(~A)
-    True
-    >>> is_literal(Or(A, B))
-    False
-
-    """
-
-    try:
-        literal_symbol(expr)
-        return True
-    except (ValueError):
-        return False
-
-
 def literal_symbol(literal):
     """
     The symbol in this literal (without the negation).

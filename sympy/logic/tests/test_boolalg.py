@@ -1,17 +1,17 @@
 from sympy import (symbols, sympify, Dummy, simplify, Equality, S, Interval,
-                   oo, EmptySet)
+                   oo, EmptySet, Q)
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
-    distribute_and_over_or, eliminate_implications, is_cnf, is_dnf,
-    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom
+    distribute_and_over_or, eliminate_implications, is_nnf, is_cnf, is_dnf,
+    simplify_logic, to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
+    BooleanAtom, is_literal
 )
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities import cartes
 
 
-A, B, C = symbols('A,B,C')
+A, B, C, D= symbols('A,B,C,D')
 
 
 def test_overloading():
@@ -68,7 +68,7 @@ def test_Xor():
     assert Xor(A, A) is false
     assert Xor(True, A, A) is true
     assert Xor(A, A, A, A, A) == A
-    assert Xor(True, False, False, A, B) == And(Or(A, Not(B)), Or(B, Not(A)))
+    assert Xor(True, False, False, A, B) == ~Xor(A, B)
     assert Xor(True) is true
     assert Xor(False) is false
     assert Xor(True, True ) is false
@@ -79,6 +79,9 @@ def test_Xor():
     assert Xor(True, False, False) is true
     assert Xor(True, False, A) == ~A
     assert Xor(False, False, A) == A
+    assert isinstance(Xor(A, B), Xor)
+    assert Xor(A, B, Xor(C, D)) == Xor(A, B, C, D)
+    assert Xor(A, B, Xor(B, C)) == Xor(A, C)
 
 
 def test_Not():
@@ -152,6 +155,14 @@ def test_Equivalent():
     assert Equivalent(A, Equivalent(B, C)) != Equivalent(Equivalent(A, B), C)
 
 
+def test_equal():
+    assert Not(Or(A, B)).equals( And(Not(A), Not(B)) ) is True
+    assert Equivalent(A, B).equals((A >> B) & (B >> A)) is True
+    assert ((A | ~B) & (~A | B)).equals((~A & ~B) | (A & B)) is True
+    assert (A >> B).equals(~A >> ~B) is False
+    assert (A >> (B >> A)).equals(A >> (C >> A)) is False
+
+
 def test_simplification():
     """
     Test working of simplification methods.
@@ -160,7 +171,7 @@ def test_simplification():
     set2 = [[0, 0, 0], [0, 1, 0], [1, 0, 1], [1, 1, 1]]
     from sympy.abc import w, x, y, z
     assert SOPform('xyz', set1) == Or(And(Not(x), z), And(Not(z), x))
-    assert Not(SOPform('xyz', set2)) == And(Or(Not(x), Not(z)), Or(x, z))
+    assert Not(SOPform('xyz', set2)) == Not(Or(And(Not(x), Not(z)), And(x, z)))
     assert POSform('xyz', set1 + set2) is true
     assert SOPform('xyz', set1 + set2) is true
     assert SOPform([Dummy(), Dummy(), Dummy()], set1 + set2) is true
@@ -284,14 +295,7 @@ def test_double_negation():
     assert ~(~a) == a
 
 
-def test_De_Morgan():
-
-    assert ~(A & B) == (~A) | (~B)
-    assert ~(A | B) == (~A) & (~B)
-    assert ~(A | B | C) == ~A & ~B & ~C
-
 # test methods
-
 
 def test_eliminate_implications():
     from sympy.abc import A, B, C, D
@@ -322,6 +326,29 @@ def test_distribute():
 
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
     assert distribute_or_over_and(And(A, Or(B, C))) == Or(And(A, B), And(A, C))
+
+
+def test_to_nnf():
+    assert to_nnf(true) is true
+    assert to_nnf(false) is false
+    assert to_nnf(A) == A
+    assert to_nnf(A | ~A | B) is true
+    assert to_nnf(A & ~A & B) is false
+    assert to_nnf(A >> B) == ~A | B
+    assert to_nnf(Equivalent(A, B, C)) == (~A | B) & (~B | C) & (~C | A)
+    assert to_nnf(A ^ B ^ C) == \
+            (A | B | C) & (~A | ~B | C) & (A | ~B | ~C) & (~A | B | ~C)
+    assert to_nnf(ITE(A, B, C)) == (~A | B) & (A | C)
+    assert to_nnf(Not(A | B | C)) == ~A & ~B & ~C
+    assert to_nnf(Not(A & B & C)) == ~A | ~B | ~C
+    assert to_nnf(Not(A >> B)) == A & ~B
+    assert to_nnf(Not(Equivalent(A, B, C))) == And(Or(A, B, C), Or(~A, ~B, ~C))
+    assert to_nnf(Not(A ^ B ^ C)) == \
+            (~A | B | C) & (A | ~B | C) & (A | B | ~C) & (~A | ~B | ~C)
+    assert to_nnf(Not(ITE(A, B, C))) == (~A | ~B) & (A | ~C)
+    assert to_nnf((A >> B) ^ (B >> A)) == (A & ~B) | (~A & B)
+    assert to_nnf((A >> B) ^ (B >> A), False) == \
+            (~A | ~B | A | B) & ((A & ~B) | (~A & B))
 
 
 def test_to_cnf():
@@ -367,6 +394,19 @@ def test_to_int_repr():
         sorted_recursive([[1, 2], [3, -1]])
 
 
+def test_is_nnf():
+    from sympy.abc import A, B
+    assert is_nnf(true) is True
+    assert is_nnf(A) is True
+    assert is_nnf(~A) is True
+    assert is_nnf(A & B) is True
+    assert is_nnf((A & B) | (~A & A) | (~B & B) | (~A & ~B), False) is True
+    assert is_nnf((A | B) & (~A | ~B)) is True
+    assert is_nnf(Not(Or(A, B))) is False
+    assert is_nnf(A ^ B) is False
+    assert is_nnf((A & B) | (~A & A) | (~B & B) | (~A & ~B), True) is False
+
+
 def test_is_cnf():
     x, y, z = symbols('x,y,z')
     assert is_cnf(x) is True
@@ -392,6 +432,7 @@ def test_ITE():
     assert ITE(True, True, False) is true
     assert ITE(False, True, False) is false
     assert ITE(False, False, True) is true
+    assert isinstance(ITE(A, B, C), ITE)
 
     A = True
     assert ITE(A, B, C) == B
@@ -400,6 +441,18 @@ def test_ITE():
     B = True
     assert ITE(And(A, B), B, C) == C
     assert ITE(Or(A, False), And(B, True), False) is false
+
+
+def test_is_literal():
+    assert is_literal(True) is True
+    assert is_literal(False) is True
+    assert is_literal(A) is True
+    assert is_literal(~A) is True
+    assert is_literal(Or(A, B)) is False
+    assert is_literal(Q.zero(A)) is True
+    assert is_literal(Not(Q.zero(A))) is True
+    assert is_literal(Or(A, B)) is False
+    assert is_literal(And(Q.zero(A), Q.zero(B))) is False
 
 def test_operators():
     # Mostly test __and__, __rand__, and so on
