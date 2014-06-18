@@ -162,12 +162,13 @@ def test_linear_3eq_order1():
     f = t**3 + log(t)
     g = t**2 + sin(t)
     eq4 = (Eq(diff(x(t),t),(4*f+g)*x(t)-f*y(t)-2*f*z(t)), Eq(diff(y(t),t),2*f*x(t)+(f+g)*y(t)-2*f*z(t)), Eq(diff(z(t),t),5*f*x(t)+f*y(t)+(-3*f+g)*z(t)))
-    sol4 = [Eq(x(t), (C1*cos(sqrt(3)*Integral(t**3 + log(t), t)) + C2*sin(sqrt(3)*Integral(t**3 + log(t), t)) + \
-    C3*exp(-2*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), (C1*cos(sqrt(3)*Integral(t**3 + \
-    log(t), t)) + C2*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t))), Eq(z(t), \
-    (C1*(-sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/2 + 3*cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
-    C2*(3*sin(sqrt(3)*Integral(t**3 + log(t), t))/2 + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
-    C3*exp(-2*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
+    sol4 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
+    + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - \
+    sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))), Eq(y(t), \
+    (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + \
+    C3*(sin(sqrt(3)*Integral(t**3 + log(t), t))/2 - sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*\
+    exp(Integral(-t**2 - sin(t), t))), Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*\
+    Integral(t**3 + log(t), t)) + C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
     assert dsolve(eq4) == sol4
 
     eq5 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
@@ -177,8 +178,8 @@ def test_linear_3eq_order1():
     assert dsolve(eq5) == sol5
 
     eq6 = (Eq(diff(x(t),t),4*x(t) - y(t) - 2*z(t)),Eq(diff(y(t),t),2*x(t) + y(t)- 2*z(t)),Eq(diff(z(t),t),5*x(t)-3*z(t)))
-    sol6 = [Eq(x(t), C1*exp(2*t) + C2*cos(t) + C3*sin(t)), Eq(y(t), C2*cos(t) + C3*sin(t)), \
-    Eq(z(t), C1*exp(2*t) + C2*(sin(t)/2 + 3*cos(t)/2) + C3*(3*sin(t)/2 - cos(t)/2))]
+    sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), \
+    Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
     assert dsolve(eq6) == sol6
 
 def test_checkodesol():
