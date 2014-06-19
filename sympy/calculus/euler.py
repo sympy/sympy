@@ -1,11 +1,14 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
 from sympy.core.compatibility import combinations_with_replacement
 
+
 def euler_equations(L, funcs=(), vars=()):
-    """Find the Euler-Lagrange equations for a given Lagrangian.
+    """
+    Find the Euler-Lagrange equations for a given Lagrangian.
 
     Parameters
     ==========
+
     L : Expr
         The Lagrangian that should be a function of the functions listed
         in the second argument and their first derivatives.
@@ -28,24 +31,25 @@ def euler_equations(L, funcs=(), vars=()):
 
     Returns
     =======
+
     eqns : set of Eq
         The set of differential equations, one for each function.
 
     Examples
     ========
 
-        >>> from sympy import Symbol, Function
-        >>> from sympy.calculus.euler import euler_equations
-        >>> x = Function('x')
-        >>> t = Symbol('t')
-        >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
-        >>> euler_equations(L, x(t), t)
-        set([-x(t) - Derivative(x(t), t, t) == 0])
-        >>> u = Function('u')
-        >>> x = Symbol('x')
-        >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
-        >>> euler_equations(L, u(t, x), [t, x])
-        set([-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0])
+    >>> from sympy import Symbol, Function
+    >>> from sympy.calculus.euler import euler_equations
+    >>> x = Function('x')
+    >>> t = Symbol('t')
+    >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
+    >>> euler_equations(L, x(t), t)
+    set([-x(t) - Derivative(x(t), t, t) == 0])
+    >>> u = Function('u')
+    >>> x = Symbol('x')
+    >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
+    >>> euler_equations(L, u(t, x), [t, x])
+    set([-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0])
 
     References
     ==========
@@ -77,9 +81,10 @@ def euler_equations(L, funcs=(), vars=()):
 
     for f in funcs:
         if not vars == f.args:
-            raise ValueError("Variables %s don't match function arguments: %s" % (vars, f))
+            raise ValueError("Variables %s don't match args: %s" % (vars, f))
 
-    order = max(len(d.variables) for d in L.atoms(Derivative) if d.expr in funcs)
+    order = max(len(d.variables) for d in L.atoms(Derivative)
+                if d.expr in funcs)
 
     eqns = []
     for f in funcs:

@@ -2,6 +2,7 @@ from sympy import (Symbol, Function, Derivative, Eq, cos, sin)
 from sympy.utilities.pytest import raises
 from sympy.calculus.euler import euler_equations
 
+
 def test_euler_interface():
     x = Function('x')
     y = Symbol('y')
@@ -37,7 +38,7 @@ def test_euler_sineg():
     x = Symbol('x')
     L = (psi(t, x).diff(t))**2/2 - (psi(t, x).diff(x))**2/2 + cos(psi(t, x))
     assert euler_equations(L, psi(t, x), [t, x]) == \
-        set([Eq(-sin(psi(t, x)) - Derivative(psi(t, x), t, t) + \
+        set([Eq(-sin(psi(t, x)) - Derivative(psi(t, x), t, t) +
              Derivative(psi(t, x), x, x), 0)])
 
 
@@ -52,9 +53,9 @@ def test_euler_high_order():
         k*Derivative(x(t), t)*Derivative(y(t), t, t) + \
         k*Derivative(y(t), t)*Derivative(x(t), t, t)
     assert euler_equations(L, [x(t), y(t)]) == \
-        set([Eq(-2*k*Derivative(x(t), t, t, t) - \
-        m*Derivative(y(t), t, t), 0), Eq(2*k*Derivative(y(t), t, t, t) - \
-        m*Derivative(x(t), t, t), 0)])
+        set([Eq(-2*k*Derivative(x(t), t, t, t) -
+             m*Derivative(y(t), t, t), 0), Eq(2*k*Derivative(y(t), t, t, t) -
+             m*Derivative(x(t), t, t), 0)])
 
     w = Symbol('w')
     L = x(t, w).diff(t, w)**2/2
