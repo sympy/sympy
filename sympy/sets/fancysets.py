@@ -2,11 +2,12 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass
-from sympy.sets.sets import Set, Interval, Intersection
+from sympy.sets.sets import Set, Interval, Intersection, EmptySet
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
 from sympy.core.decorators import deprecated
+from sympy.core.function import Lambda
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -147,6 +148,26 @@ class Integers(with_metaclass(Singleton, Set)):
     def _boundary(self):
         return self
 
+    def _eval_imageset(self, f):
+        from sympy import Wild
+        expr = f.expr
+        if len(f.variables) > 1:
+            return
+        n = f.variables[0]
+
+        a = Wild('a')
+        b = Wild('b')
+
+        match = expr.match(a*n + b)
+        if match[a].is_negative:
+            expr = -expr
+
+        match = expr.match(a*n + b)
+        if match[a] is S.One and match[b].is_integer:
+            expr = expr - match[b]
+
+        return ImageSet(Lambda(n, expr), S.Integers)
+
 
 class Reals(with_metaclass(Singleton, Interval)):
 
@@ -222,6 +243,33 @@ class ImageSet(Set):
     @property
     def is_iterable(self):
         return self.base_set.is_iterable
+
+    def _intersect(self, other):
+        from sympy import Dummy
+        from sympy.solvers.diophantine import diophantine
+        from sympy.sets.sets import imageset
+        if self.base_set is S.Integers:
+            if isinstance(other, ImageSet) and other.base_set is S.Integers:
+                f, g = self.lamda.expr, other.lamda.expr
+                n, m = self.lamda.variables[0], other.lamda.variables[0]
+
+                # Diophantine sorts the solutions according to the alphabetic
+                # order of the variable names, since the result should not depend
+                # on the variable name, they are replaced by the dummy variables
+                # below
+                a, b = Dummy('a'), Dummy('b')
+                f, g = f.subs(n, a), g.subs(m, b)
+                solns_set = diophantine(f - g)
+                if solns_set == set():
+                    return EmptySet()
+                solns = list(diophantine(f - g))
+                if len(solns) == 1:
+                    t = list(solns[0][0].free_symbols)[0]
+                else:
+                    return None
+
+                # since 'a' < 'b'
+                return imageset(Lambda(t, f.subs(a, solns[0][0])), S.Integers)
 
 
 @deprecated(useinstead="ImageSet", issue=7057, deprecated_since_version="0.7.4")
