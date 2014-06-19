@@ -3,20 +3,27 @@ from sympy.core.compatibility import combinations_with_replacement
 
 
 def euler_equations(L, funcs=(), vars=()):
-    """
-    Find the Euler-Lagrange equations for a given Lagrangian.
+    r"""
+    Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
 
     Parameters
     ==========
 
     L : Expr
         The Lagrangian that should be a function of the functions listed
-        in the second argument and their first derivatives.
+        in the second argument and their derivatives.
 
-        For example, in the case of two functions (f(x,y), g(x,y)) and
-        two independent variables (x,y) the Lagrangian would have the form::
+        For example, in the case of two functions `f(x,y)`, `g(x,y)` and
+        two independent variables `x`, `y` the Lagrangian would have the form:
 
-            L(f(x,y),g(x,y),df/dx,df/dy,dg/dx,dg/dy,x,y)
+            .. math:: L\left(f(x,y),g(x,y),\frac{\partial f(x,y)}{\partial x},
+                      \frac{\partial f(x,y)}{\partial y},
+                      \frac{\partial g(x,y)}{\partial x},
+                      \frac{\partial g(x,y)}{\partial y},x,y\right)
+
+        In many cases it is not necessary to provide anything, except the
+        Lagrangian, it will be autodetected (and an error raised if this
+        couldn't be done).
 
     funcs : Function or list/tuple of Functions
         The functions that the Lagrangian depends on. The Euler equations
@@ -24,10 +31,6 @@ def euler_equations(L, funcs=(), vars=()):
 
     vars : Symbol or list/tuple of Symbols
         The Symbols that are the independent variables of the functions.
-
-    In many cases it is not necessary to provide anything, except the
-    Lagrangian, it will be autodetected (and an error raised if this
-    couldn't be done).
 
     Returns
     =======
