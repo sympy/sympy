@@ -32,8 +32,8 @@ def euler_equations(L, funcs=(), vars=()):
     Returns
     =======
 
-    eqns : set of Eq
-        The set of differential equations, one for each function.
+    eqns : list of Eq
+        The list of differential equations, one for each function.
 
     Examples
     ========
@@ -44,12 +44,12 @@ def euler_equations(L, funcs=(), vars=()):
     >>> t = Symbol('t')
     >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
     >>> euler_equations(L, x(t), t)
-    set([-x(t) - Derivative(x(t), t, t) == 0])
+    [-x(t) - Derivative(x(t), t, t) == 0]
     >>> u = Function('u')
     >>> x = Symbol('x')
     >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
     >>> euler_equations(L, u(t, x), [t, x])
-    set([-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0])
+    [-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x) == 0]
 
     References
     ==========
@@ -92,6 +92,6 @@ def euler_equations(L, funcs=(), vars=()):
         for i in range(1, order + 1):
             for p in combinations_with_replacement(vars, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
-        eqns.append(Eq(eq, 0))
+        eqns.append(Eq(eq))
 
-    return set(eqns)
+    return eqns
