@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf
+    conjuncts, to_cnf, true
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
@@ -40,9 +40,11 @@ def literal_symbol(literal):
 def satisfiable(expr, algorithm="dpll2"):
     """
     Check satisfiability of a propositional sentence.
-    Returns a model when it succeeds
+    Returns a model when it succeeds.
+    Returns {true: true} for trivially true expressions.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -50,12 +52,10 @@ def satisfiable(expr, algorithm="dpll2"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
+    >>> satisfiable(A | ~A)
+    {True: True}
 
     """
-    if expr is True:
-        return {}
-    if expr is False:
-        return False
     expr = to_cnf(expr)
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
