@@ -1402,7 +1402,7 @@ def classify_sysode(eq, func=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_2eq_order1(eq, func, func_coef)
-                if order_eq == 2:
+                elif order_eq == 2:
                     type_of_equation = check_nonlinear_2eq_order2(eq, func, func_coef)
                 else:
                     type_of_equation = None
@@ -1695,6 +1695,7 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
     if r1 and r2 and not (r1[f].subs(x(t),u).subs(y(t),v).has(t) or \
     r2[g].subs(x(t),u).subs(y(t),v).has(t)):
         return 'type3'
+    return None
 
 def check_nonlinear_2eq_order2(eq, func, func_coef):
     return None
