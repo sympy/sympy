@@ -182,6 +182,32 @@ def test_linear_3eq_order1():
     Eq(y(t), C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), Eq(z(t), C1*exp(2*t) + 5*C2*cos(t) + 5*C3*sin(t))]
     assert dsolve(eq6) == sol6
 
+
+def test_nonlinear_2eq_order1():
+    x, y, z = symbols('x, y, z', function=True)
+    t = Symbol('t')
+    eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
+    sol1 = [[C1*exp(I/(-1/(4*C2 + 4*t))**(1/4)), C1*exp(-I/(-1/(4*C2 + 4*t))**(1/4)), \
+    C1*exp(-1/(-1/(4*C2 + 4*t))**(1/4)), C1*exp((-1/(4*C2 + 4*t))**(-1/4))], [-(-1/(4*C2 + 4*t))**(1/4), \
+    (-1/(4*C2 + 4*t))**(1/4), -I*(-1/(4*C2 + 4*t))**(1/4), I*(-1/(4*C2 + 4*t))**(1/4)]]
+    assert dsolve(eq1) == sol1
+
+    eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
+    sol2 = [[-log(C1 + 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3, \
+    -log(C1 - 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3], \
+    [-sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2, sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2]]
+    assert dsolve(eq2) == sol2
+
+    eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
+    sol3 = [[6**(2/3)/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(2/3)), \
+    6**(2/3)/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(2/3))], [sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3]]
+    assert dsolve(eq3) == sol3
+
+    eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
+    sol4 = [[-2*exp(C1)/(C2*exp(C1) + t - sin(2*t)/2)], [-2/(C1 + t - sin(2*t)/2)]]
+    assert dsolve(eq4) == sol4
+
+
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
