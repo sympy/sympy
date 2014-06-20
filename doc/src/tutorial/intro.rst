@@ -116,7 +116,7 @@ of symbolic power SymPy is capable of, to whet your appetite.
  >>> from sympy import *
  >>> x, t, z, nu = symbols('x t z nu')
 
-This will make all further example pretty print with unicode characters.
+This will make all further examples pretty print with unicode characters.
 
  >>> init_printing(use_unicode=True)
 
