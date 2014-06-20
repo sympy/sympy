@@ -823,3 +823,13 @@ def test_egyptian_fraction():
         [6, 7, 8, 9, 10, 42, 43, 44, 45, 56, 57, 58, 72, 73, 90, 1806, 1807,
          1808, 1892, 1893, 1980, 3192, 3193, 3306, 5256, 3263442, 3263443,
          3267056, 3581556, 10192056, 10650056950806]
+    assert egyptian_fraction(Rational(5, 6), "Golomb") == [2, 6, 12, 20, 30]
+    assert egyptian_fraction(Rational(5, 121), "Golomb") == [25, 1225, 3577, 7081, 11737]
+    raises(ValueError, lambda: egyptian_fraction(Rational(-4, 9)))
+    assert egyptian_fraction(Rational(8, 3), "Golomb") == [1, 2, 3, 4, 5, 6, 7,
+                                                           14, 574, 2788, 6460,
+                                                           11590, 33062, 113820]
+    assert egyptian_fraction(Rational(355, 113)) == [1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                                     10, 11, 12, 27, 744, 893588,
+                                                     1251493536607,
+                                                     20361068938197002344405230]
