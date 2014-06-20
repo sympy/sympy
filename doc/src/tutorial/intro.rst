@@ -193,8 +193,8 @@ article lists many of them.  What makes SymPy a better choice than the
 alternatives?
 
 First off, SymPy is completely free. It is open source, and licensed under the
-liberal BSD license, so you can even modify the source code and even sell if
-you want to.  This contrasts with popular commercial systems like Maple or
+liberal BSD license, so you can modify the source code and even sell it if you
+want to.  This contrasts with popular commercial systems like Maple or
 Mathematica that cost hundreds of dollars in licenses.
 
 Second, SymPy uses Python.  Most computer algebra systems invent their own
