@@ -672,6 +672,8 @@ def test_powsimp():
     eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
     assert powsimp(eq) == eq and eq.is_Mul
 
+    assert [powsimp(e) == e for e in sqrt(x**a), sqrt(x**2)]
+
 
 def test_issue_6367():
     z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
