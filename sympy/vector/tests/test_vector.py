@@ -7,6 +7,23 @@ from sympy.vector.vector import i, j, k, Vector, BaseVector, VectorAdd, \
 a, b, c = symbols('a b c')
 
 
+def test_vector_sympy():
+    """
+    Test whether the Vector framework confirms to the hashing
+    and equality testing properties of SymPy.
+    """
+    i1 = BaseVector('i1', 0)
+    assert i1 == i
+    assert i1.__hash__() == i.__hash__()
+    v1 = 3*j
+    assert v1 == j*3
+    assert v1.components == {j: 3}
+    v2 = 3*i + 4*j + 5*k
+    v3 = 2*i + 4*j + i + 4*k + k
+    assert v3 == v2
+    assert v3.__hash__() == v2.__hash__()
+
+
 def test_vector():
     assert isinstance(i, BaseVector)
     assert i != j

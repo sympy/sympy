@@ -1,9 +1,8 @@
 from sympy.simplify import simplify, trigsimp
 from sympy.core.assumptions import StdFactKB
-from sympy.core.symbol import Dummy
 from sympy.core import S, Add, Mul, sympify, Pow, Symbol, count_ops
 from sympy.core.decorators import call_highest_priority, _sympifyit
-from sympy.core.expr import Expr
+from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.numbers import Zero
 from sympy import diff, sqrt, ImmutableMatrix as Matrix
 
@@ -82,14 +81,6 @@ class Vector(Expr):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
-
-    @call_highest_priority('__req__')
-    def __eq__(self, other):
-        if isinstance(other, Vector):
-            return self.components == other.components
-        return False
-
-    __req__ = __eq__
 
     def evalf(self, *args):
         v = Vector.Zero
@@ -290,12 +281,10 @@ class Vector(Expr):
                        base_vectors]).reshape(3, 1)
 
 
-class BaseVector(Vector, Dummy):
+class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
     """
-
-    is_Atom = True
 
     def __new__(cls, name, index):
         #Verify arguments
@@ -304,13 +293,12 @@ class BaseVector(Vector, Dummy):
         if not isinstance(name, str):
             raise ValueError("name must be a valid string")
         #Initialize an object
-        obj = super(BaseVector, cls).__new__(cls, name)
-        #The _id is used for equating purposes, and for hashing
         #The '1' denotes that this is a Vector, not a Scalar
         #For now, a Symbol is used in place of an actual CoordSysRect
         #instance.
-        obj._id = (1, index, Symbol("DefaultSystem"))
-        obj._index = index
+        obj = super(BaseVector, cls).__new__(cls, S(1), S(index), \
+                                             Symbol("DefaultSystem"))
+        #The _id is used for equating purposes, and for hashing
         obj._components = {obj : S(1)}
         obj._base_vect = obj
         obj._measure_number = 1
@@ -321,17 +309,6 @@ class BaseVector(Vector, Dummy):
         obj._assumptions = StdFactKB(assumptions)
 
         return obj
-
-    @call_highest_priority('__req__')
-    def __eq__(self, other):
-        if isinstance(other, BaseVector):
-            return self._id == other._id
-        return False
-
-    def __hash__(self):
-        return self._id.__hash__()
-
-    __req__ = __eq__
 
     def __str__(self, printer=None):
         return self._name
@@ -400,9 +377,6 @@ class VectorAdd(Vector, Add):
     __repr__ = __str__
     _sympystr = __str__
 
-    def __hash__(self):
-        tup = tuple([x.__hash__() for x in self.args])
-        return tup.__hash__()
 
 class VectorMul(Vector, Mul):
     """
@@ -448,7 +422,8 @@ class VectorMul(Vector, Mul):
             newargs = [VectorMul(measure_number, x) for x in vect.args]
             return VectorAdd(*newargs)
 
-        obj = super(VectorMul, cls).__new__(cls, *args, **options)
+        obj = super(VectorMul, cls).__new__(cls, measure_number, \
+                                            vect._base_vect, **options)
         if isinstance(obj, Add):
             return VectorAdd(*obj.args)
         obj._base_vect = vect._base_vect
@@ -472,10 +447,6 @@ class VectorMul(Vector, Mul):
 
     __repr__ = __str__
     _sympystr = __str__
-
-    def __hash__(self):
-        tup = (self._base_vect.__hash__(), self._measure_number)
-        return tup.__hash__()
 
 
 class VectorZero(Vector, Zero):
