@@ -253,6 +253,7 @@ def test_line():
     assert Line((1, 1), slope=oo) == Line((1, 1), (1, 2))
     assert Line((1, 1), slope=-oo) == Line((1, 1), (1, 2))
     raises(ValueError, lambda: Line((1, 1), 1))
+    assert Line(p1, p2) == Line(p1, p2)
     assert Line(p1, p2) != Line(p2, p1)
     assert l1 != l2
     assert l1 != l3
@@ -283,17 +284,16 @@ def test_line():
     # Orthogonality
     p1_1 = Point(-x1, x1)
     l1_1 = Line(p1, p1_1)
-    assert l1.perpendicular_line(p1) != l1_1
+    assert l1.perpendicular_line(p1) == Line(Point(0, 0), Point(1, -1))
     assert Line.is_perpendicular(l1, l1_1)
     assert Line.is_perpendicular(l1, l2) is False
     p = l1.random_point()
     assert l1.perpendicular_segment(p) == p
 
     # Parallelity
-    p2_1 = Point(-2*x1, 0)
     l2_1 = Line(p3, p5)
-    assert l2.parallel_line(p1_1) != Line(p2_1, p1_1)
-    assert l2_1.parallel_line(p1) != Line(p1, Point(0, 2))
+    assert l2.parallel_line(p1_1) == Line(Point(-x1, x1), Point(-y1, 2*x1 - y1))
+    assert l2_1.parallel_line(p1) == Line(Point(0, 0), Point(0, -1))
     assert Line.is_parallel(l1, l2)
     assert Line.is_parallel(l2, l3) is False
     assert Line.is_parallel(l2, l2.parallel_line(p1_1))
@@ -346,7 +346,7 @@ def test_line():
     r5 = Ray(p2, p1)
     r6 = Ray(Point(0, 1), Point(1, 2))
     r7 = Ray(Point(0.5, 0.5), Point(1, 1))
-    assert l1.projection(r1) != Ray(p1, p2)
+    assert l1.projection(r1) == Ray(Point(0, 0), Point(2, 2))
     assert l1.projection(r2) == p1
     assert r3 != r1
     t = Symbol('t', real=True)
@@ -361,7 +361,7 @@ def test_line():
     assert s1.midpoint == Point(Rational(1, 2), Rational(1, 2))
     assert s2.length == sqrt( 2*(x1**2) )
     assert Segment((1, 1), (2, 3)).arbitrary_point() == Point(1 + t, 1 + 2*t)
-
+    assert s1.perpendicular_bisector() == Line(Point(1/2, 1/2), Point(3/2, -1/2))
     # intersections
     assert s1.intersection(Line(p6, p9)) == []
     s3 = Segment(Point(0.25, 0.25), Point(0.5, 0.5))
@@ -476,7 +476,7 @@ def test_line():
     assert p1.x <= p_s1.x and p_s1.x <= p10.x and \
         p1.y <= p_s1.y and p_s1.y <= p10.y
     s2 = Segment(p10, p1)
-
+    assert hash(s1) == hash(s2)
     p11 = p10.scale(2, 2)
     assert s1.is_similar(Segment(p10, p11))
     assert s1.is_similar(r1) is False
@@ -711,8 +711,8 @@ def test_ellipse():
     p1_2 = p2 + Point(half, 0)
     p1_3 = p2 + Point(0, 1)
     assert e1.tangent_lines(p4) == c1.tangent_lines(p4)
-    assert e2.tangent_lines(p1_2) != [Line(p1_2, p2 + Point(half, 1))]
-    assert e2.tangent_lines(p1_3) != [Line(p1_3, p2 + Point(half, 1))]
+    assert e2.tangent_lines(p1_2) == [Line(Point(3/2, 1), Point(3/2, 1/2))]
+    assert e2.tangent_lines(p1_3) == [Line(Point(1, 2), Point(5/4, 2))]
     assert c1.tangent_lines(p1_1) != [Line(p1_1, Point(0, sqrt(2)))]
     assert c1.tangent_lines(p1) == []
     assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
