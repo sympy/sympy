@@ -6795,7 +6795,6 @@ def _linear_neq_order1_type1(match_):
     func = match_['func']
     fc = match_['func_coeff']
     n = len(eq)
-    lamda = Symbol('lamda')
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
     M = Matrix(n,n,lambda i,j:-fc[i,func[j],0])
