@@ -27,3 +27,8 @@ __all__.extend(gaussopt.__all__)
 from . import medium
 from .medium import Medium
 __all__.extend(medium.__all__)
+
+
+from . import snell
+from .snell import snellslaw
+__all__.extend(medium.__all__)
