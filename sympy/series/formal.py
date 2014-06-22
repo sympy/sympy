@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import C, S, symbols, Symbol, collect, Function, Add, Mul, simplify
+from sympy import C, S, symbols, Symbol, collect, Function, Add, Mul, simplify, cancel
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq
 from sympy.functions import sign
@@ -88,7 +88,18 @@ def findgen_rational(x, function, k):
 
 
 def rational_independent(x, terms):
-    """ Returns list of rationally independent terms """
+    """
+    Returns list of rationally independent terms
+
+    Examples
+    ========
+
+    >>> rational_independent(x, [sin(x), cos(x)])
+    [sin(x), cos(x)]
+    >>> rational_independent(x, [sin(x), cos(x), x*sin(x)])
+    [x*sin(x) + sin(x), cos(x)]
+
+    """
     # XXX: Not sure if this is most efficient way
     ind = terms[0:1]
     for t in terms[1:]:
@@ -133,7 +144,10 @@ def simpleDE(x, function, func):
     eq, DE = makeDE(1)
     sol = solve(eq, a[0])
     if sol and sol[0].is_rational_function():
-        return DE.subs(a[0], sol[0])
+        sol[0] = cancel(sol[0])
+        DE = DE.subs(a[0], sol[0])
+        DE = simplify(DE)
+        return DE.as_numer_denom()[0]
 
     for k in range(2, 5):
         eq, DE = makeDE(k)
@@ -144,15 +158,15 @@ def simpleDE(x, function, func):
             sol = solve(ind, a, dict=True)
             if sol:
                 for key, val in sol[0].iteritems():
+                    val = cancel(val)
                     DE = DE.subs(key, val)
-            DE = DE.expand()
             DE = simplify(DE)
             return DE.as_numer_denom()[0]
 
     raise NotImplementedError('Cannot find simple differential equation for %s' % function)
 
 
-def DEtoRE(x, DE, recurr, n):
+def DEtoRE(x, DE, recurr, k):
     """
     Converts a differential equation into a recurrence equation
 
@@ -165,13 +179,14 @@ def DEtoRE(x, DE, recurr, n):
 
     >>> recurr = Function('r')
     >>> DE = -f(x) + Derivative(f(x), x)
-    >>> DEtoRE(x, DE, f, r, n)
-    (n + 1)*r(n + 1) - r(n)
+    >>> DEtoRE(x, DE, f, r, k)
+    (k + 1)*r(k + 1) - r(k)
 
     """
     RE = S.Zero
     DE = DE.expand()
 
+    m = None  # minimum argument or ``r`` in the RE
     for t in DE.as_ordered_terms():
         a = t.as_ordered_factors()
         a = [Mul(*a[:-1]), a[-1]]
@@ -183,7 +198,9 @@ def DEtoRE(x, DE, recurr, n):
                 j = len(a[0].args) - 1
             else:
                 j = 0
-            RE += C.RisingFactorial(n+1-l, j) * recurr(n+j-l)
+            RE += C.RisingFactorial(k+1-l, j) * recurr(k+j-l)
+            if not m or k+j-l < m:
+                m = k+j-l
         else:
             c, v = a[0].as_independent(x)
             if v.has(x):
@@ -194,18 +211,29 @@ def DEtoRE(x, DE, recurr, n):
                 j = len(a[1].args) - 1
             else:
                 j = 0
-            RE += c * C.RisingFactorial(n+1-l, j) * recurr(n+j-l)
+            RE += c * C.RisingFactorial(k+1-l, j) * recurr(k+j-l)
+            if not m or k+j-l < m:
+                m = k+j-l
+    sol = solve(m, k)
+    if sol and sol[0] > 0:
+        RE = RE.subs(k, k+sol[0])
     return RE
 
 
-def solveRE(x, RE, recurr, n, function):
+def solveRE(x, RE, recurr, k, function):
     """
     Returns generator for a given recurrence equation
     """
+    RE.expand()
+    RE = simplify(RE)
+    for s in RE.as_ordered_terms():
+        a = s.as_ordered_factors()
+        RE = collect(RE, a[-1])
+
     keys = [recurr(i) for i in range(0, 5)]
     values = [function.diff(x, i).subs(x, 0)/C.factorial(i) for i in range(0, 5)]
     init = dict(zip(keys, values))
-    sol = rsolve(RE, recurr(n), init)
+    sol = rsolve(RE, recurr(k), init)
     return sol
 
 
@@ -216,15 +244,16 @@ def findgen(x, function, k):
     for order in range(0, 5):
         diff = function.diff(x, order)
         if diff.is_rational_function():
-            return findgen_rational(x, function)  # Integrate k times
+            return findgen_rational(x, function, k)  # Integrate order times
 
     func = Function('f')
     recurr = Function('r')
-    n = C.Dummy('n', integer=True)
 
     DE = simpleDE(x, function, func)
-    RE = DEtoRE(x, DE, recurr, n)
-    return solveRE(x, RE, recurr, n, function)
+    RE = DEtoRE(x, DE, recurr, k)
+    c = solveRE(x, RE, recurr, k, function)
+
+    return (c, k, k)
 
 
 class Stream(Expr):
