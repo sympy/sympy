@@ -307,6 +307,8 @@ def TR2i(rv, half=False):
 
     """
 
+    from sympy import factor_terms
+
     def f(rv):
         if not rv.is_Mul:
             return rv
