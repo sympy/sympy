@@ -6163,61 +6163,71 @@ def _linear_2eq_order1_type1(x, y, t, r):
     It is classified under system of two linear homogeneous first-order constant-coefficient
     ordinary differential equations.
 
-    The equations which come under this type are ``Eq(diff(x(t),t), a*x(t) + b*y(t))`` and
-    ``Eq(diff(y(t),t), c*x(t) + d*y(t))``. The characteristics equation is written as
-    'a d - b c + z^{2} - z \\left(a + d\\right)' and its discriminant is
-    'D = 4 b c + \\left(a - d\\right)^{2}'. There are case
+    The equations which come under this type are
 
-    1. Case when 'a d - b c \neq 0'. The origin of coordinates, ``x`` and ``y`` is equal to zero,
+    .. math:: x' = ax + by,
+
+              y' = cx + dy
+
+    The characteristics equation is written as
+
+    .. math:: \lambda^{2} + (a+d) \lambda + ad - bc = 0
+
+    and its discriminant is `D = (a-d)^{2} + 4bc`. There are several cases
+
+    1. Case when `ad - bc \neq 0`. The origin of coordinates, `x = y = 0`,
     is the only stationary point; it is
-        a node if ``D`` is equal to ``0``
-        a node if ``D`` is greater than ``0`` and 'a d - b c' is greater than ``0``
-        a saddle if ``D`` is greater than ``0`` and 'a d - b c' is greater than ``0``
-        a focus if ``D`` is less than ``0`` and 'a + d \neq 0'
-        a centre if ``D`` is less than ``0`` and 'a + d \neq 0'.
+        - a node if `D = 0`
+        - a node if `D > 0` and `ad - bc > 0`
+        - a saddle if `D > 0` and `ad - bc < 0`
+        - a focus if `D < 0` and `a + d \neq 0`
+        - a centre if `D < 0` and `a + d \neq 0`.
 
-        1.1 If ``D`` is greater than 0. The characteristic equation ``(1)`` has two distinct real roots
-        ``z1`` and ``z2`` . The general solution of the system in question is expressed as
-       'x{\\left (t \\right )} = C_{1} b e^{t z_{1}} + C_{2} b e^{t z_{2}}'
-        and 'y{\\left (t \\right )} = C_{1} \\left(- a + z_{1}\\right) e^{t z_{1}} + C_{2} \\left(- a + z_{2}\\right) e^{t z_{2}}'
-        where ``C1`` and ``C2`` being arbitary constants
+    1.1. If `D > 0`. The characteristic equation has two distinct real roots
+    `\lambda_1` and `\lambda_ 2` . The general solution of the system in question is expressed as
 
-        1.2 If ``D`` is less than ``0``. The characteristics equation has two conjugate
-        roots, 'z_{1} = i \\beta + \\sigma' and 'z_{2} = - i \\beta + \\sigma'.
-        The general solution of the system is given by
-        'x{\\left (t \\right )} = b \\left(C_{1} \\sin{\\left (\\beta t \\right )} + C_{2} \\cos{\\left ' \
-        '(\\beta t \\right )}\\right) e^{\\sigma t}'
-        and 'y{\\left (t \\right )} = \\left(C_{1} \\beta + C_{2} \\left(- a + \\sigma\\right)\\right) ' \
-        '\\cos{\\left (\\beta t \\right )} + \\left(C_{1} \\left(- a + \\sigma\\right) - C_{2} \\beta\\right) ' \
-        'e^{\\sigma t} \\sin{\\left (\\beta t \\right )}'
+    .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t}
 
-        1.3 If ``D`` is equal to ``0`` and ``a`` is not equal to ``d``. The characteristic equation has
-        two equal roots, `z1 == z2`. The general solution of the system is written as
-        'x{\\left (t \\right )} = 2 b \\left(C_{1} + C_{2} t + \\frac{C_{2}}{a - d}\\right) e^{\\frac{t}{2} \\left(a + d\\right)}'
-        and 'y{\\left (t \\right )} = \\left(C_{1} \\left(- a + d\\right) + C_{2} t \\left(- a + d\\right) + ' \
-        'C_{2}\\right) e^{\\frac{t}{2} \\left(a + d\\right)}'
+              y = c_1 (\lambda_1 - a) e^{\lambda_1 t} + c_2 (\lambda_2 - a) e^{\lambda_2 t}
 
-        1.4 If `D = 0` and `a = d \neq 0` and `b = 0`
-        'x{\\left (t \\right )} = C_{1} e^{a t}' and
-        'y{\\left (t \\right )} = \\left(C_{1} c t + C_{2}\\right) e^{a t}'
+    where `C_1` and `C_2` being arbitary constants
 
-        1.5 If `D = 0` and `a = d \neq 0` and `c = 0`
-        'x{\\left (t \\right )} = \\left(C_{1} b t + C_{2}\\right) e^{a t}' and
-        'y{\\left (t \\right )} = C_{1} e^{a t}'
+    1.2. If `D < 0`. The characteristics equation has two conjugate
+    roots, `\lambda_1 = \sigma + i \beta` and `\lambda_2 = \sigma - i \beta`.
+    The general solution of the system is given by
 
-    2. Case when `a d - b c` is equal to ``0`` and `a^{2} + b^{2}` is greater than ``0``. The whole straight
-    line `a x + b y = 0` consists of singular points. The orginal system of differential equaitons can be
-    rewritten as
-    '\\frac{d}{d t} x{\\left (t \\right )} = a x{\\left (t \\right )} + b y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = k \\left(a x{\\left (t \\right )} + b y{\\left (t \\right )}\\right)'.
+    .. math:: x = b e^{\sigma t} (C_1 \sin(\beta t) + C_2 \cos(\beta t))
 
-        2.1 If `a + b k != 0`, Solution will be
-        'x{\\left (t \\right )} = C_{1} b + C_{2} e^{t \\left(a + b k\\right)}' and
-        'y{\\left (t \\right )} = C_{2} k e^{t \\left(a + b k\\right)} - a^{C_{1}}'
+              y = e^{\sigma t} ([(\sigma - a) C_1 - \beta C_2] \sin(\beta t) + [\beta C_1 + (\sigma - a) C_2 \cos(\beta t)])
 
-        2.2 If `a + b k = 0`, solution will be
-        'x{\\left (t \\right )} = C_{1} \\left(b k t - 1\\right) + C_{2} b t' and
-        'y{\\left (t \\right )} = C_{1} b k^{2} t + C_{2} \\left(b k^{2} t + 1\\right)'.
+    1.3. If `D = 0` and `a \neq d`. The characteristic equation has
+    two equal roots, `\lambda_1 = \lambda_2`. The general solution of the system is written as
+
+    .. math:: x = 2b (C_1 + \frac{C_2}{a-d} + C_2 t) e^{\frac{a+d}{2} t}
+
+              y = [(d - a) C_1 + C_2 + (d - a) C_2 t] e^{\frac{a+d}{2} t}
+
+    1.4. If `D = 0` and `a = d \neq 0` and `b = 0`
+
+    .. math:: x = C_1 e^{a t} , y = (c C_1 t + C_2) e^{a t}
+
+    1.5. If `D = 0` and `a = d \neq 0` and `c = 0`
+
+    .. math:: x = (b C_1 t + C_2) e^{a t} , y = C_1 e^{a t}
+
+    2. Case when `ad - bc = 0` and `a^{2} + b^{2} > 0`. The whole straight
+    line `ax + by = 0` consists of singular points. The orginal system of differential
+    equaitons can be rewritten as
+
+    .. math:: x' = ax + by , y' = k (ax + by)
+
+    2.1 If `a + bk \neq 0`, solution will be
+
+    .. math:: x = b C_1 + C_2 e^{(a + bk) t} , y = -a C_1 + k C_2 e^{(a + bk) t}
+
+    2.2 If `a + bk = 0`, solution will be
+
+    .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
 
     """
     l = Symbol('l')
@@ -6259,25 +6269,34 @@ def _linear_2eq_order1_type1(x, y, t, r):
 
 def _linear_2eq_order1_type2(x, y, t, r):
     r"""
-    The equations in this category are
-    '\\frac{d}{d t} x{\\left (t \\right )} = a x{\\left (t \\right )} + b y{\\left (t \\right )} + k_{1}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = c x{\\left (t \\right )} + d y{\\left (t \\right )} + k_{2}'.
+    The equations of this type are
+
+    .. math:: x' = ax + by + k1 , y' = cx + dy + k2
+
     The general solution og this system is given by sum of its particular solution and the
-    general solution of the corresponding homogeneous system is obtained frmo type1.
+    general solution of the corresponding homogeneous system is obtained from type1.
 
-    1. When `a d - b c != 0`. The particular solution will be
-    `x = x0` and `y = y0` where x0 and y0 are determined by solving linear system of equations
-    `a x0 + b y0 + k1 = 0` and `c x0 + d y0 + k2 = 0`
+    1. When `ad - bc \neq 0`. The particular solution will be
+    `x = x_0` and `y = y_0` where `x_0` and `y_0` are determined by solving linear system of equations
 
-    2. When `a d - b c = 0` and `a^{2} + b^{2} > 0`. In this case, the system of equation becomes
-    '\\frac{d}{d t} x{\\left (t \\right )} = a x{\\left (t \\right )} + b y{\\left (t \\right )} + k_{1}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = k \\left(a x{\\left (t \\right )} + b y{\\left (t \\right )}\\right) + k_{2}'
-        2.1 If `sigma = a + b k != 0`, particular solution is given by
-        'x{\\left (t \\right )} = \\frac{b t}{\\sigma} \\left(k k_{1} - k_{2}\\right) - \\frac{1}{\\sigma^{2}} \\left(a k_{1} + b k_{2}\\right)'
-        and 'y{\\left (t \\right )} = k x + t \\left(- k k_{1} + k_{2}\\right)'.
-        2.2 If `sigma = a + b k = 0`, particular solution is given by
-        'x{\\left (t \\right )} = \\frac{b t^{2}}{2} \\left(- k k_{1} + k_{2}\\right) + k_{1} t'
-        and 'y{\\left (t \\right )} = k x + t \\left(- k k_{1} + k_{2}\\right)'.
+    .. math:: a x_0 + b y_0 + k1 = 0 , c x_0 + d y_0 + k2 = 0
+
+    2. When `ad - bc = 0` and `a^{2} + b^{2} > 0`. In this case, the system of equation becomes
+
+    .. math:: x' = ax + by + k_1 , y' = k (ax + by) + k_2
+
+    2.1 If `\sigma = a + bk \neq 0`, particular solution is given by
+
+    .. math:: x = b \sigma^{-1} (c_1 k - c_2) t - \sigma^{-2} (a c_1 + b c_2)
+
+              y = kx + (c_2 - c_1 k) t
+
+    2.2 If `\sigma = a + bk = 0`, particular solution is given by
+
+    .. math:: x = \frac{1}{2} b (c_2 - c_1 k) t^{2} + c_1 t
+
+              y = kx + (c_2 - c_1 k) t
+
     """
     x0, y0 = symbols('x0, y0')
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
@@ -6297,14 +6316,20 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
 def _linear_2eq_order1_type3(x, y, t, r):
     r"""
-    The equations of this type of ode are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} ' \
-    'x{\\left (t \\right )} + g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} y{\\left (t \\right )} + ' \
-    'g{\\left (t \\right )} x{\\left (t \\right )}'.
+    The equations of this type of ode are
+
+    .. math:: x' = f(t) x + g(t) y
+
+              y' = g(t) x + f(t) y
+
     The solution of such equations is given by
-    '\\left(C_{1} e^{G} + C_{2} e^{- G}\\right) e^{F}' and
-    '\\left(C_{1} e^{G} - C_{2} e^{- G}\\right) e^{F}' where C1 and C2 are arbitary constants, and
-    'F = \\int f{\\left (t \\right )}\\, dt' and 'G = \\int g{\\left (t \\right )}\\, dt'.
+
+    .. math:: x = e^{F} (C_1 e^{G} + C_2 e^{-G}) , y = e^{F} (C_1 e^{G} - C_2 e^{-G})
+
+    where `C_1` and `C_2` are arbitary constants, and
+
+    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
+
     """
     C1, C2, C3, C4 = symbols('C1:5')
     F = C.Integral(r['a'], t)
@@ -6315,13 +6340,20 @@ def _linear_2eq_order1_type3(x, y, t, r):
 
 def _linear_2eq_order1_type4(x, y, t, r):
     r"""
-     The equations of this type of ode are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} ' \
-    'x{\\left (t \\right )} + g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = f{\\left (t \\right )} y{\\left (t \\right )} - g{\\left (t \\right )} x{\\left (t \\right )}'.
+    The equations of this type of ode are .
+
+    .. math:: x' = f(t) x + g(t) y
+
+              y' = -g(t) x + f(t) y
+
     The solution is given by
-    'F \\left(C_{1} \\cos{\\left (G \\right )} + C_{2} \\sin{\\left (G \\right )}\\right)' and
-    'F \\left(- C_{1} \\sin{\\left (G \\right )} + C_{2} \\cos{\\left (G \\right )}\\right)'
-    where F and G are integrals of f(t) and g(t).
+
+    .. math:: x = F (C_1 \cos(G) + C_2 \sin(G)), y = F (-C_1 \sin(G) + C_2 \cos(G))
+
+    where `C_1` and `C_2` are arbitary constants, and
+
+    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
+
     """
     C1, C2, C3, C4 = symbols('C1:5')
     if r['b'] == -r['c']:
@@ -6338,16 +6370,20 @@ def _linear_2eq_order1_type4(x, y, t, r):
 
 def _linear_2eq_order1_type5(x, y, t, r):
     r"""
-    Equations are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} x{\\left (t \\right )} + ' \
-    'g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = a g{\\left (t \\right )} x{\\left (t \\right )} + ' \
-    '\\left(b g{\\left (t \\right )} + f{\\left (t \\right )}\\right) y{\\left (t \\right )}'
+    The equations of this type of ode are .
+
+    .. math:: x' = f(t) x + g(t) y
+
+              y' = a g(t) x + [f(t) + b g(t)] y
+
     The transformation of
-    'x{\\left (t \\right )} = u{\\left (T \\right )} e^{\\int f{\\left (t \\right )}\\, dt}',
-    'y{\\left (t \\right )} = v{\\left (T \\right )} e^{\\int f{\\left (t \\right )}\\, dt}' and
-    'T{\\left (t \\right )} = e^{\\int g{\\left (t \\right )}\\, dt}' leads to a system of
-    constant coefficient linear differential equations '\\frac{d}{d T} u{\\left (T \\right )} = v{\\left (T \\right )}'
-    and '\\frac{d}{d T} v{\\left (T \\right )} = a u{\\left (T \\right )} + b v{\\left (T \\right )}'.
+
+    .. math:: x = e^{\int f(t) \,dt} u , y = e^{\int f(t) \,dt} v , T = \int g(t) \,dt
+
+    leads to a system of constant coefficient linear differential equations
+
+    .. math:: u'(T) = v , v'(T) = au + bv
+
     """
     C1, C2, C3, C4 = symbols('C1:5')
     u, v = symbols('u, v', function=True)
@@ -6369,19 +6405,23 @@ def _linear_2eq_order1_type5(x, y, t, r):
 
 def _linear_2eq_order1_type6(x, y, t, r):
     r"""
-    Equations are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} x{\\left (t \\right )} + ' \
-    'g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = a \\left(a h{\\left (t \\right )} + ' \
-    'f{\\left (t \\right )}\\right) x{\\left (t \\right )} + a \\left(g{\\left (t \\right )} - ' \
-    'h{\\left (t \\right )}\\right) y{\\left (t \\right )}'
+    The equations of this type of ode are .
 
-    This is solved by first multiplying the first equation by ``-a`` and adding it to the second
-    equation to obtain '- a \\frac{d}{d t} x{\\left (t \\right )} + \\frac{d}{d t} y{\\left (t \\right )} ' \
-    '= - a \\left(- a x{\\left (t \\right )} + y{\\left (t \\right )}\\right) h{\\left (t \\right )}'
-    Setting ``W`` as '- a x{\\left (t \\right )} + y{\\left (t \\right )}' and integrating the equation
-    we arrive at '- a x{\\left (t \\right )} + y{\\left (t \\right )} = C_{1} e^{- a \\int h{\\left (t \\right )}\\, dt}'
+    .. math:: x' = f(t) x + g(t) y
+
+              y' = a [f(t) + a h(t)] x + a [g(t) - h(t)] y
+
+    This is solved by first multiplying the first equation by `-a` and adding
+    it to the second equation to obtain
+
+    .. math:: y' - a x' = -a h(t) (y - a x)
+
+    Setting `U = y - ax` and integrating the equation we arrive at
+
+    .. math:: y - ax = C_1 e^{-a \int h(t) \,dt}
+
     and on substituing the value of y in first equation give rise to first order ODEs. After solving for
-    ``x``, we can obtain ``y`` by substituting the value of ``x`` in second equation.
+    `x`, we can obtain `y` by substituting the value of `x` in second equation.
 
     """
     C1, C2, C3, C4 = symbols('C1:5')
@@ -6417,31 +6457,34 @@ def _linear_2eq_order1_type6(x, y, t, r):
 
 def _linear_2eq_order1_type7(x, y, t, r):
     r"""
-    Differentiating the first equation and substituting the value of '\\frac{d}{d t} y{\\left (t \\right )}'
+    The equations of this type of ode are .
+
+    .. math:: x' = f(t) x + g(t) y
+
+              y' = h(t) x + p(t) y
+
+    Differentiating the first equation and substituting the value of `y`
     from second equation will give a second-order linear equation
-    'g \\frac{d^{2}}{d t^{2}}  x{\\left (t \\right )} - \\left(f g + g p + \\frac{d}{d t} g{\\left (t \\right )}' \
-    '\\right) \\frac{d}{d t} x{\\left (t \\right )} + \\left(f g p + f \\frac{d}{d t} g{\\left (t \\right )} - ' \
-    'g^{2} h - g \\frac{d}{d t} f{\\left (t \\right )}\\right) x{\\left (t \\right )} = 0'
+
+    .. math:: g x'' - (fg + gp + g') x' + (fgp - g^{2} h + f g' - f' g) x = 0
 
     This above equation can be easily integrated if following conditions are satisfied.
-    1. 'f g p + f \\frac{d}{d t} g{\\left (t \\right )} - g^{2} h - g \\frac{d}{d t} f{\\left (t \\right )} = 0'
-    2. 'f g p + f \\frac{d}{d t} g{\\left (t \\right )} - g^{2} h - g \\frac{d}{d t} f{\\left (t \\right )} = a g'
-    and 'f g + g p + \\frac{d}{d t} g{\\left (t \\right )} = b g'
+    1. `fgp - g^{2} h + f g' - f' g = 0`
+    2. `fgp - g^{2} h + f g' - f' g = ag, fg + gp + g' = bg`
     If first condition is satisfied then it is solved by current dsolve solver and in second case it becomes
     a constant cofficient differential equation which is also solved by current solver.
 
     Otherwise if the above condition fails then,
-    a particular solution is assumed 'x{\\left (t \\right )} = \\operatorname{x_{0}}{\\left (t \\right )}'.
+    a particular solution is assumed as `x = x_0(t)` and `y = y_0(t)`
     Then the general solution is expressed as
-    'x{\\left (t \\right )} = C_{1} \\operatorname{x_{0}}{\\left (t \\right )} + C_{2} ' \
-    '\\operatorname{x_{0}}{\\left (t \\right )} \\int \\frac{F{\\left (t \\right )} P{\\left (t \\right ' \
-    ')}}{\\operatorname{x_{0}}^{2}{\\left (t \\right )}} g{\\left (t \\right )}\\, dt' and
-    'y{\\left (t \\right )} = C_{1} \\operatorname{y_{0}}{\\left (t \\right )} + C_{2} \\left(C_{2} ' \
-    '\\operatorname{y_{0}}{\\left (t \\right )} \\int \\frac{F{\\left (t \\right )} P{\\left (t \\right )}}' \
-    '{\\operatorname{x_{0}}^{2}{\\left (t \\right )}} g{\\left (t \\right )}\\, dt + \\frac{F{\\left ' \
-    '(t \\right )} P{\\left (t \\right )}}{\\operatorname{x_{0}}{\\left (t \\right )}}\\right)'
-    where C1 and C2 are arbitary constants and 'F = e^{\\int f{\\left (t \\right )}\\, dt}' and
-    'P = e^{\\int p{\\left (t \\right )}\\, dt}'
+
+    .. math:: x = C_1 x_0(t) + C_2 x_0(t) \int \frac{g(t) F(t) P(t)}{x_0^{2}(t)} \,dt
+
+    .. math:: y = C_1 y_0(t) + C_2 [\frac{F(t) P(t)}{x_0(t)} + y_0(t) \int \frac{g(t) F(t) P(t)}{x_0^{2}(t)} \,dt]
+
+    where C1 and C2 are arbitary constants and
+
+    .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
 
     """
     C1, C2, C3, C4 = symbols('C1:5')

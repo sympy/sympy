@@ -182,6 +182,39 @@ implemented for the various heuristics.
 ^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.lie_heuristic_linear
 
+System of ODEs
+--------------
+These functions are intended for internal use by
+:py:meth:`~sympy.solvers.ode.dsolve` for system of differential equations.
+
+:obj:`sys_of_odes_linear_2eq_order1_type1`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order1_type1
+
+:obj:`sys_of_odes_linear_2eq_order1_type2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order1_type2
+
+:obj:`sys_of_odes_linear_2eq_order1_type3`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order1_type3
+
+:obj:`sys_of_odes_linear_2eq_order1_type4`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order1_type4
+
+:obj:`sys_of_odes_linear_2eq_order1_type5`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order1_type5
+
+:obj:`sys_of_odes_linear_2eq_order1_type6`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order1_type6
+
+:obj:`sys_of_odes_linear_2eq_order1_type7`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order1_type7
+
 Information on the ode module
 -----------------------------
 

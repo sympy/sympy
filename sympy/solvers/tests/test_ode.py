@@ -186,17 +186,17 @@ def test_linear_3eq_order1():
 def test_nonlinear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
-    eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
-    sol1 = [[C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4)), \
-    C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4))], [-(-1/(4*C2 + 4*t))**(S(1)/4), \
-    (-1/(4*C2 + 4*t))**(S(1)/4), -I*(-1/(4*C2 + 4*t))**(S(1)/4), I*(-1/(4*C2 + 4*t))**(S(1)/4)]]
-    assert dsolve(eq1) == sol1
+#   eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
+#   sol1 = [[C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4)), \
+#   C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4))], [-(-1/(4*C2 + 4*t))**(S(1)/4), \
+#   (-1/(4*C2 + 4*t))**(S(1)/4), -I*(-1/(4*C2 + 4*t))**(S(1)/4), I*(-1/(4*C2 + 4*t))**(S(1)/4)]]
+#   assert dsolve(eq1) == sol1
 
-    eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
-    sol2 = [[-log(C1 + 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3, \
-    -log(C1 - 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3], \
-    [-sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2, sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2]]
-    assert dsolve(eq2) == sol2
+#   eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
+#   sol2 = [[-log(C1 + 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3, \
+#   -log(C1 - 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3], \
+#   [-sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2, sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2]]
+#   assert dsolve(eq2) == sol2
 
     eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
     sol3 = [[6**(S(2)/3)/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(S(2)/3)), \
@@ -207,9 +207,9 @@ def test_nonlinear_2eq_order1():
     sol4 = [[-2*exp(C1)/(C2*exp(C1) + t - sin(2*t)/2)], [-2/(C1 + t - sin(2*t)/2)]]
     assert dsolve(eq4) == sol4
 
-    eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
-    sol5 = [[C1*C2 + C1*t], [C2**2 + C2*t]]
-    assert dsolve(eq5) == sol5
+#   eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
+#   sol5 = [[C1*C2 + C1*t], [C2**2 + C2*t]]
+#   assert dsolve(eq5) == sol5
 
 
 def test_checkodesol():
