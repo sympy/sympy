@@ -31,7 +31,9 @@ def test_TR2i():
     assert TR2i(sin(x)*sin(y)/cos(x)) == tan(x)*sin(y)
     assert TR2i(1/(sin(x)/cos(x))) == 1/tan(x)
     assert TR2i(1/(sin(x)*sin(y)/cos(x))) == 1/tan(x)/sin(y)
+    assert TR2i(sin(x)/2/(cos(x) + 1)) == sin(x)/(cos(x) + 1)/2
 
+    assert TR2i(sin(x)/2/(cos(x) + 1), half=True) == tan(x/2)/2
     assert TR2i(sin(1)/(cos(1) + 1), half=True) == tan(S.Half)
     assert TR2i(sin(2)/(cos(2) + 1), half=True) == tan(1)
     assert TR2i(sin(4)/(cos(4) + 1), half=True) == tan(2)
