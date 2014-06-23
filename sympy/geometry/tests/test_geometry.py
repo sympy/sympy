@@ -6,7 +6,7 @@ from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection,
-                            Point3D, Line3D, Ray3D, Segment3D, centroid)
+                            Point3D, Line3D, Ray3D, Segment3D, Plane, centroid)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
@@ -630,6 +630,82 @@ def test_line3d():
     assert intersection(l1, s1) == [s1]
     assert intersection(r1, l1) == [r1]
     assert intersection(s1, r1) == [s1]
+
+def test_plane():
+    p1 = Point3D(0, 0, 0)
+    p2 = Point3D(1, 1, 1)
+    p3 = Point3D(1, 2, 3)
+    p4 = Point3D(x, x, x)
+    p5 = Point3D(y, y, y)
+    
+    pl1 = Plane(p1, p2, p4)    
+    pl2 = Plane(p1, p2, p5)
+    pl3 = Plane(p1, p2, p3)
+    pl4 = Plane(p1, normal_vector=[1, 1, 1])
+    pl5 = Plane(p3, normal_vector=[1, 2, 3])
+    pl6 = Plane(Point3D(2, 3, 7), normal_vector=[2, 2, 2])    
+    pl7 = Plane(Point3D(1, -5, -6), normal_vector=[1, -2, 1])
+
+    assert Plane(p1, p2, p3) != Plane(p1, p3, p2)
+    assert pl3 == Plane(Point3D(0, 0, 0), [1, -2, 1])
+    assert pl1 != pl2
+    assert pl4 == pl4
+    assert pl5 == Plane(Point3D(1, 2, 3), [1, 2, 3])
+    
+    assert pl5.equation() == x + 2*y + 3*z - 14
+    assert pl3.equation() == x - 2*y + z
+    
+    assert pl1.p1 == p1
+    assert pl2.p1 == p1
+    assert pl5.p1 == p3
+    
+    assert pl4.normal_vector == [1, 1, 1]
+    assert pl5.normal_vector == [1, 2, 3]    
+
+    assert p1 in pl1
+    assert p1 in pl2
+    assert p3 in pl5
+    
+    assert pl3.projection(Point(0, 0)) == p1
+    assert pl3.projection(p1) == p1  
+    assert pl3.projection(p2) == Point3D(7/6, 2/3, 7/6)
+    
+    assert pl3.projection_line(Line(Point(0, 0), Point(1, 1))) == \
+               Line3D(Point3D(0, 0, 0), Point3D(7/6, 2/3, 1/6))
+    assert pl3.projection_line(Line(Point(0, 0), Point(1, 1))) in pl3
+    assert pl3.projection_line(Segment(Point(1, 0), Point(1, 1))) == \
+               Segment3D(Point3D(5/6, 1/3, -1/6), Point3D(7/6, 2/3, 1/6))
+
+    assert pl3.is_parallel(pl6)
+    assert pl1.is_parallel(pl6) is False
+    
+    assert pl3.is_perpendicular(pl6) is False
+    assert pl4.is_perpendicular(pl7)
+    
+    assert pl7.distance(Point3D(1, 3, 5)) == 5*sqrt(6)/6
+    assert pl6.distance(Point3D(0, 0, 0)) == 4*sqrt(3)
+    assert pl6.distance(pl6.p1) == 0
+
+    assert pl6.angle_between(pl3) == pi/2
+    assert pl6.angle_between(pl6) == 0
+    assert pl6.angle_between(pl4) == 0
+
+    assert pl3.are_coplanar(pl4, pl5) is False
+    assert pl3.is_concurrent(pl4, pl5) is False
+
+    assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), [1, -2, 1])
+    assert pl3.perpendicular_plane(Point3D(4, 4, 3)) == \
+               Plane(Point3D(4, 4, 3), [-10, 1, 12])
+
+    assert pl6.perpendicular_line(Point3D(6, 4, 2)) == \
+               Line3D(Point3D(6, 4, 2), Point3D(8, 6, 4))
+
+    assert pl6.intersection(pl6) == pl6
+    assert pl4.intersection(pl4.p1) == pl4.p1
+    assert pl3.intersection(pl6) == []
+    assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == Point3D(2, 8/3, 10/3)
+    assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=[2, -5, 3])) == \
+               [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
 
 def test_ellipse():
     p1 = Point(0, 0)

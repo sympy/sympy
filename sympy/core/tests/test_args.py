@@ -2960,6 +2960,10 @@ def test_sympy__geometry__line3d__Ray3D():
     from sympy.geometry.line3d import Ray3D
     assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
 
+def test_sympy__geometry__plane__Plane():
+    from sympy.geometry.plane import Plane
+    assert _test_args(Plane((1, 1, 1), (1, 2, 3), (3, 3, 2)))
+
 def test_sympy__geometry__polygon__Polygon():
     from sympy.geometry.polygon import Polygon
     assert _test_args(Polygon((0, 1), (2, 3), (4, 5), (6, 7)))
