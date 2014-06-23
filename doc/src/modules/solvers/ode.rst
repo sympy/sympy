@@ -187,33 +187,69 @@ System of ODEs
 These functions are intended for internal use by
 :py:meth:`~sympy.solvers.ode.dsolve` for system of differential equations.
 
-:obj:`sys_of_odes_linear_2eq_order1_type1`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:obj:`system_of_odes_linear_2eq_order1_type1`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_2eq_order1_type1
 
-:obj:`sys_of_odes_linear_2eq_order1_type2`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:obj:`system_of_odes_linear_2eq_order1_type2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_2eq_order1_type2
 
-:obj:`sys_of_odes_linear_2eq_order1_type3`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:obj:`system_of_odes_linear_2eq_order1_type3`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_2eq_order1_type3
 
-:obj:`sys_of_odes_linear_2eq_order1_type4`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:obj:`system_of_odes_linear_2eq_order1_type4`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_2eq_order1_type4
 
-:obj:`sys_of_odes_linear_2eq_order1_type5`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:obj:`system_of_odes_linear_2eq_order1_type5`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_2eq_order1_type5
 
-:obj:`sys_of_odes_linear_2eq_order1_type6`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:obj:`system_of_odes_linear_2eq_order1_type6`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_2eq_order1_type6
 
-:obj:`sys_of_odes_linear_2eq_order1_type7`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:obj:`system_of_odes_linear_2eq_order1_type7`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_2eq_order1_type7
+
+:obj:`system_of_odes_linear_2eq_order2_type1`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type1
+
+:obj:`system_of_odes_linear_2eq_order2_type2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type2
+
+:obj:`system_of_odes_linear_2eq_order2_type3`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type3
+
+:obj:`system_of_odes_linear_2eq_order2_type4`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type4
+
+:obj:`system_of_odes_linear_2eq_order2_type5`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type5
+
+:obj:`system_of_odes_linear_2eq_order2_type6`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type6
+
+:obj:`system_of_odes_linear_2eq_order2_type7`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type7
+
+:obj:`system_of_odes_linear_2eq_order2_type8`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type8
+
+:obj:`system_of_odes_linear_2eq_order2_type9`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._linear_2eq_order2_type9
 
 Information on the ode module
 -----------------------------
