@@ -10,4 +10,5 @@ Optics Module
 .. toctree::
     :maxdepth: 3
 
+    gaussopt.rst
     waves.rst
