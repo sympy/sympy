@@ -1,19 +1,20 @@
 """
 **Contains**
 
-* snellslaw
+* refraction_angle
 """
 
 from __future__ import division
 
-__all__ = ['snellslaw']
+__all__ = ['refraction_angle']
 
 from sympy import Symbol, sympify, sqrt, Matrix
 from sympy.physics.units import c, u0, e0
-from sympy.physics.optics import Medium
+from .medium import Medium
+from .waves import TWave
 
 
-def snellslaw(incident, normal, medium1, medium2):
+def refraction_angle(incident, normal, medium1, medium2):
     """
     This function calculates transmitted vector after refraction.
     `medium1` and `medium2` can be `Medium` or any sympifiable object.
@@ -73,6 +74,6 @@ def snellslaw(incident, normal, medium1, medium2):
     eta = n1/n2  # Relative index of refraction
     c1 = -incident.dot(normal)  # cos(angle_of_incidence)
     cs2 = 1 - eta**2*(1 - c1**2)  # cos(angle_of_refraction)**2
-    if cs2 < 0:  # This is the case of total internal refraction(TIR).
+    if cs2 < 0:  # This is the case of total internal reflection(TIR).
         return 0
     return eta*incident + (eta*c1 - sqrt(cs2))*normal
