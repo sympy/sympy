@@ -5,7 +5,8 @@ from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
                    simplify, sin, sqrt, symbols, tan, Derivative)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
-                            are_similar, convex_hull, intersection, centroid)
+                            are_similar, convex_hull, intersection,
+                            Point3D, centroid)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
@@ -20,8 +21,10 @@ y = Symbol('y', real=True)
 t = Symbol('t', real=True)
 x1 = Symbol('x1', real=True)
 x2 = Symbol('x2', real=True)
+x3 = Symbol('x3', real=True)
 y1 = Symbol('y1', real=True)
 y2 = Symbol('y2', real=True)
+y3 = Symbol('y3', real=True)
 half = Rational(1, 2)
 
 
@@ -159,6 +162,66 @@ def test_point():
     assert p.translate(y=1) == Point(1, 2)
     assert p.translate(*p.args) == Point(2, 2)
 
+def test_point3D():
+    p1 = Point3D(x1, x2, x3)
+    p2 = Point3D(y1, y2, y3)
+    p3 = Point3D(0, 0, 0)
+    p4 = Point3D(1, 1, 1)
+    p5 = Point3D(0, 1, 2)
+
+    assert p1 in p1
+    assert p1 not in p2
+    assert p2.y == y2
+    assert (p3 + p4) == p4
+    assert (p2 - p1) == Point3D(y1 - x1, y2 - x2, y3 - x3)
+    assert p4*5 == Point3D(5, 5, 5)
+    assert -p2 == Point3D(-y1, -y2, -y3)
+
+    assert Point(34.05, sqrt(3)) == Point(Rational(681, 20), sqrt(3))
+    assert Point3D.midpoint(p3, p4) == Point3D(half, half, half)
+    assert Point3D.midpoint(p1, p4) == Point3D(half + half*x1, half + half*x2,
+                                         half + half*x3)
+    assert Point3D.midpoint(p2, p2) == p2
+    assert p2.midpoint(p2) == p2
+
+    assert Point3D.distance(p3, p4) == sqrt(3)
+    assert Point3D.distance(p1, p1) == 0
+    assert Point3D.distance(p3, p2) == sqrt(p2.x**2 + p2.y**2 + p2.z**2)
+
+    p1_1 = Point3D(x1, x1, x1)
+    p1_2 = Point3D(y2, y2, y2)
+    p1_3 = Point3D(x1 + 1, x1, x1)
+    assert Point3D.is_collinear(p3)
+    assert Point3D.is_collinear(p3, p4)
+    assert Point3D.is_collinear(p3, p4, p1_1, p1_2)
+    assert Point3D.is_collinear(p3, p4, p1_1, p1_3) is False
+    assert Point3D.is_collinear(p3, p3, p4, p5) is False
+
+    assert p3.intersection(Point3D(0, 0, 0)) == [p3]
+    assert p3.intersection(p4) == []
+
+
+    assert p4 * 5 == Point3D(5, 5, 5)
+    assert p4 / 5 == Point3D(0.2, 0.2, 0.2)
+
+    raises(ValueError, lambda: Point3D(0, 0, 0) + 10)
+
+    # Point differences should be simplified
+    assert Point3D(x*(x - 1), y, 2) - Point3D(x**2 - x, y + 1, 1) == \
+        Point3D(0, -1, 1)
+
+    a, b = Rational(1, 2), Rational(1, 3)
+    assert Point(a, b).evalf(2) == \
+        Point(a.n(2), b.n(2))
+    raises(ValueError, lambda: Point(1, 2) + 1)
+
+    # test transformations
+    p = Point3D(1, 1, 1)
+    assert p.scale(2, 3) == Point3D(2, 3, 1)
+    assert p.translate(1, 2) == Point3D(2, 3, 1)
+    assert p.translate(1) == Point3D(2, 1, 1)
+    assert p.translate(z=1) == Point3D(1, 1, 2)
+    assert p.translate(*p.args) == Point3D(2, 2, 2)
 
 def test_line():
     p1 = Point(0, 0)

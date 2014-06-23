@@ -2,9 +2,10 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Symbol, Interval
+from sympy.core import Symbol
+from sympy.sets import Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.core.sets import FiniteSet, Union
+from sympy.sets.sets import FiniteSet, Union
 from sympy.core.singleton import S
 
 from sympy.assumptions import ask, AppliedPredicate, Q
@@ -475,7 +476,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
         else:
             expr, rel = inequality, '=='
 
-        gens = expr.atoms(Symbol)
+        gens = expr.free_symbols
 
         if not gens:
             return False

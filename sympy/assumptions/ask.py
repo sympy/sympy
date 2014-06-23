@@ -71,6 +71,9 @@ def _extract_facts(expr, symbol):
             return expr.func
         else:
             return
+    if isinstance(expr, Not) and expr.args[0].func in (And, Or):
+        cls = Or if expr.args[0] == And else And
+        expr = cls(*[~arg for arg in expr.args[0].args])
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
         args = [x for x in args if x is not None]

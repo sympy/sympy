@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core.basic import C
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Wild, Symbol)
 from sympy.core.sympify import sympify

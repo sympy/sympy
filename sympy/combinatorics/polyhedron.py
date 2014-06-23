@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Tuple, FiniteSet
+from sympy.core import Basic, Tuple
+from sympy.sets import FiniteSet
 from sympy.core.compatibility import as_int
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup

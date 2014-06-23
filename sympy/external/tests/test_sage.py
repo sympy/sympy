@@ -187,6 +187,6 @@ TESTS::
     sage: test_Catalan()
     sage: test_GoldenRation()
     sage: test_functions()
-    sage: test_issue924()
+    sage: test_issue_4023()
 
 """

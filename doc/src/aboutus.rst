@@ -336,6 +336,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Lennart Fricke: make sure that cse avoids symbol collision
 #. shashank-agg: ensure that the range is correct for multiple plots
 #. carstimon: make Abs(polar_lift(arg)) -> abs(arg)
+#. Maciej Baranski: refactor code in compilef
+#. Zamrath Nizam: replace atoms(Symbol) with free_symbols where appropriate
+#. Benjamin Gudehus: add sampling_density to stats
+#. Faisal Anees: Egyptian Fractions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

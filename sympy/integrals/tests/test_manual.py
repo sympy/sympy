@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
-                   Symbol, Mul, Integral, integrate, pi, Dummy,
-                   Derivative, diff, I, sqrt, erf, Piecewise,
-                   Eq, Ne, Q, assuming, symbols, And, Heaviside, Max, S)
+                   Symbol, Mul, Integral, integrate, pi, Dummy, Derivative,
+                   diff, I, sqrt, erf, Piecewise, Eq, Ne, Q, assuming, symbols,
+                   And, Heaviside, Max, S, acos, asinh, acosh)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
@@ -62,6 +62,8 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(x) * cos(x), x) in [sin(x) ** 2 / 2, -cos(x)**2 / 2]
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
     assert manualintegrate(csc(x) * cot(x), x) == -csc(x)
+    assert manualintegrate(sec(x)**2, x) == tan(x)
+    assert manualintegrate(csc(x)**2, x) == -cot(x)
 
     assert manualintegrate(x * sec(x**2), x) == log(tan(x**2) + sec(x**2))/2
     assert manualintegrate(cos(x)*csc(sin(x)), x) == -log(cot(sin(x)) + csc(sin(x)))
@@ -83,18 +85,73 @@ def test_manualintegrate_trigpowers():
         -cot(x)**7/7 - 2*cot(x)**5/5 - cot(x)**3/3
 
 def test_manualintegrate_inversetrig():
+    # atan
     assert manualintegrate(exp(x) / (1 + exp(2*x)), x) == atan(exp(x))
     assert manualintegrate(1 / (4 + 9 * x**2), x) == atan(3 * x/2) / 6
     assert manualintegrate(1 / (16 + 16 * x**2), x) == atan(x) / 16
     assert manualintegrate(1 / (4 + x**2), x) == atan(x / 2) / 2
     assert manualintegrate(1 / (1 + 4 * x**2), x) == atan(2*x) / 2
     assert manualintegrate(1/(a + b*x**2), x) == \
-        Piecewise((atan(x*sqrt(b/a))/(a*sqrt(b/a)), And(a > 0, b > 0)))
+        Piecewise(((sqrt(a/b)*atan(x*sqrt(b/a))/a), And(a > 0, b > 0)))
     assert manualintegrate(1/(4 + b*x**2), x) == \
-        Piecewise((atan(sqrt(b)*x/2)/(2*sqrt(b)), b > 0))
+        Piecewise((sqrt(1/b)*atan(sqrt(b)*x/2)/2, b > 0))
     assert manualintegrate(1/(a + 4*x**2), x) == \
-        Piecewise((atan(2*x*sqrt(1/a))/(2*a*sqrt(1/a)), a > 0))
+        Piecewise((atan(2*x*sqrt(1/a))/(2*sqrt(a)), a > 0))
     assert manualintegrate(1/(4 + 4*x**2), x) == atan(x) / 4
+
+    # asin
+    assert manualintegrate(1/sqrt(1-x**2), x) == asin(x)
+    assert manualintegrate(1/sqrt(4-4*x**2), x) == asin(x)/2
+    assert manualintegrate(3/sqrt(1-9*x**2), x) == asin(3*x)
+    assert manualintegrate(1/sqrt(4-9*x**2), x) == asin(3*x/2)/3
+
+    # asinh
+    assert manualintegrate(1/sqrt(x**2 + 1), x) == \
+        asinh(x)
+    assert manualintegrate(1/sqrt(x**2 + 4), x) == \
+        asinh(x/2)
+    assert manualintegrate(1/sqrt(4*x**2 + 4), x) == \
+        asinh(x)/2
+    assert manualintegrate(1/sqrt(4*x**2 + 1), x) == \
+        asinh(2*x)/2
+    assert manualintegrate(1/sqrt(a*x**2 + 1), x) == \
+        Piecewise((sqrt(-1/a)*asin(x*sqrt(-a)), a < 0), (sqrt(1/a)*asinh(sqrt(a)*x), a > 0))
+    assert manualintegrate(1/sqrt(a + x**2), x) == \
+        Piecewise((asinh(x*sqrt(1/a)), a > 0), (acosh(x*sqrt(-1/a)), a < 0))
+
+    # acosh
+    assert manualintegrate(1/sqrt(x**2 - 1), x) == \
+        acosh(x)
+    assert manualintegrate(1/sqrt(x**2 - 4), x) == \
+        acosh(x/2)
+    assert manualintegrate(1/sqrt(4*x**2 - 4), x) == \
+        acosh(x)/2
+    assert manualintegrate(1/sqrt(9*x**2 - 1), x) == \
+        acosh(3*x)/3
+    assert manualintegrate(1/sqrt(a*x**2 - 4), x) == \
+        Piecewise((sqrt(1/a)*acosh(sqrt(a)*x/2), a > 0))
+    assert manualintegrate(1/sqrt(-a + 4*x**2), x) == \
+        Piecewise((asinh(2*x*sqrt(-1/a))/2, -a > 0), (acosh(2*x*sqrt(1/a))/2, -a < 0))
+
+    # piecewise
+    assert manualintegrate(1/sqrt(a-b*x**2), x) == \
+        Piecewise((sqrt(a/b)*asin(x*sqrt(b/a))/sqrt(a), And(-b < 0, a > 0)),
+                  (sqrt(-a/b)*asinh(x*sqrt(-b/a))/sqrt(a), And(-b > 0, a > 0)),
+                  (sqrt(a/b)*acosh(x*sqrt(b/a))/sqrt(-a), And(-b > 0, a < 0)))
+    assert manualintegrate(1/sqrt(a + b*x**2), x) == \
+        Piecewise((sqrt(-a/b)*asin(x*sqrt(-b/a))/sqrt(a), And(a > 0, b < 0)),
+                  (sqrt(a/b)*asinh(x*sqrt(b/a))/sqrt(a), And(a > 0, b > 0)),
+                  (sqrt(-a/b)*acosh(x*sqrt(-b/a))/sqrt(-a), And(a < 0, b > 0)))
+
+def test_manualintegrate_trig_substitution():
+    assert manualintegrate(sqrt(16*x**2 - 9)/x, x) == \
+        sqrt(16*x**2 - 9) - 3*acos(3/(4*x))
+    assert manualintegrate(1/(x**4 * sqrt(25-x**2)), x) == \
+        -sqrt(-x**2/25 + 1)/(125*x) - (-x**2/25 + 1)**(3*S.Half)/(15*x**3)
+    assert manualintegrate(x**7/(49*x**2 + 1)**(3 * S.Half), x) == \
+        ((49*x**2 + 1)**(5*S.Half)/28824005 -
+         (49*x**2 + 1)**(3*S.Half)/5764801 +
+         3*sqrt(49*x**2 + 1)/5764801 + 1/(5764801*sqrt(49*x**2 + 1)))
 
 def test_manualintegrate_rational():
     assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4

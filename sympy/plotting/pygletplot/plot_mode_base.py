@@ -113,7 +113,7 @@ class PlotModeBase(PlotMode):
             try:
                 e = self._get_lambda_evaluator()
                 return e
-            except:
+            except Exception:
                 warnings.warn("\nWarning: creating lambda evaluator failed. "
                        "Falling back on sympy subs evaluator.")
         return self._get_sympy_evaluator()

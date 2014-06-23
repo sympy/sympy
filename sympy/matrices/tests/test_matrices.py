@@ -13,7 +13,7 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros)
 from sympy.core.compatibility import long, iterable
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL, slow, skip
 
 from sympy.abc import x, y, z
 
@@ -2371,3 +2371,22 @@ def test_pinv_rank_deficient():
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
     assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])
+
+def test_free_symbols():
+    for M in ImmutableMatrix, ImmutableSparseMatrix, Matrix, SparseMatrix:
+        assert M([[x], [0]]).free_symbols == set([x])
+
+def test_from_ndarray():
+    """See issue 7465."""
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+
+    assert Matrix(array([1, 2, 3])) == Matrix([1, 2, 3])
+    assert Matrix(array([[1, 2, 3]])) == Matrix([[1, 2, 3]])
+    assert Matrix(array([[1, 2, 3], [4, 5, 6]])) == \
+        Matrix([[1, 2, 3], [4, 5, 6]])
+    assert Matrix(array([x, y, z])) == Matrix([x, y, z])
+    raises(NotImplementedError, lambda: Matrix(array([[
+        [1, 2], [3, 4]], [[5, 6], [7, 8]]])))

@@ -30,8 +30,6 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solvers.solve_undetermined_coeffs
 
-.. autofunction:: sympy.solvers.solvers.tsolve
-
 .. autofunction:: sympy.solvers.solvers.nsolve
 
 .. autofunction:: sympy.solvers.solvers.check_assumptions

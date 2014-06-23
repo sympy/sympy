@@ -4,7 +4,7 @@ from sympy import (S, Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies,
 from sympy.core.relational import ( Relational, Equality, Unequality,
     GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
     Gt, Ge, Ne )
-from sympy.core.sets import Interval, FiniteSet
+from sympy.sets.sets import Interval, FiniteSet
 
 x, y, z, t = symbols('x,y,z,t')
 

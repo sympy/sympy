@@ -303,23 +303,13 @@ If you do not want the order term, use the ``removeO`` method.
     ── + x + 1
     2
 
-Currently, ``O`` only supports orders at 0, so series expansions at points
-other than 0 are computed by first shifting to 0 and then shifting back.
+The ``O`` notation supports arbitrary limit points (other than 0):
 
-    >>> exp(x - 6).series(x, 6)
-             2    3    4     5
-            x    x    x     x     ⎛ 6⎞
-    1 + x + ── + ── + ── + ─── + O⎝x ⎠
-            2    6    24   120
-
-This means that if you compute the series expansion at a point other than 0,
-the result will be shifted to 0. You can easily shift it back with ``subs``.
-
-    >>> exp(x - 6).series(x, 6).removeO().subs(x, x - 6)
-               5          4          3          2
-        (x - 6)    (x - 6)    (x - 6)    (x - 6)
-    x + ──────── + ──────── + ──────── + ──────── - 5
-          120         24         6          2
+    >>> exp(x - 6).series(x, x0=6)
+                2          3          4          5
+         (x - 6)    (x - 6)    (x - 6)    (x - 6)         ⎛       6       ⎞
+    -5 + ──────── + ──────── + ──────── + ──────── + x + O⎝(x - 6) ; x → 6⎠
+            2          6          24        120
 
 Finite differences
 ==================

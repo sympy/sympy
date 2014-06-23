@@ -1,7 +1,7 @@
 Sets
 ===========
 
-.. automodule:: sympy.core.sets
+.. automodule:: sympy.sets.sets
 
 Set
 ^^^

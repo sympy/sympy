@@ -2,10 +2,10 @@ from __future__ import division
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify, zoo)
+        factor, nsimplify, zoo, Subs)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 
 def test_subs():
@@ -386,7 +386,7 @@ def test_add():
     assert e.subs(-y + 1, x) == ans
 
 
-def test_subs_issue910():
+def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
 
 
@@ -554,6 +554,8 @@ def test_simultaneous_subs():
     assert (x/y).subs(reps) != (y/x).subs(reps)
     assert (x/y).subs(reps, simultaneous=True) == \
         (y/x).subs(reps, simultaneous=True)
+    assert Derivative(x, y, z).subs(reps, simultaneous=True) == \
+        Subs(Derivative(0, y, z), (y,), (0,))
 
 
 def test_issue_6419_6421():

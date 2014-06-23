@@ -258,6 +258,8 @@ the following alternative syntax:
 
 You can still use multi-step gradients with three-function color schemes.
 
+.. _plot_geom:
+
 Plotting Geometric Entities
 ---------------------------
 
