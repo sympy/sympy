@@ -394,10 +394,12 @@ class Pow(Expr):
                 pow = coeff1/coeff2
                 try:
                     pow = as_int(pow)
-                    # issue 5180
-                    return self.func(new, pow)  # (x**(6*y)).subs(x**(3*y),z)->z**2
+                    ok = True
                 except ValueError:
-                    pass
+                    ok = self.base.is_positive
+                if ok:
+                    # issue 5180: (x**(6*y)).subs(x**(3*y),z)->z**2
+                    return self.func(new, pow)
         if old.func is C.exp and self.exp.is_real and self.base.is_positive:
             coeff1, terms1 = old.args[0].as_independent(C.Symbol, as_Add=False)
             # we can only do this when the base is positive AND the exponent
