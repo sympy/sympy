@@ -523,19 +523,17 @@ class KanesMethod(object):
         self._f_d = zeroeq
         return FRSTAR
 
-    def _general_form(self):
-        """ Forms the general form for a system of constrained equations. The
-        general form is composed of seven separate equations:
+    def to_linearizer(self):
+        """Returns an instance of the Linearizer class, initiated from the
+        data in the KanesMethod class. This may be more desirable than using
+        the linearize class method, as the Linearizer object will allow more
+        efficient recalculation (i.e. about varying operating points)."""
 
-        Configuration constraints:        f_c(q, t)
-        Velocity constraints:             f_v(q, u, t)
-        Acceleration constraints:         f_a(q, q', u, u', t)
-        Kinematic differential equations: f_0(q, q', t) + f_1(q, u, t)
-        Dynamic differential equations:   f_2(q, u', t) + f_3(q, q', u, r, t)
+        if (self._fr is None) or (self._frstar is None):
+            raise ValueError('Need to compute Fr, Fr* first.')
 
-        This method returns a tuple of (f_c, f_v, f_a, f_0, f_1, f_2, f_3)."""
-
-        # The Kane's method class breaks these into pieces. Need to reassemble
+        # Get required equation components. The Kane's method class breaks
+        # these into pieces. Need to reassemble
         f_c = self._f_h
         if self._f_nh and self._k_nh:
             f_v = self._f_nh + self._k_nh*Matrix(self._u)
@@ -545,33 +543,19 @@ class KanesMethod(object):
             f_a = self._f_dnh + self._k_dnh*Matrix(self._udot)
         else:
             f_a = Matrix([])
-
         # Dicts to sub to zero, for splitting up expressions
         u_zero = dict((i, 0) for i in self._u)
         ud_zero = dict((i, 0) for i in self._udot)
         qd_zero = dict((i, 0) for i in self._qdot)
         qd_u_zero = dict((i, 0) for i in self._qdot + self._u)
-
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = self._f_k.subs(u_zero) + self._k_kqdot*Matrix(self._qdot)
         f_1 = self._f_k.subs(qd_zero) + self._k_ku*Matrix(self._u)
-
         # Break the dynamic differential eqs into f_2 and f_3
         f_2 = _subs_keep_derivs(self._frstar, qd_u_zero)
         f_3 = self._frstar.subs(ud_zero) + self._fr
-        return (f_c, f_v, f_a, f_0, f_1, f_2, f_3)
 
-    def to_linearizer(self):
-        """ Returns an instance of the Linearizer class, initiated from the
-        data in the KanesMethod class. This may be more desirable than using
-        the linearize class method, as the Linearizer object will allow more
-        efficient recalculation (i.e. about varying operating points)."""
-
-        if (self._fr is None) or (self._frstar is None):
-            raise ValueError('Need to compute Fr, Fr* first.')
-
-        # Get required equation and vector components
-        f_c, f_v, f_a, f_0, f_1, f_2, f_3 = self._general_form()
+        # Get the required vector components
         q = self._q
         u = self._u
         if self._qdep:
@@ -616,14 +600,15 @@ class KanesMethod(object):
         """ Linearize the equations of motion about a symbolic operating point.
 
         If kwarg A_and_B is False (default), returns M, A, B, r for the
-        linearized form, M*dx = A*x + B*r, where x = [q_ind u_ind]^T
+        linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
         If kwarg A_and_B is True, returns A, B, r for the linearized form
         dx = A*x + B*r, where x = [q_ind u_ind]^T. Note that this is
         computationally intensive if there are many symbolic parameters. For
         this reason, it may be more desirable to use the default A_and_B=False,
         returning M, A, and B. Values may then be substituted in to these
-        matrices, and the state space form found as A = M^-1*A, B = M^-1*B.
+        matrices, and the state space form found as
+        A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
 
         In both cases, r is found as all dynamicsymbols in the equations of
         motion that are not part of q, u, q', or u'. They are sorted in
@@ -662,11 +647,11 @@ class KanesMethod(object):
         return result + (linearizer.r,)
 
     def _old_linearize(self):
-        """ Old method to linearize the equations of motion. Returns a tuple of
+        """Old method to linearize the equations of motion. Returns a tuple of
         (f_lin_A, f_lin_B, y) for forming [M]qudot = [f_lin_A]qu + [f_lin_B]y.
 
         Deprecated in favor of new method using Linearizer class. Please change
-        your code to use the new `linearize` method. """
+        your code to use the new `linearize` method."""
 
         if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
