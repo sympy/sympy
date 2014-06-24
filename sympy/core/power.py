@@ -226,13 +226,11 @@ class Pow(Expr):
             return Pow(b, e*o)
         if e.is_real and (b.is_nonnegative or (abs(e) < 1) == True):
             return Pow(b, e*o)
+        if b is S.NaN:  # let _new handle it
+            return (b**e)**o
 
         if e.is_real is False:
-            if b is S.NaN:
-                # Special case for when b is nan. See issue 3561 for details
-                smallarg = abs(e).is_negative
-            else:
-                smallarg = (abs(e) - abs(S.Pi/C.log(b))).is_negative
+            smallarg = (abs(e) - abs(S.Pi/C.log(b))).is_negative
             if smallarg is True:
                 return Pow(b, e*o)
             if smallarg is False and o.is_Rational and o.q == 2:
