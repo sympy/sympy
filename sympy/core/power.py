@@ -237,8 +237,6 @@ class Pow(Expr):
                 return -Pow(b, e*o)
 
     def _eval_power(self, other):
-        from sympy.functions.elementary.exponential import log
-
         b, e = self.as_base_exp()
         if b.is_real and b.is_nonnegative is False and e.is_even:
             b = -b
