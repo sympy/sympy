@@ -117,7 +117,7 @@ class ColorScheme(object):
         elif len(lists) == 3:
             try:
                 (r1, r2), (g1, g2), (b1, b2) = lists
-            except:
+            except Exception:
                 raise ValueError("If three color arguments are given, "
                                  "they must be given in the format "
                                  "(r1, r2), (g1, g2), (b1, b2). To create "

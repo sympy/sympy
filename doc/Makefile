@@ -109,12 +109,17 @@ linkcheck:
 livehtml:
 	livereload -b _build/html
 
-cheatsheet: _build/cheatsheet/cheatsheet.pdf
+cheatsheet: _build/cheatsheet/cheatsheet.pdf _build/cheatsheet/combinatoric_cheatsheet.pdf
 
 _build/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
+
+_build/cheatsheet/cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
+	mkdir -p _build/cheatsheet
+	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
+	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
 
 texinfo:
 	mkdir -p _build/texinfo

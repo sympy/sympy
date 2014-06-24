@@ -10,6 +10,7 @@ from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
+from sympy.core.mul import Mul
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
@@ -603,6 +604,9 @@ class ProductSet(Set):
             measure *= set.measure
         return measure
 
+    def __len__(self):
+        return Mul(*[len(s) for s in self.args])
+
 
 class Interval(Set, EvalfMixin):
     """
@@ -1155,7 +1159,7 @@ class Union(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         try:
             return Union(set.evalf() for set in self.args)
-        except:
+        except Exception:
             raise TypeError("Not all sets are evalf-able")
 
     def __iter__(self):

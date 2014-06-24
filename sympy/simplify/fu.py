@@ -201,7 +201,7 @@ from sympy.core.power import Pow
 from sympy.core.function import expand_mul, count_ops
 from sympy.core.add import Add
 from sympy.core.symbol import Dummy
-from sympy.core.exprtools import Factors, gcd_terms
+from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.rules import Transform
 from sympy.core.basic import S
 from sympy.core.numbers import Integer, pi, I
@@ -340,7 +340,7 @@ def TR2i(rv, half=False):
         def factorize(d, ddone):
             newk = []
             for k in d:
-                if k.is_Add and len(k.args) > 2:
+                if k.is_Add and len(k.args) > 1:
                     knew = factor(k) if half else factor_terms(k)
                     if knew != k:
                         newk.append((k, knew))
@@ -350,10 +350,11 @@ def TR2i(rv, half=False):
                     newk[i] = knew
                 newk = Mul(*newk).as_powers_dict()
                 for k in newk:
-                    if ok(k, d[k]):
-                        d[k] += newk[k]
+                    v = d[k] + newk[k]
+                    if ok(k, v):
+                        d[k] = v
                     else:
-                        ddone.append((k, d[k]))
+                        ddone.append((k, v))
                 del newk
         factorize(n, ndone)
         factorize(d, ddone)
@@ -1071,7 +1072,7 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor, fraction, factor_terms
+    from sympy import factor, fraction
 
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):

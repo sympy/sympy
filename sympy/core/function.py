@@ -1334,7 +1334,7 @@ class Lambda(Expr):
         try:
             for v in variables if iterable(variables) else [variables]:
                 if not v.is_Symbol:
-                    raise TypeError("v is not a symbol")
+                    raise TypeError('variable is not a symbol: %s' % v)
         except (AssertionError, AttributeError):
             raise ValueError('variable is not a Symbol: %s' % v)
         try:
@@ -2231,6 +2231,7 @@ def count_ops(expr, visual=False):
 
     """
     from sympy.simplify.simplify import fraction
+    from sympy.logic.boolalg import BooleanFunction
 
     expr = sympify(expr)
     if isinstance(expr, Expr):
@@ -2313,6 +2314,12 @@ def count_ops(expr, visual=False):
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
+    elif isinstance(expr, BooleanFunction):
+        ops = []
+        for arg in expr.args:
+            ops.append(count_ops(arg, visual=True))
+        o = C.Symbol(expr.func.__name__.upper())
+        ops.append(o)
     elif not isinstance(expr, Basic):
         ops = []
     else:  # it's Basic not isinstance(expr, Expr):

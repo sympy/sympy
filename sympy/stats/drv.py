@@ -116,7 +116,7 @@ class SingleDiscretePSpace(SinglePSpace):
         try:
             return self.distribution.expectation(expr, x, evaluate=False,
                     **kwargs)
-        except:
+        except Exception:
             return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
                     **kwargs)
 

@@ -797,9 +797,9 @@ def test_atan2_expansion():
     assert cancel(atan(y/x).series(y, 0, 5) - atan2(y, x).series(y, 0, 5)
                   + atan2(0, x) - atan(0)) == O(y**5)
     assert cancel(atan(y/x).series(x, 1, 4) - atan2(y, x).series(x, 1, 4)
-                  + atan2(y, 1) - atan(y)) == O(x**4)
+                  + atan2(y, 1) - atan(y)) == O((x - 1)**4, (x, 1))
     assert cancel(atan((y + x)/x).series(x, 1, 3) - atan2(y + x, x).series(x, 1, 3)
-                  + atan2(1 + y, 1) - atan(1 + y)) == O(x**3)
+                  + atan2(1 + y, 1) - atan(1 + y)) == O((x - 1)**3, (x, 1))
     assert Matrix([atan2(y, x)]).jacobian([y, x]) == \
         Matrix([[x/(y**2 + x**2), -y/(y**2 + x**2)]])
 
@@ -1049,6 +1049,11 @@ def test_sec():
     # https://github.com/sympy/sympy/issues/7166
     assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
 
+    # https://github.com/sympy/sympy/issues/7167
+    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
+            1/sqrt(x - 3*pi/2) + (x - 3*pi/2)**(S(3)/2)/12 +
+            (x - 3*pi/2)**(S(7)/2)/160 + O((x - 3*pi/2)**4, (x, 3*pi/2)))
+
     assert sec(x).diff(x) == tan(x)*sec(x)
 
     # Taylor Term checks
@@ -1107,7 +1112,8 @@ def test_csc():
     assert csc(x).is_bounded == None
     assert csc(pi/2).is_bounded == True
 
-    assert series(csc(x), x, x0=pi/2, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+    assert series(csc(x), x, x0=pi/2, n=6) == \
+        1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))
     assert series(csc(x), x, x0=0, n=6) == \
             1/x + x/6 + 7*x**3/360 + 31*x**5/15120 + O(x**6)
 
