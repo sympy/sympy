@@ -211,6 +211,8 @@ class Pow(Expr):
             return (b**e)**other  # let __new__ handle it
         if other.is_integer:
             return Pow(b, e*other)
+        if any(i.is_polar for i in (b, e, other)):
+            return Pow(b, e*other)
         if e.is_real:
             if e.is_even:
                 if b.is_real:

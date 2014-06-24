@@ -4,6 +4,7 @@ from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
@@ -27,6 +28,7 @@ from sympy.core.compatibility import xrange
 class ExpBase(Function):
 
     unbranched = True
+    is_polar = False
 
     def inverse(self, argindex=1):
         """
@@ -95,28 +97,11 @@ class ExpBase(Function):
     def _eval_is_zero(self):
         return (self.args[0] is S.NegativeInfinity)
 
-    def _eval_power(b, e):
+    def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
         """
-        f = b.func
-        be = b.exp
-        rv = f(be*e)
-        if e.is_integer:
-            return rv
-        if be.is_real:
-            return rv
-        # "is True" needed below; exp.is_polar returns <property object ...>
-        if f.is_polar is True:
-            return rv
-        if e.is_polar:
-            return rv
-        if be.is_polar:
-            return rv
-        besmall = abs(be) <= S.Pi
-        if besmall == True:
-            return rv
-        elif besmall == False and e.is_Rational and e.q == 2:
-            return -rv
+        b, e = self.as_base_exp()
+        return Pow._eval_power(Pow(b, e, evaluate=False), other)
 
     def _eval_expand_power_exp(self, **hints):
         arg = self.args[0]
