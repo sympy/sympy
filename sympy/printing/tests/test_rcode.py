@@ -137,6 +137,17 @@ def test_rcode_Piecewise_deep():
 """
     assert p == s
 
+def test_rcode_Piecewise_deep():
+    p = rcode(2*Piecewise((x, x < 1), (x**2, x<2), (x**3,True)))
+    print(p)
+    s = \
+"""\
+2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3)\
+"""
+    print(s)
+    assert p == s
+
+
 
 def test_rcode_settings():
     raises(TypeError, lambda: rcode(sin(x), method="garbage"))
