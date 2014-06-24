@@ -2285,8 +2285,7 @@ def _denest_pow(eq):
     while True:
         if not b.is_Pow:
             break
-        bb, be = b.as_base_exp()
-        ok = Pow._expjoin(bb, be, e)
+        ok = Pow._eval_power(b, e)
         if ok is None:
             break
         if ok.is_Mul:
@@ -2578,7 +2577,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 b, e = term.as_base_exp()
                 if deep:
                     b, e = [recurse(i) for i in [b, e]]
-                if b.is_Pow and Pow._expjoin(b.base, b.exp, e) is None:
+                if b.is_Pow and Pow._eval_power(b, e) is None:
                     b, e = term, S.One
                 c_powers[b].append(e)
             else:

@@ -1028,8 +1028,7 @@ def test_issue_3423():
 
 
 def test_issue_3449():
-    x = Symbol("x", real=True)
-    assert sqrt(x**2) == abs(x)
+    x = Symbol("x")
     assert sqrt(x - 1).subs(x, 5) == 2
 
 

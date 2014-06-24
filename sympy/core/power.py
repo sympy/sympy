@@ -205,42 +205,30 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
-    @classmethod
-    def _expjoin(cls, b, e, o):
-        """For (b**e)**o return b**(e*o) or -b**(e*o) if possible, else None.
-        All args should be sympified.
-
-        Examples
-        ========
-
-        >>> from sympy import Pow
-        >>> from sympy.abc import x
-        >>> Pow._expjoin(x, S(1.2), S(2))
-        x**2.4
-        >>> Pow._expjoin(x, S(1.2), S(2.1))
-        """
-        # leave these lines ungrouped so coverage can be checked
-        if b.is_polar:
-            return Pow(b, e*o)
-        if o.is_integer:
-            return Pow(b, e*o)
-        if e.is_real and (b.is_nonnegative or (abs(e) < 1) == True):
-            return Pow(b, e*o)
-        if b is S.NaN:  # let _new handle it
-            return (b**e)**o
-
-        if e.is_real is False:
-            smallarg = (abs(e) - abs(S.Pi/C.log(b))).is_negative
-            if smallarg is True:
-                return Pow(b, e*o)
-            if smallarg is False and o.is_Rational and o.q == 2:
-                return -Pow(b, e*o)
-
     def _eval_power(self, other):
         b, e = self.as_base_exp()
-        if b.is_real and b.is_nonnegative is False and e.is_even:
-            b = -b
-        return self._expjoin(b, e, other)
+        if b is S.NaN:
+            return (b**e)**other  # let __new__ handle it
+        if other.is_integer:
+            return Pow(b, e*other)
+        if e.is_real:
+            if e.is_even:
+                if b.is_real:
+                    if b.is_nonnegative is False:
+                        b = -b
+                    else:
+                        b = abs(b)
+                elif b.is_real is False and other.is_Rational and other.q == 2:
+                    return Pow(b, e*other)
+            if (b.is_nonnegative or (abs(e) < 1) == True):
+                return Pow(b, e*other)
+
+        elif e.is_real is False:
+            smallarg = (abs(e) - abs(S.Pi/C.log(b))).is_negative
+            if smallarg is True:
+                return Pow(b, e*other)
+            if smallarg is False and other.is_Rational and other.q == 2:
+                return -Pow(b, e*other)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
