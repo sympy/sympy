@@ -254,9 +254,9 @@ class Printer(object):
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
             for cls in type(expr).__mro__:
-		print("p6 printer")
+                print("p6 printer")
                 printmethod = '_print_' + cls.__name__
-		print("printmethod="+printmethod)
+                print("printmethod="+printmethod)
                 if hasattr(self, printmethod):
                     return getattr(self, printmethod)(expr, *args, **kwargs)
 
