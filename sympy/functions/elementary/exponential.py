@@ -179,6 +179,9 @@ class exp_polar(ExpBase):
             return re(res)
         return res
 
+    def _eval_power(self, other):
+        return self.func(self.args[0]*other)
+
     def _eval_is_real(self):
         if self.args[0].is_real:
             return True
