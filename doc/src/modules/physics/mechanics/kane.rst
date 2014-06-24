@@ -166,7 +166,7 @@ allowed to be in the forcing vector and their derivatives are not allowed to be
 present. If dynamic symbols appear in the mass matrix or kinematic differential
 equations, an error with be raised. ::
 
-  >>> KM.linearize(A_and_B=True)[0]
+  >>> KM.linearize(A_and_B=True, new_method=True)[0]
   Matrix([
   [0, 1],
   [0, 0]])
