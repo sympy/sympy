@@ -240,10 +240,8 @@ class Pow(Expr):
         from sympy.functions.elementary.exponential import log
 
         b, e = self.as_base_exp()
-        b_nneg = b.is_nonnegative
-        if b.is_real and not b_nneg and e.is_even:
-            b = abs(b)
-            b_nneg = True
+        if b.is_real and b.is_nonnegative is False and e.is_even:
+            b = -b
         return self._expjoin(b, e, other)
 
     def _eval_is_even(self):
