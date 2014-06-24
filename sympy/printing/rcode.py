@@ -90,7 +90,7 @@ class RCodePrinter(CodePrinter):
                 lines.extend(code0)
                 lines.append("}")
         else:
-	    print("p2")
+            print("p2")
             code0 = self._doprint_a_piece(expr, assign_to)
             lines.extend(code0)
 
@@ -174,8 +174,8 @@ class RCodePrinter(CodePrinter):
         # Top level piecewise is handled in doprint()
         ecpairs = ["ifelse(%s,%s," % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
-	print("ecpairs=")
-	print(ecpairs)
+        print("ecpairs=")
+        print(ecpairs)
         last_line = ""
         if expr.args[-1].cond == True:
             last_line = "%s)" % self._print(expr.args[-1].expr)
