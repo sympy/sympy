@@ -207,6 +207,39 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
+    @classmethod
+    def _expjoin(cls, b, e, o):
+        """For (b**e)**o return b**(e*o) or -b**(e*o) if possible, else None.
+        All args should be sympified.
+
+        Examples
+        ========
+
+        >>> from sympy import Pow
+        >>> from sympy.abc import x
+        >>> Pow._expjoin(x, S(1.2), S(2))
+        x**2.4
+        >>> Pow._expjoin(x, S(1.2), S(2.1))
+        """
+        # leave these lines ungrouped so coverage can be checked
+        if b.is_polar:
+            return Pow(b, e*o)
+        if o.is_integer:
+            return Pow(b, e*o)
+        if e.is_real and (b.is_nonnegative or (abs(e) < 1) == True):
+            return Pow(b, e*o)
+
+        if e.is_real is False:
+            if b is S.NaN:
+                # Special case for when b is nan. See issue 3561 for details
+                smallarg = abs(e).is_negative
+            else:
+                smallarg = (abs(e) - abs(S.Pi/C.log(b))).is_negative
+            if smallarg is True:
+                return Pow(b, e*o)
+            if smallarg is False and o.is_Rational and o.q == 2:
+                return -Pow(b, e*o)
+
     def _eval_power(self, other):
         from sympy.functions.elementary.exponential import log
 
@@ -215,20 +248,7 @@ class Pow(Expr):
         if b.is_real and not b_nneg and e.is_even:
             b = abs(b)
             b_nneg = True
-
-        # Special case for when b is nan. See pull req 1714 for details
-        if b is S.NaN:
-            smallarg = abs(e).is_negative
-        else:
-            smallarg = (abs(e) - abs(S.Pi/log(b))).is_negative
-        if (other.is_Rational and other.q == 2 and
-                e.is_real is False and smallarg is False):
-            return -self.func(b, e*other)
-        if (other.is_integer or
-            e.is_real and (b_nneg or (abs(e) < 1) == True) or
-            e.is_real is False and smallarg is True or
-                b.is_polar):
-            return self.func(b, e*other)
+        return self._expjoin(b, e, other)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
@@ -378,15 +398,12 @@ class Pow(Expr):
             coeff2, terms2 = old.exp.as_independent(C.Symbol, as_Add=False)
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                ok = False  # True if int(pow) == pow OR self.base.is_positive
                 try:
                     pow = as_int(pow)
-                    ok = True
-                except ValueError:
-                    ok = self.base.is_positive
-                if ok:
                     # issue 5180
                     return self.func(new, pow)  # (x**(6*y)).subs(x**(3*y),z)->z**2
+                except ValueError:
+                    pass
         if old.func is C.exp and self.exp.is_real and self.base.is_positive:
             coeff1, terms1 = old.args[0].as_independent(C.Symbol, as_Add=False)
             # we can only do this when the base is positive AND the exponent

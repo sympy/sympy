@@ -2281,8 +2281,19 @@ def _denest_pow(eq):
         return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
             *powdenest(Mul(*nonpolars)**e)
 
-    # TODO see http://www.cs.berkeley.edu/~fateman/papers/y=z2w.pdf for
-    # when (b**e)**y might be changed to b**(e*y)
+    # (b**e)**y might collapse to b**(e*y)
+    while True:
+        if not b.is_Pow:
+            break
+        bb, be = b.as_base_exp()
+        ok = Pow._expjoin(bb, be, e)
+        if ok is None:
+            break
+        if ok.is_Mul:
+            assert len(ok.args) == 2 and ok.args[0] == -1
+            return -_denest_pow(ok.args[1])
+        b, e = ok.as_base_exp()
+
     if b.is_Integer:
         # use log to see if there is a power here
         logb = expand_log(log(b))
@@ -2567,7 +2578,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 b, e = term.as_base_exp()
                 if deep:
                     b, e = [recurse(i) for i in [b, e]]
-                if b.is_Pow and not (b.base.is_positive or e.is_integer):
+                if b.is_Pow and Pow._expjoin(b.base, b.exp, e) is None:
                     b, e = term, S.One
                 c_powers[b].append(e)
             else:
