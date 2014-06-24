@@ -10,4 +10,5 @@ Optics Module
 .. toctree::
     :maxdepth: 3
 
+    medium.rst
     waves.rst
