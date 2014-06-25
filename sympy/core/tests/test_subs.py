@@ -56,6 +56,7 @@ def test_powers():
     assert (x**n).subs(x, 0) is S.ComplexInfinity
     assert exp(-1).subs(S.Exp1, 0) is S.ComplexInfinity
     assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
+    assert (2**(x + 2)).subs(2, 3) == 3**(x + 3)
 
 
 def test_logexppow():   # no eval()
@@ -576,6 +577,7 @@ def test_issue_6559():
 
 
 def test_issue_5261():
+    x = symbols('x', real=True)
     e = I*x
     assert exp(e).subs(exp(x), y) == y**I
     assert (2**e).subs(2**x, y) == y**I
