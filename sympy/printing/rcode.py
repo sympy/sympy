@@ -90,7 +90,7 @@ class RCodePrinter(CodePrinter):
                 lines.extend(code0)
                 lines.append("}")
         else:
-            print("p2")
+            #print("p2")
             code0 = self._doprint_a_piece(expr, assign_to)
             lines.extend(code0)
 
@@ -172,19 +172,17 @@ class RCodePrinter(CodePrinter):
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
         # Top level piecewise is handled in doprint()
-        ecpairs = ["ifelse(%s,%s," % (self._print(c), self._print(e))
-                   for e, c in expr.args[:-1]]
-        print("ecpairs=")
-        print(ecpairs)
-        last_line = ""
         if expr.args[-1].cond == True:
-            last_line = "%s)" % self._print(expr.args[-1].expr)
+            last_line = "%s" % self._print(expr.args[-1].expr)
         else:
-            ecpairs.append("ifelse(%s,%s)" %
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
-        code = "%s" + last_line
-        return code % "".join(ecpairs) 
+            last_line = "ifelse(%s,%s,NA)" % (self._print(expr.args[-1].cond), self._print(expr.args[-1].expr))
+        code=last_line                   
+        for e, c in reversed(expr.args[:-1]):
+            #print(code)
+            code= "ifelse(%s,%s," % (self._print(c), self._print(e))+code+")"
+
+        return(code) 
+
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -281,7 +279,7 @@ def rcode(expr, assign_to=None, **settings):
         'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
-    print("p1")
+    #print("p1")
     return RCodePrinter(settings).doprint(expr, assign_to)
 
 
