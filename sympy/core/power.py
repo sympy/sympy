@@ -206,27 +206,28 @@ class Pow(Expr):
         return 3, 2, cls.__name__
 
     def _eval_power(self, other):
-        from sympy.functions.elementary.exponential import log
-
         b, e = self.as_base_exp()
-        b_nneg = b.is_nonnegative
-        if b.is_real and not b_nneg and e.is_even:
-            b = abs(b)
-            b_nneg = True
-
-        # Special case for when b is nan. See pull req 1714 for details
         if b is S.NaN:
-            smallarg = abs(e).is_negative
-        else:
-            smallarg = (abs(e) - abs(S.Pi/log(b))).is_negative
-        if (other.is_Rational and other.q == 2 and
-                e.is_real is False and smallarg is False):
-            return -self.func(b, e*other)
-        if (other.is_integer or
-            e.is_real and (b_nneg or (abs(e) < 1) == True) or
-            e.is_real is False and smallarg is True or
-                b.is_polar):
-            return self.func(b, e*other)
+            return (b**e)**other  # let __new__ handle it
+        if other.is_integer:
+            return Pow(b, e*other)
+        if any(i.is_polar for i in (b, e, other)):
+            return Pow(b, e*other)
+        if e.is_real:
+            if e.is_even:
+                if b.is_real:
+                    b = abs(b)
+                elif b.is_real is False and other.is_Rational and other.q == 2:
+                    return Pow(b, e*other)
+            if (b.is_nonnegative or (abs(e) < 1) == True):
+                return Pow(b, e*other)
+
+        elif e.is_real is False:
+            smallarg = (abs(e) - abs(S.Pi/C.log(b))).is_negative
+            if smallarg is True:
+                return Pow(b, e*other)
+            if smallarg is False and other.is_Rational and other.q == 2:
+                return -Pow(b, e*other)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
