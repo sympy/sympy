@@ -394,8 +394,9 @@ class Pow(Expr):
                     pow = as_int(pow)
                     rv = True
                 except ValueError:
-                    rv = Pow._eval_power(Pow(*old.as_base_exp(), evaluate=False), pow) is not None
-                return rv, pow
+                    rv = Pow._eval_power(
+                        Pow(*old.as_base_exp(), evaluate=False), pow)
+                return rv is not None, pow
             return False, None
 
         if old.func is self.func and self.base == old.base:
