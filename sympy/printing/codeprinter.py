@@ -117,7 +117,7 @@ class CodePrinter(StrPrinter):
             dummies = {None: (expr,)}
         openloop, closeloop = self._get_loop_opening_ending(indices)
 
-       # terms with no summations first
+        # terms with no summations first
         if None in dummies:
             text = StrPrinter.doprint(self, Add(*dummies[None]))
         else:
@@ -242,7 +242,7 @@ class CodePrinter(StrPrinter):
 
     def _format_code(self, lines):
         """Take in a list of lines of code, and format them accordingly.
-
+        
         This may include indenting, wrapping long lines, etc..."""
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")

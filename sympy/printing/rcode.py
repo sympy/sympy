@@ -20,14 +20,12 @@ from sympy.printing.precedence import precedence
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in RCodePrinter._print_Function(self)
 known_functions = {
-    "ceiling": [(lambda x: True, "ceil")],
-    "Abs": [(lambda x: not x.is_integer, "fabs")],
-    "gamma": [(lambda x: True, "tgamma")],
+    "Abs": [(lambda x: True, "abs")]
 }
 
 
 class RCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of c code"""
+    """A printer to convert python expressions to strings of R code"""
     printmethod = "_rcode"
 
     _default_settings = {
@@ -64,6 +62,7 @@ class RCodePrinter(CodePrinter):
         """
         Actually format the expression as R code.
         """
+        print("in RCodePrinter.doprint")
 
         if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
@@ -90,7 +89,7 @@ class RCodePrinter(CodePrinter):
                 lines.extend(code0)
                 lines.append("}")
         else:
-            #print("p2")
+            print("    in else")
             code0 = self._doprint_a_piece(expr, assign_to)
             lines.extend(code0)
 
@@ -158,16 +157,17 @@ class RCodePrinter(CodePrinter):
         return self._print(expr.label)
 
     def _print_Exp1(self, expr):
-        return "M_E"
-
-    def _print_Pi(self, expr):
-        return 'M_PI'
+        # although nowthing happens here we have to overload the method 
+        # of the parent which would yield "E"
+        # maybe _print_Exp1 shouldn't be implemented by StrPrinter
+        # but rather in the subclasses
+        return "exp(1)"
 
     def _print_Infinity(self, expr):
-        return 'HUGE_VAL'
+        return 'Inf'
 
     def _print_NegativeInfinity(self, expr):
-        return '-HUGE_VAL'
+        return '-Inf'
 
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
@@ -279,7 +279,7 @@ def rcode(expr, assign_to=None, **settings):
         'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
-    #print("p1")
+    print("\nin RCodePrinter.rcode")
     return RCodePrinter(settings).doprint(expr, assign_to)
 
 
