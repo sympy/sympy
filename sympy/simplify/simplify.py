@@ -2373,7 +2373,7 @@ def powdenest(eq, force=False, polar=False):
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to True will do simplifications on the riemann surface of
+    Setting ``polar`` to True will do simplifications on the Riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
