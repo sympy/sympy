@@ -16,8 +16,8 @@ Solvers
 .. autoclass:: mpmath.calculus.optimization.Muller
 .. autoclass:: mpmath.calculus.optimization.Bisection
 .. autoclass:: mpmath.calculus.optimization.Illinois
-.. autofunction:: mpmath.calculus.optimization.Pegasus
-.. autofunction:: mpmath.calculus.optimization.Anderson
+.. autoclass:: mpmath.calculus.optimization.Pegasus
+.. autoclass:: mpmath.calculus.optimization.Anderson
 .. autoclass:: mpmath.calculus.optimization.Ridder
 .. autoclass:: mpmath.calculus.optimization.ANewton
 .. autoclass:: mpmath.calculus.optimization.MDNewton

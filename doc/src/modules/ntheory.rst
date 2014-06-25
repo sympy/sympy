@@ -51,7 +51,7 @@ Ntheory Functions Reference
 
 .. autofunction:: divisor_count
 
-.. autoclass:: totient
+.. autofunction:: totient
 
 .. module:: sympy.ntheory.modular
 
