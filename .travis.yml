@@ -1,8 +1,11 @@
 language: python
 env:
+  matrix:
   - TEST_DOCTESTS="true"
   - SPLIT="1/2"
   - SPLIT="2/2"
+  global:
+    secure: <access_token>
 python:
   - 2.6
   - 2.7
@@ -149,3 +152,5 @@ script:
   - bin/test_travis.sh
 notifications:
   email: false
+after_success:
+  - bin/build_doc.sh
