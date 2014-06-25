@@ -331,7 +331,8 @@ class exp(ExpBase):
 
     def _eval_subs(self, old, new):
         if old is S.Exp1:
-            return new**self.args[0]
+            return new**self.args[0].subs(old, new)
+
         # keep processing of power-like args centralized in Pow
         if old.is_Pow:  # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
             old = exp(old.exp*log(old.base))

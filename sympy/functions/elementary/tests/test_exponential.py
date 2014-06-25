@@ -103,6 +103,7 @@ def test_exp_subs():
     assert exp(2*x + 7).subs(exp(3*x), y) == y**Rational(2, 3) * exp(7)
     x = symbols('x', positive=True)
     assert exp(3*log(x)).subs(x**2, y) == y**Rational(3, 2)
+    assert exp(E + 1).subs(E, 2) == 8
 
 
 def test_exp_conjugate():
