@@ -2281,18 +2281,6 @@ def _denest_pow(eq):
         return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
             *powdenest(Mul(*nonpolars)**e)
 
-    # (b**e)**y might collapse to b**(e*y)
-    while True:
-        if not b.is_Pow:
-            break
-        ok = Pow._eval_power(b, e)
-        if ok is None:
-            break
-        if ok.is_Mul:
-            assert len(ok.args) == 2 and ok.args[0] == -1
-            return -_denest_pow(ok.args[1])
-        b, e = ok.as_base_exp()
-
     if b.is_Integer:
         # use log to see if there is a power here
         logb = expand_log(log(b))
@@ -2302,13 +2290,11 @@ def _denest_pow(eq):
             base = logb.args[0]
             return Pow(base, e)
 
-    # if b is not a Mul or any factor is an atom then there is nothing to be
-    # done but the kernel check may have created a new exponent so we rebuild
-    # the power
+    # if b is not a Mul or any factor is an atom then there is nothing to do
     if not b.is_Mul or any(s.is_Atom for s in Mul.make_args(b)):
-        return Pow(b, e)
+        return eq
 
-    # let log handle the case of the base of the argument being a mul, e.g.
+    # let log handle the case of the base of the argument being a Mul, e.g.
     # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
     # will take the log, expand it, and then factor out the common powers that
     # now appear as coefficient. We do this manually since terms_gcd pulls out
