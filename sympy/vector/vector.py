@@ -5,6 +5,8 @@ from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.numbers import Zero
 from sympy import diff, sqrt, ImmutableMatrix as Matrix
+from sympy.vector.coordsysrect import CoordSysRect
+from sympy.vector.functions import express
 
 
 class Vector(Expr):
@@ -27,10 +29,11 @@ class Vector(Expr):
         Examples
         ========
 
-        >>> from sympy.vector import i, j, k
-        >>> v = 3*i + 4*j + 5*k
+        >>> from sympy.vector import CoordSysRect
+        >>> C = CoordSysRect('C')
+        >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.components
-        {i: 3, j: 4, k: 5}
+        {C.i: 3, C.j: 4, C.k: 5}
 
         """
         #The '_components' attribute is defined according to the
@@ -89,7 +92,7 @@ class Vector(Expr):
         return v
 
     def simplify(self, ratio=1.7, measure=count_ops):
-        """ Returns a simplified version of this vector """
+        """ Returns a simplified version of this Vector. """
         simp_components = {}
         for x in self.components:
             simp_components[x] = simplify(self.components[x], \
@@ -117,7 +120,7 @@ class Vector(Expr):
         return (self, 1)
 
     def factor(self, *args, **kwargs):
-        raise TypeError("Factoring not applicable for Vectors")
+        raise NotImplementedError("Factoring of vectors not implemented")
 
     def magnitude(self):
         """
@@ -129,7 +132,7 @@ class Vector(Expr):
         """
         Returns the normalized version of this vector.
         """
-        return self / sqrt(self & self)
+        return self / self.magnitude()
 
     def dot(self, other):
         """
@@ -151,14 +154,17 @@ class Vector(Expr):
         Examples
         ========
 
-        >>> from sympy.vector import i, j, k
-        >>> i.dot(j)
+        >>> from sympy.vector import CoordSysRect
+        >>> C = CoordSysRect('C')
+        >>> C.i.dot(C.j)
         0
-        >>> i & i
+        >>> C.i & C.i
         1
-        >>> v = 3*i + 4*j + 5*k
-        >>> v.dot(k)
+        >>> v = 3*C.i + 4*C.j + 5*C.k
+        >>> v.dot(C.k)
         5
+        >>> (C.i & C.delop)(C.x*C.y*C.z)
+        C.y*C.z
 
         """
 
@@ -169,23 +175,28 @@ class Vector(Expr):
 
         #Check if the other is a del operator
         if isinstance(other, Del):
-            vect = self
             def directional_derivative(field):
-                out = vect.dot(other._i) * \
+                field = express(field, other.system, variables = True)
+                out = self.dot(other._i) * \
                       diff(field, other._x)
-                out += vect.dot(other._j) * \
+                out += self.dot(other._j) * \
                        diff(field, other._y)
-                out += vect.dot(other._k) * \
+                out += self.dot(other._k) * \
                        diff(field, other._z)
                 if out == 0 and isinstance(field, Vector):
                     out = Vector.Zero
                 return out
             return directional_derivative
 
+        if isinstance(self, VectorZero) or isinstance(other, VectorZero):
+            return S(0)
+
+        v1 = express(self, self._sys)
+        v2 = express(other, other._sys)
         dotproduct = S(0)
-        for x in self.components:
-            dotproduct += self.components.get(x, 0) * \
-                          other.components.get(x, 0)
+        for x in v1.components:
+            dotproduct += v1.components.get(x, 0) * \
+                          v2.components.get(x, 0)
 
         return dotproduct
 
@@ -208,14 +219,15 @@ class Vector(Expr):
         Examples
         ========
 
-        >>> from sympy.vector import i, j, k
-        >>> i.cross(j)
-        k
-        >>> i ^ i
+        >>> from sympy.vector import CoordSysRect
+        >>> C = CoordSysRect('C')
+        >>> C.i.cross(C.j)
+        C.k
+        >>> C.i ^ C.i
         0
-        >>> v = 3*i + 4*j + 5*k
-        >>> v ^ i
-        5*j + (-4)*k
+        >>> v = 3*C.i +vb 4*C.j + 5*C.k
+        >>> v ^ C.i
+        5*C.j + (-4)*C.k
 
         """
 
@@ -226,15 +238,17 @@ class Vector(Expr):
             return Vector.Zero
 
         #Compute cross product
+        outvec = Vector.Zero
+        for system, vect in other.separate().items():
+            tempi = system.i
+            tempj = system.j
+            tempk = system.k
+            tempm = Matrix([[tempi, tempj, tempk], \
+                            [self & tempi, self & tempj, self & tempk], \
+                            [vect & tempi, vect & tempj, vect & tempk]])
+            outvec += tempm.det()
 
-        vx = self.components.get(j, 0)*other.components.get(k, 0) - \
-             self.components.get(k, 0)*other.components.get(j, 0)
-        vy = self.components.get(k, 0)*other.components.get(i, 0) - \
-             self.components.get(i, 0)*other.components.get(k, 0)
-        vz = self.components.get(i, 0)*other.components.get(j, 0) - \
-             self.components.get(j, 0)*other.components.get(i, 0)
-
-        return vx*i + vy*j + vz*k
+        return outvec
 
     def __xor__(self, other):
         return self.cross(other)
@@ -258,17 +272,25 @@ class Vector(Expr):
                                diff_components]
         return VectorAdd(*diff_components)
 
-    def to_matrix(self):
+    def to_matrix(self, system):
         """
-        Returns the matrix form of this vector.
+        Returns the matrix form of this vector with respect to the
+        specified coordinate system.
+
+        Parameters
+        ==========
+
+        system : CoordSysRect
+            The system wrt which the matrix form is to be computed
 
         Examples
         ========
 
-        >>> from sympy.vector import i, j, k
+        >>> from sympy.vector import CoordSysRect
+        >>> C = CoordSysRect('C')
         >>> from sympy.abc import a, b, c
-        >>> v = a*i + b*j + c*k
-        >>> v.to_matrix()
+        >>> v = a*C.i + b*C.j + c*C.k
+        >>> v.to_matrix(C)
         Matrix([
         [a],
         [b],
@@ -276,9 +298,34 @@ class Vector(Expr):
 
         """
 
-        base_vectors = (i, j, k)
         return Matrix([self.dot(unit_vec) for unit_vec in
-                       base_vectors]).reshape(3, 1)
+                       system.base_vectors()])
+
+    def separate(self):
+        """
+        The constituents of this vector in different coordinate systems,
+        as per its definition.
+
+        Returns a dict mapping each CoordSysRect to the corresponding
+        constituent Vector.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSysRect
+        >>> R1 = CoordSysRect('R1')
+        >>> R2 = CoordSysRect('R2')
+        >>> v = R1.i + R2.i
+        >>> v.separate() == {R1: R1.i, R2: R2.i}
+        True
+
+        """
+
+        parts = {}
+        for vect, measure in self.components.items():
+            parts[vect.system] = parts.get(vect.system, Vector.Zero) + \
+                                 vect*measure
+        return parts
 
 
 class BaseVector(Vector, AtomicExpr):
@@ -286,29 +333,38 @@ class BaseVector(Vector, AtomicExpr):
     Class to denote a base vector.
     """
 
-    def __new__(cls, name, index):
+    def __new__(cls, name, index, system):
         #Verify arguments
         if not index in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
         if not isinstance(name, str):
-            raise ValueError("name must be a valid string")
+            raise TypeError("name must be a valid string")
+        if not isinstance(system, CoordSysRect):
+            raise TypeError("system should be a CoordSysRect")
         #Initialize an object
-        #The '1' denotes that this is a Vector, not a Scalar
-        #For now, a Symbol is used in place of an actual CoordSysRect
-        #instance.
-        obj = super(BaseVector, cls).__new__(cls, S(1), S(index), \
-                                             Symbol("DefaultSystem"))
+        obj = super(BaseVector, cls).__new__(cls, S(index), \
+                                             system)
         #The _id is used for equating purposes, and for hashing
         obj._components = {obj : S(1)}
         obj._base_vect = obj
-        obj._measure_number = 1
+        obj._measure_number = S(1)
         obj._name = name
+        obj._system = system
 
         assumptions = {}
         assumptions['commutative'] = True
         obj._assumptions = StdFactKB(assumptions)
 
+        #This attr is used for re-expression to one of the systems
+        #involved in the definition of the Vector. Applies to
+        #VectorMul and VectorAdd too.
+        obj._sys = system
+
         return obj
+
+    @property
+    def system(self):
+        return self._system
 
     def __str__(self, printer=None):
         return self._name
@@ -361,17 +417,20 @@ class VectorAdd(Vector, Add):
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
 
+        obj._sys = (components.keys())[0]._sys
+
         return obj
 
     __init__ = Add.__init__
 
     def __str__(self, printer=None):
         ret_str = ''
-        base_vects = (i, j, k)
-        for x in base_vects:
-            if x in self.components:
-                temp_vect = self.components[x]*x
-                ret_str += temp_vect.__str__() + " + "
+        for system, vect in self.separate().items():
+            base_vects = system.base_vectors()
+            for x in base_vects:
+                if x in vect.components:
+                    temp_vect = self.components[x]*x
+                    ret_str += temp_vect.__str__() + " + "
         return ret_str[:-3]
 
     __repr__ = __str__
@@ -434,9 +493,19 @@ class VectorMul(Vector, Mul):
 
         obj._components = {vect._base_vect : measure_number}
 
+        obj._sys = vect._base_vect._sys
+
         return obj
 
     __init__ = Mul.__init__
+
+    @property
+    def base_vector(self):
+        return self._base_vect
+
+    @property
+    def measure_number(self):
+        return self._measure_number
 
     def __str__(self, printer=None):
         measure_str = self._measure_number.__str__()
@@ -518,8 +587,3 @@ def _vect_div(one, other):
 
 
 Vector.Zero = VectorZero()
-
-#Just some hacks for now
-i = BaseVector('i', 0)
-j = BaseVector('j', 1)
-k = BaseVector('k', 2)

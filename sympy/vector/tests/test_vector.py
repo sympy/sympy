@@ -1,9 +1,13 @@
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
      sin, cos
-from sympy.vector.vector import i, j, k, Vector, BaseVector, VectorAdd, \
+from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
+from sympy.vector.coordsysrect import CoordSysRect
 
+C = CoordSysRect('C')
+
+i, j, k = C.base_vectors()
 a, b, c = symbols('a b c')
 
 
@@ -12,7 +16,7 @@ def test_vector_sympy():
     Test whether the Vector framework confirms to the hashing
     and equality testing properties of SymPy.
     """
-    i1 = BaseVector('i1', 0)
+    i1 = BaseVector('i1', 0, C)
     assert i1 == i
     assert i1.__hash__() == i.__hash__()
     v1 = 3*j
@@ -64,7 +68,7 @@ def test_vector():
     assert isinstance(Vector.Zero, Vector)
     assert isinstance(v1 * 0, VectorZero)
 
-    assert v1.to_matrix() == Matrix([[a], [b], [c]])
+    assert v1.to_matrix(C) == Matrix([[a], [b], [c]])
 
     assert i.components == {i: 1}
     assert v5.components == {i: a}

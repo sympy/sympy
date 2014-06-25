@@ -1,7 +1,7 @@
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Symbol
 
 
-class BaseScalar(Dummy):
+class BaseScalar(Symbol):
     """
     A coordinate symbol/base scalar.
 
@@ -9,21 +9,27 @@ class BaseScalar(Dummy):
 
     """
 
-    def __new__(cls, name, index):
+    def __new__(cls, name, index, system):
+        from sympy.vector.coordsysrect import CoordSysRect
         obj = super(BaseScalar, cls).__new__(cls, name)
+        if not isinstance(system, CoordSysRect):
+            raise TypeError("system should be a CoordSysRect")
         if index not in range(0, 3):
             raise ValueError("Invalid index specified.")
         #The _id is used for equating purposes, and for hashing
-        #The '0' denotes that this is a Scalar, not a Vector
-        #For now, a Symbol is used in place of an actual CoordSysRect
-        #instance.
-        obj._id = (0, index, Symbol('DefaultSystem'))
+        obj._id = (index, system)
         obj._name = name
+        obj._system = system
 
         return obj
 
+    @property
+    def system(self):
+        return self._system
+
     def __eq__(self, other):
         #Check if the other object is a BaseScalar of same index
+        #and coordinate system
         if isinstance(other, BaseScalar):
             if other._id == self._id:
                 return True
@@ -40,9 +46,3 @@ class BaseScalar(Dummy):
 
     __repr__ = __str__
     _sympystr = __str__
-
-
-#Just some hacks for now
-x = BaseScalar('x', 0)
-y = BaseScalar('y', 1)
-z = BaseScalar('z', 2)

@@ -1,11 +1,14 @@
-from sympy.vector.vector import i, j, k, Vector
-from sympy.vector.scalar import x, y, z
-from sympy.vector.deloperator import delop
+from sympy.vector.vector import Vector
+from sympy.vector.coordsysrect import CoordSysRect
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
 
+C = CoordSysRect('C')
+i, j, k = C.base_vectors()
+x, y, z = C.base_scalars()
+delop = C.delop
 a, b, c = symbols('a b c')
 
 def test_del_operator():

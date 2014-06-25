@@ -1,7 +1,9 @@
 from sympy.core import Basic
 from sympy import diff
-from sympy.vector.vector import Vector, i, j, k
-from sympy.vector.scalar import x, y, z
+from sympy.vector.vector import Vector
+from sympy.vector.functions import express
+from sympy.vector.coordsysrect import CoordSysRect
+from sympy.core import S
 
 
 class Del(Basic):
@@ -10,9 +12,19 @@ class Del(Basic):
     mathematical expressions as the 'nabla' symbol.
     """
 
-    def __init__(self):
-        self._x, self._y, self._z = x, y, z
-        self._i, self._j, self._k = i, j, k
+    def __new__(cls, system):
+        if not isinstance(system, CoordSysRect):
+            raise TypeError("system should be a CoordSysRect")
+        obj = super(Del, cls).__new__(cls, system)
+        obj._x, obj._y, obj._z = system.x, system.y, system.z
+        obj._i, obj._j, obj._k = system.i, system.j, system.k
+        obj._system = system
+        obj._name = system.__str__() + ".del"
+        return obj
+
+    @property
+    def system(self):
+        return self._system
 
     def __call__(self, scalar_field):
         """
@@ -27,12 +39,15 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import x, y, z, delop
-        >>> delop(x*y*z)
-        y*z*i + x*z*j + x*y*k
+        >>> from sympy.vector import CoordSysRect
+        >>> C = CoordSysRect('C')
+        >>> C.delop(C.x*C.y*C.z)
+        C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
         """
 
+        scalar_field = express(scalar_field, self.system, \
+                               variables = True)
         vx = diff(scalar_field, self._x)
         vy = diff(scalar_field, self._y)
         vz = diff(scalar_field, self._z)
@@ -53,18 +68,19 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import i, j, k, x, y, z, delop
-        >>> v = x*y*z * (i + j + k)
-        >>> delop & v
-        x*y + x*z + y*z
-        >>> delop.dot(i)
+        >>> from sympy.vector import CoordSysRect
+        >>> C = CoordSysRect('C')
+        >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
+        >>> C.delop & v
+        C.x*C.y + C.x*C.z + C.y*C.z
+        >>> C.delop.dot(C.i)
         0
 
         """
 
-        vx = diff(vect.dot(self._i), self._x)
-        vy = diff(vect.dot(self._j), self._y)
-        vz = diff(vect.dot(self._k), self._z)
+        vx = _diff_conditional(vect.dot(self._i), self._x)
+        vy = _diff_conditional(vect.dot(self._j), self._y)
+        vz = _diff_conditional(vect.dot(self._k), self._z)
 
         return vx + vy + vz
 
@@ -84,18 +100,19 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import i, j, k, x, y, z, delop
-        >>> v = x*y*z * (i + j + k)
-        >>> delop ^ v
-        (-x*y + x*z)*i + (x*y - y*z)*j + (-x*z + y*z)*k
-        >>> delop.cross(i)
+        >>> from sympy.vector import CoordSysRect
+        >>> C = CoordSysRect('C')
+        >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
+        >>> C.delop ^ v
+        (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j + (-C.x*C.z + C.y*C.z)*C.k
+        >>> C.delop.cross(C.i)
         0
 
         """
 
-        vectx = vect.dot(self._i)
-        vecty = vect.dot(self._j)
-        vectz = vect.dot(self._k)
+        vectx = express(vect.dot(self._i), self.system)
+        vecty = express(vect.dot(self._j), self.system)
+        vectz = express(vect.dot(self._k), self.system)
         outvec = Vector.Zero
         outvec += (diff(vectz, self._y) - diff(vecty, self._z)) * self._i
         outvec += (diff(vectx, self._z) - diff(vectz, self._x)) * self._j
@@ -105,4 +122,23 @@ class Del(Basic):
 
     __xor__ = cross
 
-delop = Del()
+    def __str__(self, printer=None):
+        return self._name
+
+    __repr__ = __str__
+    _sympystr = __str__
+
+
+
+def _diff_conditional(expr, base_scalar):
+    """
+    First re-expresses expr in the system that base_scalar belongs to.
+    If base_scalar appears in the re-expressed form, differentiates
+    it wrt base_scalar.
+    Else, returns S(0)
+    """
+
+    new_expr = express(expr, base_scalar.system, variables = True)
+    if base_scalar in new_expr.atoms():
+        return diff(new_expr, base_scalar)
+    return S(0)
