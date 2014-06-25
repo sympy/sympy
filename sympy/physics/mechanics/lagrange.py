@@ -4,10 +4,12 @@ __all__ = ['LagrangesMethod']
 
 from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector import (dynamicsymbols, ReferenceFrame, Point)
-from sympy.physics.mechanics.functions import _mat_inv_mul, _find_dynamicsymbols
+from sympy.physics.mechanics.functions import _mat_inv_mul, \
+        _find_dynamicsymbols, _subs_keep_derivs
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+import collections
 import warnings
 
 warnings.simplefilter("always", SymPyDeprecationWarning)
@@ -381,6 +383,52 @@ class LagrangesMethod(object):
 
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
                 q_d, u_i, u_d, r, lams)
+
+    def solve_multipliers(self, op_point=None, sol_type='dict'):
+        """Solves for the values of the lagrange multipliers symbolically at
+        the specified operating point
+
+        Parameters
+        ----------
+        op_point : dict or iterable of dicts, optional
+            Point at which to solve at. The operating point is specified as
+            a dictionary or iterable of dictionaries of {symbol: value}. The
+            value may be numeric or symbolic itself.
+
+        sol_type : str, optional
+            Solution return type. Valid options are:
+            - 'dict': A dict of {symbol : value} (default)
+            - 'Matrix': An ordered column matrix of the solution
+        """
+
+        # Determine number of multipliers
+        k = len(self.lam_vec)
+        if k == 0:
+            raise ValueError("System has no lagrange multipliers to solve for.")
+        # Compose dict of operating conditions
+        if isinstance(op_point, dict):
+            op_point_dict = op_point
+        elif isinstance(op_point, collections.Iterable):
+            op_point_dict = {}
+            for op in op_point:
+                op_point_dict.update(op)
+        else:
+            op_point_dict = {}
+        # Compose the system to be solved
+        mass_matrix = self.mass_matrix.col_join((-self.lam_coeffs.row_join(
+                zeros(k, k))))
+        force_matrix = self.forcing.col_join(self._f_cd)
+        # Sub in the operating point
+        mass_matrix = _subs_keep_derivs(mass_matrix, op_point_dict)
+        force_matrix = _subs_keep_derivs(force_matrix, op_point_dict)
+        # Solve for the multipliers
+        sol_list = mass_matrix.LUsolve(-force_matrix)[-k:]
+        if sol_type == 'dict':
+            return dict(zip(self.lam_vec, sol_list))
+        elif sol_type == 'Matrix':
+            return Matrix(sol_list)
+        else:
+            raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
     def rhs(self, inv_method=None, **kwargs):
         """ Returns equations that can be solved numerically

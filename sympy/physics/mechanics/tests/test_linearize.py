@@ -288,13 +288,8 @@ def test_linearize_pendulum_lagrange_nonminimal():
     q_op = {q1: L, q2: 0}
     u_op = {q1d: 0, q2d: 0}
     ud_op = {q1d.diff(t): 0, q2d.diff(t): 0}
-    # Take advantage of problem structure to solve for lams
-    k = 1
-    mass_matrix = LM.mass_matrix.col_join((-LM.lam_coeffs.row_join(zeros(k, k))))
-    force_matrix = LM.forcing.col_join(LM._f_cd)
-    lam_op_vec = Matrix((mass_matrix.inv()*(-force_matrix))[-k:])
-    lam_op_vec = lam_op_vec.subs(ud_op).subs(u_op).subs(q_op)
-    lam_op = dict(zip(LM.lam_vec, lam_op_vec))
+    # Solve for multiplier operating point
+    lam_op = LM.solve_multipliers(op_point=[q_op, u_op, ud_op])
     A, B = linearizer.linearize(q_op=q_op, u_op=u_op, ud_op=ud_op, lam_op=lam_op, A_and_B=True)
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
