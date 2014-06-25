@@ -279,6 +279,26 @@ These functions are intended for internal use by
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode._linear_neq_order1_type1
 
+:obj:`system_of_odes_nonlinear_2eq_order1_type1`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._nonlinear_2eq_order1_type1
+
+:obj:`system_of_odes_nonlinear_2eq_order1_type2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._nonlinear_2eq_order1_type2
+
+:obj:`system_of_odes_nonlinear_2eq_order1_type3`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._nonlinear_2eq_order1_type3
+
+:obj:`system_of_odes_nonlinear_2eq_order1_type4`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._nonlinear_2eq_order1_type4
+
+:obj:`system_of_odes_nonlinear_2eq_order1_type5`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode._nonlinear_2eq_order1_type5
+
 Information on the ode module
 -----------------------------
 

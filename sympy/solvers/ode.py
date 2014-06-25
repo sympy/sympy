@@ -7243,9 +7243,9 @@ def _linear_3eq_order1_type2(x, y, z, t, r):
 
     1. First integral:
 
-    .. math:: ax + by + cz = A             \thinspace - (1)
+    .. math:: ax + by + cz = A             \qquad - (1)
 
-    .. math:: x^2 + y^2 + z^2 = B^2        \thinspace - (2)
+    .. math:: x^2 + y^2 + z^2 = B^2        \qquad - (2)
 
     where `A` and `B` are arbitrary constants. It follows from these integrals
     that the integral lines are circles formed by the intersection of the planes
@@ -7375,19 +7375,19 @@ def _linear_neq_order1_type1(match_):
     differential equation. So the general solution will contain `n` linearly
     independent parts and solution will consist some type of exponential
     functions. Assuming `y = \vec{v} e^{rt}` is a solution of the system where
-    \vec{v} is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
+    `\vec{v}` is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
     `y' = r v e^{r t}` into the equation `\vec{y'} = A . \vec{y}`, we get
 
     .. math:: r \vec{v} e^{rt} = A \vec{v} e^{rt}
 
     .. math:: r \vec{v} = A \vec{v}
 
-    where r comes out to be eigenvalue of A and vector \vec{v} is the eigenvector
-    of A corresponding to r. There are three possiblities of eigenvalues of A
+    where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
+    of `A` corresponding to `r`. There are three possiblities of eigenvalues of `A`
 
     - `n` distinct real eigenvalues
     - complex conjugate eigenvalues
-    - eigenvalues with multiplicity k
+    - eigenvalues with multiplicity `k`
 
     1. When all eigenvalues `r_1,..,r_n` are distinct with `n` different eigenvectors
     `v_1,...v_n` then the solution is given by
@@ -7423,6 +7423,11 @@ def _linear_neq_order1_type1(match_):
     e^{rt} [t \vec{w} + \vec{w_2}], e^{rt} [\frac{t^2}{2} \vec{w} + t \vec{w_2} + \vec{w_3}],
     ...,e^{rt} [\frac{t^{k-1}}{(k-1)!} \vec{w} + \frac{t^{k-2}}{(k-2)!} \vec{w_2} +...+ t \vec{w_{k-1}}
     + \vec{w_k}]`
+
+    So, If `\vec{y_1},...,\vec{y_n}` are `n` solution of obtained from three
+    categories of `A`, then general solution to the system `\vec{y'} = A . \vec{y}`
+
+    .. math:: \vec{y} = C_1 \vec{y_1} + C_2 \vec{y_2} + \cdots + C_n \vec{y_n}
 
     """
     eq = match_['eq']
@@ -7498,6 +7503,30 @@ def sysode_nonlinear_2eq_order1(match_):
     return sol
 
 def _nonlinear_2eq_order1_type1(x, y, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = x^n F(x,y)
+
+    .. math:: y' = g(y) F(x,y)
+
+    Solution:
+
+    .. math:: x = \varphi(y), \int \frac{1}{g(y) F(\varphi(y),y)} \,dy = t + C_2
+
+    where
+
+    if `n \neq 1`
+
+    .. math:: \varphi = [C_1 + (1-n) \int \frac{1}{g(y)} \,dy]^{\frac{1}{1-n}}
+
+    if `n = 1`
+
+    .. math:: \varphi = C_1 e^{\int \frac{1}{g(y)} \,dy}
+
+    where `C_1` and `C_2` are arbitrary constants.
+
+    """
     C1, C2 = symbols('C1:3')
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
@@ -7519,6 +7548,30 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     return [sol1, sol2]
 
 def _nonlinear_2eq_order1_type2(x, y, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = e^{\lambda x} F(x,y)
+
+    .. math:: y' = g(y) F(x,y)
+
+    Solution:
+
+    .. math:: x = \varphi(y), \int \frac{1}{g(y) F(\varphi(y),y)} \,dy = t + C_2
+
+    where
+
+    if `\lambda \neq 0`
+
+    .. math:: \varphi = -\frac{1}{\lambda} log(C_1 - \lambda \int \frac{1}{g(y)} \,dy)
+
+    if `\lambda = 0`
+
+    .. math:: \varphi = C_1 + \int \frac{1}{g(y)} \,dy
+
+    where `C_1` and `C_2` are arbitrary constants.
+
+    """
     C1, C2 = symbols('C1:3')
     n = Wild('n', exclude=[x(t),y(t)])
     f = Wild('f')
@@ -7540,6 +7593,23 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     return [sol1, sol2]
 
 def _nonlinear_2eq_order1_type3(x, y, t, eq):
+    r"""
+    Autonomous system of general form
+
+    .. math:: x' = F(x,y)
+
+    .. math:: y' = G(x,y)
+
+    Assuming `y = y(x, C_1)` where `C_1` is an arbitrary constant is the general
+    solution of the first-order equation
+
+    .. math:: F(x,y) y'_x = G(x,y)
+
+    Then the general solution of the original system of equations has the form
+
+    .. math:: \int \frac{1}{F(x,y(x,C_1))} \,dx = t + C_1
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     u, v = symbols('u, v', function=True)
     f = Wild('f')
@@ -7559,6 +7629,24 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     return [sol1, sol2]
 
 def _nonlinear_2eq_order1_type4(x, y, t, eq):
+    r"""
+    Equation:
+
+    .. math:: x' = f_1(x) g_1(y) \phi(x,y,t)
+
+    .. math:: y' = f_2(x) g_2(y) \phi(x,y,t)
+
+    First integral:
+
+    .. math:: \int \frac{f_2(x)}{f_1(x)} \,dx - \int \frac{g_1(y)}{g_2(y)} \,dy = C
+
+    where `C` is an arbitrary constant.
+
+    On solving the first integral for `x` (resp., `y` ) and on substituting the
+    resulting expression into either equation of the original solution, one
+    arrives at a firs-order equation for determining `y` (resp., `x` ).
+
+    """
     C1, C2 = symbols('C1:3')
     u, v = symbols('u, v')
     f = Wild('f')
@@ -7588,6 +7676,27 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     return [sol1, sol2]
 
 def _nonlinear_2eq_order1_type5(x, y, t, eq):
+    r"""
+    Clairaut system of ODEs
+
+    .. math:: x = t x' + F(x',y')
+
+    .. math:: y = t y' + G(x',y')
+
+    The following are solutions of the system
+
+    `(i)` straight lines:
+
+    .. math:: x = C_1 t + F(C_1, C_2), y = C_2 t + G(C_1, C_2)
+
+    where `C_1` and `C_2` are arbitrary constants;
+
+    `(ii)` envelopes of the above lines;
+
+    `(iii)` continuously differentiable lines made up from segments of the lines
+    `(i)` and `(ii)`.
+
+    """
     C1, C2 = symbols('C1:3')
     x1 = diff(x(t),t); y1 = diff(y(t),t)
     f = Wild('f')
