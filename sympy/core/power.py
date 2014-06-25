@@ -159,8 +159,6 @@ class Pow(Expr):
             evaluate = global_evaluate[0]
         from sympy.functions.elementary.exponential import exp_polar
 
-        # don't optimize "if e==0; return 1" here; it's better to handle that
-        # in the calling routine so this doesn't get called
         b = _sympify(b)
         e = _sympify(e)
         if evaluate:
@@ -172,7 +170,7 @@ class Pow(Expr):
                 if e in (S.NaN, S.Infinity, -S.Infinity):
                     return S.NaN
                 return S.One
-            elif S.NaN in (b, e):
+            elif S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
                 return S.NaN
             else:
                 # recognize base as E

@@ -2308,7 +2308,7 @@ def _denest_pow(eq):
             return b**e
         return eq
 
-    # let log handle the case of the base of the argument being a mul, e.g.
+    # let log handle the case of the base of the argument being a Mul, e.g.
     # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
     # will take the log, expand it, and then factor out the common powers that
     # now appear as coefficient. We do this manually since terms_gcd pulls out
