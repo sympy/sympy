@@ -6,6 +6,7 @@ from sympy import Matrix, eye, zeros
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import _subs_keep_derivs
+import collections
 
 class Linearizer(object):
     """This object holds the general model form for a dynamic system.
@@ -195,20 +196,20 @@ class Linearizer(object):
         else:
             self._B_u = Matrix()
 
-    def linearize(self, q_op=None, u_op=None, qd_op=None, ud_op=None,
-            r_op=None, A_and_B=False):
+    def linearize(self, op_point=None, A_and_B=False):
         """Linearize the system about the operating point. Note that
         q_op, u_op, qd_op, ud_op must satisfy the equations of motion.
         These may be either symbolic or numeric.
 
         Parameters
         ----------
-        q_op, u_op, qd_op, ud_op, r_op : dict, optional
-            Dictionaries of the operating point. These will be substituted in
-            to the linearized system before the linearization is complete.
-            Leave blank if you want a completely symbolic form. Note that any
-            reduction in symbols (whether substituted for numbers or
-            expressions with a common parameter) will result in faster runtime.
+        op_point : dict or iterable of dicts, optional
+            Dictionary or iterable of dictionaries containing the operating
+            point conditions. These will be substituted in to the linearized
+            system before the linearization is complete.  Leave blank if you
+            want a completely symbolic form. Note that any reduction in
+            symbols (whether substituted for numbers or expressions with a
+            common parameter) will result in faster runtime.
 
         A_and_B : bool, optional
             If A_and_B=False (default), (M, A, B) is returned for forming
@@ -224,16 +225,15 @@ class Linearizer(object):
         A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
         """
 
-        # Compose dicts of the trim condition for q, u, and qd, ud
-        op_compose = lambda kw: dict() if not kw else kw
-        q_op = op_compose(q_op)
-        u_op = op_compose(u_op)
-        qd_op = op_compose(qd_op)
-        ud_op = op_compose(ud_op)
-        trim = q_op
-        trim.update(u_op)
-        dtrim = qd_op
-        dtrim.update(ud_op)
+        # Compose dict of operating conditions
+        if isinstance(op_point, dict):
+            op_point_dict = op_point
+        elif isinstance(op_point, collections.Iterable):
+            op_point_dict = {}
+            for op in op_point:
+                op_point_dict.update(op)
+        else:
+            op_point_dict = {}
 
         # Dimension terms
         n = len(self.q)
@@ -272,8 +272,7 @@ class Linearizer(object):
                 M = col1
         else:
             M = col2
-        M_eq = _subs_keep_derivs(M.subs(dtrim), trim)
-        M_eq.simplify()
+        M_eq = _subs_keep_derivs(M, op_point_dict)
 
         # Build up state coefficient matrix A
         #     |(A_qq + A_qu*C_1)*C_0       A_qu*C_2|
@@ -326,15 +325,14 @@ class Linearizer(object):
                 Amat = col1
         else:
             Amat = col2
-        Amat_eq = _subs_keep_derivs(Amat.subs(dtrim), trim)
-        Amat_eq.simplify()
+        Amat_eq = _subs_keep_derivs(Amat, op_point_dict)
 
         # Build up the B matrix if there are forcing variables
         #     |0_(n + m)xs|
         # B = |B_u        |
         if s != 0 and o != m:
             Bmat = zeros(n + m, s).col_join(B_u)
-            Bmat_eq = _subs_keep_derivs(Bmat.subs(dtrim), trim)
+            Bmat_eq = _subs_keep_derivs(Bmat, op_point_dict)
         else:
             Bmat_eq = Matrix()
 

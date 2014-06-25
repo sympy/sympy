@@ -437,12 +437,15 @@ def _mat_inv_mul(A, B):
     temp3 = Matrix([i.T for i in temp3]).T
     return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
 
-def _subs_keep_derivs(expr, *args, **kwargs):
+def _subs_keep_derivs(expr, sub_dict):
     """ Performs subs exactly as subs normally would be,
     but doesn't sub in expressions inside Derivatives. """
 
     ds = expr.atoms(Derivative)
     gs = [Dummy() for d in ds]
+    items = sub_dict.items()
+    deriv_dict = dict((i, j) for (i, j) in items if i.is_Derivative)
+    sub_dict = dict((i, j) for (i, j) in items if not i.is_Derivative)
     dict_to = dict(zip(ds, gs))
     dict_from = dict(zip(gs, ds))
-    return expr.subs(dict_to).subs(*args, **kwargs).subs(dict_from)
+    return expr.subs(deriv_dict).subs(dict_to).subs(sub_dict).subs(dict_from)
