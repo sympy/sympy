@@ -8,6 +8,7 @@ from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import _subs_keep_derivs
 import collections
 
+
 class Linearizer(object):
     """This object holds the general model form for a dynamic system.
     This model is used for computing the linearized form of the system,
@@ -127,8 +128,8 @@ class Linearizer(object):
         # If not, C_0 is I_(nxn). Note that this works even if n=0
         if l > 0:
             f_c_jac_q = self.f_c.jacobian(self.q)
-            self._C_0 = (eye(n) - self._Pqd * (f_c_jac_q * self._Pqd).inv() *
-                    f_c_jac_q) * self._Pqi
+            self._C_0 = (eye(n) - self._Pqd * (f_c_jac_q *
+                    self._Pqd).LUsolve(f_c_jac_q)) * self._Pqi
         else:
             self._C_0 = eye(n)
         # If there are motion constraints (m > 0), form C_1 and C_2 as normal.
@@ -136,13 +137,14 @@ class Linearizer(object):
         # o = 0.
         if m > 0:
             f_v_jac_u = self.f_v.jacobian(self.u)
-            temp = self._Pud * (f_v_jac_u * self._Pud).inv()
+            temp = f_v_jac_u * self._Pud
             if n != 0:
                 f_v_jac_q = self.f_v.jacobian(self.q)
-                self._C_1 = -temp * f_v_jac_q
+                self._C_1 = -self._Pud * temp.LUsolve(f_v_jac_q)
             else:
                 self._C_1 = 0
-            self._C_2 = (eye(o) - temp * f_v_jac_u) * self._Pui
+            self._C_2 = (eye(o) - self._Pud *
+                    temp.LUsolve(f_v_jac_u)) * self._Pui
         else:
             self._C_1 = 0
             self._C_2 = eye(o)
@@ -222,7 +224,8 @@ class Linearizer(object):
         it may be more desirable to use the default A_and_B=False,
         returning M, A, and B. More values may then be substituted in to these
         matrices later on. The state space form can then be found as
-        A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
+        A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
+        P = Linearizer.perm_mat.
         """
 
         # Compose dict of operating conditions
@@ -282,19 +285,19 @@ class Linearizer(object):
         if n != 0:
             r1c1 = A_qq
             if o != 0:
-                r1c1 += A_qu*C_1
+                r1c1 += (A_qu * C_1)
             r1c1 = r1c1 * C_0
             if m != 0:
                 r2c1 = A_uqc
                 if o != 0:
-                    r2c1 += A_uuc*C_1
+                    r2c1 += (A_uuc * C_1)
                 r2c1 = r2c1 * C_0
             else:
                 r2c1 = Matrix()
             if o != m:
                 r3c1 = A_uqd
                 if o != 0:
-                    r3c1 += A_uud*C_1
+                    r3c1 += (A_uud * C_1)
                 r3c1 = r3c1 * C_0
             else:
                 r3c1 = Matrix()
@@ -339,13 +342,13 @@ class Linearizer(object):
         # kwarg A_and_B indicates to return  A, B for forming the equation
         # dx = [A]x + [B]r, where x = [q_ind, u_ind]^T,
         if A_and_B:
-            Minv = M_eq.inv()
-            A_cont = self.perm_mat.T * Minv * Amat_eq
+            A_cont = self.perm_mat.T * M_eq.LUsolve(Amat_eq)
             A_cont.simplify()
             if Bmat_eq:
-                B_cont = self.perm_mat.T * Minv * Bmat_eq
+                B_cont = self.perm_mat.T * M_eq.LUsolve(Bmat_eq)
                 B_cont.simplify()
             else:
+                # Bmat = Matrix([]), so no need to sub
                 B_cont = Bmat_eq
             return A_cont, B_cont
         # Otherwise return M, A, B for forming the equation
