@@ -672,6 +672,8 @@ def test_powsimp():
     eq = Mul(*[sqrt(Dummy(imaginary=True)) for i in range(3)])
     assert powsimp(eq) == eq and eq.is_Mul
 
+    assert [powsimp(e) == e for e in (sqrt(x**a), sqrt(x**2))]
+
 
 def test_issue_6367():
     z = -5*sqrt(2)/(2*sqrt(2*sqrt(29) + 29)) + sqrt(-sqrt(29)/29 + S(1)/2)
@@ -1212,7 +1214,8 @@ def test_powdenest():
         (((x**(2*a/3))**(3*y/i))**x)
     assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
     assert powdenest((p**(2*i)*q**(4*i))**j) == (p*q**2)**(2*i*j)
-    assert powdenest(((p**(2*a))**(3*y))**x) == p**(6*a*x*y)
+    e = ((p**(2*a))**(3*y))**x
+    assert powdenest(e) == e
     e = ((x**2*y**4)**a)**(x*y)
     assert powdenest(e) == e
     e = (((x**2*y**4)**a)**(x*y))**3

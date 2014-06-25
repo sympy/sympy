@@ -56,7 +56,8 @@ DerivativeRule = Rule("DerivativeRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "func")
-TrigSubstitutionRule = Rule("TrigSubstitutionRule", "theta func rewritten substep")
+TrigSubstitutionRule = Rule("TrigSubstitutionRule",
+                            "theta func rewritten substep restriction")
 
 IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
 
@@ -689,16 +690,33 @@ def trig_substitution_rule(integral):
             b_positive = ((b.is_number and b > 0) or b.is_positive)
             x_func = None
             if a_positive and b_positive:
-                # a**2 + b*x**2
+                # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
                 x_func = (sympy.sqrt(a)/sympy.sqrt(b)) * sympy.tan(theta)
+                # Do not restrict the domain: tan(theta) takes on any real
+                # value on the interval -pi/2 < theta < pi/2 so x takes on
+                # any value
+                restriction = True
             elif a_positive and not b_positive:
-                # a**2 - b*x**2
-                x_func = (sympy.sqrt(a)/sympy.sqrt(-b)) * sympy.sin(theta)
+                # a**2 - b*x**2. Assume cos(theta) > 0, -pi/2 < theta < pi/2
+                constant = sympy.sqrt(a)/sympy.sqrt(-b)
+                x_func = constant * sympy.sin(theta)
+                restriction = sympy.And(symbol > -constant, symbol < constant)
             elif not a_positive and b_positive:
-                # b*x**2 - a**2
-                x_func = (sympy.sqrt(-a)/sympy.sqrt(b)) * sympy.sec(theta)
+                # b*x**2 - a**2. Assume sin(theta) > 0, 0 < theta < pi
+                constant = sympy.sqrt(-a)/sympy.sqrt(b)
+                x_func = constant * sympy.sec(theta)
+                restriction = sympy.And(symbol > -constant, symbol < constant)
             if x_func:
+                # Manually simplify sqrt(trig(theta)**2) to trig(theta)
+                # Valid due to assumed domain restriction
+                substitutions = {}
+                for f in [sympy.sin, sympy.cos, sympy.tan,
+                          sympy.sec, sympy.csc, sympy.cot]:
+                    substitutions[sympy.sqrt(f(theta)**2)] = f(theta)
+                    substitutions[sympy.sqrt(f(theta)**(-2))] = 1/f(theta)
+
                 replaced = integrand.subs(symbol, x_func).trigsimp()
+                replaced = replaced.subs(substitutions)
                 if not replaced.has(symbol):
                     replaced *= manual_diff(x_func, theta)
                     replaced = replaced.trigsimp()
@@ -711,7 +729,8 @@ def trig_substitution_rule(integral):
                     substep = integral_steps(replaced, theta)
                     if not contains_dont_know(substep):
                         return TrigSubstitutionRule(
-                            theta, x_func, replaced, substep, integrand, symbol)
+                            theta, x_func, replaced, substep, restriction,
+                            integrand, symbol)
 
 def substitution_rule(integral):
     integrand, symbol = integral
@@ -999,7 +1018,7 @@ def eval_piecewise(substeps, integrand, symbol):
                              for substep, cond in substeps])
 
 @evaluates(TrigSubstitutionRule)
-def eval_trigsubstitution(theta, func, rewritten, substep, integrand, symbol):
+def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integrand, symbol):
     func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
 
     trig_function = list(func.find(TrigonometricFunction))
@@ -1031,7 +1050,9 @@ def eval_trigsubstitution(theta, func, rewritten, substep, integrand, symbol):
         (sympy.tan(theta), opposite/adjacent),
         (theta, inverse)
     ]
-    return _manualintegrate(substep).subs(substitution).trigsimp()
+    return sympy.Piecewise(
+        (_manualintegrate(substep).subs(substitution).trigsimp(), restriction)
+    )
 
 @evaluates(DerivativeRule)
 def eval_derivativerule(integrand, symbol):

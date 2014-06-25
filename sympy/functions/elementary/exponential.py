@@ -4,6 +4,7 @@ from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
@@ -27,6 +28,7 @@ from sympy.core.compatibility import xrange
 class ExpBase(Function):
 
     unbranched = True
+    is_polar = False
 
     def inverse(self, argindex=1):
         """
@@ -95,28 +97,11 @@ class ExpBase(Function):
     def _eval_is_zero(self):
         return (self.args[0] is S.NegativeInfinity)
 
-    def _eval_power(b, e):
+    def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
         """
-        f = b.func
-        be = b.exp
-        rv = f(be*e)
-        if e.is_integer:
-            return rv
-        if be.is_real:
-            return rv
-        # "is True" needed below; exp.is_polar returns <property object ...>
-        if f.is_polar is True:
-            return rv
-        if e.is_polar:
-            return rv
-        if be.is_polar:
-            return rv
-        besmall = abs(be) <= S.Pi
-        if besmall == True:
-            return rv
-        elif besmall == False and e.is_Rational and e.q == 2:
-            return -rv
+        b, e = self.as_base_exp()
+        return Pow._eval_power(Pow(b, e, evaluate=False), other)
 
     def _eval_expand_power_exp(self, **hints):
         arg = self.args[0]
@@ -178,6 +163,9 @@ class exp_polar(ExpBase):
             # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
             return re(res)
         return res
+
+    def _eval_power(self, other):
+        return self.func(self.args[0]*other)
 
     def _eval_is_real(self):
         if self.args[0].is_real:
@@ -342,43 +330,18 @@ class exp(ExpBase):
         return (exp(re)*cos, exp(re)*sin)
 
     def _eval_subs(self, old, new):
-        arg = self.args[0]
-        o = old
+        if old is S.Exp1:
+            return new**self.args[0].subs(old, new)
+
+        # keep processing of power-like args centralized in Pow
         if old.is_Pow:  # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
-            o = exp(o.exp*log(o.base))
-        if o.func is exp:
-            # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
-            a, expr_terms = self.args[0].as_independent(
-                C.Symbol, as_Add=False)
-            b, expr_terms_ = o.args[0].as_independent(
-                C.Symbol, as_Add=False)
+            old = exp(old.exp*log(old.base))
+        if old.func is exp or old is S.Exp1:
+            f = lambda a: Pow(*a.as_base_exp(), evaluate=False) if (
+                a.is_Pow or a.func is exp) else a
+            return Pow._eval_subs(f(self), f(old), new)
 
-            if expr_terms == expr_terms_:
-                return new**(a/b)
-
-            if arg.is_Add:  # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
-                # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
-                oarg = o.args[0]
-                new_l = []
-                o_al = []
-                coeff2, terms2 = oarg.as_coeff_mul()
-                for a in arg.args:
-                    a = a._subs(o, new)
-                    coeff1, terms1 = a.as_coeff_mul()
-                    if terms1 == terms2:
-                        new_l.append(new**(coeff1/coeff2))
-                    else:
-                        o_al.append(a._subs(o, new))
-                if new_l:
-                    new_l.append(self.func(Add(*o_al)))
-                    r = Mul(*new_l)
-                    return r
-        if o is S.Exp1:
-            # treat this however Pow is being treated
-            u = C.Dummy('u', positive=True)
-            return (u**self.args[0]).xreplace({u: new})
-
-        return Function._eval_subs(self, o, new)
+        return Function._eval_subs(self, old, new)
 
     def _eval_is_real(self):
         if self.args[0].is_real:
