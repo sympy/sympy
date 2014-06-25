@@ -375,29 +375,62 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        if old.func is self.func and self.base == old.base:
-            coeff1, terms1 = self.exp.as_independent(C.Symbol, as_Add=False)
-            coeff2, terms2 = old.exp.as_independent(C.Symbol, as_Add=False)
+        def _check(ct1, ct2, old):
+            """Return bool, pow where, if bool is True, then the exponent of
+            Pow `old` will combine with `pow` so the substitution is valid,
+            otherwise bool will be False,
+
+            cti are the coefficient and terms of an exponent of self or old
+            In this _eval_subs routine a change like (b**(2*x)).subs(b**x, y)
+            will give y**2 since (b**x)**2 == b**(2*x); if that equality does
+            not hold then the substitution should not occur so `bool` will be
+            False.
+            """
+            coeff1, terms1 = ct1
+            coeff2, terms2 = ct2
             if terms1 == terms2:
                 pow = coeff1/coeff2
                 try:
                     pow = as_int(pow)
-                    ok = True
+                    rv = True
                 except ValueError:
-                    ok = self.base.is_positive
+                    rv = Pow._eval_power(Pow(*old.as_base_exp(), evaluate=False), pow) is not None
+                return rv, pow
+            return False, None
+
+        if old.func is self.func and self.base == old.base:
+            if self.exp.is_Add is False:
+                ct1 = self.exp.as_independent(C.Symbol, as_Add=False)
+                ct2 = old.exp.as_independent(C.Symbol, as_Add=False)
+                ok, pow = _check(ct1, ct2, old)
                 if ok:
                     # issue 5180: (x**(6*y)).subs(x**(3*y),z)->z**2
                     return self.func(new, pow)
+            else:  # b**(6*x+a).subs(b**(3*x), y) -> y**2 * b**a
+                # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
+                oarg = old.exp
+                new_l = []
+                o_al = []
+                ct2 = oarg.as_coeff_mul()
+                for a in self.exp.args:
+                    newa = a._subs(old, new)
+                    ct1 = newa.as_coeff_mul()
+                    ok, pow = _check(ct1, ct2, old)
+                    if ok:
+                        new_l.append(new**pow)
+                        continue
+                    o_al.append(newa)
+                if new_l:
+                    new_l.append(Pow(self.base, Add(*o_al), evaluate=False))
+                    return Mul(*new_l)
+
         if old.func is C.exp and self.exp.is_real and self.base.is_positive:
-            coeff1, terms1 = old.args[0].as_independent(C.Symbol, as_Add=False)
-            # we can only do this when the base is positive AND the exponent
-            # is real
-            coeff2, terms2 = (self.exp*C.log(self.base)).as_independent(
+            ct1 = old.args[0].as_independent(C.Symbol, as_Add=False)
+            ct2 = (self.exp*C.log(self.base)).as_independent(
                 C.Symbol, as_Add=False)
-            if terms1 == terms2:
-                pow = coeff1/coeff2
-                if pow == int(pow) or self.base.is_positive:
-                    return self.func(new, pow)  # (2**x).subs(exp(x*log(2)), z) -> z
+            ok, pow = _check(ct1, ct2, old)
+            if ok:
+                return self.func(new, pow)  # (2**x).subs(exp(x*log(2)), z) -> z
 
     def as_base_exp(self):
         """Return base and exp of self.
