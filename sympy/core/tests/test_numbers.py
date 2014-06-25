@@ -739,6 +739,8 @@ def test_NaN():
     assert nan/S.One == nan
     assert nan**0 == 1  # as per IEEE 754
     assert 1**nan == nan # IEEE 754 is not the best choice for symbolic work
+    # test Pow._eval_power's handling of NaN
+    assert Pow(nan, 0, evaluate=False)**2 == 1
 
 
 def test_special_numbers():
