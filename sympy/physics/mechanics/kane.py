@@ -603,7 +603,7 @@ class KanesMethod(object):
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
         If kwarg A_and_B is True, returns A, B, r for the linearized form
-        dx = A*x + B*r, where x = [q_ind u_ind]^T. Note that this is
+        dx = A*x + B*r, where x = [q_ind, u_ind]^T. Note that this is
         computationally intensive if there are many symbolic parameters. For
         this reason, it may be more desirable to use the default A_and_B=False,
         returning M, A, and B. Values may then be substituted in to these
@@ -614,16 +614,10 @@ class KanesMethod(object):
         motion that are not part of q, u, q', or u'. They are sorted in
         canonical form.
 
-        The operating points may be also entered using kwargs. The more values
+        The operating points may be also entered using the `op_point` kwarg.
+        This takes a dictionary of {symbol: value}, or a an iterable of such
+        dictionaries. The values may be numberic or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
-        Operating points are specified as dictionaries of {symbol: value}. The
-        value may be numeric or symbolic itself. Operating point kwargs are:
-
-        q_op: operating point for q (generalized coordinates)
-        u_op: operating point for u (generalized speeds)
-        qd_op: operating point for d/dt q
-        ud_op: operating point for d/dt u
-        r_op: operating point for forcing vector
 
         As part of the deprecation cycle, the new method will not be used unless
         the kwarg `new_method` is set to True. If the kwarg is missing, or set

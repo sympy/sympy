@@ -82,7 +82,7 @@ def test_linearize_rolling_disc():
     assert simplify(linearizer.f_2 + linearizer.f_3 - fr - fr_star) == Matrix([0, 0, 0])
 
     # Perform the linearization
-    # Precomputed trim condition:
+    # Precomputed operating point
     q_op = {q6: -r*cos(q2)}
     u_op = {u1: 0,
             u2: sin(q2)*q1d + q3d,
@@ -213,7 +213,7 @@ def test_linearize_pendulum_nonminimal():
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
-    # Set the trim condition to be straight down, and non-moving
+    # Set the operating point to be straight down, and non-moving
     q_op = {q1: L, q2: 0}
     u_op = {u1: 0, u2: 0}
     ud_op = {u1d: 0, u2d: 0}

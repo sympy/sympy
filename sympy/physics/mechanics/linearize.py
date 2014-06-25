@@ -198,7 +198,7 @@ class Linearizer(object):
         else:
             self._B_u = Matrix()
 
-    def linearize(self, op_point=None, A_and_B=False):
+    def linearize(self, op_point=None, A_and_B=False, simplify=True):
         """Linearize the system about the operating point. Note that
         q_op, u_op, qd_op, ud_op must satisfy the equations of motion.
         These may be either symbolic or numeric.
@@ -208,16 +208,20 @@ class Linearizer(object):
         op_point : dict or iterable of dicts, optional
             Dictionary or iterable of dictionaries containing the operating
             point conditions. These will be substituted in to the linearized
-            system before the linearization is complete.  Leave blank if you
+            system before the linearization is complete. Leave blank if you
             want a completely symbolic form. Note that any reduction in
             symbols (whether substituted for numbers or expressions with a
             common parameter) will result in faster runtime.
 
         A_and_B : bool, optional
             If A_and_B=False (default), (M, A, B) is returned for forming
-            [M]*[q, u]^T = [A]*[q_ind, u_ind]^T + [B]r.  If A_and_B=True,
+            [M]*[q, u]^T = [A]*[q_ind, u_ind]^T + [B]r. If A_and_B=True,
             (A, B) is returned for forming dx = [A]x + [B]r, where
             x = [q_ind, u_ind]^T.
+
+        simplify : bool, optional
+            Determines if returned values are simplified before return.
+            Default is True.
 
         Note that the process of solving with A_and_B=True is computationally
         intensive if there are many symbolic parameters. For this reason,
@@ -343,17 +347,22 @@ class Linearizer(object):
         # dx = [A]x + [B]r, where x = [q_ind, u_ind]^T,
         if A_and_B:
             A_cont = self.perm_mat.T * M_eq.LUsolve(Amat_eq)
-            A_cont.simplify()
             if Bmat_eq:
                 B_cont = self.perm_mat.T * M_eq.LUsolve(Bmat_eq)
-                B_cont.simplify()
             else:
                 # Bmat = Matrix([]), so no need to sub
                 B_cont = Bmat_eq
+            if simplify:
+                A_cont.simplify()
+                B_cont.simplify()
             return A_cont, B_cont
         # Otherwise return M, A, B for forming the equation
         # [M]dx = [A]x + [B]r, where x = [q, u]^T
         else:
+            if simplify:
+                M_eq.simplify()
+                Amat_eq.simplify()
+                Bmat_eq.simplify()
             return M_eq, Amat_eq, Bmat_eq
 
 
