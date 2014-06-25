@@ -50,7 +50,7 @@ class CodePrinter(StrPrinter):
 
         # terms with no summations first
         if None in d:
-            print("p3 in codeprinter")
+            #print("p3 in codeprinter")
             text = CodePrinter.doprint(self, Add(*d[None]))
         else:
             # If all terms have summations we must initialize array to Zero
