@@ -13,10 +13,8 @@ g = Function('g')
 
 
 def test_printmethod():
-    class fabs(Abs):
-        def _rcode(self, printer):
-            return "fabs(%s)" % printer._print(self.args[0])
-    assert rcode(fabs(x)) == "fabs(x)"
+    p=rcode(Abs(x))
+    assert p  == "abs(x)"
 
 
 def test_rcode_sqrt():
@@ -38,12 +36,14 @@ def test_rcode_Pow():
     assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
 
 def test_rcode_constants_mathh():
-    assert rcode(exp(1)) == "M_E"
-    assert rcode(pi) == "M_PI"
-    assert rcode(oo) == "HUGE_VAL"
-    assert rcode(-oo) == "-HUGE_VAL"
+    p=rcode(exp(1)) 
+    print(">%s<" %p)
+    assert p == "exp(1)" #nothing changes
+    assert rcode(pi) == "pi" #nothing changes
+    assert rcode(oo) == "Inf"
+    assert rcode(-oo) == "-Inf"
 
-
+#mm
 def test_rcode_constants_other():
     assert rcode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
     assert rcode(
@@ -87,20 +87,18 @@ def test_rcode_inline_function():
 
 
 def test_rcode_exceptions():
-    assert rcode(ceiling(x)) == "ceil(x)"
-    assert rcode(Abs(x)) == "fabs(x)"
-    assert rcode(gamma(x)) == "tgamma(x)"
+    assert rcode(Abs(x)) == "abs(x)"
 
 
 def test_rcode_user_functions():
     x = symbols('x', integer=False)
     n = symbols('n', integer=True)
     custom_functions = {
-        "ceiling": "ceil",
-        "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
+        "ceiling": "my_ceil",
+        "Abs": [(lambda x: not x.is_integer, "my_abs"), (lambda x: x.is_integer, "abs")],
     }
-    assert rcode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
-    assert rcode(Abs(x), user_functions=custom_functions) == "fabs(x)"
+    assert rcode(ceiling(x), user_functions=custom_functions) == "my_ceil(x)"
+    assert rcode(Abs(x), user_functions=custom_functions) == "my_abs(x)"
     assert rcode(Abs(n), user_functions=custom_functions) == "abs(n)"
 
 
