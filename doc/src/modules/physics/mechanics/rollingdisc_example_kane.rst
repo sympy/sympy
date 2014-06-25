@@ -81,4 +81,3 @@ for the u dots (time derivatives of the generalized speeds). ::
   [(4*g*sin(q2) + 6*r*u2*u3 - r*u3**2*tan(q2))/(5*r)],
   [                                       -2*u1*u3/3],
   [                          (-2*u2 + u3*tan(q2))*u1]])
-

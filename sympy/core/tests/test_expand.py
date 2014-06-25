@@ -140,8 +140,6 @@ def test_issue_6121():
 
 
 def test_expand_power_base():
-    # was test_separate()
-
     assert expand_power_base((x*y*z)**4) == x**4*y**4*z**4
     assert expand_power_base((x*y*z)**x).is_Pow
     assert expand_power_base((x*y*z)**x, force=True) == x**x*y**x*z**x

@@ -152,7 +152,7 @@ class Routine(object):
         local_vars = set([i.label for i in expressions.atoms(Idx)])
 
         # symbols that should be arguments
-        symbols = expressions.atoms(Symbol) - local_vars
+        symbols = expressions.free_symbols - local_vars
 
         # Decide whether to use output argument or return value
         return_val = []

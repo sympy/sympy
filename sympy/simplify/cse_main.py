@@ -4,14 +4,14 @@ from __future__ import print_function, division
 
 import difflib
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple
+from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple, Symbol
 from sympy.core.singleton import S
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
 from sympy.core.exprtools import factor_terms
 from sympy.core.compatibility import iterable, xrange
-from sympy.utilities.iterables import numbered_symbols, \
-    sift, topological_sort, ordered
+from sympy.utilities.iterables import filter_symbols, \
+    numbered_symbols, sift, topological_sort, ordered
 
 from . import cse_opts
 
@@ -360,7 +360,10 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
             new_expr = expr
 
         if orig_expr in to_eliminate:
-            sym = next(symbols)
+            try:
+                sym = next(symbols)
+            except StopIteration:
+                raise ValueError("Symbols iterator ran out of symbols.")
             subs[orig_expr] = sym
             replacements.append((sym, new_expr))
             return sym
@@ -422,6 +425,21 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     """
     from sympy.matrices import Matrix
 
+    # Handle the case if just one expression was passed.
+    if isinstance(exprs, Basic):
+        exprs = [exprs]
+
+    if optimizations is None:
+        optimizations = list()
+    elif optimizations == 'basic':
+        optimizations = basic_optimizations
+
+    # Preprocess the expressions to give us better optimization opportunities.
+    reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
+
+    excluded_symbols = set.union(*[expr.atoms(Symbol)
+                                   for expr in reduced_exprs])
+
     if symbols is None:
         symbols = numbered_symbols()
     else:
@@ -429,17 +447,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         # an actual iterator.
         symbols = iter(symbols)
 
-    if optimizations is None:
-        optimizations = list()
-    elif optimizations == 'basic':
-        optimizations = basic_optimizations
-
-    # Handle the case if just one expression was passed.
-    if isinstance(exprs, Basic):
-        exprs = [exprs]
-
-    # Preprocess the expressions to give us better optimization opportunities.
-    reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
+    symbols = filter_symbols(symbols, excluded_symbols)
 
     # Find other optimization opportunities.
     opt_subs = opt_cse(reduced_exprs, order)

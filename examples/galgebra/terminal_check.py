@@ -7,6 +7,7 @@ from sympy.galgebra import enhance_print, Get_Program, Print_Function
 from sympy.galgebra import MV, Format, Com, Nga
 from sympy.galgebra.printing import GA_Printer
 
+
 def basic_multivector_operations():
     Print_Function()
     (ex, ey, ez) = MV.setup('e*x|y|z')
@@ -64,6 +65,7 @@ def basic_multivector_operations():
     (A > X).Fmt(2, 'A>X')
     return
 
+
 def check_generalized_BAC_CAB_formulas():
     Print_Function()
 
@@ -74,15 +76,25 @@ def check_generalized_BAC_CAB_formulas():
     print('a|(b*c) =', a | (b*c))
     print('a|(b^c) =', a | (b ^ c))
     print('a|(b^c^d) =', a | (b ^ c ^ d))
-    print('a|(b^c)+c|(a^b)+b|(c^a) =', (a | (b ^ c)) + (c | (a ^ b)) + (b | (c ^ a)))
+    print('a|(b^c)+c|(a^b)+b|(c^a) =', (a | (b ^ c)) +
+          (c | (a ^ b)) +
+          (b | (c ^ a)))
     print('a*(b^c)-b*(a^c)+c*(a^b) =', a*(b ^ c) - b*(a ^ c) + c*(a ^ b))
-    print('a*(b^c^d)-b*(a^c^d)+c*(a^b^d)-d*(a^b^c) =', a*(b ^ c ^ d) - b*(a ^ c ^ d) + c*(a ^ b ^ d) - d*(a ^ b ^ c))
+    print('a*(b^c^d)-b*(a^c^d)+c*(a^b^d)-d*(a^b^c) =', a *
+          (b ^ c ^ d) -
+          b *
+          (a ^ c ^ d) +
+          c *
+          (a ^ b ^ d) -
+          d *
+          (a ^ b ^ c))
     print('(a^b)|(c^d) =', (a ^ b) | (c ^ d))
     print('((a^b)|c)|d =', ((a ^ b) | c) | d)
     print('(a^b)x(c^d) =', Com(a ^ b, c ^ d))
     print('(a|(b^c))|(d^e) =', (a | (b ^ c)) | (d ^ e))
 
     return
+
 
 def derivatives_in_rectangular_coordinates():
     Print_Function()
@@ -117,12 +129,25 @@ def derivatives_in_rectangular_coordinates():
 
     return
 
+
 def derivatives_in_spherical_coordinates():
     Print_Function()
 
     X = (r, th, phi) = symbols('r theta phi')
-    curv = [[r*cos(phi)*sin(th), r*sin(phi)*sin(th), r*cos(th)], [1, r, r*sin(th)]]
-    (er, eth, ephi, grad) = MV.setup('e_r e_theta e_phi', metric='[1,1,1]', coords=X, curv=curv)
+    curv = [[r *
+             cos(phi) *
+             sin(th), r *
+             sin(phi) *
+             sin(th), r *
+             cos(th)], [1, r, r *
+                        sin(th)]]
+    (er,
+     eth,
+     ephi,
+     grad) = MV.setup('e_r e_theta e_phi',
+                      metric='[1,1,1]',
+                      coords=X,
+                      curv=curv)
 
     f = MV('f', 'scalar', fct=True)
     A = MV('A', 'vector', fct=True)
@@ -138,6 +163,7 @@ def derivatives_in_spherical_coordinates():
     print('grad^B =', grad ^ B)
     return
 
+
 def rounding_numerical_components():
     Print_Function()
 
@@ -152,6 +178,7 @@ def rounding_numerical_components():
     print('Nga(X*Y,2) =', Nga(X*Y, 2))
     return
 
+
 def noneuclidian_distance_calculation():
     from sympy import solve, sqrt
     Print_Function()
@@ -164,7 +191,7 @@ def noneuclidian_distance_calculation():
     print('(X^Y)**2 =', (X ^ Y)*(X ^ Y))
 
     L = X ^ Y ^ e
-    B = L*e # D&L 10.152
+    B = L*e  # D&L 10.152
     print('B =', B)
     Bsq = B*B
     print('B**2 =', Bsq)
@@ -176,18 +203,19 @@ def noneuclidian_distance_calculation():
     print('B*e*B.rev() =', BeBr)
     print('B**2 =', B*B)
     print('L**2 =', L*L)   # D&L 10.153
-    (s, c, Binv, M, BigS, BigC, alpha, XdotY, Xdote, Ydote) = symbols('s c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
+    (s, c, Binv, M, BigS, BigC, alpha, XdotY, Xdote, Ydote) = symbols(
+        's c (1/B) M S C alpha (X.Y) (X.e) (Y.e)')
 
-    Bhat = Binv*B # D&L 10.154
-    R = c + s*Bhat # Rotor R = exp(alpha*Bhat/2)
+    Bhat = Binv*B  # D&L 10.154
+    R = c + s*Bhat  # Rotor R = exp(alpha*Bhat/2)
     print('s = sinh(alpha/2) and c = cosh(alpha/2)')
     print('exp(alpha*B/(2*|B|)) =', R)
 
-    Z = R*X*R.rev() # D&L 10.155
+    Z = R*X*R.rev()  # D&L 10.155
     Z.obj = expand(Z.obj)
     Z.obj = Z.obj.collect([Binv, s, c, XdotY])
     Z.Fmt(3, 'R*X*R.rev()')
-    W = Z | Y # Extract scalar part of multivector
+    W = Z | Y  # Extract scalar part of multivector
     # From this point forward all calculations are with sympy scalars
     print('Objective is to determine value of C = cosh(alpha) such that W = 0')
     W = W.scalar()
@@ -202,7 +230,7 @@ def noneuclidian_distance_calculation():
     Bmag = sqrt(XdotY**2 - 2*XdotY*Xdote*Ydote)
     W = W.collect([Binv*c*s, XdotY])
 
-    #Double angle substitutions
+    # Double angle substitutions
 
     W = W.subs(2*XdotY**2 - 4*XdotY*Xdote*Ydote, 2/(Binv**2))
     W = W.subs(2*c*s, BigS)
@@ -255,10 +283,12 @@ def noneuclidian_distance_calculation():
     print('cosh(alpha) = C = -b/(2*a) =', expand(simplify(expand(C))))
     return
 
+
 def F(x):
     global n, nbar
     Fx = Rational(1, 2)*((x*x)*n + 2*x - nbar)
     return(Fx)
+
 
 def make_vector(a, n=3):
     if isinstance(a, str):
@@ -271,6 +301,7 @@ def make_vector(a, n=3):
         a = MV(sym_lst, 'vector')
     return(F(a))
 
+
 def conformal_representations_of_circles_lines_spheres_and_planes():
     global n, nbar
     Print_Function()
@@ -282,7 +313,7 @@ def conformal_representations_of_circles_lines_spheres_and_planes():
     print('g_{ij} =\n', MV.metric)
 
     e = n + nbar
-    #conformal representation of points
+    # conformal representation of points
 
     A = make_vector(e1)    # point a = (1,0,0)  A = F(a)
     B = make_vector(e2)    # point b = (0,1,0)  B = F(b)
@@ -311,6 +342,7 @@ def conformal_representations_of_circles_lines_spheres_and_planes():
 
     L.Fmt(3, 'Hyperbolic Circle: (A^B^e)^X = 0 =')
     return
+
 
 def properties_of_geometric_objects():
     Print_Function()
@@ -342,6 +374,7 @@ def properties_of_geometric_objects():
     print('((C^n)|n)|nbar =', delta)
     print('(p2-p1)^(p3-p1) =', (p2 - p1) ^ (p3 - p1))
 
+
 def extracting_vectors_from_conformal_2_blade():
     Print_Function()
 
@@ -371,6 +404,7 @@ def extracting_vectors_from_conformal_2_blade():
     aB = a | B
     print('a|B =', aB)
     return
+
 
 def reciprocal_frame_test():
     Print_Function()
@@ -435,8 +469,10 @@ def reciprocal_frame_test():
     print('(E3|e3)/E**2 =', simplify(w/Esq))
     return
 
+
 def dummy():
     return
+
 
 def main():
     Get_Program(True)

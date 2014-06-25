@@ -421,3 +421,9 @@ def test_issue_4099():
     assert limit(-a/x, x, 0) == -oo*sign(a)
     assert limit(-a*x, x, oo) == -oo*sign(a)
     assert limit(a*x, x, oo) == oo*sign(a)
+
+
+def test_issue_4503():
+    dx = Symbol('dx')
+    assert limit((sqrt(1 + exp(x + dx)) - sqrt(1 + exp(x)))/dx, dx, 0) == \
+        exp(x)/(2*sqrt(exp(x) + 1))

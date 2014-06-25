@@ -122,7 +122,7 @@ def express(expr, frame, frame2=None, variables=False):
             frame_set = set([])
             expr = sympify(expr)
             #Subsitute all the coordinate variables
-            for x in expr.atoms():
+            for x in expr.free_symbols:
                 if isinstance(x, CoordinateSym)and x.frame != frame:
                     frame_set.add(x.frame)
             subs_dict = {}

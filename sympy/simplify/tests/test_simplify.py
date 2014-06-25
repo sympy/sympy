@@ -9,8 +9,8 @@ from sympy import (
     posify, powdenest, powsimp, rad, radsimp, Rational, ratsimp,
     ratsimpmodprime, rcollect, RisingFactorial, root, S, separatevars,
     signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol, symbols,
-    sympify, tan, tanh, trigsimp, Wild, zoo)
-from sympy.core.mul import _keep_coeff
+    sympify, tan, tanh, trigsimp, Wild, zoo, Sum)
+from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
 from sympy.utilities.pytest import XFAIL, slow
@@ -1180,6 +1180,11 @@ def test_posify():
     assert str(modified) == '[_x, n, p]'
     assert [w.subs(reps) for w in modified] == orig
 
+    assert str(Integral(posify(1/x + y)[0], (y, 1, 3)).expand()) == \
+        'Integral(1/_x, (y, 1, 3)) + Integral(_y, (y, 1, 3))'
+    assert str(Sum(posify(1/x**n)[0], (n,1,3)).expand()) == \
+        'Sum(_x**(-n), (n, 1, 3))'
+
 
 def test_powdenest():
     from sympy import powdenest
@@ -1504,6 +1509,7 @@ def test_radsimp():
     assert radsimp(e/2) == cos(-sqrt(2) + 1)/2
     assert radsimp(1/e) == 1/cos(-sqrt(2) + 1)
     assert radsimp(2/e) == 2/cos(-sqrt(2) + 1)
+    assert fraction(radsimp(e/sqrt(x))) == (sqrt(x)*cos(-sqrt(2)+1), x)
 
     # test that symbolic denominators are not processed
     r = 1 + sqrt(2)
@@ -1511,6 +1517,18 @@ def test_radsimp():
     assert radsimp(x/(y + r), symbolic=False) == x/(y + 1 + sqrt(2))
     assert radsimp(x/(y + r)/r, symbolic=False) == \
         -x*(-sqrt(2) + 1)/(y + 1 + sqrt(2))
+
+    # issue 7408
+    eq = sqrt(x)/sqrt(y)
+    assert radsimp(eq) == umul(sqrt(x), sqrt(y), 1/y)
+    assert radsimp(eq, symbolic=False) == eq
+
+    # issue 7498
+    assert radsimp(sqrt(x)/sqrt(y)**3) == umul(sqrt(x), sqrt(y**3), 1/y**3)
+
+    # for coverage
+    eq = sqrt(x)/y**2
+    assert radsimp(eq) == eq
 
 
 def test_radsimp_issue_3214():

@@ -25,3 +25,4 @@ Contents:
    wiki.rst
    outreach.rst
    aboutus.rst
+   special_topics/index.rst

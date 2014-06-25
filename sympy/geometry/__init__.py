@@ -9,7 +9,7 @@ Usage:
 
 Notes:
 ======
-    Currently the geometry module is restricted to the 2-dimensional
+    Currently the geometry module supports 2-dimensional and 3-dimensional
     Euclidean space.
 
 Examples
@@ -17,6 +17,7 @@ Examples
 
 """
 from sympy.geometry.point import Point
+from sympy.geometry.point3d import Point3D
 from sympy.geometry.line import Line, Ray, Segment
 from sympy.geometry.ellipse import Ellipse, Circle
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle, rad, deg

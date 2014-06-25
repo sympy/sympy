@@ -112,3 +112,7 @@ Ntheory Functions Reference
 
 .. autoclass:: sympy.ntheory.mobius
     :members:
+
+.. module:: sympy.ntheory.egyptian_fraction
+
+.. autofunction:: egyptian_fraction

@@ -129,7 +129,7 @@ def main():
     det(V) = %(det)s
     \sum   = %(sum)s
            = %(sum_expand)s
-    """ % { "det": V.det(),
+    """ % {"det": V.det(),
             "sum": det_sum,
             "sum_expand": det_sum.expand(),
           })
@@ -143,7 +143,7 @@ def main():
     Quadratic function, represented by 3 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 2, [x]),
           })
 
@@ -153,7 +153,7 @@ def main():
     2D Quadratic function, represented by 6 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 2, [x, y]),
           })
 
@@ -162,7 +162,7 @@ def main():
     3D linear function, represented by 4 points:
        points = %(pts)s
        f = %(f)s
-    """ % { "pts" : points,
+    """ % {"pts": points,
             "f": gen_poly(points, 1, [x, y, z]),
           })
 

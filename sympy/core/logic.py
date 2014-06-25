@@ -25,6 +25,9 @@ def fuzzy_bool(x):
 def fuzzy_and(args):
     """Return True (all True), False (any False) or None.
 
+    Examples
+    ========
+
     >>> from sympy.core.logic import fuzzy_and
     >>> from sympy import Dummy
 
@@ -59,10 +62,10 @@ def fuzzy_not(v):
     """
     Not in fuzzy logic
 
-    Will return Not if arg is a boolean value, and None if argument
-    is None.
+    Return None if `v` is None else `not v`.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.core.logic import fuzzy_not
     >>> fuzzy_not(True)

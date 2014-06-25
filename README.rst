@@ -23,6 +23,12 @@ to ask us anything there. We have a very welcoming and helpful community.
 Download
 --------
 
+.. image:: https://pypip.in/v/sympy/badge.png
+    :target: https://pypi.python.org/pypi/sympy
+
+.. image:: https://pypip.in/d/sympy/badge.png
+    :target: https://pypi.python.org/pypi/sympy
+
 Get the latest version of SymPy from
 https://pypi.python.org/pypi/sympy/
 

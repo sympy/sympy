@@ -13,7 +13,7 @@ from sympy import (
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false)
+    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -96,7 +96,7 @@ def test_latex_basic():
     assert latex(x | y | z) == r"x \vee y \vee z"
     assert latex((x & y) | z) == r"z \vee \left(x \wedge y\right)"
     assert latex(Implies(x, y)) == r"x \Rightarrow y"
-    assert latex(~(x >> ~y)) == r"\neg (x \Rightarrow \neg y)"
+    assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
@@ -684,13 +684,13 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
 
 
-def test_latex_issue1282():
+def test_latex_issue_4381():
     y = 4*4**log(2)
     assert latex(y) == r'4 \cdot 4^{\log{\left (2 \right )}}'
     assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left (2 \right )}}}'
 
 
-def test_latex_issue1477():
+def test_latex_issue_4576():
     assert latex(Symbol("beta_13_2")) == r"\beta_{13 2}"
     assert latex(Symbol("beta_132_20")) == r"\beta_{132 20}"
     assert latex(Symbol("beta_13")) == r"\beta_{13}"
@@ -1044,6 +1044,7 @@ def test_Hadamard():
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
+
 def test_boolean_args_order():
     syms = symbols('a:f')
 
@@ -1052,6 +1053,10 @@ def test_boolean_args_order():
 
     expr = Or(*syms)
     assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
+
+    expr = Equivalent(*syms)
+    assert latex(expr) == 'a \\equiv b \\equiv c \\equiv d \\equiv e \\equiv f'
+
 
 def test_imaginary():
     i = sqrt(-1)
@@ -1254,3 +1259,8 @@ def test_Mul():
 def test_Pow():
     e = Pow(2, 2, evaluate=False)
     assert latex(e)  == r'2^{2}'
+
+
+def test_issue_7180():
+    assert latex(Equivalent(x, y)) == r"x \equiv y"
+    assert latex(Not(Equivalent(x, y))) == r"x \not\equiv y"
