@@ -440,8 +440,8 @@ def _mat_inv_mul(A, B):
     return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
 
 def _subs_keep_derivs(expr, sub_dict):
-    """ Performs subs exactly as subs normally would be,
-    but doesn't sub in expressions inside Derivatives. """
+    """Performs subs exactly as subs normally would be,
+    but doesn't sub in expressions inside Derivatives."""
 
     ds = expr.atoms(Derivative)
     gs = [Dummy() for d in ds]

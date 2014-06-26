@@ -25,7 +25,7 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
-    assert KM.linearize(A_and_B=True)[0] == Matrix([[0, 1], [-k/m, -c/m]])
+    assert KM.linearize(A_and_B=True, new_method=True)[0] == Matrix([[0, 1], [-k/m, -c/m]])
 
 
 def test_two_dof():
@@ -152,7 +152,7 @@ def test_rolling_disc():
     # This code tests our output vs. benchmark values. When r=g=m=1, the
     # critical speed (where all eigenvalues of the linearized equations are 0)
     # is 1 / sqrt(3) for the upright case.
-    A = KM.linearize(A_and_B=True)[0]
+    A = KM.linearize(A_and_B=True, new_method=True)[0]
     A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
     assert A_upright.subs(u2, 1 / sqrt(3)).eigenvals() == {S(0): 6}
 

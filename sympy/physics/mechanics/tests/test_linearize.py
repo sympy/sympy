@@ -73,17 +73,17 @@ def test_linearize_rolling_disc_kane():
     (fr, fr_star) = KM.kanes_equations(FL, BL)
 
     # Test generalized form equations
-    gen_form = KM._general_form()
-    assert gen_form[0] == f_c
-    assert gen_form[1] == f_v
-    assert gen_form[2] == f_v.diff(t)
-    sol = solve(gen_form[3] + gen_form[4], qd)
+    linearizer = KM.to_linearizer()
+    assert linearizer.f_c == f_c
+    assert linearizer.f_v == f_v
+    assert linearizer.f_a == f_v.diff(t)
+    sol = solve(linearizer.f_0 + linearizer.f_1, qd)
     for qi in qd:
         assert sol[qi] == qdots[qi]
-    assert simplify(gen_form[5] + gen_form[6] - fr - fr_star) == Matrix([0, 0, 0])
+    assert simplify(linearizer.f_2 + linearizer.f_3 - fr - fr_star) == Matrix([0, 0, 0])
 
     # Perform the linearization
-    # Precomputed trim condition:
+    # Precomputed operating point
     q_op = {q6: -r*cos(q2)}
     u_op = {u1: 0,
             u2: sin(q2)*q1d + q3d,
@@ -102,7 +102,7 @@ def test_linearize_rolling_disc_kane():
              u5d: r*(4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5),
              u6d: -r*(sin(q2)*cos(q3)*q1d*q3d + cos(q3)*q3d**2)}
 
-    A, B, inp_vec = KM.linearize(q_op=q_op, u_op=u_op, qd_op=qd_op, ud_op=ud_op, A_and_B=True)
+    A, B = linearizer.linearize(op_point=[q_op, u_op, qd_op, ud_op], A_and_B=True)
 
     upright_nominal = {q1d: 0, q2: 0, m: 1, r: 1, g: 1}
 
@@ -156,7 +156,7 @@ def test_linearize_pendulum_kane_minimal():
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
     # Linearize
-    A, B, inp_vec = KM.linearize(A_and_B=True)
+    A, B, inp_vec = KM.linearize(A_and_B=True, new_method=True)
 
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
@@ -214,12 +214,12 @@ def test_linearize_pendulum_kane_nonminimal():
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
-    # Set the trim condition to be straight down, and non-moving
+    # Set the operating point to be straight down, and non-moving
     q_op = {q1: L, q2: 0}
     u_op = {u1: 0, u2: 0}
     ud_op = {u1d: 0, u2d: 0}
 
-    A, B, inp_vec = KM.linearize(q_op=q_op, u_op=u_op, ud_op=ud_op, A_and_B=True)
+    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True, new_method=True)
 
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
@@ -290,6 +290,6 @@ def test_linearize_pendulum_lagrange_nonminimal():
     ud_op = {q1d.diff(t): 0, q2d.diff(t): 0}
     # Solve for multiplier operating point
     lam_op = LM.solve_multipliers(op_point=[q_op, u_op, ud_op])
-    A, B = linearizer.linearize(q_op=q_op, u_op=u_op, ud_op=ud_op, lam_op=lam_op, A_and_B=True)
+    A, B = linearizer.linearize(op_point=[q_op, u_op, ud_op, lam_op], A_and_B=True)
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
