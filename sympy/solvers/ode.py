@@ -7544,8 +7544,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     sol1 = []
     for sols in sol2:
         sol1.append(phi.subs(v, sols))
-    sol1 = list(set(sol1))
-    return [sol1, sol2]
+    return [set(sol1), set(sol2)]
 
 def _nonlinear_2eq_order1_type2(x, y, t, eq):
     r"""
@@ -7589,8 +7588,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     sol1 = []
     for sols in sol2:
         sol1.append(phi.subs(v, sols))
-    sol1 = list(set(sol1))
-    return [sol1, sol2]
+    return [set(sol1), set(sol2)]
 
 def _nonlinear_2eq_order1_type3(x, y, t, eq):
     r"""
@@ -7621,12 +7619,10 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     sol2r = dsolve(Eq(diff(v(u),u), G.subs(v,v(u))/F.subs(v,v(u))))
     for sol2s in sol2r:
         sol1 = solve(C.Integral(1/F.subs(v, sol2s.rhs), u).doit() - t - C2, u)
-    sol1 = list(set(sol1))
     sol2 = []
     for sols in sol1:
         sol2.append((sol2s.rhs).subs(u, sols))
-    sol2 = list(set(sol2))
-    return [sol1, sol2]
+    return [set(sol1), set(sol2)]
 
 def _nonlinear_2eq_order1_type4(x, y, t, eq):
     r"""
@@ -7668,12 +7664,10 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     sol2 = []
     for sols in sol1r:
         sol2.append(dsolve(diff(v(t),t) - F2.subs(u,sols).subs(v,v(t))*G2.subs(v,v(t))*phi.subs(u,sols).subs(v,v(t))).rhs)
-    sol2 = list(set(sol2))
     sol1 = []
     for sols in sol2r:
         sol1.append(dsolve(diff(u(t),t) - F1.subs(u,u(t))*G1.subs(v,sols).subs(u,u(t))*phi.subs(v,sols).subs(u,u(t))).rhs)
-    sol1 = list(set(sol1))
-    return [sol1, sol2]
+    return [set(sol1), set(sol2)]
 
 def _nonlinear_2eq_order1_type5(x, y, t, eq):
     r"""

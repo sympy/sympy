@@ -186,30 +186,25 @@ def test_linear_3eq_order1():
 def test_nonlinear_2eq_order1():
     x, y, z = symbols('x, y, z', function=True)
     t = Symbol('t')
-#   eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
-#   sol1 = [[C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4)), \
-#   C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4))], [-(-1/(4*C2 + 4*t))**(S(1)/4), \
-#   (-1/(4*C2 + 4*t))**(S(1)/4), -I*(-1/(4*C2 + 4*t))**(S(1)/4), I*(-1/(4*C2 + 4*t))**(S(1)/4)]]
-#   assert dsolve(eq1) == sol1
+    eq1 = (Eq(diff(x(t),t),x(t)*y(t)**3), Eq(diff(y(t),t),y(t)**5))
+    sol1 = [set([C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp((-1/(4*C2 + 4*t))**(-S(1)/4)), C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4)), C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4))]), set([I*(-1/(4*C2 + 4*t))**(S(1)/4), -(-1/(4*C2 + 4*t))**(S(1)/4), -I*(-1/(4*C2 + 4*t))**(S(1)/4), (-1/(4*C2 + 4*t))**(S(1)/4)])]
+    assert dsolve(eq1) == sol1
 
-#   eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
-#   sol2 = [[-log(C1 + 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3, \
-#   -log(C1 - 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3], \
-#   [-sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2, sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2]]
-#   assert dsolve(eq2) == sol2
+    eq2 = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
+    sol2 = [set([-log(C1 - 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3, -log(C1 + 3*sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/(2*y(t)**2))/3]), set([-sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2, sqrt(2)*sqrt(-1/((C2 + t)*y(t)**2))/2])]
+    assert dsolve(eq2) == sol2
 
-#   eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
-#   sol3 = [[6**(S(2)/3)/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(S(2)/3)), \
-#   6**(S(2)/3)/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(S(2)/3))], [sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3]]
-#   assert dsolve(eq3) == sol3
+    eq3 = (Eq(diff(x(t),t), y(t)*x(t)), Eq(diff(y(t),t), x(t)**3))
+    sol3 = [set([6**(S(2)/3)/(6*(sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(S(2)/3)), 6**(S(2)/3)/(6*(-sinh(sqrt(C1*(C2 + t)**2)/2)/sqrt(C1))**(S(2)/3))]), set([sqrt(C1 + C1/sinh(sqrt(C1*(C2 + t)**2)/2)**2)/3])]
+    assert dsolve(eq3) == sol3
 
     eq4 = (Eq(diff(x(t),t),x(t)*y(t)*sin(t)**2), Eq(diff(y(t),t),y(t)**2*sin(t)**2))
-    sol4 = [[-2*exp(C1)/(C2*exp(C1) + t - sin(2*t)/2)], [-2/(C1 + t - sin(2*t)/2)]]
+    sol4 = [set([-2*exp(C1)/(C2*exp(C1) + t - sin(2*t)/2)]), set([-2/(C1 + t - sin(2*t)/2)])]
     assert dsolve(eq4) == sol4
 
-#   eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
-#   sol5 = [[C1*C2 + C1*t], [C2**2 + C2*t]]
-#   assert dsolve(eq5) == sol5
+    eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
+    sol5 = [[C1*C2 + C1*t], [C2**2 + C2*t]]
+    assert dsolve(eq5) == sol5
 
 
 def test_checkodesol():
@@ -394,7 +389,6 @@ def test_classify_ode():
         ('separable', '1st_power_series', 'lie_group', 'separable_Integral')
 
 
-"""
 def test_classify_sysode():
     # Here x is assumed to be x(t) and y as y(t) for simplicity.
     # Similarly diff(x,t) and diff(y,y) is assumed to be x1 and y1 respectively.
@@ -407,117 +401,123 @@ def test_classify_sysode():
     x1 = diff(x(t),t) ; y1 = diff(y(t),t) ; z1 = diff(z(t),t)
     x2 = diff(x(t),t,t) ; y2 = diff(y(t),t,t) ; z2 = diff(z(t),t,t)
 
-    eq1 = (Eq(5*x1, f(x(t),y(t),t)*x(t) - 6*y(t)), Eq(2*y1, h(x(t),y(t),t)*x(t) + 3*y(t)))
-    sol1 = {'func_coeff': {(0, 1, 1): -3, (1, 1, 0): 0, (1, 0, 0): 5, (0, 0, 1): 6, (1, 0, 1): 0, \
-    (0, 0, 0): -f(x(t), y(t), t), (0, 1, 0): -h(x(t), y(t), t), (1, 1, 1): 2}, \
-    'linearity': 'Non-linear', 'order': 1, 'no_of_equation': 2}
+    eq1 = (Eq(diff(x(t),t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t),t), 2*x(t) + 5*t*y(t)))
+    sol1 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): -5*t, (1, x(t), 1): 0, (0, x(t), 1): 1, \
+    (1, y(t), 0): -5*t, (1, x(t), 0): -2, (0, y(t), 1): 0, (0, y(t), 0): -2, (1, y(t), 1): 1}, \
+    'type_of_equation': 'type3', 'func': [x(t), y(t)], 'is_linear': True, 'eq': [-5*t*x(t) - 2*y(t) + \
+    Derivative(x(t), t), -5*t*y(t) - 2*x(t) + Derivative(y(t), t)], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq1) == sol1
 
     eq2 = (Eq(x2, k*x(t) + l*y1), Eq(y2, m*x1 + n*y(t)))
-    sol2 = {'func_coeff': {(0, 1, 1): -n, (2, 1, 0): 0, (1, 1, 0): -m, (1, 0, 0): 0, (2, 1, 1): 1, \
-    (0, 0, 1): 0, (1, 0, 1): -l, (1, 1, 1): 0, (0, 0, 0): -k, (2, 0, 1): 0, (0, 1, 0): 0, (2, 0, 0): 1}, \
-    'linearity': 'linear', 'order': 2, 'no_of_equation': 2}
+    sol2 = {'no_of_equation': 2, 'func_coeff': {(1, x(t), 2): 0, (0, y(t), 2): 0, (0, x(t), 0): -k, \
+    (1, x(t), 1): -m, (0, x(t), 1): 0, (0, y(t), 1): -l, (1, x(t), 0): 0, (1, y(t), 0): -n, (0, y(t), 0): 0, \
+    (0, x(t), 2): 1, (1, y(t), 2): 1, (1, y(t), 1): 0}, 'type_of_equation': 'type3', 'func': [x(t), y(t)], \
+    'is_linear': True, 'eq': [-k*x(t) - l*Derivative(y(t), t) + Derivative(x(t), t, t), -m*Derivative(x(t), t) - \
+    n*y(t) + Derivative(y(t), t, t)], 'order': {y(t): 2, x(t): 2}}
     assert classify_sysode(eq2) == sol2
 
-    eq3 = (Eq(x2, y(t)*x(t)), Eq(y2, m*x(t) + n*y(t)))
-    sol3 = {'func_coeff': {(0, 1, 1): -n, (2, 1, 0): 0, (1, 1, 0): 0, (1, 0, 0): 0, (2, 1, 1): 1, \
-    (0, 0, 1): -x(t), (1, 0, 1): 0, (1, 1, 1): 0, (0, 0, 0): -y(t), (2, 0, 1): 0, (0, 1, 0): -m, (2, 0, 0): 1}, \
-    'linearity': 'Non-linear', 'order': 2, 'no_of_equation': 2}
+    eq3 = (Eq(x2+4*x1+3*y1+9*x(t)+7*y(t), 11*exp(I*t)), Eq(y2+5*x1+8*y1+3*x(t)+12*y(t), 2*exp(I*t)))
+    sol3 = {'no_of_equation': 2, 'func_coeff': {(1, x(t), 2): 0, (0, y(t), 2): 0, (0, x(t), 0): 9, \
+    (1, x(t), 1): 5, (0, x(t), 1): 4, (0, y(t), 1): 3, (1, x(t), 0): 3, (1, y(t), 0): 12, (0, y(t), 0): 7, \
+    (0, x(t), 2): 1, (1, y(t), 2): 1, (1, y(t), 1): 8}, 'type_of_equation': 'type4', 'func': [x(t), y(t)], \
+    'is_linear': True, 'eq': [9*x(t) + 7*y(t) - 11*exp(I*t) + 4*Derivative(x(t), t) + 3*Derivative(y(t), t) + \
+    Derivative(x(t), t, t), 3*x(t) + 12*y(t) - 2*exp(I*t) + 5*Derivative(x(t), t) + 8*Derivative(y(t), t) + \
+    Derivative(y(t), t, t)], 'order': {y(t): 2, x(t): 2}}
     assert classify_sysode(eq3) == sol3
 
-    eq4 = (Eq(x1, x(t)**n*P(x(t),y(t))), Eq(y1,r(y(t))*P(x(t),y(t))))
-    sol4 = {'func_coeff': {(0, 1, 1): 0, (1, 1, 0): 0, (1, 0, 0): 1, \
-    (0, 0, 1): 0, (1, 0, 1): 0, (0, 0, 0): 0, (0, 1, 0): 0, (1, 1, 1): 1}, \
-    'linearity': 'Non-linear', 'order': 1, 'no_of_equation': 2}
+    eq4 = (Eq((4*t**2 + 7*t + 1)**2*x2, 5*x(t) + 35*y(t)), Eq((4*t**2 + 7*t + 1)**2*y2, x(t) + 9*y(t)))
+    sol4 = {'no_of_equation': 2, 'func_coeff': {(1, x(t), 2): 0, (0, y(t), 2): 0, (0, x(t), 0): -5, \
+    (1, x(t), 1): 0, (0, x(t), 1): 0, (0, y(t), 1): 0, (1, x(t), 0): -1, (1, y(t), 0): -9, (0, y(t), 0): -35, \
+    (0, x(t), 2): 16*t**4 + 56*t**3 + 57*t**2 + 14*t + 1, (1, y(t), 2): 16*t**4 + 56*t**3 + 57*t**2 + 14*t + 1, \
+    (1, y(t), 1): 0}, 'type_of_equation': 'type10', 'func': [x(t), y(t)], 'is_linear': True, \
+    'eq': [(4*t**2 + 7*t + 1)**2*Derivative(x(t), t, t) - 5*x(t) - 35*y(t), (4*t**2 + 7*t + 1)**2*Derivative(y(t), t, t)\
+    - x(t) - 9*y(t)], 'order': {y(t): 2, x(t): 2}}
     assert classify_sysode(eq4) == sol4
 
-    eq5 = (Eq(x1, exp(k*x(t))*P(x(t),y(t))), Eq(y1,r(y(t))*P(x(t),y(t))))
-    sol5 = {'order': 1, 'func_coeff': {(1, 1, 0): 0, (0, 1, 1): 0, (1, 0, 0): 1, (0, 0, 1): 0, \
-    (1, 0, 1): 0, (0, 0, 0): 0, (0, 1, 0): 0, (1, 1, 1): 1}, \
-    'linearity': 'Non-linear', 'no_of_equation': 2}
+    eq5 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
+    sol5 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): -1, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): -5, \
+    (1, x(t), 0): -2, (0, y(t), 1): 0, (0, y(t), 0): -1, (1, y(t), 1): 1}, 'type_of_equation': 'type2', \
+    'func': [x(t), y(t)], 'is_linear': True, 'eq': [-x(t) - y(t) + Derivative(x(t), t) - 9, -2*x(t) - 5*y(t) + \
+    Derivative(y(t), t) - 23], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq5) == sol5
 
-    eq6 = (Eq(x1, P(x(t),y(t))), Eq(y1, Q(x(t),y(t))))
-    sol6 = {'func_coeff': {(0, 1, 1): 0, (1, 1, 0): 0, (1, 0, 0): 1, (0, 0, 1): 0, \
-    (1, 0, 1): 0, (0, 0, 0): 0, (0, 1, 0): 0, (1, 1, 1): 1}, \
-    'linearity': 'Non-linear', 'order': 1, 'no_of_equation': 2}
+    eq6 = (Eq(x1, exp(k*x(t))*P(x(t),y(t))), Eq(y1,r(y(t))*P(x(t),y(t))))
+    sol6 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 0, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): 0, (1, x(t), 0): 0, (0, y(t), 1): 0, (0, y(t), 0): 0, (1, y(t), 1): 1}, 'type_of_equation': 'type2', 'func': [x(t), y(t)], 'is_linear': False, 'eq': [-P(x(t), y(t))*exp(k*x(t)) + Derivative(x(t), t), -P(x(t), y(t))*r(y(t)) + Derivative(y(t), t)], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq6) == sol6
 
     eq7 = (Eq(x1, x(t)**2+y(t)/x(t)), Eq(y1, x(t)/y(t)))
-    sol7 = {'func_coeff': {(0, 1, 1): 0, (1, 1, 0): 0, (1, 0, 0): 1, (0, 0, 1): -1/x(t), \
-    (1, 0, 1): 0, (0, 0, 0): 0, (0, 1, 0): -1/y(t), (1, 1, 1): 1}, \
-    'linearity': 'Non-linear', 'order': 1, 'no_of_equation': 2}
+    sol7 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 0, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): 0, \
+    (1, x(t), 0): -1/y(t), (0, y(t), 1): 0, (0, y(t), 0): -1/x(t), (1, y(t), 1): 1}, 'type_of_equation': 'type3', \
+    'func': [x(t), y(t)], 'is_linear': False, 'eq': [-x(t)**2 + Derivative(x(t), t) - y(t)/x(t), -x(t)/y(t) + \
+    Derivative(y(t), t)], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq7) == sol7
 
     eq8 = (Eq(x1, P1(x(t))*Q1(y(t))*R(x(t),y(t),t)), Eq(y1, P1(x(t))*Q1(y(t))*R(x(t),y(t),t)))
-    sol8 = {'func_coeff': {(0, 1, 1): 0, (1, 1, 0): 0, (1, 0, 0): 1, (0, 0, 1): 0, \
-    (1, 0, 1): 0, (0, 0, 0): 0, (0, 1, 0): 0, (1, 1, 1): 1}, \
-    'linearity': 'Non-linear', 'order': 1, 'no_of_equation': 2}
+    sol8 = {'func': [x(t), y(t)], 'is_linear': False, 'type_of_equation': 'type4', 'eq': \
+    [-P1(x(t))*Q1(y(t))*R(x(t), y(t), t) + Derivative(x(t), t), -P1(x(t))*Q1(y(t))*R(x(t), y(t), t) + \
+    Derivative(y(t), t)], 'func_coeff': {(0, y(t), 1): 0, (1, y(t), 1): 1, (1, x(t), 1): 0, (0, y(t), 0): 0, \
+    (1, x(t), 0): 0, (0, x(t), 0): 0, (1, y(t), 0): 0, (0, x(t), 1): 1}, 'order': {y(t): 1, x(t): 1}, 'no_of_equation': 2}
     assert classify_sysode(eq8) == sol8
 
-    eq9 = (Eq(x2, p(t)*x(t) + t*y(t)), Eq(y2, m*x(t) + q(t)*y(t)))
-    sol9 = {'func_coeff': {(0, 1, 1): -q(t), (2, 1, 0): 0, (1, 1, 0): 0, (1, 0, 0): 0, (2, 1, 1): 1, \
-    (0, 0, 1): -t, (1, 0, 1): 0, (1, 1, 1): 0, (0, 0, 0): -p(t), (2, 0, 1): 0, (0, 1, 0): -m, (2, 0, 0): 1}, \
-    'linearity': 'linear', 'order': 2, 'no_of_equation': 2}
+    eq9 = (Eq(x1,3*y(t)-11*z(t)),Eq(y1,7*z(t)-3*x(t)),Eq(z1,11*x(t)-7*y(t)))
+    sol9 = {'no_of_equation': 3, 'func_coeff': {(1, y(t), 0): 0, (2, y(t), 1): 0, (2, z(t), 1): 1, \
+    (0, x(t), 0): 0, (2, x(t), 1): 0, (1, x(t), 1): 0, (2, y(t), 0): 7, (0, x(t), 1): 1, (1, z(t), 1): 0, \
+    (0, y(t), 1): 0, (1, x(t), 0): 3, (0, z(t), 0): 11, (0, y(t), 0): -3, (1, z(t), 0): -7, (0, z(t), 1): 0, \
+    (2, x(t), 0): -11, (2, z(t), 0): 0, (1, y(t), 1): 1}, 'type_of_equation': 'type2', 'func': [x(t), y(t), z(t)], \
+    'is_linear': True, 'eq': [-3*y(t) + 11*z(t) + Derivative(x(t), t), 3*x(t) - 7*z(t) + Derivative(y(t), t), \
+    -11*x(t) + 7*y(t) + Derivative(z(t), t)], 'order': {z(t): 1, y(t): 1, x(t): 1}}
     assert classify_sysode(eq9) == sol9
 
-    eq10 = (Eq(t*x1 + P(x1, y1), x(t)), Eq(y(t), t*y1 + Q(x1, y1)))
-    sol10 = {'func_coeff': {(0, 1, 1): 1, (1, 1, 0): 0, (1, 0, 0): t, (0, 0, 1): 0, (1, 0, 1): 0, \
-    (0, 0, 0): -1, (0, 1, 0): 0, (1, 1, 1): -t}, \
-    'linearity': 'Non-linear', 'order': 1, 'no_of_equation': 2}
+    eq10 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
+    sol10 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 1, (1, x(t), 1): 0, (0, x(t), 1): -t - \
+    Derivative(y(t), t), (1, y(t), 0): 1, (1, x(t), 0): 0, (0, y(t), 1): -Derivative(x(t), t), (0, y(t), 0): 0, \
+    (1, y(t), 1): -t}, 'type_of_equation': 'type5', 'func': [x(t), y(t)], 'is_linear': False, \
+    'eq': [-t*Derivative(x(t), t) + x(t) - Derivative(x(t), t)*Derivative(y(t), t), -t*Derivative(y(t), t) + \
+    y(t) - Derivative(y(t), t)**2], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq10) == sol10
 
-    eq11 = (Eq(x2, x1*R(x(t),y(t),t,x1,y1) + f(y(t))), Eq(y2, y1*R(x(t),y(t),t,x1,y1) + g(x(t))))
-    sol11 = {'func_coeff': {(0, 1, 1): 0, (2, 1, 0): 0, (1, 1, 0): 0, \
-    (1, 0, 0): -R(x(t), y(t), t, Derivative(x(t), t), Derivative(y(t), t)), (2, 1, 1): 1, \
-    (0, 0, 1): 0, (1, 0, 1): 0, (1, 1, 1): -R(x(t), y(t), t, Derivative(x(t), t), Derivative(y(t), t)), \
-    (0, 0, 0): 0, (2, 0, 1): 0, (0, 1, 0): 0, (2, 0, 0): 1}, \
-    'linearity': 'Non-linear', 'order': 2, 'no_of_equation': 2}
+    eq11 = (Eq(x1,x(t)*y(t)**3), Eq(y1,y(t)**5))
+    sol11 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): -y(t)**3, (1, x(t), 1): 0, (0, x(t), 1): 1, \
+    (1, y(t), 0): 0, (1, x(t), 0): 0, (0, y(t), 1): 0, (0, y(t), 0): 0, (1, y(t), 1): 1}, 'type_of_equation': \
+    'type1', 'func': [x(t), y(t)], 'is_linear': False, 'eq': [-x(t)*y(t)**3 + Derivative(x(t), t), \
+    -y(t)**5 + Derivative(y(t), t)], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq11) == sol11
 
     eq12 = (Eq(x1, y(t)), Eq(y1, x(t)))
-    sol12 = {'func_coeff': {(0, 1, 1): 0, (1, 1, 0): 0, (1, 0, 0): 1, (0, 0, 1): -1, (1, 0, 1): 0, \
-    (0, 0, 0): 0, (0, 1, 0): -1, (1, 1, 1): 1}, \
-    'linearity': 'linear', 'order': 1, 'no_of_equation': 2}
+    sol12 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 0, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): 0, \
+    (1, x(t), 0): -1, (0, y(t), 1): 0, (0, y(t), 0): -1, (1, y(t), 1): 1}, 'type_of_equation': 'type1', 'func': \
+    [x(t), y(t)], 'is_linear': True, 'eq': [-y(t) + Derivative(x(t), t), -x(t) + Derivative(y(t), t)], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq12) == sol12
 
-    eq13 = (Eq(x2, x1*R(x(t),x1)), Eq(y2, y1*R(y(t),y1)))
-    sol13 = {'func_coeff': {(0, 1, 1): 0, (2, 1, 0): 0, (1, 1, 0): 0, (1, 0, 0): -R(x(t), Derivative(x(t), t)),(2, 1, 1): 1, \
-    (0, 0, 1): 0, (1, 0, 1): 0, (1, 1, 1): -R(y(t), Derivative(y(t), t)), (0, 0, 0): 0, (2, 0, 1): 0, (0, 1, 0): 0, (2, 0, 0): 1}, \
-    'linearity': 'Non-linear', 'order': 2, 'no_of_equation': 2}
+    eq13 = (Eq(x1,x(t)*y(t)*sin(t)**2), Eq(y1,y(t)**2*sin(t)**2))
+    sol13 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): -y(t)*sin(t)**2, (1, x(t), 1): 0, (0, x(t), 1): 1, \
+    (1, y(t), 0): 0, (1, x(t), 0): 0, (0, y(t), 1): 0, (0, y(t), 0): -x(t)*sin(t)**2, (1, y(t), 1): 1}, \
+    'type_of_equation': 'type4', 'func': [x(t), y(t)], 'is_linear': False, 'eq': [-x(t)*y(t)*sin(t)**2 + \
+    Derivative(x(t), t), -y(t)**2*sin(t)**2 + Derivative(y(t), t)], 'order': {y(t): 1, x(t): 1}}
     assert classify_sysode(eq13) == sol13
 
-    eq14 = (Eq(x2, P(x(t),x1)), Eq(y2, Q(y(t), y1)))
-    sol14 = {'func_coeff': {(0, 1, 1): 0, (2, 1, 0): 0, (1, 1, 0): 0, (1, 0, 0): 0, (2, 1, 1): 1, (0, 0, 1): 0, \
-    (1, 0, 1): 0, (1, 1, 1): 0, (0, 0, 0): 0, (2, 0, 1): 0, (0, 1, 0): 0, (2, 0, 0): 1}, \
-    'linearity': 'Non-linear', 'order': 2, 'no_of_equation': 2}
+    eq14 = (Eq(x1, 21*x(t)), Eq(y1, 17*x(t)+3*y(t)), Eq(z1, 5*x(t)+7*y(t)+9*z(t)))
+    sol14 = {'no_of_equation': 3, 'func_coeff': {(1, y(t), 0): -3, (2, y(t), 1): 0, (2, z(t), 1): 1, (0, x(t), 0): -21, (2, x(t), 1): 0, (1, x(t), 1): 0, (2, y(t), 0): -7, (0, x(t), 1): 1, (1, z(t), 1): 0, (0, y(t), 1): 0, (1, x(t), 0): -17, (0, z(t), 0): 0, (0, y(t), 0): 0, (1, z(t), 0): 0, (0, z(t), 1): 0, (2, x(t), 0): -5, (2, z(t), 0): -9, (1, y(t), 1): 1}, 'type_of_equation': 'type1', 'func': [x(t), y(t), z(t)], 'is_linear': True, 'eq': [-21*x(t) + Derivative(x(t), t), -17*x(t) - 3*y(t) + Derivative(y(t), t), -5*x(t) - 7*y(t) - 9*z(t) + Derivative(z(t), t)], 'order': {z(t): 1, y(t): 1, x(t): 1}}
     assert classify_sysode(eq14) == sol14
 
-    eq15 = (Eq(x1,(k1*f(t)+g(t))*x(t)+k2*f(t)*y(t)+k3*f(t)*z(t)),Eq(y1, l1*f(t)*x(t)+(l2*f(t)+g(t))*y(t)+l3*f(t)*z(t)), \
-        Eq(z1, m1*f(t)*x(t)+m2*f(t)*y(t)+(m3*f(t)+g(t))*z(t)))
-    sol15 = {'func_coeff': {(1, 1, 0): 0, (0, 2, 1): -m2*f(t), (0, 2, 2): -m3*f(t) - g(t), (0, 0, 2): -k3*f(t), (0, 1, 1): -l2*f(t) - g(t), \
-    (1, 0, 0): 1, (0, 0, 1): -k2*f(t), (0, 2, 0): -m1*f(t), (1, 2, 1): 0, (1, 0, 1): 0, (1, 1, 1): 1, (0, 1, 2): -l3*f(t), (1, 2, 0): 0, \
-    (0, 0, 0): -k1*f(t) - g(t), (1, 2, 2): 1, (1, 0, 2): 0, (1, 1, 2): 0, (0, 1, 0): -l1*f(t)}, \
-    'linearity': 'linear', 'order': 1, 'no_of_equation': 3}
+    eq15 = (Eq(x1,4*x(t)+5*y(t)+2*z(t)),Eq(y1,x(t)+13*y(t)+9*z(t)),Eq(z1,32*x(t)+41*y(t)+11*z(t)))
+    sol15 = {'no_of_equation': 3, 'func_coeff': {(1, y(t), 0): -13, (2, y(t), 1): 0, (2, z(t), 1): 1, \
+    (0, x(t), 0): -4, (2, x(t), 1): 0, (1, x(t), 1): 0, (2, y(t), 0): -41, (0, x(t), 1): 1, (1, z(t), 1): 0, \
+    (0, y(t), 1): 0, (1, x(t), 0): -1, (0, z(t), 0): -2, (0, y(t), 0): -5, (1, z(t), 0): -9, (0, z(t), 1): 0, \
+    (2, x(t), 0): -32, (2, z(t), 0): -11, (1, y(t), 1): 1}, 'type_of_equation': 'type6', 'func': \
+    [x(t), y(t), z(t)], 'is_linear': True, 'eq': [-4*x(t) - 5*y(t) - 2*z(t) + Derivative(x(t), t), -x(t) - 13*y(t) - \
+    9*z(t) + Derivative(y(t), t), -32*x(t) - 41*y(t) - 11*z(t) + Derivative(z(t), t)], 'order': {z(t): 1, y(t): 1, x(t): 1}}
     assert classify_sysode(eq15) == sol15
 
-    eq16 = (Eq(x1, k1*x(t)), Eq(y1, l2*x(t)+l3*z(t)), Eq(z1, m1*x(t)+m2*y(t)+m3*z(t)))
-    sol16 = {'func_coeff': {(0, 1, 1): 0, (0, 2, 2): -m3, (0, 0, 2): 0, (1, 1, 0): 0, (1, 0, 0): 1, (0, 0, 1): 0, \
-    (0, 2, 0): -m1, (1, 2, 1): 0, (1, 0, 1): 0, (1, 1, 1): 1, (0, 1, 2): -l3, (0, 2, 1): -m2, (0, 0, 0): -k1, \
-    (1, 2, 0): 0, (1, 2, 2): 1, (1, 0, 2): 0, (1, 1, 2): 0, (0, 1, 0): -l2}, \
-    'linearity': 'linear', 'order': 1, 'no_of_equation': 3}
+    eq16 = (Eq(3*x1,4*5*(y(t)-z(t))),Eq(4*y1,3*5*(z(t)-x(t))),Eq(5*z1,3*4*(x(t)-y(t))))
+    sol16 = {'no_of_equation': 3, 'func_coeff': {(1, y(t), 0): 0, (2, y(t), 1): 0, (2, z(t), 1): 5, \
+    (0, x(t), 0): 0, (2, x(t), 1): 0, (1, x(t), 1): 0, (2, y(t), 0): 12, (0, x(t), 1): 3, (1, z(t), 1): 0, \
+    (0, y(t), 1): 0, (1, x(t), 0): 15, (0, z(t), 0): 20, (0, y(t), 0): -20, (1, z(t), 0): -15, (0, z(t), 1): 0, \
+    (2, x(t), 0): -12, (2, z(t), 0): 0, (1, y(t), 1): 4}, 'type_of_equation': 'type3', 'func': [x(t), y(t), z(t)], \
+    'is_linear': True, 'eq': [-20*y(t) + 20*z(t) + 3*Derivative(x(t), t), 15*x(t) - 15*z(t) + 4*Derivative(y(t), t), \
+    -12*x(t) + 12*y(t) + 5*Derivative(z(t), t)], 'order': {z(t): 1, y(t): 1, x(t): 1}}
     assert classify_sysode(eq16) == sol16
 
-    eq17 = (Eq(x2,m*P2(x(t),y(t),z(t),t,x1,y1,z1)-l*P3(x(t),y(t),z(t),t,x1,y1,z1)), \
-        Eq(y2,k*P3(x(t),y(t),z(t),t,x1,y1,z1)-m*P1(x(t),y(t),z(t),t,x1,y1,z1)), \
-        Eq(x2,l*P1(x(t),y(t),z(t),t,x1,y1,z1)-k*P2(x(t),y(t),z(t),t,x1,y1,z1)))
-    sol17 = {'func_coeff': {(0, 1, 1): 0, (1, 0, 0): 0, (1, 0, 1): 0, (0, 2, 1): 0, (1, 1, 2): 0, (0, 2, 0): 0, (0, 2, 2): 0, \
-    (0, 1, 2): 0, (2, 0, 1): 0, (1, 2, 0): 0, (2, 0, 0): 1, (1, 2, 1): 0, (0, 0, 2): 0, (2, 2, 2): 1, (1, 2, 2): 0, \
-    (2, 0, 2): 1, (0, 0, 1): 0, (0, 0, 0): 0, (2, 1, 2): 0, (1, 1, 1): 0, (1, 0, 2): 0, (1, 1, 0): 0, (2, 1, 0): 0, \
-    (2, 2, 1): 0, (2, 1, 1): 1, (2, 2, 0): 1, (0, 1, 0): 0}, \
-    'linearity': 'Non-linear', 'order': 2, 'no_of_equation': 3}
-    assert classify_sysode(eq17) == sol17
-"""
 
 def test_ode_order():
     f = Function('f')
