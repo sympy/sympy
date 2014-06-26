@@ -4,6 +4,8 @@ from sympy.utilities.pytest import raises
 from sympy.printing.rcode import RCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
+import difflib #import Differ 
+from pprint import pprint
 
 # import test
 from sympy import rcode
@@ -73,17 +75,20 @@ def test_rcode_inline_function():
     g = implemented_function('g', Lambda(x, 2*x))
     assert rcode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert rcode(
-        g(x)) == "Catalan = %s;\n2*x/Catalan" % Catalan.n()
+    assert rcode( g(x)) == "Catalan = %s;\n2*x/Catalan" % Catalan.n()
 #mm
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
-    assert rcode(g(A[i]), assign_to=A[i]) == (
-        "for (int i=0; i<n; i++){\n"
+    res=rcode(g(A[i]), assign_to=A[i])
+    ref=(
+        "for (i in 0:(n-1)){\n"
         "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
-    )
+    ) 
+    #d=difflib.Differ()
+    #pprint(list(d.compare(res.splitlines(keepends=True),ref.splitlines(keepends=True))))
+    assert res == ref
 
 
 def test_rcode_exceptions():
@@ -197,11 +202,11 @@ def test_rcode_loops_matrix_vector():
     j = Idx('j', n)
 
     s = (
-        'for (int i=0; i<m; i++){\n'
+        'for (i in 0:(m-1)){\n'
         '   y[i] = 0;\n'
         '}\n'
-        'for (int i=0; i<m; i++){\n'
-        '   for (int j=0; j<n; j++){\n'
+        'for (i in 0:(m-1)){\n'
+        '   for (j in 0:(n-1)){\n'
         '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
@@ -220,7 +225,7 @@ def test_dummy_loops():
     i = Idx(i, m)
 
     expected = (
-        'for (int i_%(icount)i=0; i_%(icount)i<m_%(mcount)i; i_%(icount)i++){\n'
+            'for (i_%(icount)i in 0:(m_%(mcount)i-1)){\n'
         '   y[i_%(icount)i] = x[i_%(icount)i];\n'
         '}'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
@@ -240,16 +245,18 @@ def test_rcode_loops_add():
     j = Idx('j', n)
 
     s = (
-        'for (int i=0; i<m; i++){\n'
+        'for (i in 0:(m-1)){\n'
         '   y[i] = x[i] + z[i];\n'
         '}\n'
-        'for (int i=0; i<m; i++){\n'
-        '   for (int j=0; j<n; j++){\n'
+        'for (i in 0:(m-1)){\n'
+        '   for (j in 0:(n-1)){\n'
         '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}'
     )
     c = rcode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
+    d=difflib.Differ()
+    #print(list(d.compare(c.splitlines(keepends=True),s.splitlines(keepends=True))))
     assert c == s
 
 
@@ -266,13 +273,13 @@ def test_rcode_loops_multiple_contractions():
     l = Idx('l', p)
 
     s = (
-        'for (int i=0; i<m; i++){\n'
+        'for (i in 0:(m-1)){\n'
         '   y[i] = 0;\n'
         '}\n'
-        'for (int i=0; i<m; i++){\n'
-        '   for (int j=0; j<n; j++){\n'
-        '      for (int k=0; k<o; k++){\n'
-        '         for (int l=0; l<p; l++){\n'
+        'for (i in 0:(m-1)){\n'
+        '   for (j in 0:(n-1)){\n'
+        '      for (k in 0:(o-1)){\n'
+        '         for (l in 0:(p-1)){\n'
         '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
@@ -297,13 +304,13 @@ def test_rcode_loops_addfactor():
     l = Idx('l', p)
 
     s = (
-        'for (int i=0; i<m; i++){\n'
+        'for (i in 0:(m-1)){\n'
         '   y[i] = 0;\n'
         '}\n'
-        'for (int i=0; i<m; i++){\n'
-        '   for (int j=0; j<n; j++){\n'
-        '      for (int k=0; k<o; k++){\n'
-        '         for (int l=0; l<p; l++){\n'
+        'for (i in 0:(m-1)){\n'
+        '   for (j in 0:(n-1)){\n'
+        '      for (k in 0:(o-1)){\n'
+        '         for (l in 0:(p-1)){\n'
         '            y[i] = (a[%s] + b[%s])*c[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
@@ -327,29 +334,29 @@ def test_rcode_loops_multiple_terms():
     k = Idx('k', o)
 
     s0 = (
-        'for (int i=0; i<m; i++){\n'
+        'for (i in 0:(m-1)){\n'
         '   y[i] = 0;\n'
         '}\n'
     )
     s1 = (
-        'for (int i=0; i<m; i++){\n'
-        '   for (int j=0; j<n; j++){\n'
-        '      for (int k=0; k<o; k++){\n'
+        'for (i in 0:(m-1)){\n'
+        '   for (j in 0:(n-1)){\n'
+        '      for (k in 0:(o-1)){\n'
         '         y[i] = b[j]*b[k]*c[%s] + y[i];\n' % (i*n*o + j*o + k) +\
         '      }\n'
         '   }\n'
         '}\n'
     )
     s2 = (
-        'for (int i=0; i<m; i++){\n'
-        '   for (int k=0; k<o; k++){\n'
+        'for (i in 0:(m-1)){\n'
+        '   for (k in 0:(o-1)){\n'
         '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
         '   }\n'
         '}\n'
     )
     s3 = (
-        'for (int i=0; i<m; i++){\n'
-        '   for (int j=0; j<n; j++){\n'
+        'for (i in 0:(m-1)){\n'
+        '   for (j in 0:(n-1)){\n'
         '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}\n'

@@ -115,7 +115,7 @@ class RCodePrinter(CodePrinter):
         """
         open_lines = []
         close_lines = []
-        loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"
+        loopstart = "for (%(var)s in %(start)s:(%(end)s-1)){"
         for i in indices:
             # C arrays start at 0 and end at dimension-1
             open_lines.append(loopstart % {
