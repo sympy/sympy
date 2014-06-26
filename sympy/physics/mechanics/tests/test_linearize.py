@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt, zeros
+from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
@@ -250,8 +250,7 @@ def test_linearize_pendulum_lagrange_minimal():
     LM.form_lagranges_equations()
 
     # Linearize
-    linearizer = LM.to_linearizer([q1], [q1d])
-    A, B = linearizer.linearize(A_and_B=True)
+    A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True)
 
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
@@ -278,18 +277,13 @@ def test_linearize_pendulum_lagrange_nonminimal():
     Lag = Lagrangian(N, pP)
     LM = LagrangesMethod(Lag, [q1, q2], hol_coneqs=f_c, forcelist=[(P, m*g*N.x)], frame=N)
     LM.form_lagranges_equations()
-    # Perform the Linearization
-    q_i = Matrix([q2])
-    q_d = Matrix([q1])
-    u_i = Matrix([q2d])
-    u_d = Matrix([q1d])
-    linearizer = LM.to_linearizer(q_i, u_i, q_d, u_d)
     # Compose operating point
-    q_op = {q1: L, q2: 0}
-    u_op = {q1d: 0, q2d: 0}
-    ud_op = {q1d.diff(t): 0, q2d.diff(t): 0}
+    op_point = {q1: L, q2: 0, q1d: 0, q2d: 0, q1d.diff(t): 0, q2d.diff(t): 0}
     # Solve for multiplier operating point
-    lam_op = LM.solve_multipliers(op_point=[q_op, u_op, ud_op])
-    A, B = linearizer.linearize(op_point=[q_op, u_op, ud_op, lam_op], A_and_B=True)
+    lam_op = LM.solve_multipliers(op_point=op_point)
+    op_point.update(lam_op)
+    # Perform the Linearization
+    A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
+            op_point=op_point, A_and_B=True)
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])

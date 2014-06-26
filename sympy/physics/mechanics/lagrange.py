@@ -341,11 +341,20 @@ class LagrangesMethod(object):
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
 
-    def to_linearizer(self, q_ind=None, u_ind=None, q_dep=None, u_dep=None):
-        """ Returns an instance of the Linearizer class, initiated from the
+    def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None):
+        """Returns an instance of the Linearizer class, initiated from the
         data in the LagrangesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
-        efficient recalculation (i.e. about varying operating points) """
+        efficient recalculation (i.e. about varying operating points).
+
+        Parameters
+        ----------
+        q_ind, qd_ind : array_like, optional
+            The independent generalized coordinates and speeds.
+        q_dep, qd_dep : array_like, optional
+            The dependent generalized coordinates and speeds.
+        """
+
         # Compose vectors
         t = dynamicsymbols._t
         q = Matrix(self._q)
@@ -357,8 +366,8 @@ class LagrangesMethod(object):
         mat_build = lambda x: Matrix(x) if x else Matrix()
         q_i = mat_build(q_ind)
         q_d = mat_build(q_dep)
-        u_i = mat_build(u_ind)
-        u_d = mat_build(u_dep)
+        u_i = mat_build(qd_ind)
+        u_d = mat_build(qd_dep)
 
         # Compose general form equations
         f_c = self._hol_coneqs
@@ -369,6 +378,18 @@ class LagrangesMethod(object):
         f_2 = self._term1
         f_3 = -(self._term2 + self._term4)
         f_4 = -self._term3
+
+        # Check that there are an appropriate number of independent and
+        # dependent coordinates
+        if len(q_d) != len(f_c) or len(u_d) != len(f_v):
+            raise ValueError(("Must supply {:} dependent coordinates, and " +
+                    "{:} dependent speeds").format(len(f_c), len(f_v)))
+        if set(Matrix([q_i, q_d])) != set(q):
+            raise ValueError("Must partition q into q_ind and q_dep, with " +
+                    "no extra or missing symbols.")
+        if set(Matrix([u_i, u_d])) != set(u):
+            raise ValueError("Must partition qd into qd_ind and qd_dep, " +
+                    "with no extra or missing symbols.")
 
         # Find all other dynamic symbols, forming the forcing vector r.
         # Sort r to make it canonical.
@@ -383,6 +404,36 @@ class LagrangesMethod(object):
 
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
                 q_d, u_i, u_d, r, lams)
+
+    def linearize(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
+            **kwargs):
+        """ Linearize the equations of motion about a symbolic operating point.
+
+        If kwarg A_and_B is False (default), returns M, A, B, r for the
+        linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
+
+        If kwarg A_and_B is True, returns A, B, r for the linearized form
+        dx = A*x + B*r, where x = [q_ind, u_ind]^T. Note that this is
+        computationally intensive if there are many symbolic parameters. For
+        this reason, it may be more desirable to use the default A_and_B=False,
+        returning M, A, and B. Values may then be substituted in to these
+        matrices, and the state space form found as
+        A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
+
+        In both cases, r is found as all dynamicsymbols in the equations of
+        motion that are not part of q, u, q', or u'. They are sorted in
+        canonical form.
+
+        The operating points may be also entered using the `op_point` kwarg.
+        This takes a dictionary of {symbol: value}, or a an iterable of such
+        dictionaries. The values may be numberic or symbolic. The more values
+        you can specify beforehand, the faster this computation will run.
+
+        For more documentation, please see the `Linearizer` class."""
+
+        linearizer = self.to_linearizer(q_ind, qd_ind, q_dep, qd_dep)
+        result = linearizer.linearize(**kwargs)
+        return result + (linearizer.r,)
 
     def solve_multipliers(self, op_point=None, sol_type='dict'):
         """Solves for the values of the lagrange multipliers symbolically at

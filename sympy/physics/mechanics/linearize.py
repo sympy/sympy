@@ -43,12 +43,14 @@ class Linearizer(object):
             The generalized coordinates.
         u : array_like
             The generalized speeds
-        q_i, u_i : array_like, optional.
+        q_i, u_i : array_like, optional
             The independent generalized coordinates and speeds.
         q_d, u_d : array_like, optional
             The dependent generalized coordinates and speeds.
         r : array_like, optional
             The input variables.
+        lams : array_like, optional
+            The lagrange multipliers
         """
 
         # Generalized equation form
