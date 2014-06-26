@@ -229,15 +229,11 @@ class Printer(object):
             raise AttributeError("No order defined.")
 
     def doprint(self, expr):
-        print("in Printer.doprint 1")
         """Returns printer's representation for expr (as a string)"""
         res=self._str(self._print(expr))
-        print("in Printer.doprint 2\n res=: "+str(res))
         return res
 
     def _print(self, expr, *args, **kwargs):
-        print("in Printer._print 1")
-        print(type(expr))
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -252,31 +248,18 @@ class Printer(object):
             # should be printed, use that method.
             if (self.printmethod and hasattr(expr, self.printmethod)
                     and not isinstance(expr, BasicMeta)):
-                print("first")
-                print(self.printmethod)
                 return getattr(expr, self.printmethod)(self, *args, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
-            print("mro=" + str(type(expr).__mro__))
             for cls in type(expr).__mro__:
                 printmethod = '_print_' + cls.__name__
-                print("    try printmethod="+printmethod)
                 if hasattr(self, printmethod):
-                    meth=getattr(self, printmethod)
-                    print("    found method"+printmethod)
                     res=getattr(self, printmethod)(expr, *args, **kwargs)
-                    print("second b")
-                    print(">%s<" %res)
 
                     return getattr(self, printmethod)(expr, *args, **kwargs)
-                else:
-                    print("        self has no method: "+printmethod)
-
             # Unknown object, fall back to the emptyPrinter.
-            print("    found no printmethods for any elements in mro in self,will now return the result of self.emptyPrinter(expr)")
             res=self.emptyPrinter(expr)
-            print("in Printer._print 2 \n res=: "+str(res))
             return res
         finally:
             self._print_level -= 1

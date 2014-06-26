@@ -43,12 +43,11 @@ def test_rcode_constants_mathh():
     assert rcode(oo) == "Inf"
     assert rcode(-oo) == "-Inf"
 
-#mm
 def test_rcode_constants_other():
-    assert rcode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert rcode(2*GoldenRatio) == "GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
     assert rcode(
-        2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
-    assert rcode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
+        2*Catalan) == "Catalan = 0.915965594177219;\n2*Catalan"
+    assert rcode(2*EulerGamma) == "EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 
 def test_rcode_Rational():
@@ -75,7 +74,8 @@ def test_rcode_inline_function():
     assert rcode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert rcode(
-        g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
+        g(x)) == "Catalan = %s;\n2*x/Catalan" % Catalan.n()
+#mm
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))

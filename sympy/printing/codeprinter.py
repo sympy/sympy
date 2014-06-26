@@ -242,7 +242,7 @@ class CodePrinter(StrPrinter):
 
     def _format_code(self, lines):
         """Take in a list of lines of code, and format them accordingly.
-        
+
         This may include indenting, wrapping long lines, etc..."""
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
