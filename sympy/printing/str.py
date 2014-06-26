@@ -35,7 +35,6 @@ class StrPrinter(Printer):
         return sep.join([self.parenthesize(item, level) for item in args])
 
     def emptyPrinter(self, expr):
-        print("in StringPrinter.emptyPrinter")
         if isinstance(expr, str):
             return expr
         elif isinstance(expr, Basic):
@@ -44,7 +43,6 @@ class StrPrinter(Printer):
             else:
                 raise
         else:
-            print("    in StringPrinter.emptyPrinter else str(expr)=:"+str(expr))
             return str(expr)
 
     def _print_Add(self, expr, order=None):
@@ -158,7 +156,6 @@ class StrPrinter(Printer):
         return str(expr)
 
     def _print_GoldenRatio(self, expr):
-        print("in StrPrinter._printGoldenRatio")
         return 'GoldenRatio'
 
     def _print_ImaginaryUnit(self, expr):

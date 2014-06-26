@@ -15,7 +15,7 @@ g = Function('g')
 
 #mm
 def test_rcode_constants_other():
-    assert rcode(GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\nGoldenRatio"
+    assert rcode(GoldenRatio) == "GoldenRatio = 1.61803398874989;\nGoldenRatio"
     #assert rcode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
     #assert rcode(
     #    2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"

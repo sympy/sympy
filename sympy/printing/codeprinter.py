@@ -26,8 +26,7 @@ class CodePrinter(StrPrinter):
     }
 
     def _doprint_a_piece(self, expr, assign_to=None):
-        print("in CodePrinter._do_print_a_piece 1")
-        # Here we print an expression that may contain Indexed objects, they
+                # Here we print an expression that may contain Indexed objects, they
         # correspond to arrays in the generated code.  The low-level implementation
         # involves looping over array elements and possibly storing results in temporary
         # variables or accumulate it in the assign_to object.
@@ -51,10 +50,7 @@ class CodePrinter(StrPrinter):
 
         # terms with no summations first
         if None in d:
-            print("    in CodePrinter._do_print_a_piece 2")
             text = CodePrinter.doprint(self, Add(*d[None]))
-            print("    in CodePrinter._do_print_a_piece 3")
-            print("    text=:" +text)
         else:
             # If all terms have summations we must initialize array to Zero
             text = CodePrinter.doprint(self, 0)

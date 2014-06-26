@@ -62,7 +62,6 @@ class RCodePrinter(CodePrinter):
         """
         Actually format the expression as R code.
         """
-        print("in RCodePrinter.doprint")
 
         if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
@@ -89,7 +88,6 @@ class RCodePrinter(CodePrinter):
                 lines.extend(code0)
                 lines.append("}")
         else:
-            print("    in else")
             code0 = self._doprint_a_piece(expr, assign_to)
             lines.extend(code0)
 
@@ -101,7 +99,7 @@ class RCodePrinter(CodePrinter):
                 for expr in sorted(not_c, key=str):
                     frontlines.append("// %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("double const %s = %s;" % (name, value))
+                frontlines.append("%s = %s;" % (name, value))
             lines = frontlines + lines
             lines = "\n".join(lines)
             result = self.indent_code(lines)
@@ -178,7 +176,6 @@ class RCodePrinter(CodePrinter):
             last_line = "ifelse(%s,%s,NA)" % (self._print(expr.args[-1].cond), self._print(expr.args[-1].expr))
         code=last_line                   
         for e, c in reversed(expr.args[:-1]):
-            #print(code)
             code= "ifelse(%s,%s," % (self._print(c), self._print(e))+code+")"
 
         return(code) 
@@ -279,7 +276,6 @@ def rcode(expr, assign_to=None, **settings):
         'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     """
-    print("\nin RCodePrinter.rcode")
     return RCodePrinter(settings).doprint(expr, assign_to)
 
 
