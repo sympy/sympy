@@ -209,25 +209,45 @@ class Pow(Expr):
         b, e = self.as_base_exp()
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
+
         if other.is_integer:
             return Pow(b, e*other)
+
         if any(i.is_polar for i in (b, e, other)):
             return Pow(b, e*other)
+
         if e.is_real:
             if e.is_even:
                 if b.is_real:
                     b = abs(b)
-                elif b.is_real is False and other.is_Rational and other.q == 2:
+                elif b.is_real is False and getattr(other, 'q', None) == 2:
                     return Pow(b, e*other)
             if (b.is_nonnegative or (abs(e) < 1) == True):
                 return Pow(b, e*other)
-
-        elif e.is_real is False:
-            smallarg = (abs(e) - abs(S.Pi/C.log(b))).is_negative
-            if smallarg is True:
+        elif e.is_imaginary:
+            # with radius of different origins (starting with 0) the
+            # expoents can be joined
+            radius = abs(S.Pi/C.log(abs(b)))
+            p = abs(e)
+            ok = smallarg = (p - radius).is_nonpositive
+            if not ok and other.is_Rational:
+                origin = 2*other.q*radius
+                ok = (p % origin - radius).is_nonpositive
+            if ok:
                 return Pow(b, e*other)
-            if smallarg is False and other.is_Rational and other.q == 2:
+            # outside that radius if other is 1/2 then this is how they join
+            if ok is False and getattr(other, 'q', None) == 2:
                 return -Pow(b, e*other)
+        elif getattr(other, 'q', None) == 2 and \
+                e.is_real is False and e.is_imaginary is False:  # XXX e.is_complex gives None for 1 + I :-(
+            # for exponents that have real and imaginary parts the combining of 1/2
+            # is like this
+            if b.is_positive:
+                return Pow(b, e*other)
+            if b.is_negative:
+                return -Pow(b, e*other)
+            if b.is_positive is False and b.is_negative is False:
+                return Pow(b, e*other)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
