@@ -213,7 +213,7 @@ class Pow(Expr):
         if other.is_integer:
             return Pow(b, e*other)
 
-        if any(i.is_polar for i in (b, e, other)):
+        if b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
             return Pow(b, e*other)
 
         if e.is_real:
