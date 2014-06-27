@@ -225,22 +225,27 @@ class Pow(Expr):
             if (b.is_nonnegative or (abs(e) < 1) == True):
                 return Pow(b, e*other)
         elif e.is_imaginary:
-            # with radius of different origins (starting with 0) the
-            # expoents can be joined
+            # within a distance of radius (from periodic "origins") the
+            # exponents can be joined
             radius = abs(S.Pi/C.log(abs(b)))
             p = abs(e)
-            ok = smallarg = (p - radius).is_nonpositive
+            ok = (p - radius).is_nonpositive
             if not ok and other.is_Rational:
                 origin = 2*other.q*radius
                 ok = (p % origin - radius).is_nonpositive
             if ok:
                 return Pow(b, e*other)
-            # outside that radius if other is 1/2 then this is how they join
+            # outside that radius if other is 1/2 then the exponents join
+            # but the expression has the opposite sign
             if ok is False and getattr(other, 'q', None) == 2:
                 return -Pow(b, e*other)
         elif getattr(other, 'q', None) == 2 and \
-                e.is_real is False and e.is_imaginary is False:  # XXX e.is_complex gives None for 1 + I :-(
-            # for exponents that have real and imaginary parts the combining of 1/2
+                e.is_real is False and e.is_imaginary is False:
+                #            -----                       -----
+                #               \____________________________\__
+                #                                               |
+                # XXX e.is_complex gives None for 1 + I :-( so use 2 Falses
+            # for exponents with real and imaginary parts the combining of 1/2
             # is like this
             if b.is_positive:
                 return Pow(b, e*other)
