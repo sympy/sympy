@@ -1,4 +1,4 @@
-from sympy.matrices.sparsetools import trace, conjugate, transpose, conjugate_transpose, csr_row
+from sympy.matrices.sparsetools import trace, conjugate, transpose, conjugate_transpose
 from sympy import SparseMatrix
 
 from sympy import ZZ
