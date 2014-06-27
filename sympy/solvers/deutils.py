@@ -133,7 +133,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     the following keys are returned
 
     'func'    - It provides the function for which the differential equation
-                has to be solved. This is useful when the function
+                has to be solved.
 
     'default' - The default key as returned by classifier functions in ode
                 and pde.py
