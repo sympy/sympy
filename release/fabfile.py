@@ -138,7 +138,7 @@ def prepare_apt():
     sudo("apt-get -qq update")
     sudo("apt-get -y install git python3 make python-virtualenv zip python-dev")
     # Needed to build the docs
-    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin")
+    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
     # Our Ubuntu is too old to include Python 3.3
     sudo("apt-get -y install python-software-properties")
     sudo("add-apt-repository -y ppa:fkrull/deadsnakes")
@@ -303,6 +303,7 @@ def build_docs():
             with cd("/home/vagrant/repos/sympy/doc"):
                 run("make clean")
                 run("make html-errors")
+                run("make man")
                 with cd("/home/vagrant/repos/sympy/doc/_build"):
                     run("mv html {html-nozip}".format(**tarball_formatter()))
                     run("zip -9lr {html} {html-nozip}".format(**tarball_formatter()))

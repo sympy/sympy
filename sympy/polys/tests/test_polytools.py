@@ -2297,11 +2297,10 @@ def test_factor():
     assert factor(f) == g
     assert factor(g) == g
 
-    f = sqrt(expand((x - 1)**5*(r**2 + 1)))
-    g = sqrt(r**2 + 1)*(x - 1)**(S(5)/2)
+    g = (x - 1)**5*(r**2 + 1)
+    f = sqrt(expand(g))
 
-    assert factor(f) == g
-    assert factor(g) == g
+    assert factor(f) == sqrt(g)
 
     f = Poly(sin(1)*x + 1, x, domain=EX)
 
@@ -2383,6 +2382,8 @@ def test_factor():
 
     # deep option
     assert factor(sin(x**2 + x) + x, deep=True) == sin(x*(x + 1)) + x
+
+    assert factor(sqrt(x**2)) == sqrt(x**2)
 
 
 def test_factor_large():

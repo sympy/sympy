@@ -5576,7 +5576,7 @@ def _symbolic_factor_list(expr, opt, method):
 
             if exp is S.One:
                 factors.extend(_factors)
-            elif exp.is_integer or len(_factors) == 1:
+            elif exp.is_integer:
                 factors.extend([(f, k*exp) for f, k in _factors])
             else:
                 other = []
@@ -5587,11 +5587,7 @@ def _symbolic_factor_list(expr, opt, method):
                     else:
                         other.append((f, k))
 
-                if len(other) == 1:
-                    f, k = other[0]
-                    factors.append((f, k*exp))
-                else:
-                    factors.append((_factors_product(other), exp))
+                factors.append((_factors_product(other), exp))
 
     return coeff, factors
 

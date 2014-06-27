@@ -3179,6 +3179,11 @@ def test_sympy__physics__optics__waves__TWave():
     assert _test_args(TWave(A, f, phi))
 
 
+def test_sympy__physics__optics__medium__Medium():
+    from sympy.physics.optics import Medium
+    assert _test_args(Medium('m'))
+
+
 def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
     assert _test_args(BaseVector('i', 0))
@@ -3216,3 +3221,4 @@ def test_sympy__vector__deloperator__Del():
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
     assert _test_args(BaseScalar('x', 0))
+

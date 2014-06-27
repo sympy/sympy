@@ -2312,7 +2312,7 @@ def _denest_pow(eq):
             return b**e
         return eq
 
-    # let log handle the case of the base of the argument being a mul, e.g.
+    # let log handle the case of the base of the argument being a Mul, e.g.
     # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
     # will take the log, expand it, and then factor out the common powers that
     # now appear as coefficient. We do this manually since terms_gcd pulls out
@@ -2377,7 +2377,7 @@ def powdenest(eq, force=False, polar=False):
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to True will do simplifications on the riemann surface of
+    Setting ``polar`` to True will do simplifications on the Riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be

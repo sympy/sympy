@@ -39,6 +39,8 @@ class CoordSysRect(Basic):
         obj._del = Del(obj)
 
         #Assign important params
+        #If location information is given, adjust the new instance's
+        #origin accordingly
         from sympy.vector.point import Point
         if not isinstance(name, string_types):
             raise TypeError("name should be a string")
@@ -47,8 +49,10 @@ class CoordSysRect(Basic):
             if not isinstance(parent, CoordSysRect):
                 raise TypeError("parent should be a CoordSysRect/None")
             obj._root = obj._parent._root
-            obj._origin = parent.origin.locatenew(name + '.origin', \
-                                                  location)
+            if location is None:
+                location = Vector.Zero
+            obj._origin = parent.origin.locate_new(name + '.origin', \
+                                                   location)
         else:
             obj._origin = Point(name + '.origin')
             obj._root = obj
@@ -146,12 +150,7 @@ class CoordSysRect(Basic):
         else:
             parent_orient = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
-        obj._parent_dcm = parent_orient
-
-        #If location information is given, adjust the new instance's
-        #origin accordingly
-        if location is None:
-            location = Vector.Zero
+        obj._parent_dcm = parent_orient        
 
         #Return the instance
         return obj

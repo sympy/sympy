@@ -41,7 +41,7 @@ def express(expr, system, variables=False):
 
     """
 
-    from sympy.vector.vector import Vector
+    from sympy.vector.vector import Vector, BaseVector
     if expr == 0 or expr == Vector.Zero:
         return expr
 
@@ -50,7 +50,13 @@ def express(expr, system, variables=False):
         if variables:
             #If variables attribute is True, substitute
             #the coordinate variables in the Vector
-            system_list = expr.separate().keys()
+            system_list = []
+            for x in expr.atoms():
+                if (isinstance(x, BaseScalar) or \
+                    isinstance(x, BaseVector)) and \
+                    x.system != system:
+                    system_list.append(x.system)
+            system_list = set(system_list)
             subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.variable_map(system))
