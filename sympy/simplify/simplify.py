@@ -2281,31 +2281,17 @@ def _denest_pow(eq):
         return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
             *powdenest(Mul(*nonpolars)**e)
 
-    # see if there is a positive, non-Mul base at the very bottom
-    exponents = []
-    kernel = eq
-    while kernel.is_Pow:
-        kernel, ex = kernel.as_base_exp()
-        exponents.append(ex)
-    if kernel.is_positive:
-        e = Mul(*exponents)
-        if kernel.is_Mul:
-            b = kernel
-        else:
-            if kernel.is_Integer:
-                # use log to see if there is a power here
-                logkernel = expand_log(log(kernel))
-                if logkernel.is_Mul:
-                    c, logk = logkernel.args
-                    e *= c
-                    kernel = logk.args[0]
-            return Pow(kernel, e)
+    if b.is_Integer:
+        # use log to see if there is a power here
+        logb = expand_log(log(b))
+        if logb.is_Mul:
+            c, logb = logb.args
+            e *= c
+            base = logb.args[0]
+            return Pow(base, e)
 
-    # if any factor is an atom then there is nothing to be done
-    # but the kernel check may have created a new exponent
-    if any(s.is_Atom for s in Mul.make_args(b)):
-        if exponents:
-            return b**e
+    # if b is not a Mul or any factor is an atom then there is nothing to do
+    if not b.is_Mul or any(s.is_Atom for s in Mul.make_args(b)):
         return eq
 
     # let log handle the case of the base of the argument being a Mul, e.g.
@@ -2419,14 +2405,10 @@ def powdenest(eq, force=False, polar=False):
     If assumptions allow, symbols can also be moved to the outermost exponent:
 
     >>> i = Symbol('i', integer=True)
-    >>> p = Symbol('p', positive=True)
     >>> powdenest(((x**(2*i))**(3*y))**x)
     ((x**(2*i))**(3*y))**x
     >>> powdenest(((x**(2*i))**(3*y))**x, force=True)
     x**(6*i*x*y)
-
-    >>> powdenest(((p**(2*a))**(3*y))**x)
-    p**(6*a*x*y)
 
     >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
     ((x**(2*a/3))**(3*y/i))**x
