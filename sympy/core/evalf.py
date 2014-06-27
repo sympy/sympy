@@ -1082,6 +1082,10 @@ def hypsum(expr, n, start, prec):
         return v._mpf_
 
 
+def evalf_prod(expr, prec, options):
+    return evalf(expr.rewrite(C.Sum), prec=prec, options=options)
+
+
 def evalf_sum(expr, prec, options):
     if 'subs' in options:
         expr = expr.subs(options['subs'])
@@ -1185,6 +1189,7 @@ def _create_evalf_table():
 
         C.Integral: evalf_integral,
         C.Sum: evalf_sum,
+        C.Product: evalf_prod,
         C.Piecewise: evalf_piecewise,
 
         C.bernoulli: evalf_bernoulli,

@@ -1,6 +1,7 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
+                   sin, sqrt, sstr, sympify, S, integrate, atan, product,
+                   Sum, Product)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
 from sympy.mpmath import inf, ninf, nan
@@ -255,11 +256,13 @@ def test_evalf_trig_zero_detection():
     assert a.evalf(chop=True) == 0
     raises(PrecisionExhausted, lambda: a.evalf(strict=True))
 
+
 def test_evalf_sum():
     assert Sum(n,(n,1,2)).evalf() == 3.
     assert Sum(n,(n,1,2)).doit().evalf() == 3.
     # the next test should return instantly
     assert Sum(1/n,(n,1,2)).evalf() == 1.5
+
 
 def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum(1/n, (n, 1, oo)).evalf())
@@ -271,6 +274,11 @@ def test_evalf_divergent_series():
     raises(ValueError, lambda: Sum((-2)**n, (n, 1, oo)).evalf())
     raises(ValueError, lambda: Sum((2*n + 3)/(3*n**2 + 4), (n, 0, oo)).evalf())
     raises(ValueError, lambda: Sum((0.5*n**3)/(n**4 + 1), (n, 0, oo)).evalf())
+
+
+def test_evalf_product():
+    assert Product(n, (n, 1, 10)).evalf() == 3628800.
+    assert Product(1 - S.Half**2/n**2, (n, 1, oo)).evalf(5)==0.63662
 
 
 def test_evalf_py_methods():
