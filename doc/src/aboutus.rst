@@ -335,6 +335,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Stas Kelvich: fixes to quantum module
 #. sevaader: fix to assumptions
 #. Dhruvesh Vijay Parikh: implement Möbius function
+#. Venkatesh Halli: improvement to matrices
 #. Lennart Fricke: make sure that cse avoids symbol collision
 #. shashank-agg: ensure that the range is correct for multiple plots
 #. carstimon: make Abs(polar_lift(arg)) -> abs(arg)
