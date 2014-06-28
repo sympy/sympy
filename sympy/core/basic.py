@@ -335,17 +335,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
            but faster
         """
-
-        if type(self) is not type(other):
-            try:
-                other = _sympify(other)
-            except SympifyError:
-                return True     # sympy != other
-
-            if type(self) is not type(other):
-                return True
-
-        return self._hashable_content() != other._hashable_content()
+        return not self.__eq__(other)
 
     def dummy_eq(self, other, symbol=None):
         """
