@@ -337,6 +337,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Dhruvesh Vijay Parikh: implement Möbius function
 #. Venkatesh Halli: improvement to matrices
 #. Lennart Fricke: make sure that cse avoids symbol collision
+#. Vlad Seghete: fix an issue with autowrap
 #. shashank-agg: ensure that the range is correct for multiple plots
 #. carstimon: make Abs(polar_lift(arg)) -> abs(arg)
 #. Pierre Haessig: fix typos
