@@ -347,6 +347,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Faisal Anees: Egyptian Fractions
 #. Robert Johansson: quantum field operators
 #. Kalevi Suominen: fix to assumptions
+#. Kaushik Varanasi: fix a typo
 #. Fawaz Alazemi: combinatorics cheat sheet
 #. Ambar Mehrotra: Fix to documentation
 #. Mark Shoulson: Enhanced Egyptian fractions
