@@ -341,6 +341,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Zamrath Nizam: replace atoms(Symbol) with free_symbols where appropriate
 #. Benjamin Gudehus: add sampling_density to stats
 #. Faisal Anees: Egyptian Fractions
+#. Fawaz Alazemi: combinatorics cheat sheet
 #. Ambar Mehrotra: Fix to documentation
 #. Mark Shoulson: Enhanced Egyptian fractions
 
