@@ -337,6 +337,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Lennart Fricke: make sure that cse avoids symbol collision
 #. shashank-agg: ensure that the range is correct for multiple plots
 #. carstimon: make Abs(polar_lift(arg)) -> abs(arg)
+#. Pierre Haessig: fix typos
 #. Maciej Baranski: refactor code in compilef
 #. Zamrath Nizam: replace atoms(Symbol) with free_symbols where appropriate
 #. Benjamin Gudehus: add sampling_density to stats
