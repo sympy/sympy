@@ -175,6 +175,11 @@ def test_harmonic_rational():
         assert h.n() == a.n()
 
 
+def test_harmonic_evalf():
+    assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
+    assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
+
+
 def test_harmonic_rewrite_polygamma():
     n = Symbol("n")
     m = Symbol("m")
