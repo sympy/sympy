@@ -1,5 +1,27 @@
 #! /usr/bin/env bash
 
+# This file automatically deploys changes to http://docs.sympy.org/dev/index.html.
+# This will happen only when a PR gets merged which is basically when a new commit
+# is added to master.
+# It requires an access token which should be present in .travis.yml file.
+#
+# Following is the procedure to get the access token:
+#
+# $ curl -X POST -u <github_username> -H "Content-Type: application/json" -d\
+# "{\"scopes\":[\"public_repo\"],\"note\":\"token for pushing from travis\"}"\
+# https://api.github.com/authorizations
+#
+# It'll give you a JSON response having a key called "token".
+#
+# $ gem install travis
+# $ travis encrypt -r sympy/sympy GH_TOKEN=<token> env.global
+#
+# This will give you an access token("secure"). This helps in creating an
+# environment variable named GH_TOKEN while building.
+#
+# Add this secure code to .travis.yml as described here http://docs.travis-ci.com/user/encryption-keys/
+
+
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
         echo "Installing dependencies"
