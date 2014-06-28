@@ -100,6 +100,9 @@ def test_vector_magnitude_normalize():
     assert v2.magnitude() == sqrt(a**2 + b**2 + c**2)
     assert v2.normalize() == v2 / v2.magnitude()
 
+    v3 = i + j
+    assert v3.normalize() == (sqrt(2)/2)*C.i + (sqrt(2)/2)*C.j
+
 
 def test_vector_simplify():
     A, s, k, m = symbols('A, s, k, m')

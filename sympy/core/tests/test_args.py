@@ -3184,24 +3184,40 @@ def test_sympy__physics__optics__medium__Medium():
     assert _test_args(Medium('m'))
 
 
+def test_sympy__vector__coordsysrect__CoordSysRect():
+    from sympy.vector.coordsysrect import CoordSysRect
+    assert _test_args(CoordSysRect('C'))
+
+
+def test_sympy__vector__point__Point():
+    from sympy.vector.point import Point
+    assert _test_args(Point('P'))
+
+
 def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
-    assert _test_args(BaseVector('i', 0))
+    from sympy.vector.coordsysrect import CoordSysRect
+    C = CoordSysRect('C')
+    assert _test_args(BaseVector('Ci', 0, C))
 
 
 def test_sympy__vector__vector__VectorAdd():
-    from sympy.vector.vector import i, j, k, VectorAdd, VectorMul
+    from sympy.vector.vector import VectorAdd, VectorMul
+    from sympy.vector.coordsysrect import CoordSysRect
+    C = CoordSysRect('C')
     from sympy.abc import a, b, c, x, y, z
-    v1 = a*i + b*j + c*k
-    v2 = x*i + y*j + z*k
+    v1 = a*C.i + b*C.j + c*C.k
+    v2 = x*C.i + y*C.j + z*C.k
     assert _test_args(VectorAdd(v1, v2))
     assert _test_args(VectorMul(x, v1))
 
 
 def test_sympy__vector__vector__VectorMul():
-    from sympy.vector.vector import i, VectorMul
+    from sympy.vector.vector import VectorMul
+    from sympy.vector.coordsysrect import CoordSysRect
+    C = CoordSysRect('C')
     from sympy.abc import a
-    assert _test_args(VectorMul(a, i))
+    assert _test_args(VectorMul(a, C.i))
 
 
 def test_sympy__vector__vector__VectorZero():
@@ -3215,10 +3231,13 @@ def test_sympy__vector__vector__Vector():
 
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
-    assert _test_args(Del())
+    from sympy.vector.coordsysrect import CoordSysRect
+    C = CoordSysRect('C')
+    assert _test_args(Del(C))
 
 
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
-    assert _test_args(BaseScalar('x', 0))
-
+    from sympy.vector.coordsysrect import CoordSysRect
+    C = CoordSysRect('C')
+    assert _test_args(BaseScalar('Cx', 0, C))

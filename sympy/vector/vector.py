@@ -1,10 +1,11 @@
-from sympy.simplify import simplify, trigsimp
+from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Add, Mul, sympify, Pow, Symbol, count_ops
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.numbers import Zero
-from sympy import diff, sqrt, ImmutableMatrix as Matrix
+from sympy import diff as df, sqrt, ImmutableMatrix as Matrix, \
+     factor as fctr
 from sympy.vector.coordsysrect import CoordSysRect
 from sympy.vector.functions import express
 
@@ -86,29 +87,44 @@ class Vector(Expr):
     __rtruediv__ = __rdiv__
 
     def evalf(self, *args):
-        v = Vector.Zero
-        for x in self.components:
-            v += self.components[x].evalf(*args) * x
-        return v
+        """
+        Implements the SymPy evalf routine for vectors.
+
+        evalf's documentation
+        =====================
+
+        """
+        vec = Vector.Zero
+        for k, v in self.components.items():
+            vec += v.evalf(*args) * k
+        return vec
+    evalf.__doc__ += Expr.evalf.__doc__
 
     def simplify(self, ratio=1.7, measure=count_ops):
-        """ Returns a simplified version of this Vector. """
-        simp_components = {}
-        for x in self.components:
-            simp_components[x] = simplify(self.components[x], \
-                                          ratio, measure)
-        simp_components = [x * simp_components[x] for x in \
-                           simp_components]
+        """
+        Implements the SymPy simplify routine for vectors.
+
+        simplify's documentation
+        ========================
+
+        """
+        simp_components = [simp(v, ratio, measure) * k for \
+                           k, v in self.components.items()]
         return VectorAdd(*simp_components)
+    simplify.__doc__ += simp.__doc__
 
     def trigsimp(self, **opts):
-        """ trigsimp method for vectors """
-        trig_components = {}
-        for x in self.components:
-            trig_components[x] = trigsimp(self.components[x], **opts)
-        trig_components = [x * trig_components[x] for x in \
-                           trig_components]
+        """
+        Implements the SymPy trigsimp routine, for vectors.
+
+        trigsimp's documentation
+        ========================
+
+        """
+        trig_components = [tsimp(v, **opts) * k for \
+                           k, v in self.components.items()]
         return VectorAdd(*trig_components)
+    trigsimp.__doc__ += tsimp.__doc__
 
     def _eval_simplify(self, ratio, measure):
         return self.simplify(ratio, measure)
@@ -117,10 +133,28 @@ class Vector(Expr):
         return self.diff(wrt)
 
     def as_numer_denom(self):
+        """
+        Returns the expression as a tuple wrt the following
+        transformation -
+
+        expression -> a/b -> a, b
+
+        """
         return (self, 1)
 
     def factor(self, *args, **kwargs):
-        raise NotImplementedError("Factoring of vectors not implemented")
+        """
+        Implements the SymPy factor routine, on the scalar parts
+        of a vectorial expression.
+
+        factor's documentation
+        ========================
+
+        """
+        fctr_components = [fctr(v, *args, **kwargs) * k for \
+                           k, v in self.components.items()]
+        return VectorAdd(*fctr_components)
+    factor.__doc__ += fctr.__doc__
 
     def magnitude(self):
         """
@@ -132,7 +166,7 @@ class Vector(Expr):
         """
         Returns the normalized version of this vector.
         """
-        return self / self.magnitude()
+        return self / sqrt(self & self)
 
     def dot(self, other):
         """
@@ -178,11 +212,11 @@ class Vector(Expr):
             def directional_derivative(field):
                 field = express(field, other.system, variables = True)
                 out = self.dot(other._i) * \
-                      diff(field, other._x)
+                      df(field, other._x)
                 out += self.dot(other._j) * \
-                       diff(field, other._y)
+                       df(field, other._y)
                 out += self.dot(other._k) * \
-                       diff(field, other._z)
+                       df(field, other._z)
                 if out == 0 and isinstance(field, Vector):
                     out = Vector.Zero
                 return out
@@ -191,10 +225,10 @@ class Vector(Expr):
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):
             return S(0)
 
-        v1 = express(self, self._sys)
+        v1 = express(self, other._sys)
         v2 = express(other, other._sys)
         dotproduct = S(0)
-        for x in v1.components:
+        for x in other._sys.base_vectors():
             dotproduct += v1.components.get(x, 0) * \
                           v2.components.get(x, 0)
 
@@ -225,7 +259,7 @@ class Vector(Expr):
         C.k
         >>> C.i ^ C.i
         0
-        >>> v = 3*C.i +vb 4*C.j + 5*C.k
+        >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v ^ C.i
         5*C.j + (-4)*C.k
 
@@ -238,15 +272,29 @@ class Vector(Expr):
             return Vector.Zero
 
         #Compute cross product
+        def _det(mat):
+            """This is needed as a little method for to find the determinant
+            of a list in python.
+            SymPy's Matrix won't take in Vector, so need a custom function.
+            The user shouldn't be calling this.
+
+            """
+
+            return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * \
+                                 mat[2][1])
+                    + mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
+                    mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
+                    mat[1][1] * mat[2][0]))
+
         outvec = Vector.Zero
         for system, vect in other.separate().items():
             tempi = system.i
             tempj = system.j
             tempk = system.k
-            tempm = Matrix([[tempi, tempj, tempk], \
-                            [self & tempi, self & tempj, self & tempk], \
-                            [vect & tempi, vect & tempj, vect & tempk]])
-            outvec += tempm.det()
+            tempm = [[tempi, tempj, tempk], \
+                     [self & tempi, self & tempj, self & tempk], \
+                     [vect & tempi, vect & tempj, vect & tempk]]
+            outvec += _det(tempm)
 
         return outvec
 
@@ -255,22 +303,29 @@ class Vector(Expr):
     __xor__.__doc__ = cross.__doc__
 
     def as_coeff_Mul(self, rational=False):
+        """Efficiently extract the coefficient of a product. """
         return (S(1), self)
 
     def as_coeff_add(self, *deps):
+        """Efficiently extract the coefficient of a summation. """
         l = [x * self.components[x] for x in self.components]
         return (0, tuple(l))
 
     def diff(self, *args, **kwargs):
+        """
+        Implements the SymPy diff routine, for vectors.
+
+        diff's documentation
+        ========================
+
+        """
         for x in args:
             if isinstance(x, Vector):
                 raise TypeError("Cannot differentiate wrt a Vector")
-        diff_components = {}
-        for x in self.components:
-            diff_components[x] = diff(self.components[x], *args, **kwargs)
-        diff_components = [x * diff_components[x] for x in \
-                               diff_components]
+        diff_components = [df(v, *args, **kwargs) * k for \
+                           k, v in self.components.items()]
         return VectorAdd(*diff_components)
+    diff.__doc__ += df.__doc__
 
     def to_matrix(self, system):
         """
@@ -470,7 +525,7 @@ class VectorMul(Vector, Mul):
         if count > 1:
             raise ValueError("Cannot multiply one vector with another")
         elif count == 0:
-            raise TypeError("No vectors supplied")
+            return Mul(*args, **options)
         #Handle zero vector case
         if zeroflag:
             return Vector.Zero
@@ -501,10 +556,14 @@ class VectorMul(Vector, Mul):
 
     @property
     def base_vector(self):
+        """ The BaseVector involved in the product. """
         return self._base_vect
 
     @property
     def measure_number(self):
+        """ The scalar expression involved in the defition of
+        this VectorMul.
+        """
         return self._measure_number
 
     def __str__(self, printer=None):

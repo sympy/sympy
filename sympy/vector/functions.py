@@ -30,14 +30,15 @@ def express(expr, system, variables=False):
     ========
 
     >>> from sympy.vector import CoordSysRect
+    >>> from sympy import Symbol
     >>> N = CoordSysRect('N')
     >>> q = Symbol('q')
-    >>> B = N.orient_new('B', 'Axis', [q, N.z])
+    >>> B = N.orient_new('B', 'Axis', [q, N.k])
     >>> from sympy.vector import express
     >>> express(B.i, N)
-    cos(q)*N.i + sin(q)*N.j
+    (cos(q))*N.i + (sin(q))*N.j
     >>> express(N.x, B, variables=True)
-    B.x*cos(q(t)) - B.y*sin(q(t))
+    B.x*cos(q) - B.y*sin(q)
 
     """
 

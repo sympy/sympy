@@ -2,7 +2,7 @@ from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.functions import express, _path
 from sympy import sin, cos, eye, sympify, trigsimp, \
-     ImmutableMatrix as Matrix
+     ImmutableMatrix as Matrix, S, Symbol
 from sympy.core.compatibility import string_types
 
 
@@ -14,9 +14,42 @@ class CoordSysRect(Basic):
     def __new__(cls, name, vector_names=None, variable_names=None, \
                 location=None, rot_type=None, rot_amounts=None, \
                 rot_order='', parent=None):
+        """
+        The orientation/location parameters are necessary if this system
+        is being defined at a certain orientation or location wrt another.
+
+        Parameters
+        ==========
+
+        name : str
+            The name of the new CoordSysRect instance.
+
+        vector_names, variable_names : tuples/lists(optional)
+            Tuples/Lists of 3 strings each, with custom names for base
+            vectors and base scalars of the new system respectively.
+
+        location : Vector
+            The position vector of the new system's origin wrt this
+            one.
+
+        rot_type : str
+            The type of orientation matrix that is being created.
+
+        rot_amounts : list OR value
+            The quantities that the orientation matrix will be
+            defined by.
+
+        rot_order : str
+            If applicable, the order of a series of rotations.
+
+        parent : CoordSysRect
+            The coordinate system wrt which the orientation/location
+            (or both) is being defined.
+
+        """
 
         #A CoordSysRect can be uniquely identified by its name
-        obj = super(CoordSysRect, cls).__new__(cls, name)
+        obj = super(CoordSysRect, cls).__new__(cls, Symbol(name))
         obj._name = name
 
         #Initialize the base vectors
@@ -150,7 +183,7 @@ class CoordSysRect(Basic):
         else:
             parent_orient = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
-        obj._parent_dcm = parent_orient        
+        obj._parent_dcm = parent_orient.T
 
         #Return the instance
         return obj
@@ -240,9 +273,9 @@ class CoordSysRect(Basic):
         elif other == self._parent:
             return self._parent_dcm
         elif other._parent == self:
-            return other._parent_dcm
+            return other._parent_dcm.T
         #Else, use tree to calculate position
-        rootindex, path = self._path(other)
+        rootindex, path = _path(self, other)
         result = eye(3)
         i = -1
         for i in range(rootindex):
@@ -267,8 +300,8 @@ class CoordSysRect(Basic):
         Parameters
         ==========
 
-        otherframe : ReferenceFrame
-            The other frame to map the variables to.
+        otherframe : CoordSysRect
+            The other system to map the variables to.
 
         simplify : bool
             Specifies whether simplification of the expressions is
@@ -277,13 +310,13 @@ class CoordSysRect(Basic):
         Examples
         ========
 
-        >>> from sympy.physics.vector import CoordSysRect
+        >>> from sympy.vector import CoordSysRect
         >>> from sympy import Symbol
         >>> A = CoordSysRect('A')
         >>> q = Symbol('q')
-        >>> B = A.orient_new('B', 'Axis', [q, A.z])
+        >>> B = A.orient_new('B', 'Axis', [q, A.k])
         >>> A.variable_map(B)
-        {A.x: B.x*cos(q(t)) - B.y*sin(q(t)), A.y: B.x*sin(q(t)) + B.y*cos(q(t)), A.z: B.z}
+        {A.x: B.x*cos(q) - B.y*sin(q), A.y: B.x*sin(q) + B.y*cos(q), A.z: B.z}
 
         """
 
@@ -306,15 +339,15 @@ class CoordSysRect(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysRect instance
+            The name of the new CoordSysRect instance.
 
         position : Vector
             The position vector of the new system's origin wrt this
-            one
+            one.
 
-        vector_names, variable_names : tuples(optional)
-            Tuples of 3 strings each, with custom names for base vectors
-            and base scalars of the new system respectively
+        vector_names, variable_names : tuples/lists(optional)
+            Tuples/Lists of 3 strings each, with custom names for base
+            vectors and base scalars of the new system respectively.
 
         Examples
         ========
@@ -331,35 +364,77 @@ class CoordSysRect(Basic):
                             vector_names=vector_names, \
                             variable_names=variable_names, parent=self)
 
-    def orient_new(self, vector_names=None, variable_names=None, \
-                   rot_type=None, rot_amounts=None, rot_order=''):
+    def orient_new(self, name, rot_type=None, rot_amounts=None, \
+                   rot_order='', vector_names=None, variable_names=None):
         """
         Creates a new CoordSysRect oriented in the user-specified way
         with respect to this system.
 
-
-
         Parameters
         ==========
 
-        newname : str
-            The name for the new ReferenceFrame
+        name : str
+            The name of the new CoordSysRect instance.
+
         rot_type : str
             The type of orientation matrix that is being created.
-        amounts : list OR value
-            The quantities that the orientation matrix will be defined by.
+
+        rot_amounts : list OR value
+            The quantities that the orientation matrix will be defined
+            by.
+
         rot_order : str
             If applicable, the order of a series of rotations.
 
+        vector_names, variable_names : tuples/lists(optional)
+            Tuples/Lists of 3 strings each, with custom names for base
+            vectors and base scalars of the new system respectively.
 
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.vector import CoordSysRect
         >>> from sympy import symbols
-        >>> q1 = symbols('q1')
-        >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+        >>> N = CoordSysRect('N')
+
+        We have a choice of how to implement the orientation. First is
+        Body. Body orientation takes this reference frame through three
+        successive simple rotations. Acceptable rotation orders are of
+        length 3, expressed in XYZ or 123, and cannot have a rotation
+        about about an axis twice in a row.
+
+        >>> B = N.orient_new('B', 'Body', [q1, q2, q3], '123')
+        >>> B = N.orient_new('B', 'Body', [q1, q2, 0], 'ZXZ')
+        >>> B = N.orient_new('B', 'Body', [0, 0, 0], 'XYX')
+
+        Next is Space. Space is like Body, but the rotations are applied
+        in the opposite order.
+
+        >>> B = N.orient_new('B', 'Space', [q1, q2, q3], '312')
+
+        Next is Quaternion. This orients the new CoordSysRect with
+        Quaternions, defined as a finite rotation about lambda, a unit
+        vector, by some amount theta.
+        This orientation is described by four parameters:
+        q0 = cos(theta/2)
+        q1 = lambda_x sin(theta/2)
+        q2 = lambda_y sin(theta/2)
+        q3 = lambda_z sin(theta/2)
+        Quaternion does not take in a rotation order.
+
+        >>> B = N.orient_new('B', 'Quaternion', [q0, q1, q2, q3])
+
+        Last is Axis. This is a rotation about an arbitrary axis by
+        some angle. The axis is supplied as a Vector. This is how
+        simple rotations are defined.
+
+        >>> B = N.orient_new('B', 'Axis', [q1, N.i + 2 * N.j])
 
         """
-        return None
+        return CoordSysRect(name, rot_type=rot_type, \
+                            rot_amounts=rot_amounts, \
+                            rot_order = rot_order, \
+                            vector_names=vector_names, \
+                            variable_names=variable_names, \
+                            parent=self)

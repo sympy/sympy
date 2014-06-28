@@ -3,6 +3,7 @@ from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSysRect
 from sympy.vector.functions import express, _path
 from sympy.simplify import trigsimp
+from sympy import Symbol
 
 
 class Point(Basic):
@@ -18,7 +19,7 @@ class Point(Basic):
            parent_point is not None:
             raise TypeError("parent_point should be a Point instance")
         #Create an object
-        obj = super(Point, cls).__new__(cls, name)
+        obj = super(Point, cls).__new__(cls, Symbol(name))
         #Decide the object parameters
         obj._name = name
         obj._pos = position
@@ -51,7 +52,7 @@ class Point(Basic):
         >>> N = CoordSysRect('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)
-        - 10*N.i
+        (-10)*N.i
 
         """
 
@@ -133,7 +134,7 @@ class Point(Basic):
         (10, 5, 0)
 
         """
-        
+
         pos_vect = self.position_wrt(coordinate_system.origin)
         pos_vect = express(pos_vect, coordinate_system, variables = True)
         if simplify:

@@ -1,7 +1,7 @@
 from sympy.vector.coordsysrect import CoordSysRect
 from sympy.vector.scalar import BaseScalar
 from sympy import Symbol, sin, cos, pi, ImmutableMatrix as Matrix, \
-     symbols
+     symbols, simplify, sqrt, zeros
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
@@ -39,17 +39,20 @@ def test_coordinate_vars():
     assert express(B.x*B.i + B.y*B.j + B.z*B.k, A) == \
            (B.x*cos(q) - B.y*sin(q))*A.i + (B.x*sin(q) + \
            B.y*cos(q))*A.j + B.z*A.k
-    assert express(B.x*B.i + B.y*B.j + B.z*B.k, A, variables=True) == \
+    assert simplify(express(B.x*B.i + B.y*B.j + B.z*B.k, A, \
+                            variables=True)) == \
            A.x*A.i + A.y*A.j + A.z*A.k
     assert express(A.x*A.i + A.y*A.j + A.z*A.k, B) == \
            (A.x*cos(q) + A.y*sin(q))*B.i + \
            (-A.x*sin(q) + A.y*cos(q))*B.j + A.z*B.k
-    assert express(A.x*A.i + A.y*A.j + A.z*A.k, B, variables=True) == \
+    assert simplify(express(A.x*A.i + A.y*A.j + A.z*A.k, B, \
+                            variables=True)) == \
            B.x*B.i + B.y*B.j + B.z*B.k
     N = B.orient_new('N', 'Axis', [-q, B.k])
-    assert N.variable_map(A) == {N.x: A.x, N.z: A.z, N.y: A.y}
-    C = A.orient_new('C', 'Axis', [q, A.i + A.y + A.k])
-    mapping = A.variable_map(C)
+    assert N.variable_map(A, simplify = True) == \
+           {N.x: A.x, N.z: A.z, N.y: A.y}
+    C = A.orient_new('C', 'Axis', [q, A.i + A.j + A.k])
+    mapping = A.variable_map(C, simplify = True)
     assert mapping[A.x] == 2*C.x*cos(q)/3 + C.x/3 - \
            2*C.y*sin(q + pi/6)/3 + C.y/3 - 2*C.z*cos(q + pi/3)/3 + C.z/3
     assert mapping[A.y] == -2*C.x*cos(q + pi/3)/3 + \
@@ -60,10 +63,10 @@ def test_coordinate_vars():
 
 def test_dcm():
     N = CoordSysRect('N')
-    A = N.orient_new('A', 'Axis', [q1, N.z])
-    B = A.orient_new('B', 'Axis', [q2, A.x])
-    C = B.orient_new('C', 'Axis', [q3, B.y])
-    D = N.orient_new('D', 'Axis', [q4, N.y])
+    A = N.orient_new('A', 'Axis', [q1, N.k])
+    B = A.orient_new('B', 'Axis', [q2, A.i])
+    C = B.orient_new('C', 'Axis', [q3, B.j])
+    D = N.orient_new('D', 'Axis', [q4, N.j])
     E = N.orient_new('E', 'Space', [q1, q2, q3], '123')
     assert N.dcm(C) == Matrix([
         [- sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), - sin(q1) *
@@ -98,16 +101,16 @@ def test_vector():
     Tests the effects of orientation of coordinate systems on
     basic vector operations.
     """
-    N = ReferenceFrame('N')
-    A = N.orientnew('A', 'Axis', [q1, N.z])
-    B = A.orientnew('B', 'Axis', [q2, A.x])
-    C = B.orientnew('C', 'Axis', [q3, B.y])
+    N = CoordSysRect('N')
+    A = N.orient_new('A', 'Axis', [q1, N.k])
+    B = A.orient_new('B', 'Axis', [q2, A.i])
+    C = B.orient_new('C', 'Axis', [q3, B.j])
 
     #Test to_matrix
     v1 = a*N.i + b*N.j + c*N.k
-    assert v1.to_matrix(A) == Matrix([[a],
-                                      [ b * cos(q1) + c * sin(q1)],
-                                      [-b * sin(q1) + c * cos(q1)]])
+    assert v1.to_matrix(A) == Matrix([[ a*cos(q1) + b*sin(q1)], \
+                                      [-a*sin(q1) + b*cos(q1)], \
+                                      [                     c]])
 
     #Test dot
     assert N.i.dot(A.i) == cos(q1)
@@ -120,7 +123,7 @@ def test_vector():
     assert N.k.dot(A.j) == 0
     assert N.k.dot(A.k) == 1
 
-    assert N.i.dot(A.i + A.j) == sqrt(2)*cos(q1 + pi/4) == \
+    assert N.i.dot(A.i + A.j) == -sin(q1) + cos(q1) == \
            (A.i + A.j).dot(N.i)
 
     assert A.i.dot(C.i) == cos(q3)
@@ -147,35 +150,36 @@ def test_vector():
     assert N.i.cross(A.i) == sin(q1)*A.k
     assert N.i.cross(A.j) == cos(q1)*A.k
     assert N.i.cross(A.i + A.j) == sin(q1)*A.k + cos(q1)*A.k
-    assert (A.i + A.j).cross(N.i) == -sin(q1)*A.k - cos(q1)*A.k
+    assert (A.i + A.j).cross(N.i) == (-sin(q1) - cos(q1))*N.k
 
     assert A.i.cross(C.i) == sin(q3)*C.j
     assert A.i.cross(C.j) == -sin(q3)*C.i + cos(q3)*C.k
     assert A.i.cross(C.k) == -cos(q3)*C.j
-    assert C.i.cross(A.i) == -sin(q3)*C.j
-    assert C.j.cross(A.i) == sin(q3)*C.i - cos(q3)*C.k
-    assert C.k.cross(A.i) == cos(q3)*C.j
+    assert C.i.cross(A.i) == (-sin(q3)*cos(q2))*A.j + \
+           (-sin(q2)*sin(q3))*A.k
+    assert C.j.cross(A.i) == (sin(q2))*A.j + (-cos(q2))*A.k
+    assert express(C.k.cross(A.i), C).trigsimp() == cos(q3)*C.j
 
 
 def test_locatenew_point():
     """
     Tests Point class, and locate_new method in CoordSysRect.
     """
-    assert isinstance(C.origin, Point)
+    assert isinstance(A.origin, Point)
     v = a*A.i + b*A.j + c*A.k
-    A = C.locate_new('A', location = v)
-    assert A.origin.position_wrt(C) == \
-           A.origin.position_wrt(C.origin) == v
+    C = A.locate_new('C', v)
     assert C.origin.position_wrt(A) == \
-           C.origin.position_wrt(A.origin) == -v
-    assert C.origin.express_coordinates(A) == (a, b, c)
-    p = C.origin.locate_new('p', -v)
-    assert p.express_coordinates(C) == (-a, -b, -c)
-    assert p.position_wrt(A.origin) == p.position_wrt(A) == \
+           C.origin.position_wrt(A.origin) == v
+    assert A.origin.position_wrt(C) == \
+           A.origin.position_wrt(C.origin) == -v
+    assert A.origin.express_coordinates(C) == (-a, -b, -c)
+    p = A.origin.locate_new('p', -v)
+    assert p.express_coordinates(A) == (-a, -b, -c)
+    assert p.position_wrt(C.origin) == p.position_wrt(C) == \
            -2 * v
     p1 = p.locate_new('p1', 2*v)
-    assert p1.position_wrt(A.origin) == Vector.Zero
-    assert p1.express_coordinates(A) == (0, 0, 0)
-    p2 = p.locate_new('p2', C.i)
-    assert p1.position_wrt(p2) == 2*v - C.i
-    assert p2.express_coordinates(A) == (2*a - 1, 2*b, 2*c)
+    assert p1.position_wrt(C.origin) == Vector.Zero
+    assert p1.express_coordinates(C) == (0, 0, 0)
+    p2 = p.locate_new('p2', A.i)
+    assert p1.position_wrt(p2) == 2*v - A.i
+    assert p2.express_coordinates(C) == (-2*a + 1, -2*b, -2*c)
