@@ -8,5 +8,4 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 SymPyDeprecationWarning(feature="Module sympy.physics.gaussopt",
         useinstead="sympy.physics.optics.gaussopt",
-        deprecated_since_version="0.7.6").warn()
-
+        deprecated_since_version="0.7.6", issue=7659).warn()
