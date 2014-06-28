@@ -332,6 +332,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Juan Luis Cano Rodríguez: fixes to mechanics module
 #. Sahil Shekhawat: fixes to core
 #. Kundan Kumar: fixes to ODE identification of separable_reduced
+#. Stas Kelvich: fixes to quantum module
 #. sevaader: fix to assumptions
 #. Dhruvesh Vijay Parikh: implement Möbius function
 #. Lennart Fricke: make sure that cse avoids symbol collision
