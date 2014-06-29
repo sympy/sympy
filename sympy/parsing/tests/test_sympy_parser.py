@@ -84,4 +84,4 @@ def test_issue_2515():
 
 def test_issue_7663():
     x = Symbol('x')
-    parse_expr('2*(x+1)', evaluate=0) == 2*(x + 1)
+    parse_expr('2*(x+1)', evaluate=0) == Mul(2, x + 1, evaluate=False)
