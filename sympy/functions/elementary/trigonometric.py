@@ -931,7 +931,8 @@ class csc(ReciprocalTrigonometricFunction):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://functions.wolfram.com/ElementaryFunctions/Csc
+    .. [2] http://dlmf.nist.gov/4.14
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/Csc
 
     """
 
