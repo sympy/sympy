@@ -21,6 +21,8 @@
 #
 # Add this secure code to .travis.yml as described here http://docs.travis-ci.com/user/encryption-keys/
 
+# Exit on error
+set -e
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
