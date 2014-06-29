@@ -571,7 +571,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y**2/exp(x), x, y)
             [{x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
-            [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+            [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
 
     * iterable of one or more of the above
 

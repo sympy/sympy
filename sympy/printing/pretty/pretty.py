@@ -1641,7 +1641,7 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
 
-        except:
+        except Exception:
             try:
                 pform = self._print('Domain: ')
                 pform = prettyForm(*pform.right(self._print(d.symbols)))

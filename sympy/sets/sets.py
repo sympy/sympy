@@ -1159,7 +1159,7 @@ class Union(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         try:
             return Union(set.evalf() for set in self.args)
-        except:
+        except Exception:
             raise TypeError("Not all sets are evalf-able")
 
     def __iter__(self):
@@ -1664,6 +1664,18 @@ def imageset(*args):
     set = args[-1]
 
     r = set._eval_imageset(f)
+    if isinstance(r, ImageSet):
+        f, set = r.args
+
+    if f.variables[0] == f.expr:
+        return set
+
+    if isinstance(set, ImageSet):
+        if len(set.lamda.variables) == 1 and len(f.variables) == 1:
+            return imageset(Lambda(set.lamda.variables[0],
+                                   f.expr.subs(f.variables[0], set.lamda.expr)),
+                            set.base_set)
+
     if r is not None:
         return r
 

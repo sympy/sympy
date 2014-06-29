@@ -837,7 +837,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
         fn(*args)
         if condition:
             given_fn(*args)
-    except:
+    except Exception:
         raise TypeError("Expr/condition too complex for lambdify")
 
     def return_generator():

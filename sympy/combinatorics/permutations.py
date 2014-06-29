@@ -1518,7 +1518,7 @@ class Permutation(Basic):
                 try:
                     # P([a, b, c])
                     return [i[j] for j in self._array_form]
-                except:
+                except Exception:
                     raise TypeError('unrecognized argument')
         else:
             # P(1, 2, 3)

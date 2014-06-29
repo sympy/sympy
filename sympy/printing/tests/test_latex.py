@@ -744,9 +744,9 @@ def test_latex_order():
 
 def test_latex_Lambda():
     assert latex(Lambda(x, x + 1)) == \
-        r"\Lambda {\left (x, x + 1 \right )}"
+        r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == \
-        r"\Lambda {\left (\begin{pmatrix}x, & y\end{pmatrix}, x + 1 \right )}"
+        r"\left( \begin{pmatrix}x, & y\end{pmatrix} \mapsto x + 1 \right)"
 
 
 def test_latex_PolyElement():
@@ -807,7 +807,7 @@ def test_latex_RootOf():
 
 def test_latex_RootSum():
     assert latex(RootSum(x**5 + x + 3, sin)) == \
-        r"\operatorname{RootSum} {\left(x^{5} + x + 3, \Lambda {\left (x, \sin{\left (x \right )} \right )}\right)}"
+        r"\operatorname{RootSum} {\left(x^{5} + x + 3, \left( x \mapsto \sin{\left (x \right )} \right)\right)}"
 
 
 def test_settings():
@@ -1044,6 +1044,7 @@ def test_Hadamard():
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
+
 def test_boolean_args_order():
     syms = symbols('a:f')
 
@@ -1052,6 +1053,10 @@ def test_boolean_args_order():
 
     expr = Or(*syms)
     assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
+
+    expr = Equivalent(*syms)
+    assert latex(expr) == 'a \\equiv b \\equiv c \\equiv d \\equiv e \\equiv f'
+
 
 def test_imaginary():
     i = sqrt(-1)

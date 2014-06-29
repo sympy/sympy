@@ -2252,7 +2252,7 @@ class Expr(Basic, EvalfMixin):
         return False
 
     def is_algebraic_expr(self, *syms):
-        '''
+        """
         This tests whether a given expression is algebraic or not, in the
         given symbols, syms. When syms is not given, all free symbols
         will be used. The rational function does not have to be in expanded
@@ -2266,7 +2266,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import Symbol, sqrt
-        >>> x = Symbol('x')
+        >>> x = Symbol('x', real=True)
         >>> sqrt(1 + x).is_rational_function()
         False
         >>> sqrt(1 + x).is_algebraic_expr()
@@ -2276,8 +2276,8 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be an algebraic
         expression to become one.
 
-        >>> from sympy import sin, factor
-        >>> a = sqrt(sin(x)**2 + 2*sin(x) + 1)/(sin(x) + 1)
+        >>> from sympy import exp, factor
+        >>> a = sqrt(exp(x)**2 + 2*exp(x) + 1)/(exp(x) + 1)
         >>> a.is_algebraic_expr(x)
         False
         >>> factor(a).is_algebraic_expr()
@@ -2292,7 +2292,7 @@ class Expr(Basic, EvalfMixin):
 
         - http://en.wikipedia.org/wiki/Algebraic_expression
 
-        '''
+        """
         if syms:
             syms = set(map(sympify, syms))
         else:
@@ -2391,7 +2391,7 @@ class Expr(Basic, EvalfMixin):
 
         # from here on it's x0=0 and dir='+' handling
 
-        if x.is_positive is x.is_negative is None:
+        if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
             xpos = C.Dummy('x', positive=True, bounded=True)
             rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
