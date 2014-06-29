@@ -317,15 +317,17 @@ def get_integer_part(expr, no, options, return_ints=False):
     # positive or negative (which may fail if very close).
     def calc_part(expr, nexpr):
         nint = int(to_int(nexpr, rnd))
-        expr = C.Add(expr, -nint, evaluate=False)
-        x, _, x_acc, _ = evalf(expr, 10, options)
-        try:
-            check_target(expr, (x, None, x_acc, None), 3)
-        except PrecisionExhausted:
-            if not expr.equals(0):
-                raise PrecisionExhausted
-            x = fzero
-        nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
+        n, c, p, b = nexpr
+        if c != 1 and p != 0:
+            expr = C.Add(expr, -nint, evaluate=False)
+            x, _, x_acc, _ = evalf(expr, 10, options)
+            try:
+                check_target(expr, (x, None, x_acc, None), 3)
+            except PrecisionExhausted:
+                if not expr.equals(0):
+                    raise PrecisionExhausted
+                x = fzero
+            nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
         return nint, fastlog(nint) + 10
 
