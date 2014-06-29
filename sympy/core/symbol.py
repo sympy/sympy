@@ -335,8 +335,8 @@ def symbols(names, **args):
     To reduce typing, range syntax is supported to create indexed symbols.
     Ranges are indicated by a colon and the type of range is determined by
     the character to the right of the colon. If the character is a digit
-    then all continguous digits to the left are taken as the nonnegative
-    starting value (or 0 if there are no digit of the colon) and all
+    then all contiguous digits to the left are taken as the nonnegative
+    starting value (or 0 if there is no digit left of the colon) and all
     contiguous digits to the right are taken as 1 greater than the ending
     value::
 
