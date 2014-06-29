@@ -6,6 +6,7 @@ from sympy import (
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
+from sympy.utilities.pytest import NS
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
 
@@ -274,10 +275,6 @@ def test_other_sums():
     assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
 
 fac = factorial
-
-
-def NS(e, n=15, **options):
-    return str(sympify(e).evalf(n, **options))
 
 
 def test_evalf_fast_series():

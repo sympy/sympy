@@ -4,6 +4,7 @@ from sympy.utilities.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt, root, Min, Max, real_root
 from sympy import S, Float, I, cos, sin, oo, pi, Add
 
+from sympy.utilities.pytest import raises, unchanged
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -101,6 +102,10 @@ def test_Min():
     a, b = Symbol('a', real=True), Symbol('b', real=True)
     # a and b are both real, Min(a, b) should be real
     assert Min(a, b).is_real
+
+    # issue 7619
+    f = Function('f')
+    unchanged(Min, *(1, 2*Min(f(1), 2)))
 
 
 def test_Max():

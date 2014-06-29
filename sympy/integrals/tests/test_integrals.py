@@ -3,10 +3,11 @@ from sympy import (
     Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma, factor, Function,
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
-    sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
+    Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
     Tuple, nan, And, Eq, Or, re, im
 )
 from sympy.integrals.risch import NonElementaryIntegral
+from sympy.utilities.pytest import NS
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.physics import units
 
@@ -340,10 +341,6 @@ def test_issue_4052():
 
     assert integrate(cos(asin(x)), x) == f
     assert integrate(sin(acos(x)), x) == f
-
-
-def NS(e, n=15, **options):
-    return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 
 def test_evalf_integrals():

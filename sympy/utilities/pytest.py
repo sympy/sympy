@@ -7,6 +7,7 @@ import functools
 
 from sympy.core.compatibility import get_function_name
 from sympy.core.sympify import sympify
+from sympy.printing.str import sstr
 
 try:
     import py
@@ -174,3 +175,8 @@ def unchanged(func, *args):
     """
     f = func(*args)
     assert f.func == func and f.args == tuple([sympify(a) for a in args])
+
+
+def NS(e, n=15, **options):
+    """Return evaluated expression as a string."""
+    return sstr(sympify(e).evalf(n, **options), full_prec=True)

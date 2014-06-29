@@ -3,10 +3,11 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, erf2, erf2inv, exp, expand, im, log, pi, re, sec, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
+    sinh, solve, solve_linear, sqrt, symbols, sympify, tan, tanh,
     root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve)
 
 from sympy.core.function import nfloat
+from sympy.utilities.pytest import NS
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
@@ -20,9 +21,6 @@ from sympy.utilities.randtest import test_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
-
-def NS(e, n=15, **options):
-    return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 def test_swap_back():
     f, g = map(Function, 'fg')
@@ -901,7 +899,7 @@ def test_unrad():
 def test_unrad_slow():
     ans = solve(sqrt(x) + sqrt(x + 1) -
                 sqrt(1 - x) - sqrt(2 + x))
-    assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
+    assert len(ans) == 1 and NS(ans[0], 2) == '0.73'
     # the fence optimization problem
     # https://github.com/sympy/sympy/issues/4793#issuecomment-36994519
     F = Symbol('F')
