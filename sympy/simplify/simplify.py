@@ -2563,6 +2563,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 b, e = term.as_base_exp()
                 if deep:
                     b, e = [recurse(i) for i in [b, e]]
+                if b.is_Pow or b.func is exp:
+                    # don't let smthg like sqrt(x**a) split into x**a, 1/2
+                    # or else it will be joined as x**(a/2) later
+                    b, e = b**e, S.One
                 c_powers[b].append(e)
             else:
                 # This is the logic that combines exponents for equal,
