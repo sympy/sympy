@@ -1946,7 +1946,8 @@ class acot(InverseTrigonometricFunction):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+    .. [2] http://dlmf.nist.gov/4.23
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCot
 
     """
 
