@@ -223,3 +223,24 @@ def test_imageset_union():
     assert Union(imageset(Lambda(n, 2*pi*n), S.Integers),
                  imageset(Lambda(n, 2*pi*n + pi), S.Integers)) == \
             imageset(Lambda(n, pi*n), S.Integers)
+    assert Union(imageset(Lambda(n, 2*pi*n), S.Integers),
+                 imageset(Lambda(n, 2*pi*n - pi), S.Integers)) == \
+            imageset(Lambda(n, pi*n), S.Integers)
+
+@XFAIL
+def test_imageset_union2():
+    # This fails because I expect gcd(2*_n, 2*_n - 1, 2*_n - 1/2, 2*_n + 1/2) to
+    # return 1/2 but it returns 1.
+    # TODO: report it as bug in gcd and add a @XFAIL test for it.
+    assert Union(imageset(Lambda(n, 2*n), S.Integers),
+                 imageset(Lambda(n, 2*n - S.One), S.Integers),
+                 imageset(Lambda(n, 2*n + S.One/2), S.Integers),
+                 imageset(Lambda(n, 2*n - S.One/2), S.Integers)) == \
+            imageset(Lambda(n, n/2), S.Integers)
+
+    assert Union(imageset(Lambda(n, 2*pi*n), S.Integers),
+                 imageset(Lambda(n, 2*pi*n - pi), S.Integers),
+                 imageset(Lambda(n, 2*pi*n + pi/2), S.Integers),
+                 imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
+                ) == \
+            imageset(Lambda(n, pi*n/2), S.Integers)

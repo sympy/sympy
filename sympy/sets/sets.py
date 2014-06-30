@@ -1031,7 +1031,7 @@ class Union(Set, EvalfMixin):
         Then we iterate through all pairs and ask the constituent sets if they
         can simplify themselves with any other constituent
         """
-        from sympy import ImageSet, gcd, Wild, expand, Lambda
+        from sympy import ImageSet, gcd, Wild, expand, Lambda, Dummy
 
         # ===== Global Rules =====
         # Merge all finite sets
@@ -1040,26 +1040,25 @@ class Union(Set, EvalfMixin):
             finite_set = FiniteSet(x for set in finite_sets for x in set)
             args = [finite_set] + [x for x in args if not x.is_FiniteSet]
 
+        # ===== A special rule for ImageSet ======
         if all(isinstance(s, ImageSet) and s.base_set == S.Integers
                for s in args):
             # XXX: fix for the case where imageset(Lambda(n, n), S.Integers)
             # is converted to S.Integers Maybe add a special rule for it.
-            # XXX: take care of the cases where the symbol of the lambda
-            # expression are not the same.
-            exprs = [s.lamda.expr for s in args]
-            symbol = args[0].lamda.variables[0] # XXX: assuming all exprs have
-            # the same symbol and the lamba isn't multivariate
-            # assuming all the exprs are of the form (a*n + b)*c
-            c = gcd(*exprs)
-            if not c.has(symbol):
-                exprs = [expand(expr/c) for expr in exprs]
-                a, b = Wild('a'), Wild('b')
-                matches = [expr.match(a*symbol + b) for expr in exprs]
-                if len(set(m[a] for m in matches)) == 1:
-                    q = matches[0][a]
-                    ps = [m[b] for m in matches]
-                    if set(p%q for p in ps) == set(i%q for i in range(q)):
-                        return imageset(Lambda(symbol, c*symbol), S.Integers)
+            n = Dummy('n')
+            lamdas = [s.lamda for s in args]
+            if all(len(l.variables) == 1 for l in lamdas):
+                exprs = [l.expr.subs(l.variables[0], n) for l in lamdas]
+                c = gcd(*exprs)
+                if not c.has(n):
+                    exprs = [expand(expr/c) for expr in exprs]
+                    a, b = Wild('a'), Wild('b')
+                    matches = [expr.match(a*n + b) for expr in exprs]
+                    if len(set(m[a] for m in matches)) == 1:
+                        q = matches[0][a]
+                        ps = [m[b] for m in matches]
+                        if set(p%q for p in ps) == set(i%q for i in range(q)):
+                            return imageset(Lambda(n, c*n), S.Integers)
 
 
         # ===== Pair-wise Rules =====
