@@ -34,11 +34,6 @@ def test_simple():
     assert e.aseries(n) == exp(exp(sqrt(log(log(n)))*log(log(log(n)))**3)*sqrt(log(n))*log(log(n))**2)*log(n)**2/sqrt(n)
 
 
-# TODO: add test cases involving special functions
-def test_special():
-    pass
-
-
 def test_hierarchical():
     # Gruntz' thesis pp.
     # 6.21
