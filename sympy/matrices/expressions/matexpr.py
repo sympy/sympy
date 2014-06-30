@@ -8,6 +8,7 @@ from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy.core.function import Function, Lambda
 
 
 def _sympifyit(arg, retval=None):
@@ -362,6 +363,72 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_simplify(self, **kwargs):
         return self
+
+
+class ElemWise(MatrixExpr):
+    """Symbolic replresentation of an elementwise operation on a matrix
+
+    Represented as ElemWise(A, f(x)) where f(x) is a function in x and
+    A is a MatrixSymbol
+    """
+    def __new__( cls, M, fn):
+        return Basic.__new__(cls, M, fn)
+
+    def doit(self):
+        return self._evaluate()
+
+    Expression = property(lambda self: self.args[1])
+    Matrix = property(lambda self: self.args[0])
+
+    @property
+    def shape(self):
+        return self.Matrix.shape
+
+    @property
+    def shape(self):
+        return self.Matrix.shape
+
+    @property
+    def rows(self):
+        return self.Matrix.rows
+
+    @property
+    def cols(self):
+        return self.Matrix.cols
+
+    def _evaluate(self):
+        function = sympify(self.Expression)
+        mat = self.Matrix
+        self._eval_args(function, mat)
+        x = Symbol('x')
+        if function == IdentityFunction and type(mat) != ElemWise:
+            return mat
+        if(type(mat) in [MatrixSymbol, MatMul]):
+            return self._evaluate_simple(function, mat, x)
+        elif(type(mat) == ElemWise):
+            new_func, mat = sympify(mat.Expression), mat.Matrix
+            old_func = sympify(self.Expression)
+            return ElemWise(mat, new_func(old_func(x))).evaluate()
+
+    def _eval_args(self, function, mat):
+        if(self._is_multivariate(function)):
+            raise TypeError("The function can't be multivariate.")
+        if(type(mat) not in [MatrixSymbol, MatMul, ElemWise]):
+            raise ValueError("The first argument should evaluate to a Matrix.")
+
+    def _is_multivariate(self, function):
+        return False
+
+    def _evaluate_simple(self, function, mat, x):
+        function = sympify(function)
+        return ElemWise(mat, function)
+
+    def _scalar_mul(self, M, *args):
+        return MatMul(M, *args).doit()
+
+    def _entry(self, i, j):
+        return MatrixElement(self, i, j)
+
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity

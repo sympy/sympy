@@ -1,7 +1,7 @@
 from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
-from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
+from sympy.matrices import (ElemWise, Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         Transpose, Adjoint)
 from sympy.utilities.pytest import raises
@@ -38,6 +38,17 @@ def test_subs():
     assert (A*B).subs(B, C) == A*C
 
     assert (A*B).subs(l, n).is_square
+
+
+def test_ElemWise():
+    f = lambda x: n*m*x
+    g = lambda x: sin(x)
+    h = lambda x: cos(x)**2
+    assert ElemWise(A, f(x)) == A*n*m
+    assert ElemWise(ElemWise(A, f(x)), f(x)) == A*n**2*m**2
+    assert ElemWise(ElemWise(A, g(x)), g(x)) == ElemWise(A, sin(sin(x)))
+    assert ElemWise(ElemWise(A, h(x)), f(x)) == ElemWise(A, n*m*cos(x)**2)
+    assert ElemWise(ElemWise(A, f(x)), h(x)) == ElemWise(A*n*m, cos(x)**2)
 
 
 def test_ZeroMatrix():
