@@ -150,7 +150,8 @@ class Polygon(GeometryEntity):
                 nodup.pop(i + 1)
                 if a == c:
                     nodup.pop(i)
-            i += 1
+            else:
+                i += 1
 
         vertices = list(nodup)
 

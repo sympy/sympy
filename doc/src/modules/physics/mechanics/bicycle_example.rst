@@ -335,4 +335,3 @@ also commented out)::
 Upon running the above code yourself, enabling the commented out lines, compare
 the computed eigenvalues to those is the referenced paper. This concludes the
 bicycle example.
-

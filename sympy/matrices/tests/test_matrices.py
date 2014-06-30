@@ -3,7 +3,7 @@ import collections
 from sympy import (
     Abs, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
-    sympify, trigsimp)
+    sympify, trigsimp, sstr)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector)
 from sympy.matrices import (
@@ -11,9 +11,9 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros)
-from sympy.core.compatibility import long, iterable
+from sympy.core.compatibility import long, iterable, u
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL, slow, skip
 
 from sympy.abc import x, y, z
 
@@ -2122,6 +2122,12 @@ def test_issue_5964():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
 
 
+def test_issue_7604():
+    x, y = symbols(u("x y"))
+    assert sstr(Matrix([[x, 2*y], [y**2, x + 3]])) == \
+        'Matrix([\n[   x,   2*y],\n[y**2, x + 3]])'
+
+
 def test_is_Identity():
     assert eye(3).is_Identity
     assert eye(3).as_immutable().is_Identity
@@ -2371,3 +2377,22 @@ def test_pinv_rank_deficient():
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])
     assert ones(1, 0) + ones(1, 0) == Matrix(1, 0, [])
+
+def test_free_symbols():
+    for M in ImmutableMatrix, ImmutableSparseMatrix, Matrix, SparseMatrix:
+        assert M([[x], [0]]).free_symbols == set([x])
+
+def test_from_ndarray():
+    """See issue 7465."""
+    try:
+        from numpy import array
+    except ImportError:
+        skip('NumPy must be available to test creating matrices from ndarrays')
+
+    assert Matrix(array([1, 2, 3])) == Matrix([1, 2, 3])
+    assert Matrix(array([[1, 2, 3]])) == Matrix([[1, 2, 3]])
+    assert Matrix(array([[1, 2, 3], [4, 5, 6]])) == \
+        Matrix([[1, 2, 3], [4, 5, 6]])
+    assert Matrix(array([x, y, z])) == Matrix([x, y, z])
+    raises(NotImplementedError, lambda: Matrix(array([[
+        [1, 2], [3, 4]], [[5, 6], [7, 8]]])))

@@ -39,7 +39,6 @@ access any SymPy module, or use this contens:
    sets.rst
    simplify/simplify.rst
    simplify/hyperexpand.rst
-   statistics.rst
    stats.rst
    solvers/ode.rst
    solvers/pde.rst

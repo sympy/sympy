@@ -160,7 +160,7 @@ class KanesMethod(object):
         t = dynamicsymbols._t
         return reduce(set.union, [set([i]) for j in inlist
             for i in j.atoms(AppliedUndef, Derivative)
-            if i.atoms() == set([t])], set()) - insyms
+            if i.free_symbols == set([t])], set()) - insyms
 
         temp_f = set().union(*[i.atoms(AppliedUndef) for i in inlist])
         temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
@@ -171,7 +171,7 @@ class KanesMethod(object):
 
     def _find_othersymbols(self, inlist, insyms=[]):
         """Finds all non-dynamic symbols in the expressions."""
-        return list(reduce(set.union, [i.atoms(Symbol) for i in inlist]) -
+        return list(reduce(set.union, [i.free_symbols for i in inlist]) -
                     set(insyms))
 
 
@@ -683,7 +683,7 @@ class KanesMethod(object):
         # gets multiplied by the jacobian of qd wrt qi, this is extended for
         # the ud's as well. dqd_dqi is computed by taking a taylor expansion of
         # the holonomic constraint equations about q*, treating q* - q as dq,
-        # seperating into dqd (depedent q's) and dqi (independent q's) and the
+        # separating into dqd (depedent q's) and dqi (independent q's) and the
         # rearranging for dqd/dqi. This is again extended for the speeds.
 
         # First case: configuration and motion constraints

@@ -98,7 +98,7 @@ def test_union():
     Y = Interval(1, 2) + FiniteSet(3)
     XandY = X.intersect(Y)
     assert 2 in X and 3 in X and 3 in XandY
-    assert X.subset(XandY) and Y.subset(XandY)
+    assert XandY.is_subset(X) and XandY.is_subset(Y)
 
     raises(TypeError, lambda: Union(1, 2, 3))
 
@@ -197,6 +197,12 @@ def test_intersect():
     assert Union(Interval(0, 5), FiniteSet(['Ham'])).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
         FiniteSet(2, 3, 4, 5)
 
+    # tests for the intersection alias
+    assert Interval(0, 5).intersection(FiniteSet(1, 3)) == FiniteSet(1, 3)
+    assert Interval(0, 1, True, True).intersection(FiniteSet(1)) == S.EmptySet
+
+    assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
+        Union(Interval(1, 1), Interval(2, 2))
 
 def test_intersection():
     # iterable
@@ -220,6 +226,11 @@ def test_intersection():
     assert (2, 2) not in i
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
+
+
+def test_is_disjoint():
+    assert Interval(0, 2).is_disjoint(Interval(1, 2)) == False
+    assert Interval(0, 2).is_disjoint(Interval(3, 4)) == True
 
 
 def test_ProductSet_of_single_arg_is_arg():
@@ -267,28 +278,67 @@ def test_measure():
     assert (band * FiniteSet(1, 2, 3)).measure == nan
 
 
-def test_subset():
-    assert Interval(0, 2).subset(Interval(0, 1)) is True
-    assert Interval(0, 2).subset(Interval(0, 3)) is False
+def test_is_subset():
+    assert Interval(0, 1).is_subset(Interval(0, 2)) is True
+    assert Interval(0, 3).is_subset(Interval(0, 2)) is False
 
-    assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(1, 2))
-    assert FiniteSet(1, 2, 3, 4).subset(FiniteSet(4, 5)) is False
-    assert Interval(0, 2).subset(FiniteSet(1))
-    assert Interval(0, 2, True, True).subset(FiniteSet(1, 2)) is False
-    assert (Interval(0, 2, False, True) + FiniteSet(2, 3)).subset(
-        Interval(1, 2) + FiniteSet(3))
+    assert FiniteSet(1, 2).is_subset(FiniteSet(1, 2, 3, 4))
+    assert FiniteSet(4, 5).is_subset(FiniteSet(1, 2, 3, 4)) is False
+    assert FiniteSet(1).is_subset(Interval(0, 2))
+    assert FiniteSet(1, 2).is_subset(Interval(0, 2, True, True)) is False
+    assert (Interval(1, 2) + FiniteSet(3)).is_subset(
+        (Interval(0, 2, False, True) + FiniteSet(2, 3)))
 
-    assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 4)) is True
-    assert Union(Interval(0, 1), Interval(2, 5)).subset(Interval(3, 6)) is False
+    assert Interval(3, 4).is_subset(Union(Interval(0, 1), Interval(2, 5))) is True
+    assert Interval(3, 6).is_subset(Union(Interval(0, 1), Interval(2, 5))) is False
 
-    assert Interval(0, 5).subset(FiniteSet(1, 2, 3, 4)) is True
-    assert FiniteSet(1, 2, 3).subset(S.EmptySet) is True
+    assert FiniteSet(1, 2, 3, 4).is_subset(Interval(0, 5)) is True
+    assert S.EmptySet.is_subset(FiniteSet(1, 2, 3)) is True
 
-    assert S.EmptySet.subset(Interval(0, 1)) is False
-    assert S.EmptySet.subset(S.EmptySet) is True
+    assert Interval(0, 1).is_subset(S.EmptySet) is False
+    assert S.EmptySet.is_subset(S.EmptySet) is True
 
-    raises(ValueError, lambda: S.EmptySet.subset(1))
+    raises(ValueError, lambda: S.EmptySet.is_subset(1))
 
+    # tests for the issubset alias
+    assert FiniteSet(1, 2, 3, 4).issubset(Interval(0, 5)) is True
+    assert S.EmptySet.issubset(FiniteSet(1, 2, 3)) is True
+
+def test_is_proper_subset():
+    assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
+    assert Interval(0, 3).is_proper_subset(Interval(0, 2)) is False
+    assert S.EmptySet.is_proper_subset(FiniteSet(1, 2, 3)) is True
+
+def test_is_superset():
+
+    assert Interval(0, 1).is_superset(Interval(0, 2)) == False
+    assert Interval(0, 3).is_superset(Interval(0, 2))
+
+    assert FiniteSet(1, 2).is_superset(FiniteSet(1, 2, 3, 4)) == False
+    assert FiniteSet(4, 5).is_superset(FiniteSet(1, 2, 3, 4)) == False
+    assert FiniteSet(1).is_superset(Interval(0, 2)) == False
+    assert FiniteSet(1, 2).is_superset(Interval(0, 2, True, True)) == False
+    assert (Interval(1, 2) + FiniteSet(3)).is_superset(
+        (Interval(0, 2, False, True) + FiniteSet(2, 3))) == False
+
+    assert Interval(3, 4).is_superset(Union(Interval(0, 1), Interval(2, 5))) == False
+
+    assert FiniteSet(1, 2, 3, 4).is_superset(Interval(0, 5)) == False
+    assert S.EmptySet.is_superset(FiniteSet(1, 2, 3)) == False
+
+    assert Interval(0, 1).is_superset(S.EmptySet) == True
+    assert S.EmptySet.is_superset(S.EmptySet) == True
+
+    raises(ValueError, lambda: S.EmptySet.is_superset(1))
+
+    # tests for the issuperset alias
+    assert Interval(0, 1).issuperset(S.EmptySet) == True
+    assert S.EmptySet.issuperset(S.EmptySet) == True
+
+def test_is_proper_superset():
+    assert Interval(0, 1).is_proper_superset(Interval(0, 2)) is False
+    assert Interval(0, 3).is_proper_superset(Interval(0, 2)) is True
+    assert FiniteSet(1, 2, 3).is_proper_superset(S.EmptySet) is True
 
 def test_contains():
     assert Interval(0, 2).contains(1) is True
@@ -414,8 +464,8 @@ def test_finite_basic():
     B = FiniteSet(3, 4, 5)
     AorB = Union(A, B)
     AandB = A.intersect(B)
-    assert AorB.subset(A) and AorB.subset(B)
-    assert A.subset(AandB)
+    assert A.is_subset(AorB) and B.is_subset(AorB)
+    assert AandB.is_subset(A)
     assert AandB == FiniteSet(3)
 
     assert A.inf == 1 and A.sup == 3
@@ -473,7 +523,7 @@ def test_product_basic():
     HH, TT = sympify(H), sympify(T)
     assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
 
-    assert (d6*d6).subset(d4*d4)
+    assert (d4*d4).is_subset(d6*d6)
 
     inf, neginf = S.Infinity, S.NegativeInfinity
     assert square.complement == Union(
@@ -484,11 +534,16 @@ def test_product_basic():
         ((Interval(neginf, 0, True, True) + Interval(1, inf, True, True))
          * (Interval(neginf, 0, True, True) + Interval(1, inf, True, True))))
 
-    assert (Interval(-10, 10)**3).subset(Interval(-5, 5)**3)
-    assert not (Interval(-5, 5)**3).subset(Interval(-10, 10)**3)
-    assert not (Interval(-10, 10)**2).subset(Interval(-5, 5)**3)
+    assert (Interval(-5, 5)**3).is_subset(Interval(-10, 10)**3)
+    assert not (Interval(-10, 10)**3).is_subset(Interval(-5, 5)**3)
+    assert not (Interval(-5, 5)**2).is_subset(Interval(-10, 10)**3)
 
-    assert square.subset(Interval(.2, .5)*FiniteSet(.5))  # segment in square
+    assert (Interval(.2, .5)*FiniteSet(.5)).is_subset(square)  # segment in square
+
+    assert len(coin*coin*coin) == 8
+    assert len(S.EmptySet*S.EmptySet) == 0
+    assert len(S.EmptySet*coin) == 0
+    raises(TypeError, lambda: len(coin*Interval(0, 2)))
 
 
 def test_real():

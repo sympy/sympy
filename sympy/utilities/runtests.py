@@ -554,8 +554,6 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/statistics",                # prints a deprecation
-        "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
         "sympy/utilities/compilef.py"  # needs tcc
     ])
 

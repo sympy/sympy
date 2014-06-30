@@ -580,7 +580,11 @@ class Float(Number):
     """
     __slots__ = ['_mpf_', '_prec']
 
-    is_rational = True
+    # A Float represents many real numbers,
+    # both rational and irrational.
+    is_rational = None
+    is_irrational = None
+
     is_real = True
 
     is_Float = True

@@ -25,10 +25,6 @@ def test_all_classes_are_tested():
 
     modules = {}
 
-    # Ignore sympy.statistics import warning
-    warnings.filterwarnings("ignore", message="sympy.statistics has been deprecated since SymPy 0.7.2",
-        category=SymPyDeprecationWarning)
-
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
 
@@ -421,45 +417,45 @@ def test_sympy__core__relational__Unequality():
     assert _test_args(Unequality(x, 2))
 
 
-def test_sympy__core__sets__EmptySet():
-    from sympy.core.sets import EmptySet
+def test_sympy__sets__sets__EmptySet():
+    from sympy.sets.sets import EmptySet
     assert _test_args(EmptySet())
 
 
-def test_sympy__core__sets__UniversalSet():
-    from sympy.core.sets import UniversalSet
+def test_sympy__sets__sets__UniversalSet():
+    from sympy.sets.sets import UniversalSet
     assert _test_args(UniversalSet())
 
 
-def test_sympy__core__sets__FiniteSet():
-    from sympy.core.sets import FiniteSet
+def test_sympy__sets__sets__FiniteSet():
+    from sympy.sets.sets import FiniteSet
     assert _test_args(FiniteSet(x, y, z))
 
 
-def test_sympy__core__sets__Interval():
-    from sympy.core.sets import Interval
+def test_sympy__sets__sets__Interval():
+    from sympy.sets.sets import Interval
     assert _test_args(Interval(0, 1))
 
 
-def test_sympy__core__sets__ProductSet():
-    from sympy.core.sets import ProductSet, Interval
+def test_sympy__sets__sets__ProductSet():
+    from sympy.sets.sets import ProductSet, Interval
     assert _test_args(ProductSet(Interval(0, 1), Interval(0, 1)))
 
 
 @SKIP("does it make sense to test this?")
-def test_sympy__core__sets__Set():
-    from sympy.core.sets import Set
+def test_sympy__sets__sets__Set():
+    from sympy.sets.sets import Set
     assert _test_args(Set())
 
 
-def test_sympy__core__sets__Intersection():
-    from sympy.core.sets import Intersection, Interval
+def test_sympy__sets__sets__Intersection():
+    from sympy.sets.sets import Intersection, Interval
     assert _test_args(Intersection(Interval(0, 3), Interval(2, 4),
         evaluate=False))
 
 
-def test_sympy__core__sets__Union():
-    from sympy.core.sets import Union, Interval
+def test_sympy__sets__sets__Union():
+    from sympy.sets.sets import Union, Interval
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
 
@@ -567,19 +563,19 @@ def test_sympy__stats__drv__SingleDiscreteDistribution():
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
-    from sympy.core.sets import FiniteSet
+    from sympy.sets.sets import FiniteSet
     assert _test_args(RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3)))
 
 
 def test_sympy__stats__rv__SingleDomain():
     from sympy.stats.rv import SingleDomain
-    from sympy.core.sets import FiniteSet
+    from sympy.sets.sets import FiniteSet
     assert _test_args(SingleDomain(x, FiniteSet(1, 2, 3)))
 
 
 def test_sympy__stats__rv__ConditionalDomain():
     from sympy.stats.rv import ConditionalDomain, RandomDomain
-    from sympy.core.sets import FiniteSet
+    from sympy.sets.sets import FiniteSet
     D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
     assert _test_args(ConditionalDomain(D, x > 1))
 
@@ -2305,6 +2301,11 @@ def test_sympy__physics__quantum__operator__HermitianOperator():
     assert _test_args(HermitianOperator('H'))
 
 
+def test_sympy__physics__quantum__operator__IdentityOperator():
+    from sympy.physics.quantum.operator import IdentityOperator
+    assert _test_args(IdentityOperator(5))
+
+
 def test_sympy__physics__quantum__operator__Operator():
     from sympy.physics.quantum.operator import Operator
     assert _test_args(Operator('A'))
@@ -2326,6 +2327,48 @@ def test_sympy__physics__quantum__operator__UnitaryOperator():
 def test_sympy__physics__quantum__piab__PIABBra():
     from sympy.physics.quantum.piab import PIABBra
     assert _test_args(PIABBra('B'))
+
+
+def test_sympy__physics__quantum__boson__BosonOp():
+    from sympy.physics.quantum.boson import BosonOp
+    assert _test_args(BosonOp('a'))
+    assert _test_args(BosonOp('a', False))
+
+
+def test_sympy__physics__quantum__boson__BosonFockKet():
+    from sympy.physics.quantum.boson import BosonFockKet
+    assert _test_args(BosonFockKet(1))
+
+
+def test_sympy__physics__quantum__boson__BosonFockBra():
+    from sympy.physics.quantum.boson import BosonFockBra
+    assert _test_args(BosonFockBra(1))
+
+
+def test_sympy__physics__quantum__boson__BosonCoherentKet():
+    from sympy.physics.quantum.boson import BosonCoherentKet
+    assert _test_args(BosonCoherentKet(1))
+
+
+def test_sympy__physics__quantum__boson__BosonCoherentBra():
+    from sympy.physics.quantum.boson import BosonCoherentBra
+    assert _test_args(BosonCoherentBra(1))
+
+
+def test_sympy__physics__quantum__fermion__FermionOp():
+    from sympy.physics.quantum.fermion import FermionOp
+    assert _test_args(FermionOp('c'))
+    assert _test_args(FermionOp('c', False))
+
+
+def test_sympy__physics__quantum__fermion__FermionFockKet():
+    from sympy.physics.quantum.fermion import FermionFockKet
+    assert _test_args(FermionFockKet(1))
+
+
+def test_sympy__physics__quantum__fermion__FermionFockBra():
+    from sympy.physics.quantum.fermion import FermionFockBra
+    assert _test_args(FermionFockBra(1))
 
 
 def test_sympy__physics__quantum__piab__PIABHamiltonian():
@@ -2938,6 +2981,9 @@ def test_sympy__geometry__point__Point():
     from sympy.geometry.point import Point
     assert _test_args(Point(0, 1))
 
+def test_sympy__geometry__point3d__Point3D():
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(Point3D(0, 1, 2))
 
 def test_sympy__geometry__ellipse__Ellipse():
     from sympy.geometry.ellipse import Ellipse
@@ -3149,3 +3195,12 @@ def test_sympy__ntheory__factor___totient():
 def test_sympy__ntheory__residue_ntheory__mobius():
     from sympy.ntheory import mobius
     assert _test_args(mobius(2))
+
+def test_sympy__physics__optics__waves__TWave():
+    from sympy.physics.optics import TWave
+    A, f, phi = symbols('A, f, phi')
+    assert _test_args(TWave(A, f, phi))
+
+def test_sympy__physics__optics__medium__Medium():
+    from sympy.physics.optics import Medium
+    assert _test_args(Medium('m'))

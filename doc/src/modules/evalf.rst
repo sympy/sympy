@@ -161,7 +161,9 @@ Fibonacci number, the following happens:
 
 
 The lack of digits in the returned number indicates that ``N`` failed to achieve
-full accuracy. The result indicates that the magnitude of the expression is something less than 10^84, but that is not a particularly good answer. To force a higher working precision, the ``maxn`` keyword argument can be used:
+full accuracy. The result indicates that the magnitude of the expression is something
+less than 10^84, but that is not a particularly good answer. To force a higher working
+precision, the ``maxn`` keyword argument can be used:
 
     >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5), maxn=500)
     -4.60123853010113e-210
@@ -422,6 +424,3 @@ Here are several more advanced examples:
     >>> nsimplify(gamma('1/4')*gamma('3/4'), [pi])
       ___
     \/ 2 *pi
-
-
-

@@ -1704,9 +1704,9 @@ class atan(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
-            return S.Pi/2 - atan(1/self.args[0])
+            return (S.Pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
         elif args0[0] == S.NegativeInfinity:
-            return -S.Pi/2 - atan(1/self.args[0])
+            return (-S.Pi/2 - atan(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
@@ -1813,9 +1813,9 @@ class acot(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
-            return S.Pi/2 - acot(1/self.args[0])
+            return (S.Pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
         elif args0[0] == S.NegativeInfinity:
-            return 3*S.Pi/2 - acot(1/self.args[0])
+            return (3*S.Pi/2 - acot(1/self.args[0]))._eval_nseries(x, n, logx)
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 

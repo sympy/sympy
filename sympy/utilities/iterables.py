@@ -527,10 +527,34 @@ def subsets(seq, k=None, repetition=False):
                 yield i
 
 
-def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
+def filter_symbols(iterator, exclude):
+    """
+    Only yield elements from `iterator` that do not occur in `exclude`.
+
+    Parameters
+    ==========
+
+    iterator : iterable
+    iterator to take elements from
+
+    exclude : iterable
+    elements to exclude
+
+    Returns
+    =======
+
+    iterator : iterator
+    filtered iterator
+    """
+    exclude = set(exclude)
+    for s in iterator:
+        if s not in exclude:
+            yield s
+
+def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
-    increasing subscripts.
+    increasing subscripts provided that they do not occur in `exclude`.
 
     Parameters
     ==========
@@ -551,7 +575,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     sym : Symbol
         The subscripted symbols.
     """
-
+    exclude = set(exclude or [])
     if cls is None:
         # We can't just make the default cls=C.Symbol because it isn't
         # imported yet.
@@ -559,7 +583,9 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
 
     while True:
         name = '%s%s' % (prefix, start)
-        yield cls(name, *args, **assumptions)
+        s = cls(name, *args, **assumptions)
+        if s not in exclude:
+            yield s
         start += 1
 
 

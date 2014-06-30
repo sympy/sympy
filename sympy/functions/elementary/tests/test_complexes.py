@@ -518,7 +518,7 @@ def test_issue_4754_derivative_conjugate():
     assert (f(y).conjugate()).diff(y) == -(f(y).diff(y)).conjugate()
 
 
-def test_derivatives_issue1658():
+def test_derivatives_issue_4757():
     x = Symbol('x', real=True)
     y = Symbol('y', imaginary=True)
     f = Function('f')
@@ -559,6 +559,8 @@ def test_periodic_argument():
     assert unbranched_argument(polar_lift(1 + I)) == pi/4
     assert periodic_argument(2*p, p) == periodic_argument(p, p)
     assert periodic_argument(pi*p, p) == periodic_argument(p, p)
+
+    assert Abs(polar_lift(1 + I)) == Abs(1 + I)
 
 
 @XFAIL

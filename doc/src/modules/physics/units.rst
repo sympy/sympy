@@ -67,4 +67,3 @@ Docstring
 
 .. automodule:: sympy.physics.units
    :members:
-

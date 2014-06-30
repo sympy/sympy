@@ -317,15 +317,17 @@ def get_integer_part(expr, no, options, return_ints=False):
     # positive or negative (which may fail if very close).
     def calc_part(expr, nexpr):
         nint = int(to_int(nexpr, rnd))
-        expr = C.Add(expr, -nint, evaluate=False)
-        x, _, x_acc, _ = evalf(expr, 10, options)
-        try:
-            check_target(expr, (x, None, x_acc, None), 3)
-        except PrecisionExhausted:
-            if not expr.equals(0):
-                raise PrecisionExhausted
-            x = fzero
-        nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
+        n, c, p, b = nexpr
+        if c != 1 and p != 0:
+            expr = C.Add(expr, -nint, evaluate=False)
+            x, _, x_acc, _ = evalf(expr, 10, options)
+            try:
+                check_target(expr, (x, None, x_acc, None), 3)
+            except PrecisionExhausted:
+                if not expr.equals(0):
+                    raise PrecisionExhausted
+                x = fzero
+            nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
         return nint, fastlog(nint) + 10
 
@@ -783,7 +785,8 @@ def evalf_log(expr, prec, options):
         arg = C.Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, _, _ = evalf_add(arg, prec, options)
         prec2 = workprec - fastlog(xre)
-        re = mpf_log(mpf_add(xre, fone, prec2), prec, rnd)
+        # xre is now x - 1 so we add 1 back here to calculate x
+        re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
 
     re_acc = prec
 
@@ -865,6 +868,17 @@ def as_mpmath(x, prec, options):
 def do_integral(expr, prec, options):
     func = expr.args[0]
     x, xlow, xhigh = expr.args[1]
+    if xlow == xhigh:
+        xlow = xhigh = 0
+    elif x not in func.free_symbols:
+        # only the difference in limits matters in this case
+        # so if there is a symbol in common that will cancel
+        # out when taking the difference, then use that
+        # difference
+        if xhigh.free_symbols & xlow.free_symbols:
+            diff = xhigh - xlow
+            if not diff.free_symbols:
+                xlow, xhigh = 0, diff
     orig = mp.prec
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)

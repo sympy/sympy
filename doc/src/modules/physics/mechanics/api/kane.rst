@@ -12,7 +12,7 @@ Kane
 partial_velocity
 ================
 
-This method is the same as :mod:`physics.vector`'s 
+This method is the same as :mod:`physics.vector`'s
 :mod:`partial_velocity`.
 
 LagrangesMethod

@@ -62,4 +62,3 @@ Base Class Reference
 .. autofunction:: metric_to_Riemann_components
 
 .. autofunction:: metric_to_Ricci_components
-

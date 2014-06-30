@@ -60,7 +60,7 @@ class Piecewise(Function):
     Usage:
 
       Piecewise( (expr,cond), (expr,cond), ... )
-        - Each argument is a 2-tuple defining a expression and condition
+        - Each argument is a 2-tuple defining an expression and condition
         - The conds are evaluated in turn returning the first that is True.
           If any of the evaluated conds are not determined explicitly False,
           e.g. x < 1, the function is returned in symbolic form.

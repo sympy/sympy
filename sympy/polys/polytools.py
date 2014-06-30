@@ -5145,6 +5145,8 @@ def terms_gcd(f, *gens, **args):
     sympy.core.exprtools.gcd_terms, sympy.core.exprtools.factor_terms
 
     """
+    from sympy.core.relational import Equality
+
     orig = sympify(f)
     if not isinstance(f, Expr) or f.is_Atom:
         return orig
@@ -5154,6 +5156,9 @@ def terms_gcd(f, *gens, **args):
         args.pop('deep')
         args['expand'] = False
         return terms_gcd(new, *gens, **args)
+
+    if isinstance(f, Equality):
+        return f
 
     clear = args.pop('clear', True)
     options.allowed_flags(args, ['polys'])
@@ -5571,7 +5576,7 @@ def _symbolic_factor_list(expr, opt, method):
 
             if exp is S.One:
                 factors.extend(_factors)
-            elif exp.is_integer or len(_factors) == 1:
+            elif exp.is_integer:
                 factors.extend([(f, k*exp) for f, k in _factors])
             else:
                 other = []
@@ -5582,11 +5587,7 @@ def _symbolic_factor_list(expr, opt, method):
                     else:
                         other.append((f, k))
 
-                if len(other) == 1:
-                    f, k = other[0]
-                    factors.append((f, k*exp))
-                else:
-                    factors.append((_factors_product(other), exp))
+                factors.append((_factors_product(other), exp))
 
     return coeff, factors
 

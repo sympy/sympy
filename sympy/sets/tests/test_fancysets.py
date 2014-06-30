@@ -1,7 +1,7 @@
 from sympy.sets.fancysets import ImageSet, Range
-from sympy.core.sets import FiniteSet, Interval, imageset
+from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-        Rational, sqrt)
+        Rational, sqrt, Eq, tan)
 from sympy.utilities.pytest import XFAIL
 import itertools
 
@@ -168,3 +168,51 @@ def test_intersections():
     assert -5 in S.Integers.intersect(Interval(-oo, 3))
     assert all(x.is_Integer
             for x in take(10, S.Integers.intersect(Interval(3, oo)) ))
+
+
+def test_infinitely_indexed_set_1():
+    from sympy.abc import n, m, t
+    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(m, m), S.Integers)
+
+    assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(m, 2*m + 1), S.Integers)) == \
+            EmptySet()
+
+    assert imageset(Lambda(n, 2*n), S.Integers).intersect(imageset(Lambda(n, 2*n + 1), S.Integers)) == \
+            EmptySet()
+
+    assert imageset(Lambda(m, 2*m), S.Integers).intersect(imageset(Lambda(n, 3*n), S.Integers)) == \
+            ImageSet(Lambda(t, 6*t), S.Integers)
+
+
+def test_infinitely_indexed_set_2():
+    from sympy import exp
+    from sympy.abc import n
+    a = Symbol('a', integer=True)
+    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(n, n + a), S.Integers)
+    assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(n, -n + a), S.Integers)
+    assert imageset(Lambda(n, -6*n), S.Integers) == ImageSet(Lambda(n, 6*n), S.Integers)
+    assert imageset(Lambda(n, 2*n + pi), S.Integers) == ImageSet(Lambda(n, 2*n + pi), S.Integers)
+    assert imageset(Lambda(n, pi*n + pi), S.Integers) == ImageSet(Lambda(n, pi*n + pi), S.Integers)
+    assert imageset(Lambda(n, exp(n)), S.Integers) != imageset(Lambda(n, n), S.Integers)
+
+
+@XFAIL
+def test_infinitely_indexed_failed_diophantine():
+    from sympy.abc import n, m, t
+    assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(imageset(Lambda(n, 3*pi*n), S.Integers)) == \
+            ImageSet(Lambda(t, -6*pi*t), S.Integers)
+
+
+@XFAIL
+def test_infinitely_indexed_set_3():
+    from sympy.abc import n
+    assert imageset(Lambda(n, 2*n + 1), S.Integers) == imageset(Lambda(n, 2*n - 1), S.Integers)
+    assert imageset(Lambda(n, 3*n + 2), S.Integers) == imageset(Lambda(n, 3*n - 1), S.Integers)
+
+
+def test_ImageSet_simplification():
+    from sympy.abc import n, m
+    assert imageset(Lambda(n, n), S.Integers) == S.Integers
+    assert imageset(Lambda(n, sin(n)),
+                    imageset(Lambda(m, tan(m)), S.Integers)) == \
+            imageset(Lambda(m, sin(tan(m))), S.Integers)

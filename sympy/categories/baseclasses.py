@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
-                        Tuple)
+from sympy.core import Basic, Dict, Symbol, Tuple
 from sympy.core.compatibility import xrange
+from sympy.sets import Set, FiniteSet, EmptySet
 
 
 class Class(Set):
@@ -914,7 +914,7 @@ class Diagram(Basic):
         >>> d1 == Diagram([f], {f: "unique"})
         True
         """
-        if not self.objects.subset(objects):
+        if not objects.is_subset(self.objects):
             raise ValueError(
                 "Supplied objects should all belong to the diagram.")
 

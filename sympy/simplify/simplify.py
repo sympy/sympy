@@ -145,20 +145,6 @@ expand_denom = denom_expand
 expand_fraction = fraction_expand
 
 
-def separate(expr, deep=False, force=False):
-    """
-    Deprecated wrapper for ``expand_power_base()``.  Use that function instead.
-    """
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
-    SymPyDeprecationWarning(
-        feature="separate()", useinstead="expand_power_base()", issue=6482,
-        deprecated_since_version="0.7.2", value="Note: in separate() deep "
-        "defaults to False, whereas in expand_power_base(), "
-        "deep defaults to True.",
-    ).warn()
-    return expand_power_base(sympify(expr), deep=deep, force=force)
-
-
 def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_term=True):
     """
     Collect additive terms of an expression.
@@ -1911,33 +1897,53 @@ def radsimp(expr, symbolic=True, max_terms=4):
         else:
             raise NotImplementedError
 
-    def handle(expr):
-        if expr.is_Atom:
-            return expr
+    def ispow2(d, log2=False):
+        if not d.is_Pow:
+            return False
+        e = d.exp
+        if e.is_Rational and e.q == 2 or symbolic and fraction(e)[1] == 2:
+            return True
+        if log2:
+            q = 1
+            if e.is_Rational:
+                q = e.q
+            elif symbolic:
+                d = fraction(e)[1]
+                if d.is_Integer:
+                    q = d
+            if q != 1 and log(q, 2).is_Integer:
+                return True
+        return False
 
+    def handle(expr):
+        # Handle first reduces to the case
+        # expr = 1/d, where d is an add, or d is base**p/2.
+        # We do this by recursively calling handle on each piece.
         n, d = fraction(expr)
 
-        if d.is_Atom:
-            # n can't be an Atom since expr is not an Atom
+        if expr.is_Atom or (d.is_Atom and n.is_Atom):
+            return expr
+        elif not n.is_Atom:
             n = n.func(*[handle(a) for a in n.args])
-            return _umul(n, 1/d)
+            return _umul(n, handle(1/d))
         elif n is not S.One:
-            return Mul(n, handle(1/d))
+            return _umul(n, handle(1/d))
         elif d.is_Mul:
             return _umul(*[handle(1/d) for d in d.args])
 
+        # By this step, expr is 1/d, and d is not a mul.
         if not symbolic and d.free_symbols:
             return expr
 
-        if d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
-            d2 = sqrtdenest(sqrt(d.base))**d.exp.p
+        if ispow2(d):
+            d2 = sqrtdenest(sqrt(d.base))**fraction(d.exp)[0]
             if d2 != d:
                 return handle(1/d2)
         elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
             # (1/d**i) = (1/d)**i
             return handle(1/d.base)**d.exp
 
-        if not (d.is_Add or d.is_Pow and d.exp.is_Rational and d.exp.q == 2):
+        if not (d.is_Add or ispow2(d)):
             return 1/d.func(*[handle(a) for a in d.args])
 
         # handle 1/d treating d as an Add (though it may not be)
@@ -1965,9 +1971,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 p2 = []
                 other = []
                 for i in Mul.make_args(m):
-                    if i.is_Pow and (i.exp is S.Half or
-                            i.exp.is_Rational and i.exp.q != 1 and
-                            log(i.exp.q, 2).is_Integer):
+                    if ispow2(i, log2=True):
                         p2.append(i.base if i.exp is S.Half else i.base**(2*i.exp))
                     elif i is S.ImaginaryUnit:
                         p2.append(S.NegativeOne)
@@ -2003,7 +2007,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             num = powsimp(_num(rterms))
             n *= num
             d *= num
-            d = _mexpand(d)
+            d = powdenest(_mexpand(d), force=symbolic)
             if d.is_Atom:
                 break
 
@@ -2079,7 +2083,7 @@ def posify(eq):
         return f(eq), dict([(r, s) for s, r in reps.items()])
 
     reps = dict([(s, Dummy(s.name, positive=True))
-                 for s in eq.atoms(Symbol) if s.is_positive is None])
+                 for s in eq.free_symbols if s.is_positive is None])
     eq = eq.subs(reps)
     return eq, dict([(r, s) for s, r in reps.items()])
 
@@ -2157,7 +2161,7 @@ def polarify(eq, subs=True, lift=False):
     eq = _polarify(sympify(eq), lift)
     if not subs:
         return eq
-    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.atoms(Symbol)])
+    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.free_symbols])
     eq = eq.subs(reps)
     return eq, dict([(r, s) for s, r in reps.items()])
 
@@ -2277,34 +2281,20 @@ def _denest_pow(eq):
         return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
             *powdenest(Mul(*nonpolars)**e)
 
-    # see if there is a positive, non-Mul base at the very bottom
-    exponents = []
-    kernel = eq
-    while kernel.is_Pow:
-        kernel, ex = kernel.as_base_exp()
-        exponents.append(ex)
-    if kernel.is_positive:
-        e = Mul(*exponents)
-        if kernel.is_Mul:
-            b = kernel
-        else:
-            if kernel.is_Integer:
-                # use log to see if there is a power here
-                logkernel = expand_log(log(kernel))
-                if logkernel.is_Mul:
-                    c, logk = logkernel.args
-                    e *= c
-                    kernel = logk.args[0]
-            return Pow(kernel, e)
+    if b.is_Integer:
+        # use log to see if there is a power here
+        logb = expand_log(log(b))
+        if logb.is_Mul:
+            c, logb = logb.args
+            e *= c
+            base = logb.args[0]
+            return Pow(base, e)
 
-    # if any factor is an atom then there is nothing to be done
-    # but the kernel check may have created a new exponent
-    if any(s.is_Atom for s in Mul.make_args(b)):
-        if exponents:
-            return b**e
+    # if b is not a Mul or any factor is an atom then there is nothing to do
+    if not b.is_Mul or any(s.is_Atom for s in Mul.make_args(b)):
         return eq
 
-    # let log handle the case of the base of the argument being a mul, e.g.
+    # let log handle the case of the base of the argument being a Mul, e.g.
     # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
     # will take the log, expand it, and then factor out the common powers that
     # now appear as coefficient. We do this manually since terms_gcd pulls out
@@ -2369,7 +2359,7 @@ def powdenest(eq, force=False, polar=False):
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to True will do simplifications on the riemann surface of
+    Setting ``polar`` to True will do simplifications on the Riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
@@ -2415,14 +2405,10 @@ def powdenest(eq, force=False, polar=False):
     If assumptions allow, symbols can also be moved to the outermost exponent:
 
     >>> i = Symbol('i', integer=True)
-    >>> p = Symbol('p', positive=True)
     >>> powdenest(((x**(2*i))**(3*y))**x)
     ((x**(2*i))**(3*y))**x
     >>> powdenest(((x**(2*i))**(3*y))**x, force=True)
     x**(6*i*x*y)
-
-    >>> powdenest(((p**(2*a))**(3*y))**x)
-    p**(6*a*x*y)
 
     >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
     ((x**(2*a/3))**(3*y/i))**x
@@ -2577,6 +2563,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 b, e = term.as_base_exp()
                 if deep:
                     b, e = [recurse(i) for i in [b, e]]
+                if b.is_Pow or b.func is exp:
+                    # don't let smthg like sqrt(x**a) split into x**a, 1/2
+                    # or else it will be joined as x**(a/2) later
+                    b, e = b**e, S.One
                 c_powers[b].append(e)
             else:
                 # This is the logic that combines exponents for equal,

@@ -14,7 +14,7 @@ Vector
 ======
 
 This module derives the vector-related abilities and related functionalities
-from :mod:`physics.vector`. Please have a look at the documentation of 
+from :mod:`physics.vector`. Please have a look at the documentation of
 :mod:`physics.vector` and its necessary API to understand the vector capabilities
 of :mod:`mechanics`.
 
