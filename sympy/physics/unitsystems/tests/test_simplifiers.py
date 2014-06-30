@@ -4,7 +4,7 @@ from __future__ import division
 
 from sympy import Add, Pow, Mul
 
-from sympy.physics.unitsystems import dim_simplify, qsimplify
+from sympy.physics.unitsystems.simplifiers import dim_simplify, qsimplify
 from sympy.physics.unitsystems.quantities import Quantity as Q
 from sympy.physics.unitsystems.systems import mks, mks_dim
 

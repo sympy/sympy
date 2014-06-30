@@ -32,7 +32,7 @@ should be :math:`L^3 M^{-1} T^{-2}`.
     >>> from __future__ import division
     >>> from sympy import solve, Symbol, symbols
     >>> from sympy.physics.unitsystems.systems import mks_dim as mks
-    >>> from sympy.physics.unitsystems import dim_simplify
+    >>> from sympy.physics.unitsystems.simplifiers import dim_simplify
     >>> length, mass, time = mks["length"], mks["mass"], mks["time"]
     >>> acceleration = mks["acceleration"]
     >>> m, a, F = symbols("m a F")
@@ -67,7 +67,8 @@ variables (taken from Wikipedia). The result should be 224.701 days.
 
     >>> from __future__ import division
     >>> from sympy import solve, Symbol, symbols, pi
-    >>> from sympy.physics.unitsystems import qsimplify, Unit, Quantity as Q
+    >>> from sympy.physics.unitsystems import Unit, Quantity as Q
+    >>> from sympy.physics.unitsystems.simplifiers import qsimplify
     >>> from sympy.physics.unitsystems.systems import mks
     >>> m, kg, s = mks["m"], mks["kg"], mks["s"]
     >>> T, a, M, G = symbols("T a M G")

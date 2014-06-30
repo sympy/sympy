@@ -8,9 +8,9 @@ MKS stands for "meter, kilogram, second".
 
 from __future__ import division
 
-from sympy.physics.unitsystems import qsimplify
-from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
-from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
+from sympy.physics.unitsystems.simplifiers import qsimplify
+from sympy.physics.unitsystems import (Dimension, DimensionSystem, Unit,
+                                       Constant, UnitSystem)
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
 
 # base dimensions
