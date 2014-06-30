@@ -130,7 +130,7 @@ class Unit(Expr):
     def __repr__(self):
         return self.abbrev_dim
 
-    def __add__(self, other):
+    def add(self, other):
         if not isinstance(other, Unit):
             raise TypeError("Only unit can be added; '%s' is not valid"
                             % type(other))
@@ -142,7 +142,7 @@ class Unit(Expr):
                                  "added; '%s' and '%s' are different"
                                  % (self, other))
 
-    def __sub__(self, other):
+    def sub(self, other):
 
         if not isinstance(other, Unit):
             raise TypeError("Only unit can be added; '%s' is not valid"
@@ -155,7 +155,7 @@ class Unit(Expr):
                                  "subtracted; '%s' and '%s' are different"
                                  % (self, other))
 
-    def __pow__(self, other):
+    def pow(self, other):
 
         other = sympify(other)
         #TODO: check consistency when having rational, float...
@@ -166,7 +166,7 @@ class Unit(Expr):
                 return self
             else:
                 factor = (self.factor**other).evalf()
-                dim = self.dim**other
+                dim = self.dim.pow(other)
                 if dim == 1:
                     return factor
                 else:
@@ -174,14 +174,14 @@ class Unit(Expr):
         else:
             return Pow(self, other)
 
-    def __mul__(self, other):
+    def mul(self, other):
         other = sympify(other)
 
         if other == 1:
             return self
         elif isinstance(other, Unit):
             factor = self.factor * other.factor
-            dim = self.dim * other.dim
+            dim = self.dim.mul(other.dim)
             if dim == 1:
                 return factor
             else:
@@ -196,17 +196,14 @@ class Unit(Expr):
         else:
             return Mul(self, other)
 
-    def __rmul__(self, other):
-        return self * other
-
-    def __div__(self, other):
+    def div(self, other):
         other = sympify(other)
 
         if other == 1:
             return self
         elif isinstance(other, Unit):
             factor = self.factor / other.factor
-            dim = self.dim / other.dim
+            dim = self.dim.div(other.dim)
             if dim == 1:
                 return factor
             else:
@@ -220,13 +217,9 @@ class Unit(Expr):
         else:
             return Mul(self, Pow(other, -1))
 
-    __truediv__ = __div__
+    def rdiv(self, other):
 
-    def __rdiv__(self, other):
-
-        return self**-1 * other
-
-    __rtruediv__ = __rdiv__
+        return self.pow(-1).mul(other)
 
     def is_compatible(self, other):
         """

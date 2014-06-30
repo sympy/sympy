@@ -45,28 +45,28 @@ def test_operations():
 
     assert -q == Quantity(-10, m)
 
-    assert q + Quantity(20, m) == Quantity(30, m)
-    assert q + Quantity(20, Unit(m.dim, 10)) == Quantity(30, Unit(m.dim, 11))
+    assert q.add(Quantity(20, m)) == Quantity(30, m)
+    assert q.add(Quantity(20, Unit(m.dim, 10))) == Quantity(30, Unit(m.dim, 11))
 
-    assert q - Quantity(20, m) == Quantity(-10, m)
-    assert q - Quantity(20, Unit(m.dim, 10)) == Quantity(-10, Unit(m.dim, -9))
+    assert q.sub(Quantity(20, m)) == Quantity(-10, m)
+    assert q.sub(Quantity(20, Unit(m.dim, 10))) == Quantity(-10, Unit(m.dim, -9))
 
-    assert q**2 == Quantity(10**2, m**2)
+    assert q.pow(2) == Quantity(10**2, m.pow(2))
 
-    assert q * p == Quantity(5*10, m*s)
+    assert q.mul(p) == Quantity(5*10, m.mul(s))
 
-    assert q / p == Quantity(10/5, m/s)
+    assert q.div(p) == Quantity(10/5, m.div(s))
 
 
 def test_error_operations():
     q = Quantity(10, m)
     p = Quantity(5, s)
 
-    raises(ValueError, lambda: q + p)
-    raises(TypeError, lambda: q + 1)
+    raises(ValueError, lambda: q.add(p))
+    raises(TypeError, lambda: q.add(1))
 
-    raises(ValueError, lambda: q - p)
-    raises(TypeError, lambda: q - 1)
+    raises(ValueError, lambda: q.sub(p))
+    raises(TypeError, lambda: q.sub(1))
 
 
 def test_convert_to():

@@ -77,7 +77,7 @@ variables (taken from Wikipedia). The result should be 224.701 days.
     >>> Tsol = solve(T**2 / a**3 - 4*pi**2 / G / M, T)[1]
     >>> q = qsimplify(Tsol.subs(venus_subs))
     >>> day = Unit(s.dim, abbrev="day", factor=86400)
-    >>> print(q.convert_to(day))
+    >>> print(q.convert_to(qsimplify(day)))
     224.667 day
 
 We could also have the solar mass and the day as units coming from the

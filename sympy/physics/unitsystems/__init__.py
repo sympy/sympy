@@ -25,7 +25,7 @@ from __future__ import division
 from sympy import Add, Mul, Pow
 from sympy.core.compatibility import reduce
 from sympy.physics.unitsystems.dimensions import Dimension
-from sympy.physics.unitsystems.units import Unit, Constant
+from sympy.physics.unitsystems.units import Unit
 from sympy.physics.unitsystems.quantities import Quantity
 
 
@@ -46,12 +46,13 @@ def dim_simplify(expr):
         args.append(arg)
 
     if isinstance(expr, Pow):
-        return args[0]**args[1]
+        return args[0].pow(args[1])
     elif isinstance(expr, Add):
-        return reduce(lambda x, y: x+y, args)
+        args = [arg for arg in args if isinstance(arg, Dimension)]
+        return reduce(lambda x, y: x.add(y), args)
     elif isinstance(expr, Mul):
         args = [arg for arg in args if isinstance(arg, Dimension)]
-        return reduce(lambda x, y: x*y, args)
+        return reduce(lambda x, y: x.mul(y), args)
     else:
         return expr
 
@@ -63,6 +64,20 @@ def qsimplify(expr):
     If units are encountered, as it can be when using Constant, they are
     converted to quantity.
     """
+
+    def redmul(x, y):
+        """
+        Function used to combine args in multiplications.
+
+        This is necessary because the previous computation was not commutative,
+        and Mul(3, u) was not simplified; but Mul(u, 3) was.
+        """
+        if isinstance(x, Quantity):
+            return x.mul(y)
+        elif isinstance(y, Quantity):
+            return y.mul(x)
+        else:
+            return x*y
 
     args = []
     for arg in expr.args:
@@ -83,18 +98,18 @@ def qsimplify(expr):
             o_args.append(arg)
 
     if isinstance(expr, Pow):
-        return args[0]**args[1]
+        return args[0].pow(args[1])
     elif isinstance(expr, Add):
         if q_args != []:
-            quantities = reduce(lambda x, y: x+y, q_args)
+            quantities = reduce(lambda x, y: x.add(y), q_args)
         else:
             quantities = []
         return reduce(lambda x, y: x+y, o_args, quantities)
     elif isinstance(expr, Mul):
         if q_args != []:
-            quantities = reduce(lambda x, y: x*y, q_args)
+            quantities = reduce(lambda x, y: x.mul(y), q_args)
         else:
             quantities = []
-        return reduce(lambda x, y: x*y, o_args, quantities)
+        return reduce(redmul, o_args, quantities)
     else:
         return expr

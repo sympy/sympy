@@ -85,47 +85,41 @@ def test_add_sub():
     v = Unit(length, factor=5)
     w = Unit(time, factor=2)
 
-    assert u + v == Unit(length, factor=15)
-    assert u - v == Unit(length, factor=5)
+    assert u.add(v) == Unit(length, factor=15)
+    assert u.sub(v) == Unit(length, factor=5)
 
-    raises(ValueError, lambda: u + w)
-    raises(ValueError, lambda: u - w)
-    raises(TypeError, lambda: u + 1)
-    raises(TypeError, lambda: u - 1)
+    raises(ValueError, lambda: u.add(w))
+    raises(ValueError, lambda: u.sub(w))
+    raises(TypeError, lambda: u.add(1))
+    raises(TypeError, lambda: u.sub(1))
 
 
 def test_pow():
     u = Unit(length, factor=10)
 
-    assert u**0 == 1
-    assert u**1 == u
-    assert u**2 == Unit(length**2, factor=100)
-    assert u**-1 == Unit(length**-1, factor=0.1)
+    assert u.pow(0) == 1
+    assert u.pow(1) == u
+    assert u.pow(2) == Unit(length.pow(2), factor=100)
+    assert u.pow(-1) == Unit(length.pow(-1), factor=0.1)
 
 
 def test_mul():
     u = Unit(length, factor=10)
 
-    assert 1*u == u
-    assert u*1 == u
+    assert u.mul(1) == u
 
-    assert u * Unit(time, factor=2) == Unit(length*time, factor=20)
-    assert u * Unit(length**-1, factor=2) == 20
-
-    # test rmul with something different from Unit
-    assert 2*u == u*2
+    assert u.mul(Unit(time, factor=2)) == Unit(length.mul(time), factor=20)
+    assert u.mul(Unit(length.pow(-1), factor=2)) == 20
 
 
 def test_div():
     u = Unit(length, factor=10)
 
-    assert 1/u == u**-1
-    assert u/1 == u
+    assert u.rdiv(1) == u.pow(-1)
+    assert u.div(1) == u
 
-    assert u / Unit(time, factor=2) == Unit(length/time, factor=5)
-    assert u / Unit(length, factor=2) == 5
-
-    assert 2/u == 2 * u**-1
+    assert u.div(Unit(time, factor=2)) == Unit(length.div(time), factor=5)
+    assert u.div(Unit(length, factor=2)) == 5
 
 
 def test_is_compatible():
@@ -134,6 +128,7 @@ def test_is_compatible():
     assert u.is_compatible(Unit(length)) is True
     assert u.is_compatible(Unit(time)) is False
     assert u.is_compatible(2) is False
+
 
 def test_as_quantity():
     from sympy.physics.unitsystems.quantities import Quantity

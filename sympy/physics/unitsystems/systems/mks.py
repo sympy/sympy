@@ -8,6 +8,7 @@ MKS stands for "meter, kilogram, second".
 
 from __future__ import division
 
+from sympy.physics.unitsystems import qsimplify
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
 from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
@@ -54,7 +55,7 @@ Hz = Unit(frequency, abbrev="Hz")
 
 # constants
 # Newton constant
-G = Constant(m**3*kg**-1*s**-2, factor=6.67384e-11, abbrev="G")
+G = Constant(qsimplify(m**3*kg**-1*s**-2).as_unit, factor=6.67384e-11, abbrev="G")
 # speed of light
 c = Constant(velocity, factor=299792458, abbrev="c")
 

@@ -69,25 +69,25 @@ def test_properties():
 def test_add_sub():
     length = Dimension(length=1)
 
-    assert length + length == length
-    assert length - length == length
+    assert length.add(length) == length
+    assert length.sub(length) == length
     assert -length == length
 
-    raises(TypeError, lambda: length + 1)
-    raises(TypeError, lambda: length - 1)
-    raises(ValueError, lambda: length + Dimension(time=1))
-    raises(ValueError, lambda: length - Dimension(time=1))
+    raises(TypeError, lambda: length.add(1))
+    raises(TypeError, lambda: length.sub(1))
+    raises(ValueError, lambda: length.add(Dimension(time=1)))
+    raises(ValueError, lambda: length.sub(Dimension(time=1)))
 
 
 def test_mul_div_exp():
     length = Dimension(length=1)
     time = Dimension(time=1)
-    velocity = length / time
+    velocity = length.div(time)
 
-    assert length**2 == Dimension(length=2)
-    assert length*length == length**2
-    assert length * time == Dimension(length=1, time=1)
+    assert length.pow(2) == Dimension(length=2)
+    assert length.mul(length) == length.pow(2)
+    assert length.mul(time) == Dimension(length=1, time=1)
     assert velocity == Dimension(length=1, time=-1)
-    assert velocity**2 == Dimension(length=2, time=-2)
+    assert velocity.pow(2) == Dimension(length=2, time=-2)
 
-    raises(TypeError, lambda: length**"a")
+    raises(TypeError, lambda: length.pow("a"))

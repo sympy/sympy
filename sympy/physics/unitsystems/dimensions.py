@@ -45,12 +45,12 @@ class Dimension(Expr):
     exponentiation (by a number) to give new dimensions. Addition and
     subtraction is defined only when the two objects are the same dimension.
 
-        >>> velocity = length / time
+        >>> velocity = length.div(time)
         >>> velocity  #doctest: +SKIP
         {'length': 1, 'time': -1}
-        >>> length + length
+        >>> length.add(length)
         {'length': 1}
-        >>> length**2
+        >>> length.pow(2)
         {'length': 2}
 
     Defining addition-like operations will help when doing dimensional analysis.
@@ -212,7 +212,7 @@ class Dimension(Expr):
     def __neg__(self):
         return self
 
-    def __add__(self, other):
+    def add(self, other):
         """
         Define the addition for Dimension.
 
@@ -229,12 +229,12 @@ class Dimension(Expr):
 
         return self
 
-    def __sub__(self, other):
+    def sub(self, other):
         # there is no notion of ordering (or magnitude) among dimension,
         # subtraction is equivalent to addition when the operation is legal
-        return self + other
+        return self.add(other)
 
-    def __pow__(self, other):
+    def pow(self, other):
         #TODO: be sure that it works with rational numbers (e.g. when dealing
         #      with dimension under a fraction)
 
@@ -249,7 +249,7 @@ class Dimension(Expr):
             raise TypeError("Dimensions can be exponentiated only with "
                             "numbers; '%s' is not valid" % type(other))
 
-    def __mul__(self, other):
+    def mul(self, other):
         if not isinstance(other, Dimension):
             #TODO: improve to not raise error: 2*L could be a legal operation
             #      (the same comment apply for __div__)
@@ -271,7 +271,7 @@ class Dimension(Expr):
         else:
             return d
 
-    def __div__(self, other):
+    def div(self, other):
         if not isinstance(other, Dimension):
             raise TypeError("Only dimension can be divided; '%s' is not valid"
                             % type(other))
@@ -289,12 +289,8 @@ class Dimension(Expr):
         else:
             return d
 
-    __truediv__ = __div__
-
-    def __rdiv__(self, other):
+    def rdiv(self, other):
         return other * pow(self, -1)
-
-    __rtruediv__ = __rdiv__
 
     @property
     def is_dimensionless(self):
@@ -467,7 +463,7 @@ class DimensionSystem(object):
         """
 
         if self._list_can_dims is None:
-            gen = reduce(lambda x, y: x*y, self._base_dims)
+            gen = reduce(lambda x, y: x.mul(y), self._base_dims)
             self._list_can_dims = tuple(sorted(map(str, gen.keys())))
 
         return self._list_can_dims
