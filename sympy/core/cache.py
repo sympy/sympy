@@ -23,7 +23,7 @@ class _cache(list):
 
     def clear_cache(self):
         """clear cache content"""
-        for item in CACHE:
+        for item in self:
             myfunc = item
             while hasattr(myfunc,'__wrapped__'):
                 if hasattr(myfunc,'cache_clear'):
@@ -40,7 +40,7 @@ clear_cache = CACHE.clear_cache
 
 
 
-# lru_cache compatible with py2 taken from
+# lru_cache compatible with py2 copied directly from
 #   http://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
@@ -129,11 +129,7 @@ def lru_cache(maxsize=100, typed=False):
 
             def wrapper(*args, **kwds):
                 # simple caching without ordering or size limit
-                try:
-                    key = make_key(args, kwds, typed)
-                except TypeError:
-                    stats[MISSES] += 1
-                    return user_function(*args, **kwds)
+                key = make_key(args, kwds, typed)
                 result = cache_get(key, root)   # root used here as a unique not-found sentinel
                 if result is not root:
                     stats[HITS] += 1
@@ -220,74 +216,50 @@ def lru_cache(maxsize=100, typed=False):
 ### End of backported lru_cache
 
 from sympy.core.decorators import wraps
+import sys
 
-try:
+if sys.version_info[:2] >= (3, 3):
+    # 3.2 has an lru_cache with an incompatible API
     from functools import lru_cache
 
-    def __cacheit(maxsize):
-        """caching decorator.
+def __cacheit(maxsize):
+    """caching decorator.
 
-           important: the result of cached function must be *immutable*
-
-
-           Examples
-           ========
-
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a,b):
-           ...    return a+b
-
-           >>> @cacheit
-           ... def f(a,b):
-           ...    return [a,b] # <-- WRONG, returns mutable object
-
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        def func_wrapper(func):
-            cfunc = lru_cache(maxsize,typed=True)(func)
-
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                try:
-                    retval = cfunc(*args, **kwargs)
-                except TypeError:
-                    retval = func(*args, **kwargs)
-                return retval
-
-            wrapper.cache_info = cfunc.cache_info
-            wrapper.cache_clear = cfunc.cache_clear
-            CACHE.append(wrapper)
-
-            return wrapper
-        return func_wrapper
-
-except ImportError:
-
-    def __cacheit(maxsize):
-        """caching decorator.
-
-           important: the result of cached function must be *immutable*
+       important: the result of cached function must be *immutable*
 
 
-           Examples
-           ========
+       Examples
+       ========
 
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a,b):
-           ...    return a+b
+       >>> from sympy.core.cache import cacheit
+       >>> @cacheit
+       ... def f(a,b):
+       ...    return a+b
 
-           >>> @cacheit
-           ... def f(a,b):
-           ...    return [a,b] # <-- WRONG, returns mutable object
+       >>> @cacheit
+       ... def f(a,b):
+       ...    return [a,b] # <-- WRONG, returns mutable object
 
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        return lru_cache(maxsize,typed=True)
+       to force cacheit to check returned results mutability and consistency,
+       set environment variable SYMPY_USE_CACHE to 'debug'
+    """
+    def func_wrapper(func):
+        cfunc = lru_cache(maxsize,typed=True)(func)
 
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                retval = cfunc(*args, **kwargs)
+            except TypeError:
+                retval = func(*args, **kwargs)
+            return retval
+
+        wrapper.cache_info = cfunc.cache_info
+        wrapper.cache_clear = cfunc.cache_clear
+        CACHE.append(wrapper)
+
+        return wrapper
+    return func_wrapper
 
 ########################################
 
@@ -333,12 +305,20 @@ def _getenv(key, default=None):
 
 # SYMPY_USE_CACHE=yes/no/debug
 USE_CACHE = _getenv('SYMPY_USE_CACHE', 'yes').lower()
-# SYMPY_CACHE_SIZE=<some integer>
-try:
-    SYMPY_CACHE_SIZE = int(_getenv('SYMPY_CACHE_SIZE',500))
-except ValueError:
-    raise RuntimeError(
-        'SYMPY_CACHE_SIZE must be a valid integer. Got: %s' % SYMPY_CACHE_SIZE)
+# SYMPY_CACHE_SIZE=some_integer/None
+# special cases :
+#  SYMPY_CACHE_SIZE=0    -> No caching
+#  SYMPY_CACHE_SIZE=None -> Unbounded caching
+scs = _getenv('SYMPY_CACHE_SIZE','500')
+if scs.lower() == 'none':
+    SYMPY_CACHE_SIZE = None
+else:
+    try:
+        SYMPY_CACHE_SIZE = int(scs)
+    except ValueError:
+        raise RuntimeError(
+            'SYMPY_CACHE_SIZE must be a valid integer or None. ' + \
+            'Got: %s' % SYMPY_CACHE_SIZE)
 if USE_CACHE == 'no':
     cacheit = __cacheit_nocache
 elif USE_CACHE == 'yes':
