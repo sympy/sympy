@@ -786,7 +786,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
-    if evaluate is False:
+    if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
     return eval_expr(code, local_dict, global_dict)
