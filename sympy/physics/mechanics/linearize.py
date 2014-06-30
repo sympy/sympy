@@ -198,7 +198,7 @@ class Linearizer(object):
         else:
             self._B_u = Matrix()
 
-    def linearize(self, op_point=None, A_and_B=False, simplify=True):
+    def linearize(self, op_point=None, A_and_B=False, simplify=False):
         """Linearize the system about the operating point. Note that
         q_op, u_op, qd_op, ud_op must satisfy the equations of motion.
         These may be either symbolic or numeric.
@@ -221,7 +221,7 @@ class Linearizer(object):
 
         simplify : bool, optional
             Determines if returned values are simplified before return.
-            Default is True.
+            For large expressions this may be time consuming. Default is False.
 
         Note that the process of solving with A_and_B=True is computationally
         intensive if there are many symbolic parameters. For this reason,
