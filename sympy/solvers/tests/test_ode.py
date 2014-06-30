@@ -471,12 +471,13 @@ def test_classify_sysode():
     -11*x(t) + 7*y(t) + Derivative(z(t), t)], 'order': {z(t): 1, y(t): 1, x(t): 1}}
     assert classify_sysode(eq9) == sol9
 
-    eq10 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
-    sol10 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 1, (1, x(t), 1): 0, (0, x(t), 1): -t - \
-    Derivative(y(t), t), (1, y(t), 0): 1, (1, x(t), 0): 0, (0, y(t), 1): -Derivative(x(t), t), (0, y(t), 0): 0, \
-    (1, y(t), 1): -t}, 'type_of_equation': 'type5', 'func': [x(t), y(t)], 'is_linear': False, \
-    'eq': [-t*Derivative(x(t), t) + x(t) - Derivative(x(t), t)*Derivative(y(t), t), -t*Derivative(y(t), t) + \
-    y(t) - Derivative(y(t), t)**2], 'order': {y(t): 1, x(t): 1}}
+    eq10 = (x2 + log(t)*(t*x1 - x(t)) + exp(t)*(t*y1 - y(t)), y2 + (t**2)*(t*x1 - x(t)) + (t)*(t*y1 - y(t)))
+    sol10 = {'no_of_equation': 2, 'func_coeff': {(1, x(t), 2): 0, (0, y(t), 2): 0, (0, x(t), 0): -log(t), \
+    (1, x(t), 1): t**3, (0, x(t), 1): t*log(t), (0, y(t), 1): t*exp(t), (1, x(t), 0): -t**2, (1, y(t), 0): -t, \
+    (0, y(t), 0): -exp(t), (0, x(t), 2): 1, (1, y(t), 2): 1, (1, y(t), 1): t**2}, 'type_of_equation': 'type11', \
+    'func': [x(t), y(t)], 'is_linear': True, 'eq': [(t*Derivative(x(t), t) - x(t))*log(t) + (t*Derivative(y(t), t) - \
+    y(t))*exp(t) + Derivative(x(t), t, t), t**2*(t*Derivative(x(t), t) - x(t)) + t*(t*Derivative(y(t), t) - y(t)) \
+    + Derivative(y(t), t, t)], 'order': {y(t): 2, x(t): 2}}
     assert classify_sysode(eq10) == sol10
 
     eq11 = (Eq(x1,x(t)*y(t)**3), Eq(y1,y(t)**5))
