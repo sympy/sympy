@@ -1,7 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
 from sympy import symbols, Q
-from sympy.logic.boolalg import And, Implies, Equivalent, true
+from sympy.logic.boolalg import And, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -205,5 +205,8 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
 
 def test_satisfiable_bool():
-    assert satisfiable(True) == {true: true}
-    assert satisfiable(False) == False
+    from sympy.core.singleton import S
+    assert satisfiable(true) == {true: true}
+    assert satisfiable(S.true) == {true: true}
+    assert satisfiable(false) is False
+    assert satisfiable(S.false) is False
