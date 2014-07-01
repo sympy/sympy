@@ -41,9 +41,11 @@ def literal_symbol(literal):
 def satisfiable(expr, algorithm="dpll2"):
     """
     Check satisfiability of a propositional sentence.
-    Returns a model when it succeeds
+    Returns a model when it succeeds.
+    Returns {true: true} for trivially true expressions.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -51,13 +53,11 @@ def satisfiable(expr, algorithm="dpll2"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
+    >>> satisfiable(True)
+    {True: True}
 
     """
     expr = to_cnf(expr)
-    if expr == True:
-        return {true: true}
-    if expr == False:
-        return False
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
@@ -85,11 +85,9 @@ def valid(expr):
     References
     ==========
 
-    .. [1] en.wikipedia.org/wiki/Validity
+    .. [1] http://en.wikipedia.org/wiki/Validity
 
     """
-    if isinstance(expr, bool):
-        return expr
     return not satisfiable(Not(expr))
 
 
@@ -175,9 +173,9 @@ def entails(expr, formula_set={}):
 
     >>> from sympy.abc import A, B, C
     >>> from sympy.logic.inference import entails
-    >>> entails(A, {A >> B, B >> C})
+    >>> entails(A, [A >> B, B >> C])
     False
-    >>> entails(C, {A >> B, B >> C, A})
+    >>> entails(C, [A >> B, B >> C, A])
     True
     >>> entails(A >> B)
     False
