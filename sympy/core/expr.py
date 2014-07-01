@@ -2665,6 +2665,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
+        >>> from sympy import sin, exp
         >>> from sympy.abc import x, y
         >>> e = sin(1/x + exp(-x)) - sin(1/x)
         >>> e.aseries(x)
