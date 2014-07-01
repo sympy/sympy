@@ -553,7 +553,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if len(set(order.values()))!=1:
             raise ValueError("It solves only those systems of equations whose orders are equal")
         match['order'] = list(order.values())[0]
-        if len(set(func))!=len(eq):
+        if len(func)!=len(eq):
+            func = list(set(func))
+            match['func'] = func
+            if len(func)!=len(eq):
                 raise ValueError("dsolve() and classify_sysode() work with"
                 "number of functions being equal to number of equations")
         if match['type_of_equation'] is None:
@@ -1402,7 +1405,7 @@ def classify_sysode(eq, func=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_2eq_order1(eq, func, func_coef)
-                if order_eq == 2:
+                elif order_eq == 2:
                     type_of_equation = check_nonlinear_2eq_order2(eq, func, func_coef)
                 else:
                     type_of_equation = None
@@ -1642,6 +1645,61 @@ def check_linear_neq_order1(eq, func, func_coef):
     return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
+    x = func[0].func
+    y = func[1].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    u, v = symbols('u, v')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    f1 = Wild('f1', exclude=[v,t])
+    f2 = Wild('f2', exclude=[v,t])
+    g1 = Wild('g1', exclude=[u,t])
+    g2 = Wild('g2', exclude=[u,t])
+    g = Wild('g')
+    r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
+    r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if not (r1 and r2):
+        r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
+        r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if r1 and r2 and not (r1[f].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t) \
+    or r2[g].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t)):
+        return 'type5'
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    r = eq[0].match(diff(x(t),t) - x(t)**n*f)
+    if r:
+        g = (diff(y(t),t) - eq[1])/r[f]
+    if r and not (g.has(x(t)) or g.subs(y(t),v).has(t) or r[f].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type1'
+    r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
+    if r:
+        g = (diff(y(t),t) - eq[1])/r[f]
+    if r and not (g.has(x(t)) or g.subs(y(t),v).has(t) or r[f].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type2'
+    g = Wild('g')
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    if r1 and r2 and not (r1[f].subs(x(t),u).subs(y(t),v).has(t) or \
+    r2[g].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type3'
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    R1 = num.match(f1*g1)
+    R2 = denum.match(f2*g2)
+    phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
+    if R1 and R2:
+        return 'type4'
     return None
 
 def check_nonlinear_2eq_order2(eq, func, func_coef):
@@ -6838,3 +6896,131 @@ def _linear_neq_order1_type1(match_):
     for i in range(len(eq)):
         sol.append(Eq(func[i],e_vector[i]))
     return sol
+
+def sysode_nonlinear_2eq_order1(match_):
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    func = match_['func']
+    eq = match_['eq']
+    fc = match_['func_coeff']
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if match_['type_of_equation'] == 'type5':
+        sol = _nonlinear_2eq_order1_type5(x, y, t, eq)
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    if match_['type_of_equation'] == 'type1':
+        sol = _nonlinear_2eq_order1_type1(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type2':
+        sol = _nonlinear_2eq_order1_type2(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type3':
+        sol = _nonlinear_2eq_order1_type3(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type4':
+        sol = _nonlinear_2eq_order1_type4(x, y, t, eq)
+    return sol
+
+def _nonlinear_2eq_order1_type1(x, y, t, eq):
+    C1, C2 = symbols('C1:3')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    u, v, phi = symbols('u, v, phi', function=True)
+    r = eq[0].match(diff(x(t),t) - x(t)**n*f)
+    g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
+    F = r[f].subs(x(t),u).subs(y(t),v)
+    n = r[n]
+    if n!=1:
+        phi = (C1 + (1-n)*C.Integral(1/g, v))**(1/(1-n))
+    else:
+        phi = C1*exp(C.Integral(1/g, v))
+    phi = phi.doit()
+    sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol = []
+    for sols in sol2:
+        sol.append(Eq(y(t), sols))
+        sol.append(Eq(x(t),phi.subs(v, sols)))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type2(x, y, t, eq):
+    C1, C2 = symbols('C1:3')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    u, v, phi = symbols('u, v, phi', function=True)
+    r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
+    g = (diff(y(t),t) - eq[1])/r[f]
+    F = r[f].subs(x(t),u).subs(y(t),v)
+    n = r[n]
+    if n:
+        phi = -1/n*log(C1 - n*C.Integral(1/g, v))
+    else:
+        phi = C1 + C.Integral(1/g, v)
+    phi = phi.doit()
+    sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol = []
+    for sols in sol2:
+        sol.append(Eq(y(t), sols))
+        sol.append(Eq(x(t),phi.subs(v, sols)))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type3(x, y, t, eq):
+    C1, C2, C3, C4 = symbols('C1:5')
+    u, v = symbols('u, v', function=True)
+    f = Wild('f')
+    g = Wild('g')
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    F = r1[f].subs(x(t),u).subs(y(t),v)
+    G = r2[g].subs(x(t),u).subs(y(t),v)
+    sol2r = dsolve(Eq(diff(v(u),u), G.subs(v,v(u))/F.subs(v,v(u))))
+    for sol2s in sol2r:
+        sol1 = solve(C.Integral(1/F.subs(v, sol2s.rhs), u).doit() - t - C2, u)
+    sol = []
+    for sols in sol1:
+        sol.append(Eq(x(t), sols))
+        sol.append(Eq(y(t), (sol2s.rhs).subs(u, sols)))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type4(x, y, t, eq):
+    C1, C2 = symbols('C1:3')
+    u, v = symbols('u, v')
+    f = Wild('f')
+    g = Wild('g')
+    f1 = Wild('f1', exclude=[v,t])
+    f2 = Wild('f2', exclude=[v,t])
+    g1 = Wild('g1', exclude=[u,t])
+    g2 = Wild('g2', exclude=[u,t])
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    R1 = num.match(f1*g1)
+    R2 = denum.match(f2*g2)
+    phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
+    F1 = R1[f1]; F2 = R2[f2]
+    G1 = R1[g1]; G2 = R2[g2]
+    sol1r = solve(C.Integral(F2/F1, u).doit() - C.Integral(G1/G2,v).doit() - C1, u)
+    sol2r = solve(C.Integral(F2/F1, u).doit() - C.Integral(G1/G2,v).doit() - C1, v)
+    sol = []
+    for sols in sol1r:
+        sol.append(Eq(y(t), dsolve(diff(v(t),t) - F2.subs(u,sols).subs(v,v(t))*G2.subs(v,v(t))*phi.subs(u,sols).subs(v,v(t))).rhs))
+    for sols in sol2r:
+        sol.append(Eq(x(t), dsolve(diff(u(t),t) - F1.subs(u,u(t))*G1.subs(v,sols).subs(u,u(t))*phi.subs(v,sols).subs(u,u(t))).rhs))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type5(x, y, t, eq):
+    C1, C2 = symbols('C1:3')
+    x1 = diff(x(t),t); y1 = diff(y(t),t)
+    f = Wild('f')
+    g = Wild('g')
+    r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
+    r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if not (r1 and r2):
+        r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
+        r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    return set([Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))])
