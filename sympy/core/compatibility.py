@@ -416,7 +416,7 @@ def default_sort_key(item, order=None):
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
-    The following are eqivalent ways of getting the key for an object:
+    The following are equivalent ways of getting the key for an object:
 
     >>> x.sort_key() == default_sort_key(x)
     True
@@ -546,8 +546,8 @@ def default_sort_key(item, order=None):
 def _nodes(e):
     """
     A helper for ordered() which returns the node count of ``e`` which
-    for Basic object is the number of Basic nodes in the expression tree
-    but for other object is 1 (unless the object is an iterable or dict
+    for Basic objects is the number of Basic nodes in the expression tree
+    but for other objects is 1 (unless the object is an iterable or dict
     for which the sum of nodes is returned).
     """
     from .basic import Basic
