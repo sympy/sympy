@@ -1043,22 +1043,21 @@ class Union(Set, EvalfMixin):
         # ===== A special rule for ImageSet ======
         if all(isinstance(s, ImageSet) and s.base_set == S.Integers
                for s in args):
-            # XXX: fix for the case where imageset(Lambda(n, n), S.Integers)
+            # TODO: fix for the case where imageset(Lambda(n, n), S.Integers)
             # is converted to S.Integers Maybe add a special rule for it.
             n = Dummy('n')
             lamdas = [s.lamda for s in args]
             if all(len(l.variables) == 1 for l in lamdas):
-                exprs = [l.expr.subs(l.variables[0], n) for l in lamdas]
-                c = gcd(*exprs)
-                if not c.has(n):
-                    exprs = [expand(expr/c) for expr in exprs]
-                    a, b = Wild('a'), Wild('b')
-                    matches = [expr.match(a*n + b) for expr in exprs]
-                    if len(set(m[a] for m in matches)) == 1:
-                        q = matches[0][a]
-                        ps = [m[b] for m in matches]
-                        if set(p%q for p in ps) == set(i%q for i in range(q)):
-                            return imageset(Lambda(n, c*n), S.Integers)
+                exprs = [l(n) for l in lamdas]
+                a, b = Wild('a'), Wild('b')
+                matches = [expr.match(a*n + b) for expr in exprs]
+                if len(set(m[a] for m in matches)) == 1:
+                    q = matches[0][a]
+                    c = q/(len(args))
+                    q = len(args)
+                    ps = [m[b]/c for m in matches]
+                    if set(p%q for p in ps) == set(i%q for i in range(q)):
+                        return imageset(Lambda(n, c*n), S.Integers)
 
 
         # ===== Pair-wise Rules =====
