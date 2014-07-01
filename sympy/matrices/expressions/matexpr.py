@@ -374,7 +374,7 @@ class ElemWise(MatrixExpr):
     def __new__( cls, M, fn):
         return Basic.__new__(cls, M, fn)
 
-    def doit(self):
+    def evaluate(self):
         return self._evaluate()
 
     Expression = property(lambda self: self.args[1])
