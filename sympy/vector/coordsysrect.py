@@ -6,7 +6,7 @@ from sympy import sin, cos, eye, sympify, trigsimp, \
 from sympy.core.compatibility import string_types
 
 
-class CoordSysRect(Basic):
+class CoordSysCartesian(Basic):
     """
     Represents a coordinate system in 3-D space.
     """
@@ -22,7 +22,7 @@ class CoordSysRect(Basic):
         ==========
 
         name : str
-            The name of the new CoordSysRect instance.
+            The name of the new CoordSysCartesian instance.
 
         vector_names, variable_names : tuples/lists(optional)
             Tuples/Lists of 3 strings each, with custom names for base
@@ -42,14 +42,14 @@ class CoordSysRect(Basic):
         rot_order : str
             If applicable, the order of a series of rotations.
 
-        parent : CoordSysRect
+        parent : CoordSysCartesian
             The coordinate system wrt which the orientation/location
             (or both) is being defined.
 
         """
 
-        #A CoordSysRect can be uniquely identified by its name
-        obj = super(CoordSysRect, cls).__new__(cls, Symbol(name))
+        #A CoordSysCartesian can be uniquely identified by its name
+        obj = super(CoordSysCartesian, cls).__new__(cls, Symbol(name))
         obj._name = name
 
         #Initialize the base vectors
@@ -79,11 +79,12 @@ class CoordSysRect(Basic):
             raise TypeError("name should be a string")
         obj._parent = parent
         if obj._parent is not None:
-            if not isinstance(parent, CoordSysRect):
-                raise TypeError("parent should be a CoordSysRect/None")
+            if not isinstance(parent, CoordSysCartesian):
+                raise TypeError("parent should be a " + \
+                                "CoordSysCartesian/None")
             obj._root = obj._parent._root
             if location is None:
-                location = Vector.Zero
+                location = Vector.zero
             obj._origin = parent.origin.locate_new(name + '.origin', \
                                                    location)
         else:
@@ -93,24 +94,9 @@ class CoordSysRect(Basic):
         #If orientation information has been provided, orient the
         #coordinate system accordingly
         if rot_type is not None:
-            amounts = list(rot_amounts)
-            for i, v in enumerate(amounts):
+            for i, v in enumerate(rot_amounts):
                 if not isinstance(v, Vector):
-                    amounts[i] = sympify(v)
-            def _rot(axis, angle):
-                """DCM for simple axis 1, 2 or 3 rotations. """
-                if axis == 1:
-                    return Matrix([[1, 0, 0],
-                        [0, cos(angle), -sin(angle)],
-                        [0, sin(angle), cos(angle)]])
-                elif axis == 2:
-                    return Matrix([[cos(angle), 0, sin(angle)],
-                        [0, 1, 0],
-                        [-sin(angle), 0, cos(angle)]])
-                elif axis == 3:
-                    return Matrix([[cos(angle), -sin(angle), 0],
-                        [sin(angle), cos(angle), 0],
-                        [0, 0, 1]])
+                    rot_amounts[i] = sympify(v)
 
             approved_orders = ('123', '231', '312', '132', '213', \
                                '321', '121', '131', '212', '232', \
@@ -126,58 +112,17 @@ class CoordSysRect(Basic):
                 raise TypeError('Invalid rot_type parameter')
             parent_orient = []
             if rot_type == 'AXIS':
-                if not rot_order == '':
-                    raise TypeError('Axis orientation takes no' +  \
-                                    'rotation order')
-                if not (isinstance(amounts, (list, tuple)) & \
-                        (len(amounts) == 2)):
-                    raise TypeError('Amounts should be of length 2')
-                theta = amounts[0]
-                axis = amounts[1]
-                axis = express(axis, parent).normalize()
-                axis = axis.to_matrix(parent)
-                parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
-                        Matrix([[0, -axis[2], axis[1]], \
-                                [axis[2], 0, -axis[0]],
-                            [-axis[1], axis[0], 0]]) * sin(theta) + \
-                                 axis * axis.T)
+                parent_orient = _orient_axis(list(rot_amounts), \
+                                             rot_order, parent)
             elif rot_type == 'QUATERNION':
-                if not rot_order == '':
-                    raise TypeError(
-                        'Quaternion orientation takes no rotation order')
-                if not (isinstance(amounts, (list, tuple)) & \
-                        (len(amounts) == 4)):
-                    raise TypeError('Amounts should be of length 4')
-                q0, q1, q2, q3 = amounts
-                parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - \
-                                          q3 **
-                    2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)],
-                    [2 * (q1 * q2 + q0 * q3), \
-                     q0 ** 2 - q1 ** 2 + q2 ** 2 - q3 ** 2,
-                    2 * (q2 * q3 - q0 * q1)], [2 * (q1 * q3 - q0 * q2), \
-                                               2 * (q0 * q1 + q2 * q3), \
-                                               q0 ** 2 - q1 ** 2 - \
-                                               q2 ** 2 + q3 ** 2]]))
+                parent_orient = _orient_quaternion(list(rot_amounts), \
+                                                   rot_order)
             elif rot_type == 'BODY':
-                if not (len(amounts) == 3 & len(rot_order) == 3):
-                    raise TypeError('Body orientation takes 3' + \
-                                    'values & 3 orders')
-                a1 = int(rot_order[0])
-                a2 = int(rot_order[1])
-                a3 = int(rot_order[2])
-                parent_orient = (_rot(a1, amounts[0]) *
-                                 _rot(a2, amounts[1]) *
-                                 _rot(a3, amounts[2]))
+                parent_orient = _orient_body(list(rot_amounts), \
+                                             rot_order)
             elif rot_type == 'SPACE':
-                if not (len(amounts) == 3 & len(rot_order) == 3):
-                    raise TypeError('Space orientation takes 3 ' + \
-                                    'values & 3 orders')
-                a1 = int(rot_order[0])
-                a2 = int(rot_order[1])
-                a3 = int(rot_order[2])
-                parent_orient = (_rot(a3, amounts[2]) * \
-                                 _rot(a2, amounts[1]) * \
-                                 _rot(a1, amounts[0]))
+                parent_orient = _orient_space(list(rot_amounts), \
+                                              rot_order)
             else:
                 raise NotImplementedError('Rotation not implemented')
         else:
@@ -245,16 +190,16 @@ class CoordSysRect(Basic):
         Parameters
         ==========
 
-        other : CoordSysRect
+        other : CoordSysCartesian
             The system which the DCM is generated to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
+        >>> from sympy.vector import CoordSysCartesian
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysRect('N')
+        >>> N = CoordSysCartesian('N')
         >>> A = N.orient_new('A', 'Axis', [q1, N.i])
         >>> N.dcm(A)
         Matrix([
@@ -264,9 +209,9 @@ class CoordSysRect(Basic):
 
         """
 
-        if not isinstance(other, CoordSysRect):
+        if not isinstance(other, CoordSysCartesian):
             raise TypeError(str(other) + \
-                            " is not a CoordSysRect")
+                            " is not a CoordSysCartesian")
         #Handle special cases
         if other == self:
             return eye(3)
@@ -286,33 +231,24 @@ class CoordSysRect(Basic):
             i += 1
         return result
 
-    def variable_map(self, other, simplify=False):
+    def variable_map(self, other):
         """
         Returns a dictionary which expresses the coordinate variables
         (base scalars) of this frame in terms of the variables of
         otherframe.
 
-        If 'simplify' is True, returns a simplified version of the mapped
-        values. Else, returns them without simplification.
-
-        Simplification of the expressions may take time.
-
         Parameters
         ==========
 
-        otherframe : CoordSysRect
+        otherframe : CoordSysCartesian
             The other system to map the variables to.
-
-        simplify : bool
-            Specifies whether simplification of the expressions is
-            needed.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
+        >>> from sympy.vector import CoordSysCartesian
         >>> from sympy import Symbol
-        >>> A = CoordSysRect('A')
+        >>> A = CoordSysCartesian('A')
         >>> q = Symbol('q')
         >>> B = A.orient_new('B', 'Axis', [q, A.k])
         >>> A.variable_map(B)
@@ -323,23 +259,20 @@ class CoordSysRect(Basic):
         vars_matrix = self.dcm(other) * Matrix(other.base_scalars())
         mapping = {}
         for i, x in enumerate(self.base_scalars()):
-            if simplify:
-                mapping[x] = trigsimp(vars_matrix[i], method='fu')
-            else:
-                mapping[x] = vars_matrix[i]
+            mapping[x] = trigsimp(vars_matrix[i], method='matching')
         return mapping
 
     def locate_new(self, name, position, vector_names=None, \
                    variable_names=None):
         """
-        Returns a CoordSysRect with its origin located at the given
+        Returns a CoordSysCartesian with its origin located at the given
         position wrt this coordinate system's origin.
 
         Parameters
         ==========
 
         name : str
-            The name of the new CoordSysRect instance.
+            The name of the new CoordSysCartesian instance.
 
         position : Vector
             The position vector of the new system's origin wrt this
@@ -352,29 +285,29 @@ class CoordSysRect(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> A = CoordSysRect('A')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> A = CoordSysCartesian('A')
         >>> B = A.locate_new('B', 10 * A.i)
         >>> B.origin.position_wrt(A.origin)
         10*A.i
 
         """
 
-        return CoordSysRect(name, location=position, \
+        return CoordSysCartesian(name, location=position, \
                             vector_names=vector_names, \
                             variable_names=variable_names, parent=self)
 
     def orient_new(self, name, rot_type=None, rot_amounts=None, \
                    rot_order='', vector_names=None, variable_names=None):
         """
-        Creates a new CoordSysRect oriented in the user-specified way
+        Creates a new CoordSysCartesian oriented in the user-specified way
         with respect to this system.
 
         Parameters
         ==========
 
         name : str
-            The name of the new CoordSysRect instance.
+            The name of the new CoordSysCartesian instance.
 
         rot_type : str
             The type of orientation matrix that is being created.
@@ -393,10 +326,10 @@ class CoordSysRect(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
+        >>> from sympy.vector import CoordSysCartesian
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysRect('N')
+        >>> N = CoordSysCartesian('N')
 
         We have a choice of how to implement the orientation. First is
         Body. Body orientation takes this reference frame through three
@@ -413,7 +346,7 @@ class CoordSysRect(Basic):
 
         >>> B = N.orient_new('B', 'Space', [q1, q2, q3], '312')
 
-        Next is Quaternion. This orients the new CoordSysRect with
+        Next is Quaternion. This orients the new CoordSysCartesian with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
         This orientation is described by four parameters:
@@ -432,9 +365,102 @@ class CoordSysRect(Basic):
         >>> B = N.orient_new('B', 'Axis', [q1, N.i + 2 * N.j])
 
         """
-        return CoordSysRect(name, rot_type=rot_type, \
+        return CoordSysCartesian(name, rot_type=rot_type, \
                             rot_amounts=rot_amounts, \
                             rot_order = rot_order, \
                             vector_names=vector_names, \
                             variable_names=variable_names, \
                             parent=self)
+
+
+def _rot(axis, angle):
+    """DCM for simple axis 1, 2 or 3 rotations. """
+    if axis == 1:
+        return Matrix([[1, 0, 0],
+            [0, cos(angle), -sin(angle)],
+            [0, sin(angle), cos(angle)]])
+    elif axis == 2:
+        return Matrix([[cos(angle), 0, sin(angle)],
+            [0, 1, 0],
+            [-sin(angle), 0, cos(angle)]])
+    elif axis == 3:
+        return Matrix([[cos(angle), -sin(angle), 0],
+            [sin(angle), cos(angle), 0],
+            [0, 0, 1]])
+
+
+def _orient_axis(amounts, rot_order, parent):
+    """
+    Helper method for orientation using Axis method.
+    """
+    if not rot_order == '':
+        raise TypeError('Axis orientation takes no' +  \
+                        'rotation order')
+    if not (isinstance(amounts, (list, tuple)) & \
+            (len(amounts) == 2)):
+        raise TypeError('Amounts should be of length 2')
+    theta = amounts[0]
+    axis = amounts[1]
+    axis = express(axis, parent).normalize()
+    axis = axis.to_matrix(parent)
+    parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
+            Matrix([[0, -axis[2], axis[1]], \
+                    [axis[2], 0, -axis[0]],
+                [-axis[1], axis[0], 0]]) * sin(theta) + \
+                     axis * axis.T)
+    return parent_orient
+
+
+def _orient_quaternion(amounts, rot_order):
+    """
+    Helper method for orientation using Quaternion method.
+    """
+    if not rot_order == '':
+        raise TypeError(
+            'Quaternion orientation takes no rotation order')
+    if not (isinstance(amounts, (list, tuple)) & \
+            (len(amounts) == 4)):
+        raise TypeError('Amounts should be of length 4')
+    q0, q1, q2, q3 = amounts
+    parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - \
+                              q3 **
+        2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)],
+        [2 * (q1 * q2 + q0 * q3), \
+         q0 ** 2 - q1 ** 2 + q2 ** 2 - q3 ** 2,
+        2 * (q2 * q3 - q0 * q1)], [2 * (q1 * q3 - q0 * q2), \
+                                   2 * (q0 * q1 + q2 * q3), \
+                                   q0 ** 2 - q1 ** 2 - \
+                                   q2 ** 2 + q3 ** 2]]))
+    return parent_orient
+
+
+def _orient_body(amounts, rot_order):
+    """
+    Helper method for orientation using Body method.
+    """
+    if not (len(amounts) == 3 & len(rot_order) == 3):
+        raise TypeError('Body orientation takes 3' + \
+                        'values & 3 orders')
+    a1 = int(rot_order[0])
+    a2 = int(rot_order[1])
+    a3 = int(rot_order[2])
+    parent_orient = (_rot(a1, amounts[0]) *
+                     _rot(a2, amounts[1]) *
+                     _rot(a3, amounts[2]))
+    return parent_orient
+
+
+def _orient_space(amounts, rot_order):
+    """
+    Helper method for orientation using Space method.
+    """
+    if not (len(amounts) == 3 & len(rot_order) == 3):
+        raise TypeError('Space orientation takes 3 ' + \
+                        'values & 3 orders')
+    a1 = int(rot_order[0])
+    a2 = int(rot_order[1])
+    a3 = int(rot_order[2])
+    parent_orient = (_rot(a3, amounts[2]) * \
+                     _rot(a2, amounts[1]) * \
+                     _rot(a1, amounts[0]))
+    return parent_orient

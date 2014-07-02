@@ -1,4 +1,4 @@
-from sympy.vector.coordsysrect import CoordSysRect
+from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
 from sympy import Symbol, sin, cos, pi, ImmutableMatrix as Matrix, \
      symbols, simplify, sqrt, zeros
@@ -7,7 +7,7 @@ from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 
 
-A = CoordSysRect('A')
+A = CoordSysCartesian('A')
 a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
@@ -49,10 +49,10 @@ def test_coordinate_vars():
                             variables=True)) == \
            B.x*B.i + B.y*B.j + B.z*B.k
     N = B.orient_new('N', 'Axis', [-q, B.k])
-    assert N.variable_map(A, simplify = True) == \
+    assert N.variable_map(A) == \
            {N.x: A.x, N.z: A.z, N.y: A.y}
     C = A.orient_new('C', 'Axis', [q, A.i + A.j + A.k])
-    mapping = A.variable_map(C, simplify = True)
+    mapping = A.variable_map(C)
     assert mapping[A.x] == 2*C.x*cos(q)/3 + C.x/3 - \
            2*C.y*sin(q + pi/6)/3 + C.y/3 - 2*C.z*cos(q + pi/3)/3 + C.z/3
     assert mapping[A.y] == -2*C.x*cos(q + pi/3)/3 + \
@@ -62,7 +62,7 @@ def test_coordinate_vars():
 
 
 def test_dcm():
-    N = CoordSysRect('N')
+    N = CoordSysCartesian('N')
     A = N.orient_new('A', 'Axis', [q1, N.k])
     B = A.orient_new('B', 'Axis', [q2, A.i])
     C = B.orient_new('C', 'Axis', [q3, B.j])
@@ -101,7 +101,7 @@ def test_vector():
     Tests the effects of orientation of coordinate systems on
     basic vector operations.
     """
-    N = CoordSysRect('N')
+    N = CoordSysCartesian('N')
     A = N.orient_new('A', 'Axis', [q1, N.k])
     B = A.orient_new('B', 'Axis', [q2, A.i])
     C = B.orient_new('C', 'Axis', [q3, B.j])
@@ -145,7 +145,7 @@ def test_vector():
     assert N.j.cross(A.k) == cos(q1)*A.i - sin(q1)*A.j
     assert N.k.cross(A.i) == A.j
     assert N.k.cross(A.j) == -A.i
-    assert N.k.cross(A.k) == Vector.Zero
+    assert N.k.cross(A.k) == Vector.zero
 
     assert N.i.cross(A.i) == sin(q1)*A.k
     assert N.i.cross(A.j) == cos(q1)*A.k
@@ -163,7 +163,7 @@ def test_vector():
 
 def test_locatenew_point():
     """
-    Tests Point class, and locate_new method in CoordSysRect.
+    Tests Point class, and locate_new method in CoordSysCartesian.
     """
     assert isinstance(A.origin, Point)
     v = a*A.i + b*A.j + c*A.k
@@ -178,7 +178,7 @@ def test_locatenew_point():
     assert p.position_wrt(C.origin) == p.position_wrt(C) == \
            -2 * v
     p1 = p.locate_new('p1', 2*v)
-    assert p1.position_wrt(C.origin) == Vector.Zero
+    assert p1.position_wrt(C.origin) == Vector.zero
     assert p1.express_coordinates(C) == (0, 0, 0)
     p2 = p.locate_new('p2', A.i)
     assert p1.position_wrt(p2) == 2*v - A.i

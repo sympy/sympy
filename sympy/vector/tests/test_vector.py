@@ -3,9 +3,9 @@ from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
      sin, cos
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
-from sympy.vector.coordsysrect import CoordSysRect
+from sympy.vector.coordsysrect import CoordSysCartesian
 
-C = CoordSysRect('C')
+C = CoordSysCartesian('C')
 
 i, j, k = C.base_vectors()
 a, b, c = symbols('a b c')
@@ -33,9 +33,9 @@ def test_vector():
     assert i != j
     assert j != k
     assert k != i
-    assert i - i == Vector.Zero
-    assert i + Vector.Zero == i
-    assert Vector.Zero != 0
+    assert i - i == Vector.zero
+    assert i + Vector.zero == i
+    assert Vector.zero != 0
 
     v1 = a*i + b*j + c*k
     v2 = a**2*i + b**2*j + c**2*k
@@ -44,8 +44,8 @@ def test_vector():
     v5 = a * i
 
     assert isinstance(v1, VectorAdd)
-    assert v1 - v1 == Vector.Zero
-    assert v1 + Vector.Zero == v1
+    assert v1 - v1 == Vector.zero
+    assert v1 + Vector.zero == v1
     assert v1.dot(i) == a
     assert v1.dot(j) == b
     assert v1.dot(k) == c
@@ -64,8 +64,8 @@ def test_vector():
     assert isinstance(v4, Vector)
     assert isinstance(v4, VectorAdd)
     assert isinstance(v4, Vector)
-    assert isinstance(Vector.Zero, VectorZero)
-    assert isinstance(Vector.Zero, Vector)
+    assert isinstance(Vector.zero, VectorZero)
+    assert isinstance(Vector.zero, Vector)
     assert isinstance(v1 * 0, VectorZero)
 
     assert v1.to_matrix(C) == Matrix([[a], [b], [c]])
@@ -74,16 +74,16 @@ def test_vector():
     assert v5.components == {i: a}
     assert v1.components == {i: a, j: b, k: c}
 
-    assert VectorAdd(v1, Vector.Zero) == v1
+    assert VectorAdd(v1, Vector.zero) == v1
     assert VectorMul(a, v1) == v1*a
     assert VectorMul(1, i) == i
-    assert VectorAdd(v1, Vector.Zero) == v1
-    assert VectorMul(0, Vector.Zero) == Vector.Zero
+    assert VectorAdd(v1, Vector.zero) == v1
+    assert VectorMul(0, Vector.zero) == Vector.zero
 
 
 def test_vector_magnitude_normalize():
-    assert Vector.Zero.magnitude() == 0
-    assert Vector.Zero.normalize() == Vector.Zero
+    assert Vector.zero.magnitude() == 0
+    assert Vector.zero.normalize() == Vector.zero
 
     assert i.magnitude() == 1
     assert j.magnitude() == 1
@@ -129,13 +129,13 @@ def test_vector_simplify():
     assert trigsimp(v) == (2*sin(a + pi/4)**2)*i + (-1)*j
     assert trigsimp(v) == v.trigsimp()
 
-    assert simplify(Vector.Zero) == Vector.Zero
+    assert simplify(Vector.zero) == Vector.zero
 
 
 def test_vector_dot():
-    assert i.dot(Vector.Zero) == 0
-    assert Vector.Zero.dot(i) == 0
-    assert i & Vector.Zero == 0
+    assert i.dot(Vector.zero) == 0
+    assert Vector.zero.dot(i) == 0
+    assert i & Vector.zero == 0
 
     assert i.dot(i) == 1
     assert i.dot(j) == 0
@@ -160,26 +160,26 @@ def test_vector_dot():
 
 
 def test_vector_cross():
-    assert i.cross(Vector.Zero) == Vector.Zero
-    assert Vector.Zero.cross(i) == Vector.Zero
+    assert i.cross(Vector.zero) == Vector.zero
+    assert Vector.zero.cross(i) == Vector.zero
 
-    assert i.cross(i) == Vector.Zero
+    assert i.cross(i) == Vector.zero
     assert i.cross(j) == k
     assert i.cross(k) == -j
-    assert i ^ i == Vector.Zero
+    assert i ^ i == Vector.zero
     assert i ^ j == k
     assert i ^ k == -j
 
     assert j.cross(i) == -k
-    assert j.cross(j) == Vector.Zero
+    assert j.cross(j) == Vector.zero
     assert j.cross(k) == i
     assert j ^ i == -k
-    assert j ^ j == Vector.Zero
+    assert j ^ j == Vector.zero
     assert j ^ k == i
 
     assert k.cross(i) == j
     assert k.cross(j) == -i
-    assert k.cross(k) == Vector.Zero
+    assert k.cross(k) == Vector.zero
     assert k ^ i == j
     assert k ^ j == -i
-    assert k ^ k == Vector.Zero
+    assert k ^ k == Vector.zero

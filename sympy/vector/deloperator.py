@@ -2,7 +2,7 @@ from sympy.core import Basic
 from sympy import diff
 from sympy.vector.vector import Vector
 from sympy.vector.functions import express
-from sympy.vector.coordsysrect import CoordSysRect
+from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.core import S
 
 
@@ -13,8 +13,8 @@ class Del(Basic):
     """
 
     def __new__(cls, system):
-        if not isinstance(system, CoordSysRect):
-            raise TypeError("system should be a CoordSysRect")
+        if not isinstance(system, CoordSysCartesian):
+            raise TypeError("system should be a CoordSysCartesian")
         obj = super(Del, cls).__new__(cls, system)
         obj._x, obj._y, obj._z = system.x, system.y, system.z
         obj._i, obj._j, obj._k = system.i, system.j, system.k
@@ -39,8 +39,8 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> C = CoordSysRect('C')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> C = CoordSysCartesian('C')
         >>> C.delop(C.x*C.y*C.z)
         C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
@@ -68,8 +68,8 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> C = CoordSysRect('C')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> C = CoordSysCartesian('C')
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
         >>> C.delop & v
         C.x*C.y + C.x*C.z + C.y*C.z
@@ -100,8 +100,8 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> C = CoordSysRect('C')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> C = CoordSysCartesian('C')
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
         >>> C.delop ^ v
         (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j + (-C.x*C.z + C.y*C.z)*C.k
@@ -113,7 +113,7 @@ class Del(Basic):
         vectx = express(vect.dot(self._i), self.system)
         vecty = express(vect.dot(self._j), self.system)
         vectz = express(vect.dot(self._k), self.system)
-        outvec = Vector.Zero
+        outvec = Vector.zero
         outvec += (diff(vectz, self._y) - diff(vecty, self._z)) * self._i
         outvec += (diff(vectx, self._z) - diff(vectz, self._x)) * self._j
         outvec += (diff(vecty, self._x) - diff(vectx, self._y)) * self._k

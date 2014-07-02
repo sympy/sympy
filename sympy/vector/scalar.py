@@ -10,10 +10,10 @@ class BaseScalar(Symbol):
     """
 
     def __new__(cls, name, index, system):
-        from sympy.vector.coordsysrect import CoordSysRect
+        from sympy.vector.coordsysrect import CoordSysCartesian
         obj = super(BaseScalar, cls).__new__(cls, name)
-        if not isinstance(system, CoordSysRect):
-            raise TypeError("system should be a CoordSysRect")
+        if not isinstance(system, CoordSysCartesian):
+            raise TypeError("system should be a CoordSysCartesian")
         if index not in range(0, 3):
             raise ValueError("Invalid index specified.")
         #The _id is used for equating purposes, and for hashing

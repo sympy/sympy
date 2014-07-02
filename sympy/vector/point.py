@@ -1,6 +1,6 @@
 from sympy.core.basic import Basic
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysRect
+from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express, _path
 from sympy.simplify import trigsimp
 from sympy import Symbol
@@ -11,7 +11,7 @@ class Point(Basic):
     Represents a point in 3-D space.
     """
 
-    def __new__(cls, name, position=Vector.Zero, parent_point=None):
+    def __new__(cls, name, position=Vector.zero, parent_point=None):
         #Check the args first
         if not isinstance(position, Vector):
             raise TypeError("position should be a Vector instance")
@@ -35,12 +35,12 @@ class Point(Basic):
     def position_wrt(self, other):
         """
         Returns the position of this Point with respect to another
-        Point/CoordSysRect.
+        Point/CoordSysCartesian.
 
         Parameters
         ==========
 
-        other : Point/CoordSysRect
+        other : Point/CoordSysCartesian
             If other is a Point, the position of this Point wrt it is
             returned. If its an instance of CoordSyRect, the position
             wrt its origin is returned.
@@ -48,8 +48,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysRect
-        >>> N = CoordSysRect('N')
+        >>> from sympy.vector import Point, CoordSysCartesian
+        >>> N = CoordSysCartesian('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> N.origin.position_wrt(p1)
         (-10)*N.i
@@ -57,21 +57,21 @@ class Point(Basic):
         """
 
         if not isinstance(other, Point) and \
-           not isinstance(other, CoordSysRect):
+           not isinstance(other, CoordSysCartesian):
             raise TypeError(str(other) + \
-                            "is not a Point or CoordSysRect")
-        if isinstance(other, CoordSysRect):
+                            "is not a Point or CoordSysCartesian")
+        if isinstance(other, CoordSysCartesian):
             other = other.origin
         #Handle special cases
         if other == self:
-            return Vector.Zero
+            return Vector.zero
         elif other == self._parent:
             return self._pos
         elif other._parent == self:
             return -1 * other._pos
         #Else, use point tree to calculate position
         rootindex, path = _path(self, other)
-        result = Vector.Zero
+        result = Vector.zero
         i = -1
         for i in range(rootindex):
             result += path[i]._pos
@@ -98,8 +98,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysRect
-        >>> N = CoordSysRect('N')
+        >>> from sympy.vector import Point, CoordSysCartesian
+        >>> N = CoordSysCartesian('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p1.position_wrt(N.origin)
         10*N.i
@@ -110,12 +110,12 @@ class Point(Basic):
     def express_coordinates(self, coordinate_system, simplify=False):
         """
         Returns the Cartesian coordinates of this point wrt the origin
-        of the given CoordSysRect instance.
+        of the given CoordSysCartesian instance.
 
         Parameters
         ==========
 
-        coordinate_system : CoordSysRect
+        coordinate_system : CoordSysCartesian
             The coordinate system to express the coordinates of this
             Point in.
 
@@ -126,8 +126,8 @@ class Point(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import Point, CoordSysRect
-        >>> N = CoordSysRect('N')
+        >>> from sympy.vector import Point, CoordSysCartesian
+        >>> N = CoordSysCartesian('N')
         >>> p1 = N.origin.locate_new('p1', 10 * N.i)
         >>> p2 = p1.locate_new('p2', 5 * N.j)
         >>> p2.express_coordinates(N)

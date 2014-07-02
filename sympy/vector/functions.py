@@ -19,7 +19,7 @@ def express(expr, system, variables=False):
     expr : Vector/scalar(sympyfiable)
         The expression to re-express in ReferenceFrame 'frame'
 
-    system: CoordSysRect
+    system: CoordSysCartesian
         The coordinate system to express expr in
 
     variables : boolean
@@ -29,9 +29,9 @@ def express(expr, system, variables=False):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysRect
+    >>> from sympy.vector import CoordSysCartesian
     >>> from sympy import Symbol
-    >>> N = CoordSysRect('N')
+    >>> N = CoordSysCartesian('N')
     >>> q = Symbol('q')
     >>> B = N.orient_new('B', 'Axis', [q, N.k])
     >>> from sympy.vector import express
@@ -43,7 +43,7 @@ def express(expr, system, variables=False):
     """
 
     from sympy.vector.vector import Vector, BaseVector
-    if expr == 0 or expr == Vector.Zero:
+    if expr == 0 or expr == Vector.zero:
         return expr
 
     if isinstance(expr, Vector):
@@ -63,7 +63,7 @@ def express(expr, system, variables=False):
                 subs_dict.update(f.variable_map(system))
             expr = expr.subs(subs_dict)
         #Re-express in this frame
-        outvec = Vector.Zero
+        outvec = Vector.zero
         parts = expr.separate()
         for x in parts:
             if x != system:
@@ -103,7 +103,7 @@ def matrix_to_vector(matrix, system):
     matrix : SymPy Matrix, Dimensions: (1, 3)
         The matrix to be converted to a vector
 
-    system : CoordSysRect
+    system : CoordSysCartesian
         The coordinate system the vector is to be defined in
 
     Examples
@@ -111,8 +111,8 @@ def matrix_to_vector(matrix, system):
 
     >>> from sympy import ImmutableMatrix as Matrix
     >>> m = Matrix([[1], [2], [3]])
-    >>> from sympy.vector import CoordSysRect, matrix_to_vector
-    >>> C = CoordSysRect('C')
+    >>> from sympy.vector import CoordSysCartesian, matrix_to_vector
+    >>> C = CoordSysCartesian('C')
     >>> v = matrix_to_vector(m, C)
     >>> v
     C.i + 2*C.j + 3*C.k
@@ -122,7 +122,7 @@ def matrix_to_vector(matrix, system):
     """
 
     from sympy.vector.vector import Vector
-    outvec = Vector.Zero
+    outvec = Vector.zero
     vects = system.base_vectors()
     for i, x in enumerate(matrix):
         outvec += x * vects[i]

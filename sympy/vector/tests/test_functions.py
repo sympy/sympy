@@ -1,9 +1,9 @@
 from sympy.vector.vector import Vector
-from sympy.vector.coordsysrect import CoordSysRect
+from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express, matrix_to_vector
 from sympy import symbols, S, sin, cos, ImmutableMatrix as Matrix
 
-N = CoordSysRect('N')
+N = CoordSysCartesian('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 A = N.orient_new('A', 'Axis', [q1, N.k])
 B = A.orient_new('B', 'Axis', [q2, A.i])
@@ -11,7 +11,7 @@ C = B.orient_new('C', 'Axis', [q3, B.j])
 
 
 def test_express():
-    assert express(Vector.Zero, N) == Vector.Zero
+    assert express(Vector.zero, N) == Vector.zero
     assert express(S(0), N) == S(0)
     assert express(A.i, C) == cos(q3)*C.i + sin(q3)*C.k
     assert express(A.j, C) == sin(q2)*sin(q3)*C.i + cos(q2)*C.j - \
@@ -154,6 +154,6 @@ def test_matrix_to_vector():
     assert matrix_to_vector(m, C) == C.i + 2*C.j + 3*C.k
     m = Matrix([[0], [0], [0]])
     assert matrix_to_vector(m, N) == matrix_to_vector(m, C) == \
-           Vector.Zero
+           Vector.zero
     m = Matrix([[q1], [q2], [q3]])
     assert matrix_to_vector(m, N) == q1*N.i + q2*N.j + q3*N.k

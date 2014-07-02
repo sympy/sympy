@@ -6,7 +6,7 @@ from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.numbers import Zero
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix, \
      factor as fctr
-from sympy.vector.coordsysrect import CoordSysRect
+from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express
 
 
@@ -30,8 +30,8 @@ class Vector(Expr):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> C = CoordSysRect('C')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> C = CoordSysCartesian('C')
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.components
         {C.i: 3, C.j: 4, C.k: 5}
@@ -94,7 +94,7 @@ class Vector(Expr):
         =====================
 
         """
-        vec = Vector.Zero
+        vec = Vector.zero
         for k, v in self.components.items():
             vec += v.evalf(*args) * k
         return vec
@@ -166,7 +166,7 @@ class Vector(Expr):
         """
         Returns the normalized version of this vector.
         """
-        return self / sqrt(self & self)
+        return self / self.magnitude()
 
     def dot(self, other):
         """
@@ -188,8 +188,8 @@ class Vector(Expr):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> C = CoordSysRect('C')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> C = CoordSysCartesian('C')
         >>> C.i.dot(C.j)
         0
         >>> C.i & C.i
@@ -205,7 +205,7 @@ class Vector(Expr):
         #Check special cases
         from sympy.vector.deloperator import Del
         if not isinstance(other, Vector) and not isinstance(other, Del):
-            raise TypeError(str(other) + " is not a vector or del operator")
+            raise TypeError(str(other)+" is not a vector or del operator")
 
         #Check if the other is a del operator
         if isinstance(other, Del):
@@ -218,7 +218,7 @@ class Vector(Expr):
                 out += self.dot(other._k) * \
                        df(field, other._z)
                 if out == 0 and isinstance(field, Vector):
-                    out = Vector.Zero
+                    out = Vector.zero
                 return out
             return directional_derivative
 
@@ -253,8 +253,8 @@ class Vector(Expr):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> C = CoordSysRect('C')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> C = CoordSysCartesian('C')
         >>> C.i.cross(C.j)
         C.k
         >>> C.i ^ C.i
@@ -268,8 +268,8 @@ class Vector(Expr):
         #Check special cases
         if not isinstance(other, Vector):
             raise TypeError(str(other) + " is not a vector")
-        if self == Vector.Zero or other == Vector.Zero:
-            return Vector.Zero
+        if self == Vector.zero or other == Vector.zero:
+            return Vector.zero
 
         #Compute cross product
         def _det(mat):
@@ -286,7 +286,7 @@ class Vector(Expr):
                     mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
                     mat[1][1] * mat[2][0]))
 
-        outvec = Vector.Zero
+        outvec = Vector.zero
         for system, vect in other.separate().items():
             tempi = system.i
             tempj = system.j
@@ -335,14 +335,14 @@ class Vector(Expr):
         Parameters
         ==========
 
-        system : CoordSysRect
+        system : CoordSysCartesian
             The system wrt which the matrix form is to be computed
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> C = CoordSysRect('C')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> C = CoordSysCartesian('C')
         >>> from sympy.abc import a, b, c
         >>> v = a*C.i + b*C.j + c*C.k
         >>> v.to_matrix(C)
@@ -361,15 +361,15 @@ class Vector(Expr):
         The constituents of this vector in different coordinate systems,
         as per its definition.
 
-        Returns a dict mapping each CoordSysRect to the corresponding
+        Returns a dict mapping each CoordSysCartesian to the corresponding
         constituent Vector.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysRect
-        >>> R1 = CoordSysRect('R1')
-        >>> R2 = CoordSysRect('R2')
+        >>> from sympy.vector import CoordSysCartesian
+        >>> R1 = CoordSysCartesian('R1')
+        >>> R2 = CoordSysCartesian('R2')
         >>> v = R1.i + R2.i
         >>> v.separate() == {R1: R1.i, R2: R2.i}
         True
@@ -378,7 +378,7 @@ class Vector(Expr):
 
         parts = {}
         for vect, measure in self.components.items():
-            parts[vect.system] = parts.get(vect.system, Vector.Zero) + \
+            parts[vect.system] = parts.get(vect.system, Vector.zero) + \
                                  vect*measure
         return parts
 
@@ -394,8 +394,8 @@ class BaseVector(Vector, AtomicExpr):
             raise ValueError("index must be 0, 1 or 2")
         if not isinstance(name, str):
             raise TypeError("name must be a valid string")
-        if not isinstance(system, CoordSysRect):
-            raise TypeError("system should be a CoordSysRect")
+        if not isinstance(system, CoordSysCartesian):
+            raise TypeError("system should be a CoordSysCartesian")
         #Initialize an object
         obj = super(BaseVector, cls).__new__(cls, S(index), \
                                              system)
@@ -447,7 +447,7 @@ class VectorAdd(Vector, Add):
                     raise TypeError(str(arg) +
                                     " cannot be interpreted as a vector")
             #If argument is zero, ignore
-            if arg == Vector.Zero:
+            if arg == Vector.zero:
                 continue
             #Else, update components accordingly
             for x in arg.components:
@@ -460,7 +460,7 @@ class VectorAdd(Vector, Add):
 
         #Handle case of zero vector
         if len(components) == 0:
-            return Vector.Zero
+            return Vector.zero
 
         #Build object
         newargs = [x*components[x] for x in components]
@@ -472,7 +472,7 @@ class VectorAdd(Vector, Add):
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
 
-        obj._sys = (components.keys())[0]._sys
+        obj._sys = (list(components.keys()))[0]._sys
 
         return obj
 
@@ -528,7 +528,7 @@ class VectorMul(Vector, Mul):
             return Mul(*args, **options)
         #Handle zero vector case
         if zeroflag:
-            return Vector.Zero
+            return Vector.zero
 
         #If one of the args was a VectorAdd, return an
         #appropriate VectorAdd instance
@@ -645,4 +645,4 @@ def _vect_div(one, other):
         raise TypeError("Invalid division involving a vector")
 
 
-Vector.Zero = VectorZero()
+Vector.zero = VectorZero()
