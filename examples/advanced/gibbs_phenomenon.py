@@ -14,7 +14,7 @@ See:
 """
 
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
-    sin, cos, sign, Plot, lambdify, Integral, S
+    sin, cos, sign, lambdify, Integral, S
 
 # seterr(True)
 
@@ -139,7 +139,6 @@ def main():
     f = series(L)
     print("Fourier series of the step function")
     pprint(f)
-    # Plot(f.diff(x), [x, -5, 5, 3000])
     x0 = msolve(f.diff(x), x)
 
     print("x-value of the maximum:", x0)

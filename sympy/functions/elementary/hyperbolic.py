@@ -503,7 +503,7 @@ class coth(HyperbolicFunction):
             elif arg is S.NegativeInfinity:
                 return S.NegativeOne
             elif arg is S.Zero:
-                return S.Zero
+                return S.ComplexInfinity
             elif arg.is_negative:
                 return -cls(-arg)
         else:

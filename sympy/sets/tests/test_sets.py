@@ -197,6 +197,12 @@ def test_intersect():
     assert Union(Interval(0, 5), FiniteSet(['Ham'])).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
         FiniteSet(2, 3, 4, 5)
 
+    # tests for the intersection alias
+    assert Interval(0, 5).intersection(FiniteSet(1, 3)) == FiniteSet(1, 3)
+    assert Interval(0, 1, True, True).intersection(FiniteSet(1)) == S.EmptySet
+
+    assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
+        Union(Interval(1, 1), Interval(2, 2))
 
 def test_intersection():
     # iterable
@@ -220,6 +226,11 @@ def test_intersection():
     assert (2, 2) not in i
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
+
+
+def test_is_disjoint():
+    assert Interval(0, 2).is_disjoint(Interval(1, 2)) == False
+    assert Interval(0, 2).is_disjoint(Interval(3, 4)) == True
 
 
 def test_ProductSet_of_single_arg_is_arg():
@@ -289,6 +300,10 @@ def test_is_subset():
 
     raises(ValueError, lambda: S.EmptySet.is_subset(1))
 
+    # tests for the issubset alias
+    assert FiniteSet(1, 2, 3, 4).issubset(Interval(0, 5)) is True
+    assert S.EmptySet.issubset(FiniteSet(1, 2, 3)) is True
+
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
     assert Interval(0, 3).is_proper_subset(Interval(0, 2)) is False
@@ -315,6 +330,10 @@ def test_is_superset():
     assert S.EmptySet.is_superset(S.EmptySet) == True
 
     raises(ValueError, lambda: S.EmptySet.is_superset(1))
+
+    # tests for the issuperset alias
+    assert Interval(0, 1).issuperset(S.EmptySet) == True
+    assert S.EmptySet.issuperset(S.EmptySet) == True
 
 def test_is_proper_superset():
     assert Interval(0, 1).is_proper_superset(Interval(0, 2)) is False
@@ -520,6 +539,11 @@ def test_product_basic():
     assert not (Interval(-5, 5)**2).is_subset(Interval(-10, 10)**3)
 
     assert (Interval(.2, .5)*FiniteSet(.5)).is_subset(square)  # segment in square
+
+    assert len(coin*coin*coin) == 8
+    assert len(S.EmptySet*S.EmptySet) == 0
+    assert len(S.EmptySet*coin) == 0
+    raises(TypeError, lambda: len(coin*Interval(0, 2)))
 
 
 def test_real():

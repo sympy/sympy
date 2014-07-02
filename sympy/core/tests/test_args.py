@@ -2301,6 +2301,11 @@ def test_sympy__physics__quantum__operator__HermitianOperator():
     assert _test_args(HermitianOperator('H'))
 
 
+def test_sympy__physics__quantum__operator__IdentityOperator():
+    from sympy.physics.quantum.operator import IdentityOperator
+    assert _test_args(IdentityOperator(5))
+
+
 def test_sympy__physics__quantum__operator__Operator():
     from sympy.physics.quantum.operator import Operator
     assert _test_args(Operator('A'))
@@ -2322,6 +2327,48 @@ def test_sympy__physics__quantum__operator__UnitaryOperator():
 def test_sympy__physics__quantum__piab__PIABBra():
     from sympy.physics.quantum.piab import PIABBra
     assert _test_args(PIABBra('B'))
+
+
+def test_sympy__physics__quantum__boson__BosonOp():
+    from sympy.physics.quantum.boson import BosonOp
+    assert _test_args(BosonOp('a'))
+    assert _test_args(BosonOp('a', False))
+
+
+def test_sympy__physics__quantum__boson__BosonFockKet():
+    from sympy.physics.quantum.boson import BosonFockKet
+    assert _test_args(BosonFockKet(1))
+
+
+def test_sympy__physics__quantum__boson__BosonFockBra():
+    from sympy.physics.quantum.boson import BosonFockBra
+    assert _test_args(BosonFockBra(1))
+
+
+def test_sympy__physics__quantum__boson__BosonCoherentKet():
+    from sympy.physics.quantum.boson import BosonCoherentKet
+    assert _test_args(BosonCoherentKet(1))
+
+
+def test_sympy__physics__quantum__boson__BosonCoherentBra():
+    from sympy.physics.quantum.boson import BosonCoherentBra
+    assert _test_args(BosonCoherentBra(1))
+
+
+def test_sympy__physics__quantum__fermion__FermionOp():
+    from sympy.physics.quantum.fermion import FermionOp
+    assert _test_args(FermionOp('c'))
+    assert _test_args(FermionOp('c', False))
+
+
+def test_sympy__physics__quantum__fermion__FermionFockKet():
+    from sympy.physics.quantum.fermion import FermionFockKet
+    assert _test_args(FermionFockKet(1))
+
+
+def test_sympy__physics__quantum__fermion__FermionFockBra():
+    from sympy.physics.quantum.fermion import FermionFockBra
+    assert _test_args(FermionFockBra(1))
 
 
 def test_sympy__physics__quantum__piab__PIABHamiltonian():
@@ -2909,6 +2956,10 @@ def test_sympy__geometry__point__Point():
     from sympy.geometry.point import Point
     assert _test_args(Point(0, 1))
 
+def test_sympy__geometry__point3d__Point3D():
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(Point3D(0, 1, 2))
+
 
 def test_sympy__geometry__ellipse__Ellipse():
     from sympy.geometry.ellipse import Ellipse
@@ -2939,6 +2990,22 @@ def test_sympy__geometry__line__Segment():
     from sympy.geometry.line import Segment
     assert _test_args(Segment((0, 1), (2, 3)))
 
+@SKIP("abstract class")
+def test_sympy__geometry__line3d__LinearEntity3D():
+    pass
+
+
+def test_sympy__geometry__line3d__Line3D():
+    from sympy.geometry.line3d import Line3D
+    assert _test_args(Line3D((0, 1, 1), (2, 3, 4)))
+
+def test_sympy__geometry__line3d__Segment3D():
+    from sympy.geometry.line3d import Segment3D
+    assert _test_args(Segment3D((0, 1, 1), (2, 3, 4)))
+
+def test_sympy__geometry__line3d__Ray3D():
+    from sympy.geometry.line3d import Ray3D
+    assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
 
 def test_sympy__geometry__polygon__Polygon():
     from sympy.geometry.polygon import Polygon
@@ -3120,3 +3187,12 @@ def test_sympy__ntheory__factor___totient():
 def test_sympy__ntheory__residue_ntheory__mobius():
     from sympy.ntheory import mobius
     assert _test_args(mobius(2))
+
+def test_sympy__physics__optics__waves__TWave():
+    from sympy.physics.optics import TWave
+    A, f, phi = symbols('A, f, phi')
+    assert _test_args(TWave(A, f, phi))
+
+def test_sympy__physics__optics__medium__Medium():
+    from sympy.physics.optics import Medium
+    assert _test_args(Medium('m'))

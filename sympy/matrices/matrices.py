@@ -18,7 +18,7 @@ from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
-from sympy.core.compatibility import reduce, as_int
+from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
@@ -161,7 +161,7 @@ class MatrixBase(object):
             flat_list = [cls._sympify(i) for i in flat_list]
 
         # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
+        elif len(args) == 1 and hasattr(args[0], "__array__"):
             # NumPy array or matrix or some other object that implements
             # __array__. So let's first use this method to get a
             # numpy.array() and then make a python list out of it.
@@ -171,8 +171,8 @@ class MatrixBase(object):
                 flat_list = [cls._sympify(i) for i in arr.ravel()]
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
-                rows, cols = 1, arr.shape[0]
-                flat_list = [S.Zero]*cols
+                rows, cols = arr.shape[0], 1
+                flat_list = [S.Zero]*rows
                 for i in range(len(arr)):
                     flat_list[i] = cls._sympify(arr[i])
                 return rows, cols, flat_list
@@ -663,16 +663,16 @@ class MatrixBase(object):
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
         align = {
-            'left': str.ljust,
-            'right': str.rjust,
-            'center': str.center,
-            '<': str.ljust,
-            '>': str.rjust,
-            '^': str.center,
+            'left': 'ljust',
+            'right': 'rjust',
+            'center': 'center',
+            '<': 'ljust',
+            '>': 'rjust',
+            '^': 'center',
             }[align]
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
-                row[j] = align(elem, maxlen[j])
+                row[j] = getattr(elem, align)(maxlen[j])
             res[i] = "[" + colsep.join(row) + "]"
         return rowsep.join(res)
 
@@ -1825,7 +1825,7 @@ class MatrixBase(object):
                 # Minimum singular value
                 return Min(*self.singular_values())
 
-            elif (ord is None or isinstance(ord, str) and ord.lower() in
+            elif (ord is None or isinstance(ord, string_types) and ord.lower() in
                     ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)
@@ -4098,7 +4098,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except:
+    except Exception:
         pass
     try:
         import numpy
@@ -4106,7 +4106,7 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except:
+    except Exception:
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 

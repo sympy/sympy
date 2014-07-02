@@ -407,7 +407,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     def sub_expr(expr, dummies_dict):
         try:
             expr = sympify(expr).xreplace(dummies_dict)
-        except:
+        except Exception:
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):

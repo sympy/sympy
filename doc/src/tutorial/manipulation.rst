@@ -119,7 +119,7 @@ Thus, we could have created the same object by writing ``Mul(x, y)``.
 Now we get to our final expression, ``x**2 + x*y``.  This is the addition of
 our last two objects, ``Pow(x, 2)``, and ``Mul(x, y)``.  The SymPy class for
 addition is ``Add``, so, as you might expect, to create this object, we use
-``Add(Pow(x, 2), Mul(x, y)``.
+``Add(Pow(x, 2), Mul(x, y))``.
 
     >>> Add(Pow(x, 2), Mul(x, y))
     x**2 + x*y

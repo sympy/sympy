@@ -943,7 +943,7 @@ class Ei(Function):
     where `\gamma` is the Euler-Mascheroni constant.
 
     If `x` is a polar number, this defines an analytic function on the
-    riemann surface of the logarithm. Otherwise this defines an analytic
+    Riemann surface of the logarithm. Otherwise this defines an analytic
     function in the cut plane `\mathbb{C} \setminus (-\infty, 0]`.
 
     **Background**

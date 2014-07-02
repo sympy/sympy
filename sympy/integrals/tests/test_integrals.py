@@ -297,10 +297,9 @@ def test_matrices():
         [-cos(2*x), -cos(3*x)],
     ])
 
-# issue1012
-
 
 def test_integrate_functions():
+    # issue 4111
     assert integrate(f(x), x) == Integral(f(x), x)
     assert integrate(f(x), (x, 0, 1)) == Integral(f(x), (x, 0, 1))
     assert integrate(f(x)*diff(f(x), x), x) == f(x)**2/2
@@ -721,6 +720,9 @@ def test_is_zero():
     assert Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)).is_zero is None
     assert Integral(x, (m, 0)).is_zero
     assert Integral(x + 1/m, (m, 0)).is_zero is None
+    i = Integral(m, (m, 1, exp(x)), (x, 0))
+    assert i.is_zero is None and i.doit() == S(1)/4
+    assert Integral(m, (x, 0), (m, 1, exp(x))).is_zero is True
 
 
 def test_series():

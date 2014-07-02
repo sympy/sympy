@@ -638,15 +638,14 @@ def test_issue_7231():
     from sympy.abc import a
     ans1 = f(x).series(x, a)
     _xi_1 = ans1.atoms(Dummy).pop()
-    res = (f(a) + x*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
-           x**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
-           x**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
-                     (_xi_1,), (a,))/6 +
-           x**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
-                     (_xi_1,), (a,))/24 +
-           x**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1,
-                                _xi_1, _xi_1, _xi_1),
-                     (_xi_1,), (a,))/120 + O(x**6))
+    res = (f(a) + (-a + x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
+           (-a + x)**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
+           (-a + x)**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/6 +
+           (-a + x)**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/24 +
+           (-a + x)**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/120 + O((-a + x)**6, (x, a)))
     assert res == ans1
     ans2 = f(x).series(x, a)
     assert res == ans2

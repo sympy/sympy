@@ -132,9 +132,18 @@ class Integral(AddWithLimits):
                 any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
             return True
         free = self.function.free_symbols
-        if any(len(xab) == 2 and xab[1] == 0 and xab[0] not in free for \
-                xab in self.limits):
-            return True
+        for xab in self.limits:
+            if len(xab) == 1:
+                free.add(xab[0])
+                continue
+            if len(xab) == 2 and xab[1].is_zero and xab[0] not in free:
+                return True
+            # take integration symbol out of free since it will be replaced
+            # with the free symbols in the limits
+            free.discard(xab[0])
+            # add in the new symbols
+            for i in xab[1:]:
+                free.update(i.free_symbols)
         if not self.free_symbols and self.function.is_number:
             # the integrand is a number and the limits are numerical
             return False

@@ -102,7 +102,7 @@ def test_linearize_rolling_disc_kane():
              u5d: r*(4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5),
              u6d: -r*(sin(q2)*cos(q3)*q1d*q3d + cos(q3)*q3d**2)}
 
-    A, B = linearizer.linearize(op_point=[q_op, u_op, qd_op, ud_op], A_and_B=True)
+    A, B = linearizer.linearize(op_point=[q_op, u_op, qd_op, ud_op], A_and_B=True, simplify=True)
 
     upright_nominal = {q1d: 0, q2: 0, m: 1, r: 1, g: 1}
 
@@ -156,7 +156,7 @@ def test_linearize_pendulum_kane_minimal():
     (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
 
     # Linearize
-    A, B, inp_vec = KM.linearize(A_and_B=True, new_method=True)
+    A, B, inp_vec = KM.linearize(A_and_B=True, new_method=True, simplify=True)
 
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
@@ -219,7 +219,8 @@ def test_linearize_pendulum_kane_nonminimal():
     u_op = {u1: 0, u2: 0}
     ud_op = {u1d: 0, u2d: 0}
 
-    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True, new_method=True)
+    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True,
+            new_method=True, simplify=True)
 
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
