@@ -30,7 +30,7 @@ class Undecidable(ValueError):
 
 
 class LinearEntity(GeometryEntity):
-    """An abstract base class for all linear entities (line, ray and segment)
+    """A base class for all linear entities (line, ray and segment)
     in a 2-dimensional Euclidean space.
 
     Attributes
@@ -46,10 +46,6 @@ class LinearEntity(GeometryEntity):
     =====
 
     This is an abstract class and is not meant to be instantiated.
-    Subclasses should implement the following methods:
-
-        * __eq__
-        * contains
 
     See Also
     ========
@@ -943,14 +939,6 @@ class LinearEntity(GeometryEntity):
             None if a determination cannot be made."""
         raise NotImplementedError()
 
-    def __eq__(self, other):
-        """Subclasses should implement this method."""
-        raise NotImplementedError()
-
-    def __hash__(self):
-        return super(LinearEntity, self).__hash__()
-
-
 class Line(LinearEntity):
     """An infinite line in space.
 
@@ -1151,16 +1139,11 @@ class Line(LinearEntity):
         y = m*x - c/b
         return abs(factor_terms(o.y - y))/sqrt(1 + m**2)
 
-
-    def __eq__(self, other):
-        """Return True if other is equal to this Line, or False otherwise."""
+    def equal(self, other):
+        """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line):
             return False
-        return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
-
-    def __hash__(self):
-        return super(Line, self).__hash__()
-
+        return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
 
 class Ray(LinearEntity):
     """
@@ -1407,14 +1390,11 @@ class Ray(LinearEntity):
         t = _symbol(parameter)
         return [t, 0, 10]
 
-    def __eq__(self, other):
-        """Is the other GeometryEntity equal to this Ray?"""
+    def equal(self, other):
+        """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Ray):
             return False
-        return (self.source == other.source) and (other.p2 in self)
-
-    def __hash__(self):
-        return super(Ray, self).__hash__()
+        return self.source == other.source and other.p2 in self
 
     def contains(self, o):
         """Is other GeometryEntity contained in this Ray?"""
@@ -1654,15 +1634,6 @@ class Segment(LinearEntity):
                     self.p1 + Point(t*seg_vector.x, t*seg_vector.y), o)
             return distance
         raise NotImplementedError()
-
-    def __eq__(self, other):
-        """Is the other GeometryEntity equal to this Segment?"""
-        if not isinstance(other, Segment):
-            return False
-        return (self.p1 == other.p1) and (self.p2 == other.p2)
-
-    def __hash__(self):
-        return super(Segment, self).__hash__()
 
     def contains(self, other):
         """
