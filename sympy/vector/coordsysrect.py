@@ -2,7 +2,8 @@ from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.functions import express, _path
 from sympy import sin, cos, eye, sympify, trigsimp, \
-     ImmutableMatrix as Matrix, S, Symbol
+     ImmutableMatrix as Matrix, S, Symbol, rot_axis1, \
+     rot_axis2, rot_axis3
 from sympy.core.compatibility import string_types
 
 
@@ -376,17 +377,11 @@ class CoordSysCartesian(Basic):
 def _rot(axis, angle):
     """DCM for simple axis 1, 2 or 3 rotations. """
     if axis == 1:
-        return Matrix([[1, 0, 0],
-            [0, cos(angle), -sin(angle)],
-            [0, sin(angle), cos(angle)]])
+        return Matrix(rot_axis1(angle).T)
     elif axis == 2:
-        return Matrix([[cos(angle), 0, sin(angle)],
-            [0, 1, 0],
-            [-sin(angle), 0, cos(angle)]])
+        return Matrix(rot_axis2(angle).T)
     elif axis == 3:
-        return Matrix([[cos(angle), -sin(angle), 0],
-            [sin(angle), cos(angle), 0],
-            [0, 0, 1]])
+        return Matrix(rot_axis3(angle).T)
 
 
 def _orient_axis(amounts, rot_order, parent):
