@@ -206,8 +206,6 @@ def test_pow2():
     assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
     e = sqrt(2**(-2 + I))
     assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = sqrt((-3)**(-2*sqrt(2) + I))
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
     e = sqrt((1 + I)**(-2*sqrt(2) + I))
     assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
     e = sqrt((1 + 11*I)**(-2*sqrt(2) + I))
