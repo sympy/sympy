@@ -370,7 +370,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         x = self.value.symbol
         try:
             return self.distribution.expectation(expr, x, evaluate=False, **kwargs)
-        except:
+        except Exception:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):

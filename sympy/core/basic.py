@@ -334,17 +334,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
            but faster
         """
-
-        if type(self) is not type(other):
-            try:
-                other = _sympify(other)
-            except SympifyError:
-                return True     # sympy != other
-
-            if type(self) is not type(other):
-                return True
-
-        return self._hashable_content() != other._hashable_content()
+        return not self.__eq__(other)
 
     def dummy_eq(self, other, symbol=None):
         """
@@ -1543,11 +1533,20 @@ class Basic(with_metaclass(ManagedProperties)):
             if hasattr(self, rule):
                 return getattr(self, rule)()
             return self
-        sargs = self.args
-        terms = [ t._eval_rewrite(pattern, rule, **hints)
-                    if isinstance(t, Basic) else t
-                    for t in sargs ]
-        return self.func(*terms)
+
+        if hints.get('deep', True):
+            args = [ a._eval_rewrite(pattern, rule, **hints)
+                        if isinstance(a, Basic) else a
+                        for a in self.args ]
+        else:
+            args = self.args
+
+        if pattern is None or isinstance(self.func, pattern):
+            if hasattr(self, rule):
+                rewritten = getattr(self, rule)(*args)
+                if rewritten is not None:
+                    return rewritten
+        return self.func(*args)
 
     def rewrite(self, *args, **hints):
         """ Rewrite functions in terms of other functions.
@@ -1562,7 +1561,7 @@ class Basic(with_metaclass(ManagedProperties)):
         you can use string or a destination function instance (in
         this case rewrite() will use the str() function).
 
-        There is also possibility to pass hints on how to rewrite
+        There is also the possibility to pass hints on how to rewrite
         the given expressions. For now there is only one such hint
         defined called 'deep'. When 'deep' is set to False it will
         forbid functions to rewrite their contents.

@@ -2252,7 +2252,7 @@ class Expr(Basic, EvalfMixin):
         return False
 
     def is_algebraic_expr(self, *syms):
-        '''
+        """
         This tests whether a given expression is algebraic or not, in the
         given symbols, syms. When syms is not given, all free symbols
         will be used. The rational function does not have to be in expanded
@@ -2266,7 +2266,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import Symbol, sqrt
-        >>> x = Symbol('x')
+        >>> x = Symbol('x', real=True)
         >>> sqrt(1 + x).is_rational_function()
         False
         >>> sqrt(1 + x).is_algebraic_expr()
@@ -2276,8 +2276,8 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be an algebraic
         expression to become one.
 
-        >>> from sympy import sin, factor
-        >>> a = sqrt(sin(x)**2 + 2*sin(x) + 1)/(sin(x) + 1)
+        >>> from sympy import exp, factor
+        >>> a = sqrt(exp(x)**2 + 2*exp(x) + 1)/(exp(x) + 1)
         >>> a.is_algebraic_expr(x)
         False
         >>> factor(a).is_algebraic_expr()
@@ -2292,7 +2292,7 @@ class Expr(Basic, EvalfMixin):
 
         - http://en.wikipedia.org/wiki/Algebraic_expression
 
-        '''
+        """
         if syms:
             syms = set(map(sympify, syms))
         else:
@@ -2314,73 +2314,40 @@ class Expr(Basic, EvalfMixin):
         the series one by one (the lazy series given when n=None), else
         all the terms at once when n != None.
 
-        Note: when n != None, if an O() term is returned then the x in the
-        in it and the entire expression represents x - x0, the displacement
-        from x0. (If there is no O() term then the series was exact and x has
-        it's normal meaning.) This is currently necessary since sympy's O()
-        can only represent terms at x0=0. So instead of::
+        Returns the series expansion of "self" around the point ``x = x0``
+        with respect to ``x`` up to ``O((x - x0)**n, x, x0)`` (default n is 6).
 
-          cos(x).series(x0=1, n=2) --> (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
+        If ``x=None`` and ``self`` is univariate, the univariate symbol will
+        be supplied, otherwise an error will be raised.
 
-        which graphically looks like this::
+        >>> from sympy import cos, exp
+        >>> from sympy.abc import x, y
+        >>> cos(x).series()
+        1 - x**2/2 + x**4/24 + O(x**6)
+        >>> cos(x).series(n=4)
+        1 - x**2/2 + O(x**4)
+        >>> cos(x).series(x, x0=1, n=2)
+        cos(1) - (x - 1)*sin(1) + O((x - 1)**2, (x, 1))
+        >>> e = cos(x + exp(y))
+        >>> e.series(y, n=2)
+        cos(x + 1) - y*sin(x + 1) + O(y**2)
+        >>> e.series(x, n=2)
+        cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-               |
-              .|.         . .
-             . | \      .     .
-            ---+----------------------
-               |   . .          . .
-               |    \
-              x=0
+        If ``n=None`` then a generator of the series terms will be returned.
 
-        the following is returned instead::
+        >>> term=cos(x).series(n=None)
+        >>> [next(term) for i in range(2)]
+        [1, -x**2/2]
 
-        -x*sin(1) + cos(1) + O(x**2)
+        For ``dir=+`` (default) the series is calculated from the right and
+        for ``dir=-`` the series from the left. For smooth functions this
+        flag will not alter the results.
 
-        whose graph is this::
-
-               \ |
-              . .|        . .
-             .   \      .     .
-            -----+\------------------.
-                 | . .          . .
-                 |  \
-                x=0
-
-        which is identical to ``cos(x + 1).series(n=2)``.
-
-        Usage:
-            Returns the series expansion of "self" around the point ``x = x0``
-            with respect to ``x`` up to O(x**n) (default n is 6).
-
-            If ``x=None`` and ``self`` is univariate, the univariate symbol will
-            be supplied, otherwise an error will be raised.
-
-            >>> from sympy import cos, exp
-            >>> from sympy.abc import x, y
-            >>> cos(x).series()
-            1 - x**2/2 + x**4/24 + O(x**6)
-            >>> cos(x).series(n=4)
-            1 - x**2/2 + O(x**4)
-            >>> e = cos(x + exp(y))
-            >>> e.series(y, n=2)
-            cos(x + 1) - y*sin(x + 1) + O(y**2)
-            >>> e.series(x, n=2)
-            cos(exp(y)) - x*sin(exp(y)) + O(x**2)
-
-            If ``n=None`` then a generator of the series terms will be returned.
-
-            >>> term=cos(x).series(n=None)
-            >>> [next(term) for i in range(2)]
-            [1, -x**2/2]
-
-            For ``dir=+`` (default) the series is calculated from the right and
-            for ``dir=-`` the series from the left. For smooth functions this
-            flag will not alter the results.
-
-            >>> abs(x).series(dir="+")
-            x
-            >>> abs(x).series(dir="-")
-            -x
+        >>> abs(x).series(dir="+")
+        x
+        >>> abs(x).series(dir="-")
+        -x
 
         """
         from sympy import collect
@@ -2420,16 +2387,11 @@ class Expr(Basic, EvalfMixin):
             s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
             if n is None:  # lseries...
                 return (si.subs(x, rep2 + rep2b) for si in s)
-            # nseries...
-            o = s.getO() or S.Zero
-            s = s.removeO()
-            if o and x0:
-                rep2b = 0  # when O() can handle x0 != 0 this can be removed
-            return s.subs(x, rep2 + rep2b) + o
+            return s.subs(x, rep2 + rep2b)
 
         # from here on it's x0=0 and dir='+' handling
 
-        if x.is_positive is x.is_negative is None:
+        if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
             xpos = C.Dummy('x', positive=True, bounded=True)
             rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)

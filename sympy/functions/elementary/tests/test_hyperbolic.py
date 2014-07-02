@@ -224,7 +224,7 @@ def test_coth():
     assert coth(-oo) == -1
 
     assert coth(0) == coth(0)
-
+    assert coth(0) == zoo
     assert coth(1) == coth(1)
     assert coth(-1) == -coth(1)
 

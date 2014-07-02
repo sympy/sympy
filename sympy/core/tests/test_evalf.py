@@ -228,9 +228,7 @@ def test_evalf_bugs():
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
-    raises(PrecisionExhausted, lambda: a.evalf())
-    assert a.evalf(chop=True) == 3
-    assert a.evalf(maxn=500) == 2
+    assert a.evalf() == 3
     assert b.evalf() == 3
     # equals, as a fallback, can still fail but it might succeed as here
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
@@ -243,6 +241,10 @@ def test_evalf_integer_parts():
                .evalf(1000)) == fibonacci(999)
     assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1, 2)))
                .evalf(1000)) == fibonacci(1000)
+
+    assert ceiling(x).evalf(subs={x: 3}) == 3
+    assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
+    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
 
 
 def test_evalf_trig_zero_detection():
@@ -416,3 +418,9 @@ def test_issue_6632_evalf():
     add = (-100000*sqrt(2500000001) + 5000000001)
     assert add.n() == 9.999999998e-11
     assert (add*add).n() == 9.999999996e-21
+
+
+def test_issue_4945():
+    from sympy.abc import H
+    from sympy import zoo
+    assert (H/0).evalf(subs={H:1}) == zoo*H

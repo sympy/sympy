@@ -224,7 +224,7 @@ Python, ``^`` represents logical exclusive or.  SymPy follows this convention:
      >>> True ^ True
      False
      >>> x^y
-     Or(And(Not(x), y), And(Not(y), x))
+     Xor(x, y)
 
 Finally, a small technical discussion on how SymPy works is in order.  When
 you type something like ``x + 1``, the SymPy Symbol ``x`` is added to the

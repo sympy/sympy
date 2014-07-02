@@ -134,7 +134,7 @@ def qapply_Mul(e, **options):
         args.append(lhs.ket)
         lhs = lhs.bra
 
-   # Call .doit() on Commutator/AntiCommutator.
+    # Call .doit() on Commutator/AntiCommutator.
     if isinstance(lhs, (Commutator, AntiCommutator)):
         comm = lhs.doit()
         if isinstance(comm, Add):
@@ -147,8 +147,8 @@ def qapply_Mul(e, **options):
             return qapply(e.func(*args)*comm*rhs, **options)
 
     # Apply tensor products of operators to states
-    if isinstance(lhs, TensorProduct) and all([isinstance(arg, Operator) or arg == 1 for arg in lhs.args]) and \
-            isinstance(rhs, TensorProduct) and all([isinstance(arg, State) or arg == 1 for arg in rhs.args]) and \
+    if isinstance(lhs, TensorProduct) and all([isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in lhs.args]) and \
+            isinstance(rhs, TensorProduct) and all([isinstance(arg, (Operator, State, Mul, Pow)) or arg == 1 for arg in rhs.args]) and \
             len(lhs.args) == len(rhs.args):
         result = TensorProduct(*[qapply(lhs.args[n]*rhs.args[n], **options) for n in range(len(lhs.args))]).expand(tensorproduct=True)
         return qapply_Mul(e.func(*args), **options)*result

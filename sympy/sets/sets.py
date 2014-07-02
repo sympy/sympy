@@ -7,9 +7,10 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass
+from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
+from sympy.core.mul import Mul
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, true, false
@@ -88,6 +89,12 @@ class Set(Basic):
         """
         return Intersection(self, other)
 
+    def intersection(self, other):
+        """
+        Alias for :meth:`intersect()`
+        """
+        return self.intersect(other)
+
     def _intersect(self, other):
         """
         This function should only be used internally
@@ -101,6 +108,29 @@ class Set(Basic):
         Used within the :class:`Intersection` class
         """
         return None
+
+    def is_disjoint(self, other):
+        """
+        Returns True if 'self' and 'other' are disjoint
+
+        >>> from sympy import Interval
+        >>> Interval(0, 2).is_disjoint(Interval(1, 2))
+        False
+        >>> Interval(0, 2).is_disjoint(Interval(3, 4))
+        True
+
+        References
+        ==========
+
+        http://en.wikipedia.org/wiki/Disjoint_sets
+        """
+        return self.intersect(other) == S.EmptySet
+
+    def isdisjoint(self, other):
+        """
+        Alias for :meth:`is_disjoint()`
+        """
+        return self.is_disjoint(other)
 
     def _union(self, other):
         """
@@ -212,7 +242,6 @@ class Set(Basic):
         Returns True if 'self' is a subset of 'other'.
 
         >>> from sympy import Interval
-
         >>> Interval(0, 0.5).is_subset(Interval(0, 1))
         True
         >>> Interval(0, 1).is_subset(Interval(0, 1, left_open=True))
@@ -224,12 +253,33 @@ class Set(Basic):
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
+    def issubset(self, other):
+        """
+        Alias for :meth:`is_subset()`
+        """
+        return self.is_subset(other)
+
+    def is_proper_subset(self, other):
+        """
+        Returns True if 'self' is a proper subset of 'other'.
+
+        >>> from sympy import Interval
+        >>> Interval(0, 0.5).is_proper_subset(Interval(0, 1))
+        True
+        >>> Interval(0, 1).is_proper_subset(Interval(0, 1))
+        False
+
+        """
+        if isinstance(other, Set):
+            return self != other and self.is_subset(other)
+        else:
+            raise ValueError("Unknown argument '%s'" % other)
+
     def is_superset(self, other):
         """
         Returns True if 'self' is a superset of 'other'.
 
         >>> from sympy import Interval
-
         >>> Interval(0, 0.5).is_superset(Interval(0, 1))
         False
         >>> Interval(0, 1).is_superset(Interval(0, 1, left_open=True))
@@ -238,6 +288,28 @@ class Set(Basic):
         """
         if isinstance(other, Set):
             return other.is_subset(self)
+        else:
+            raise ValueError("Unknown argument '%s'" % other)
+
+    def issuperset(self, other):
+        """
+        Alias for :meth:`is_superset()`
+        """
+        return self.is_superset(other)
+
+    def is_proper_superset(self, other):
+        """
+        Returns True if 'self' is a proper superset of 'other'.
+
+        >>> from sympy import Interval
+        >>> Interval(0, 1).is_proper_superset(Interval(0, 0.5))
+        True
+        >>> Interval(0, 1).is_proper_superset(Interval(0, 1))
+        False
+
+        """
+        if isinstance(other, Set):
+            return self != other and self.is_superset(other)
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
@@ -531,6 +603,9 @@ class ProductSet(Set):
         for set in self.sets:
             measure *= set.measure
         return measure
+
+    def __len__(self):
+        return Mul(*[len(s) for s in self.args])
 
 
 class Interval(Set, EvalfMixin):
@@ -1084,7 +1159,7 @@ class Union(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         try:
             return Union(set.evalf() for set in self.args)
-        except:
+        except Exception:
             raise TypeError("Not all sets are evalf-able")
 
     def __iter__(self):
@@ -1371,12 +1446,12 @@ class FiniteSet(Set, EvalfMixin):
     Examples
     ========
 
-        >>> from sympy import FiniteSet
+    >>> from sympy import FiniteSet
 
-        >>> FiniteSet(1, 2, 3, 4)
-        {1, 2, 3, 4}
-        >>> 3 in FiniteSet(1, 2, 3, 4)
-        True
+    >>> FiniteSet(1, 2, 3, 4)
+    {1, 2, 3, 4}
+    >>> 3 in FiniteSet(1, 2, 3, 4)
+    True
 
     References
     ==========
@@ -1395,13 +1470,12 @@ class FiniteSet(Set, EvalfMixin):
 
             if len(args) == 0:
                 return EmptySet()
+        else:
+            args = list(map(sympify, args))
 
-
-        args = frozenset(args)  # remove duplicates
-        args = map(sympify, args)
-        args = frozenset(args)
+        args = list(ordered(frozenset(args)))
         obj = Basic.__new__(cls, *args)
-        obj._elements = args
+        obj._elements = frozenset(args)
         return obj
 
     def __iter__(self):
@@ -1535,13 +1609,13 @@ class FiniteSet(Set, EvalfMixin):
         return other.is_subset(self)
 
     def __gt__(self, other):
-        return self != other and self >= other
+        return self.is_proper_superset(other)
 
     def __le__(self, other):
         return self.is_subset(other)
 
     def __lt__(self, other):
-        return self != other and other >= self
+        return self.is_proper_subset(other)
 
 
 def imageset(*args):
@@ -1590,6 +1664,18 @@ def imageset(*args):
     set = args[-1]
 
     r = set._eval_imageset(f)
+    if isinstance(r, ImageSet):
+        f, set = r.args
+
+    if f.variables[0] == f.expr:
+        return set
+
+    if isinstance(set, ImageSet):
+        if len(set.lamda.variables) == 1 and len(f.variables) == 1:
+            return imageset(Lambda(set.lamda.variables[0],
+                                   f.expr.subs(f.variables[0], set.lamda.expr)),
+                            set.base_set)
+
     if r is not None:
         return r
 

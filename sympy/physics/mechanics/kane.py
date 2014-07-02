@@ -2,14 +2,19 @@ from __future__ import print_function, division
 
 __all__ = ['KanesMethod']
 
-from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.core.compatibility import reduce
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
      Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import inertia_of_point_mass, _mat_inv_mul
+from sympy.physics.mechanics.functions import _mat_inv_mul, _subs_keep_derivs
+from sympy.physics.mechanics.linearize import Linearizer
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+import warnings
+
+warnings.simplefilter("always", SymPyDeprecationWarning)
 
 class KanesMethod(object):
     """Kane's method object.
@@ -91,10 +96,10 @@ class KanesMethod(object):
         >>> rhs = MM.inv() * forcing
         >>> rhs
         Matrix([[(-c*u(t) - k*q(t))/m]])
-        >>> KM.linearize()[0]
+        >>> KM.linearize(A_and_B=True, new_method=True)[0]
         Matrix([
-        [ 0,  1],
-        [-k, -c]])
+        [   0,    1],
+        [-k/m, -c/m]])
 
     Please look at the documentation pages for more information on how to
     perform linearization and how to deal with dependent coordinates & speeds,
@@ -173,7 +178,6 @@ class KanesMethod(object):
         """Finds all non-dynamic symbols in the expressions."""
         return list(reduce(set.union, [i.free_symbols for i in inlist]) -
                     set(insyms))
-
 
     def _coords(self, qind, qdep=[], coneqs=[]):
         """Supply all the generalized coordinates in a list.
@@ -519,86 +523,129 @@ class KanesMethod(object):
         self._f_d = zeroeq
         return FRSTAR
 
-    def kanes_equations(self, FL, BL):
-        """ Method to form Kane's equations, Fr + Fr* = 0.
+    def to_linearizer(self):
+        """Returns an instance of the Linearizer class, initiated from the
+        data in the KanesMethod class. This may be more desirable than using
+        the linearize class method, as the Linearizer object will allow more
+        efficient recalculation (i.e. about varying operating points)."""
 
-        Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
-        present (say, s auxiliary speeds, o generalized speeds, and m motion
-        constraints) the length of the returned vectors will be o - m + s in
-        length. The first o - m equations will be the constrained Kane's
-        equations, then the s auxiliary Kane's equations. These auxiliary
-        equations can be accessed with the auxiliary_eqs().
+        if (self._fr is None) or (self._frstar is None):
+            raise ValueError('Need to compute Fr, Fr* first.')
 
-        Parameters
-        ==========
-
-        FL : list
-            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
-            tuples which represent the force at a point or torque on a frame.
-        BL : list
-            A list of all RigidBody's and Particle's in the system.
-
-        """
-
-        if (self._q is None) or (self._u is None):
-            raise ValueError('Speeds and coordinates must be supplied first.')
-        if (self._k_kqdot is None):
-            raise __KDEqError
-
-
-        fr = self._form_fr(FL)
-        frstar = self._form_frstar(BL)
-        if self._uaux != []:
-            if self._udep == []:
-                km = KanesMethod(self._inertial, self._q, self._uaux,
-                             u_auxiliary=self._uaux)
-            else:
-                km = KanesMethod(self._inertial, self._q, self._uaux,
-                u_auxiliary=self._uaux, u_dependent=self._udep,
-                velocity_constraints=(self._k_nh * Matrix(self._u) + self._f_nh))
-            km._qdot_u_map = self._qdot_u_map
-            self._km = km
-            fraux = km._form_fr(FL)
-            frstaraux = km._form_frstar(BL)
-            self._aux_eq = fraux + frstaraux
-            self._fr = fr.col_join(fraux)
-            self._frstar = frstar.col_join(frstaraux)
-            return (self._fr, self._frstar)
+        # Get required equation components. The Kane's method class breaks
+        # these into pieces. Need to reassemble
+        f_c = self._f_h
+        if self._f_nh and self._k_nh:
+            f_v = self._f_nh + self._k_nh*Matrix(self._u)
         else:
-            return (fr, frstar)
+            f_v = Matrix([])
+        if self._f_dnh and self._k_dnh:
+            f_a = self._f_dnh + self._k_dnh*Matrix(self._udot)
+        else:
+            f_a = Matrix([])
+        # Dicts to sub to zero, for splitting up expressions
+        u_zero = dict((i, 0) for i in self._u)
+        ud_zero = dict((i, 0) for i in self._udot)
+        qd_zero = dict((i, 0) for i in self._qdot)
+        qd_u_zero = dict((i, 0) for i in self._qdot + self._u)
+        # Break the kinematic differential eqs apart into f_0 and f_1
+        f_0 = self._f_k.subs(u_zero) + self._k_kqdot*Matrix(self._qdot)
+        f_1 = self._f_k.subs(qd_zero) + self._k_ku*Matrix(self._u)
+        # Break the dynamic differential eqs into f_2 and f_3
+        f_2 = _subs_keep_derivs(self._frstar, qd_u_zero)
+        f_3 = self._frstar.subs(ud_zero) + self._fr
 
-    def linearize(self):
-        """ Method used to generate linearized equations.
+        # Get the required vector components
+        q = self._q
+        u = self._u
+        if self._qdep:
+            q_i = q[:-len(self._qdep)]
+        else:
+            q_i = q
+        q_d = self._qdep
+        if self._udep:
+            u_i = u[:-len(self._udep)]
+        else:
+            u_i = u
+        u_d = self._udep
 
-        Note that for linearization, it is assumed that time is not perturbed,
-        but only coordinates and positions. The "forcing" vector's jacobian is
-        computed with respect to the state vector in the form [Qi, Qd, Ui, Ud].
-        This is the "f_lin_A" matrix.
+        # Form dictionary of auxiliary speeds & and their derivatives,
+        # setting each to 0.
+        uaux = self._uaux
+        uauxdot = [diff(i, dynamicsymbols._t) for i in uaux]
+        uaux_zero = dict((i, 0) for i in uaux + uauxdot)
 
-        It also finds any non-state dynamicsymbols and computes the jacobian of
-        the "forcing" vector with respect to them. This is the "f_lin_B"
-        matrix; if this is empty, an empty matrix is created.
+        # Checking for dynamic symbols outside the dynamic differential
+        # equations; throws error if there is.
+        insyms = set(q + self._qdot + u + self._udot + uaux + uauxdot)
+        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
+                self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
+            raise ValueError('Cannot have dynamicsymbols outside dynamic \
+                             forcing vector.')
 
-        Consider the following:
-        If our equations are: [M]qudot = f, where [M] is the full mass matrix,
-        qudot is a vector of the deriatives of the coordinates and speeds, and
-        f in the full forcing vector, the linearization process is as follows:
-        [M]qudot = [f_lin_A]qu + [f_lin_B]y, where qu is the state vector,
-        f_lin_A is the jacobian of the full forcing vector with respect to the
-        state vector, f_lin_B is the jacobian of the full forcing vector with
-        respect to any non-speed/coordinate dynamicsymbols which show up in the
-        full forcing vector, and y is a vector of those dynamic symbols (each
-        column in f_lin_B corresponds to a row of the y vector, each of which
-        is a non-speed/coordinate dynamicsymbol).
+        # Find all other dynamic symbols, forming the forcing vector r.
+        # Sort r to make it canonical.
+        r = list(self._find_dynamicsymbols(self._f_d.subs(uaux_zero), insyms))
+        r.sort(key=default_sort_key)
 
-        To get the traditional state-space A and B matrix, you need to multiply
-        the f_lin_A and f_lin_B matrices by the inverse of the mass matrix.
-        Caution needs to be taken when inverting large symbolic matrices;
-        substituting in numerical values before inverting will work better.
+        # Check for any derivatives of variables in r that are also found in r.
+        for i in r:
+            if diff(i, dynamicsymbols._t) in r:
+                raise ValueError('Cannot have derivatives of specified \
+                                 quantities when linearizing forcing terms.')
+        return Linearizer(f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, q_i, q_d,
+                u_i, u_d, r)
 
-        A tuple of (f_lin_A, f_lin_B, other_dynamicsymbols) is returned.
+    def linearize(self, **kwargs):
+        """ Linearize the equations of motion about a symbolic operating point.
 
-        """
+        If kwarg A_and_B is False (default), returns M, A, B, r for the
+        linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
+
+        If kwarg A_and_B is True, returns A, B, r for the linearized form
+        dx = A*x + B*r, where x = [q_ind, u_ind]^T. Note that this is
+        computationally intensive if there are many symbolic parameters. For
+        this reason, it may be more desirable to use the default A_and_B=False,
+        returning M, A, and B. Values may then be substituted in to these
+        matrices, and the state space form found as
+        A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
+
+        In both cases, r is found as all dynamicsymbols in the equations of
+        motion that are not part of q, u, q', or u'. They are sorted in
+        canonical form.
+
+        The operating points may be also entered using the `op_point` kwarg.
+        This takes a dictionary of {symbol: value}, or a an iterable of such
+        dictionaries. The values may be numberic or symbolic. The more values
+        you can specify beforehand, the faster this computation will run.
+
+        As part of the deprecation cycle, the new method will not be used unless
+        the kwarg `new_method` is set to True. If the kwarg is missing, or set
+        to false, the old linearization method will be used. After next release
+        the need for this kwarg will be removed.
+
+        For more documentation, please see the `Linearizer` class."""
+
+        if 'new_method' not in kwargs or not kwargs['new_method']:
+            # User is still using old code.
+            SymPyDeprecationWarning("The linearize class method has changed " +
+                    "to a new interface, the old method is deprecated. To " +
+                    "use the new method, set the kwarg `new_method=True`. " +
+                    "For more information, read the docstring " +
+                    "of `linearize`.").warn()
+            return self._old_linearize()
+        # Remove the new method flag, before passing kwargs to linearize
+        kwargs.pop('new_method')
+        linearizer = self.to_linearizer()
+        result = linearizer.linearize(**kwargs)
+        return result + (linearizer.r,)
+
+    def _old_linearize(self):
+        """Old method to linearize the equations of motion. Returns a tuple of
+        (f_lin_A, f_lin_B, y) for forming [M]qudot = [f_lin_A]qu + [f_lin_B]y.
+
+        Deprecated in favor of new method using Linearizer class. Please change
+        your code to use the new `linearize` method."""
 
         if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
@@ -771,6 +818,54 @@ class KanesMethod(object):
         else:
             f_lin_B = Matrix([])
         return (f_lin_A, f_lin_B, Matrix(other_dyns))
+
+    def kanes_equations(self, FL, BL):
+        """ Method to form Kane's equations, Fr + Fr* = 0.
+
+        Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
+        present (say, s auxiliary speeds, o generalized speeds, and m motion
+        constraints) the length of the returned vectors will be o - m + s in
+        length. The first o - m equations will be the constrained Kane's
+        equations, then the s auxiliary Kane's equations. These auxiliary
+        equations can be accessed with the auxiliary_eqs().
+
+        Parameters
+        ==========
+
+        FL : list
+            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+            tuples which represent the force at a point or torque on a frame.
+        BL : list
+            A list of all RigidBody's and Particle's in the system.
+
+        """
+
+        if (self._q is None) or (self._u is None):
+            raise ValueError('Speeds and coordinates must be supplied first.')
+        if (self._k_kqdot is None):
+            raise __KDEqError
+
+
+        fr = self._form_fr(FL)
+        frstar = self._form_frstar(BL)
+        if self._uaux != []:
+            if self._udep == []:
+                km = KanesMethod(self._inertial, self._q, self._uaux,
+                             u_auxiliary=self._uaux)
+            else:
+                km = KanesMethod(self._inertial, self._q, self._uaux,
+                u_auxiliary=self._uaux, u_dependent=self._udep,
+                velocity_constraints=(self._k_nh * Matrix(self._u) + self._f_nh))
+            km._qdot_u_map = self._qdot_u_map
+            self._km = km
+            fraux = km._form_fr(FL)
+            frstaraux = km._form_frstar(BL)
+            self._aux_eq = fraux + frstaraux
+            self._fr = fr.col_join(fraux)
+            self._frstar = frstar.col_join(frstaraux)
+            return (self._fr, self._frstar)
+        else:
+            return (fr, frstar)
 
     def rhs(self, inv_method=None):
         """ Returns the system's equations of motion in first order form.
