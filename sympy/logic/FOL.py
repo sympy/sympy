@@ -9,6 +9,7 @@ from sympy.core import Symbol
 from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import (BooleanFunction, And, Or, Not,
     eliminate_implications)
+from sympy.utilities.iterables import numbered_symbols
 
 
 class FOL(BooleanFunction):
@@ -365,3 +366,48 @@ def _to_pnf(expr):
         return expr.func(expr.vars, _to_pnf(expr.expr))
 
     raise ValueError()
+
+
+def to_snf(expr):
+    """
+    Converts the given FOL expression into Skolem Normal Form
+
+    Examples
+    ========
+
+    >>> from sympy.logic.FOL import to_snf, Predicate, ForAll, Exists
+    >>> from sympy.abc import X, Y
+    >>> P = Predicate('P')
+    >>> R = Predicate('R')
+    >>> to_snf(ForAll(X, P(X) | Exists(Y, R(X, Y))))
+    ForAll((X,), Or(P(X), R(X, f0(X))))
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Skolem_normal_form
+    """
+
+    expr = to_pnf(expr)
+    var_list = []
+
+    while isinstance(expr, Quantifier):
+        skolemFunc = numbered_symbols('f', Function)
+
+        if isinstance(expr, ForAll):
+            var_list.extend(expr.vars)
+            expr = expr.expr
+
+        elif isinstance(expr, Exists):
+            if var_list:
+                d = {}
+                for var in expr.vars:
+                    d[var] = next(skolemFunc)(*var_list)
+                expr = expr.expr.subs(d)
+            else:
+                expr = expr.expr
+
+        else:
+            raise ValueError()
+
+    return ForAll(var_list, expr)
