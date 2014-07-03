@@ -1427,7 +1427,7 @@ class Basic(with_metaclass(ManagedProperties)):
         {x_: b + c}
         """
         expr = sympify(expr)
-        if not isinstance(expr, self.__class__):
+        if expr.__class__ != self.__class__:
             return None
 
         if self == expr:
