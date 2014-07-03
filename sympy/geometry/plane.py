@@ -7,7 +7,7 @@ Plane
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan, Eq, symbols
+from sympy.core import S, C, sympify, Dummy, nan, Eq, symbols, Symbol
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
     sqrt
 from sympy.core.logic import fuzzy_and
@@ -26,8 +26,8 @@ class Plane(GeometryEntity):
     """
     A plane is a flat, two-dimensional surface. A plane is the two-dimensional
     analogue of a point (zero-dimensions), a line (one-dimension) and a solid
-    (three-dimensions).A plane can generally be constructed by two types of
-    inputs.They are three non collinear points and a point and the plane's
+    (three-dimensions). A plane can generally be constructed by two types of
+    inputs. They are three non-collinear points and a point and the plane's
     normal vector.
 
     Attributes
@@ -52,7 +52,7 @@ class Plane(GeometryEntity):
     def __new__(cls, p1, pt1=None, pt2=None, normal_vector=[], **kwargs):
         p1 = Point3D(p1)
         if pt1 is None and pt2 is None and len(normal_vector) == 3:
-            normal_vector = normal_vector
+            pass
         elif pt1 and pt2 is not None and len(normal_vector) == 0:
             pt1, pt2 = Point3D(pt1), Point3D(pt2)
             if Point3D.is_collinear(p1, pt1, pt2):
@@ -67,7 +67,7 @@ class Plane(GeometryEntity):
 
     @property
     def p1(self):
-        """The only defining point of the plane.Others can be obtained from the
+        """The only defining point of the plane. Others can be obtained from the
         arbitrary_point method.
 
         See Also
@@ -104,7 +104,7 @@ class Plane(GeometryEntity):
         """
         return self.args[1]
 
-    def equation(self, x='x', y='y', z='z'):
+    def equation(self, x=None, y=None, z=None):
         """The equation of the Plane.
 
         Examples
@@ -119,7 +119,7 @@ class Plane(GeometryEntity):
         6*x + 6*y + 6*z - 42
 
         """
-        x, y, z = symbols("x, y, z")
+        x, y, z = [i if i else Symbol(j, real=True) for i, j in zip((x, y, z), 'xyz')]
         a = Point3D(x, y, z)
         b = self.p1.direction_ratio(a)
         c = self.normal_vector
@@ -196,7 +196,7 @@ class Plane(GeometryEntity):
         For the interaction between 2D and 3D lines(segments, rays), you should
         convert the line to 3D by using this method. For example for finding the
         intersection between a 2D and a 3D line, convert the 2D line to a 3D line
-        by prjecting it on a required plane and then proceed to find the
+        by projecting it on a required plane and then proceed to find the
         intersection between those lines.
 
         Examples
@@ -257,7 +257,7 @@ class Plane(GeometryEntity):
         elif isinstance(l, Plane):
             a = Matrix(l.normal_vector)
             b = Matrix(self.normal_vector)
-            if sum(list(a.cross(b))) == 0:
+            if a.cross(b).is_zero:
                 return True
             else:
                 return False
@@ -544,14 +544,16 @@ class Plane(GeometryEntity):
         a = self.normal_vector
         return Plane(pt, normal_vector=a)
 
-    def perpendicular_plane(self, pt):
+    def perpendicular_plane(self, l, pt):
         """
-        Plane perpendicular to the given plane and passing through the point pt.
+        Plane perpendicular to the given plane and passing through a line in the
+        given plane.
 
         Parameters
         ==========
 
         pt: Point3D
+        l: LinearEntity or LinearEntity3D
 
         Returns
         =======
@@ -561,17 +563,24 @@ class Plane(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Plane, Point3D
+        >>> from sympy import Plane, Point3D, Line3D
         >>> a = Plane(Point3D(1,4,6), normal_vector=[2, 4, 6])
-        >>> a.perpendicular_plane(Point3D(2, 3, 5))
-        Plane(Point3D(2, 3, 5), [2, 8, -6])
+        >>> b = Line3D(Point3D(-27, 27, 0), Point3D(-37, 35, -2))
+        >>> a.perpendicular_plane(b, Point3D(1, 2, 3))
+        Plane(Point3D(1, 2, 3), [-26, -26, 26])
 
         """
-        a = Matrix(self.normal_vector)
-        b, c = pt, self.p1
-        d = Matrix(b.direction_ratio(c))
-        e = list(d.cross(a))
-        return Plane(pt, normal_vector=e)
+        if l in self:
+            a = l
+        else:
+            a = self.projection_line(l)
+        b, c, d = a.p1, a.p2, pt
+        e = Plane(d, b, c)
+        if e.is_perpendicular(self):
+            return e
+        else:
+            return NotImplementedError('The plane passing through the given line'
+                                        'is not perpendicular to the given plane')
 
     def random_point(self, seed=None):
         """ Returns a random point on the Plane.
@@ -716,3 +725,8 @@ class Plane(GeometryEntity):
                 return False
         else:
             return False
+
+    def equal(self, pl):
+        """ Returns True if the planes are mathematically equal otherwise False
+        """
+        return self.equation() == pl.equation()

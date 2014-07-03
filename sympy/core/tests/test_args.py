@@ -3009,7 +3009,7 @@ def test_sympy__geometry__line3d__Ray3D():
 
 def test_sympy__geometry__plane__Plane():
     from sympy.geometry.plane import Plane
-    assert _test_args(Plane((1, 1, 1), (1, 2, 3), (3, 3, 2)))
+    assert _test_args(Plane((1, 1, 1), (-3, 4, -2), (1, 2, 3)))
 
 def test_sympy__geometry__polygon__Polygon():
     from sympy.geometry.polygon import Polygon
