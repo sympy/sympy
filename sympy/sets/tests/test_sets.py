@@ -651,9 +651,9 @@ def test_image_EmptySet():
     assert imageset(x, 2*x, S.EmptySet) == S.EmptySet
 
 
-def test_issue_5724():
-    raises(TypeError, lambda: I in Interval(-oo,oo))
-    raises(TypeError, lambda: Interval(-oo,oo).contains(I))
+def test_issue_5724_7680():
+    assert I not in S.Reals  # issue 7680
+    assert Interval(-oo,oo).contains(I) is False
     raises(TypeError, lambda: I > 2)
 
 
