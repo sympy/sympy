@@ -32,3 +32,8 @@ __all__.extend(medium.__all__)
 from . import utils
 from .utils import refraction_angle, deviation
 __all__.extend(utils.__all__)
+
+
+from . import mirrors
+from .mirrors import Mirror, SphericalMirror, ConcaveMirror, ConvexMirror
+__all__.extend(mirrors.__all__)
