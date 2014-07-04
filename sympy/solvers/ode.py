@@ -548,8 +548,6 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             if eq[i].coeff(diff(func[i],t,ode_order(eq[i], func[i]))).is_negative:
                 eq[i] = -eq[i]
         match['eq'] = eq
-        if len(func) != len(eq) and (func != [None]):
-            raise ValueError("Number of functions given is less than number of equations %s" % func)
         if len(set(order.values()))!=1:
             raise ValueError("It solves only those systems of equations whose orders are equal")
         match['order'] = list(order.values())[0]
