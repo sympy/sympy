@@ -1674,13 +1674,11 @@ def imageset(*args):
     elif set is S.Naturals0:
         n = Dummy(var.name, integer=True, nonnegative=True)
     elif set.intersect(S.Reals) == set:
-        # XXX; I'm being lazy here the other assumptions might still apply
+        # XXX; I'm being lazy here the other
+        # more specific assumptions might still apply
         n = Dummy(var.name, real=True)
     else:
         n = Dummy(var.name)
-
-    # XXX: make sure that the assumptions on the variables don't wear off
-    # while doing various set operations
 
     f = Lambda(n, expr.subs(var, n))
 

@@ -732,25 +732,26 @@ def test_imageset_var_assumptions():
     s1 = imageset(Lambda(n, sin(n)), S.Reals)
     s2 = imageset(lambda n: sin(n), S.Reals)
     s3 = imageset(n, sin(n), S.Reals)
-
-    s4 = imageset(Lambda(n, sin(n)), S.Integers)
-
-    s5 = imageset(Lambda(n, sin(n)), S.Naturals)
-
-    s6 = imageset(Lambda(n, sin(n)), S.Naturals0)
-
-    s7 = imageset(Lambda(n, sin(n)), Interval(-10, oo))
-
     assert s1.lamda.variables[0].is_real is True
     assert s2.lamda.variables[0].is_real is True
     assert s3.lamda.variables[0].is_real is True
 
+    s4 = imageset(Lambda(n, sin(n)), S.Integers)
     assert s4.lamda.variables[0].is_integer is True
 
+    s5 = imageset(Lambda(n, sin(n)), S.Naturals)
     assert s5.lamda.variables[0].is_integer is True \
             and s5.lamda.variables[0].is_positive is True
 
+    s6 = imageset(Lambda(n, sin(n)), S.Naturals0)
     assert s6.lamda.variables[0].is_integer is True \
             and s6.lamda.variables[0].is_nonnegative is True
 
+    s7 = imageset(Lambda(n, sin(n)), Interval(-10, oo))
     assert s7.lamda.variables[0].is_real is True
+
+    s8 = imageset(Lambda(n, 2*n), S.Integers).intersect(
+        imageset(Lambda(n, 3*n), S.Integers))
+    assert s8.lamda.variables[0].is_integer is True
+
+
