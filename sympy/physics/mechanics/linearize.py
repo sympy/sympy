@@ -74,10 +74,15 @@ class Linearizer(object):
         self._qd = self.q.diff(dynamicsymbols._t)
         self._ud = self.u.diff(dynamicsymbols._t)
 
-        # Calculates here only need to be run once:
+        self._setup_done = False
+
+    def _setup(self):
+        # Calculations here only need to be run once. They are moved out of
+        # the __init__ method to increase the speed of Linearizer creation.
         self._form_permutation_matrices()
         self._form_block_matrices()
         self._form_coefficient_matrices()
+        self._setup_done = True
 
     def _form_permutation_matrices(self):
         """Form the permutation matrices Pq and Pu."""
@@ -231,6 +236,10 @@ class Linearizer(object):
         A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
         P = Linearizer.perm_mat.
         """
+
+        # Run the setup if needed:
+        if not self._setup_done:
+            self._setup()
 
         # Compose dict of operating conditions
         if isinstance(op_point, dict):

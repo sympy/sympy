@@ -545,15 +545,13 @@ class KanesMethod(object):
             f_a = Matrix([])
         # Dicts to sub to zero, for splitting up expressions
         u_zero = dict((i, 0) for i in self._u)
-        ud_zero = dict((i, 0) for i in self._udot)
         qd_zero = dict((i, 0) for i in self._qdot)
-        qd_u_zero = dict((i, 0) for i in self._qdot + self._u)
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = self._f_k.subs(u_zero) + self._k_kqdot*Matrix(self._qdot)
         f_1 = self._f_k.subs(qd_zero) + self._k_ku*Matrix(self._u)
         # Break the dynamic differential eqs into f_2 and f_3
-        f_2 = msubs(self._frstar, qd_u_zero)
-        f_3 = self._frstar.subs(ud_zero) + self._fr
+        f_2 = -self._k_d * Matrix(self._udot)
+        f_3 = -self._f_d
 
         # Get the required vector components
         q = self._q
