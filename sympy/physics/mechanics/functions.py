@@ -8,7 +8,8 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Symbol, Derivative, Dummy
+from sympy import sympify, Matrix, Symbol, Derivative, Dummy, Wild, sin, cos,\
+        tan, simplify, Mul
 from sympy.core.basic import S
 
 __all__ = ['inertia',
@@ -22,7 +23,8 @@ __all__ = ['inertia',
            'mprint',
            'msprint',
            'mpprint',
-           'mlatex']
+           'mlatex',
+           'msubs']
 
 warnings.simplefilter("always", SymPyDeprecationWarning)
 
@@ -414,39 +416,113 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def _mat_inv_mul(A, B):
-    """
-    Computes A^-1 * B symbolically w/ substitution, where B is not
-    necessarily a vector, but can be a matrix.
+def msubs(expr, sub_dict, smart=False):
+    """A custom subs for use on expressions derived in physics.mechanics.
 
-    """
+    Traverses the expression tree once, performing the subs found in sub_dict.
+    Terms inside `Derivative` expressions are ignored:
 
-    r1, c1 = A.shape
-    r2, c2 = B.shape
-    temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j) + str(r1 * i)))
-    temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j) + str(r2 * i)))
-    for i in range(len(temp1)):
-        if A[i] == 0:
-            temp1[i] = 0
-    for i in range(len(temp2)):
-        if B[i] == 0:
-            temp2[i] = 0
-    temp3 = []
-    for i in range(c2):
-        temp3.append(temp1.LDLsolve(temp2[:, i]))
-    temp3 = Matrix([i.T for i in temp3]).T
-    return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
+    >>> x = dynamicsymbols('x')
+    >>> msubs(x.diff() + x, {x: 1})
+    Derivative(x, t) + 1
+
+    If smart=True, also checks for conditions that may result in `nan`, but
+    if simplified would yield a valid expression. For example:
+
+    >>> (sin(a)/tan(a)).subs(a, 0)
+    nan
+    >>> msubs(sin(a)/tan(a), {a: 0}, smart=True)
+    1
+
+    It does this by first replacing all `tan` with `sin/cos`. Then each node
+    is traversed. If the node is a fraction, subs is first evaluated on the
+    denominator. If this results in 0, simplification of the entire fraction
+    is attempted. Using this selective simplification, only subexpressions
+    that result in 1/0 are targeted, resulting in faster performance."""
+
+    if smart:
+        func = _smart_subs
+    else:
+        func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
+    if isinstance(expr, Matrix):
+        return expr.applyfunc(lambda x: func(x, sub_dict))
+    else:
+        return func(expr, sub_dict)
 
 
-def _subs_keep_derivs(expr, sub_dict):
-    """ Performs subs exactly as subs normally would be,
-    but doesn't sub in expressions inside Derivatives. """
+def _crawl(expr, func, *args, **kwargs):
+    """Crawl the expression tree, and apply func to every node."""
+    val = func(expr, *args, **kwargs)
+    if val is not None:
+        return val
+    new_args = (_crawl(arg, func, *args, **kwargs) for arg in expr.args)
+    return expr.func(*new_args)
 
-    ds = expr.atoms(Derivative)
-    gs = [Dummy() for d in ds]
-    items = sub_dict.items()
-    deriv_dict = dict((i, j) for (i, j) in items if i.is_Derivative)
-    sub_dict = dict((i, j) for (i, j) in items if not i.is_Derivative)
-    dict_to = dict(zip(ds, gs))
-    dict_from = dict(zip(gs, ds))
-    return expr.subs(deriv_dict).subs(dict_to).subs(sub_dict).subs(dict_from)
+
+def _sub_func(expr, sub_dict):
+    """Perform direct matching substitution, ignoring derivatives."""
+    if expr in sub_dict:
+        return sub_dict[expr]
+    elif not expr.args or expr.is_Derivative:
+        return expr
+
+
+def _tan_repl_func(expr):
+    """Replace tan with sin/tan."""
+    if isinstance(expr, tan):
+        return sin(*expr.args)/cos(*expr.args)
+    elif not expr.args or expr.is_Derivative:
+        return expr
+
+
+def _smart_subs(expr, sub_dict):
+    """Performs subs, checking for conditions that may result in `nan` or 
+    `oo`, and attempts to simplify them out.
+
+    The expression tree is traversed twice, and the following steps are
+    performed on each expression node:
+    - First traverse: 
+        Replace all `tan` with `sin/cos`.
+    - Second traverse:
+        If node is a fraction, check if the denominator evaluates to 0.
+        If so, attempt to simplify it out. Then if node is in sub_dict,
+        sub in the corresponding value."""
+    expr = _crawl(expr, _tan_repl_func)
+    def _recurser(expr, sub_dict):
+        # Decompose the expression into num, den
+        num, den = _fraction_decomp(expr)
+        if den != 1:
+            # If there is a non trivial denominator, we need to handle it
+            denom_subbed = _recurser(den, sub_dict)
+            if denom_subbed.evalf() == 0:
+                # If denom is 0 after this, attempt to simplify the bad expr
+                expr = simplify(expr)
+            else:
+                # Expression won't result in nan, find numerator
+                num_subbed = _recurser(num, sub_dict)
+                return num_subbed/denom_subbed
+        # We have to crawl the tree manually, because `expr` may have been
+        # modified in the simplify step. First, perform subs as normal:
+        val = _sub_func(expr, sub_dict)
+        if val is not None:
+            return val
+        new_args = (_recurser(arg, sub_dict) for arg in expr.args)
+        return expr.func(*new_args)
+
+
+def _fraction_decomp(expr):
+    """Return num, den such that expr = num/den"""
+    if not isinstance(expr, Mul):
+        return expr, 1
+    num = []
+    den = []
+    for a in expr.args:
+        if a.is_Pow and a.args[1] == -1:
+            den.append(1/a)
+    else:
+        num.append(a)
+    if not den:
+        return expr, 1
+    num = Mul(*num)
+    den = Mul(*den)
+    return num, den

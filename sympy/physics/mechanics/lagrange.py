@@ -4,7 +4,6 @@ __all__ = ['LagrangesMethod']
 
 from sympy import diff, zeros, Matrix, eye, sympify, Symbol
 from sympy.physics.vector import (dynamicsymbols, ReferenceFrame, Point)
-from sympy.physics.mechanics.functions import _mat_inv_mul
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 import warnings
 
@@ -342,8 +341,7 @@ class LagrangesMethod(object):
             inv_method = kwargs['method']
 
         if inv_method is None:
-            self._rhs = _mat_inv_mul(self.mass_matrix_full,
-                                          self.forcing_full)
+            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
         else:
             self._rhs = (self.mass_matrix_full.inv(inv_method,
                          try_block_diag=True) * self.forcing_full)

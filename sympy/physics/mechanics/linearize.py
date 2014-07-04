@@ -5,7 +5,7 @@ __all__ = ['Linearizer']
 from sympy import Matrix, eye, zeros
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import _subs_keep_derivs
+from sympy.physics.mechanics.functions import msubs
 import collections
 
 
@@ -279,7 +279,7 @@ class Linearizer(object):
                 M = col1
         else:
             M = col2
-        M_eq = _subs_keep_derivs(M, op_point_dict)
+        M_eq = msubs(M, op_point_dict)
 
         # Build up state coefficient matrix A
         #     |(A_qq + A_qu*C_1)*C_0       A_qu*C_2|
@@ -332,14 +332,14 @@ class Linearizer(object):
                 Amat = col1
         else:
             Amat = col2
-        Amat_eq = _subs_keep_derivs(Amat, op_point_dict)
+        Amat_eq = msubs(Amat, op_point_dict)
 
         # Build up the B matrix if there are forcing variables
         #     |0_(n + m)xs|
         # B = |B_u        |
         if s != 0 and o != m:
             Bmat = zeros(n + m, s).col_join(B_u)
-            Bmat_eq = _subs_keep_derivs(Bmat, op_point_dict)
+            Bmat_eq = msubs(Bmat, op_point_dict)
         else:
             Bmat_eq = Matrix()
 
