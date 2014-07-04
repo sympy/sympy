@@ -698,6 +698,9 @@ class UndefinedFunction(FunctionClass):
         ret.__module__ = None
         return ret
 
+    def __instancecheck__(cls, instance):
+        return type(instance) == cls
+
 UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
                                          (s.class_key() == o.class_key()))
 
