@@ -2731,7 +2731,7 @@ class Expr(Basic, EvalfMixin):
             return s.subs(d, exp(logw))
 
         o = s.getO()
-        terms = sorted(Add.make_args(s.removeO()), cmp=lambda x, y: int(x.as_coeff_exponent(d)[1] - y.as_coeff_exponent(d)[1]))
+        terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(d)[1]))
         s = S.Zero
         gotO = False
 
