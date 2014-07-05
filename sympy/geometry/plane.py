@@ -212,14 +212,14 @@ class Plane(GeometryEntity):
         Line3D(Point3D(4/3, 4/3, 4/3), Point3D(5/3, 5/3, 5/3))
 
         """
-        if isinstance(l, Line) or isinstance(l, Line3D):
-            a, b = self.projection(l.p1), self.projection(l.p2)
+        if not isinstance(l, (Line, Line3D, Ray, Ray3D, Segment, Segment3D)):
+            raise NotImplementedError('Enter a linear entity only')
+        a, b = self.projection(l.p1), self.projection(l.p2)
+        if isinstance(l, (Line, Line3D)):
             return Line3D(a, b)
-        if isinstance(l, Ray) or isinstance(l, Ray3D):
-            a, b = self.projection(l.p1), self.projection(l.p2)
+        if isinstance(l, (Ray, Ray3D)):
             return Ray3D(a, b)
-        if isinstance(l, Segment) or isinstance(l, Segment3D):
-            a, b = self.projection(l.p1), self.projection(l.p2)
+        if isinstance(l, (Segment, Segment3D)):
             return Segment3D(a, b)
 
     def is_parallel(self, l):
@@ -289,7 +289,7 @@ class Plane(GeometryEntity):
         if isinstance(l, LinearEntity3D):
             a = Matrix(l.direction_ratio)
             b = Matrix(self.normal_vector)
-            if sum(list(a.cross(b))) == 0:
+            if a.cross(b).is_zero:
                 return True
             else:
                 return False
