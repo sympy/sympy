@@ -291,8 +291,8 @@ class Vector(Expr):
             tempi = system.i
             tempj = system.j
             tempk = system.k
-            tempm = [[tempi, tempj, tempk], \
-                     [self & tempi, self & tempj, self & tempk], \
+            tempm = [[tempi, tempj, tempk],
+                     [self & tempi, self & tempj, self & tempk],
                      [vect & tempi, vect & tempj, vect & tempk]]
             outvec += _det(tempm)
 
@@ -397,7 +397,7 @@ class BaseVector(Vector, AtomicExpr):
         if not isinstance(system, CoordSysCartesian):
             raise TypeError("system should be a CoordSysCartesian")
         #Initialize an object
-        obj = super(BaseVector, cls).__new__(cls, S(index), \
+        obj = super(BaseVector, cls).__new__(cls, S(index),
                                              system)
         #The _id is used for equating purposes, and for hashing
         obj._components = {obj : S(1)}
@@ -536,7 +536,7 @@ class VectorMul(Vector, Mul):
             newargs = [VectorMul(measure_number, x) for x in vect.args]
             return VectorAdd(*newargs)
 
-        obj = super(VectorMul, cls).__new__(cls, measure_number, \
+        obj = super(VectorMul, cls).__new__(cls, measure_number,
                                             vect._base_vect, **options)
         if isinstance(obj, Add):
             return VectorAdd(*obj.args)

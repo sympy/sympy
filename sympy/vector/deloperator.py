@@ -46,7 +46,7 @@ class Del(Basic):
 
         """
 
-        scalar_field = express(scalar_field, self.system, \
+        scalar_field = express(scalar_field, self.system,
                                variables = True)
         vx = diff(scalar_field, self._x)
         vy = diff(scalar_field, self._y)

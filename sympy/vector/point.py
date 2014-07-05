@@ -145,7 +145,7 @@ class Point(Basic):
         #Determine the position vector
         pos_vect = self.position_wrt(coordinate_system.origin)
         #Express it in the given coordinate system
-        pos_vect = trigsimp(express(pos_vect, coordinate_system, \
+        pos_vect = trigsimp(express(pos_vect, coordinate_system,
                                     variables = True))
         coords = []
         for vect in coordinate_system.base_vectors():

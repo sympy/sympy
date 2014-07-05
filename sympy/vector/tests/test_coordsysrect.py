@@ -108,8 +108,8 @@ def test_vector():
 
     #Test to_matrix
     v1 = a*N.i + b*N.j + c*N.k
-    assert v1.to_matrix(A) == Matrix([[ a*cos(q1) + b*sin(q1)], \
-                                      [-a*sin(q1) + b*cos(q1)], \
+    assert v1.to_matrix(A) == Matrix([[ a*cos(q1) + b*sin(q1)],
+                                      [-a*sin(q1) + b*cos(q1)],
                                       [                     c]])
 
     #Test dot
