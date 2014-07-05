@@ -3,7 +3,8 @@ from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express, _path
 from sympy.simplify import trigsimp
-from sympy import Symbol
+from sympy import Dummy
+from sympy.core.cache import cacheit
 
 
 class Point(Basic):
@@ -19,7 +20,14 @@ class Point(Basic):
            parent_point is not None:
             raise TypeError("parent_point should be a Point instance")
         #Create an object
-        obj = super(Point, cls).__new__(cls, Symbol(name))
+        if parent_point is None:
+            arg_parent = Dummy('default')
+        else:
+            arg_parent = parent_point
+        #All points that are defined as 'roots' are unequal.
+        #Pointss defined at same position wrt the same
+        #'parent' are equal, irrespective of name.
+        obj = super(Point, cls).__new__(cls, position, arg_parent)
         #Decide the object parameters
         obj._name = name
         obj._pos = position
@@ -32,10 +40,11 @@ class Point(Basic):
         #Return object
         return obj
 
+    @cacheit
     def position_wrt(self, other):
         """
-        Returns the position of this Point with respect to another
-        Point/CoordSysCartesian.
+        Returns the position vector of this Point with respect to
+        another Point/CoordSysCartesian.
 
         Parameters
         ==========
@@ -85,6 +94,8 @@ class Point(Basic):
         """
         Returns a new Point located at the given position wrt this
         Point.
+        Thus, the position vector of the new Point wrt this one will
+        be equal to the given 'position' parameter.
 
         Parameters
         ==========
@@ -107,10 +118,10 @@ class Point(Basic):
         """
         return Point(name, position, self)
 
-    def express_coordinates(self, coordinate_system, simplify=False):
+    def express_coordinates(self, coordinate_system):
         """
-        Returns the Cartesian coordinates of this point wrt the origin
-        of the given CoordSysCartesian instance.
+        Returns the Cartesian/rectangular coordinates of this point
+        wrt the origin of the given CoordSysCartesian instance.
 
         Parameters
         ==========
@@ -118,10 +129,6 @@ class Point(Basic):
         coordinate_system : CoordSysCartesian
             The coordinate system to express the coordinates of this
             Point in.
-
-        simplify : Boolean
-            If simplify is True, the coordinates are simplified
-            trigonometrically before returning.
 
         Examples
         ========
@@ -135,10 +142,11 @@ class Point(Basic):
 
         """
 
+        #Determine the position vector
         pos_vect = self.position_wrt(coordinate_system.origin)
-        pos_vect = express(pos_vect, coordinate_system, variables = True)
-        if simplify:
-            pos_vect = trigsimp(pos_vect)
+        #Express it in the given coordinate system
+        pos_vect = trigsimp(express(pos_vect, coordinate_system, \
+                                    variables = True))
         coords = []
         for vect in coordinate_system.base_vectors():
             coords.append(pos_vect.dot(vect))

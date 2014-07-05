@@ -20,7 +20,7 @@ def express(expr, system, variables=False):
         The expression to re-express in ReferenceFrame 'frame'
 
     system: CoordSysCartesian
-        The coordinate system to express expr in
+        The coordinate system the expr is to be expressed in
 
     variables : boolean
         Specifies whether to substitute the coordinate variables present
@@ -60,14 +60,14 @@ def express(expr, system, variables=False):
             system_list = set(system_list)
             subs_dict = {}
             for f in system_list:
-                subs_dict.update(f.variable_map(system))
+                subs_dict.update(f.scalar_map(system))
             expr = expr.subs(subs_dict)
         #Re-express in this frame
         outvec = Vector.zero
         parts = expr.separate()
         for x in parts:
             if x != system:
-                temp = system.dcm(x) * parts[x].to_matrix(x)
+                temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
                 outvec += matrix_to_vector(temp, system)
             else:
                 outvec += parts[x]
@@ -84,7 +84,7 @@ def express(expr, system, variables=False):
                     system_set.add(x.system)
             subs_dict = {}
             for f in system_set:
-                subs_dict.update(f.variable_map(system))
+                subs_dict.update(f.scalar_map(system))
             return expr.subs(subs_dict)
         return expr
 
@@ -110,7 +110,7 @@ def matrix_to_vector(matrix, system):
     ========
 
     >>> from sympy import ImmutableMatrix as Matrix
-    >>> m = Matrix([[1], [2], [3]])
+    >>> m = Matrix([1, 2, 3])
     >>> from sympy.vector import CoordSysCartesian, matrix_to_vector
     >>> C = CoordSysCartesian('C')
     >>> v = matrix_to_vector(m, C)

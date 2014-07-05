@@ -24,12 +24,12 @@ def test_coordinate_vars():
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)
-    assert A.variable_map(A) == {A.x: A.x, A.y: A.y, A.z: A.z}
+    assert A.scalar_map(A) == {A.x: A.x, A.y: A.y, A.z: A.z}
     assert A.x.system == A
     B = A.orient_new('B', 'Axis', [q, A.k])
-    assert B.variable_map(A) == {B.z: A.z, B.y: -A.x*sin(q) + A.y*cos(q),
+    assert B.scalar_map(A) == {B.z: A.z, B.y: -A.x*sin(q) + A.y*cos(q),
                                  B.x: A.x*cos(q) + A.y*sin(q)}
-    assert A.variable_map(B) == {A.x: B.x*cos(q) - B.y*sin(q),
+    assert A.scalar_map(B) == {A.x: B.x*cos(q) - B.y*sin(q),
                                  A.y: B.x*sin(q) + B.y*cos(q), A.z: B.z}
     assert express(B.x, A, variables=True) == A.x*cos(q) + A.y*sin(q)
     assert express(B.y, A, variables=True) == -A.x*sin(q) + A.y*cos(q)
@@ -49,10 +49,10 @@ def test_coordinate_vars():
                             variables=True)) == \
            B.x*B.i + B.y*B.j + B.z*B.k
     N = B.orient_new('N', 'Axis', [-q, B.k])
-    assert N.variable_map(A) == \
+    assert N.scalar_map(A) == \
            {N.x: A.x, N.z: A.z, N.y: A.y}
     C = A.orient_new('C', 'Axis', [q, A.i + A.j + A.k])
-    mapping = A.variable_map(C)
+    mapping = A.scalar_map(C)
     assert mapping[A.x] == 2*C.x*cos(q)/3 + C.x/3 - \
            2*C.y*sin(q + pi/6)/3 + C.y/3 - 2*C.z*cos(q + pi/3)/3 + C.z/3
     assert mapping[A.y] == -2*C.x*cos(q + pi/3)/3 + \
@@ -61,20 +61,20 @@ def test_coordinate_vars():
            2*C.y*cos(q + pi/3)/3 + C.y/3 + 2*C.z*cos(q)/3 + C.z/3
 
 
-def test_dcm():
+def test_rotation_matrix():
     N = CoordSysCartesian('N')
     A = N.orient_new('A', 'Axis', [q1, N.k])
     B = A.orient_new('B', 'Axis', [q2, A.i])
     C = B.orient_new('C', 'Axis', [q3, B.j])
     D = N.orient_new('D', 'Axis', [q4, N.j])
     E = N.orient_new('E', 'Space', [q1, q2, q3], '123')
-    assert N.dcm(C) == Matrix([
+    assert N.rotation_matrix(C) == Matrix([
         [- sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), - sin(q1) *
         cos(q2), sin(q1) * sin(q2) * cos(q3) + sin(q3) * cos(q1)], \
         [sin(q1) * cos(q3) + sin(q2) * sin(q3) * cos(q1), \
          cos(q1) * cos(q2), sin(q1) * sin(q3) - sin(q2) * cos(q1) * \
          cos(q3)], [- sin(q3) * cos(q2), sin(q2), cos(q2) * cos(q3)]])
-    test_mat = D.dcm(C) - Matrix(
+    test_mat = D.rotation_matrix(C) - Matrix(
         [[cos(q1) * cos(q3) * cos(q4) - sin(q3) * (- sin(q4) * cos(q2) +
         sin(q1) * sin(q2) * cos(q4)), - sin(q2) * sin(q4) - sin(q1) *
             cos(q2) * cos(q4), sin(q3) * cos(q1) * cos(q4) + cos(q3) * \
@@ -88,7 +88,7 @@ def test_dcm():
           sin(q4) * cos(q1) + cos(q3) * (cos(q2) * cos(q4) + \
                                          sin(q1) * sin(q2) * sin(q4))]])
     assert test_mat.expand() == zeros(3, 3)
-    assert E.dcm(N) == Matrix(
+    assert E.rotation_matrix(N) == Matrix(
         [[cos(q2)*cos(q3), sin(q3)*cos(q2), -sin(q2)],
         [sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1), \
          sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2)], \
