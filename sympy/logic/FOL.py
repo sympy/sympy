@@ -7,8 +7,8 @@ from itertools import product
 
 from sympy.core import Symbol
 from sympy.core.compatibility import ordered
-from sympy.logic.boolalg import (BooleanFunction, And, Or, Not,
-    eliminate_implications)
+from sympy.logic.boolalg import (And, BooleanFunction,
+    eliminate_implications, Not, Or)
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -54,8 +54,8 @@ class Applied(FOL):
             ', '.join(str(arg) for arg in self.args))
 
     def __eq__(self, other):
-        if isinstance(other, self.func.__class__):
-            return (self.name, self.args) == (other.name, other.args)
+        if isinstance(other, self.__class__):
+            return (self.func, self.args) == (other.func, other.args)
         else:
             return False
 
@@ -123,13 +123,14 @@ class AppliedFunction(Applied):
 
 class Quantifier(FOL):
 
-    def __init__(self, var, expr):
-        try:
+    def __new__(cls, var, expr, **kwargs):
+        
+        if hasattr(var, '__iter__'):
             var = set(var)
-        except TypeError:
+        else:
             var = set([var])
 
-        if isinstance(expr, self.func):
+        if isinstance(expr, cls):
             v, e = expr.args
             var = var.union(v)
             expr = e
@@ -139,7 +140,13 @@ class Quantifier(FOL):
             if v:
                 raise ValueError("Variable %s is already bound" % tuple(v))
 
-        self._args = (tuple(ordered(var)), expr)
+        var = var.intersection(expr.atoms())
+        if not var:
+            return expr
+
+        obj = super(Quantifier, cls).__new__(cls, var, expr, **kwargs)
+        obj._args = (tuple(ordered(var)), expr)
+        return obj
 
     @property
     def vars(self):
@@ -298,6 +305,43 @@ def _fol_true(expr, model={}):
 
     # PL Operators
     return expr.func(*args)
+
+def standardize(expr):
+    """
+    Rename variables so that each quantifier has its own unique variables
+
+    Examples
+    ========
+
+    >>> from sympy.abc import X, Y
+    >>> from sympy.logic.FOL import Predicate, ForAll, standardize
+    >>> P = Predicate('P')
+    >>> Q = Predicate('Q')
+    >>> standardize(ForAll(X, P(X) >> Q(X)) | ForAll(X, Q(X) >> P(X)))
+    """
+    return _standardize(expr, {})
+
+
+def _standardize(expr, var_set):
+
+    if not isinstance(expr, BooleanFunction):
+        return expr
+
+    if isinstance(expr, Quantifier):
+        d = {}
+        for var in expr.vars:
+            if var in var_set:
+                if not var_set[var]:
+                    var_set[var] = numbered_symbols(var.name)
+                v = next(var_set[var])
+                d[var] = v
+            else:
+                var_set[var] = None
+                d[var] = var
+        e = _standardize(expr.expr, var_set)
+        return expr.func(d.values(), e.subs(d))
+
+    return expr.func(*[_standardize(arg, var_set) for arg in expr.args])
 
 
 def to_pnf(expr):
