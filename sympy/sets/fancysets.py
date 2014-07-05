@@ -250,6 +250,11 @@ class ImageSet(Set):
         from sympy.sets.sets import imageset
         if self.base_set is S.Integers:
             if isinstance(other, ImageSet) and other.base_set is S.Integers:
+                # Reference
+                # =========
+                # Comments on Sets in Computer Algebra Systems,
+                # especially including Inﬁnite Indexed Sets, Richard Fateman
+                # http://www.cs.berkeley.edu/~fateman/papers/sets.pdf
                 f, g = self.lamda.expr, other.lamda.expr
                 n, m = self.lamda.variables[0], other.lamda.variables[0]
 

@@ -841,6 +841,10 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
+        from sympy.assumptions.ask import ask, Q
+        if ask(Q.real(other)) is False:
+            return False
+
         if self.left_open:
             expr = other > self.start
         else:
