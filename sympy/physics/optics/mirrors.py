@@ -124,11 +124,7 @@ class SphericalMirror(Mirror):
         >>> m.focus
         Point3D(1/2, 1, 1)
         """
-        return Point3D(
-            (self._center.x + self._pole.x)/2,
-            (self._center.y + self._pole.y)/2,
-            (self._center.y + self._pole.y)/2
-        )
+        return self._pole.midpoint()
 
 
 class ConcaveMirror(SphericalMirror):
