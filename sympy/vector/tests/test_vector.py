@@ -35,7 +35,9 @@ def test_vector():
     assert k != i
     assert i - i == Vector.zero
     assert i + Vector.zero == i
+    assert i - Vector.zero == i
     assert Vector.zero != 0
+    assert -Vector.zero == Vector.zero
 
     v1 = a*i + b*j + c*k
     v2 = a**2*i + b**2*j + c**2*k

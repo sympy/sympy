@@ -68,6 +68,8 @@ def test_rotation_matrix():
     C = B.orient_new('C', 'Axis', [q3, B.j])
     D = N.orient_new('D', 'Axis', [q4, N.j])
     E = N.orient_new('E', 'Space', [q1, q2, q3], '123')
+    F = N.orient_new('B', 'Quaternion', [q1, q2, q3, q4])
+    G = N.orient_new('G', 'Body', [q1, q2, q3], '123')
     assert N.rotation_matrix(C) == Matrix([
         [- sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), - sin(q1) *
         cos(q2), sin(q1) * sin(q2) * cos(q3) + sin(q3) * cos(q1)], \
@@ -94,6 +96,19 @@ def test_rotation_matrix():
          sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), sin(q1)*cos(q2)], \
          [sin(q1)*sin(q3) + sin(q2)*cos(q1)*cos(q3), - \
           sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1), cos(q1)*cos(q2)]])
+    assert F.rotation_matrix(N) == Matrix([[
+        q1**2 + q2**2 - q3**2 - q4**2,
+        2*q1*q4 + 2*q2*q3, -2*q1*q3 + 2*q2*q4],[ -2*q1*q4 + 2*q2*q3,
+            q1**2 - q2**2 + q3**2 - q4**2, 2*q1*q2 + 2*q3*q4],
+                                           [2*q1*q3 + 2*q2*q4,
+                                            -2*q1*q2 + 2*q3*q4,
+                                q1**2 - q2**2 - q3**2 + q4**2]])
+    assert G.rotation_matrix(N) == Matrix([[
+        cos(q2)*cos(q3),  sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1),
+        sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3)], [
+            -sin(q3)*cos(q2), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3),
+            sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],[
+                sin(q2), -sin(q1)*cos(q2), cos(q1)*cos(q2)]])
 
 
 def test_vector():
@@ -169,8 +184,10 @@ def test_locatenew_point():
     v = a*A.i + b*A.j + c*A.k
     C = A.locate_new('C', v)
     assert C.origin.position_wrt(A) == \
+           C.position_wrt(A) == \
            C.origin.position_wrt(A.origin) == v
     assert A.origin.position_wrt(C) == \
+           A.position_wrt(C) == \
            A.origin.position_wrt(C.origin) == -v
     assert A.origin.express_coordinates(C) == (-a, -b, -c)
     p = A.origin.locate_new('p', -v)
