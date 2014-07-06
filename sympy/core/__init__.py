@@ -1,8 +1,8 @@
 """Core module. Provides the basic operations needed in sympy.
 """
 
-from .cache import cacheit
 from .sympify import sympify, SympifyError
+from .cache import cacheit
 from .basic import Basic, Atom, C, preorder_traversal
 from .singleton import S
 from .expr import Expr, AtomicExpr
