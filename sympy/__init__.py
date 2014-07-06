@@ -47,7 +47,6 @@ from .integrals import *
 from .tensor import *
 from .parsing import *
 from .calculus import *
-from .vector import *
 # Adds about .04-.05 seconds of import time
 # from combinatorics import *
 # This module is slow to import:
