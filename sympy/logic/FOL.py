@@ -3,12 +3,12 @@ First Order Logic module for SymPy
 """
 
 from __future__ import print_function
-from itertools import product
+from itertools import combinations, product
 
 from sympy.core import Symbol
 from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import (And, BooleanFunction,
-    eliminate_implications, Not, Or)
+    eliminate_implications, Not, Or, true)
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -306,6 +306,7 @@ def _fol_true(expr, model={}):
     # PL Operators
     return expr.func(*args)
 
+
 def standardize(expr):
     """
     Rename variables so that each quantifier has its own unique variables
@@ -313,7 +314,7 @@ def standardize(expr):
     Examples
     ========
 
-    >>> from sympy.abc import X, Y
+    >>> from sympy.abc import X
     >>> from sympy.logic.FOL import Predicate, ForAll, standardize
     >>> P = Predicate('P')
     >>> Q = Predicate('Q')
@@ -358,7 +359,6 @@ def to_pnf(expr):
     >>> H = Predicate('H')
     >>> to_pnf((F(a) | Exists(X, G(X))) >> ForAll(Y, H(Y)))
     ForAll((X, Y), Or(And(Not(F(a)), Not(G(X))), H(Y)))
-
 
     References
     ==========
@@ -455,3 +455,153 @@ def to_snf(expr):
             raise ValueError()
 
     return ForAll(var_list, expr)
+
+
+def mgu(expr1, expr2):
+    """
+    Returns the Most General Unifier of two Predicates if it exists.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import X, Y, Z
+    >>> from sympy.logic.FOL import Predicate, Function, mgu
+    >>> P = Predicate('P')
+    >>> f = Function('f')
+    >>> g = Function('g')
+    >>> mgu(P(f(X), Z), P(Y, 'a'))
+    {Y: f(X), Z: 'a'}
+    >>> mgu(P(f('a'), g(X)), P(Y, Y))
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Unification_%28computer_science%29
+    """
+
+    if not (isinstance(expr1, Applied) and isinstance(expr2, Applied)):
+        return False
+    if expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
+        return False
+
+    subs = {}
+    args1, args2 = list(expr1.args), list(expr2.args)
+
+    while args1 and args2:
+        arg1, arg2 = args1.pop(0), args2.pop(0)
+
+        if arg1 == arg2:
+            continue
+
+        sub = {}
+        if isinstance(arg1, Symbol):
+            if isinstance(arg2, BooleanFunction) and arg1 in arg2.atoms():
+                return False
+            sub[arg1] = arg2
+
+        elif isinstance(arg2, Symbol):
+            if isinstance(arg1, BooleanFunction) and arg2 in arg1.atoms():
+                return False
+            sub[arg2] = arg1
+
+        elif isinstance(arg1, Applied) and isinstance(arg2, Applied):
+            sub = mgu(arg1, arg2)
+            if not sub:
+                return False
+
+        else:
+            return False
+
+        args1 = [arg.subs(sub) for arg in args1]
+        args2 = [arg.subs(sub) for arg in args2]
+        for v, s in sub.items():
+            subs[v] = s
+
+    if subs == {}:
+        return {true: true}
+    return subs
+
+
+def resolve(expr):
+    """
+    Returns the resolution of a FOL formula
+
+    Examples
+    ========
+
+    >>> from sympy.abc import X, Y, Z
+    >>> from sympy.logic.FOL import Predicate, Function, resolve
+    >>> P = Predicate('P')
+    >>> Q = Predicate('Q')
+    >>> f = Function('f')
+    >>> resolve((P(X) | ~Q(f(Z))) & ~P(f('a')) & Q(Y))
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Resolution_%28logic%29
+    """
+
+    clauses = []
+    for clause in expr.args:
+        c = {}
+        if isinstance(clause, AppliedPredicate):
+            c[clause.func] = clause
+        elif isinstance(clause, Not):
+            c[Not(clause.args[0].func)] = clause
+        elif isinstance(clause, (And, Or)):
+            for literal in clause.args:
+                if literal.is_Not:
+                    c[Not(literal.args[0].func)] = literal
+                else:
+                    c[literal.func] = literal
+        else:
+            raise ValueError()
+        clauses.append(c)
+
+    visited = set()
+    while True:
+        temp = []
+        for c1, c2 in combinations(clauses, 2):
+            key = (tuple(c1.values()), tuple(c2.values()))
+            
+            if not key in visited:
+                visited.add(key)
+                t = _resolve(c1, c2)
+                if {} in t:
+                    return False
+                temp.extend(t)
+
+        if not temp:
+            return True
+        clauses.extend(temp)
+
+
+def _resolve(clause1, clause2):
+
+    clauses = []
+    if len(clause1) > len(clause2):
+        clause1, clause2 = clause2, clause1
+
+    for literal in clause1:
+        if Not(literal) in clause2:
+            pred1 = clause1[literal]
+            pred2 = clause2[Not(literal)]
+
+            if pred1.is_Not:
+                pred1 = pred1.args[0]
+            elif pred2.is_Not:
+                pred2 = pred2.args[0]
+            subs = mgu(pred1, pred2)
+
+            if subs:
+                c = dict(list(clause1.items()) + list(clause2.items()))
+                c.pop(literal)
+                c.pop(Not(literal))
+                for pred, literal in c.items():
+                    c[pred] = literal.subs(subs)
+                clauses.append(c)
+
+    return clauses

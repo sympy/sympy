@@ -3,9 +3,9 @@
 from sympy.abc import X, Y, Z
 from sympy.utilities.pytest import raises
 
-from sympy.logic.boolalg import (And, Implies, Or, Xor)
+from sympy.logic.boolalg import (And, Implies, Or, Xor, true)
 from sympy.logic.FOL import (AppliedFunction, AppliedPredicate, Exists,
-    ForAll, Function, Predicate)
+    ForAll, Function, mgu, Predicate)
 
 
 def test_Predicate():
@@ -68,5 +68,13 @@ def test_Exists():
     Exists((X, Y), Exists(Z, A(X, Y) ^ B(Y, Z))).expr == Xor(A(X, Y), B(Y, Z))
 
 
-def test_to_pnf():
-    pass
+def test_mgu():
+    P = Predicate('A')
+    Q = Predicate('B')
+    f = Function('f')
+    g = Function('g')
+    assert mgu(P(X), Q(X)) is False
+    assert mgu(P(X), P(X, Y)) is False
+    assert mgu(P(X), P(X)) == {true: true}
+    assert mgu(P(X, X), P(Y, f(Y))) is False
+    assert mgu(P('a', X, f(g(Z))), P(Z, f(Y), f(Y))) == {X: f(Y), Z: 'a', Y: g('a')}
