@@ -2,8 +2,9 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf
+    conjuncts, to_cnf, true
 from sympy.core.basic import C
+from sympy.core.compatibility import ordered
 from sympy.core.sympify import sympify
 
 
@@ -40,9 +41,11 @@ def literal_symbol(literal):
 def satisfiable(expr, algorithm="dpll2"):
     """
     Check satisfiability of a propositional sentence.
-    Returns a model when it succeeds
+    Returns a model when it succeeds.
+    Returns {true: true} for trivially true expressions.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -50,12 +53,10 @@ def satisfiable(expr, algorithm="dpll2"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
+    >>> satisfiable(True)
+    {True: True}
 
     """
-    if expr is True:
-        return {}
-    if expr is False:
-        return False
     expr = to_cnf(expr)
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
@@ -64,6 +65,30 @@ def satisfiable(expr, algorithm="dpll2"):
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
         return dpll_satisfiable(expr)
     raise NotImplementedError
+
+
+def valid(expr):
+    """
+    Check validity of a propositional sentence.
+    A valid propositional sentence is True under every assignment.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.inference import valid
+    >>> valid(A | ~A)
+    True
+    >>> valid(A | B)
+    False
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Validity
+
+    """
+    return not satisfiable(Not(expr))
 
 
 def pl_true(expr, model={}):
@@ -138,10 +163,40 @@ def pl_true(expr, model={}):
         raise ValueError("Illegal operator in logic expression" + str(expr))
 
 
+def entails(expr, formula_set={}):
+    """
+    Check whether the given expr_set entail an expr.
+    If formula_set is empty then it returns the validity of expr.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import A, B, C
+    >>> from sympy.logic.inference import entails
+    >>> entails(A, [A >> B, B >> C])
+    False
+    >>> entails(C, [A >> B, B >> C, A])
+    True
+    >>> entails(A >> B)
+    False
+    >>> entails(A >> (B >> A))
+    True
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Logical_consequence
+
+    """
+    formula_set = list(formula_set)
+    formula_set.append(Not(expr))
+    return not satisfiable(And(*formula_set))
+
+
 class KB(object):
     """Base class for all knowledge bases"""
     def __init__(self, sentence=None):
-        self.clauses = []
+        self.clauses_ = set()
         if sentence:
             self.tell(sentence)
 
@@ -153,6 +208,10 @@ class KB(object):
 
     def retract(self, sentence):
         raise NotImplementedError
+
+    @property
+    def clauses(self):
+        return list(ordered(self.clauses_))
 
 
 class PropKB(KB):
@@ -176,11 +235,10 @@ class PropKB(KB):
 
         >>> l.tell(y)
         >>> l.clauses
-        [Or(x, y), y]
+        [y, Or(x, y)]
         """
         for c in conjuncts(to_cnf(sentence)):
-            if not c in self.clauses:
-                self.clauses.append(c)
+            self.clauses_.add(c)
 
     def ask(self, query):
         """Checks if the query is true given the set of clauses.
@@ -197,15 +255,7 @@ class PropKB(KB):
         >>> l.ask(y)
         False
         """
-        if len(self.clauses) == 0:
-            return False
-        from sympy.logic.algorithms.dpll import dpll
-        query_conjuncts = self.clauses[:]
-        query_conjuncts.extend(conjuncts(to_cnf(query)))
-        s = set()
-        for q in query_conjuncts:
-            s = s.union(q.atoms(C.Symbol))
-        return bool(dpll(query_conjuncts, list(s), {}))
+        return entails(query, self.clauses_)
 
     def retract(self, sentence):
         """Remove the sentence's clauses from the KB
@@ -228,5 +278,4 @@ class PropKB(KB):
         []
         """
         for c in conjuncts(to_cnf(sentence)):
-            if c in self.clauses:
-                self.clauses.remove(c)
+            self.clauses_.discard(c)
