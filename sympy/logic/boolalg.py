@@ -908,25 +908,71 @@ def distribute_or_over_and(expr):
     return _distribute((expr, Or, And))
 
 
-def _distribute(info):
+def _distribute(info, simplify=True):
     """
     Distributes info[1] over info[2] with respect to info[0].
     """
-    if info[0].func is info[2]:
-        for arg in info[0].args:
-            if arg.func is info[1]:
-                conj = arg
+
+    expr, op1, op2 = info
+    expr = to_nnf(expr, simplify)
+    if is_literal(expr):
+        return expr
+
+    s = [([expr], [])]
+    t = []
+
+    while s:
+        a, b = s.pop()
+
+        while True:
+            if a:
+                clause = a.pop()
+            else:
+                t.append(b)
                 break
-        else:
-            return info[0]
-        rest = info[2](*[a for a in info[0].args if a is not conj])
-        return info[1](*list(map(_distribute,
-            [(info[2](c, rest), info[1], info[2]) for c in conj.args])))
-    elif info[0].func is info[1]:
-        return info[1](*list(map(_distribute,
-            [(x, info[1], info[2]) for x in info[0].args])))
+
+            if isinstance(clause, op1):
+                for arg in clause.args[1:]:
+                    at = a[:]
+                    bt = b[:]
+                    if is_literal(arg):
+                        bt.append(arg)
+                    else:
+                        at.append(arg)
+                    s.append((at, bt))
+
+                arg = clause.args[0]
+                if is_literal(arg):
+                    b.append(arg)
+                else:
+                    a.append(arg)
+
+            elif isinstance(clause, op2):
+                for arg in clause.args:
+                    if is_literal(arg):
+                        b.append(arg)
+                    else:
+                        a.append(arg)
+
+            else:
+                raise ValueError("Illegal operator %s in expr" % clause.func)
+
+    if simplify:
+        clauses = []
+        for clause in t:
+            flag = True
+            literals = set()
+            for literal in clause:
+                if Not(literal) in literals:
+                    flag = False
+                    break
+                else:
+                    literals.add(literal)
+            if flag:
+                clauses.append(op2(*literals))
+        return op1(*clauses)
     else:
-        return info[0]
+        return op1(*[op2(*clause) for clause in t])
 
 
 def to_nnf(expr, simplify=True):
@@ -934,7 +980,7 @@ def to_nnf(expr, simplify=True):
     Converts expr to Negation Normal Form.
     A logical expression is in Negation Normal Form (NNF) if it
     contains only And, Or and Not, and Not is applied only to literals.
-    If simpify is True, the result contains no redundant clauses.
+    If simpify is True, the result contains no trivially True/False clauses.
 
     Examples
     ========
@@ -946,16 +992,18 @@ def to_nnf(expr, simplify=True):
     >>> to_nnf(Equivalent(A >> B, B >> A))
     And(Or(A, And(A, Not(B)), Not(B)), Or(And(B, Not(A)), B, Not(A)))
     """
+    expr = sympify(expr)
     if is_nnf(expr, simplify):
         return expr
     return expr.to_nnf(simplify)
 
 
-def to_cnf(expr, simplify=False):
+def to_cnf(expr, simplify=True):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
-    If simplify is True, the expr is evaluated to its simplest CNF form.
+    If simplify is True, the result contains no trivially True clauses.
+
 
     Examples
     ========
@@ -964,30 +1012,19 @@ def to_cnf(expr, simplify=False):
     >>> from sympy.abc import A, B, D
     >>> to_cnf(~(A | B) | D)
     And(Or(D, Not(A)), Or(D, Not(B)))
-    >>> to_cnf((A | B) & (A | ~A), True)
-    Or(A, B)
-
+    >>> to_cnf((A & B) | (~A & ~B))
+    And(Or(A, Not(B)), Or(B, Not(A)))
+    >>> to_cnf((A & B) | (~A & ~B), False)
+    And(Or(A, Not(A)), Or(A, Not(B)), Or(B, Not(A)), Or(B, Not(B)))
     """
-    expr = sympify(expr)
-    if not isinstance(expr, BooleanFunction):
-        return expr
-
-    if simplify:
-        return simplify_logic(expr, 'cnf', True)
-
-    # Don't convert unless we have to
-    if is_cnf(expr):
-        return expr
-
-    expr = eliminate_implications(expr)
-    return distribute_and_over_or(expr)
+    return _distribute((expr, And, Or), simplify)
 
 
-def to_dnf(expr, simplify=False):
+def to_dnf(expr, simplify=True):
     """
     Convert a propositional logical sentence s to disjunctive normal form.
     That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
-    If simplify is True, the expr is evaluated to its simplest DNF form.
+    If simplify is True, the result contains no trivially False clauses.
 
     Examples
     ========
@@ -996,23 +1033,12 @@ def to_dnf(expr, simplify=False):
     >>> from sympy.abc import A, B, C
     >>> to_dnf(B & (A | C))
     Or(And(A, B), And(B, C))
-    >>> to_dnf((A & B) | (A & ~B) | (B & C) | (~B & C), True)
-    Or(A, C)
-
+    >>> to_dnf((A | ~B) & (A >> B))
+    Or(And(A, B), And(Not(A), Not(B)))
+    >>> to_dnf((A | ~B) & (A >> B), False)
+    Or(And(A, B), And(A, Not(A)), And(B, Not(B)), And(Not(A), Not(B)))
     """
-    expr = sympify(expr)
-    if not isinstance(expr, BooleanFunction):
-        return expr
-
-    if simplify:
-        return simplify_logic(expr, 'dnf', True)
-
-    # Don't convert unless we have to
-    if is_dnf(expr):
-        return expr
-
-    expr = eliminate_implications(expr)
-    return distribute_or_over_and(expr)
+    return _distribute((expr, Or, And), simplify)
 
 
 def is_nnf(expr, simplified=True):
@@ -1020,7 +1046,7 @@ def is_nnf(expr, simplified=True):
     Checks if expr is in Negation Normal Form.
     A logical expression is in Negation Normal Form (NNF) if it
     contains only And, Or and Not, and Not is applied only to literals.
-    If simpified is True, checks if result contains no redundant clauses.
+    If simpified is True, checks if result contains no trivially True/False clauses.
 
     Examples
     ========
@@ -1110,44 +1136,27 @@ def _is_form(expr, function1, function2):
     """
     expr = sympify(expr)
 
-    # Special case of an Atom
-    if expr.is_Atom:
+    # Special case of a literal
+    if is_literal(expr):
         return True
 
     # Special case of a single expression of function2
     if expr.func is function2:
-        for lit in expr.args:
-            if lit.func is Not:
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
+        for arg in expr.args:
+            if not is_literal(arg):
+                return False
         return True
-
-    # Special case of a single negation
-    if expr.func is Not:
-        if not expr.args[0].is_Atom:
-            return False
 
     if expr.func is not function1:
         return False
 
-    for cls in expr.args:
-        if cls.is_Atom:
-            continue
-        if cls.func is Not:
-            if not cls.args[0].is_Atom:
-                return False
-        elif cls.func is not function2:
+    for clause in expr.args:
+        if clause.func is function2:
+            for arg in clause.args:
+                if not is_literal(arg):
+                    return False
+        elif not is_literal(clause):
             return False
-        for lit in cls.args:
-            if lit.func is Not:
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
 
     return True
 

@@ -332,6 +332,7 @@ def test_to_nnf():
     assert to_nnf(true) is true
     assert to_nnf(false) is false
     assert to_nnf(A) == A
+    assert to_nnf(~A) == Not(A)
     assert to_nnf(A | ~A | B) is true
     assert to_nnf(A & ~A & B) is false
     assert to_nnf(A >> B) == ~A | B
@@ -353,11 +354,17 @@ def test_to_nnf():
 
 def test_to_cnf():
 
+    assert to_cnf(A | ~A) is true
+    assert to_cnf(A & ~A) is false
+    assert to_cnf(A | (A & B)) == A & (A | B)
     assert to_cnf(~(B | C)) == And(Not(B), Not(C))
     assert to_cnf((A & B) | C) == And(Or(A, C), Or(B, C))
     assert to_cnf(A >> B) == (~A) | B
     assert to_cnf(A >> (B & C)) == (~A | B) & (~A | C)
-    assert to_cnf(A & (B | C) | ~A & (B | C), True) == B | C
+    assert to_cnf(A & (B | C) | ~A & (B | C)) == \
+            (A | B | C) & (B | C) & (~A | B | C)
+    assert to_cnf((A & ~B) | (A >> B)) == True
+    assert to_cnf((A & ~B) | (A >> B), False) == (~A | A | B) & (~A | ~B | B)
 
     assert to_cnf(Equivalent(A, B)) == And(Or(A, Not(B)), Or(B, Not(A)))
     assert to_cnf(Equivalent(A, B & C)) == \
@@ -368,10 +375,16 @@ def test_to_cnf():
 
 def test_to_dnf():
 
+    assert to_dnf(A | ~A) is true
+    assert to_dnf(A & ~A) is false
+    assert to_dnf(A & (A | B)) == A | (A & B)
     assert to_dnf(~(B | C)) == And(Not(B), Not(C))
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
     assert to_dnf(A >> B) == (~A) | B
     assert to_dnf(A >> (B & C)) == (~A) | (B & C)
+    assert to_dnf((A | B) & (~A | B) & (A | ~B) & (~A & ~B)) == False
+    assert to_dnf((A | B) & (~A | B) & (A | ~B) & (~A & ~B), False) == \
+            (~A & ~B & A) | (~A & ~B & A & B) | (~A & ~B & B)
 
     assert to_dnf(Equivalent(A, B), True) == \
            Or(And(A, B), And(Not(A), Not(B)))
@@ -414,6 +427,8 @@ def test_is_cnf():
     assert is_cnf(x & y & z) is True
     assert is_cnf((x | y) & z) is True
     assert is_cnf((x & y) | z) is False
+    assert is_cnf(x >> y) is False
+    assert is_cnf(((x & z) | y) & z) is False
 
 
 def test_is_dnf():
@@ -423,6 +438,8 @@ def test_is_dnf():
     assert is_dnf(x & y & z) is True
     assert is_dnf((x & y) | z) is True
     assert is_dnf((x | y) & z) is False
+    assert is_dnf(x ^ y) is False
+    assert is_dnf(Equivalent(x, y) | z) is False
 
 
 def test_ITE():
@@ -433,6 +450,8 @@ def test_ITE():
     assert ITE(False, True, False) is false
     assert ITE(False, False, True) is true
     assert isinstance(ITE(A, B, C), ITE)
+    raises(ValueError, lambda:ITE(A, B))
+    assert ITE(A, B, B) == B
 
     A = True
     assert ITE(A, B, C) == B
