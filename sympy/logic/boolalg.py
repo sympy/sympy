@@ -1671,3 +1671,71 @@ def bool_equal(bool1, bool2, info=False):
     if info:
         return mapping
     return True
+
+
+def tseitin_transformation(expr, dummy=True):
+    """
+    Converts any propositional formula into an equisatisfiable CNF
+    form with auxilliary literals using Tseitin Transformation.
+    This is mainly for use by SAT solvers as it prevents the
+    exponential blowup of formula when converted to CNF. To get
+    the CNF of any particular formula use to_cnf function.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Tseitin-Transformation
+    """
+    from sympy.core.symbol import Dummy
+    from sympy.utilities.iterables import numbered_symbols
+
+    if expr.is_Atom:
+        return expr
+
+    expr = eliminate_implications(sympify(expr))
+
+    if is_cnf(expr):
+        return expr
+
+    if dummy:
+        sym_factory = numbered_symbols('s', cls=Dummy)
+    else:
+        sym_factory = numbered_symbols('s')
+
+    s = next(sym_factory)
+    q = [expr]
+    dct = {expr: s}
+    clauses = [s]
+
+    while q:
+        clause = q.pop(0)
+        args = []
+
+        for arg in clause.args:
+            if arg.is_Atom:
+                s = arg
+            else:
+                if arg not in dct:
+                    s = next(sym_factory)
+                    dct[arg] = s
+                    q.append(arg)
+                else:
+                    s = dct[arg]
+
+            args.append(s)
+
+        s = dct[clause]
+
+        if isinstance(clause, Not):
+            clauses.append(Or(Not(s), Not(arg)))
+
+        elif isinstance(clause, And):
+            clauses.extend([Or(Not(s), arg) for arg in args])
+
+        elif isinstance(clause, Or):
+            clauses.append(Or(Not(s), *args))
+
+        else:
+            raise ValueError("Illegal operator " + str(expr))
+
+    return And(*clauses)
