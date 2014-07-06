@@ -353,6 +353,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Mark Shoulson: Enhanced Egyptian fractions
 #. David P. Sanders: Fix to latex printer
 #. John V. Siratt: Fix to documentation
+#. Sarwar Chahal: Fix to documentation
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
