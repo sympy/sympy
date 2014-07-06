@@ -249,7 +249,7 @@ class Set(Basic):
 
         """
         if isinstance(other, Set):
-            return self.intersect(other) == self
+            return self.intersect(other).args == self.args
         else:
             raise ValueError("Unknown argument '%s'" % other)
 
