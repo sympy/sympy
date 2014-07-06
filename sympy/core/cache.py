@@ -272,7 +272,7 @@ def __cacheit_debug(maxsize):
     """cacheit + code to check cache consistency"""
     def func_wrapper(func):
 
-        cfunc = __cacheit(func)
+        cfunc = __cacheit(maxsize)(func)
 
         @wraps(func)
         def wrapper(*args, **kw_args):
