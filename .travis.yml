@@ -2,8 +2,9 @@ language: python
 env:
   matrix:
   - TEST_DOCTESTS="true"
-  - SPLIT="1/2"
-  - SPLIT="2/2"
+  - SPLIT="1/3"
+  - SPLIT="2/3"
+  - SPLIT="3/3"
   global:
     secure: uJycOcgT3Rg9TsU6ID2UMHc56Fh6Q70p1/mFiod8r97g8zER9kWTZ2GVDSRiw1Nfh0Wojcy04PAG3t5m9bwM08YF8qZy1PJkCb/pu7PN8Hzt+6FSBb84gGEXMiv1xuZWSQ0pUuBa1Lfcxuq6m2/eA8aNfgoqnpLgR8zeg/2xhFw=
 python:
