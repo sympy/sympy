@@ -39,15 +39,14 @@ def test_disc_on_an_incline_plane():
 
     # We then create the list of generalized coordinates and constraint
     # equations. The constraint arises due to the disc rolling without slip on
-    # on the inclined path. Also, the constraint is holonomic but we supply the
-    # differentiated holonomic equation as the 'LagrangesMethod' class requires
-    # that. We then invoke the 'LagrangesMethod' class and supply it the
-    # necessary arguments and generate the equations of motion. The'rhs' method
-    # solves for the q_double_dots (i.e. the second derivative with respect to
-    # time  of the generalized coordinates and the lagrange multiplers.
+    # on the inclined path. We then invoke the 'LagrangesMethod' class and
+    # supply it the necessary arguments and generate the equations of motion.
+    # The'rhs' method solves for the q_double_dots (i.e. the second derivative
+    # with respect to time  of the generalized coordinates and the lagrange
+    # multiplers.
     q = [y, theta]
-    coneq = [yd - R * thetad]
-    m = LagrangesMethod(L, q, coneq)
+    hol_coneqs = [y - R * theta]
+    m = LagrangesMethod(L, q, hol_coneqs=hol_coneqs)
     m.form_lagranges_equations()
     rhs = m.rhs()
     rhs.simplify()

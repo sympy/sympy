@@ -9,6 +9,7 @@ from sympy.physics.mechanics.functions import _mat_inv_mul, \
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import filldedent
 import collections
 import warnings
 
@@ -109,12 +110,6 @@ class LagrangesMethod(object):
         q_list : list
             A list of the generalized coordinates
 
-        coneqs : list
-            ** DEPRECATED IN FAVOR OF BELOW **
-            A list of the holonomic and non-holonomic constraint equations.
-            VERY IMPORTANT NOTE- The holonomic constraints must be
-            differentiated with respect to time and then included in coneqs.
-
         hol_coneqs: list
             A list of the holonomic constraint equations
 
@@ -162,6 +157,9 @@ class LagrangesMethod(object):
 
         # Deal with constraint equations
         if coneqs:
+            SymPyDeprecationWarning(filldedent("""The `coneqs` kwarg is
+            deprecated in favor of `hol_coneqs` and `nonhol_coneqs`. Please
+            update your code""")).warn()
             self.coneqs = coneqs
         else:
             mat_build = lambda x: Matrix(x) if x else Matrix()
