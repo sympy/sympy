@@ -8,6 +8,7 @@ from .core import C
 from .singleton import S
 from .expr import Expr
 
+from sympy.core.evalf import PrecisionExhausted
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
 from sympy.core.logic import fuzzy_bool
@@ -217,12 +218,18 @@ class Pow(Expr):
             return Pow(b, e*other)
 
         if e.is_real:
+            if (abs(e) < 2) == True:
+                if (e == -1) == True:
+                    if b.is_negative is False:
+                        return Pow(b, e*other)
+                elif (e == -1) == False:
+                    return Pow(b, e*other)
             if e.is_even:
                 if b.is_real:
                     b = abs(b)
-                elif b.is_real is False and getattr(other, 'q', None) == 2:
+                if getattr(other, 'q', None) == 2 and b.is_real is not None:
                     return Pow(b, e*other)
-            if (b.is_nonnegative or (abs(e) < 1) == True):
+            if b.is_nonnegative:
                 return Pow(b, e*other)
         elif e.is_imaginary:
             # within a distance of radius (from periodic "origins") the
@@ -233,26 +240,25 @@ class Pow(Expr):
             if not ok and other.is_Rational:
                 origin = 2*other.q*radius
                 ok = (p % origin - radius).is_nonpositive
+                if ok:
+                    pass
+            elif ok:
+                pass
             if ok:
                 return Pow(b, e*other)
             # outside that radius if other is 1/2 then the exponents join
             # but the expression has the opposite sign
             if ok is False and getattr(other, 'q', None) == 2:
                 return -Pow(b, e*other)
-        elif getattr(other, 'q', None) == 2 and \
-                e.is_real is False and e.is_imaginary is False:
-                #            -----                       -----
-                #               \____________________________\__
-                #                                               |
-                # XXX e.is_complex gives None for 1 + I :-( so use 2 Falses
-            # for exponents with real and imaginary parts the combining of 1/2
-            # is like this
-            if b.is_positive:
-                return Pow(b, e*other)
-            if b.is_negative:
-                return -Pow(b, e*other)
-            if b.is_positive is False and b.is_negative is False:
-                return Pow(b, e*other)
+        elif e.is_real is False:
+            try:
+                n = C.floor((C.im(e)*C.log(b)/2/S.Pi).evalf(2, strict=True))
+                if n not in [-S.Half, S.Zero, S.Half, S.One]:
+                    assert None
+            except (AssertionError, PrecisionExhausted):
+                n = None
+            if n is not None:
+                return Pow(b, e*other)*C.exp(S.ImaginaryUnit*S.Pi*n)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:

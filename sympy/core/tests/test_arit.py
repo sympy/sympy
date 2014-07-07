@@ -2,8 +2,9 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan
+        sign, im, nan, cbrt
 )
+from sympy.core.evalf import PrecisionExhausted
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
@@ -210,7 +211,31 @@ def test_pow2():
     assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
     e = sqrt((1 + 11*I)**(-2*sqrt(2) + I))
     assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-
+    assert sqrt(x**2) != x
+    assert cbrt(x**3) != x
+    r = symbols('r', real=True)
+    assert sqrt(r**2) == abs(r)
+    assert cbrt(r**3) != r
+    p = symbols('p', positive=True)
+    assert cbrt(p**3) == p
+    # there are also conditions that will make (x**y)**z == +/-x**(y*z);
+    # all checked against wolframalpha
+    # im(n).is_integer != True, other=1/2 -- see Pow._eval_power
+    assert sqrt((1 + I)**(-2*sqrt(2) + I)) == (1 + I)**(-sqrt(2) + I/2)
+    assert sqrt(exp(3 + I)) == exp(S(3)/2 + I/2)
+    # im(n) is not rational, other=1/3
+    assert ((1 + I)**(I*pi/(2*log(sqrt(2)))))**(S(1)/3) == (1 + I)**(I*pi/3/(2*log(sqrt(2))))
+    # im(n).is_integer == True -- see Pow._eval_power
+    assert sqrt(2**(-2 + I)) == 2**(-1 + I/2)
+    # outside radius but other is 1/2 -- see Pow._eval_power
+    assert sqrt((1 + I)**(2*I*pi/log(sqrt(2)))) == -(1 + I)**(I*pi/log(sqrt(2)))
+    # two small arg tests -- see Pow._eval_power
+    assert ((1 + I)**(-I*pi/(2*log(sqrt(2)))))**.3 == (1 + I)**(-I*pi*.3/(2*log(sqrt(2))))
+    assert ((1 + I)**(-I*pi/(2*log(sqrt(2)))))**(1/S(3)) == (1 + I)**(-I*pi/3/(2*log(sqrt(2))))
+    # one large arg test -- see Pow._eval_power
+    assert ((1 + I)**(-12*I*pi/log(sqrt(2))))**(1/S(3)) == (1 + I)**(-12*I*pi/3/log(sqrt(2)))
+    # other
+    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(1+S.Half/2)
 
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)
