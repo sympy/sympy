@@ -1123,7 +1123,10 @@ class SymPyDocTests(object):
         self._reporter.start()
         for f in self._testfiles:
             try:
-                self.test_file(f)
+                # Remove this condition once this file is removed.
+                # See https://github.com/sympy/sympy/issues/7659
+                if f.find('/sympy/physics/gaussopt.py') == -1:
+                    self.test_file(f)
             except KeyboardInterrupt:
                 print(" interrupted by user")
                 self._reporter.finish()
