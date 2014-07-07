@@ -1,5 +1,5 @@
-from printer import Format, xpdf
-from ga import Ga
+from sympy.galgebra.printer import Format, xpdf
+from sympy.galgebra.ga import Ga
 Format()
 g3d = Ga('e*x|y|z')
 A = g3d.mv('A','mv')

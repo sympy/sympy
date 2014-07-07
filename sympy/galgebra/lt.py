@@ -192,6 +192,12 @@ class Lt(object):
         else:
             raise TypeError('Cannot have LT as left argument in Lt __rmul__\n')
 
+    def _repr_latex_(self):
+        latex_str = printer.GaLatexPrinter.latex(self)
+        if r'\begin{align*}' not in latex_str:
+            latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
+        return latex_str
+
     def det(self):  # det(L) defined by L(I) = det(L)I
 
         lt_I = self(self.Ga.i, obj=True)
@@ -627,6 +633,12 @@ class Mlt(object):
             return Mlt(value, self.Ga, nargs)
         else:
             return Mlt(X * self.fvalue, self.Ga, self.nargs)
+
+    def _repr_latex_(self):
+        latex_str = printer.GaLatexPrinter.latex(self)
+        if r'\begin{align*}' not in latex_str:
+            latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
+        return latex_str
 
     def dd(self):
         Mlt.increment_slots(self.nargs + 1, self.Ga)

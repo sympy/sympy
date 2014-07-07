@@ -1,6 +1,6 @@
 from sympy import symbols, sin, cos, latex
-from ga import Ga
-from printer import Format, xpdf
+from sympy.galgebra.ga import Ga
+from sympy.galgebra.printer import Format, xpdf
 
 Format()
 (x, y, z) = xyz = symbols('x,y,z',real=True)
@@ -51,4 +51,4 @@ print r'\f{\mbox{tr}}{\underline{T}} =',T.tr()
 a = m4d.mv('a','vector')
 b = m4d.mv('b','vector')
 print r'a|\f{\overline{T}}{b}-b|\f{\underline{T}}{a} =',((a|T.adj()(b))-(b|T(a))).simplify()
-xpdf(paper=(10,12),debug=True)
+xpdf(paper=(10,12))

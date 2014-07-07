@@ -1,7 +1,7 @@
 import sys
 from sympy import symbols,sin
-from printer import Format,xpdf
-from ga import Ga
+from sympy.galgebra.printer import Format,xpdf
+from sympy.galgebra.ga import Ga
 
 Format()
 X = (r,th,phi) = symbols('r theta phi')

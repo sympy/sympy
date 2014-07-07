@@ -13,6 +13,32 @@ from inspect import getouterframes, currentframe
 import ga
 import mv
 import lt
+import metric
+
+ip_cmds = \
+"""
+$\\DeclareMathOperator{\Tr}{Tr}
+\\DeclareMathOperator{\Adj}{Adj}
+\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}
+\\newcommand{\\lp}{\\left (}
+\\newcommand{\\rp}{\\right )}
+\\newcommand{\\paren}[1]{\\lp {#1} \\rp}
+\\newcommand{\\half}{\\frac{1}{2}}
+\\newcommand{\\llt}{\\left <}
+\\newcommand{\\rgt}{\\right >}
+\\newcommand{\\abs}[1]{\\left |{#1}\\right | }
+\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}
+\\newcommand{\\lbrc}{\\left \\{}
+\\newcommand{\\rbrc}{\\right \\}}
+\\newcommand{\\W}{\\wedge}
+\\newcommand{\\prm}[1]{{#1}'}
+\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}
+\\newcommand{\\R}{\\dagger}
+\\newcommand{\\deriv}[3]{\\bfrac{d^{#3}#1}{d{#2}^{#3}}}
+\\newcommand{\\grade}[1]{\\left < {#1} \\right >}
+\\newcommand{\\f}[2]{{#1}\\lp{#2}\\rp}
+\\newcommand{\\eval}[2]{\\left . {#1} \\right |_{#2}}$
+"""
 
 SYS_CMD = {'linux2': {'rm': 'rm', 'evince': 'evince', 'null': ' > /dev/null', '&': '&'},
            'win32': {'rm': 'del', 'evince': '', 'null': ' > NUL', '&': ''},
@@ -263,6 +289,8 @@ class GaPrinter(StrPrinter):
                       'cosh', 'cot', 'coth', 'exp', 'floor', 'im', 'log', 're',
                       'root', 'sin', 'sinh', 'sqrt', 'sign', 'tan', 'tanh', 'Abs')
 
+    str_flg = True
+
     def _print_Function(self, expr):
         name = expr.func.__name__
 
@@ -274,8 +302,23 @@ class GaPrinter(StrPrinter):
 
     def _print_Derivative(self, expr):
         diff_args = map(self._print, expr.args)
-        xi = ''.join(diff_args[1:])
-        return Eprint.Deriv('D{%s}' % (xi,) + '%s' % (diff_args[0],))
+        xi = []
+        ni = []
+        for x in diff_args[1:]:
+            if x in xi:
+                i = xi.index(x)
+                ni[i] += 1
+            else:
+                xi.append(x)
+                ni.append(1)
+
+        s = 'D'
+        for (x, n) in zip(xi, ni):
+            s += '{' + str(x) + '}'
+            if n > 1:
+                s += '^' + str(n)
+        s += str(diff_args[0])
+        return Eprint.Deriv(s)
 
     def _print_Matrix(self, expr):
         out_str = ostr(list(expr))
@@ -288,8 +331,14 @@ class GaPrinter(StrPrinter):
             #print 'expr.obj =',expr.obj
             return expr.Mv_str()
 
+    def _print_Pdop(self, expr):
+        return expr.Pdop_str()
+
     def _print_Dop(self, expr):
         return expr.Dop_str()
+
+    def _print_Sdop(self, expr):
+        return expr.Sdop_str()
 
     def _print_Lt(self, expr):
         return expr.Lt_str()
@@ -655,7 +704,8 @@ class GaLatexPrinter(LatexPrinter):
 
             if mode == '^':
                 s = s[:-7]
-            if not expr.is_commutative:
+
+            if not expr.is_commutative and mv.Mv.latex_flg:
                 s = '\\boldsymbol{' + s + '}'
 
             return s
@@ -806,8 +856,14 @@ class GaLatexPrinter(LatexPrinter):
             ostr = expr.Mv_latex_str()
             return(ostr)
 
+    def _print_Pdop(self, expr):
+        return expr.Pdop_latex_str()
+
     def _print_Dop(self, expr):
         return expr.Dop_latex_str()
+
+    def _print_Sdop(self, expr):
+        return expr.Sdop_latex_str()
 
     def _print_Lt(self, expr):
         return expr.Lt_latex_str()
@@ -860,7 +916,7 @@ def print_latex(expr, **settings):
     print latex(expr, **settings)
 
 
-def Format(Fmode=True, Dmode=True, ipy=False):
+def Format(Fmode=True, Dmode=True, ipy=False, dop=1):
     """
     Set modes for latex printer -
 
@@ -870,22 +926,31 @@ def Format(Fmode=True, Dmode=True, ipy=False):
 
     and redirects printer output so that latex compiler can capture it.
     """
+
     GaLatexPrinter.Dmode = Dmode
     GaLatexPrinter.Fmode = Fmode
     GaLatexPrinter.ipy = ipy
+    GaLatexPrinter.dop = dop
     if ipy:
-        from IPython.core.display import display, Math
+        from IPython.core.display import display, Math, Latex
+
     GaLatexPrinter.latex_flg = True
     GaLatexPrinter.redirect()
+    if ipy:
+        return Latex(ip_cmds)
     return
 
 
-def xpdf(filename=None, debug=False, paper=(14, 11), crop=False, png=False, prog=False):
+def xpdf(filename=None, paper=(14, 11), crop=False, png=False, prog=False, debug=False):
 
     """
     Post processes LaTeX output (see comments below), adds preamble and
     postscript, generates tex file, inputs file to latex, displays resulting
     pdf file.
+
+    Arg    Value    Result
+    crop   True     Use "pdfcrop" to crop output file (pdfcrop must be installed, linux only)
+    png    True     Use "convert" to produce png output (imagemagick must be installed, linux only)
     """
     if GaLatexPrinter.ipy:
         GaLatexPrinter.restore()
@@ -935,6 +1000,7 @@ def xpdf(filename=None, debug=False, paper=(14, 11), crop=False, png=False, prog
                     lhs = lhs.replace('|', r'\cdot ')
                     lhs = lhs.replace('^', r'\W ')
                     lhs = lhs.replace('*', ' ')
+                    lhs = lhs.replace('rgrad', r'\bar{\boldsymbol{\nabla}} ')
                     lhs = lhs.replace('grad', r'\boldsymbol{\nabla} ')
                     lhs = lhs.replace('<', r'\rfloor ')
                     lhs = lhs.replace('>', r'\lfloor ')

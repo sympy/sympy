@@ -1,6 +1,6 @@
 from sympy import symbols
-from ga import Ga
-from printer import Format, xpdf
+from sympy.galgebra.ga import Ga
+from sympy.galgebra.printer import Format, xpdf
 
 Format()
 

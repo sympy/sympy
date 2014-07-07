@@ -1,6 +1,6 @@
-from printer import Format, xpdf
-from ga import Ga
-from mv import Com
+from sympy.galgebra.printer import Format, xpdf
+from sympy.galgebra.ga import Ga
+from sympy.galgebra.mv import Com
 Format()
 
 (g4d,a,b,c,d) = Ga.build('a b c d')

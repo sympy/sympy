@@ -1,13 +1,17 @@
 #mv.py
 
 import sys
+sys.path.append('./')
 import itertools
 import copy
+import numbers
+import operator
+from compiler.ast import flatten
 from operator import itemgetter, mul, add
 from numpy.linalg import matrix_rank
 from sympy import Symbol, Function, S, expand, Add, Mul, Pow, Basic, \
     sin, cos, sinh, cosh, sqrt, trigsimp, \
-    simplify, diff, Rational
+    simplify, diff, Rational, Expr
 from sympy import N as Nsympy
 import metric
 import printer
@@ -47,6 +51,8 @@ class Mv(object):
 
     ################### Multivector initialization #####################
 
+    fmt = 1
+    latex_flg = False
     restore = False
     init_slots = {'f': (False, 'True if function of coordinates'),
                   'ga': (None, 'Geometric algebra to be used with multivectors'),
@@ -73,14 +79,41 @@ class Mv(object):
 
     @staticmethod
     def Format(mode=1):
+        Mv.latex_flg = True
         Mv.fmt = mode
+        return
+
+    @staticmethod
+    def Mul(A, B, op):
+        if not isinstance(A, Mv):
+            A = B.Ga.mv(A)
+        if not isinstance(B, Mv):
+            B = A.Ga.mv(B)
+
+        if op == '*':
+            return A * B
+        elif op == '^':
+            return A ^ B
+        elif op == '|':
+            return A | B
+        elif op == '<':
+            return A < B
+        elif op == '>':
+            return A > B
+        else:
+            raise ValeError('Operation ' + op + 'not allowed in Mv.Mul!')
         return
 
     def characterise_Mv(self):
         if self.char_Mv:
             return
         obj = self.obj
-        if obj.is_commutative:
+        if isinstance(obj, numbers.Number):
+            self.i_grade = 0
+            self.is_blade_rep = True
+            self.grades = [0]
+            return
+        if  obj.is_commutative:
             self.i_grade = 0
             self.is_blade_rep = True
             self.grades = [0]
@@ -222,7 +255,10 @@ class Mv(object):
                 self.is_blade_rep = x.is_blade_rep
                 self.i_grade = x.i_grade
             else:
-                self.obj = x
+                if isinstance(x, Expr):
+                   self.obj = x
+                else:
+                    self.obj = S(x)
                 self.is_blade_rep = True
                 self.characterise_Mv()
         else:
@@ -253,13 +289,27 @@ class Mv(object):
 
     def __eq__(self, A):
         if not isinstance(A, Mv):
+            if not self.is_scalar():
+                return False
+            if expand(self.obj) == expand(A):
+                return True
+            else:
+                return False
+        if self.is_blade_rep != A.is_blade_rep:
+            self = self.blade_rep()
+            A = A.blade_rep()
+        coefs, bases = metric.linear_expand(self.obj)
+        Acoefs, Abases = metric.linear_expand(A.obj)
+        if len(bases) != len(Abases):
             return False
-        self.obj = expand(self.obj)
-        A.obj = expand(A.obj)
-        if self.obj == A.obj:
-            return True
-        else:
+        if set(bases) != set(Abases):
             return False
+        for base in bases:
+            index = bases.index(base)
+            indexA = Abases.index(base)
+            if expand(coefs[index]) != expand(Acoefs[index]):
+                return False
+        return True
 
     def __neg__(self):
         return Mv(-self.obj, ga=self.Ga)
@@ -273,7 +323,7 @@ class Mv(object):
             raise ValueError('In + operation Mv arguments are not from same geometric algebra')
 
         if isinstance(A, Dop):
-            return A.Add(self.obj, A)
+            return Dop.Add(A, self)
 
         if self.is_blade_rep == A.is_blade_rep:
             return Mv(self.obj + A.obj, ga=self.Ga)
@@ -302,7 +352,7 @@ class Mv(object):
             raise ValueError('In - operation Mv arguments are not from same geometric algebra')
 
         if isinstance(A, Dop):
-            return A.Add(self.obj, A, mode='-')
+            return Dop.Add(self, -A)
 
         if self.is_blade_rep == A.is_blade_rep:
             return Mv(self.obj - A.obj, ga=self.Ga)
@@ -331,7 +381,7 @@ class Mv(object):
             raise ValueError('In * operation Mv arguments are not from same geometric algebra')
 
         if isinstance(A, Dop):
-            return A.Mul(self, A, mode='*')
+            return A.Mul(self, A, op='*')
 
         if self.is_blade_rep and A.is_blade_rep:
             self = self.base_rep()
@@ -385,6 +435,9 @@ class Mv(object):
             Printer = printer.GaPrinter
         return Printer().doprint(self)
 
+    def __repr__(self):
+        return str(self)
+
     def Mv_str(self):
         # str representation of multivector
         if self.i_grade == 0:
@@ -422,7 +475,7 @@ class Mv(object):
                 else:
                     grade0 += c
             if grade0 != S(0):
-                terms[0] = (grade0, S(1), -1)
+                terms[-1] = (grade0, S(1), -1)
             terms = terms.items()
 
             sorted_terms = sorted(terms, key=itemgetter(0))  # sort via base indexes
@@ -558,7 +611,7 @@ class Mv(object):
             raise ValueError('In ^ operation Mv arguments are not from same geometric algebra')
 
         if isinstance(A, Dop):
-            return A.Mul(self, A, mode='^')
+            return A.Mul(self, A, op='^')
 
         self = self.blade_rep()
         A = A.blade_rep()
@@ -582,7 +635,7 @@ class Mv(object):
         self.Ga.dot_mode = '|'
 
         if isinstance(A, Dop):
-            return A.Mul(self, A, mode='|')
+            return A.Mul(self, A, op='|')
 
         self = self.blade_rep()
         A = A.blade_rep()
@@ -606,7 +659,7 @@ class Mv(object):
         self.Ga.dot_mode = '<'
 
         if isinstance(A, Dop):
-            return A.Mul(self, A, mode='<')
+            return A.Mul(self, A, op='<')
 
         self = self.blade_rep()
         A = A.blade_rep()
@@ -614,7 +667,6 @@ class Mv(object):
         return self_lc_A
 
     def __gt__(self, A):  # right contraction (>)
-
 
         if (not isinstance(A, Mv)) and (not isinstance(A, Dop)):  # sympy scalar
             return self.Ga.mv(A * self.scalar())
@@ -625,7 +677,7 @@ class Mv(object):
         self.Ga.dot_mode = '>'
 
         if isinstance(A, Dop):
-            return A.Mul(self, A, mode='>')
+            return A.Mul(self, A, op='>')
 
         self = self.blade_rep()
         A = A.blade_rep()
@@ -713,6 +765,16 @@ class Mv(object):
         # return r-th grade of multivector as
         # a multivector
         return Mv(self.Ga.get_grade(self.obj, r), ga=self.Ga)
+
+    def components(self):
+        (coefs, bases) = metric.linear_expand(self.obj)
+        bases_lst = self.Ga.blades_lst
+        cb = zip(coefs, bases)
+        cb = sorted(cb, key=lambda x: self.Ga.blades_lst0.index(x[1]))
+        terms = []
+        for (coef, base) in cb:
+            terms.append(self.Ga.mv(coef * base))
+        return terms
 
     def get_coefs(self, grade):
         (coefs, bases) = metric.linear_expand(self.obj)
@@ -847,26 +909,33 @@ class Mv(object):
         for latex.
         """
         self.fmt = fmt
-        printer.GaLatexPrinter.fmt = self.fmt
-        latex_str = printer.GaLatexPrinter.latex(self)
+        if Mv.latex_flg:
+            printer.GaLatexPrinter.fmt = self.fmt
+            latex_str = printer.GaLatexPrinter.latex(self)
 
-        if printer.GaLatexPrinter.ipy:
-            if title is None:
-                if r'\begin{align*}' not in latex_str:
-                    latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
-            else:
-                if r'\begin{align*}' not in latex_str:
-                    latex_str = r'\begin{equation*} ' + title + ' = ' + latex_str + r' \end{equation*}'
+            if printer.GaLatexPrinter.ipy:
+                if title is None:
+                    if r'\begin{align*}' not in latex_str:
+                        latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
                 else:
-                    latex_str = latex_str.replace(r'\begin{align*}', r'\begin{align*} ' + title)
-                    latex_str = latex_str.replace('&', '=&', 1)
-            from IPython.core.display import display, Math
-            display(Math(latex_str))
-        else:
-            if title is not None:
-                print title + ' = ' + latex_str
+                    if r'\begin{align*}' not in latex_str:
+                        latex_str = r'\begin{equation*} ' + title + ' = ' + latex_str + r' \end{equation*}'
+                    else:
+                        latex_str = latex_str.replace(r'\begin{align*}', r'\begin{align*} ' + title)
+                        latex_str = latex_str.replace('&', '=&', 1)
+                from IPython.core.display import display, Math
+                display(Math(latex_str))
             else:
-                print latex_str
+                if title is not None:
+                    print title + ' = ' + latex_str
+                else:
+                    print latex_str
+        else:
+            printer.GaPrinter.fmt = self.fmt
+            if title is not None:
+                print title + ' = ' + str(self)
+            else:
+                print self
         return
 
     def _repr_latex_(self):
@@ -956,61 +1025,512 @@ class Mv(object):
         coefs = [x[0] for x in key_coefs]
         return coefs
 
-###################### Differential Operator Class #####################
+################ Scalar Partial Differential Operator Class ############
 
+class Sdop(object):
 
-def mod_convert(l, mod):
-    m = 0
-    for i in reversed(l):
-        m = mod * m + i
-    return m
+    init_slots = {'ga': (None, 'Associated geometric algebra'),
+                  'fmt': (1, '1 for normal formating')}
 
+    ga = None
+    str_mode = False
 
-def pdop_sort(coef_lst, pdiff_lst):
-    if len(pdiff_lst) == 1:
-        return [(coef_lst[0], pdiff_lst[0])]
+    @staticmethod
+    def setGa(ga):
+        Sdop.ga = ga
+        Pdop.setGa(ga)
+        return
 
-    mod = max(list(itertools.chain(*pdiff_lst))) + 1
-    key_lst = [mod_convert(x, mod) for x in pdiff_lst]
-    return [(x, y) for (z, x, y) in sorted(zip(key_lst, coef_lst, pdiff_lst))]
+    def TSimplify(self):
+        new_terms = []
+        for (coef, pdiff) in self.terms:
+            new_terms.append((Simp.apply(coef), pdiff))
+        self.terms = new_terms
+        return
 
+    @staticmethod
+    def consolidate_coefs(sdop):
+        """
+        Remove zero coefs and consolidate coefs with repeated pdiffs.
+        """
+        if isinstance(sdop, Sdop):
+            terms = sdop.terms
+        else:
+            terms = sdop
 
-def pdiff_str(pdiffs, coords):
-    s = 'D{'
-    nz_cnt = 0
-    for (pdiff, coord) in zip(pdiffs, coords):
-        if pdiff > 0:
-            nz_cnt += 1
-            if pdiff == 1:
-                s += str(coord) + ','
-            else:
-                s += str(coord) + '^' + str(pdiff) + ','
-    if nz_cnt > 0:
-        s = s[:-1] + '}'
-    else:
+        new_coefs = []
+        new_pdiffs = []
+        for (coef, pd) in terms:
+            if coef != S(0):
+                if pd in new_pdiffs:
+                    index = new_pdiffs.index(pd)
+                    new_coefs[index] += coef
+                else:
+                    new_coefs.append(coef)
+                    new_pdiffs.append(pd)
+        new_terms = zip(new_coefs, new_pdiffs)
+
+        if isinstance(sdop, Sdop):
+            return Sdop(new_terms, ga=sdop.Ga)
+        else:
+            return new_terms
+
+    def sort_terms(self):
+        self.terms.sort(key=operator.itemgetter(1), cmp=Pdop.compare)
+        return
+
+    def Sdop_str(self):
+        if len(self.terms) == 0:
+            return '0'
+
+        self.sort_terms()
         s = ''
-    return s
+        for (coef, pdop) in self.terms:
+            pd_str = str(pdop)
 
-
-def pdiff_latex_str(pdiffs, coords):
-    if len(pdiffs) > 1:
-        nz_cnt = sum(pdiffs)
-    else:
-        nz_cnt = pdiffs[0]
-    if nz_cnt == 0:
-        return ''
-    if nz_cnt > 1:
-        s = '\\bfrac{\partial^{' + str(nz_cnt) + '}}{'
-    else:
-        s = '\\bfrac{\partial}{'
-    for (pdiff, coord) in zip(pdiffs, coords):
-        if pdiff > 0:
-            if pdiff == 1:
-                s += '\\partial ' + printer.latex(coord) + ' '
+            if coef == S(1):
+                s += pd_str
+            elif coef == S(-1):
+                s += '-' + pd_str
             else:
-                s += '\\partial ' + printer.latex(coord) + '^{' + str(pdiff) + '}'
-    return s + '} '
+                if isinstance(coef, Add):
+                    s += '(' + str(coef) + ')*' + pd_str
+                else:
+                    s += str(coef) + '*' + pd_str
+            s += ' + '
 
+        s = s.replace('+ -','- ')
+        s = s[:-3]
+        if Sdop.str_mode:
+            if len(self.terms) > 1 or isinstance(self.terms[0][0], Add):
+                s = '(' + s + ')'
+        return s
+
+    def Sdop_latex_str(self):
+        if len(self.terms) == 0:
+            return '0'
+
+        self.sort_terms()
+
+        s = ''
+        for (coef, pdop) in self.terms:
+            pd_str = str(pdop)
+            if coef == S(1):
+                if pd_str == '':
+                    s += '1'
+                else:
+                    s += pd_str
+            elif coef == S(-1):
+                if pd_str == '':
+                    s += '-1'
+                else:
+                    s += '-' + pd_str
+            else:
+                s += str(coef) + ' ' + pd_str
+            s += ' + '
+
+        s = s.replace('+ -','- ')
+        return s[:-3]
+
+    def __str__(self):
+        if printer.GaLatexPrinter.latex_flg:
+            Printer = printer.GaLatexPrinter
+        else:
+            Printer = printer.GaPrinter
+
+        return Printer().doprint(self)
+
+    def __repr__(self):
+        return str(self)
+
+    def _repr_latex_(self):
+        latex_str = printer.GaLatexPrinter.latex(self)
+        if r'\begin{align*}' not in latex_str:
+            latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
+        return latex_str
+
+    def __init__(self, *kargs, **kwargs):
+
+        kwargs = metric.test_init_slots(Sdop.init_slots, **kwargs)
+
+        self.Ga = kwargs['ga']  # Associated geometric algebra (coords)
+        self.fmt = kwargs['fmt']  # Output format
+
+        if self.Ga is None:
+            if Sdop.ga is None:
+                raise ValueError('In Sdop.__init__ self.Ga must be defined.')
+            else:
+                self.Ga = Sdop.ga
+
+        if len(kargs[0]) == 0:  # identity Dop
+            self.terms = [(S(1), self.Ga.Pdop_identity)]
+        else:
+            if len(kargs) == 2:
+                if len(kargs[0]) != len(kargs[1]):
+                    raise ValueError('In Sdop.__init__ coefficent list and Pdop list must be same length.')
+                self.terms = zip(kargs[0],kargs[1])
+            elif len(kargs) == 1:
+                self.terms = kargs[0]
+            else:
+                raise ValueError('In Sdop.__init__ length of kargs must be 1 or 2.')
+
+    def __call__(self, arg):
+        if isinstance(arg, Sdop):
+            if self.Ga != arg.Ga:
+                raise ValueError('In Sdop.__call__  self.Ga != arg.Ga.')
+            terms = []
+            for (coef, pdiff) in self.terms:
+                new_terms = pdiff(arg.terms)
+                new_terms = [ (coef * x[0], x[1]) for x in new_terms]
+                terms += new_terms
+            return Sdop(terms, ga=self.Ga)
+        else:
+            return sum([x[0] * x[1](arg) for x in self.terms])
+
+
+    def __neg__(self):
+        return Sdop([(-x[0], x[1]) for x in self.terms], ga=self.Ga)
+
+    @staticmethod
+    def Add(sdop1, sdop2):
+        if isinstance(sdop1, Sdop) and isinstance(sdop1, Sdop):
+            if sdop1.Ga != sdop2.Ga:
+                raise ValueError('In Sdop.Add sdop1.Ga != sdop2.Ga.')
+            coefs1, pdiffs1 = zip(*sdop1.terms)
+            coefs2, pdiffs2 = zip(*sdop2.terms)
+
+            pdiffs1 = list(pdiffs1)
+            pdiffs2 = list(pdiffs2)
+
+            pdiffs = pdiffs1 + [x for x in pdiffs2 if x not in pdiffs1]
+            coefs = len(pdiffs) * [S(0)]
+
+            for pdiff in pdiffs1:
+                index = pdiffs.index(pdiff)
+                coef = coefs1[pdiffs1.index(pdiff)]
+                coefs[index] += coef
+
+            for pdiff in pdiffs2:
+                index = pdiffs.index(pdiff)
+                coef = coefs2[pdiffs2.index(pdiff)]
+                coefs[index] += coef
+
+            sdop_sum = Sdop(coefs, pdiffs, ga=sdop1.Ga)
+        elif isinstance(sdop1, Sdop):
+            coefs, pdiffs = zip(*sdop1.terms)
+            if sdop1.Ga.Pdop_identity in pdiffs:
+                index = pdiffs.index(sdop1.Ga.Pdop_identity)
+                coef[index] += sdop2
+            else:
+                coef.append(sdop2)
+                pdiff.append(sdop1.Ga.Pdop_identity)
+            return Sdop(coefs, pdiffs, ga=sdop1.Ga)
+        else:
+            coefs, pdiffs = zip(*sdop2.terms)
+            if sdop2.Ga.Pdop_identity in pdiffs:
+                index = pdiffs.index(sdop2.Ga.Pdop_identity)
+                coef[index] += sdop1
+            else:
+                coef.append(sdop1)
+                pdiff.append(sdop2.Ga.Pdop_identity)
+            sdop_sum = Sdop(coefs, pdiffs, ga=sdop2.Ga)
+
+        return Sdop.consolidate_coefs(sdop_sum)
+
+    def __eq__(self, sdop):
+        if isinstance(sdop, Sdop):
+            if self.Ga != sdop.Ga:
+                return False
+            self = Sdop.consolidate_coefs(self)
+            sdop = Sdop.consolidate_coefs(sdop)
+            if len(self.terms) != len(sdop.terms):
+                return False
+            if set(self.terms) != set(sdop.terms):
+                return False
+            return True
+        else:
+            return False
+
+    def __add__(self, sdop):
+        return Sdop.Add(self, sdop)
+
+    def __radd__(self, sdop):
+        return Sdop(self, sdop)
+
+    def __add_ab__(self, sdop):
+        if isinstance(sdop, Sdop):
+            if self.Ga != sdop.Ga:
+                raise ValueError('In Sdop.__add_ab__ self.Ga != sdop.Ga.')
+
+            coefs, pdiffs = zip(*self.terms)
+            pdiffs = list(pdiffs)
+            coefs = list(coefs)
+
+            for (coef, pdiff) in sdop.terms:
+                if pdiff in pdiffs:
+                    index = pdiffs.index(pdiff)
+                    coefs[index] += coef
+                else:
+                    pdiffs.append(pdiff)
+                    coefs.append(coef)
+            self.term = zip(coefs, pdiffs)
+            self = Sdop.consolidate_coefs(self)
+            return
+
+        elif isinstance(sdop, tuple):
+            self.term.append(sdop)
+            self = Dfop.consolidate_coefs(self)
+            return
+
+        else:
+            self.terms.append((sdop, self.Ga.Pdop_identity))
+            self = Sdop.consolidate_coefs(self)
+            return
+
+    def __sub__(self, sdop):
+        return Sdop.Add(self, -sdop)
+
+    def __rsub__(self, sdop):
+        return Sdop.Add(-self, sdop)
+
+    def __mul__(sdopl, sdopr):
+        if isinstance(sdopl, Sdop) and isinstance(sdopr, Sdop):
+            if sdopl.Ga != sdopr.Ga:
+                raise ValueError('In Sdop.__mul__ Sdop arguments are not from same geometric algebra')
+            terms = []
+            for (coef, pdiff) in sdopl.terms:
+                Dsdopl = pdiff(sdopr.terms)  # list of terms
+                Dsdopl = [(coef * x[0], x[1]) for x in Dsdopl]
+                terms += Dsdopl
+            product = Sdop(terms, ga=sdopl.Ga)
+            return Sdop.consolidate_coefs(product)
+        else:
+            if not isinstance(sdopl, Sdop):  # sdopl is a scalar
+                terms = [(sdopl * x[0], x[1]) for x in sdopr.terms]
+                product = Sdop(terms, ga=sdopr.Ga)  # returns Sdop
+                return Sdop.consolidate_coefs(product)
+            else:  # sdopr is a scalar or a multivector
+                return sum([x[0] * x[1](sdopr) for x in sdopl.terms])  # returns scalar
+
+    def __rmul__(self,sdop):
+        terms = [(sdop * x[0], x[1]) for x in self.terms]
+        return Sdop(terms, ga=self.Ga)
+
+#################### Partial Derivative Operator Class #################
+
+class Pdop(object):
+    """
+    Partial derivative class for multivectors.  The partial derivatives
+    are of the form
+
+        \partial_{i_{1}...i_{n}} =
+            \partial^{i_{1}+...+i_{n}}/\partial{x_{1}^{i_{1}}}...\partial{x_{n}^{i_{n}}}.
+
+    If i_{j} = 0 then the partial derivative does not contain the x^{i_{j}}
+    coordinate.
+
+    The partial derivative is represented by a dictionary with coordinates
+    for keys and key value are the number of times one differentiates with
+    respect to the key.
+    """
+
+    ga = None
+
+    init_slots = {'ga': (None, 'Associated geometric algebra')}
+
+    @staticmethod
+    def setGa(ga):
+        Pdop.ga = ga
+        return
+
+    @staticmethod
+    def compare(pdop1, pdop2):  # compare two Pdops
+        if pdop1.order > pdop2.order:
+            return 1
+        if pdop1.order < pdop2.order:
+            return -1
+
+        keys1 = pdop1.pdiffs.keys()
+        keys2 = pdop2.pdiffs.keys()
+        lkeys1 = len(keys1)
+        lkeys2 = len(keys2)
+
+        if lkeys1 == lkeys2:
+            s1 = ''.join([str(pdop1.Ga.coords.index(x)) for x in keys1])
+            s2 = ''.join([str(pdop1.Ga.coords.index(x)) for x in keys2])
+            if s1 < s2:
+                return -1
+            else:
+                return 1
+        else:
+            if lkeys1 < lkeys2:
+                return 1
+            else:
+                return -1
+
+    def __eq__(self,A):
+        if isinstance(A, Pdop) and self.Ga.name == A.Ga.name and self.pdiffs == A.pdiffs:
+            return True
+        else:
+            if len(self.pdiffs) == 0 and A == S(1):
+                return True
+            return False
+
+    def __init__(self, *kargs, **kwargs):
+
+        kwargs = metric.test_init_slots(Pdop.init_slots, **kwargs)
+
+        self.Ga = kwargs['ga']  # Associated geometric algebra
+        self.fmt = 1
+        self.order = 0
+
+        if self.Ga is None:
+            if Pdop.ga is None:
+                raise ValueError('In Pdop.__init__ self.Ga must be defined.')
+            else:
+                self.Ga = Pdop.ga  # use geometric algebra of class Pdop
+
+        if kargs[0] is None:  # Pdop is the identity (1)
+            self.pdiffs = {}
+        elif isinstance(kargs[0], dict):  # Pdop defined by dictionary
+            self.pdiffs = kargs[0]
+        else:  # Pdop defined by list of integers
+            self.pdiffs = {}
+            for x in kargs[0]:
+                if x != 0:
+                    ix = kargs.index[x]
+                    self.pdiffs[self.Ga.coords[ix]] = x
+
+        for x in self.pdiffs:  # self.order is total number of differentiations
+            self.order += self.pdiffs[x]
+
+    def factor(self):
+        """
+        If partial derivative operator self.order > 1 factor out first
+        order differential operator.  Needed for application of partial
+        derivative operator to product of sympy expression and partial
+        differential operator.  For example if D = Pdop({x:3}) then
+
+            (Pdop({x:2}),Pdop({x:1})) = D.factor()
+        """
+        if self.order == 1:
+            return S(0), self
+        else:
+            x = self.pdiffs.keys()[0]
+            self.order -= 1
+            n = self.pdiffs[x]
+            if n == 1:
+                del self.pdiffs[x]
+            else:
+                self.pdiffs[x] -= 1
+            return self, self.Ga.Pdiffs[x]
+
+    def __call__(self, arg):
+
+        if self.pdiffs == {}:
+            return arg  # result is Pdop identity (1)
+
+        if isinstance(arg, Pdop):  # arg is Pdop
+            if self.Ga.name != arg.Ga.name:
+                raise ValueError('In Pdop.__call__ arguments do not belong to same geometric algebra.')
+            elif arg.pdiffs == {}:  # arg is one
+                return S(0)  # derivative is zero
+            else:  # arg is partial derivative
+                pdiffs = copy.copy(arg.pdiffs)
+                for key in self.pdiffs:
+                    if key in pdiffs:
+                        pdiffs[key] += self.pdiffs[key]
+                    else:
+                        pdiffs[key] = self.pdiffs[key]
+            return Pdop(pdiffs,ga=self.Ga)  # result is Pdop
+
+        elif isinstance(arg, Mv):  # arg is multivector
+            for x in self.pdiffs:
+                for i in range(self.pdiffs[x]):
+                    arg = self.Ga.pDiff(arg, x)
+            return arg  # result is multivector
+
+        elif isinstance(arg, (Expr, Symbol, numbers.Number)):  # arg is sympy expression
+            for x in self.pdiffs:
+                arg = diff(arg,x,self.pdiffs[x])
+            return arg  # derivative is sympy expression
+
+        elif isinstance(arg,list):  # arg is list of tuples (coef, partial derivative)
+            D = copy.deepcopy(self)
+            terms = copy.deepcopy(arg)
+
+            while True:
+                D, D0 = D.factor()
+                k = 0
+                for term in terms:
+                    dc = D0(term[0])
+                    pd = D0(term[1])
+                    tmp = []
+                    if dc != 0:
+                        tmp.append((dc,term[1]))
+                    if pd != 0 :
+                        tmp.append((term[0],pd))
+                    terms[k] = tmp
+                    k += 1
+                terms = [i for o in terms for i in o]  # flatten list one level
+                if D == 0:
+                    break
+            terms = Sdop.consolidate_coefs(terms)
+            return terms  # result is list of tuples (coef, partial derivative)
+        elif isinstance(arg, Sdop):  # arg is scalar differential operator
+            if self.Ga != arg.Ga:
+                raise ValueError('In Pdop.__call__ self.Ga != arg.Ga.')
+            return self(arg.terms)  # result is list of tuples (coef, partial derivative)
+        else:
+            raise ValueError('In Pdop.__call__ type(arg) = ' + str(type(arg)) + ' not allowed.')
+
+    def __mul__(self, pdop):  # functional product of self and arg (self*arg)
+        return self(pdop)
+
+    def __rmul__(self, pdop):  # functional product of arg and self (arg*self)
+        if isinstance(pdop, Pdop):
+            return pdop(self)
+        return Sdop([(pdop, self)], ga=self.Ga)
+
+    def Pdop_str(self):
+        if self.order == 0:
+            return 'D{}'
+        s = 'D'
+        for x in self.pdiffs:
+            s += '{' + str(x) + '}'
+            n = self.pdiffs[x]
+            if n > 1:
+                s += '^' + str(n)
+        return s
+
+    def Pdop_latex_str(self):
+        if self.order == 0:
+            return ''
+        s = r'\bfrac{\partial'
+        if self.order > 1:
+            s += '^{' + str(self.order) + '}'
+        s += '}{'
+        keys = self.pdiffs.keys()
+        keys.sort(key=(self.Ga.coords + keys).index)
+        for key in keys:
+            i = self.pdiffs[key]
+            s += r'\partial ' + str(key)
+            if i > 1:
+                s += '^{' + str(i) + '}'
+        s += '}'
+        return s
+
+    def __str__(self):
+        if printer.GaLatexPrinter.latex_flg:
+            Printer = printer.GaLatexPrinter
+        else:
+            Printer = printer.GaPrinter
+        return Printer().doprint(self)
+
+    def __repr__(self):
+        return str(self)
+
+################# Multivector Differential Operator Class ##############
 
 class Dop(object):
     """
@@ -1052,21 +1572,73 @@ class Dop(object):
 
     init_slots = {'ga': (None, 'Associated geometric algebra'),
                   'cmpflg': (False, 'Complement flag for Dop'),
-                  'debug': (False, 'True to print out debugging information')}
+                  'debug': (False, 'True to print out debugging information'),
+                  'fmt': (1, '1 for normal formating')}
+
+    ga = None
+
+    @staticmethod
+    def setGa(ga):  # set geometric algebra globally for all Dop's
+        Dop.ga = ga
+        Sdop.setGa(ga)
+        return
+
+    @staticmethod
+    def flatten_one_level(lst):
+        return [inner for outer in lst for inner in outer]
+        """
+        new_lst = []
+        for x in lst:
+            if isinstance(x[0], list):
+                new_lst += x
+            else:
+                new_lst.append(x)
+        return new_lst
+        """
 
     def __init__(self, *kargs, **kwargs):
 
         kwargs = metric.test_init_slots(Dop.init_slots, **kwargs)
 
-        self.coefs = kargs[0]  # List of coeffients for Dop
-        self.pdiffs = kargs[1]  # List of partial derivatives for Dop
         self.cmpflg = kwargs['cmpflg']  # Complement flag (default False)
         self.Ga = kwargs['ga']  # Associated geometric algebra
-        self.fmt = 1
 
         if self.Ga is None:
-            raise ValueError('In Dop ga must be defined to instanciate.')
+            if Dop.ga is None:
+                raise ValueError('In Dop.__init__ self.Ga must be defined.')
+            else:
+                self.Ga = Dop.ga
 
+        self.fmt = kwargs['fmt']  # Output format
+
+        if len(kargs[0]) == 0:  # identity Dop
+            self.terms = [(S(1),self.Ga.pdop_identity)]
+        else:
+            if len(kargs) == 2:
+                if len(kargs[0]) != len(kargs[1]):
+                    raise ValueError('In Dop.__init__ coefficent list and Pdop list must be same length.')
+                self.terms = zip(kargs[0],kargs[1])
+            elif len(kargs) == 1:
+                if isinstance(kargs[0][0][0], Mv):  # Mv expansion [(Mv, Pdop)]
+                    self.terms = kargs[0]
+                elif isinstance(kargs[0][0][0], Sdop):  # Sdop expansion [(Sdop, Mv)]
+                    coefs = []
+                    pdiffs = []
+                    for (sdop, mv) in kargs[0]:
+                        for (coef, pdiff) in sdop.terms:
+                            if pdiff in pdiffs:
+                                index = pdiffs.index(pdiff)
+                                coefs[index] += coef * mv
+                            else:
+                                pdiffs.append(pdiff)
+                                coefs.append(coef * mv)
+                    self.terms = zip(coefs, pdiffs)
+                else:
+                    raise ValueError('In Dop.__init__ kargs[0] form not allowed.')
+            else:
+                raise ValueError('In Dop.__init__ length of kargs must be 1 or 2.')
+
+    """
     def remove_zero_coefs(self):
 
         new_coefs = []
@@ -1078,6 +1650,7 @@ class Dop(object):
         self.coefs = new_coefs
         self.pdiffs = new_pdiffs
         return
+    """
 
     def consolidate_coefs(self):
         """
@@ -1085,7 +1658,9 @@ class Dop(object):
         """
         new_coefs = []
         new_pdiffs = []
-        for (coef, pd) in zip(self.coefs, self.pdiffs):
+        for (coef, pd) in self.terms:
+            if isinstance(coef, Mv) and coef.is_scalar():
+                coef = coef.obj
             if coef != S(0):
                 if pd in new_pdiffs:
                     index = new_pdiffs.index(pd)
@@ -1093,198 +1668,179 @@ class Dop(object):
                 else:
                     new_coefs.append(coef)
                     new_pdiffs.append(pd)
-        self.coefs = new_coefs
-        self.pdiffs = new_pdiffs
-        self.TSimplify()
+
+        self.terms = zip(new_coefs, new_pdiffs)
+        #self.TSimplify()
         return
 
-    @staticmethod
-    def Add(dop1, dop2, mode='+'):
+    def blade_rep(self):
+        N = len(self.blades)
+        coefs = N * [[]]
+        bases = N * [0]
+        for term in self.terms:
+            for (coef, base) in metric.linear_expand(self.terms[0].obj, mode=False):
+                index = self.blades.index(base)
+                coefs[index] = coef
+                bases[index] = base
 
-        if dop1.Ga.name != dop2.Ga.name:
-            raise ValueError('In Dop + operation Dop arguments are not from same geometric algebra')
+    @staticmethod
+    def Add(dop1, dop2):
 
         if isinstance(dop1, Dop) and isinstance(dop2, Dop):
-            sum = Dop(list(dop1.coefs), list(dop1.pdiffs), ga=dop1.Ga,
-                      cmpflg=dop1.cmpflg)
+            if dop1.Ga.name != dop2.Ga.name:
+                raise ValueError('In Dop.Add Dop arguments are not from same geometric algebra')
 
-            for (coef, pdiff) in zip(dop2.coefs, dop2.pdiffs):
-                if pdiff in sum.pdiffs:
-                    index = sum.pdiffs.index(pdiff)
-                    if mode == '+':
-                        sum.coefs[index] += coef
-                    else:
-                        sum.coefs[index] -= coef
-                else:
-                    sum.pdiffs.append(pdiff)
-                    if mode == '+':
-                        sum.coefs.append(coef)
-                    else:
-                        sum.coefs.append(-coef)
+            if dop1.cmpflg != dop2.cmpflg:
+                raise ValueError('In Dop.Add complement flags have different values.')
 
-        elif isinstance(dop2, Mv):
-            sum = Dop(list(dop1.coefs), list(dop1.pdiffs), ga=dop1.Ga,
-                      cmpflg=dop1.cmpflg)
+            coefs1, pdiffs1 = zip(*dop1.terms)
+            coefs2, pdiffs2 = zip(*dop2.terms)
 
-            if self.Ga.pd0 in sum.pdiffs:
-                index0 = sum.pdiffs.index(self.Ga.pd0)
-                if mode == '+':
-                    sum.coefs[index0] += dop2.obj
-                else:
-                    sum.coefs[index0] += dop2.obj
-            else:
-                sum.pdiffs.append(self.Ga.pd0)
-                if mode == '+':
-                    sum.coefs.append(dop2.obj)
-                else:
-                    sum.coefs.append(-dop2.obj)
+            pdiffs1 = list(pdiffs1)
+            pdiffs2 = list(pdiffs2)
+
+            pdiffs = pdiffs1 + [x for x in pdiffs2 if x not in pdiffs1]
+            coefs = len(pdiffs) * [S(0)]
+
+            for pdiff in pdiffs1:
+                index = pdiffs.index(pdiff)
+                coef = coefs1[pdiffs1.index(pdiff)]
+                coefs[index] += coef
+
+            for pdiff in pdiffs2:
+                index = pdiffs.index(pdiff)
+                coef = coefs2[pdiffs2.index(pdiff)]
+                coefs[index] += coef
+
+            return Dop(coefs, pdiffs, cmpflg=dop1.cmpflg, ga=dop1.Ga)
         else:
-            dop2_coefs = [-x for x in dop2.coefs]
-            sum = Dop(dop2_coefs, list(dop2.pdiffs), ga=dop2.Ga,
-                      cmpflg=dop2.cmpflg)
-
-            if self.Ga.pd0 in sum.pdiffs:
-                index0 = sum.pdiffs.index(self.Ga.pd0)
-                sum.coefs[index0] += dop1.obj
-            else:
-                sum.pdiffs.append(self.Ga.pd0)
-                sum.coefs.append(dop1.obj)
-
-        sum.remove_zero_coefs()
-        return sum
+            if isinstance(dop1, Dop):  # dop1 is Dop
+                if not isinstance(dop2, Mv):
+                    dop2 = dop1.Ga.mv(dop2)
+                dop2 = Dop([dop2], [dop1.Ga.Pdop_identity], cmpflg=dop1.cmpflg, ga=dop1.Ga)
+            else:  # dop2 is Dop
+                if not isinstance(dop1, Mv):
+                    dop1 = dop2.Ga.mv(dop1)
+                dop1 = Dop([dop1], [dop2.Ga.Pdop_identity], cmpflg=dop2.cmpflg, ga=dop2.Ga)
+            return Dop.Add(dop1, dop2)
 
     def __add__(self, dop):
         return Dop.Add(self, dop)
 
+    def __radd__(self, dop):
+        return Dop.Add(dop, self)
+
     def __neg__(self):
 
-        ncoefs = [-x for x in self.coefs]
+        coefs, pdiffs = zip(*self.terms)
 
-        neg = Dop(ncoefs, list(self.pdiffs), ga=self.Ga,
+        coefs = [-x for x in coefs]
+
+        neg = Dop(coefs, pdiffs, ga=self.Ga,
                   cmpflg=self.cmpflg)
 
         return neg
 
     def __sub__(self, dop):
-        return Dop.Add(self, dop, mode='-')
+        return Dop.Add(self, -dop)
 
-    @ staticmethod
-    def Mul(dopl, dopr, mode='*'):  # General multiplication of Dop's
+    def __rsub__(self, dop):
+        return Dop.Add(dop, -self)
 
-        if dopl.Ga.name != dopr.Ga.name:
-            raise ValueError('In Dop ' + mode + 'operation Dop arguments are not from same geometric algebra')
+    @staticmethod
+    def Mul(dopl, dopr, op='*'):  # General multiplication of Dop's
+        # cmpflg is True if the Dop operates on the left argument and
+        # False if the Dop operates on the right argument
 
-        if isinstance(dopr, Mv):
-            if not dopl.cmpflg:  # dopr is multivector then dopl*dopr is multivector
-                DmodeF = S(0)
-                if dopl.Ga.dslot == -1:  # Grad with respect to coordinates
-                    for (coef, pdiff) in zip(dopl.coefs, dopl.pdiffs):
-                        pdopl = dopl.Ga.pDiff(dopr.obj, pdiff)
-                        DmodeF += dopl.Ga.Mul(coef, pdopl, mode=mode)
-                    DmodeF = Mv(DmodeF, ga=dopl.Ga).blade_rep()
-                else:  # Grad with respect to Mlt *kargs slot
-                    for (coef, pdiff) in zip(dopl.coefs, dopl.Ga.pdiffs[dopl.Ga.dslot]):
-                        pdopl = dopl.Ga.pDiff(dopr.obj, pdiff)
-                        DmodeF += dopl.Ga.Mul(coef, pdopl, mode=mode)
-                    DmodeF = Mv(DmodeF, ga=dopl.Ga).blade_rep()
-                    dopl.Ga.dslot = -1  # Reset to derivative with respect to coordinates
-                return DmodeF
-            else:  # dopr is multivector then dopl*dopr is differential operator
-                DmodeF = S(0)
-                for (coef, pdiff) in zip(dopl.coefs, dopl.pdiffs):
-                    DmodeF += dopl.Ga.Mul(coef, dopl.Ga.pDiff(dopr.obj, pdiff), mode=mode)
-
-                coefs = [dopl.Ga.Mul(dopr.obj, x, mode=mode) for x in dopl.coefs]
-                pdiffs = list(dopl.pdiffs)
-
-                if dopl.Ga.pd0 in pdiffs:
-                    index = pdiffs.index(self.Ga.pd0)
-                    coefs[index] += DmodeF
+        if isinstance(dopl, Dop) and isinstance(dopr, Dop):
+            if dopl.Ga != dopr.Ga:
+                raise ValueError('In Dop.Mul Dop arguments are not from same geometric algebra')
+            if dopl.cmpflg != dopr.cmpflg:
+                raise ValueError('In Dop.Mul Dop arguments do not have same cmplfg')
+            if not dopl.cmpflg:  # dopl and dopr operate on right argument
+                terms = []
+                for (coef, pdiff) in dopl.terms:
+                    Ddopl = pdiff(dopr.terms)  # list of terms
+                    Ddopl = [(Mv.Mul(coef, x[0], op=op), x[1]) for x in Ddopl]
+                    terms += Ddopl
+                product = Dop(terms, ga=dopl.Ga)
+            else:  # dopl and dopr operate on left argument
+                terms = []
+                for (coef, pdiff) in dopr.terms:
+                    Ddopr = pdiff(dopl.terms)  # list of terms
+                    Ddopr = [(Mv.Mul(x[0], coef, op=op), x[1]) for x in Ddopr]
+                    terms += Ddopr
+                product = Dop(terms, ga=dopr.Ga, cmpflg=True)
+        else:
+            if not isinstance(dopl, Dop):  # dopl is a scalar or Mv and dopr is Dop
+                if isinstance(dopl, Mv) and dopl.Ga != dopr.Ga:
+                    raise ValueError('In Dop.Mul Dop arguments are not from same geometric algebra')
                 else:
-                    coefs.append(DmodeF)
-                    pdiffs.append(dopl.Ga.pd0)
+                    dopl = dopr.Ga.mv(dopl)
 
-                DmodeF = Dop(coefs, pdiffs, ga=dopl.Ga, cmpflg=dopl.cmpflg)
-                DmodeF.consolidate_coefs()
-                return DmodeF
-
-        if isinstance(dopl, Mv):
-            if not dopr.cmpflg:  # dopl is multivector then dopl*dopr is differential operator
-                new_coefs = [dopl.Ga.Mul(dopl.obj, x, mode=mode) for x in dopr.coefs]
-
-                FmodeD = Dop(new_coefs, list(dopr.pdiffs), ga=dopr.Ga,
-                             cmpflg=dopr.cmpflg)
-
-                FmodeD.consolidate_coefs()
-                return FmodeD
-            else:  # dopl is multivector then dopl*dopr is multivector
-                FmodeD = S(0)
-                if dopr.Ga.dslot == -1:  # Grad with respect to coordinates
-                    for (coef, pdiff) in zip(dopr.coefs, dopr.pdiffs):
-                        pdopr = dopl.Ga.pDiff(dopl.obj, pdiff)
-                        FmodeD += dopl.Ga.Mul(pdopr, coef, mode=mode)
-                else:  # Grad with respect to Mlt *kargs slot
-                    for (coef, pdiff) in zip(dopl.coefs, dopl.Ga.pdiffs[dopr.Ga.dslot]):
-                        pdopl = dopl.Ga.pDiff(dopr.obj, pdiff)
-                        DmodeF += dopl.Ga.Mul(coef, pdopl, mode=mode)
-                    DmodeF = Mv(DmodeF, ga=dopl.Ga).blade_rep()
-                    dopr.Ga.dslot = -1  # Reset to derivative with respect to coordinates
-                FmodeD = Mv(FmodeD, ga=self.Ga).blade_rep()
-                return FmodeD
-
-        # dopl and dopr are both differential operators
-
-        coefs = []
-        pdiffs = []
-
-        # See eq (72) in LaTeX docs
-
-        for (l_coef, l_pdiff) in zip(dopl.coefs, dopl.pdiffs):
-            for (r_coef, r_pdiff) in zip(dopr.coefs, dopr.pdiffs):
-                coef1 = dopl.Ga.Mul(l_coef, dopl.Ga.pDiff(r_coef, l_pdiff), mode=mode)
-                coef2 = dopl.Ga.Mul(l_coef, r_coef, mode=mode)
-                pdiff = map(add, l_pdiff, r_pdiff)
-                if r_pdiff in pdiffs:
-                    index = pdiffs.index(r_pdiff)
-                    coefs[index] += coef1
+                if not dopr.cmpflg:  # dopr operates on right argument
+                    terms = [(Mv.Mul(dopl, x[0], op=op), x[1]) for x in dopr.terms]
+                    return Dop(terms, ga=dopr.Ga)  # returns Dop
                 else:
-                    pdiffs.append(r_pdiff)
-                    coefs.append(coef1)
-                if pdiff in pdiffs:
-                    index = pdiffs.index(pdiff)
-                    coefs[index] += coef2
+                    product = sum([Mv.Mul(x[1](dopl), x[0], op=op) for x in dopr.terms])  # returns multivector
+            else:  # dopr is a scalar or a multivector
+
+                if isinstance(dopr, Mv) and dopl.Ga != dopr.Ga:
+                    raise ValueError('In Dop.Mul Dop arguments are not from same geometric algebra')
+
+                if not dopl.cmpflg:  # dopl operates on right argument
+                    return sum([Mv.Mul(x[0], x[1](dopr), op=op) for x in dopl.terms])  # returns multivector
                 else:
-                    pdiffs.append(pdiff)
-                    coefs.append(coef2)
-
-        dopl_mode_dopr = Dop(coefs, pdiffs, ga=dopr.Ga,
-                             cmpflg=dopl.cmpflg or dopr.cmpflg)
-
-        dopl_mode_dopr.consolidate_coefs()
-
-        return dopl_mode_dopr
+                    terms = [(Mv.Mul(x[0], dopr, op=op), x[1]) for x in dopl.terms]
+                    product = Dop(terms, ga=dopl.Ga, cmpflg=True)  # returns Dop complement
+        if isinstance(product, Dop):
+            product.consolidate_coefs()
+        return product
 
     def TSimplify(self):
-        new_coefs = []
-        for coef in self.coefs:
-            new_coefs.append(metric.Simp.apply(coef))
-        self.coefs = new_coefs
+        new_terms = []
+        for (coef, pdiff) in self.terms:
+            new_terms.append((metric.Simp.apply(coef), pdiff))
+        self.terms = new_terms
         return
 
     def __mul__(self, dopr):  # * geometric product
-        return Dop.Mul(self, dopr, mode='*')
+        return Dop.Mul(self, dopr, op='*')
+
+    def __rmul__(self, dopl):  # * geometric product
+        return Dop.Mul(dopl, self, op='*')
 
     def __xor__(self, dopr):  # ^ outer product
-        return Dop.Mul(self, dopr, mode='^')
+        return Dop.Mul(self, dopr, op='^')
+
+    def __rxor__(self, dopl):  # ^ outer product
+        return Dop.Mul(dopl, self, op='^')
 
     def __or__(self, dopr):  # | inner product
-        return Dop.Mul(self, dopr, mode='|')
+        return Dop.Mul(self, dopr, op='|')
+
+    def __ror__(self, dopl):  # | inner product
+        return Dop.Mul(dopl, self, op='|')
 
     def __lt__(self, dopr):  # < left contraction
-        return Dop.Mul(self, dopr, mode='<')
+        return Dop.Mul(self, dopr, op='<')
 
     def __gt__(self, dopr):  # > right contraction
-        return Dop.Mul(self, dopr, mode='>')
+        return Dop.Mul(self, dopr, op='>')
+
+    def __eq__(self, dop):
+        if isinstance(dop, Dop):
+            if self.Ga != dop.Ga:
+                return False
+            self = Sdop.consolidate_coefs(self)
+            dop = Sdop.consolidate_coefs(dop)
+            if len(self.terms) != len(dop.terms):
+                return False
+            if set(self.terms) != set(dop.terms):
+                return False
+            return True
+        else:
+            return False
 
     def __str__(self):
         if printer.GaLatexPrinter.latex_flg:
@@ -1294,127 +1850,167 @@ class Dop(object):
 
         return Printer().doprint(self)
 
+    def __repr__(self):
+        return str(self)
+
     def _repr_latex_(self):
-        if printer.GaLatexPrinter.latex_flg:
-            Printer = printer.GaLatexPrinter
-            return Printer().doprint(self)
-        return
+        latex_str = printer.GaLatexPrinter.latex(self)
+        if r'\begin{align*}' not in latex_str:
+            latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
+        return latex_str
+
+    def is_scalar(self):
+        for x in self.terms:
+            if isinstance(x[0], Mv) and not x[0].is_scalar():
+                return False
+        return True
+
+    def components(self):
+        dop_lst = []
+        for (sdop, base) in self.Dop_mv_expand():
+            new_coefs = []
+            new_pdiffs = []
+            for (coef, pdiff) in sdop.terms:
+                if pdiff in new_pdiffs:
+                    index = new_pdiffs.index(pdiff)
+                    new_coefs[index] += coef * base
+                else:
+                    new_pdiffs.append(pdiff)
+                    new_coefs.append(coef * base)
+            new_coefs = [Mv(x, ga=self.Ga) for x in new_coefs]
+            terms = zip(new_coefs, new_pdiffs)
+            dop_lst.append(Dop(terms, ga=self.Ga))
+        return tuple(dop_lst)
+
+    def Dop_mv_expand(self):
+        coefs = []
+        bases = []
+        self.consolidate_coefs()
+        for (coef, pdiff) in self.terms:
+            if isinstance(coef, Mv) and not coef.is_scalar():
+                mv_terms = metric.linear_expand(coef.obj, mode=False)
+                for (mv_coef, mv_base) in mv_terms:
+                    if mv_base in bases:
+                        index = bases.index(mv_base)
+                        coefs[index] += Sdop([(mv_coef, pdiff)], ga=self.Ga)
+                    else:
+                        bases.append(mv_base)
+                        coefs.append(Sdop([(mv_coef, pdiff)], ga=self.Ga))
+            else:
+                if isinstance(coef, Mv):
+                    mv_coef = coef.obj
+                else:
+                    mv_coef = coef
+                if S(1) in bases:
+                    index = bases.index(S(1))
+                    coefs[index] += Sdop([(mv_coef, pdiff)], ga=self.Ga)
+                else:
+                    bases.append(S(1))
+                    coefs.append(Sdop([(mv_coef, pdiff)], ga=self.Ga))
+        terms = zip(coefs, bases)
+        return sorted(terms, key=lambda x: self.Ga.blades_lst0.index(x[1]))
 
     def Dop_str(self):
-        if len(self.coefs) == 0:
-            return '0'
+        if len(self.terms) == 0:
+            return ' 0 '
 
-        dop_sorted = pdop_sort(self.coefs, self.pdiffs)
-
+        mv_terms = self.Dop_mv_expand()
         s = ''
-        for (coef, pdop) in dop_sorted:
-            pd_str = pdiff_str(pdop, self.Ga.coords)
-            if pd_str == '':
-                coef_str = str(Mv(coef, ga=self.Ga))
-            elif isinstance(coef, Mul) or \
-                  isinstance(coef, Symbol) or \
-                  isinstance(coef, Rational) or \
-                  isinstance(coef, Function) or \
-                  isinstance(coef, Pow):
-                coef_str = str(Mv(coef, ga=self.Ga)) + '*'
-            elif isinstance(coef, Add):
-                coef_str = '(' + str(Mv(coef, ga=self.Ga)) + ')*'
-            elif coef == S(1):
-                coef_str = ''
-            elif isinstance(coef, Rational):
-                coef_str = str(coef) + '*'
-            s += coef_str + printer.Eprint.Deriv(pd_str) + ' + '
 
+        for (sdop, base) in mv_terms:
+            str_sdop = str(sdop)
+            if base == S(1):
+                s += str_sdop
+            else:
+                if len(sdop.terms) > 1:
+                    if self.cmpflg:
+                        s += '(' + str_sdop + ')*' + str(base)
+                    else:
+                        s += str(base) + '*(' + str_sdop + ')'
+                else:
+                    if str_sdop[0] == '-' and not isinstance(sdop.terms[0][0], Add):
+                        if self.cmpflg:
+                            s += str_sdop + '*' + str(base)
+                        else:
+                            s += '-' + str(base) + '*' + str_sdop[1:]
+                    else:
+                        if self.cmpflg:
+                            s += str_dop + '*' + str(base)
+                        else:
+                            s += str(base) + '*' + str_sdop
+            s += ' + '
+
+        s = s.replace('+ -','-')
         return s[:-3]
 
     def Dop_latex_str(self):
-        if len(self.coefs) == 0:
+        if len(self.terms) == 0:
             return ' 0 '
 
-        dop_sorted = pdop_sort(self.coefs, self.pdiffs)
+        self.consolidate_coefs()
 
+        mv_terms = self.Dop_mv_expand()
         s = ''
-        first_flg = False
-        pop = ' '
-        for (coef, pdop) in dop_sorted:
-            pd_str = pdiff_latex_str(pdop, self.Ga.coords)
-            if pd_str == '':
-                if coef == S(1):
-                    if first_flg:
-                        pop = ' + '
-                    coef_str = '1'
-                elif coef == -S(1):
-                    pop = ' - '
-                    coef_str = '1'
-                elif isinstance(coef, Mul) or \
-                      isinstance(coef, Rational) or \
-                      isinstance(coef, Symbol) or \
-                      isinstance(coef, Function) or \
-                      isinstance(coef, Pow):
-                    coef_str = str(Mv(coef, ga=self.Ga)) + ' '
-                    if first_flg:
-                        if coef_str[0] != '-':
-                            pop = ' + '
-                        else:
-                            pop = ' '
-                elif isinstance(coef, Add):
-                    coef_str = str(Mv(coef, ga=self.Ga))
-                    if first_flg:
-                        if coef_str[0] != '-':
-                            pop = ' + '
-                        else:
-                            pop = ' '
-            else:
-                if coef == S(1):
-                    if first_flg:
-                        pop = ' + '
-                    coef_str = ''
-                elif coef == -S(1):
-                    pop = ' - '
-                    coef_str = ''
-                elif isinstance(coef, Mul) or \
-                      isinstance(coef, Rational) or \
-                      isinstance(coef, Symbol) or \
-                      isinstance(coef, Function) or \
-                      isinstance(coef, Pow):
-                    coef_str = str(Mv(coef, ga=self.Ga)) + ' '
-                    if first_flg:
-                        if coef_str[0] != '-':
-                            pop = ' + '
-                        else:
-                            pop = ' '
-                elif isinstance(coef, Add):
-                    if first_flg:
-                        pop = ' + '
-                    coef_str = '\\paren{' + str(Mv(coef, ga=self.Ga)) + '}'
 
-            first_flg = True
-            s += pop + coef_str + pd_str + ' '
-        return s
+        for (sdop, base) in mv_terms:
+            str_sdop = str(sdop)
+            if base == S(1):
+                s += str_sdop
+            else:
+                if str_sdop == '1':
+                    s += str(base)
+                if str_sdop == '-1':
+                    s += '-' + str(base)
+                    if str_sdop[1:] != '1':
+                        s += ' ' + str_sdop[1:]
+                else:
+                    if len(sdop.terms) > 1:
+                        if self.cmpflg:
+                            s += r'\left ( ' + str_sdop + r'\right ) ' + str(base)
+                        else:
+                            s += str(base) + ' ' + r'\left ( ' + str_sdop + r'\right ) '
+                    else:
+                        if str_sdop[0] == '-' and not isinstance(sdop.terms[0][0], Add):
+                            if self.cmpflg:
+                                s += str_sdop + str(base)
+                            else:
+                                s += '-' + str(base) + ' ' + str_sdop[1:]
+                        else:
+                            if self.cmpflg:
+                                s += str_sdop + ' ' + str(base)
+                            else:
+                                s += str(base) + ' ' + str_sdop
+            s += ' + '
+
+        s = s.replace('+ -','-')
+        Sdop.str_mode = False
+        return s[:-3]
 
     def Fmt(self, fmt=1, title=None):
 
         self.fmt = fmt
-        latex_str = printer.GaLatexPrinter.latex(self)
+        print 'Mv.latex_flg =', Mv.latex_flg
+        if Mv.latex_flg:
+            latex_str = printer.GaLatexPrinter.latex(self)
 
-        if printer.GaLatexPrinter.ipy:
-            if title is None:
-                if r'\begin{align*}' not in latex_str:
-                    latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
-            else:
-                if r'\begin{align*}' not in latex_str:
-                    latex_str = r'\begin{equation*} ' + title + ' = ' + latex_str + r' \end{equation*}'
+            if printer.GaLatexPrinter.ipy:
+                if title is None:
+                    if r'\begin{align*}' not in latex_str:
+                        latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
                 else:
-                    latex_str = latex_str.replace(r'\begin{align*}', r'\begin{align*} ' + title)
-                    latex_str = latex_str.replace('&', '=&', 1)
-            latex_str = latex_str.replace(r'\bfrac', r'\frac')
-            from IPython.core.display import display, Math
-            display(Math(latex_str))
-        else:
-            if title is not None:
-                print title + ' = ' + latex_str
+                    if r'\begin{align*}' not in latex_str:
+                        latex_str = r'\begin{equation*} ' + title + ' = ' + latex_str + r' \end{equation*}'
+                    else:
+                        latex_str = latex_str.replace(r'\begin{align*}', r'\begin{align*} ' + title)
+                        latex_str = latex_str.replace('&', '=&', 1)
+                latex_str = latex_str.replace(r'\bfrac', r'\frac')
+                from IPython.core.display import display, Math
+                display(Math(latex_str))
             else:
-                    print latex_str
+                if title is not None:
+                    print title + ' = ' + latex_str
+                else:
+                        print latex_str
         return
 
     @staticmethod

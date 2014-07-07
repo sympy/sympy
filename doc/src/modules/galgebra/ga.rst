@@ -76,8 +76,8 @@ Geometric Algebra
 Using LaTeX, Enhanced Printing, and Numerics
 ============================================
 
-For developing code using *sympy* and the *GA* module I strongly suggested that you 
-go to <http://www.geany.org/Download/Releases> and install the version of the *geany* 
+For developing code using *sympy* and the *GA* module I strongly suggested that you
+go to <http://www.geany.org/Download/Releases> and install the version of the *geany*
 editor appropriate for your system.  This editor allows you to execute python scripts
 from within the editor, incorporate pep8 checking of python code, and use the ansicon
 windows package to allow enhanced terminal printing on windows systems.
@@ -86,30 +86,29 @@ Additionally, *geany* also recongizes rst files and can easily be configured to 
 the rst files to html if you are documenting your code using Python-Sphinx.
 
 In order to use the LaTeX printing options in the *GA* module install a LaTeX
-distribution as follows: 
+distribution as follows:
 
-    #. To install texlive in linux or windows
+    #. To install texlive in ubuntu goto console and enter *sudo apt-get install texlive-full*.
 
-        #. Go to <http://www.tug.org/texlive/acquire-netinstall.html> and click on "install-tl.zip" to download
-        #. Unzip "install-tl.zip" anywhere on your machine
-        #. Open the file "readme.en.html" in the "readme-html.dir" directory.  This file contains the information needed to install texlive.
-        #. Open a terminal (console) in the "install-tl-XXXXXX" directory
-        #. Follow the instructions in "readme.en.html" file to run the install-tl.bat file in windows or the install-tl script file in linux.
+    #. To install miktex in windows goto <http://miktex.org/> and follow instructions for full installation.
 
-    #. For OSX install mactex from <http://tug.org/mactex/>.
+    #. To install mactex in OSX goto <http://tug.org/mactex/> and follow instructions for full installation.
 
 To use the numerical evaluation options install python-numpy:
 
     #. Install python-nympy if you want to calculate numerical matrix functons (determinant, inverse, eigenvalues, etc.).
        For windows go to <http://sourceforge.net/projects/numpy/files/NumPy/1.6.2/> and install the distribution of numpy
        appropriate for your system.
-       
+
     #. For OSX go to <http://sourceforge.net/projects/numpy/files/NumPy/1.6.1/>.
 
 If you wish to use "enhance_print" on windows install ansicon as follows:
 
         #. Go to <https://github.com/adoxa/ansicon/downloads> and download "ansicon"
         #. In the Edit -> Preferences -> Tools menu of "geany" enter into the Terminal input the full path of "ansicon.exe"
+
+To use extra options *crop*, *png*, and *prog* in LaTeX printing goto section on LaTeX printing for instructions and limitations.
+
 
 Module Components
 =================
@@ -131,7 +130,7 @@ A geometric algebra is instantiated with
    multivector field as a function of position and for calculating the derivatives
    of a multivector field. Additionally, *Ga()* calculates the pseudo scalar,
    :math:`I` and pseudo scalar inverse :math:`I^{-1}` and makes them available to the programmer as *MV.I* and *MV.Iinv*.
-   For the case of instantiating a 3-d geometeric algebra in spherical coordinates we could use
+   For the case of instantiating a 3-d geometric algebra in spherical coordinates we could use
 
        .. code-block:: python
 
@@ -143,8 +142,8 @@ A geometric algebra is instantiated with
    The input :math:`X` allows the metric to be input as a vector manifold. :math:`X`
    is a list of functions of *coords* dimension, :math:`m`, equal to or greater than
    the number of coordinates. If *g=None* it is assumed that *X* is a vector in an
-   :math:`m`-dimensional orthonormal Euclidian vector space.  If it is wished
-   the embedding vector space to be non-Euclidian that condition is specified with
+   :math:`m`-dimensional orthonormal Euclidean vector space.  If it is wished
+   the embedding vector space to be non-Euclidean that condition is specified with
    *g*.  For example if we wish the embedding space to be a 5-dimensional Minkowski
    space then *g=[-1,1,1,1,1]*.  Then the *Ga* class uses *X* to calculate the
    manifold basis vectors as a function of the coordinates and from them the metric
@@ -202,7 +201,7 @@ A geometric algebra is instantiated with
    of other classes since the objects of the other classes are all associated with a particular
    geometric algebra object.  Thus we have
 
-    .. image:: tabels/class_objs.png
+    .. image:: tables/class_objs.png
         :width: 400px
         :align: center
 
@@ -222,7 +221,7 @@ Instantiating a Multivector
     *Ga.mv(name, mode, f=False)*
 
         As an example of both instantiating a geometric algebra and multivectors consider the
-        following code fragment for a 3-d Euclidian geometric algebra.
+        following code fragment for a 3-d Euclidean geometric algebra.
 
         .. code-block:: python
 
@@ -251,7 +250,7 @@ Instantiating a Multivector
         from the coordinate symbols or if there are no coordinates from the subscripts of
         the basis vectors.  The types of name and modes available for multivector instantiation are
 
-            .. image:: tabels/instanciate_mv.png
+            .. image:: tables/instanciate_mv.png
                 :width: 750px
                 :align: center
 
@@ -293,12 +292,16 @@ Instantiating a Multivector
         dFrop = rgrad*F
         dBrop = rgrad*B
 
-    *dFop*, *dBop*, *dFrop*, and *dBrop* are all multivector differential operators (again see 
+    *dFop*, *dBop*, *dFrop*, and *dBrop* are all multivector differential operators (again see
     `GA[page 25] <../../_downloads/GA.pdf#page=26>`_).
 
 
 Basic Multivector Class Functions
 ---------------------------------
+
+    *components(self)*
+
+       Return list of multivectors correspoinding to each base blade of multivector.
 
     *convert_to_blades(self)*
 
@@ -371,7 +374,7 @@ Basic Multivector Class Functions
 
         Function to print multivectors in different formats where
 
-            .. image :: tabels/fmt_opts.png
+            .. image :: tables/fmt_opts.png
                 :width: 400px
                 :align: center
 
@@ -497,7 +500,7 @@ Basic Multivector Functions
 
     *cross(v1,v2)*
 
-       If *v1* and *v2* are 3-dimensional euclidian vectors the vector cross product is
+       If *v1* and *v2* are 3-dimensional euclidean vectors the vector cross product is
        returned, :math:`v_{1}\times v_{2} = -I\left ( v_{1}\wedge v_{2} \right )`.
 
     *def_prec(gd,op_ord='<>|,^,\*')*
@@ -536,109 +539,10 @@ Basic Multivector Functions
        the normalized dual of *n*.
 
 
-
-Multivector Derivatives
------------------------
-
-    The various derivatives of a multivector function is accomplished by
-    multiplying the gradient operator vector with the function.  The gradient
-    operation vector is returned by the *Ga.mv()* function if coordinates
-    are defined.  For example if we have for a 3-D vector space
-
-    .. code-block:: python
-
-        X = (x,y,z) = symbols('x y z')
-        o3d = Ga('e*x|y|z',metric='[1,1,1]',coords=X)
-        (ex,ey,ez) = o3d.mv()
-        (grad,rgrad) = o3d.grads()
-
-
-    Then the gradient operator vector is *grad* (actually the user can give
-    it any name he wants to).  Then the derivatives of the multivector
-    function *F = o3d.mv('F','mv',f=True)* are given by multiplying by the
-    left geometric derivative operator and the right geometric derivative operator
-    *grad* :math:`= \nabla` and *rgrad* :math:`= \bar{\nabla}`.  Another option
-    is to use the gradient operator members of the geometric algebra directly where we have
-    :math:`\nabla =` *o3d.grad* and :math:`\bar{\nabla} =` *o3d.rgrad*.
-
-    .. math::
-      :nowrap:
-
-      \begin{align*}
-            \nabla F &=  \mbox{grad $*$ F} \\
-            F \bar{\nabla} &=  \mbox{F $*$ rgrad} \\
-            \nabla \wedge F &=  \mbox{grad ^ F} \\
-            F \wedge \bar{\nabla} &=  \mbox{F ^ rgrad} \\
-            \nabla \cdot F &=  \mbox{grad $|$ F} \\
-            F \cdot \bar{\nabla} &=  \mbox{F $|$ rgrad} \\
-            \nabla \lfloor F &=  \mbox{grad $<$ F} \\
-            F \lfloor \bar{\nabla} &=  \mbox{F $<$ rgrad} \\
-            \nabla \rfloor F &=  \mbox{grad $>$ F} \\
-            F \rfloor \bar{\nabla} &= \mbox{F $>$ rgrad}
-      \end{align*}
-
-
-    The preceding code block gives examples of all possible multivector
-    derivatives of the multivector function *F* where the operation returns
-    a multivector function. The complementary operations
-
-        .. math::
-          :nowrap:
-
-          \begin{align*}
-                F \nabla &=  \mbox{F $*$ grad} \\
-                \bar{\nabla} F &=  \mbox{rgrad $*$ F} \\
-                F \wedge \nabla &=  \mbox{F ^ grad} \\
-                \bar{\nabla} \wedge F &=  \mbox{rgrad ^ F} \\
-                F \cdot \nabla &=  \mbox{F $|$ grad} \\
-                \bar{\nabla}\cdot F &=  \mbox{rgrad $|$ F} \\
-                F \lfloor \nabla &=  \mbox{F $<$ grad} \\
-                \bar{\nabla} \lfloor F &=  \mbox{rgrad $<$ F} \\
-                F \rfloor \nabla &=  \mbox{F $>$ grad} \\
-                \bar{\nabla} \rfloor F &= \mbox{rgrad $>$ F}
-          \end{align*}
-
-    all return multivector linear differential operators.
-
-
-Submanifolds
-------------
-
-    In general the geometric algebra that the user defines exists on the tangent space of
-    a manifold.  The submanifold class, *Sm*, is derived from
-    the *Ga* class and allows one
-    to define a submanifold of a manifold by defining a coordinate mapping between the submanifold
-    coordinates and the manifold coordinates.  What is returned is the geometric
-    algebra of the tangent space of the submanifold. The submanifold for a geometric algebra is
-    instantiated with
-
-    *Ga.sm(map,coords,root='e',norm=False)*
-
-        To define the submanifold we must define a coordinate map from the coordinates of the submanifold to
-        each of the coordinates of the base manifold.  Thus the arguments *map* and *coords* are
-        respectively lists of functions and symbols.  The list of symbols, *coords*, are the coordinates of the
-        submanifold and are of length equal to the dimension of the submanifold.  The list of functions, *map*,
-        define the mapping from the coordinate space of the submanifold to the coordinate space of the
-        base manifold.  The length of *map* is equal to the dimension of the base manifold and each function in
-        *map* is a function of the coordinates of the submanifold. As a concrete example consider the
-        following code.
-
-        .. literalinclude:: pysource/manifold_src.py
-            :language: python
-
-        The base manifold, *sp3d*, is a 3-d Euclidian space using standard spherical coordinates. The submanifold
-        *sph2d* of *sp3d* is a spherical surface of radius :math:`1`.  To take the sumanifold operation one step further
-        the submanifold *cir1d* of *sph2d* is a circle in *sph2d* where the latitude of the circle is :math:`\pi/8`.
-
-        In each case, for demonstration purposes, a scalar and vector function on each manifold is defined (*f* and *F*
-        for the 2-d manifold and *h* and *H* for the 1-d manifold) and the geometric derivative of each function is taken.  The
-        manifold mapping and the metric tensor for *cir1d* of *sph2d* are also shown. Note that if the submanifold
-        basis vectors are not normalized the program output is :download:`Submanifold <./pysource/manifold_src.pdf>`.
-
 Linear Transformations
 ----------------------
 
-    The mathematical background for linear transformations is in `GA[page 26] <../../_downloads/GA.pdf#page=27>`_.  
+    The mathematical background for linear transformations is in `GA[page 26] <../../_downloads/GA.pdf#page=27>`_.
     Linear transformations on the tangent space of
     the manifold are instantiated with the *Ga* member function *lt* (the actual class being instantiated is *Lt*) as shown in
     lines 12, 20, 26, and 44 of the code (Ltrans.py)
@@ -661,7 +565,7 @@ Linear Transformations
     *M* is an expression that can define the coefficients of the linear transformation in various ways
     defined as follows.
 
-    .. image:: tabels/lt_ops.png
+    .. image:: tables/lt_ops.png
         :width: 800px
         :align: center
 
@@ -720,9 +624,9 @@ Differential Operators
 ----------------------
 
     For the mathematical treatment of linear mulivector differential operators `GA[page 23] <../../_downloads/GA.pdf#page=24>`_.
-    The is a differential
+    There is a differential
     operator class *Dop*. However, one never needs to use it directly.  The operators are constructed from linear
-    combinations of multivector products of the operators *Ga.grad* and *Ga.rgrad* as shown in the following code for
+    combinations of multivector products of the differential operators *Ga.grad* and *Ga.rgrad* as shown in the following code for
     both orthogonal rectangular and spherical 3-d coordinate systems.
 
     .. literalinclude:: pysource/dop.py
@@ -730,15 +634,137 @@ Differential Operators
 
     The output of this code is :download:`Differential Operators <./pysource/dop.pdf>`.
 
+    .. warning::
+
+        Since *Ga.grad* operates on multivectors and differential operators on it's right and *Ga.rgrad*
+        operates on multivectors and differential operators on it's left one can never multiply (any
+        multivector multiplication operator) a left and a right differential operator together since the
+        result is not well defined and will generate an error message.  A right operator times a right
+        operator gives a right operator and a left operator times a left operator gives a left operator.
+
+    The printed output of a *Dop* (text or latex) is the sum of the products of scalar differential operators
+    times the base-blades of the geometric algebra. If the *Dop* operates to the right the base-blades are
+    printed to the left of the scalar differential operator, if the *Dop* operates to the left the base-blades are
+    printed to the right of the scalar differential operator.  For examples see the first two lines in
+    :download:`Differential Operators <./pysource/dop.pdf>`.
+
+    The various derivatives of a multivector function is accomplished by
+    multiplying the gradient differential operator with the function.  The gradient
+    differential operation is returned by the *Ga.mv()* function if coordinates
+    are defined.  For example if we have for a 3-D vector space
+
+    .. code-block:: python
+
+        X = (x,y,z) = symbols('x y z')
+        o3d = Ga('e*x|y|z',metric='[1,1,1]',coords=X)
+        (ex,ey,ez) = o3d.mv()
+        (grad,rgrad) = o3d.grads()
+
+
+    Then the gradient operator is *grad* (actually the user can give
+    it any name he wants to).  Then the derivatives of the multivector
+    function *F = o3d.mv('F','mv',f=True)* are given by multiplying by the
+    left geometric derivative operator and the right geometric derivative operator
+    *grad* :math:`= \nabla` and *rgrad* :math:`= \bar{\nabla}`.  Another option
+    is to use the gradient operator members of the geometric algebra directly where we have
+    :math:`\nabla =` *o3d.grad* and :math:`\bar{\nabla} =` *o3d.rgrad*.
+
+    .. math::
+      :nowrap:
+
+      \begin{align*}
+            \nabla F &=  \mbox{grad $*$ F} \\
+            F \bar{\nabla} &=  \mbox{F $*$ rgrad} \\
+            \nabla \wedge F &=  \mbox{grad ^ F} \\
+            F \wedge \bar{\nabla} &=  \mbox{F ^ rgrad} \\
+            \nabla \cdot F &=  \mbox{grad $|$ F} \\
+            F \cdot \bar{\nabla} &=  \mbox{F $|$ rgrad} \\
+            \nabla \lfloor F &=  \mbox{grad $<$ F} \\
+            F \lfloor \bar{\nabla} &=  \mbox{F $<$ rgrad} \\
+            \nabla \rfloor F &=  \mbox{grad $>$ F} \\
+            F \rfloor \bar{\nabla} &= \mbox{F $>$ rgrad}
+      \end{align*}
+
+
+    The preceding code block gives examples of all possible multivector
+    derivatives of the multivector function *F* where the operation returns
+    a multivector function. The complementary operations
+
+        .. math::
+          :nowrap:
+
+          \begin{align*}
+                F \nabla &=  \mbox{F $*$ grad} \\
+                \bar{\nabla} F &=  \mbox{rgrad $*$ F} \\
+                F \wedge \nabla &=  \mbox{F ^ grad} \\
+                \bar{\nabla} \wedge F &=  \mbox{rgrad ^ F} \\
+                F \cdot \nabla &=  \mbox{F $|$ grad} \\
+                \bar{\nabla}\cdot F &=  \mbox{rgrad $|$ F} \\
+                F \lfloor \nabla &=  \mbox{F $<$ grad} \\
+                \bar{\nabla} \lfloor F &=  \mbox{rgrad $<$ F} \\
+                F \rfloor \nabla &=  \mbox{F $>$ grad} \\
+                \bar{\nabla} \rfloor F &= \mbox{rgrad $>$ F}
+          \end{align*}
+
+    all return multivector linear differential operators.
+
+    One additional class function of utility is
+
+    *components(self)*
+
+       Return list of differential operators corresponding to each base blade in *self*
+       differential operator.  For example ``o3d.grad.components()`` would print as
+       :math:`\left [ \boldsymbol{e}_{x}\frac{\partial}{\partial x}, \boldsymbol{e}_{y}\frac{\partial}{\partial y},\boldsymbol{e}_{z}\frac{\partial}{\partial z}\right ]`,
+       while ``o3d.rgrad.components()`` would print as
+       :math:`\left [ \frac{\partial}{\partial x}\boldsymbol{e}_{x}, \frac{\partial}{\partial y}\boldsymbol{e}_{y},\frac{\partial}{\partial z}\boldsymbol{e}_{z}\right ]`.
+
+
+Submanifolds
+------------
+
+    In general the geometric algebra that the user defines exists on the tangent space of
+    a manifold.  The submanifold class, *Sm*, is derived from
+    the *Ga* class and allows one
+    to define a submanifold of a manifold by defining a coordinate mapping between the submanifold
+    coordinates and the manifold coordinates.  What is returned is the geometric
+    algebra of the tangent space of the submanifold. The submanifold for a geometric algebra is
+    instantiated with
+
+    *Ga.sm(map,coords,root='e',norm=False)*
+
+        To define the submanifold we must define a coordinate map from the coordinates of the submanifold to
+        each of the coordinates of the base manifold.  Thus the arguments *map* and *coords* are
+        respectively lists of functions and symbols.  The list of symbols, *coords*, are the coordinates of the
+        submanifold and are of length equal to the dimension of the submanifold.  The list of functions, *map*,
+        define the mapping from the coordinate space of the submanifold to the coordinate space of the
+        base manifold.  The length of *map* is equal to the dimension of the base manifold and each function in
+        *map* is a function of the coordinates of the submanifold. As a concrete example consider the
+        following code.
+
+        .. literalinclude:: pysource/manifold_src.py
+            :language: python
+
+        The base manifold, *sp3d*, is a 3-d Euclidian space using standard spherical coordinates. The submanifold
+        *sph2d* of *sp3d* is a spherical surface of radius :math:`1`.  To take the sumanifold operation one step further
+        the submanifold *cir1d* of *sph2d* is a circle in *sph2d* where the latitude of the circle is :math:`\pi/8`.
+
+        In each case, for demonstration purposes, a scalar and vector function on each manifold is defined (*f* and *F*
+        for the 2-d manifold and *h* and *H* for the 1-d manifold) and the geometric derivative of each function is taken.  The
+        manifold mapping and the metric tensor for *cir1d* of *sph2d* are also shown. Note that if the submanifold
+        basis vectors are not normalized the program output is :download:`Submanifold <./pysource/manifold_src.pdf>`.
+
+
 Instantiating a Multi-linear Functions (Tensors)
 ------------------------------------------------
 
-The mathematical background for multi-linear functions is in `GA[page 27] <../../_downloads/GA.pdf#page=28>`_.
+The mathematical background for multi-linear functions is in `GA[page 27] <../../_downloads/GA.pdf#page=28>`_.  Note
+that the multilinear transformations represent *concrete* tensors <http://en.wikipedia.org/wiki/Multilinear_map> as
+opposed to *abstract* tensors <http://en.wikipedia.org/wiki/Abstract_index_notation>.
 To instantiate a multi-linear function use
 
 *Mlt(self, f, Ga, nargs=None, fct=False)* where the arguments are
 
-        .. image:: tabels/tensor_inst.png
+        .. image:: tables/tensor_inst.png
             :width: 600px
             :align: center
 
@@ -838,11 +864,11 @@ Latex Printing
        This function from the *ga* module turns on latex printing with the
        following options
 
-        .. image:: tabels/latex_prnt.png
+        .. image:: tables/latex_prnt.png
             :width: 700px
             :align: center
 
-    *xpdf(filename=None,debug=False,paper=(14,11),crop=False)*
+    *xpdf(filename=None,paper=(14,11),crop=False,png=False,prog=False,debug=False)*
 
        This function from the *printer* module post-processes the output captured from
        print statements, writes the resulting latex strings to the file *filename},
@@ -850,9 +876,9 @@ Latex Printing
        the pdf file are deleted. If *debug = True* the file *filename* is printed to
        standard output for debugging purposes and *filename* (the tex file) is saved.  If *filename* is not entered the default
        filename is the root name of the python program being executed with *.tex* appended.
-       The *paper* option defines the size of the paper sheet for latex. The format for the *paper* is
+       The *paper* option defines the size of the paper sheet for latex. The format for the *paper* input is
 
-        .. image:: tabels/latex_paper.png
+        .. image:: tables/latex_paper.png
             :width: 600px
             :align: center
 
@@ -860,6 +886,15 @@ Latex Printing
 
        If the *crop* input is *True* the linux *pdfcrop* program is used to crop the pdf output (if output is one page).  This only works
        for linux installations (where *pdfcrop* is installed).
+
+       If the *png* input is *True* the imagemagick convert program is used to output a portable network graphics format file.  This only
+       work in linux installations where imagemagick is installed and the the script *Pdf2Png* (copy in galgebra/utilities directory) is
+       in the executable path.
+
+       If the *prog* input is *True* the python program that produces the \LaTeX output is printed to the pdf output first using the
+       lstlisting package in the \LaTeX distribution.
+
+       If the *debug* input is *True* the tex file generated is printed to the console.
 
        The *xpdf* function requires that latex and a pdf viewer be installed on
        the computer.
@@ -873,7 +908,7 @@ Latex Printing
     .. literalinclude:: pysource/print_example1.py
         :language: python
 
-    The output of the code is `*LaTeX* output example :download:<./pysource/print_example1.pdf>` is displayed
+    The output of the code is :download:`LaTeX output example <./pysource/print_example1.pdf>` is displayed
 
     For the cases of derivatives the code is
 
@@ -888,7 +923,7 @@ Latex Printing
     *\** are mapped by the *xpdf()* post-processor as follows if the string contains
     an *=*.
 
-    .. image:: tabels/latex_replc.png
+    .. image:: tables/latex_replc.png
         :width: 375px
         :align: center
 
@@ -979,7 +1014,7 @@ also be applied to the numerical calculations of crystal properties.
 Lorentz-Transformation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-A simple physics demonstation of geometric algebra is the derivation of
+A simple physics demonstration of geometric algebra is the derivation of
 the Lorentz-Transformation.  In this demonstration a 2-dimensional
 Minkowski space is defined and the Lorentz-Transformation is generated
 from a rotation of a vector in the Minkowski space using the rotor
@@ -988,7 +1023,7 @@ from a rotation of a vector in the Minkowski space using the rotor
     .. literalinclude:: pysource/lorentz_trans.py
         :language: python
 
-The preceeding code also demonstrates how to use the sympy *subs* functions
+The preceding code also demonstrates how to use the sympy *subs* functions
 to perform the hyperbolic half angle transformation.  The code also shows
 the use of both the *#* and *\%* directives in the text string
 ``r"#%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} = t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} = R\left ( t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\right ) R^{\dagger}"``.
@@ -1054,7 +1089,7 @@ standard curl of a 3-dimension function the result is multiplied by
 .. literalinclude:: pysource/spherical.py
     :language: python
 
-Results of the code are in :download:`Spherical Coordinates <./pysource/spherical.pdf>`. 
+Results of the code are in :download:`Spherical Coordinates <./pysource/spherical.pdf>`.
 
 Maxwell's Equations
 ^^^^^^^^^^^^^^^^^^^
@@ -1101,7 +1136,7 @@ The example code for tensors on a manifold is
         :language: python
 
 This code uses a unit sphere as the example manifold and shows the
-geometric derivative and directional derivative operators.  Additonally,
+geometric derivative and directional derivative operators.  Additionally,
 rank 1 and rank 2 general tensors are defined.  The rank 2 tensor is
 contracted and evaluated to show multilinear properties.  The covariant
 derivatives of both tensors are caculated.  The results are in :download:`Manifold <./pysource/manifold.pdf>`

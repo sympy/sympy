@@ -1,9 +1,12 @@
 #metric.py
 
+import sys
 import copy
+import itertools
 from sympy import diff, trigsimp, Matrix, Rational, \
     sqf_list, Symbol, sqrt, eye, S, expand, Mul, \
-    Add, simplify, together, ratsimp
+    Add, simplify, together, ratsimp, Expr, latex, \
+    numbers
 
 import printer
 
@@ -25,8 +28,10 @@ def str_to_lst(s):
     return v_lst
 
 
-def linear_expand(expr):
-    expr = expand(expr)
+def linear_expand(expr, mode=True):
+
+    if isinstance(expr, Expr):
+        expr = expand(expr)
     if expr == 0:
         coefs = [expr]
         bases = [S(1)]
@@ -57,7 +62,10 @@ def linear_expand(expr):
             else:
                 bases.append(base)
                 coefs.append(coef)
-    return (coefs, bases)
+    if mode:
+        return (coefs, bases)
+    else:
+        return zip(coefs, bases)
 
 
 def square_root_of_expr(expr):

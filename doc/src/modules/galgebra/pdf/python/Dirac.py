@@ -1,8 +1,8 @@
 
 import sys
 from sympy import symbols,sin,cos
-from printer import Format,xpdf,Get_Program,Print_Function
-from ga import Ga
+from sympy.galgebra.printer import Format,xpdf,Get_Program,Print_Function
+from sympy.galgebra.ga import Ga
 
 Format()
 coords = symbols('t x y z',real=True)

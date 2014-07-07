@@ -1,6 +1,6 @@
 from sympy import expand,simplify
-from printer import Format,xpdf
-from ga import Ga
+from sympy.galgebra.printer import Format,xpdf
+from sympy.galgebra.ga import Ga
 
 g = '1 # #,'+ \
     '# 1 #,'+ \

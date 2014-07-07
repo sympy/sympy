@@ -1086,63 +1086,91 @@ where $\f{D^{j_{1}\dots j_{n}}}{}$ are linear multivector functionals.
 
 The definition of the sum of two differential operators is obvious since any multivector operator, $\circ$, is a bilinear operator 
 $\paren{\paren{D_{A}+D_{B}}\circ F = D_{A}\circ F+D_{B}\circ F}$, the product of two differential operators $D_{A}$ and $D_{B}$ operating on a multivector function $F$ is defined to be ($\circ_{1}$ and $\circ_{2}$ are any two multivector multiplicative operations)
-\begin{align*}
-	\paren{D_{A}\circ_{1}D_{B}}\circ_{2}F &\equiv \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}
+\be
+	\paren{D_{A}\circ_{1}D_{B}}\circ_{2}F \equiv \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}
 	                                              \partial_{i_{1}\dots i_{n}}\paren{D_{B}^{j_{1}\dots j_{n}}
-	                                              \partial_{j_{1}\dots j_{n}}}}\circ_{2}F \nonumber \\
-	                                      &= \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}
-	                                         \paren{\paren{\partial_{i_{1}\dots i_{n}}D_{B}^{j_{1}\dots j_{n}}}
-	                                         \partial_{j_{1}\dots j_{n}}+
-	                                         D_{B}^{j_{1}\dots j_{n}}}
-	                                         \partial_{i_{1}+j_{1},\dots, i_{n}+j_{n}}}\circ_{2}F \nonumber \\
-	                                      &= \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}\paren{\partial_{i_{1}\dots i_{n}}D_{B}^{j_{1}\dots j_{n}}}}
-	                                         \circ_{2}\partial_{j_{1}\dots j_{n}}F+	                                         
-	                                         \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}D_{B}^{j_{1}\dots j_{n}}}
-	                                         \circ_{2}\partial_{i_{1}+j_{1},\dots, i_{n}+j_{n}}F,
-\end{align*}
-where we have used the fact that the $\partial$ operator is a scalar operator and commutes with $\circ_{1}$ and $\circ_{2}$.
+	                                              \partial_{j_{1}\dots j_{n}}}}\circ_{2}F.
+\ee
 
 Thus for a pure operator product $D_{A}\circ D_{B}$ we have
 \be\label{eq_71a}
-	D_{A}\circ D_{B} = \paren{D_{A}^{i_{1}\dots i_{n}}\circ\paren{\partial_{i_{1}\dots i_{n}}D_{B}^{j_{1}\dots j_{n}}}}
-	                                         \partial_{j_{1}\dots j_{n}}+	                                         
-	                                         \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}D_{B}^{j_{1}\dots j_{n}}}
-	                                         \partial_{i_{1}+j_{1},\dots, i_{n}+j_{n}}
+	D_{A}\circ D_{B} = \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}
+	                                              \partial_{i_{1}\dots i_{n}}\paren{D_{B}^{j_{1}\dots j_{n}}
+	                                              \partial_{j_{1}\dots j_{n}}}}
 \ee
-and the form of eq~(\ref{eq_71a}) is the same as eq(\ref{eq_67a}).  The basis of eq~(\ref{eq_71a}) is that the $\partial$ operator
-operates on all object to the right of it as products so that the product rule must be used in all differentiations.  Since eq~(\ref{eq_71a})
-puts the product of two differential operators in standard form we also evaluate $F\circ_{2}\paren{D_{A}\circ_{1}D_{B}}$.
+and the form of eq~(\ref{eq_71a}) is the same as eq~(\ref{eq_67a}).  The basis of eq~(\ref{eq_71a}) is that the $\partial$ operator
+operates on all object to the right of it as products so that the generalized product rule must be used in all differentiations (product 
+rule for higher order partial derivatives if needed).  Since eq~(\ref{eq_71a})
+puts the product of two differential operators in standard form we can also evaluate $F\circ_{2}\paren{D_{A}\circ_{1}D_{B}}$.
 
 We now must distinguish between the following cases.  If $D$ is a differential operator and $F$ a multivector function should $D\circ F$ and
 $F\circ D$ return a differential operator or a multivector. In order to be consistent with the standard vector analysis we have $D\circ F$ 
-return a multivector and $F\circ D$ return a differential operator.  The we define the complementary differential operator $\bar{D}$ which
+return a multivector and $F\circ D$ return a differential operator.  Then we define the complementary differential operator $\bar{D}$ which
 is identical to $D$ except that $\bar{D}\circ F$ returns a differential operator according to eq~(\ref{eq_71a})\footnote{In this case
 $D_{B}^{j_{1}\dots j_{n}} = F$ and $\partial_{j_{1}\dots j_{n}} = 1$.} and $F\circ\bar{D}$ returns a multivector according to eq~(\ref{eq_68a}). 
 
 A general differential operator is built from repeated applications of the basic operator building blocks $\paren{\bar{\nabla}\circ A}$,
 $\paren{A\circ\bar{\nabla}}$, $\paren{\bar{\nabla}\circ\bar{\nabla}}$, and $\paren{A\pm \bar{\nabla}}$.  Both $\nabla$ and  $\bar{\nabla}$
-are represented by the operator
-\be
-	\nabla = \bar{\nabla} = e^{i}\pdiff{}{x^{i}},
-\ee
-but are flagged to produce the appropriate result.
+are represented by the operator but are flagged to produce the appropriate result.  The two operators are displayed as
+\begin{align}
+	\nabla  &= e^{i}\pdiff{}{x^{i}}, \\
+	\bar{\nabla}  &= \pdiff{}{x^{i}}e^{i}.	
+\end{align}
+ Note that in the product of differential operators both operators must be either right
+acting $\paren{\nabla}$ or left acting $\paren{\bar{\nabla}}$ with a resulting operator that is right acting or left acting.  Mixing 
+left acting and right acting operators is ambiguous.
 
 In the our notation the directional derivative operator is $a\cdot\nabla$, the Laplacian 
 $\nabla\cdot\nabla$ and the expression for the Riemann tensor, $R^{i}_{jkl}$, is
 \be
 	\paren{\nabla\W\nabla}\eb^{i} = \half R^{i}_{jkl}\paren{\eb^{j}\W\eb^{k}}\eb^{l}.
 \ee
-We would use the complement if we wish a quantum mechanical type commutator defining
+If we wish a quantum mechanical type commutator define
 \be
-	\com{x,\nabla} \equiv x\nabla - \bar{\nabla}x,
+	\com{x,\nabla} \equiv x\nabla - \nabla x,
 \ee
 or if we wish to simulate the dot notation (Doran and Lasenby)
 \be
 	\dot{F}\dot{\nabla} = F\bar{\nabla}.
 \ee
 
+The linear differential operator is represented as a list of tuples.  The first member of the tuple is a multivector and the second
+element is a partial differential operator (\T{Pdop} class).  The partial differential operator is a dictionary wrapped in the \T{Pdop}
+class where the keys of the dictionary are the variables one is differentiating with respect to and the key values integers that represent
+the number of times each differentiation is to be performed.  For example we have the correspondence 
+\be
+	\bfrac{\partial^{4}}{\partial x \partial y \partial z^{2}}  \leftrightarrow \T{\{x:1,y:1,z:2\}}.
+\ee
+The member fuctions of \T{Pdop} allow the operator to correctly operate on multivectors and other \T{Pdop}'s for both first order and
+higher order derivatives.  The order of the derivative is the sum of the key values in the dictionary.  If the order is greater 
+than one the \T{Pdop} is factored into \T{Pdop}'s of order one that are successively applied to the argument being differentiated.   
+The object that then represents a multivector differential operator (wrapped in the \T{Dop} class) is then
+\be
+	\left [ \paren{A_{0},P_{0}}, \dots , \paren{A_{r},P_{r}} \right ],\label{doprep}
+\ee
+where the $A_{i}$'s are multvectors and the $P_{i}$'s are partial differential operators.  The member functions of the \T{Dop} class create
+an algebra of linear multivector differential operators where the multiplication operator for class members can be any of the multivector
+multiplicative operators (\T{*}, \T{\^}, \T{|}, \T{<}, and \T{>}).  Additionally, each instantiation of \T{Dop} has a flag to indicate 
+whether the operator acts on the left or the right.
 
-
+For displaying a \T{Dop} an additonal class, \T{Sdop}, is used.  \T{Sdop} is a scalar differential operator class and it is used to print
+\T{Dop}'s as the sum of the products of basis blades and scalar differential operators.  Thus if $A$ is a vector then $A\nabla$ would be
+displayed as
+\begin{equation*}
+\hspace{-0.4in} A^{x} \bfrac{\partial}{\partial x} + A^{y} \bfrac{\partial}{\partial y} + A^{z} \bfrac{\partial}{\partial z} + \bm{e_{x}\wedge e_{y}} \left ( - A^{y} \bfrac{\partial}{\partial x} + A^{x} \bfrac{\partial}{\partial y}\right )  + \bm{e_{x}\wedge e_{z}} \left ( - A^{z} \bfrac{\partial}{\partial x} + A^{x} \bfrac{\partial}{\partial z}\right )  + \bm{e_{y}\wedge e_{z}} \left ( - A^{z} \bfrac{\partial}{\partial y} + A^{y} \bfrac{\partial}{\partial z}\right ). 
+\end{equation*} 
+Instead of (internal representation as in eq~(\ref{doprep}))
+\begin{equation*}
+\hspace{-.35in}\paren{A^{x}-\bm{e_{x}\W e_{y}}A^{y}-\bm{e_{x}\W e_{z}}A^{z}}\pdiff{}{x} +
+\paren{A^{y}+\bm{e_{x}\W e_{y}}A^{x}-\bm{e_{y}\W e_{z}}A^{z}}\pdiff{}{y} +
+\paren{A^{z}+\bm{e_{x}\W e_{z}}A^{x}+\bm{e_{y}\W e_{z}}A^{y}}\pdiff{}{z}. 
+\end{equation*}
+For those interested in quantum mechanics note that if $\bm{X} = x\bm{e_{x}}+y\bm{e_{y}}+z\bm{e_{z}}$ then
+\begin{equation*} \bm{X}\W\bm{\nabla} = \bm{e_{x}\wedge e_{y}} \left ( - y \bfrac{\partial}{\partial x} + x \bfrac{\partial}{\partial y}\right )  + \bm{e_{x}\wedge e_{z}} \left ( - z \bfrac{\partial}{\partial x} + x \bfrac{\partial}{\partial z}\right )  + \bm{e_{y}\wedge e_{z}} \left ( - z \bfrac{\partial}{\partial y} + y \bfrac{\partial}{\partial z}\right )
+\end{equation*}
+and the components of $\bm{X}\W\bm{\nabla}$ are the quantum mechanical angular momentum operators to within a multiplicative constanst
+(in the geometric algebra formulation of mechanics angular momentum is a bivector and not an pseudo vector as in the standard vector
+treatment).
 \section{Linear Transformations/Outermorphisms}\label{Ltrans}
 
 In the tangent space of a manifold, $\mathcal{M}$, (which is a vector space) a linear transformation is the mapping 
@@ -1447,7 +1475,9 @@ The geometric algebra module consists of the following files and classes
                                      tables, reciprocal basis, and left and right geometric derivative operators.} \\ \cline{2-3}
       & \T{Sm} &  \parbox[t]{4in}{Instantiates geometric algebra for submainfold (inherits \T{Ga}).} \\ \hline
 \T{mv.py} & \T{Mv} & \parbox[t]{4in}{Instantiates multivector.}\\ \cline{2-3}
-      & \T{Dop} & \parbox[t]{4in}{Instantiates linear multivector differential operator.}\\ \hline
+      & \T{Dop} & \parbox[t]{4in}{Instantiates linear multivector differential operator.}\\
+      & \T{Pdop} &  \parbox[t]{4in}{Instantiates partial differential operator.}\\
+      & \T{Sdop} &  \parbox[t]{4in}{Instantiates linear scalar differential operator.}\\\hline
 \T{lt.py} & \T{Lt}  & \parbox[t]{4in}{Instantiates multivector linear transformation.}\\ \hline
 \T{printer.py} & \T{Eprint} & \parbox[t]{4in}{Starts enhanced text printing on ANSI terminal (requires \T{ansicon} on Windows).}\\ \cline{2-3}
            & \T{GaPrinter} & \parbox[t]{4in}{Text printer for all geometric algebra classes (inherits from \T{sympy} 
@@ -1702,17 +1732,15 @@ If we can instantiate multivectors we can use all the multivector class function
 \begin{quote}
 	Fuction to print multivectors in different formats where
 	\begin{center}
-	\begin{longtable}{cl}
+	\begin{tabular}{cl}
 	\T{fmt} & \multicolumn{1}{c}{Formatting} \\
 	1 & Print entire multivector on one line. \\
 	2 & Print each grade of multivector on one line.\\
 	3 & Print each base of multivector on one line.
-	\end{longtable}	
+	\end{tabular}	
 	\end{center}
 	\T{title} appends a title string to the beginning of the output.  An equal sign in
 	the title string is not required, but is added as a default.
-	\emph{\T{Fmt()} is currently the only way to obtain \LaTeX output for multivectors in 
-	an IPython notebook.} 
 \end{quote}
 
 \T{func(self,fct)}
@@ -1863,11 +1891,11 @@ If we can instantiate multivectors we can use all the multivector class function
    the normalized dual of \T{n}.
 \end{quote}
 
-\section{Multivector Derivatives}
+\section{Multivector Differential Operators}
 
-The various derivatives of a multivector function is accomplished by
-multiplying the gradient operator vector with the function.  The gradiant
-operation vector is returned by the \T{Ga.mv()} function if coordinates
+The various derivatives of a multivector function are calculated by
+multiplying the gradient differential operator with the function.  The gradient
+differential operators (left and right) are returned by the \T{Ga.grads()} function if coordinates
 are defined.  For example if we have for a 3-D vector space
 
 \begin{lstlisting}
@@ -1877,12 +1905,12 @@ are defined.  For example if we have for a 3-D vector space
     (grad,rgrad) = o3d.grads()
 \end{lstlisting}
 
-Then the gradient operator vector is \T{grad} (actually the user can give
-it any name he wants to).  Then the derivatives of the multivector
+The gradient differential operator is \T{grad} (actually the user can give
+it any name he wants to).  The left and right derivatives of the multivector
 function \T{F = o3d.mv('F','mv',f=True)} are given by multiplying by the
 left geometric derivative operator and the right geometric derivative operator
 $\paren{\mbox{\T{grad}} = \nabla\mbox{ and } \mbox{\T{rgrad}} = \bar{\nabla}}$.  Another option 
-is to use the gradiant operator members of the geometric algebra directly where we have
+is to use the gradient operator members of the geometric algebra directly where we have
 $\nabla = \T{o3d.grad}$ and $\bar{\nabla} = \T{o3d.rgrad}$.
 
       \begin{align}
@@ -1916,6 +1944,8 @@ a multivector function. The complementary operations
       \end{align}
 
 all return multivector linear differential operators.
+
+
 
 \section{Submanifolds}
 
@@ -2039,20 +2069,6 @@ use can uncomment those statements and run the code in the ``LaTeX docs'' direct
 \begin{center}
 	\includegraphics[scale=0.65]{python/Ltrans.pdf}
 \end{center}
-
-\section{Differential Operators}
-
-For the mathematical treatment of linear mulivector differential operators see section~\ref{ldops}.  The is a differential operator
-class \T{Dop}. However, one never needs to use it directly.  The operators are constructed from linear combinations of multivector 
-products of the operators \T{Ga.grad} and \T{Ga.rgrad} as shown in the following code for both orthogonal rectangular and spherical
-3-d coordinate systems. 
-\includecode{python/Dop.py}
-The output of this code is.
-\begin{center}
-	\includegraphics[scale=1]{python/Dop.pdf}
-\end{center}
-
-Note that for print an operator in the IPython notebook one must implement (yet to be done) a printing method similar to \T{mv.Fmt()}.
 
 \section{Instantiating a Multi-linear Functions (Tensors)}
 

@@ -1,6 +1,6 @@
 from sympy import symbols, sin
-from printer import Format,xpdf
-from ga import Ga
+from sympy.galgebra.printer import Format,xpdf
+from sympy.galgebra.ga import Ga
 
 Format()
 coords = (x,y,z) = symbols('x y z',real=True)
@@ -23,10 +23,6 @@ print r'%\nabla^{2} \bm{A} =',lap*A
 print r'%\bar{\nabla}\cdot v =', o3d.rgrad|v
 Xgrad = X|o3d.grad
 rgradX = o3d.rgrad|X
-print r'%\bm{X}\cdot \nabla =', Xgrad
-print r'%\bar{\nabla}\cdot \bm{X} =', rgradX
-com = Xgrad - rgradX
-print r'%\bm{X}\cdot \nabla - \bar{\nabla}\cdot \bm{X} =', com
 sph_coords = (r,th,phi) = symbols('r theta phi',real=True)
 (sp3d,er,eth,ephi) = Ga.build('e',g=[1,r**2,r**2*sin(th)**2],coords=sph_coords,norm=True)
 f = sp3d.mv('f','scalar',f=True)

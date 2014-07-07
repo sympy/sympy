@@ -1,8 +1,8 @@
 import sys
 from sympy import symbols,exp,I,Matrix,solve,simplify
-from printer import Format,xpdf,Get_Program,Print_Function
-from ga import Ga
-from metric import linear_expand
+from sympy.galgebra.printer import Format,xpdf,Get_Program,Print_Function
+from sympy.galgebra.ga import Ga
+from sympy.galgebra.metric import linear_expand
 
 Format()
 X = (t,x,y,z) = symbols('t x y z',real=True)

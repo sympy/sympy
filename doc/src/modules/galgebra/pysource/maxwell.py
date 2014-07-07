@@ -1,6 +1,6 @@
 from sympy import symbols
-from printer import Format, xpdf
-from ga import Ga
+from sympy.galgebra.printer import Format, xpdf
+from sympy.galgebra.ga import Ga
 
 Format()
 X = symbols('t x y z',real=True)

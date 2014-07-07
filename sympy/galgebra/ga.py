@@ -4,7 +4,7 @@ import operator
 import copy
 from sympy import diff, Rational, Symbol, S, Mul, Pow, Add, \
     collect, expand, eye, trigsimp, sin, cos, sinh, cosh, \
-    symbols, sqrt, Abs
+    symbols, sqrt, Abs, numbers
 from collections import OrderedDict
 #from sympy.core.compatibility import combinations
 from itertools import combinations
@@ -69,7 +69,8 @@ def update_and_substitute(expr1, expr2, func, mul_dict):
     product of bases1[i]*bases2[j] as a linear combination of scalars and
     bases of the geometric algebra.
     """
-    if expr1.is_commutative or expr2.is_commutative:
+    if (isinstance(expr1, numbers.Number) or expr1.is_commutative) \
+        or (isinstance(expr2, numbers.Number) or expr2.is_commutative):
         return expr1 * expr2
     (coefs1, bases1) = metric.linear_expand(expr1)
     (coefs2, bases2) = metric.linear_expand(expr2)
@@ -191,6 +192,11 @@ class Ga(metric.Metric):
         Ga.set_simp(*simps)
         return Ga(*kargs, **kwargs)
 
+    def __eq__(self, ga):
+        if self.name == self.ga:
+            return True
+        return False
+
     def __init__(self, bases, **kwargs):
 
         # Each time a geometric algebra is intialized in setup of append
@@ -215,16 +221,19 @@ class Ga(metric.Metric):
         self.Inorm = None
 
         if self.coords is not None:
+            self.coords = list(self.coords)
+
+        if self.coords is not None:
             self.coord_vec = sum([coord * base for (coord, base) in zip(self.coords, self.basis)])
             self.build_reciprocal_basis(kwargs['gsym'])
-            self.pd0 = self.n * [0]
-            # Partial derivative indices for no differentiation
-            self.pdx = []
-            for i in self.n_range:
-                pdxi = self.n * [0]
-                pdxi[i] = 1
-                # Partial derivative indices for coordinate differentiation
-                self.pdx.append(pdxi)
+            self.Pdop_identity = mv.Pdop({},ga=self)  # Identity Pdop = 1
+            self.Pdiffs = {}
+            self.sPds = {}
+            for x in self.coords:  # Partial derivative operator for each coordinate
+                self.Pdiffs[x] = mv.Pdop({x:1}, ga=self)
+                self.sPds[x] = mv.Sdop([(S(1), self.Pdiffs[x])], ga=self)
+            self.grad, self.rgrad = self.grads()
+            self.TSgrads =[]
 
         if self.connect_flg:
             self.build_connection()
@@ -246,12 +255,33 @@ class Ga(metric.Metric):
         self.pdiffs = []  # List of lists dummy vector coefficients
         self.dslot = -1  # kargs slot for dervative, -1 for coordinates
 
+    def make_grad(self, a, cmpflg=False):  # make gradient operator with respect to vector a
+        if isinstance(a, mv.Mv):
+            ai = a.get_coefs(1)
+        else:
+            ai = a
+        coefs = []
+        pdiffs = []
+        for (base, coord) in zip(self.r_basis_mv, ai):
+            coefs.append(base)
+            pdiffs.append(mv.Pdop({coord: 1}, ga=self))
+        return mv.Dop(coefs, pdiffs, ga=self, cmpflg=cmpflg)
+
+    def __str__(self):
+        return self.name
+
     def I(self):
         if self.Inorm is None:
             if self.inorm is None:
                 self.inorm = (self.i * self.i).scalar()
             self.Inorm = self.i / sqrt(Abs(self.inorm))
         return self.Inorm
+
+    def X(self):
+        return self.mv(sum([coord*base for (coord, base) in zip(self.coords, self.basis)]))
+
+    def sdop(self, coefs, pdiffs=None):
+        return metric.Sdop(coefs, pdiffs, ga=self)
 
     def mv(self, root=None, *kargs, **kwargs):
         """
@@ -266,6 +296,9 @@ class Ga(metric.Metric):
             return self.mv_basis
 
         kwargs['ga'] = self
+
+        if not isinstance(root,str):
+            return mv.Mv(root, *kargs, **kwargs)
 
         if ' ' in root and ' ' not in kargs[0]:
             root_lst = root.split(' ')
@@ -293,18 +326,17 @@ class Ga(metric.Metric):
         return mv.Mv(root, *kargs, **kwargs)
 
     def grads(self):
-
-        r_basis = list(self.r_basis)
-
         if not self.is_ortho:
-            r_basis = [x / self.inorm for x in r_basis]
+            r_basis = [x / self.inorm for x in self.r_basis_mv]
+        else:
+            r_basis = self.r_basis_mv
         if self.norm:
-            r_basis = [x / e_norm for (x, e_norm) in zip(r_basis, self.e_norm)]
+            r_basis = [x / e_norm for (x, e_norm) in zip(self.r_basis_mv, self.e_norm)]
 
-        self.grad = mv.Dop(r_basis, self.pdx, ga=self)
-        self.grad.consolidate_coefs()
-        self.rgrad = mv.Dop(r_basis, self.pdx, ga=self, cmpflg=True)
-        self.rgrad.consolidate_coefs()
+        pdx = [self.Pdiffs[x] for x in self.coords]
+
+        self.grad = mv.Dop(r_basis, pdx, ga=self)
+        self.rgrad = mv.Dop(r_basis, pdx, ga=self, cmpflg=True)
         return self.grad, self.rgrad
 
     def dop(self, *kargs, **kwargs):
@@ -412,6 +444,8 @@ class Ga(metric.Metric):
                 blades.append(blade_symbol)
                 self.blades_lst.append(blade_symbol)
             self.blades.append(blades)
+
+        self.blades_lst0 = [S(1)] + self.blades_lst
 
         self.iobj = self.blades_lst[-1]
 
@@ -986,22 +1020,25 @@ class Ga(metric.Metric):
 
     def remove_scalar_part(self, A):
         """
-        Return multivector with scalar part removed.  Required for
-        Hestenes dot product.
+        Return non-commutative part (sympy object) of A.obj.
         """
-        A = expand(A)
-        if isinstance(A, Add):
-            return(sum([x for x in A.args if not x.is_commutative]))
-        elif isinstance(A, Symbol):
-            if A.is_commutative:
-                return 0
-            else:
-                return A
+
+        if isinstance(A, mv.Mv):
+            return self.remove_scalar_part(A.obj)
         else:
-            if A.is_commutative:
-                return 0
+            if isinstance(A, Add):
+                A = expand(A)
+                return(sum([x for x in A.args if not x.is_commutative]))
+            elif isinstance(A, Symbol):
+                if A.is_commutative:
+                    return 0
+                else:
+                    return A
             else:
-                return A
+                if A.is_commutative:
+                    return 0
+                else:
+                    return A
 
     def scalar_part(self, A):
         A = expand(A)
@@ -1307,9 +1344,9 @@ class Ga(metric.Metric):
         # Simple partial differentiation, once with respect to a single
         # variable, but including case of non-constant basis vectors
 
-        dA = expand(diff(A, coord))
+        dA = self.mv(expand(diff(A.obj, coord)))
 
-        if self.connect_flg and self.dslot == -1:  # Basis blades are function of coordinates
+        if self.connect_flg and self.dslot == -1 and not A.is_scalar():  # Basis blades are function of coordinates
             B = self.remove_scalar_part(A)
             if B != zero:
                 if isinstance(B, Add):

@@ -1,8 +1,8 @@
 import sys
 from sympy import symbols, sin, latex, diff, Function, expand
-from ga import Ga
-from lt import Mlt
-from printer import Eprint, Format, xpdf
+from sympy.galgebra.ga import Ga
+from sympy.galgebra.lt import Mlt
+from sympy.galgebra.printer import Eprint, Format, xpdf
 
 Format()
 

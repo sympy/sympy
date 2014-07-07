@@ -12,24 +12,23 @@
 \contentsline {subsection}{\numberline {1.10.1}Geometric Derivative on a Manifold}{21}{subsection.1.10.1}
 \contentsline {subsection}{\numberline {1.10.2}Normalizing Basis for Derivatives}{22}{subsection.1.10.2}
 \contentsline {subsection}{\numberline {1.10.3}Linear Differential Operators}{23}{subsection.1.10.3}
-\contentsline {section}{\numberline {1.11}Linear Transformations/Outermorphisms}{26}{section.1.11}
-\contentsline {section}{\numberline {1.12}Multilinear Functions (Tensors)}{27}{section.1.12}
-\contentsline {subsection}{\numberline {1.12.1}Multiliner Functions}{27}{subsection.1.12.1}
-\contentsline {subsection}{\numberline {1.12.2}Algebraic Operations}{27}{subsection.1.12.2}
-\contentsline {subsection}{\numberline {1.12.3}Covariant, Contravariant, and Mixed Representations}{28}{subsection.1.12.3}
-\contentsline {subsection}{\numberline {1.12.4}Contraction and Differentiation}{29}{subsection.1.12.4}
-\contentsline {subsection}{\numberline {1.12.5}From Vector to Tensor}{30}{subsection.1.12.5}
-\contentsline {subsection}{\numberline {1.12.6}Parallel Transport and Covariant Deriviatives}{30}{subsection.1.12.6}
-\contentsline {chapter}{\numberline {2}Module Components}{34}{chapter.2}
-\contentsline {section}{\numberline {2.1}Instantiating a Geometric Algebra}{35}{section.2.1}
-\contentsline {section}{\numberline {2.2}Instantiating a Multivector}{37}{section.2.2}
-\contentsline {section}{\numberline {2.3}Basic Multivector Class Functions}{39}{section.2.3}
-\contentsline {section}{\numberline {2.4}Basic Multivector Functions}{42}{section.2.4}
-\contentsline {section}{\numberline {2.5}Multivector Derivatives}{44}{section.2.5}
-\contentsline {section}{\numberline {2.6}Submanifolds}{45}{section.2.6}
-\contentsline {section}{\numberline {2.7}Linear Transformations}{48}{section.2.7}
-\contentsline {section}{\numberline {2.8}Differential Operators}{56}{section.2.8}
-\contentsline {section}{\numberline {2.9}Instantiating a Multi-linear Functions (Tensors)}{58}{section.2.9}
-\contentsline {section}{\numberline {2.10}Basic Multilinear Function Class Functions}{59}{section.2.10}
-\contentsline {section}{\numberline {2.11}Standard Printing}{60}{section.2.11}
-\contentsline {section}{\numberline {2.12}Latex Printing}{61}{section.2.12}
+\contentsline {section}{\numberline {1.11}Linear Transformations/Outermorphisms}{27}{section.1.11}
+\contentsline {section}{\numberline {1.12}Multilinear Functions (Tensors)}{28}{section.1.12}
+\contentsline {subsection}{\numberline {1.12.1}Multiliner Functions}{28}{subsection.1.12.1}
+\contentsline {subsection}{\numberline {1.12.2}Algebraic Operations}{29}{subsection.1.12.2}
+\contentsline {subsection}{\numberline {1.12.3}Covariant, Contravariant, and Mixed Representations}{29}{subsection.1.12.3}
+\contentsline {subsection}{\numberline {1.12.4}Contraction and Differentiation}{30}{subsection.1.12.4}
+\contentsline {subsection}{\numberline {1.12.5}From Vector to Tensor}{31}{subsection.1.12.5}
+\contentsline {subsection}{\numberline {1.12.6}Parallel Transport and Covariant Deriviatives}{32}{subsection.1.12.6}
+\contentsline {chapter}{\numberline {2}Module Components}{36}{chapter.2}
+\contentsline {section}{\numberline {2.1}Instantiating a Geometric Algebra}{37}{section.2.1}
+\contentsline {section}{\numberline {2.2}Instantiating a Multivector}{39}{section.2.2}
+\contentsline {section}{\numberline {2.3}Basic Multivector Class Functions}{41}{section.2.3}
+\contentsline {section}{\numberline {2.4}Basic Multivector Functions}{44}{section.2.4}
+\contentsline {section}{\numberline {2.5}Multivector Differential Operators}{46}{section.2.5}
+\contentsline {section}{\numberline {2.6}Submanifolds}{47}{section.2.6}
+\contentsline {section}{\numberline {2.7}Linear Transformations}{50}{section.2.7}
+\contentsline {section}{\numberline {2.8}Instantiating a Multi-linear Functions (Tensors)}{58}{section.2.8}
+\contentsline {section}{\numberline {2.9}Basic Multilinear Function Class Functions}{59}{section.2.9}
+\contentsline {section}{\numberline {2.10}Standard Printing}{59}{section.2.10}
+\contentsline {section}{\numberline {2.11}Latex Printing}{60}{section.2.11}
