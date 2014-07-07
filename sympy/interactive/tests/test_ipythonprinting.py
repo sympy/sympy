@@ -1,5 +1,7 @@
 """Tests that the IPython printing module is properly loaded. """
 
+import warnings
+
 from sympy.core.compatibility import u
 from sympy.interactive.session import init_ipython_session
 from sympy.external import import_module
@@ -97,3 +99,23 @@ def test_print_builtin_option():
     # Python 3.3.3 + IPython 1.1.0 gives: '{n_i: 3, pi: 3.14}'
     # Python 2.7.5 + IPython 1.1.0 gives: '{pi: 3.14, n_i: 3}'
     assert text in ("{pi: 3.14, n_i: 3}", "{n_i: 3, pi: 3.14}")
+
+def test_matplotlib_bad_latex():
+    # Initialize and setup IPython session
+    app = init_ipython_session()
+    app.run_cell("import IPython")
+    app.run_cell("ip = get_ipython()")
+    app.run_cell("inst = ip.instance()")
+    app.run_cell("format = inst.display_formatter.format")
+    app.run_cell("from sympy import init_printing, Matrix")
+    app.run_cell("init_printing(use_latex='matplotlib')")
+
+    # The png formatter is not enabled by default in this context
+    app.run_cell("inst.display_formatter.formatters['image/png'].enabled = True")
+
+    # Make sure no warnings are raised by IPython
+    app.run_cell("import warnings")
+    app.run_cell("warnings.simplefilter('error', IPython.core.formatters.FormatterWarning)")
+
+    # This should not raise an exception
+    app.run_cell("a = format(Matrix([1, 2, 3]))")
