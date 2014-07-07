@@ -235,7 +235,11 @@ def test_pow2():
     # one large arg test -- see Pow._eval_power
     assert ((1 + I)**(-12*I*pi/log(sqrt(2))))**(1/S(3)) == (1 + I)**(-12*I*pi/3/log(sqrt(2)))
     # other
-    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(1+S.Half/2)
+    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(5/S(4))
+    assert cbrt(p**2) == p**(2/S(3))
+    z = symbols('z', real=False)
+    assert cbrt(p**z).as_base_exp() == (p**z, 1/S(3))
+
 
 def test_pow3():
     assert sqrt(2)**3 == 2 * sqrt(2)

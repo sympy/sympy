@@ -252,13 +252,15 @@ class Pow(Expr):
                 return -Pow(b, e*other)
         elif e.is_real is False:
             try:
-                n = C.floor((C.im(e)*C.log(b)/2/S.Pi).evalf(2, strict=True))
-                if n not in [-S.Half, S.Zero, S.Half, S.One]:
+                n = (C.im(e)*C.log(b)/2/S.Pi).evalf(2, strict=True)
+                if not all(i.is_Number for i in n.as_real_imag()):
                     assert None
             except (AssertionError, PrecisionExhausted):
                 n = None
             if n is not None:
-                return Pow(b, e*other)*C.exp(S.ImaginaryUnit*S.Pi*n)
+                s = C.exp(S.ImaginaryUnit*S.Pi*C.floor(C.im(e)*C.log(b)/2/S.Pi))
+                if (C.sign(s) - s).evalf(2, strict=True) == 0:
+                    return C.sign(s)*Pow(b, e*other)
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
