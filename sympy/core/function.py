@@ -208,13 +208,19 @@ class Application(with_metaclass(FunctionClass, Basic)):
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
-            obj.nargs = FiniteSet(obj.nargs) if obj.nargs is not None \
+            # Canonicalize nargs here; change to set in nargs.
+            if is_sequence(obj.nargs):
+                obj.nargs = tuple(ordered(set(obj.nargs)))
+            elif obj.nargs is not None:
+                obj.nargs = (as_int(obj.nargs),)
+
+            obj.nargs = FiniteSet(*obj.nargs) if obj.nargs is not None \
                 else Naturals0()
         except AttributeError:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
-            obj.nargs = FiniteSet(obj._nargs) if obj._nargs is not None \
+            obj.nargs = FiniteSet(*obj._nargs) if obj._nargs is not None \
                 else Naturals0()
         return obj
 
@@ -759,7 +765,12 @@ class WildFunction(Function, AtomicExpr):
         cls.name = name
         nargs = assumptions.pop('nargs', S.Naturals0)
         if not isinstance(nargs, Set):
-            nargs = FiniteSet(nargs)
+            # Canonicalize nargs here.  See also FunctionClass.
+            if is_sequence(nargs):
+                nargs = tuple(ordered(set(nargs)))
+            elif nargs is not None:
+                nargs = (as_int(nargs),)
+            nargs = FiniteSet(*nargs)
         cls.nargs = nargs
 
     def matches(self, expr, repl_dict={}, old=False):
