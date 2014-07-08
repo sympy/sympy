@@ -69,9 +69,9 @@ class RCodePrinter(CodePrinter):
             raise TypeError("RCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
-        # keep a set of expressions that are not strictly translatable to C
+        # keep a set of expressions that are not strictly translatable to R
         # and number constants that must be declared and initialized
-        not_c = self._not_supported = set()
+        not_r = self._not_supported = set()
         self._number_symbols = set()
 
         # We treat top level Piecewise here to get if tests outside loops
@@ -94,9 +94,9 @@ class RCodePrinter(CodePrinter):
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(not_c) > 0:
+            if len(not_r) > 0:
                 frontlines.append("// Not C:")
-                for expr in sorted(not_c, key=str):
+                for expr in sorted(not_r, key=str):
                     frontlines.append("// %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("%s = %s;" % (name, value))
@@ -105,7 +105,7 @@ class RCodePrinter(CodePrinter):
             result = self.indent_code(lines)
         else:
             lines = self.indent_code("\n".join(lines))
-            result = self._number_symbols, not_c, lines
+            result = self._number_symbols, not_r, lines
         del self._not_supported
         del self._number_symbols
         return result
