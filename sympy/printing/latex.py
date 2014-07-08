@@ -1847,12 +1847,11 @@ def latex(expr, **settings):
     >>> print(latex(x**2, symbol_names={x:'x_i'}))
     x_i^{2}
 
-    Besides all Basic based expressions, you can recursively
-    convert Python containers (lists, tuples and dicts) and
-    also SymPy matrices:
+    ``latex`` also supports the builtin container types list, tuple, and
+    dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\begin{bmatrix}2 / x, & y\end{bmatrix}$
+    $\left [ 2 / x, \quad y\right ]$
 
     """
 
