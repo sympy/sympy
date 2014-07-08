@@ -3007,6 +3007,7 @@ def test_sympy__geometry__line3d__Ray3D():
     from sympy.geometry.line3d import Ray3D
     assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
 
+@XFAIL
 def test_sympy__geometry__plane__Plane():
     from sympy.geometry.plane import Plane
     assert _test_args(Plane((1, 1, 1), (-3, 4, -2), (1, 2, 3)))
