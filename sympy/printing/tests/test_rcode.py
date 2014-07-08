@@ -76,7 +76,6 @@ def test_rcode_inline_function():
     assert rcode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert rcode( g(x)) == "Catalan = %s;\n2*x/Catalan" % Catalan.n()
-#mm
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -170,16 +169,17 @@ def test_rcode_Indexed():
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = RCodePrinter()
-    p._not_c = set()
+    p._not_r = set()
 
     x = IndexedBase('x')[j]
     assert p._print_Indexed(x) == 'x[j]'
+#mm
     A = IndexedBase('A')[i, j]
     assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
     B = IndexedBase('B')[i, j, k]
     assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
 
-    assert p._not_c == set()
+    assert p._not_r == set()
 
 
 def test_rcode_Indexed_without_looking_for_contraction():
