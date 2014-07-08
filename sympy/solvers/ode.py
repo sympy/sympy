@@ -249,7 +249,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     sign, Piecewise, atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div, lcm
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -1814,8 +1814,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
             r3 = (diff(z(t),t) - eq[2] == z(t)*(r1[b]*r2[F1] - r2[a]*r1[F2]))
         if r1 and r2 and r3:
             return 'type5'
-    else:
-        return None
+    return None
 
 def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
@@ -7889,3 +7888,128 @@ def _nonlinear_2eq_order1_type5(func, t, eq):
                 x, y = y, x
     x1 = diff(x(t),t); y1 = diff(y(t),t)
     return set([Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))])
+
+def sysode_nonlinear_3eq_order1(match_):
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    z = match_['func'][2].func
+    eq = match_['eq']
+    fc = match_['func_coeff']
+    func = match_['func']
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if match_['type_of_equation'] == 'type1':
+        sol = _nonlinear_3eq_order1_type1(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type2':
+        sol = _nonlinear_3eq_order1_type2(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type3':
+        sol = _nonlinear_3eq_order1_type3(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type4':
+        sol = _nonlinear_3eq_order1_type4(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type5':
+        sol = _nonlinear_3eq_order1_type5(x, y, z, t, eq)
+    return sol
+
+def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
+    C1, C2 = symbols('C1:3')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    r = (diff(x(t),t) - eq[0]).match(p*y(t)*z(t))
+    r.update((diff(y(t),t) - eq[1]).match(q*z(t)*x(t)))
+    r.update((diff(z(t),t) - eq[2]).match(s*x(t)*y(t)))
+    n1, d1 = r[p].as_numer_denom()
+    n2, d2 = r[q].as_numer_denom()
+    n3, d3 = r[s].as_numer_denom()
+    val = solve([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, d3*u-d3*v-n3*w],[u,v])
+    vals = val.values()
+    c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
+    b = vals[0].subs(w,c)
+    a = vals[1].subs(w,c)
+    y_x = sqrt(((c*C1-C2) - a*(c-a)*x(t)**2)/(b*(c-b)))
+    z_x = sqrt(((b*C1-C2) - a*(b-a)*x(t)**2)/(c*(b-c)))
+    z_y = sqrt(((a*C1-C2) - b*(a-b)*y(t)**2)/(c*(a-c)))
+    x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
+    x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
+    y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
+    try:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x).rhs
+    except:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x, hint='separable_Integral')
+    try:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y).rhs
+    except:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y, hint='separable_Integral')
+    try:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z).rhs
+    except:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z, hint='separable_Integral')
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
+    C1, C2 = symbols('C1:3')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    f = Wild('f')
+    r1 = (diff(x(t),t) - eq[0]).match(y(t)*z(t)*f)
+    r = collect_const(r1[f]).match(p*f)
+    r.update(((diff(y(t),t) - eq[1])/r[f]).match(q*z(t)*x(t)))
+    r.update(((diff(z(t),t) - eq[2])/r[f]).match(s*x(t)*y(t)))
+    n1, d1 = r[p].as_numer_denom()
+    n2, d2 = r[q].as_numer_denom()
+    n3, d3 = r[s].as_numer_denom()
+    val = solve([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, -d3*u+d3*v+n3*w],[u,v])
+    vals = val.values()
+    c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
+    a = vals[0].subs(w,c)
+    b = vals[1].subs(w,c)
+    y_x = sqrt(((c*C1-C2) - a*(c-a)*x(t)**2)/(b*(c-b)))
+    z_x = sqrt(((b*C1-C2) - a*(b-a)*x(t)**2)/(c*(b-c)))
+    z_y = sqrt(((a*C1-C2) - b*(a-b)*y(t)**2)/(c*(a-c)))
+    x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
+    x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
+    y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
+    try:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f]).rhs
+    except:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f], hint='separable_Integral')
+    try:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f]).rhs
+    except:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f], hint='separable_Integral')
+    try:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f]).rhs
+    except:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
+    C1, C2 = symbols('C1:3')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    F1, F2, F3 = symbols('F1, F2, F3', cls=Wild)
+    r1 = (diff(x(t),t) - eq[0]).match(F2-F3)
+    r = collect_const(r1[F2]).match(s*F2)
+    r.update(collect_const(r1[F3]).match(q*F3))
+    if eq[1].has(r[F2]) and not eq[1].has(r[F3]):
+        r[F2], r[F3] = r[F3], r[F2]
+        r[s], r[q] = -r[q], -r[s]
+    r.update((diff(y(t),t) - eq[1]).match(p*r[F3] - r[s]*F1))
+    a = r[p]; b = r[q]; c = r[s]
+    F1 = r[F1].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F2 = r[F2].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F3 = r[F3].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    y_x = dsolve(diff(v(u),u) - ((a*F3-c*F1)/(c*F2-b*F3)).subs(w,(C1-a*u-b*v)/c).subs(v,v(u)))
+    z_x = dsolve(diff(w(u),u) - ((b*F1-a*F2)/(c*F2-b*F3)).subs(v,(C1-a*u-c*w)/b).subs(w,w(u))).rhs
+    z_y = dsolve(diff(w(v),v) - ((b*F1-a*F2)/(a*F3-c*F1)).subs(u,(C1-b*v-c*w)/a).subs(w,w(v))).rhs
+    x_y = dsolve(diff(u(v),v) - ((c*F2-b*F3)/(a*F3-c*F1)).subs(w,(C1-a*u-b*v)/c).subs(u,u(v))).rhs
+    y_z = dsolve(diff(v(w),w) - ((a*F3-c*F1)/(b*F1-a*F2)).subs(u,(C1-b*v-c*w)/a).subs(v,v(w))).rhs
+    x_z = dsolve(diff(u(w),w) - ((c*F2-b*F3)/(b*F1-a*F2)).subs(v,(C1-a*u-c*w)/b).subs(u,u(w))).rhs
+    sol1 = dsolve(diff(u(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
+    sol2 = dsolve(diff(v(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
+    sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
