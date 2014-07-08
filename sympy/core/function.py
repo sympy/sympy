@@ -1644,9 +1644,10 @@ def diff(f, *symbols, **kwargs):
 
     """
     kwargs.setdefault('evaluate', True)
-    from sympy.vector.vector import Vector
-    if isinstance(f, Vector):
-        return f.diff(*symbols, **kwargs)
+    try:
+        return f._eval_diff(*symbols, **kwargs)
+    except AttributeError:
+        pass
     return Derivative(f, *symbols, **kwargs)
 
 

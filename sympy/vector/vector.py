@@ -129,8 +129,14 @@ class Vector(Expr):
     def _eval_simplify(self, ratio, measure):
         return self.simplify(ratio, measure)
 
+    def _eval_trigsimp(self, **opts):
+        return self.trigsimp(**opts)
+
     def _eval_derivative(self, wrt):
         return self.diff(wrt)
+
+    def _eval_diff(self, *args, **kwargs):
+        return self.diff(*args, **kwargs)
 
     def as_numer_denom(self):
         """

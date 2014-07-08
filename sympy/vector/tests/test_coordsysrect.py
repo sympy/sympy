@@ -12,6 +12,16 @@ a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
+def test_coordsyscartesian_equivalence():
+    A1 = CoordSysCartesian('A')
+    assert A1 == A
+    B = CoordSysCartesian('B')
+    assert A != B
+    assert A.locate_new('C1', A.i) == A.locate_new('C2', A.i)
+    assert A.orient_new_axis('C1', a, A.i) == \
+           A.orient_new_axis('C2', a, A.i)
+
+
 def test_coordinate_vars():
     """
     Tests the coordinate variables functionality with respect to
@@ -68,7 +78,7 @@ def test_rotation_matrix():
     C = B.orient_new('C', 'Axis', [q3, B.j])
     D = N.orient_new('D', 'Axis', [q4, N.j])
     E = N.orient_new('E', 'Space', [q1, q2, q3], '123')
-    F = N.orient_new('B', 'Quaternion', [q1, q2, q3, q4])
+    F = N.orient_new('F', 'Quaternion', [q1, q2, q3, q4])
     G = N.orient_new('G', 'Body', [q1, q2, q3], '123')
     assert N.rotation_matrix(C) == Matrix([
         [- sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), - sin(q1) *
@@ -174,6 +184,17 @@ def test_vector():
            (-sin(q2)*sin(q3))*A.k
     assert C.j.cross(A.i) == (sin(q2))*A.j + (-cos(q2))*A.k
     assert express(C.k.cross(A.i), C).trigsimp() == cos(q3)*C.j
+
+def test_orient_new_methods():
+    N = CoordSysCartesian('N')
+    D = N.orient_new('D', 'Axis', [q4, N.j])
+    E = N.orient_new('E', 'Space', [q1, q2, q3], '123')
+    F = N.orient_new('F', 'Quaternion', [q1, q2, q3, q4])
+    G = N.orient_new('G', 'Body', [q1, q2, q3], '123')
+    assert D == N.orient_new_axis('D', q4, N.j)
+    assert E == N.orient_new_space('E', q1, q2, q3, '123')
+    assert F == N.orient_new_quaternion('F', q1, q2, q3, q4)
+    assert G == N.orient_new_body('G', q1, q2, q3, '123')
 
 
 def test_locatenew_point():

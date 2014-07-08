@@ -1385,12 +1385,13 @@ def trigsimp(expr, **opts):
 
     """
     from sympy.simplify.fu import fu
-    from sympy.vector import Vector
-
-    if isinstance(expr, Vector):
-        return expr.trigsimp(**opts)
 
     expr = sympify(expr)
+
+    try:
+        return expr._eval_trigsimp(**opts)
+    except AttributeError:
+        pass
 
     old = opts.pop('old', False)
     if not old:
@@ -3654,15 +3655,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.functions.special.bessel import BesselBase
     from sympy.vector import Vector
 
-    if isinstance(expr, Vector):
-        return expr.simplify(ratio, measure)
-
-    original_expr = expr = signsimp(expr)
-
     try:
         return expr._eval_simplify(ratio=ratio, measure=measure)
     except AttributeError:
         pass
+
+    original_expr = expr = signsimp(expr)
 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase

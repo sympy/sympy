@@ -2,7 +2,7 @@ from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.functions import express, _path
 from sympy import sin, cos, eye, sympify, trigsimp, \
-     ImmutableMatrix as Matrix, S, Dummy, rot_axis1, \
+     ImmutableMatrix as Matrix, S, Symbol, rot_axis1, \
      rot_axis2, rot_axis3
 from sympy.core.compatibility import string_types
 from sympy.core.cache import cacheit
@@ -37,14 +37,14 @@ class CoordSysCartesian(Basic):
             The position vector of the new system's origin wrt the parent
             instance.
 
-        rot_type : str
+        rot_type : str ('Axis'/'Body'/'Quaternion'/'Space')
             The type of orientation matrix that is being created.
 
         rot_amounts : list OR value
             The quantities that the orientation matrix will be
             defined by.
 
-        rot_order : str
+        rot_order : str (Look at the docs of orient_new for more details)
             If applicable, the order of a series of rotations.
 
         parent : CoordSysCartesian
@@ -82,7 +82,8 @@ class CoordSysCartesian(Basic):
             else:
                 raise NotImplementedError('Rotation not implemented')
         else:
-            rot_amounts = []
+            if not (rot_amounts == None and rot_order == ''):
+                raise ValueError("No rotation type provided")
             parent_orient = Matrix(eye(3))
 
         #If location information is not given, adjust the default
@@ -97,15 +98,23 @@ class CoordSysCartesian(Basic):
             origin = parent.origin.locate_new(name + '.origin',
                                               location)
             arg_parent = parent
+            arg_self = Symbol('default')
         else:
             origin = Point(name + '.origin')
-            arg_parent = Dummy('default')
+            arg_parent = Symbol('default')
+            arg_self = Symbol(name)
 
-        #All systems that are defined as 'roots' are unequal.
+        #All systems that are defined as 'roots' are unequal, unless
+        #they have the same name.
         #Systems defined at same orientation/position wrt the same
-        #'parent' are equal, irrespective of name.
+        #'parent' are equal, irrespective of the name.
+        #This is true even if the same orientation is provided via
+        #different methods like Axis/Body/Space/Quaternion.
+        #However, coincident systems may be seen as unequal if
+        #positioned/oriented wrt different parents, even though
+        #they may actually be 'coincident' wrt the root system.
         obj = super(CoordSysCartesian, cls).__new__(
-            cls, parent_orient, origin, arg_parent)
+            cls, arg_self, parent_orient, origin, arg_parent)
         obj._name = name
 
         #Initialize the base vectors
@@ -333,11 +342,13 @@ class CoordSysCartesian(Basic):
         """
 
         return CoordSysCartesian(name, location=position,
-                            vector_names=vector_names,
-                            variable_names=variable_names, parent=self)
+                                 vector_names=vector_names,
+                                 variable_names=variable_names,
+                                 parent=self)
 
     def orient_new(self, name, rot_type=None, rot_amounts=None,
-                   rot_order='', vector_names=None, variable_names=None):
+                   rot_order='', location=None, vector_names=None,
+                   variable_names=None):
         """
         Creates a new CoordSysCartesian oriented in the user-specified way
         with respect to this system.
@@ -357,6 +368,11 @@ class CoordSysCartesian(Basic):
 
         rot_order : str
             If applicable, the order of a series of rotations.
+
+        location : Vector(optional)
+            The location of the new coordinate system's origin wrt this
+            system's origin. If not specified, the origins are taken to
+            be coincident.
 
         vector_names, variable_names : tuples/lists(optional)
             Tuples/Lists of 3 strings each, with custom names for base
@@ -405,7 +421,7 @@ class CoordSysCartesian(Basic):
         specify rotations about N.i, then N.j, then N.k.
         Therefore,
 
-        >>> D = N.orient_new('B', 'Space', [q1, q2, q3], '312')
+        >>> D = N.orient_new('D', 'Space', [q1, q2, q3], '312')
 
         is same as
 
@@ -433,14 +449,15 @@ class CoordSysCartesian(Basic):
 
         """
         return CoordSysCartesian(name, rot_type=rot_type,
-                            rot_amounts=rot_amounts,
-                            rot_order = rot_order,
-                            vector_names=vector_names,
-                            variable_names=variable_names,
-                            parent=self)
+                                 rot_amounts=rot_amounts,
+                                 rot_order = rot_order,
+                                 vector_names=vector_names,
+                                 variable_names=variable_names,
+                                 location = location,
+                                 parent=self)
     __new__.__doc__ += orient_new.__doc__
 
-    def orient_new_axis(self, name, angle, axis):
+    def orient_new_axis(self, name, angle, axis, location=None):
         """
         Axis rotation is a rotation about an arbitrary axis by
         some angle. The angle is supplied as a SymPy expr scalar, and
@@ -458,19 +475,27 @@ class CoordSysCartesian(Basic):
         axis : Vector
             The axis around which the rotation has to be performed
 
+        location : Vector(optional)
+            The location of the new coordinate system's origin wrt this
+            system's origin. If not specified, the origins are taken to
+            be coincident.
+
         Examples
         ========
 
         >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy import symbols
+        >>> q1 = symbols('q1')
         >>> N = CoordSysCartesian('N')
         >>> B = N.orient_new_axis('B', q1, N.i + 2 * N.j)
 
         """
 
-        return self.orient_new(name, 'Axis', [angle, axis])
+        return self.orient_new(name, 'Axis', [angle, axis],
+                               location=location)
 
     def orient_new_body(self, name, angle1, angle2, angle3,
-                        rotation_order):
+                        rotation_order, location=None):
         """
         Body orientation takes this coordinate system through three
         successive simple rotations.
@@ -490,8 +515,18 @@ class CoordSysCartesian(Basic):
         rotation_order : string
             String defining the order of axes for rotation
 
+        location : Vector(optional)
+            The location of the new coordinate system's origin wrt this
+            system's origin. If not specified, the origins are taken to
+            be coincident.
+
         Examples
         ========
+
+        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy import symbols
+        >>> q1, q2, q3 = symbols('q1 q2 q3')
+        >>> N = CoordSysCartesian('N')
 
         A 'Body' fixed rotation is described by three angles and
         three body-fixed rotation axes. To orient a coordinate system D
@@ -519,7 +554,103 @@ class CoordSysCartesian(Basic):
         """
 
         return self.orient_new(name, 'Body', [angle1, angle2, angle3],
-                               rotation_order)
+                               rotation_order, location=location)
+
+    def orient_new_space(self, name, angle1, angle2, angle3,
+                         rotation_order, location=None):
+        """
+        Space rotation is similar to Body rotation, but the rotations
+        are applied in the opposite order.
+
+        Refer to the docs of orient_new_body for more information and
+        examples.
+
+        Parameters
+        ==========
+
+        name : string
+            The name of the new coordinate system
+
+        angle1, angle2, angle3 : Expr
+            Three successive angles to rotate the coordinate system by
+
+        rotation_order : string
+            String defining the order of axes for rotation
+
+        location : Vector(optional)
+            The location of the new coordinate system's origin wrt this
+            system's origin. If not specified, the origins are taken to
+            be coincident.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy import symbols
+        >>> q1, q2, q3 = symbols('q1 q2 q3')
+        >>> N = CoordSysCartesian('N')
+
+        To orient a coordinate system D with respect to N, each
+        sequential rotation is always about N's orthogonal unit vectors.
+        For example, a '123' rotation will specify rotations about
+        N.i, then N.j, then N.k.
+        Therefore,
+
+        >>> D = N.orient_new_space('D', q1, q2, q3, '312')
+
+        is same as
+
+        >>> B = N.orient_new_axis('B', q1, N.i)
+        >>> C = B.orient_new_axis('C', q2, N.j)
+        >>> D = C.orient_new_axis('D', q3, N.k)
+
+        docs of orient_new_body
+        =======================
+
+        """
+
+        return self.orient_new(name, 'Space', [angle1, angle2, angle3],
+                               rotation_order, location=location)
+
+    def orient_new_quaternion(self, name, q0, q1, q2, q3, location=None):
+        """
+        Quaternion orientation orients the new CoordSysCartesian with
+        Quaternions, defined as a finite rotation about lambda, a unit
+        vector, by some amount theta.
+        This orientation is described by four parameters:
+        q0 = cos(theta/2)
+        q1 = lambda_x sin(theta/2)
+        q2 = lambda_y sin(theta/2)
+        q3 = lambda_z sin(theta/2)
+        Quaternion does not take in a rotation order.
+
+        Parameters
+        ==========
+
+        name : string
+            The name of the new coordinate system
+
+        q0, q1, q2, q3 : Expr
+            The quaternions to rotate the coordinate system by
+
+        location : Vector(optional)
+            The location of the new coordinate system's origin wrt this
+            system's origin. If not specified, the origins are taken to
+            be coincident.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy import symbols
+        >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
+        >>> N = CoordSysCartesian('N')
+        >>> B = N.orient_new('B', 'Quaternion', [q0, q1, q2, q3])
+
+        """
+
+        return self.orient_new(name, 'Quaternion', [q0, q1, q2, q3],
+                               location = location)
 
     def __init__(self, name, vector_names=None, variable_names=None,
                 location=None, rot_type=None, rot_amounts=None,

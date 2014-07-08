@@ -3,7 +3,7 @@ from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express, _path
 from sympy.simplify import trigsimp
-from sympy import Dummy
+from sympy import Symbol
 from sympy.core.cache import cacheit
 
 
@@ -21,13 +21,16 @@ class Point(Basic):
             raise TypeError("parent_point should be a Point instance")
         #Create an object
         if parent_point is None:
-            arg_parent = Dummy('default')
+            arg_parent = Symbol('default')
+            arg_self = Symbol(name)
         else:
             arg_parent = parent_point
+            arg_self = Symbol('default')
         #All points that are defined as 'roots' are unequal.
-        #Pointss defined at same position wrt the same
-        #'parent' are equal, irrespective of name.
-        obj = super(Point, cls).__new__(cls, position, arg_parent)
+        #Points defined at same position wrt the same
+        #'parent' are equal, irrespective of the names.
+        obj = super(Point, cls).__new__(cls, arg_self,
+                                        position, arg_parent)
         #Decide the object parameters
         obj._name = name
         obj._pos = position
