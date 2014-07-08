@@ -5,6 +5,7 @@ from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sign, im, nan, cbrt
 )
 from sympy.core.evalf import PrecisionExhausted
+from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
@@ -167,78 +168,10 @@ def test_pow2():
     # x**(2*y) is always (x**y)**2 but is only (x**2)**y if
     #                                  x.is_positive or y.is_integer
     # let x = 1 to see why the following are not true.
-    assert ((-x)**2)**Rational(1, 3) != ((-x)**Rational(1, 3))**2
     assert (-x)**Rational(2, 3) != x**Rational(2, 3)
     assert (-x)**Rational(5, 7) != -x**Rational(5, 7)
-    # there are also conditions that will make (x**y)**z == +/-x**(y*z);
-    # all checked against wolframalpha
-    f = pi/log(sqrt(2))
-    assert ((1 + I)**(I*f/2))**0.3 == (1 + I)**(0.15*I*f)
-    assert ((1 + I)**(I*f/2))**(S(1)/3) == (1 + I)**(I*f/6)
-    assert (1 + I)**(2*I*f) == ((1 + I)**(6*I*f))**(S(1)/3)
-    assert (1 + I)**(4*I*f) == ((1 + I)**(12*I*f))**(S(1)/3)
-    assert (((1 + I)**(I*(1 + 7*f)))**(S(1)/3)).exp == S(1)/3
-    assert sqrt((1 + I)**(I*f/2)) == (1 + I)**(I*f/4)
-    assert (1 + I)**(2*I*f) == sqrt((1 + I)**(4*I*f))
-    assert (1 + I)**(4*I*f) == sqrt((1 + I)**(8*I*f))
-    assert (1 + I)**(-0.15*I*f) == ((1 + I)**(-I*f/2))**0.3
-    assert (1 + I)**(-I*f/6) == ((1 + I)**(-I*f/2))**(S(1)/3)
-    assert ((1 + I)**(-6*I*f))**(S(1)/3) == (1 + I)**(-2*I*f)
-    assert ((1 + I)**(-12*I*f))**(S(1)/3) == (1 + I)**(-4*I*f)
-    assert (((1 + I)**(I*(-7*f - 1)))**(S(1)/3)).exp == S(1)/3
-    assert (1 + I)**(-I*f/4) == sqrt((1 + I)**(-I*f/2))
-    assert sqrt((1 + I)**(-4*I*f)) == (1 + I)**(-2*I*f)
-    assert sqrt((1 + I)**(-8*I*f)) == (1 + I)**(-4*I*f)
-    # check that power of 1/2 is joined and sign is correct;
-    # all checked against wolframalpha
-    e = (-2)**(-I)
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = (-2 + I)**(-I)
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = (2*I)**(-I)
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = 2**(-I)
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = -(1 + I)**(I*(1 + 5*pi/log(2))/2)
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = -(1 + I)**(I*(-5*pi/log(2) - 1)/2)
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = sqrt(2**(-2*sqrt(2) + I))
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = sqrt(2**(-2 + I))
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = sqrt((1 + I)**(-2*sqrt(2) + I))
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
-    e = sqrt((1 + 11*I)**(-2*sqrt(2) + I))
-    assert re(e).is_positive and e.as_base_exp()[0].is_Pow is False
+    assert ((-x)**2)**Rational(1, 3) != ((-x)**Rational(1, 3))**2
     assert sqrt(x**2) != x
-    assert cbrt(x**3) != x
-    r = symbols('r', real=True)
-    assert sqrt(r**2) == abs(r)
-    assert cbrt(r**3) != r
-    p = symbols('p', positive=True)
-    assert cbrt(p**3) == p
-    # there are also conditions that will make (x**y)**z == +/-x**(y*z);
-    # all checked against wolframalpha
-    # im(n).is_integer != True, other=1/2 -- see Pow._eval_power
-    assert sqrt((1 + I)**(-2*sqrt(2) + I)) == (1 + I)**(-sqrt(2) + I/2)
-    assert sqrt(exp(3 + I)) == exp(S(3)/2 + I/2)
-    # im(n) is not rational, other=1/3
-    assert ((1 + I)**(I*pi/(2*log(sqrt(2)))))**(S(1)/3) == (1 + I)**(I*pi/3/(2*log(sqrt(2))))
-    # im(n).is_integer == True -- see Pow._eval_power
-    assert sqrt(2**(-2 + I)) == 2**(-1 + I/2)
-    # outside radius but other is 1/2 -- see Pow._eval_power
-    assert sqrt((1 + I)**(2*I*pi/log(sqrt(2)))) == -(1 + I)**(I*pi/log(sqrt(2)))
-    # two small arg tests -- see Pow._eval_power
-    assert ((1 + I)**(-I*pi/(2*log(sqrt(2)))))**.3 == (1 + I)**(-I*pi*.3/(2*log(sqrt(2))))
-    assert ((1 + I)**(-I*pi/(2*log(sqrt(2)))))**(1/S(3)) == (1 + I)**(-I*pi/3/(2*log(sqrt(2))))
-    # one large arg test -- see Pow._eval_power
-    assert ((1 + I)**(-12*I*pi/log(sqrt(2))))**(1/S(3)) == (1 + I)**(-12*I*pi/3/log(sqrt(2)))
-    # other
-    assert sqrt(Pow(2*I, 5*S.Half)) != (2*I)**(5/S(4))
-    assert cbrt(p**2) == p**(2/S(3))
-    z = symbols('z', real=False)
-    assert cbrt(p**z).as_base_exp() == (p**z, 1/S(3))
 
 
 def test_pow3():

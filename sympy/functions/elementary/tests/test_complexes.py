@@ -259,7 +259,7 @@ def test_as_real_imag():
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
     i = symbols('i', imaginary=True)
-    assert sqrt(i**2).as_real_imag() == (0, -I*i)
+    assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
 @XFAIL
 def test_sign_issue_3068():

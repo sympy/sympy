@@ -211,56 +211,86 @@ class Pow(Expr):
         if b is S.NaN:
             return (b**e)**other  # let __new__ handle it
 
+        s = None
         if other.is_integer:
-            return Pow(b, e*other)
+            s = 1
+        elif b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
+            s = 1
+        elif e.is_real:
+            # helper functions ===========================
+            def _half(e):
+                if getattr(e, 'q', None) == 2:
+                    return True
+                n, d = e.as_numer_denom()
+                if n.is_integer and d == 2:
+                    return True
+            def _n2(e):
+                try:
+                    rv = e.evalf(2, strict=True)
+                    if rv.is_Number:
+                        return rv
+                except PrecisionExhausted:
+                    pass
+            def _si(l, h=None, eps=None):
+                if eps:
+                    from sympy.series.limits import limit
+                    l += eps
+                    h -= eps
+                l = C.exp(2*S.Pi*S.ImaginaryUnit*other*C.floor(S.Half - e*l/(2*S.Pi)))
+                h = l if h is None else C.exp(2*S.Pi*S.ImaginaryUnit*other*C.floor(S.Half - e*h/(2*S.Pi)))
+                if eps:
+                    l = limit(l, eps, 0)
+                    h = limit(h, eps, 0)
+                if h == l:
+                    s = l
+                    if s.is_real and _n2(C.sign(s) - s) == 0:
+                        return C.sign(s)
+            # ===================================================
+            # we need _half(other) with constant floor or
+            # floor(S.Half - e*arg(b)/2/pi) == 0
 
-        if b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
-            return Pow(b, e*other)
-
-        if e.is_real:
-            if (abs(e) < 2) == True:
-                if (e == -1) == True:
-                    if b.is_negative is False:
-                        return Pow(b, e*other)
-                elif (e == -1) == False:
-                    return Pow(b, e*other)
-            if e.is_even:
+            # handle -1 as special case
+            if (e == -1) == True:
+                # floor arg. is 1/2 + arg(b)/2/pi
+                if _half(other):
+                    if b.is_negative is True:
+                        return S.NegativeOne**other*Pow(-b, e*other)
+                    if b.is_real is False:
+                        return Pow(b.conjugate()/C.Abs(b)**2, other)
+            elif e.is_even:
                 if b.is_real:
                     b = abs(b)
-                if getattr(other, 'q', None) == 2 and b.is_real is not None:
-                    return Pow(b, e*other)
-            if b.is_nonnegative:
-                return Pow(b, e*other)
-        elif e.is_imaginary:
-            # within a distance of radius (from periodic "origins") the
-            # exponents can be joined
-            radius = abs(S.Pi/C.log(abs(b)))
-            p = abs(e)
-            ok = (p - radius).is_nonpositive
-            if not ok and other.is_Rational:
-                origin = 2*other.q*radius
-                ok = (p % origin - radius).is_nonpositive
-                if ok:
-                    pass
-            elif ok:
-                pass
-            if ok:
-                return Pow(b, e*other)
-            # outside that radius if other is 1/2 then the exponents join
-            # but the expression has the opposite sign
-            if ok is False and getattr(other, 'q', None) == 2:
-                return -Pow(b, e*other)
+                if b.is_imaginary:
+                    b = abs(C.im(b))*S.ImaginaryUnit
+
+            if (abs(e) < 1) == True or (e == 1) == True:
+                s = 1  # floor = 0
+            elif b.is_nonnegative:
+                s = 1  # floor = 0
+            elif C.re(b).is_nonnegative and abs(e) < 2:
+                s = 1  # floor = 0
+            elif C.im(b).is_nonzero and (abs(e) == 2) == True:
+                s = 1  # floor = 0
+            elif _half(other):
+                s = _si(C.arg(b))
         elif e.is_real is False:
+            # _half(other) with constant floor or
+            # floor(S.Half - im(e*log(b))/2/pi) == 0
             try:
-                n = (C.im(e)*C.log(b)/2/S.Pi).evalf(2, strict=True)
-                if not all(i.is_Number for i in n.as_real_imag()):
-                    assert None
-            except (AssertionError, PrecisionExhausted):
-                n = None
-            if n is not None:
-                s = C.exp(S.ImaginaryUnit*S.Pi*C.floor(C.im(e)*C.log(b)/2/S.Pi))
-                if (C.sign(s) - s).evalf(2, strict=True) == 0:
-                    return C.sign(s)*Pow(b, e*other)
+                s = C.exp(2*S.ImaginaryUnit*S.Pi*other*
+                    C.floor(S.Half - C.im(e*C.log(b))/2/S.Pi))
+                # be careful when testing that s is -1 or 1 b/csign(I) == I:
+                # so check that s is real
+                if s.is_real and (C.sign(s) - s).evalf(2, strict=True) == 0:
+                    s = C.sign(s)
+                else:
+                    s = None
+            except PrecisionExhausted:
+                s = None
+
+        if s is not None:
+            return s*Pow(b, e*other)
+
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
