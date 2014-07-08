@@ -2938,13 +2938,13 @@ def test_any_object_in_sequence():
 
 def test_pretty_sets():
     s = FiniteSet
-    assert pretty(s([x*y, x**2])) == \
+    assert pretty(s(*[x*y, x**2])) == \
 """\
   2      \n\
 {x , x*y}\
 """
-    assert pretty(s(range(1, 6))) == "{1, 2, 3, 4, 5}"
-    assert pretty(s(range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+    assert pretty(s(*range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(s(*range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
     for s in (frozenset, set):
         assert pretty(s([x*y, x**2])) == \
 """\

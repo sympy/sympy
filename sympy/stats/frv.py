@@ -50,7 +50,7 @@ class FiniteDomain(RandomDomain):
 
     @property
     def dict(self):
-        return FiniteSet(Dict(dict(el)) for el in self.elements)
+        return FiniteSet(*[Dict(dict(el)) for el in self.elements])
 
     def __contains__(self, other):
         return other in self.elements
@@ -89,7 +89,7 @@ class SingleFiniteDomain(FiniteDomain):
 
     @property
     def elements(self):
-        return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
+        return FiniteSet(*[frozenset(((self.symbol, elem), )) for elem in self.set])
 
     def __iter__(self):
         return (frozenset(((self.symbol, elem),)) for elem in self.set)
@@ -112,7 +112,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
 
     @property
     def elements(self):
-        return FiniteSet(iter(self))
+        return FiniteSet(*self)
 
 
 class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
@@ -156,8 +156,8 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     @property
     def set(self):
         if self.fulldomain.__class__ is SingleFiniteDomain:
-            return FiniteSet(elem for elem in self.fulldomain.set
-                    if frozenset(((self.fulldomain.symbol, elem),)) in self)
+            return FiniteSet(*[elem for elem in self.fulldomain.set
+                               if frozenset(((self.fulldomain.symbol, elem),)) in self])
         else:
             raise NotImplementedError(
                 "Not implemented on multi-dimensional conditional domain")

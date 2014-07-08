@@ -8,6 +8,7 @@ from sympy.core.function import PoleError
 from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
+from sympy.core.cache import clear_cache
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -649,3 +650,26 @@ def test_issue_7231():
     assert res == ans1
     ans2 = f(x).series(x, a)
     assert res == ans2
+
+def test_issue_7687():
+    from sympy.core.function import Function
+    from sympy.abc import x
+    f = Function('f')(x)
+    ff = Function('f')(x)
+    match_with_cache = ff.matches(f)
+    assert isinstance(f, type(ff))
+    clear_cache()
+    ff = Function('f')(x)
+    assert isinstance(f, type(ff))
+    assert match_with_cache == ff.matches(f)
+
+def test_issue_7688():
+    from sympy.core.function import Function, UndefinedFunction
+    from sympy.abc import x
+
+    f = Function('f')  # actually an UndefinedFunction
+    clear_cache()
+    class A(UndefinedFunction):
+        pass
+    a = A('f')
+    assert isinstance(a, type(f))
