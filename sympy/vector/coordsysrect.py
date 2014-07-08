@@ -440,6 +440,87 @@ class CoordSysCartesian(Basic):
                             parent=self)
     __new__.__doc__ += orient_new.__doc__
 
+    def orient_new_axis(self, name, angle, axis):
+        """
+        Axis rotation is a rotation about an arbitrary axis by
+        some angle. The angle is supplied as a SymPy expr scalar, and
+        the axis is supplied as a Vector.
+
+        Parameters
+        ==========
+
+        name : string
+            The name of the new coordinate system
+
+        angle : Expr
+            The angle by which the new system is to be rotated
+
+        axis : Vector
+            The axis around which the rotation has to be performed
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSysCartesian
+        >>> N = CoordSysCartesian('N')
+        >>> B = N.orient_new_axis('B', q1, N.i + 2 * N.j)
+
+        """
+
+        return self.orient_new(name, 'Axis', [angle, axis])
+
+    def orient_new_body(self, name, angle1, angle2, angle3,
+                        rotation_order):
+        """
+        Body orientation takes this coordinate system through three
+        successive simple rotations.
+
+        Body fixed rotations include both Euler Angles and
+        Tait-Bryan Angles, see http://en.wikipedia.org/wiki/Euler_angles.
+
+        Parameters
+        ==========
+
+        name : string
+            The name of the new coordinate system
+
+        angle1, angle2, angle3 : Expr
+            Three successive angles to rotate the coordinate system by
+
+        rotation_order : string
+            String defining the order of axes for rotation
+
+        Examples
+        ========
+
+        A 'Body' fixed rotation is described by three angles and
+        three body-fixed rotation axes. To orient a coordinate system D
+        with respect to N, each sequential rotation is always about
+        the orthogonal unit vectors fixed to D. For example, a '123'
+        rotation will specify rotations about N.i, then D.j, then
+        D.k. (Initially, D.i is same as N.i)
+        Therefore,
+
+        >>> D = N.orient_new_body('D', q1, q2, q3, '123')
+
+        is same as
+
+        >>> D = N.orient_new_axis('D', q1, N.i)
+        >>> D = D.orient_new_axis('D', q2, D.j)
+        >>> D = D.orient_new_axis('D', q3, D.k)
+
+        Acceptable rotation orders are of length 3, expressed in XYZ or
+        123, and cannot have a rotation about about an axis twice in a row.
+
+        >>> B = N.orient_new_body('B', q1, q2, q3, '123')
+        >>> B = N.orient_new_body('B', q1, q2, 0, 'ZXZ')
+        >>> B = N.orient_new_body('B', 0, 0, 0, 'XYX')
+
+        """
+
+        return self.orient_new(name, 'Body', [angle1, angle2, angle3],
+                               rotation_order)
+
     def __init__(self, name, vector_names=None, variable_names=None,
                 location=None, rot_type=None, rot_amounts=None,
                 rot_order='', parent=None):
