@@ -29,6 +29,6 @@ from .medium import Medium
 __all__.extend(medium.__all__)
 
 
-from . import snell
-from .snell import snellslaw
-__all__.extend(medium.__all__)
+from . import utils
+from .utils import refraction_angle
+__all__.extend(utils.__all__)
