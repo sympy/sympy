@@ -316,11 +316,10 @@ identity 2 is that `\sqrt{x}\sqrt{y} \neq \sqrt{xy}`.
 
 Identity 3 is not always true.  For example, if `x = -1`, `a = 2`, and `b =
 \frac{1}{2}`, then `(x^a)^b = {\left ((-1)^2\right )}^{1/2} = \sqrt{1} = 1`
-and `x^{ab} = (-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true at
-least `b` is an integer (again, it may also hold in
-other cases as well).  Two common consequences of the failure of identity 3
-are that `\sqrt{x^2}\neq x` and that `\sqrt{\frac{1}{x}} \neq
-\frac{1}{\sqrt{x}}`.
+and `x^{ab} = (-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true
+when `b` is an integer (again, it may also hold in other cases as well).  Two
+common consequences of the failure of identity 3 are that `\sqrt{x^2}\neq x`
+and that `\sqrt{\frac{1}{x}} \neq \frac{1}{\sqrt{x}}`.
 
 To summarize
 
