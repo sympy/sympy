@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<list key="installedFeatures">
+		<item value="com.aptana.feature.rcp:3.4.2.201308081805-7o7nFDFFFcLz-2l0rkQ0UYz0u_Wm"/>
+		<item value="com.aptana.feature.studio:3.4.2.201308081736-7W7I57boG98RAi489ctbvKi7VXbq"/>
+		<item value="com.aptana.feature:3.4.2.1376005939-B87T88BWOnwWRYdZO1DC44EXtPxS"/>
+		<item value="com.aptana.php.feature:3.4.2.201308081728-7J7E-7IOYXVXXUJS"/>
+		<item value="com.aptana.pydev.feature:2.7.0.2013032300-7g9I-8Jez0cfdJcee"/>
+		<item value="io.emmet.eclipse:1.0.0.201401132323"/>
+		<item value="org.eclipse.help:1.3.0.v20110530-0844-7i7uFFmFFl8nvqbDpEqTvx"/>
+		<item value="org.eclipse.platform:3.7.2.v20120207-1839-9gF7UHPDFxGjd-PqDr2jX_4yKaumkoHTz04_q-q"/>
+		<item value="org.eclipse.rcp:3.7.2.v20120120-1424-9DB5FmnFq5JCf1UA38R-kz0S0272"/>
+		<item value="org.radrails.rails:3.4.2.201308081726-7n-7Z7oKfjkqlemv"/>
+	</list>
+	<section name="ExternalProjectImportWizard">
+	</section>
+	<section name="NewWizardAction">
+	</section>
+</section>

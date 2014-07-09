@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbench progressCount="36" version="2.0">
+<workbenchAdvisor/>
+<window height="744" maximized="true" width="1200" x="65" y="24">
+<fastViewData fastViewLocation="1024"/>
+<perspectiveBar>
+<itemSize x="160"/>
+</perspectiveBar>
+<coolbarLayout>
+<coolItem id="group.file" itemType="typeGroupMarker"/>
+<coolItem id="org.eclipse.ui.workbench.file" itemType="typeToolBarContribution" x="132" y="30"/>
+<coolItem id="additions" itemType="typeGroupMarker"/>
+<coolItem id="net.sourceforge.vrapper.Vrapper" itemType="typeToolBarContribution" x="40" y="30"/>
+<coolItem id="org.eclipse.debug.ui.launchActionSet" itemType="typeToolBarContribution" x="140" y="30"/>
+<coolItem id="org.eclipse.search.searchActionSet" itemType="typeToolBarContribution" x="82" y="30"/>
+<coolItem id="com.aptana.ui.globalActionSet" itemType="typeToolBarContribution" x="188" y="30"/>
+<coolItem id="org.eclipse.ui.edit.text.actionSet.presentation" itemType="typeToolBarContribution" x="96" y="30"/>
+<coolItem id="group.nav" itemType="typeGroupMarker"/>
+<coolItem id="org.eclipse.ui.workbench.navigate" itemType="typeToolBarContribution" x="84" y="30"/>
+<coolItem id="group.editor" itemType="typeGroupMarker"/>
+<coolItem id="org.python.pydev.editor.PythonEditor" itemType="typeToolBarContribution" x="-1" y="-1"/>
+<coolItem id="group.help" itemType="typeGroupMarker"/>
+<coolItem id="org.eclipse.ui.workbench.help" itemType="typeToolBarContribution" x="-1" y="-1"/>
+</coolbarLayout>
+<page aggregateWorkingSetId="Aggregate for window 1404812264419" focus="true" label="Workspace - Web">
+<editors>
+<editorArea activeWorkbook="DefaultEditorWorkbook">
+<info part="DefaultEditorWorkbook">
+<folder appearance="1" expanded="2">
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+<part id="1"/>
+<part id="2"/>
+<part id="3"/>
+<part id="4"/>
+<part id="5"/>
+</presentation>
+</folder>
+</info>
+</editorArea>
+<editor id="org.python.pydev.editor.PythonEditor" name="__init__.py" partName="sympy" path="/home/nabeel/GITHUB_Projects/sympy/sympy/__init__.py" title="sympy" tooltip="sympy/__init__.py" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/sympy/__init__.py"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
+</editor>
+<editor id="org.python.pydev.editor.PythonEditor" name="integrals.py" partName="integrals" path="/home/nabeel/GITHUB_Projects/sympy/sympy/integrals/integrals.py" title="integrals" tooltip="sympy/integrals/integrals.py" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/sympy/integrals/integrals.py"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="2699" selectionTopPixel="815"/>
+</editor>
+<editor activePart="true" focus="true" id="org.python.pydev.editor.PythonEditor" name="expr_with_limits.py" partName="expr_with_limits" path="/home/nabeel/GITHUB_Projects/sympy/sympy/concrete/expr_with_limits.py" title="expr_with_limits" tooltip="sympy/concrete/expr_with_limits.py" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/sympy/concrete/expr_with_limits.py"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="3194" selectionTopPixel="884"/>
+</editor>
+<editor id="org.python.pydev.editor.PythonEditor" name="expr.py" partName="expr" path="/home/nabeel/GITHUB_Projects/sympy/sympy/core/expr.py" title="expr" tooltip="sympy/core/expr.py" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/sympy/core/expr.py"/>
+<editorState selectionHorizontalPixel="0" selectionLength="63" selectionOffset="611" selectionTopPixel="357"/>
+</editor>
+<editor id="org.python.pydev.editor.PythonEditor" name="sympify.py" partName="sympify" path="/home/nabeel/GITHUB_Projects/sympy/sympy/core/sympify.py" title="sympify" tooltip="sympy/core/sympify.py" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/sympy/core/sympify.py"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="5984"/>
+</editor>
+<editor id="org.python.pydev.editor.PythonEditor" name="abc.py" partName="abc" path="/home/nabeel/GITHUB_Projects/sympy/sympy/abc.py" title="abc" tooltip="sympy/abc.py" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/sympy/abc.py"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
+</editor>
+</editors>
+<views>
+<view id="org.eclipse.ui.navigator.ProjectExplorer" partName="Project Explorer">
+<viewState CommonNavigator.LINKING_ENABLED="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0"/>
+</view>
+<view id="org.eclipse.ui.views.ContentOutline" partName="Outline">
+<viewState/>
+</view>
+</views>
+<perspectives activePart="org.python.pydev.editor.PythonEditor" activePerspective="com.aptana.ui.WebPerspective">
+<perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
+<descriptor class="com.aptana.ui.internal.WebPerspectiveFactory" id="com.aptana.ui.WebPerspective" label="Web"/>
+<alwaysOnActionSet id="com.aptana.browser.actionSet"/>
+<alwaysOnActionSet id="com.aptana.ruby.debug.ui.RubyDebugActionSet"/>
+<alwaysOnActionSet id="org.eclipse.ui.cheatsheets.actionSet"/>
+<alwaysOnActionSet id="org.eclipse.search.searchActionSet"/>
+<alwaysOnActionSet id="org.eclipse.ui.edit.text.actionSet.convertLineDelimitersTo"/>
+<alwaysOnActionSet id="org.eclipse.ui.actionSet.keyBindings"/>
+<alwaysOnActionSet id="org.eclipse.ui.actionSet.openFiles"/>
+<alwaysOnActionSet id="com.aptana.editor.common.presentation"/>
+<alwaysOnActionSet id="org.eclipse.debug.ui.launchActionSet"/>
+<alwaysOnActionSet id="org.eclipse.debug.ui.breakpointActionSet"/>
+<alwaysOnActionSet id="com.aptana.js.debug.ui.actionSet"/>
+<alwaysOnActionSet id="org.eclipse.ui.NavigateActionSet"/>
+<alwaysOnActionSet id="org.eclipse.ui.edit.text.actionSet.presentation"/>
+<alwaysOnActionSet id="com.aptana.ui.globalActionSet"/>
+<alwaysOnActionSet id="com.aptana.terminal.actionSet"/>
+<show_view_action id="com.aptana.browser.views.webbrowser"/>
+<show_view_action id="com.aptana.explorer.view"/>
+<show_view_action id="org.eclipse.ui.navigator.ProjectExplorer"/>
+<show_view_action id="com.aptana.ui.io.remoteview"/>
+<show_view_action id="org.eclipse.ui.views.ContentOutline"/>
+<show_view_action id="com.aptana.samples.ui.SamplesView"/>
+<show_view_action id="com.aptana.snippets.ui.views.SnippetsView"/>
+<show_view_action id="com.aptana.terminal.views.terminal"/>
+<show_view_action id="org.eclipse.ui.console.ConsoleView"/>
+<show_view_action id="org.eclipse.pde.runtime.LogView"/>
+<show_view_action id="org.eclipse.ui.views.ProblemView"/>
+<show_view_action id="org.eclipse.ui.views.TaskList"/>
+<show_view_action id="com.aptana.webserver.ui.view"/>
+<new_wizard_action id="com.aptana.editor.php.NewPHPProjectWizard"/>
+<new_wizard_action id="com.aptana.ui.wizards.NewWebProject"/>
+<new_wizard_action id="com.aptana.ruby.core.ui.rubyProjectWizard"/>
+<new_wizard_action id="com.aptana.ui.wizards.new.file"/>
+<new_wizard_action id="org.eclipse.ui.wizards.new.folder"/>
+<new_wizard_action id="org.eclipse.ui.editors.wizards.UntitledTextFileWizard"/>
+<new_wizard_action id="org.radrails.rails.ui.projectWizard"/>
+<perspective_action id="org.eclipse.debug.ui.DebugPerspective"/>
+<hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
+<fastViewBars>
+<fastViewBar fastViewLocation="16384" id="org.eclipse.ui.internal.ViewStack@1d5cf30" orientation="512" selectedTabId="org.eclipse.ui.views.ContentOutline" style="0">
+<fastViews>
+<view id="org.eclipse.ui.views.ContentOutline" ratio="0.3"/>
+</fastViews>
+</fastViewBar>
+<fastViewBar fastViewLocation="16384" id="left" orientation="512" selectedTabId="org.eclipse.ui.navigator.ProjectExplorer" style="0">
+<fastViews>
+<view id="org.eclipse.ui.navigator.ProjectExplorer" ratio="0.29864973"/>
+</fastViews>
+</fastViewBar>
+</fastViewBars>
+<layout>
+<mainWindow>
+<info folder="true" part="left">
+<folder appearance="2" expanded="2">
+<page content="com.aptana.explorer.view" label="LabelNotFound"/>
+<page content="org.eclipse.ui.navigator.ProjectExplorer" label="LabelNotFound"/>
+<page content="com.aptana.ui.io.remoteview" label="LabelNotFound"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+</folder>
+</info>
+<info folder="true" part="stickyFolderRight" ratio="0.7495784" ratioLeft="889" ratioRight="297" relationship="2" relative="left">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
+<page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
+<page content="org.eclipse.ui.cheatsheets.views.CheatSheetView" label="LabelNotFound"/>
+</folder>
+</info>
+<info part="org.eclipse.ui.editorss" ratio="0.19983137" ratioLeft="237" ratioRight="949" relationship="2" relative="left"/>
+<info folder="true" part="terminalArea" ratio="0.7488922" ratioLeft="507" ratioRight="170" relationship="4" relative="org.eclipse.ui.editorss">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.ui.console.ConsoleView" label="LabelNotFound"/>
+<page content="com.aptana.terminal.views.terminal" label="LabelNotFound"/>
+<page content="org.eclipse.pde.runtime.LogView" label="LabelNotFound"/>
+<page content="org.eclipse.ui.views.ProblemView" label="LabelNotFound"/>
+<page content="org.eclipse.ui.views.TaskList" label="LabelNotFound"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+</folder>
+</info>
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@1d5cf30" ratio="0.7488922" ratioLeft="507" ratioRight="170" relationship="4" relative="left">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.ui.views.ContentOutline" label="LabelNotFound"/>
+<page content="com.aptana.samples.ui.SamplesView" label="LabelNotFound"/>
+<page content="com.aptana.snippets.ui.views.SnippetsView" label="LabelNotFound"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+</folder>
+</info>
+</mainWindow>
+</layout>
+</perspective>
+</perspectives>
+<workingSets/>
+<navigationHistory>
+<editors>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/__init__.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/geometry/ellipse.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/integrals/integrals.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/concrete/expr_with_limits.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/core/expr.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/core/sympify.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/abc.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/__init__.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/integrals/integrals.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/core/expr.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/core/sympify.py"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" path="/sympy/abc.py"/>
+</editors>
+<item historyLabel="sympy" index="0">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="ellipse" index="1">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="ellipse" index="1">
+<position/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1338" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1338" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="2175" y="14"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1338" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="108" y="4"/>
+</item>
+<item historyLabel="expr" index="4">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="108" y="4"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1338" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="108" y="4"/>
+</item>
+<item historyLabel="expr" index="4">
+<position info="not_deleted" x="611" y="63"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="108" y="4"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1338" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="11964" y="0"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1330" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="290" y="7"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1330" y="0"/>
+</item>
+<item historyLabel="sympify" index="5">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="abc" index="6">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="sympify" index="5">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1330" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="290" y="7"/>
+</item>
+<item historyLabel="integrals" index="2">
+<position info="not_deleted" x="1330" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="290" y="7"/>
+</item>
+<item historyLabel="sympy" index="7">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="integrals" index="8">
+<position info="not_deleted" x="1330" y="0"/>
+</item>
+<item historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="290" y="7"/>
+</item>
+<item historyLabel="expr" index="9">
+<position info="not_deleted" x="611" y="63"/>
+</item>
+<item historyLabel="sympify" index="10">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="abc" index="11">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="expr" index="9">
+<position info="not_deleted" x="611" y="63"/>
+</item>
+<item historyLabel="abc" index="11">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="integrals" index="8">
+<position info="not_deleted" x="2699" y="0"/>
+</item>
+<item active="true" historyLabel="expr_with_limits" index="3">
+<position info="not_deleted" x="290" y="7"/>
+</item>
+</navigationHistory>
+<input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
+</page>
+<workbenchWindowAdvisor/>
+<actionBarAdvisor/>
+<trimLayout>
+<trimArea IMemento.internal.id="16384">
+<trimItem IMemento.internal.id="left"/>
+<trimItem IMemento.internal.id="org.eclipse.ui.internal.ViewStack@1d5cf30"/>
+</trimArea>
+<trimArea IMemento.internal.id="128">
+<trimItem IMemento.internal.id="org.eclipse.ui.internal.WorkbenchWindow.topBar"/>
+</trimArea>
+<trimArea IMemento.internal.id="1024">
+<trimItem IMemento.internal.id="org.eclise.ui.internal.FastViewBar"/>
+<trimItem IMemento.internal.id="org.eclipse.jface.action.StatusLineManager"/>
+<trimItem IMemento.internal.id="org.eclipse.ui.internal.progress.ProgressRegion"/>
+</trimArea>
+</trimLayout>
+</window>
+<mruList>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" name="abc.py" tooltip="sympy/abc.py">
+<persistable path="/sympy/abc.py"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" name="sympify.py" tooltip="sympy/core/sympify.py">
+<persistable path="/sympy/core/sympify.py"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" name="expr.py" tooltip="sympy/core/expr.py">
+<persistable path="/sympy/core/expr.py"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" name="expr_with_limits.py" tooltip="sympy/concrete/expr_with_limits.py">
+<persistable path="/sympy/concrete/expr_with_limits.py"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" name="integrals.py" tooltip="sympy/integrals/integrals.py">
+<persistable path="/sympy/integrals/integrals.py"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" name="ellipse.py" tooltip="sympy/geometry/ellipse.py">
+<persistable path="/sympy/geometry/ellipse.py"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.python.pydev.editor.PythonEditor" name="__init__.py" tooltip="sympy/__init__.py">
+<persistable path="/sympy/__init__.py"/>
+</file>
+</mruList>
+</workbench>
