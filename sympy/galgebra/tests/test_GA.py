@@ -485,10 +485,10 @@ def test_conformal_representations_of_circles_lines_spheres_and_planes():
     D = make_vector(ez, cf3d)
     X = make_vector(x*ex + y*ey +z*ez, cf3d)
 
-    assert A == ex + n/2 - nbar/2
-    assert B == ey + n/2 - nbar/2
-    assert C == -ex + n/2 - nbar/2
-    assert D == ez + n/2 - nbar/2
+    assert A == ex + (n - nbar)/S(2)
+    assert B == ey + (n - nbar)/S(2)
+    assert C == -ex + (n - nbar)/S(2)
+    assert D == ez + (n - nbar)/S(2)
     assert X == x*ex + y*ey + z*ez + (x**2/2 + y**2/2 + z**2/2)*n - nbar/2
 
     assert A ^ B ^ C ^ X == -z*(ex^ey^ez^n) + z*(ex^ey^ez^nbar) + ((x**2 + y**2 + z**2 - S(1))/2)*(ex^ey^n^nbar)

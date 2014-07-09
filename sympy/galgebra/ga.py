@@ -1585,3 +1585,6 @@ class Sm(Ga):
 
         if debug:
             print 'Exit Sm.__init__()'
+
+if __name__ == "__main__":
+    pass

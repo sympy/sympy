@@ -1,7 +1,5 @@
 #mv.py
 
-import sys
-sys.path.append('./')
 import itertools
 import copy
 import numbers
@@ -13,8 +11,10 @@ from sympy import Symbol, Function, S, expand, Add, Mul, Pow, Basic, \
     sin, cos, sinh, cosh, sqrt, trigsimp, \
     simplify, diff, Rational, Expr
 from sympy import N as Nsympy
-import metric
 import printer
+import metric
+import ga
+
 
 half = Rational(1, 2)
 
@@ -424,6 +424,11 @@ class Mv(object):
         return(self)
 
     def __div__(self, A):
+        self_div = Mv(self.obj, ga=self.Ga)
+        self_div.obj /= A
+        return(self_div)
+
+    def __truediv__(self, A):
         self_div = Mv(self.obj, ga=self.Ga)
         self_div.obj /= A
         return(self_div)
@@ -1132,6 +1137,10 @@ class Sdop(object):
         s = s.replace('+ -','- ')
         return s[:-3]
 
+    def _repr_latex_(self):
+        latex_str = printer.GaLatexPrinter.latex(self)
+        return '$ ' + latex_str + '$ '
+
     def __str__(self):
         if printer.GaLatexPrinter.latex_flg:
             Printer = printer.GaLatexPrinter
@@ -1142,12 +1151,6 @@ class Sdop(object):
 
     def __repr__(self):
         return str(self)
-
-    def _repr_latex_(self):
-        latex_str = printer.GaLatexPrinter.latex(self)
-        if r'\begin{align*}' not in latex_str:
-            latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
-        return latex_str
 
     def __init__(self, *kargs, **kwargs):
 
@@ -1520,6 +1523,10 @@ class Pdop(object):
         s += '}'
         return s
 
+    def _repr_latex_(self):
+        latex_str = printer.GaLatexPrinter.latex(self)
+        return '$ ' + latex_str + '$ '
+
     def __str__(self):
         if printer.GaLatexPrinter.latex_flg:
             Printer = printer.GaLatexPrinter
@@ -1806,6 +1813,14 @@ class Dop(object):
 
     def __mul__(self, dopr):  # * geometric product
         return Dop.Mul(self, dopr, op='*')
+
+    def __truediv__(self, dopr):
+        if isinstance(dopr, (Dop, Mv)):
+            raise ValueError('In Dop.__truediv__ dopr must be a sympy scalar.')
+        terms = []
+        for term in self.terms:
+            terms.append((term[0]/dopr,term[1]))
+        return Dop(terms, ga= self.Ga)
 
     def __rmul__(self, dopl):  # * geometric product
         return Dop.Mul(dopl, self, op='*')
@@ -2109,3 +2124,6 @@ def correlation(u, v, dec=3):  # Compute the correlation coefficient of vectors 
         ulocal[i] -= uave
         vlocal[i] -= vave
     return ulocal.dot(vlocal) / (ulocal.norm() * vlocal.norm()). evalf(dec)
+
+if __name__ == "__main__":
+    pass

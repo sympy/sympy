@@ -34,6 +34,6 @@ print (o3d.grad+xs)*o3d.grad
 
 print X
 print X^o3d.grad
-
+print (X^o3d.grad).components()
 
 xpdf(filename='prod.tex')

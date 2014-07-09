@@ -4,10 +4,10 @@ import sys
 import inspect
 import types
 import itertools
-import metric
 from sympy import collect, expand, symbols, Matrix, Symbol, Function, S, Add
 from copy import copy
 import printer
+import metric
 import mv
 import lt
 
@@ -702,3 +702,6 @@ class Mlt(object):
             output += str(i)+':'+str(i_index)+':'+str(self(*e)) + '\n'
             i += 1
         return output
+
+if __name__ == "__main__":
+    pass

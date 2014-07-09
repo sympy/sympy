@@ -1,8 +1,10 @@
-\documentclass[12pt]{report}
+\documentclass[12pt,twoside,openright]{memoir}
+%\usepackage[paperwidth=8.5in, paperheight=11.00in,bindingoffset=.75in]{geometry}
 % setup the page geometry for landscape and use maximum screen real estate
 %\usepackage[dvips]{geometry,graphicx,color}
+\usepackage[latin1]{inputenc}
 \usepackage{listings}
-\usepackage{parskip}
+%\usepackage{parskip}
 \usepackage[pdftex]{geometry,graphicx,color}
 %\usepackage{bm}
 \usepackage{amsmath}
@@ -16,11 +18,13 @@
 \usepackage{pdfpages}
 \usepackage{rotating}
 \usepackage{setspace}
-\usepackage{sectsty}
-\usepackage{eufrak}
+%\usepackage{sectsty}
+%\usepackage{eufrak}
 \usepackage{makecell}
 \usepackage{longtable}
 \usepackage[hyphens]{url}
+\setlength{\parindent}{0pt}
+\nonzeroparskip
 \DeclareGraphicsExtensions{.pdf}
 \definecolor{LinkColor} {rgb} {0, 0, .8} 
 \usepackage[colorlinks=true, linkcolor=LinkColor, citecolor=black, urlcolor=blue]{hyperref}
@@ -34,13 +38,8 @@
 \definecolor{red}{rgb}{1,0,0}
 \definecolor{gray}{rgb}{0.95,0.95,0.95}
 \setlength{\parindent}{0in}
-\usepackage{sectsty}
-\sectionfont{\large}
-%\titlespacing*{\section}{0pt}{6pt}{3pt}
-\title{\bf\Large Geometric Algebra Module for \emph{Sympy}}
-\author{\bf Alan Bromborsky\\
-\bf Army Research Lab (Retired)\\
-\bf abrombo@verizon.net}
+%\usepackage{sectsty}
+%\sectionfont{\large}
 
 \newcommand{\bfrac}[2]{\displaystyle\frac{#1}{#2}}
 \newcommand{\lp}{\left (}
@@ -93,12 +92,17 @@
 \newcommand{\includecode}[1]{\lstinputlisting[language=Python, caption=#1, escapechar=none]{#1}}
 \newcommand{\notebox}[1]{\begin{center}\fbox{\parbox{6in}{#1}}\end{center}}
 \newcommand{\warningbox}[1]{\color{red}\begin{center}\fbox{\parbox{6in}{#1}}\end{center}\color{black}}
+
+%\titlespacing*{\section}{0pt}{6pt}{3pt}
+\title{\textbf{\textit{Geometric Algebra Module for Sympy}}}
+\author{Alan Bromborsky \\ Army Research Lab (Retired)\\ \T{abrombo@verizon.net}}
+\date{}
+
+
 \begin{document}
 
-\parskip 10pt
-
 \maketitle
-{\bf Introduction}\newline
+{ Introduction}\newline
 
    This document describes the implementation, installation and use of a
    geometric algebra module written in
@@ -114,7 +118,7 @@
    well as linear multivector differential operators ($\bm{\nabla}$, $\bm{\nabla}^2$, etc.), linear 
    transformations, and multi-linear transformations (tensors). The module requires the 
    \emph{sympy} module and the numpy module for numerical linear algebra calculations.  For latex output
-   a latex distribution must be installed.
+   a latex distribution must be installed.\newpage
 
 \tableofcontents
 
@@ -129,7 +133,6 @@ algebra are called multivectors and consist of the linear combination of
 scalars, vectors, and the geometric product of two or more vectors. The
 additional axioms for the geometric algebra are that for any vectors $a$,
 $b$, and $c$ in the base vector space (\cite{Doran},p85):
-
   \begin{equation}
   \begin{array}{c}
   a\lp bc \rp = \lp ab \rp c \\
@@ -138,56 +141,44 @@ $b$, and $c$ in the base vector space (\cite{Doran},p85):
   aa = a^{2} \in \Re
   \end{array}
   \end{equation}
-
 The dot product of two vectors is defined by (\cite{Doran},p86)
-
   \begin{equation}
      a\cdot b \equiv (ab+ba)/2
   \end{equation}
-
 Then consider
-
   \begin{align}
      c &= a+b \\
      c^{2} &= (a+b)^{2} \\
      c^{2} &= a^{2}+ab+ba+b^{2} \\
      a\cdot b &= (c^{2}-a^{2}-b^{2})/2 \in \Re
   \end{align}
-
 Thus $a\cdot b$  is real.  The objects generated from linear combinations of scalars and
 the geometric products of vectors are called multivectors.  If a basis for
 the underlying vector space is the set of vectors formed from $\eb_{1},\dots,\eb_{n}$ (we use
 boldface $\eb$'s to denote basis vectors)
 a complete basis for the geometric algebra is given by the scalar $1$, the vectors $\eb_{1},\dots,\eb_{n}$
 and all geometric products of vectors
-
    \begin{equation}
       \eb_{i_{1}}\eb_{i_{2}}\dots \eb_{i_{r}} \mbox{ where } 0\le r \le n\mbox{, }0 \le i_{j} \le n \mbox{ and } i_{1}<i_{2}<\dots<i_{r}
    \end{equation}
-
 Each base of the complete basis is represented by a noncommutative symbol (except for the scalar 1)
 with name $\eb_{i_{1}}\dots \eb_{i_{r}}$ so that the general multivector $\bm{A}$ is represented by
 ($A$ is the scalar part of the multivector and the $A^{i_{1},\dots,i_{r}}$ are scalars)
-
    \begin{equation}
       \bm{A} = A + \sum_{r=1}^{n}\sum_{\substack{i_{1},\dots,i_{r}\\ 0\le i_{j}<i_{j+1} \le n}} 
                A^{i_{1},\dots,i_{r}}\eb_{i_{1}}\eb_{i_{2}}\dots \eb_{r}
    \end{equation}
-
 The critical operation in setting up the geometric algebra is reducing
 the geometric product of any two bases to a linear combination of bases so that
 we can calculate a multiplication table for the bases.  Since the geometric
 product is associative we can use the operation (by definition for two vectors
 $a\cdot b \equiv (ab+ba)/2$  which is a scalar)
-
    \begin{equation}\label{reduce}
       \eb_{i_{j+1}}\eb_{i_{j}} = 2\eb_{i_{j+1}}\cdot \eb_{i_{j}} - \eb_{i_{j}}\eb_{i_{j+1}}
    \end{equation}
-
 These processes are repeated untill every basis list in $\bm{A}$ is in normal
 (ascending) order with no repeated elements. As an example consider the
 following
-
    \begin{align}
       \eb_{3}\eb_{2}\eb_{1} &= (2(\eb_{2}\cdot \eb_{3}) - \eb_{2}\eb_{3})\eb_{1} \\
                       &= 2\paren{\eb_{2}\cdot \eb_{3}}\eb_{1} - \eb_{2}\eb_{3}\eb_{1} \\
@@ -196,7 +187,6 @@ following
                       &= 2\paren{\paren{\eb_{2}\cdot \eb_{3}}\eb_{1}-\paren{\eb_{1}\cdot \eb_{3}}\eb_{2}+
                          \paren{\eb_{1}\cdot \eb_{2}}\eb_{3}}-\eb_{1}\eb_{2}\eb_{3}
    \end{align}
-
 which results from repeated application of eq.~(\ref{reduce}).  If the product of basis vectors contains repeated factors
 eq.~(\ref{reduce}) can be used to bring the repeated factors next to one another so that if $\eb_{i_{j}} = \eb_{i_{j+1}}$
 then $\eb_{i_{j}}\eb_{i_{j+1}} = \eb_{i_{j}}\cdot \eb_{i_{j+1}} = \eb_{i_{j}}^{2}$ which is a scalar that commutes with all the terms in the product
@@ -208,110 +198,84 @@ taken $r$ at a time (binominal coefficient).
 The other construction required for formulating the geometric algebra is the outer or wedge product (symbol $\W$) of $r$
 vectors denoted by $a_{1}\W\dots\W a_{r}$.  The wedge product of $r$ vectors is called an $r$-blade and is defined
 by (\cite{Doran},p86)
-
    \begin{equation}
       a_{1}\W\dots\W a_{r} \equiv \sum_{i_{j_{1}}\dots i_{j_{r}}} \epsilon^{i_{j_{1}}\dots i_{j_{r}}}a_{i_{j_{1}}}\dots a_{i_{j_{1}}}
    \end{equation}
-
 where $\epsilon^{i_{j_{1}}\dots i_{j_{r}}}$ is the contravariant permutation symbol which is $+1$ for an even permutation of the
 superscripts, $0$ if any superscripts are repeated, and $-1$ for an odd permutation of the superscripts. From the definition
 $a_{1}\W\dots\W a_{r}$ is antisymmetric in all its arguments and the following relation for the wedge product of a vector $a$ and an
 $r$-blade $B_{r}$ can be derived
-
    \begin{equation}\label{wedge}
       a\W B_{r} = (aB_{r}+(-1)^{r}B_{r}a)/2
    \end{equation}
-
 Using eq.~(\ref{wedge}) one can represent the wedge product of all the basis vectors
 in terms of the geometric product of all the basis vectors so that one can solve (the system
 of equations is lower diagonal) for the geometric product of all the basis vectors in terms of
 the wedge product of all the basis vectors.  Thus a general multivector $\bm{B}$ can be
 represented as a linear combination of a scalar and the basis blades.
-
    \begin{equation}
       \bm{B} = B + \sum_{r=1}^{n}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} B^{i_{1},\dots,i_{r}}\eb_{i_{1}}\W \eb_{i_{2}}\W\dots\W \eb_{r}
    \end{equation}
-
 Using the blades $\eb_{i_{1}}\W \eb_{i_{2}}\W\dots\W \eb_{r}$ creates a graded
 algebra where $r$ is the grade of the basis blades.  The grade-$r$
 part of $\bm{B}$ is the linear combination of all terms with
 grade $r$ basis blades. The scalar part of $\bm{B}$ is defined to
 be grade-$0$.  Now that the blade expansion of $\bm{B}$ is defined
 we can also define the grade projection operator $\proj{\bm{B}}{r}$ by
-
    \begin{equation}
       \proj{\bm{B}}{r} = \sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} B^{i_{1},\dots,i_{r}}\eb_{i_{1}}\W \eb_{i_{2}}\W\dots\W \eb_{r}
    \end{equation}
-
 and
-
    \begin{equation}
       \proj{\bm{B}}{} \equiv \proj{\bm{B}}{0} = B
    \end{equation}
-
 Then if $\bm{A}_{r}$ is an $r$-grade multivector and $\bm{B}_{s}$ is an $s$-grade multivector we have
-
    \begin{equation}
       \bm{A}_{r}\bm{B}_{s} = \proj{\bm{A}_{r}\bm{B}_{s}}{\abs{r-s}}+\proj{\bm{A}_{r}\bm{B}_{s}}{\abs{r-s}+2}+\cdots
                              \proj{\bm{A}_{r}\bm{B}_{s}}{r+s}
    \end{equation}
-
 and define (\cite{Hestenes},p6)
-
    \begin{align}
       \bm{A}_{r}\W\bm{B}_{s} &\equiv \proj{\bm{A}_{r}\bm{B}_{s}}{r+s} \\
       \bm{A}_{r}\cdot\bm{B}_{s} &\equiv \braces{ \begin{array}{cc}
       r\mbox{ and }s \ne 0: & \proj{\bm{A}_{r}\bm{B}_{s}}{\abs{r-s}}  \\
       r\mbox{ or }s = 0: & 0 \end{array}}
    \end{align}
-
 where $\bm{A}_{r}\cdot\bm{B}_{s}$ is called the dot or inner product of
 two pure grade multivectors.  For the case of two non-pure grade multivectors
-
    \begin{align}
       \bm{A}\W\bm{B} &= \sum_{r,s}\proj{\bm{A}}{r}\W\proj{\bm{B}}{{s}} \\
       \bm{A}\cdot\bm{B} &= \sum_{r,s\ne 0}\proj{\bm{A}}{r}\cdot\proj{\bm{B}}{{s}}
    \end{align}
-
 Two other products, the right ($\rfloor$) and left ($\lfloor$) contractions, are defined by
-
    \begin{align}
       \bm{A}\lfloor\bm{B} &\equiv \sum_{r,s}\braces{\begin{array}{cc} \proj{\bm{A}_r\bm{B}_{s}}{r-s} & r \ge s \\
                                                   0                                               & r < s \end{array}}  \\
       \bm{A}\rfloor\bm{B} &\equiv \sum_{r,s}\braces{\begin{array}{cc} \proj{\bm{A}_{r}\bm{B}_{s}}{s-r} & s \ge r \\
                                                   0                                               & s < r\end{array}}
    \end{align}
-
 A final operation for multivectors is the reverse.  If a multivector $\bm{A}$ is the geometric product of $r$ vectors (versor)
 so that $\bm{A} = a_{1}\dots a_{r}$ the reverse is defined by
-
    \begin{align}
       \bm{A}^{\R} \equiv a_{r}\dots a_{1}
    \end{align}
-
 where for a general multivector we have (the the sum of the reverse of versors)
-
    \begin{equation}
       \bm{A}^{\R} = A + \sum_{r=1}^{n}(-1)^{r(r-1)/2}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} A^{i_{1},\dots,i_{r}}\eb_{i_{1}}\W \eb_{i_{2}}\W\dots\W \eb_{r}
    \end{equation}
-
 note that if $\bm{A}$ is a versor then $\bm{A}\bm{A}^{\R}\in\Re$ and ($AA^{\R} \ne 0$)
-
    \begin{equation}
       \bm{A}^{-1} = \bfrac{\bm{A}^{\R}}{\bm{AA}^{\R}}
    \end{equation}
-
 \section{Representation of Multivectors in \emph{sympy}}
 
 The \emph{sympy} python module offers a simple way of representing multivectors using linear
 combinations of commutative expressions (expressions consisting only of commuting \emph{sympy} objects)
 and noncommutative symbols. We start by defining $n$ noncommutative \emph{sympy} symbols as a basis for 
 the vector space
-
 \begin{lstlisting}[numbers=none]
    (e_1,...,e_n) = symbols('e_1,...,e_n',commutative=False)
 \end{lstlisting}
-
 Several software packages for numerical geometric algebra calculations are
 available from Doran-Lasenby group and the Dorst group. Symbolic packages for
 Clifford algebra using orthongonal bases such as
@@ -340,9 +304,8 @@ all the needed multivector operations as shown in Table~\ref{ops}
  where $A$ and $B$  are any two multivectors (In the case of
 $+$, $-$, $*$, $\W$, $|$, $<$, and $>$ the operation is also defined if $A$ or
 $B$ is a \emph{sympy} symbol or a \emph{sympy} real number).
-
-\begin{table}
 \begin{center}
+\begin{table}
 \begin{longtable}{cc}
     $A+B$ & sum of multivectors \\
     $A-B$ & difference of multivectors \\
@@ -352,30 +315,28 @@ $B$ is a \emph{sympy} symbol or a \emph{sympy} real number).
     $A<B$ & left contraction of multivectors \\
     $A>B$ & right contraction of multivectors 
 \end{longtable}
-\end{center}
 \caption{Multivector operations for GA}\label{ops}
 \end{table}
-
+\end{center}
 Since \T{<} and \T{>} have no r-forms (in python for the \T{<} and \T{>} operators there are no \lstinline$__rlt__()$ and
  \lstinline$__rgt__()$ member functions to overload)
 we can only have mixed modes (scalars and multivectors) if the first operand is a multivector.
 
+Except for \T{<} and \T{>} all the multivector operators have r-forms so that as long as one of the
+operands, left or right, is a multivector the other can be a multivector or a scalar (\emph{sympy} symbol or integer).
 
-    Except for \T{<} and \T{>} all the multivector operators have r-forms so that as long as one of the
-    operands, left or right, is a multivector the other can be a multivector or a scalar (\emph{sympy} symbol or integer).
-
-    Note that the operator order precedence is determined by python and is not
-    necessarily that used by geometric algebra. It is \emph{absolutely essential} to
-    use parenthesis in multivector
-    expressions containing \T{\^}, \T{|}, \T{<}, and/or \T{>}.  As an example let
-    \T{A} and \T{B} be any two multivectors. Then \T{A + A*B = A +(A*B)}, but
-    \lstinline!A+A^B = (2*A)^B! since in python the \T{\^} operator has a lower precedence
-    than the \T{+} operator.  In geometric algebra the outer and inner products and
-    the left and right contractions have a higher precedence than the geometric
-    product and the geometric product has a higher precedence than addition and
-    subtraction.  In python the \T{\^}, \T{|}, \T{>}, and \T{<} all have a lower
-    precedence than \T{+} and \T{-} while \T{*} has a higher precedence than
-    \T{+} and \T{-}.
+Note that the operator order precedence is determined by python and is not
+necessarily that used by geometric algebra. It is \emph{absolutely essential} to
+use parenthesis in multivector
+expressions containing \T{\^}, \T{|}, \T{<}, and/or \T{>}.  As an example let
+\T{A} and \T{B} be any two multivectors. Then \T{A + A*B = A +(A*B)}, but
+\lstinline!A+A^B = (2*A)^B! since in python the \T{\^} operator has a lower precedence
+than the \T{+} operator.  In geometric algebra the outer and inner products and
+the left and right contractions have a higher precedence than the geometric
+product and the geometric product has a higher precedence than addition and
+subtraction.  In python the \T{\^}, \T{|}, \T{>}, and \T{<} all have a lower
+precedence than \T{+} and \T{-} while \T{*} has a higher precedence than
+\T{+} and \T{-}.
 
 For those users who wish to define a default operator precedence the functions
 \T{def\_prec()} and \T{GAeval()} are available in the module printer.
@@ -401,12 +362,10 @@ For those users who wish to define a default operator precedence the functions
    precedence defined by \T{op\_ord='<>|,\^,*'}.  Then the parsed string is
    converted to a \emph{sympy} expression using the python \T{eval()} function.
    For example consider where \T{X}, \T{Y}, \T{Z}, and \T{W} are multivectors
-
 	\begin{lstlisting}[numbers=none]
       def_prec(globals())
       V = GAeval('X|Y^Z*W')
 	\end{lstlisting}
-	
    The \emph{sympy} variable \T{V} would evaluate to \lstinline!((X|Y)^Z)*W!.
    \end{quote}
 
@@ -421,17 +380,14 @@ vectors are input as a string with the symbol name separated by spaces.  For
 example if we are calculating the geometric algebra of a system with three
 vectors that we wish to denote as \T{a0}, \T{a1}, and \T{a2} we would define the
 string variable:
-
 \begin{lstlisting}[numbers=none]
   basis = 'a0 a1 a2'
 \end{lstlisting}  
-
 that would be input into the multivector setup function which instantiates the geometric
 algebra.  The next step would be
 to define the symbolic metric for the geometric algebra of the basis we
 have defined. The default metric is the most general and is the matrix of
 the following symbols
-
   \begin{equation}\label{metric}
   g = \lbrk
   \begin{array}{ccc}
@@ -441,8 +397,6 @@ the following symbols
   \end{array}
   \rbrk
   \end{equation}
-
-
 where each of the $g_{ij}$ is a symbol representing all of the dot
 products of the basis vectors. Note that the symbols are named so that
 $g_{ij} = g_{ji}$ since for the symbol function
@@ -457,19 +411,14 @@ the metric tensor ($g_{ij} = $\T{o3d.g[i,j]}) for that algebra.
 The default definition of $g$ can be overwritten by specifying a string
 that will define $g$. As an example consider a symbolic representation
 for conformal geometry. Define for a basis
-
 \begin{lstlisting}[numbers=none]
   basis = 'a0 a1 a2 n nbar'
 \end{lstlisting}
-
 and for a metric
-
 \begin{lstlisting}[numbers=none]
   g = '# # # 0 0, # # # 0 0, # # # 0 0, 0 0 0 0 2, 0 0 0 2 0'
 \end{lstlisting}
-
 then calling \T{cf3d = Ga(basis,g=g)} would initialize the metric tensor
-
   \begin{equation}
   g = \lbrk
   \begin{array}{ccccc}
@@ -481,7 +430,6 @@ then calling \T{cf3d = Ga(basis,g=g)} would initialize the metric tensor
   \end{array}
   \rbrk
   \end{equation}
-
 for the  \T{cf3d} (conformal 3-d) geometric algebra.
 
 Here we have specified that \T{n} and \T{nbar} are orthogonal to all the
@@ -494,34 +442,26 @@ the program are instantiated.  For the case of an orthogonal 3-d vector
 space that means the
 symbolic vectors named \T{a0}, \T{a1}, and \T{a2} are created. We can 
 instantiate the geometric algebra and obtain the basis vectors with -
-
 \begin{lstlisting}[numbers=none]
   o3d = Ga('a_1 a_2 a_3',g=[1,1,1])
   (a_1,a_2,a_3) = o3d.mv()
 \end{lstlisting}
-
 or use the \T{Ga.build()} function -
-
 \begin{lstlisting}[numbers=none]
   (o3d,a_1,a_2,a_3) = Ga.build('a_1 a_2 a_3',g=[1,1,1])
 \end{lstlisting}
-
 Note that the python variable name for a basis vector does not have to
 correspond to the name give in \T{Ga()} or \T{Ga.build()}, one may wish to use a
 shortened python variable name to reduce programming (typing) errors, for
 example one could use -
-
 \begin{lstlisting}[numbers=none]
   (o3d,a1,a2,a3) = Ga.build('a_1 a_2 a_3',g=[1,1,1])
 \end{lstlisting}
-
 or
-
 \begin{lstlisting}[numbers=none]
   (st4d,g0,g1,g2,g3) = Ga.build('gamma_0 gamma_1 gamma_2 gamma_3',\
                        g=[1,-1,-1,-1])
 \end{lstlisting}
-
 for Minkowski spacetime.
 
 If the latex printer is used \T{e1} would print as $\bm{e_{1}}$
@@ -557,28 +497,22 @@ $a_{i_{1}}a_{i_{2}}\dots a_{i_{r}}$ where $i_{1}<i_{2}<\dots <i_{r}$
 and $r \le n$. We call these multivectors bases and represent them
 internally with noncommutative symbols so for example $a_{1}a_{2}a_{3}$
 is represented by
-
 \begin{lstlisting}[numbers=none]
 Symbol('a_1*a_2*a_3',commutative=False)
 \end{lstlisting}
-
 In the simplest case of two basis vectors \T{a\_1} and \T{a\_2} we have a list of
 bases
-
 \begin{lstlisting}[numbers=none]
 self.bases = [[Symbol('a_1',commutative=False),\
              Symbol('a_2',commutative=False)],\
              [Symbol('a_1*a_2',commutative=False)]]
 \end{lstlisting}
-
 For the case of the basis blades we have
-
 \begin{lstlisting}[numbers=none]
 self.blades = [[Symbol('a_1',commutative=False),\
               Symbol('a_2',commutative=False)],\
               [Symbol('a_1^a_2',commutative=False)]]
 \end{lstlisting}
-
 \notebox{
   For all grades/pseudo-grades greater than one (vectors) the \T{*} in the name of the base symbol is
   replaced with a \T{\^} in the name of the blade symbol so that for all basis bases and
@@ -586,11 +520,9 @@ self.blades = [[Symbol('a_1',commutative=False),\
   bases and blades.}
 
 The index tupels for the bases of each pseudo grade and each grade for the case of dimension 3 is
-
 \begin{lstlisting}[numbers=none]
 self.indexes = (((0,),(1,),(2,)),((0,1),(0,2),(1,2)),((0,1,2)))
 \end{lstlisting}
-
 Then the noncommutative symbol representing each base is constructed from each index tuple.
 For example for \verb|self.indexes[1][1]| the symbol is \verb|Symbol('a_1*a_3',commutative=False)|.  
 
@@ -603,12 +535,10 @@ bases are identical and fewer arrays and dictionaries need to be constructed.}
 In terms of the bases defined as noncommutative \emph{sympy} symbols the general multivector
 is a linear combination (scalar \emph{sympy} coefficients) of bases so that for the case
 of two bases the most general multivector is given by -
-
 \begin{lstlisting}[numbers=none]
 A = A_0+A__1*self.bases[1][0]+A__2*self.bases[1][1]
    +A__12*self.bases[2][0]
 \end{lstlisting}
-
 If we have another multivector \T{B} to multiply with \T{A} we can calculate the product in
 terms of a linear combination of bases if we have a multiplication table for the bases.
 
@@ -617,14 +547,11 @@ terms of a linear combination of bases if we have a multiplication table for the
 Since we can now calculate the symbolic geometric product of any two
 multivectors we can also calculate the blades corresponding to the product of
 the symbolic basis vectors using the formula
-
   \begin{equation}
     A_{r}\W b = \half\lp A_{r}b-\lp -1 \rp^{r}bA_{r} \rp,
   \end{equation}
-
 where $A_{r}$ is a multivector of grade $r$ and $b$ is a
 vector.  For our example basis the result is shown in Table~\ref{bladexpand}.
-
 \begin{table}[h]
 \begin{lstlisting}[numbers=none]
    1 = 1
@@ -638,12 +565,10 @@ vector.  For our example basis the result is shown in Table~\ref{bladexpand}.
 \end{lstlisting}
 \caption{Bases blades in terms of bases.}\label{bladexpand}
 \end{table}
-
 The important thing to notice about Table~\ref{bladexpand} is that it is a
 triagonal (lower triangular) system of equations so that using a simple back
 substitution algorithm we can solve for the pseudo bases in terms of the blades
 giving Table~\ref{baseexpand}.
-
 \begin{table}
 \begin{lstlisting}[numbers=none]
    1 = 1
@@ -657,7 +582,6 @@ giving Table~\ref{baseexpand}.
 \end{lstlisting}
 \caption{Bases in terms of basis blades.}\label{baseexpand}
 \end{table}
-
 Using Table~\ref{baseexpand} and simple substitution we can convert from a base
 multivector representation to a blade representation.  Likewise, using Table~\ref{bladexpand}
 we can convert from blades to bases.
@@ -684,64 +608,48 @@ from one representation to the other.
 In geometric algebra any general multivector $A$ can be decomposed into
 pure grade multivectors (a linear combination of blades of all the same order)
 so that in a $n$-dimensional vector space
-
   \begin{equation}
   A = \sum_{r = 0}^{n}A_{r}
   \end{equation}
-
 The geometric product of two pure grade multivectors $A_{r}$ and
 $B_{s}$ has the form
-
   \begin{equation}
   A_{r}B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}+\proj{A_{r}B_{s}}{\abs{r-s}+2}+\cdots+\proj{A_{r}B_{s}}{r+s}
   \end{equation}
-
 where $\proj{}{t}$ projects the $t$ grade components of the
 multivector argument.  The inner and outer products of $A_{r}$ and
 $B_{s}$ are then defined to be
-
   \begin{equation}
   A_{r}\cdot B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}
   \end{equation}
-
   \begin{equation}
   A_{r}\wedge B_{s} = \proj{A_{r}B_{s}}{r+s}
   \end{equation}
-
 and
-
   \begin{equation}
   A\cdot B = \sum_{r,s>0}A_{r}\cdot B_{s}
   \end{equation}
-
   \begin{equation}
   A\wedge B = \sum_{r,s}A_{r}\wedge B_{s}
   \end{equation}
-
 Likewise the right ($\lfloor$) and left ($\rfloor$) contractions are defined as
-
   \begin{equation}
   A_{r}\lfloor B_{s} = \left \{ \begin{array}{cc}
      \proj{A_{r}B_{s}}{r-s} &  r \ge s \\
                0            &  r < s \end{array} \right \}
   \end{equation}
-
   \begin{equation}
   A_{r}\rfloor B_{s} = \left \{ \begin{array}{cc}
      \proj{A_{r}B_{s}}{s-r} &  s \ge r \\
                0            &  s < r \end{array} \right \}
   \end{equation}
-
 and
-
   \begin{equation}
   A\lfloor B = \sum_{r,s}A_{r}\lfloor B_{s}
   \end{equation}
-
   \begin{equation}
   A\rfloor B = \sum_{r,s}A_{r}\rfloor B_{s}
   \end{equation}
-
 \warningbox{
     In the  \T{Mv} class we have overloaded the \T{\^} operator to represent the outer
     product so that instead of calling the outer product function we can write \lstinline!mv1^mv2!.
@@ -759,31 +667,23 @@ and
 \section{Reverse of Multivector}
 
 If $A$ is the geometric product of $r$ vectors
-
   \begin{equation}
     A = a_{1}\dots a_{r}
   \end{equation}
-
 Then the reverse of $A$ designated $A^{\R}$ is defined by
-
   \begin{equation}
     A^{\R} \equiv a_{r}\dots a_{1}.
   \end{equation}
-
 The reverse is simply the product with the order of terms reversed.  The reverse
 of a sum of products is defined as the sum of the reverses so that for a general
 multivector $A$ we have
-
   \begin{equation}
     A^{\R} = \sum_{i=0}^{N} \proj{A}{i}^{\R}
   \end{equation}
-
 but
-
   \begin{equation}\label{reverse}
     \proj{A}{i}^{\R} = \lp -1\rp^{\frac{i\lp i-1\rp}{2}}\proj{A}{i}
   \end{equation}
-
 which is proved by expanding the blade bases in terms of orthogonal vectors and
 showing that eq.~(\ref{reverse}) holds for the geometric product of orthogonal
 vectors.
@@ -795,7 +695,7 @@ If $R$ is the product of two vectors then the plane that $R$ defines
 is the plane of the rotation.  That is to say that $RaR^{\R}$ rotates the
 component of $a$ that is projected into the plane defined by $a$ and
 $b$ where $R=ab$. $R$ may be written
-$R = e^{\frac{\theta}{2}U}$, where $\theta$ is the angle of rotation
+$R = e^{\frac{\theta}{2}u}$, where $\theta$ is the angle of rotation
 and $u$ is a unit blade $\lp u^{2} = \pm 1\rp$ that defines the
 plane of rotation.
 
@@ -806,21 +706,16 @@ $a_{1},\dots,a_{M}$, then the reciprocal frame is
 $a^{1},\dots,a^{M}$ where $a_{i}\cdot a^{j} = \delta_{i}^{j}$,
 $\delta_{i}^{j}$ is the Kronecker delta (zero if $i \ne j$ and one
 if $i = j$). The reciprocal frame is constructed as follows:
-
   \begin{equation}
     E_{M} = a_{1}\W\dots\W a_{M}
   \end{equation}
-
   \begin{equation}
     E_{M}^{-1} = \bfrac{E_{M}}{E_{M}^{2}}
   \end{equation}
-
 Then
-
   \begin{equation}
     a^{i} = \lp -1\rp^{i-1}\lp a_{1}\W\dots\W \breve{a}_{i} \W\dots\W a_{M}\rp E_{M}^{-1}
   \end{equation}
-
 where $\breve{a}_{i}$ indicates that $a_{i}$ is to be deleted from
 the product.  In the standard notation if a vector is denoted with a subscript
 the reciprocal vector is denoted with a superscript. The set of reciprocal vectors
@@ -829,8 +724,10 @@ they are required for geometric differentiation.
 
 \section{Manifolds and Submanifolds}\label{sect_manifold}
 
-A $m$-dimensional vector manifold\footnote{By the manifold embedding theorem any $m$-dimensional 
-manifold is isomorphic to a $m$-dimensional vector manifold}, $\mathcal{M}$, is defined by a
+A $m$-dimensional \emph{vector} manifold\footnote{By the manifold embedding theorem any $m$-dimensional 
+manifold is isomorphic to a $m$-dimensional vector manifold 
+\url{http://en.wikipedia.org/wiki/Whitney_embedding_theorem}.}
+, $\mathcal{M}$, is defined by a
 coordinate tuple (tuples are indicated by the vector accent ``$\vec{\;\;\;}$'')
 \be
 	\vec{x} = \paren{x^{1},\dots,x^{m}},
@@ -944,17 +841,13 @@ $\bm{e}^{j}\lp\bm{e}_{i_{1}}\W\dots\W \bm{e}_{i_{r}} \rp$
 can only contain grades $r-1$ and $r+1$ so that $\nabla F_{r}$
 also can only contain those grades. For a grade-$r$ multivector
 $F_{r}$ the inner (div) and outer (curl) derivatives are
-
   \begin{equation}
   \nabla\cdot F_{r} = \left < \nabla F_{r}\right >_{r-1} = \bm{e}^{j}\cdot \pdiff{F_{r}}{x^{j}}
   \end{equation}
-
 and
-
   \begin{equation}
   \nabla\W F_{r} = \left < \nabla F_{r}\right >_{r+1} = \bm{e}^{j}\W \pdiff{F_{r}}{x^{j}}
   \end{equation}
-
 For a general multivector function $F$ the inner and outer derivatives are
 just the sum of the inner and outer dervatives of each grade of the multivector
 function.
@@ -1005,12 +898,10 @@ not associative with respect to one another ($v\cdot\nabla$ is a scalar operator
 
 The basis vector set, $\set{\bm{e}_{i}}$, is not in general normalized.  We define a normalized set of basis
 vectors, $\set{\bm{\hat{e}}_{i}}$, and reciprocal basis vectors, $\set{\bm{\hat{e}}^{i}}$, by
-
 \begin{align}
   \bm{\hat{e}}_{i} = \bfrac{\bm{e}_{i}}{\sqrt{\abs{\bm{e}_{i}^{2}}}} = \bfrac{\bm{e}_{i}}{\abs{\bm{e}_{i}}}, \\
   \bm{\hat{e}}^{i} = \bfrac{\bm{e}^{i}}{\sqrt{\abs{\paren{\bm{e}^{i}}^{2}}}} = \bfrac{\bm{e}^{i}}{\abs{\bm{e}^{i}}}.
 \end{align}
-
 This works for all $\bm{e}_{i}^{2} \neq 0$.  Note that  $\bm{\hat{e}}_{i}^{2} = \pm 1$ and $\paren{\bm{\hat{e}}^{i}}^{2} = \pm 1$.  
 Using the definition of reciprocal vectors we obtain the relationship between $\abs{\bm{e}_{i}}$ and $\abs{\bm{e}^{i}}$,
 \begin{align*}
@@ -1062,7 +953,6 @@ Additionally, using our notation the product of two partial derivative operation
 \be
 	\partial_{i_{1}\dots i_{n}}\partial_{j_{1}\dots j_{n}} = \partial_{i_{1}+j_{1},\dots, i_{n}+j_{n}}.
 \ee 
-
 A general general multivector linear differential operator is a linear combination of multivectors and partial derivative operators
 denoted by (in all of this section we will use the Einstein summation convention) 
 \be\label{eq_66b}
@@ -1072,14 +962,13 @@ Equation~(\ref{eq_66b}) is the normal form of the differential operator in that 
 of the multivector coefficients and do not operate upon the multivector coefficients.
 The operator of eq~(\ref{eq_66b}) can operate on mulitvector functions, returning a multivector function via the following definitions.
 
-
 $F$ as (Einstein summation convention)
 \be\label{eq_67a}
 	D\circ F = D^{j_{1}\dots j_{n}}\circ\partial_{j_{1}\dots j_{n}}F,
 \ee
 or
 \be\label{eq_68a}
-	F\circ D = \partial_{j_{1}\dots j_{n}}F\circ D^{j_{1}\dots j_{n}},
+	F\circ D = F\circ D^{j_{1}\dots j_{n}}\partial_{j_{1}\dots j_{n}},
 \ee
 where the $D^{j_{1}\dots j_{n}}$ are multivector functions and $\circ$ is any of the multivector multiplicative operations.
 
@@ -1096,7 +985,6 @@ $\paren{\paren{D_{A}+D_{B}}\circ F = D_{A}\circ F+D_{B}\circ F}$, the product of
 	                                              \partial_{i_{1}\dots i_{n}}\paren{D_{B}^{j_{1}\dots j_{n}}
 	                                              \partial_{j_{1}\dots j_{n}}}}\circ_{2}F.
 \ee
-
 Thus for a pure operator product $D_{A}\circ D_{B}$ we have
 \be\label{eq_71a}
 	D_{A}\circ D_{B} = \paren{D_{A}^{i_{1}\dots i_{n}}\circ_{1}
@@ -1138,7 +1026,6 @@ or if we wish to simulate the dot notation (Doran and Lasenby)
 \be
 	\dot{F}\dot{\nabla} = F\bar{\nabla}.
 \ee
-
 The linear differential operator is represented as a list of tuples.  The first member of the tuple is a multivector and the second
 element is a partial differential operator (\T{Pdop} class).  The partial differential operator is a dictionary wrapped in the \T{Pdop}
 class where the keys of the dictionary are the variables one is differentiating with respect to and the key values integers that represent
@@ -1359,7 +1246,6 @@ So that if $v = v^{i}\eb_{i} = v_{i}\eb^{i}$ the covariant and contravariant rep
 	\f{v}{a} = v_{i}a^{i} = v^{i}a_{i}.
 \ee
 
-
 \subsection{Parallel Transport and Covariant Deriviatives}
 The covariant derivative of a tensor field $\f{T}{a_{1},\dots,a_{r};x}$ ($x$ is the coordinate vector of which $T$ can be a non-linear function) in
 the direction $a_{r+1}$ is (remember $a_{j} = a_{j}^{k}\eb_{k}$ and the $\eb_{k}$ can be functions of $x$) the directional derivative of 
@@ -1474,14 +1360,14 @@ The component free form of the covariant derivative (the one used to calculate i
 The geometric algebra module consists of the following files and classes
 \begin{center}
 \begin{longtable}{ccl}
-\bf{File} & \bf{Classes} & {\bf Usage} \\ \Xhline{2\arrayrulewidth}
+{File} & {Classes} & { Usage} \\ \hline
 \T{metric.py} & \T{Metric} & \parbox[t]{4in}{Instantiates metric tensor and derivatives of basis vectors.  Normalized basis if required.} \\ \hline
 \T{ga.py} & \T{Ga} & \parbox[t]{4in}{Instantiates geometric algebra (inherits \T{Metric}), generates bases, blades, multiplication
                                      tables, reciprocal basis, and left and right geometric derivative operators.} \\ \cline{2-3}
       & \T{Sm} &  \parbox[t]{4in}{Instantiates geometric algebra for submainfold (inherits \T{Ga}).} \\ \hline
 \T{mv.py} & \T{Mv} & \parbox[t]{4in}{Instantiates multivector.}\\ \cline{2-3}
-      & \T{Dop} & \parbox[t]{4in}{Instantiates linear multivector differential operator.}\\
-      & \T{Pdop} &  \parbox[t]{4in}{Instantiates partial differential operator.}\\
+      & \T{Dop} & \parbox[t]{4in}{Instantiates linear multivector differential operator.}\\ \cline{2-3}
+      & \T{Pdop} &  \parbox[t]{4in}{Instantiates partial differential operator.}\\ \cline{2-3}
       & \T{Sdop} &  \parbox[t]{4in}{Instantiates linear scalar differential operator.}\\\hline
 \T{lt.py} & \T{Lt}  & \parbox[t]{4in}{Instantiates multivector linear transformation.}\\ \hline
 \T{printer.py} & \T{Eprint} & \parbox[t]{4in}{Starts enhanced text printing on ANSI terminal (requires \T{ansicon} on Windows).}\\ \cline{2-3}
@@ -1583,13 +1469,13 @@ In general we have defined member fuctions of the \T{Ga} class that will instant
 of other classes since the objects of the other classes are all associated with a particular
 geometric algebra object.  Thus we have
 \begin{center}
-\begin{longtable}{ccc}
+\begin{tabular}{ccc}
 	Object &  Class & \T{Ga} method \\
 	multivector & \T{Mv} & \T{mv} \\
 	submanifold & \T{Sm} & \T{sm} \\
 	linear transformation & \T{Lt} & \T{lt} \\
 	differential operator & \T{Dop} & \T{dop}
-\end{longtable}
+\end{tabular}
 \end{center}
 for the instantiation of various objects from the \T{Ga} class.  This means that in order to 
 instantiate any of these objects we need only to import \T{Ga} into our program.
@@ -1627,7 +1513,7 @@ that for text output \T{A} would be printed as \T{A\_\_x*e\_x+A\_\_y*e\_y+A\_\_z
 from the coordinate symbols or if there are no coordinates from the subscripts of 
 the basis vectors.  The types of name and modes available for multivector instantiation are
 \begin{center}
-   \begin{longtable}{ccc}
+   \begin{tabular}{ccc}
     \T{name} &  \T{mode}  &  result \\
          string s &  \T{`scalar'} & symbolic scalar of value Symbol(s) \\
          string s  &\T{`vector'} &  symbolic vector \\
@@ -1637,7 +1523,7 @@ the basis vectors.  The types of name and modes available for multivector instan
          string s &  \T{`spinor'} & symbolic even multivector \\ 
          string s &  \T{`mv'} & symbolic general multivector \\
          scalar c & None  &  zero grade multivector with coefficient value c 
-	\end{longtable}
+	\end{tabular}
 \end{center}
 Line 5 of the previous listing illustrates the case of using the \T{mv} member function with
 no arguments. The code does not return a multivector, but rather a tuple or the basis vectors of the geometric algebra \T{o3d}.  
@@ -1671,7 +1557,6 @@ dFrop = rgrad*F
 dBrop = rgrad*B.
 \end{lstlisting}
 \T{dFop}, \T{dBop}, \T{dFrop}, and \T{dBrop} are all multivector differential operators (again see section~\ref{ldops}).
-
 
 \section{Basic Multivector Class Functions}
 
@@ -1902,14 +1787,12 @@ The various derivatives of a multivector function are calculated by
 multiplying the gradient differential operator with the function.  The gradient
 differential operators (left and right) are returned by the \T{(grad,rgrad) = Ga.grads()} function if coordinates
 are defined.  For example if we have for a 3-D vector space
-
 \begin{lstlisting}
     X = (x,y,z) = symbols('x y z')
     o3d = Ga('e*x|y|z',metric='[1,1,1]',coords=X)
     (ex,ey,ez) = o3d.mv()
     (grad,rgrad) = o3d.grads()
 \end{lstlisting}
-
 The gradient differential operator is \T{grad} (actually the user can give
 it any name he wants to).  The left and right derivatives of the multivector
 function \T{F = o3d.mv('F','mv',f=True)} are given by multiplying by the
@@ -1917,7 +1800,6 @@ left geometric derivative operator and the right geometric derivative operator
 $\paren{\mbox{\T{grad}} = \nabla\mbox{ and } \mbox{\T{rgrad}} = \bar{\nabla}}$.  Another option 
 is to use the gradient operator members of the geometric algebra directly where we have
 $\nabla = \T{o3d.grad}$ and $\bar{\nabla} = \T{o3d.rgrad}$.
-
       \begin{align}
             \nabla F &=  \mbox{\lstinline!grad*F!} \\
             F \bar{\nabla} &=  \mbox{\lstinline!F*rgrad!} \\
@@ -1930,11 +1812,9 @@ $\nabla = \T{o3d.grad}$ and $\bar{\nabla} = \T{o3d.rgrad}$.
             \nabla \rfloor F &=  \mbox{\lstinline!grad>F!} \\
             F \rfloor \bar{\nabla} &= \mbox{\lstinline!F>rgrad!}
       \end{align}
-
 The preceding code block gives examples of all possible multivector
 derivatives of the multivector function \T{F} where the operation returns
 a multivector function. The complementary operations
-
       \begin{align}
             F \nabla &=  \mbox{\lstinline!F*grad!} \\
             \bar{\nabla} F &=  \mbox{\lstinline!rgrad*F!} \\
@@ -1947,10 +1827,7 @@ a multivector function. The complementary operations
             F \rfloor \nabla &=  \mbox{\lstinline!F>grad!} \\
             \bar{\nabla} \rfloor F &= \mbox{\lstinline!rgrad>F!}
       \end{align}
-
 all return multivector linear differential operators.
-
-
 
 \section{Submanifolds}
 
@@ -2001,10 +1878,10 @@ coefficients of the linear transformation are symbolic constants) linear transfo
 coordinates, $\set{\bm{e}_{i}}$, must be defined when the geometric algebra associated with the linear transformation is instantiated.  
 This is due to the naming conventions of the general linear transformation (coordinate names are used) and for the calculation 
 of the trace of the linear transformation which requires taking a divergence.}.To instantiate a specific linear transformation
-the usage of \T{lt()} is 
+the usage of \T{lt()} is
 \T{Ga.lt(M,f=False)}
 \begin{quote}
-	\T{M} is an expression that can define the coefficients of the linear transformation in various ways defined as follows. 
+	\T{M} is an expression that can define the coefficients of the linear transformation in various ways defined as follows.\newpage 
 	\begin{center}
     \begin{longtable}{cl}
     \T{M} &  \multicolumn{1}{c}{Result} \\ \hline
@@ -2069,11 +1946,11 @@ The \T{matrix()} member function returns a \emph{sympy} \T{Matrix} object which 
 Note that in \T{Ltrans.py} lines 30 and 49 are commented out since the latex output of those statements would run off the page.  The
 use can uncomment those statements and run the code in the ``LaTeX docs'' directory to see the output.
 \includecode{python/Ltrans.py}
-\newpage The output of this code is.
+The output of this code is (next page): \newpage
 \begin{center}
-	\includegraphics[scale=0.65]{python/Ltrans.pdf}
+	%\vspace{-1in}
+	\includegraphics[scale=0.80]{python/Ltrans.pdf}
 \end{center}
-
 \section{Instantiating a Multi-linear Functions (Tensors)}
 
 The mathematical background for multi-linear functions is in section~\ref{MLtrans}.  To instantiate a multi-linear function use
@@ -2182,8 +2059,7 @@ functions are
 \begin{quote}
    This function from the \T{ga} module turns on latex printing with the
    following options
-
-\begin{longtable}{ccc}
+\begin{tabular}{ccc}
          Argument &  Value &  Result \\
          \T{Fmode} &  \T{True} &  Print functions without argument list, $f$ \\
                &  \T{False} &  Print functions with standard \emph{sympy} latex formatting, $\f{f}{x,y,z}$ \\
@@ -2191,9 +2067,8 @@ functions are
                &  \T{False} &  Print partial derivatives with standard \emph{sympy} latex formatting $\frac{\partial f}{\partial x}$ \\
          \T{ipy}   &  \T{False} &  Redirect print output to file for post-processing by latex \\
                &  \T{True} &  Do not redirect print output.  This is used for Ipython with MathJax
-\end{longtable}
+\end{tabular}
 \end{quote}
-
 \T{xpdf(filename=None,paper=(14,11),crop=False,png=True,prog=True,debug=False)}
 \begin{quote}
    This function from the \T{printer} module post-processes the output captured from
@@ -2203,16 +2078,14 @@ functions are
    standard output for debugging purposes and \T{filename} (the tex file) is saved.  If \T{filename} is not entered the default
    filename is the root name of the python program being executed with \T{.tex} appended.
    The \T{paper} option defines the size of the paper sheet for latex. The format for the  \T{paper} is
-   
    \begin{center}
-   \begin{longtable}{ll}
+   \begin{tabular}{ll}
        \T{paper=(w,h)} & \T{w} is paper width in inches and \\
                        & \T{h} is paper height in inches \\
        \T{paper='letter'} & paper is standard letter size $8.5\mbox{ in}\times 11\mbox{ in}$ \\
        \T{paper='landscape'} & paper is standard letter size but $11\mbox{ in}\times 8.5\mbox{ in}$
-   \end{longtable}
+   \end{tabular}
    \end{center}
-
    The default of \T{paper=(14,11)} was chosen so that long multivector expressions would not be truncated on the display.
    
    If the \T{crop} input is \T{True} the linux \T{pdfcrop} program is used to crop the pdf output (if output is one page).  This only works
@@ -2232,7 +2105,6 @@ functions are
 
 As an example of using the latex printing options when the following code is
 executed
-
 \begin{lstlisting}
     from printer import Format, xpdf
     from ga import Ga
@@ -2244,16 +2116,13 @@ executed
     A.Fmt(3,r'\bm{A}')
     xpdf()
 \end{lstlisting}
-
 The following is displayed
 \begin{align*}
       \bm{A} = & A+A^{x}\bm{e_{x}}+A^{y}\bm{e_{y}}+A^{z}\bm{e_{z}}+A^{xy}\bm{e_{x}\W e_{y}}+A^{xz}\bm{e_{x}\W e_{z}}+A^{yz}\bm{e_{y}\W e_{z}}+A^{xyz}\bm{e_{x}\W e_{y}\W e_{z}} \\
       \bm{A} =  & A \\  & +A^{x}\bm{e_{x}}+A^{y}\bm{e_{y}}+A^{z}\bm{e_{z}} \\  & +A^{xy}\bm{e_{x}\W e_{y}}+A^{xz}\bm{e_{x}\W e_{z}}+A^{yz}\bm{e_{y}\W e_{z}} \\  & +A^{xyz}\bm{e_{x}\W e_{y}\W e_{z}} \\
       \bm{A} =  & A \\  & +A^{x}\bm{e_{x}} \\  & +A^{y}\bm{e_{y}} \\  & +A^{z}\bm{e_{z}} \\  & +A^{xy}\bm{e_{x}\W e_{y}} \\  & +A^{xz}\bm{e_{x}\W e_{z}} \\  & +A^{yz}\bm{e_{y}\W e_{z}} \\  & +A^{xyz}\bm{e_{x}\W e_{y}\W e_{z}}
 \end{align*}
-
 For the cases of derivatives the code is
-
 \begin{lstlisting}
     from printer import Format, xpdf
     from ga import Ga
@@ -2280,9 +2149,7 @@ For the cases of derivatives the code is
 
     xpdf()
 \end{lstlisting}
-
 and the latex displayed output is ($f$ is a scalar function)
-
 \begin{equation*} \bm{A} = A^{x}\bm{e_{x}}+A^{y}\bm{e_{y}}+A^{z}\bm{e_{z}} \end{equation*}
 \begin{equation*} \bm{B} = B^{xy}\bm{e_{x}\W e_{y}}+B^{xz}\bm{e_{x}\W e_{z}}+B^{yz}\bm{e_{y}\W e_{z}} \end{equation*}
 \begin{equation*} \bm{\nabla}  f = \partial_{x} f\bm{e_{x}}+\partial_{y} f\bm{e_{y}}+\partial_{z} f\bm{e_{z}} \end{equation*}
@@ -2292,14 +2159,13 @@ and the latex displayed output is ($f$ is a scalar function)
  \begin{align*} \bm{\nabla}  \bm{B} =  & \left ( - \partial_{y} B^{xy} - \partial_{z} B^{xz}\right ) \bm{e_{x}}+\left ( \partial_{x} B^{xy} - \partial_{z} B^{yz}\right ) \bm{e_{y}}+\left ( \partial_{x} B^{xz} + \partial_{y} B^{yz}\right ) \bm{e_{z}} \\  & +\left ( \partial_{z} B^{xy} - \partial_{y} B^{xz} + \partial_{x} B^{yz}\right ) \bm{e_{x}\W e_{y}\W e_{z}} \\ \end{align*} 
 \begin{equation*} \bm{\nabla} \W \bm{B} = \left ( \partial_{z} B^{xy} - \partial_{y} B^{xz} + \partial_{x} B^{yz}\right ) \bm{e_{x}\W e_{y}\W e_{z}} \end{equation*}
 \begin{equation*} \bm{\nabla} \cdot \bm{B} = \left ( - \partial_{y} B^{xy} - \partial_{z} B^{xz}\right ) \bm{e_{x}}+\left ( \partial_{x} B^{xy} - \partial_{z} B^{yz}\right ) \bm{e_{y}}+\left ( \partial_{x} B^{xz} + \partial_{y} B^{yz}\right ) \bm{e_{z}} \end{equation*}
-
 This example also demonstrates several other features of the latex printer.  In the
 case that strings are input into the latex printer such as \lstinline!r'grad*\bm{A}'!,
 \lstinline!r'grad^\bm{A}'!, or \lstinline!r'grad*\bm{A}'!.  The text symbols \T{grad}, \T{\^}, \T{|}, and
 \T{*} are mapped by the \T{xpdf()} post-processor as follows if the string contains
 an \T{=}.
 \begin{center}
-\begin{longtable}{ccc}
+\begin{tabular}{ccc}
          original &  replacement &  displayed latex \\
          \lstinline!grad*A! &  \lstinline!\bm{\nabla}A! & $\bm{\nabla}A$ \\
          \lstinline!A^B! &  \lstinline!A\wedge B! &  $A\wedge B$ \\
@@ -2307,9 +2173,8 @@ an \T{=}.
          \lstinline!A*B! &  \lstinline!AB! &  $AB$ \\
          \lstinline!A<B! &  \lstinline!A\lfloor B! &  $A\lfloor B$ \\
          \lstinline!A>B! &  \lstinline!A\rfloor B! &  $A\rfloor B$ 
-\end{longtable}
+\end{tabular}
 \end{center}
-
 If the first character in the string to be printed is a \T{\%} none of the above substitutions
 are made before the latex processor is applied.  In general for the latex
 printer strings are assumed to be in a math environment (equation or

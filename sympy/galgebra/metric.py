@@ -518,3 +518,7 @@ class Metric(object):
 
         if self.norm:
             self.normalize_metric()
+
+if __name__ == "__main__":
+    pass
+

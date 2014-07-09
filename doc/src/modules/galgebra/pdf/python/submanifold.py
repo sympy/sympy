@@ -4,7 +4,8 @@ from sympy.galgebra.printer import Format, xpdf
 
 Format()
 coords = (r, th, phi) = symbols('r,theta,phi', real=True)
-sp3d = Ga('e_r e_th e_ph', g=[1, r**2, r**2*sin(th)**2], coords=coords, norm=True)
+sp3d = Ga('e_r e_th e_ph', g=[1, r**2, r**2*sin(th)**2], \
+       coords=coords, norm=True)
 
 sph_uv = (u, v) = symbols('u,v', real=True)
 sph_map = [1, u, v]  # Coordinate map for sphere of r = 1
