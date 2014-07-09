@@ -449,6 +449,9 @@ def test_Float():
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
 
+    assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
+
+
 def test_Float_eval():
     a = Float(3.2)
     assert (a**2).is_Float
