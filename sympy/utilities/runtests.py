@@ -554,7 +554,8 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/utilities/compilef.py"  # needs tcc
+        "sympy/utilities/compilef.py",  # needs tcc
+        "sympy/physics/gaussopt.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:
@@ -1123,10 +1124,7 @@ class SymPyDocTests(object):
         self._reporter.start()
         for f in self._testfiles:
             try:
-                # Remove this condition once this file is removed.
-                # See https://github.com/sympy/sympy/issues/7659
-                if f.find('/sympy/physics/gaussopt.py') == -1:
-                    self.test_file(f)
+                self.test_file(f)
             except KeyboardInterrupt:
                 print(" interrupted by user")
                 self._reporter.finish()
