@@ -19,10 +19,6 @@ class Vector(Expr):
     is_Vector = True
     _op_priority = 12.0
 
-    def __new__(cls, *args):
-        obj = super(Vector, cls).__new__(cls, *args)
-        return obj
-
     @property
     def components(self):
         """
