@@ -151,7 +151,7 @@ def test_sorted_args():
 
 def test_call():
     x, y = symbols('x y')
-    # See the long history of this in issues 1927 and 2006.
+    # See the long history of this in issues 5026 and 5105.
 
     raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
     raises(TypeError, lambda: sin(x)(1))
