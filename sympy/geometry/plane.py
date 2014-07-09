@@ -42,14 +42,14 @@ class Plane(GeometryEntity):
     >>> from sympy import Plane, Point3D
     >>> from sympy.abc import x
     >>> Plane(Point3D(1, 1, 1), Point3D(2, 3, 4), Point3D(2, 2, 2))
-    Plane(Point3D(1, 1, 1), [-1, 2, -1])
+    Plane(Point3D(1, 1, 1), (-1, 2, -1))
     >>> Plane((1, 1, 1), (2, 3, 4), (2, 2, 2))
-    Plane(Point3D(1, 1, 1), [-1, 2, -1])
-    >>> Plane(Point3D(1, 1, 1), normal_vector=[1,4,7])
-    Plane(Point3D(1, 1, 1), [1, 4, 7])
+    Plane(Point3D(1, 1, 1), (-1, 2, -1))
+    >>> Plane(Point3D(1, 1, 1), normal_vector=(1,4,7))
+    Plane(Point3D(1, 1, 1), (1, 4, 7))
 
     """
-    def __new__(cls, p1, pt1=None, pt2=None, normal_vector=[], **kwargs):
+    def __new__(cls, p1, pt1=None, pt2=None, normal_vector=(), **kwargs):
         p1 = Point3D(p1)
         if pt1 is None and pt2 is None and len(normal_vector) == 3:
             pass
@@ -59,7 +59,7 @@ class Plane(GeometryEntity):
                 raise NotImplementedError('Enter three non-collinear points')
             a = p1.direction_ratio(pt1)
             b = p1.direction_ratio(pt2)
-            normal_vector = list(Matrix(a).cross(Matrix(b)))
+            normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
             raise ValueError('Either provide 3 3D points or a point with a'
             'normal vector')
@@ -96,10 +96,10 @@ class Plane(GeometryEntity):
         >>> from sympy import Point3D, Plane
         >>> a = Plane(Point3D(1, 1, 1), Point3D(2, 3, 4), Point3D(2, 2, 2))
         >>> a.normal_vector
-        [-1, 2, -1]
-        >>> a = Plane(Point3D(1, 1, 1), normal_vector=[1, 4, 7])
+        (-1, 2, -1)
+        >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 4, 7))
         >>> a.normal_vector
-        [1, 4, 7]
+        (1, 4, 7)
 
         """
         return self.args[1]
@@ -114,7 +114,7 @@ class Plane(GeometryEntity):
         >>> a = Plane(Point3D(1, 1, 2), Point3D(2, 4, 7), Point3D(3, 5, 1))
         >>> a.equation()
         -23*x + 11*y - 2*z + 16
-        >>> a = Plane(Point3D(1, 4, 2), normal_vector=[6, 6, 6])
+        >>> a = Plane(Point3D(1, 4, 2), normal_vector=(6, 6, 6))
         >>> a.equation()
         6*x + 6*y + 6*z - 42
 
@@ -152,7 +152,7 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point, Point3D
-        >>> a = Plane(Point3D(1, 1, 1), normal_vector=[1, 1, 1])
+        >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
         >>> b = Point(1, 2)
         >>> a.projection(b)
         Point3D(1, 2, 0)
@@ -203,7 +203,7 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Line, Line3D, Point, Point3D
-        >>> a = Plane(Point3D(1, 1, 1), normal_vector=[1, 1, 1])
+        >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
         >>> b = Line(Point(1, 1), Point(2, 2))
         >>> a.projection_line(b)
         Line3D(Point3D(4/3, 4/3, 1/3), Point3D(5/3, 5/3, -1/3))
@@ -212,7 +212,9 @@ class Plane(GeometryEntity):
         Line3D(Point3D(4/3, 4/3, 4/3), Point3D(5/3, 5/3, 5/3))
 
         """
-        if not isinstance(l, (Line, Line3D, Ray, Ray3D, Segment, Segment3D)):
+        from sympy.geometry.line import LinearEntity
+        from sympy.geometry.line3d import LinearEntity3D
+        if not isinstance(l, (LinearEntity, LinearEntity3D)):
             raise NotImplementedError('Enter a linear entity only')
         a, b = self.projection(l.p1), self.projection(l.p2)
         if isinstance(l, (Line, Line3D)):
@@ -239,8 +241,8 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point3D
-        >>> a = Plane(Point3D(1,4,6), normal_vector=[2, 4, 6])
-        >>> b = Plane(Point3D(3,1,3), normal_vector=[4, 8, 12])
+        >>> a = Plane(Point3D(1,4,6), normal_vector=(2, 4, 6))
+        >>> b = Plane(Point3D(3,1,3), normal_vector=(4, 8, 12))
         >>> a.is_parallel(b)
         True
 
@@ -279,8 +281,8 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point3D
-        >>> a = Plane(Point3D(1,4,6), normal_vector=[2, 4, 6])
-        >>> b = Plane(Point3D(2, 2, 2), normal_vector=[-1, 2, -1])
+        >>> a = Plane(Point3D(1,4,6), normal_vector=(2, 4, 6))
+        >>> b = Plane(Point3D(2, 2, 2), normal_vector=(-1, 2, -1))
         >>> a.is_perpendicular(b)
         True
 
@@ -328,7 +330,7 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Point, Point3D, Line, Line3D, Plane
-        >>> a = Plane(Point3D(1, 1, 1), normal_vector=[1, 1, 1])
+        >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.distance(b)
         sqrt(3)
@@ -394,7 +396,7 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Point3D, Line3D, Plane
-        >>> a = Plane(Point3D(1, 2, 2), normal_vector=[1, 2, 3])
+        >>> a = Plane(Point3D(1, 2, 2), normal_vector=(1, 2, 3))
         >>> b = Line3D(Point3D(1, 3, 4), Point3D(2, 2, 2))
         >>> a.angle_between(b)
         -asin(sqrt(21)/6)
@@ -433,9 +435,9 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point3D
-        >>> a = Plane(Point3D(5, 0, 0), normal_vector=[1, -1, 1])
-        >>> b = Plane(Point3D(0, -2, 0), normal_vector=[3, 1, 1])
-        >>> c = Plane(Point3D(0, -1, 0), normal_vector=[5, -1, 9])
+        >>> a = Plane(Point3D(5, 0, 0), normal_vector=(1, -1, 1))
+        >>> b = Plane(Point3D(0, -2, 0), normal_vector=(3, 1, 1))
+        >>> c = Plane(Point3D(0, -1, 0), normal_vector=(5, -1, 9))
         >>> Plane.is_concurrent(a, b, c)
         False
 
@@ -510,8 +512,8 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point3D, Line3D
-        >>> a = Plane(Point3D(1,4,6), normal_vector=[2, 4, 6])
-        >>> a.perpendicular_line(Point3D(9,8,7))
+        >>> a = Plane(Point3D(1,4,6), normal_vector=(2, 4, 6))
+        >>> a.perpendicular_line(Point3D(9, 8, 7))
         Line3D(Point3D(9, 8, 7), Point3D(11, 12, 13))
 
         """
@@ -536,9 +538,9 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point3D
-        >>> a = Plane(Point3D(1,4,6), normal_vector=[2, 4, 6])
+        >>> a = Plane(Point3D(1, 4, 6), normal_vector=(2, 4, 6))
         >>> a.parallel_plane(Point3D(2, 3, 5))
-        Plane(Point3D(2, 3, 5), [2, 4, 6])
+        Plane(Point3D(2, 3, 5), (2, 4, 6))
 
         """
         a = self.normal_vector
@@ -564,10 +566,10 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point3D, Line3D
-        >>> a = Plane(Point3D(1,4,6), normal_vector=[2, 4, 6])
+        >>> a = Plane(Point3D(1, 4, 6), normal_vector=(2, 4, 6))
         >>> b = Line3D(Point3D(-27, 27, 0), Point3D(-37, 35, -2))
         >>> a.perpendicular_plane(b, Point3D(1, 2, 3))
-        Plane(Point3D(1, 2, 3), [-26, -26, 26])
+        Plane(Point3D(1, 2, 3), (-26, -26, 26))
 
         """
         if l in self:
@@ -629,15 +631,15 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Point, Point3D, Line, Line3D, Plane
-        >>> a = Plane(Point3D(1, 2, 3), normal_vector=[1, 1, 1])
+        >>> a = Plane(Point3D(1, 2, 3), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.intersection(b)
         Point3D(1, 2, 3)
         >>> c = Line3D(Point3D(1, 4, 7), Point3D(2, 2, 2))
         >>> a.intersection(c)
         Point3D(2, 2, 2)
-        >>> d = Plane(Point3D(6, 0, 0), normal_vector=[2, -5, 3])
-        >>> e = Plane(Point3D(2, 0, 0), normal_vector=[3, 4, -3])
+        >>> d = Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))
+        >>> e = Plane(Point3D(2, 0, 0), normal_vector=(3, 4, -3))
         >>> d.intersection(e)
         [Line3D(Point3D(78/23, -24/23, 0), Point3D(147/23, 321/23, 23))]
 

@@ -2956,6 +2956,7 @@ def test_sympy__geometry__point__Point():
     from sympy.geometry.point import Point
     assert _test_args(Point(0, 1))
 
+
 def test_sympy__geometry__point3d__Point3D():
     from sympy.geometry.point3d import Point3D
     assert _test_args(Point3D(0, 1, 2))
@@ -2990,6 +2991,7 @@ def test_sympy__geometry__line__Segment():
     from sympy.geometry.line import Segment
     assert _test_args(Segment((0, 1), (2, 3)))
 
+
 @SKIP("abstract class")
 def test_sympy__geometry__line3d__LinearEntity3D():
     pass
@@ -2999,18 +3001,21 @@ def test_sympy__geometry__line3d__Line3D():
     from sympy.geometry.line3d import Line3D
     assert _test_args(Line3D((0, 1, 1), (2, 3, 4)))
 
+
 def test_sympy__geometry__line3d__Segment3D():
     from sympy.geometry.line3d import Segment3D
     assert _test_args(Segment3D((0, 1, 1), (2, 3, 4)))
+
 
 def test_sympy__geometry__line3d__Ray3D():
     from sympy.geometry.line3d import Ray3D
     assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
 
-@XFAIL
+
 def test_sympy__geometry__plane__Plane():
     from sympy.geometry.plane import Plane
     assert _test_args(Plane((1, 1, 1), (-3, 4, -2), (1, 2, 3)))
+
 
 def test_sympy__geometry__polygon__Polygon():
     from sympy.geometry.polygon import Polygon

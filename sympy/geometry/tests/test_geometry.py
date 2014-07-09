@@ -641,20 +641,20 @@ def test_plane():
     raises(NotImplementedError, lambda: Plane(p1, p2, p4))
     raises(NotImplementedError, lambda: Plane(p1, p2, p5))
     pl3 = Plane(p1, p2, p3)
-    pl4 = Plane(p1, normal_vector=[1, 1, 1])
-    pl5 = Plane(p3, normal_vector=[1, 2, 3])
-    pl6 = Plane(Point3D(2, 3, 7), normal_vector=[2, 2, 2])
-    pl7 = Plane(Point3D(1, -5, -6), normal_vector=[1, -2, 1])
+    pl4 = Plane(p1, normal_vector=(1, 1, 1))
+    pl5 = Plane(p3, normal_vector=(1, 2, 3))
+    pl6 = Plane(Point3D(2, 3, 7), normal_vector=(2, 2, 2))
+    pl7 = Plane(Point3D(1, -5, -6), normal_vector=(1, -2, 1))
 
     l1 = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
     l2 = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
 
     assert Plane(p1, p2, p3) != Plane(p1, p3, p2)
-    assert pl3 == Plane(Point3D(0, 0, 0), normal_vector=[1, -2, 1])
+    assert pl3 == Plane(Point3D(0, 0, 0), normal_vector=(1, -2, 1))
     assert pl3 != pl4
     assert pl4 == pl4
-    assert pl5 == Plane(Point3D(1, 2, 3), normal_vector=[1, 2, 3])
+    assert pl5 == Plane(Point3D(1, 2, 3), normal_vector=(1, 2, 3))
 
     assert pl5.equation(x, y, z) == x + 2*y + 3*z - 14
     assert pl3.equation(x, y, z) == x - 2*y + z
@@ -663,8 +663,8 @@ def test_plane():
     assert pl4.p1 == p1
     assert pl5.p1 == p3
 
-    assert pl4.normal_vector == [1, 1, 1]
-    assert pl5.normal_vector == [1, 2, 3]
+    assert pl4.normal_vector == (1, 1, 1)
+    assert pl5.normal_vector == (1, 2, 3)
 
     assert p1 in pl3
     assert p1 in pl4
@@ -697,9 +697,10 @@ def test_plane():
     assert Plane.are_coplanar(l1, l2, l3) is False
     assert pl3.is_concurrent(pl4, pl5) is False
 
-    assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), normal_vector=[1, -2, 1])
-    assert pl3.perpendicular_plane(Line3D(Point3D(22/3, 11/3, 0), Point3D(31/3, 11/3, -3)),Point3D(4, 4, 3)) == \
-               Plane(Point3D(4, 4, 3), normal_vector=[1, 1, 1])
+    assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
+                                                      normal_vector=(1, -2, 1))
+    assert pl3.perpendicular_plane(Line3D(Point3D(22/3, 11/3, 0), Point3D(31/3, 11/3, -3)), Point3D(4, 4, 3)) == \
+               Plane(Point3D(4, 4, 3), normal_vector=(1, 1, 1))
 
     assert pl6.perpendicular_line(Point3D(6, 4, 2)) == \
                Line3D(Point3D(6, 4, 2), Point3D(8, 6, 4))
@@ -708,7 +709,7 @@ def test_plane():
     assert pl4.intersection(pl4.p1) == pl4.p1
     assert pl3.intersection(pl6) == [Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6))]
     assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == Point3D(2, 8/3, 10/3)
-    assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=[2, -5, 3])) == \
+    assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))) == \
                [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
 
 def test_ellipse():
