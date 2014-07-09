@@ -3,7 +3,6 @@ from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Add, Mul, sympify, Pow, Symbol, count_ops
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.expr import Expr, AtomicExpr
-from sympy.core.numbers import Zero
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix, \
      factor as fctr
 from sympy.vector.coordsysrect import CoordSysCartesian
@@ -19,6 +18,10 @@ class Vector(Expr):
 
     is_Vector = True
     _op_priority = 12.0
+
+    def __new__(cls, *args):
+        obj = super(Vector, cls).__new__(cls, *args)
+        return obj
 
     @property
     def components(self):
@@ -583,13 +586,17 @@ class VectorMul(Vector, Mul):
     _sympystr = __str__
 
 
-class VectorZero(Vector, Zero):
+class VectorZero(Vector):
     """
     Class to denote a zero vector
     """
 
     _op_priority = 12.1
     components = {}
+
+    def __new__(cls, *args):
+        obj = super(VectorZero, cls).__new__(cls, *args)
+        return obj
 
     @call_highest_priority('__req__')
     def __eq__(self, other):
@@ -638,6 +645,11 @@ class VectorZero(Vector, Zero):
         """
         return self
 
+    def __str__(self, printer=None):
+        return '0'
+    __repr__ = __str__
+    _sympystr = __str__
+
 
 def _vect_div(one, other):
     """ Helper for division involving vectors. """
@@ -651,4 +663,4 @@ def _vect_div(one, other):
         raise TypeError("Invalid division involving a vector")
 
 
-Vector.zero = VectorZero()
+Vector.zero = VectorZero(S(-1), Symbol('default'))
