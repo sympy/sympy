@@ -67,7 +67,7 @@ Geometric Algebra
    (div) derivatives. Tensors are included in the module as multilinear
    functions of vectors with contraction and covariant differentiation
    defined without the need of component indices.  For latex output a
-   latex distribution must be installed.  A more detail description of the
+   latex distribution must be installed.  A more detailed description of the
    module and the mathematics behind it is at :download:`GA <./pdf/GA.pdf>`.
 
 .. module:: sympy.galgebra.ga
@@ -76,7 +76,7 @@ Geometric Algebra
 Using LaTeX, Enhanced Printing, and Numerics
 ============================================
 
-For developing code using *sympy* and the *GA* module I strongly suggested that you
+For developing code using *sympy* and the *GA* module it is strongly suggested that you
 go to <http://www.geany.org/Download/Releases> and install the version of the *geany*
 editor appropriate for your system.  This editor allows you to execute python scripts
 from within the editor, incorporate pep8 checking of python code, and use the ansicon
@@ -120,7 +120,7 @@ A geometric algebra is instantiated with
 
    *sympy.galgebra.Ga(basis, g=None, coords=None, norm=False, debug=False, X=None)*
 
-   The *basis* and *g* parameters were described in `GA[page 10] <../../_downloads/GA.pdf#page=11>`_.
+   The *basis* and *g* parameters were described in `GA[page 9] <../../_downloads/GA.pdf#page=9>`_.
 
    If *debug=True* the data structure required to initialize the *Ga* class
    are printed out.
@@ -129,7 +129,7 @@ A geometric algebra is instantiated with
    the number of basis vectors.  These symbols are used as the arguments of a
    multivector field as a function of position and for calculating the derivatives
    of a multivector field. Additionally, *Ga()* calculates the pseudo scalar,
-   :math:`I` and pseudo scalar inverse :math:`I^{-1}` and makes them available to the programmer as *MV.I* and *MV.Iinv*.
+   :math:`I` and makes it to the programmer as *MV.I()*.
    For the case of instantiating a 3-d geometric algebra in spherical coordinates we could use
 
        .. code-block:: python
@@ -171,7 +171,7 @@ A geometric algebra is instantiated with
 
    for the spherical 3-d geometric algebra. The left derivative *grad* :math:`= \nabla` and the
    right derivative *rgrad* :math:`= \bar{\nabla}` are explained in
-   `GA[page 23] <../../_downloads/GA.pdf#page=24>`_. Again
+   `GA[page 22] <../../_downloads/GA.pdf#page=22>`_. Again
    the names *grad* and *rgrad* are whatever the user chooses them to be.
 
    an alternative instantiation method is
@@ -215,7 +215,7 @@ Instantiating a Multivector
     Since we need to associate each multivector with the geometric algebra that contains it
     we use a member function of *Ga* to instantiate every multivector (There is a
     multivector class, *Mv*, but in order the insure that every multivector is associated
-    with the correct geometric algebra we always use the member function *Ga.mv* to instantiate
+    with the correct geometric algebra we use the member function *Ga.mv* to instantiate
     the multivector.)  The multivector is instantiated with:
 
     *Ga.mv(name, mode, f=False)*
@@ -255,7 +255,7 @@ Instantiating a Multivector
                 :align: center
 
         Line 5 of the previous listing illustrates the case of using the *mv* member function with
-        no arguments. The code does not return a multivector, but rather a tuple or the basis vectors of the geometric algebra *o3d*.
+        no arguments. The code does not return a multivector, but rather a tuple of the basis vectors of the geometric algebra *o3d*.
         The elements of the tuple then can
         be used to construct multivectors, or multivector fields through the operations
         of addition, subtraction, multiplication (geometric, inner, and outer products and left and right contraction).
@@ -293,7 +293,7 @@ Instantiating a Multivector
         dBrop = rgrad*B
 
     *dFop*, *dBop*, *dFrop*, and *dBrop* are all multivector differential operators (again see
-    `GA[page 25] <../../_downloads/GA.pdf#page=26>`_).
+    `GA[page 25] <../../_downloads/GA.pdf#page=25>`_).
 
 
 Basic Multivector Class Functions
@@ -301,7 +301,7 @@ Basic Multivector Class Functions
 
     *components(self)*
 
-       Return list of multivectors correspoinding to each base blade of multivector.
+       Return list of multivectors corresponding to each base blade of multivector.
 
     *convert_to_blades(self)*
 
@@ -324,7 +324,7 @@ Basic Multivector Class Functions
     *dual(self)*
 
        Return dual of multivector which is multivector left multiplied by
-       pseudoscalar *Mv.i* (Hestenes,p22).
+       pseudoscalar :math:`I` (Hestenes,p22).
 
     *even(self)*
 
@@ -542,7 +542,7 @@ Basic Multivector Functions
 Linear Transformations
 ----------------------
 
-    The mathematical background for linear transformations is in `GA[page 26] <../../_downloads/GA.pdf#page=27>`_.
+    The mathematical background for linear transformations starts at `GA[page 23] <../../_downloads/GA.pdf#page=23>`_.
     Linear transformations on the tangent space of
     the manifold are instantiated with the *Ga* member function *lt* (the actual class being instantiated is *Lt*) as shown in
     lines 12, 20, 26, and 44 of the code (Ltrans.py)
@@ -623,7 +623,7 @@ Linear Transformations
 Differential Operators
 ----------------------
 
-    For the mathematical treatment of linear mulivector differential operators `GA[page 23] <../../_downloads/GA.pdf#page=24>`_.
+    The mathematical treatment of linear mulivector differential operators starts at `GA[page 20] <../../_downloads/GA.pdf#page=20>`_.
     There is a differential
     operator class *Dop*. However, one never needs to use it directly.  The operators are constructed from linear
     combinations of multivector products of the differential operators *Ga.grad* and *Ga.rgrad* as shown in the following code for
@@ -726,7 +726,8 @@ Submanifolds
     a manifold.  The submanifold class, *Sm*, is derived from
     the *Ga* class and allows one
     to define a submanifold of a manifold by defining a coordinate mapping between the submanifold
-    coordinates and the manifold coordinates.  What is returned is the geometric
+    coordinates and the manifold coordinates as described starting at `GA[page 16] <../../_downloads/GA.pdf#page=16>`_.
+    What is returned is the geometric
     algebra of the tangent space of the submanifold. The submanifold for a geometric algebra is
     instantiated with
 
@@ -757,7 +758,7 @@ Submanifolds
 Instantiating a Multi-linear Functions (Tensors)
 ------------------------------------------------
 
-The mathematical background for multi-linear functions is in `GA[page 27] <../../_downloads/GA.pdf#page=28>`_.  Note
+The mathematical background for multi-linear functions starts at `GA[page 26] <../../_downloads/GA.pdf#page=26>`_.  Note
 that the multilinear transformations represent *concrete* tensors <http://en.wikipedia.org/wiki/Multilinear_map> as
 opposed to *abstract* tensors <http://en.wikipedia.org/wiki/Abstract_index_notation>.
 To instantiate a multi-linear function use
@@ -795,7 +796,7 @@ Basic Multilinear Function Class Functions
 ------------------------------------------
 
 If we can instantiate multilinear functions we can use all the multilinear function class functions as described as follows.
-See `GA[page 27] <../../_downloads/GA.pdf#page=28>`_ for the mathematical description of each operation.
+For the mathematical description of each operation start at `GA[page 25] <../../_downloads/GA.pdf#page=25>`_.
 
     *self(kargs)*
 
@@ -820,7 +821,7 @@ See `GA[page 27] <../../_downloads/GA.pdf#page=28>`_ for the mathematical descri
     *self.cderiv()*
 
         Returns covariant derivative of tensor field. If *T* is a tensor of rank :math:`k` then *T.cderiv()* is a tensor of rank :math:`k+1`.
-        The operation performed is defined in `GA[page 30] <../../_downloads/GA.pdf#page=31>`_.
+        The operation performed is defined in `GA[page 31] <../../_downloads/GA.pdf#page=31>`_.
 
 Standard Printing
 -----------------
