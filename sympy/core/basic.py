@@ -182,10 +182,10 @@ class Basic(with_metaclass(ManagedProperties)):
         if c:
             return c
         for l, r in zip(st, ot):
+            l = Basic(*l) if isinstance(l, frozenset) else l
+            r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
                 c = l.compare(r)
-            elif isinstance(l, frozenset):
-                c = 0
             else:
                 c = (l > r) - (l < r)
             if c:
