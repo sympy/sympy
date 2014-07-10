@@ -53,7 +53,7 @@ class Plane(GeometryEntity):
         p1 = Point3D(p1)
         if pt1 is None and pt2 is None and len(normal_vector) == 3:
             pass
-        elif pt1 and pt2 is not None and len(normal_vector) == 0:
+        elif pt1 and pt2 and len(normal_vector) == 0:
             pt1, pt2 = Point3D(pt1), Point3D(pt2)
             if Point3D.is_collinear(p1, pt1, pt2):
                 raise NotImplementedError('Enter three non-collinear points')
@@ -161,9 +161,9 @@ class Plane(GeometryEntity):
         Point3D(4/3, 4/3, 4/3)
 
         """
-        x, y, z = symbols("x, y, z")
+        x, y, z = map(Dummy(), 'xyz')
         k = self.equation(x, y, z)
-        const = [i for i in k.args if i.is_constant() is True]
+        const = [i for i in k.args if not i.free_symbols]
         a, b, c = k.coeff(x), k.coeff(y), k.coeff(z)
         if const != []:
             d = -(a*pt.args[0] + b*pt.args[1] + const.pop())
@@ -340,13 +340,13 @@ class Plane(GeometryEntity):
 
         """
         from sympy.geometry.line3d import LinearEntity3D
-        x, y, z = symbols("x y z")
+        x, y, z = map(Dummy(), 'xyz')
         if self.intersection(o) != []:
             return S.Zero
 
         if isinstance(o, Point3D):
             k = self.equation(x, y, z)
-            const = [i for i in k.args if i.is_constant() is True]
+            const = [i for i in k.args if not i.free_symbols]
             a, b, c = k.coeff(x), k.coeff(y), k.coeff(z)
             if const != []:
                 d = a*o.x + b*o.y + c*o.z + const.pop()
@@ -653,7 +653,7 @@ class Plane(GeometryEntity):
                 return []
         if isinstance(o, LinearEntity3D):
             t = symbols('t')
-            x, y, z = symbols("x y z")
+            x, y, z = map(Dummy(), 'xyz')
             if o in self:
                 return [o]
             else:
@@ -670,7 +670,7 @@ class Plane(GeometryEntity):
                         return []
         if isinstance(o, LinearEntity):
             t = symbols('t')
-            x, y, z = symbols("x y z")
+            x, y, z = map(Dummy(), 'xyz')
             if o in self:
                 return [o]
             else:
@@ -687,7 +687,7 @@ class Plane(GeometryEntity):
             if self.is_parallel(o):
                 return []
             else:
-                x, y, z = symbols("x y z")
+                x, y, z = map(Dummy(), 'xyz')
                 a, b= Matrix([self.normal_vector]), Matrix([o.normal_vector])
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
@@ -705,7 +705,7 @@ class Plane(GeometryEntity):
     def __contains__(self, o):
         from sympy.geometry.line3d import LinearEntity3D
         from sympy.geometry.line import LinearEntity
-        x, y, z = symbols("x, y, z")
+        x, y, z = map(Dummy(), 'xyz')
         k = self.equation(x, y, z)
         if isinstance(o, Point3D):
             d = k.subs([(x, o.x), (y, o.y), (z, o.z)])
