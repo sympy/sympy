@@ -508,6 +508,7 @@ def _smart_subs(expr, sub_dict):
             return val
         new_args = (_recurser(arg, sub_dict) for arg in expr.args)
         return expr.func(*new_args)
+    return _recurser(expr, sub_dict)
 
 
 def _fraction_decomp(expr):
