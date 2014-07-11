@@ -7,6 +7,7 @@ from sympy import diff as df, sqrt, ImmutableMatrix as Matrix, \
      factor as fctr
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express
+from sympy.core.compatibility import with_metaclass
 
 
 class Vector(Expr):
@@ -405,8 +406,8 @@ class BaseVector(Vector, AtomicExpr):
         obj = super(BaseVector, cls).__new__(cls, S(index),
                                              system)
         #The _id is used for equating purposes, and for hashing
-        obj._components = {obj : S(1)}
         obj._base_vect = obj
+        obj._components = {obj: S(1)}
         obj._measure_number = S(1)
         obj._name = name
         obj._system = system
@@ -590,9 +591,15 @@ class VectorZero(Vector):
     _op_priority = 12.1
     components = {}
 
-    def __new__(cls, *args):
-        obj = super(VectorZero, cls).__new__(cls, *args)
+    def __new__(cls):
+        obj = super(VectorZero, cls).__new__(cls)
+        #Pre-compute a specific hash value for the zero vector
+        #Use the same one always
+        obj._hash = tuple([S(0), Symbol('global')]).__hash__()
         return obj
+
+    def __hash__(self):
+        return self._hash
 
     @call_highest_priority('__req__')
     def __eq__(self, other):
@@ -659,4 +666,4 @@ def _vect_div(one, other):
         raise TypeError("Invalid division involving a vector")
 
 
-Vector.zero = VectorZero(S(-1), Symbol('default'))
+Vector.zero = VectorZero()
