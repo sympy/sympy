@@ -165,7 +165,7 @@ class Plane(GeometryEntity):
         k = self.equation(x, y, z)
         a, b, c = [k.coeff(i) for i in (x, y, z)]
         d = k.xreplace({x: pt.args[0], y: pt.args[1], z:0})
-        t = -d/(a**2 + b**2 + c**2) 
+        t = -d/(a**2 + b**2 + c**2)
         if isinstance(pt, Point):
             return Point3D(pt.x + t*a, pt.y + t*b, t*c)
         if isinstance(pt, Point3D):
