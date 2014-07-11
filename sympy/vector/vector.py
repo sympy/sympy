@@ -7,7 +7,6 @@ from sympy import diff as df, sqrt, ImmutableMatrix as Matrix, \
      factor as fctr
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express
-from sympy.core.compatibility import with_metaclass
 
 
 class Vector(Expr):
