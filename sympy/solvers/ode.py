@@ -7972,7 +7972,6 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
     y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
     try:
-        print(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f])
         sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f]).rhs
     except:
         sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f], hint='separable_Integral')
@@ -7987,7 +7986,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
-    C1, C2 = symbols('C1:3')
+    C1 = symbols('C1')
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8019,7 +8018,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
-    C1, C2 = symbols('C1:3')
+    C1 = symbols('C1')
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
     q = Wild('q', exclude=[x(t), y(t), z(t), t])
@@ -8039,7 +8038,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     x_yz = sqrt((C1 - b*v**2 - c*w**2)/a)
     y_zx = sqrt((C1 - c*w**2 - a*u**2)/b)
     z_xy = sqrt((C1 - a*u**2 - b*v**2)/c)
-    y_x = dsolve(diff(v(u),u) - ((a*u*F3-c*w*F1)/(c*w*F2-b*v*F3)).subs(w,z_xy).subs(v,v(u)))
+    y_x = dsolve(diff(v(u),u) - ((a*u*F3-c*w*F1)/(c*w*F2-b*v*F3)).subs(w,z_xy).subs(v,v(u))).rhs
     z_x = dsolve(diff(w(u),u) - ((b*v*F1-a*u*F2)/(c*w*F2-b*v*F3)).subs(v,y_zx).subs(w,w(u))).rhs
     z_y = dsolve(diff(w(v),v) - ((b*v*F1-a*u*F2)/(a*u*F3-c*w*F1)).subs(u,x_yz).subs(w,w(v))).rhs
     x_y = dsolve(diff(u(v),v) - ((c*w*F2-b*v*F3)/(a*u*F3-c*w*F1)).subs(w,z_xy).subs(u,u(v))).rhs
@@ -8048,4 +8047,36 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     sol1 = dsolve(diff(u(t),t) - (c*w*F2 - b*v*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
     sol2 = dsolve(diff(v(t),t) - (a*u*F3 - c*w*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
     sol3 = dsolve(diff(w(t),t) - (b*v*F1 - a*u*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _nonlinear_3eq_order1_type5(x, y, t, eq):
+    C1 = symbols('C1')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    F1, F2, F3 = symbols('F1, F2, F3', cls=Wild)
+    r1 = eq[0].match(diff(x(t),t) - x(t)*(F2 - F3))
+    r = collect_const(r1[F2]).match(s*F2)
+    r.update(collect_const(r1[F3]).match(q*F3))
+    if eq[1].has(r[F2]) and not eq[1].has(r[F3]):
+        r[F2], r[F3] = r[F3], r[F2]
+        r[s], r[q] = -r[q], -r[s]
+    r.update((diff(y(t),t) - eq[1]).match(y(t)*(a*r[F3] - r[c]*F1)))
+    a = r[p]; b = r[q]; c = r[s]
+    F1 = r[F1].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F2 = r[F2].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F3 = r[F3].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    x_yz = (C1*v**-b*w**-c)**-a
+    y_zx = (C1*w**-c*u**-a)**-b
+    z_xy = (C1*u**-a*v**-b)**-c
+    y_x = dsolve(diff(v(u),u) - ((v*(a*F3-c*F1))/(u*(c*F2-b*F3))).subs(w,z_xy).subs(v,v(u))).rhs
+    z_x = dsolve(diff(w(u),u) - ((w*(b*F1-a*F2))/(u*(c*F2-b*F3))).subs(v,y_zx).subs(w,w(u))).rhs
+    z_y = dsolve(diff(w(v),v) - ((w*(b*F1-a*F2))/(v*(a*F3-c*F1))).subs(u,x_yz).subs(w,w(v))).rhs
+    x_y = dsolve(diff(u(v),v) - ((u*(c*F2-b*F3))/(v*(a*F3-c*F1))).subs(w,z_xy).subs(u,u(v))).rhs
+    y_z = dsolve(diff(v(w),w) - ((v*(a*F3-c*F1))/(w*(b*F1-a*F2))).subs(u,x_yz).subs(v,v(w))).rhs
+    x_z = dsolve(diff(u(w),w) - ((u*(c*F2-b*F3))/(w*(b*F1-a*F2))).subs(v,y_zx).subs(u,u(w))).rhs
+    sol1 = dsolve(diff(u(t),t) - (u*(c*F2-b*F3)).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
+    sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
+    sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
