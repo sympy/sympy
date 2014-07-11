@@ -13,8 +13,10 @@ from sympy.physics.mechanics.functions import msubs
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 import warnings
+from sympy.utilities.iterables import iterable
 
 warnings.simplefilter("always", SymPyDeprecationWarning)
+
 
 class KanesMethod(object):
     """Kane's method object.
@@ -112,239 +114,140 @@ class KanesMethod(object):
                                   'kinematic differential equations to use' +
                                   'this method.')
 
-    def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=[],
-            configuration_constraints=[], u_dependent=[],
-            velocity_constraints=[], acceleration_constraints=None,
-            u_auxiliary=[]):
+    def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
+            configuration_constraints=None, u_dependent=None,
+            velocity_constraints=None, acceleration_constraints=None,
+            u_auxiliary=None):
 
         """Please read the online documentation. """
-        # Big storage things
+
         if not isinstance(frame, ReferenceFrame):
             raise TypeError('An intertial ReferenceFrame must be supplied')
         self._inertial = frame
-        self._forcelist = None
-        self._bodylist = None
-        self._fr = None
-        self._frstar = None
-        self._rhs = None
-        self._aux_eq = None
 
-        # States
-        self._q = None
-        self._qdep = []
-        self._qdot = None
-        self._u = None
-        self._udep = []
-        self._udot = None
-        self._uaux = None
+        self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
+                u_auxiliary)
+        self._initialize_constraint_matrices(configuration_constraints,
+                velocity_constraints, acceleration_constraints)
+        self._initialize_kindiffeq_matrices(kd_eqs)
 
-        # Differential Equations Matrices and Map
-        self._k_d = None
-        self._f_d = None
-        self._k_kqdot = None
-        self._k_ku = None
-        self._f_k = None
-        self._qdot_u_map = None
+    def _initialize_vectors(self, q_ind, q_dep, u_ind, u_dep, u_aux):
+        """Initialize the coordinate and speed vectors."""
 
-        # Constraint Matrices
-        self._f_h = Matrix([])
-        self._k_nh = Matrix([])
-        self._f_nh = Matrix([])
-        self._k_dnh = Matrix([])
-        self._f_dnh = Matrix([])
+        none_handler = lambda x: Matrix(x) if x else Matrix()
 
-        self._coords(q_ind, q_dependent, configuration_constraints)
-        self._speeds(u_ind, u_dependent, velocity_constraints,
-                acceleration_constraints, u_auxiliary)
-        if kd_eqs is not None:
-            self._kindiffeq(kd_eqs)
+        # Initialize generalized coordinates
+        q_dep = none_handler(q_dep)
+        if not iterable(q_ind):
+            raise TypeError('Generalized coordinates must be an iterable.')
+        if not iterable(q_dep):
+            raise TypeError('Dependent coordinates must be an iterable.')
+        q_ind = Matrix(q_ind)
+        self._qdep = q_dep
+        self._q = Matrix([q_ind, q_dep])
+        self._qdot = self._q.diff(dynamicsymbols._t)
 
-    def _find_dynamicsymbols(self, inlist, insyms=[]):
-        """Finds all non-supplied dynamicsymbols in the expressions."""
-        from sympy.core.function import AppliedUndef, Derivative
-        t = dynamicsymbols._t
-        return reduce(set.union, [set([i]) for j in inlist
-            for i in j.atoms(AppliedUndef, Derivative)
-            if i.free_symbols == set([t])], set()) - insyms
+        # Initialize generalized speeds
+        u_dep = none_handler(u_dep)
+        if not iterable(u_ind):
+            raise TypeError('Generalized speeds must be an iterable.')
+        if not iterable(u_dep):
+            raise TypeError('Dependent speeds must be an iterable.')
+        u_ind = Matrix(u_ind)
+        self._udep = u_dep
+        self._u = Matrix([u_ind, u_dep])
+        self._udot = self._u.diff(dynamicsymbols._t)
+        self._uaux = none_handler(u_aux)
 
-        temp_f = set().union(*[i.atoms(AppliedUndef) for i in inlist])
-        temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
-        set_f = set([a for a in temp_f if a.args == (t,)])
-        set_d = set([a for a in temp_d if ((a.args[0] in set_f) and all([i == t
-                     for i in a.variables]))])
-        return list(set.union(set_f, set_d) - set(insyms))
+    def _initialize_constraint_matrices(self, config, vel, acc):
+        """Initializes constraint matrices."""
 
-    def _find_othersymbols(self, inlist, insyms=[]):
-        """Finds all non-dynamic symbols in the expressions."""
-        return list(reduce(set.union, [i.free_symbols for i in inlist]) -
-                    set(insyms))
+        # Define vector dimensions
+        o = len(self._u)
+        m = len(self._udep)
+        p = o - m
+        none_handler = lambda x: Matrix(x) if x else Matrix()
 
-    def _coords(self, qind, qdep=[], coneqs=[]):
-        """Supply all the generalized coordinates in a list.
-
-        If some coordinates are dependent, supply them as part of qdep. Their
-        dependent nature will only show up in the linearization process though.
-
-        Parameters
-        ==========
-
-        qind : list
-            A list of independent generalized coords
-        qdep : list
-            List of dependent coordinates
-        coneq : list
-            List of expressions which are equal to zero; these are the
-            configuration constraint equations
-        """
-
-        if not isinstance(qind, (list, tuple)):
-            raise TypeError('Generalized coords. must be supplied in a list.')
-        self._q = qind + qdep
-        self._qdot = [diff(i, dynamicsymbols._t) for i in self._q]
-
-        if not isinstance(qdep, (list, tuple)):
-            raise TypeError('Dependent coordinates and constraints must each be '
-                            'provided in their own list.')
-        if len(qdep) != len(coneqs):
+        # Initialize configuration constraints
+        config = none_handler(config)
+        if len(self._qdep) != len(config):
             raise ValueError('There must be an equal number of dependent '
-                             'coordinates and constraints.')
-        coneqs = Matrix(coneqs)
-        self._qdep = qdep
-        self._f_h = coneqs
+                             'coordinates and configuration constraints.')
+        self._f_h = none_handler(config)
 
-    def _speeds(self, uind, udep=[], coneqs=[], diffconeqs=None, u_auxiliary=[]):
-        """Supply all the generalized speeds in a list.
-
-        If there are motion constraints or auxiliary speeds, they are provided
-        here as well (as well as motion constraints).
-
-        Parameters
-        ==========
-
-        uind : list
-            A list of independent generalized speeds
-        udep : list
-            Optional list of dependent speeds
-        coneqs : list
-            Optional List of constraint expressions; these are expressions
-            which are equal to zero which define a speed (motion) constraint.
-        diffconeqs : list
-            Optional, calculated automatically otherwise; list of constraint
-            equations; again equal to zero, but define an acceleration
-            constraint.
-        u_auxiliary : list
-            An optional list of auxiliary speeds used for brining
-            non-contributing forces into evidence
-
-        """
-
-        if not hasattr(uind, '__iter__'):
-            raise TypeError('Supply generalized speeds in an iterable.')
-        self._u = uind + udep
-        self._udot = [diff(i, dynamicsymbols._t) for i in self._u]
-        self._uaux = u_auxiliary
-
-        if not hasattr(udep, '__iter__'):
-            raise TypeError('Supply dependent speeds in an iterable.')
-        if len(udep) != len(coneqs):
+        # Initialize velocity and acceleration constraints
+        vel = none_handler(vel)
+        acc = none_handler(acc)
+        if len(vel) != m:
             raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints.')
-        if diffconeqs is not None:
-            if len(udep) != len(diffconeqs):
-                raise ValueError('There must be an equal number of dependent '
-                                 'speeds and constraints.')
-        if len(udep) != 0:
-            u = self._u
-            uzero = dict(list(zip(u, [0] * len(u))))
-            coneqs = Matrix(coneqs)
-            udot = self._udot
-            udotzero = dict(list(zip(udot, [0] * len(udot))))
+                             'speeds and velocity constraints.')
+        if acc and (len(acc) != m):
+            raise ValueError('There must be an equal number of dependent '
+                             'speeds and acceleration constraints.')
+        if vel:
+            u_zero = dict((i, 0) for i in self._u)
+            udot_zero = dict((i, 0) for i in self._udot)
 
-            self._udep = udep
-            self._f_nh = coneqs.subs(uzero)
-            self._k_nh = (coneqs - self._f_nh).jacobian(u)
-            # if no differentiated non holonomic constraints were given, calculate
-            if diffconeqs is None:
-                self._k_dnh = self._k_nh
-                self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * Matrix(u) +
+            self._f_nh = vel.subs(u_zero)
+            self._k_nh = (vel - self._f_nh).jacobian(self._u)
+            # If no acceleration constraints given, calculate them.
+            if not acc:
+                self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * self._u +
                                self._f_nh.diff(dynamicsymbols._t))
+                self._k_dnh = self._k_nh
             else:
-                self._f_dnh = diffconeqs.subs(udotzero)
-                self._k_dnh = (diffconeqs - self._f_dnh).jacobian(udot)
+                self._f_dnh = acc.subs(udot_zero)
+                self._k_dnh = (acc - self._f_dnh).jacobian(self._udot)
 
-            o = len(u)  # number of generalized speeds
-            m = len(udep)  # number of motion constraints
-            p = o - m  # number of independent speeds
-            # For a reminder, form of non-holonomic constraints is:
-            # B u + C = 0
-            B = self._k_nh[:, :]
-            C = self._f_nh[:, 0]
+            # Form of non-holonomic constraints is B*u + C = 0.
+            # We partition B into independent and dependent columns:
+            # Ars is then -B_dep.inv() * B_ind, and it relates dependent speeds
+            # to independent speeds as: udep = Ars*uind, neglecting the C term.
+            B_ind = self._k_nh[:, :p]
+            B_dep = self._k_nh[:, p:o]
+            self._Ars = -B_dep.LUsolve(B_ind)
+        else:
+            self._f_nh = Matrix()
+            self._k_nh = Matrix()
+            self._f_dnh = Matrix()
+            self._k_dnh = Matrix()
+            self._Ars = Matrix()
 
-            # We partition B into indenpendent and dependent columns
-            # Ars is then -Bdep.inv() * Bind, and it relates depedent speeds to
-            # independent speeds as: udep = Ars uind, neglecting the C term here.
-            self._depB = B
-            self._depC = C
-            mr1 = B[:, :p]
-            ml1 = B[:, p:o]
-            self._Ars = - ml1.LUsolve(mr1)
+    def _initialize_kindiffeq_matrices(self, kdeqs):
+        """Initialize the kinematic differential equation matrices."""
 
-    def _partial_velocity(self, vlist, ulist, frame):
-        """Returns the list of partial velocities, replacing qdot's in the
-        velocity list if necessary.
-        """
-        if self._qdot_u_map is None:
-            raise ___KDEqError
-        v = [vel.subs(self._qdot_u_map) for vel in vlist]
-        return partial_velocity(v, ulist, frame)
+        if kdeqs:
+            if len(self._q) != len(kdeqs):
+                raise ValueError('There must be an equal number of kinematic '
+                                'differential equations and coordinates.')
+            kdeqs = Matrix(kdeqs)
 
-    def kindiffdict(self):
-        """Returns the qdot's in a dictionary. """
-        if self._qdot_u_map is None:
-            raise ___KDEqError
-        return self._qdot_u_map
+            u = self._u
+            qdot = self._qdot
+            # Dictionaries setting things to zero
+            u_zero = dict((i, 0) for i in u)
+            uaux_zero = dict((i, 0) for i in self._uaux)
+            qdot_zero = dict((i, 0) for i in qdot)
 
-    def _kindiffeq(self, kdeqs):
-        """Supply all the kinematic differential equations in a list.
+            f_k = kdeqs.subs(u_zero).subs(qdot_zero)
+            k_ku = (kdeqs.subs(qdot_zero) - f_k).jacobian(u)
+            k_kqdot = (kdeqs.subs(u_zero) - f_k).jacobian(qdot)
 
-        They should be in the form [Expr1, Expr2, ...] where Expri is equal to
-        zero
+            f_k = k_kqdot.LUsolve(f_k)
+            k_ku = k_kqdot.LUsolve(k_ku)
+            k_kqdot = eye(len(qdot))
 
-        Parameters
-        ==========
+            self._qdot_u_map = solve_linear_system_LU(
+                    Matrix([k_kqdot.T, -(k_ku * u + f_k).T]).T, qdot)
 
-        kdeqs : list (of Expr)
-            The listof kinematic differential equations
-
-        """
-        if len(self._q) != len(kdeqs):
-            raise ValueError('There must be an equal number of kinematic '
-                             'differential equations and coordinates.')
-
-        uaux = self._uaux
-        # dictionary of auxiliary speeds which are equal to zero
-        uaz = dict(list(zip(uaux, [0] * len(uaux))))
-
-        #kdeqs = Matrix(kdeqs).subs(uaz)
-        kdeqs = Matrix(kdeqs)
-
-        qdot = self._qdot
-        qdotzero = dict(list(zip(qdot, [0] * len(qdot))))
-        u = self._u
-        uzero = dict(list(zip(u, [0] * len(u))))
-
-        f_k = kdeqs.subs(uzero).subs(qdotzero)
-        k_kqdot = (kdeqs.subs(uzero) - f_k).jacobian(Matrix(qdot))
-        k_ku = (kdeqs.subs(qdotzero) - f_k).jacobian(Matrix(u))
-
-        self._k_ku = k_kqdot.LUsolve(k_ku)
-        self._f_k = k_kqdot.LUsolve(f_k)
-        self._k_kqdot = eye(len(qdot))
-        self._qdot_u_map = solve_linear_system_LU(Matrix([self._k_kqdot.T,
-            -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
-
-        self._k_ku = k_kqdot.LUsolve(k_ku).subs(uaz)
-        self._f_k = k_kqdot.LUsolve(f_k).subs(uaz)
+            self._f_k = f_k.subs(uaux_zero)
+            self._k_ku = k_ku.subs(uaux_zero)
+            self._k_kqdot = k_kqdot
+        else:
+            self._qdot_u_map = None
+            self._f_k = Matrix()
+            self._k_ku = Matrix()
+            self._k_kqdot = Matrix()
 
     def _form_fr(self, fl):
         """Form the generalized active force.
@@ -569,15 +472,14 @@ class KanesMethod(object):
             u_i = u
         u_d = self._udep
 
-        # Form dictionary of auxiliary speeds & and their derivatives,
-        # setting each to 0.
+        # Form dictionary to set auxiliary speeds & their derivatives to 0.
         uaux = self._uaux
-        uauxdot = [diff(i, dynamicsymbols._t) for i in uaux]
-        uaux_zero = dict((i, 0) for i in uaux + uauxdot)
+        uauxdot = uaux.diff(dynamicsymbols._t)
+        uaux_zero = dict((i, 0) for i in Matrix([uaux, uauxdot]))
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = set(q + self._qdot + u + self._udot + uaux + uauxdot)
+        insyms = set(Matrix([q, self._qdot, u, self._udot, uaux, uauxdot]))
         if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
                 self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
             raise ValueError('Cannot have dynamicsymbols outside dynamic \
@@ -847,14 +749,15 @@ class KanesMethod(object):
 
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
-        if self._uaux != []:
-            if self._udep == []:
+        if self._uaux:
+            if not self._udep:
                 km = KanesMethod(self._inertial, self._q, self._uaux,
                              u_auxiliary=self._uaux)
             else:
                 km = KanesMethod(self._inertial, self._q, self._uaux,
-                u_auxiliary=self._uaux, u_dependent=self._udep,
-                velocity_constraints=(self._k_nh * Matrix(self._u) + self._f_nh))
+                        u_auxiliary=self._uaux, u_dependent=self._udep,
+                        velocity_constraints=(self._k_nh * self._u +
+                        self._f_nh))
             km._qdot_u_map = self._qdot_u_map
             self._km = km
             fraux = km._form_fr(FL)
@@ -934,3 +837,39 @@ class KanesMethod(object):
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
+
+    def kindiffdict(self):
+        """Returns the qdot's in a dictionary. """
+        if self._qdot_u_map is None:
+            raise ___KDEqError
+        return self._qdot_u_map
+
+    def _find_dynamicsymbols(self, inlist, insyms=[]):
+        """Finds all non-supplied dynamicsymbols in the expressions."""
+        from sympy.core.function import AppliedUndef, Derivative
+        t = dynamicsymbols._t
+        return reduce(set.union, [set([i]) for j in inlist
+            for i in j.atoms(AppliedUndef, Derivative)
+            if i.free_symbols == set([t])], set()) - insyms
+
+        temp_f = set().union(*[i.atoms(AppliedUndef) for i in inlist])
+        temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
+        set_f = set([a for a in temp_f if a.args == (t,)])
+        set_d = set([a for a in temp_d if ((a.args[0] in set_f) and all([i == t
+                     for i in a.variables]))])
+        return list(set.union(set_f, set_d) - set(insyms))
+
+    def _find_othersymbols(self, inlist, insyms=[]):
+        """Finds all non-dynamic symbols in the expressions."""
+        return list(reduce(set.union, [i.free_symbols for i in inlist]) -
+                    set(insyms))
+
+    def _partial_velocity(self, vlist, ulist, frame):
+        """Returns the list of partial velocities, replacing qdot's in the
+        velocity list if necessary.
+        """
+        if self._qdot_u_map is None:
+            raise ___KDEqError
+        v = [vel.subs(self._qdot_u_map) for vel in vlist]
+        return partial_velocity(v, ulist, frame)
+
