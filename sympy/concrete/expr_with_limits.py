@@ -83,7 +83,7 @@ class ExprWithLimits(Expr):
             free = function.free_symbols
             if len(free) != 1:
                 raise ValueError(
-                    "specify dummy variables for %s" % function)
+                    "specify dummy variables for %s as second parameter" % function)
             limits, orientation = [Tuple(s) for s in free], 1
 
         # denest any nested calls
@@ -360,7 +360,7 @@ class AddWithLimits(ExprWithLimits):
             free = function.free_symbols
             if len(free) != 1:
                 raise ValueError(
-                    "specify dummy variables for %s" % function)
+                    "specify dummy variables for %s as second parameter" % function)
             limits, orientation = [Tuple(s) for s in free], 1
 
         # denest any nested calls
