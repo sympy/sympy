@@ -3656,11 +3656,14 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.vector import Vector
 
     try:
-        return expr._eval_simplify(ratio=ratio, measure=measure)
+        original_expr = expr = signsimp(expr)
     except AttributeError:
         pass
 
-    original_expr = expr = signsimp(expr)
+    try:
+        return expr._eval_simplify(ratio=ratio, measure=measure)
+    except AttributeError:
+        pass
 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
