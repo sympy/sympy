@@ -1,6 +1,6 @@
 from __future__ import division
 
-from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
+from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
         sign, im, nan
 )
@@ -1492,7 +1492,10 @@ def test_issue_6040():
 
 
 def test_issue_6082():
-    assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
+    assert Basic.compare(Max(x, 1), Max(x, 2)) == -1
+    assert Basic.compare(Max(x, 2), Max(x, 1)) == 1
+    assert Basic.compare(Max(x, 1), Max(x, 1)) == 0
+    assert Basic.compare(Max(1, x), frozenset((1, x))) == -1
 
 
 def test_issue_6077():
