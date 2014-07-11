@@ -1131,7 +1131,10 @@ class Sdop(object):
                 else:
                     s += '-' + pd_str
             else:
-                s += str(coef) + ' ' + pd_str
+                if isinstance(coef, Add):
+                    s += r'\left ( ' + str(coef) + r'\right ) ' + pd_str
+                else:
+                    s += str(coef) + ' ' + pd_str
             s += ' + '
 
         s = s.replace('+ -','- ')
@@ -1139,7 +1142,7 @@ class Sdop(object):
 
     def _repr_latex_(self):
         latex_str = printer.GaLatexPrinter.latex(self)
-        return '$ ' + latex_str + '$ '
+        return ' ' + latex_str + ' '
 
     def __str__(self):
         if printer.GaLatexPrinter.latex_flg:
@@ -1509,7 +1512,7 @@ class Pdop(object):
     def Pdop_latex_str(self):
         if self.order == 0:
             return ''
-        s = r'\bfrac{\partial'
+        s = r'\frac{\partial'
         if self.order > 1:
             s += '^{' + str(self.order) + '}'
         s += '}{'
@@ -1525,7 +1528,7 @@ class Pdop(object):
 
     def _repr_latex_(self):
         latex_str = printer.GaLatexPrinter.latex(self)
-        return '$ ' + latex_str + '$ '
+        return ' ' + latex_str + ' '
 
     def __str__(self):
         if printer.GaLatexPrinter.latex_flg:
@@ -1870,9 +1873,9 @@ class Dop(object):
 
     def _repr_latex_(self):
         latex_str = printer.GaLatexPrinter.latex(self)
-        if r'\begin{align*}' not in latex_str:
-            latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
-        return latex_str
+        #if r'\begin{align*}' not in latex_str:
+        #    latex_str = r'\begin{equation*} ' + latex_str + r' \end{equation*}'
+        return '$$ ' + latex_str + ' $$'
 
     def is_scalar(self):
         for x in self.terms:
@@ -2018,7 +2021,7 @@ class Dop(object):
                     else:
                         latex_str = latex_str.replace(r'\begin{align*}', r'\begin{align*} ' + title)
                         latex_str = latex_str.replace('&', '=&', 1)
-                latex_str = latex_str.replace(r'\bfrac', r'\frac')
+                latex_str = latex_str.replace(r'\frac', r'\frac')
                 from IPython.core.display import display, Math
                 display(Math(latex_str))
             else:

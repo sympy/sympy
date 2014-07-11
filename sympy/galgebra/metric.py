@@ -404,6 +404,19 @@ class Metric(object):
         coords = kwargs['coords']
         norm = kwargs['norm']
 
+        """
+        Normalization for reciprocal vectors if you do not wish to
+        explicitly calculate the determinate of the metric tensor.
+        """
+        if not isinstance(bool, norm):
+            norm = False
+            if self.coords is None:
+                self.g_norm = Symbol('det(g)',real=True)
+            else:
+                self.g_norm = Function('det(g)',real=True)(*self.coords)
+        else:
+            self.g_norm = None
+
         self.debug = debug
         self.is_ortho = False  # Is basis othogonal
         self.coords = coords  # Manifold coordinates

@@ -276,7 +276,7 @@ class Lt(object):
                 else:
                     latex_str = latex_str.replace(r'\begin{align*}', r'\begin{align*} ' + title)
                     latex_str = latex_str.replace('&', '=&', 1)
-            latex_str = latex_str.replace(r'\bfrac', r'\frac')
+            #latex_str = latex_str.replace(r'\frac', r'\frac')
             from IPython.core.display import display, Math
             display(Math(latex_str))
         else:

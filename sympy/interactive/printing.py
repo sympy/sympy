@@ -44,9 +44,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                "\\pagestyle{empty}\n" \
                "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
     if euler:
-        addpackages = '\\usepackage{euler}'
+        addpackages = '\\usepackage{euler}\\newcommand{\\bfrac}[2]{\\frac{#1}{#2}}'
     else:
-        addpackages = ''
+        addpackages = '\\newcommand{\\bfrac}[2]{\\frac{#1}{#2}}'
     preamble = preamble % (fontsize, addpackages)
 
     imagesize = 'tight'
@@ -96,6 +96,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy import Basic
         from sympy.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
+        from sympy.galgebra.mv import Mv, Dop, Pdop, Sdop
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
@@ -104,7 +105,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return False
         # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
         # to use here, than these explicit imports.
-        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
+        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, Mv, Dop)):
             return True
         elif isinstance(o, (float, integer_types)) and print_builtin:
             return True
