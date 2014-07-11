@@ -161,16 +161,11 @@ class Plane(GeometryEntity):
         Point3D(4/3, 4/3, 4/3)
 
         """
-        x, y, z = map(Dummy(), 'xyz')
+        x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
-        const = [i for i in k.args if not i.free_symbols]
-        a, b, c = k.coeff(x), k.coeff(y), k.coeff(z)
-        if const != []:
-            d = -(a*pt.args[0] + b*pt.args[1] + const.pop())
-            t = d/(a**2 + b**2 + c**2)
-        else:
-            d = -(a*pt.args[0] + b*pt.args[1])
-            t = d/(a**2 + b**2 + c**2)
+        a, b, c = [k.coeff(i) for i in (x, y, z)]
+        d = k.xreplace({x: pt.args[0], y: pt.args[1], z:0})
+        t = -d/(a**2 + b**2 + c**2) 
         if isinstance(pt, Point):
             return Point3D(pt.x + t*a, pt.y + t*b, t*c)
         if isinstance(pt, Point3D):
@@ -340,22 +335,17 @@ class Plane(GeometryEntity):
 
         """
         from sympy.geometry.line3d import LinearEntity3D
-        x, y, z = map(Dummy(), 'xyz')
+        x, y, z = map(Dummy, 'xyz')
         if self.intersection(o) != []:
             return S.Zero
 
         if isinstance(o, Point3D):
-            k = self.equation(x, y, z)
-            const = [i for i in k.args if not i.free_symbols]
-            a, b, c = k.coeff(x), k.coeff(y), k.coeff(z)
-            if const != []:
-                d = a*o.x + b*o.y + c*o.z + const.pop()
-                t = sqrt(a**2 + b**2 + c**2)
-                return abs(d / t)
-            else:
-                d = a*o.x + b*o.y + c*o.z
-                t = sqrt(a**2 + b**2 + c**2)
-                return abs(d / t)
+           x, y, z = map(Dummy, 'xyz')
+           k = self.equation(x, y, z)
+           a, b, c = [k.coeff(i) for i in (x, y, z)]
+           d = k.xreplace({x: o.args[0], y: o.args[1], z: o.args[2]})
+           t = abs(d/sqrt(a**2 + b**2 + c**2))
+           return t
         if isinstance(o, LinearEntity3D):
             a, b = o.p1, self.p1
             c = Matrix(a.direction_ratio(b))
@@ -653,7 +643,7 @@ class Plane(GeometryEntity):
                 return []
         if isinstance(o, LinearEntity3D):
             t = symbols('t')
-            x, y, z = map(Dummy(), 'xyz')
+            x, y, z = map(Dummy, 'xyz')
             if o in self:
                 return [o]
             else:
@@ -670,7 +660,7 @@ class Plane(GeometryEntity):
                         return []
         if isinstance(o, LinearEntity):
             t = symbols('t')
-            x, y, z = map(Dummy(), 'xyz')
+            x, y, z = map(Dummy, 'xyz')
             if o in self:
                 return [o]
             else:
@@ -687,7 +677,7 @@ class Plane(GeometryEntity):
             if self.is_parallel(o):
                 return []
             else:
-                x, y, z = map(Dummy(), 'xyz')
+                x, y, z = map(Dummy, 'xyz')
                 a, b= Matrix([self.normal_vector]), Matrix([o.normal_vector])
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
@@ -705,7 +695,7 @@ class Plane(GeometryEntity):
     def __contains__(self, o):
         from sympy.geometry.line3d import LinearEntity3D
         from sympy.geometry.line import LinearEntity
-        x, y, z = map(Dummy(), 'xyz')
+        x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
         if isinstance(o, Point3D):
             d = k.subs([(x, o.x), (y, o.y), (z, o.z)])
