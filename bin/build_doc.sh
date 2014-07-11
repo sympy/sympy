@@ -41,11 +41,11 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
         git config --global user.name "SymPy (Travis CI)"
 
         echo -e "Cloning repository"
-        git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/sympy/sympy_doc.git  gh-pages > /dev/null
+        git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/sympy/sympy_doc.git  gh-pages 2>/dev/null
 
         cd gh-pages
         git remote rm origin
-        git remote add origin https://${GH_TOKEN}@github.com/sympy/sympy_doc.git > /dev/null
+        git remote add origin https://${GH_TOKEN}@github.com/sympy/sympy_doc.git 2>/dev/null
         rm -rf dev/
         cp -R ../sympy/doc/_build/html dev/
         git add -A dev/
