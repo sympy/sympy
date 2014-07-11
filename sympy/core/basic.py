@@ -672,20 +672,10 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return self.args
 
+    @deprecated(useinstead="iter(self.args)", issue=7717, deprecated_since_version="0.7.6")
     def iter_basic_args(self):
         """
         Iterates arguments of ``self``.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x
-        >>> a = 2*x
-        >>> a.iter_basic_args()
-        <...iterator object at 0x...>
-        >>> list(a.iter_basic_args())
-        [2, x]
-
         """
         return iter(self.args)
 

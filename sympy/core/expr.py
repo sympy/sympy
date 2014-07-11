@@ -291,7 +291,7 @@ class Expr(Basic, EvalfMixin):
         """
         if not self.args:
             return False
-        return all(obj.is_number for obj in self.iter_basic_args())
+        return all(obj.is_number for obj in self.args)
 
     def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
         """Return self evaluated, if possible, replacing free symbols with
