@@ -109,11 +109,6 @@ class KanesMethod(object):
 
     """
 
-    simp = True
-    ___KDEqError = AttributeError('Create an instance of KanesMethod with' +
-                                  'kinematic differential equations to use' +
-                                  'this method.')
-
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
             configuration_constraints=None, u_dependent=None,
             velocity_constraints=None, acceleration_constraints=None,
@@ -124,6 +119,9 @@ class KanesMethod(object):
         if not isinstance(frame, ReferenceFrame):
             raise TypeError('An intertial ReferenceFrame must be supplied')
         self._inertial = frame
+
+        self._fr = None
+        self._frstar = None
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
@@ -219,7 +217,7 @@ class KanesMethod(object):
         if kdeqs:
             if len(self._q) != len(kdeqs):
                 raise ValueError('There must be an equal number of kinematic '
-                                'differential equations and coordinates.')
+                                 'differential equations and coordinates.')
             kdeqs = Matrix(kdeqs)
 
             u = self._u
@@ -250,53 +248,37 @@ class KanesMethod(object):
             self._k_kqdot = Matrix()
 
     def _form_fr(self, fl):
-        """Form the generalized active force.
+        """Form the generalized active force."""
 
-        Computes the vector of the generalized active force vector.
-        Used to compute E.o.M. in the form Fr + Fr* = 0.
-
-        Parameters
-        ==========
-
-        fl : list
-            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
-            tuples which represent the force at a point or torque on a frame.
-
-        """
-
-        if not hasattr(fl, '__iter__'):
+        if not iterable(fl):
             raise TypeError('Force pairs must be supplied in an iterable.')
 
         N = self._inertial
-        self._forcelist = fl[:]
-        u = self._u
-        o = len(u)  # number of gen. speeds
-        b = len(fl)  # number of forces
-
-        FR = zeros(o, 1)
-
         # pull out relevant velocities for constructing partial velocities
-        vel_list = []
-        f_list = []
-        for i in fl:
-            if isinstance(i[0], ReferenceFrame):
-                vel_list += [i[0].ang_vel_in(N)]
-            elif isinstance(i[0], Point):
-                vel_list += [i[0].vel(N)]
-            else:
-                raise TypeError('First entry in pair must be point or frame.')
-            f_list += [i[1]]
-        partials = self._partial_velocity(vel_list, u, N)
+        def f_list_parser(f_list):
+            for obj, force in fl:
+                if isinstance(obj, ReferenceFrame):
+                    yield obj.ang_vel_in(N), force
+                elif isinstance(obj, Point):
+                    yield obj.vel(N), force
+                else:
+                    raise TypeError('First entry in each forcelist pair must '
+                                    'be a point or frame.')
+
+        unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
+        vel_list, f_list = unzip(list(f_list_parser(fl)))
 
         # Fill Fr with dot product of partial velocities and forces
+        o = len(self._u)
+        b = len(f_list)
+        FR = zeros(o, 1)
+        partials = self._partial_velocity(vel_list, self._u, N)
         for i in range(o):
-            for j in range(b):
-                FR[i] += partials[j][i] & f_list[j]
+            FR[i] = sum(partials[j][i] & f_list[j] for j in range(b))
 
         # In case there are dependent speeds
-        m = len(self._udep)  # number of dependent speeds
-        if m != 0:
-            p = o - m
+        if self._udep:
+            p = o - len(self._udep)
             FRtilde = FR[:p, 0]
             FRold = FR[p:o, 0]
             FRtilde += self._Ars.T * FRold
@@ -306,81 +288,62 @@ class KanesMethod(object):
         return FR
 
     def _form_frstar(self, bl):
-        """Form the generalized inertia force.
+        """Form the generalized inertia force."""
 
-        Computes the vector of the generalized inertia force vector.
-        Used to compute E.o.M. in the form Fr + Fr* = 0.
-
-        Parameters
-        ==========
-
-        bl : list
-            A list of all RigidBody's and Particle's in the system.
-
-        """
-
-        if not hasattr(bl, '__iter__'):
+        if not iterable(bl):
             raise TypeError('Bodies must be supplied in an iterable.')
+
         t = dynamicsymbols._t
         N = self._inertial
-        self._bodylist = bl
-        u = self._u  # all speeds
-        udep = self._udep  # dependent speeds
-        o = len(u)
-        m = len(udep)
-        p = o - m
-        udot = self._udot
-        udotzero = dict(list(zip(udot, [0] * o)))
-        # auxiliary speeds
-        uaux = self._uaux
-        uauxdot = [diff(i, t) for i in uaux]
-        # dictionary of auxiliary speeds which are equal to zero
-        uaz = dict(list(zip(uaux, [0] * len(uaux))))
-        uadz = dict(list(zip(uauxdot, [0] * len(uauxdot))))
-        # dictionary of qdot's to u's
-        qdots = dict(list(zip(list(self._qdot_u_map.keys()),
-                         list(self._qdot_u_map.values()))))
-        for k, v in list(qdots.items()):
-            qdots[k.diff(t)] = v.diff(t)
+        # Dicts setting things to zero
+        udot_zero = dict((i, 0) for i in self._udot)
+        uaux_zero = dict((i, 0) for i in self._uaux)
+        uauxdot = [diff(i, t) for i in self._uaux]
+        uauxdot_zero = dict((i, 0) for i in uauxdot)
+        # Dictionary of q' and q'' to u and u'
+        q_ddot_u_map = dict((k.diff(t), v.diff(t)) for (k, v) in
+                self._qdot_u_map.items())
+        q_ddot_u_map.update(self._qdot_u_map)
 
-        MM = zeros(o, o)
-        nonMM = zeros(o, 1)
-        partials = []
-        # Fill up the list of partials: format is a list with no. elements
+        # Fill up the list of partials: format is a list with num elements
         # equal to number of entries in body list. Each of these elements is a
         # list - either of length 1 for the translational components of
         # particles or of length 2 for the translational and rotational
         # components of rigid bodies. The inner most list is the list of
         # partial velocities.
-        for v in bl:
-            if isinstance(v, RigidBody):
-                partials += [self._partial_velocity([v.masscenter.vel(N),
-                                                     v.frame.ang_vel_in(N)],
-                                                    u, N)]
-            elif isinstance(v, Particle):
-                partials += [self._partial_velocity([v.point.vel(N)], u, N)]
-            else:
-                raise TypeError('The body list needs RigidBody or '
-                                'Particle as list elements.')
+        def body_list_parser(bl):
+            for body in bl:
+                if isinstance(body, RigidBody):
+                    yield self._partial_velocity([body.masscenter.vel(N),
+                            body.frame.ang_vel_in(N)], self._u, N)
+                elif isinstance(body, Particle):
+                    yield self._partial_velocity([body.point.vel(N)], self._u, N)
+                else:
+                    raise TypeError('The body list needs RigidBody or '
+                                    'Particle as list elements.')
+        partials = list(body_list_parser(bl))
 
-        # This section does 2 things - computes the parts of Fr* that are
-        # associated with the udots, and the parts that are not associated with
-        # the udots. This happens for RigidBody and Particle a little
-        # differently, but similar process overall.
-        for i, v in enumerate(bl):
-            if isinstance(v, RigidBody):
-                M = v.mass.subs(uaz).doit()
-                vel = v.masscenter.vel(N).subs(uaz).doit()
-                acc = v.masscenter.acc(N).subs(udotzero).subs(uaz).doit()
+        # Compute fr_star in two components:
+        # fr_star = -(MM*u' + nonMM)
+        o = len(self._u)
+        MM = zeros(o, o)
+        nonMM = zeros(o, 1)
+        zero_uaux = lambda expr: expr.subs(uaux_zero)
+        zero_udot_uaux = lambda expr: expr.subs(udot_zero).subs(uaux_zero)
+        for i, body in enumerate(bl):
+            if isinstance(body, RigidBody):
+                M = zero_uaux(body.mass)
+                I = zero_uaux(body.central_inertia)
+                vel = zero_uaux(body.masscenter.vel(N))
+                omega = zero_uaux(body.frame.ang_vel_in(N))
+                acc = zero_udot_uaux(body.masscenter.acc(N))
                 inertial_force = (M.diff(t) * vel + M * acc)
-                omega = v.frame.ang_vel_in(N).subs(uaz).doit()
-                I = v.central_inertia.subs(uaz).doit()
-                inertial_torque = ((I.dt(v.frame) & omega).subs(uaz).doit() +
-                    (I & v.frame.ang_acc_in(N)).subs(udotzero).subs(uaz).doit() +
-                    (omega ^ (I & omega)).subs(uaz).doit())
+                inertial_torque = zero_uaux((I.dt(body.frame) & omega) +
+                    (I & body.frame.ang_acc_in(N)).subs(udot_zero) +
+                    (omega ^ (I & omega)))
                 for j in range(o):
-                    tmp_vel = partials[i][0][j].subs(uaz).doit()
-                    tmp_ang = (I & partials[i][1][j].subs(uaz).doit())
+                    tmp_vel = zero_uaux(partials[i][0][j])
+                    tmp_ang = zero_uaux(I & partials[i][1][j])
                     for k in range(o):
                         # translational
                         MM[j, k] += M * (tmp_vel & partials[i][0][k])
@@ -388,43 +351,37 @@ class KanesMethod(object):
                         MM[j, k] += (tmp_ang & partials[i][1][k])
                     nonMM[j] += inertial_force & partials[i][0][j]
                     nonMM[j] += inertial_torque & partials[i][1][j]
-
-            if isinstance(v, Particle):
-                M = v.mass.subs(uaz).doit()
-                vel = v.point.vel(N).subs(uaz).doit()
-                acc = v.point.acc(N).subs(udotzero).subs(uaz).doit()
+            else:
+                M = zero_uaux(body.mass)
+                vel = zero_uaux(body.point.vel(N))
+                acc = zero_udot_uaux(body.point.acc(N))
                 inertial_force = (M.diff(t) * vel + M * acc)
                 for j in range(o):
-                    temp = partials[i][0][j].subs(uaz).doit()
+                    temp = zero_uaux(partials[i][0][j])
                     for k in range(o):
                         MM[j, k] += M * (temp & partials[i][0][k])
                     nonMM[j] += inertial_force & partials[i][0][j]
-        # Negate FRSTAR since Kane defines the inertia forces/torques
-        # to be negative and we didn't do so above.
-        MM = MM.subs(qdots).subs(uaz).doit()
-        nonMM = nonMM.subs(qdots).subs(udotzero).subs(uadz).subs(uaz).doit()
-        FRSTAR = -(MM * Matrix(udot).subs(uadz) + nonMM)
+        # Compose fr_star out of MM and nonMM
+        MM = zero_uaux(msubs(MM, q_ddot_u_map))
+        nonMM = msubs(msubs(nonMM, q_ddot_u_map),
+                udot_zero, uauxdot_zero, uaux_zero)
+        fr_star = -(MM * Matrix(self._udot).subs(uauxdot_zero) + nonMM)
 
-        # For motion constraints, m is the number of constraints
-        # Really, one should just look at Kane's book for descriptions of this
-        # process
-        if m != 0:
-            FRSTARtilde = FRSTAR[:p, 0]
-            FRSTARold = FRSTAR[p:o, 0]
-            FRSTARtilde += self._Ars.T * FRSTARold
-            FRSTAR = FRSTARtilde
-
+        # If there are dependent speeds, we need to find fr_star_tilde
+        if self._udep:
+            p = o - len(self._udep)
+            fr_star_ind = fr_star[:p, 0]
+            fr_star_dep = fr_star[p:o, 0]
+            fr_star = fr_star_ind + (self._Ars.T * fr_star_dep)
+            # Apply the same to MM
             MMi = MM[:p, :]
             MMd = MM[p:o, :]
-            MM = MMi + self._Ars.T * MMd
-        self._frstar = FRSTAR
+            MM = MMi + (self._Ars.T * MMd)
 
-        zeroeq = -(self._fr + self._frstar)
-        zeroeq = zeroeq.subs(udotzero)
-
+        self._frstar = fr_star
         self._k_d = MM
-        self._f_d = zeroeq
-        return FRSTAR
+        self._f_d = -msubs(self._fr + self._frstar, udot_zero)
+        return fr_star
 
     def to_linearizer(self):
         """Returns an instance of the Linearizer class, initiated from the
@@ -450,7 +407,7 @@ class KanesMethod(object):
         u_zero = dict((i, 0) for i in self._u)
         ud_zero = dict((i, 0) for i in self._udot)
         qd_zero = dict((i, 0) for i in self._qdot)
-        qd_u_zero = dict((i, 0) for i in self._qdot + self._u)
+        qd_u_zero = dict((i, 0) for i in Matrix([self._qdot, self._u]))
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = msubs(self._f_k, u_zero) + self._k_kqdot*Matrix(self._qdot)
         f_1 = msubs(self._f_k, qd_zero) + self._k_ku*Matrix(self._u)
@@ -530,11 +487,11 @@ class KanesMethod(object):
 
         if 'new_method' not in kwargs or not kwargs['new_method']:
             # User is still using old code.
-            SymPyDeprecationWarning("The linearize class method has changed " +
-                    "to a new interface, the old method is deprecated. To " +
-                    "use the new method, set the kwarg `new_method=True`. " +
-                    "For more information, read the docstring " +
-                    "of `linearize`.").warn()
+            SymPyDeprecationWarning('The linearize class method has changed '
+                    'to a new interface, the old method is deprecated. To '
+                    'use the new method, set the kwarg `new_method=True`. '
+                    'For more information, read the docstring '
+                    'of `linearize`.').warn()
             return self._old_linearize()
         # Remove the new method flag, before passing kwargs to linearize
         kwargs.pop('new_method')
@@ -741,11 +698,8 @@ class KanesMethod(object):
 
         """
 
-        if (self._q is None) or (self._u is None):
-            raise ValueError('Speeds and coordinates must be supplied first.')
-        if (self._k_kqdot is None):
-            raise __KDEqError
-
+        if not self._k_kqdot:
+            raise _KDEqError
 
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
@@ -765,9 +719,7 @@ class KanesMethod(object):
             self._aux_eq = fraux + frstaraux
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
-            return (self._fr, self._frstar)
-        else:
-            return (fr, frstar)
+        return (self._fr, self._frstar)
 
     def rhs(self, inv_method=None):
         """ Returns the system's equations of motion in first order form.
@@ -797,24 +749,25 @@ class KanesMethod(object):
 
     @property
     def auxiliary_eqs(self):
-        if (self._fr is None) or (self._frstar is None):
+        """A matrix containing the auxiliary equations."""
+        if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        if self._uaux == []:
+        if not self._uaux:
             raise ValueError('No auxiliary speeds have been declared.')
         return self._aux_eq
 
     @property
     def mass_matrix(self):
-        # Returns the mass matrix, which is augmented by the differentiated non
-        # holonomic equations if necessary
-        if (self._frstar is None) & (self._fr is None):
+        """The mass matrix of the system."""
+        if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         return Matrix([self._k_d, self._k_dnh])
 
     @property
     def mass_matrix_full(self):
-        # Returns the mass matrix from above, augmented by kin diff's k_kqdot
-        if (self._frstar is None) & (self._fr is None):
+        """The mass matrix of the system, augmented by the kinematic
+        differential equations."""
+        if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         o = len(self._u)
         n = len(self._q)
@@ -823,25 +776,24 @@ class KanesMethod(object):
 
     @property
     def forcing(self):
-        # Returns the forcing vector, which is augmented by the differentiated
-        # non holonomic equations if necessary
-        if (self._frstar is None) & (self._fr is None):
+        """The forcing vector of the system."""
+        if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
     def forcing_full(self):
-        # Returns the forcing vector, which is augmented by the differentiated
-        # non holonomic equations if necessary
-        if (self._frstar is None) & (self._fr is None):
+        """The forcing vector of the system, augmented by the kinematic
+        differential equations."""
+        if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
 
     def kindiffdict(self):
-        """Returns the qdot's in a dictionary. """
-        if self._qdot_u_map is None:
-            raise ___KDEqError
+        """Returns a dictionary mapping q' to u."""
+        if not self._qdot_u_map:
+            raise _KDEqError
         return self._qdot_u_map
 
     def _find_dynamicsymbols(self, inlist, insyms=[]):
@@ -868,8 +820,10 @@ class KanesMethod(object):
         """Returns the list of partial velocities, replacing qdot's in the
         velocity list if necessary.
         """
-        if self._qdot_u_map is None:
-            raise ___KDEqError
+        if not self._qdot_u_map:
+            raise _KDEqError
         v = [vel.subs(self._qdot_u_map) for vel in vlist]
         return partial_velocity(v, ulist, frame)
 
+_KDEqError = AttributeError('Create an instance of KanesMethod with kinematic '
+                            'differential equations to use this method.')

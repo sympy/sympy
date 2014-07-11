@@ -3,6 +3,7 @@ import warnings
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
+from sympy.utilities import dict_merge
 from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
@@ -416,15 +417,23 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def msubs(expr, sub_dict, smart=False):
+def msubs(expr, *sub_dicts, smart=False):
     """A custom subs for use on expressions derived in physics.mechanics.
 
-    Traverses the expression tree once, performing the subs found in sub_dict.
+    Traverses the expression tree once, performing the subs found in sub_dicts.
     Terms inside `Derivative` expressions are ignored:
 
     >>> x = dynamicsymbols('x')
     >>> msubs(x.diff() + x, {x: 1})
     Derivative(x, t) + 1
+
+    Note that sub_dicts can be a single dictionary, or several dictionaries:
+
+    >>> x, y, z = dynamicsymbols('x, y, z')
+    >>> sub1 = {x: 1, y: 2}
+    >>> sub2 = {z: 3, x.diff(): 4}
+    >>> msubs(x.diff() + x + y + z, sub1, sub2)
+    10
 
     If smart=True, also checks for conditions that may result in `nan`, but
     if simplified would yield a valid expression. For example:
@@ -440,6 +449,7 @@ def msubs(expr, sub_dict, smart=False):
     is attempted. Using this selective simplification, only subexpressions
     that result in 1/0 are targeted, resulting in faster performance."""
 
+    sub_dict = dict_merge(*sub_dicts)
     if smart:
         func = _smart_subs
     else:
