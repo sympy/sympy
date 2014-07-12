@@ -551,11 +551,11 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if len(set(order.values()))!=1:
             raise ValueError("It solves only those systems of equations whose orders are equal")
         match['order'] = list(order.values())[0]
-        if len(func)!=len(eq):
+        if len(func) != len(eq):
             func = list(set(func))
             match['func'] = func
-            if len(func)!=len(eq):
-                raise ValueError("dsolve() and classify_sysode() work with"
+            if len(func) != len(eq):
+                raise ValueError("dsolve() and classify_sysode() work with "
                 "number of functions being equal to number of equations")
         if match['type_of_equation'] is None:
             raise NotImplementedError
