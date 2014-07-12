@@ -404,7 +404,7 @@ class BaseVector(Vector, AtomicExpr):
         #Initialize an object
         obj = super(BaseVector, cls).__new__(cls, S(index),
                                              system)
-        #The _id is used for equating purposes, and for hashing
+        #Assign important attributes
         obj._base_vect = obj
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
