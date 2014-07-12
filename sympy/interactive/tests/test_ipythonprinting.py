@@ -82,7 +82,7 @@ def test_print_builtin_option():
         text = app.user_ns['a'][0]['text/plain']
         latex = app.user_ns['a'][0]['text/latex']
     assert text == u('{n\u1d62: 3, \u03c0: 3.14}')
-    assert latex == r'$$\left \{ n_{i} : 3, \quad \pi : 3.14\right \}$$'
+    assert latex == r'$$\left \{ n_{i} : 3, \  \pi : 3.14\right \}$$'
 
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
     app.run_cell("init_printing(use_latex=True, print_builtin=False)")

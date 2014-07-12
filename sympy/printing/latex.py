@@ -1317,14 +1317,14 @@ class LatexPrinter(Printer):
 
     def _print_tuple(self, expr):
         return r"\left ( %s\right )" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
 
     def _print_list(self, expr):
         return r"\left [ %s\right ]" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1334,7 +1334,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\left \{ %s\right \}" % r", \quad ".join(items)
+        return r"\left \{ %s\right \}" % r", \  ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -1851,7 +1851,7 @@ def latex(expr, **settings):
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\left [ 2 / x, \quad y\right ]$
+    $\left [ 2 / x, \  y\right ]$
 
     """
 
