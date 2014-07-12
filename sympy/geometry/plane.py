@@ -583,7 +583,7 @@ class Plane(GeometryEntity):
         Point3D
 
         """
-        x, y, z = symbols("x, y, z")
+        x, y, z = map(Dummy,"xyz")
         a = self.equation(x, y, z)
         from sympy import Rational
         import random
@@ -642,7 +642,7 @@ class Plane(GeometryEntity):
             else:
                 return []
         if isinstance(o, LinearEntity3D):
-            t = symbols('t')
+            t = Dummy('t')
             x, y, z = map(Dummy, 'xyz')
             if o in self:
                 return [o]
@@ -659,7 +659,7 @@ class Plane(GeometryEntity):
                     else:
                         return []
         if isinstance(o, LinearEntity):
-            t = symbols('t')
+            t = Dummy('t')
             x, y, z = map(Dummy, 'xyz')
             if o in self:
                 return [o]
@@ -721,4 +721,4 @@ class Plane(GeometryEntity):
     def equal(self, pl):
         """ Returns True if the planes are mathematically equal otherwise False
         """
-        return self.equation() == pl.equation()
+        return abs(self.equation()) == abs(pl.equation())
