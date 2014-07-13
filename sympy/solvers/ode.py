@@ -1658,8 +1658,7 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
     r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
     r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
     if not (r1 and r2):
-        # In `./bin/test`, this matching fails. Issue for this:
-        # https://github.com/sympy/sympy/issues/7723
+        # This matching fails in `./bin/test` (issue #7723)
         r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
         r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
     if not (r1 and r2):

@@ -207,9 +207,7 @@ def test_nonlinear_2eq_order1():
 
 @XFAIL
 def test_issue_7723():
-    # This test case is failing in `./bin/test` due a match statement not working
-    # but that is only in testing otherwise it works fine. Issue for this:
-    # https://github.com/sympy/sympy/issues/7723
+    # This test case is failing due a match statement not working (issue #7723)
     eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
     sol5 = set([Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)])
     assert dsolve(eq5) == sol5
