@@ -12,7 +12,7 @@ below for advanced users that may want to use the framework directly.
 
    >>> from sympy.utilities.codegen import codegen
 
-Impementation Details
+Implementation Details
 =====================
 
 Here we present the most important pieces of the internal structure, as
