@@ -1,11 +1,11 @@
 language: python
 env:
   matrix:
-  - TEST_DOCTESTS="true"
-  - SPLIT="1/4"
-  - SPLIT="2/4"
-  - SPLIT="3/4"
-  - SPLIT="4/4"
+  - TEST_DOCTESTS="true" FASTCACHE="true"
+  - SPLIT="1/4" FASTCACHE="true"
+  - SPLIT="2/4" FASTCACHE="true"
+  - SPLIT="3/4" FASTCACHE="true"
+  - SPLIT="4/4" FASTCACHE="true"
   global:
     secure: uJycOcgT3Rg9TsU6ID2UMHc56Fh6Q70p1/mFiod8r97g8zER9kWTZ2GVDSRiw1Nfh0Wojcy04PAG3t5m9bwM08YF8qZy1PJkCb/pu7PN8Hzt+6FSBb84gGEXMiv1xuZWSQ0pUuBa1Lfcxuq6m2/eA8aNfgoqnpLgR8zeg/2xhFw=
 python:
@@ -135,6 +135,9 @@ matrix:
       env:
         - SPLIT="4/4"
 before_install:
+  - if [[ "${FASTCACHE}" == "true" ]]; then
+      pip install fastcache;
+    fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;
       sudo apt-get install libgmp-dev;

@@ -83,6 +83,39 @@ def __cacheit(maxsize):
 
     return func_wrapper
 
+try:
+    from fastcache import clru_cache
+except ImportError:
+    pass
+else:
+    def __cacheit(maxsize):
+        """caching decorator.
+
+           important: the result of cached function must be *immutable*
+
+
+           Examples
+           ========
+
+           >>> from sympy.core.cache import cacheit
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return a+b
+
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return [a,b] # <-- WRONG, returns mutable object
+
+           to force cacheit to check returned results mutability and consistency,
+           set environment variable SYMPY_USE_CACHE to 'debug'
+        """
+        def func_wrapper(func):
+
+            cfunc = clru_cache(maxsize, typed=True)(func)
+            CACHE.append(cfunc)
+            return cfunc
+
+        return func_wrapper
 ########################################
 
 
