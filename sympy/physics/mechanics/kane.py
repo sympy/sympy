@@ -3,13 +3,12 @@ from __future__ import print_function, division
 __all__ = ['KanesMethod']
 
 from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
-from sympy.core.compatibility import reduce
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
      Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import msubs
+from sympy.physics.mechanics.functions import msubs, find_dynamicsymbols
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 import warnings
@@ -258,9 +257,9 @@ class KanesMethod(object):
         def f_list_parser(f_list):
             for obj, force in fl:
                 if isinstance(obj, ReferenceFrame):
-                    yield obj.ang_vel_in(N), force
+                    yield obj.ang_vel_in(N).subs(self._qdot_u_map), force
                 elif isinstance(obj, Point):
-                    yield obj.vel(N), force
+                    yield obj.vel(N).subs(self._qdot_u_map), force
                 else:
                     raise TypeError('First entry in each forcelist pair must '
                                     'be a point or frame.')
@@ -272,7 +271,7 @@ class KanesMethod(object):
         o = len(self._u)
         b = len(f_list)
         FR = zeros(o, 1)
-        partials = self._partial_velocity(vel_list, self._u, N)
+        partials = partial_velocity(vel_list, self._u, N)
         for i in range(o):
             FR[i] = sum(partials[j][i] & f_list[j] for j in range(b))
 
@@ -311,17 +310,17 @@ class KanesMethod(object):
         # particles or of length 2 for the translational and rotational
         # components of rigid bodies. The inner most list is the list of
         # partial velocities.
-        def body_list_parser(bl):
-            for body in bl:
-                if isinstance(body, RigidBody):
-                    yield self._partial_velocity([body.masscenter.vel(N),
-                            body.frame.ang_vel_in(N)], self._u, N)
-                elif isinstance(body, Particle):
-                    yield self._partial_velocity([body.point.vel(N)], self._u, N)
-                else:
-                    raise TypeError('The body list needs RigidBody or '
-                                    'Particle as list elements.')
-        partials = list(body_list_parser(bl))
+        def get_partial_velocity(body):
+            if isinstance(body, RigidBody):
+                vlist = [body.masscenter.vel(N), body.frame.ang_vel_in(N)]
+            elif isinstance(body, Particle):
+                vlist = [body.point.vel(N),]
+            else:
+                raise TypeError('The body list may only contain either '
+                                'RigidBody or Particle as list elements.')
+            v = [vel.subs(self._qdot_u_map) for vel in vlist]
+            return partial_velocity(v, self._u, N)
+        partials = [get_partial_velocity(body) for body in bl]
 
         # Compute fr_star in two components:
         # fr_star = -(MM*u' + nonMM)
@@ -436,15 +435,15 @@ class KanesMethod(object):
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = set(Matrix([q, self._qdot, u, self._udot, uaux, uauxdot]))
-        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
+        sym_list = set(Matrix([q, self._qdot, u, self._udot, uaux, uauxdot]))
+        if any(find_dynamicsymbols(i, sym_list) for i in [self._k_kqdot,
                 self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
             raise ValueError('Cannot have dynamicsymbols outside dynamic \
                              forcing vector.')
 
         # Find all other dynamic symbols, forming the forcing vector r.
         # Sort r to make it canonical.
-        r = list(self._find_dynamicsymbols(self._f_d.subs(uaux_zero), insyms))
+        r = list(find_dynamicsymbols(self._f_d.subs(uaux_zero), sym_list))
         r.sort(key=default_sort_key)
 
         # Check for any derivatives of variables in r that are also found in r.
@@ -524,18 +523,12 @@ class KanesMethod(object):
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = set(
-            self._q + self._qdot + self._u + self._udot + uaux + uauxdot)
-        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
-                                                              self._k_ku,
-                                                              self._f_k,
-                                                              self._k_dnh,
-                                                              self._f_dnh,
-                                                              self._k_d]):
-            raise ValueError('Cannot have dynamicsymbols outside dynamic '
-                             'forcing vector.')
-        other_dyns = list(self._find_dynamicsymbols(self._f_d.subs(subdict),
-                                             insyms))
+        insyms = set(Matrix([q, self._qdot, u, self._udot, uaux, uauxdot]))
+        if any(find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
+                self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
+            raise ValueError('Cannot have dynamicsymbols outside dynamic \
+                             forcing vector.')
+        other_dyns = list(find_dynamicsymbols(self._f_d.subs(subdict), insyms))
 
         # make it canonically ordered so the jacobian is canonical
         other_dyns.sort(key=default_sort_key)
@@ -699,7 +692,8 @@ class KanesMethod(object):
         """
 
         if not self._k_kqdot:
-            raise _KDEqError
+            raise AttributeError('Create an instance of KanesMethod with '
+                    'kinematic differential equations to use this method.')
 
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
@@ -747,6 +741,13 @@ class KanesMethod(object):
                          try_block_diag=True) * self.forcing_full)
         return self._rhs
 
+    def kindiffdict(self):
+        """Returns a dictionary mapping q' to u."""
+        if not self._qdot_u_map:
+            raise AttributeError('Create an instance of KanesMethod with '
+                    'kinematic differential equations to use this method.')
+        return self._qdot_u_map
+
     @property
     def auxiliary_eqs(self):
         """A matrix containing the auxiliary equations."""
@@ -789,41 +790,3 @@ class KanesMethod(object):
             raise ValueError('Need to compute Fr, Fr* first.')
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
-
-    def kindiffdict(self):
-        """Returns a dictionary mapping q' to u."""
-        if not self._qdot_u_map:
-            raise _KDEqError
-        return self._qdot_u_map
-
-    def _find_dynamicsymbols(self, inlist, insyms=[]):
-        """Finds all non-supplied dynamicsymbols in the expressions."""
-        from sympy.core.function import AppliedUndef, Derivative
-        t = dynamicsymbols._t
-        return reduce(set.union, [set([i]) for j in inlist
-            for i in j.atoms(AppliedUndef, Derivative)
-            if i.free_symbols == set([t])], set()) - insyms
-
-        temp_f = set().union(*[i.atoms(AppliedUndef) for i in inlist])
-        temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
-        set_f = set([a for a in temp_f if a.args == (t,)])
-        set_d = set([a for a in temp_d if ((a.args[0] in set_f) and all([i == t
-                     for i in a.variables]))])
-        return list(set.union(set_f, set_d) - set(insyms))
-
-    def _find_othersymbols(self, inlist, insyms=[]):
-        """Finds all non-dynamic symbols in the expressions."""
-        return list(reduce(set.union, [i.free_symbols for i in inlist]) -
-                    set(insyms))
-
-    def _partial_velocity(self, vlist, ulist, frame):
-        """Returns the list of partial velocities, replacing qdot's in the
-        velocity list if necessary.
-        """
-        if not self._qdot_u_map:
-            raise _KDEqError
-        v = [vel.subs(self._qdot_u_map) for vel in vlist]
-        return partial_velocity(v, ulist, frame)
-
-_KDEqError = AttributeError('Create an instance of KanesMethod with kinematic '
-                            'differential equations to use this method.')

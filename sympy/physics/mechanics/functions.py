@@ -4,13 +4,14 @@ import warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
 from sympy.utilities import dict_merge
-from sympy.physics.vector import Vector, ReferenceFrame, Point
+from sympy.utilities.iterables import iterable
+from sympy.physics.vector import Vector, ReferenceFrame, Point, dynamicsymbols
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Symbol, Derivative, Dummy, Wild, sin, cos,\
-        tan, simplify, Mul
+from sympy import sympify, Matrix, Derivative, sin, cos, tan, simplify, Mul
+from sympy.core.function import AppliedUndef
 from sympy.core.basic import S
 
 __all__ = ['inertia',
@@ -25,7 +26,8 @@ __all__ = ['inertia',
            'msprint',
            'mpprint',
            'mlatex',
-           'msubs']
+           'msubs',
+           'find_dynamicsymbols']
 
 warnings.simplefilter("always", SymPyDeprecationWarning)
 
@@ -417,6 +419,32 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
+def find_dynamicsymbols(expression, exclude=None):
+    """Find all dynamicsymbols in expression.
+
+    >>> x, y = dynamicsymbols('x, y')
+    >>> expr = x + x.diff()*y
+    >>> find_dynamicsymbols(expr)
+    {Derivative(x(t), t), x(t), y(t)}
+
+    If the optional `exclude` kwarg is used, only dynamicsymbols
+    not in the iterable `exclude` are returned.
+
+    >>> find_dynamicsymbols(expr, [x, y])
+    {Derivative(x(t), t)}
+    """
+    t_set = set([dynamicsymbols._t])
+    if exclude:
+        if iterable(exclude):
+            exclude_set = set(exclude)
+        else:
+            raise TypeError("exclude must be an iterable")
+    else:
+        exclude_set = set()
+    return set([i for i in expression.atoms(AppliedUndef, Derivative) if
+            i.free_symbols == t_set]) - exclude_set
+
+
 def msubs(expr, *sub_dicts, smart=False):
     """A custom subs for use on expressions derived in physics.mechanics.
 
@@ -480,18 +508,18 @@ def _sub_func(expr, sub_dict):
 def _tan_repl_func(expr):
     """Replace tan with sin/tan."""
     if isinstance(expr, tan):
-        return sin(*expr.args)/cos(*expr.args)
+        return sin(*expr.args) / cos(*expr.args)
     elif not expr.args or expr.is_Derivative:
         return expr
 
 
 def _smart_subs(expr, sub_dict):
-    """Performs subs, checking for conditions that may result in `nan` or 
+    """Performs subs, checking for conditions that may result in `nan` or
     `oo`, and attempts to simplify them out.
 
     The expression tree is traversed twice, and the following steps are
     performed on each expression node:
-    - First traverse: 
+    - First traverse:
         Replace all `tan` with `sin/cos`.
     - Second traverse:
         If node is a fraction, check if the denominator evaluates to 0.
@@ -510,7 +538,7 @@ def _smart_subs(expr, sub_dict):
             else:
                 # Expression won't result in nan, find numerator
                 num_subbed = _recurser(num, sub_dict)
-                return num_subbed/denom_subbed
+                return num_subbed / denom_subbed
         # We have to crawl the tree manually, because `expr` may have been
         # modified in the simplify step. First, perform subs as normal:
         val = _sub_func(expr, sub_dict)
@@ -529,7 +557,7 @@ def _fraction_decomp(expr):
     den = []
     for a in expr.args:
         if a.is_Pow and a.args[1] == -1:
-            den.append(1/a)
+            den.append(1 / a)
     else:
         num.append(a)
     if not den:
