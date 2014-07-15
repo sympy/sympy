@@ -1316,15 +1316,26 @@ def classify_sysode(eq, func=None, **kwargs):
     func = list(set(func))
     if len(func) < len(eq) and (func != [None]):
         raise ValueError("Number of functions given is less than number of equations %s" % func)
+    func_dict = dict()
     for funcs in func:
         if not order[funcs]:
             max_order = 0
-            for eqs_ in eq:
+            for i, eqs_ in enumerate(eq):
                 order_ = ode_order(eqs_,funcs)
                 if max_order < order_:
                     max_order = order_
+                    eq_no = i
+        try:
+            if func_dict[eq_no]:
+                list_func = []
+                list_func.append(func_dict[eq_no])
+                list_func.append(funcs)
+                func_dict[eq_no] = list_func
+        except:
+            func_dict[eq_no] = funcs
         order[funcs] = max_order
-    matching_hints['func'] = func
+    matching_hints['func'] = list(func_dict.values())
+    func = list(func_dict.values())
     for funcs in func:
         if funcs and len(funcs.args)!=1:
             raise ValueError("dsolve() and classify_sysode() work with"
@@ -1366,18 +1377,6 @@ def classify_sysode(eq, func=None, **kwargs):
 
     if len(set(order.values()))==1:
         order_eq = list(matching_hints['order'].values())[0]
-        func = []
-        for eqs in eq:
-            derivs = eqs.atoms(Derivative)
-            funcs = set.union(*[d.atoms(AppliedUndef) for d in derivs])
-            max_order = 0
-            for fun in funcs:
-                order_ = ode_order(eqs, fun)
-                if order_ > max_order or (order_ == max_order and eqs.coeff(diff(fun, t, order_))!=0):
-                    max_order = order_
-                    func_ = fun
-            func.append(func_)
-        matching_hints['func'] = func
         if matching_hints['is_linear'] == True:
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
