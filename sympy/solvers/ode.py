@@ -545,18 +545,21 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
         # keep highest order term coefficient positive
         for i in range(len(eq)):
-            if eq[i].coeff(diff(func[i],t,ode_order(eq[i], func[i]))).is_negative:
-                eq[i] = -eq[i]
+            for func_ in func:
+                if isinstance(func_, list):
+                    pass
+                else:
+                    if eq[i].coeff(diff(func[i],t,ode_order(eq[i], func[i]))).is_negative:
+                        eq[i] = -eq[i]
         match['eq'] = eq
         if len(set(order.values()))!=1:
             raise ValueError("It solves only those systems of equations whose orders are equal")
         match['order'] = list(order.values())[0]
-        if len(func) != len(eq):
-            func = list(set(func))
-            match['func'] = func
-            if len(func) != len(eq):
-                raise ValueError("dsolve() and classify_sysode() work with "
-                "number of functions being equal to number of equations")
+        def recur_len(l):
+            return sum(recur_len(item) if isinstance(item,list) else 1 for item in l)
+        if recur_len(func) != len(eq):
+            raise ValueError("dsolve() and classify_sysode() work with "
+            "number of functions being equal to number of equations")
         if match['type_of_equation'] is None:
             raise NotImplementedError
         else:
@@ -1337,9 +1340,15 @@ def classify_sysode(eq, func=None, **kwargs):
     matching_hints['func'] = list(func_dict.values())
     func = list(func_dict.values())
     for funcs in func:
-        if funcs and len(funcs.args)!=1:
-            raise ValueError("dsolve() and classify_sysode() work with"
-            "functions of one variable only, not %s" % funcs)
+        if isinstance(funcs, list):
+            for funcs_elem in funcs:
+                if len(funcs_elem.args) != 1:
+                    raise ValueError("dsolve() and classify_sysode() work with"
+                    "functions of one variable only, not %s" % funcs)
+        else:
+            if funcs and len(funcs.args) != 1:
+                raise ValueError("dsolve() and classify_sysode() work with"
+                "functions of one variable only, not %s" % funcs)
 
     # find the order of all equation in system of odes
     matching_hints["order"] = order
@@ -1349,29 +1358,42 @@ def classify_sysode(eq, func=None, **kwargs):
     # Here j denotes the equation number, func[l] denotes the function about
     # which we are taking about and k denotes the order of function func[l]
     # whose coefficient we are calculating.
+    def linearity_check(eqs, j, funcs, is_linear_):
+        for k in range(order[funcs]+1):
+            func_coef[j,funcs,k] = collect(eqs.expand(),[diff(funcs,t,k)]).coeff(diff(funcs,t,k))
+            if is_linear_ == True:
+                if func_coef[j,funcs,k]==0:
+                    if k==0:
+                        coef = eqs.as_independent(funcs)[1]
+                        for xr in xrange(1, ode_order(eqs,funcs)+1):
+                            coef -= eqs.as_independent(diff(funcs,t,xr))[1]
+                        if coef != 0:
+                            is_linear_ = False
+                    else:
+                        if eqs.as_independent(diff(funcs,t,k))[1]:
+                            is_linear_ = False
+                else:
+                    for funcs_ in func:
+                        if isinstance(funcs_, list):
+                            for elem_funcs_ in funcs_:
+                                dep = func_coef[j,funcs,k].as_independent(elem_funcs_)[1]
+                                if dep!=1 and dep!=0:
+                                    is_linear_ = False
+                        else:
+                            dep = func_coef[j,funcs,k].as_independent(funcs_)[1]
+                            if dep!=1 and dep!=0:
+                                is_linear_ = False
+        return is_linear_
+
     func_coef = {}
     is_linear = True
     for j, eqs in enumerate(eq):
         for funcs in func:
-            for k in range(order[funcs]+1):
-                func_coef[j,funcs,k] = collect(eqs.expand(),[diff(funcs,t,k)]).coeff(diff(funcs,t,k))
-                if is_linear == True:
-                    if func_coef[j,funcs,k]==0:
-                        if k==0:
-                            coef = eqs.as_independent(funcs)[1]
-                            for xr in xrange(1, ode_order(eqs,funcs)+1):
-                                coef -= eqs.as_independent(diff(funcs,t,xr))[1]
-                            if coef != 0:
-                                is_linear = False
-                        else:
-                            if eqs.as_independent(diff(funcs,t,k))[1]:
-                                is_linear = False
-                    else:
-                        for funcs_ in func:
-                            dep = func_coef[j,funcs,k].as_independent(funcs_)[1]
-                            if dep!=1 and dep!=0:
-                                is_linear = False
-
+            if isinstance(funcs, list):
+                for funcs_elem in funcs:
+                    is_linear = linearity_check(eqs, j, funcs_elem, is_linear)
+            else:
+                is_linear = linearity_check(eqs, j, funcs, is_linear)
     matching_hints['func_coeff'] = func_coef
     matching_hints['is_linear'] = is_linear
 
@@ -1642,33 +1664,43 @@ def check_linear_neq_order1(eq, func, func_coef):
     return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    f = Wild('f')
+    g = Wild('g')
+    u, v = symbols('u, v')
+    for func_ in func:
+        if isinstance(func_, list):
+            x = func[0][0].func
+            y = func[0][1].func
+            def check_type(x, y):
+                r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
+                r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
+                if not (r1 and r2):
+                    r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+                    r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+                if not (r1 and r2):
+                    r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
+                    r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
+                if not (r1 and r2):
+                    r1 = (-eq[0]).match(diff(x(t),t) - x(t)/t + f/t)
+                    r2 = (-eq[1]).match(diff(y(t),t) - y(t)/t + g/t)
+                if r1 and r2 and not (r1[f].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t) \
+                or r2[g].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t)):
+                    return 'type5'
+                else:
+                    return None
+            eq_type = check_type(x, y)
+            if not eq_type:
+                eq_type = check_type(y, x)
+            return eq_type
     x = func[0].func
     y = func[1].func
     fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    u, v = symbols('u, v')
     n = Wild('n', exclude=[x(t),y(t)])
-    f = Wild('f')
     f1 = Wild('f1', exclude=[v,t])
     f2 = Wild('f2', exclude=[v,t])
     g1 = Wild('g1', exclude=[u,t])
     g2 = Wild('g2', exclude=[u,t])
-    g = Wild('g')
-    r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
-    r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
-    if not (r1 and r2):
-        # This matching fails in `./bin/test` (issue #7723)
-        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
-        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
-    if not (r1 and r2):
-        r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
-        r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
-    if not (r1 and r2):
-        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
-        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
-    if r1 and r2 and not (r1[f].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t) \
-    or r2[g].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t)):
-        return 'type5'
     for i in range(2):
         eqs = 0
         for terms in Add.make_args(eq[i]):
@@ -7480,14 +7512,15 @@ def _linear_neq_order1_type1(match_):
     return sol
 
 def sysode_nonlinear_2eq_order1(match_):
-    x = match_['func'][0].func
-    y = match_['func'][1].func
     func = match_['func']
     eq = match_['eq']
     fc = match_['func_coeff']
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     if match_['type_of_equation'] == 'type5':
-        sol = _nonlinear_2eq_order1_type5(x, y, t, eq)
+        sol = _nonlinear_2eq_order1_type5(func, t, eq)
+        return sol
+    x = func[0].func
+    y = func[1].func
     for i in range(2):
         eqs = 0
         for terms in Add.make_args(eq[i]):
@@ -7672,7 +7705,7 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
         sol.append(Eq(x(t), dsolve(diff(u(t),t) - F1.subs(u,u(t))*G1.subs(v,sols).subs(u,u(t))*phi.subs(v,sols).subs(u,u(t))).rhs))
     return set(sol)
 
-def _nonlinear_2eq_order1_type5(x, y, t, eq):
+def _nonlinear_2eq_order1_type5(func, t, eq):
     r"""
     Clairaut system of ODEs
 
@@ -7695,18 +7728,28 @@ def _nonlinear_2eq_order1_type5(x, y, t, eq):
 
     """
     C1, C2 = symbols('C1:3')
-    x1 = diff(x(t),t); y1 = diff(y(t),t)
     f = Wild('f')
     g = Wild('g')
-    r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
-    r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
-    if not (r1 and r2):
-        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
-        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
-    if not (r1 and r2):
-        r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
-        r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
-    if not (r1 and r2):
-        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
-        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    def check_type(x, y):
+        r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
+        r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
+        if not (r1 and r2):
+            r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+            r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+        if not (r1 and r2):
+            r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
+            r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
+        if not (r1 and r2):
+            r1 = (-eq[0]).match(diff(x(t),t) - x(t)/t + f/t)
+            r2 = (-eq[1]).match(diff(y(t),t) - y(t)/t + g/t)
+        return [r1, r2]
+    for func_ in func:
+        if isinstance(func_, list):
+            x = func[0][0].func
+            y = func[0][1].func
+            [r1, r2] = check_type(x, y)
+            if not (r1 and r2):
+                [r1, r2] = check_type(y, x)
+                x, y = y, x
+    x1 = diff(x(t),t); y1 = diff(y(t),t)
     return set([Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))])
