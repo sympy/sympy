@@ -2,7 +2,6 @@
 
 Contains
 * Hyperbola
-* Rectangular Hyperbola
 
 """
 
@@ -21,6 +20,7 @@ from sympy.utilities.misc import filldedent
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
+from .ellipse import Ellipse, Circle
 from .util import _symbol, idiff
 from sympy.mpmath import findroot as nroot
 
@@ -45,8 +45,6 @@ class Hyperbola(GeometryEntity):
     hradius
     vradius
     eccentricity
-    periapsis
-    apoapsis
     focus_distance
     foci
 
@@ -266,68 +264,12 @@ class Hyperbola(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Hyperbola(p1, 3, sqrt(2))
         >>> e1.eccentricity
-        sqrt(11)/3
+        sqrt(13)/2
 
         """
-        return self.focus_distance / self.major
-
-        @property
-    def periapsis(self):
-        """The periapsis of the Hyperbola.
-
-        The shortest distance between the focus and the contour.
-
-        Returns
-        =======
-
-        periapsis : number
-
-        See Also
-        ========
-
-        apoapsis : Returns greatest distance between focus and contour
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Hyperbola
-        >>> p1 = Point(0, 0)
-        >>> e1 = Hyperbola(p1, 3, 1)
-        >>> e1.periapsis
-        -2*sqrt(2) + 3
-
-        """
-        return self.major * (1 - self.eccentricity)
+        return self.focus_distance / self.minor
 
     @property
-    def apoapsis(self):
-        """The apoapsis of the Hyperbola.
-
-        The greatest distance between the focus and the contour.
-
-        Returns
-        =======
-
-        apoapsis : number
-
-        See Also
-        ========
-
-        periapsis : Returns shortest distance between foci and contour
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Hyperbola
-        >>> p1 = Point(0, 0)
-        >>> e1 = Hyperbola(p1, 3, 1)
-        >>> e1.apoapsis
-        2*sqrt(2) + 3
-
-        """
-        return self.major * (1 + self.eccentricity)
-
-        @property
     def focus_distance(self):
         """The focale distance of the Hyperbola.
 
@@ -350,7 +292,7 @@ class Hyperbola(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Hyperbola(p1, 3, 1)
         >>> e1.focus_distance
-        2*sqrt(2)
+        sqrt(10)
 
         """
         return Point.distance(self.center, self.foci[0])
@@ -382,7 +324,7 @@ class Hyperbola(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Hyperbola(p1, 3, 1)
         >>> e1.foci
-        (Point(-2*sqrt(2), 0), Point(2*sqrt(2), 0))
+        (Point(sqrt(10), 0), Point(sqrt(10), 0))
 
         """
         c = self.center
@@ -390,7 +332,7 @@ class Hyperbola(GeometryEntity):
         if hr == vr:
             return (c, c)
 
-        fd = sqrt(self.major**2 - self.minor**2)
+        fd = sqrt(self.major**2 + self.minor**2)
         if hr == self.minor:
             # foci on the y-axis
             return (c + Point(0, -fd), c + Point(0, fd))
@@ -413,6 +355,29 @@ class Hyperbola(GeometryEntity):
         Hyperbola(Point(0, 1), 2, 1)
         """
         return super(Hyperbola, self).rotate(angle, pt)
+
+    def asymptotes(self):
+        """ Returns a pair of asymtotes to the hyperbola.
+
+        Notes
+        =====
+
+        Asymptotes of a hyperbola are the lines that pass through center of the
+        hyperbola and touch the hyperbola at infinity.Basically they act as
+        tangents to the two branches of hyperbola at infinity.
+
+        Examples
+        ========
+
+        >>> from sympy import Hyperbola, Line, Point
+        >>> a = Hyperbola(Point(0, 0), 3, 1)
+        >>> a.asymptotes()
+        [Line(Point(0, 0), Point(1, 1/3)), Line(Point(0, 0), Point(1, -1/3))]
+
+        """
+        slope = self.vradius / self.hradius
+        p = self.center
+        return [Line(p, slope = slope), Line(p, slope = -slope)]
 
     def equation(self, x='x', y='y'):
         """The equation of the hyperbola.
@@ -494,7 +459,7 @@ class Hyperbola(GeometryEntity):
         x = C.Dummy('x', real=True)
         y = C.Dummy('y', real=True)
 
-        res = self.equation(x, y).subs({x: o.x, y: o.y})
+        res = self.equation(x, y).subs({x: p.x, y: p.y})
         if res < 0:
             return True
         else:
@@ -541,6 +506,327 @@ class Hyperbola(GeometryEntity):
         return Point(self.center.x + self.hradius*C.sec(t),
                      self.center.y + self.vradius*C.tan(t))
 
+    def intersection(self, o):
+        """The intersection of this hyperbola and another geometrical entity
+        `o`.
+
+        Parameters
+        ==========
+
+        o : GeometryEntity
+
+        Returns
+        =======
+
+        intersection : list of GeometryEntity objects
+
+        Notes
+        -----
+        Currently supports intersections with Point, Line, Segment, Ray,
+        Circle and Ellipse types.
+
+        See Also
+        ========
+
+        sympy.geometry.entity.GeometryEntity
+
+        Examples
+        ========
+
+        >>> from sympy import Hyperbola, Point, Line, sqrt
+        >>> e = Hyperbola(Point(0, 0), 5, 7)
+        >>> e.intersection(Point(0, 0))
+        []
+        >>> e.intersection(Point(5, 0))
+        [Point(5, 0)]
+        >>> e.intersection(Line(Point(0,0), Point(0, 1)))
+        []
+        >>> e.intersection(Line(Point(5,0), Point(5, 1)))
+        [Point(5, 0)]
+        >>> e.intersection(Line(Point(6,0), Point(6, 1)))
+        [Point(6, -7*sqrt(11)/5), Point(6, 7*sqrt(11)/5)]
+        >>> e = Ellipse(Point(-1, 0), 4, 3)
+        >>> e.intersection(Ellipse(Point(1, 0), 4, 3))
+        [Point(sqrt(15), -3*15**(1/4)*sqrt(2)/4), Point(sqrt(15), 3*15**(1/4)*sqrt(2)/4)]
+        >>> e.intersection(Ellipse(Point(5, 0), 4, 3))
+        [Point(2 + sqrt(7), -3*sqrt(6)*7**(1/4)/4), Point(2 + sqrt(7), 3*sqrt(6)*7**(1/4)/4)]
+        >>> e.intersection(Hyperbola(Point(100500, 0), 4, 3))
+        [Point(100499/2, -3*sqrt(10100450937)/8), Point(100499/2, 3*sqrt(10100450937)/8)]
+        >>> e.intersection(Hyperbola(Point(0, 0), 3, 4))
+        [Point(3, 0)]
+
+        >>> e.intersection(Hyperbola(Point(-1, 0), 3, 4))
+        []
+        """
+        if isinstance(o, Point):
+            if o in self:
+                return [o]
+            else:
+                return []
+
+        elif isinstance(o, (LinearEntity, Circle, Ellipse, Hyperbola)):
+            x = Dummy('x', real=True)
+            y = Dummy('y', real=True)
+            seq = self.equation(x, y)
+            oeq = o.equation(x, y)
+            result = solve([seq, oeq], [x, y])
+            return [Point(*r) for r in list(uniq(result))]
+
+        return self.intersection(o)
+
+    def tangent_lines(self, p):
+        """Tangent lines between `p` and the hyperbola.
+
+        If `p` is on the hyperbola, returns the tangent line through point `p`.
+        Otherwise, returns the tangent line(s) from `p` to the hyperbola, or
+        None if no tangent line is possible (e.g., `p` is outside the hyperbola).
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        tangent_lines : list with 1 or 2 Lines
+
+        Raises
+        ======
+
+        NotImplementedError.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point, sympy.geometry.line.Line
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Hyperbola
+        >>> e1 = Hyperbola(Point(0, 0), 3, 2)
+        >>> e1.tangent_lines(Point(3, 0))
+        [Line(Point(3, 0), Point(3, -12))]
+
+        """
+        p = Point(p)
+        if self.encloses_point(p) is False:
+            if p in self:
+                delta = self.center - p
+                rise = (self.vradius ** 2)*delta.x
+                run = -(self.hradius ** 2)*delta.y
+                p2 = Point(simplify(p.x + run),
+                       simplify(p.y + rise))
+                return [Line(p, p2)]
+            else:
+                return []
+        else:
+            x, y = Dummy('x', real=True), Dummy('y', real=True)
+            eq = self.equation(x, y)
+            dydx = idiff(eq, y, x)
+            slope = Line(p, Point(x, y)).slope
+            tangent_points = solve([slope - dydx, eq], [x, y])
+
+            # handle horizontal and vertical tangent lines
+            if len(tangent_points) == 1:
+                assert tangent_points[0][
+                    0] == p.x or tangent_points[0][1] == p.y
+                return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+
+            return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
+
+    def is_tangent(self, o):
+        """Is `o` tangent to the hyperbola?
+
+        Parameters
+        ==========
+
+        o : GeometryEntity
+            An Ellipse, LinearEntity or Polygon
+
+        Raises
+        ======
+
+        NotImplementedError
+            When the wrong type of argument is supplied.
+
+        Returns
+        =======
+
+        is_tangent: boolean
+            True if o is tangent to the hyperbola, False otherwise.
+
+        See Also
+        ========
+
+        tangent_lines
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Hyperbola, Line
+        >>> p0, p1, p2 = Point(0, 0), Point(3, 0), Point(3, 3)
+        >>> e1 = Hyperbola(p0, 3, 2)
+        >>> l1 = Line(p1, p2)
+        >>> e1.is_tangent(l1)
+        True
+
+        """
+        inter = None
+        if isinstance(o, Hyperbola):
+            inter = self.intersection(o)
+            if isinstance(inter, Hyperbola):
+                return False
+            return (inter is not None and isinstance(inter[0], Point)
+                    and len(inter) == 1)
+        elif isinstance(o, LinearEntity):
+            inter = self.intersection(o)
+            if inter is not None and len(inter) == 1:
+                return inter[0] in o
+            else:
+                return False
+        elif isinstance(o, Polygon):
+            c = 0
+            for seg in o.sides:
+                inter = self.intersection(seg)
+                c += len([True for point in inter if point in seg])
+            return c == 1
+        else:
+            raise NotImplementedError("Unknown argument type")
+
+    def normal_lines(self, p, prec=None):
+        """Normal lines between `p` and the hyperbola.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        normal_lines : list with 1, 2 or 4 Lines
+
+        """
+        p = Point(p)
+
+        if True:
+            rv = []
+            if p.x == self.center.x:
+                rv.append(Line(self.center, slope=oo))
+            if p.y == self.center.y:
+                rv.append(Line(self.center, slope=0))
+            if rv:
+                return rv
+
+        x, y = Dummy('x', real=True), Dummy('y', real=True)
+        eq = self.equation(x, y)
+        dydx = idiff(eq, y, x)
+        norm = -1/dydx
+        slope = Line(p, (x, y)).slope
+        seq = slope - norm
+        points = []
+        if prec is not None:
+            yis = solve(seq, y)[0]
+            xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
+            try:
+                iv = list(zip(*Poly(xeq).intervals()))[0]
+                xsol = [S(nroot(lambdify(x, xeq), i, solver="anderson"))
+                    for i in iv]
+                points = [Point(i, solve(eq.subs(x, i), y)[0]).n(prec)
+                    for i in xsol]
+            except PolynomialError:
+                pass
+        if not points:
+            points = solve((seq, eq), (x, y))
+            points = [Point(i).n(prec) if prec is not None else Point(i)
+                      for i in points if all(j.n(2).is_real for j in i)]
+        slopes = [norm.subs(zip((x, y), pt.args)) for pt in points]
+        if prec is not None:
+            slopes = [i.n(prec) if i not in (-oo, oo, zoo) else i
+                for i in slopes]
+        return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
+
+    def plot_interval(self, parameter='t'):
+        """The plot interval for the default geometric plot of the Hyperbola.
+
+        Parameters
+        ==========
+
+        parameter : str, optional
+            Default value is 't'.
+
+        Returns
+        =======
+
+        plot_interval : list
+            [parameter, lower_bound, upper_bound]
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Hyperbola
+        >>> e1 = Hyperbola(Point(0, 0), 3, 2)
+        >>> e1.plot_interval()
+        [t, -pi, pi]
+
+        """
+        t = _symbol(parameter)
+        return [t, -S.Pi, S.Pi]
+
+    def random_point(self, seed=None):
+        """A random point on the hyperbola.
+
+        Returns
+        =======
+
+        point : Point
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+        arbitrary_point : Returns parameterized point on hyperbola
+
+        Notes
+        -----
+
+        A random point may not appear to be on the hyperbola, ie, `p in e` may
+        return False. This is because the coordinates of the point will be
+        floating point values, and when these values are substituted into the
+        equation for the hyperbola the result may not be zero because of floating
+        point rounding error.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Hyperbola, Segment
+        >>> e1 = Hyperbola(Point(0, 0), 3, 2)
+        >>> e1.random_point() # gives some random point
+        Point(...)
+        >>> p1 = e1.random_point(seed=0); p1.n(2)
+        Point(3.1, 0.51)
+
+        """
+        import random
+        from sympy import sec, tan, Rational
+        t = _symbol('t')
+        x, y = self.arbitrary_point(t).args
+        if seed is not None:
+            rng = random.Random(seed)
+        else:
+            rng = random
+        for i in range(10):  # should be enough?
+            # simplify this now or else the Float will turn s into a Float
+            c = 2*Rational(rng.random()) - 1
+            s = sqrt(c**2 + 1)
+            p1 = Point(x.subs(sec(t), s), y.subs(tan(t), c))
+            if p1 in self:
+                return p1
+        raise GeometryError(
+            'Having problems generating a point in the hyperbola.')
+
     def __contains__(self, o):
         if isinstance(o, Point):
             x = C.Dummy('x', real=True)
@@ -551,7 +837,3 @@ class Hyperbola(GeometryEntity):
         elif isinstance(o, Hyperbola):
             return self == o
         return False
-
-class RecHyperbola(Hyperbola):
-    #TODO
-    pass

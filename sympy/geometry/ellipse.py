@@ -23,6 +23,7 @@ from sympy.utilities.misc import filldedent
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
+from .hyperbola import Hyperbola
 from .util import _symbol, idiff
 from sympy.mpmath import findroot as nroot
 
@@ -870,7 +871,6 @@ class Ellipse(GeometryEntity):
                 for i in slopes]
         return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
 
-
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the ellipse.
 
@@ -1129,7 +1129,7 @@ class Ellipse(GeometryEntity):
 
         Notes
         -----
-        Currently supports intersections with Point, Line, Segment, Ray,
+        Currently supports intersections with Point, Line, Segment, Ray, Hyperbola,
         Circle and Ellipse types.
 
         See Also
@@ -1185,16 +1185,10 @@ class Ellipse(GeometryEntity):
             else:
                 return self._do_ellipse_intersection(o)
 
+        elif isinstance(o, Hyperbola):
+            return o.inersection(self)
+
         return o.intersection(self)
-
-    def __eq__(self, o):
-        """Is the other GeometryEntity the same as this ellipse?"""
-        return isinstance(o, GeometryEntity) and (self.center == o.center and
-                                                  self.hradius == o.hradius and
-                                                  self.vradius == o.vradius)
-
-    def __hash__(self):
-        return super(Ellipse, self).__hash__()
 
     def __contains__(self, o):
         if isinstance(o, Point):

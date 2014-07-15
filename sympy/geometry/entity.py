@@ -31,7 +31,6 @@ ordering_of_classes = [
     "Circle",
     "Ellipse",
     "Hyperbola",
-    "RectHyperbola",
     "Curve"
 ]
 
