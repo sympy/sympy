@@ -225,7 +225,7 @@ class Ga(metric.Metric):
 
         if self.coords is not None:
             self.coord_vec = sum([coord * base for (coord, base) in zip(self.coords, self.basis)])
-            self.build_reciprocal_basis(kwargs['gsym'])
+            self.build_reciprocal_basis(self.gsym)
             self.Pdop_identity = mv.Pdop({},ga=self)  # Identity Pdop = 1
             self.Pdiffs = {}
             self.sPds = {}
@@ -1169,9 +1169,16 @@ class Ga(metric.Metric):
             self.r_basis = [self.basis[i] / self.g[i, i] for i in self.n_range]
         else:
             self.iobj = self.blade_to_base_rep(self.blades_lst[-1])
-            if gsym:
-                n = len(self.coords)
-                self.inorm_sq = (-1) ** (n*(n - 1)/2) * Function('det(g)')(*self.coords)
+            if gsym is not None:
+                if printer.GaLatexPrinter.latex_flg:
+                    det_str = r'\det\left ( ' + gsym + r'\right ) '
+                else:
+                    det_str = 'det(' + gsym + ')'
+                if self.coords is None:
+                    self.inorm_sq = (-1) ** (n*(n - 1)/2) * Symbol(det_str,real=True)
+                else:
+                    n = len(self.coords)
+                    self.inorm_sq = (-1) ** (n*(n - 1)/2) * Function(det_str,real=True)(*self.coords)
             else:
                 self.inorm = expand(self.basic_mul(self.iobj, self.iobj))
                 self.inorm_sq = metric.Simp.apply(self.inorm * self.inorm)

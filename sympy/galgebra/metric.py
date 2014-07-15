@@ -201,7 +201,7 @@ class Metric(object):
                   'X': (None, 'vector manifold function'),
                   'norm': (False, 'True to normalize basis vectors'),
                   'debug': (False, 'True to print out debugging information'),
-                  'gsym': (False, 'True to use "det(g)" function in reciprocal basis')}
+                  'gsym': (None, 'String s to use "det("+s+")" function in reciprocal basis')}
 
     @staticmethod
     def dot_orthogonal(V1, V2, g=None):
@@ -403,19 +403,12 @@ class Metric(object):
         debug = kwargs['debug']
         coords = kwargs['coords']
         norm = kwargs['norm']
+        self.gsym = kwargs['gsym']
 
         """
         Normalization for reciprocal vectors if you do not wish to
         explicitly calculate the determinate of the metric tensor.
         """
-        if not isinstance(bool, norm):
-            norm = False
-            if self.coords is None:
-                self.g_norm = Symbol('det(g)',real=True)
-            else:
-                self.g_norm = Function('det(g)',real=True)(*self.coords)
-        else:
-            self.g_norm = None
 
         self.debug = debug
         self.is_ortho = False  # Is basis othogonal

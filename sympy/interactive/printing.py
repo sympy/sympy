@@ -40,6 +40,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     except ImportError:
         pass
 
+    from sympy.galgebra.printer import Format
+    Format(ipy=True)
+
     preamble = "\\documentclass[%s]{article}\n" \
                "\\pagestyle{empty}\n" \
                "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
