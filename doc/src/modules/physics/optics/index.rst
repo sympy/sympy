@@ -14,3 +14,4 @@ Optics Module
     medium.rst
     utils.rst
     waves.rst
+    mirrors.rst

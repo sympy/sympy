@@ -29,6 +29,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.geometry.point import Point
 from sympy.geometry.point3d import Point3D
 from sympy.geometry.line3d import Ray3D, Line3D
+from sympy.geometry.plane import Plane
 from sympy.matrices import Matrix
 
 
@@ -168,7 +169,9 @@ class ConcaveMirror(SphericalMirror):
         int_z = (pole.z*tbase + center.z*(radius - tbase))/radius
         # These are the coordinates of the center of the circle which
         # cuts the the sphere.
-        # WIP: Calculating extreme points of the curvature
+        pt = Point3D(int_x, int_y, int_z)
+        aprt_plane = Plane(pt, normal_vector=Ray3D(pt, pole).direction_ratio)
+
         obj = super(ConcaveMirror, cls).__new__(cls, center, radius)
 
         obj._radius = radius
