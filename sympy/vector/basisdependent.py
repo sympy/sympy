@@ -218,19 +218,6 @@ class BasisDependentAdd(BasisDependent, Add):
 
     __init__ = Add.__init__
 
-     def __str__(self, printer=None):
-        ret_str = ''
-        for system, vect in self.separate().items():
-            base_vects = system.base_vectors()
-            for x in base_vects:
-                if x in vect.components:
-                    temp_vect = self.components[x]*x
-                    ret_str += temp_vect.__str__() + " + "
-        return ret_str[:-3]
-
-    __repr__ = __str__
-    _sympystr = __str__
-
 
 class BasisDependentMul(BasisDependent, Mul):
     """
@@ -300,7 +287,7 @@ class BasisDependentMul(BasisDependent, Mul):
         if '(' in measure_str or '-' in measure_str or \
            '+' in measure_str:
             measure_str = '(' + measure_str + ')'
-        return measure_str + '*' + self._base_instance.__str__()
+        return measure_str + '*' + self._base_instance.__str__(printer)
 
     __repr__ = __str__
     _sympystr = __str__

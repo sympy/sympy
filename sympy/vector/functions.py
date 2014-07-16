@@ -1,6 +1,4 @@
 from sympy.vector.scalar import BaseScalar
-from sympy.vector import CoordSysCartesian
-from sympy.vector.dyadic import Dyadic
 from sympy import sympify
 
 
@@ -12,8 +10,9 @@ def express(expr, system, system2=None, variables=False):
     coordinate system.
 
     If 'variables' is True, then the coordinate variables (base scalars)
-    of other coordinate systems present in the vector/scalar field or dyadic
-    are also substituted in terms of the base scalars of the given system.
+    of other coordinate systems present in the vector/scalar field or
+    dyadic aree also substituted in terms of the base scalars of the
+    given system.
 
     Parameters
     ==========
@@ -32,7 +31,7 @@ def express(expr, system, system2=None, variables=False):
     ========
 
     >>> from sympy.vector import CoordSysCartesian
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, cos, sin
     >>> N = CoordSysCartesian('N')
     >>> q = Symbol('q')
     >>> B = N.orient_new('B', 'Axis', [q, N.k])
@@ -42,12 +41,14 @@ def express(expr, system, system2=None, variables=False):
     >>> express(N.x, B, variables=True)
     B.x*cos(q) - B.y*sin(q)
     >>> d = N.i.outer(N.i)
-    >>> express(d, B, N)
-    cos(q)*(B.i|N.i) - sin(q)*(B.j|N.i)
+    >>> express(d, B, N) == (cos(q))*(B.i|N.i) + (-sin(q))*(B.j|N.i)
+    True
 
     """
 
+    from sympy.vector.coordsysrect import CoordSysCartesian
     from sympy.vector.vector import Vector, BaseVector
+    from sympy.vector.dyadic import Dyadic
     if expr == 0 or expr == Vector.zero:
         return expr
 
@@ -85,7 +86,7 @@ def express(expr, system, system2=None, variables=False):
                 outvec += parts[x]
         return outvec
 
-    elif isinstance(other, Dyadic):
+    elif isinstance(expr, Dyadic):
         if system2 is None:
             system2 = system
         if not isinstance(system2, CoordSysCartesian):
@@ -130,7 +131,7 @@ def matrix_to_vector(matrix, system):
     Parameters
     ==========
 
-    matrix : SymPy Matrix, Dimensions: (1, 3)
+    matrix : SymPy Matrix, Dimensions: (3, 1)
         The matrix to be converted to a vector
 
     system : CoordSysCartesian

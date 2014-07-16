@@ -1,38 +1,60 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix
-from sympy.vector import (CoordSysCartesian, Vector, Dyadic)
+from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix, \
+     simplify
+from sympy.vector import (CoordSysCartesian, Vector, Dyadic,
+                          DyadicAdd, DyadicMul, DyadicZero,
+                          BaseDyadic, express)
 
 
 A = CoordSysCartesian('A')
 
 
 def test_dyadic():
+    a, b = symbols('a, b')
+    assert Dyadic.zero != 0
+    assert isinstance(Dyadic.zero, DyadicZero)
+    assert BaseDyadic(A.i, A.j) != BaseDyadic(A.j, A.i)
+
     d1 = A.i | A.i
     d2 = A.j | A.j
     d3 = A.i | A.j
-    assert d1 * 0 == 0
-    assert d1 != 0
+
+    assert isinstance(d1, BaseDyadic)
+    assert isinstance(a*d1, DyadicMul)
+    assert isinstance(a*d1 + b*d3, DyadicAdd)
+    assert d1 == A.i.outer(A.i)
+    assert d3 == A.i.outer(A.j)
+    v1 = a*A.i - A.k
+    v2 = A.i + b*A.j
+    assert v1 | v2 == v1.outer(v2) == a * (A.i|A.i) + (a*b) * (A.i|A.j) +\
+           - (A.k|A.i) - b * (A.k|A.j)
+    assert d1 * 0 == Dyadic.zero
+    assert d1 != Dyadic.zero
     assert d1 * 2 == 2 * (A.i | A.i)
     assert d1 / 2. == 0.5 * d1
-    assert d1 & (0 * d1) == 0
-    assert d1 & d2 == 0
-    assert d1 & A.i == A.i
-    assert d1 ^ A.i == 0
-    assert d1 ^ A.j == A.i | A.k
-    assert d1 ^ A.k == - A.i | A.j
-    assert d2 ^ A.i == - A.j | A.k
-    assert A.i ^ d1 == 0
-    assert A.j ^ d1 == - A.k | A.i
+
+    assert d1.dot(0 * d1) == Vector.zero
+    assert d1 & d2 == Dyadic.zero
+    assert d1.dot(A.i) == A.i == d1 & A.i
+
+    assert d1.cross(A.i) == Dyadic.zero
+    assert d1 ^ A.j == d1.cross(A.j)
+    assert d1.cross(A.k) == - A.i | A.j
+    assert d2.cross(A.i) == - A.j | A.k == d2 ^ A.i
+
+    assert A.i ^ d1 == Dyadic.zero
+    assert A.j.cross(d1) == - A.k | A.i == A.j ^ d1
     assert A.k ^ d1 == A.j | A.i
-    assert A.i & d1 == A.i
-    assert A.j & d1 == 0
+    assert A.i.dot(d1) == A.i & d1 == A.i
+    assert A.j.dot(d1) == Vector.zero
     assert A.j & d2 == A.j
-    assert d1 & d3 == A.i | A.j
-    assert d3 & d1 == 0
-    assert d1.dt(A) == 0
+
+    assert d1.dot(d3) == d1 & d3 == A.i | A.j == d3
+    assert d3 & d1 == Dyadic.zero
+
     q = symbols('q')
     B = A.orient_new('B', 'Axis', [q, A.k])
-    assert d1.express(B) == d1.express(B, B)
-    assert d1.express(B) == ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
+    assert express(d1, B) == express(d1, B, B)
+    assert express(d1, B) == ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
             (B.i | B.j) + (-sin(q) * cos(q)) * (B.j | B.i) + (sin(q)**2) *
             (B.j | B.j))
     assert express(d1, B, A) == (cos(q)) * (B.i | A.i) + (-sin(q)) * (B.j | A.i)
@@ -64,6 +86,7 @@ def test_dyadic_simplify():
     test1 = (1 / x + 1 / y) * dy
     assert (N.i & test1 & N.i) != (x + y) / (x * y)
     test1 = test1.simplify()
+    assert test1.simplify() == simplify(test1)
     assert (N.i & test1 & N.i) == (x + y) / (x * y)
 
     test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * dy

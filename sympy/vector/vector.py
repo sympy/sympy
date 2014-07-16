@@ -6,7 +6,7 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express
 from sympy.vector.basisdependent import BasisDependent, \
      BasisDependentAdd, BasisDependentMul, BasisDependentZero
-from sympy.vector import BaseDyadic, Dyadic, DyadicAdd
+from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
 
 
 class Vector(BasisDependent):
@@ -55,9 +55,10 @@ class Vector(BasisDependent):
     def dot(self, other):
         """
         Returns the dot product of this Vector, either with another
-        Vector, or the Del operator.
+        Vector, or a Dyadic, or a Del operator.
         If 'other' is a Vector, returns the dot product scalar (Sympy
         expression).
+        If 'other' is a Dyadic, the dot product is returned as a Vector.
         If 'other' is an instance of Del, returns the directional
         derivate operator as a Python function. If this function is
         applied to a scalar expression, it returns the directional
@@ -66,8 +67,8 @@ class Vector(BasisDependent):
         Parameters
         ==========
 
-        other: Vector/Del
-            The Vector we are dotting with, or a Del operator .
+        other: Vector/Dyadic/Del
+            The Vector or Dyadic we are dotting with, or a Del operator .
 
         Examples
         ========
@@ -83,6 +84,9 @@ class Vector(BasisDependent):
         5
         >>> (C.i & C.delop)(C.x*C.y*C.z)
         C.y*C.z
+        >>> d = C.i.outer(C.i)
+        >>> C.i.dot(d)
+        C.i
 
         """
 
@@ -127,14 +131,16 @@ class Vector(BasisDependent):
 
     def cross(self, other):
         """
-        Returns the cross product of this Vector with another.
-        The cross product is a Vector.
+        Returns the cross product of this Vector with another Vector or
+        Dyadic instance.
+        The cross product is a Vector, if 'other' is a Vector. If 'other'
+        is a Dyadic, this returns a Dyadic instance.
 
         Parameters
         ==========
 
-        other: Vector
-            The Vector we are crossing with.
+        other: Vector/Dyadic
+            The Vector or Dyadic we are crossing with.
 
         Examples
         ========
@@ -148,6 +154,9 @@ class Vector(BasisDependent):
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v ^ C.i
         5*C.j + (-4)*C.k
+        >>> d = C.i.outer(C.i)
+        >>> C.j.cross(d)
+        (-1)*(C.k|C.i)
 
         """
 
@@ -223,7 +232,7 @@ class Vector(BasisDependent):
         #the required Dyadic instance
         args = []
         for k1, v1 in self.components.items():
-            for k2, v2 in self.components.items():
+            for k2, v2 in other.components.items():
                 args.append((v1*v2) * BaseDyadic(k1, k2))
 
         return DyadicAdd(*args)
@@ -341,6 +350,19 @@ class VectorAdd(BasisDependentAdd, Vector):
     def __new__(cls, *args, **options):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
+
+    def __str__(self, printer=None):
+        ret_str = ''
+        for system, vect in self.separate().items():
+            base_vects = system.base_vectors()
+            for x in base_vects:
+                if x in vect.components:
+                    temp_vect = self.components[x]*x
+                    ret_str += temp_vect.__str__(printer) + " + "
+        return ret_str[:-3]
+
+    __repr__ = __str__
+    _sympystr = __str__
 
 
 class VectorMul(BasisDependentMul, Vector):

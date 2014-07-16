@@ -4,20 +4,19 @@ from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy.core.assumptions import StdFactKB
 from sympy import ImmutableMatrix as Matrix
-from sympy.vector.vector import Vector
 
 
 class Dyadic(BasisDependent):
     """
     Super class for all Dyadic-classes.
-    
+
     See:
     http://en.wikipedia.org/wiki/Dyadic_tensor
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
     """
-    
-    _op_priority = 12.2
+
+    _op_priority = 13.0
 
     @property
     def components(self):
@@ -38,6 +37,8 @@ class Dyadic(BasisDependent):
         """
         Returns the dot product(also called inner product) of this
         Dyadic, with another Dyadic or Vector.
+        If 'other' is a Dyadic, this returns a Dyadic. Else, it returns
+        a Vector (unless an error is encountered).
 
         Parameters
         ==========
@@ -58,22 +59,23 @@ class Dyadic(BasisDependent):
         N.i
 
         """
-        
+
+        from sympy.vector.vector import Vector
         if isinstance(other, BasisDependentZero):
-            return S(0)
+            return Vector.zero
         elif isinstance(other, Vector):
-            outvec = 0
+            outvec = Vector.zero
             for k, v in self.components.items():
                 vect_dot = k.args[1].dot(other)
                 outvec += vect_dot * v * k.args[0]
             return outvec
         elif isinstance(other, Dyadic):
-            outdyad = 0
+            outdyad = Dyadic.zero
             for k1, v1 in self.components.items():
                 for k2, v2 in other.components.items():
                     vect_dot = k1.args[1].dot(k2.args[0])
-                    outer = k1.args[0].cross(k2.args[1])
-                    outdyad += vect_dot * v1 * v2 * outer
+                    outer_product = k1.args[0].outer(k2.args[1])
+                    outdyad += vect_dot * v1 * v2 * outer_product
             return outdyad
         else:
             raise TypeError("Inner product is not defined for " + \
@@ -84,9 +86,9 @@ class Dyadic(BasisDependent):
     __and__.__doc__ = dot.__doc__
 
     def rdot(self, other):
-        """The inner product operator for a Vector and a Dyadic
-
-        This is for: Vector dot Dyadic
+        """
+        The inner product operator for a Vector and a Dyadic
+        Returns the dot product as a Vector instance
 
         Parameters
         ==========
@@ -100,15 +102,16 @@ class Dyadic(BasisDependent):
         >>> from sympy.vector import CoordSysCartesian
         >>> N = CoordSysCartesian('N')
         >>> d = N.i.outer(N.i)
-        >>> N.i.outer(d)
+        >>> N.i.dot(d)
         N.i
 
         """
-        
+
+        from sympy.vector.vector import Vector
         if other == Vector.zero:
-            return S(0)
+            return Vector.zero
         elif isinstance(other, Vector):
-            outvec = 0
+            outvec = Vector.zero
             for k, v in self.components.items():
                 vect_dot = k.args[0].dot(other)
                 outvec += vect_dot * v * k.args[1]
@@ -122,7 +125,9 @@ class Dyadic(BasisDependent):
     __and__.__doc__ = rdot.__doc__
 
     def cross(self, other):
-        """For a cross product in the form: Dyadic x Vector.
+        """
+        Returns the cross product between this Dyadic, and a Vector, as a
+        Vector instance.
 
         Parameters
         ==========
@@ -140,11 +145,12 @@ class Dyadic(BasisDependent):
         (N.i|N.k)
 
         """
-        
+
+        from sympy.vector.vector import Vector
         if other == Vector.zero:
-            return S(0)
+            return Dyadic.zero
         elif isinstance(other, Vector):
-            outdyad = S(0)
+            outdyad = Dyadic.zero
             for k, v in self.components.items():
                 cross_product = k.args[1].cross(other)
                 outer = k.args[0].outer(cross_product)
@@ -159,7 +165,9 @@ class Dyadic(BasisDependent):
     __xor__.__doc__ = cross.__doc__
 
     def rcross(self, other):
-        """For a cross product in the form: Vector x Dyadic
+        """
+        Returns the cross product between a Vector and this Dyadic, as a
+        Dyadic instance.
 
         Parameters
         ==========
@@ -174,14 +182,15 @@ class Dyadic(BasisDependent):
         >>> N = CoordSysCartesian('N')
         >>> d = N.i.outer(N.i)
         >>> N.j.cross(d)
-        -(N.k|N.i)
+        (-1)*(N.k|N.i)
 
         """
-        
+
+        from sympy.vector.vector import Vector
         if other == Vector.zero:
-            return S(0)
+            return Dyadic.zero
         elif isinstance(other, Vector):
-            outdyad = S(0)
+            outdyad = Dyadic.zero
             for k, v in self.components.items():
                 cross_product = other.cross(k.args[0])
                 outer = cross_product.outer(k.args[1])
@@ -196,7 +205,8 @@ class Dyadic(BasisDependent):
     __rxor__.__doc__ = rcross.__doc__
 
     def to_matrix(self, system, second_system=None):
-        """Returns the matrix form of the dyadic with respect to one or two
+        """
+        Returns the matrix form of the dyadic with respect to one or two
         coordinate systems.
 
         Parameters
@@ -237,7 +247,7 @@ class Dyadic(BasisDependent):
             second_system = system
 
         return Matrix([i.dot(self).dot(j) for i in system for j in
-                      second_system])
+                      second_system]).reshape(3, 3)
 
 
 class BaseDyadic(Dyadic, AtomicExpr):
@@ -245,6 +255,7 @@ class BaseDyadic(Dyadic, AtomicExpr):
     Class to denote a base dyadic tensor component.
     """
     def __new__(cls, vector1, vector2):
+        from sympy.vector.vector import Vector, BaseVector
         #Verify arguments
         if not isinstance(vector1, (BaseVector, DyadicZero)) or \
            not isinstance(vector2, (BaseVector, DyadicZero)):
@@ -258,6 +269,8 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._base_instance = obj
         obj._measure_number = 1
         obj._components = {obj: S(1)}
+        obj._sys = vector1._sys
+
         return obj
 
     def __str__(self, printer=None):
@@ -294,13 +307,23 @@ class DyadicAdd(BasisDependentAdd, Dyadic):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
+    def __str__(self, printer=None):
+        ret_str = ''
+        for k, v in self.components.items():
+            temp_dyad = k * v
+            ret_str += temp_dyad.__str__(printer) + " + "
+        return ret_str[:-3]
+
+    __repr__ = __str__
+    _sympystr = __str__
+
 
 class DyadicZero(BasisDependentZero, Dyadic):
     """
     Class to denote a zero dyadic
     """
 
-    _op_priority = 12.3
+    _op_priority = 13.1
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
