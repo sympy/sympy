@@ -5,9 +5,9 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.orderings import lex, grlex
 
-from sympy.utilities.pytest import raises, XFAIL
 from sympy.core import Symbol, symbols
 from sympy import sqrt, Rational
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_FracField___init__():
     F1 = FracField("x,y", ZZ, lex)
@@ -26,7 +26,7 @@ def test_FracField___hash__():
     assert hash(F)
 
 def test_FracField___eq__():
-    assert field("x,y,z", QQ)[0] == field("x,y,z", QQ)[0]
+    assert field("x,y,z", QQ)[0] == field("x,y,z", QQ)[0]  # quality: SKIP
     assert field("x,y,z", QQ)[0] is field("x,y,z", QQ)[0]
 
     assert field("x,y,z", QQ)[0] != field("x,y,z", ZZ)[0]

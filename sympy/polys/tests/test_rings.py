@@ -9,10 +9,10 @@ from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
-from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
 from sympy.core.compatibility import reduce
 from sympy import sqrt, pi, oo
+from sympy.utilities.pytest import raises
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")
@@ -52,7 +52,7 @@ def test_PolyRing___hash__():
     assert hash(R)
 
 def test_PolyRing___eq__():
-    assert ring("x,y,z", QQ)[0] == ring("x,y,z", QQ)[0]
+    assert ring("x,y,z", QQ)[0] == ring("x,y,z", QQ)[0]  # quality: SKIP
     assert ring("x,y,z", QQ)[0] is ring("x,y,z", QQ)[0]
 
     assert ring("x,y,z", QQ)[0] != ring("x,y,z", ZZ)[0]

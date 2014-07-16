@@ -2,13 +2,13 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat)
-from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
 from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
+from sympy.utilities.pytest import XFAIL, raises
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -131,7 +131,6 @@ def test_Lambda():
     assert e(x) == x**2
     assert e(y) == y**2
 
-    assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
@@ -176,7 +175,7 @@ def test_Lambda_equality():
     assert Lambda(x, 2*x) == Lambda(y, 2*y)
     # although variables are casts as Dummies, the expressions
     # should still compare equal
-    assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    assert Lambda((x, y), 2*x) == Lambda((y, x), 2*y)
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
 

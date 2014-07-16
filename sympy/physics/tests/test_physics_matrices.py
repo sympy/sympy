@@ -1,5 +1,6 @@
 from sympy.physics.matrices import msigma, mgamma, minkowski_tensor, pat_matrix, mdft
 from sympy import zeros, eye, I, Matrix, sqrt, Rational
+from sympy.utilities.pytest import unchanged
 
 
 def test_parallel_axis_theorem():
@@ -35,8 +36,9 @@ def test_Pauli():
     sigma2 = msigma(2)
     sigma3 = msigma(3)
 
-    assert sigma1 == sigma1
-    assert sigma1 != sigma2
+    assert msigma(1) == Matrix(2, 2, [0, 1, 1, 0])
+    assert msigma(2) == Matrix(2, 2, [0, -I, I, 0])
+    assert msigma(3) == Matrix(2, 2, [1, 0, 0, -1])
 
     # sigma*I -> I*sigma    (see #354)
     assert sigma1*sigma2 == sigma3*I

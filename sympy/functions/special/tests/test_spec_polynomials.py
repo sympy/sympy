@@ -4,7 +4,7 @@ from sympy import (
     legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
     laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, unchanged
 
 x = Symbol('x')
 
@@ -219,9 +219,9 @@ def test_hermite():
     assert hermite(6, x) == 64*x**6 - 480*x**4 + 720*x**2 - 120
 
     n = Symbol("n")
-    assert hermite(n, x) == hermite(n, x)
+    unchanged(hermite, n, x)
     assert hermite(n, -x) == (-1)**n*hermite(n, x)
-    assert hermite(-n, x) == hermite(-n, x)
+    unchanged(hermite, -n, x)
 
     assert conjugate(hermite(n, x)) == hermite(n, conjugate(x))
 

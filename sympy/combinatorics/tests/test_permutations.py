@@ -4,6 +4,7 @@ from sympy.combinatorics.permutations import (Permutation, _af_parity,
     _af_rmul, _af_rmuln, Cycle)
 from sympy.utilities.pytest import raises
 
+
 rmul = Permutation.rmul
 
 
@@ -184,8 +185,9 @@ def test_Permutation():
     assert r.index() == 3
 
     assert p.get_precedence_distance(q) == q.get_precedence_distance(p)
-    assert p.get_adjacency_distance(q) == p.get_adjacency_distance(q)
-    assert p.get_positional_distance(q) == p.get_positional_distance(q)
+    assert p.get_adjacency_distance(q) == q.get_adjacency_distance(p)
+    assert p.get_positional_distance(q) == q.get_positional_distance(p)
+
     p = Permutation([0, 1, 2, 3])
     q = Permutation([3, 2, 1, 0])
     assert p.get_precedence_distance(q) == 6

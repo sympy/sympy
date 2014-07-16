@@ -13,7 +13,7 @@ from sympy.functions.special.error_functions import _erfs, _eis
 
 from sympy.core.function import ArgumentIndexError
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, unchanged
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -439,8 +439,8 @@ def test_li():
 
     assert conjugate(li(z)) == li(conjugate(z))
     assert conjugate(li(-zr)) == li(-zr)
-    assert conjugate(li(-zp)) == conjugate(li(-zp))
-    assert conjugate(li(zn)) == conjugate(li(zn))
+    unchanged(conjugate, li(-zp))
+    unchanged(conjugate, li(zn))
 
     assert li(z).rewrite(Li) == Li(z) + li(2)
     assert li(z).rewrite(Ei) == Ei(log(z))
@@ -565,7 +565,7 @@ def test_fresnel():
     assert fresnels(oo) == S.Half
     assert fresnels(-oo) == -S.Half
 
-    assert fresnels(z) == fresnels(z)
+    unchanged(fresnels, z)
     assert fresnels(-z) == -fresnels(z)
     assert fresnels(I*z) == -I*fresnels(z)
     assert fresnels(-I*z) == I*fresnels(z)
@@ -608,7 +608,7 @@ def test_fresnel():
     assert fresnelc(oo) == S.Half
     assert fresnelc(-oo) == -S.Half
 
-    assert fresnelc(z) == fresnelc(z)
+    unchanged(fresnelc, z)
     assert fresnelc(-z) == -fresnelc(z)
     assert fresnelc(I*z) == I*fresnelc(z)
     assert fresnelc(-I*z) == -I*fresnelc(z)

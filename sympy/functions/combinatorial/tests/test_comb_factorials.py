@@ -2,7 +2,7 @@ from sympy import (Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func)
 from sympy.functions.combinatorial.factorials import subfactorial
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, unchanged
 
 
 def test_rf_eval_apply():
@@ -10,7 +10,7 @@ def test_rf_eval_apply():
 
     assert rf(nan, y) == nan
 
-    assert rf(x, y) == rf(x, y)
+    assert rf(x, y) == rf(x, y)  # __eq__ test?
 
     assert rf(oo, 0) == 1
     assert rf(-oo, 0) == 1
@@ -39,7 +39,7 @@ def test_ff_eval_apply():
 
     assert ff(nan, y) == nan
 
-    assert ff(x, y) == ff(x, y)
+    assert ff(x, y) == ff(x, y)  # __eq__ test?
 
     assert ff(oo, 0) == 1
     assert ff(-oo, 0) == 1

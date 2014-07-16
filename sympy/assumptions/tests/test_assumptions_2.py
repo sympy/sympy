@@ -11,9 +11,8 @@ from sympy.printing import pretty
 
 def test_equal():
     """Test for equality"""
-    assert Q.positive(x) == Q.positive(x)
+    assert Q.positive(x) == Q.positive(x)  # __eq__
     assert Q.positive(x) != ~Q.positive(x)
-    assert ~Q.positive(x) == ~Q.positive(x)
 
 
 def test_pretty():

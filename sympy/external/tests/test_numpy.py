@@ -76,10 +76,10 @@ def test_basics():
     one = Rational(1)
     zero = Rational(0)
     assert array(1) == array(one)
-    assert array([one]) == array([one])
-    assert array([x]) == array([x])
+    assert array([1]) == array([one])
     assert array(x) == array(Symbol("x"))
-    assert array(one + x) == array(1 + x)
+    assert array([x]) == array([Symbol("x")])
+    assert array(1 + x) == array(one + x)
 
     X = array([one, zero, zero])
     assert (X == array([one, zero, zero])).all()

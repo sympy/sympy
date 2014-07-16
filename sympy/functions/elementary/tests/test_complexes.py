@@ -3,7 +3,7 @@ from sympy import (
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
 )
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, unchanged
 
 from sympy.utilities.randtest import comp
 
@@ -33,14 +33,14 @@ def test_re():
     assert re(E) == E
     assert re(-E) == -E
 
-    assert re(x) == re(x)
+    assert re(x) == re(x)  # __eq__ test?
     assert re(x*I) == -im(x)
     assert re(r*I) == 0
     assert re(r) == r
     assert re(i*I) == I * i
     assert re(i) == 0
 
-    assert re(x + y) == re(x + y)
+    assert re(x + y) == re(x) + re(y)
     assert re(x + r) == re(x) + r
 
     assert re(re(x)) == re(x)
@@ -91,14 +91,14 @@ def test_im():
     assert im(E*I) == E
     assert im(-E*I) == -E
 
-    assert im(x) == im(x)
+    assert im(x) == im(x)  # __eq__ test?
     assert im(x*I) == re(x)
     assert im(r*I) == r
     assert im(r) == 0
     assert im(i*I) == 0
     assert im(i) == -I * i
 
-    assert im(x + y) == im(x + y)
+    assert im(x + y) == im(x) + im(y)
     assert im(x + r) == im(x)
     assert im(x + r*I) == im(x) + r
 

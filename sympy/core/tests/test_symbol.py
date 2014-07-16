@@ -19,8 +19,7 @@ def test_Symbol():
     assert x1 != xdummy1
     assert xdummy1 != xdummy2
 
-    assert Symbol("x") == Symbol("x")
-    assert Dummy("x") != Dummy("x")
+    assert Dummy("x") != Dummy("x")  # but Symbol('x') == Symbol('x')
     d = symbols('d', cls=Dummy)
     assert isinstance(d, Dummy)
     c, d = symbols('c,d', cls=Dummy)

@@ -1,8 +1,8 @@
 """ Unit tests for Hyper_Function"""
 from sympy.core import symbols, Dummy, Tuple, S
 from sympy.functions import hyper
-
 from sympy.simplify.hyperexpand import Hyper_Function
+from sympy.utilities.pytest import unchanged
 
 def test_attrs():
     a, b = symbols('a, b', cls=Dummy)
@@ -25,7 +25,7 @@ def test_has():
     assert not f.has(c)
 
 def test_eq():
-    assert Hyper_Function([1], []) == Hyper_Function([1], [])
+    unchanged(Hyper_Function, (1,), ())
     assert (Hyper_Function([1], []) != Hyper_Function([1], [])) is False
     assert Hyper_Function([1], []) != Hyper_Function([2], [])
     assert Hyper_Function([1], []) != Hyper_Function([1, 2], [])

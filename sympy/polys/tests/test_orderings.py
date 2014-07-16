@@ -10,10 +10,9 @@ from sympy.core import S
 from sympy.utilities.pytest import raises
 
 def test_lex_order():
+    assert type(lex((1, 2, 3))) is tuple
     assert lex((1, 2, 3)) == (1, 2, 3)
     assert str(lex) == 'lex'
-
-    assert lex((1, 2, 3)) == lex((1, 2, 3))
 
     assert lex((2, 2, 3)) > lex((1, 2, 3))
     assert lex((1, 3, 3)) > lex((1, 2, 3))
@@ -28,10 +27,10 @@ def test_lex_order():
     assert lex != grlex
 
 def test_grlex_order():
+    assert type(grlex((1, 2, 3))) is tuple
     assert grlex((1, 2, 3)) == (6, (1, 2, 3))
     assert str(grlex) == 'grlex'
 
-    assert grlex((1, 2, 3)) == grlex((1, 2, 3))
 
     assert grlex((2, 2, 3)) > grlex((1, 2, 3))
     assert grlex((1, 3, 3)) > grlex((1, 2, 3))
@@ -53,10 +52,9 @@ def test_grlex_order():
     assert grlex.is_global is True
 
 def test_grevlex_order():
+    assert type(grevlex((1, 2, 3))) is tuple
     assert grevlex((1, 2, 3)) == (6, (-3, -2, -1))
     assert str(grevlex) == 'grevlex'
-
-    assert grevlex((1, 2, 3)) == grevlex((1, 2, 3))
 
     assert grevlex((2, 2, 3)) > grevlex((1, 2, 3))
     assert grevlex((1, 3, 3)) > grevlex((1, 2, 3))
