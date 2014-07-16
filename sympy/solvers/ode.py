@@ -1356,7 +1356,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     # find coefficients of terms f(t), diff(f(t),t) and higher derivatives
     # and similarly for other functions g(t), diff(g(t),t) in all equations.
     # Here j denotes the equation number, funcs[l] denotes the function about
-    # which we are taking about and k denotes the order of function funcs[l]
+    # which we are talking about and k denotes the order of function funcs[l]
     # whose coefficient we are calculating.
     def linearity_check(eqs, j, func, is_linear_):
         for k in range(order[func]+1):
