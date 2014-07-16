@@ -27,14 +27,18 @@ class Callable(FOL):
     def __call__(self, *args):
         return self.apply()(self, *args)
 
-    def _sympystr(self, *args, **kwargs):
-        return self.name
-
     def __eq__(self, other):
         if isinstance(other, self.func):
             return self.name == other.name
         else:
             return False
+
+    def _sympystr(self, *args, **kwargs):
+        return self.name
+
+    @classmethod
+    def apply(cls):
+        raise NotImplementedError()
 
     @property
     def name(self):
@@ -49,15 +53,15 @@ class Applied(FOL):
         self._func = func
         self._args = tuple(args)
 
-    def _sympystr(self, *args, **kwargs):
-        return "%s(%s)" % (self.name,
-            ', '.join(str(arg) for arg in self.args))
-
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return (self.func, self.args) == (other.func, other.args)
         else:
             return False
+
+    def _sympystr(self, *args, **kwargs):
+        return "%s(%s)" % (self.name,
+            ', '.join(str(arg) for arg in self.args))
 
     @property
     def name(self):
@@ -123,20 +127,22 @@ class AppliedFunction(Applied):
 
 class Quantifier(FOL):
 
-    def __new__(cls, var, expr, **kwargs):
-        
-        if hasattr(var, '__iter__'):
-            var = set(var)
+    def __new__(cls, *args, **kwargs):
+
+        var = args[:-1]
+        expr = args[-1]
+        if len(var) == 1 and hasattr(var[0], '__iter__'):
+            var = set(var[0])
         else:
-            var = set([var])
+            var = set(var)
 
         if isinstance(expr, cls):
-            v, e = expr.args
+            v, e = expr.vars, expr.expr
             var = var.union(v)
             expr = e
 
         for x in expr.atoms(Quantifier):
-            v = var.intersection(x.args[0])
+            v = var.intersection(x.vars)
             if v:
                 raise ValueError("Variable %s is already bound" % tuple(v))
 
@@ -144,17 +150,21 @@ class Quantifier(FOL):
         if not var:
             return expr
 
-        obj = super(Quantifier, cls).__new__(cls, var, expr, **kwargs)
-        obj._args = (tuple(ordered(var)), expr)
+        args = tuple(ordered(var)) + (expr, )
+        obj = super(Quantifier, cls).__new__(cls, *args, **kwargs)
         return obj
+
+    def _sympystr(self, *args, **kwargs):
+        return "%s((%s), %s)" % (self.func, ', '.join(
+                str(v) for v in self.vars), self.expr)
 
     @property
     def vars(self):
-        return self.args[0]
+        return self.args[:-1]
 
     @property
     def expr(self):
-        return self.args[1]
+        return self.args[-1]
 
 
 class ForAll(Quantifier):
@@ -170,7 +180,7 @@ class ForAll(Quantifier):
     >>> Man = Predicate('Man')
     >>> Mortal = Predicate('Mortal')
     >>> ForAll(X, Man(X) >> Mortal(X))
-    ForAll((X,), Implies(Man(X), Mortal(X)))
+    ForAll((X), Implies(Man(X), Mortal(X)))
 
     >>> Knows = Predicate('Knows')
     >>> ForAll(X, ForAll(Y, Knows(X, Y)))
@@ -191,7 +201,7 @@ class Exists(Quantifier):
     >>> Man = Predicate('Man')
     >>> Smart = Predicate('Smart')
     >>> Exists(X, Man(X) >> Smart(X))
-    Exists((X,), Implies(Man(X), Smart(X)))
+    Exists((X), Implies(Man(X), Smart(X)))
 
     >>> Knows = Predicate('Knows')
     >>> Exists(X, Exists(Y, Knows(X, Y)))
@@ -269,15 +279,15 @@ def _fol_true(expr, model={}):
         else:
             raise ValueError()
 
-        var = expr.args[0]
-        domain = [model.get(v) for v in var]
-        if None in domain:
+        var = expr.vars
+        domains = [model.get(v) for v in var]
+        if None in domains:
             return None
-        values = product(*domain)
+        values = product(*domains)
         N = False
         for value in values:
             m = dict(zip(var, value))
-            result = _fol_true(expr.args[1].xreplace(m), model)
+            result = _fol_true(expr.expr.xreplace(m), model)
             if result is None:
                 N = True
                 continue
@@ -309,7 +319,7 @@ def _fol_true(expr, model={}):
 
 def standardize(expr):
     """
-    Rename variables so that each quantifier has its own unique variables
+    Rename variables so that each quantifier has its own unique variables.
 
     Examples
     ========
@@ -318,7 +328,8 @@ def standardize(expr):
     >>> from sympy.logic.FOL import Predicate, ForAll, standardize
     >>> P = Predicate('P')
     >>> Q = Predicate('Q')
-    >>> standardize(ForAll(X, P(X) >> Q(X)) | ForAll(X, Q(X) >> P(X)))
+    >>> standardize(ForAll(X, P(X) & Q(X)) | ForAll(X, Q(X) >> P(X)))
+    Or(ForAll((X), And(P(X), Q(X))), ForAll((X0), Implies(Q(X0), P(X0))))
     """
     return _standardize(expr, {})
 
@@ -347,7 +358,7 @@ def _standardize(expr, var_set):
 
 def to_pnf(expr):
     """
-    Converts the given FOL expression into Prenex Normal Form
+    Converts the given FOL expression into Prenex Normal Form.
 
     Examples
     ========
@@ -365,7 +376,7 @@ def to_pnf(expr):
 
     .. [1] http://en.wikipedia.org/wiki/Prenex_normal_form
     """
-    expr = eliminate_implications(expr)
+    expr = standardize(eliminate_implications(expr))
     return _to_pnf(expr)
 
 
@@ -414,7 +425,7 @@ def _to_pnf(expr):
 
 def to_snf(expr):
     """
-    Converts the given FOL expression into Skolem Normal Form
+    Converts the given FOL expression into Skolem Normal Form.
 
     Examples
     ========
@@ -424,7 +435,7 @@ def to_snf(expr):
     >>> P = Predicate('P')
     >>> R = Predicate('R')
     >>> to_snf(ForAll(X, P(X) | Exists(Y, R(X, Y))))
-    ForAll((X,), Or(P(X), R(X, f0(X))))
+    ForAll((X), Or(P(X), R(X, f0(X))))
 
     References
     ==========
@@ -435,8 +446,8 @@ def to_snf(expr):
     expr = to_pnf(expr)
     var_list = []
 
+    skolemFunc = numbered_symbols('f', Function)
     while isinstance(expr, Quantifier):
-        skolemFunc = numbered_symbols('f', Function)
 
         if isinstance(expr, ForAll):
             var_list.extend(expr.vars)
@@ -525,7 +536,7 @@ def mgu(expr1, expr2):
 
 def resolve(expr):
     """
-    Returns the resolution of a FOL formula
+    Returns the resolution of a FOL formula.
 
     Examples
     ========

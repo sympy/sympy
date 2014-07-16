@@ -1,12 +1,12 @@
 """ Test file for SymPy First Order Logic """
 
-from sympy.abc import X, Y, Z
 from sympy.utilities.pytest import raises
 
 from sympy.logic.boolalg import (And, Implies, Or, Xor, true)
 from sympy.logic.FOL import (AppliedFunction, AppliedPredicate, Exists,
-    ForAll, Function, mgu, Predicate)
+    ForAll, Function, mgu, Predicate, standardize, to_pnf, to_snf)
 
+from sympy.abc import X, Y, Z
 
 def test_Predicate():
     A = Predicate('A')
@@ -68,6 +68,45 @@ def test_Exists():
     Exists((X, Y), Exists(Z, A(X, Y) ^ B(Y, Z))).expr == Xor(A(X, Y), B(Y, Z))
 
 
+def test_standardize():
+    from sympy.core.symbol import Symbol
+    X0 = Symbol('X0')
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert standardize(ForAll(X, P(X)) >> ForAll(X, Q(X))) == \
+                ForAll(X, P(X)) >> ForAll(X0, Q(X0))
+
+
+def test_to_pnf():
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert to_pnf(P(X, Y)) == P(X, Y)
+    assert to_pnf(Exists(X, ForAll(Y, P(X, Y)))) == \
+                Exists(X, ForAll(Y, P(X, Y)))
+    assert to_pnf(ForAll((X, Y), ~(P(X) >> Q(Y)))) == \
+                ForAll((X, Y), P(X) & ~Q(Y))
+    assert to_pnf(Exists(X, P(X)) & Exists(Y, Q(Y))) == \
+                Exists((X, Y), P(X) & Q(Y))
+    assert to_pnf(ForAll(X, P(X)) >> ForAll(Y, Q(Y))) == \
+                ForAll(Y, Exists(X, ~P(X) | Q(Y)))
+
+
+def test_to_snf():
+    from sympy.abc import W
+    P = Predicate('P')
+    Q = Predicate('Q')
+    f0 = Function('f0')
+    f1 = Function('f1')
+    assert to_snf(ForAll((X, Y), P(X) >> Q(Y))) == \
+                ForAll((X, Y), ~P(X) | Q(Y))
+    assert to_snf(Exists(X, ForAll(Y, P(X) | Q(Y)))) == \
+                ForAll(Y, P(X) | Q(Y))
+    assert to_snf(ForAll(X, Exists(Y, P(X) & Q(Y)))) == \
+                ForAll(X, P(X) & Q(f0(X)))
+    assert to_snf(ForAll(W, Exists(X, ForAll(Y, Exists(Z, P(W, X) >>
+        Q(Y, Z)))))) == ForAll((W, Y), ~P(W, f0(W)) | Q(Y, f1(W, Y)))
+
+
 def test_mgu():
     P = Predicate('A')
     Q = Predicate('B')
@@ -78,3 +117,7 @@ def test_mgu():
     assert mgu(P(X), P(X)) == {true: true}
     assert mgu(P(X, X), P(Y, f(Y))) is False
     assert mgu(P('a', X, f(g(Z))), P(Z, f(Y), f(Y))) == {X: f(Y), Z: 'a', Y: g('a')}
+
+
+def test_resolution():
+    pass
