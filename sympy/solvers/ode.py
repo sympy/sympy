@@ -1742,6 +1742,62 @@ def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
 
 
+
+def checksysodesol(eqs, sols, func=None):
+    def _sympify(eq):
+        return list(map(sympify, eq if iterable(eq) else [eq]))
+    eqs = _sympify(eqs)
+    for i in range(len(eqs)):
+        if isinstance(eqs[i], Equality):
+            eqs[i] = eqs[i].lhs - eqs[i].rhs
+    if func is None:
+        funcs = []
+        for eq in eqs:
+            derivs = eq.atoms(Derivative)
+            func = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            for func_ in  func:
+                funcs.append(func_)
+        funcs = list(set(funcs))
+    if not all(isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs)\
+    and len(set([func.args for func in funcs]))!=1:
+        raise ValueError("func must be a function of one variable, not %s" % func)
+    for sol in sols:
+        if len(sol.atoms(AppliedUndef)) != 1:
+            raise ValueError("solution should have one function only")
+    if len(funcs) != len(sols):
+        raise ValueError("Solution provided is not sufficient to check sysode solutions")
+    t = funcs[0].args[0]
+    dictsol = dict()
+    for sol in sols:
+        sol_func = list(sol.atoms(AppliedUndef))[0]
+        if not (sol.lhs == sol_func and not sol.rhs.has(sol_func)) and not (\
+        sol.rhs == sol_func and not sol.lhs.has(sol_func)):
+            solved = solve(sol, sol_func)
+            if not solved:
+                raise NotImplementedError
+            dictsol[sol_func] = solved
+        if sol.lhs == sol_func:
+            dictsol[sol_func] = sol.rhs
+        if sol.rhs == sol_func:
+            dictsol[sol_func] = sol.lhs
+    checkeq = []
+    for eq in eqs:
+        for func in funcs:
+            eq = sub_func_doit(eq, func, dictsol[func])
+        ss = simplify(eq)
+        if ss:
+            # with the new numer_denom in power.py, if we do a simple
+            # expansion then testnum == 0 verifies all solutions.
+            eq = ss.expand(force=True)
+        else:
+            eq = 0
+        checkeq.append(eq)
+    if len(set(checkeq)) == 1 and list(set(checkeq))[0] == 0:
+        return (True, checkeq)
+    else:
+        return (False, checkeq)
+
+
 @vectorize(0)
 def odesimp(eq, func, order, constants, hint):
     r"""

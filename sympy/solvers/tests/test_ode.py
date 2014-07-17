@@ -7,7 +7,7 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, classify_sysode, constant_renumber, constantsimp,
-    homogeneous_order, infinitesimals, checkinfsol)
+    homogeneous_order, infinitesimals, checkinfsol, checksysodesol)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
@@ -207,6 +207,14 @@ def test_nonlinear_2eq_order1():
     eq5 = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
     sol5 = set([Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)])
     assert dsolve(eq5) == sol5
+
+
+def test_checksysodesol():
+    x, y, z = symbols('x, y, z', function=True)
+    t = Symbol('t')
+    eq = (Eq(diff(x(t),t), 9*y(t)), Eq(diff(y(t),t), 12*x(t)))
+    sol = [Eq(x(t), 9*C1*exp(-6*sqrt(3)*t) + 9*C2*exp(6*sqrt(3)*t)), Eq(y(t), -6*sqrt(3)*C1*exp(-6*sqrt(3)*t) + 6*sqrt(3)*C2*exp(6*sqrt(3)*t))]
+    assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
 def test_checkodesol():
