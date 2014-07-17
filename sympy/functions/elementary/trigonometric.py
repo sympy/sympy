@@ -1937,6 +1937,9 @@ class atan2(Function):
             return 2*S.Pi*(C.Heaviside(C.re(y))) - S.Pi
         elif x is S.Infinity:
             return S.Zero
+        elif x.is_imaginary and y.is_imaginary:
+            x = C.im(x)
+            y = C.im(y)
 
         if x.is_real and y.is_real:
             if x.is_positive:
@@ -1953,9 +1956,11 @@ class atan2(Function):
                     return -S.Pi/2
                 elif y.is_zero:
                     return S.NaN
-
-        if y.is_zero and x.is_real and x.is_nonzero:
-            return S.Pi * (S.One - C.Heaviside(x))
+            if y.is_zero and x.is_nonzero:
+                return S.Pi * (S.One - C.Heaviside(x))
+        if x.is_number and y.is_number:
+            return -S.ImaginaryUnit*C.log(
+                (x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_log(self, y, x):
         return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
