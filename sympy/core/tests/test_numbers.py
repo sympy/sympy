@@ -1423,3 +1423,7 @@ def test_latex():
     assert latex(zoo) == r"\tilde{\infty}"
     assert latex(nan) == r"\mathrm{NaN}"
     assert latex(I) == r"i"
+
+
+def test_issue_7742():
+    assert -oo % 1 == nan
