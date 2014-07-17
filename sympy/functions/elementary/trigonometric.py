@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.numbers import igcdex
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, AppliedUndef
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -1937,6 +1937,9 @@ class atan2(Function):
             return 2*S.Pi*(C.Heaviside(C.re(y))) - S.Pi
         elif x is S.Infinity:
             return S.Zero
+        elif x.is_imaginary and y.is_imaginary and x.is_number and y.is_number:
+            x = C.im(x)
+            y = C.im(y)
 
         if x.is_real and y.is_real:
             if x.is_positive:
@@ -1953,9 +1956,12 @@ class atan2(Function):
                     return -S.Pi/2
                 elif y.is_zero:
                     return S.NaN
-
         if y.is_zero and x.is_real and x.is_nonzero:
             return S.Pi * (S.One - C.Heaviside(x))
+        if (x.is_number and not x.atoms(AppliedUndef) and
+                y.is_number and not y.atoms(AppliedUndef)):
+            return -S.ImaginaryUnit*C.log(
+                (x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_log(self, y, x):
         return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
