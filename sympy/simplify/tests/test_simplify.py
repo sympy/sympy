@@ -12,7 +12,7 @@ from sympy import (
     sympify, tan, tanh, trigsimp, Wild, zoo, Sum)
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
-    collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
+    collect_sqrt, fraction_expand, _unevaluated_Add, nthroot, fibsimp)
 from sympy.utilities.pytest import XFAIL, slow
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
@@ -1732,6 +1732,26 @@ def test_signsimp():
     assert signsimp(Eq(e, 0)) is S.true
     assert Abs(x - 1) == Abs(1 - x)
 
+def test_fibsimp():
+    from sympy.functions.combinatorial.numbers import fibonacci
+    m,n = symbols('m n', integer=True)
+
+    assert fibsimp(fibonacci(n) + fibonacci(n - 1)) == fibonacci(n + 1)
+    assert fibsimp(-fibonacci(n + 1) - fibonacci(n)) == -fibonacci(n + 2)
+
+    assert fibsimp(fibonacci(n)**2 - fibonacci(n + m)*fibonacci(n - m)) == \
+        (-1)**(n - m) * fibonacci(m)**2
+
+    assert fibsimp(fibonacci(m)*fibonacci(n + 1) - fibonacci(m + 1)*fibonacci(n))\
+        == (-1)**n * fibonacci(m - n)
+
+    assert fibsimp(fibonacci(n) + fibonacci(n - 1) + fibonacci(n + 2)) == \
+        fibonacci(n + 3)
+
+    assert fibsimp(-fibonacci(n + 3) - fibonacci(n) - fibonacci(n + 1) - \
+                   fibonacci(m)**2 + fibonacci(n + m) * fibonacci(-n + m) - \
+                   fibonacci(n - 5)+ 1) == -fibonacci(n + 4) - (-1)**(m - n) * \
+        fibonacci(n)**2  - fibonacci(n - 5) + 1
 
 def test_besselsimp():
     from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh, cosine_transform
