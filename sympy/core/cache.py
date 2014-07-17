@@ -42,7 +42,17 @@ from sympy.core.compatibility import lru_cache
 from functools import update_wrapper
 
 try:
-    from fastcache import clru_cache
+    import fastcache
+    from warnings import warn
+    # the version attribute __version__ is not present for all versions
+    if not hasattr(fastcache, '__version__'):
+        warn("fastcache version >= 0.4.0 required", UserWarning)
+        raise ImportError
+        # ensure minimum required version of fastcache is present
+    if fastcache.__version__ < '0.4.0':
+        warn("fastcache version >= 0.4.0 required, detected {}"\
+             .format(fastcache.__version__), UserWarning)
+        raise ImportError
 
 except ImportError:
 
@@ -112,7 +122,7 @@ else:
         """
         def func_wrapper(func):
 
-            cfunc = clru_cache(maxsize, typed=True, unhashable='ignore')(func)
+            cfunc = fastcache.clru_cache(maxsize, typed=True, unhashable='ignore')(func)
             CACHE.append(cfunc)
             return cfunc
 
