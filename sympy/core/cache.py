@@ -41,53 +41,54 @@ clear_cache = CACHE.clear_cache
 from sympy.core.compatibility import lru_cache
 from functools import update_wrapper
 
-def __cacheit(maxsize):
-    """caching decorator.
-
-       important: the result of cached function must be *immutable*
-
-
-       Examples
-       ========
-
-       >>> from sympy.core.cache import cacheit
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return a+b
-
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return [a,b] # <-- WRONG, returns mutable object
-
-       to force cacheit to check returned results mutability and consistency,
-       set environment variable SYMPY_USE_CACHE to 'debug'
-    """
-    def func_wrapper(func):
-        cfunc = lru_cache(maxsize, typed=True)(func)
-
-        # wraps here does not propagate all the necessary info
-        # for py2.7, use update_wrapper below
-        def wrapper(*args, **kwargs):
-            try:
-                retval = cfunc(*args, **kwargs)
-            except TypeError:
-                retval = func(*args, **kwargs)
-            return retval
-
-        wrapper.__wrapped__ = cfunc.__wrapped__
-        wrapper.cache_info = cfunc.cache_info
-        wrapper.cache_clear = cfunc.cache_clear
-        uw = update_wrapper(wrapper, func)
-        CACHE.append(uw)
-        return wrapper
-
-    return func_wrapper
-
 try:
     from fastcache import clru_cache
+
 except ImportError:
-    pass
+
+    def __cacheit(maxsize):
+        """caching decorator.
+
+           important: the result of cached function must be *immutable*
+
+
+           Examples
+           ========
+
+           >>> from sympy.core.cache import cacheit
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return a+b
+
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return [a,b] # <-- WRONG, returns mutable object
+
+           to force cacheit to check returned results mutability and consistency,
+           set environment variable SYMPY_USE_CACHE to 'debug'
+        """
+        def func_wrapper(func):
+            cfunc = lru_cache(maxsize, typed=True)(func)
+
+            # wraps here does not propagate all the necessary info
+            # for py2.7, use update_wrapper below
+            def wrapper(*args, **kwargs):
+                try:
+                    retval = cfunc(*args, **kwargs)
+                except TypeError:
+                    retval = func(*args, **kwargs)
+                return retval
+
+            wrapper.__wrapped__ = cfunc.__wrapped__
+            wrapper.cache_info = cfunc.cache_info
+            wrapper.cache_clear = cfunc.cache_clear
+            uw = update_wrapper(wrapper, func)
+            CACHE.append(uw)
+            return wrapper
+
+        return func_wrapper
 else:
+
     def __cacheit(maxsize):
         """caching decorator.
 
@@ -111,7 +112,7 @@ else:
         """
         def func_wrapper(func):
 
-            cfunc = clru_cache(maxsize, typed=True)(func)
+            cfunc = clru_cache(maxsize, typed=True, unhashable='ignore')(func)
             CACHE.append(cfunc)
             return cfunc
 
