@@ -1,6 +1,7 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
         sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
+from sympy.utilities.pytest import unchanged
 
 
 def test_exp_values():
@@ -141,10 +142,10 @@ def test_log_values():
     assert log(E) == 1
     assert log(-E).expand() == 1 + I*pi
 
-    assert log(pi) == log(pi)
+    unchanged(log, pi)
     assert log(-pi).expand() == log(pi) + I*pi
 
-    assert log(17) == log(17)
+    unchanged(log, 17)
     assert log(-17) == log(17) + I*pi
 
     assert log(I) == I*pi/2
@@ -309,7 +310,7 @@ def test_log_simplify():
 
 def test_lambertw():
     x = Symbol('x')
-    assert LambertW(x) == LambertW(x)
+    assert LambertW(x) == LambertW(x)  # __eq__ test?
     assert LambertW(0) == 0
     assert LambertW(E) == 1
     assert LambertW(-1/E) == -1

@@ -1,4 +1,4 @@
-"""py.test hacks to support XFAIL/XPASS"""
+"""py.test hacks to support XFAIL/XPASS and other functions for testing"""
 
 from __future__ import print_function, division
 
@@ -6,6 +6,8 @@ import sys
 import functools
 
 from sympy.core.compatibility import get_function_name
+from sympy.core.sympify import sympify
+from sympy.printing.str import sstr
 
 try:
     import py
@@ -158,3 +160,23 @@ else:
             return inner
 
         return skipping
+
+
+def unchanged(func, *args):
+    """An assertion that the given function and arguments are unchanged when
+    the function is evaluated.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.pytest import unchanged
+    >>> from sympy import cos
+    >>> unchanged(cos, 3)
+    """
+    f = func(*args)
+    assert f.func == func and f.args == tuple([sympify(a) for a in args])
+
+
+def NS(e, n=15, **options):
+    """Return evaluated expression as a string."""
+    return sstr(sympify(e).evalf(n, **options), full_prec=True)

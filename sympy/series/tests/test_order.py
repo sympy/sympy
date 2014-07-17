@@ -1,8 +1,8 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function)
-from sympy.utilities.pytest import XFAIL, raises
+    Function, Add)
 from sympy.abc import w, x, y, z
+from sympy.utilities.pytest import XFAIL, raises, unchanged
 
 
 def test_caching_bug():
@@ -53,7 +53,7 @@ def test_simple_3():
     assert Order(x) + x**2 == Order(x)
     assert Order(x) + 1/x == 1/x + Order(x)
     assert Order(1/x) + 1/x**2 == 1/x**2 + Order(1/x)
-    assert Order(x) + exp(1/x) == Order(x) + exp(1/x)
+    unchanged(Add, Order(x), exp(1/x))  # XXX is that ordering right?
 
 
 def test_simple_4():
@@ -80,7 +80,7 @@ def test_simple_7():
     assert 1 + O(1) == O(1)
     assert 2 + O(1) == O(1)
     assert x + O(1) == O(1)
-    assert 1/x + O(1) == 1/x + O(1)
+    unchanged(Add, 1/x, O(1))
 
 
 def test_simple_8():

@@ -1,16 +1,12 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
-                   sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
+                   sin, sqrt, Sum, sympify, S, integrate, atan, product)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
 from sympy.mpmath import inf, ninf, nan
 from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
-from sympy.utilities.pytest import raises, XFAIL
-
-
-def NS(e, n=15, **options):
-    return sstr(sympify(e).evalf(n, **options), full_prec=True)
+from sympy.utilities.pytest import raises, XFAIL, NS
 
 
 def test_evalf_helpers():

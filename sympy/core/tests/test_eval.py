@@ -1,4 +1,5 @@
-from sympy import Symbol, Function, exp, sqrt, Rational, I, cos, tan
+from sympy import (Symbol, Function, exp, sqrt, Rational, I, cos, sin, tan,
+    symbols)
 from sympy.utilities.pytest import XFAIL
 
 
@@ -48,7 +49,9 @@ def test_pow_eval():
     assert 24/sqrt(64) == 3
     assert (-27)**Rational(1, 3) == 3*(-1)**Rational(1, 3)
 
-    assert (cos(2) / tan(2))**2 == (cos(2) / tan(2))**2
+    # this was formerly (cos(2)/tan(2))**2 == (cos(2)/tan(2))**2
+    a, b = symbols('a b', real=True)
+    assert (a/b)**2 == a**2/b**2
 
 
 @XFAIL

@@ -1,6 +1,7 @@
 from sympy.physics.quantum import Dagger, AntiCommutator, qapply
 from sympy.physics.quantum.fermion import FermionOp
 from sympy.physics.quantum.fermion import FermionFockKet, FermionFockBra
+from sympy.utilities.pytest import unchanged
 
 
 def test_fermionoperator():
@@ -13,7 +14,7 @@ def test_fermionoperator():
     assert c.is_annihilation
     assert not Dagger(c).is_annihilation
 
-    assert FermionOp("c") == FermionOp("c")
+    unchanged(FermionOp, "c", 1)
     assert FermionOp("c") != FermionOp("d")
     assert FermionOp("c", True) != FermionOp("c", False)
 

@@ -6,7 +6,7 @@ from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       test_numerically as tn)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, unchanged
 
 x = Symbol('x')
 y = Symbol('y')
@@ -118,8 +118,8 @@ def test_lowergamma():
         lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
 
     assert conjugate(lowergamma(x, y)) == lowergamma(conjugate(x), conjugate(y))
-    assert conjugate(lowergamma(x, 0)) == conjugate(lowergamma(x, 0))
-    assert conjugate(lowergamma(x, -oo)) == conjugate(lowergamma(x, -oo))
+    unchanged(conjugate, lowergamma(x, 0))
+    unchanged(conjugate, lowergamma(x, -oo))
 
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
@@ -163,7 +163,7 @@ def test_uppergamma():
 
     assert conjugate(uppergamma(x, y)) == uppergamma(conjugate(x), conjugate(y))
     assert conjugate(uppergamma(x, 0)) == gamma(conjugate(x))
-    assert conjugate(uppergamma(x, -oo)) == conjugate(uppergamma(x, -oo))
+    unchanged(conjugate, uppergamma(x, -oo))
 
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
     assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
@@ -359,9 +359,9 @@ def test_loggamma():
     assert s1 == loggamma(x).rewrite('intractable').series(x)
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
-    assert conjugate(loggamma(0)) == conjugate(loggamma(0))
+    assert loggamma(0) == oo
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
-    assert conjugate(loggamma(-oo)) == conjugate(loggamma(-oo))
+    assert loggamma(-oo) == zoo
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real

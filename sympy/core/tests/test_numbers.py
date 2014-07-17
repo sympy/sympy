@@ -710,7 +710,6 @@ def test_Infinity_inequations():
 
 
 def test_NaN():
-    assert nan == nan
     assert nan != 1
     assert 1*nan == nan
     assert 1 != nan
@@ -1016,7 +1015,7 @@ def test_no_len():
 
 
 def test_issue_3321():
-    assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
+    assert sqrt(Rational(1, 5)) == sqrt(5)/5
     assert 5 * sqrt(Rational(1, 5)) == sqrt(5)
 
 

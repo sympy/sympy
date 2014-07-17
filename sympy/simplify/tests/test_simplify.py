@@ -13,7 +13,7 @@ from sympy import (
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul as umul
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, unchanged
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
 
@@ -594,7 +594,7 @@ def test_powsimp():
     assert powsimp(
         f(4**x * 2**(-x) * 2**(-x)) ) == f(4**x * 2**(-x) * 2**(-x))
     assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep=True ) == f(1)
-    assert exp(x)*exp(y) == exp(x)*exp(y)
+    unchanged(Mul, exp(x), exp(y))
     assert powsimp(exp(x)*exp(y)) == exp(x + y)
     assert powsimp(exp(x)*exp(y)*2**x*2**y) == (2*E)**(x + y)
     assert powsimp(exp(x)*exp(y)*2**x*2**y, combine='exp') == \
@@ -709,7 +709,7 @@ def test_powsimp_polar():
     assert p**x * (1/p)**x == 1
     assert (1/p)**x == p**(-x)
 
-    assert exp_polar(x)*exp_polar(y) == exp_polar(x)*exp_polar(y)
+    unchanged(Mul, exp_polar(x), exp_polar(y))
     assert powsimp(exp_polar(x)*exp_polar(y)) == exp_polar(x + y)
     assert powsimp(exp_polar(x)*exp_polar(y)*p**x*p**y) == \
         (p*exp_polar(1))**(x + y)

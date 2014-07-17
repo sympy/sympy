@@ -13,7 +13,7 @@ def test_ideal_operations():
     T = R.ideal(x, y)
 
     assert not (I == J)
-    assert I == I
+    assert I == I  # quality: SKIP
 
     assert I.union(J) == T
     assert I + J == T

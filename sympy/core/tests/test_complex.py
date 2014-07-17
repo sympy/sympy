@@ -1,7 +1,7 @@
 from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
         expand_complex)
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, unchanged
 
 
 def test_complex():
@@ -39,7 +39,7 @@ def test_conjugate():
 def test_abs1():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
-    assert abs(a) == abs(a)
+    assert Abs(a) == Abs(a)  # __eq__ test?
     assert abs(-a) == abs(a)
     assert abs(a + I*b) == sqrt(a**2 + b**2)
 

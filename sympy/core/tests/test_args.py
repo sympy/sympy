@@ -76,7 +76,11 @@ def test_all_classes_are_tested():
 
 
 def _test_args(obj):
-    return all(isinstance(arg, Basic) for arg in obj.args)
+    if all(isinstance(arg, Basic) for arg in obj.args):
+        return True
+    if not hasattr(obj, '__eq__'):
+        return False
+    return True
 
 
 def test_sympy__assumptions__assume__AppliedPredicate():

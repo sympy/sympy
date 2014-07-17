@@ -13,13 +13,11 @@ from sympy import (
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
-
 from sympy.physics.units import joule
-
-from sympy.utilities.pytest import raises
 from sympy.core.trace import Tr
-
 from sympy.core.compatibility import u_decode as u
+from sympy.utilities.pytest import raises, unchanged
+
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')

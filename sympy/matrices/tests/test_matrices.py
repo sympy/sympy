@@ -12,6 +12,7 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros)
 from sympy.core.compatibility import long, iterable, u
+from sympy.utilities.pytest import NS
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 
@@ -805,8 +806,6 @@ def test_eigen():
     d = (R(33, 8) + 3*b/8)
     e = (R(33, 8) - 3*b/8)
 
-    def NS(e, n):
-        return str(N(e, n))
     r = [
         (a - b/2, 1, [Matrix([(12 + 24/(c - b/2))/((c - b/2)*e) + 3/(c - b/2),
                               (6 + 12/(c - b/2))/e, 1])]),

@@ -3,6 +3,7 @@ from sympy.physics.quantum import Dagger, Commutator, qapply
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.boson import (
     BosonFockKet, BosonFockBra, BosonCoherentKet, BosonCoherentBra)
+from sympy.utilities.pytest import unchanged
 
 
 def test_bosonoperator():
@@ -15,7 +16,7 @@ def test_bosonoperator():
     assert a.is_annihilation
     assert not Dagger(a).is_annihilation
 
-    assert BosonOp("a") == BosonOp("a")
+    unchanged(BosonOp, "a", 1)
     assert BosonOp("a") != BosonOp("c")
     assert BosonOp("a", True) != BosonOp("a", False)
 

@@ -2,8 +2,9 @@ from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.utilities.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt, root, Min, Max, real_root
-from sympy import S, Float, I, cos, sin, oo, pi, Add
+from sympy import S, Float, I, cos, sin, oo, pi, Add, Function
 
+from sympy.utilities.pytest import raises, unchanged
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -31,8 +32,8 @@ def test_Min():
     assert Min(-oo, oo) == -oo
     assert Min(oo, -oo) == -oo
     assert Min(n, n) == n
-    assert Min(n, np) == Min(n, np)
-    assert Min(np, n) == Min(np, n)
+    assert Min(n, np) == Min(np, n)
+    unchanged(Min, n, np)
     assert Min(n, 0) == n
     assert Min(0, n) == n
     assert Min(n, nn) == n
@@ -58,8 +59,8 @@ def test_Min():
     assert Min(0, oo) == 0
     assert Min(oo, 0) == 0
     assert Min(nn, nn) == nn
-    assert Min(nn, p) == Min(nn, p)
-    assert Min(p, nn) == Min(p, nn)
+    unchanged(Min, nn, p)
+    assert Min(p, nn) == Min(nn, p)
     assert Min(nn, oo) == nn
     assert Min(oo, nn) == nn
     assert Min(p, p) == p
@@ -84,7 +85,7 @@ def test_Min():
     assert Min(2, x, p, n, oo, n_, p, 2, -2, -2) == Min(-2, x, n, n_)
     assert Min(0, x, 1, y) == Min(0, x, y)
     assert Min(1000, 100, -100, x, p, n) == Min(n, x, -100)
-    assert Min(cos(x), sin(x)) == Min(cos(x), sin(x))
+    unchanged(Min, sin(x), cos(x))
     assert Min(cos(x), sin(x)).subs(x, 1) == cos(1)
     assert Min(cos(x), sin(x)).subs(x, S(1)/2) == sin(S(1)/2)
     raises(ValueError, lambda: Min(cos(x), sin(x)).subs(x, I))

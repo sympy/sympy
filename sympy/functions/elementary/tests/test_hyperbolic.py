@@ -2,7 +2,7 @@ from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sq
     coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
     Integer, O, exp
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, unchanged
 
 
 def test_sinh():
@@ -18,16 +18,16 @@ def test_sinh():
 
     assert sinh(0) == 0
 
-    assert sinh(1) == sinh(1)
+    unchanged(sinh, 1)
     assert sinh(-1) == -sinh(1)
 
-    assert sinh(x) == sinh(x)
+    unchanged(sinh, x)
     assert sinh(-x) == -sinh(x)
 
-    assert sinh(pi) == sinh(pi)
+    unchanged(sinh, pi)
     assert sinh(-pi) == -sinh(pi)
 
-    assert sinh(2**1024 * E) == sinh(2**1024 * E)
+    unchanged(sinh, 2**1024 * E)
     assert sinh(-2**1024 * E) == -sinh(2**1024 * E)
 
     assert sinh(pi*I) == 0
@@ -58,7 +58,7 @@ def test_sinh():
     assert sinh(pi*I/105) == sin(pi/105)*I
     assert sinh(-pi*I/105) == -sin(pi/105)*I
 
-    assert sinh(2 + 3*I) == sinh(2 + 3*I)
+    unchanged(sinh, 2 + 3*I)
 
     assert sinh(x*I) == sin(x)*I
 
@@ -87,16 +87,16 @@ def test_cosh():
 
     assert cosh(0) == 1
 
-    assert cosh(1) == cosh(1)
+    unchanged(cosh, 1)
     assert cosh(-1) == cosh(1)
 
-    assert cosh(x) == cosh(x)
+    unchanged(cosh, x)
     assert cosh(-x) == cosh(x)
 
     assert cosh(pi*I) == cos(pi)
     assert cosh(-pi*I) == cos(pi)
 
-    assert cosh(2**1024 * E) == cosh(2**1024 * E)
+    unchanged(cosh, 2**1024 * E)
     assert cosh(-2**1024 * E) == cosh(2**1024 * E)
 
     assert cosh(pi*I/2) == 0
@@ -127,14 +127,14 @@ def test_cosh():
     assert cosh(pi*I/105) == cos(pi/105)
     assert cosh(-pi*I/105) == cos(pi/105)
 
-    assert cosh(2 + 3*I) == cosh(2 + 3*I)
+    unchanged(cosh, 2 + 3*I)
 
     assert cosh(x*I) == cos(x)
 
     assert cosh(k*pi*I) == cos(k*pi)
     assert cosh(17*k*pi*I) == cos(17*k*pi)
 
-    assert cosh(k*pi) == cosh(k*pi)
+    unchanged(cosh, k*pi)
 
 
 def test_cosh_series():
@@ -156,16 +156,16 @@ def test_tanh():
 
     assert tanh(0) == 0
 
-    assert tanh(1) == tanh(1)
+    unchanged(tanh, 1)
     assert tanh(-1) == -tanh(1)
 
-    assert tanh(x) == tanh(x)
+    unchanged(tanh, x)
     assert tanh(-x) == -tanh(x)
 
-    assert tanh(pi) == tanh(pi)
+    unchanged(tanh, pi)
     assert tanh(-pi) == -tanh(pi)
 
-    assert tanh(2**1024 * E) == tanh(2**1024 * E)
+    unchanged(tanh, 2**1024 * E)
     assert tanh(-2**1024 * E) == -tanh(2**1024 * E)
 
     assert tanh(pi*I) == 0
@@ -175,10 +175,10 @@ def test_tanh():
     assert tanh(-3*10**73*pi*I) == 0
     assert tanh(7*10**103*pi*I) == 0
 
-    assert tanh(pi*I/2) == tanh(pi*I/2)
-    assert tanh(-pi*I/2) == -tanh(pi*I/2)
-    assert tanh(5*pi*I/2) == tanh(5*pi*I/2)
-    assert tanh(7*pi*I/2) == tanh(7*pi*I/2)
+    assert tanh(pi*I/2) == zoo
+    assert tanh(-pi*I/2) == zoo
+    assert tanh(5*pi*I/2) == zoo
+    assert tanh(7*pi*I/2) == zoo
 
     assert tanh(pi*I/3) == sqrt(3)*I
     assert tanh(-2*pi*I/3) == sqrt(3)*I
@@ -196,7 +196,7 @@ def test_tanh():
     assert tanh(pi*I/105) == tan(pi/105)*I
     assert tanh(-pi*I/105) == -tan(pi/105)*I
 
-    assert tanh(2 + 3*I) == tanh(2 + 3*I)
+    unchanged(tanh, 2 + 3*I)
 
     assert tanh(x*I) == tan(x)*I
 
@@ -223,18 +223,17 @@ def test_coth():
     assert coth(oo) == 1
     assert coth(-oo) == -1
 
-    assert coth(0) == coth(0)
     assert coth(0) == zoo
-    assert coth(1) == coth(1)
+    unchanged(coth, 1)
     assert coth(-1) == -coth(1)
 
-    assert coth(x) == coth(x)
+    unchanged(coth, x)
     assert coth(-x) == -coth(x)
 
     assert coth(pi*I) == -I*cot(pi)
     assert coth(-pi*I) == cot(pi)*I
 
-    assert coth(2**1024 * E) == coth(2**1024 * E)
+    unchanged(coth, 2**1024 * E)
     assert coth(-2**1024 * E) == -coth(2**1024 * E)
 
     assert coth(pi*I) == -I*cot(pi)
@@ -265,7 +264,7 @@ def test_coth():
     assert coth(pi*I/105) == -cot(pi/105)*I
     assert coth(-pi*I/105) == cot(pi/105)*I
 
-    assert coth(2 + 3*I) == coth(2 + 3*I)
+    unchanged(coth, 2 + 3*I)
 
     assert coth(x*I) == -cot(x)*I
 
@@ -283,7 +282,7 @@ def test_coth_series():
 
 def test_asinh():
     x, y = symbols('x,y')
-    assert asinh(x) == asinh(x)
+    unchanged(asinh, x)
     assert asinh(-x) == -asinh(x)
     assert asinh(nan) == nan
     assert asinh( 0) == 0

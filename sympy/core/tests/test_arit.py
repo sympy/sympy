@@ -5,7 +5,7 @@ from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sign, im, nan
 )
 from sympy.core.compatibility import long
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, unchanged
 from sympy.utilities.randtest import test_numerically
 
 
@@ -155,10 +155,10 @@ def test_pow():
     n = Symbol('k', even=False)
     k = Symbol('k', even=True)
 
-    assert (-1)**x == (-1)**x
-    assert (-1)**n == (-1)**n
+    unchanged(Pow, -1, x)
+    unchanged(Pow, -1, n)
+    unchanged(Pow, -2*x, k)  # we choose not to auto expand this
     assert (-2)**k == 2**k
-    assert (-2*x)**k == (-2*x)**k  # we choose not to auto expand this
     assert (-1)**k == 1
 
 
@@ -274,7 +274,7 @@ def test_ncmul():
     assert A/A == 1
     assert A/(A**2) == 1/A
 
-    assert A/(1 + A) == A/(1 + A)
+    unchanged(Mul, A, 1/(1 + A))
 
     assert set((A + B + 2*(A + B)).args) == \
         set([A, B, 2*(A + B)])
@@ -323,8 +323,8 @@ def test_powerbug():
 def test_Mul_doesnt_expand_exp():
     x = Symbol('x')
     y = Symbol('y')
-    assert exp(x)*exp(y) == exp(x)*exp(y)
-    assert 2**x*2**y == 2**x*2**y
+    unchanged(Mul, exp(x), exp(y))
+    unchanged(Mul, 2**x, 2**y)
     assert x**2*x**3 == x**5
     assert 2**x*3**x == 6**x
     assert x**(y)*x**(2*y) == x**(3*y)

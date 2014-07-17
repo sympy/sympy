@@ -253,7 +253,7 @@ def test_line():
     assert Line((1, 1), slope=oo) == Line((1, 1), (1, 2))
     assert Line((1, 1), slope=-oo) == Line((1, 1), (1, 2))
     raises(ValueError, lambda: Line((1, 1), 1))
-    assert Line(p1, p2) == Line(p1, p2)
+    assert Line(p1, p2).args == (p1, p2)
     assert Line(p1, p2) != Line(p2, p1)
     assert l1 != l2
     assert l1 != l3
@@ -684,8 +684,8 @@ def test_plane():
     assert Plane(p1, p2, p3) != Plane(p1, p3, p2)
     assert pl3 == Plane(Point3D(0, 0, 0), normal_vector=(1, -2, 1))
     assert pl3 != pl4
-    assert pl4 == pl4
-    assert pl5 == Plane(Point3D(1, 2, 3), normal_vector=(1, 2, 3))
+    assert pl4 == pl4  # XXX foo == foo test
+    assert pl5 == Plane(Point3D(1, 2, 3), normal_vector=(1, 2, 3))  # XXX foo == foo test?
 
     assert pl5.equation(x, y, z) == x + 2*y + 3*z - 14
     assert pl3.equation(x, y, z) == x - 2*y + z
