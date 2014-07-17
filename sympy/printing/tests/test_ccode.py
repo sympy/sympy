@@ -1,4 +1,4 @@
-from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq
+from sympy.core import pi, oo, symbols, Function, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, Symbol
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt, gamma
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
@@ -26,10 +26,14 @@ def test_ccode_sqrt():
 
 
 def test_ccode_Pow():
-    assert ccode(x**3) == "pow(x, 3)"
-    assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
+    assert ccode(x**3) == "x*x*x"
+    assert ccode(x**30) == "pow(x, 30)"
+    k = Symbol('k', integer=True)
+    assert ccode(x**k) == "pow(x, k)"
+    assert ccode(x**(y**3)) == "pow(x, y*y*y)"
+    assert ccode(x**(y**30)) == "pow(x, pow(y, 30))"
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+        "pow(3.5*g(x), -x + pow(y, x))/(x*x + y)"
     assert ccode(x**-1.0) == '1.0/x'
     assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
@@ -116,28 +120,28 @@ def test_ccode_boolean():
 
 
 def test_ccode_Piecewise():
-    p = ccode(Piecewise((x, x < 1), (x**2, True)))
+    p = ccode(Piecewise((x, x < 1), (x**20, True)))
     s = \
 """\
 if (x < 1) {
    x
 }
 else {
-   pow(x, 2)
+   pow(x, 20)
 }\
 """
     assert p == s
 
 
 def test_ccode_Piecewise_deep():
-    p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
+    p = ccode(2*Piecewise((x, x < 1), (x**22, True)))
     s = \
 """\
 2*((x < 1) ? (
    x
 )
 : (
-   pow(x, 2)
+   pow(x, 22)
 ) )\
 """
     assert p == s
