@@ -366,68 +366,64 @@ class MatrixSymbol(MatrixExpr):
 
 
 class ElemWise(MatrixExpr):
-    """Symbolic replresentation of an elementwise operation on a matrix
+    """Symbolic replresentation of an elementwise operation on a Matrix object
 
     Represented as ElemWise(A, f(x)) where f(x) is a function in x and
     A is a MatrixSymbol
+
+    >>> from sympy import MatrixSymbol, Lambda, Symbol, symbols, cos, ElemWise
+    >>> A = MatrixSymbol('X', 3, 3)
+    >>> B = MatrixSymbol('Y', 3, 4)
+    >>> x = symbols('x')
+    >>> z = Symbol('z', real=True)
+    >>> f = Lambda(x, z*x)
+    >>> g = Lambda(x, cos(z*x)**2)
+    >>> L = ElemWise(ElemWise(A*B, f), f).evaluate()
+    >>> O = ElemWise(ElemWise(A, g), f).evaluate()
+    >>> T = ElemWise(ElemWise(A, f), g).evaluate()
+    >>> L[1, 1]
+    z**2*(X[1, 0]*Y[0, 1] + X[1, 1]*Y[1, 1] + X[1, 2]*Y[2, 1])
+    >>> O
+    ElemWise(X, z*cos(x*z)**2)
+    >>> T
+    ElemWise(X, cos(x*z**2)**2)
     """
+
     def __new__( cls, M, fn):
         return Basic.__new__(cls, M, fn)
 
     def evaluate(self):
         return self._evaluate()
 
-    Expression = property(lambda self: self.args[1])
-    Matrix = property(lambda self: self.args[0])
-
-    @property
-    def shape(self):
-        return self.Matrix.shape
-
-    @property
-    def shape(self):
-        return self.Matrix.shape
-
-    @property
-    def rows(self):
-        return self.Matrix.rows
-
-    @property
-    def cols(self):
-        return self.Matrix.cols
+    expression = property(lambda self: self.args[1])
+    matrix = property(lambda self: self.args[0])
+    x = Symbol('x')
 
     def _evaluate(self):
-        function = sympify(self.Expression)
-        mat = self.Matrix
-        self._eval_args(function, mat)
-        x = Symbol('x')
+        function = sympify(self.expression)
+        mat = self.matrix
         if function == IdentityFunction and type(mat) != ElemWise:
             return mat
         if(type(mat) in [MatrixSymbol, MatMul]):
-            return self._evaluate_simple(function, mat, x)
+            return self._evaluate_simple(function, mat)
         elif(type(mat) == ElemWise):
-            new_func, mat = sympify(mat.Expression), mat.Matrix
-            old_func = sympify(self.Expression)
-            return ElemWise(mat, new_func(old_func(x))).evaluate()
+            new_func, mat = sympify(mat.expression), mat.matrix
+            old_func = sympify(self.expression)
+            return ElemWise(mat, old_func(new_func(self.x))).evaluate()
 
-    def _eval_args(self, function, mat):
-        if(self._is_multivariate(function)):
-            raise TypeError("The function can't be multivariate.")
-        if(type(mat) not in [MatrixSymbol, MatMul, ElemWise]):
-            raise ValueError("The first argument should evaluate to a Matrix.")
-
-    def _is_multivariate(self, function):
-        return False
-
-    def _evaluate_simple(self, function, mat, x):
+    def _evaluate_simple(self, function, mat):
         function = sympify(function)
-        return ElemWise(mat, function)
-
-    def _scalar_mul(self, M, *args):
-        return MatMul(M, *args).doit()
+	if(type(function) == Lambda):
+            return ElemWise(mat, function(self.x))
+        else:
+            return ElemWise(mat, function)
 
     def _entry(self, i, j):
-        return MatrixElement(self, i, j)
+        return sympify(self.expression.subs(self.x, self.matrix[i, j]))
+
+    @property
+    def shape(self):
+        return self.matrix.shape
 
 
 class Identity(MatrixExpr):

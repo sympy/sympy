@@ -5,6 +5,7 @@ from sympy.matrices import (ElemWise, Identity, ImmutableMatrix, Inverse, MatAdd
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         Transpose, Adjoint)
 from sympy.utilities.pytest import raises
+from sympy.core.function import Lambda
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 x = symbols('x')
@@ -41,14 +42,13 @@ def test_subs():
 
 
 def test_ElemWise():
-    f = lambda x: n*m*x
-    g = lambda x: sin(x)
-    h = lambda x: cos(x)**2
-    assert ElemWise(A, f(x)) == A*n*m
-    assert ElemWise(ElemWise(A, f(x)), f(x)) == A*n**2*m**2
-    assert ElemWise(ElemWise(A, g(x)), g(x)) == ElemWise(A, sin(sin(x)))
-    assert ElemWise(ElemWise(A, h(x)), f(x)) == ElemWise(A, n*m*cos(x)**2)
-    assert ElemWise(ElemWise(A, f(x)), h(x)) == ElemWise(A*n*m, cos(x)**2)
+    f = Lambda(x, 2*x)
+    g = Lambda(x, cos(x)**2)
+    h = Lambda(x, x^-1)
+    X = MatrixSymbol('X', 3, 3)
+    assert ElemWise(X, 4*x) == ElemWise(ElemWise(X, f), f).evaluate()
+    assert ElemWise(X, 2*cos(x)**2) == ElemWise(ElemWise(X, g), f).evaluate()
+    assert ElemWise(X, x) == ElemWise(ElemWise(X, h), h).evaluate()
 
 
 def test_ZeroMatrix():
