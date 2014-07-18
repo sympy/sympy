@@ -409,7 +409,7 @@ def test_derivative_subs():
     assert Derivative(f(x), x).subs(f(x), y) != 0
     assert Derivative(f(x), x).subs(f(x), y).subs(y, f(x)) == \
         Derivative(f(x), x)
-    # issues 1986, 1938
+    # issues 5085, 5037
     assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)

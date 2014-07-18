@@ -19,7 +19,6 @@ b21 = Basic(b2, b1)
 
 def test_structure():
     assert b21.args == (b2, b1)
-    assert tuple(b21.iter_basic_args()) == b21.args
     assert b21.func(*b21.args) == b21
     assert bool(b1)
 
@@ -151,7 +150,7 @@ def test_sorted_args():
 
 def test_call():
     x, y = symbols('x y')
-    # See the long history of this in issues 1927 and 2006.
+    # See the long history of this in issues 5026 and 5105.
 
     raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
     raises(TypeError, lambda: sin(x)(1))

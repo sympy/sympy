@@ -16,6 +16,14 @@ from .waves import TWave
 __all__.extend(waves.__all__)
 
 
+from . import gaussopt
+from .gaussopt import RayTransferMatrix, FreeSpace, FlatRefraction,\
+    CurvedRefraction, FlatMirror, CurvedMirror, ThinLens, GeometricRay,\
+    BeamParameter, waist2rayleigh, rayleigh2waist, geometric_conj_ab,\
+    geometric_conj_af, geometric_conj_bf, gaussian_conj, conjugate_gauss_beams
+__all__.extend(gaussopt.__all__)
+
+
 from . import medium
 from .medium import Medium
 __all__.extend(medium.__all__)

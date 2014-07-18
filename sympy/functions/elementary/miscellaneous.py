@@ -339,7 +339,7 @@ class MinMaxBase(Expr, LatticeOp):
             elif arg == cls.identity:
                 continue
             elif arg.func == cls:
-                for x in arg.iter_basic_args():
+                for x in arg.args:
                     yield x
             else:
                 yield arg

@@ -2037,10 +2037,6 @@ def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import ReferenceFrame
     assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
 
-def test_sympy__physics__gaussopt__BeamParameter():
-    from sympy.physics.gaussopt import BeamParameter
-    assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
-
 
 def test_sympy__physics__paulialgebra__Pauli():
     from sympy.physics.paulialgebra import Pauli
@@ -2956,6 +2952,7 @@ def test_sympy__geometry__point__Point():
     from sympy.geometry.point import Point
     assert _test_args(Point(0, 1))
 
+
 def test_sympy__geometry__point3d__Point3D():
     from sympy.geometry.point3d import Point3D
     assert _test_args(Point3D(0, 1, 2))
@@ -2990,6 +2987,7 @@ def test_sympy__geometry__line__Segment():
     from sympy.geometry.line import Segment
     assert _test_args(Segment((0, 1), (2, 3)))
 
+
 @SKIP("abstract class")
 def test_sympy__geometry__line3d__LinearEntity3D():
     pass
@@ -2999,13 +2997,21 @@ def test_sympy__geometry__line3d__Line3D():
     from sympy.geometry.line3d import Line3D
     assert _test_args(Line3D((0, 1, 1), (2, 3, 4)))
 
+
 def test_sympy__geometry__line3d__Segment3D():
     from sympy.geometry.line3d import Segment3D
     assert _test_args(Segment3D((0, 1, 1), (2, 3, 4)))
 
+
 def test_sympy__geometry__line3d__Ray3D():
     from sympy.geometry.line3d import Ray3D
     assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
+
+
+def test_sympy__geometry__plane__Plane():
+    from sympy.geometry.plane import Plane
+    assert _test_args(Plane((1, 1, 1), (-3, 4, -2), (1, 2, 3)))
+
 
 def test_sympy__geometry__polygon__Polygon():
     from sympy.geometry.polygon import Polygon
@@ -3177,6 +3183,7 @@ def test_sympy__categories__baseclasses__Category():
     K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
 
+
 def test_sympy__ntheory__factor___totient():
     from sympy.ntheory.factor_ import totient
     k = symbols('k', integer=True)
@@ -3188,10 +3195,17 @@ def test_sympy__ntheory__residue_ntheory__mobius():
     from sympy.ntheory import mobius
     assert _test_args(mobius(2))
 
+
 def test_sympy__physics__optics__waves__TWave():
     from sympy.physics.optics import TWave
     A, f, phi = symbols('A, f, phi')
     assert _test_args(TWave(A, f, phi))
+
+
+def test_sympy__physics__optics__gaussopt__BeamParameter():
+    from sympy.physics.optics import BeamParameter
+    assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
+
 
 def test_sympy__physics__optics__medium__Medium():
     from sympy.physics.optics import Medium

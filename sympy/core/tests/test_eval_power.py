@@ -186,7 +186,7 @@ def test_issue_4362():
 
 
 def test_Pow_signs():
-    """Cf. issues 1496 and 2151"""
+    """Cf. issues 4595 and 5250"""
     x = Symbol('x')
     y = Symbol('y')
     n = Symbol('n', even=True)

@@ -15,9 +15,11 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
-    ask, refine, AlgebraicNumber,
-    elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci, sign,
-    Lambda, Piecewise, Subs, residue, Derivative, logcombine)
+    ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
+    continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
+    continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
+    powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
+    residue, Derivative, logcombine)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
@@ -45,6 +47,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
+from itertools import islice, takewhile
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -56,7 +59,27 @@ g = Function('g')
 #   Not implemented.
 
 # B. Set Theory
-#   Not implemented.
+
+
+def test_B1():
+    assert (FiniteSet(i, j, j, k, k, k) | FiniteSet(l, k, j) |
+            FiniteSet(j, m, j)) == FiniteSet(i, j, k, l, m)
+
+
+def test_B2():
+    assert (FiniteSet(i, j, j, k, k, k) & FiniteSet(l, k, j) &
+            FiniteSet(j, m, j)) == FiniteSet(j)
+
+
+def test_B3():
+    assert (FiniteSet(i, j, k, l, m) - FiniteSet(j) ==
+            FiniteSet(i, k, l, m))
+
+
+def test_B4():
+    assert (FiniteSet(*(FiniteSet(i, j)*FiniteSet(k, l))) ==
+            FiniteSet((i, k), (i, l), (j, k), (j, l)))
+
 
 # C. Numbers
 
@@ -314,7 +337,45 @@ def test_G2():
 def test_G3():
     raise NotImplementedError("(a+b)**p mod p == a**p + b**p mod p; p prime")
 
-# ... G20 Modular equations and continued fractions are not implemented.
+# ... G14 Modular equations are not implemented.
+
+def test_G15():
+    assert Rational(sqrt(3).evalf()).limit_denominator(15) == Rational(26, 15)
+    assert list(takewhile(lambda x: x.q <= 15, cf_c(cf_i(sqrt(3)))))[-1] == \
+        Rational(26, 15)
+
+
+def test_G16():
+    assert list(islice(cf_i(pi),10)) == [3, 7, 15, 1, 292, 1, 1, 1, 2, 1]
+
+
+def test_G17():
+    assert cf_p(0, 1, 23) == [4, [1, 3, 1, 8]]
+
+
+def test_G18():
+    assert cf_p(1, 2, 5) == [[1]]
+    assert cf_r([[1]]) == S.Half + sqrt(5)/2
+
+
+@XFAIL
+def test_G19():
+    s = symbols('s', integer=True, positive=True)
+    it = cf_i((exp(1/s) - 1)/(exp(1/s) + 1))
+    assert list(islice(it, 5)) == [0, 2*s, 6*s, 10*s, 14*s]
+
+
+def test_G20():
+    s = symbols('s', integer=True, positive=True)
+    # Wester erroneously has this as -s + sqrt(s**2 + 1)
+    assert cf_r([[2*s]]) == s + sqrt(s**2 + 1)
+
+
+@XFAIL
+def test_G20b():
+    s = symbols('s', integer=True, positive=True)
+    assert cf_p(s, 1, s**2 + 1) == [[2*s]]
+
 
 # H. Algebra
 

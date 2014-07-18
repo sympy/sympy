@@ -21,6 +21,7 @@ from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point import Point
 from .util import _symbol
+from sympy.core.compatibility import is_sequence
 
 # TODO: this should be placed elsewhere and reused in other modules
 
@@ -1092,7 +1093,24 @@ class Line(LinearEntity):
         return simplify(a*x + b*y + c)
 
     def contains(self, o):
-        """Return True if o is on this Line, or False otherwise."""
+        """
+        Return True if o is on this Line, or False otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy import Line,Point
+        >>> p1, p2 = Point(0, 1), Point(3, 4)
+        >>> l = Line(p1, p2)
+        >>> l.contains(p1)
+        True
+        >>> l.contains((0, 1))
+        True
+        >>> l.contains((0, 0))
+        False
+        """
+        if is_sequence(o):
+            o = Point(o)
         if isinstance(o, Point):
             o = o.func(*[simplify(i) for i in o.args])
             x, y = Dummy(), Dummy()
@@ -1128,9 +1146,12 @@ class Line(LinearEntity):
         >>> s = Line(p1, p2)
         >>> s.distance(Point(-1, 1))
         sqrt(2)
+        >>> s.distance((-1, 2))
+        3*sqrt(2)/2
         """
         if not isinstance(o, Point):
-            raise NotImplementedError
+            if is_sequence(o):
+                o = Point(o)
         a, b, c = self.coefficients
         if 0 in (a, b):
             return self.perpendicular_segment(o).length
@@ -1345,9 +1366,12 @@ class Ray(LinearEntity):
         >>> s = Ray(p1, p2)
         >>> s.distance(Point(-1, -1))
         sqrt(2)
+        >>> s.distance((-1, 2))
+        3*sqrt(2)/2
         """
         if not isinstance(o, Point):
-            raise NotImplementedError
+            if is_sequence(o):
+                o = Point(o)
         s = self.perpendicular_segment(o)
         if isinstance(s, Point):
             if self.contains(s):
@@ -1397,14 +1421,43 @@ class Ray(LinearEntity):
         return self.source == other.source and other.p2 in self
 
     def contains(self, o):
-        """Is other GeometryEntity contained in this Ray?"""
+        """
+        Is other GeometryEntity contained in this Ray?
+
+        Examples
+        ========
+
+        >>> from sympy import Ray,Point,Segment
+        >>> p1, p2 = Point(0, 0), Point(4, 4)
+        >>> r = Ray(p1, p2)
+        >>> r.contains(p1)
+        True
+        >>> r.contains((1, 1))
+        True
+        >>> r.contains((1, 3))
+        False
+        >>> s = Segment((1, 1), (2, 2))
+        >>> r.contains(s)
+        True
+        >>> s = Segment((1, 2), (2, 5))
+        >>> r.contains(s)
+        False
+        >>> r1 = Ray((2, 2), (3, 3))
+        >>> r.contains(r1)
+        True
+        >>> r1 = Ray((2, 2), (3, 5))
+        >>> r.contains(r1)
+        False
+        """
         if isinstance(o, Ray):
             return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2) and
                     self.xdirection == o.xdirection and
                     self.ydirection == o.ydirection)
         elif isinstance(o, Segment):
             return o.p1 in self and o.p2 in self
-        elif isinstance(o, Point):
+        elif is_sequence(o):
+            o = Point(o)
+        if isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
                 if self.xdirection is S.Infinity:
                     rv = o.x >= self.source.x
@@ -1620,7 +1673,11 @@ class Segment(LinearEntity):
         >>> s = Segment(p1, p2)
         >>> s.distance(Point(10, 15))
         sqrt(170)
+        >>> s.distance((0, 12))
+        sqrt(73)
         """
+        if is_sequence(o):
+            o = Point(o)
         if isinstance(o, Point):
             seg_vector = self.p2 - self.p1
             pt_vector = o - self.p1

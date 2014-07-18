@@ -25,7 +25,7 @@ from .util import _symbol, idiff
 from sympy.mpmath import findroot as nroot
 
 class Hyperbola(GeometryEntity):
-    """A Hyoerbolical GeometryEntity.
+    """A Hyperbolical GeometryEntity.
 
     Parameters
     ==========
@@ -95,7 +95,7 @@ class Hyperbola(GeometryEntity):
         Returns
         =======
 
-        center : number
+        center : Point
 
         See Also
         ========
@@ -264,7 +264,7 @@ class Hyperbola(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Hyperbola(p1, 3, sqrt(2))
         >>> e1.eccentricity
-        sqrt(13)/2
+        sqrt(22)/2
 
         """
         return self.focus_distance / self.minor
@@ -324,7 +324,7 @@ class Hyperbola(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Hyperbola(p1, 3, 1)
         >>> e1.foci
-        (Point(sqrt(10), 0), Point(sqrt(10), 0))
+        (Point(-sqrt(10), 0), Point(sqrt(10), 0))
 
         """
         c = self.center
@@ -350,7 +350,7 @@ class Hyperbola(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import hyperbola, pi
+        >>> from sympy import Hyperbola, pi
         >>> Hyperbola((1, 0), 2, 1).rotate(pi/2)
         Hyperbola(Point(0, 1), 2, 1)
         """
@@ -533,7 +533,7 @@ class Hyperbola(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Hyperbola, Point, Line, sqrt
+        >>> from sympy import Hyperbola, Point, Line, sqrt, Ellipse
         >>> e = Hyperbola(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
         []
@@ -545,7 +545,7 @@ class Hyperbola(GeometryEntity):
         [Point(5, 0)]
         >>> e.intersection(Line(Point(6,0), Point(6, 1)))
         [Point(6, -7*sqrt(11)/5), Point(6, 7*sqrt(11)/5)]
-        >>> e = Ellipse(Point(-1, 0), 4, 3)
+        >>> e = Hyperbola(Point(-1, 0), 4, 3)
         >>> e.intersection(Ellipse(Point(1, 0), 4, 3))
         [Point(sqrt(15), -3*15**(1/4)*sqrt(2)/4), Point(sqrt(15), 3*15**(1/4)*sqrt(2)/4)]
         >>> e.intersection(Ellipse(Point(5, 0), 4, 3))
@@ -805,8 +805,6 @@ class Hyperbola(GeometryEntity):
         >>> e1 = Hyperbola(Point(0, 0), 3, 2)
         >>> e1.random_point() # gives some random point
         Point(...)
-        >>> p1 = e1.random_point(seed=0); p1.n(2)
-        Point(3.1, 0.51)
 
         """
         import random
