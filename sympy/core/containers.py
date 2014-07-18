@@ -9,7 +9,7 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, integer_types
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
 
@@ -253,3 +253,129 @@ class Dict(Basic):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
+
+
+from itertools import imap, islice
+import operator
+
+class Stream(Basic):
+    """
+    Stream container
+
+    Examples
+    ========
+
+    >>> from sympy.core.containers import Stream
+    >>> from sympy.abc import x
+    >>> def fib(x, y):
+    ...     while True:
+    ...         yield x
+    ...         x, y = y, x + y
+    >>> s = Stream(fib(0, 1))
+    >>> list(s[0:5])
+    [0, 1, 1, 2, 3]
+    """
+
+    __slots__ = ("_last", "_collection", "_origin")
+
+    class _StreamIterator(object):
+
+        __slots__ = ("_stream", "_position")
+
+        def __init__(self, stream):
+            self._stream = stream
+            self._position = -1 # not started yet
+
+        def __next__(self):
+            self._position += 1
+            if len(self._stream._collection) > self._position or self._stream._fill_to(self._position):
+                return self._stream._collection[self._position]
+
+            raise StopIteration()
+        next = __next__
+
+    def __init__(self, origin=[]):
+        self._collection = []
+        self._last = -1 # not started yet
+        self._origin = iter(origin) if origin else []
+
+    def _fill_to(self, index):
+        while self._last < index:
+            try:
+                n = next(self._origin)
+            except StopIteration:
+                return False
+
+            self._last += 1
+            self._collection.append(n)
+
+        return True
+
+    def _eval_subs(self, old, new):
+        return self.__class__(imap(lambda t: t.subs(old, new), self))
+
+    def __iter__(self):
+        return self._StreamIterator(self)
+
+    def __getitem__(self, index):
+        if isinstance(index, integer_types):
+            if index < 0:
+                raise TypeError("Invalid argument type")
+            self._fill_to(index)
+            return self._collection[index]
+        elif isinstance(index, slice):
+            if index.step == 0:
+                raise ValueError("Step must not be 0")
+            if not index.stop:
+                return self.__class__(imap(self.__getitem__, islice(index.start, index.stop, index.step or 1)))
+            return self.__class__(imap(self.__getitem__, xrange(index.start, index.stop, index.step or 1)))
+        else:
+            raise TypeError("Invalid argument type")
+
+    def __add__(self, other):
+        return self.__class__(imap(operator.add, self, other))
+
+    def __sub__(self, other):
+        from sympy.core import S
+        return self + other*S.NegativeOne
+
+    def __mul__(self, other):
+        from sympy.core import Number, Symbol, Basic, S
+        if not isinstance(other, Stream):
+            return self.__class__(imap(lambda x: x*other, self))
+        def mul():
+            k = 0
+            while True:
+                p = S.Zero
+                for i, a in enumerate(self):
+                    p += a*other[k - i]
+                    if i >= k:
+                        break
+                yield p
+                k += 1
+        return self.__class__(mul())
+
+    def __truediv__(self, other):
+        from sympy.core import S
+        if not isinstance(other, Stream):
+            return self*(S.One/other)
+        def invert_unit_series(s):
+            r = S.One
+            for t in s:
+                yield r
+                r = S.NegativeOne*r*t
+        c = S.One/other[0]
+        return self*self.__class__(invert_unit_series(other*c))*c
+    __div__ = __truediv__
+
+    def shift(self, n):
+        """ Right shift stream by n items """
+        return self.__class__(islice(self, n, None))
+
+    @property
+    def is_empty(self):
+        try:
+            if self.__getitem__(0) is not None:
+                return False
+        except IndexError:
+            return True

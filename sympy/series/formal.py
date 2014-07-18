@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import C, S, collect, Function, Add, Mul, simplify, cancel, sympify
+from sympy import C, S, collect, Function, Add, Mul, simplify, cancel, sympify, Basic
+from sympy.core.containers import Stream, Tuple
 from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq
@@ -9,21 +10,21 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.concrete import Sum
 from sympy.core import Add, Pow
 from sympy.core.expr import Expr
-from sympy.polys import roots, lcm
+from sympy.polys import roots, lcm, degree
 from sympy.polys.partfrac import apart
 from sympy.solvers import solve, rsolve
 
 
-def FormalSeries(x=None, n=0, *args, **kwargs):
+def FormalSeries(x=None, x0=0, dir='+', *args, **kwargs):
     """
-    Finds generator for given function and returns a ``Stream`` class.
+    Finds generator for given function and returns a ``Lazyseries`` object.
 
-    ``n`` represents the starting term for the infinite series
+    Kwargs
+    ======
 
-    Kwargs:
-        function:
-        sequence:
-        generator:
+    function
+    sequence
+    generator
 
     Examples
     ========
@@ -31,52 +32,74 @@ def FormalSeries(x=None, n=0, *args, **kwargs):
     >>> from sympy.series.formal import FormalSeries
     >>> from sympy.abc import x
     >>> FormalSeries(x, function=1/(1-x))
-    Stream(...)
+    Lazyseries(...)
     >>> FormalSeries(x, sequence=(1, 2, 3))
-    Stream(...)
+    Lazyseries(...)
 
     """
-    k = Dummy('k')
+    k = Dummy('k')  # Positive and Integer should be True
     generator = kwargs.pop("generator", None)
     if generator:
         c, e, k = generator
 
     sequence = kwargs.pop('sequence', None)
     if sequence:
-        c, e = findgen_seq(x, sequence, k)
+        c, e = findgen_seq(sequence, k)
 
     function = kwargs.pop('function', None)
-    if function:
+    if function is not None:
+        function = sympify(function)
+
+        if len(dir) != 1 or dir not in '+-':
+            raise ValueError("Dir must be '+' or '-'")
+
+        if x0 in [S.Infinity, S.NegativeInfinity]:
+            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
+            return FormalSeries(x, dir=dir, function=function.subs(x, 1/x)).subs(x, 1/x)
+
+        if x0 or dir == '-':
+            if dir == '-':
+                rep = -x + x0
+                rep2 = -x + x0
+            else:
+                rep = x + x0
+                rep2 = x - x0
+            return FormalSeries(x, function=function.subs(x, rep)).subs(x, rep2)
+
+        if x.is_positive is x.is_negative is None:
+            xpos = Dummy('x', positive=True, bounded=True)
+            return FormalSeries(xpos, function=function.subs(x, xpos)).subs(xpos, x)
+
         generator = findgen(x, function, k)
-        return sum([FormalSeries(x, generator=(c, e, k)) for c, e in generator])
+        return sum(FormalSeries(x, generator=(c, e, k)) for c, e in generator)
 
-    # If generator is constant like x**2 or 1
-    # Then all except first terms are zero
     if not e.has(k):
-        general_term = c*x**e
-        if n > 0:
-            nth_term = (S.Zero, S.Infinity)
-        else:
-            nth_term = (c, e)
+        def gen():
+            yield c*x**e
+            raise StopIteration
     else:
-        general_term = Sum(c*x**e, (k, S.Zero, S.Infinity))
-        nth_term = (c.subs(k, n), e.subs(k, n))
-    compute_tail = lambda: FormalSeries(x, n=n+1, generator=(c, e, k))
+        def gen():
+            n = 0
+            while True:
+                nc, ne = c.subs(k, n), e.subs(k, n)
+                yield nc*x**ne
+                n = n + 1
+    return Lazyseries(x, Stream(gen()))
 
-    return Stream(x, nth_term, general_term, compute_tail)
 
-
-def findgen_seq(x, sequence, k):
+def findgen_seq(sequence, k):
     """
     Returns generator for a sequence in terms of k
 
     Examples
     ========
 
-    >>> findgen_seq(x, (1, 2, 3), k)
-    (Piecewise((1, Eq(k%3, 0)), (2, Eq(k%3, 1)), (3, Eq(k%3, 2))), k, k)
-    >>> findgen_seq(x, [1], k)
-    (1, k, k)
+    >>> from sympy.series.formal import findgen_seq
+    >>> from sympy.abc import x, k
+    >>> findgen_seq((1, 2, 3), k)
+    (Piecewise((1, Mod(k, 3) == 0), (2, Mod(k, 3) == 1), (3, Mod(k, 3) == 2)), k)
+    >>> findgen_seq([1], k)
+    (Piecewise((1, Mod(k, 1) == 0)), k)
 
     """
     l = len(sequence)
@@ -91,14 +114,16 @@ def findgen_rational(x, function, k):
     Examples
     ========
 
+    >>> from sympy.series.formal import findgen_rational
+    >>> from sympy.abc import x, k
     >>> findgen_rational(x, 1/(1-x), k)
-    (1, k, k)
+    [(1, k)]
     >>> findgen_rational(x, 1/(1+x), k)
-    (-(-1)**(-k - 1), k, k)
+    [(-(-1)**(-k - 1), k)]
 
     """
     gen = []
-    m = Wild('m')
+    m = Wild('m', exclude=(0,))
     terms = Add.make_args(apart(function))
     for t in terms:
         n, d = t.as_numer_denom()
@@ -122,13 +147,15 @@ def rational_independent(x, terms):
     Examples
     ========
 
+    >>> from sympy import sin, cos
+    >>> from sympy.series.formal import rational_independent
+    >>> from sympy.abc import x
     >>> rational_independent(x, [sin(x), cos(x)])
     [sin(x), cos(x)]
     >>> rational_independent(x, [sin(x), cos(x), x*sin(x)])
     [x*sin(x) + sin(x), cos(x)]
 
     """
-    # XXX: Not sure if this is most efficient way
     ind = terms[0:1]
     for t in terms[1:]:
         dep = False
@@ -145,7 +172,7 @@ def rational_independent(x, terms):
     return ind
 
 
-def simpleDE(x, function, func):
+def simpleDE(x, function, f):
     """
     Converts a function into a simple differential equation.
 
@@ -155,18 +182,21 @@ def simpleDE(x, function, func):
     Examples:
     ========
 
+    >>> from sympy import sin, exp, Function
+    >>> from sympy.series.formal import simpleDE
+    >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> simpleDE(x, exp(x), f(x))
-    -f(x) + Derivative(f(x), x, x)
-    >>> simpleDE(x, sin(x), f(x))
+    >>> simpleDE(x, exp(x), f)
+    -f(x) + Derivative(f(x), x)
+    >>> simpleDE(x, sin(x), f)
     f(x) + Derivative(f(x), x, x)
 
     """
     a = symbols('a:4')
 
     makeDE = lambda k: (function.diff(x, k) + \
-            Add(*[a[i]*function.diff(x, i) for i in range(0, k)]), func(x).diff(x, k) +
-            Add(*[a[i]*func(x).diff(x, i) for i in range(0, k)]))
+            Add(*[a[i]*function.diff(x, i) for i in range(0, k)]), f(x).diff(x, k) +
+            Add(*[a[i]*f(x).diff(x, i) for i in range(0, k)]))
 
     # Solve for case k=1
     eq, DE = makeDE(1)
@@ -202,13 +232,16 @@ def DEtoRE(DE, r, k):
     Converts a differential equation into a recurrence equation
 
     Parameters:
-        recurr: Function in which RE whill be expressed
+        r: Function in which RE whill be expressed
         n: Argument of recurr function
 
     Examples
     ========
 
-    >>> r = Function('r')
+    >>> from sympy import Derivative, Function
+    >>> from sympy.series.formal import DEtoRE
+    >>> from sympy.abc import x, k
+    >>> f, r = Function('f'), Function('r')
     >>> DE = -f(x) + Derivative(f(x), x)
     >>> DEtoRE(DE, r, k)
     (k + 1)*r(k + 1) - r(k)
@@ -218,7 +251,7 @@ def DEtoRE(DE, r, k):
     DE = DE.expand()
 
     f = DE.atoms(Function).pop()
-    x = DE.atoms(Symbol).pop()
+    x = f.atoms(Symbol).pop()
 
     # Minimum argument of ``r`` in the RE
     # This converts recurrences like
@@ -301,9 +334,13 @@ def solveRE(RE, r, k, function):
     Examples
     ========
 
+    >>> from sympy import exp, Function
+    >>> from sympy.series.formal import solveRE
+    >>> from sympy.abc import x, k
+    >>> r = Function('r')
     >>> RE = (k+1)*r(k+1) - r(k)
-    >>> solveRE(x, RE, r, k, exp(x))
-    (1/k!, k)
+    >>> solveRE(RE, r, k, exp(x))
+    [(1/(factorial(k)), k)]
 
     """
     RE = RE.expand().collect(r(k).func(Wild('m')))
@@ -341,8 +378,14 @@ def findgen(x, function, k):
 
     Examples
     ========
-    >>> findgen(x, sin(x), k)
 
+    >>> from sympy import sin, exp
+    >>> from sympy.series.formal import findgen
+    >>> from sympy.abc import x, k
+    >>> findgen(x, sin(x), k)
+    [((-1/4)**k/(RisingFactorial(3/2, k)*factorial(k)), 2*k + 1)]
+    >>> findgen(x, exp(x), k)
+    [(1/(factorial(k)), k)]
 
     References
     ==========
@@ -355,20 +398,15 @@ def findgen(x, function, k):
 
     simplDE, DEtoRE, solveRE
     """
-    function = sympify(function)
-
-    if x.is_positive is not True:
-        xpos = Dummy('x', positive=True)
-        function = function.subs(x, xpos)
-        return findgen(xpos, function, k)
-
     # Search upto 4th order DE
     # Good enough for most functions
     for order in range(0, 5):
         diff = function.diff(x, order)
         if diff.is_rational_function():
             try:
-                return findgen_rational(x, diff, k)  # Integrate order times
+                gen = findgen_rational(x, diff, k)  # Integrate order times
+                integral = lambda e, k: e if k == 0 else integral(e.integrate(x, conds="none"), k - 1)
+                return [integral(c*x**e, order).as_coeff_exponent(x) for c, e in gen]
             except ValueError:
                 break
 
@@ -381,179 +419,138 @@ def findgen(x, function, k):
 
     return gen
 
-class EmptyStream():
-    """ Represents an empty stream """
-    pass
 
+from heapq import merge
+from itertools import imap, islice, takewhile
 
-class Stream(Expr):
+class Lazyseries(Expr):
     """
-    Stream class to represent infinite series.
+    Represents an infinite series
+    Use ``FormalSeries`` to create a Lazyseries object
 
-    Use ``FormalSeries`` to generate a stream object representing infinite series of a function.
+    Examples
+    ========
 
-    Attributes:
-        head: first term of the series represented as a tuple (c, e)
-        compute_tail: function to generate rest of the series, returns a Stream class
-        tail: stream object representing rest of the series generated by compute_tail
-
-    References
-    ==========
-
-    .. [1] Gruntz' Thesis pp. 100 Secion 7.1.2
+    >>> from sympy import sin, cos
+    >>> from sympy.series.formal import FormalSeries
+    >>> from sympy.abc import x
+    >>> s = FormalSeries(x, function=sin(x))
+    >>> s.as_series(n=6)
+    x - x**3/6 + x**5/120 + O(x**6)
+    >>> t = FormalSeries(x, function=cos(x))
+    >>> t.as_series(n=6)
+    1 - x**2/2 + x**4/24 + O(x**6)
+    >>> u = s * t
+    >>> u.as_series(n=6)
+    x - 2*x**3/3 + 2*x**5/15 + O(x**6)
 
     """
-    def __init__(self, x, head, general_term, compute_tail=lambda: EmptyStream()):
+    def __init__(self, x, gen):
         self.x = x
-        self.head = head
-        self.general_term = general_term
-        self._compute_tail = compute_tail
+        self.sym = x.atoms(Symbol).pop()
+        self.gen = gen
 
-    def __add__(self, other):
-        if self is EmptyStream():
-            return other
-        if other is EmptyStream():
-            return self
-        if self.x != other.x:
-            raise ValueError('Expected streams of same variable, got: %s, %s' % (self.x, other.x))
+    def __iter__(self):
+        return self.gen.__iter__()
 
-        c1, e1 = self.head
-        c2, e2 = other.head
-
-        gen1, gen2 = self.general_term, other.general_term
-        if not gen1 or not gen2:
-            gen = None
-        else:
-            gen = gen1 + gen2
-
-        s = sign(e2 - e1)
-        if s == 1:
-            return Stream(self.x, self.head, gen, lambda: self.tail + other)
-        if s == -1:
-            return Stream(self.x, other.head, gen, lambda: self + other.tail)
-        if s == 0:
-            return Stream(self.x, (c1 + c2, e1), gen, lambda: self.tail + other.tail)
-        raise NotImplementedError('Result depends on sign of %s' % s)
-
-    def __sub__(self, other):
-        if self is None:
-            return other.scale(-1)
-        if other is None:
-            return self
-        if self.x != other.x:
-            raise ValueError('Expected streams of same variable, got: %s, %s' % (self.x, other.x))
-
-        c1, e1 = self.head
-        c2, e2 = other.head
-
-        gen1, gen2 = self.general_term, other.general_term
-        if not gen1 or not gen2:
-            gen = None
-        else:
-            gen = gen1 - gen2
-
-        s = sign(e2 - e1)
-        if s == 1:
-            return Stream(self.x, self.head, gen, lambda: self.tail - other)
-        if s == -1:
-            return Stream(self.x, other.head, gen, lambda: self - other.tail)
-        if s == 0:
-            return Stream(self.x, (c1 - c2, e1), gen, lambda: self.tail - other.tail)
-        raise NotImplementedError('Result depends on sign of %s' % s)
-
-    def __mul__(self, other):
-        if self is EmptyStream() or other is EmptyStream():
-            return EmptyStream()
-        if self.x != other.x:
-            raise ValueError('Expected streams of same variable, got: %s, %s' % (self.x, other.x))
-
-        c1, e1 = self.head
-        c2, e2 = other.head
-        gen = None  # TODO: cauchy product formula
-
-        compute_tail = lambda: other.tail.shift(e1).scale(c1) + self.tail.shift(e2).scale(c2) + self.tail*other.tail
-        return Stream(self.x, (c1*c2, e1+e2), gen, compute_tail)
-
-    def __truediv__(self, other):
-        if self is EmptyStream():
-            return EmptyStream()
-        if other is EmptyStream():
-            raise ZeroDivisionError('Division by zero')
-        if self.x != other.x:
-            raise ValueError('Expected streams of same variable, got: %s, %s' % (self.x, other.x))
-
-        c1, e1 = self.head
-        c2, e2 = other.head
-        gen = None
-
-        q = lambda: Stream(self.x, (c1/c2, e1-e2), gen, lambda: (self.tail + (other.tail * q()).scale(-1)).scale(S.One/c2).shift(-e2))
-        return q()
-
-    def compose(self, other):
-        c1, e1 = self.head
-        c2, e2 = other.head
-        gen = None
-        return Stream(self.x, self.head, gen, lambda: other * self.tail.shift(-1).compose(other))
-
-    def invert(self):
-        c1, e1 = self.head
-        gen = None
-        r = lambda: Stream(self.x, (S.One/c1, -e1), gen, lambda: self.tail.scale(-1) * r())
-        return r()
-
-    def scale(self, n):
-        c1, e1 = self.head
-
-        if not self.general_term:
-            gen = None
-        else:
-            t, limits = self.general_term.args
-            t = t*n
-            gen = Sum(t, limits)
-
-        return Stream(self.x, (c1*n, e1), gen, lambda: self.tail.scale(n))
-
-    def shift(self, n):
-        x = self.x
-        c1, e1 = self.head
-
-        if not self.general_term:
-            gen = None
-        else:
-            t, limits = self.general_term.args
-            t = t*x**n
-            gen = Sum(t, limits)
-
-        return Stream(self.x, (c1, e1+n), gen, lambda: self.tail.shift(n))
-
-    @property
-    def tail(self):
-        if self._compute_tail is not None:
-            self._tail = self._compute_tail()
-            self._compute_tail = None
-        return self._tail
-
-    @property
-    def term(self):
-        coeff, expo = self.head
-        x = self.x
-        return coeff * x**expo
-
-    def as_summation(self):
-        if self.general_term:
-            return self.general_term
-        raise ValueError
+    def __getitem__(self, index):
+        return self.gen.__getitem__(index)
 
     def as_series(self, n=6):
-        x = self.x
-        s = self.term
-        it = self.tail
-        # Go for 9 more terms until you hit the limit
-        # Or you get an empty stream
-        for i in range(n + 9):
-            c, e = it.head
-            if it == EmptyStream() or e > n:
-                break
-            s += it.term
-            it = it.tail
-        return s + C.Order(x**n, x)
+        sym = self.sym
+        it = takewhile(lambda t: degree(t, sym) < n, self.gen)
+        s = [t for t in it]
+        return Add(*s) + C.Order(sym**n, sym)
+
+    @property
+    def is_empty(self):
+        return self.gen.is_empty
+
+    def inverse(self):
+        return self.__class__(self.sym, Stream(Lazyseries.series_inverse(self.sym, self.gen)))
+
+    @staticmethod
+    def series_inverse(sym, self):
+        def gen():
+            yield S.One
+            raise StopIteration
+        for t in Lazyseries.series_div(sym, Stream(gen()), self):
+            yield t
+
+    def compose(self, other):
+        if self.sym != other.sym:
+            raise ValueError('Cannot compose series of different variables')
+        return self.__class__(self.sym, Stream(Lazyseries.series_compose(self.sym, self.gen, other.gen)))
+
+    @staticmethod
+    def series_compose(sym, self, other):
+        if self.is_empty:
+            raise StopIteration
+        yield self[0]
+        self = self.shift(1)
+        it = Lazyseries.series_mul(sym, other,
+                Stream(Lazyseries.series_compose(sym, self/sym, other)))
+        for t in it:
+            yield t
+
+    def __add__(self, other):
+        if self.sym != other.sym:
+            raise ValueError('Cannot add series of different variables')
+        sym = self.sym
+        return self.__class__(sym, Stream(Lazyseries.series_add(sym, self.gen, other.gen)))
+
+    @staticmethod
+    def series_add(sym, *iterables):
+        """ Custom add for series to produce terms in sorted order """
+        # Wrap the original term around Term to define __lt__ method for merge
+        class Term():
+            def __init__(self, term):
+                self.term = term
+            def __lt__(self, other):
+                return degree(self.term, sym) < degree(other.term, sym)
+        input_iter = [imap(lambda t: Term(t), it) for it in iterables]
+        return imap(lambda t: t.term, merge(*input_iter))
+
+    def __mul__(self, other):
+        if not isinstance(other, Lazyseries):
+            return self.__class__(self.x, self.gen * other)
+        if self.sym != other.sym:
+            raise ValueError('Cannot multiply series of different variables')
+        return self.__class__(self.sym, Stream(Lazyseries.series_mul(self.sym, self.gen, other.gen)))
+
+    @staticmethod
+    def series_mul(sym, self, other):
+        try:
+            a, b = self[0], other[0]
+        except IndexError:
+            raise StopIteration
+        yield a * b
+        self, other = self.shift(1), other.shift(1)
+        it = Stream(Lazyseries.series_add(sym, self*b, other*a,
+            Lazyseries.series_mul(sym, self, other)))
+        for t in it:
+            yield t
+
+    def __truediv__(self, other):
+        if not isinstance(other, Lazyseries):
+            return self.__class__(self.x, self.gen/other)
+        if self.sym != other.sym:
+            raise ValueError('Cannot multiply series of different variables')
+        return self.__class__(self.sym, Stream(Lazyseries.series_div(self.sym, self.gen, other.gen)))
+    __div__ = __truediv__
+
+    @staticmethod
+    def series_div(sym, self, other):
+        if self.is_empty:
+            raise StopIteration
+        if other.is_empty:
+            raise ZeroDivisionError
+        a, b = self[0], other[0]
+        self, other = self.shift(1), other.shift(1)
+        def gen():
+            yield a/b
+            q = Lazyseries.series_mul(sym, other, Stream(gen()))
+            for t in Lazyseries.series_add(sym, self, (Stream(q)*S.NegativeOne)/b):
+                yield t
+        for t in gen():
+            yield t

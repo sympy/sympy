@@ -36,7 +36,6 @@ def test_DEtoRE():
     DE = 2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
     assert DEtoRE(DE, r, k) == k*r(k) + 2*n*r(k + 1) + (-k - 2)*r(k + 2)
 
-
 def test_solveRE():
     r = Function('r')
 
@@ -89,15 +88,9 @@ def test_series_mul():
     s2 = FormalSeries(x, function=1/(1+x))
     s = s1 * s2
     assert s.as_series() == 1 + x**2 + x**4 + O(x**6)
-
-
-def test_series_scale_shift():
     s = FormalSeries(x, sequence=(1, 2, 3))
-    assert s.scale(-1).as_series() == -1 - 2*x - 3*x**2 - x**3 - 2*x**4 - 3*x**5 + O(x**6)
-    assert s.shift(2).as_series() == x**2 + 2*x**3 + 3*x**4 + x**5 + O(x**6)
-    s = FormalSeries(x, function=sin(x))
-    assert s.scale(0).as_series() == O(x**6)
-    assert s.shift(1).scale(1).as_series() == x**2 - x**4/6 + O(x**6)
+    assert (s*(-1)).as_series() == -1 - 2*x - 3*x**2 - x**3 - 2*x**4 - 3*x**5 + O(x**6)
+    assert (s*x**2).as_series() == x**2 + 2*x**3 + 3*x**4 + x**5 + O(x**6)
 
 
 def test_series_div():
@@ -113,11 +106,11 @@ def test_series_div():
 
 def test_series_inverse():
     s = FormalSeries(x, function=1/(1-x))
-    assert s.invert().as_series() == 1 - x + O(x**6)
+    assert s.inverse().as_series() == 1 - x + O(x**6)
     s = FormalSeries(x, function=exp(x))
-    assert s.invert().as_series() == 1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
+    assert s.inverse().as_series() == 1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
     s = FormalSeries(x, sequence=(1, 2, 3))
-    assert s.invert().as_series() == 1 - 2*x + x**2 + 3*x**3 - 9*x**4 + 9*x**5 + O(x**6)
+    assert s.inverse().as_series() == 1 - 2*x + x**2 + 3*x**3 - 9*x**4 + 9*x**5 + O(x**6)
 
 
 def test_series_compose():
