@@ -34,8 +34,6 @@ more information on each (run help(pde)):
 """
 from __future__ import print_function, division
 
-from copy import deepcopy
-
 from sympy.simplify import simplify
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
@@ -317,7 +315,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     reduced_eq = None
     if eq.is_Add:
         var = set(combinations_with_replacement((x,y), order))
-        dummyvar = deepcopy(var)
+        dummyvar = var.copy()
         power = None
         for i in var:
             coeff = eq.coeff(f(x,y).diff(*i))

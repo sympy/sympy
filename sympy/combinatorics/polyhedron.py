@@ -381,7 +381,7 @@ class Polyhedron(Basic):
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
         obj._corners = tuple(corners)  # in order given
-        obj._faces = FiniteSet(faces)
+        obj._faces = FiniteSet(*faces)
         if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
         # use the identity permutation if none are given

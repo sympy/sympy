@@ -224,7 +224,7 @@ class Point3D(GeometryEntity):
         See Also
         ========
 
-        sympy.geometry.line.Line
+        sympy.geometry.line3d.Line3D
 
         Examples
         ========
@@ -249,9 +249,14 @@ class Point3D(GeometryEntity):
         if len(points) <= 2:
             return True  # two points always form a line
         if len(points) == 3:
-            return (points[0].direction_cosine(points[1]) ==
-            points[1].direction_cosine(points[2]))
-
+            a = (points[0].direction_cosine(points[1]))
+            b = (points[0].direction_cosine(points[2]))
+            a = [abs(i) for i in a]
+            b = [abs(i) for i in b]
+            if a == b:
+                return True
+            else:
+                return False
         # XXX Cross product is used now,
         # If the concept needs to extend to more than three
         # dimensions then another method would have to be used

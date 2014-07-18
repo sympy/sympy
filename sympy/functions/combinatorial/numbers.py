@@ -642,6 +642,10 @@ class harmonic(Function):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
+    def _eval_evalf(self, prec):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma).evalf(n=prec)
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #

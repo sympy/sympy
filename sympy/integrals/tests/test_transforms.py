@@ -714,3 +714,7 @@ def test_hankel_transform():
     assert inverse_hankel_transform(
         2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(
         nu + S(3)/2)/sqrt(pi), k, r, nu) == r**nu*exp(-a*r)
+
+
+def test_issue_7181():
+    assert mellin_transform(1/(1 - x), x, s) != None

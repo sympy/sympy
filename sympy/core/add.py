@@ -629,7 +629,7 @@ class Add(Expr, AssocOp):
     @cacheit
     def extract_leading_order(self, symbols, point=None):
         """
-        Returns the leading term and it's order.
+        Returns the leading term and its order.
 
         Examples
         ========
@@ -665,7 +665,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple represeting a complex numbers
+        returns a tuple representing a complex numbers
 
         Examples
         ========

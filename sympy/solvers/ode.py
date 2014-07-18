@@ -548,13 +548,14 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             if eq[i].coeff(diff(func[i],t,ode_order(eq[i], func[i]))).is_negative:
                 eq[i] = -eq[i]
         match['eq'] = eq
-        if len(func) != len(eq) and (func != [None]):
-            raise ValueError("Number of functions given is less than number of equations %s" % func)
         if len(set(order.values()))!=1:
             raise ValueError("It solves only those systems of equations whose orders are equal")
         match['order'] = list(order.values())[0]
-        if len(set(func))!=len(eq):
-                raise ValueError("dsolve() and classify_sysode() work with"
+        if len(func) != len(eq):
+            func = list(set(func))
+            match['func'] = func
+            if len(func) != len(eq):
+                raise ValueError("dsolve() and classify_sysode() work with "
                 "number of functions being equal to number of equations")
         if match['type_of_equation'] is None:
             raise NotImplementedError
@@ -1402,7 +1403,7 @@ def classify_sysode(eq, func=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_2eq_order1(eq, func, func_coef)
-                if order_eq == 2:
+                elif order_eq == 2:
                     type_of_equation = check_nonlinear_2eq_order2(eq, func, func_coef)
                 else:
                     type_of_equation = None
@@ -1642,6 +1643,62 @@ def check_linear_neq_order1(eq, func, func_coef):
     return 'type1'
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
+    x = func[0].func
+    y = func[1].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    u, v = symbols('u, v')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    f1 = Wild('f1', exclude=[v,t])
+    f2 = Wild('f2', exclude=[v,t])
+    g1 = Wild('g1', exclude=[u,t])
+    g2 = Wild('g2', exclude=[u,t])
+    g = Wild('g')
+    r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
+    r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        # This matching fails in `./bin/test` (issue #7723)
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if not (r1 and r2):
+        r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
+        r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if r1 and r2 and not (r1[f].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t) \
+    or r2[g].subs(diff(x(t),t),u).subs(diff(y(t),t),v).has(t)):
+        return 'type5'
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    r = eq[0].match(diff(x(t),t) - x(t)**n*f)
+    if r:
+        g = (diff(y(t),t) - eq[1])/r[f]
+    if r and not (g.has(x(t)) or g.subs(y(t),v).has(t) or r[f].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type1'
+    r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
+    if r:
+        g = (diff(y(t),t) - eq[1])/r[f]
+    if r and not (g.has(x(t)) or g.subs(y(t),v).has(t) or r[f].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type2'
+    g = Wild('g')
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    if r1 and r2 and not (r1[f].subs(x(t),u).subs(y(t),v).has(t) or \
+    r2[g].subs(x(t),u).subs(y(t),v).has(t)):
+        return 'type3'
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    R1 = num.match(f1*g1)
+    R2 = denum.match(f2*g2)
+    phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
+    if R1 and R2:
+        return 'type4'
     return None
 
 def check_nonlinear_2eq_order2(eq, func, func_coef):
@@ -6108,61 +6165,71 @@ def _linear_2eq_order1_type1(x, y, t, r):
     It is classified under system of two linear homogeneous first-order constant-coefficient
     ordinary differential equations.
 
-    The equations which come under this type are ``Eq(diff(x(t),t), a*x(t) + b*y(t))`` and
-    ``Eq(diff(y(t),t), c*x(t) + d*y(t))``. The characteristics equation is written as
-    'a d - b c + z^{2} - z \\left(a + d\\right)' and its discriminant is
-    'D = 4 b c + \\left(a - d\\right)^{2}'. There are case
+    The equations which come under this type are
 
-    1. Case when 'a d - b c \neq 0'. The origin of coordinates, ``x`` and ``y`` is equal to zero,
+    .. math:: x' = ax + by,
+
+    .. math:: y' = cx + dy
+
+    The characteristics equation is written as
+
+    .. math:: \lambda^{2} + (a+d) \lambda + ad - bc = 0
+
+    and its discriminant is `D = (a-d)^{2} + 4bc`. There are several cases
+
+    1. Case when `ad - bc \neq 0`. The origin of coordinates, `x = y = 0`,
     is the only stationary point; it is
-        a node if ``D`` is equal to ``0``
-        a node if ``D`` is greater than ``0`` and 'a d - b c' is greater than ``0``
-        a saddle if ``D`` is greater than ``0`` and 'a d - b c' is greater than ``0``
-        a focus if ``D`` is less than ``0`` and 'a + d \neq 0'
-        a centre if ``D`` is less than ``0`` and 'a + d \neq 0'.
+    - a node if `D = 0`
+    - a node if `D > 0` and `ad - bc > 0`
+    - a saddle if `D > 0` and `ad - bc < 0`
+    - a focus if `D < 0` and `a + d \neq 0`
+    - a centre if `D < 0` and `a + d \neq 0`.
 
-        1.1 If ``D`` is greater than 0. The characteristic equation ``(1)`` has two distinct real roots
-        ``z1`` and ``z2`` . The general solution of the system in question is expressed as
-       'x{\\left (t \\right )} = C_{1} b e^{t z_{1}} + C_{2} b e^{t z_{2}}'
-        and 'y{\\left (t \\right )} = C_{1} \\left(- a + z_{1}\\right) e^{t z_{1}} + C_{2} \\left(- a + z_{2}\\right) e^{t z_{2}}'
-        where ``C1`` and ``C2`` being arbitary constants
+    1.1. If `D > 0`. The characteristic equation has two distinct real roots
+    `\lambda_1` and `\lambda_ 2` . The general solution of the system in question is expressed as
 
-        1.2 If ``D`` is less than ``0``. The characteristics equation has two conjugate
-        roots, 'z_{1} = i \\beta + \\sigma' and 'z_{2} = - i \\beta + \\sigma'.
-        The general solution of the system is given by
-        'x{\\left (t \\right )} = b \\left(C_{1} \\sin{\\left (\\beta t \\right )} + C_{2} \\cos{\\left ' \
-        '(\\beta t \\right )}\\right) e^{\\sigma t}'
-        and 'y{\\left (t \\right )} = \\left(C_{1} \\beta + C_{2} \\left(- a + \\sigma\\right)\\right) ' \
-        '\\cos{\\left (\\beta t \\right )} + \\left(C_{1} \\left(- a + \\sigma\\right) - C_{2} \\beta\\right) ' \
-        'e^{\\sigma t} \\sin{\\left (\\beta t \\right )}'
+    .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t}
 
-        1.3 If ``D`` is equal to ``0`` and ``a`` is not equal to ``d``. The characteristic equation has
-        two equal roots, `z1 == z2`. The general solution of the system is written as
-        'x{\\left (t \\right )} = 2 b \\left(C_{1} + C_{2} t + \\frac{C_{2}}{a - d}\\right) e^{\\frac{t}{2} \\left(a + d\\right)}'
-        and 'y{\\left (t \\right )} = \\left(C_{1} \\left(- a + d\\right) + C_{2} t \\left(- a + d\\right) + ' \
-        'C_{2}\\right) e^{\\frac{t}{2} \\left(a + d\\right)}'
+    .. math:: y = c_1 (\lambda_1 - a) e^{\lambda_1 t} + c_2 (\lambda_2 - a) e^{\lambda_2 t}
 
-        1.4 If `D = 0` and `a = d \neq 0` and `b = 0`
-        'x{\\left (t \\right )} = C_{1} e^{a t}' and
-        'y{\\left (t \\right )} = \\left(C_{1} c t + C_{2}\\right) e^{a t}'
+    where `C_1` and `C_2` being arbitary constants
 
-        1.5 If `D = 0` and `a = d \neq 0` and `c = 0`
-        'x{\\left (t \\right )} = \\left(C_{1} b t + C_{2}\\right) e^{a t}' and
-        'y{\\left (t \\right )} = C_{1} e^{a t}'
+    1.2. If `D < 0`. The characteristics equation has two conjugate
+    roots, `\lambda_1 = \sigma + i \beta` and `\lambda_2 = \sigma - i \beta`.
+    The general solution of the system is given by
 
-    2. Case when `a d - b c` is equal to ``0`` and `a^{2} + b^{2}` is greater than ``0``. The whole straight
-    line `a x + b y = 0` consists of singular points. The orginal system of differential equaitons can be
-    rewritten as
-    '\\frac{d}{d t} x{\\left (t \\right )} = a x{\\left (t \\right )} + b y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = k \\left(a x{\\left (t \\right )} + b y{\\left (t \\right )}\\right)'.
+    .. math:: x = b e^{\sigma t} (C_1 \sin(\beta t) + C_2 \cos(\beta t))
 
-        2.1 If `a + b k != 0`, Solution will be
-        'x{\\left (t \\right )} = C_{1} b + C_{2} e^{t \\left(a + b k\\right)}' and
-        'y{\\left (t \\right )} = C_{2} k e^{t \\left(a + b k\\right)} - a^{C_{1}}'
+    .. math:: y = e^{\sigma t} ([(\sigma - a) C_1 - \beta C_2] \sin(\beta t) + [\beta C_1 + (\sigma - a) C_2 \cos(\beta t)])
 
-        2.2 If `a + b k = 0`, solution will be
-        'x{\\left (t \\right )} = C_{1} \\left(b k t - 1\\right) + C_{2} b t' and
-        'y{\\left (t \\right )} = C_{1} b k^{2} t + C_{2} \\left(b k^{2} t + 1\\right)'.
+    1.3. If `D = 0` and `a \neq d`. The characteristic equation has
+    two equal roots, `\lambda_1 = \lambda_2`. The general solution of the system is written as
+
+    .. math:: x = 2b (C_1 + \frac{C_2}{a-d} + C_2 t) e^{\frac{a+d}{2} t}
+
+    .. math:: y = [(d - a) C_1 + C_2 + (d - a) C_2 t] e^{\frac{a+d}{2} t}
+
+    1.4. If `D = 0` and `a = d \neq 0` and `b = 0`
+
+    .. math:: x = C_1 e^{a t} , y = (c C_1 t + C_2) e^{a t}
+
+    1.5. If `D = 0` and `a = d \neq 0` and `c = 0`
+
+    .. math:: x = (b C_1 t + C_2) e^{a t} , y = C_1 e^{a t}
+
+    2. Case when `ad - bc = 0` and `a^{2} + b^{2} > 0`. The whole straight
+    line `ax + by = 0` consists of singular points. The orginal system of differential
+    equaitons can be rewritten as
+
+    .. math:: x' = ax + by , y' = k (ax + by)
+
+    2.1 If `a + bk \neq 0`, solution will be
+
+    .. math:: x = b C_1 + C_2 e^{(a + bk) t} , y = -a C_1 + k C_2 e^{(a + bk) t}
+
+    2.2 If `a + bk = 0`, solution will be
+
+    .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
 
     """
     l = Symbol('l')
@@ -6204,25 +6271,34 @@ def _linear_2eq_order1_type1(x, y, t, r):
 
 def _linear_2eq_order1_type2(x, y, t, r):
     r"""
-    The equations in this category are
-    '\\frac{d}{d t} x{\\left (t \\right )} = a x{\\left (t \\right )} + b y{\\left (t \\right )} + k_{1}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = c x{\\left (t \\right )} + d y{\\left (t \\right )} + k_{2}'.
+    The equations of this type are
+
+    .. math:: x' = ax + by + k1 , y' = cx + dy + k2
+
     The general solution og this system is given by sum of its particular solution and the
-    general solution of the corresponding homogeneous system is obtained frmo type1.
+    general solution of the corresponding homogeneous system is obtained from type1.
 
-    1. When `a d - b c != 0`. The particular solution will be
-    `x = x0` and `y = y0` where x0 and y0 are determined by solving linear system of equations
-    `a x0 + b y0 + k1 = 0` and `c x0 + d y0 + k2 = 0`
+    1. When `ad - bc \neq 0`. The particular solution will be
+    `x = x_0` and `y = y_0` where `x_0` and `y_0` are determined by solving linear system of equations
 
-    2. When `a d - b c = 0` and `a^{2} + b^{2} > 0`. In this case, the system of equation becomes
-    '\\frac{d}{d t} x{\\left (t \\right )} = a x{\\left (t \\right )} + b y{\\left (t \\right )} + k_{1}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = k \\left(a x{\\left (t \\right )} + b y{\\left (t \\right )}\\right) + k_{2}'
-        2.1 If `sigma = a + b k != 0`, particular solution is given by
-        'x{\\left (t \\right )} = \\frac{b t}{\\sigma} \\left(k k_{1} - k_{2}\\right) - \\frac{1}{\\sigma^{2}} \\left(a k_{1} + b k_{2}\\right)'
-        and 'y{\\left (t \\right )} = k x + t \\left(- k k_{1} + k_{2}\\right)'.
-        2.2 If `sigma = a + b k = 0`, particular solution is given by
-        'x{\\left (t \\right )} = \\frac{b t^{2}}{2} \\left(- k k_{1} + k_{2}\\right) + k_{1} t'
-        and 'y{\\left (t \\right )} = k x + t \\left(- k k_{1} + k_{2}\\right)'.
+    .. math:: a x_0 + b y_0 + k1 = 0 , c x_0 + d y_0 + k2 = 0
+
+    2. When `ad - bc = 0` and `a^{2} + b^{2} > 0`. In this case, the system of equation becomes
+
+    .. math:: x' = ax + by + k_1 , y' = k (ax + by) + k_2
+
+    2.1 If `\sigma = a + bk \neq 0`, particular solution is given by
+
+    .. math:: x = b \sigma^{-1} (c_1 k - c_2) t - \sigma^{-2} (a c_1 + b c_2)
+
+    .. math:: y = kx + (c_2 - c_1 k) t
+
+    2.2 If `\sigma = a + bk = 0`, particular solution is given by
+
+    .. math:: x = \frac{1}{2} b (c_2 - c_1 k) t^{2} + c_1 t
+
+    .. math:: y = kx + (c_2 - c_1 k) t
+
     """
     x0, y0 = symbols('x0, y0')
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
@@ -6242,14 +6318,20 @@ def _linear_2eq_order1_type2(x, y, t, r):
 
 def _linear_2eq_order1_type3(x, y, t, r):
     r"""
-    The equations of this type of ode are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} ' \
-    'x{\\left (t \\right )} + g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} y{\\left (t \\right )} + ' \
-    'g{\\left (t \\right )} x{\\left (t \\right )}'.
+    The equations of this type of ode are
+
+    .. math:: x' = f(t) x + g(t) y
+
+    .. math:: y' = g(t) x + f(t) y
+
     The solution of such equations is given by
-    '\\left(C_{1} e^{G} + C_{2} e^{- G}\\right) e^{F}' and
-    '\\left(C_{1} e^{G} - C_{2} e^{- G}\\right) e^{F}' where C1 and C2 are arbitary constants, and
-    'F = \\int f{\\left (t \\right )}\\, dt' and 'G = \\int g{\\left (t \\right )}\\, dt'.
+
+    .. math:: x = e^{F} (C_1 e^{G} + C_2 e^{-G}) , y = e^{F} (C_1 e^{G} - C_2 e^{-G})
+
+    where `C_1` and `C_2` are arbitary constants, and
+
+    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
+
     """
     C1, C2, C3, C4 = symbols('C1:5')
     F = C.Integral(r['a'], t)
@@ -6260,13 +6342,20 @@ def _linear_2eq_order1_type3(x, y, t, r):
 
 def _linear_2eq_order1_type4(x, y, t, r):
     r"""
-     The equations of this type of ode are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} ' \
-    'x{\\left (t \\right )} + g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = f{\\left (t \\right )} y{\\left (t \\right )} - g{\\left (t \\right )} x{\\left (t \\right )}'.
+    The equations of this type of ode are .
+
+    .. math:: x' = f(t) x + g(t) y
+
+    .. math:: y' = -g(t) x + f(t) y
+
     The solution is given by
-    'F \\left(C_{1} \\cos{\\left (G \\right )} + C_{2} \\sin{\\left (G \\right )}\\right)' and
-    'F \\left(- C_{1} \\sin{\\left (G \\right )} + C_{2} \\cos{\\left (G \\right )}\\right)'
-    where F and G are integrals of f(t) and g(t).
+
+    .. math:: x = F (C_1 \cos(G) + C_2 \sin(G)), y = F (-C_1 \sin(G) + C_2 \cos(G))
+
+    where `C_1` and `C_2` are arbitary constants, and
+
+    .. math:: F = \int f(t) \,dt , G = \int g(t) \,dt
+
     """
     C1, C2, C3, C4 = symbols('C1:5')
     if r['b'] == -r['c']:
@@ -6283,16 +6372,20 @@ def _linear_2eq_order1_type4(x, y, t, r):
 
 def _linear_2eq_order1_type5(x, y, t, r):
     r"""
-    Equations are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} x{\\left (t \\right )} + ' \
-    'g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = a g{\\left (t \\right )} x{\\left (t \\right )} + ' \
-    '\\left(b g{\\left (t \\right )} + f{\\left (t \\right )}\\right) y{\\left (t \\right )}'
+    The equations of this type of ode are .
+
+    .. math:: x' = f(t) x + g(t) y
+
+    .. math:: y' = a g(t) x + [f(t) + b g(t)] y
+
     The transformation of
-    'x{\\left (t \\right )} = u{\\left (T \\right )} e^{\\int f{\\left (t \\right )}\\, dt}',
-    'y{\\left (t \\right )} = v{\\left (T \\right )} e^{\\int f{\\left (t \\right )}\\, dt}' and
-    'T{\\left (t \\right )} = e^{\\int g{\\left (t \\right )}\\, dt}' leads to a system of
-    constant coefficient linear differential equations '\\frac{d}{d T} u{\\left (T \\right )} = v{\\left (T \\right )}'
-    and '\\frac{d}{d T} v{\\left (T \\right )} = a u{\\left (T \\right )} + b v{\\left (T \\right )}'.
+
+    .. math:: x = e^{\int f(t) \,dt} u , y = e^{\int f(t) \,dt} v , T = \int g(t) \,dt
+
+    leads to a system of constant coefficient linear differential equations
+
+    .. math:: u'(T) = v , v'(T) = au + bv
+
     """
     C1, C2, C3, C4 = symbols('C1:5')
     u, v = symbols('u, v', function=True)
@@ -6314,19 +6407,23 @@ def _linear_2eq_order1_type5(x, y, t, r):
 
 def _linear_2eq_order1_type6(x, y, t, r):
     r"""
-    Equations are '\\frac{d}{d t} x{\\left (t \\right )} = f{\\left (t \\right )} x{\\left (t \\right )} + ' \
-    'g{\\left (t \\right )} y{\\left (t \\right )}' and
-    '\\frac{d}{d t} y{\\left (t \\right )} = a \\left(a h{\\left (t \\right )} + ' \
-    'f{\\left (t \\right )}\\right) x{\\left (t \\right )} + a \\left(g{\\left (t \\right )} - ' \
-    'h{\\left (t \\right )}\\right) y{\\left (t \\right )}'
+    The equations of this type of ode are .
 
-    This is solved by first multiplying the first equation by ``-a`` and adding it to the second
-    equation to obtain '- a \\frac{d}{d t} x{\\left (t \\right )} + \\frac{d}{d t} y{\\left (t \\right )} ' \
-    '= - a \\left(- a x{\\left (t \\right )} + y{\\left (t \\right )}\\right) h{\\left (t \\right )}'
-    Setting ``W`` as '- a x{\\left (t \\right )} + y{\\left (t \\right )}' and integrating the equation
-    we arrive at '- a x{\\left (t \\right )} + y{\\left (t \\right )} = C_{1} e^{- a \\int h{\\left (t \\right )}\\, dt}'
+    .. math:: x' = f(t) x + g(t) y
+
+    .. math:: y' = a [f(t) + a h(t)] x + a [g(t) - h(t)] y
+
+    This is solved by first multiplying the first equation by `-a` and adding
+    it to the second equation to obtain
+
+    .. math:: y' - a x' = -a h(t) (y - a x)
+
+    Setting `U = y - ax` and integrating the equation we arrive at
+
+    .. math:: y - ax = C_1 e^{-a \int h(t) \,dt}
+
     and on substituing the value of y in first equation give rise to first order ODEs. After solving for
-    ``x``, we can obtain ``y`` by substituting the value of ``x`` in second equation.
+    `x`, we can obtain `y` by substituting the value of `x` in second equation.
 
     """
     C1, C2, C3, C4 = symbols('C1:5')
@@ -6362,31 +6459,37 @@ def _linear_2eq_order1_type6(x, y, t, r):
 
 def _linear_2eq_order1_type7(x, y, t, r):
     r"""
-    Differentiating the first equation and substituting the value of '\\frac{d}{d t} y{\\left (t \\right )}'
+    The equations of this type of ode are .
+
+    .. math:: x' = f(t) x + g(t) y
+
+    .. math:: y' = h(t) x + p(t) y
+
+    Differentiating the first equation and substituting the value of `y`
     from second equation will give a second-order linear equation
-    'g \\frac{d^{2}}{d t^{2}}  x{\\left (t \\right )} - \\left(f g + g p + \\frac{d}{d t} g{\\left (t \\right )}' \
-    '\\right) \\frac{d}{d t} x{\\left (t \\right )} + \\left(f g p + f \\frac{d}{d t} g{\\left (t \\right )} - ' \
-    'g^{2} h - g \\frac{d}{d t} f{\\left (t \\right )}\\right) x{\\left (t \\right )} = 0'
+
+    .. math:: g x'' - (fg + gp + g') x' + (fgp - g^{2} h + f g' - f' g) x = 0
 
     This above equation can be easily integrated if following conditions are satisfied.
-    1. 'f g p + f \\frac{d}{d t} g{\\left (t \\right )} - g^{2} h - g \\frac{d}{d t} f{\\left (t \\right )} = 0'
-    2. 'f g p + f \\frac{d}{d t} g{\\left (t \\right )} - g^{2} h - g \\frac{d}{d t} f{\\left (t \\right )} = a g'
-    and 'f g + g p + \\frac{d}{d t} g{\\left (t \\right )} = b g'
+
+    1. `fgp - g^{2} h + f g' - f' g = 0`
+
+    2. `fgp - g^{2} h + f g' - f' g = ag, fg + gp + g' = bg`
+
     If first condition is satisfied then it is solved by current dsolve solver and in second case it becomes
     a constant cofficient differential equation which is also solved by current solver.
 
     Otherwise if the above condition fails then,
-    a particular solution is assumed 'x{\\left (t \\right )} = \\operatorname{x_{0}}{\\left (t \\right )}'.
+    a particular solution is assumed as `x = x_0(t)` and `y = y_0(t)`
     Then the general solution is expressed as
-    'x{\\left (t \\right )} = C_{1} \\operatorname{x_{0}}{\\left (t \\right )} + C_{2} ' \
-    '\\operatorname{x_{0}}{\\left (t \\right )} \\int \\frac{F{\\left (t \\right )} P{\\left (t \\right ' \
-    ')}}{\\operatorname{x_{0}}^{2}{\\left (t \\right )}} g{\\left (t \\right )}\\, dt' and
-    'y{\\left (t \\right )} = C_{1} \\operatorname{y_{0}}{\\left (t \\right )} + C_{2} \\left(C_{2} ' \
-    '\\operatorname{y_{0}}{\\left (t \\right )} \\int \\frac{F{\\left (t \\right )} P{\\left (t \\right )}}' \
-    '{\\operatorname{x_{0}}^{2}{\\left (t \\right )}} g{\\left (t \\right )}\\, dt + \\frac{F{\\left ' \
-    '(t \\right )} P{\\left (t \\right )}}{\\operatorname{x_{0}}{\\left (t \\right )}}\\right)'
-    where C1 and C2 are arbitary constants and 'F = e^{\\int f{\\left (t \\right )}\\, dt}' and
-    'P = e^{\\int p{\\left (t \\right )}\\, dt}'
+
+    .. math:: x = C_1 x_0(t) + C_2 x_0(t) \int \frac{g(t) F(t) P(t)}{x_0^{2}(t)} \,dt
+
+    .. math:: y = C_1 y_0(t) + C_2 [\frac{F(t) P(t)}{x_0(t)} + y_0(t) \int \frac{g(t) F(t) P(t)}{x_0^{2}(t)} \,dt]
+
+    where C1 and C2 are arbitary constants and
+
+    .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
 
     """
     C1, C2, C3, C4 = symbols('C1:5')
@@ -6469,6 +6572,69 @@ def sysode_linear_2eq_order2(match_):
     return sol
 
 def _linear_2eq_order2_type1(x, y, t, r):
+    r"""
+    System of two constant-coefficient second-order linear homogeneous differential equations
+
+    .. math:: x'' = ax + by
+
+    .. math:: y'' = cx + dy
+
+    The charecteristic equation for above equations
+
+    .. math:: \lambda^4 - (a + d) \lambda^2 + ad - bc = 0
+
+    whose discriminant is `D = (a - d)^2 + 4bc \neq 0`
+
+    1. When `ad - bc \neq 0`
+
+    1.1. If `D \neq 0`. The characteristic equation has four distict roots, `\lambda_1, \lambda_2, \lambda_3, \lambda_4`.
+    The general solution of the system is
+
+    .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t} + C_3 b e^{\lambda_3 t} + C_4 b e^{\lambda_4 t}
+
+    .. math:: y = C_1 (\lambda_1^{2} - a) e^{\lambda_1 t} + C_2 (\lambda_2^{2} - a) e^{\lambda_2 t} + C_3 (\lambda_3^{2} - a) e^{\lambda_3 t} + C_4 (\lambda_4^{2} - a) e^{\lambda_4 t}
+
+    where `C_1,..., C_4` are arbitary constants.
+
+    1.2. If `D = 0` and `a \neq d`:
+
+    .. math:: x = 2 C_1 (bt + \frac{2bk}{a - d}) e^{\frac{kt}{2}} + 2 C_2 (bt + \frac{2bk}{a - d}) e^{\frac{-kt}{2}} + 2b C_3 t e^{\frac{kt}{2}} + 2b C_4 t e^{\frac{-kt}{2}}
+
+    .. math:: y = C_1 (d - a) t e^{\frac{kt}{2}} + C_2 (d - a) t e^{\frac{-kt}{2}} + C_3 [(d - a) t + 2k] e^{\frac{kt}{2}} + C_4 [(d - a) t - 2k] e^{\frac{-kt}{2}}
+
+    where `C_1,..., C_4` are arbitary constants and `k = \sqrt{2 (a + d)}`
+
+    1.3. If `D = 0` and `a = d \neq 0` and `b = 0`:
+
+    .. math:: x = 2 \sqrt{a} C_1 e^{\sqrt{a} t} + 2 \sqrt{a} C_2 e^{-\sqrt{a} t}
+
+    .. math:: y = c C_1 t e^{\sqrt{a} t} - c C_2 t e^{-\sqrt{a} t} + C_3 e^{\sqrt{a} t} + C_4 e^{-\sqrt{a} t}
+
+    1.4. If `D = 0` and `a = d \neq 0` and `c = 0`:
+
+    .. math:: x = b C_1 t e^{\sqrt{a} t} - b C_2 t e^{-\sqrt{a} t} + C_3 e^{\sqrt{a} t} + C_4 e^{-\sqrt{a} t}
+
+    .. math:: y = 2 \sqrt{a} C_1 e^{\sqrt{a} t} + 2 \sqrt{a} C_2 e^{-\sqrt{a} t}
+
+    2. When `ad - bc = 0` and `a^2 + b^2 > 0`. Then the original system becomes
+
+    .. math:: x'' = ax + by
+
+    .. math:: y'' = k (ax + by)
+
+    2.1. If `a + bk \neq 0`:
+
+    .. math:: x = C_1 e^{t \sqrt{a + bk}} + C_2 e^{-t \sqrt{a + bk}} + C_3 bt + C_4 b
+
+    .. math:: y = C_1 k e^{t \sqrt{a + bk}} + C_2 k e^{-t \sqrt{a + bk}} - C_3 at - C_4 a
+
+    2.2. If `a + bk = 0`:
+
+    .. math:: x = C_1 b t^3 + C_2 b t^2 + C_3 t + C_4
+
+    .. math:: y = kx + 6 C_1 t + 2 C_2
+
+    """
     r['a'] = r['c1']
     r['b'] = r['d1']
     r['c'] = r['c2']
@@ -6515,6 +6681,39 @@ def _linear_2eq_order2_type1(x, y, t, r):
     return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
 
 def _linear_2eq_order2_type2(x, y, t, r):
+    r"""
+    The equations in this type are
+
+    .. math:: x'' = a_1 x + b_1 y + c_1
+
+    .. math:: y'' = a_2 x + b_2 y + c_2
+
+    The general solution of this system is given by the sum of its particular solution
+    and the general solution of the homogeneous system. The general solution is given
+    by the linear system of 2 equation of order 2 and type 1
+
+    1. If `a_1 b_2 - a_2 b_1 \neq 0`. A particular solution will be `x = x_0` and `y = y_0`
+    where the constants `x_0` and `y_0` are determined by solving the linear algebraic system
+
+    .. math:: a_1 x_0 + b_1 y_0 + c_1 = 0, a_2 x_0 + b_2 y_0 + c_2 = 0
+
+    2. If `a_1 b_2 - a_2 b_1 = 0` and `a_1^2 + b_1^2 > 0`. In this case, the system in question becomes
+
+    .. math:: x'' = ax + by + c_1, y'' = k (ax + by) + c_2
+
+    2.1. If `\sigma = a + bk \neq 0`, the particular solution will be
+
+    .. math:: x = \frac{1}{2} b \sigma^{-1} (c_1 k - c_2) t^2 - \sigma^{-2} (a c_1 + b c_2)
+
+    .. math:: y = kx + \frac{1}{2} (c_2 - c_1 k) t^2
+
+    2.2. If `\sigma = a + bk = 0`, the particular solution will be
+
+    .. math:: x = \frac{1}{24} b (c_2 - c_1 k) t^4 + \frac{1}{2} c_1 t^2
+
+    .. math:: y = kx + \frac{1}{2} (c_2 - c_1 k) t^2
+
+    """
     x0, y0 = symbols('x0, y0')
     if r['c1']*r['d2'] - r['c2']*r['d1'] != 0:
         sol = solve((r['c1']*x0+r['d1']*y0+r['e1'], r['c2']*x0+r['d2']*y0+r['e2']), x0, y0)
@@ -6534,6 +6733,20 @@ def _linear_2eq_order2_type2(x, y, t, r):
     return psol
 
 def _linear_2eq_order2_type3(x, y, t, r):
+    r"""
+    These type of equation is used for describing the horizontal motion of a pendulum
+    taking into account the Earth rotation.
+    The solution is given with `a^2 + 4b > 0`:
+
+    .. math:: x = C_1 \cos(\alpha t) + C_2 \sin(\alpha t) + C_3 \cos(\beta t) + C_4 \sin(\beta t)
+
+    .. math:: y = -C_1 \sin(\alpha t) + C_2 \cos(\alpha t) - C_3 \sin(\beta t) + C_4 \cos(\beta t)
+
+    where `C_1,...,C_4` and
+
+    .. math:: \alpha = \frac{1}{2} a + \frac{1}{2} \sqrt{a^2 + 4b}, \beta = \frac{1}{2} a - \frac{1}{2} \sqrt{a^2 + 4b}
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     if r['b1']**2 - 4*r['c1'] > 0:
         r['a'] = r['b1'] ; r['b'] = -r['c1']
@@ -6544,6 +6757,51 @@ def _linear_2eq_order2_type3(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type4(x, y, t, r):
+    r"""
+    These equations are found in the theory of oscillations
+
+    .. math:: x'' + a_1 x' + b_1 y' + c_1 x + d_1 y = k_1 e^{i \omega t}
+
+    .. math:: y'' + a_2 x' + b_2 y' + c_2 x + d_2 y = k_2 e^{i \omega t}
+
+    The general solution of this linear nonhomogeneous system of constant-coefficient
+    differential equations is given by the sum of its particular solution and the
+    general solution of the corresponding homogeneous system (with `k_1 = k_2 = 0`)
+
+    1. A particular solution is obtained by the method of undetermined coefficients:
+
+    .. math:: x = A_* e^{i \omega t}, y = B_* e^{i \omega t}
+
+    On substituting these expressions into the original system of differential equations,
+    one arrive at a linear nonhomogeneous system of algebraic equations for the
+    coefficients `A` and `B`.
+
+    2. The general solution of the homogeneous system of differential equations is determined
+    by a linear combination of linearly independent particular solutions determined by
+    the method of undetermined coefficients in the form of exponentials:
+
+    .. math:: x = A e^{\lambda t}, y = B e^{\lambda t}
+
+    On substituting these expressions into the original system and colleting the
+    coefficients of the unknown `A` and `B`, one obtains
+
+    .. math:: (\lambda^{2} + a_1 \lambda + c_1) A + (b_1 \lambda + d_1) B = 0
+
+    .. math:: (a_2 \lambda + c_2) A + (\lambda^{2} + b_2 \lambda + d_2) B = 0
+
+    The determinant of this system must vanish for nontrivial solutions A, B to exist.
+    This requirement results in the following characteristic equation for `\lambda`
+
+    .. math:: (\lambda^2 + a_1 \lambda + c_1) (\lambda^2 + b_2 \lambda + d_2) - (b_1 \lambda + d_1) (a_2 \lambda + c_2) = 0
+
+    If all roots `k_1,...,k_4` of this equation are distict, the general solution of the original
+    system of the differential equations has the form
+
+    .. math:: x = C_1 (b_1 \lambda_1 + d_1) e^{\lambda_1 t} - C_2 (b_1 \lambda_2 + d_1) e^{\lambda_2 t} - C_3 (b_1 \lambda_3 + d_1) e^{\lambda_3 t} - C_4 (b_1 \lambda_4 + d_1) e^{\lambda_4 t}
+
+    .. math:: y = C_1 (\lambda_1^{2} + a_1 \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + a_1 \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + a_1 \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + a_1 \lambda_4 + c_1) e^{\lambda_4 t}
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     k = Symbol('k')
     Ra, Ca, Rb, Cb = symbols('Ra, Ca, Rb, Cb')
@@ -6576,6 +6834,43 @@ def _linear_2eq_order2_type4(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type5(x, y, t, r):
+    r"""
+    The equation which come under this catagory are
+
+    .. math:: x'' = a (t y' - y)
+
+    .. math:: y'' = b (t x' - x)
+
+    The transformation
+
+    .. math:: u = t x' - x, b = t y' - y
+
+    leads to the first-order system
+
+    .. math:: u' = atv, v' = btu
+
+    The general solution of this system is given by
+
+    If `ab > 0`:
+
+    .. math:: u = C_1 a e^{\frac{1}{2} \sqrt{ab} t^2} + C_2 a e^{-\frac{1}{2} \sqrt{ab} t^2}
+
+    .. math:: v = C_1 \sqrt{ab} e^{\frac{1}{2} \sqrt{ab} t^2} - C_2 \sqrt{ab} e^{-\frac{1}{2} \sqrt{ab} t^2}
+
+    If `ab < 0`:
+
+    .. math:: u = C_1 a \cos(\frac{1}{2} \sqrt{\left|ab\right|} t^2) + C_2 a \sin(-\frac{1}{2} \sqrt{\left|ab\right|} t^2)
+
+    .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\frac{1}{2} \sqrt{\left|ab\right|} t^2) + C_2 \sqrt{\left|ab\right|} \cos(-\frac{1}{2} \sqrt{\left|ab\right|} t^2)
+
+    where `C_1` and `C_2` are arbitary constants. On substituting the value of `u` and `v`
+    in above equations and integrating the resulting expressions, the general solution will become
+
+    .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
+
+    where `C_3` and `C_4` are arbitrary constants.
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     r['a'] = -r['d1'] ; r['b'] = -r['c2']
     mul = sqrt(abs(r['a']*r['b']))
@@ -6590,6 +6885,28 @@ def _linear_2eq_order2_type5(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type6(x, y, t, r):
+    r"""
+    The equations are
+
+    .. math:: x'' = f(t) (a_1 x + b_1 y)
+
+    .. math:: y'' = f(t) (a_2 x + b_2 y)
+
+    If `k_1` and `k_2` are roots of the quadratic equation
+
+    .. math:: k^2 - (a_1 + b_2) k + a_1 b_2 - a_2 b_1 = 0
+
+    Then by multiplying appropriate constants and adding together original equations
+    we obtain two independent equations:
+
+    .. math:: z_1'' = k_1 f(t) z_1, z_1 = a_2 x + (k_1 - a_1) y
+
+    .. math:: z_2'' = k_2 f(t) z_2, z_2 = a_2 x + (k_2 - a_1) y
+
+    Solving the equations will give the values of `x` and `y` after obtaining the value
+    of `z_1` and `z_2` by solving the differential equation and substuting the result.
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     k = Symbol('k')
     z = Function('z')
@@ -6608,6 +6925,34 @@ def _linear_2eq_order2_type6(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type7(x, y, t, r):
+    r"""
+    The equations are given as
+
+    .. math:: x'' = f(t) (a_1 x' + b_1 y')
+
+    .. math:: y'' = f(t) (a_2 x' + b_2 y')
+
+    If `k_1` and 'k_2` are roots of the quadratic equation
+
+    .. math:: k^2 - (a_1 + b_2) k + a_1 b_2 - a_2 b_1 = 0
+
+    Then the system can be reduced by adding together the two equations multiplied
+    by appropriate constants give following two independent equations:
+
+    .. math:: z_1'' = k_1 f(t) z_1', z_1 = a_2 x + (k_1 - a_1) y
+
+    .. math:: z_2'' = k_2 f(t) z_2', z_2 = a_2 x + (k_2 - a_1) y
+
+    Integrating these and returning to the original variables, one arrives at a linear
+    algebraic system for the unknowns `x` and `y`:
+
+    .. math:: a_2 x + (k_1 - a_1) y = C_1 \int e^{k_1 F(t)} \,dt + C_2
+
+    .. math:: a_2 x + (k_2 - a_1) y = C_3 \int e^{k_2 F(t)} \,dt + C_4
+
+    where `C_1,...,C_4` are arbitrary constants and `F(t) = \int f(t) \,dt`
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     k = Symbol('k')
     num, denum = cancel((r['a1']*x(t) + r['b1']*y(t))/(r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
@@ -6626,6 +6971,43 @@ def _linear_2eq_order2_type7(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type8(x, y, t, r):
+    r"""
+    The equation of this catagory are
+
+    .. math:: x'' = a f(t) (t y' - y)
+
+    .. math:: y'' = b f(t) (t x' - x)
+
+    The transformation
+
+    .. math:: u = t x' - x, v = t y' - y
+
+    leads to the system of first-order equations
+
+    .. math:: u' = a t f(t) v, v' = b t f(t) u
+
+    The general solution of this system has the form
+
+    If `ab > 0`:
+
+    .. math:: u = C_1 a e^{\sqrt{ab} \int t f(t) \,dt} + C_2 a e^{-\sqrt{ab} \int t f(t) \,dt}
+
+    .. math:: v = C_1 \sqrt{ab} e^{\sqrt{ab} \int t f(t) \,dt} - C_2 \sqrt{ab} e^{-\sqrt{ab} \int t f(t) \,dt}
+
+    If `ab < 0`:
+
+    .. math:: u = C_1 a \cos(\sqrt{\left|ab\right|} \int t f(t) \,dt) + C_2 a \sin(-\sqrt{\left|ab\right|} \int t f(t) \,dt)
+
+    .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\sqrt{\left|ab\right|} \int t f(t) \,dt) + C_2 \sqrt{\left|ab\right|} \cos(-\sqrt{\left|ab\right|} \int t f(t) \,dt)
+
+    where `C_1` and `C_2` are arbitary constants. On substituting the value of `u` and `v`
+    in above equations and integrating the resulting expressions, the general solution will become
+
+    .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
+
+    where `C_3` and `C_4` are arbitrary constants.
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     num, denum = cancel(r['d1']/r['c2']).as_numer_denom()
     f = -r['d1']/num
@@ -6644,6 +7026,46 @@ def _linear_2eq_order2_type8(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type9(x, y, t, r):
+    r"""
+    .. math:: t^2 x'' + a_1 t x' + b_1 t y' + c_1 x + d_1 y = 0
+
+    .. math:: t^2 y'' + a_2 t x' + b_2 t y' + c_2 x + d_2 y = 0
+
+    These system of equations are euler type.
+
+    The substitution of `t = \sigma e^{\tau} (\sigma \neq 0)` leads to the system of constant
+    coefficient linear differential equations
+
+    .. math:: x'' + (a_1 - 1) x' + b_1 y' + c_1 x + d_1 y = 0
+
+    .. math:: y'' + a_2 x' + (b_2 - 1) y' + c_2 x + d_2 y = 0
+
+    The general solution of the homogeneous system of differential equations is determined
+    by a linear combination of linearly independent particular solutions determined by
+    the method of undetermined coefficients in the form of exponentials
+
+    .. math:: x = A e^{\lambda t}, y = B e^{\lambda t}
+
+    On substituting these expressions into the original system and colleting the
+    coefficients of the unknown `A` and `B`, one obtains
+
+    .. math:: (\lambda^{2} + (a_1 - 1) \lambda + c_1) A + (b_1 \lambda + d_1) B = 0
+
+    .. math:: (a_2 \lambda + c_2) A + (\lambda^{2} + (b_2 - 1) \lambda + d_2) B = 0
+
+    The determinant of this system must vanish for nontrivial solutions A, B to exist.
+    This requirement results in the following characteristic equation for `\lambda`
+
+    .. math:: (\lambda^2 + (a_1 - 1) \lambda + c_1) (\lambda^2 + (b_2 - 1) \lambda + d_2) - (b_1 \lambda + d_1) (a_2 \lambda + c_2) = 0
+
+    If all roots `k_1,...,k_4` of this equation are distict, the general solution of the original
+    system of the differential equations has the form
+
+    .. math:: x = C_1 (b_1 \lambda_1 + d_1) e^{\lambda_1 t} - C_2 (b_1 \lambda_2 + d_1) e^{\lambda_2 t} - C_3 (b_1 \lambda_3 + d_1) e^{\lambda_3 t} - C_4 (b_1 \lambda_4 + d_1) e^{\lambda_4 t}
+
+    .. math:: y = C_1 (\lambda_1^{2} + (a_1 - 1) \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + (a_1 - 1) \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + (a_1 - 1) \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + (a_1 - 1) \lambda_4 + c_1) e^{\lambda_4 t}
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     k = Symbol('k')
     a1 = -r['a1']*t; a2 = -r['a2']*t
@@ -6662,6 +7084,27 @@ def _linear_2eq_order2_type9(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type10(x, y, t, r):
+    r"""
+    The equation of this catagory are
+
+    .. math:: (\alpha t^2 + \beta t + \gamma)^{2} x'' = ax + by
+
+    .. math:: (\alpha t^2 + \beta t + \gamma)^{2} y'' = cx + dy
+
+    The transformation
+
+    .. math:: \tau = \int \frac{1}{\alpha t^2 + \beta t + \gamma} \,dt , u = \frac{x}{\sqrt{\left|\alpha t^2 + \beta t + \gamma\right|}} , v = \frac{y}{\sqrt{\left|\alpha t^2 + \beta t + \gamma\right|}}
+
+    leads to a constant coefficient linear system of equations
+
+    .. math:: u'' = (a - \alpha \gamma + \frac{1}{4} \beta^{2}) u + b v
+
+    .. math:: v'' = c u + (d - \alpha \gamma + \frac{1}{4} \beta^{2}) v
+
+    These system of equations obtained can be solved by type1 of System of two
+    constant-coefficient second-order linear homogeneous differential equations.
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     u, v = symbols('u, v', function=True)
     T = Symbol('T')
@@ -6683,6 +7126,28 @@ def _linear_2eq_order2_type10(x, y, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type11(x, y, t, r):
+    r"""
+    The equations which comes under this type are
+
+    .. math:: x'' = f(t) (t x' - x) + g(t) (t y' - y)
+
+    .. math:: y'' = h(t) (t x' - x) + p(t) (t y' - y)
+
+    The transformation
+
+    .. math:: u = t x' - x, v = t y' - y
+
+    leads to the linear system of first-order equations
+
+    .. math:: u' = t f(t) u + t g(t) v, v' = t h(t) u + t p(t) v
+
+    On substituting the value of `u` and `v` in transformed equation gives value of `x` and `y` as
+
+    .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt , y = C_4 t + t \int \frac{v}{t^2} \,dt.
+
+    where `C_3` and `C_4` are arbitrary constants.
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     u, v = symbols('u, v', function=True)
     f = -r['c1'] ; g = -r['d1']
@@ -6739,6 +7204,27 @@ def sysode_linear_3eq_order1(match_):
     return sol
 
 def _linear_3eq_order1_type1(x, y, z, t, r):
+    r"""
+    .. math:: x' = ax
+
+    .. math:: y' = bx + cy
+
+    .. math:: z' = dx + ky + pz
+
+    Solution of such equations are forward substitution. Solving first equations
+    gives the value of `x`, substituting it in second and third equation and
+    solving second equation gives `y` and similarly substituting `y` in third
+    equation give `z`.
+
+    .. math:: x = C_1 e^{at}
+
+    .. math:: y = \frac{b C_1}{a - c} e^{at} + C_2 e^{ct}
+
+    .. math:: z = \frac{C_1}{a - p} (d + \frac{bk}{a - c}) e^{at} + \frac{k C_2}{c - p} e^{ct} + C_3 e^{pt}
+
+    where `C_1, C_2` and `C_3` are arbitrary constants.
+
+    """
     C1, C2, C3, C4 = symbols('C1:5')
     a = r['a1']; b = r['a2']; c = r['b2']
     d = r['a3']; k = r['b3']; p = r['c3']
@@ -6748,6 +7234,39 @@ def _linear_3eq_order1_type1(x, y, z, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _linear_3eq_order1_type2(x, y, z, t, r):
+    r"""
+    The equations of this type are
+
+    .. math:: x' = cy - bz
+
+    .. math:: y' = az - cx
+
+    .. math:: z' = bx - ay
+
+    1. First integral:
+
+    .. math:: ax + by + cz = A             \qquad - (1)
+
+    .. math:: x^2 + y^2 + z^2 = B^2        \qquad - (2)
+
+    where `A` and `B` are arbitrary constants. It follows from these integrals
+    that the integral lines are circles formed by the intersection of the planes
+    `(1)` and sphere `(2)`
+
+    2. Solution:
+
+    .. math:: x = a C_0 + k C_1 \cos(kt) + (c C_2 - b C_3) \sin(kt)
+
+    .. math:: y = b C_0 + k C_2 \cos(kt) + (a C_2 - c C_3) \sin(kt)
+
+    .. math:: z = c C_0 + k C_3 \cos(kt) + (b C_2 - a C_3) \sin(kt)
+
+    where `k = \sqrt{a^2 + b^2 + c^2}` and the four constants of integration,
+    `C_1,...,C_4` are constrained by a single relation,
+
+    .. math:: a C_1 + b C_2 + c C_3 = 0
+
+    """
     C0, C1, C2, C3 = symbols('C0:4')
     a = r['c2']; b = r['a3']; c = r['b1']
     k = sqrt(a**2 + b**2 + c**2)
@@ -6757,6 +7276,35 @@ def _linear_3eq_order1_type2(x, y, z, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _linear_3eq_order1_type3(x, y, z, t, r):
+    r"""
+    Equations of this system of ODEs
+
+    .. math:: a x' = bc (y - z)
+
+    .. math:: b y' = ac (z - x)
+
+    .. math:: c z' = ab (x - y)
+
+    1. First integral:
+
+    .. math:: a^2 x + b^2 y + c^2 z = A
+
+    where A is an arbitary constant. It follows that the integral lines are plane curves.
+
+    2. Solution:
+
+    .. math:: x = C_0 + k C_1 \cos(kt) + a^{-1} bc (C_2 - C_3) \sin(kt)
+
+    .. math:: y = C_0 + k C_2 \cos(kt) + a b^{-1} c (C_3 - C_1) \sin(kt)
+
+    .. math:: z = C_0 + k C_3 \cos(kt) + ab c^{-1} (C_1 - C_2) \sin(kt)
+
+    where `k = \sqrt{a^2 + b^2 + c^2}` and the four constants of integration,
+    `C_1,...,C_4` are constrained by a single relation
+
+    .. math:: a^2 C_1 + b^2 C_2 + c^2 C_3 = 0
+
+    """
     C0, C1, C2, C3 = symbols('C0:4')
     c = sqrt(r['b1']*r['c2'])
     b = sqrt(r['b1']*r['a3'])
@@ -6768,6 +7316,32 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _linear_3eq_order1_type4(x, y, z, t, r):
+    r"""
+    Equations:
+
+    .. math:: x' = (a_1 f(t) + g(t)) x + a_2 f(t) y + a_3 f(t) z
+
+    .. math:: y' = b_1 f(t) x + (b_2 f(t) + g(t)) y + b_3 f(t) z
+
+    .. math:: z' = c_1 f(t) x + c_2 f(t) y + (c_3 f(t) + g(t)) z
+
+    The transformation
+
+    .. math:: x = e^{\int g(t) \,dt} u, y = e^{\int g(t) \,dt} v, z = e^{\int g(t) \,dt} w, \tau = \int f(t) \,dt
+
+    leads to the system of constant coefficient linear differential equations
+
+    .. math:: u' = a_1 u + a_2 v + a_3 w
+
+    .. math:: v' = b_1 u + b_2 v + b_3 w
+
+    .. math:: w' = c_1 u + c_2 v + c_3 w
+
+    These system of equations are solved by homogeneous linear system of constant
+    coefficients of `n` equations of first order. Then substituting the value of
+    `u, v` and `w` in transformed equation gives value of `x, y` and `z`.
+
+    """
     u, v, w = symbols('u, v, w', function=True)
     a2, a3 = cancel(r['b1']/r['c1']).as_numer_denom()
     f = cancel(r['b1']/a2)
@@ -6791,6 +7365,73 @@ def sysode_linear_neq_order1(match_):
     sol = _linear_neq_order1_type1(match_)
 
 def _linear_neq_order1_type1(match_):
+    r"""
+    System of n first-order constant-coefficient linear nonhomogeneous differential equation
+
+    .. math:: y'_k = a_{k1} y_1 + a_{k2} y_2 +...+ a_{kn} y_n; k = 1,2,...,n
+
+    or that can be written as `\vec{y'} = A . \vec{y}`
+    where `\vec{y}` is matrix of `y_k` for `k = 1,2,...n` and `A` is a `n \times n` matrix.
+
+    Since these equations are equivalent to a first order homogeneous linear
+    differential equation. So the general solution will contain `n` linearly
+    independent parts and solution will consist some type of exponential
+    functions. Assuming `y = \vec{v} e^{rt}` is a solution of the system where
+    `\vec{v}` is a vector of coefficients of `y_1,...,y_n`. Substituting `y` and
+    `y' = r v e^{r t}` into the equation `\vec{y'} = A . \vec{y}`, we get
+
+    .. math:: r \vec{v} e^{rt} = A \vec{v} e^{rt}
+
+    .. math:: r \vec{v} = A \vec{v}
+
+    where `r` comes out to be eigenvalue of `A` and vector `\vec{v}` is the eigenvector
+    of `A` corresponding to `r`. There are three possiblities of eigenvalues of `A`
+
+    - `n` distinct real eigenvalues
+    - complex conjugate eigenvalues
+    - eigenvalues with multiplicity `k`
+
+    1. When all eigenvalues `r_1,..,r_n` are distinct with `n` different eigenvectors
+    `v_1,...v_n` then the solution is given by
+
+    .. math:: \vec{y} = C_1 e^{r_1 t} \vec{v_1} + C_2 e^{r_2 t} \vec{v_2} +...+ C_n e^{r_n t} \vec{v_n}
+
+    where `C_1,C_2,...,C_n` are arbitrary constants.
+
+    2. When some eigenvalues are complex then in order to make the solution real,
+    we take a llinear combination: if `r = a + bi` has an eigenvector
+    `\vec{v} = \vec{w_1} + i \vec{w_2}` then to obtain real-valued solutions to
+    the system, replace the complex-valued solutions `e^{rx} \vec{v}`
+    with real-valued solution `e^{ax} (\vec{w_1} \cos(bx) - \vec{w_2} \sin(bx))`
+    and for `r = a - bi` replace the solution `e^{-r x} \vec{v}` with
+    `e^{ax} (\vec{w_1} \sin(bx) + \vec{w_2} \cos(bx))`
+
+    3. If some eigenvalues are repeated. Then we get fewer than `n` linearly
+    independent eigenvectors, we miss some of the solutions and need to
+    construct the missing ones. We do this via generalized eigenvectors, vectors
+    which are not eigenvectors but are close enough that we can use to write
+    down the remaining solutions. For a eigenvalue `r` with eigenvector `\vec{w}`
+    we obtain `\vec{w_2},...,\vec{w_k}` using
+
+    .. math:: (A - r I) . \vec{w_2} = \vec{w}
+
+    .. math:: (A - r I) . \vec{w_3} = \vec{w_2}
+
+    .. math:: \vdots
+
+    .. math:: (A - r I) . \vec{w_k} = \vec{w_{k-1}}
+
+    Then the solutions to the system for the eigenspace are `e^{rt} [\vec{w}],
+    e^{rt} [t \vec{w} + \vec{w_2}], e^{rt} [\frac{t^2}{2} \vec{w} + t \vec{w_2} + \vec{w_3}],
+    ...,e^{rt} [\frac{t^{k-1}}{(k-1)!} \vec{w} + \frac{t^{k-2}}{(k-2)!} \vec{w_2} +...+ t \vec{w_{k-1}}
+    + \vec{w_k}]`
+
+    So, If `\vec{y_1},...,\vec{y_n}` are `n` solution of obtained from three
+    categories of `A`, then general solution to the system `\vec{y'} = A . \vec{y}`
+
+    .. math:: \vec{y} = C_1 \vec{y_1} + C_2 \vec{y_2} + \cdots + C_n \vec{y_n}
+
+    """
     eq = match_['eq']
     func = match_['func']
     fc = match_['func_coeff']
@@ -6838,3 +7479,235 @@ def _linear_neq_order1_type1(match_):
     for i in range(len(eq)):
         sol.append(Eq(func[i],e_vector[i]))
     return sol
+
+def sysode_nonlinear_2eq_order1(match_):
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    func = match_['func']
+    eq = match_['eq']
+    fc = match_['func_coeff']
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if match_['type_of_equation'] == 'type5':
+        sol = _nonlinear_2eq_order1_type5(x, y, t, eq)
+    for i in range(2):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    if match_['type_of_equation'] == 'type1':
+        sol = _nonlinear_2eq_order1_type1(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type2':
+        sol = _nonlinear_2eq_order1_type2(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type3':
+        sol = _nonlinear_2eq_order1_type3(x, y, t, eq)
+    elif match_['type_of_equation'] == 'type4':
+        sol = _nonlinear_2eq_order1_type4(x, y, t, eq)
+    return sol
+
+def _nonlinear_2eq_order1_type1(x, y, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = x^n F(x,y)
+
+    .. math:: y' = g(y) F(x,y)
+
+    Solution:
+
+    .. math:: x = \varphi(y), \int \frac{1}{g(y) F(\varphi(y),y)} \,dy = t + C_2
+
+    where
+
+    if `n \neq 1`
+
+    .. math:: \varphi = [C_1 + (1-n) \int \frac{1}{g(y)} \,dy]^{\frac{1}{1-n}}
+
+    if `n = 1`
+
+    .. math:: \varphi = C_1 e^{\int \frac{1}{g(y)} \,dy}
+
+    where `C_1` and `C_2` are arbitrary constants.
+
+    """
+    C1, C2 = symbols('C1:3')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    u, v, phi = symbols('u, v, phi', function=True)
+    r = eq[0].match(diff(x(t),t) - x(t)**n*f)
+    g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
+    F = r[f].subs(x(t),u).subs(y(t),v)
+    n = r[n]
+    if n!=1:
+        phi = (C1 + (1-n)*C.Integral(1/g, v))**(1/(1-n))
+    else:
+        phi = C1*exp(C.Integral(1/g, v))
+    phi = phi.doit()
+    sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol = []
+    for sols in sol2:
+        sol.append(Eq(y(t), sols))
+        sol.append(Eq(x(t),phi.subs(v, sols)))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type2(x, y, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = e^{\lambda x} F(x,y)
+
+    .. math:: y' = g(y) F(x,y)
+
+    Solution:
+
+    .. math:: x = \varphi(y), \int \frac{1}{g(y) F(\varphi(y),y)} \,dy = t + C_2
+
+    where
+
+    if `\lambda \neq 0`
+
+    .. math:: \varphi = -\frac{1}{\lambda} log(C_1 - \lambda \int \frac{1}{g(y)} \,dy)
+
+    if `\lambda = 0`
+
+    .. math:: \varphi = C_1 + \int \frac{1}{g(y)} \,dy
+
+    where `C_1` and `C_2` are arbitrary constants.
+
+    """
+    C1, C2 = symbols('C1:3')
+    n = Wild('n', exclude=[x(t),y(t)])
+    f = Wild('f')
+    u, v, phi = symbols('u, v, phi', function=True)
+    r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
+    g = (diff(y(t),t) - eq[1])/r[f]
+    F = r[f].subs(x(t),u).subs(y(t),v)
+    n = r[n]
+    if n:
+        phi = -1/n*log(C1 - n*C.Integral(1/g, v))
+    else:
+        phi = C1 + C.Integral(1/g, v)
+    phi = phi.doit()
+    sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol = []
+    for sols in sol2:
+        sol.append(Eq(y(t), sols))
+        sol.append(Eq(x(t),phi.subs(v, sols)))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type3(x, y, t, eq):
+    r"""
+    Autonomous system of general form
+
+    .. math:: x' = F(x,y)
+
+    .. math:: y' = G(x,y)
+
+    Assuming `y = y(x, C_1)` where `C_1` is an arbitrary constant is the general
+    solution of the first-order equation
+
+    .. math:: F(x,y) y'_x = G(x,y)
+
+    Then the general solution of the original system of equations has the form
+
+    .. math:: \int \frac{1}{F(x,y(x,C_1))} \,dx = t + C_1
+
+    """
+    C1, C2, C3, C4 = symbols('C1:5')
+    u, v = symbols('u, v', function=True)
+    f = Wild('f')
+    g = Wild('g')
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    F = r1[f].subs(x(t),u).subs(y(t),v)
+    G = r2[g].subs(x(t),u).subs(y(t),v)
+    sol2r = dsolve(Eq(diff(v(u),u), G.subs(v,v(u))/F.subs(v,v(u))))
+    for sol2s in sol2r:
+        sol1 = solve(C.Integral(1/F.subs(v, sol2s.rhs), u).doit() - t - C2, u)
+    sol = []
+    for sols in sol1:
+        sol.append(Eq(x(t), sols))
+        sol.append(Eq(y(t), (sol2s.rhs).subs(u, sols)))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type4(x, y, t, eq):
+    r"""
+    Equation:
+
+    .. math:: x' = f_1(x) g_1(y) \phi(x,y,t)
+
+    .. math:: y' = f_2(x) g_2(y) \phi(x,y,t)
+
+    First integral:
+
+    .. math:: \int \frac{f_2(x)}{f_1(x)} \,dx - \int \frac{g_1(y)}{g_2(y)} \,dy = C
+
+    where `C` is an arbitrary constant.
+
+    On solving the first integral for `x` (resp., `y` ) and on substituting the
+    resulting expression into either equation of the original solution, one
+    arrives at a firs-order equation for determining `y` (resp., `x` ).
+
+    """
+    C1, C2 = symbols('C1:3')
+    u, v = symbols('u, v')
+    f = Wild('f')
+    g = Wild('g')
+    f1 = Wild('f1', exclude=[v,t])
+    f2 = Wild('f2', exclude=[v,t])
+    g1 = Wild('g1', exclude=[u,t])
+    g2 = Wild('g2', exclude=[u,t])
+    r1 = eq[0].match(diff(x(t),t) - f)
+    r2 = eq[1].match(diff(y(t),t) - g)
+    num, denum = ((r1[f].subs(x(t),u).subs(y(t),v))/(r2[g].subs(x(t),u).subs(y(t),v))).as_numer_denom()
+    R1 = num.match(f1*g1)
+    R2 = denum.match(f2*g2)
+    phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
+    F1 = R1[f1]; F2 = R2[f2]
+    G1 = R1[g1]; G2 = R2[g2]
+    sol1r = solve(C.Integral(F2/F1, u).doit() - C.Integral(G1/G2,v).doit() - C1, u)
+    sol2r = solve(C.Integral(F2/F1, u).doit() - C.Integral(G1/G2,v).doit() - C1, v)
+    sol = []
+    for sols in sol1r:
+        sol.append(Eq(y(t), dsolve(diff(v(t),t) - F2.subs(u,sols).subs(v,v(t))*G2.subs(v,v(t))*phi.subs(u,sols).subs(v,v(t))).rhs))
+    for sols in sol2r:
+        sol.append(Eq(x(t), dsolve(diff(u(t),t) - F1.subs(u,u(t))*G1.subs(v,sols).subs(u,u(t))*phi.subs(v,sols).subs(u,u(t))).rhs))
+    return set(sol)
+
+def _nonlinear_2eq_order1_type5(x, y, t, eq):
+    r"""
+    Clairaut system of ODEs
+
+    .. math:: x = t x' + F(x',y')
+
+    .. math:: y = t y' + G(x',y')
+
+    The following are solutions of the system
+
+    `(i)` straight lines:
+
+    .. math:: x = C_1 t + F(C_1, C_2), y = C_2 t + G(C_1, C_2)
+
+    where `C_1` and `C_2` are arbitrary constants;
+
+    `(ii)` envelopes of the above lines;
+
+    `(iii)` continuously differentiable lines made up from segments of the lines
+    `(i)` and `(ii)`.
+
+    """
+    C1, C2 = symbols('C1:3')
+    x1 = diff(x(t),t); y1 = diff(y(t),t)
+    f = Wild('f')
+    g = Wild('g')
+    r1 = eq[0].match(t*diff(x(t),t) - x(t) + f)
+    r2 = eq[1].match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    if not (r1 and r2):
+        r1 = (-eq[0]).match(t*diff(x(t),t) - x(t) + f)
+        r2 = (-eq[1]).match(t*diff(y(t),t) - y(t) + g)
+    if not (r1 and r2):
+        r1 = eq[0].match(diff(x(t),t) - x(t)/t + f/t)
+        r2 = eq[1].match(diff(y(t),t) - y(t)/t + g/t)
+    return set([Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))])

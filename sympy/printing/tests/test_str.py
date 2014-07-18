@@ -647,8 +647,8 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
+    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
 
 
 def test_PrettyPoly():
