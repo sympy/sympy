@@ -184,6 +184,158 @@ def with_metaclass(meta, *bases):
     return metaclass("NewBase", None, {})
 
 
+try:
+    from collections import Counter
+except ImportError:    # < 2.7
+    # Backporting collections.Counter class
+    # to make it work with Python 2.6 version.
+    from operator import itemgetter
+    from heapq import nlargest
+    from itertools import repeat, ifilter
+
+    class Counter(dict):
+        '''Dict subclass for counting hashable objects.  Sometimes called a bag
+        or multiset.  Elements are stored as dictionary keys and their counts
+        are stored as dictionary values.
+        '''
+
+        def __init__(self, iterable=None, **kwds):
+            '''Create a new, empty Counter object.  And if given, count elements
+            from an input iterable.  Or, initialize the count from another mapping
+            of elements to their counts.
+
+            '''
+            self.update(iterable, **kwds)
+
+        def __missing__(self, key):
+            return 0
+
+        def most_common(self, n=None):
+            '''List the n most common elements and their counts from the most
+            common to the least. If n is None, then list all element counts.
+
+            '''
+            if n is None:
+                return sorted(self.iteritems(), key=itemgetter(1), reverse=True)
+            return nlargest(n, self.iteritems(), key=itemgetter(1))
+
+        def elements(self):
+            '''Iterator over elements repeating each as many times as its count.
+
+            '''
+            for elem, count in self.iteritems():
+                for _ in repeat(None, count):
+                    yield elem
+
+        # Override dict methods where the meaning changes for Counter objects.
+
+        @classmethod
+        def fromkeys(cls, iterable, v=None):
+            raise NotImplementedError(
+                'Counter.fromkeys() is undefined.  Use Counter(iterable) instead.')
+
+        def update(self, iterable=None, **kwds):
+            '''Like dict.update() but add counts instead of replacing them.
+
+            Source can be an iterable, a dictionary, or another Counter instance.
+
+            '''
+            if iterable is not None:
+                if hasattr(iterable, 'iteritems'):
+                    if self:
+                        self_get = self.get
+                        for elem, count in iterable.iteritems():
+                            self[elem] = self_get(elem, 0) + count
+                    else:
+                        dict.update(self, iterable) # fast path when counter is empty
+                else:
+                    self_get = self.get
+                    for elem in iterable:
+                        self[elem] = self_get(elem, 0) + 1
+            if kwds:
+                self.update(kwds)
+
+        def copy(self):
+            'Like dict.copy() but returns a Counter instance instead of a dict.'
+            return Counter(self)
+
+        def __delitem__(self, elem):
+            'Like dict.__delitem__() but does not raise KeyError for missing values.'
+            if elem in self:
+                dict.__delitem__(self, elem)
+
+        def __repr__(self):
+            if not self:
+                return '%s()' % self.__class__.__name__
+            items = ', '.join(map('%r: %r'.__mod__, self.most_common()))
+            return '%s({%s})' % (self.__class__.__name__, items)
+
+        # Multiset-style mathematical operations discussed in:
+        #       Knuth TAOCP Volume II section 4.6.3 exercise 19
+        #       and at http://en.wikipedia.org/wiki/Multiset
+        #
+        # Outputs guaranteed to only include positive counts.
+        #
+        # To strip negative and zero counts, add-in an empty counter:
+        #       c += Counter()
+
+        def __add__(self, other):
+            '''Add counts from two counters.
+
+            '''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            result = Counter()
+            for elem in set(self) | set(other):
+                newcount = self[elem] + other[elem]
+                if newcount > 0:
+                    result[elem] = newcount
+            return result
+
+        def __sub__(self, other):
+            ''' Subtract count, but keep only results with positive counts.
+
+            '''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            result = Counter()
+            for elem in set(self) | set(other):
+                newcount = self[elem] - other[elem]
+                if newcount > 0:
+                    result[elem] = newcount
+            return result
+
+        def __or__(self, other):
+            '''Union is the maximum of value in either of the input counters.
+
+            '''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            _max = max
+            result = Counter()
+            for elem in set(self) | set(other):
+                newcount = _max(self[elem], other[elem])
+                if newcount > 0:
+                   result[elem] = newcount
+            return result
+
+        def __and__(self, other):
+            ''' Intersection is the minimum of corresponding counts.
+
+            '''
+            if not isinstance(other, Counter):
+                return NotImplemented
+            _min = min
+            result = Counter()
+            if len(self) < len(other):
+                self, other = other, self
+            for elem in ifilter(self.__contains__, other):
+                newcount = _min(self[elem], other[elem])
+                if newcount > 0:
+                    result[elem] = newcount
+            return result
+
+
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
