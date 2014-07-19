@@ -110,7 +110,6 @@ def _pi_coeff(arg, cycles=1):
     >>> coeff(5.5*pi)
     3/2
     >>> coeff(2 + pi)
-
     """
     arg = sympify(arg)
     if arg is S.Pi:
@@ -188,7 +187,6 @@ class sin(TrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
-
     """
 
     def fdiff(self, argindex=1):
@@ -414,7 +412,6 @@ class cos(TrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cos
-
     """
 
     def fdiff(self, argindex=1):
@@ -756,7 +753,6 @@ class tan(TrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Tan
-
     """
 
     def fdiff(self, argindex=1):
@@ -991,7 +987,6 @@ class cot(TrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cot
-
     """
 
     def fdiff(self, argindex=1):
@@ -1341,7 +1336,6 @@ class sec(ReciprocalTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [2] http://functions.wolfram.com/ElementaryFunctions/Sec
-
     """
 
     _reciprocal_of = cos
@@ -1414,7 +1408,6 @@ class csc(ReciprocalTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Csc
-
     """
 
     _reciprocal_of = sin
@@ -1497,7 +1490,6 @@ class asin(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSin
-
     """
 
     def fdiff(self, argindex=1):
@@ -1660,7 +1652,6 @@ class acos(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCos
-
     """
 
     def fdiff(self, argindex=1):
@@ -1948,7 +1939,6 @@ class acot(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCot
-
     """
 
     def fdiff(self, argindex=1):
@@ -2108,7 +2098,6 @@ class asec(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
-
     """
 
     @classmethod
@@ -2192,7 +2181,6 @@ class acsc(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
-
     """
 
     @classmethod
@@ -2336,7 +2324,6 @@ class atan2(InverseTrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://en.wikipedia.org/wiki/Atan2
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
-
     """
 
     @classmethod
