@@ -390,6 +390,8 @@ def test_arg():
     assert arg(1 + I) == pi/4
     assert arg(-1 + I) == 3*pi/4
     assert arg(1 - I) == -pi/4
+    f = Function('f')
+    assert not arg(f(0) + I*f(1)).atoms(re)
 
     p = Symbol('p', positive=True)
     assert arg(p) == 0

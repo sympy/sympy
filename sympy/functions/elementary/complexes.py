@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core import S, C
 from sympy.core.compatibility import u
-from sympy.core.function import Function, Derivative, ArgumentIndexError
+from sympy.core.function import (Function, Derivative, ArgumentIndexError,
+    AppliedUndef)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
@@ -475,9 +476,9 @@ class arg(Function):
     @classmethod
     def eval(cls, arg):
         x, y = re(arg), im(arg)
-        arg = C.atan2(y, x)
-        if arg.is_number:
-            return arg
+        rv = C.atan2(y, x)
+        if rv.is_number and not rv.atoms(AppliedUndef):
+            return rv
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])
