@@ -62,7 +62,7 @@ class Plane(GeometryEntity):
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
             raise ValueError('Either provide 3 3D points or a point with a'
-            'normal vector')
+            ' normal vector')
         return GeometryEntity.__new__(cls, p1, normal_vector, **kwargs)
 
     @property
