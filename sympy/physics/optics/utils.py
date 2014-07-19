@@ -18,8 +18,8 @@ from .waves import TWave
 
 def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     """
-    This function calculates transmitted vector after refraction.
-    `medium1` and `medium2` can be `Medium` or any sympifiable object.
+    This function calculates transmitted vector after refraction at planar
+    surface. `medium1` and `medium2` can be `Medium` or any sympifiable object.
 
     If `incident` is an object of `Ray3D`, `normal` also has to be an instance
     of `Ray3D` in order to get the output as a `Ray3D`. Please note that if
@@ -157,7 +157,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
 def deviation(incident, medium1, medium2, normal=None, plane=None):
     """
     This function calculates the angle of deviation of a ray
-    due to refraction.
+    due to refraction at planar surface.
 
     Parameters
     ==========
@@ -185,6 +185,8 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     >>> r1 = Ray3D(Point3D(-1, -1, 1), Point3D(0, 0, 0))
     >>> deviation(r1, 1, 1, n)
     0
+    >>> deviation(r1, n1, n2, plane=P)
+    -acos(-sqrt(-2*n1**2/(3*n2**2) + 1)) + acos(-sqrt(3)/3)
 
     """
     refracted = refraction_angle(incident,
@@ -206,15 +208,20 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
         else:
             _incident = incident
 
-        if not isinstance(normal, Matrix):
-            if type(normal) == type(()) or type(normal) == type([]):
-                _normal = Matrix(normal)
-            elif isinstance(normal, Ray3D):
-                _normal = Matrix(normal.direction_ratio)
+        if plane is None:
+            if not isinstance(normal, Matrix):
+                if type(normal) == type(()) or type(normal) == type([]):
+                    _normal = Matrix(normal)
+                elif isinstance(normal, Ray3D):
+                    _normal = Matrix(normal.direction_ratio)
+                else:
+                    raise TypeError("normal should be a Matrix, Ray3D, tuple or list")
             else:
-                raise TypeError("normal should be a Matrix, Ray3D, tuple or list")
+                _normal = normal
         else:
-            _normal = normal
+            _normal = plane.normal_vector
+            if isinstance(_normal, list):
+                _normal = Matrix(_normal)
 
         mag_incident = sqrt(sum([i**2 for i in _incident]))
         mag_normal = sqrt(sum([i**2 for i in _normal]))
