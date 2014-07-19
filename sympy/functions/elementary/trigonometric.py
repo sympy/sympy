@@ -1102,7 +1102,7 @@ class cot(TrigonometricFunction):
             denom = cos(2*re) - C.cosh(2*im)
             return (-sin(2*re)/denom, -C.sinh(2*im)/denom)
         else:
-            return (cot(re), S.Zero)
+            return (self.func(re), S.Zero)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -1256,7 +1256,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
             return 1/t
 
     def fdiff(self, argindex=1):
-        return self._calculate_reciprocal("fdiff", argindex)
+        return -self._calculate_reciprocal("fdiff", argindex)/self**2
 
     def _eval_rewrite_as_exp(self, arg):
         return self._rewrite_reciprocal("_eval_rewrite_as_exp", arg)
