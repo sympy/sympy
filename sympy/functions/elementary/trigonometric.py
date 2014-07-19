@@ -1363,7 +1363,7 @@ class sec(ReciprocalTrigonometricFunction):
     @cacheit
     def taylor_term(n, x, *previous_terms):
         # Reference Formula:
-        # https://www.efunda.com/math/taylor_series/trig.cfm
+        # http://functions.wolfram.com/ElementaryFunctions/Sec/06/01/02/01/
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
