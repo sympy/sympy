@@ -1237,10 +1237,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _call_reciprocal(self, method_name, *args, **kwargs):
         # Calls method_name on _reciprocal_of
         o = self._reciprocal_of(self.args[0])
-        if kwargs:
-            return getattr(o, method_name)(**kwargs)
-        else:
-            return getattr(o, method_name)(*args)
+        return getattr(o, method_name)(*args, **kwargs)
 
     def _calculate_reciprocal(self, method_name, *args, **kwargs):
         # If calling method_name on _reciprocal_of returns a value != None
