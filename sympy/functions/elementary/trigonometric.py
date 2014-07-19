@@ -1230,6 +1230,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
                     narg = (1 - pi_coeff)*S.Pi
                     return -cls(narg)
         t = cls._reciprocal_of.eval(arg)
+        if hasattr(arg, 'inverse') and arg.inverse() == cls:
+            return arg.args[0]
         return 1/t if t != None else t
 
     def _call_reciprocal(self, method_name, *args, **kwargs):

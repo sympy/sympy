@@ -1044,6 +1044,8 @@ def test_sec():
     assert sec(x*I) == 1/cosh(x)
     assert sec(-x) == sec(x)
 
+    assert sec(asec(x)) == x
+
     assert sec(x).rewrite(exp) == 1/(exp(I*x)/2 + exp(-I*x)/2)
     assert sec(x).rewrite(sin) == sec(x)
     assert sec(x).rewrite(cos) == 1/cos(x)
@@ -1114,6 +1116,8 @@ def test_csc():
     assert csc(I) == -I/sinh(1)
     assert csc(x*I) == -I/sinh(x)
     assert csc(-x) == -csc(x)
+
+    assert csc(acsc(x)) == x
 
     assert csc(x).rewrite(exp) == 2*I/(exp(I*x) - exp(-I*x))
     assert csc(x).rewrite(sin) == 1/sin(x)
