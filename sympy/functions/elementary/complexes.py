@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core import S, C
 from sympy.core.compatibility import u
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -475,10 +476,20 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
-        x, y = re(arg), im(arg)
+        if not arg.is_Atom:
+            c, arg_ = factor_terms(arg).as_coeff_Mul()
+            if arg_.is_Mul:
+                arg_ = Mul(*[a if (sign(a) not in (-1, 1)) else
+                    sign(a) for a in arg_.args])
+            arg_ = sign(c)*arg_
+        else:
+            arg_ = arg
+        x, y = re(arg_), im(arg_)
         rv = C.atan2(y, x)
         if rv.is_number and not rv.atoms(AppliedUndef):
             return rv
+        if arg_ != arg:
+            return cls(arg_, evaluate=False)
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])

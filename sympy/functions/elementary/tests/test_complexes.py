@@ -402,6 +402,23 @@ def test_arg():
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
 
+    e = p + I*p**2
+    assert arg(e) == arg(1 + p*I)
+    # make sure sign doesn't swap
+    e = -2*p + 4*I*p**2
+    assert arg(e) == arg(-1 + 2*p*I)
+    # make sure sign isn't lost
+    x = symbols('x', real=True)  # could be zero
+    e = x + I*x
+    assert arg(e) == arg(x*(1 + I))
+    assert arg(e/p) == arg(x*(1 + I))
+    e = p*cos(p) + I*log(p)*exp(p)
+    assert arg(e).args[0] == e
+    # keep it simple -- let the user do more advanced cancellation
+    e = (p + 1) + I*(p**2 - 1)
+    assert arg(e).args[0] == e
+
+
 def test_arg_rewrite():
     assert arg(1 + I) == atan2(1, 1)
 
