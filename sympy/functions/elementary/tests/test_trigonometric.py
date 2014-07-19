@@ -618,7 +618,12 @@ def test_acos():
     assert acos(Rational(3, 2), evaluate=False).is_positive is False
     assert acos(p).is_positive is None
 
-    assert acos(z).conjugate() == acos(conjugate(z))
+    assert acos(2 + p).conjugate() != acos(10 + p)
+    assert acos(-3 + n).conjugate() != acos(-3 + n)
+    assert acos(S.One/3).conjugate() == acos(S.One/3)
+    assert acos(-S.One/3).conjugate() == acos(-S.One/3)
+    assert acos(p + n*I).conjugate() == acos(p - n*I)
+    assert acos(z).conjugate() != acos(conjugate(z))
 
 
 def test_acos_series():

@@ -1756,7 +1756,12 @@ class acos(InverseTrigonometricFunction):
         return S.Pi/2 - acsc(1/arg)
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        z = self.args[0]
+        r = self.func(self.args[0].conjugate())
+        if z.is_real is False:
+            return r
+        elif z.is_real and (z + 1).is_nonnegative and (z - 1).is_nonpositive:
+            return r
 
     def _sage_(self):
         import sage.all as sage
