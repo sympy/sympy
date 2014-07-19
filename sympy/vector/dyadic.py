@@ -78,51 +78,12 @@ class Dyadic(BasisDependent):
                     outdyad += vect_dot * v1 * v2 * outer_product
             return outdyad
         else:
-            raise TypeError("Inner product is not defined for " + \
+            raise TypeError("Inner product is not defined for " +
                             str(type(other)) + " and Dyadics.")
 
     def __and__(self, other):
         return self.dot(other)
     __and__.__doc__ = dot.__doc__
-
-    def rdot(self, other):
-        """
-        The inner product operator for a Vector and a Dyadic
-        Returns the dot product as a Vector instance
-
-        Parameters
-        ==========
-
-        other : Vector
-            The vector we are dotting with
-
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
-        >>> d = N.i.outer(N.i)
-        >>> N.i.dot(d)
-        N.i
-
-        """
-
-        from sympy.vector.vector import Vector
-        if other == Vector.zero:
-            return Vector.zero
-        elif isinstance(other, Vector):
-            outvec = Vector.zero
-            for k, v in self.components.items():
-                vect_dot = k.args[0].dot(other)
-                outvec += vect_dot * v * k.args[1]
-            return outvec
-        else:
-            raise TypeError(str(type(other)) + " not supported for " + \
-                            "r-dot with dyadics")
-
-    def __rand__(self, other):
-        return self.rdot(other)
-    __and__.__doc__ = rdot.__doc__
 
     def cross(self, other):
         """
@@ -157,52 +118,12 @@ class Dyadic(BasisDependent):
                 outdyad += v * outer
             return outdyad
         else:
-            raise TypeError(str(type(other)) + " not supported for " + \
+            raise TypeError(str(type(other)) + " not supported for " +
                             "cross with dyadics")
 
     def __xor__(self, other):
         return self.cross(other)
     __xor__.__doc__ = cross.__doc__
-
-    def rcross(self, other):
-        """
-        Returns the cross product between a Vector and this Dyadic, as a
-        Dyadic instance.
-
-        Parameters
-        ==========
-
-        other : Vector
-            The Vector that we are crossing this Dyadic with
-
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
-        >>> d = N.i.outer(N.i)
-        >>> N.j.cross(d)
-        (-1)*(N.k|N.i)
-
-        """
-
-        from sympy.vector.vector import Vector
-        if other == Vector.zero:
-            return Dyadic.zero
-        elif isinstance(other, Vector):
-            outdyad = Dyadic.zero
-            for k, v in self.components.items():
-                cross_product = other.cross(k.args[0])
-                outer = cross_product.outer(k.args[1])
-                outdyad += v * outer
-            return outdyad
-        else:
-            raise TypeError(str(type(other)) + " not supported for " + \
-                            "r-cross with dyadics")
-
-    def __rxor__(self, other):
-        return self.rcross(other)
-    __rxor__.__doc__ = rcross.__doc__
 
     def to_matrix(self, system, second_system=None):
         """
@@ -258,8 +179,8 @@ class BaseDyadic(Dyadic, AtomicExpr):
         from sympy.vector.vector import Vector, BaseVector
         #Verify arguments
         if not isinstance(vector1, (BaseVector, DyadicZero)) or \
-           not isinstance(vector2, (BaseVector, DyadicZero)):
-            raise TypeError("BaseDyadic cannot be composed of non-base "+ \
+               not isinstance(vector2, (BaseVector, DyadicZero)):
+            raise TypeError("BaseDyadic cannot be composed of non-base "+
                             "vectors")
         #Handle special case of zero vector
         elif vector1 == Vector.zero or vector2 == Vector.zero:

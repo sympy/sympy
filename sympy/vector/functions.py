@@ -66,9 +66,9 @@ def express(expr, system, system2=None, variables=False):
             #the coordinate variables in the Vector
             system_list = []
             for x in expr.atoms():
-                if (isinstance(x, BaseScalar) or \
-                    isinstance(x, BaseVector)) and \
-                    x.system != system:
+                if (isinstance(x, BaseScalar)
+                        or isinstance(x, BaseVector)
+                            and x.system != system):
                     system_list.append(x.system)
             system_list = set(system_list)
             subs_dict = {}
@@ -95,9 +95,9 @@ def express(expr, system, system2=None, variables=False):
         outdyad = Dyadic.zero
         var = variables
         for k, v in expr.components.items():
-            outdyad += express(v, system, variables = var) * \
-                       (express(k.args[0], system, variables = var) |
-                        express(k.args[1], system2, variables = var))
+            outdyad += (express(v, system, variables = var) *
+                        (express(k.args[0], system, variables = var) |
+                         express(k.args[1], system2, variables = var)))
 
         return outdyad
 

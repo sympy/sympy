@@ -81,7 +81,7 @@ class BasisDependent(Expr):
         ========================
 
         """
-        simp_components = [simp(v, ratio, measure) * k for \
+        simp_components = [simp(v, ratio, measure) * k for
                            k, v in self.components.items()]
         return self._add_func(*simp_components)
     simplify.__doc__ += simp.__doc__
@@ -94,7 +94,7 @@ class BasisDependent(Expr):
         ========================
 
         """
-        trig_components = [tsimp(v, **opts) * k for \
+        trig_components = [tsimp(v, **opts) * k for
                            k, v in self.components.items()]
         return self._add_func(*trig_components)
     trigsimp.__doc__ += tsimp.__doc__
@@ -130,7 +130,7 @@ class BasisDependent(Expr):
         ========================
 
         """
-        fctr_components = [fctr(v, *args, **kwargs) * k for \
+        fctr_components = [fctr(v, *args, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*fctr_components)
     factor.__doc__ += fctr.__doc__
@@ -155,7 +155,7 @@ class BasisDependent(Expr):
         for x in args:
             if isinstance(x, BasisDependent):
                 raise TypeError("Invalid arg for differentiation")
-        diff_components = [df(v, *args, **kwargs) * k for \
+        diff_components = [df(v, *args, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*diff_components)
     diff.__doc__ += df.__doc__
@@ -259,7 +259,7 @@ class BasisDependentMul(BasisDependent, Mul):
         #If one of the args was a VectorAdd, return an
         #appropriate VectorAdd instance
         if isinstance(expr, cls._add_func):
-            newargs = [cls._mul_func(measure_number, x) for \
+            newargs = [cls._mul_func(measure_number, x) for
                        x in expr.args]
             return cls._add_func(*newargs)
 
@@ -284,8 +284,8 @@ class BasisDependentMul(BasisDependent, Mul):
 
     def __str__(self, printer=None):
         measure_str = self._measure_number.__str__()
-        if '(' in measure_str or '-' in measure_str or \
-           '+' in measure_str:
+        if ('(' in measure_str or '-' in measure_str or
+                '+' in measure_str):
             measure_str = '(' + measure_str + ')'
         return measure_str + '*' + self._base_instance.__str__(printer)
 

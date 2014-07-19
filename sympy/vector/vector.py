@@ -92,21 +92,25 @@ class Vector(BasisDependent):
 
         #Check special cases
         if isinstance(other, Dyadic):
-            return other.rdot(self)
+            if isinstance(self, VectorZero):
+                return Vector.zero
+            outvec = Vector.zero
+            for k, v in other.components.items():
+                vect_dot = k.args[0].dot(self)
+                outvec += vect_dot * v * k.args[1]
+            return outvec
         from sympy.vector.deloperator import Del
         if not isinstance(other, Vector) and not isinstance(other, Del):
-            raise TypeError(str(other)+" is not a vector or del operator")
+            raise TypeError(str(other)+" is not a vector, dyadic or " +
+                            "del operator")
 
         #Check if the other is a del operator
         if isinstance(other, Del):
             def directional_derivative(field):
                 field = express(field, other.system, variables = True)
-                out = self.dot(other._i) * \
-                      df(field, other._x)
-                out += self.dot(other._j) * \
-                       df(field, other._y)
-                out += self.dot(other._k) * \
-                       df(field, other._z)
+                out = self.dot(other._i) * df(field, other._x)
+                out += self.dot(other._j) * df(field, other._y)
+                out += self.dot(other._k) * df(field, other._z)
                 if out == 0 and isinstance(field, Vector):
                     out = Vector.zero
                 return out
@@ -119,15 +123,14 @@ class Vector(BasisDependent):
         v2 = express(other, other._sys)
         dotproduct = S(0)
         for x in other._sys.base_vectors():
-            dotproduct += v1.components.get(x, 0) * \
-                          v2.components.get(x, 0)
+            dotproduct += (v1.components.get(x, 0) *
+                           v2.components.get(x, 0))
 
         return dotproduct
 
     def __and__(self, other):
         return self.dot(other)
     __and__.__doc__ = dot.__doc__
-    __rand__ = __and__
 
     def cross(self, other):
         """
@@ -162,10 +165,18 @@ class Vector(BasisDependent):
 
         #Check special cases
         if isinstance(other, Dyadic):
-            return other.rcross(self)
+            if isinstance(self, VectorZero):
+                return Dyadic.zero
+            outdyad = Dyadic.zero
+            for k, v in other.components.items():
+                cross_product = self.cross(k.args[0])
+                outer = cross_product.outer(k.args[1])
+                outdyad += v * outer
+            return outdyad
         elif not isinstance(other, Vector):
             raise TypeError(str(other) + " is not a vector")
-        elif self == Vector.zero or other == Vector.zero:
+        elif (isinstance(self, VectorZero) or
+              isinstance(other, VectorZero)):
             return Vector.zero
 
         #Compute cross product
@@ -177,7 +188,7 @@ class Vector(BasisDependent):
 
             """
 
-            return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * \
+            return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] *
                                  mat[2][1])
                     + mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
                     mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
@@ -224,8 +235,8 @@ class Vector(BasisDependent):
         #Handle the special cases
         if not isinstance(other, Vector):
             raise TypeError("Invalid operand for outer product")
-        elif isinstance(self, VectorZero) or \
-             isinstance(other, VectorZero):
+        elif (isinstance(self, VectorZero) or
+              isinstance(other, VectorZero)):
             return Dyadic.zero
 
         #Iterate over components of both the vectors to generate
@@ -292,8 +303,8 @@ class Vector(BasisDependent):
 
         parts = {}
         for vect, measure in self.components.items():
-            parts[vect.system] = parts.get(vect.system, Vector.zero) + \
-                                 vect*measure
+            parts[vect.system] = (parts.get(vect.system, Vector.zero) +
+                                  vect*measure)
         return parts
 
 
