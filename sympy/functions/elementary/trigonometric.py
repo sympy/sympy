@@ -1209,6 +1209,29 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     _is_even = None  # optional, to be defined in subclass
     _is_odd = None   # optional, to be defined in subclass
 
+    @classmethod
+    def eval(cls, arg):
+        if arg.could_extract_minus_sign():
+            if cls._is_even:
+                return cls(-arg)
+            if cls._is_odd:
+                return -cls(-arg)
+
+        pi_coeff = _pi_coeff(arg)
+        if (pi_coeff is not None
+            and not (2*pi_coeff).is_integer
+            and pi_coeff.is_Rational):
+                q = pi_coeff.q
+                p = pi_coeff.p % (2*q)
+                if p > q:
+                    narg = (pi_coeff - 1)*S.Pi
+                    return -cls(narg)
+                if 2*p > q:
+                    narg = (1 - pi_coeff)*S.Pi
+                    return -cls(narg)
+        t = cls._reciprocal_of.eval(arg)
+        return 1/t if t != None else t
+
     def _call_reciprocal(self, method_name, *args, **kwargs):
         # Calls method_name on _reciprocal_of
         o = self._reciprocal_of(self.args[0])
@@ -1277,29 +1300,6 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx):
         return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)
-
-    @classmethod
-    def eval(cls, arg):
-        if arg.could_extract_minus_sign():
-            if cls._is_even:
-                return cls(-arg)
-            if cls._is_odd:
-                return -cls(-arg)
-
-        pi_coeff = _pi_coeff(arg)
-        if (pi_coeff is not None
-            and not (2*pi_coeff).is_integer
-            and pi_coeff.is_Rational):
-                q = pi_coeff.q
-                p = pi_coeff.p % (2*q)
-                if p > q:
-                    narg = (pi_coeff - 1)*S.Pi
-                    return -cls(narg)
-                if 2*p > q:
-                    narg = (1 - pi_coeff)*S.Pi
-                    return -cls(narg)
-        t = cls._reciprocal_of.eval(arg)
-        return 1/t if t != None else t
 
 
 class sec(ReciprocalTrigonometricFunction):
