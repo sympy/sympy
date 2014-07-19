@@ -83,7 +83,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     if not isinstance(incident, Matrix):
         if type(incident) == type(()) or type(incident) == type([]):
             _incident = Matrix(incident)
-        elif isinstance(incident, Ray3D):`
+        elif isinstance(incident, Ray3D):
             _incident = Matrix(incident.direction_ratio)
         else:
             raise TypeError("incident should be a Matrix, Ray3D, tuple or list")
