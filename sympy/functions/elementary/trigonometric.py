@@ -1254,8 +1254,6 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         t = self._call_reciprocal(method_name, arg)
         if t != None and t != self._reciprocal_of(arg):
             return 1/t
-        else:
-            return
 
     def fdiff(self, argindex=1):
         return self._calculate_reciprocal("fdiff", argindex)
