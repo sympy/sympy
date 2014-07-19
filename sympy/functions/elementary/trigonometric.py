@@ -997,7 +997,7 @@ class cot(TrigonometricFunction):
 
     def inverse(self, argindex=1):
         """
-        Return the inverse of this function.
+        Returns the inverse of this function.
         """
         return acot
 
