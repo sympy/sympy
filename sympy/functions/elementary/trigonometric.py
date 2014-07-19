@@ -156,8 +156,9 @@ class sin(TrigonometricFunction):
     Notes
     =====
 
-    sin(x) will evaluate automatically in the case x
-    is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+    This function will evaluate automatically in the
+    case x/pi is some rational number [4]_.  For example,
+    if x is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
     Examples
     ========
@@ -187,6 +188,7 @@ class sin(TrigonometricFunction):
     .. [1] http://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
+    .. [4] http://mathworld.wolfram.com/TrigonometryAngles.html
     """
 
     def fdiff(self, argindex=1):
@@ -381,8 +383,7 @@ class cos(TrigonometricFunction):
     Notes
     =====
 
-    cos(x) will evaluate automatically in the case x
-    is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+    See :func:`sin` for notes about automatic evaluation.
 
     Examples
     ========
@@ -728,8 +729,7 @@ class tan(TrigonometricFunction):
     Notes
     =====
 
-    tan(x) will evaluate automatically in the case x is a
-    multiple of pi.
+    See :func:`sin` for notes about automatic evaluation.
 
     Examples
     ========
@@ -962,8 +962,7 @@ class cot(TrigonometricFunction):
     Notes
     =====
 
-    cot(x) will evaluate automatically in the case x is a
-    multiple of pi.
+    See :func:`sin` for notes about automatic evaluation.
 
     Examples
     ========
@@ -1308,8 +1307,7 @@ class sec(ReciprocalTrigonometricFunction):
     Notes
     =====
 
-    sec(x) will evaluate automatically in the case x is a
-    multiple of pi.
+    See :func:`sin` for notes about automatic evaluation.
 
     Examples
     ========
@@ -1380,8 +1378,7 @@ class csc(ReciprocalTrigonometricFunction):
     Notes
     =====
 
-    csc(x) will evaluate automatically in the case x is a
-    multiple of pi.
+    See :func:`sin` for notes about automatic evaluation.
 
     Examples
     ========
