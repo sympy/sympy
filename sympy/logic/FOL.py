@@ -126,6 +126,9 @@ class AppliedFunction(Applied):
 
 
 class Quantifier(FOL):
+    """
+    Abstract base class for ForAll and Exists.
+    """
 
     def __new__(cls, *args, **kwargs):
 
@@ -336,12 +339,9 @@ def standardize(expr):
 
 def _standardize(expr, var_set):
 
-    if not isinstance(expr, BooleanFunction):
-        return expr
-
-    if isinstance(expr, Quantifier):
+    def update_var_set(vars):
         d = {}
-        for var in expr.vars:
+        for var in vars:
             if var in var_set:
                 if not var_set[var]:
                     var_set[var] = numbered_symbols(var.name)
@@ -350,6 +350,35 @@ def _standardize(expr, var_set):
             else:
                 var_set[var] = None
                 d[var] = var
+        return d
+
+    if not isinstance(expr, BooleanFunction):
+        return expr
+
+    if isinstance(expr, (And, Or)):
+        if isinstance(expr, And):
+            cls = ForAll
+        else:
+            cls = Exists
+
+        v = set()
+        for arg in expr.args:
+            if isinstance(arg, cls):
+                v.update(arg.vars)
+        d = update_var_set(v)
+        expr = expr.subs(d)
+
+        args = []
+        for arg in expr.args:
+            if isinstance(arg, cls):
+                a = _standardize(arg.expr, var_set)
+                args.append(arg.func(arg.vars, a))
+            else:
+                args.append(_standardize(arg, var_set))
+        return expr.func(*args)
+
+    if isinstance(expr, Quantifier):
+        d = update_var_set(expr.vars)
         e = _standardize(expr.expr, var_set)
         return expr.func(d.values(), e.subs(d))
 

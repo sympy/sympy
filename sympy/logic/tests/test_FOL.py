@@ -71,10 +71,23 @@ def test_Exists():
 def test_standardize():
     from sympy.core.symbol import Symbol
     X0 = Symbol('X0')
+    Y0 = Symbol('Y0')
     P = Predicate('P')
     Q = Predicate('Q')
+    R = Predicate('R')
     assert standardize(ForAll(X, P(X)) >> ForAll(X, Q(X))) == \
                 ForAll(X, P(X)) >> ForAll(X0, Q(X0))
+    assert standardize(ForAll(X, P(X)) & ForAll(X, Q(X))) == \
+                ForAll(X, P(X)) & ForAll(X, Q(X))
+    assert standardize(Exists(X, P(X)) | Exists(X, Q(X))) == \
+                Exists(X, P(X)) | Exists(X, Q(X))
+    assert standardize(ForAll(X, P(X) & Q(X)) | ForAll(X, P(X) >> Q(X))) == \
+                ForAll(X, P(X) & Q(X)) | ForAll(X0, P(X0) >> Q(X0))
+    assert standardize(Exists(X, P(X) & Q(X)) & Exists(X, P(X) >> Q(X))) == \
+                Exists(X, P(X) & Q(X)) & Exists(X0, P(X0) >> Q(X0))
+    assert standardize(Exists(X, P(X) >> ForAll(Y, R(Y))) |
+                Exists((X, Y), P(X, Y))) == Exists(X, P(X) >>
+                ForAll(Y0, R(Y0))) | Exists((X, Y), P(X, Y))
 
 
 def test_to_pnf():
@@ -89,6 +102,10 @@ def test_to_pnf():
                 Exists((X, Y), P(X) & Q(Y))
     assert to_pnf(ForAll(X, P(X)) >> ForAll(Y, Q(Y))) == \
                 ForAll(Y, Exists(X, ~P(X) | Q(Y)))
+    assert to_pnf(ForAll(X, P(X)) & ForAll(X, Q(X))) == \
+                ForAll(X, P(X) & Q(X))
+    assert to_pnf(Exists(X, P(X)) | Exists(X, Q(X))) == \
+                Exists(X, P(X) | Q(X))
 
 
 def test_to_snf():
