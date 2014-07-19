@@ -98,7 +98,8 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         # If we have the plane, we can get the intersection
         # point of incident ray and the plane and thus return
         # an instance of Ray3D.
-        return_ray = True
+        if isinstance(incident, Ray3D):
+            return_ray = True
         intersection_pt = plane.intersection(incident)
         _normal = plane.normal_vector
         if isinstance(_normal, list):
@@ -180,6 +181,7 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     >>> from sympy.geometry import Point3D, Ray3D, Plane
     >>> from sympy.matrices import Matrix
     >>> from sympy import symbols
+    >>> n1, n2 = symbols('n1, n2')
     >>> n = Matrix([0, 0, 1])
     >>> P = Plane(Point3D(0, 0, 0), normal_vector=[0, 0, 1])
     >>> r1 = Ray3D(Point3D(-1, -1, 1), Point3D(0, 0, 0))
