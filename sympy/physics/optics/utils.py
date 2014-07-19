@@ -6,9 +6,9 @@
 
 from __future__ import division
 
-__all__ = ['refraction_angle']
+__all__ = ['refraction_angle', 'deviation']
 
-from sympy import Symbol, sympify, sqrt, Matrix
+from sympy import Symbol, sympify, sqrt, Matrix, acos
 from sympy.geometry.line3d import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
@@ -121,21 +121,14 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         else:
             _normal = normal
 
-    m1, m2 = None, None
     n1, n2 = None, None
 
-    # If m1 and m2 are instances of Medium, assign them to m1 and m2
-    # respectively otherwise m1 and m2 will be treated as refractive
-    # indices of the mediums and will be assigned to n1 and n2 respectively.
-
     if isinstance(medium1, Medium):
-        m1 = medium1
         n1 = medium1.refractive_index
     else:
         n1 = sympify(medium1)
 
     if isinstance(medium2, Medium):
-        m2 = medium2
         n2 = medium2.refractive_index
     else:
         n2 = sympify(medium2)
@@ -159,3 +152,76 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         return drs
     else:
         return Ray3D(intersection_pt, direction_ratio=drs)
+
+
+def deviation(incident, medium1, medium2, normal=None, plane=None):
+    """
+    This function calculates the angle of deviation of a ray
+    due to refraction.
+
+    Parameters
+    ==========
+
+    incident : Matrix, Ray3D, tuple or list
+        Incident vector
+    medium1 : sympy.physics.optics.medium.Medium or sympifiable
+        Medium 1 or its refractive index
+    medium2 : sympy.physics.optics.medium.Medium or sympifiable
+        Medium 2 or its refractive index
+    normal : Matrix, Ray3D, tuple or list
+        Normal vector
+    plane : Plane
+        Plane of separation of the two media.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics import deviation
+    >>> from sympy.geometry import Point3D, Ray3D, Plane
+    >>> from sympy.matrices import Matrix
+    >>> from sympy import symbols
+    >>> n = Matrix([0, 0, 1])
+    >>> P = Plane(Point3D(0, 0, 0), normal_vector=[0, 0, 1])
+    >>> r1 = Ray3D(Point3D(-1, -1, 1), Point3D(0, 0, 0))
+    >>> deviation(r1, 1, 1, n)
+    0
+
+    """
+    refracted = refraction_angle(incident,
+                                 medium1,
+                                 medium2,
+                                 normal=normal,
+                                 plane=plane)
+    if refracted != 0:
+        if isinstance(refracted, Ray3D):
+            refracted = Matrix(refracted.direction_ratio)
+
+        if not isinstance(incident, Matrix):
+            if type(incident) == type(()) or type(incident) == type([]):
+                _incident = Matrix(incident)
+            elif isinstance(incident, Ray3D):
+                _incident = Matrix(incident.direction_ratio)
+            else:
+                raise TypeError("incident should be a Matrix, Ray3D, tuple or list")
+        else:
+            _incident = incident
+
+        if not isinstance(normal, Matrix):
+            if type(normal) == type(()) or type(normal) == type([]):
+                _normal = Matrix(normal)
+            elif isinstance(normal, Ray3D):
+                _normal = Matrix(normal.direction_ratio)
+            else:
+                raise TypeError("normal should be a Matrix, Ray3D, tuple or list")
+        else:
+            _normal = normal
+
+        mag_incident = sqrt(sum([i**2 for i in _incident]))
+        mag_normal = sqrt(sum([i**2 for i in _normal]))
+        mag_refracted = sqrt(sum([i**2 for i in refracted]))
+        _incident /= mag_incident
+        _normal /= mag_normal
+        refracted /= mag_refracted
+        i = acos(_incident.dot(_normal))
+        r = acos(refracted.dot(_normal))
+        return i - r

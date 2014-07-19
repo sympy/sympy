@@ -15,7 +15,10 @@ def test_refraction_angle():
 
     r1 = Ray3D(Point3D(-1, -1, 1), Point3D(0, 0, 0))
     n = Matrix([0, 0, 1])
+    P = Plane(Point3D(0, 0, 0), normal_vector=[0, 0, 1])
     assert refraction_angle(r1, 1, 1, n) == Matrix([
-                                                   [ 1],
-                                                   [ 1],
-                                                   [-1]])
+                                            [ 1],
+                                            [ 1],
+                                            [-1]])
+    assert refraction_angle(r1, 1, 1, plane=P) ==\
+        Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
