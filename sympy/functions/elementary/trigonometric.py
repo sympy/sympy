@@ -2118,6 +2118,12 @@ class asec(InverseTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return sec
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
         if C.Order(1,x).contains(arg):
@@ -2200,6 +2206,12 @@ class acsc(InverseTrigonometricFunction):
             return -1/(self.args[0]**2*sqrt(1 - 1/self.args[0]**2))
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return csc
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
