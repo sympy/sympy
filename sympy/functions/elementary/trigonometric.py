@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.numbers import igcdex
-from sympy.core.function import Function, ArgumentIndexError, AppliedUndef
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -1958,10 +1958,9 @@ class atan2(Function):
                     return S.NaN
         if y.is_zero and x.is_real and x.is_nonzero:
             return S.Pi * (S.One - C.Heaviside(x))
-        if (x.is_number and not x.atoms(AppliedUndef) and
-                y.is_number and not y.atoms(AppliedUndef)):
+        if x.is_number and y.is_number:
             return -S.ImaginaryUnit*C.log(
-                (x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
+                (x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_log(self, y, x):
         return -S.ImaginaryUnit*C.log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
@@ -1970,8 +1969,12 @@ class atan2(Function):
         return 2*atan(y / (sqrt(x**2 + y**2) + x))
 
     def _eval_rewrite_as_arg(self, y, x):
-        if (x.is_real or x.is_imaginary) and (y.is_real or y.is_imaginary):
+        if x.is_real and y.is_real:
             return C.arg(x + y*S.ImaginaryUnit)
+        I = S.ImaginaryUnit
+        n = x + I*y
+        d = x**2 + y**2
+        return C.arg(n/sqrt(d)) - I*log(abs(n)/sqrt(abs(d)))
 
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real

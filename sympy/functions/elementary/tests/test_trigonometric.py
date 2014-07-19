@@ -678,11 +678,17 @@ def test_atan2():
     assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
 
     ex = atan2(y, x) - arg(x + I*y)
-    # these 4 agree with wolframalpha
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
-    assert ex.subs({x:2, y:3*I}).rewrite(arg) == -pi + I*atanh(3/S(2))
-    assert ex.subs({x:2*I, y:3}).rewrite(arg) == 3*pi/2 - I*atanh(3/S(2))
-    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == atan(2/S(3)) + atan(3/S(2))
+    assert ex.subs({x:2, y:3*I}).rewrite(arg) == -pi - I*log(sqrt(5)*I/5)
+    assert ex.subs({x:2*I, y:3}).rewrite(arg) == -pi/2 - I*log(sqrt(5)*I)
+    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == -pi + atan(2/S(3)) + atan(3/S(2))
+    i = symbols('i', imaginary=True)
+    r = symbols('r', real=True)
+    e = atan2(i, r)
+    rewrite = e.rewrite(arg)
+    reps = {i: I, r: -2}
+    assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
+    assert (e - rewrite).subs(reps).equals(0)
 
     assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
 
