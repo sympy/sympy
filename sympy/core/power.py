@@ -167,7 +167,12 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            elif b is S.One:
+            elif e.is_integer and _coeff_isneg(b):
+                if e.is_even:
+                    b = -b
+                elif e.is_odd:
+                    return -Pow(-b, e)
+            if b is S.One:
                 if e in (S.NaN, S.Infinity, -S.Infinity):
                     return S.NaN
                 return S.One
