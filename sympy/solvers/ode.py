@@ -1765,7 +1765,7 @@ def checksysodesol(eqs, sols, func=None):
         if len(sol.atoms(AppliedUndef)) != 1:
             raise ValueError("solution should have one function only")
     if len(funcs) != len(sols):
-        raise ValueError("Solution provided is not sufficient to check sysode solutions")
+        raise ValueError("number of solution provided does not match the number of equations")
     t = funcs[0].args[0]
     dictsol = dict()
     for sol in sols:
@@ -1785,9 +1785,7 @@ def checksysodesol(eqs, sols, func=None):
         for func in funcs:
             eq = sub_func_doit(eq, func, dictsol[func])
         ss = simplify(eq)
-        if ss:
-            # with the new numer_denom in power.py, if we do a simple
-            # expansion then testnum == 0 verifies all solutions.
+        if ss != 0:
             eq = ss.expand(force=True)
         else:
             eq = 0
@@ -6387,6 +6385,7 @@ def _linear_2eq_order1_type2(x, y, t, r):
     .. math:: y = kx + (c_2 - c_1 k) t
 
     """
+    r['k1'] = -r['k1']; r['k2'] = -r['k2']
     x0, y0 = symbols('x0, y0')
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
