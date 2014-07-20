@@ -2103,7 +2103,7 @@ def hyper_as_trig(rv):
     """
     from sympy.simplify.simplify import signsimp
 
-    # mask of trig functions
+    # mask off trig functions
     trigs = rv.atoms(C.TrigonometricFunction)
     reps = [(t, Dummy()) for t in trigs]
     masked = rv.xreplace(dict(reps))
@@ -2111,5 +2111,11 @@ def hyper_as_trig(rv):
     # get inversion substitutions in place
     reps = [(v, k) for k, v in reps]
 
-    return _osborne(masked), lambda x: signsimp(
+    t, f = _osborne(masked), lambda x: signsimp(
         _osbornei(x).xreplace(dict(reps)))
+
+    # test if the invariant holds
+    if signsimp(f(t) - rv) == 0:
+        return t, f
+    else:
+        return rv, lambda x: x
