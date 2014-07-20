@@ -1,4 +1,3 @@
-import functools
 from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
 from sympy.core import S, Rational, Symbol, Basic
@@ -7,10 +6,10 @@ from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.pretty import pretty
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
+from sympy.tensor.poly_tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
-    TensorManager, TensExpr, TIDS, DummyTensorIndex
+    TensorManager, TensExpr, TIDS
 from sympy.utilities.pytest import raises, skip
 
 def _is_equal(arg1, arg2):
@@ -334,7 +333,7 @@ def test_canonicalize1():
 def test_bug_correction_tensor_indices():
     # to make sure that tensor_indices does not return a list if creating
     # only one index:
-    from sympy.tensor.tensor import tensor_indices, TensorIndexType, TensorIndex
+    from sympy.tensor.poly_tensor import tensor_indices, TensorIndexType, TensorIndex
     A = TensorIndexType("A")
     i = tensor_indices('i', A)
     assert not isinstance(i, (tuple, list))
@@ -473,7 +472,7 @@ def test_indices():
     A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
     t = A(a,b)*B(-b,c)
     indices = t.get_indices()
-    L_0 = DummyTensorIndex('L_0', Lorentz)
+    L_0 = TensorIndex('L_0', Lorentz)
     assert indices == [a, L_0, -L_0, c]
     raises(ValueError, lambda: tensor_indices(3, Lorentz))
     raises(ValueError, lambda: A(a,b,c))
@@ -543,14 +542,9 @@ def test_add1():
     assert TensAdd(t1).equals(t1)
     t2a = B(d0,a) + A(d0, a)
     t2 = A(b,-d0)*t2a
-    # TODO: remove intrusion
-    a1, a2 = t2.expand().args
-    a1m = a1(a, b)
-    a1c = a1.canon_bp()
-    # TODO: remove end
-    assert str(t2.expand()) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0)'
+    assert str(t2) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0)'
     t2b = t2 + t1
-    assert str(t2b.expand()) == '2*A(b, L_0)*B(a, -L_0) + A(a, L_0)*A(b, -L_0)'
+    assert str(t2b) == '2*A(b, L_0)*B(a, -L_0) + A(a, L_0)*A(b, -L_0)'
     p, q, r = tensorhead('p,q,r', [Lorentz], [[1]])
     t = q(d0)*2
     assert str(t) == '2*q(d0)'
@@ -562,23 +556,23 @@ def test_add1():
     assert str(t2) == '2*q(-d0) + p(-d0)'
     t1 = p(d0)
     t3 = t1*t2
-    assert str(t3.expand()) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
     t3 = t2*t1
     assert str(t3) == '2*p(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
     t1 = p(d0) + 2*q(d0)
     t3 = t1*t2
-    assert str(t3.expand()) == '4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
+    assert str(t3) == '4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
     t1 = p(d0) - 2*q(d0)
     assert str(t1) == '-2*q(d0) + p(d0)'
     t2 = p(-d0) + 2*q(-d0)
     t3 = t1*t2
-    assert t3.expand() == p(d0)*p(-d0) - 4*q(d0)*q(-d0)
+    assert t3 == p(d0)*p(-d0) - 4*q(d0)*q(-d0)
     t = p(i)*p(j)*(p(k) + q(k)) + p(i)*(p(j) + q(j))*(p(k) - 3*q(k))
-    assert _is_equal(t.expand(), 2*p(i)*p(j)*p(k) - 2*p(i)*p(j)*q(k) + p(i)*p(k)*q(j) - 3*p(i)*q(j)*q(k))
+    assert t == 2*p(i)*p(j)*p(k) - 2*p(i)*p(j)*q(k) + p(i)*p(k)*q(j) - 3*p(i)*q(j)*q(k)
     t1 = (p(i) + q(i) + 2*r(i))*(p(j) - q(j))
     t2 = (p(j) + q(j) + 2*r(j))*(p(i) - q(i))
     t = t1 + t2
-    assert t.expand() == 2*p(i)*p(j) + 2*p(i)*r(j) + 2*p(j)*r(i) - 2*q(i)*q(j) - 2*q(i)*r(j) - 2*q(j)*r(i)
+    assert t == 2*p(i)*p(j) + 2*p(i)*r(j) + 2*p(j)*r(i) - 2*q(i)*q(j) - 2*q(i)*r(j) - 2*q(j)*r(i)
     t = p(i)*q(j)/2
     assert 2*t == p(i)*q(j)
     t = (p(i) + q(i))/2
@@ -598,7 +592,7 @@ def test_add1():
     assert (t + t1).equals(2)
     t2 = 1 + A(a, -a)
     assert t1 != t2
-    assert t2 != TensMul(0)
+    assert t2 != TensMul.from_data(0, [], [], [])
     t = p(i) + q(i)
     raises(ValueError, lambda: t(i, j))
 
@@ -637,8 +631,6 @@ def test_add2():
     A = tensorhead('A', [Lorentz]*3, [[3]])
     t1 = 2*R(m, n, p, q) - R(m, q, n, p) + R(m, p, n, q)
     t2 = t1*A(-n, -p, -q)
-    # TODO: this test is interrupted
-    return
     assert t2 == 0
     t1 = S(2)/3*R(m,n,p,q) - S(1)/3*R(m,q,n,p) + S(1)/3*R(m,p,n,q)
     t2 = t1*A(-n, -p, -q)
@@ -651,16 +643,14 @@ def test_mul():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     sym = tensorsymmetry([1]*2)
-    t = TensMul(3)
-    assert str(t) == '3'
-    t = TensMul(1)
+    t = TensMul.from_data(S.One, [], [], [])
     assert str(t) == '1'
     A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
     t = (1 + x)*A(a, b)
     assert str(t) == '(x + 1)*A(a, b)'
     assert t.types == [Lorentz]
     assert t.rank == 2
-    assert t.dummy_indices_list == []
+    assert t.dum == []
     assert t.coeff == 1 + x
     assert sorted(t.free) == [(a, 0, 0), (b, 1, 0)]
     assert t.components == [A]
@@ -669,22 +659,15 @@ def test_mul():
     t1 = tensor_mul(*t.split())
     assert t == t(-b, d)
     assert t == t1
-    assert tensor_mul(*[]) == S.One
+    assert tensor_mul(*[]) == TensMul.from_data(S.One, [], [], [])
 
-    t = -2*A(-b, a)*B(-a, c)*A(-c, d)
-    t1 = tensor_mul(*t.split())
-    assert t == t(-b, d)
-    assert t == t1
-    assert functools.reduce(lambda x, y: x*y, t.split()) == t
-
-    t = TensMul()
+    t = TensMul.from_data(1, [], [], [])
     zsym = tensorsymmetry()
     typ = TensorType([], zsym)
     C = typ('C')
     assert str(C()) == 'C'
     assert str(t) == '1'
-    t2 = TensMul(1)
-    assert t == t2
+    assert t.split()[0] == t
     raises(ValueError, lambda: TIDS.free_dum_from_indices(a, a))
     raises(ValueError, lambda: TIDS.free_dum_from_indices(-a, -a))
     raises(ValueError, lambda: A(a, b)*A(a, c))
@@ -739,7 +722,7 @@ def test_riemann_cyclic_replace():
     t = R(m0, m2, m1, m3)
     t1 = riemann_cyclic_replace(t)
     t1a = -S.One/3*R(m0, m3, m2, m1) + S.One/3*R(m0, m1, m2, m3) + Rational(2, 3)*R(m0, m2, m1, m3)
-    assert _is_equal(t1, t1a)
+    assert t1 == t1a
 
 def test_riemann_cyclic():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -755,7 +738,7 @@ def test_riemann_cyclic():
     assert t1 == 0
     t = R(i,j,k,l)
     t1 = riemann_cyclic(t)
-    assert _is_equal(t1, -S(1)/3*R(i, l, j, k) + S(1)/3*R(i, k, j, l) + S(2)/3*R(i, j, k, l))
+    assert t1 == -S(1)/3*R(i, l, j, k) + S(1)/3*R(i, k, j, l) + S(2)/3*R(i, j, k, l)
 
     t = R(i,j,k,l)*R(-k,-l,m,n)*(R(-m,-n,-i,-j) + 2*R(-m,-j,-n,-i))
     t1 = riemann_cyclic(t)
@@ -769,17 +752,16 @@ def test_div():
     t1 = t/S(4)
     assert str(t1) == '1/4*R(m0, L_0, -L_0, m3)'
     t = t.canon_bp()
-    assert not t1.is_canon_bp
-    t1 = (t*4).canon_bp()
-    assert t1.is_canon_bp
+    assert not t1._is_canon_bp
+    t1 = t*4
+    assert t1._is_canon_bp
     t1 = t1/4
-    assert t1.is_canon_bp
+    assert t1._is_canon_bp
 
 def test_contract_metric1():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
-    a0, a1, a2 = tensor_indices('a0:3', Lorentz)
     g = Lorentz.metric
     p = tensorhead('p', [Lorentz], [[1]])
     t = g(a, b)*p(-b)
@@ -808,58 +790,13 @@ def test_contract_metric1():
     assert _is_equal(t2, A(a, b)*B(-b, -a))
 
     t1 = A(a,b)*B(-b,-c)*g(c, d)*g(-a, -d)
-    #import ipdb; ipdb.set_trace()
     t2 = t1.contract_metric(g)
     assert _is_equal(t2, A(a,b)*B(-b,-a))
-
-    t1 = g(a,b)*g(-a,-b)
-    t2 = t1.contract_metric(g)
-    assert t2 == D
-
-    t1 = g(b,a)*g(-a,-b)
-    t2 = t1.contract_metric(g)
-    assert t2 == D
-
-    t1 = A(c, -d)*g(a,b)*g(-a,-b)
-    t2 = t1.contract_metric(g)
-    assert t2 == D*A(c, -d)
-
-    t1 = g(a,b)*g(-b,-c)*g(c,-a)
-    t2 = t1.contract_metric(g)
-    assert t2 == D
-
-    t1 = g(a,b)*g(-b,-c)*g(c,d)*g(-d,-a)
-    t2 = t1.contract_metric(g)
-    assert t2 == D
-
-    t1 = g(a,b)*g(-b,c)
-    t2 = t1.contract_metric(g)
-    assert t2 == g(a, c)
-
-    t1 = g(a,b)*g(-b,-c)*g(c,d)*g(-d,-e)
-    t2 = t1.contract_metric(g)
-    assert t2 == g(a, -e)
-
-    t1 = g(a,b)*g(-b,-c)*g(c,d)
-    t2 = t1.contract_metric(g)
-    assert t2 == g(a, d)
-
-    t1 = g(a,b)*g(-b,-c)
-    t2 = t1.contract_metric(g)
-    assert t2 == g(a, -c)
-
-    t1 = g(a,b)*g(-e,d)*g(c,-b)*g(-d,-c)
-    t2 = t1.contract_metric(g)
-    assert _is_equal(t2, g(a, -e))
-
-    t1 = g(a,b)*g(-e,a0)*g(c,-b)*g(-a0, a1)*g(-a2, -a1)*g(d, a2)*g(-d,-c)
-    t2 = t1.contract_metric(g)
-    assert _is_equal(t2, g(a, -e))
 
     t1 = A(a,b)*g(-a,-b)
     t2 = t1.contract_metric(g)
     assert _is_equal(t2, A(a, -a))
-    assert not t2.free_indices_set
+    assert not t2.free
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     g = Lorentz.metric
@@ -875,14 +812,14 @@ def test_contract_metric2():
     t1 = g(a,b)*p(c)*p(-c)
     t2 = 3*g(-a,-b)*q(c)*q(-c)
     t = t1*t2
-    tc = t.contract_metric(g)
-    assert _is_equal(tc, 3*D*p(a)*p(-a)*q(b)*q(-b))
+    t = t.contract_metric(g)
+    assert t == 3*D*p(a)*p(-a)*q(b)*q(-b)
     t1 = g(a,b)*p(c)*p(-c)
     t2 = 3*q(-a)*q(-b)
     t = t1*t2
-    tc1 = t.contract_metric(g)
-    tc2 = tc1.canon_bp()
-    assert tc2 == 3*p(a)*p(-a)*q(b)*q(-b)
+    t = t.contract_metric(g)
+    t = t.canon_bp()
+    assert t == 3*p(a)*p(-a)*q(b)*q(-b)
 
     t1 = 2*g(a,b)*p(c)*p(-c)
     t2 = - 3*g(-a,-b)*q(c)*q(-c)
@@ -902,17 +839,17 @@ def test_contract_metric2():
     t = t1*t2
     t = t.contract_metric(g)
     t1 = (1 - 2*D)*p(a)*p(-a)*q(b)*q(-b) + p(a)*q(-a)*p(b)*q(-b)
-    assert _is_equal(t, t1)
+    assert t == t1
 
     t = g(a,b)*g(c,d)*g(-b,-c)
     t1 = t.contract_metric(g)
-    assert _is_equal(t1, g(a, d))
+    assert t1 == g(a, d)
 
     t1 = g(a,b)*g(c,d) + g(a,c)*g(b,d) + g(a,d)*g(b,c)
     t2 = t1.substitute_indices((a,-a),(b,-b),(c,-c),(d,-d))
     t = t1*t2
-    t3 = t.contract_metric(g)
-    assert t3.equals(3*D**2 + 6*D)
+    t = t.contract_metric(g)
+    assert t.equals(3*D**2 + 6*D)
 
     t = 2*p(a)*g(b,-b)
     t1 = t.contract_metric(g)
@@ -930,11 +867,9 @@ def test_contract_metric2():
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     t = A(a, b)*p(L_0)*g(-a, -b)
     t1 = t.contract_metric(g)
-    # TODO: ambiguous case:
-    return
     assert str(t1) == 'A(L_1, -L_1)*p(L_0)' or str(t1) == 'A(-L_1, L_1)*p(L_0)'
 
-def test_contract_metric3():
+def test_metric_contract3():
     D = Symbol('D')
     Spinor = TensorIndexType('Spinor', dim=D, metric=True, dummy_fmt='S')
     a0,a1,a2,a3,a4 = tensor_indices('a0:5', Spinor)
@@ -944,7 +879,7 @@ def test_contract_metric3():
 
     t = C(a0, -a0)
     t1 = t.contract_metric(C)
-    assert _is_equal(t1, -D)
+    assert t1.equals(-D)
 
     t = C(-a0, a0)
     t1 = t.contract_metric(C)
@@ -1131,8 +1066,7 @@ def test_fun():
     gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
     # t = g_{a b; c}
     t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
-    # TODO: is expand() necessary? Decide
-    t = t.expand().contract_metric(g)
+    t = t.contract_metric(g)
     assert t == 0
     t = q(c)*p(a)*q(b)
     assert t(b,c,d) == q(d)*p(b)*q(c)
@@ -1253,8 +1187,7 @@ def test_hidden_indices_for_matrix_multiplication():
     B1 = B(m1)
 
     assert _is_equal((B1*A0*B0), B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1))
-    # TODO: check
-    # assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, -S.auto_right))
+    assert _is_equal((B0*A0), B(-m0, s0)*A(m0, -s0, -S.auto_right))
     assert _is_equal((A0*B0), A(m0, S.auto_left, s0)*B(-m0, -s0))
 
     C = tensorhead('C', [L, L], [[1]*2])
@@ -1291,10 +1224,9 @@ def test_hidden_indices_for_matrix_multiplication():
     raises(ValueError, lambda: E(True, True, True, True))
 
     # test that a delta is automatically added on missing auto-matrix indices in TensAdd
-    assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4)*S.delta() == \
+    assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4) == \
         E(m1, m2, m3, m4)*S.delta(S.auto_left, -S.auto_right) +\
         F(m2)*F(m3)*F(m4)*A(m1, S.auto_left, -S.auto_right)
-    # TODO: remove automatrix indices?
     assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(L.auto_left, -L.auto_right)
     assert E(m1, m2)*A(m3) + F(m1)*F(m2)*F(m3) == \
         E(m1, m2, L.auto_left, -L.auto_right)*A(m3, S.auto_left, -S.auto_right) +\
@@ -1536,7 +1468,7 @@ def test_valued_tensor_expressions():
     assert expr5.data.expand() == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
 
 
-def test_valued_noncommuting_components():
+def test_noncommuting_components():
     numpy = import_module("numpy")
     if numpy is None:
         skip("numpy not installed.")
@@ -1626,7 +1558,6 @@ def test_valued_metric_inverse():
     # (this has no physical sense, it's just testing sympy);
     # it is symmetrical:
     md = [[2, 2, 2, 1], [2, 3, 1, 0], [2, 1, 2, 3], [1, 0, 3, 2]]
-    # TODO: remove assignment to TensorIndexType?
     Lorentz.data = md
     m = Matrix(md)
     metric = Lorentz.metric
@@ -1727,74 +1658,3 @@ def test_contract_automatrix_and_data():
     assert L.data is None
     assert S.data is None
     assert G.data is None
-
-#def test_tensmul_to_args():
-#    # TODO: delete this?
-#    Lorentz = TensorIndexType('Lorentz')
-#    i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
-#    A = tensorhead('A', [Lorentz]*2, [[1]*2])
-#    B = tensorhead('B', [Lorentz]*2, [[1]*2])
-#
-#    t1 = A(i0, i1)
-#    assert TensMul(*t1._tids.to_tensmul_args()) == t1
-#    t2 = A(i0, -i0)
-#    assert TensMul(*t2._tids.to_tensmul_args()) == t2
-#    t3 = A(i0, i1)*A(i2, i3)
-#    assert TensMul(*t3._tids.to_tensmul_args()) == t3
-#    t4 = A(i0, i1)*A(-i1, i2)
-#    assert TensMul(*t4._tids.to_tensmul_args()) == t4
-#    t5 = A(i0, i1)*A(-i0, -i1)
-#    assert TensMul(*t5._tids.to_tensmul_args()) == t5
-#    t6 = A(i0, i1)*B(i2, i3)
-#    assert TensMul(*t6._tids.to_tensmul_args()) == t6
-#    t7 = A(i0, i1)*B(-i1, i2)
-#    assert TensMul(*t7._tids.to_tensmul_args()) == t7
-#    t8 = A(i0, i1)*B(-i0, -i1)
-#    assert TensMul(*t8._tids.to_tensmul_args()) == t8
-#
-#    C = tensorhead('C', [Lorentz]*3, [[1]*3])
-#    a0, a1, a2, a3 = tensor_indices('a0:4', Lorentz)
-#    d0, d1, d2, d3 = tensor_indices('d0:4', Lorentz)
-#    tc = C(d3, d0, d2)*C(a0, -d1, -d2)*C(d1, -d3, a1)*C(a2, a3, -d0)
-#
-#    assert TensMul(*tc._tids.to_tensmul_args()) == tc
-
-def test_free_dummy_indices_list_and_set():
-    L = TensorIndexType('L')
-    i0, i1, i2, i3, i4, i5, i6 = tensor_indices('i0:7', L)
-    A = tensorhead('A', [L]*3, [[1]]*3)
-    B = tensorhead('B', [L]*3, [[1]*3])
-    C = tensorhead('C', [L]*3, [[3]])
-
-    assert A(i0, i1, i2).free_indices_set == {i0, i1, i2}
-    assert A(i0, i1, i2).free_indices_list == [i0, i1, i2]
-    assert B(i0, i1, i2).free_indices_set == {i0, i1, i2}
-    assert B(i0, i1, i2).free_indices_list == [i0, i1, i2]
-    assert C(i0, i1, i2).free_indices_set == {i0, i1, i2}
-    assert C(i0, i1, i2).free_indices_list == [i0, i1, i2]
-
-    assert A(i0, i1, i2).dummy_indices_set == set([])
-    assert A(i0, i1, i2).dummy_indices_list == []
-    assert B(i0, i1, i2).dummy_indices_set == set([])
-    assert B(i0, i1, i2).dummy_indices_list == []
-    assert C(i0, i1, i2).dummy_indices_set == set([])
-    assert C(i0, i1, i2).dummy_indices_list == []
-
-    assert A(i0, -i0, i2).free_indices_set == set([i2])
-    assert A(i0, -i0, i2).free_indices_list == [i2]
-    assert B(i0, -i0, i2).free_indices_set == set([i2])
-    assert B(i0, -i0, i2).free_indices_list == [i2]
-    assert C(i0, -i0, i2).free_indices_set == set([i2])
-    assert C(i0, -i0, i2).free_indices_list == [i2]
-
-    L_0 = A(i0, -i0, i1).args[1][0]
-
-    assert A(i0, -i0, i2).dummy_indices_set == set([L_0, -L_0])
-    assert A(i0, -i0, i2).dummy_indices_list == [L_0, -L_0]
-    assert B(i0, -i0, i2).dummy_indices_set == set([L_0, -L_0])
-    assert B(i0, -i0, i2).dummy_indices_list == [L_0, -L_0]
-    assert C(i0, -i0, i2).dummy_indices_set == set([L_0, -L_0])
-    assert C(i0, -i0, i2).dummy_indices_list == [L_0, -L_0]
-
-    # TODO: add tests of TensMul (cross contractions)
-    # TODO: add tests of TensAdd

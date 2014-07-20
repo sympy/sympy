@@ -33,513 +33,23 @@ from __future__ import print_function, division
 
 import functools
 from collections import defaultdict
+import itertools
 from sympy import Matrix, Rational
+from sympy.assumptions.ask import ask, Q
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
-from sympy.core import Basic, sympify, Add, S
+from sympy.core import Basic, sympify, S
+from sympy.core.add import Add
 from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
+from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices import eye
-
-
-class TIDS(CantSympify):
-    """
-    Tensor internal data structure. This contains internal data structures about
-    components of a tensor expression, its free and dummy indices.
-
-    To create a ``TIDS`` object via the standard constructor, the required
-    arguments are
-
-    WARNING: this class is meant as an internal representation of tensor data
-    structures and should not be directly accessed by end users.
-
-    Parameters
-    ==========
-
-    components : ``TensorHead`` objects representing the components of the tensor expression.
-
-    free : Free indices in their internal representation.
-
-    dum : Dummy indices in their internal representation.
-
-    Examples
-    ========
-
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
-    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-    >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
-    >>> TIDS([T], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
-    TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
-
-    Notes
-    =====
-
-    In short, this has created the components, free and dummy indices for
-    the internal representation of a tensor T(m0, m1, -m1, m3).
-
-    Free indices are represented as a list of triplets. The elements of
-    each triplet identify a single free index and are
-
-    1. TensorIndex object
-    2. position inside the component
-    3. component number
-
-    Dummy indices are represented as a list of 4-plets. Each 4-plet stands
-    for couple for contracted indices, their original TensorIndex is not
-    stored as it is no longer required. The four elements of the 4-plet
-    are
-
-    1. position inside the component of the first index.
-    2. position inside the component of the second index.
-    3. component number of the first index.
-    4. component number of the second index.
-
-    """
-
-    def __init__(self, components, free, dum):
-        self.components = components
-        self.free = free
-        self.dum = dum
-        self._ext_rank = len(self.free) + 2*len(self.dum)
-
-    def get_components_with_free_indices(self):
-        """
-        Get a list of components with their associated indices.
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
-        >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> t = TIDS.from_components_and_indices([T], [m0, m1, -m1, m3])
-        >>> t.get_components_with_free_indices()
-        [(T(Lorentz,Lorentz,Lorentz,Lorentz), [(m0, 0, 0), (m3, 3, 0)])]
-        >>> t2 = (A(m0)*A(-m0))._tids
-        >>> t2.get_components_with_free_indices()
-        [(A(Lorentz), []), (A(Lorentz), [])]
-        >>> t3 = (A(m0)*A(-m1)*A(-m0)*A(m1))._tids
-        >>> t3.get_components_with_free_indices()
-        [(A(Lorentz), []), (A(Lorentz), []), (A(Lorentz), []), (A(Lorentz), [])]
-        >>> t4 = (A(m0)*A(m1)*A(-m0))._tids
-        >>> t4.get_components_with_free_indices()
-        [(A(Lorentz), []), (A(Lorentz), [(m1, 0, 1)]), (A(Lorentz), [])]
-        >>> t5 = (A(m0)*A(m1)*A(m2))._tids
-        >>> t5.get_components_with_free_indices()
-        [(A(Lorentz), [(m0, 0, 0)]), (A(Lorentz), [(m1, 0, 1)]), (A(Lorentz), [(m2, 0, 2)])]
-        """
-        components = self.components
-        ret_comp = []
-
-        free_counter = 0
-        if len(self.free) == 0:
-            return [(comp, []) for comp in components]
-
-        for i, comp in enumerate(components):
-            c_free = []
-            while free_counter < len(self.free):
-                if not self.free[free_counter][2] == i:
-                    break
-
-                c_free.append(self.free[free_counter])
-                free_counter += 1
-
-                if free_counter >= len(self.free):
-                    break
-            ret_comp.append((comp, c_free))
-
-        return ret_comp
-
-    @staticmethod
-    def from_components_and_indices(components, indices):
-        """
-        Create a new ``TIDS`` object from ``components`` and ``indices``
-
-        ``components``  ``TensorHead`` objects representing the components
-                        of the tensor expression.
-
-        ``indices``     ``TensorIndex`` objects, the indices. Contractions are
-                        detected upon construction.
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
-        >>> TIDS.from_components_and_indices([T], [m0, m1, -m1, m3])
-        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
-
-        In case of many components the same indices have slightly different
-        indexes:
-
-        >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> TIDS.from_components_and_indices([A]*4, [m0, m1, -m1, m3])
-        TIDS([A(Lorentz), A(Lorentz), A(Lorentz), A(Lorentz)], [(m0, 0, 0), (m3, 0, 3)], [(0, 0, 1, 2)])
-        """
-        tids = None
-        cur_pos = 0
-        for i in components:
-            tids_sing = TIDS([i], *TIDS.free_dum_from_indices(*indices[cur_pos:cur_pos+i.rank]))
-            if tids is None:
-                tids = tids_sing
-            else:
-                tids *= tids_sing
-            cur_pos += i.rank
-
-        if tids is None:
-            tids = TIDS([], [], [])
-
-        tids.free.sort(key=lambda x: x[0].name)
-        tids.dum.sort()
-
-        return tids
-
-    def to_indices(self):
-        """
-        Get a list of indices, creating new tensor indices to complete dummy indices.
-        """
-        component_indices = []
-        for i in self.components:
-            component_indices.append([None]*i.rank)
-
-        for i in self.free:
-            component_indices[i[2]][i[1]] = i[0]
-
-        for i, dummy_pos in enumerate(self.dum):
-            tensor_index_type = self.components[dummy_pos[2]].args[1].args[0][0]
-            dummy_index = TensorIndex('dummy_index_{0}'.format(i), tensor_index_type)
-            component_indices[dummy_pos[2]][dummy_pos[0]] = dummy_index
-            component_indices[dummy_pos[3]][dummy_pos[1]] = -dummy_index
-
-        indices = []
-        for i in component_indices:
-            indices.extend(i)
-
-        return indices
-
-    @staticmethod
-    def free_dum_from_indices(*indices):
-        """
-        Convert ``indices`` into ``free``, ``dum`` for single component tensor
-
-        ``free``     list of tuples ``(index, pos, 0)``,
-                     where ``pos`` is the position of index in
-                     the list of indices formed by the component tensors
-
-        ``dum``      list of tuples ``(pos_contr, pos_cov, 0, 0)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> TIDS.free_dum_from_indices(m0, m1, -m1, m3)
-        ([(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
-        """
-        n = len(indices)
-        if n == 1:
-            return [(indices[0], 0, 0)], []
-
-        # find the positions of the free indices and of the dummy indices
-        free = [True]*len(indices)
-        index_dict = {}
-        dum = []
-        for i, index in enumerate(indices):
-            name = index._name
-            typ = index._tensortype
-            contr = index._is_up
-            if (name, typ) in index_dict:
-                # found a pair of dummy indices
-                is_contr, pos = index_dict[(name, typ)]
-                # check consistency and update free
-                if is_contr:
-                    if contr:
-                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
-                    else:
-                        free[pos] = False
-                        free[i] = False
-                else:
-                    if contr:
-                        free[pos] = False
-                        free[i] = False
-                    else:
-                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
-                if contr:
-                    dum.append((i, pos, 0, 0))
-                else:
-                    dum.append((pos, i, 0, 0))
-            else:
-                index_dict[(name, typ)] = index._is_up, i
-
-        free = [(index, i, 0) for i, index in enumerate(indices) if free[i]]
-        free.sort()
-        return free, dum
-
-    @staticmethod
-    def mul(f, g):
-        """
-        The algorithms performing the multiplication of two ``TIDS`` instances.
-
-        In short, it forms a new ``TIDS`` object, joining components and indices,
-        checking that abstract indices are compatible, and possibly contracting
-        them.
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
-        >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> tids_1 = TIDS.from_components_and_indices([T], [m0, m1, -m1, m3])
-        >>> tids_2 = TIDS.from_components_and_indices([A], [m2])
-        >>> tids_1 * tids_2
-        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
-            [(m0, 0, 0), (m3, 3, 0), (m2, 0, 1)], [(1, 2, 0, 0)])
-
-        In this case no contraction has been performed.
-
-        >>> tids_3 = TIDS.from_components_and_indices([A], [-m3])
-        >>> tids_1 * tids_3
-        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
-            [(m0, 0, 0)], [(1, 2, 0, 0), (3, 0, 0, 1)])
-
-        Free indices ``m3`` and ``-m3`` are identified as a contracted couple, and are
-        therefore transformed into dummy indices.
-
-        A wrong index construction (for example, trying to contract two
-        contravariant indices or using indices multiple times) would result in
-        an exception:
-
-        >>> tids_4 = TIDS.from_components_and_indices([A], [m3])
-        >>> # This raises an exception:
-        >>> # tids_1 * tids_4
-        """
-        index_up = lambda u: u if u.is_up else -u
-
-        # find out which free indices of f and g are contracted
-        free_dict1 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in f.free])
-        free_dict2 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in g.free])
-
-        free_names = set(free_dict1.keys()) & set(free_dict2.keys())
-        # find the new `free` and `dum`
-        nc1 = len(f.components)
-        dum2 = [(i1, i2, c1 + nc1, c2 + nc1) for i1, i2, c1, c2 in g.dum]
-        free1 = [(ind, i, c) for ind, i, c in f.free if index_up(ind) not in free_names]
-        free2 = [(ind, i, c + nc1) for ind, i, c in g.free if index_up(ind) not in free_names]
-        free = free1 + free2
-        dum = f.dum + dum2
-        for name in free_names:
-            ipos1, cpos1, ind1 = free_dict1[name]
-            ipos2, cpos2, ind2 = free_dict2[name]
-            cpos2 += nc1
-            if ind1._is_up == ind2._is_up:
-                raise ValueError('wrong index construction {0}'.format(ind1))
-            if ind1._is_up:
-                new_dummy = (ipos1, ipos2, cpos1, cpos2)
-            else:
-                new_dummy = (ipos2, ipos1, cpos2, cpos1)
-            dum.append(new_dummy)
-        return (f.components + g.components, free, dum)
-
-    def __mul__(self, other):
-        return TIDS(*self.mul(self, other))
-
-    def __str__(self):
-        return "TIDS({0}, {1}, {2})".format(self.components, self.free, self.dum)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def sorted_components(self):
-        """
-        Returns a ``TIDS`` with sorted components
-
-        The sorting is done taking into account the commutation group
-        of the component tensors.
-        """
-        from sympy.combinatorics.permutations import _af_invert
-        cv = list(zip(self.components, range(len(self.components))))
-        sign = 1
-        n = len(cv) - 1
-        for i in range(n):
-            for j in range(n, i, -1):
-                c = cv[j-1][0].commutes_with(cv[j][0])
-                if c not in [0, 1]:
-                    continue
-                if (cv[j-1][0]._types, cv[j-1][0]._name) > \
-                        (cv[j][0]._types, cv[j][0]._name):
-                    cv[j-1], cv[j] = cv[j], cv[j-1]
-                    if c:
-                        sign = -sign
-
-        # perm_inv[new_pos] = old_pos
-        components = [x[0] for x in cv]
-        perm_inv = [x[1] for x in cv]
-        perm = _af_invert(perm_inv)
-        free = [(ind, i, perm[c]) for ind, i, c in self.free]
-        free.sort()
-        dum = [(i1, i2, perm[c1], perm[c2]) for i1, i2, c1, c2 in self.dum]
-        dum.sort(key=lambda x: components[x[2]].index_types[x[0]])
-
-        return TIDS(components, free, dum), sign
-
-    def canon_args(self):
-        """
-        Returns ``(g, dummies, msym, v)``, the entries of ``canonicalize``
-
-        see ``canonicalize`` in ``tensor_can.py``
-        """
-        # to be called after sorted_components
-        from sympy.combinatorics.permutations import _af_new
-#         types = list(set(self._types))
-#         types.sort(key = lambda x: x._name)
-        n = self._ext_rank
-        g = [None]*n + [n, n+1]
-        pos = 0
-        vpos = []
-        components = self.components
-        for t in components:
-            vpos.append(pos)
-            pos += t._rank
-        # ordered indices: first the free indices, ordered by types
-        # then the dummy indices, ordered by types and contravariant before
-        # covariant
-        # g[position in tensor] = position in ordered indices
-        for i, (indx, ipos, cpos) in enumerate(self.free):
-            pos = vpos[cpos] + ipos
-            g[pos] = i
-        pos = len(self.free)
-        j = len(self.free)
-        dummies = []
-        prev = None
-        a = []
-        msym = []
-        for ipos1, ipos2, cpos1, cpos2 in self.dum:
-            pos1 = vpos[cpos1] + ipos1
-            pos2 = vpos[cpos2] + ipos2
-            g[pos1] = j
-            g[pos2] = j + 1
-            j += 2
-            typ = components[cpos1].index_types[ipos1]
-            if typ != prev:
-                if a:
-                    dummies.append(a)
-                a = [pos, pos + 1]
-                prev = typ
-                msym.append(typ.metric_antisym)
-            else:
-                a.extend([pos, pos + 1])
-            pos += 2
-        if a:
-            dummies.append(a)
-        numtyp = []
-        prev = None
-        for t in components:
-            if t == prev:
-                numtyp[-1][1] += 1
-            else:
-                prev = t
-                numtyp.append([prev, 1])
-        v = []
-        for h, n in numtyp:
-            if h._comm == 0 or h._comm == 1:
-                comm = h._comm
-            else:
-                comm = TensorManager.get_comm(h._comm, h._comm)
-            v.append((h._symmetry.base, h._symmetry.generators, n, comm))
-        return _af_new(g), dummies, msym, v
-
-    def perm2tensor(self, g, canon_bp=False):
-        """
-        Returns a ``TIDS`` instance corresponding to the permutation ``g``
-
-        ``g``  permutation corresponding to the tensor in the representation
-        used in canonicalization
-
-        ``canon_bp``   if True, then ``g`` is the permutation
-        corresponding to the canonical form of the tensor
-        """
-        vpos = []
-        components = self.components
-        pos = 0
-        for t in components:
-            vpos.append(pos)
-            pos += t._rank
-        sorted_free = [x[0] for x in self.free]
-        sorted_free.sort()
-        nfree = len(sorted_free)
-        rank = self._ext_rank
-        dum = [[None]*4 for i in range((rank - nfree)//2)]
-        free = []
-        icomp = -1
-        for i in range(rank):
-            if i in vpos:
-                icomp += vpos.count(i)
-                pos0 = i
-            ipos = i - pos0
-            gi = g[i]
-            if gi < nfree:
-                ind = sorted_free[gi]
-                free.append((ind, ipos, icomp))
-            else:
-                j = gi - nfree
-                idum, cov = divmod(j, 2)
-                if cov:
-                    dum[idum][1] = ipos
-                    dum[idum][3] = icomp
-                else:
-                    dum[idum][0] = ipos
-                    dum[idum][2] = icomp
-        dum = [tuple(x) for x in dum]
-
-        return TIDS(components, free, dum)
-
-
-class VTIDS(TIDS):
-    """
-    DEPRECATED: DO NOT USE.
-    """
-
-    @deprecated(useinstead="TIDS")
-    def __init__(self, components, free, dum, data):
-        super(VTIDS, self).__init__(components, free, dum)
-        self.data = data
-
-    @staticmethod
-    @deprecated(useinstead="TIDS")
-    def parse_data(data):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator.parse_data(data)
-
-    @deprecated(useinstead="TIDS")
-    def correct_signature_from_indices(self, data, indices, free, dum):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._correct_signature_from_indices(data, indices, free, dum)
-
-    @staticmethod
-    @deprecated(useinstead="TIDS")
-    def flip_index_by_metric(data, metric, pos):
-        """
-        DEPRECATED: DO NOT USE.
-        """
-        return _TensorDataLazyEvaluator._flip_index_by_metric(data, metric, pos)
+from sympy.tensor.tids import TIDS, VTIDS
 
 
 class _TensorDataLazyEvaluator(CantSympify):
@@ -558,6 +68,7 @@ class _TensorDataLazyEvaluator(CantSympify):
     associated to the tensor expression.
     """
     _substitutions_dict = dict()
+    # TODO: remove this or not?
     _substitutions_dict_tensmul = dict()
 
     def __getitem__(self, key):
@@ -594,7 +105,18 @@ class _TensorDataLazyEvaluator(CantSympify):
         if isinstance(key, TensorHead):
             return None
 
+        if isinstance(key, Tensor):
+            # special case to handle metrics. Metric tensors cannot be
+            # constructed through contraction by the metric, their
+            # components show if they are a matrix or its inverse.
+            signature = tuple([i.is_up for i in key.get_indices()])
+            srch = (key.component,) + signature
+            if srch in self._substitutions_dict_tensmul:
+                return self._substitutions_dict_tensmul[srch]
+            return self.data_tensmul_from_tensorhead(key, key.component)
+
         if isinstance(key, TensMul):
+            # TODO: should TensMul.split() include non-tensor expressions?
             tensmul_list = key.split()
             if len(tensmul_list) == 1 and len(tensmul_list[0].components) == 1:
                 # special case to handle metrics. Metric tensors cannot be
@@ -639,8 +161,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         return self._correct_signature_from_indices(
             data,
             tensmul.get_indices(),
-            tensmul.free,
-            tensmul.dum,
+            # TODO: remove
+            #tensmul.free,
+            tensmul.dummy_indices_list,
             True)
 
     def data_tensmul_from_tensorhead(self, tensmul, tensorhead):
@@ -655,8 +178,8 @@ class _TensorDataLazyEvaluator(CantSympify):
         return self._correct_signature_from_indices(
             tensorhead.data,
             tensmul.get_indices(),
-            tensmul.free,
-            tensmul.dum)
+            #tensmul.free,
+            tensmul.dummy_indices_list)
 
     def data_product_tensors(self, data_list, tensmul_list):
         """
@@ -664,6 +187,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         list of ``TensMul`` instances, compute the resulting ``ndarray``,
         after tensor products and contractions.
         """
+        # TODO: should tensor be assigned data only if their index order can be determined?
         def data_mul(f, g):
             """
             Multiplies two ``ndarray`` objects, it first calls ``TIDS.mul``,
@@ -673,10 +197,10 @@ class _TensorDataLazyEvaluator(CantSympify):
             data1, tensmul1 = f
             data2, tensmul2 = g
             components, free, dum = TIDS.mul(tensmul1, tensmul2)
-            data = _TensorDataLazyEvaluator._contract_ndarray(tensmul1.free, tensmul2.free, data1, data2)
+            data = _TensorDataLazyEvaluator._contract_ndarray(tensmul1.free_indices_list, tensmul2.free_indices_list, data1, data2)
             # TODO: do this more efficiently... maybe by just passing an index list
             # to .data_product_tensor(...)
-            return data, TensMul.from_TIDS(S.One, TIDS(components, free, dum))
+            return data, tensmul1*tensmul2
 
         return functools.reduce(data_mul, zip(data_list, tensmul_list))
 
@@ -727,21 +251,12 @@ class _TensorDataLazyEvaluator(CantSympify):
     def _contract_ndarray(free1, free2, ndarray1, ndarray2):
         numpy = import_module('numpy')
 
-        def ikey(x):
-            return x[1:]
-
-        free1 = free1[:]
-        free2 = free2[:]
-        free1.sort(key=ikey)
-        free2.sort(key=ikey)
-        self_free = [_[0] for _ in free1]
         axes1 = []
         axes2 = []
         for jpos, jindex in enumerate(free2):
-            if -jindex[0] in self_free:
-                nidx = self_free.index(-jindex[0])
-            else:
+            if -jindex not in free1:
                 continue
+            nidx = free1.index(-jindex)
             axes1.append(nidx)
             axes2.append(jpos)
 
@@ -792,6 +307,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         invt = Matrix(inverse_transpose)
         self._substitutions_dict_tensmul[metric, True, False] = m * invt
         self._substitutions_dict_tensmul[metric, False, True] = invt * m
+        #TODO test that with antisymmetric metric the metric contraction relations hold.
 
     @staticmethod
     def _flip_index_by_metric(data, metric, pos):
@@ -814,7 +330,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         return _TensorDataLazyEvaluator.parse_data(m)
 
     @staticmethod
-    def _correct_signature_from_indices(data, indices, free, dum, inverse=False):
+    def _correct_signature_from_indices(data, indices, dum, inverse=False):
         """
         Utility function to correct the values inside the components data
         ndarray according to whether indices are covariant or contravariant.
@@ -1075,6 +591,8 @@ class _TensorManager(object):
 TensorManager = _TensorManager()
 
 
+# TODO: should the first argument of TensMul always be a Mul(...) containing its coefficient?
+
 @doctest_depends_on(modules=('numpy',))
 class TensorIndexType(Basic):
     """
@@ -1199,19 +717,19 @@ class TensorIndexType(Basic):
     @property
     def auto_right(self):
         if not hasattr(self, '_auto_right'):
-            self._auto_right = TensorIndex("auto_right", self)
+            self._auto_right = BindableTensorIndex("auto_right", self)
         return self._auto_right
 
     @property
     def auto_left(self):
         if not hasattr(self, '_auto_left'):
-            self._auto_left = TensorIndex("auto_left", self)
+            self._auto_left = BindableTensorIndex("auto_left", self)
         return self._auto_left
 
     @property
     def auto_index(self):
         if not hasattr(self, '_auto_index'):
-            self._auto_index = TensorIndex("auto_index", self)
+            self._auto_index = BindableTensorIndex("auto_index", self)
         return self._auto_index
 
     @property
@@ -1358,7 +876,7 @@ class TensorIndex(Basic):
     An index can be in contravariant or in covariant form; in the latter
     case it is represented prepending a ``-`` to the index name.
 
-    Dummy indices have a name with head given by ``tensortype._dummy_fmt``
+    Dummy indices have a name with head given by ``tensortype.dummy_fmt``
 
 
     Examples
@@ -1409,6 +927,10 @@ class TensorIndex(Basic):
         return obj
 
     @property
+    def is_free(self):
+        return self.args[3] == 1
+
+    @property
     def name(self):
         return self._name
 
@@ -1430,9 +952,28 @@ class TensorIndex(Basic):
         return (self._tensortype, self._name) < (other._tensortype, other._name)
 
     def __neg__(self):
-        t1 = TensorIndex(self._name, self._tensortype,
-                (not self._is_up))
+        t1 = self.func(self.args[0], self.args[1],
+                (not self.args[2]))
         return t1
+
+
+FreeTensorIndex = TensorIndex
+#class FreeTensorIndex(TensorIndex):
+#    # TODO: finish
+#    def __new__(cls, *args, **kw_args):
+#        return TensorIndex.__new__(cls, *args, **kw_args)
+
+
+class DummyTensorIndex(TensorIndex):
+    # TODO: finish
+    def __new__(cls, *args, **kw_args):
+        return TensorIndex.__new__(cls, *args, **kw_args)
+
+
+class BindableTensorIndex(TensorIndex):
+    # TODO: FINISH
+    pass
+
 
 def tensor_indices(s, typ):
     """
@@ -1457,6 +998,8 @@ def tensor_indices(s, typ):
     else:
         raise ValueError('expecting a string')
 
+    # TODO remove
+    # tilist = [FreeTensorIndex(i, typ) for i in a]
     tilist = [TensorIndex(i, typ) for i in a]
     if len(tilist) == 1:
         return tilist[0]
@@ -1928,7 +1471,7 @@ class TensorHead(Basic):
         obj._matrix_behavior = matrix_behavior
 
         obj._name = obj.args[0].name
-        obj._rank = len(obj.index_types)
+        #obj._rank = len(obj.index_types)
         obj._types = typ.types
         obj._symmetry = typ.symmetry
         obj._comm = comm2i
@@ -1940,7 +1483,7 @@ class TensorHead(Basic):
 
     @property
     def rank(self):
-        return self._rank
+        return len(self.index_types)
 
     @property
     def types(self):
@@ -1977,50 +1520,51 @@ class TensorHead(Basic):
     def _print(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
 
-    def _check_auto_matrix_indices_in_call(self, *indices):
-        matrix_behavior_kinds = dict()
-
-        if len(indices) != len(self.index_types):
-            if not self._matrix_behavior:
-                raise ValueError('wrong number of indices')
-
-            # _matrix_behavior is True, so take the last one or two missing
-            # indices as auto-matrix indices:
-            ldiff = len(self.index_types) - len(indices)
-            if ldiff > 2:
-                raise ValueError('wrong number of indices')
-            if ldiff == 2:
-                mat_ind = [len(indices), len(indices) + 1]
-            elif ldiff == 1:
-                mat_ind = [len(indices)]
-            not_equal = True
-        else:
-            not_equal = False
-            mat_ind = [i for i, e in enumerate(indices) if e is True]
-            if mat_ind:
-                not_equal = True
-            indices = tuple([_ for _ in indices if _ is not True])
-
-            for i, el in enumerate(indices):
-                if not isinstance(el, TensorIndex):
-                    not_equal = True
-                    break
-                if el._tensortype != self.index_types[i]:
-                    not_equal = True
-                    break
-
-        if not_equal:
-            for el in mat_ind:
-                eltyp = self.index_types[el]
-                if eltyp in matrix_behavior_kinds:
-                    elind = -self.index_types[el].auto_right
-                    matrix_behavior_kinds[eltyp].append(elind)
-                else:
-                    elind = self.index_types[el].auto_left
-                    matrix_behavior_kinds[eltyp] = [elind]
-                indices = indices[:el] + (elind,) + indices[el:]
-
-        return indices, matrix_behavior_kinds
+#     def _check_auto_matrix_indices_in_call(self, *indices):
+#         # TODO: remove?
+#         matrix_behavior_kinds = dict()
+# 
+#         if len(indices) != len(self.index_types):
+#             if not self._matrix_behavior:
+#                 raise ValueError('wrong number of indices')
+# 
+#             # _matrix_behavior is True, so take the last one or two missing
+#             # indices as auto-matrix indices:
+#             ldiff = len(self.index_types) - len(indices)
+#             if ldiff > 2:
+#                 raise ValueError('wrong number of indices')
+#             if ldiff == 2:
+#                 mat_ind = [len(indices), len(indices) + 1]
+#             elif ldiff == 1:
+#                 mat_ind = [len(indices)]
+#             not_equal = True
+#         else:
+#             not_equal = False
+#             mat_ind = [i for i, e in enumerate(indices) if e is True]
+#             if mat_ind:
+#                 not_equal = True
+#             indices = tuple([_ for _ in indices if _ is not True])
+# 
+#             for i, el in enumerate(indices):
+#                 if not isinstance(el, TensorIndex):
+#                     not_equal = True
+#                     break
+#                 if el._tensortype != self.index_types[i]:
+#                     not_equal = True
+#                     break
+# 
+#         if not_equal:
+#             for el in mat_ind:
+#                 eltyp = self.index_types[el]
+#                 if eltyp in matrix_behavior_kinds:
+#                     elind = -self.index_types[el].auto_right
+#                     matrix_behavior_kinds[eltyp].append(elind)
+#                 else:
+#                     elind = self.index_types[el].auto_left
+#                     matrix_behavior_kinds[eltyp] = [elind]
+#                 indices = indices[:el] + (elind,) + indices[el:]
+# 
+#         return indices, matrix_behavior_kinds
 
     def __call__(self, *indices):
         """
@@ -2096,15 +1640,19 @@ class TensorHead(Basic):
 
         """
 
-        indices, matrix_behavior_kinds = self._check_auto_matrix_indices_in_call(*indices)
+        #indices, matrix_behavior_kinds = self._check_auto_matrix_indices_in_call(*indices)
 
         components = [self]
-        tids = TIDS.from_components_and_indices(components, indices)
-
-        tmul = TensMul.from_TIDS(S.One, tids)
-        tmul._matrix_behavior_kinds = matrix_behavior_kinds
-
+        tmul = Tensor(self, indices)
+        #tmul._matrix_behavior_kinds = matrix_behavior_kinds
         return tmul
+
+#        tids = TIDS.from_components_and_indices(components, indices)
+#
+#        tmul = TensMul.from_TIDS(S.One, tids)
+#        tmul._matrix_behavior_kinds = matrix_behavior_kinds
+#
+#        return tmul
 
     def __pow__(self, other):
         if self.data is None:
@@ -2183,6 +1731,10 @@ class TensExpr(Basic):
 
     _op_priority = 11.0
     is_commutative = False
+
+    @property
+    def has_index_order(self):
+        return False
 
     def __neg__(self):
         return self*S.NegativeOne
@@ -2295,6 +1847,490 @@ class TensExpr(Basic):
             raise NotImplementedError(
                 "missing multidimensional reduction to matrix.")
 
+    def canon_bp(self):
+        """
+        Canonicalize using the Butler-Portugal algorithm for canonicalization
+        under monoterm symmetries.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
+        >>> A = tensorhead('A', [Lorentz]*2, [[2]])
+        >>> t = A(m0,-m1)*A(m1,-m0)
+        >>> t.canon_bp()
+        -A(L_0, L_1)*A(-L_0, -L_1)
+        >>> t = A(m0,-m1)*A(m1,-m2)*A(m2,-m0)
+        >>> t.canon_bp()
+        0
+        """
+        if not self.has_index_order:
+            # TODO: Should this raise an error?
+            return self
+        if self.is_canon_bp:
+            return self
+        if not self.components:
+            return self
+        t = self.sorted_components()
+        g, dummies, msym, v = t.canon_args()
+        can = canonicalize(g, dummies, msym, *v)
+        if can == 0:
+            return S.Zero
+        tmul = t.perm2tensor(can, True)
+        tmul = tmul.renumber_dummies()
+        return tmul
+
+    def renumber_dummies(self):
+        """
+        TODO
+
+        only if index order.
+
+        TODO: test whether this correctly works with spinor dummies.
+        """
+        sign = S.One
+
+        dummy_indices = self.virtual_dummy_indices_list
+        repl_dummies = {}
+        create_dummy = TensExpr._get_dummy_generator([])
+        for index in dummy_indices:
+            if -index in repl_dummies:
+                repl_dummies[index] = -repl_dummies[-index]
+                if index.tensortype.metric_antisym and index.is_up:
+                    #import ipdb; ipdb.set_trace()
+                    sign = -sign
+                continue
+            subs_dummy = create_dummy(index)
+            if not index.is_up and index.tensortype.metric_antisym is not None:
+                subs_dummy = -subs_dummy
+            repl_dummies[index] = subs_dummy
+        # TODO: correct bugs and add substitution rules.
+        tmul = sign*self.xreplace(repl_dummies)
+        tmul._is_canon_bp = self._is_canon_bp
+        return tmul
+
+    @property
+    def types(self):
+        # TODO: this should be independent from the indices.
+        typs = set([i.tensortype for i in self.indices_set])
+        typs = list(typs)
+        typs.sort(key=lambda x: x.name)
+        return typs
+
+    def fun_eval(self, *index_tuples):
+        """
+        Return a tensor with free indices substituted according to ``index_tuples``
+
+        Parameters
+        ==========
+
+        index_types : list of tuples ``(old_index, new_index)``
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
+        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> t = A(i, k)*B(-k, -j) + A(i, -j)
+        >>> t.fun_eval((i, k),(-j, l))
+        A(k, l) + A(k, L_0)*B(l, -L_0)
+        """
+        return self.xreplace(dict(index_tuples))
+
+    def substitute_indices(self, *index_tuples):
+        """
+        TODO: add deprecation warning.
+        TODO: add description of what advantages it gives compared to .xreplace/.subs: it substitutes also indices of opposite sign.
+
+        Return a tensor with free indices substituted according to ``index_tuples``
+
+        Parameters
+        ==========
+
+        ``index_types`` list of tuples ``(old_index, new_index)``
+
+        Note: this method will neither raise or lower the indices, it will just replace their symbol.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
+        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> t = A(i, k)*B(-k, -j); t
+        A(i, L_0)*B(-L_0, -j)
+        >>> t.substitute_indices((i,j), (j, k))
+        A(j, L_0)*B(-L_0, -k)
+        """
+        repl_dict = dict(index_tuples)
+        for old, new in index_tuples:
+            repl_dict[-old] = -new
+        return self.xreplace(repl_dict)
+
+    # TODO: add notes, this is an experimental attempt, not linked to the main
+    # code.
+    def __perform_contract_metric(self, g):
+        xrepl_dict = {}
+        xrepl_inverse_dict = {}
+        gfactor = [S.One]
+
+        def add_parsed_couple(ind1, ind2):
+            xrepl_dict[ind1] = ind2
+            xrepl_inverse_dict[ind2] = ind1
+            # TODO: add check if indices are both free, to save the metric.
+            # TODO: restore FreeTensorIndex class?
+            if not isinstance(ind1, DummyTensorIndex) and not isinstance(ind2, DummyTensorIndex):
+                if ind1 == ind2:
+                    pass
+                import ipdb; ipdb.set_trace()
+                #return None
+                return g(ind2, -ind1)
+            if -ind1 in xrepl_dict:
+                # TODO: should this be popped?
+                #import ipdb; ipdb.set_trace()
+                indo1 = xrepl_dict[-ind1]
+                return g(ind2, indo1)
+                #return g(indo1, ind2)
+
+        def determine_antisym_metric_sign(i1, i2, regu):
+            a1 = i1
+            a2 = -i2
+            if regu:
+                if a1.is_up == a2.is_up:
+                    return 1
+                else:
+                    return -1
+            else:
+                if a1.is_up == a2.is_up:
+                    return -1
+                else:
+                    return 1
+
+        def add_substitution(ind1, ind2):
+            if -ind1 in xrepl_dict:
+                # g(ind1, indo)*g(-ind1, ind2)
+                indo = xrepl_dict.pop(-ind1)
+                xrepl_inverse_dict.pop(indo)
+                if indo == -ind2:
+                    # g(ind1, -ind2)*g(-ind1, ind2) ==> D
+                    return determine_antisym_metric_sign(ind1, -ind2, True), None
+                # indo could be free, check if ind2 is free and avoid this step?
+                metric_subs = add_parsed_couple(-ind2, indo)
+            elif ind2 in xrepl_dict:
+                # g(-ind2, indo)*g(-ind1, ind2)
+                indo = xrepl_dict.pop(ind2)
+                xrepl_inverse_dict.pop(indo)
+                if ind1 == indo:
+                    import ipdb; ipdb.set_trace()
+                    # g(-ind2, ind1)*g(-ind1, ind2) ==> D
+                    return determine_antisym_metric_sign(ind1, -ind2, False), None
+                metric_subs = add_parsed_couple(ind1, indo)
+            elif -ind2 in xrepl_inverse_dict:
+                # g(indo, -ind2)*g(-ind1, ind2)
+                indo = xrepl_inverse_dict.pop(-ind2)
+                xrepl_dict.pop(indo)
+                if indo == ind1:
+                    # g(ind1, -ind2)*g(-ind1, ind2)
+                    return determine_antisym_metric_sign(ind1, -ind2, True), None
+                metric_subs = add_parsed_couple(indo, -ind1)
+            elif ind1 in xrepl_inverse_dict:
+                # g(indo, ind1)*g(-ind1, ind2)
+                indo = xrepl_inverse_dict.pop(ind1)
+                xrepl_dict.pop(indo)
+                if indo == -ind2:
+                    # g(-ind2, ind1)*g(-ind1, ind2)
+                    return determine_antisym_metric_sign(ind1, -ind2, False), None
+                metric_subs = add_parsed_couple(indo, ind2)
+            else:
+                metric_subs = add_parsed_couple(ind1, ind2)
+
+            return 0, metric_subs
+
+        components = self.components
+        antisym = g.index_types[0].metric_antisym
+        #if not any(x == g for x in components):
+        #    return self
+        # list of positions of the metric ``g``
+        if isinstance(self, Tensor):
+            if self.component == g:
+                gpos = [self]
+            else:
+                return self
+        else:
+            gpos = [i for i in self.args if isinstance(i, Tensor) and i.component == g] # TODO: rename gpos to `metric_list`
+        if not gpos:
+            return self
+        mfactor = S.One
+        elim = set()
+        for tensl in gpos:
+            if tensl in elim:
+                continue
+            typ = g.index_types[0]
+            if typ.dim is None:
+                raise ValueError('dimension not assigned')
+            dim = typ.dim
+            inde1, inde2 = tensl.indices_list
+            free1 = tensl.free_indices_list
+            dum1 = tensl.dummy_indices_list
+            if not dum1:
+                continue
+
+            if len(dum1) == 1:
+                dum10 = dum1[0]
+                assert len(free1) == 1  # TODO: remove assertion
+                free10 = free1[0]
+                if not antisym:
+                    factor_dim, repl = add_substitution(-dum10, free10)
+                    if repl:
+                        xrepl_dict[tensl] = repl
+                    else:
+                        elim.add(tensl)
+                    if factor_dim:
+                        mfactor *= dim
+                else:
+                    factor_dim, repl = add_substitution(-dum10, free10)
+                    if repl:
+                        xrepl_dict[tensl] = repl
+                    else:
+                        elim.add(tensl)
+                    if factor_dim:
+                        mfactor *= factor_dim*dim
+                    if dum10.is_up:
+                        # TODO: check position in tensl
+                        import ipdb; ipdb.set_trace()
+                        if dum10 == tensl.indices_list[0]:
+                            # dummy is at first position
+                            mfactor *= -1
+                    else:
+                        if dum10 == tensl.indices_list[1]:
+                            mfactor *= -1
+
+            elif len(dum1) == 2:
+                assert len(dum1) == 2  # TODO: ...
+                assert len(free1) == 0 # TODO: remove asserts
+                dum11, dum12 = dum1
+
+                if not antisym:
+                    # dp0, dp1, dc0, dc1 = dum1[0]
+                    if dum11 == -dum12:
+                        # g(i, -i)
+                        print("Case g(i, -i)")
+                        mfactor *= dim
+                        elim.add(tensl)
+                        print("mfactor:\t", mfactor)
+                    else:
+                        # g(i0, i1)*p(-i1)
+                        factor_dim, repl = add_substitution(-dum12, dum11)
+                        if repl:
+                            xrepl_dict[tensl] = repl
+                        else:
+                            elim.add(tensl)
+                        if factor_dim:
+                            mfactor *= dim
+                else:
+                    if dum11 == -dum12:
+                        # g(i, -i) or g(-i, i)
+                        mfactor *= dim
+                        if dum11.is_up:
+                            mfactor *= -1
+                        elim.add(tensl)
+                    else:
+                        # A(i)*B(-i)*g(i, -i) or something like that
+                        if dum11.is_up:
+                            factor_dim, repl = add_substitution(-dum12, dum11)
+                            if repl:
+                                xrepl_dict[tensl] = repl
+                            else:
+                                elim.add(tensl)
+                            if factor_dim:
+                                mfactor *= factor_dim*dim
+                        else:
+                            factor_dim, repl = add_substitution(-dum11, dum12)
+                            if repl:
+                                xrepl_dict[tensl] = repl
+                            else:
+                                elim.add(tensl)
+                            if factor_dim:
+                                mfactor *= factor_dim*dim
+
+        if isinstance(self, Tensor):
+            res = self if self not in elim else S.One
+        else:
+            res = self.func(*[arg for arg in self.args if arg not in elim])
+        return mfactor*res.xreplace(xrepl_dict)*gfactor[0]
+
+    def contract_metric(self, metric):
+        """
+        Raise or lower indices with the metric ``g``
+
+        Parameters
+        ==========
+
+        g : metric
+
+        Notes
+        =====
+
+        see the ``TensorIndexType`` docstring for the contraction conventions
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
+        >>> g = Lorentz.metric
+        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> t = p(m0)*q(m1)*g(-m0, -m1)
+        >>> t.canon_bp()
+        metric(L_0, L_1)*p(-L_0)*q(-L_1)
+        >>> t.contract_metric(g).canon_bp()
+        p(L_0)*q(-L_0)
+        """
+        # TODO: metric should possess info about dim without accessing indices.
+        new_t = self.__perform_contract_metric_xreplace(metric)
+        if isinstance(new_t, TensExpr):
+            # TODO: renumber_dummies should become aware of spinor indices.
+            # TODO: also add tests for this.
+            pass
+            #new_t = new_t.renumber_dummies()
+        return new_t
+
+    def __perform_contract_metric_xreplace(self, g):
+        # TODO: documentation
+        dim = g.index_types[0].dim
+
+        # TODO: move to Tensor class.
+        if isinstance(self, Tensor):
+            args = [self]
+        else:
+            args = self.args
+
+        components = self.components
+        antisym = g.index_types[0].metric_antisym
+        # find the first metric inside the expression arguments which has at
+        # least one non-free index, then perform the contraction:
+        target_metric = None
+        for arg in args:
+            if not isinstance(arg, TensExpr):
+                continue
+            if arg.component != g:
+                continue
+            if len(arg.free_indices_list) == 2:
+                continue
+            target_metric = arg
+            break
+        if target_metric is None:
+            return self
+
+        free = target_metric.free_indices_list
+        dum = target_metric.dummy_indices_list
+        if not antisym:
+            # metric is not antisymmetric:
+            if len(free) == 1:
+                dum1 = dum[0]
+                free1 = free[0]
+                new_expr = self.xreplace({target_metric: S.One}).xreplace({-dum1: free1})
+                return new_expr.contract_metric(g)
+            else:
+                dum1, dum2 = dum
+                if dum1 == -dum2:
+                    if dim is None:
+                        raise ValueError("index does not specify its dimension")
+                    new_expr = dim*self.xreplace({target_metric: S.One})
+                    if not isinstance(new_expr, TensExpr):
+                        return new_expr
+                    return new_expr.contract_metric(g)
+                ndum = self._get_dummy_generator(self.dummy_indices_set)(dum1)
+                new_expr = self.xreplace({target_metric: S.One, -dum1: ndum, -dum2: -ndum})
+                return new_expr.contract_metric(g)
+        else:
+            # antisymmetric metric:
+            if len(free) == 1:
+                dum1 = dum[0]
+                free1 = free[0]
+                # check if the free index is the first one:
+                free_is_first = bool(target_metric.indices_list[0] == free1)
+
+                # sign cases:
+                # call `f` the free index, `d` the dummy index.
+                # g( f,  d) ==> +
+                # g( f, -d) ==> -
+                # g(-f,  d) ==> +
+                # g(-f, -d) ==> -
+                # g( d,  f) ==> -
+                # g( d, -f) ==> -
+                # g(-d,  f) ==> +
+                # g(-d, -f) ==> +
+                sign = (1 if free_is_first else -1)*(1 if dum1.is_up else -1)
+                new_expr = sign*self.xreplace({target_metric: S.One}).xreplace({-dum1: free1})
+                return new_expr.contract_metric(g)
+            else:
+                dum1, dum2 = dum
+                if dum1 == -dum2:
+                    # TODO: find a better way to suppress an element from the args (using strategies?)
+
+                    # sign cases:
+                    # g( d, -d) ==> -
+                    # g(-d,  d) ==> +
+                    sign = -1 if dum1.is_up else 1
+                    if dim is None:
+                        raise ValueError("index does not specify its dimension")
+                    new_expr = sign*dim*self.xreplace({target_metric: S.One})
+                    if not isinstance(new_expr, TensExpr):
+                        return new_expr
+                    return new_expr.contract_metric(g)
+                # sign cases:  # TODO: describe replacement process.
+                # in the resulting expression:
+                # resulting `d1` ==> flips valence
+                # resulting `d2` ==> keeps valence # TODO: check
+                # g( d1,  d2) ==> -
+                # g( d1, -d2) ==> +
+                # g(-d1,  d2) ==> -
+                # g(-d1, -d2) ==> +
+                sign = 1 if not dum2.is_up else -1
+                ndum = self._get_dummy_generator(self.dummy_indices_set)(dum1)
+                new_expr = sign * self.xreplace({target_metric: S.One, -dum1: ndum, -dum2: -ndum})
+                return new_expr.contract_metric(g)
+
+    @staticmethod
+    def _get_dummy_generator(dummy_indices):
+        # TODO documentation.
+        dummy_type_counter = defaultdict(lambda: 0)
+
+        def _create_dummy(index):
+#            if isinstance(index, DummyTensorIndex):
+#                # TODO check collisions!
+#                return index
+            dummy_fmt = index.tensortype.dummy_fmt[:-3]
+            # TODO: this is repeated twice, find a way to write it just once:
+            count = dummy_type_counter[index.tensortype]
+            dummy_type_counter[index.tensortype] = count + 1
+            dummy_name = dummy_fmt + "_" + str(count)
+            dummy = DummyTensorIndex(*((dummy_name,)+index.args[1:]))
+            # if dummy has already been used by a previous expression (indices
+            # that were already contracted when passed to the TensMul
+            # constructor), then choose another dummy:
+            if dummy in dummy_indices:
+                dummy = _create_dummy(index)
+            return dummy
+
+        #_create_dummy.dummy_type_counter = dummy_type_counter
+        return _create_dummy
+
+    @property
+    def rank(self):
+        return len(self.free_indices_set)
+
+    @property
+    def ext_rank(self):
+        return len(self.indices_set)
+
     def _eval_simplify(self, ratio, measure):
         # this is a way to simplify a tensor expression.
 
@@ -2307,6 +2343,541 @@ class TensExpr(Basic):
                 expr = i.simplify_this_type(expr)
         # TODO: missing feature, perform metric contraction.
         return expr
+
+    @staticmethod
+    def _assert_automatrix_indices_structure(args):
+        # TODO
+        pass
+
+    @staticmethod
+    def _replace_automatrix_indices_in_args(args):
+        # TODO
+
+        # Replacement cases:
+
+        # A(auto_left, -auto_right)*B(auto_left, -auto_right) 
+        #   ===> A(auto_left, -s)*B(s, -auto_right)
+
+        # A(auto_left)*B(auto_left, -auto_right)
+        #   ===> A(-s)*B(s, -auto_left)
+
+        # A(auto_left, -auto_right)*B(auto_left)
+        #   ===> A(auto_left, -s)*B(s)
+
+        # A(auto_left)*B(auto_left)
+        #   ===> A(-s)*B(s)
+
+        dummy_counter = defaultdict(lambda: 0)
+        def get_dummy(indextype):
+            c = dummy_counter[indextype]
+            dummy_counter[indextype] += 1
+            return FreeTensorIndex('dummy_bind_{0}'.format(c), indextype, True)
+
+        d = {}
+        last_bindable_by_indextype = {}
+        for arg_i, arg in enumerate(args):
+            if not isinstance(arg, TensExpr):
+                continue
+#           bind_indices = [i for i in arg.indices_set if isinstance(i, BindableTensorIndex)]
+#           if len(bind_indices)>0:
+#               import ipdb; ipdb.set_trace()
+            #auto_left_indices = [i for i in bind_indices if i.name == 'auto_left']
+            #auto_right_indices = [i for i in bind_indices if i.name == 'auto_right'] 
+            # TODO: create a method to return this `bind_types` object
+            bind_types = defaultdict(lambda: [None, None])
+            for i in arg.indices_set:
+                if not isinstance(i, BindableTensorIndex):
+                    continue
+                if i.name == 'auto_left':
+                    bind_types[i.tensortype][0] = i
+                else:
+                    bind_types[i.tensortype][1] = i
+
+            for key, indices in bind_types.items():
+                al, ar = indices
+                # TODO: remove these assertions:
+                if ar is not None:
+                    assert ar.name == 'auto_right'
+                if al is not None:
+                    assert al.name == 'auto_left'
+
+                # TODO: bindable indices should count as free, add test.
+                if key in last_bindable_by_indextype:
+                    # TODO: remove
+#                    if len(args) == 2 and str(args[0]).startswith('C(auto_left') and str(args[1]).startswith('C(auto_left'):
+#                        import ipdb; ipdb.set_trace()
+                    # TODO: replace indices and update
+                    # last_bindable_by_indextype
+                    dummy = get_dummy(key)
+                    if ar is not None:
+                        to_bind_left, pos = last_bindable_by_indextype[key]
+                        last_bindable_by_indextype[key] = ar
+                    else:
+                        to_bind_left, pos = last_bindable_by_indextype.pop(key)
+                    args[pos] = args[pos].xreplace({to_bind_left: -dummy})
+                    args[arg_i] = args[arg_i].xreplace({al: dummy})
+                    if to_bind_left == al and ar is not None:
+                        #args[arg_i] = args[arg_i].xreplace({ar: al})
+                        last_bindable_by_indextype[key] = ar
+                        
+                else:
+                    # TODO: update last_bindable_by_indextype
+                    if ar is not None:
+                        last_bindable_by_indextype[key] = (ar, arg_i)
+                    else:
+                        last_bindable_by_indextype[key] = (al, arg_i)
+#                d[al] = arg_i
+#                if ar is not None:
+#                    d[ar] = arg_i
+
+        return args
+
+    @staticmethod
+    def _detect_contracted_indices_in_args(args):
+        args = TensMul._replace_automatrix_indices_in_args(args)
+        # TODO: relocate to TensExpr? or not?
+
+        # this assumes that indices in args are contracted multiplicatively.
+
+        # TODO: finish.
+#        free_indices = set([])
+
+        free_indices_dict = {}
+        dummy_indices = set([])
+
+        # TODO: the logic to detect wrong index signatures should be made
+        # independent so it can be used with the unify module.
+
+        xreplace_list_dict = [{} for i in args]
+        all_indices_list = []
+        #kept_back_dummy_indices = set([])
+        dummy_repeated_counter = defaultdict(lambda: 0)
+
+        # TODO: should this be a search through all of the args tree or just
+        # through the first children?
+        for arg_i, arg in enumerate(args):
+            if not isinstance(arg, TensExpr):
+                # if it is not a TensExpr, it cannot contain indices.
+                continue
+            # TODO: every TensExpr should possess free indices.
+
+            # if it is possible to determine the index order, get the list,
+            # otherwise an unsorted set:
+            if arg.has_index_order:
+                # TODO: rename has_index_order to are_indices_sorted/has_index_order ?
+                index_walking_list = arg.indices_list
+                # TODO: add tests for .free_indices_set, .free_indices_list, .dummy_indices_set, .dummy_indices_list
+            else:
+                index_walking_list = arg.indices_set
+
+            # iterate over the just determined list or set:
+            for index in index_walking_list:
+                #paired_position = None
+                if not isinstance(index, TensorIndex):
+                    # TODO: how should it behave in cases like this one?
+                    continue
+#                 if index in arg.dummy_indices_set and -index in arg.dummy_indices_set:
+#                     1/0
+#                     # `index` and `-index` are a contracted pair inside `arg`,
+#                     # the code will try not to renumber them, i.e. they are put
+#                     # into a special variable (`kept_back_dummy_indices`). If
+#                     # two args have two identical pairs, the code will be forced
+#                     # to renumber one of the pairs.
+#                     if index not in kept_back_dummy_indices:
+#                         kept_back_dummy_indices.add(index)
+#                         continue
+#                     # TODO: SHOULD kept_back_dummy_indices be included into
+#                     # dummy_indices of the object being constructed?
+                if isinstance(index, DummyTensorIndex):
+                    if index in dummy_indices:
+                        # if another dummy index with the same name already
+                        # exists, relabeling is necessary:
+
+                        #drcount = dummy_repeated_counter[index]
+                        #index = FreeTensorIndex(*(("DtFidxctr{0}X{1}".format(index.args[0], drcount),)+index.args[1:]))
+                        #index = FreeTensorIndex(*index.args)
+                        pass
+                    else:
+                        dummy_indices.add(index)
+                        continue
+                if index in free_indices_dict:
+                    if not isinstance(index, BindableTensorIndex):
+                    # TODO: remove if
+                        raise ValueError('wrong index signature')
+
+#                    # This is the case in which there are auto-matrix indices.
+#                    other_arg_i = free_indices_dict[index]
+#                # TODO: there's a better way of getting `auto_left` index:
+#                    auto_left = BindableTensorIndex('auto_left', *index.args[1:])
+#                    auto_right = BindableTensorIndex('auto_right', *index.args[1:])
+#                    prev_arg = args[other_arg_i]
+#                    #TODO: remove assertion
+#                    assert auto_left.is_up
+#                    #import ipdb; ipdb.set_trace()
+##                    free_indices_dict.pop(auto_left, None)
+##                    free_indices_dict.pop(-auto_right, None)
+#                    fri = FreeTensorIndex(*(('dummy_contract',)+index.args[1:]))
+#
+#                    paired_position = free_indices_dict.pop(index)
+#                    args[arg_i] = args[arg_i].xreplace({index: -index})
+#                    opo = all_indices_list.index([index, paired_position, None])
+#                    all_indices_list[opo][2] = arg_i
+
+#                    # Case: A(auto_left)*B(auto_left)
+#                    #  ===> A(d)*A(-d)
+#                    if -auto_right not in prev_arg and -auto_right not in arg:
+#                        args[other_arg_i] = args[other_arg_i].xreplace({auto_left: fri})
+#                        args[arg_i] = args[arg_i].xreplace({auto_left: -fri})
+#                    # Case: A(auto_left)*B(auto_left, -auto_right)
+#                    #  ===> A(d)*B(-d, auto_left)
+#                    elif auto_left in prev_arg and -auto_right not in arg:
+#                        args[other_arg_i] = args[other_arg_i].xreplace({auto_left: fri})
+#                        args[arg_i] = args[arg_i].xreplace({auto_left: -fri})
+#                    # Case: A(auto_left, -auto_right)*B(auto_left)
+#                    #  ===> A(auto_left, -d)*B(d)
+#                    elif -auto_right not in arg:
+#                        args[other_arg_i] = args[other_arg_i].xreplace({-auto_right: fri})
+#                        args[arg_i] = args[arg_i].xreplace({auto_left: -fri})
+#                    # Case: A(auto_left, -auto_right)*B(auto_left, -auto_right)
+#                    #  ===> A(auto_left, -d)*B(d, -auto_right)
+#                    else:
+#                        args[other_arg_i] = args[other_arg_i].xreplace({-auto_right: fri})
+#                        args[arg_i] = args[arg_i].xreplace({auto_left: -fri})
+
+#                    free_indices_dict[fri] = arg_i
+#                    free_indices_dict[-fri] = other_arg_i
+
+#                        if index.name == "auto_left":
+#                            fri = FreeTensorIndex(*(('dummy_contract',)+index.args[1:]))
+#                            args[arg_i] = args[arg_i].xreplace({index: fri})
+#                            index = fri
+#                        elif index.name == "auto_right":
+#                            free_indices_dict[fri] = other_pos
+#                            args[other_pos] = args[other_pos].xreplace({index: -fri})
+#                        else:
+#                            raise ValueError('')
+
+                if -index in free_indices_dict:
+                    # TODO: wrong comment:::
+                    # contract the index:
+                    # this means substitute it by dummies.
+                    paired_position = free_indices_dict.pop(-index)
+#                    temp_dummy_identified.add(index)
+#                    temp_dummy_identified.add(-index)
+#                    free_indices.remove(-index)
+                    opo = all_indices_list.index([-index, paired_position, None])
+                    all_indices_list[opo][2] = arg_i
+                else:
+                    free_indices_dict[index] = arg_i
+                #    continue
+                all_indices_list.append([index, arg_i, None])
+                #index_to_component_dict[index] = arg_i
+
+        _create_dummy = TensExpr._get_dummy_generator(dummy_indices)
+
+        for index, pos1, pos2 in all_indices_list:
+            if pos2 is None:
+                continue
+#            if index not in temp_dummy_identified:
+#                continue
+#            temp_dummy_identified.remove(index)
+#            temp_dummy_identified.remove(-index)
+
+            dummy = _create_dummy(index)
+
+#            pos1 = index_to_component_dict[index]
+#            pos2 = index_to_component_dict[-index]
+
+            xreplace_list_dict[pos1].update({index: dummy})
+            xreplace_list_dict[pos2].update({-index: -dummy})
+            # free_indices.remove(-index)
+            dummy_indices.add(-dummy)
+            dummy_indices.add(dummy)
+
+        for i in range(len(args)):
+            if not isinstance(args[i], TensExpr):
+                continue
+
+#             excluded_dummies = args[i].atoms(DummyTensorIndex) #- args[i].dummy_indices
+#             pre_xreplace = {}
+#             while excluded_dummies:
+#                 j = excluded_dummies.pop()
+#                 if -j in excluded_dummies:
+#                     dummy = _create_dummy(j)
+#                     pre_xreplace.update({j: dummy, -j: -dummy})
+#                     excluded_dummies.remove(-j)
+# #            for j in excluded_dummies:
+# #                1/0
+# #                xreplace_list_dict[i].update({j: _create_dummy(j)})
+#             #new_dummies = xreplace_list_dict[i].values()
+#             args[i] = args[i].xreplace(pre_xreplace)
+
+            args[i] = args[i].xreplace(xreplace_list_dict[i])
+
+#TODO: remove
+        # Replace `-auto_right` with `auto_left` when there is no more `auto_left`:
+#        for arg_i, arg in enumerate(args):
+#            if not isinstance(arg, TensExpr):
+#                continue
+#            for index in arg.indices_set:
+#                if not isinstance(index, BindableTensorIndex):
+#                    continue
+#                if index.name != 'auto_right':
+#                    continue
+#                # TODO: there's a better way of getting `auto_left` index:
+#                auto_left = BindableTensorIndex('auto_left', index.args[1], 1)
+#                # TODO: remove assert
+#                assert auto_left.is_up
+#                if auto_left not in arg.indices_set:
+#                    print("test\n")
+#                    args[arg_i] = args[arg_i].xreplace({index: auto_left})
+            
+
+        # TODO: add substitutions of dummy indices in subexpressions.
+        # i.e., the numbering has to be consistent.
+
+        # TODO: All TensExpr need to possess two sets, free and dummy indices.
+        # Subclasses of TensExpr are divided into two classes: those with an
+        # ordered free index list, and those with just a set.
+
+        free_indices = set([])
+        for i in free_indices_dict.keys():
+            if isinstance(i, DummyTensorIndex):
+                dummy_indices.add(i)
+            else:
+                free_indices.add(i)
+        return args, free_indices, dummy_indices
+
+    @property
+    def indices_set(self):
+        # TODO: add tests
+        return self.atoms(TensorIndex)
+
+    @property
+    def indices_list(self):
+        self._assert_has_index_order()
+        # TODO: add tests
+        ind = []
+        for arg in self.args:
+            if not isinstance(arg, TensExpr):
+                continue
+            ind.extend(arg.indices_list)
+        return ind
+
+#        indices_list = []
+#        for i in self.args:
+#            if not isinstance(i, TensExpr):
+#                continue
+#            if not isinstance(i, CanonicalizableTensor):
+#                raise ValueError("No order to determine.")
+#            indices_list.extend(i.indices)
+#        return indices_list
+
+    @property
+    def free_indices_set(self):
+        return self._free_indices
+
+    @property
+    def free_indices_list(self):
+        self._assert_has_index_order()
+        # TODO: wrong, they need to be ordered.
+        indices = []
+        for i in self.args:
+            if not isinstance(i, TensExpr):
+                continue
+            # TODO: how should this behave in case of non-canonicalizable tensors?
+            for j in i.free_indices_list:
+                indices.append(j)
+            #indices.extend(i.free_indices_list())
+        return indices
+
+    @property
+    def dummy_indices_set(self):
+        # TODO: define how TensAdd makes indices inheritable, write docstring.
+        dis = set([])
+        for arg in self.args:
+            if not isinstance(arg, TensExpr):
+                continue
+            dis.update(arg.dummy_indices_set)
+        return dis
+
+    @property
+    def dummy_indices_list(self):
+        self._assert_has_index_order()
+        d_indices = []
+        for arg in self.args:
+            if not isinstance(arg, TensExpr):
+                continue
+            d_indices.extend(arg.dummy_indices_list)
+        return d_indices
+
+    @property
+    def virtual_free_indices_list(self):
+        self._assert_has_index_order()
+        indices = self.indices_list
+        dummies = self.dummy_indices_set
+        return [i for i in indices if -i not in dummies]
+
+    @property
+    def virtual_free_indices_set(self):
+        return set(self.virtual_free_indices_list)
+
+    @property
+    def virtual_dummy_indices_list(self):
+        self._assert_has_index_order()
+        dummies = self.dummy_indices_list
+        return [i for i in dummies if -i in dummies]
+
+    @property
+    def virtual_dummy_indices_set(self):
+        return set(self.virtual_dummy_indices_list)
+
+    # TODO: deprecate this:
+    # TODO: use instead ==> free_indices_set
+    #@deprecated()
+    @property
+    def free_args(self):
+        return self.free_indices_set
+
+    @property
+    def is_canon_bp(self):
+        self._assert_has_index_order()
+        return self._is_canon_bp
+
+    # TODO: add rank attribute to Tensor (and test it).
+
+    # TODO: rename `get_tensor_index_permutation` ?
+    def get_tensor_permutation(self):
+        """
+        Returns the list representing the permutation of the tensor indices.
+        """
+        self._assert_has_index_order()
+        indices = self.indices_list
+        sorted_indices = self.get_canon_sorted_indices()
+        g = [sorted_indices.index(i) for i in indices]
+        # TODO: when should these be flipped?
+        g.extend([len(g), len(g)+1])
+        return g
+
+    def canon_args(self):
+        """
+        Returns ``(g, dummies, msym, v)``, the entries of ``canonicalize``
+
+        see ``canonicalize`` in ``tensor_can.py``
+        """
+        self._assert_has_index_order()
+        # to be called after sorted_components
+        from sympy.combinatorics.permutations import _af_new
+
+        virtual_dummies = self.virtual_dummy_indices_list
+
+        # get `g` list:
+        g = self.get_tensor_permutation()
+
+        # TODO: this is wrong!!!
+        # get `dummies` object:
+        dummies_by_type = defaultdict(lambda: [])
+        for i, ind in enumerate(self.indices_list):
+            #if not isinstance(ind, DummyTensorIndex):
+            if ind not in virtual_dummies:
+                continue
+            dummies_by_type[ind.tensortype].append(g[i])
+        dummies = []
+        ind_types = sorted(dummies_by_type.keys(), key=lambda a: a._name)
+        for typ in ind_types:
+            dummies.append(sorted(dummies_by_type[typ]))
+
+            #return 1 if key in virtual_dummies else 0
+
+#        if dummies != []:
+#            dummies = [dummies]
+
+        # get the expression for `msym`:
+        msym = []
+        prev = None
+        for index in virtual_dummies:
+            if not index.is_up:
+                continue
+            typ = index.tensortype
+            if typ == prev:
+                continue
+            msym.append(typ.metric_antisym)
+            prev = typ
+
+        # now calculate `v`:
+        numtyp = []
+        prev = None
+        for t in self.components:
+            # TODO: add to documentation: canonicalizable tensors both have
+            # ordered indices and have Tensor components.
+            if t == prev:
+                numtyp[-1][1] += 1
+            else:
+                prev = t
+                numtyp.append([prev, 1])
+        v = []
+        for h, n in numtyp:
+            if h._comm == 0 or h._comm == 1:
+                comm = h._comm
+            else:
+                comm = TensorManager.get_comm(h._comm, h._comm)
+            v.append((h._symmetry.base, h._symmetry.generators, n, comm))
+
+        return _af_new(g), dummies, msym, v
+
+    def get_canon_sorted_indices(self):
+        self._assert_has_index_order()
+        virtual_dummies = self.virtual_dummy_indices_list
+        # TODO: rename `indices_list` to `extended_indices_list` ?
+
+        def free_first(key):
+            dummy_or_free = 1 if key in virtual_dummies else 0
+            notup = not key.is_up
+            return dummy_or_free, key.tensortype, key.name, notup
+
+        indices = sorted(self.virtual_free_indices_list) + sorted(virtual_dummies, key=free_first)
+        return indices
+
+    def _assert_has_index_order(self):
+        if not self.has_index_order:
+            raise ValueError("tensor has no index order")
+
+    def perm2tensor(self, g, canon_bp=False):
+        """
+        Returns the tensor corresponding to the permutation ``g``
+
+        ``g``  permutation corresponding to the tensor in the representation
+        used in canonicalization
+
+        ``canon_bp``   if True, then ``g`` is the permutation
+        corresponding to the canonical form of the tensor
+        """
+        self._assert_has_index_order()
+        sign = 1
+        if g[-1] != len(g) - 1:
+            sign = -sign
+
+        # TODO: rename `indices_list` to `extended_indices_list` ?
+
+        indices = self.get_canon_sorted_indices()
+        repl_indices = [None]*len(indices)
+        for i in range(len(repl_indices)):
+            repl_indices[i] = indices[g[i]]
+        # TODO: this should just be an order replacement operation.
+        # such order replacement operation should be acted upon by calling the TensExpr with the new indices.
+        res = sign*self.xreplace(dict(zip(self.indices_list, repl_indices)))
+        res._is_canon_bp = canon_bp
+        return res
+
+    @property
+    def free(self):
+        raise NotImplementedError("This feature is no longer available here,"\
+            "use `sympy.tensor.deprecated_tensor` if you want it.")
+
+    @property
+    def dum(self):
+        raise NotImplementedError("This feature is no longer available here,"\
+            "use `sympy.tensor.deprecated_tensor` if you want it.")
 
 
 @doctest_depends_on(modules=('numpy',))
@@ -2370,20 +2941,25 @@ class TensAdd(TensExpr):
         if not args:
             return S.Zero
 
+        # TODO: remove
         # replace auto-matrix indices so that they are the same in all addends
-        args = TensAdd._tensAdd_check_automatrix(args)
+        #args = TensAdd._tensAdd_check_automatrix(args)
 
         # now check that all addends have the same indices:
-        TensAdd._tensAdd_check(args)
-        args = Tuple(*args)
+        free_indices = TensAdd._tensAdd_check(args)
 
         # if TensAdd has only 1 TensMul element in its `args`:
         if len(args) == 1 and isinstance(args[0], TensMul):
-            obj = Basic.__new__(cls, *args, **kw_args)
-            return obj
+            # TODO: Should this just return a TensMul?
+            #obj = Basic.__new__(cls, *args, **kw_args)
+            #obj._free_indices = free_indices
+            return args[0]
 
         # canonicalize all TensMul
-        args = [x.canon_bp() for x in args if x]
+        # TODO: remove canonicalization upon construction:
+        args = [canon_bp(x) for x in args if x]
+        # TODO: decide what to do
+        is_canon_bp = kw_args.pop('is_canon_bp', True)
         args = [x for x in args if x]
 
         # if there are no more args (i.e. have cancelled out),
@@ -2392,136 +2968,156 @@ class TensAdd(TensExpr):
             return S.Zero
 
         # collect canonicalized terms
-        args.sort(key=lambda x: (x.components, x.free, x.dum))
-        a = TensAdd._tensAdd_collect_terms(args)
-        if not a:
+        # TODO: remove
+        # args.sort(key=lambda x: (x.components, x.free_indices_set, x.dummy_indices_set))
+        def sort_key(x):
+            if not isinstance(x, TensExpr):
+                return (-1, [], [], [])
+            if x.has_index_order:
+                return (x.coeff == 1, x.components, x.free_indices_list, x.dummy_indices_list)
+            return (-1, [], [], [])
+        args = TensAdd._tensAdd_collect_terms(args)
+        args.sort(key=sort_key)
+        if not args:
             return S.Zero
         # it there is only a component tensor return it
-        if len(a) == 1:
-            return a[0]
+        if len(args) == 1:
+            # TODO: REmove
+            assert not isinstance(args[0], TensAdd)
+            return args[0]
 
-        args = Tuple(*args)
+#        def _sort_key(x):
+#            if not isinstance(x, TensExpr):
+#                return [], []
+#            return x.components, x.free_indices_list
+        #args.sort()
+        # TODO remove
+        assert len(args) > 1
+
+        #args = Tuple(*args)
         obj = Basic.__new__(cls, *args, **kw_args)
-        obj._args = tuple(a)
+#        obj._args = tuple(args)  # TODO: is this required?
+        obj._free_indices = free_indices
+        # TODO: this will have to be changed after introducing operators:
+        obj._dummy_indices = set([])  # args[0].atoms(TensorIndex).difference(free_indices)
+        obj._is_canon_bp = is_canon_bp
         return obj
 
     @staticmethod
     def _tensAdd_flatten(args):
-        # flatten TensAdd, coerce terms which are not tensors to tensors
-
-        if not all(isinstance(x, TensExpr) for x in args):
-            args1 = []
-            for x in args:
-                if isinstance(x, TensExpr):
-                    if isinstance(x, TensAdd):
-                        args1.extend(list(x.args))
-                    else:
-                        args1.append(x)
-            args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
-            args2 = [x for x in args if not isinstance(x, TensExpr)]
-            t1 = TensMul.from_data(Add(*args2), [], [], [])
-            args = [t1] + args1
-        a = []
-        for x in args:
-            if isinstance(x, TensAdd):
-                a.extend(list(x.args))
+        # expand all TensAdd in args.
+        # TODO: also expand Add
+        new_arg = []
+        for arg in args:
+            if isinstance(arg, TensAdd):
+                new_arg.extend(arg.args)
             else:
-                a.append(x)
-        args = [x for x in a if x._coeff]
-        return args
+                new_arg.append(arg)
+        return new_arg
 
-    @staticmethod
-    def _tensAdd_check_automatrix(args):
-        # check that all automatrix indices are the same.
-
-        # if there are no addends, just return.
-        if not args:
-            return args
-
-        # @type auto_left_types: set
-        auto_left_types = set([])
-        auto_right_types = set([])
-        args_auto_left_types = []
-        args_auto_right_types = []
-        for i, arg in enumerate(args):
-            arg_auto_left_types = set([])
-            arg_auto_right_types = set([])
-            for index in arg.get_indices():
-                # @type index: TensorIndex
-                if index in (index._tensortype.auto_left, -index._tensortype.auto_left):
-                    auto_left_types.add(index._tensortype)
-                    arg_auto_left_types.add(index._tensortype)
-                if index in (index._tensortype.auto_right, -index._tensortype.auto_right):
-                    auto_right_types.add(index._tensortype)
-                    arg_auto_right_types.add(index._tensortype)
-            args_auto_left_types.append(arg_auto_left_types)
-            args_auto_right_types.append(arg_auto_right_types)
-        for arg, aas_left, aas_right in zip(args, args_auto_left_types, args_auto_right_types):
-            missing_left = auto_left_types - aas_left
-            missing_right = auto_right_types - aas_right
-            missing_intersection = missing_left & missing_right
-            for j in missing_intersection:
-                args[i] *= j.delta(j.auto_left, -j.auto_right)
-            if missing_left != missing_right:
-                raise ValueError("cannot determine how to add auto-matrix indices on some args")
-
-        return args
+        # TODO: OLD: flatten TensAdd, coerce terms which are not tensors to tensors
 
     @staticmethod
     def _tensAdd_check(args):
+        # TODO: should this become args[i].free_indices?
+
         # check that all addends have the same free indices
-        indices0 = set([x[0] for x in args[0].free])
-        list_indices = [set([y[0] for y in x.free]) for x in args[1:]]
+        indices0 = _free_indices(args[0])  # TODO: set([x[0] for x in args[0].free])
+
+        # TODO: if there are wildcards?
+        # this is not optimal:
+        #if not all([i.has_index_order for i in self.args if isinstance(i, TensExpr)]):
+            #return indices0
+
+        list_indices = [_free_indices(x) for x in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
+        return indices0
 
     @staticmethod
     def _tensAdd_collect_terms(args):
         # collect TensMul terms differing at most by their coefficient
-        a = []
-        prev = args[0]
-        prev_coeff = prev._coeff
-        changed = False
-
-        for x in args[1:]:
-            # if x and prev have the same tensor, update the coeff of prev
-            if x.components == prev.components \
-                    and x.free == prev.free and x.dum == prev.dum:
-                prev_coeff = prev_coeff + x._coeff
-                changed = True
-                op = 0
-            else:
-                # x and prev are different; if not changed, prev has not
-                # been updated; store it
-                if not changed:
-                    a.append(prev)
+        mapping = defaultdict(lambda: S.Zero)
+        residual = S.Zero
+        for arg in args:
+            if isinstance(arg, Tensor):
+                mapping[arg] += 1
+            elif isinstance(arg, TensMul):
+                if arg.coeff == 1:
+                    mapping[arg] += 1
+                elif arg.coeff == 0:
+                    # ignore null arg
+                    import ipdb; ipdb.set_trace()
+                    continue
                 else:
-                    # get a tensor from prev with coeff=prev_coeff and store it
-                    if prev_coeff:
-                        t = TensMul.from_data(prev_coeff, prev.components,
-                            prev.free, prev.dum)
-                        a.append(t)
-                # move x to prev
-                op = 1
-                pprev, prev = prev, x
-                pprev_coeff, prev_coeff = prev_coeff, x._coeff
-                changed = False
-        # if the case op=0 prev was not stored; store it now
-        # in the case op=1 x was not stored; store it now (as prev)
-        if op == 0 and prev_coeff:
-            prev = TensMul.from_data(prev_coeff, prev.components, prev.free, prev.dum)
-            a.append(prev)
-        elif op == 1:
-            a.append(prev)
-        return a
+                    mapping[TensMul(*arg.args[1:])] += arg.coeff
+            elif not isinstance(arg, TensExpr):
+                residual += arg
+            # TODO: handle other possible TensExpr cases, such as partial
+            # derivative.
+        coll = [coeff*t for coeff, t in mapping.items() if coeff]
+        if residual != 0:
+            coll = [residual] + coll
+        return [t for t in coll if t != 0]
+
+#         a = []
+#         prev = args[0]
+#         prev_coeff = prev._coeff
+#         changed = False
+#
+#         for x in args[1:]:
+#             # if x and prev have the same tensor, update the coeff of prev
+#             if x.components == prev.components \
+#                     and x.free == prev.free and x.dum == prev.dum:
+#                 prev_coeff = prev_coeff + x._coeff
+#                 changed = True
+#                 op = 0
+#             else:
+#                 # x and prev are different; if not changed, prev has not
+#                 # been updated; store it
+#                 if not changed:
+#                     a.append(prev)
+#                 else:
+#                     # get a tensor from prev with coeff=prev_coeff and store it
+#                     if prev_coeff:
+#                         t = TensMul.from_data(prev_coeff, prev.components,
+#                             prev.free, prev.dum)
+#                         a.append(t)
+#                 # move x to prev
+#                 op = 1
+#                 pprev, prev = prev, x
+#                 pprev_coeff, prev_coeff = prev_coeff, x._coeff
+#                 changed = False
+#         # if the case op=0 prev was not stored; store it now
+#         # in the case op=1 x was not stored; store it now (as prev)
+#         if op == 0 and prev_coeff:
+#             prev = TensMul.from_data(prev_coeff, prev.components, prev.free, prev.dum)
+#             a.append(prev)
+#         elif op == 1:
+#             a.append(prev)
+#         return a
+
+#    @property
+#    def dummy_indices(self):
+#        return self.atoms(DummyTensorIndex)
+
+    @property
+    def free_indices_list(self):
+        raise ValueError('no order in TensAdd')
+
+    @property
+    def dummy_indices_list(self):
+        raise ValueError('no order in TensAdd')
 
     @property
     def rank(self):
-        return self.args[0].rank
+        # TODO: remove
+        # return self.args[0].rank
+        return len(_free_indices(self.args[0]))
 
-    @property
-    def free_args(self):
-        return self.args[0].free_args
+#    @property
+#    def free_args(self):
+#        return self.args[0].free_args
 
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
@@ -2547,14 +3143,14 @@ class TensAdd(TensExpr):
         >>> t(i0,i1) - t(i1,i0)
         0
         """
-        free_args = self.free_args
+        free_args = sorted(self.free_indices_set)
         indices = list(indices)
         if [x._tensortype for x in indices] != [x._tensortype for x in free_args]:
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
         index_tuples = list(zip(free_args, indices))
-        a = [TensMul(*x.fun_eval(*index_tuples).args) for x in self.args]
+        a = [x.fun_eval(*index_tuples) for x in self.args]
         res = TensAdd(*a)
 
         return res
@@ -2564,14 +3160,16 @@ class TensAdd(TensExpr):
         canonicalize using the Butler-Portugal algorithm for canonicalization
         under monoterm symmetries.
         """
+        if not self.has_index_order:
+            return self
         args = [x.canon_bp() for x in self.args]
-        res = TensAdd(*args)
+        res = TensAdd(*args, is_canon_bp=True)
         return res
 
     def equals(self, other):
         other = sympify(other)
-        if isinstance(other, TensMul) and other._coeff == 0:
-            return all(x._coeff == 0 for x in self.args)
+        if isinstance(other, TensMul) and other.coeff == 0:
+            return all(x.coeff == 0 for x in self.args)
         if isinstance(other, TensExpr):
             if self.rank != other.rank:
                 return False
@@ -2588,6 +3186,9 @@ class TensAdd(TensExpr):
                 return t._coeff == 0
             else:
                 return all(x._coeff == 0 for x in t.args)
+
+    def expand(self):
+        return TensAdd(*[i.expand() for i in self.args])
 
     def __add__(self, other):
         return TensAdd(self, other)
@@ -2611,7 +3212,9 @@ class TensAdd(TensExpr):
         other = sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
-        return TensAdd(*(x/other for x in self.args))
+        # TODO: remove
+        # return TensAdd(*(x/other for x in self.args))
+        return TensAdd(*[x/other for x in self.args])
 
     def __rdiv__(self, other):
         raise ValueError('cannot divide by a tensor')
@@ -2620,7 +3223,7 @@ class TensAdd(TensExpr):
         return self.data[item]
 
     __truediv__ = __div__
-    __truerdiv__ = __rdiv__
+    __rtruediv__ = __rdiv__
 
     def contract_delta(self, delta):
         args = [x.contract_delta(delta) for x in self.args]
@@ -2644,71 +3247,17 @@ class TensAdd(TensExpr):
         see the ``TensorIndexType`` docstring for the contraction conventions
         """
 
-        args = [x.contract_metric(g) for x in self.args]
+        args = [x.contract_metric(g) if isinstance(x, TensExpr) else x for x in self.args]
         t = TensAdd(*args)
+        # TODO: is canon_bp necessary?
         return canon_bp(t)
-
-    def fun_eval(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        Parameters
-        ==========
-
-        index_types : list of tuples ``(old_index, new_index)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
-        >>> t = A(i, k)*B(-k, -j) + A(i, -j)
-        >>> t.fun_eval((i, k),(-j, l))
-        A(k, L_0)*B(l, -L_0) + A(k, l)
-        """
-        args = self.args
-        args1 = []
-        for x in args:
-            y = x.fun_eval(*index_tuples)
-            args1.append(y)
-        return TensAdd(*args1)
-
-    def substitute_indices(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        Parameters
-        ==========
-
-        index_types : list of tuples ``(old_index, new_index)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
-        """
-        args = self.args
-        args1 = []
-        for x in args:
-            y = x.substitute_indices(*index_tuples)
-            args1.append(y)
-        return TensAdd(*args1)
 
     def _print(self):
         a = []
         args = self.args
         for x in args:
             a.append(str(x))
-        a.sort()
+        #a.sort()
         s = ' + '.join(a)
         s = s.replace('+ -', '- ')
         return s
@@ -2734,7 +3283,7 @@ class TensAdd(TensExpr):
         >>> c1 = eA.coeff
         >>> c2 = eB.coeff
         >>> TensAdd.from_TIDS_list([c1, c2], [t1, t2])
-        2*B(i, j) + 3*A(i, j)
+        3*A(i, j) + 2*B(i, j)
 
         If the coefficient parameter is a scalar, then it will be applied
         as a coefficient on all ``TIDS`` objects.
@@ -2766,6 +3315,325 @@ class TensAdd(TensExpr):
         if not self.data:
             raise ValueError("No iteration on abstract tensors")
         return self.data.flatten().__iter__()
+
+
+@doctest_depends_on(modules=('numpy',))
+class Tensor(TensExpr):
+    """
+    """
+
+    is_commutative = False
+
+    def __new__(cls, tensor_head, indices, **kw_args):
+        try:
+            tids = TIDS.from_components_and_indices((tensor_head,), indices)
+        except Exception as e:
+            tids = None
+        indices = Tensor._add_automatrix_indices(tensor_head, indices, tensor_head._matrix_behavior==True)
+        Tensor._check_indices_compability(tensor_head, indices)
+        indices, free_ind, dummy_ind = Tensor._detect_contracted_indices(indices)
+        # TODO: replace contracted indices with dummy ones.
+        obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
+        obj._tids = tids
+        # TODO: do we need these two sets?
+        obj._free_indices = free_ind
+        obj._dummy_indices = dummy_ind
+        obj._is_canon_bp = kw_args.get('is_canon_bp', False)
+        return obj
+
+    @staticmethod
+    def _add_automatrix_indices(tensor_head, indices, add_trailing=False):
+        ind_types = tensor_head.index_types
+        if len(indices) > len(ind_types):
+            raise ValueError('wrong number of indices')
+        if (not add_trailing) and (len(indices) != len(ind_types)):
+            raise ValueError('wrong number of indices')
+
+        indices = [i for i in indices]
+        typd = defaultdict(lambda: 0)
+
+        for i, ind in enumerate(indices):
+            typ_counter = typd[ind_types[i]]
+            typd[ind_types[i]] += 1
+
+            if ind != True:
+                continue
+
+            if typ_counter == 0:
+                indices[i] = ind_types[i].auto_left
+            elif typ_counter == 1:
+                indices[i] = -ind_types[i].auto_right
+            else:
+                raise ValueError('wrong number of indices')
+
+        if not add_trailing:
+            return indices
+
+        #indices = list(indices)
+
+        for i in range(len(indices), len(ind_types)):
+            typ_counter = typd[ind_types[i]]
+            typd[ind_types[i]] += 1
+            ind_typ = ind_types[i]
+
+            if typ_counter == 0:
+                indices.append(ind_typ.auto_left)
+            elif typ_counter == 1:
+                indices.append(-ind_typ.auto_right)
+            else:
+                raise ValueError('wrong number of indices')
+        return indices
+
+#        typd = collections.defaultdict(lambda: 0)
+#        new_indices = [None]*len(indices)
+#        index_pointer = 0
+#        for i, ind_typ in enumerate(ind_types):
+#            if indices[index_pointer].tensortype == ind_typ:
+#                new_indices[i] = indices[index_pointer]
+#                index_pointer += 1
+#                continue
+#            typ_counter = typd[ind_typ]
+#            if typ_counter == 0:
+#                new_indices[i] = ind_typ.auto_left
+#            elif typ_counter == 1:
+#                new_indices[i] = ind_typ.auto_right
+#            else:
+#                raise ValueError('wrong index signature')
+
+    @staticmethod
+    def _check_indices_compability(tensor_head, indices):
+        ind_types = tensor_head.index_types
+        # TODO: already asserted?
+        if len(indices) != len(ind_types):
+            raise ValueError('wrong number of indices')
+
+        for index, ind_type in zip(indices, ind_types):
+            if index.tensortype != ind_type:
+                raise ValueError('incompatible index types')
+
+# TODO: rename?
+    @staticmethod
+    def _detect_contracted_indices(indices):
+        # TODO: finish.
+        indices = list(indices)
+
+        free_indices = set([])
+        dummy_indices = set([])
+        dum_type_counter = defaultdict(lambda: 0)
+        for i, index in enumerate(indices):
+            if not isinstance(index, TensorIndex):
+                # TODO: remove to support wilds.
+                raise ValueError('index is not a TensorIndex')
+                continue
+            if isinstance(index, DummyTensorIndex):
+                # this means that a tensor with dummy indices is being
+                # constructed, it has to be handled as a free index until the
+                # contraction is detected:
+                dummy_indices.add(index)
+                continue
+            if index in free_indices:
+                raise ValueError('cannot repeat the same index')
+            if index in dummy_indices:
+                raise ValueError('wrong index signature')
+            if -index in free_indices:
+                free_indices.remove(-index)
+                count = dum_type_counter[index.tensortype]
+                dum_type_counter[index.tensortype] = count + 1
+                dummy_fmt = index.tensortype.dummy_fmt[:-3]
+                dummy_name = dummy_fmt + "_" + str(count)
+                dummy_ind = DummyTensorIndex(*((dummy_name,)+index.args[1:]))
+                dummy_indices.add(dummy_ind)
+                dummy_indices.add(-dummy_ind)
+                indices[i] = dummy_ind
+                indices[indices.index(-index)] = -dummy_ind
+            else:
+                free_indices.add(index)
+        return indices, set(free_indices), set(dummy_indices)
+
+    @property
+    def has_index_order(self):
+        # TODO: add tests for `has_index_order`
+        # TODO: check if this should always be true:
+        return True
+
+    @property
+    def coeff(self):
+        return S.One
+
+    @property
+    def component(self):
+        return self.args[0]
+
+    @property
+    def components(self):
+        return [self.args[0]]
+
+    def split(self):
+        return [self]
+
+    def expand(self):
+        return self
+
+    def sorted_components(self):
+        return self
+
+    def get_indices(self):
+        # TODO: Remove this.
+        return list(self.args[1])
+
+    @property
+    def indices_list(self):
+        return list(self.args[1])
+
+    @property
+    def free_indices_list(self):
+        return [i for i in self.args[1] if i in self.free_indices_set]
+
+#    @property
+#    def free_indices_set(self):
+#        return [i for i in self.args[1] if i in self.free_indices_set]
+
+    @property
+    def dummy_indices_list(self):
+        return [i for i in self.args[1] if i not in self.free_indices_set]
+
+    @property
+    def dummy_indices_set(self):
+        return set(self.dummy_indices_list)
+
+    def as_base_exp(self):
+        return self, S.One
+
+    def __call__(self, *indices):
+        # TODO: add docstring
+        # TODO: is this correct?
+        fi = self.free_indices_list[:len(indices)]
+        fi.sort()
+        if len(indices) > len(fi):
+            raise ValueError("too many indices") # TODO create a unique function for this.
+        return self.xreplace(dict(zip(fi, indices)))  # TODO: xreplace acts on all subexpressions, it could act on independent subexpressions in the args-tree.
+
+    # TODO: put this into TensExpr?
+    def __iter__(self):
+        return self.data.flatten().__iter__()
+
+    # TODO: put this into TensExpr?
+    def __getitem__(self, item):
+        return self.data[item]
+
+    @property
+    def data(self):
+        return _tensor_data_substitution_dict[self]
+
+    @data.setter
+    def data(self, data):
+        # TODO: check data compatibility with properties of tensor.
+        _tensor_data_substitution_dict[self] = data
+
+    @data.deleter
+    def data(self):
+        if self in _tensor_data_substitution_dict:
+            del _tensor_data_substitution_dict[self]
+        if self.metric in _tensor_data_substitution_dict:
+            del _tensor_data_substitution_dict[self.metric]
+
+    def __mul__(self, other):
+        return TensMul(self, other)
+
+    def __rmul__(self, other):
+        return TensMul(other, self)
+
+    def __div__(self, other):
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        return TensMul(self, S.One/other, is_canon_bp=self.is_canon_bp)
+
+    def __rdiv__(self, other):
+        raise ValueError('cannot divide by a tensor')
+
+    def __add__(self, other):
+        return TensAdd(self, other)
+
+    def __radd__(self, other):
+        return TensAdd(other, self)
+
+    def __sub__(self, other):
+        return TensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return TensAdd(other, self)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    def __neg__(self):
+        return TensMul(S.NegativeOne, self)
+
+    def _print(self):
+        indices_str = str(tuple(self.get_indices())).replace(',)', ')')
+        if indices_str == "()":
+            return str(self.component.args[0])
+        return str(self.component.args[0]) + indices_str
+
+    def equals(self, other):
+        if other == 0:
+            return self.coeff == 0
+        other = sympify(other)
+        if not isinstance(other, TensExpr):
+            assert not self.components
+            return S.One == other
+
+        def _get_compar_comp(self):
+            t = self.canon_bp()
+#             r = (t.coeff, tuple(t.components), \
+#                     tuple(sorted(t.free)), tuple(sorted(t.dum)))
+            r = (t.coeff, tuple(t.components), \
+                    tuple(sorted(t.free_indices_set)), tuple(t.dummy_indices_set))
+            return r
+
+        return _get_compar_comp(self) == _get_compar_comp(other)
+
+    def contract_delta(self, metric):
+        return self.contract_metric(metric)
+
+#     def canon_bp(self):
+#         """
+#         Canonicalize using the Butler-Portugal algorithm for canonicalization
+#         under monoterm symmetries.
+#
+#         Examples
+#         ========
+#
+#         >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+#         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+#         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
+#         >>> A = tensorhead('A', [Lorentz]*2, [[2]])
+#         >>> t = A(m0,-m1)*A(m1,-m0)
+#         >>> t.canon_bp()
+#         -A(L_0, L_1)*A(-L_0, -L_1)
+#         >>> t = A(m0,-m1)*A(m1,-m2)*A(m2,-m0)
+#         >>> t.canon_bp()
+#         0
+#         """
+#         if not self.has_index_order:
+#             return self
+#         if self.is_canon_bp:
+#             return self
+#         # t = self.sorted_components()
+#         g, dummies, msym, v = self._tids.canon_args()
+#         can = canonicalize(g, dummies, msym, *v)
+#         if can == 0:
+#             return S.Zero
+#         # TODO remove
+#         # tmul = self.func(self.component, self._tids.perm2tensor(can, True).to_indices())
+#
+#         tmul = self.perm2tensor(can, True)
+#         return tmul
+
+#        # TODO: remove
+#        tmul = TensMul(*self._tids.perm2tensor(can, True).to_tensmul_args())
+#        tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
+#        return tmul
 
 
 @doctest_depends_on(modules=('numpy',))
@@ -2809,74 +3677,179 @@ class TensMul(TensExpr):
 
     """
 
-    def __new__(cls, coeff, *args, **kw_args):
-        coeff = sympify(coeff)
+    def __new__(cls, *args, **kw_args):
+        #components = []
+        #indices = []
+        # TODO: tensmul arguments are not flattened, i.e. there is still
+        # a tensmul object inside the arguments when constructed. Add
+        # test for this.
 
-        if len(args) == 2:
-            components = args[0]
-            indices = args[1]
-            tids = TIDS.from_components_and_indices(components, indices)
-        elif len(args) == 1:
-            tids = args[0]
-            components = tids.components
-            indices = tids.to_indices()
-        else:
-            raise TypeError("wrong construction")
+        def _parse_args(args):
+            # TODO: this function should just collect the commutative scalars and put them into coeff
+            # TODO: it was changed to include also non-commutative arguments.
+            new_args = []
+            coeff = S.One
+            for arg in args:
+                if isinstance(arg, TensMul):
+                    if arg.args:
+                        if not isinstance(arg.args[0], TensExpr):
+                            coeff *= arg.args[0]
+                            new_args.extend(arg.args[1:])
+                        else:
+                            new_args.extend(arg.args)
+                    continue
+                elif not isinstance(arg, TensExpr):
+                    arg = sympify(arg)
+                    coeff *= arg
+#                    if arg.is_commutative:
+#                        coeff *= arg
+                    continue
+                new_args.append(arg)
+            return coeff, new_args
 
-        for i in indices:
-            if not isinstance(i, TensorIndex):
-                raise TypeError("i should be of type TensorIndex")
+        coeff, new_args = _parse_args(args)
+        if new_args == []:
+            return coeff
 
-        t_components = Tuple(*components)
-        t_indices = Tuple(*indices)
+        if coeff == S.Zero:
+            return S.Zero
 
-        obj = Basic.__new__(cls, coeff, t_components, t_indices)
+        if coeff != 1:
+            # if coeff is not one, add it as first argument:
+            new_args = [coeff] + new_args
+        elif len(new_args) == 1:
+            # if there is only one element and coefficient is one, don't create a TensMul:
+            return new_args[0]
+
+#        tids = None
+#        if all([i.has_index_order for i in args if isinstance(i, TensExpr)]):
+#            has_index_order = True
+#        else:
+#            has_index_order = False
+
+            #try:
+                # TODO: should tids be generated by multiplication?
+                # TODO: make sure that tids only exists if TensMul is canonicalizable.
+                #tids = TIDS.from_components_and_indices(components, indices)
+#                seq = [i._tids for i in args if isinstance(i, TensExpr)]
+#                if seq:
+#                    tids = reduce(lambda x, y: x*y, seq)
+                # TODO: this alternative does not work (makes canon_bp() get wrong results):
+#                all_tids = [i._tids for i in new_args if isinstance(i, TensExpr)]
+#                tids = all_tids[0]
+#                for i in all_tids[1:]:
+#                    tids *= i
+
+#                if globals().get('flag_no', True):
+#                    globals()['flag_no'] = False
+#                    assert coeff*TensMul(*tids.to_tensmul_args()) == TensMul(*args)
+#                    globals()['flag_no'] = True
+
+#                has_index_order = True
+#            except (ValueError, TypeError, AttributeError):
+#                # TODO: how to handle index contraction with no TIDS?
+#                # this applies to the class Tensor as well.
+#                tids = None
+#            except Exception:
+#                tids = None
+
+        # TODO: handle index contractions...
+        new_args, free_indices, dummy_indices = TensExpr._detect_contracted_indices_in_args(new_args)
+
+        obj = Basic.__new__(cls, *new_args)
+
         obj._types = []
-        for t in tids.components:
-            obj._types.extend(t._types)
-        obj._tids = tids
-        obj._ext_rank = len(obj._tids.free) + 2*len(obj._tids.dum)
+#        for t in tids.components:
+#            obj._types.extend(t._types)
+#        obj._tids = tids
+# TODO: this will fail:
+#        obj._ext_rank = len(obj._tids.free) + 2*len(obj._tids.dum)
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)
-        obj._matrix_behavior_kinds = dict()
+        obj._free_indices = free_indices
+        obj._dummy_indices = dummy_indices
         return obj
 
-    @staticmethod
-    def from_data(coeff, components, free, dum, **kw_args):
-        tids = TIDS(components, free, dum)
-        return TensMul.from_TIDS(coeff, tids, **kw_args)
+    @property
+    # TODO
+    #@cacheit
+    def has_index_order(self):
+        return all([arg.has_index_order for arg in self.args if isinstance(arg, TensExpr)])
 
+# TODO: rename get_indices() to @property indices and deprecate the old one?
+
+## TODO: rename?
+#    @staticmethod
+#    def _detect_contracted_indices_in_args(args):
+#        # TODO: finish.
+#        #free = set([])
+#        free_to_component_mapping = {}
+#        dummy_to_arg_mapping = {}
+#        dummy_type_counter = defaultdict(lambda: 0)
+#        #dummies = set([])
+#
+#        for arg_i, arg in enumerate(args):
+#            if not isinstance(arg, Tensor):
+#                continue
+#            for index in arg.get_indices():
+#                if not isinstance(index, FreeTensorIndex):
+#                    continue
+#
+#                if index in free_to_component_mapping:
+#                    raise ValueError('wrong index signature')
+#                if -index in free_to_component_mapping:
+#                    # TODO: wrong comment:::
+#                    # contract the index:
+#                    # this means substitute it by dummies.
+#                    dummy_to_arg_mapping[index] = arg_i
+#                    dummy_to_arg_mapping[-index] = free_to_component_mapping.pop(-index)
+#                free_to_component_mapping[index] = arg_i
+#
+#        for index, pos1 in dummy_to_arg_mapping.items():
+#            dummy_fmt = index.tensortype.dummy_fmt[:-3]
+#            # TODO: this is repeated twice, find a way to write it just once:
+#            count = dummy_type_counter[index.tensortype]
+#            dummy_type_counter[index.tensortype] = count + 1
+#            dummy_name = dummy_fmt + "_" + str(count)
+#            dummy = DummyTensorIndex(*((dummy_name,)+index.args[1:]))
+#            args[pos1] = args[pos1].subs(index, dummy)
+#            pos2 = dummy_to_arg_mapping.pop(-index)
+#            args[pos2] = args[pos2].subs(-index, -dummy)
+#
+#        return args
+
+# TODO: restore
+#    @staticmethod
+#    def from_data(coeff, components, free, dum, **kw_args):
+#        tids = TIDS(components, free, dum)
+#        return TensMul.from_TIDS(coeff, tids, **kw_args)
+
+    # TODO: deprecate
+    # TODO: or better remove?
     @staticmethod
     def from_TIDS(coeff, tids, **kw_args):
-        return TensMul(coeff, tids, **kw_args)
-
-    @property
-    def free_args(self):
-        return sorted([x[0] for x in self.free])
+        # TODO: correct
+        return coeff*TensMul(*tids.to_tensmul_args())
+    # TODO: remove
+#        components, free, dum = tids.to_tensmul_args()
+#        free = map(lambda x: (FreeTensorIndex(*x[0].args), x[1], x[2]), free)
+#        return TensMul(coeff, components, free, dum, **kw_args)
 
     @property
     def components(self):
-        return self._tids.components[:]
-
-    @property
-    def free(self):
-        return self._tids.free[:]
+        ret = []
+        for i in self.args:
+            if isinstance(i, Tensor):
+                ret.append(i.component)
+        return ret
 
     @property
     def coeff(self):
         return self._coeff
 
     @property
-    def dum(self):
-        return self._tids.dum[:]
-
-    @property
     def rank(self):
-        return len(self.free)
-
-    @property
-    def types(self):
-        return self._types[:]
+        return len(_free_indices(self))
 
     def equals(self, other):
         if other == 0:
@@ -2886,13 +3859,24 @@ class TensMul(TensExpr):
             assert not self.components
             return self._coeff == other
 
-        def _get_compar_comp(self):
-            t = self.canon_bp()
-            r = (t._coeff, tuple(t.components), \
-                    tuple(sorted(t.free)), tuple(sorted(t.dum)))
-            return r
+#        def _get_compar_comp(self):
+#            t = self.canon_bp()
+#            r = (t.coeff, tuple(t.components), \
+#                    tuple(sorted(t.free_indices_list)), \
+#                    tuple(sorted(t.dummy_indices_list)))
+#            return r
 
-        return _get_compar_comp(self) == _get_compar_comp(other)
+        s1 = self.expand()
+        s2 = other.expand()
+
+        if s1.has_index_order != s2.has_index_order:
+            return False
+
+        if s1.has_index_order:
+            s1 = s1.canon_bp()
+            s2 = s2.canon_bp()
+
+        return s1 == s2
 
     def get_indices(self):
         """
@@ -2915,34 +3899,85 @@ class TensMul(TensExpr):
         >>> t.get_indices()
         [m1, m0, m2]
         """
-        indices = [None]*self._ext_rank
-        start = 0
-        pos = 0
-        vpos = []
-        components = self.components
-        for t in components:
-            vpos.append(pos)
-            pos += t._rank
-        cdt = defaultdict(int)
-        # if the free indices have names with dummy_fmt, start with an
-        # index higher than those for the dummy indices
-        # to avoid name collisions
-        for indx, ipos, cpos in self.free:
-            if indx._name.split('_')[0] == indx._tensortype._dummy_fmt[:-3]:
-                cdt[indx._tensortype] = max(cdt[indx._tensortype], int(indx._name.split('_')[1]) + 1)
-            start = vpos[cpos]
-            indices[start + ipos] = indx
-        for ipos1, ipos2, cpos1, cpos2 in self.dum:
-            start1 = vpos[cpos1]
-            start2 = vpos[cpos2]
-            typ1 = components[cpos1].index_types[ipos1]
-            assert typ1 == components[cpos2].index_types[ipos2]
-            fmt = typ1._dummy_fmt
-            nd = cdt[typ1]
-            indices[start1 + ipos1] = TensorIndex(fmt % nd, typ1)
-            indices[start2 + ipos2] = TensorIndex(fmt % nd, typ1, False)
-            cdt[typ1] += 1
+        # TODO: this does not return wilds
+        indices = []
+        # TODO: add tests for get_indices() for Tensor, TensMul.
+        # get_indices() should work only when indices are sortable.
+        for arg in self.args:
+            if not isinstance(arg, TensExpr):
+                continue
+            indices.extend(arg.get_indices())
+
         return indices
+
+#        return self.atoms(TensorIndex)
+
+#        indices = [None]*self._ext_rank
+#        start = 0
+#        pos = 0
+#        vpos = []
+#        components = self.components
+#        for t in components:
+#            vpos.append(pos)
+#            pos += t._rank
+#        cdt = defaultdict(int)
+#        # if the free indices have names with dummy_fmt, start with an
+#        # index higher than those for the dummy indices
+#        # to avoid name collisions
+#        for indx, ipos, cpos in self.free:
+#            if indx._name.split('_')[0] == indx._tensortype._dummy_fmt[:-3]:
+#                cdt[indx._tensortype] = max(cdt[indx._tensortype], int(indx._name.split('_')[1]) + 1)
+#            start = vpos[cpos]
+#            indices[start + ipos] = indx
+#        for ipos1, ipos2, cpos1, cpos2 in self.dum:
+#            start1 = vpos[cpos1]
+#            start2 = vpos[cpos2]
+#            typ1 = components[cpos1].index_types[ipos1]
+#            assert typ1 == components[cpos2].index_types[ipos2]
+#            fmt = typ1._dummy_fmt
+#            nd = cdt[typ1]
+#            indices[start1 + ipos1] = TensorIndex(fmt % nd, typ1)
+#            indices[start2 + ipos2] = TensorIndex(fmt % nd, typ1, False)
+#            cdt[typ1] += 1
+#        return indices
+
+    def sorted_components(self):
+        """
+        TODO replace 'sorted_components'
+        should this be a part of TensMul?
+
+        TODO: test this with non-commutative scalars.
+
+        Returns a tensor with sorted components.
+
+        The sorting is done taking into account the commutation group
+        of the component tensors.
+        """
+        #from sympy.combinatorics.permutations import _af_invert
+        #cv = list(zip(self.args, range(len(self.components))))
+        if self.coeff != 1:
+            cv = list(zip(self.args[1:], range(len(self.components))))
+        else:
+            cv = list(zip(self.args, range(len(self.components))))
+        sign = 1
+        n = len(cv) - 1
+
+        for i in range(n):
+            for j in range(n, i, -1):
+                comp0 = cv[j][0].component
+                compm1 = cv[j-1][0].component
+                c = compm1.commutes_with(comp0)
+                if c not in [0, 1]:
+                    continue
+                if (compm1._types, compm1._name) > \
+                        (comp0._types, comp0._name):
+                    cv[j-1], cv[j] = cv[j], cv[j-1]
+                    if c:
+                        sign = -sign
+
+        #cv.sort(key=lambda x: x[1])
+        new_args = [x[0] for x in cv]
+        return TensMul(sign*self.coeff, *new_args)
 
     def split(self):
         """
@@ -2965,18 +4000,51 @@ class TensMul(TensExpr):
         >>> t.split()
         [A(a, L_0), B(-L_0, c)]
         """
-        indices = self.get_indices()
-        pos = 0
-        components = self.components
-        if not components:
-            return [TensMul.from_data(self._coeff, [], [], [])]
-        res = []
-        for t in components:
-            t1 = t(*indices[pos:pos + t._rank])
-            pos += t._rank
-            res.append(t1)
-        res[0] = TensMul.from_data(self._coeff, res[0].components, res[0]._tids.free, res[0]._tids.dum, is_canon_bp=res[0]._is_canon_bp)
-        return res
+        coeff = S.One
+        args = []
+        for i, arg in enumerate(self.args):
+            if not isinstance(arg, TensExpr):
+                coeff *= arg
+                continue
+            if not arg.has_index_order:
+                # TODO: should this be skipped?
+                continue
+            dummies = arg.dummy_indices_list
+            # TODO: Remove
+            # frees = [FreeTensorIndex(*dummy.args) for dummy in dummies]
+            frees = [FreeTensorIndex(*dummy.args) for dummy in dummies]
+            args.append(coeff*arg.subs(dict(zip(dummies, frees))))
+            coeff = S.One
+        return args
+
+        # TODO: remove
+#        indices = self.get_indices()
+#        pos = 0
+#        components = self.components
+#        if not components:
+#            return [TensMul.from_data(self._coeff, [], [], [])]
+#        res = []
+#        for t in components:
+#            t1 = t(*indices[pos:pos + t._rank])
+#            pos += t._rank
+#            res.append(t1)
+#        res[0] = TensMul.from_data(self._coeff, res[0].components, res[0]._tids.free, res[0]._tids.dum, is_canon_bp=res[0].is_canon_bp)
+#        return res
+
+    # TODO
+    def expand(self):
+        """
+        """
+        # detect whether it has TensAdd subexpressions.
+        #
+        exp_pre = []
+        for arg in self.args:
+            if isinstance(arg, TensAdd):
+                eargs = list(arg.args[:])
+                exp_pre.append(eargs)
+            else:
+                exp_pre.append([arg])
+        return TensAdd(*[TensMul(*item) for item in itertools.product(*exp_pre)])
 
     def __add__(self, other):
         return TensAdd(self, other)
@@ -3012,63 +4080,24 @@ class TensMul(TensExpr):
         """
         other = sympify(other)
         if not isinstance(other, TensExpr):
-            coeff = self._coeff*other
-            tmul = TensMul.from_TIDS(coeff, self._tids, is_canon_bp=self._is_canon_bp)
-            tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
-            return tmul
+            return TensMul(*(self.args + (other,)))
         if isinstance(other, TensAdd):
-            return TensAdd(*[self*x for x in other.args])
+            return TensAdd(*[TensMul(self, x) for x in other.args])
 
-        matrix_behavior_kinds = dict()
-
-        self_matrix_behavior_kinds = self._matrix_behavior_kinds
-        other_matrix_behavior_kinds = other._matrix_behavior_kinds
-
-        for key, v1 in self_matrix_behavior_kinds.items():
-            if key in other_matrix_behavior_kinds:
-                v2 = other_matrix_behavior_kinds[key]
-                if len(v1) == 1:
-                    other = other.substitute_indices((v2[0], -v1[0]))
-                    if len(v2) == 2:
-                        matrix_behavior_kinds[key] = (v2[1],)
-                elif len(v1) == 2:
-                    auto_index = v1[1]._tensortype.auto_index
-                    self = self.substitute_indices((v1[1], -auto_index))
-                    other = other.substitute_indices((v2[0], auto_index))
-                    if len(v2) == 1:
-                        matrix_behavior_kinds[key] = (v1[0],)
-                    elif len(v2) == 2:
-                        matrix_behavior_kinds[key] = (v1[0], v2[1])
-            else:
-                matrix_behavior_kinds[key] = v1
-
-        for key, v2 in other_matrix_behavior_kinds.items():
-            if key in self_matrix_behavior_kinds:
-                continue
-            matrix_behavior_kinds[key] = v2
-
-        new_tids = self._tids*other._tids
-        coeff = self._coeff*other._coeff
-        tmul = TensMul.from_TIDS(coeff, new_tids)
-        if isinstance(tmul, TensExpr):
-            tmul._matrix_behavior_kinds = matrix_behavior_kinds
-
-        return tmul
+        tmul = TensMul(self, other)
+        return tmul.renumber_dummies()
 
     def __rmul__(self, other):
         other = sympify(other)
-        coeff = other*self._coeff
-        tmul = TensMul.from_TIDS(coeff, self._tids)
-        tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
-        return tmul
+        return TensMul(other, *self.args)
 
     def __div__(self, other):
         other = sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
-        coeff = self._coeff/other
-        tmul = TensMul.from_TIDS(coeff, self._tids, is_canon_bp=self._is_canon_bp)
-        tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
+        #coeff = self._coeff/other
+        #tmul = TensMul.from_TIDS(coeff, self._tids, is_canon_bp=self.is_canon_bp)
+        tmul = TensMul(S.One/other, *self.args, is_canon_bp=self.is_canon_bp)
         return tmul
 
     def __rdiv__(self, other):
@@ -3078,293 +4107,11 @@ class TensMul(TensExpr):
         return self.data[item]
 
     __truediv__ = __div__
-    __truerdiv__ = __rdiv__
-
-    def sorted_components(self):
-        """
-        Returns a tensor with sorted components
-        calling the corresponding method in a ``TIDS`` object.
-        """
-        new_tids, sign = self._tids.sorted_components()
-        coeff = -self._coeff if sign == -1 else self._coeff
-        t = TensMul.from_TIDS(coeff, new_tids)
-        return t
-
-    def perm2tensor(self, g, canon_bp=False):
-        """
-        Returns the tensor corresponding to the permutation ``g``
-
-        For further details, see the method in ``TIDS`` with the same name.
-        """
-        new_tids = self._tids.perm2tensor(g, canon_bp)
-        coeff = self._coeff
-        if g[-1] != len(g) - 1:
-            coeff = -coeff
-        res = TensMul.from_TIDS(coeff, new_tids, is_canon_bp=canon_bp)
-        res._matrix_behavior_kinds = self._matrix_behavior_kinds
-        return res
-
-    def canon_bp(self):
-        """
-        Canonicalize using the Butler-Portugal algorithm for canonicalization
-        under monoterm symmetries.
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> A = tensorhead('A', [Lorentz]*2, [[2]])
-        >>> t = A(m0,-m1)*A(m1,-m0)
-        >>> t.canon_bp()
-        -A(L_0, L_1)*A(-L_0, -L_1)
-        >>> t = A(m0,-m1)*A(m1,-m2)*A(m2,-m0)
-        >>> t.canon_bp()
-        0
-        """
-        if self._is_canon_bp:
-            return self
-        if not self.components:
-            return self
-        t = self.sorted_components()
-        g, dummies, msym, v = t._tids.canon_args()
-        can = canonicalize(g, dummies, msym, *v)
-        if can == 0:
-            return S.Zero
-        tmul = t.perm2tensor(can, True)
-        tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
-        return tmul
+    __rtruediv__ = __rdiv__
 
     def contract_delta(self, delta):
         t = self.contract_metric(delta)
         return t
-
-    def contract_metric(self, g):
-        """
-        Raise or lower indices with the metric ``g``
-
-        Parameters
-        ==========
-
-        g : metric
-
-        Notes
-        =====
-
-        see the ``TensorIndexType`` docstring for the contraction conventions
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> g = Lorentz.metric
-        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
-        >>> t = p(m0)*q(m1)*g(-m0, -m1)
-        >>> t.canon_bp()
-        metric(L_0, L_1)*p(-L_0)*q(-L_1)
-        >>> t.contract_metric(g).canon_bp()
-        p(L_0)*q(-L_0)
-        """
-        components = self.components
-        antisym = g.index_types[0].metric_antisym
-        #if not any(x == g for x in components):
-        #    return self
-        # list of positions of the metric ``g``
-        gpos = [i for i, x in enumerate(components) if x == g]
-        if not gpos:
-            return self
-        coeff = self._coeff
-        tids = self._tids
-        dum = tids.dum[:]
-        free = tids.free[:]
-        elim = set()
-        for gposx in gpos:
-            if gposx in elim:
-                continue
-            free1 = [x for x in free if x[-1] == gposx]
-            dum1 = [x for x in dum if x[-2] == gposx or x[-1] == gposx]
-            if not dum1:
-                continue
-            elim.add(gposx)
-            if len(dum1) == 2:
-                if not antisym:
-                    dum10, dum11 = dum1
-                    if dum10[3] == gposx:
-                        # the index with pos p0 and component c0 is contravariant
-                        c0 = dum10[2]
-                        p0 = dum10[0]
-                    else:
-                        # the index with pos p0 and component c0 is covariant
-                        c0 = dum10[3]
-                        p0 = dum10[1]
-                    if dum11[3] == gposx:
-                        # the index with pos p1 and component c1 is contravariant
-                        c1 = dum11[2]
-                        p1 = dum11[0]
-                    else:
-                        # the index with pos p1 and component c1 is covariant
-                        c1 = dum11[3]
-                        p1 = dum11[1]
-                    dum.append((p0, p1, c0, c1))
-                else:
-                    dum10, dum11 = dum1
-                    # change the sign to bring the indices of the metric to contravariant
-                    # form; change the sign if dum10 has the metric index in position 0
-                    if dum10[3] == gposx:
-                        # the index with pos p0 and component c0 is contravariant
-                        c0 = dum10[2]
-                        p0 = dum10[0]
-                        if dum10[1] == 1:
-                            coeff = -coeff
-                    else:
-                        # the index with pos p0 and component c0 is covariant
-                        c0 = dum10[3]
-                        p0 = dum10[1]
-                        if dum10[0] == 0:
-                            coeff = -coeff
-                    if dum11[3] == gposx:
-                        # the index with pos p1 and component c1 is contravariant
-                        c1 = dum11[2]
-                        p1 = dum11[0]
-                        coeff = -coeff
-                    else:
-                        # the index with pos p1 and component c1 is covariant
-                        c1 = dum11[3]
-                        p1 = dum11[1]
-                    dum.append((p0, p1, c0, c1))
-
-            elif len(dum1) == 1:
-                if not antisym:
-                    dp0, dp1, dc0, dc1 = dum1[0]
-                    if dc0 == dc1:
-                        # g(i, -i)
-                        typ = g.index_types[0]
-                        if typ._dim is None:
-                            raise ValueError('dimension not assigned')
-                        coeff = coeff*typ._dim
-
-                    else:
-                        # g(i0, i1)*p(-i1)
-                        if dc0 == gposx:
-                            p1 = dp1
-                            c1 = dc1
-                        else:
-                            p1 = dp0
-                            c1 = dc0
-                        ind, p, c = free1[0]
-                        free.append((ind, p1, c1))
-                else:
-                    dp0, dp1, dc0, dc1 = dum1[0]
-                    if dc0 == dc1:
-                        # g(i, -i)
-                        typ = g.index_types[0]
-                        if typ._dim is None:
-                            raise ValueError('dimension not assigned')
-                        coeff = coeff*typ._dim
-
-                        if dp0 < dp1:
-                            # g(i, -i) = -D with antisymmetric metric
-                            coeff = -coeff
-                    else:
-                        # g(i0, i1)*p(-i1)
-                        if dc0 == gposx:
-                            p1 = dp1
-                            c1 = dc1
-                            if dp0 == 0:
-                                coeff = -coeff
-                        else:
-                            p1 = dp0
-                            c1 = dc0
-                        ind, p, c = free1[0]
-                        free.append((ind, p1, c1))
-            dum = [x for x in dum if x not in dum1]
-            free = [x for x in free if x not in free1]
-
-        shift = 0
-        shifts = [0]*len(components)
-        for i in range(len(components)):
-            if i in elim:
-                shift += 1
-                continue
-            shifts[i] = shift
-        free = [(ind, p, c - shifts[c]) for (ind, p, c) in free if c not in elim]
-        dum = [(p0, p1, c0 - shifts[c0], c1 - shifts[c1]) for  i, (p0, p1, c0, c1) in enumerate(dum) if c0 not in elim and c1 not in elim]
-        components = [c for i, c in enumerate(components) if i not in elim]
-        tids = TIDS(components, free, dum)
-        res = TensMul.from_TIDS(coeff, tids)
-        return res
-
-    def substitute_indices(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        ``index_types`` list of tuples ``(old_index, new_index)``
-
-        Note: this method will neither raise or lower the indices, it will just replace their symbol.
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
-        """
-        free = self.free
-        free1 = []
-        for j, ipos, cpos in free:
-            for i, v in index_tuples:
-                if i._name == j._name and i._tensortype == j._tensortype:
-                    if i._is_up == j._is_up:
-                        free1.append((v, ipos, cpos))
-                    else:
-                        free1.append((-v, ipos, cpos))
-                    break
-            else:
-                free1.append((j, ipos, cpos))
-
-        t = TensMul.from_data(self._coeff, self.components, free1, self.dum)
-
-        # object is rebuilt in order to make sure that all contracted indices get recognized as dummies.
-        # t2 = TensMul(*t.args)
-        return t
-
-    def fun_eval(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        ``index_types`` list of tuples ``(old_index, new_index)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.fun_eval((i, k),(-j, l))
-        A(k, L_0)*B(-L_0, l)
-        """
-        free = self.free
-        free1 = []
-        for j, ipos, cpos in free:
-            # search j in index_tuples
-            for i, v in index_tuples:
-                if i == j:
-                    free1.append((v, ipos, cpos))
-                    break
-            else:
-                free1.append((j, ipos, cpos))
-        return TensMul.from_data(self._coeff, self.components, free1, self.dum)
 
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
@@ -3383,13 +4130,16 @@ class TensMul(TensExpr):
         >>> t(i1)
         p(i1)*q(L_0)*q(-L_0)
         """
-        free_args = self.free_args
         indices = list(indices)
-        if [x._tensortype for x in indices] != [x._tensortype for x in free_args]:
+        # get a set (not a list), so this applies even if the order is not
+        # specified:
+        sorted_free_indices = ([i for i in self.free_indices_set])
+        sorted_free_indices.sort()
+        if [x._tensortype for x in indices] != [x._tensortype for x in sorted_free_indices]:
             raise ValueError('incompatible types')
-        if indices == free_args:
+        if indices == sorted_free_indices:
             return self
-        t = self.fun_eval(*list(zip(free_args, indices)))
+        t = self.fun_eval(*list(zip(sorted_free_indices, indices)))
 
         # object is rebuilt in order to make sure that all contracted indices
         # get recognized as dummies, but only if there are contracted indices.
@@ -3398,26 +4148,38 @@ class TensMul(TensExpr):
         return t
 
     def _print(self):
-        if len(self.components) == 0:
-            return str(self._coeff)
-        indices = [str(ind) for ind in self.get_indices()]
-        pos = 0
-        a = []
-        for t in self.components:
-            if t._rank > 0:
-                a.append('%s(%s)' % (t.name, ', '.join(indices[pos:pos + t._rank])))
-            else:
-                a.append('%s' % t.name)
-            pos += t._rank
-        res = '*'. join(a)
-        if self._coeff == S.One:
-            return res
-        elif self._coeff == -S.One:
-            return '-%s' % res
-        if self._coeff.is_Atom:
-            return '%s*%s' % (self._coeff, res)
-        else:
-            return '(%s)*%s' %(self._coeff, res)
+        def _format(o):
+            if isinstance(o, TensAdd):
+                return "({0})".format(o)
+            if isinstance(o, Add):
+                return "({0})".format(o)
+            return str(o)
+        outstr = '*'.join([_format(arg) for arg in self.args])
+        if outstr.startswith('-1*'):
+            outstr = '-'+outstr[3:]
+        return outstr
+
+# TODO: remove
+#        if len(self.components) == 0:
+#            return str(self._coeff)
+#        indices = [str(ind) for ind in self.get_indices()]
+#        pos = 0
+#        a = []
+#        for t in self.components:
+#            if t._rank > 0:
+#                a.append('%s(%s)' % (t.name, ', '.join(indices[pos:pos + t._rank])))
+#            else:
+#                a.append('%s' % t.name)
+#            pos += t._rank
+#        res = '*'. join(a)
+#        if self._coeff == S.One:
+#            return res
+#        elif self._coeff == -S.One:
+#            return '-%s' % res
+#        if self._coeff.is_Atom:
+#            return '%s*%s' % (self._coeff, res)
+#        else:
+#            return '(%s)*%s' %(self._coeff, res)
 
     @property
     def data(self):
@@ -3455,7 +4217,7 @@ def tensor_mul(*a):
     product of tensors
     """
     if not a:
-        return TensMul.from_data(S.One, [], [], [])
+        return S.One
     t = a[0]
     for tx in a[1:]:
         t = t*tx
@@ -3469,8 +4231,13 @@ def riemann_cyclic_replace(t_r):
     ``R(m,n,p,q) -> 2/3*R(m,n,p,q) - 1/3*R(m,q,n,p) + 1/3*R(m,p,n,q)``
 
     """
-    free = sorted(t_r.free, key=lambda x: x[1])
-    m, n, p, q = [x[0] for x in free]
+    if not isinstance(t_r, TensExpr):
+        # TODO: should it ever come to this place?
+        return t_r
+    # TODO: remove
+    #free = sorted(t_r.free, key=lambda x: x[1])
+    #m, n, p, q = [x[0] for x in free]
+    m, n, p, q = t_r.free_indices_list
     t0 = S(2)/3*t_r
     t1 = - S(1)/3*t_r.substitute_indices((m,m),(n,q),(p,n),(q,p))
     t2 = S(1)/3*t_r.substitute_indices((m,m),(n,p),(p,n),(q,q))
@@ -3495,10 +4262,13 @@ def riemann_cyclic(t2):
     >>> riemann_cyclic(t)
     0
     """
-    if isinstance(t2, TensMul):
+    t2 = t2.expand()
+    if isinstance(t2, (TensMul, Tensor)):
         args = [t2]
-    else:
+    elif isinstance(t2, TensAdd):
         args = t2.args
+    else:
+        raise ValueError('wrong type')
     a1 = [x.split() for x in args]
     a2 = [[riemann_cyclic_replace(tx) for tx in y] for y in a1]
     a3 = [tensor_mul(*v) for v in a2]
@@ -3508,7 +4278,10 @@ def riemann_cyclic(t2):
     else:
         return canon_bp(t3)
 
+# TODO: introduce get_component_list() and get_components_set() as for the indices?
+
 def get_lines(ex, index_type):
+    # TODO: add test for `get_lines`
     """
     returns ``(lines, traces, rest)`` for an index type,
     where ``lines`` is the list of list of positions of a matrix line,
@@ -3601,3 +4374,14 @@ def get_lines(ex, index_type):
     rest = [x for x in range(len(components)) if x not in rest]
 
     return lines, traces, rest
+
+
+def _free_indices(expr):
+    if isinstance(expr, TensExpr):
+        return expr.free_indices_set
+    return set([])
+
+def _dummy_indices(expr):
+    if isinstance(expr, TensExpr):
+        return expr.dummy_indices_set
+    return set([])
