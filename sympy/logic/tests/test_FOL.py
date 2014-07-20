@@ -3,8 +3,9 @@
 from sympy.utilities.pytest import raises
 
 from sympy.logic.boolalg import (And, Implies, Or, Xor, true)
-from sympy.logic.FOL import (AppliedFunction, AppliedPredicate, Exists,
-    ForAll, Function, mgu, Predicate, standardize, to_pnf, to_snf)
+from sympy.logic.FOL import (AppliedFunction, AppliedPredicate, Constant,
+    Exists, fol_true, ForAll, Function, mgu, Predicate, resolve,
+    standardize, to_pnf, to_snf)
 
 from sympy.abc import X, Y, Z
 
@@ -68,6 +69,36 @@ def test_Exists():
     Exists((X, Y), Exists(Z, A(X, Y) ^ B(Y, Z))).expr == Xor(A(X, Y), B(Y, Z))
 
 
+def test_fol_true():
+    P = Predicate('P')
+    f = Function('f')
+    _P = {(0,): False, 'default': True}
+    _f = {(0,): 1, 'default': 0}
+    assert fol_true(P(0)) is None
+    assert fol_true(P(f(0)), {P:_P, f:_f}) is True
+    assert fol_true(P(f(X)), {X:1, P:_P, f:_f}) is False
+    assert fol_true(ForAll(X, P(X)), {P:_P}) is None
+    assert fol_true(ForAll(X, Exists(Y, P(X) & P(Y))),
+        {X:[0, 1], P:_P}) is None
+
+    from operator import gt, lt, eq
+    GT = Predicate('GT')
+    LT = Predicate('LT')
+    EQ = Predicate('EQ')
+    add1 = Function('add1')
+    _add1 = lambda x: (x + 1) % 6
+    domain = range(6)
+    assert fol_true(LT(add1(X), X), {X:1, LT:lt, add1:_add1}) is False
+    assert fol_true(GT(X, Y) & GT(Y, Z) >> GT(X, Z),
+        {X:3, Y:2, Z:1, GT:gt}) is True
+    assert fol_true(ForAll(X, GT(add1(X), X)),
+        {X:domain, GT:gt, add1:_add1}) is False
+    assert fol_true(Exists(X, EQ(_add1(X), X),),
+        {X:domain, EQ:eq, add1:_add1}) is False
+    assert fol_true(ForAll((X, Y, Z), (GT(X, Y) & GT(Y, Z)) >> GT(X, Z)),
+        {X:domain, Y:domain, Z:domain, GT:gt}) is True
+
+
 def test_standardize():
     from sympy.core.symbol import Symbol
     X0 = Symbol('X0')
@@ -93,7 +124,10 @@ def test_standardize():
 def test_to_pnf():
     P = Predicate('P')
     Q = Predicate('Q')
+    assert to_pnf(True) is true
     assert to_pnf(P(X, Y)) == P(X, Y)
+    assert to_pnf(~ForAll(X, P(X))) == Exists(X, ~P(X))
+    assert to_pnf(~Exists(X, P(X))) == ForAll(X, ~P(X))
     assert to_pnf(Exists(X, ForAll(Y, P(X, Y)))) == \
                 Exists(X, ForAll(Y, P(X, Y)))
     assert to_pnf(ForAll((X, Y), ~(P(X) >> Q(Y)))) == \
@@ -114,27 +148,48 @@ def test_to_snf():
     Q = Predicate('Q')
     f0 = Function('f0')
     f1 = Function('f1')
+    c0 = Constant('c0')
     assert to_snf(ForAll((X, Y), P(X) >> Q(Y))) == \
                 ForAll((X, Y), ~P(X) | Q(Y))
     assert to_snf(Exists(X, ForAll(Y, P(X) | Q(Y)))) == \
-                ForAll(Y, P(X) | Q(Y))
+                ForAll(Y, P(c0) | Q(Y))
     assert to_snf(ForAll(X, Exists(Y, P(X) & Q(Y)))) == \
                 ForAll(X, P(X) & Q(f0(X)))
     assert to_snf(ForAll(W, Exists(X, ForAll(Y, Exists(Z, P(W, X) >>
         Q(Y, Z)))))) == ForAll((W, Y), ~P(W, f0(W)) | Q(Y, f1(W, Y)))
 
 
+def test_to_cnf():
+    pass
+
+
+def test_to_dnf():
+    pass
+
+
 def test_mgu():
-    P = Predicate('A')
-    Q = Predicate('B')
+    P = Predicate('P')
+    Q = Predicate('Q')
     f = Function('f')
     g = Function('g')
+    a = Constant('a')
+    b = Constant('b')
     assert mgu(P(X), Q(X)) is False
     assert mgu(P(X), P(X, Y)) is False
     assert mgu(P(X), P(X)) == {true: true}
     assert mgu(P(X, X), P(Y, f(Y))) is False
-    assert mgu(P('a', X, f(g(Z))), P(Z, f(Y), f(Y))) == {X: f(Y), Z: 'a', Y: g('a')}
+    assert mgu(P(X, Y), P(f(X), Z)) is False
+    assert mgu(P(f(a)), P(f(b))) is False
+    assert mgu(P(X, f(a)), P(Y, X)) == {X: f(a), Y: f(a)}
+    assert mgu(P(a, X, f(g(Z))), P(Z, f(Y), f(Y))) == {X: f(Y), Z: a, Y: g(a)}
 
 
 def test_resolution():
+    P = Predicate('P')
+    Q = Predicate('Q')
+    a = Constant('a')
+    assert resolve(And(P(X) >> Q(X), P(a), ~Q(a))) is False
+
+
+def test_entails():
     pass

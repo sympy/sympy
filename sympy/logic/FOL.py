@@ -125,6 +125,11 @@ class AppliedFunction(Applied):
     pass
 
 
+class Constant(Symbol):
+    is_Constant = True
+    is_Symbol = False
+
+
 class Quantifier(FOL):
     """
     Abstract base class for ForAll and Exists.
@@ -240,8 +245,8 @@ def fol_true(expr, model={}):
     >>> CanFool = Predicate('CanFool')
     >>> X_domain = ['John', 'Jack']
     >>> T_domain = [1, 2, 3]
-    >>> def person(X): return X in X_domain
-    >>> def time(T): return T in T_domain
+    >>> person = lambda X: X in X_domain
+    >>> time = lambda T: T in T_domain
     >>> CanFoolMap = {('John',2):False, ('John',3):False, 'default':True}
     >>> model = {X:X_domain, T:T_domain, Person:person, Time:time, CanFool:CanFoolMap}
 
@@ -260,7 +265,11 @@ def fol_true(expr, model={}):
     >>> fol_true(expr, model)
     False
     """
-    return _fol_true(expr, model)
+    result = _fol_true(expr, model)
+    if result is None:
+        return None
+    else:
+        return bool(result)
 
 
 def _fol_true(expr, model={}):
@@ -309,10 +318,7 @@ def _fol_true(expr, model={}):
         if mapping is None:
             return None
         if hasattr(mapping, '__call__'):
-            try:
-                return mapping(*args)
-            except:
-                return None
+            return mapping(*args)
         default = mapping.get('default')
         return mapping.get(args, default)
 
@@ -340,6 +346,7 @@ def standardize(expr):
 def _standardize(expr, var_set):
 
     def update_var_set(vars):
+        """ Adds variables to var_set and returns subsitutions to be made. """
         d = {}
         for var in vars:
             if var in var_set:
@@ -355,6 +362,9 @@ def _standardize(expr, var_set):
     if not isinstance(expr, BooleanFunction):
         return expr
 
+    # Prevent renaming of variables based on following equivalences
+    # ForAll(X, P(X)) & ForAll(X, Q(X)) == ForAll(X, P(X) & Q(X))
+    # Exists(X, P(X)) | Exists(X, Q(X)) == Exists(X, P(X) | Q(X))
     if isinstance(expr, (And, Or)):
         if isinstance(expr, And):
             cls = ForAll
@@ -455,6 +465,8 @@ def _to_pnf(expr):
 def to_snf(expr):
     """
     Converts the given FOL expression into Skolem Normal Form.
+    The formula in SNF is only equisatisfiable to the original
+    formula and not necessarily equivalent.
 
     Examples
     ========
@@ -476,6 +488,7 @@ def to_snf(expr):
     var_list = []
 
     skolemFunc = numbered_symbols('f', Function)
+    skolemConst = numbered_symbols('c', Constant)
     while isinstance(expr, Quantifier):
 
         if isinstance(expr, ForAll):
@@ -483,18 +496,66 @@ def to_snf(expr):
             expr = expr.expr
 
         elif isinstance(expr, Exists):
-            if var_list:
-                d = {}
-                for var in expr.vars:
+            d = {}
+            for var in expr.vars:
+                if var_list:
                     d[var] = next(skolemFunc)(*var_list)
-                expr = expr.expr.subs(d)
-            else:
-                expr = expr.expr
+                else:
+                    d[var] = next(skolemConst)
+            expr = expr.expr.subs(d)
 
         else:
             raise ValueError()
 
     return ForAll(var_list, expr)
+
+
+def to_cnf(expr):
+    """
+    Converts a given FOL formula into Conjunctive Normal Form.
+    The given expr is first converted to an equisatisfiable formula
+    in SNF followed by dropping of implicit universal quantification
+    and distribution of conjuction over disjunction.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import X, Y
+    >>> from sympy.logic.FOL import Predicate, ForAll, Exists, to_cnf
+    >>> P = Predicate('P')
+    >>> Q = Predicate('Q')
+    >>> to_cnf(ForAll(X, Exists(Y, P(X, Y) >> Q(X, Y))))
+    Or(Not(P(X, f0(X))), Q(X, f0(X)))
+    """
+    from sympy.logic.boolalg import to_cnf as to_cnf_prop
+    expr = to_snf(expr)
+    while isinstance(expr, ForAll):
+        expr = expr.expr
+    return to_cnf_prop(expr)
+
+
+def to_dnf(expr):
+    """
+    Converts a given FOL formula into Disjunctive Normal Form.
+    The given expr is first converted to an equisatisfiable formula
+    in SNF followed by dropping of implicit universal quantification
+    and distribution of disjunction over conjuction.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import X, Y
+    >>> from sympy.logic.FOL import Predicate, ForAll, Exists, to_dnf
+    >>> P = Predicate('P')
+    >>> Q = Predicate('Q')
+    >>> to_dnf(ForAll(X, Exists(Y, P(X, Y) >> Q(X, Y))))
+    Or(Not(P(X, f0(X))), Q(X, f0(X)))
+    """
+    from sympy.logic.boolalg import to_dnf as to_dnf_prop
+    expr = to_snf(expr)
+    while isinstance(expr, ForAll):
+        expr = expr.expr
+    return to_dnf_prop(expr)
 
 
 def mgu(expr1, expr2):
@@ -505,13 +566,14 @@ def mgu(expr1, expr2):
     ========
 
     >>> from sympy.abc import X, Y, Z
-    >>> from sympy.logic.FOL import Predicate, Function, mgu
+    >>> from sympy.logic.FOL import Predicate, Function, Constant, mgu
     >>> P = Predicate('P')
     >>> f = Function('f')
     >>> g = Function('g')
-    >>> mgu(P(f(X), Z), P(Y, 'a'))
-    {Y: f(X), Z: 'a'}
-    >>> mgu(P(f('a'), g(X)), P(Y, Y))
+    >>> a = Constant('a')
+    >>> mgu(P(f(X), Z), P(Y, a))
+    {Y: f(X), Z: a}
+    >>> mgu(P(f(a), g(X)), P(Y, Y))
     False
 
     References
@@ -520,9 +582,8 @@ def mgu(expr1, expr2):
     .. [1] http://en.wikipedia.org/wiki/Unification_%28computer_science%29
     """
 
-    if not (isinstance(expr1, Applied) and isinstance(expr2, Applied)):
-        return False
-    if expr1.func != expr2.func or len(expr1.args) != len(expr2.args):
+    if any([not isinstance(expr1, Applied), not isinstance(expr2, Applied),
+            expr1.func != expr2.func, len(expr1.args) != len(expr2.args)]):
         return False
 
     subs = {}
@@ -535,15 +596,12 @@ def mgu(expr1, expr2):
             continue
 
         sub = {}
-        if isinstance(arg1, Symbol):
+        if arg1.is_Symbol or arg2.is_Symbol:
+            if not arg1.is_Symbol:
+                arg1, arg2 = arg2, arg1
             if isinstance(arg2, BooleanFunction) and arg1 in arg2.atoms():
                 return False
             sub[arg1] = arg2
-
-        elif isinstance(arg2, Symbol):
-            if isinstance(arg1, BooleanFunction) and arg2 in arg1.atoms():
-                return False
-            sub[arg2] = arg1
 
         elif isinstance(arg1, Applied) and isinstance(arg2, Applied):
             sub = mgu(arg1, arg2)
@@ -560,12 +618,20 @@ def mgu(expr1, expr2):
 
     if subs == {}:
         return {true: true}
+
+    for var, sub in subs.items():
+        while sub.is_Symbol:
+            if not sub in subs:
+                break
+            sub = subs[sub]
+        subs[var] = sub
+
     return subs
 
 
-def resolve(expr):
+def resolve(*expr):
     """
-    Returns the resolution of a FOL formula.
+    Returns the resolution of given set of FOL formulas.
 
     Examples
     ========
@@ -575,15 +641,16 @@ def resolve(expr):
     >>> P = Predicate('P')
     >>> Q = Predicate('Q')
     >>> f = Function('f')
-    >>> resolve((P(X) | ~Q(f(Z))) & ~P(f('a')) & Q(Y))
+    >>> resolve((P(X) | ~Q(f(Z))), ~P(f('a')) & Q(Y))
     False
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Resolution_%28logic%29
+    .. [1] http://en.wikipedia.org/wiki/Resolution_(logic)
     """
 
+    expr = to_cnf(And(*expr))
     clauses = []
     for clause in expr.args:
         c = {}
@@ -606,7 +673,7 @@ def resolve(expr):
         temp = []
         for c1, c2 in combinations(clauses, 2):
             key = (tuple(c1.values()), tuple(c2.values()))
-            
+
             if not key in visited:
                 visited.add(key)
                 t = _resolve(c1, c2)
@@ -645,3 +712,24 @@ def _resolve(clause1, clause2):
                 clauses.append(c)
 
     return clauses
+
+
+def entails(expr, formula_set=[]):
+    """
+    Check whether the formula_set entails the given expr.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import X
+    >>> from sympy.logic.FOL import Predicate, Constant, entails
+    >>> Man = Predicate('Man')
+    >>> Mortal = Predicate('Mortal')
+    >>> Socrates = Constant('Socrates')
+    >>> entails(Mortal(Socrates), [Man(X) >> Mortal(X), Man(Socrates)])
+    True
+    """
+
+    formula_set = list(formula_set)
+    formula_set.append(~expr)
+    return not resolve(*formula_set)
