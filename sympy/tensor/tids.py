@@ -28,7 +28,7 @@ class TIDS(CantSympify):
     Examples
     ========
 
-    >>> from sympy.tensor.poly_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+    >>> from sympy.tensor.deprecated_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
     >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
@@ -73,7 +73,7 @@ class TIDS(CantSympify):
         Examples
         ========
 
-        >>> from sympy.tensor.poly_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+        >>> from sympy.tensor.deprecated_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
@@ -130,7 +130,7 @@ class TIDS(CantSympify):
         Examples
         ========
 
-        >>> from sympy.tensor.poly_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+        >>> from sympy.tensor.deprecated_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
@@ -173,7 +173,7 @@ class TIDS(CantSympify):
         for i in self.free:
             component_indices[i[2]][i[1]] = i[0]
 
-        from sympy.tensor.poly_tensor import TensorIndex
+        from sympy.tensor.deprecated_tensor import TensorIndex
 
         for i, dummy_pos in enumerate(self.dum):
             # TODO: add test for special case (Flavor index)
@@ -202,7 +202,7 @@ class TIDS(CantSympify):
         Examples
         ========
 
-        >>> from sympy.tensor.poly_tensor import TensorIndexType, tensor_indices, TIDS
+        >>> from sympy.tensor.deprecated_tensor import TensorIndexType, tensor_indices, TIDS
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> TIDS.free_dum_from_indices(m0, m1, -m1, m3)
@@ -259,7 +259,7 @@ class TIDS(CantSympify):
         Examples
         ========
 
-        >>> from sympy.tensor.poly_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+        >>> from sympy.tensor.deprecated_tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
@@ -436,7 +436,7 @@ class TIDS(CantSympify):
                 prev = t
                 numtyp.append([prev, 1])
         v = []
-        from sympy.tensor.poly_tensor import TensorManager
+        from sympy.tensor.deprecated_tensor import TensorManager
         for h, n in numtyp:
             if h._comm == 0 or h._comm == 1:
                 comm = h._comm

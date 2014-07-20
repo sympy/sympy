@@ -367,6 +367,9 @@ class StrPrinter(Printer):
     def _print_TensorHead(self, expr):
         return expr._print()
 
+    def _print_Tensor(self, expr):
+        return expr._print()
+
     def _print_TensMul(self, expr):
         return expr._print()
 

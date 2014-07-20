@@ -6,7 +6,7 @@ from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.pretty import pretty
-from sympy.tensor.poly_tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
+from sympy.tensor.deprecated_tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
     TensorManager, TensExpr, TIDS
@@ -333,7 +333,7 @@ def test_canonicalize1():
 def test_bug_correction_tensor_indices():
     # to make sure that tensor_indices does not return a list if creating
     # only one index:
-    from sympy.tensor.poly_tensor import tensor_indices, TensorIndexType, TensorIndex
+    from sympy.tensor.deprecated_tensor import tensor_indices, TensorIndexType, TensorIndex
     A = TensorIndexType("A")
     i = tensor_indices('i', A)
     assert not isinstance(i, (tuple, list))
