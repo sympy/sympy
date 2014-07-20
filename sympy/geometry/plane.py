@@ -638,7 +638,7 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity
         if isinstance(o, Point) or isinstance(o, Point3D):
             if o in self:
-                return o
+                return [o]
             else:
                 return []
         if isinstance(o, LinearEntity3D):
@@ -655,7 +655,7 @@ class Plane(GeometryEntity):
                 else:
                     a = a.subs(t, c[0])
                     if a in o:
-                        return a
+                        return [a]
                     else:
                         return []
         if isinstance(o, LinearEntity):
@@ -673,7 +673,7 @@ class Plane(GeometryEntity):
                     return [Point(c[x], c[y])]
         if isinstance(o, Plane):
             if o == self:
-                return self
+                return [self]
             if self.is_parallel(o):
                 return []
             else:
