@@ -2,6 +2,7 @@
 **Contains**
 
 * refraction_angle
+* deviation
 """
 
 from __future__ import division
@@ -13,7 +14,6 @@ from sympy.geometry.line3d import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
 from .medium import Medium
-from .waves import TWave
 
 
 def refraction_angle(incident, medium1, medium2, normal=None, plane=None):

@@ -1,8 +1,7 @@
-from __future__ import division, print_function
+from __future__ import division
 
 from sympy.physics.optics.utils import refraction_angle, deviation
 from sympy.physics.optics.medium import Medium
-from sympy.physics.optics.waves import TWave
 
 from sympy import symbols, sqrt, Matrix
 from sympy.geometry.point3d import Point3D
