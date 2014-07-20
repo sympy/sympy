@@ -3490,8 +3490,9 @@ def signsimp(expr, evaluate=None):
     Examples
     ========
 
-    >>> from sympy import signsimp, exp
+    >>> from sympy import signsimp, exp, symbols
     >>> from sympy.abc import x, y
+    >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
     (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
@@ -3501,10 +3502,19 @@ def signsimp(expr, evaluate=None):
     x*(-1 + 1/x) + x*(1 - 1/x)
     >>> signsimp(_)
     0
-    >>> n**3
-    (-1 + 1/x)**3
+
+    Since powers automatically handle leading signs
+
+    >>> (-2)**i
+    -2**i
+
+    signsimp can be used to put the base of a power with an integer
+    exponent into canonical form:
+
+    >>> n**i
+    (-1 + 1/x)**i
     >>> signsimp(_)
-    -(1 - 1/x)**3
+    -(1 - 1/x)**i
 
     By default, signsimp doesn't leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
