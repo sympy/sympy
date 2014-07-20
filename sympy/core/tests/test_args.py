@@ -3235,6 +3235,13 @@ def test_sympy__physics__optics__mirrors__ConvexMirror():
     assert _test_args(ConvexMirror(Point3D(0, 0, 0), Point3D(1, 2, 3)))
 
 
+def test_sympy__physics__optics__mirrors__PlaneMirror():
+    from sympy.physics.optics.mirrors import PlaneMirror
+    from sympy.matrices import Matrix
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(PlaneMirror(0, 0, 0), Matrix([-1, 0, 0]), x)
+
+
 def test_sympy__vector__coordsysrect__CoordSysCartesian():
     from sympy.vector.coordsysrect import CoordSysCartesian
     assert _test_args(CoordSysCartesian('C'))

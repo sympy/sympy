@@ -1,13 +1,15 @@
 """
 This module contains various types of mirrors.
 
+By default the mirrors will be assumed to be placed in
+YZ plane facing X axis.
+
 Following sign convention is followed:
 
-    For a spherically curved mirror in air, the magnitude of the focal length
-    is equal to the radius of curvature of the mirror divided by two. The focal
-    length is positive for a concave mirror, and negative for a convex mirror.
-    In the sign convention used in optical design, a concave mirror has negative
-    radius of curvature.
+    Distance measured in the direction of incident ray
+    will be considered positive while in the opposite
+    direction it will be negative.
+
 
 **Contains**
 
@@ -21,7 +23,12 @@ Following sign convention is followed:
 
 from __future__ import division
 
-__all__ = ['Mirror', 'SphericalMirror', 'ConcaveMirror', 'ConvexMirror']
+__all__ = ['Mirror',
+           'SphericalMirror',
+           'ConcaveMirror',
+           'ConvexMirror',
+           'PlaneMirror'
+           ]
 
 from sympy import sympify, sqrt, symbols, oo
 from sympy.core.basic import Basic
@@ -384,3 +391,36 @@ class ConvexMirror(SphericalMirror):
         )
 
     __str__ = __repr__
+
+
+class PlaneMirror(SphericalMirror):
+    """
+    A plane mirror in the space.
+    """
+
+    def __new__(cls,
+                pole=Point3D(0, 0, 0),
+                normal=Matrix([-1, 0, 0]),
+                aperture_size=symbols('a')
+                ):
+
+        if not isinstance(pole, Point3D):
+            if not is_sequence(pole):
+                raise TypeError("'pole' can only be Point3D or any sequence")
+            else:
+                pole = Point3D(pole)
+        _plane = Plane(pole, normal_vector=normal)
+        radius = oo
+        center = Point3D(pole.x + 0 if normal[0] == 0 else radius*normal[0],
+            pole.y + 0 if normal[1] == 0 else radius*normal[1],
+            pole.z + 0 if normal[2] == 0 else radius*normal[2])
+        obj = super(PlaneMirror, cls).__new__(cls, center, radius)
+
+        obj._radius = radius
+        obj._center = center
+        obj._pole = pole
+        obj._aperture_size = aperture_size
+        return obj
+
+    def center(self):
+        return self._center
