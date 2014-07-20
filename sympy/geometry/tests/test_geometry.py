@@ -5,7 +5,7 @@ from sympy import (Abs, C, I, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
                    simplify, sin, sqrt, symbols, tan, Derivative)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
-                            are_similar, convex_hull, intersection,
+                            are_similar, convex_hull, intersection, Hyperbola,
                             Point3D, Line3D, Ray3D, Segment3D, Plane, centroid)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
@@ -997,6 +997,153 @@ def test_ellipse_random_point():
         r = e3.random_point()
         # substitution should give zero*y1**2
         assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
+
+def test_hyperbola():
+    p1 = Point(0, 0)
+    p2 = Point(1, 1)
+    p4 = Point(0, 1)
+
+    e1 = Hyperbola(p1, 1, 1)
+    e2 = Hyperbola(p2, 0.5, 1)
+    e3 = Hyperbola(p1, y1, y1)
+
+    # Test creation with three points
+    cen, rad = Point(3*half, 2), 5*half
+
+    raises(ValueError, lambda: Hyperbola(None, None, None, 1))
+
+    # Basic Stuff
+    assert Hyperbola(None, 1, 1).center == Point(0, 0)
+    assert e1 != e2
+    #assert p4 in e1 is False
+    assert p2 not in e2
+    assert e1.plot_interval() == e2.plot_interval() == [t, -pi, pi]
+    assert e1.plot_interval(x) == e2.plot_interval(x) == [x, -pi, pi]
+    assert e1.minor == 1
+    assert e1.major == 1
+    assert e1.hradius == 1
+    assert e1.vradius == 1
+
+    # Private Functions
+    assert (Line(p1, p2) in e1) is False
+    assert e1.__cmp__(e1) == 0
+    assert e1.__cmp__(Point(0, 0)) > 0
+
+    # Encloses
+    assert e1.encloses(Line(p1, p2)) is False
+    assert e1.encloses(Ray(p1, p2)) is False
+    assert e1.encloses(RegularPolygon(p1, 5, 3)) is False
+    assert e1.encloses(RegularPolygon(p2, 5, 3)) is False
+
+    # with generic symbols, the hradius is assumed to contain the major radius
+    M = Symbol('M')
+    m = Symbol('m')
+
+    assert e2.arbitrary_point() in e2
+
+    # Foci
+    f1, f2 = Point(2*sqrt(5), 0), Point(-2*sqrt(5), 0)
+    ef = Hyperbola(Point(0, 0), 4, 2)
+    assert ef.foci in [(f1, f2), (f2, f1)]
+
+    # Tangents
+    v = sqrt(2) / 2
+    p1_1 = Point(v, v)
+    p1_2 = p2 + Point(0.5, 0)
+    p1_3 = p2 + Point(0, 1)
+    assert e2.tangent_lines(p1_2) == [Line(Point(3/2, 1), Point(3/2, 1/2))]
+    assert e1.tangent_lines(p1_3) == \
+           [Line(Point(1, 2), Point(-5/3, -4/3)), Line(Point(1, 2), Point(1, 0))]
+    assert e1.tangent_lines(p1) == []
+    assert e2.is_tangent(Line(p1_2, p2 + Point(half, 1)))
+    assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1))) is False
+    assert e1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
+    assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) is False
+    assert Hyperbola(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
+        [Line(Point(0, 0), Point(-4*sqrt(79)/15 + 79/15, -sqrt(79)/15 + 79/15)),
+         Line(Point(0, 0), Point(4*sqrt(79)/15 + 79/15, sqrt(79)/15 + 79/15))]
+    assert Hyperbola(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
+        [Line(Point(3, 4), Point(3, 5))]
+
+    e = Hyperbola(Point(0, 0), 2, 1)
+    assert e.normal_lines(Point(0, 0)) == \
+        [Line(Point(0, 0), Point(0, 1)), Line(Point(0, 0), Point(1, 0))]
+    assert e.normal_lines(Point(1, 0)) == \
+        [Line(Point(0, 0), Point(1, 0))]
+    assert e.normal_lines((0, 1)) == \
+        [Line(Point(0, 0), Point(0, 1))]
+    assert e.normal_lines(Point(1, 1), 1) == \
+        [Line(Point(-2, -26/261), Point(-1, -3/10)),
+         Line(Point(2, -1/3), Point(3, 1/4))]
+
+    p = Point(2, S.Half)
+    assert e.normal_lines(p, 1) == \
+        [Line(Point(-2, -13/261), Point(-1, -1/7)),
+         Line(Point(2, -2/5), Point(3, 2/5))]
+
+    e = Hyperbola((0, 0), 2, 2*sqrt(3)/3)
+    assert e.normal_lines((1, 1), 1) == \
+        [Line(Point(-2, -1/5), Point(-1, -1/2)),
+         Line(Point(2, -2/5), Point(3, 1/5))]
+
+    # Properties
+    major = 3
+    minor = 1
+    e4 = Hyperbola(p2, minor, major)
+    assert e4.focus_distance == sqrt(major**2 + minor**2)
+    ecc = e4.focus_distance / major
+    assert e4.eccentricity == ecc
+    # independent of orientation
+    e4 = Hyperbola(p2, major, minor)
+    assert e4.focus_distance == sqrt(major**2 + minor**2)
+    ecc = e4.focus_distance / major
+    assert e4.eccentricity == ecc
+
+    # Intersection
+    l1 = Line(Point(1, -5), Point(1, 5))
+    l2 = Line(Point(-5, -1), Point(5, -1))
+    l3 = Line(Point(-1, -1), Point(1, 1))
+    l4 = Line(Point(-10, 0), Point(0, 10))
+    pts_c1_l3 = [Point(sqrt(2)/2, sqrt(2)/2), Point(-sqrt(2)/2, -sqrt(2)/2)]
+
+    assert intersection(e2, l1) == []
+    assert intersection(e1, Point(1, 0)) == [Point(1, 0)]
+    assert intersection(e1, l1) == [Point(1, 0)]
+    assert intersection(e1, l2) == [Point(-sqrt(2), -1), Point(sqrt(2), -1)]
+    assert intersection(e1, l3) == []
+    assert intersection(e1, e3) == []
+    assert e1.intersection(l1) == [Point(1, 0)]
+    #assert e3.intersection(l4) == [Point(-(y1**2 + 100)/20, -(y1 - 10)*(y1 + 10)/20)]
+    assert e1.intersection(Ellipse(Point(2, 0), 1, 1)) == [Point(1, 0)]
+    assert e1.intersection(Ellipse(Point(5, 0), 1, 1,)) == []
+    assert e1.intersection(Point(2, 0)) == []
+
+    hyp = Hyperbola(Point(0, 0), 3, 2)
+    assert hyp.tangent_lines(Point(3, 0)) == \
+        [Line(Point(3, 0), Point(3, -12))]
+
+    assert e3.is_tangent(e3.tangent_lines(p1 + Point(y1, 0))[0])
+
+    e = Hyperbola((1, 2), 3, 2)
+    assert e.tangent_lines(Point(10, 0)) == []
+
+    # encloses_point
+    e = Hyperbola((0, 0), 1, 2)
+    assert e.encloses_point(e.center)
+    assert e.encloses_point(e.center + Point(0, e.vradius - Rational(1, 10)))
+    assert e.encloses_point(e.center + Point(e.hradius - Rational(1, 10), 0))
+    assert e.encloses_point(e.center + Point(e.hradius, 0)) is False
+    assert e.encloses_point(
+        e.center + Point(e.hradius + Rational(1, 10), 0)) is False
+    e = Hyperbola((0, 0), 2, 1)
+    assert e.encloses_point(e.center)
+    assert e.encloses_point(e.center + Point(0, e.vradius - Rational(1, 10)))
+    assert e.encloses_point(e.center + Point(e.hradius - Rational(1, 10), 0))
+    assert e.encloses_point(e.center + Point(e.hradius, 0)) is False
+    assert e.encloses_point(
+        e.center + Point(e.hradius + Rational(1, 10), 0)) is False
+    assert e1.encloses_point(Point(1, 0)) is False
+    assert e1.encloses_point(Point(0.3, 0.4)) is True
 
 
 def test_polygon():

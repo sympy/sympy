@@ -1,4 +1,4 @@
-"""Hyperbolical geometrical entities.
+"""Hyperbolical geometric entities.
 
 Contains
 * Hyperbola
@@ -20,7 +20,6 @@ from sympy.utilities.misc import filldedent
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line
-from .ellipse import Ellipse, Circle
 from .util import _symbol, idiff
 from sympy.mpmath import findroot as nroot
 
@@ -264,10 +263,10 @@ class Hyperbola(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Hyperbola(p1, 3, sqrt(2))
         >>> e1.eccentricity
-        sqrt(22)/2
+        sqrt(11)/3
 
         """
-        return self.focus_distance / self.minor
+        return self.focus_distance / self.major
 
     @property
     def focus_distance(self):
@@ -558,6 +557,7 @@ class Hyperbola(GeometryEntity):
         >>> e.intersection(Hyperbola(Point(-1, 0), 3, 4))
         []
         """
+        from .ellipse import Ellipse, Circle
         if isinstance(o, Point):
             if o in self:
                 return [o]
@@ -611,17 +611,14 @@ class Hyperbola(GeometryEntity):
 
         """
         p = Point(p)
-        if self.encloses_point(p) is False:
-            if p in self:
-                delta = self.center - p
-                rise = (self.vradius ** 2)*delta.x
-                run = -(self.hradius ** 2)*delta.y
-                p2 = Point(simplify(p.x + run),
+        if p in self:
+            delta = self.center - p
+            rise = (self.vradius ** 2)*delta.x
+            run = -(self.hradius ** 2)*delta.y
+            p2 = Point(simplify(p.x + run),
                        simplify(p.y + rise))
-                return [Line(p, p2)]
-            else:
-                return []
-        else:
+            return [Line(p, p2)]
+        elif self.encloses_point(p):
             x, y = Dummy('x', real=True), Dummy('y', real=True)
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
@@ -630,11 +627,16 @@ class Hyperbola(GeometryEntity):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][
-                    0] == p.x or tangent_points[0][1] == p.y
-                return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+                if tangent_points[0][0] == p.x:
+                    return [Line(p, p + Point(0, 1))]
+                if tangent_points[0][1] == p.y:
+                    return [Line(p, p + Point(1, 0))]
+            if len(tangent_points) == 0:
+                return []
 
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
+        else:
+            return []
 
     def is_tangent(self, o):
         """Is `o` tangent to the hyperbola?
@@ -707,6 +709,16 @@ class Hyperbola(GeometryEntity):
         =======
 
         normal_lines : list with 1, 2 or 4 Lines
+
+        Examples
+        ========
+
+        >>> from sympy import Hyperbola, Point, Line
+        >>> a = Hyperbola(Point(0, 0), 2, 1)
+        >>> a.normal_lines(Point(0, 0))
+        [Line(Point(0, 0), Point(0, 1)), Line(Point(0, 0), Point(1, 0))]
+        >>> a.normal_lines(Point(1, 0))
+        [Line(Point(0, 0), Point(1, 0))]
 
         """
         p = Point(p)
