@@ -305,7 +305,8 @@ def xobj(symb, length):
     return: [] of equal-length strings
     """
 
-    assert length > 0
+    if length <= 0:
+        raise ValueError("Length should be greater than 0")
 
     # TODO robustify when no unicodedat available
     if _use_unicode:

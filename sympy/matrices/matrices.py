@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, xrange
+from sympy.core.compatibility import is_sequence, default_sort_key, xrange, NotIterable
 
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
@@ -18,7 +18,7 @@ from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
-from sympy.core.compatibility import reduce, as_int
+from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
@@ -42,7 +42,7 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
-class DeferredVector(Symbol):
+class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
 
     Examples
@@ -161,7 +161,7 @@ class MatrixBase(object):
             flat_list = [cls._sympify(i) for i in flat_list]
 
         # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
+        elif len(args) == 1 and hasattr(args[0], "__array__"):
             # NumPy array or matrix or some other object that implements
             # __array__. So let's first use this method to get a
             # numpy.array() and then make a python list out of it.
@@ -171,8 +171,8 @@ class MatrixBase(object):
                 flat_list = [cls._sympify(i) for i in arr.ravel()]
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
-                rows, cols = 1, arr.shape[0]
-                flat_list = [S.Zero]*cols
+                rows, cols = arr.shape[0], 1
+                flat_list = [S.Zero]*rows
                 for i in range(len(arr)):
                     flat_list[i] = cls._sympify(arr[i])
                 return rows, cols, flat_list
@@ -199,15 +199,13 @@ class MatrixBase(object):
             if len(ncol) > 1:
                 raise ValueError("Got rows of variable lengths: %s" %
                     sorted(list(ncol)))
-            rows = len(in_mat)
+            cols = ncol.pop() if ncol else 0
+            rows = len(in_mat) if cols else 0
             if rows:
                 if not is_sequence(in_mat[0]):
                     cols = 1
                     flat_list = [cls._sympify(i) for i in in_mat]
                     return rows, cols, flat_list
-                cols = ncol.pop()
-            else:
-                cols = 0
             flat_list = []
             for j in range(rows):
                 for i in range(cols):
@@ -568,13 +566,16 @@ class MatrixBase(object):
             A = self
             B = other
             if A.shape != B.shape:
-                raise ShapeError("Matrices size mismatch.")
+                raise ShapeError("Matrix size mismatch.")
             alst = A.tolist()
             blst = B.tolist()
             ret = [S.Zero]*A.rows
             for i in range(A.shape[0]):
                 ret[i] = list(map(lambda j, k: j + k, alst[i], blst[i]))
-            return classof(A, B)._new(ret)
+            rv = classof(A, B)._new(ret)
+            if 0 in A.shape:
+                rv = rv.reshape(*A.shape)
+            return rv
         raise TypeError('cannot add matrix and %s' % type(other))
 
     def __radd__(self, other):
@@ -662,16 +663,16 @@ class MatrixBase(object):
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
         align = {
-            'left': str.ljust,
-            'right': str.rjust,
-            'center': str.center,
-            '<': str.ljust,
-            '>': str.rjust,
-            '^': str.center,
+            'left': 'ljust',
+            'right': 'rjust',
+            'center': 'center',
+            '<': 'ljust',
+            '>': 'rjust',
+            '^': 'center',
             }[align]
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
-                row[j] = align(elem, maxlen[j])
+                row[j] = getattr(elem, align)(maxlen[j])
             res[i] = "[" + colsep.join(row) + "]"
         return rowsep.join(res)
 
@@ -994,45 +995,6 @@ class MatrixBase(object):
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def submatrix(self, keys):
-        """
-        Get a slice/submatrix of the matrix using the given slice.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(4, 4, lambda i, j: i+j)
-        >>> m
-        Matrix([
-        [0, 1, 2, 3],
-        [1, 2, 3, 4],
-        [2, 3, 4, 5],
-        [3, 4, 5, 6]])
-        >>> m[:1, 1]
-        Matrix([[1]])
-        >>> m[:2, :1]
-        Matrix([
-        [0],
-        [1]])
-        >>> m[2:4, 2:4]
-        Matrix([
-        [4, 5],
-        [5, 6]])
-
-        See Also
-        ========
-
-        extract
-        """
-        rlo, rhi, clo, chi = self.key2bounds(keys)
-        rows, cols = rhi - rlo, chi - clo
-        mat = [S.Zero]*rows*cols
-        for i in range(rows):
-            mat[i*cols:(i + 1)*cols] = \
-                self._mat[(i + rlo)*self.cols + clo:(i + rlo)*self.cols + chi]
-        return self._new(rows, cols, mat)
-
     def extract(self, rowsList, colsList):
         """Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
@@ -1070,10 +1032,6 @@ class MatrixBase(object):
         [2],
         [8]])
 
-        See Also
-        ========
-
-        submatrix
         """
         cols = self.cols
         flat_list = self._mat
@@ -1144,6 +1102,9 @@ class MatrixBase(object):
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> from sympy.matrices import Matrix
         >>> Matrix([[x]])
@@ -1161,6 +1122,21 @@ class MatrixBase(object):
         for i in self:
             result.update( i.atoms(*types) )
         return result
+
+    @property
+    def free_symbols(self):
+        """Returns the free symbols within the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x
+        >>> from sympy.matrices import Matrix
+        >>> Matrix([[x], [1]]).free_symbols
+        set([x])
+        """
+
+        return set.union(*[i.free_symbols for i in self])
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -1849,7 +1825,7 @@ class MatrixBase(object):
                 # Minimum singular value
                 return Min(*self.singular_values())
 
-            elif (ord is None or isinstance(ord, str) and ord.lower() in
+            elif (ord is None or isinstance(ord, string_types) and ord.lower() in
                     ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)
@@ -2002,16 +1978,19 @@ class MatrixBase(object):
 
         A matrix is zero if every element is zero.  A matrix need not be square
         to be considered zero.  The empty matrix is zero by the principle of
-        vacuous truth.
+        vacuous truth.  For a matrix that may or may not be zero (e.g.
+        contains a symbol), this will be None
 
         Examples
         ========
 
         >>> from sympy import Matrix, zeros
+        >>> from sympy.abc import x
         >>> a = Matrix([[0, 0], [0, 0]])
         >>> b = zeros(3, 4)
         >>> c = Matrix([[0, 1], [0, 0]])
         >>> d = Matrix([])
+        >>> e = Matrix([[x, 0], [0, 0]])
         >>> a.is_zero
         True
         >>> b.is_zero
@@ -2020,8 +1999,13 @@ class MatrixBase(object):
         False
         >>> d.is_zero
         True
+        >>> e.is_zero
         """
-        return not list(self.values())
+        if any(i.is_zero == False for i in self):
+            return False
+        if any(i.is_zero == None for i in self):
+            return None
+        return True
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
@@ -2471,7 +2455,7 @@ class MatrixBase(object):
         if not self:
             return S.One
 
-        M, n = self.copy(), self.rows
+        M, n = self.copy().as_mutable(), self.rows
 
         if n == 1:
             det = M[0, 0]
@@ -2627,8 +2611,7 @@ class MatrixBase(object):
 
         return self.adjugate() / d
 
-    def rref(self, simplified=False, iszerofunc=_iszero,
-            simplify=False):
+    def rref(self, iszerofunc=_iszero, simplify=False):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         To simplify elements before finding nonzero pivots set simplify=True
@@ -2646,14 +2629,6 @@ class MatrixBase(object):
         [1, 0],
         [0, 1]]), [0, 1])
         """
-        if simplified is not False:
-            SymPyDeprecationWarning(
-                feature="'simplified' as a keyword to rref",
-                useinstead="simplify=True, or set simplify equal to your "
-                "own custom simplification function",
-                issue=3382, deprecated_since_version="0.7.2",
-            ).warn()
-            simplify = simplify or True
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
         # pivot: index of next row to contain a pivot
@@ -2670,10 +2645,10 @@ class MatrixBase(object):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
+                        r.row_swap(pivot, k)
                         break
-                if k == r.rows - 1 and iszerofunc(r[k, i]):
+                else:
                     continue
-                r.row_swap(pivot, k)
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
             for j in xrange(r.rows):
@@ -2685,8 +2660,7 @@ class MatrixBase(object):
             pivot += 1
         return self._new(r), pivotlist
 
-    def rank(self, simplified=False, iszerofunc=_iszero,
-        simplify=False):
+    def rank(self, iszerofunc=_iszero, simplify=False):
         """
         Returns the rank of a matrix
 
@@ -2699,23 +2673,15 @@ class MatrixBase(object):
         >>> n.rank()
         2
         """
-        row_reduced = self.rref(simplified=simplified, iszerofunc=iszerofunc, simplify=simplify)
+        row_reduced = self.rref(iszerofunc=iszerofunc, simplify=simplify)
         rank = len(row_reduced[-1])
         return rank
 
-    def nullspace(self, simplified=False, simplify=False):
+    def nullspace(self, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self
         """
         from sympy.matrices import zeros
 
-        if simplified is not False:
-            SymPyDeprecationWarning(
-                feature="'simplified' as a keyword to nullspace",
-                useinstead="simplify=True, or set simplify equal to your "
-                "own custom simplification function",
-                issue=3382, deprecated_since_version="0.7.2",
-            ).warn()
-            simplify = simplify or True
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
         reduced, pivots = self.rref(simplify=simpfunc)
@@ -4132,7 +4098,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except:
+    except Exception:
         pass
     try:
         import numpy
@@ -4140,15 +4106,13 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except:
+    except Exception:
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
-    if isinstance(j, slice):
-        return j
     if type(j) is not int:
         try:
             j = j.__index__()

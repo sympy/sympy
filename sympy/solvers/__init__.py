@@ -8,7 +8,8 @@
     [-1]
 """
 from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
-    solve_undetermined_coeffs, tsolve, nsolve, solve_linear, checksol
+    solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
+    det_quick, inv_quick
 
 from .recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
@@ -21,3 +22,6 @@ from .pde import pde_separate, pde_separate_add, pde_separate_mul, \
     pdsolve, classify_pde, checkpdesol
 
 from .deutils import ode_order
+
+from .inequalities import reduce_inequalities, reduce_abs_inequality, \
+    reduce_abs_inequalities, solve_poly_inequality, solve_rational_inequalities, solve_univariate_inequality

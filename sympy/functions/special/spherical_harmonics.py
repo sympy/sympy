@@ -140,8 +140,6 @@ class Ynm(Function):
     .. [4] http://dlmf.nist.gov/14.30
     """
 
-    nargs = 4
-
     @classmethod
     def eval(cls, n, m, theta, phi):
         n, m, theta, phi = [sympify(x) for x in (n, m, theta, phi)]
@@ -161,8 +159,10 @@ class Ynm(Function):
 
     def _eval_expand_func(self, **hints):
         n, m, theta, phi = self.args
-        return (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
+        rv = (sqrt((2*n + 1)/(4*pi) * C.factorial(n - m)/C.factorial(n + m)) *
                 C.exp(I*m*phi) * assoc_legendre(n, m, C.cos(theta)))
+        # We can do this because of the range of theta
+        return rv.subs(sqrt(-cos(theta)**2 + 1), sin(theta))
 
     def fdiff(self, argindex=4):
         if argindex == 1:
@@ -290,8 +290,6 @@ class Znm(Function):
     .. [2] http://mathworld.wolfram.com/SphericalHarmonic.html
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
     """
-
-    nargs = 4
 
     @classmethod
     def eval(cls, n, m, theta, phi):

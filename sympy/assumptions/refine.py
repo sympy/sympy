@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Expr
+from sympy.core import S, Add, Expr, Basic
 from sympy.assumptions import Q, ask
 from sympy.core.logic import fuzzy_not
 
@@ -24,6 +24,8 @@ def refine(expr, assumptions=True):
         x
 
     """
+    if not isinstance(expr, Basic):
+        return expr
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial

@@ -2,7 +2,8 @@
 from __future__ import print_function, division
 
 from sympy.core import sympify
-from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent, BooleanFunction
+from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
+    BooleanFunction, true, false, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -64,16 +65,21 @@ def _extract_facts(expr, symbol):
     if isinstance(expr, bool):
         return
     if not expr.has(symbol):
-        return None
+        return
     if isinstance(expr, AppliedPredicate):
         if expr.arg == symbol:
             return expr.func
         else:
             return
+    if isinstance(expr, Not) and expr.args[0].func in (And, Or):
+        cls = Or if expr.args[0] == And else And
+        expr = cls(*[~arg for arg in expr.args[0].args])
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
-        return expr.func(*[x for x in args if x is not None])
-    if all(arg != None for arg in args):
+        args = [x for x in args if x is not None]
+        if args:
+            return expr.func(*args)
+    if args and all(x != None for x in args):
         return expr.func(*args)
 
 
@@ -110,10 +116,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
-    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool)):
+    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("proposition must be a valid logical expression")
 
-    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool)):
+    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
         raise TypeError("assumptions must be a valid logical expression")
 
     if isinstance(proposition, AppliedPredicate):
@@ -122,20 +128,22 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         key, expr = Q.is_true, sympify(proposition)
 
     assumptions = And(assumptions, And(*context))
+    assumptions = to_cnf(assumptions)
+
     local_facts = _extract_facts(assumptions, expr)
 
-    if local_facts is not None and satisfiable(And(local_facts, known_facts_cnf)) is False:
+    if local_facts and satisfiable(And(local_facts, known_facts_cnf)) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
-        return res
+        return bool(res)
 
-    if assumptions is True:
+    if assumptions == True:
         return
 
-    if local_facts in (None, True):
+    if local_facts is None:
         return
 
     # See if there's a straight-forward conclusion we can make for the inference
@@ -295,7 +303,7 @@ _handlers = [
     ("real",              "sets.AskRealHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("algebraic",         "sets.AskAlgebraicHandler"),
-    ("is_true",           "TautologicalHandler"),
+    ("is_true",           "common.TautologicalHandler"),
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
     ("orthogonal",        "matrices.AskOrthogonalHandler"),

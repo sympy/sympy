@@ -66,7 +66,7 @@ def real_imag(ba, bd, gen):
     Helper function, to get the real and imaginary part of a rational function
     evaluated at sqrt(-1) without actually evaluating it at sqrt(-1)
 
-    Seperates the even and odd power terms by checking the degree of terms wrt
+    Separates the even and odd power terms by checking the degree of terms wrt
     mod 4. Returns a tuple (ba[0], ba[1], bd) where ba[0] is real part
     of the numerator ba[1] is the imaginary part and bd is the denominator
     of the rational function.
@@ -213,6 +213,8 @@ def constant_system(A, u, DE):
     Because Poly does not play well with Matrix yet, this algorithm assumes that
     all matrix entries are Basic expressions.
     """
+    if not A:
+        return A, u
     Au = A.row_join(u)
     Au = Au.rref(simplify=cancel)[0]
     # Warning: This will NOT return correct results if cancel() cannot reduce
@@ -793,7 +795,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     logarithmic derivative of a k(t)-radical.
 
     case is one of {'primitive', 'exp', 'tan', 'auto'} for the primitive,
-    hyperexponential, and hypertangent cases, respectively.  If case it 'auto',
+    hyperexponential, and hypertangent cases, respectively.  If case is 'auto',
     it will attempt to determine the type of the derivation automatically.
     """
     fa, fd = fa.cancel(fd, include=True)
@@ -894,7 +896,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         residueterms]] + [n], S(1))
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
-    assert common_denom == n*m  # Verify exact division
+    if common_denom != n*m:  # Verify exact division
+        raise ValueError("Inexact division")
     u = cancel(u**m*Mul(*[Pow(i, j) for i, j in residueterms]))
 
     return (common_denom, u)

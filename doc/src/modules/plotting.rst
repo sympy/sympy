@@ -107,7 +107,7 @@ it in interactive mode (python -i plotting.py)::
 
 And type for instance ``example(7)`` or ``example(11)``.
 
-See also the `Plotting Module <https://github.com/sympy/sympy/wiki/Plotting-Module>`_
+See also the `Plotting Module <https://github.com/sympy/sympy/wiki/Plotting-capabilities>`_
 wiki page for screenshots.
 
 
@@ -143,7 +143,8 @@ Close                    ESCAPE
 Screenshot               F8
 ======================   ========
 
-The mouse can be used to rotate, zoom, and translate by dragging the left, middle, and right mouse buttons respectively.
+The mouse can be used to rotate, zoom, and translate by dragging the left, middle,
+and right mouse buttons respectively.
 
 Coordinate Modes
 ----------------
@@ -256,6 +257,8 @@ the following alternative syntax:
     >>> p[1].color = z,(0.4,0.9), y,(0.4,0.9), x,(0.4,0.9)
 
 You can still use multi-step gradients with three-function color schemes.
+
+.. _plot_geom:
 
 Plotting Geometric Entities
 ---------------------------

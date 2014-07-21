@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
-                        Tuple)
-from sympy.core.compatibility import xrange
+from sympy.core import Basic, Dict, Symbol, Tuple
+from sympy.core.compatibility import xrange, iterable
+from sympy.sets import Set, FiniteSet, EmptySet
 
 
 class Class(Set):
@@ -203,6 +203,7 @@ class NamedMorphism(Morphism):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
@@ -452,7 +453,7 @@ class Category(Basic):
             raise ValueError("A Category cannot have an empty name.")
 
         new_category = Basic.__new__(cls, Symbol(name), Class(objects),
-                                     FiniteSet(commutative_diagrams))
+                                     FiniteSet(*commutative_diagrams))
         return new_category
 
     @property
@@ -708,7 +709,7 @@ class Diagram(Basic):
                 for morphism, props in premises_arg.items():
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
                     Diagram._add_morphism_closure(
-                        premises, morphism, FiniteSet(props))
+                        premises, morphism, FiniteSet(*props) if iterable(props) else FiniteSet(props))
 
         if len(args) >= 2:
             # We also have some conclusions.
@@ -739,7 +740,7 @@ class Diagram(Basic):
                         # No need to add identities and recurse
                         # composites this time.
                         Diagram._add_morphism_closure(
-                            conclusions, morphism, FiniteSet(props),
+                            conclusions, morphism, FiniteSet(*props) if iterable(props) else FiniteSet(props),
                             add_identities=False, recurse_composites=False)
 
         return Basic.__new__(cls, Dict(premises), Dict(conclusions), objects)
@@ -751,6 +752,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
         >>> from sympy import pretty
@@ -773,6 +775,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
         >>> from sympy import FiniteSet
@@ -801,6 +804,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
@@ -861,6 +865,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> A = Object("A")
         >>> B = Object("B")
@@ -896,6 +901,7 @@ class Diagram(Basic):
 
         Examples
         ========
+
         >>> from sympy.categories import Object, NamedMorphism, Diagram
         >>> from sympy import FiniteSet
         >>> A = Object("A")
@@ -908,7 +914,7 @@ class Diagram(Basic):
         >>> d1 == Diagram([f], {f: "unique"})
         True
         """
-        if not self.objects.subset(objects):
+        if not objects.is_subset(self.objects):
             raise ValueError(
                 "Supplied objects should all belong to the diagram.")
 

@@ -1,16 +1,16 @@
-"""Bessel type functions"""
-
 from __future__ import print_function, division
 
-from sympy import S, pi, I
-from sympy.core.function import Function, ArgumentIndexError, expand_func
+from sympy import S, C, pi, I, Rational, Symbol, Wild, cacheit, sympify
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper
 from sympy.core.compatibility import xrange
 
 # TODO
-# o Airy Ai and Bi functions
 # o Scorer functions G1 and G2
 # o Asymptotic expansions
 #   These are possible, e.g. for fixed order, but since the bessel type
@@ -37,8 +37,6 @@ class BesselBase(Function):
     ``2*F_n' = -_a*F_{n+1} + b*F_{n-1}``.
     """
 
-    nargs = 2
-
     @property
     def order(self):
         """ The order of the bessel-type function. """
@@ -52,8 +50,8 @@ class BesselBase(Function):
     def fdiff(self, argindex=2):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
-        return self._b/2 * self.__class__(self.order - 1, self.argument) \
-            - self._a/2 * self.__class__(self.order + 1, self.argument) \
+        return (self._b/2 * self.__class__(self.order - 1, self.argument) -
+                self._a/2 * self.__class__(self.order + 1, self.argument))
 
     def _eval_conjugate(self):
         z = self.argument
@@ -192,6 +190,11 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_real:
+            return True
+
 
 class bessely(BesselBase):
     r"""
@@ -261,6 +264,11 @@ class bessely(BesselBase):
 
     def _eval_rewrite_as_yn(self, nu, z):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
+
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_positive:
+            return True
 
 
 class besseli(BesselBase):
@@ -353,6 +361,11 @@ class besseli(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z):
         return self._eval_rewrite_as_besselj(*self.args).rewrite(jn)
 
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_real:
+            return True
+
 
 class besselk(BesselBase):
     r"""
@@ -427,6 +440,11 @@ class besselk(BesselBase):
         ay = self._eval_rewrite_as_bessely(*self.args)
         if ay:
             return ay.rewrite(yn)
+
+    def _eval_is_real(self):
+        nu, z = self.args
+        if nu.is_integer and z.is_positive:
+            return True
 
 
 class hankel1(BesselBase):
@@ -693,8 +711,8 @@ def jn_zeros(n, k, method="sympy", dps=15):
         from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
-                                              int(k)), prec)
-                for k in xrange(1, k + 1)]
+                                              int(l)), prec)
+                for l in xrange(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn
         from scipy.optimize import newton
@@ -719,3 +737,689 @@ def jn_zeros(n, k, method="sympy", dps=15):
         root = solver(f, root + pi)
         roots.append(root)
     return roots
+
+
+class AiryBase(Function):
+    """
+    Abstract base class for Airy functions.
+
+    This class is meant to reduce code duplication.
+    """
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            re, im = self.args[0].as_real_imag()
+        return (re, im)
+
+    def as_real_imag(self, deep=True, **hints):
+        x, y = self._as_real_imag(deep=deep, **hints)
+        sq = -y**2/x**2
+        re = S.Half*(self.func(x+x*sqrt(sq))+self.func(x-x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x-x*sqrt(sq)) - self.func(x+x*sqrt(sq)))
+        return (re, im)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+
+class airyai(AiryBase):
+    r"""
+    The Airy function `\operatorname{Ai}` of the first kind.
+
+    The Airy function `\operatorname{Ai}(z)` is defined to be the function
+    satisfying Airy's differential equation
+
+    .. math::
+        \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
+
+    Equivalently, for real `z`
+
+    .. math::
+        \operatorname{Ai}(z) := \frac{1}{\pi}
+        \int_0^\infty \cos\left(\frac{t^3}{3} + z t\right) \mathrm{d}t.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airyai
+    >>> from sympy.abc import z
+
+    >>> airyai(z)
+    airyai(z)
+
+    Several special values are known:
+
+    >>> airyai(0)
+    3**(1/3)/(3*gamma(2/3))
+    >>> from sympy import oo
+    >>> airyai(oo)
+    0
+    >>> airyai(-oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airyai(z))
+    airyai(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airyai(z), z)
+    airyaiprime(z)
+    >>> diff(airyai(z), z, 2)
+    z*airyai(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airyai(z), z, 0, 3)
+    3**(5/6)*gamma(1/3)/(6*pi) - 3**(1/6)*z*gamma(2/3)/(2*pi) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airyai(-2).evalf(50)
+    0.22740742820168557599192443603787379946077222541710
+
+    Rewrite Ai(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airyai(z).rewrite(hyper)
+    -3**(2/3)*z*hyper((), (4/3,), z**3/9)/(3*gamma(1/3)) + 3**(1/3)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3))
+
+    See Also
+    ========
+
+    airybi: Airy function of the second kind.
+    airyaiprime: Derivative of the Airy function of the first kind.
+    airybiprime: Derivative of the Airy function of the second kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return airyaiprime(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return ((3**(S(1)/3)*x)**(-n)*(3**(S(1)/3)*x)**(n + 1)*sin(pi*(2*n/3 + S(4)/3))*C.factorial(n) *
+                        gamma(n/3 + S(2)/3)/(sin(pi*(2*n/3 + S(2)/3))*C.factorial(n + 1)*gamma(n/3 + S(1)/3)) * p)
+            else:
+                return (S.One/(3**(S(2)/3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
+                        C.factorial(n) * (root(3, 3)*x)**n)
+
+    def _eval_rewrite_as_besselj(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return ot*sqrt(-z) * (besselj(-ot, tt*a) + besselj(ot, tt*a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return ot*sqrt(z) * (besseli(-ot, tt*a) - besseli(ot, tt*a))
+        else:
+            return ot*(C.Pow(a, ot)*besseli(-ot, tt*a) - z*C.Pow(a, -ot)*besseli(ot, tt*a))
+
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = S.One / (3**(S(2)/3)*gamma(S(2)/3))
+        pf2 = z / (root(3, 3)*gamma(S(1)/3))
+        return pf1 * hyper([], [S(2)/3], z**3/9) - pf2 * hyper([], [S(4)/3], z**3/9)
+
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.free_symbols
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+            M = arg.match(c*(d*z**n)**m)
+            if M is not None:
+                m = M[m]
+                # The transformation is given by 03.05.16.0001.01
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAi/16/01/01/0001/
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+                    pf = (d * z**n)**m / (d**m * z**(m*n))
+                    newarg = c * d**m * z**(m*n)
+                    return S.Half * ((pf + S.One)*airyai(newarg) - (pf - S.One)/sqrt(3)*airybi(newarg))
+
+
+class airybi(AiryBase):
+    r"""
+    The Airy function `\operatorname{Bi}` of the second kind.
+
+    The Airy function `\operatorname{Bi}(z)` is defined to be the function
+    satisfying Airy's differential equation
+
+    .. math::
+        \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
+
+    Equivalently, for real `z`
+
+    .. math::
+        \operatorname{Bi}(z) := \frac{1}{\pi}
+                 \int_0^\infty
+                   \exp\left(-\frac{t^3}{3} + z t\right)
+                   + \sin\left(\frac{t^3}{3} + z t\right) \mathrm{d}t.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airybi
+    >>> from sympy.abc import z
+
+    >>> airybi(z)
+    airybi(z)
+
+    Several special values are known:
+
+    >>> airybi(0)
+    3**(5/6)/(3*gamma(2/3))
+    >>> from sympy import oo
+    >>> airybi(oo)
+    oo
+    >>> airybi(-oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airybi(z))
+    airybi(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airybi(z), z)
+    airybiprime(z)
+    >>> diff(airybi(z), z, 2)
+    z*airybi(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airybi(z), z, 0, 3)
+    3**(1/3)*gamma(1/3)/(2*pi) + 3**(2/3)*z*gamma(2/3)/(2*pi) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airybi(-2).evalf(50)
+    -0.41230258795639848808323405461146104203453483447240
+
+    Rewrite Bi(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airybi(z).rewrite(hyper)
+    3**(1/6)*z*hyper((), (4/3,), z**3/9)/gamma(1/3) + 3**(5/6)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3))
+
+    See Also
+    ========
+
+    airyai: Airy function of the first kind.
+    airyaiprime: Derivative of the Airy function of the first kind.
+    airybiprime: Derivative of the Airy function of the second kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Infinity
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return airybiprime(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 1:
+                p = previous_terms[-1]
+                return (3**(S(1)/3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * C.factorial((n - S.One)/S(3)) /
+                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * C.factorial((n - 2)/S(3))) * p)
+            else:
+                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
+                        C.factorial(n) * (root(3, 3)*x)**n)
+
+    def _eval_rewrite_as_besselj(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return sqrt(-z/3) * (besselj(-ot, tt*a) - besselj(ot, tt*a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return sqrt(z)/sqrt(3) * (besseli(-ot, tt*a) + besseli(ot, tt*a))
+        else:
+            b = C.Pow(a, ot)
+            c = C.Pow(a, -ot)
+            return sqrt(ot)*(b*besseli(-ot, tt*a) + z*c*besseli(ot, tt*a))
+
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = S.One / (root(3, 6)*gamma(S(2)/3))
+        pf2 = z*root(3, 6) / gamma(S(1)/3)
+        return pf1 * hyper([], [S(2)/3], z**3/9) + pf2 * hyper([], [S(4)/3], z**3/9)
+
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.free_symbols
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+            M = arg.match(c*(d*z**n)**m)
+            if M is not None:
+                m = M[m]
+                # The transformation is given by 03.06.16.0001.01
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBi/16/01/01/0001/
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+                    pf = (d * z**n)**m / (d**m * z**(m*n))
+                    newarg = c * d**m * z**(m*n)
+                    return S.Half * (sqrt(3)*(S.One - pf)*airyai(newarg) + (S.One + pf)*airybi(newarg))
+
+
+class airyaiprime(AiryBase):
+    r"""
+    The derivative `\operatorname{Ai}^\prime` of the Airy function of the first kind.
+
+    The Airy function `\operatorname{Ai}^\prime(z)` is defined to be the function
+
+    .. math::
+        \operatorname{Ai}^\prime(z) := \frac{\mathrm{d} \operatorname{Ai}(z)}{\mathrm{d} z}.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airyaiprime
+    >>> from sympy.abc import z
+
+    >>> airyaiprime(z)
+    airyaiprime(z)
+
+    Several special values are known:
+
+    >>> airyaiprime(0)
+    -3**(2/3)/(3*gamma(1/3))
+    >>> from sympy import oo
+    >>> airyaiprime(oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airyaiprime(z))
+    airyaiprime(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airyaiprime(z), z)
+    z*airyai(z)
+    >>> diff(airyaiprime(z), z, 2)
+    z*airyaiprime(z) + airyai(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airyaiprime(z), z, 0, 3)
+    -3**(2/3)/(3*gamma(1/3)) + 3**(1/3)*z**2/(6*gamma(2/3)) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airyaiprime(-2).evalf(50)
+    0.61825902074169104140626429133247528291577794512415
+
+    Rewrite Ai'(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airyaiprime(z).rewrite(hyper)
+    3**(1/3)*z**2*hyper((), (5/3,), z**3/9)/(6*gamma(2/3)) - 3**(2/3)*hyper((), (1/3,), z**3/9)/(3*gamma(1/3))
+
+    See Also
+    ========
+
+    airyai: Airy function of the first kind.
+    airybi: Airy function of the second kind.
+    airybiprime: Derivative of the Airy function of the second kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return -S.One / (3**Rational(1, 3) * gamma(Rational(1, 3)))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return self.args[0]*airyai(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_evalf(self, prec):
+        from sympy.mpmath import mp
+        from sympy import Expr
+        z = self.args[0]._to_mpmath(prec)
+        oprec = mp.prec
+        mp.prec = prec
+        res = mp.airyai(z, derivative=1)
+        mp.prec = oprec
+        return Expr._from_mpmath(res, prec)
+
+    def _eval_rewrite_as_besselj(self, z):
+        tt = Rational(2, 3)
+        a = C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return z/3 * (besselj(-tt, tt*a) - besselj(tt, tt*a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = tt * C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return z/3 * (besseli(tt, a) - besseli(-tt, a))
+        else:
+            a = C.Pow(z, Rational(3, 2))
+            b = C.Pow(a, tt)
+            c = C.Pow(a, -tt)
+            return ot * (z**2*c*besseli(tt, tt*a) - b*besseli(-ot, tt*a))
+
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = z**2 / (2*3**(S(2)/3)*gamma(S(2)/3))
+        pf2 = 1 / (root(3, 3)*gamma(S(1)/3))
+        return pf1 * hyper([], [S(5)/3], z**3/9) - pf2 * hyper([], [S(1)/3], z**3/9)
+
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.free_symbols
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+            M = arg.match(c*(d*z**n)**m)
+            if M is not None:
+                m = M[m]
+                # The transformation is in principle
+                # given by 03.07.16.0001.01 but note
+                # that there is an error in this formule.
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+                    pf = (d**m * z**(n*m)) / (d * z**n)**m
+                    newarg = c * d**m * z**(n*m)
+                    return S.Half * ((pf + S.One)*airyaiprime(newarg) + (pf - S.One)/sqrt(3)*airybiprime(newarg))
+
+
+class airybiprime(AiryBase):
+    r"""
+    The derivative `\operatorname{Bi}^\prime` of the Airy function of the first kind.
+
+    The Airy function `\operatorname{Bi}^\prime(z)` is defined to be the function
+
+    .. math::
+        \operatorname{Bi}^\prime(z) := \frac{\mathrm{d} \operatorname{Bi}(z)}{\mathrm{d} z}.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airybiprime
+    >>> from sympy.abc import z
+
+    >>> airybiprime(z)
+    airybiprime(z)
+
+    Several special values are known:
+
+    >>> airybiprime(0)
+    3**(1/6)/gamma(1/3)
+    >>> from sympy import oo
+    >>> airybiprime(oo)
+    oo
+    >>> airybiprime(-oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airybiprime(z))
+    airybiprime(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airybiprime(z), z)
+    z*airybi(z)
+    >>> diff(airybiprime(z), z, 2)
+    z*airybiprime(z) + airybi(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airybiprime(z), z, 0, 3)
+    3**(1/6)/gamma(1/3) + 3**(5/6)*z**2/(6*gamma(2/3)) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airybiprime(-2).evalf(50)
+    0.27879516692116952268509756941098324140300059345163
+
+    Rewrite Bi'(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airybiprime(z).rewrite(hyper)
+    3**(5/6)*z**2*hyper((), (5/3,), z**3/9)/(6*gamma(2/3)) + 3**(1/6)*hyper((), (1/3,), z**3/9)/gamma(1/3)
+
+    See Also
+    ========
+
+    airyai: Airy function of the first kind.
+    airybi: Airy function of the second kind.
+    airyaiprime: Derivative of the Airy function of the first kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    """
+
+    nargs = 1
+    unbranched = True
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Infinity
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return 3**Rational(1, 6) / gamma(Rational(1, 3))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return self.args[0]*airybi(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_evalf(self, prec):
+        from sympy.mpmath import mp
+        from sympy import Expr
+        z = self.args[0]._to_mpmath(prec)
+        oprec = mp.prec
+        mp.prec = prec
+        res = mp.airybi(z, derivative=1)
+        mp.prec = oprec
+        return Expr._from_mpmath(res, prec)
+
+    def _eval_rewrite_as_besselj(self, z):
+        tt = Rational(2, 3)
+        a = tt * C.Pow(-z, Rational(3, 2))
+        if re(z).is_negative:
+            return -z/sqrt(3) * (besselj(-tt, a) + besselj(tt, a))
+
+    def _eval_rewrite_as_besseli(self, z):
+        ot = Rational(1, 3)
+        tt = Rational(2, 3)
+        a = tt * C.Pow(z, Rational(3, 2))
+        if re(z).is_positive:
+            return z/sqrt(3) * (besseli(-tt, a) + besseli(tt, a))
+        else:
+            a = C.Pow(z, Rational(3, 2))
+            b = C.Pow(a, tt)
+            c = C.Pow(a, -tt)
+            return sqrt(ot) * (b*besseli(-tt, tt*a) + z**2*c*besseli(tt, tt*a))
+
+    def _eval_rewrite_as_hyper(self, z):
+        pf1 = z**2 / (2*root(3, 6)*gamma(S(2)/3))
+        pf2 = root(3, 6) / gamma(S(1)/3)
+        return pf1 * hyper([], [S(5)/3], z**3/9) + pf2 * hyper([], [S(1)/3], z**3/9)
+
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
+        symbs = arg.free_symbols
+
+        if len(symbs) == 1:
+            z = symbs.pop()
+            c = Wild("c", exclude=[z])
+            d = Wild("d", exclude=[z])
+            m = Wild("m", exclude=[z])
+            n = Wild("n", exclude=[z])
+            M = arg.match(c*(d*z**n)**m)
+            if M is not None:
+                m = M[m]
+                # The transformation is in principle
+                # given by 03.08.16.0001.01 but note
+                # that there is an error in this formule.
+                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
+                if (3*m).is_integer:
+                    c = M[c]
+                    d = M[d]
+                    n = M[n]
+                    pf = (d**m * z**(n*m)) / (d * z**n)**m
+                    newarg = c * d**m * z**(n*m)
+                    return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))

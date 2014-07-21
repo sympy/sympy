@@ -335,10 +335,7 @@ def test_fp_lambertw():
     assert ae(fp.lambertw(-3-4j, 2), (-0.55792273874679112639 + 8.7173627024159324811j))
     assert ae(fp.lambertw(10000+1000j, 2), (6.6223802254585662734 + 11.61348646825020766j))
 
-# This function has to be split because it is too long for Jython.
-# See http://grinder.sourceforge.net/faq.html#faq-N10544.
-
-def test_fp_stress_ei_e1_1():
+def test_fp_stress_ei_e1():
     # Can be tightened on recent Pythons with more accurate math/cmath
     ATOL = 1e-13
     PTOL = 1e-12
@@ -596,13 +593,6 @@ def test_fp_stress_ei_e1_1():
     assert ae(v, (5855431.4907298084434 - 720920.93315409165707j), tol=ATOL)
     assert ae(v.real, 5855431.4907298084434, tol=PTOL)
     assert ae(v.imag, -720920.93315409165707, tol=PTOL)
-
-
-def test_fp_stress_ei_e1_2():
-    # Can be tightened on recent Pythons with more accurate math/cmath
-    ATOL = 1e-13
-    PTOL = 1e-12
-
     v = fp.e1((-30.0 + 120.0j))
     assert ae(v, (-65402491644.703470747 - 56697658399.657460294j), tol=ATOL)
     assert ae(v.real, -65402491644.703470747, tol=PTOL)
@@ -1022,12 +1012,6 @@ def test_fp_stress_ei_e1_2():
     v = fp.ei(1.1641532182693481445e-10)
     assert ae(v, -22.296641293460247028, tol=ATOL)
     assert type(v) is float
-
-def test_fp_stress_ei_e1_3():
-    # Can be tightened on recent Pythons with more accurate math/cmath
-    ATOL = 1e-13
-    PTOL = 1e-12
-
     v = fp.ei(0.25)
     assert ae(v, -0.54254326466191372953, tol=ATOL)
     assert type(v) is float

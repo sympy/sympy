@@ -242,7 +242,8 @@ def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
     e = powsimp(e, deep=True, combine='exp')
-    assert isinstance(e, Basic)
+    if not isinstance(e, Basic):
+        raise TypeError("e should be an instance of Basic")
     if not e.has(x):
         return SubsSet(), e
     elif e == x:
@@ -306,9 +307,10 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     f and g and returns either (f, expsf) [if f is larger], (g, expsg)
     [if g is larger] or (union, expsboth) [if f, g are of the same class].
     """
-    assert isinstance(f, SubsSet)
-    assert isinstance(g, SubsSet)
-
+    if not isinstance(f, SubsSet):
+        raise TypeError("f should be an instance of SubsSet")
+    if not isinstance(g, SubsSet):
+        raise TypeError("g should be an instance of SubsSet")
     if f == SubsSet():
         return g, expsg
     elif g == SubsSet():
@@ -322,7 +324,8 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     elif c == "<":
         return g, expsg
     else:
-        assert c == "="
+        if c != "=":
+            raise ValueError("c should be =")
         return union, expsboth
 
 
@@ -359,7 +362,8 @@ def sign(e, x):
     the same thing as the sign of e.]
     """
     from sympy import sign as _sign
-    assert isinstance(e, Basic)
+    if not isinstance(e, Basic):
+        raise TypeError("e should be an instance of Basic")
 
     if e.is_positive:
         return 1
@@ -422,7 +426,8 @@ def limitinf(e, x):
             return c0*oo
         s = sign(c0, x)
         #the leading term shouldn't be 0:
-        assert s != 0
+        if s == 0:
+            raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
         return limitinf(c0, x)  # e0=0: lim f = lim c0
@@ -448,20 +453,15 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.core.exprtools import factor_terms
+    from sympy.polys import cancel
 
-    n = 1
-    while 1:
-        series = e.nseries(x, n=n, logx=logx)
-        if not series.has(Order):
-            # The series expansion is locally exact.
-            return series
+    for t in e.lseries(x, logx=logx):
+        t = cancel(t)
 
-        series = series.removeO()
-        series = factor_terms(series, fraction=True)
-        if series:
-            return series
-        n *= 2
+        if t.simplify():
+            break
+
+    return t
 
 
 @debug
@@ -478,7 +478,8 @@ def mrv_leadterm(e, x):
         # e really does not depend on x after simplification
         series = calculate_series(e, x)
         c0, e0 = series.leadterm(x)
-        assert e0 == 0
+        if e0 != 0:
+            raise ValueError("e0 should be 0")
         return c0, e0
     if x in Omega:
         #move the whole omega up (exponentiate each term):
@@ -499,7 +500,6 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True, bounded=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
 
@@ -551,11 +551,14 @@ def rewrite(e, Omega, x, wsym):
     for examples and correct results.
     """
     from sympy import ilcm
-    assert isinstance(Omega, SubsSet)
-    assert len(Omega) != 0
+    if not isinstance(Omega, SubsSet):
+        raise TypeError("Omega should be an instance of SubsSet")
+    if len(Omega) == 0:
+        raise ValueError("Length can not be 0")
     #all items in Omega must be exponentials
     for t in Omega.keys():
-        assert t.func is exp
+        if not t.func is exp:
+            raise ValueError("Value should be exp")
     rewrites = Omega.rewrites
     Omega = list(Omega.items())
 
@@ -579,7 +582,8 @@ def rewrite(e, Omega, x, wsym):
             denominators.append(c.q)
         arg = f.args[0]
         if var in rewrites:
-            assert rewrites[var].func is exp
+            if not rewrites[var].func is exp:
+                raise ValueError("Value should be exp")
             arg = rewrites[var].args[0]
         O2.append((var, exp((arg - c*g.args[0]).expand())*wsym**c))
 

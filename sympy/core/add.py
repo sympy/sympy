@@ -2,8 +2,8 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core.core import C
-from sympy.core.compatibility import reduce
+from sympy.core.basic import C, Basic
+from sympy.core.compatibility import cmp_to_key, reduce, is_sequence
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
@@ -11,13 +11,11 @@ from sympy.core.numbers import ilcm, igcd
 from sympy.core.expr import Expr
 
 
+# Key for sorting commutative args in canonical order
+_args_sortkey = cmp_to_key(Basic.compare)
 def _addsort(args):
     # in-place sorting of args
-
-    # Currently we sort things using hashes, as it is quite fast. A better
-    # solution is not to sort things at all - but this needs some more
-    # fixing.
-    args.sort(key=hash)
+    args.sort(key=_args_sortkey)
 
 
 def _unevaluated_Add(*args):
@@ -181,6 +179,9 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
+                if terms[s] is S.NaN:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
             else:
                 terms[s] = c
 
@@ -345,7 +346,7 @@ class Add(Expr, AssocOp):
 
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
-    # issue 2425.
+    # issue 5524.
 
     def _eval_derivative(self, s):
         return self.func(*[f.diff(s) for f in self.args])
@@ -626,9 +627,9 @@ class Add(Expr, AssocOp):
             return self._new_rawargs(*args)
 
     @cacheit
-    def extract_leading_order(self, *symbols):
+    def extract_leading_order(self, symbols, point=None):
         """
-        Returns the leading term and it's order.
+        Returns the leading term and its order.
 
         Examples
         ========
@@ -643,7 +644,10 @@ class Add(Expr, AssocOp):
 
         """
         lst = []
-        seq = [(f, C.Order(f, *symbols)) for f in self.args]
+        symbols = list(symbols if is_sequence(symbols) else [symbols])
+        if not point:
+            point = [0]*len(symbols)
+        seq = [(f, C.Order(f, *zip(symbols, point))) for f in self.args]
         for ef, of in seq:
             for e, o in lst:
                 if o.contains(of) and o != of:
@@ -661,7 +665,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple represeting a complex numbers
+        returns a tuple representing a complex numbers
 
         Examples
         ========
@@ -705,13 +709,13 @@ class Add(Expr, AssocOp):
         else:
             plain = self.func(*[s for s, _ in self.extract_leading_order(x)])
             rv = factor_terms(plain, fraction=False)
-            rv_fraction = factor_terms(rv, fraction=True)
+            rv_simplify = rv.simplify()
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
-            if x not in rv_fraction.free_symbols:
-                if rv_fraction.is_zero and plain.is_zero is not True:
+            if x not in rv_simplify.free_symbols:
+                if rv_simplify.is_zero and plain.is_zero is not True:
                     return (self - plain)._eval_as_leading_term(x)
-                return rv_fraction
+                return rv_simplify
             return rv
 
     def _eval_adjoint(self):

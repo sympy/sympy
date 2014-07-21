@@ -98,7 +98,8 @@ def _af_rmuln(*abc):
     if m == 2:
         a, b = a
         return [a[i] for i in b]
-    assert m != 0
+    if m == 0:
+        raise ValueError("String must not be empty")
     p0 = _af_rmuln(*a[:m//2])
     p1 = _af_rmuln(*a[m//2:])
     return [p0[i] for i in p1]
@@ -315,6 +316,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle as C
         >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
@@ -347,6 +349,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
@@ -399,6 +402,7 @@ class Cycle(dict):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Cycle
         >>> Cycle(1, 2, 6)
         Cycle(1, 2, 6)
@@ -954,6 +958,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.print_cyclic = False
         >>> p = Permutation(2, 3)(4, 5)
@@ -1294,6 +1299,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics import Permutation
         >>> p = Permutation(1, 2, 9)
         >>> 2^p == p(2) == 9
@@ -1512,7 +1518,7 @@ class Permutation(Basic):
                 try:
                     # P([a, b, c])
                     return [i[j] for j in self._array_form]
-                except:
+                except Exception:
                     raise TypeError('unrecognized argument')
         else:
             # P(1, 2, 3)
@@ -1853,6 +1859,7 @@ class Permutation(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([])
         >>> p.is_Identity
@@ -2373,7 +2380,9 @@ class Permutation(Basic):
         """
         Returns the next permutation in Trotter-Johnson order.
         If self is the last permutation it returns None.
-        See [4] section 2.4.
+        See [4] section 2.4. If it is desired to generate all such
+        permutations, they can be generated in order more quickly
+        with the ``generate_bell`` function.
 
         Examples
         ========
@@ -2391,7 +2400,7 @@ class Permutation(Basic):
         See Also
         ========
 
-        rank_trotterjohnson, unrank_trotterjohnson
+        rank_trotterjohnson, unrank_trotterjohnson, sympy.utilities.iterables.generate_bell
         """
         pi = self.array_form[:]
         n = len(pi)

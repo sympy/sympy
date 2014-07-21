@@ -14,7 +14,8 @@ class ColorGradient(object):
             self.colors = list(args)
             self.intervals = [0.0, 1.0]
         elif len(args) > 0:
-            assert len(args) % 2 == 0
+            if len(args) % 2 != 0:
+                raise ValueError("len(args) should be even")
             self.colors = [args[i] for i in xrange(1, len(args), 2)]
             self.intervals = [args[i] for i in xrange(0, len(args), 2)]
         assert len(self.colors) == len(self.intervals)
@@ -116,7 +117,7 @@ class ColorScheme(object):
         elif len(lists) == 3:
             try:
                 (r1, r2), (g1, g2), (b1, b2) = lists
-            except:
+            except Exception:
                 raise ValueError("If three color arguments are given, "
                                  "they must be given in the format "
                                  "(r1, r2), (g1, g2), (b1, b2). To create "
@@ -214,7 +215,8 @@ class ColorScheme(object):
             raise ValueError("Color function is not callable.")
         try:
             result = self.f(0, 0, 0, 0, 0)
-            assert len(result) == 3
+            if len(result) != 3:
+                raise ValueError("length should be equal to 3")
         except TypeError as te:
             raise ValueError("Color function needs to accept x,y,z,u,v, "
                              "as arguments even if it doesn't use all of them.")

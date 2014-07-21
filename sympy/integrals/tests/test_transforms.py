@@ -424,12 +424,12 @@ def test_inverse_mellin_transform():
     # Section 8.4.20
     # TODO this can be further simplified!
     assert simplify(IMT(-2**(2*s)*cos(pi*a/2 - pi*b/2 + pi*s)*gamma(-2*s + 1) *
-                      gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s) /
-                      (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
+                    gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s) /
+                    (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
                     s, x,
-                      (Max(-re(a)/2 - re(b)/2, -re(a)/2 + re(b)/2), S(1)/2))) == \
-        (cos(pi*b)*besselj(b, sqrt(x)) - besselj(-b, sqrt(x)))*besselj(a,
-        sqrt(x))/sin(pi*b)
+                    (Max(-re(a)/2 - re(b)/2, -re(a)/2 + re(b)/2), S(1)/2))) == \
+                    besselj(a, sqrt(x))*-(besselj(-b, sqrt(x)) -
+                    besselj(b, sqrt(x))*cos(pi*b))/sin(pi*b)
     # TODO more
 
     # for coverage
@@ -714,3 +714,7 @@ def test_hankel_transform():
     assert inverse_hankel_transform(
         2**(nu + 1)*a*k**(-nu - 3)*(a**2/k**2 + 1)**(-nu - S(3)/2)*gamma(
         nu + S(3)/2)/sqrt(pi), k, r, nu) == r**nu*exp(-a*r)
+
+
+def test_issue_7181():
+    assert mellin_transform(1/(1 - x), x, s) != None

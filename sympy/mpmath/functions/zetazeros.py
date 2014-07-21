@@ -150,8 +150,25 @@ def separate_my_zero(ctx, my_zero_number, zero_number_block, T, V, prec):
     t1 = T[k0]
     t0 = T[k0-1]
     ctx.prec = prec
+    wpz = wpzeros(my_zero_number*ctx.log(my_zero_number))
+
+    guard = 4*ctx.mag(my_zero_number)
+    precs = [ctx.prec+4]
+    index=0
+    while precs[0] > 2*wpz:
+        index +=1
+        precs = [precs[0] // 2 +3+2*index] + precs
+    ctx.prec = precs[0] + guard
     r = ctx.findroot(lambda x:ctx.siegelz(x), (t0,t1), solver ='illinois', verbose=False)
-    return r
+    #print "first step at", ctx.dps, "digits"
+    z=ctx.mpc(0.5,r)
+    for prec in precs[1:]:
+        ctx.prec = prec + guard
+        #print "refining to", ctx.dps, "digits"
+        znew = z - ctx.zeta(z) / ctx.zeta(z, derivative=1)
+        #print "difference", ctx.nstr(abs(z-znew))
+        z=ctx.mpc(0.5,ctx.im(znew))
+    return ctx.im(z)
 
 def sure_number_block(ctx, n):
     """The number of good Rosser blocks needed to apply
@@ -332,7 +349,7 @@ def zetazero(ctx, n, info=False, round=True):
 
     The first few zeros::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 25; mp.pretty = True
         >>> zetazero(1)
         (0.5 + 14.13472514173469379045725j)
@@ -465,7 +482,7 @@ def nzeros(ctx, t):
 
     The first zero has imaginary part between 14 and 15::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> nzeros(14)
         0
@@ -537,7 +554,7 @@ def backlunds(ctx, t):
 
     **Examples**
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> backlunds(217.3)
         0.16302205431184

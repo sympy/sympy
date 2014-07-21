@@ -174,7 +174,7 @@ def cplot(ctx, f, re=[-5,5], im=[-5,5], points=2000, color=None,
                 v = (0.5, 0.5, 0.5)
             w[n,m] = v
         if verbose:
-            print(n, "of", N)
+            print(str(n) + ' of ' + str(N))
     rea, reb, ima, imb = [float(_) for _ in [rea, reb, ima, imb]]
     axes.imshow(w, extent=(rea, reb, ima, imb), origin='lower')
     axes.set_xlabel('Re(z)')
@@ -199,7 +199,7 @@ def splot(ctx, f, u=[-5,5], v=[-5,5], points=100, keep_aspect=True, \
 
     For example, to plot a simple function::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> f = lambda x, y: sin(x+y)*cos(y)
         >>> splot(f, [-pi,pi], [-pi,pi])    # doctest: +SKIP
 

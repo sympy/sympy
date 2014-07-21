@@ -21,7 +21,7 @@ Credits and Copyright
 
 This code was taken from Sage with the permission of all authors:
 
-http://groups.google.com/group/sage-devel/browse_thread/thread/33835976efbb3b7f
+https://groups.google.com/forum/#!topic/sage-devel/M4NZdu-7O38
 
 AUTHORS:
 
@@ -65,12 +65,12 @@ def _calc_factlist(nn):
         [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]
     """
     if nn >= len(_Factlist):
-        for ii in range(len(_Factlist), nn + 1):
+        for ii in range(len(_Factlist), int(nn + 1)):
             _Factlist.append(_Factlist[ii - 1] * ii)
     return _Factlist[:int(nn) + 1]
 
 
-def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
+def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`.
 
@@ -78,13 +78,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
     OUTPUT:
 
-    Rational number times the square root of a rational number
-    (if ``prec=None``), or real number if a precision is given.
+    Rational number times the square root of a rational number.
 
     Examples
     ========
@@ -217,7 +213,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     return res
 
 
-def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
+def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculates the Clebsch-Gordan coefficient
     `\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle`.
@@ -228,13 +224,9 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
     OUTPUT:
 
-    Rational number times the square root of a rational number
-    (if ``prec=None``), or real number if a precision is given.
+    Rational number times the square root of a rational number.
 
     EXAMPLES::
 
@@ -266,7 +258,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     - Jens Rasch (2009-03-24): initial version
     """
     res = (-1) ** sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
-        wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3, prec)
+        wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
     return res
 
 
@@ -296,6 +288,7 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         sage: _big_delta_coeff(1,1,1)
         1/2*sqrt(1/6)
     """
+
     if int(aa + bb - cc) != (aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if int(aa + cc - bb) != (aa + cc - bb):
@@ -384,7 +377,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     _calc_factlist(maxfact)
 
     sumres = 0
-    for kk in range(imin, imax + 1):
+    for kk in range(int(imin), int(imax) + 1):
         den = _Factlist[int(kk - aa - bb - ee)] * \
             _Factlist[int(kk - cc - dd - ee)] * \
             _Factlist[int(kk - aa - cc - ff)] * \
@@ -540,7 +533,7 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     imax = min(j_1 + j_9, j_2 + j_6, j_4 + j_8)
 
     sumres = 0
-    for kk in range(imin, imax + 1):
+    for kk in range(imin, int(imax) + 1):
         sumres = sumres + (2 * kk + 1) * \
             racah(j_1, j_2, j_9, j_6, j_3, kk, prec) * \
             racah(j_4, j_6, j_8, j_2, j_5, kk, prec) * \
@@ -685,7 +678,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
          _Factlist[bigL - l_2] * _Factlist[bigL - l_3])
 
     sumres = 0
-    for ii in range(imin, imax + 1):
+    for ii in range(int(imin), int(imax) + 1):
         den = _Factlist[ii] * _Factlist[ii + l_3 - l_1 - m_2] * \
             _Factlist[l_2 + m_2 - ii] * _Factlist[l_1 - ii - m_1] * \
             _Factlist[ii + l_3 - l_2 + m_1] * _Factlist[l_1 + l_2 - l_3 - ii]

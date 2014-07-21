@@ -99,7 +99,7 @@ From Wikipedia ([WikiPappus]_):
 
   Given one set of collinear points `A`, `B`, `C`, and another set of collinear
   points `a`, `b`, `c`, then the intersection points `X`, `Y`, `Z` of line pairs `Ab` and
-  `aB`, `Ac` and `aC`, `Bc` and `bC` are collinear. 
+  `aB`, `Ac` and `aC`, `Bc` and `bC` are collinear.
 
 ::
 
@@ -196,7 +196,7 @@ Geometry Visualization
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The plotting module is capable of plotting geometric entities. See
-`Plotting Geometric Entities <https://github.com/sympy/sympy/wiki/Plotting-Module>`_ in
+:ref:`Plotting Geometric Entities <plot_geom>` in
 the plotting module entry.
 
 API Reference
@@ -280,4 +280,3 @@ Polygons
 
 .. autoclass:: Triangle
    :members:
-

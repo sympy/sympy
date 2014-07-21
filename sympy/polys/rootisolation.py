@@ -71,8 +71,8 @@ def dup_sturm(f, K):
     return sturm[:-1]
 
 def dup_root_upper_bound(f, K):
-    """Compute the LMQ upper bound for `f`'s positive roots,
-       which was developed by Akritas-Strzebonski-Vigklas.
+    """Compute the LMQ upper bound for the positive roots of `f`;
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
        Reference:
        ==========
@@ -80,33 +80,34 @@ def dup_root_upper_bound(f, K):
            Values of the Positive Roots of Polynomials"
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009.
     """
-    n, t, P = len(f), K.one, []
-
+    n, P = len(f), []
+    t = n * [K.one]
     if dup_LC(f, K) < 0:
         f = dup_neg(f, K)
-
     f = list(reversed(f))
 
     for i in xrange(0, n):
         if f[i] >= 0:
             continue
 
-        a, Q = K.log(-f[i], 2), []
+        a, QL = K.log(-f[i], 2), []
 
         for j in xrange(i + 1, n):
 
             if f[j] <= 0:
                 continue
 
-            q = t + a - K.log(f[j], 2)
-            Q.append(q // (j - i))
+            q = t[j] + a - K.log(f[j], 2)
+            QL.append([q // (j - i) , j])
 
-            t += 1
-
-        if not Q:
+        if not QL:
             continue
 
-        P.append(min(Q))
+        q = min(QL)
+
+        t[q[1]] = t[q[1]] + 1
+
+        P.append(q[0])
 
     if not P:
         return None
@@ -114,7 +115,8 @@ def dup_root_upper_bound(f, K):
         return K.get_field()(2)**(max(P) + 1)
 
 def dup_root_lower_bound(f, K):
-    """Compute LMQ lower bound for `f`'s positive roots.
+    """Compute the LMQ lower bound for the positive roots of `f`;
+       LMQ (Local Max Quadratic) was developed by Akritas-Strzebonski-Vigklas.
 
        Reference:
        ==========

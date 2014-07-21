@@ -29,9 +29,11 @@ def dpll_satisfiable(expr):
     False
 
     """
+    clauses = conjuncts(to_cnf(expr))
+    if False in clauses:
+        return False
     symbols = sorted(_find_predicates(expr), key=default_sort_key)
     symbols_int_repr = set(range(1, len(symbols) + 1))
-    clauses = conjuncts(to_cnf(expr))
     clauses_int_repr = to_int_repr(clauses, symbols)
     result = dpll_int_repr(clauses_int_repr, symbols_int_repr, {})
     if not result:

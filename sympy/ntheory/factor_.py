@@ -55,7 +55,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     1. p**M is the base-p divisor of n
     2. sm(p + m) is the smoothness of p + m (m = -1 by default)
-    3. psm(p + n) is the power smoothness of p + m
+    3. psm(p + m) is the power smoothness of p + m
 
     The list is sorted according to smoothness (default) or by power smoothness
     if power=1.

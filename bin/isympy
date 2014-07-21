@@ -15,6 +15,7 @@ the user:
     >>> x, y, z, t = symbols('x y z t')
     >>> k, m, n = symbols('k m n', integer=True)
     >>> f, g, h = symbols('f g h', cls=Function)
+    >>> init_printing()
 
 So starting 'isympy' is equivalent to starting Python (or IPython) and
 executing the above commands by hand.  It is intended for easy and quick

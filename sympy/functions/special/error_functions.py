@@ -90,7 +90,6 @@ class erf(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erf
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -98,6 +97,13 @@ class erf(Function):
             return 2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfinv
 
     @classmethod
     def eval(cls, arg):
@@ -274,7 +280,6 @@ class erfc(Function):
     .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -282,6 +287,12 @@ class erfc(Function):
             return -2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfcinv
 
     @classmethod
     def eval(cls, arg):
@@ -452,7 +463,6 @@ class erfi(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
     """
 
-    nargs = 1
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -616,7 +626,6 @@ class erf2(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
     """
 
-    nargs = 2
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -733,13 +742,18 @@ class erfinv(Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
     """
 
-    nargs = 1
 
     def fdiff(self, argindex =1):
         if argindex == 1:
             return sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else :
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erf
 
     @classmethod
     def eval(cls, z):
@@ -806,13 +820,18 @@ class erfcinv (Function):
     .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
     """
 
-    nargs = 1
 
     def fdiff(self, argindex =1):
         if argindex == 1:
             return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfc
 
     @classmethod
     def eval(cls, z):
@@ -878,7 +897,6 @@ class erf2inv(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
     """
 
-    nargs = 2
 
     def fdiff(self, argindex):
         x, y = self.args
@@ -925,7 +943,7 @@ class Ei(Function):
     where `\gamma` is the Euler-Mascheroni constant.
 
     If `x` is a polar number, this defines an analytic function on the
-    riemann surface of the logarithm. Otherwise this defines an analytic
+    Riemann surface of the logarithm. Otherwise this defines an analytic
     function in the cut plane `\mathbb{C} \setminus (-\infty, 0]`.
 
     **Background**
@@ -1006,18 +1024,17 @@ class Ei(Function):
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
     Chi: Hyperbolic cosine integral.
-    sympy.functions.special.gamma_functions.uppergamma
+    sympy.functions.special.gamma_functions.uppergamma: Upper incomplete gamma function.
 
     References
     ==========
 
     .. [1] http://dlmf.nist.gov/6.6
     .. [2] http://en.wikipedia.org/wiki/Exponential_integral
-    .. [3] Abramowitz & Stegun, section 5: http://www.math.sfu.ca/~cbm/aands/page_228.htm
+    .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1176,7 +1193,6 @@ class expint(Function):
 
     """
 
-    nargs = 2
 
     @classmethod
     def eval(cls, nu, z):
@@ -1194,7 +1210,7 @@ class expint(Function):
         if n == 0:
             return
         if nu.is_integer:
-            if (nu > 0) is not True:
+            if (nu > 0) != True:
                 return
             return expint(nu, z) \
                 - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
@@ -1361,7 +1377,6 @@ class li(Function):
     .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1479,7 +1494,6 @@ class Li(Function):
     .. [3] http://dlmf.nist.gov/6
     """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1511,7 +1525,6 @@ class Li(Function):
 class TrigonometricIntegral(Function):
     """ Base class for trigonometric integrals. """
 
-    nargs = 1
 
     @classmethod
     def eval(cls, z):
@@ -1910,7 +1923,8 @@ class Chi(TrigonometricIntegral):
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
     def _latex(self, printer, exp=None):
-        assert len(self.args) == 1
+        if len(self.args) != 1:
+            raise ValueError("Arg length should be 1")
         if exp:
             return r'\operatorname{Chi}^{%s}{\left (%s \right )}' \
                 % (printer._print(exp), printer._print(self.args[0]))
@@ -1929,7 +1943,6 @@ class Chi(TrigonometricIntegral):
 class FresnelIntegral(Function):
     """ Base class for the Fresnel integrals."""
 
-    nargs = 1
     unbranched = True
 
     @classmethod
@@ -2074,7 +2087,7 @@ class fresnels(FresnelIntegral):
     See Also
     ========
 
-    fresnelc
+    fresnelc: Fresnel cosine integral.
 
     References
     ==========
@@ -2083,8 +2096,10 @@ class fresnels(FresnelIntegral):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelS
-    """
+    .. [5] The converging factors for the fresnel integrals
+            by John W. Wrench Jr. and Vicki Alley
 
+    """
     _trigfunc = C.sin
     _sign = -S.One
 
@@ -2110,6 +2125,29 @@ class fresnels(FresnelIntegral):
     def _eval_rewrite_as_meijerg(self, z):
         return (pi*z**(S(9)/4) / (sqrt(2)*(z**2)**(S(3)/4)*(-z)**(S(3)/4))
                 * meijerg([], [1], [S(3)/4], [S(1)/4, 0], -pi**2*z**4/16))
+
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+
+            # expansion of S(x) = S1(x*sqrt(pi/2)), see reference[5] page 1-8
+            p = [(-1)**k * C.factorial(4*k + 1) /
+                 (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
+                 for k in xrange(0, n)]
+            q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
+                 (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
+                 for k in xrange(1, n)]
+
+            p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
+            q = [-sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
+
+            return S.Half + (C.sin(z**2)*Add(*p) + C.cos(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+
+        # All other points are not handled
+        return super(fresnels, self)._eval_aseries(n, args0, x, logx)
 
 
 class fresnelc(FresnelIntegral):
@@ -2181,7 +2219,7 @@ class fresnelc(FresnelIntegral):
     See Also
     ========
 
-    fresnels
+    fresnels: Fresnel sine integral.
 
     References
     ==========
@@ -2190,8 +2228,9 @@ class fresnelc(FresnelIntegral):
     .. [2] http://dlmf.nist.gov/7
     .. [3] http://mathworld.wolfram.com/FresnelIntegrals.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/FresnelC
+    .. [5] The converging factors for the fresnel integrals
+            by John W. Wrench Jr. and Vicki Alley
     """
-
     _trigfunc = C.cos
     _sign = S.One
 
@@ -2218,6 +2257,30 @@ class fresnelc(FresnelIntegral):
         return (pi*z**(S(3)/4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [S(1)/4], [S(3)/4, 0], -pi**2*z**4/16))
 
+    def _eval_aseries(self, n, args0, x, logx):
+        point = args0[0]
+
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+
+            # expansion of C(x) = C1(x*sqrt(pi/2)), see reference[5] page 1-8
+            p = [(-1)**k * C.factorial(4*k + 1) /
+                 (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*C.factorial(2*k))
+                 for k in xrange(0, n)]
+            q = [1/(2*z)] + [(-1)**k * C.factorial(4*k - 1) /
+                 (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*C.factorial(2*k - 1))
+                 for k in xrange(1, n)]
+
+            p = [-sqrt(2/pi)*t for t in p] + [C.Order(1/z**n, x)]
+            q = [ sqrt(2/pi)*t for t in q] + [C.Order(1/z**n, x)]
+
+            return S.Half + (C.cos(z**2)*Add(*p) + C.sin(z**2)*Add(*q)).subs(x, sqrt(2/pi)*x)
+
+        # All other points are not handled
+        return super(fresnelc, self)._eval_aseries(n, args0, x, logx)
+
+
 ###############################################################################
 #################### HELPER FUNCTIONS #########################################
 ###############################################################################
@@ -2229,7 +2292,6 @@ class _erfs(Function):
     tractable for the Gruntz algorithm.
     """
 
-    nargs = 1
 
     def _eval_aseries(self, n, args0, x, logx):
         point = args0[0]
@@ -2274,7 +2336,6 @@ class _eis(Function):
     tractable for the Gruntz algorithm.
     """
 
-    nargs = 1
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != S.Infinity:

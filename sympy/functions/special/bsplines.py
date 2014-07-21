@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S, sympify, expand
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.functions.elementary.piecewise import ExprCondPair
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 
 
 def _add_splines(c, b1, d, b2):
@@ -15,7 +15,8 @@ def _add_splines(c, b1, d, b2):
     else:
         new_args = []
         n_intervals = len(b1.args)
-        assert(n_intervals == len(b2.args))
+        if n_intervals != len(b2.args):
+            raise ValueError("Args of b1 and b2 are not equal")
         new_args.append((c*b1.args[0].expr, b1.args[0].cond))
         for i in range(1, n_intervals - 1):
             new_args.append((

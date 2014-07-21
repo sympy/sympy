@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
-    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
+    factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -67,7 +67,7 @@ def test_fcode_functions():
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
 
 
-#issue 3715
+#issue 6814
 def test_fcode_functions_with_integers():
     x= symbols('x')
     assert fcode(x * log(10)) == "      x*log(10.0d0)"
@@ -158,7 +158,7 @@ def test_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
         "      do i = 1, n\n"
-        "         A(i) = A(i)*(1 + A(i))*(2 + A(i))\n"
+        "         A(i) = (A(i) + 1)*(A(i) + 2)*A(i)\n"
         "      end do"
     )
 
@@ -546,7 +546,9 @@ def test_loops():
 
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
-            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'})
+            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'} or
+            code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'} or
+            code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'})
 
 
 def test_dummy_loops():
@@ -565,6 +567,16 @@ def test_dummy_loops():
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
+
+def test_fcode_Indexed_without_looking_for_contraction():
+    len_y = 5
+    y = IndexedBase('y', shape=(len_y,))
+    x = IndexedBase('x', shape=(len_y,))
+    Dy = IndexedBase('Dy', shape=(len_y-1,))
+    i = Idx('i', len_y-1)
+    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    code0 = fcode(e.rhs, assign_to=e.lhs, contract=False)
+    assert code0.endswith('Dy(i) = (y(i + 1) - y(i))/(x(i + 1) - x(i))')
 
 
 def test_derived_classes():

@@ -334,9 +334,9 @@ class RootOf(Expr):
         if not radicals:
             return None
 
-        if radicals and poly.degree() == 2:
+        if poly.degree() == 2:
             return roots_quadratic(poly)
-        elif radicals and poly.length() == 2 and poly.TC():
+        elif poly.length() == 2 and poly.TC():
             return roots_binomial(poly)
         else:
             return None
@@ -510,7 +510,7 @@ class RootSum(Expr):
             except AttributeError:
                 is_func = False
 
-            if is_func and (func.nargs == 1 or 1 in func.nargs):
+            if is_func and 1 in func.nargs:
                 if not isinstance(func, Lambda):
                     func = Lambda(poly.gen, func(poly.gen))
             else:

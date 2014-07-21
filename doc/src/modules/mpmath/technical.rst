@@ -78,10 +78,10 @@ For further details on how the arithmetic is implemented, refer to the mpmath so
 Decimal issues
 --------------
 
-Mpmath uses binary arithmetic internally, while most interaction with the user is done via the decimal number system. Translating between binary and decimal numbers is a somewhat subtle matter; many Python novices run into the following "bug" (addressed in the `General Python FAQ <http://www.python.org/doc/faq/general/#why-are-floating-point-calculations-so-inaccurate>`_)::
+Mpmath uses binary arithmetic internally, while most interaction with the user is done via the decimal number system. Translating between binary and decimal numbers is a somewhat subtle matter; many Python novices run into the following "bug" (addressed in the `General Python FAQ <http://docs.python.org/2/faq/design.html#why-are-floating-point-calculations-so-inaccurate>`_)::
 
-    >>> 0.1
-    0.10000000000000001
+    >>> 1.2 - 1.0
+    0.19999999999999996
 
 Decimal fractions fall into the category of numbers that generally cannot be represented exactly in binary floating-point form. For example, none of the numbers 0.1, 0.01, 0.001 has an exact representation as a binary floating-point number. Although mpmath can approximate decimal fractions with any accuracy, it does not solve this problem for all uses; users who need *exact* decimal fractions should look at the ``decimal`` module in Python's standard library (or perhaps use fractions, which are much faster).
 
@@ -155,5 +155,5 @@ Further reading
 
 There are many excellent textbooks on numerical analysis and floating-point arithmetic. Some good web resources are:
 
-* `David Goldberg, What Every Computer Scientist Should Know About Floating-Point Arithmetic <http://docs.sun.com/source/806-3568/ncg_goldberg.html>`_
+* `David Goldberg, What Every Computer Scientist Should Know About Floating-Point Arithmetic <http://www.cl.cam.ac.uk/teaching/1011/FPComp/floatingmath.pdf>`_
 * `The Wikipedia article about numerical analysis  <http://en.wikipedia.org/wiki/Numerical_analysis>`_

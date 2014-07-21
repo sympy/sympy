@@ -141,9 +141,14 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Not(self, e):
+        from sympy import Equivalent, Implies
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
+            if isinstance(arg, Equivalent):
+                return self._print_Equivalent(arg, altchar=u("\u2262"))
+            if isinstance(arg, Implies):
+                return self._print_Implies(arg, altchar=u("\u219b"))
 
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
@@ -203,15 +208,15 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e, sort=True)
 
-    def _print_Implies(self, e):
+    def _print_Implies(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, u("\u2192"), sort=False)
+            return self.__print_Boolean(e, altchar or u("\u2192"), sort=False)
         else:
             return self._print_Function(e)
 
-    def _print_Equivalent(self, e):
+    def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, u("\u2261"))
+            return self.__print_Boolean(e, altchar or u("\u2261"))
         else:
             return self._print_Function(e, sort=True)
 
@@ -746,7 +751,7 @@ class PrettyPrinter(Printer):
         P = {}
         for n, ec in enumerate(pexpr.args):
             P[n, 0] = self._print(ec.expr)
-            if ec.cond is True:
+            if ec.cond == True:
                 P[n, 1] = prettyForm('otherwise')
             else:
                 P[n, 1] = prettyForm(
@@ -985,30 +990,22 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_Lambda(self, e):
-        symbols, expr = e.args
-
-        if len(symbols) == 1:
-            symbols = self._print(symbols[0])
+        vars, expr = e.args
+        if self._use_unicode:
+            arrow = u(" \u21a6 ")
         else:
-            symbols = self._print(tuple(symbols))
+            arrow = " -> "
+        if len(vars) == 1:
+            var_form = self._print(vars[0])
+        else:
+            var_form = self._print(tuple(vars))
 
-        args = (symbols, self._print(expr))
-
-        prettyFunc = self._print(C.Symbol("Lambda"))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
-
-        pform = prettyForm(
-            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
-
-        # store pform parts so it can be reassembled e.g. when powered
-        pform.prettyFunc = prettyFunc
-        pform.prettyArgs = prettyArgs
-
-        return pform
+        return prettyForm(*stringPict.next(var_form, arrow, self._print(expr)), binding=8)
 
     def _print_Order(self, expr):
         pform = self._print(expr.expr)
-        if expr.point != S.Zero or len(expr.variables) > 1:
+        if (expr.point and any(p != S.Zero for p in expr.point)) or \
+           len(expr.variables) > 1:
             pform = prettyForm(*pform.right("; "))
             if len(expr.variables) > 1:
                 pform = prettyForm(*pform.right(self._print(expr.variables)))
@@ -1018,7 +1015,10 @@ class PrettyPrinter(Printer):
                 pform = prettyForm(*pform.right(u(" \u2192 ")))
             else:
                 pform = prettyForm(*pform.right(" -> "))
-            pform = prettyForm(*pform.right(self._print(expr.point)))
+            if len(expr.point) > 1:
+                pform = prettyForm(*pform.right(self._print(expr.point)))
+            else:
+                pform = prettyForm(*pform.right(self._print(expr.point[0])))
         pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.left("O"))
         return pform
@@ -1641,7 +1641,7 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
 
-        except:
+        except Exception:
             try:
                 pform = self._print('Domain: ')
                 pform = prettyForm(*pform.right(self._print(d.symbols)))

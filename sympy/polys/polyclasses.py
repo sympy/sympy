@@ -7,6 +7,8 @@ from sympy.core.sympify import CantSympify
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed, NotReversible
 
+from sympy import oo
+
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
 
@@ -528,7 +530,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def homogeneous_order(f):
         """Returns the homogeneous order of ``f``. """
         if f.is_zero:
-            return -1
+            return -oo
 
         monoms = f.monoms()
         tdeg = sum(monoms[0])

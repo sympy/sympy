@@ -1,5 +1,5 @@
 ===
-Ask 
+Ask
 ===
 
 .. automodule:: sympy.assumptions.ask

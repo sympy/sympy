@@ -30,6 +30,7 @@ import random
 import subprocess
 import signal
 import stat
+from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
@@ -37,10 +38,6 @@ from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-# Use sys.stdout encoding for ouput.
-pdoctest._encoding = sys.__stdout__.encoding
-
-IS_PYTHON_3 = (sys.version_info[0] == 3)
 IS_WINDOWS = (os.name == 'nt')
 
 
@@ -59,7 +56,7 @@ def _indent(s, indent=4):
     encoding and the ``backslashreplace`` error handler.
     """
     # After a 2to3 run the below code is bogus, so wrap it with a version check
-    if sys.version_info[0] < 3:
+    if not PY3:
         if isinstance(s, unicode):
             s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
@@ -78,7 +75,7 @@ def _report_failure(self, out, test, example, got):
     s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
     out(self._failure_header(test, example) + s)
 
-if IS_PYTHON_3 and IS_WINDOWS:
+if PY3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
 
 
@@ -121,23 +118,6 @@ def sys_normcase(f):
     if sys_case_insensitive:  # global defined after call to get_sympy_dir()
         return f.lower()
     return f
-
-
-def isgeneratorfunction(object):
-    """
-    Return True if the object is a user-defined generator function.
-
-    Generator function objects provides same attributes as functions.
-
-    See isfunction.__doc__ for attributes listing.
-
-    Adapted from Python 2.6.
-    """
-    CO_GENERATOR = 0x20
-    if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-            get_function_code(object).co_flags & CO_GENERATOR:
-        return True
-    return False
 
 
 def setup_pprint():
@@ -277,7 +257,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or sys.version_info[0] == 3):
+        if not (sys.platform == "win32" or PY3):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
@@ -574,9 +554,8 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/statistics",                # prints a deprecation
-        "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py"  # needs tcc
+        "sympy/utilities/compilef.py",  # needs tcc
+        "sympy/physics/gaussopt.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:
@@ -587,7 +566,8 @@ def _doctest(*paths, **kwargs):
             "examples/advanced/autowrap_ufuncify.py",
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
-            "examples/intermediate/mplot3d.py"
+            "examples/intermediate/mplot3d.py",
+            "doc/src/modules/numeric-computation.rst"
         ])
     else:
         if import_module('matplotlib') is None:
@@ -602,6 +582,9 @@ def _doctest(*paths, **kwargs):
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
+
+    if import_module('theano') is None:
+        blacklist.extend(["doc/src/modules/numeric-computation.rst"])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
@@ -618,7 +601,7 @@ def _doctest(*paths, **kwargs):
     #         "sympy/utilities/benchmarking.py"
     #     ])
 
-    # blacklist these modules until issue 1741 is resolved
+    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py",
         "sympy/utilities/benchmarking.py"
@@ -868,7 +851,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if not IS_PYTHON_3:
+    if not PY3:
         text, filename = pdoctest._load_testfile(
             filename, package, module_relative)
         if encoding is not None:
@@ -986,7 +969,7 @@ class SymPyTests(object):
             gl = {'__file__': filename}
             random.seed(self._seed)
             try:
-                if IS_PYTHON_3:
+                if PY3:
                     open_file = lambda: open(filename, encoding="utf8")
                 else:
                     open_file = lambda: open(filename)
@@ -1414,10 +1397,6 @@ class SymPyDocTestFinder(DocTestFinder):
                                    source_lines, globs, seen)
                     except KeyboardInterrupt:
                         raise
-                    except ValueError:
-                        raise
-                    except Exception:
-                        pass
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
@@ -1447,19 +1426,21 @@ class SymPyDocTestFinder(DocTestFinder):
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
-                    inspect.isclass(val) or
-                    isinstance(val, property)):
+                        inspect.isclass(val) or
+                        isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
-                        if val.fget.__module__ != module.__name__:
-                            continue
+                        if hasattr(val.fget, '__module__'):
+                            if val.fget.__module__ != module.__name__:
+                                continue
                     else:
                         if val.__module__ != module.__name__:
                             continue
 
                     assert self._from_module(module, val), \
-                        "%s is not in module %s (valname %s)" % (val, module, valname)
+                        "%s is not in module %s (valname %s)" % (
+                            val, module, valname)
 
                     valname = '%s.%s' % (name, valname)
                     self._find(tests, val, valname, module, source_lines,
@@ -1516,10 +1497,16 @@ class SymPyDocTestFinder(DocTestFinder):
         if lineno is None:
             # handling of properties is not implemented in _find_lineno so do
             # it here
-            tobj = obj if not isinstance(obj, property) else obj.fget
+            if hasattr(obj, 'func_closure') and obj.func_closure is not None:
+                tobj = obj.func_closure[0].cell_contents
+            elif isinstance(obj, property):
+                tobj = obj.fget
+            else:
+                tobj = obj
             lineno = self._find_lineno(tobj, source_lines)
 
-        assert lineno is not None
+        if lineno is None:
+            return None
 
         # Return a DocTest for this object.
         if module is None:
@@ -1546,7 +1533,7 @@ class SymPyDocTestRunner(DocTestRunner):
     tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
-    issue 2041).
+    issue 5140).
 
     See the docstring of the original DocTestRunner for more information.
     """
@@ -1783,7 +1770,7 @@ class PyTestReporter(Reporter):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
-                if sys.version_info[0] > 2:
+                if PY3:
                     stdout = stdout.decode("utf-8")
             except (OSError, IOError):
                 pass
@@ -1886,9 +1873,9 @@ class PyTestReporter(Reporter):
                 sys.stdout.write("\n")
 
         # Avoid UnicodeEncodeError when printing out test failures
-        if IS_PYTHON_3 and IS_WINDOWS:
+        if PY3 and IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
-        elif IS_PYTHON_3 and not sys.stdout.encoding.lower().startswith('utf'):
+        elif PY3 and not sys.stdout.encoding.lower().startswith('utf'):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
                               ).decode(sys.stdout.encoding)
 

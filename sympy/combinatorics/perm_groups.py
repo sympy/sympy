@@ -2403,6 +2403,7 @@ class PermutationGroup(Basic):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.permutations import Permutation
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
@@ -3294,6 +3295,7 @@ def _orbits(degree, generators):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.permutations import Permutation
     >>> from sympy.combinatorics.perm_groups import PermutationGroup, _orbits
     >>> a = Permutation([0, 2, 1])

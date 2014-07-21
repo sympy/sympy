@@ -842,7 +842,7 @@ def dup_mirror(f, K):
     -x**3 + 2*x**2 + 4*x + 2
 
     """
-    f, n, a = list(f), dup_degree(f), -K.one
+    f, n, a = list(f), len(f) - 1, -K.one
 
     for i in xrange(n - 1, -1, -1):
         f[i], a = a*f[i], -a
@@ -864,7 +864,7 @@ def dup_scale(f, a, K):
     4*x**2 - 4*x + 1
 
     """
-    f, n, b = list(f), dup_degree(f), a
+    f, n, b = list(f), len(f) - 1, a
 
     for i in xrange(n - 1, -1, -1):
         f[i], b = b*f[i], b*a
@@ -886,7 +886,7 @@ def dup_shift(f, a, K):
     x**2 + 2*x + 1
 
     """
-    f, n = list(f), dup_degree(f)
+    f, n = list(f), len(f) - 1
 
     for i in xrange(n, 0, -1):
         for j in xrange(0, i):
@@ -912,7 +912,7 @@ def dup_transform(f, p, q, K):
     if not f:
         return []
 
-    n = dup_degree(f)
+    n = len(f) - 1
     h, Q = [f[0]], [[K.one]]
 
     for i in xrange(0, n):
@@ -986,7 +986,7 @@ def dmp_compose(f, g, u, K):
 
 def _dup_right_decompose(f, s, K):
     """Helper function for :func:`_dup_decompose`."""
-    n = dup_degree(f)
+    n = len(f) - 1
     lc = dup_LC(f, K)
 
     f = dup_to_raw_dict(f)
@@ -1030,7 +1030,7 @@ def _dup_left_decompose(f, h, K):
 
 def _dup_decompose(f, K):
     """Helper function for :func:`dup_decompose`."""
-    df = dup_degree(f)
+    df = len(f) - 1
 
     for s in xrange(2, df):
         if df % s != 0:

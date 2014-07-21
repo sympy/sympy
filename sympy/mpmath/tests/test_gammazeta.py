@@ -1,8 +1,6 @@
 from sympy.mpmath import *
 from sympy.mpmath.libmp import round_up, from_float, mpf_zeta_int
 
-from sympy.utilities.pytest import XFAIL
-
 def test_zeta_int_bug():
     assert mpf_zeta_int(0, 10) == from_float(-0.5)
 
@@ -161,6 +159,8 @@ def test_gamma():
     assert gamma(300).ae('1.0201917073881354535e612')
     assert gamma(-0.5).ae(-3.5449077018110320546)
     assert gamma(-7.43).ae(0.00026524416464197007186)
+    #assert gamma(Rational(1,2)) == gamma(0.5)
+    #assert gamma(Rational(-7,3)).ae(gamma(mpf(-7)/3))
     assert gamma(1+1j).ae(0.49801566811835604271 - 0.15494982830181068512j)
     assert gamma(-1+0.01j).ae(-0.422733904013474115 + 99.985883082635367436j)
     assert gamma(20+30j).ae(-1453876687.5534810 + 1163777777.8031573j)
@@ -190,11 +190,6 @@ def test_gamma():
     assert loggamma(2+8j).ae(-8.5205176753667636926 + 10.8569497125597429366j)
     assert loggamma('1e10000').ae('2.302485092994045684017991e10004')
     assert loggamma('1e10000j').ae(mpc('-1.570796326794896619231322e10000','2.302485092994045684017991e10004'))
-
-@XFAIL
-def test_gamma_failing():
-    assert gamma(Rational(1,2)) == gamma(0.5)
-    assert gamma(Rational(-7,3)).ae(gamma(mpf(-7)/3))
 
 def test_fac2():
     mp.dps = 15
@@ -267,10 +262,14 @@ def test_zeta():
     assert zeta(-4) == 0
     assert zeta(-100) == 0
     assert isnan(zeta(nan))
+    assert zeta(1e-30).ae(-0.5)
+    assert zeta(-1e-30).ae(-0.5)
     # Zeros in the critical strip
     assert zeta(mpc(0.5, 14.1347251417346937904)).ae(0)
     assert zeta(mpc(0.5, 21.0220396387715549926)).ae(0)
     assert zeta(mpc(0.5, 25.0108575801456887632)).ae(0)
+    assert zeta(mpc(1e-30,1e-40)).ae(-0.5)
+    assert zeta(mpc(-1e-30,1e-40)).ae(-0.5)
     mp.dps = 50
     im = '236.5242296658162058024755079556629786895294952121891237'
     assert zeta(mpc(0.5, im)).ae(0, 1e-46)
@@ -303,6 +302,10 @@ def test_altzeta():
     assert altzeta(s).ae((1-2**(1-s))*zeta(s))
     assert altzeta(-100.5).ae(4.58595480083585913e+108)
     assert altzeta(1.3).ae(0.73821404216623045)
+    assert altzeta(1e-30).ae(0.5)
+    assert altzeta(-1e-30).ae(0.5)
+    assert altzeta(mpc(1e-30,1e-40)).ae(0.5)
+    assert altzeta(mpc(-1e-30,1e-40)).ae(0.5)
 
 def test_zeta_huge():
     mp.dps = 15
@@ -333,9 +336,8 @@ def test_polygamma():
     psi0 = lambda z: psi(0,z)
     psi1 = lambda z: psi(1,z)
     assert psi0(3) == psi(0,3) == digamma(3)
-    # Not sure what this guy was doing, only place psi2, psi3, tetragamma used
-    # assert psi2(3) == psi(2,3) == tetragamma(3)
-    # assert psi3(3) == psi(3,3) == pentagamma(3)
+    #assert psi2(3) == psi(2,3) == tetragamma(3)
+    #assert psi3(3) == psi(3,3) == pentagamma(3)
     assert psi0(pi).ae(0.97721330794200673)
     assert psi0(-pi).ae(7.8859523853854902)
     assert psi0(-pi+1).ae(7.5676424992016996)
@@ -516,16 +518,14 @@ def test_gamma_huge_7():
     mp.dps = 15
     y = gamma(a)
     assert str(y.real) == "2.0"
+    # wrong
+    #assert str(y.imag) == "2.16735365342606e-1000"
     assert str(y.imag) == "1.84556867019693e-1000"
     mp.dps = 50
     y = gamma(a)
     assert str(y.real) == "2.0"
+    #assert str(y.imag) == "2.1673536534260596065418805612488708028522563689298e-1000"
     assert str(y.imag) ==  "1.8455686701969342787869758198351951379156813281202e-1000"
-
-@XFAIL
-def test_gamma_huge_7_failing():
-    assert str(y.imag) == "2.16735365342606e-1000"
-    assert str(y.imag) == "2.1673536534260596065418805612488708028522563689298e-1000"
 
 def test_stieltjes():
     mp.dps = 15

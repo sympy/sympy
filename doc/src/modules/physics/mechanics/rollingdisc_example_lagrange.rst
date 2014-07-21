@@ -9,7 +9,7 @@ disc's mass and radius, and the local gravity. ::
 
   >>> from sympy import symbols, cos, sin
   >>> from sympy.physics.mechanics import *
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
   >>> q1, q2, q3 = dynamicsymbols('q1 q2 q3')
   >>> q1d, q2d, q3d = dynamicsymbols('q1 q2 q3', 1)
   >>> r, m, g = symbols('r m g')
@@ -66,6 +66,6 @@ accelerations(q double dots) with the ``rhs`` method. ::
   [                                                          q1'],
   [                                                          q2'],
   [                                                          q3'],
-  [                     -4*(tan(q2)*q1' + 3*q3'/(2*cos(q2)))*q2'],
+  [                         -(4*tan(q2)*q1' + 6*q3'/cos(q2))*q2'],
   [-4*g*sin(q2)/(5*r) + sin(2*q2)*q1'**2/2 + 6*cos(q2)*q1'*q3'/5],
   [         (-5*cos(q2)*q1' + 6*tan(q2)*q3' + 4*q1'/cos(q2))*q2']])

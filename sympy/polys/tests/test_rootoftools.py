@@ -246,7 +246,7 @@ def test_RootSum___new__():
     assert RootSum(f**2, g) == 2*RootSum(f, g)
     assert RootSum((x - 7)*f**3, g) == log(7*x) + 3*RootSum(f, g)
 
-    # Issue 2472
+    # issue 5571
     assert hash(RootSum((x - 7)*f**3, g)) == hash(log(7*x) + 3*RootSum(f, g))
 
     raises(MultivariatePolynomialError, lambda: RootSum(x**3 + x + y))
@@ -317,9 +317,9 @@ def test_RootSum_evalf():
     rs = RootSum(x**2 + 1, exp)
 
     assert rs.evalf(n=20, chop=True).epsilon_eq(
-        Float("1.0806046117362794348", 20), Float("1e-20")) is True
+        Float("1.0806046117362794348", 20), Float("1e-20")) is S.true
     assert rs.evalf(n=15, chop=True).epsilon_eq(
-        Float("1.08060461173628", 15), Float("1e-15")) is True
+        Float("1.08060461173628", 15), Float("1e-15")) is S.true
 
     rs = RootSum(x**2 + a, exp, x)
 

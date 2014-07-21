@@ -113,7 +113,7 @@ class PlotModeBase(PlotMode):
             try:
                 e = self._get_lambda_evaluator()
                 return e
-            except:
+            except Exception:
                 warnings.warn("\nWarning: creating lambda evaluator failed. "
                        "Falling back on sympy subs evaluator.")
         return self._get_sympy_evaluator()
@@ -323,10 +323,11 @@ class PlotModeBase(PlotMode):
             for i in self.intervals:
                 if i.v_steps is None:
                     continue
-                step_max = max([step_max, i.v_steps])
+                step_max = max([step_max, int(i.v_steps)])
             v = ['both', 'solid'][step_max > 40]
         #try:
-        assert v in self.styles
+        if v not in self.styles:
+            raise ValueError("v should be there in self.styles")
         if v == self._style:
             return
         self._style = v

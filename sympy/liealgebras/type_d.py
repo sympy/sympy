@@ -1,11 +1,13 @@
-from sympy.core import Set, Dict, Tuple
+from sympy.core import Dict, Tuple
+from sympy.sets import Set
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 
 class TypeD(Standard_Cartan):
 
     def __new__(cls, n):
-        assert n >= 3
+        if n < 3:
+            raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "D", n)
 
 

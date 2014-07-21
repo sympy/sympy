@@ -249,13 +249,13 @@ want to be mentioned here, so see our repository history for a full list).
 #. CJ Carey: Fix for limits of factorials
 #. Patrick Lacasse: Fix for Piecewise.subs
 #. Ananya H: Bug fix
-#. Tarang Patel: added test for issue 1640
+#. Tarang Patel: added test for issue 4739
 #. Christopher Dembia: improvements to mecahanics documentation
 #. Benjamin Fishbein: added rank method to Matrix
 #. Sean Ge: made KroneckerDelta arguments canonically ordered
 #. Ankit Agrawal: Statistical moments
 #. Amit Jamadagni: qapply Rotation to spin states
-#. Björn Dahlgren: Documentation fix
+#. Björn Dahlgren: Implemented finite difference module, minor fixes
 #. Christophe Saint-Jean: fixed and added metrics to galgebra
 #. Demian Wassermann: fix to ccode printer for Piecewise
 #. Khagesh Patel: Addition to matrix expressions
@@ -286,13 +286,75 @@ want to be mentioned here, so see our repository history for a full list).
 #. Manish Gill: Fix infinite loop in Matrix constructor
 #. Markus Müller: Add Jordan form for matrices
 #. Amit Saha: Fixes to documentation
+#. Jeremy: Bug fix
 #. QuaBoo: Optimizations in ntheory
 #. Stefan van der Walt: Fixes to mechanics module
 #. David Joyner: Cryptography module
+#. Lars Buitinck: Bug fix
+#. Alkiviadis G. Akritas: Add a reference
 #. Vinit Ravishankar: fix iterables documentation
 #. Mike Boyle: Additions to the printing system
 #. Heiner Kirchhoffer: PythonRational int conversion fix
+#. Pablo Puente: Test cases from Wester paper
 #. James Fiedler: Bug fix
+#. Harsh Gupta: Bug fix
+#. Tuomas Airaksinen: is_real for besselx
+#. rathmann: fix some Python 2/3 issues
+#. Paul Strickland: documentation fix
+#. James Goppert: correct code in form_lagranges_equations
+#. Avichal Dayal: removed duplicate solutions obtained from solve
+#. Paul Scott: pass along keywords for plots
+#. shiprabanga: code quality fixes
+#. Pramod Ch: fix problem with (I*oo).expand_complex()
+#. Akshay: added normal_lines to Ellipse
+#. Buck Shlegeris: add inverses to error functions
+#. Jonathan Miller: documentation
+#. Edward: update license year
+#. Rajath S: corrected iteration values in gaunt, racah, and wigner_9j
+#. Aditya Shah: bug fix, improvement to parsers
+#. Sambuddha Basu: documentation fix
+#. Zeel Shah: fixes to logic module
+#. Abhinav Chanda: wigner_3j and clebsch_gordan fixes
+#. Jim Crist: lambdify improvments
+#. Sudhanshu Mishra: Added tests for racah() of sympy.physics.wigner module
+#. Rajat Aggarwal: improvements to integration module
+#. Soumya Dipta Biswas: Add support for Equivalent with multiple arguments
+#. Anurag Sharma: improvements to Risch algorithm
+#. Sushant Hiray: taylor_term for sec
+#. Ben Lucato: documentation fixes
+#. Kunal Arora: documentation fixes
+#. Henry Gebhardt: bugfix to ufuncify
+#. Dammina Sahabandu: implemented continued fractions functions
+#. Shukla: particle on a ring functions
+#. Ralph Bean: typo
+#. richierichrawr: documentation fixes
+#. John Connor: fixes to ntheory
+#. Juan Luis Cano Rodríguez: fixes to mechanics module
+#. Sahil Shekhawat: fixes to core
+#. Kundan Kumar: fixes to ODE identification of separable_reduced
+#. Stas Kelvich: fixes to quantum module
+#. sevaader: fix to assumptions
+#. Dhruvesh Vijay Parikh: implement Möbius function
+#. Venkatesh Halli: improvement to matrices
+#. Lennart Fricke: make sure that cse avoids symbol collision
+#. Vlad Seghete: fix an issue with autowrap
+#. shashank-agg: ensure that the range is correct for multiple plots
+#. carstimon: make Abs(polar_lift(arg)) -> abs(arg)
+#. Pierre Haessig: fix typos
+#. Maciej Baranski: refactor code in compilef
+#. Zamrath Nizam: replace atoms(Symbol) with free_symbols where appropriate
+#. Benjamin Gudehus: add sampling_density to stats
+#. Faisal Anees: Egyptian Fractions
+#. Robert Johansson: quantum field operators
+#. Kalevi Suominen: fix to assumptions
+#. Kaushik Varanasi: fix a typo
+#. Fawaz Alazemi: combinatorics cheat sheet
+#. Ambar Mehrotra: Fix to documentation
+#. Mark Shoulson: Enhanced Egyptian fractions
+#. David P. Sanders: Fix to latex printer
+#. John V. Siratt: Fix to documentation
+#. Sarwar Chahal: Fix to documentation
+#. Nathan Woods: Fix to C code printer
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -302,7 +364,7 @@ You can find a brief history of SymPy in the README.
 Financial and Infrastructure Support
 ------------------------------------
 
-* `Google <http://www.google.com/corporate/>`_: SymPy has received generous
+* `Google <http://www.google.com/about/company/>`_: SymPy has received generous
   financial support from Google in various years through the `Google Summer of
   Code <http://www.google-melange.com/>`_ program by providing stipends:
 
@@ -314,7 +376,7 @@ Financial and Infrastructure Support
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
   * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
 
-* `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
+* `Python Software Foundation (PSF) <https://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:
 
   * 3 GSoC 2007 students (Brian, Robert and Jason)
@@ -336,7 +398,7 @@ Financial and Infrastructure Support
   <http://www.google-melange.com/gci/homepage/google/gci2011>`_ 2011.  (`GCI
   2011 <http://www.google-melange.com/gci/org/google/gci2011/sympy>`_)
 
-* `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
+* `Simula Research Laboratory <https://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
 
 * `GitHub <https://github.com/about>`_ is providing us with development
   and collaboration tools

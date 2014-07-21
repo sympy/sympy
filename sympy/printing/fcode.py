@@ -38,6 +38,7 @@ class FCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'source_format': 'fixed',
+        'contract': True,
     }
 
     _implicit_functions = set([
@@ -132,7 +133,7 @@ class FCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
+                elif i == len(expr.args) - 1 and c == True:
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
@@ -428,6 +429,12 @@ def fcode(expr, **settings):
        source_format : optional
            The source format can be either 'fixed' or 'free'.
            [default='fixed']
+       contract: optional
+           If True, `Indexed` instances are assumed to obey
+           tensor contraction rules and the corresponding nested
+           loops over indices are generated. Setting contract = False
+           will not generate loops, instead the user is responsible
+           to provide values for the indices in the code. [default=True]
 
        Examples
        ========
@@ -441,6 +448,15 @@ def fcode(expr, **settings):
        >>> print(fcode(pi))
              parameter (pi = 3.14159265358979d0)
              pi
+       >>> from sympy import Eq, IndexedBase, Idx
+       >>> len_y = 5
+       >>> y = IndexedBase('y', shape=(len_y,))
+       >>> t = IndexedBase('t', shape=(len_y,))
+       >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+       >>> i = Idx('i', len_y-1)
+       >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+       >>> fcode(e.rhs, assign_to=e.lhs, contract=False)
+       '      Dy(i) = (y(i + 1) - y(i))/(t(i + 1) - t(i))'
 
     """
     # run the printer

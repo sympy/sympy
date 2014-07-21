@@ -89,4 +89,3 @@ Docstring
 
 .. automodule:: sympy.utilities.iterables
    :members:
-

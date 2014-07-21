@@ -45,7 +45,8 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
             variables = self.symbols
         if not variables:
             return expr
-        assert frozenset(variables) == frozenset(self.symbols)
+        if frozenset(variables) != frozenset(self.symbols):
+            raise ValueError("Values should be equal")
         # assumes only intervals
         return Integral(expr, (self.symbol, self.set), **kwargs)
 
@@ -369,7 +370,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         x = self.value.symbol
         try:
             return self.distribution.expectation(expr, x, evaluate=False, **kwargs)
-        except:
+        except Exception:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):

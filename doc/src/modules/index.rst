@@ -22,6 +22,7 @@ access any SymPy module, or use this contens:
    crypto.rst
    concrete.rst
    evalf.rst
+   numeric-computation.rst
    functions/index.rst
    galgebra/index.rst
    geometry.rst
@@ -38,15 +39,16 @@ access any SymPy module, or use this contens:
    sets.rst
    simplify/simplify.rst
    simplify/hyperexpand.rst
-   statistics.rst
    stats.rst
    solvers/ode.rst
    solvers/pde.rst
    solvers/solvers.rst
    solvers/diophantine.rst
+   solvers/inequalities.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst
+   calculus/index.rst
    physics/index.rst
    categories.rst
    diffgeom.rst

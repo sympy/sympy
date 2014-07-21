@@ -194,7 +194,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_integer and (dif < 0) is True:
+            if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -289,7 +289,7 @@ class Sum(AddWithLimits,ExprWithIntLimits):
             >>> s
             -log(a) + log(b) + 1/(2*b) + 1/(2*a)
             >>> e
-            Abs(-1/(12*b**2) + 1/(12*a**2))
+            Abs(1/(12*b**2) - 1/(12*a**2))
 
         If the function is a polynomial of degree at most 2n+1, the
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
@@ -305,9 +305,10 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         m = int(m)
         n = int(n)
         f = self.function
-        assert len(self.limits) == 1
+        if len(self.limits) != 1:
+            raise ValueError("More than 1 limit")
         i, a, b = self.limits[0]
-        if (a > b) is True:
+        if (a > b) == True:
             if a - b == 1:
                 return S.Zero,S.Zero
             a, b = b + 1, a - 1
@@ -323,10 +324,9 @@ class Sum(AddWithLimits,ExprWithIntLimits):
                 term = f.subs(i, a)
                 if term:
                     test = abs(term.evalf(3)) < eps
-                    if isinstance(test, bool):
-                        if test is True:
-                            return s, abs(term)
-                    else:
+                    if test == True:
+                        return s, abs(term)
+                    elif not (test == False):
                         # a symbolic Relational class, can't go further
                         return term, S.Zero
                 s += term
@@ -563,8 +563,7 @@ def eval_sum(f, limits):
     if a == b:
         return f.subs(i, a)
     if isinstance(f, Piecewise):
-        from sympy.utilities.iterables import flatten
-        if i not in flatten([arg.args[1].free_symbols for arg in f.args]):
+        if not any(i in arg.args[1].free_symbols for arg in f.args):
             # Piecewise conditions do not depend on the dummy summation variable,
             # therefore we can fold:     Sum(Piecewise((e, c), ...), limits)
             #                        --> Piecewise((Sum(e, limits), c), ...)
@@ -584,6 +583,8 @@ def eval_sum(f, limits):
     # Doing it directly may be faster if there are very few terms.
     if definite and (dif < 100):
         return eval_sum_direct(f, (i, a, b))
+    if isinstance(f, Piecewise):
+        return None
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
     # We should try to transform to partial fractions
@@ -756,7 +757,7 @@ def eval_sum_hyper(f, i_a_b):
                 return None
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
-            if cond is False:
+            if cond == False:
                 return None
         return Piecewise((res1 - res2, cond), (old_sum, True))
 
@@ -768,7 +769,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond is False:
+        if cond == False:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 
@@ -776,7 +777,7 @@ def eval_sum_hyper(f, i_a_b):
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
         r, c = res
-        if c is False:
+        if c == False:
             if r.is_number:
                 f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:

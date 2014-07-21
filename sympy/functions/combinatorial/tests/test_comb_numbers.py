@@ -1,9 +1,10 @@
 import string
 
-from sympy import (bernoulli, Symbol, symbols, Dummy, Sum, harmonic, Rational, oo,
-    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, binomial, gamma, sqrt,
-    hyper, log, digamma, trigamma, polygamma, diff, Expr, sympify, expand_func,
-    EulerGamma, factorial)
+from sympy import (bernoulli, Symbol, symbols, Dummy, S, Sum, Rational,
+                   oo, zoo, pi, I, simplify, expand_func, harmonic,
+                   bell, fibonacci, lucas, euler, catalan, binomial, gamma,
+                   sqrt, hyper, log, digamma, trigamma, polygamma, diff,
+                   EulerGamma, factorial, sin, cos, cot, cancel, zeta)
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -77,15 +78,139 @@ def test_bell():
 
 
 def test_harmonic():
+    n = Symbol("n")
+
+    assert harmonic(n, 0) == n
+    assert harmonic(n, 1) == harmonic(n)
+
+    assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1
     assert harmonic(2, 1) == Rational(3, 2)
     assert harmonic(3, 1) == Rational(11, 6)
     assert harmonic(4, 1) == Rational(25, 12)
-    assert harmonic(3, 1) == harmonic(3)
-    assert harmonic(3, 5) == 1 + Rational(1, 2**5) + Rational(1, 3**5)
-    assert harmonic(10, 0) == 10
-    assert harmonic(oo, 1) == zoo
+    assert harmonic(0, 2) == 0
+    assert harmonic(1, 2) == 1
+    assert harmonic(2, 2) == Rational(5, 4)
+    assert harmonic(3, 2) == Rational(49, 36)
+    assert harmonic(4, 2) == Rational(205, 144)
+    assert harmonic(0, 3) == 0
+    assert harmonic(1, 3) == 1
+    assert harmonic(2, 3) == Rational(9, 8)
+    assert harmonic(3, 3) == Rational(251, 216)
+    assert harmonic(4, 3) == Rational(2035, 1728)
+
+    assert harmonic(oo, -1) == S.NaN
+    assert harmonic(oo, 0) == oo
+    assert harmonic(oo, S.Half) == oo
+    assert harmonic(oo, 1) == oo
     assert harmonic(oo, 2) == (pi**2)/6
+    assert harmonic(oo, 3) == zeta(3)
+
+
+def test_harmonic_rational():
+    ne = S(6)
+    no = S(5)
+    pe = S(8)
+    po = S(9)
+    qe = S(10)
+    qo = S(13)
+
+    Heee = harmonic(ne + pe/qe)
+    Aeee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
+             + pi*(1/S(4) + sqrt(5)/4)/(2*sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 13944145/S(4720968))
+
+    Heeo = harmonic(ne + pe/qo)
+    Aeeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
+             + 2*log(sin(5*pi/13))*cos(80*pi/13) - 2*log(sin(6*pi/13))*cos(5*pi/13)
+             - 2*log(sin(4*pi/13))*cos(pi/13) + pi*cot(5*pi/13)/2 - 2*log(sin(pi/13))*cos(3*pi/13)
+             + 2422020029/S(702257080))
+
+    Heoe = harmonic(ne + po/qe)
+    Aeoe = (-log(20) + 2*(1/S(4) + sqrt(5)/4)*log(-1/S(4) + sqrt(5)/4)
+             + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
+             + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
+             + 11818877030/S(4286604231) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(-sqrt(5)/2 + 1/S(2)) )
+
+
+    Heoo = harmonic(ne + po/qo)
+    Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
+             + 2*log(sin(6*pi/13))*cos(108*pi/13) - 2*log(sin(5*pi/13))*cos(pi/13)
+             - 2*log(sin(pi/13))*cos(5*pi/13) + pi*cot(4*pi/13)/2
+             - 2*log(sin(2*pi/13))*cos(3*pi/13) + 11669332571/S(3628714320))
+
+    Hoee = harmonic(no + pe/qe)
+    Aoee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
+             + pi*(1/S(4) + sqrt(5)/4)/(2*sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 779405/S(277704))
+
+    Hoeo = harmonic(no + pe/qo)
+    Aoeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
+             + 2*log(sin(5*pi/13))*cos(80*pi/13) - 2*log(sin(6*pi/13))*cos(5*pi/13)
+             - 2*log(sin(4*pi/13))*cos(pi/13) + pi*cot(5*pi/13)/2
+             - 2*log(sin(pi/13))*cos(3*pi/13) + 53857323/S(16331560))
+
+    Hooe = harmonic(no + po/qe)
+    Aooe = (-log(20) + 2*(1/S(4) + sqrt(5)/4)*log(-1/S(4) + sqrt(5)/4)
+             + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
+             + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
+             + 486853480/S(186374097) - pi*sqrt(sqrt(5)/8 + 5/S(8))/(2*(-sqrt(5)/4 + 1/S(4))))
+
+    Hooo = harmonic(no + po/qo)
+    Aooo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
+             + 2*log(sin(6*pi/13))*cos(108*pi/13) - 2*log(sin(5*pi/13))*cos(pi/13)
+             - 2*log(sin(pi/13))*cos(5*pi/13) + pi*cot(4*pi/13)/2
+             - 2*log(sin(2*pi/13))*cos(3*pi/13) + 383693479/S(125128080))
+
+    H = [Heee, Heeo, Heoe, Heoo, Hoee, Hoeo, Hooe, Hooo]
+    A = [Aeee, Aeeo, Aeoe, Aeoo, Aoee, Aoeo, Aooe, Aooo]
+
+    for h, a in zip(H, A):
+        e = expand_func(h).doit()
+        assert cancel(e/a) == 1
+        assert h.n() == a.n()
+
+
+def test_harmonic_evalf():
+    assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
+    assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
+
+
+def test_harmonic_rewrite_polygamma():
+    n = Symbol("n")
+    m = Symbol("m")
+
+    assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
+
+    assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+
+    assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+    assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
+
+    assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+
+@XFAIL
+def test_harmonic_limit_fail():
+    n = Symbol("n")
+    m = Symbol("m")
+    # For m > 1:
+    assert limit(harmonic(n, m), n, oo) == zeta(m)
+
+@XFAIL
+def test_harmonic_rewrite_sum_fail():
+    n = Symbol("n")
+    m = Symbol("m")
+
+    _k = Dummy("k")
+    assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
+    assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
 
 
 def replace_dummy(expr, sym):
@@ -103,28 +228,6 @@ def test_harmonic_rewrite_sum():
     _k = Dummy("k")
     assert replace_dummy(harmonic(n).rewrite(Sum), _k) == Sum(1/_k, (_k, 1, n))
     assert replace_dummy(harmonic(n, m).rewrite(Sum), _k) == Sum(_k**(-m), (_k, 1, n))
-
-
-@XFAIL
-def test_harmonic_rewrite_sum():
-    n = Symbol("n")
-    m = Symbol("m")
-
-    assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
-
-    assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
-    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
-
-    assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
-    assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
-
-    assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
-
-    _k = Dummy("k")
-    assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
-    assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
 
 
 def test_euler():
@@ -152,7 +255,7 @@ def test_euler():
 
 @XFAIL
 def test_euler_failing():
-    # depends on dummy variables being implemented http://code.google.com/p/sympy/issues/detail?id=2566
+    # depends on dummy variables being implemented https://github.com/sympy/sympy/issues/5665
     assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
 
 

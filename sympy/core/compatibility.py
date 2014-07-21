@@ -14,14 +14,18 @@ from sympy.external import import_module
 Python 2 and Python 3 compatible imports
 
 String and Unicode compatible changes:
-    * `unicode()` removed in Python 3, defined as `str()`
-    * `u()` escapes unicode sequences in Python 2 (e.g. u('\u2020'))
-    * `u_decode()` decodes utf-8 formatted unicode strings
+    * `unicode()` removed in Python 3, import `unicode` for Python 2/3
+      compatible function
+    * `unichr()` removed in Python 3, import `unichr` for Python 2/3 compatible
+      function
+    * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
+    * Use `u_decode()` to decode utf-8 formatted unicode strings
     * `string_types` gives str in Python 3, unicode and str in Python 2,
       equivalent to basestring
 
 Integer related changes:
-    * `long()` removed in Python 3, defined as `int()`
+    * `long()` removed in Python 3, import `long` for Python 2/3 compatible
+      function
     * `integer_types` gives int in Python 3, int and long in Python 2
 
 Types related changes:
@@ -41,25 +45,27 @@ Moved modules:
     * `cStringIO()` (same as `StingIO()` in Python 3)
     * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
+Iterator/list changes:
+    * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
+      iterator version of range
+
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
 
 Metaclasses:
     * Use `with_metaclass()`, examples below
-    * Define class `Foo` with metaclass `Meta`, and no parent:
-        class Foo(with_metaclass(Meta)):
-            pass
-    * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
-        class Foo(with_metaclass(Meta, Bar)):
-            pass
+        * Define class `Foo` with metaclass `Meta`, and no parent:
+            class Foo(with_metaclass(Meta)):
+                pass
+        * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
+            class Foo(with_metaclass(Meta, Bar)):
+                pass
 """
 
 import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
-    import collections
-
     class_types = type,
     integer_types = (int,)
     string_types = (str,)
@@ -67,6 +73,7 @@ if PY3:
 
     # String / unicode compatibility
     unicode = str
+    unichr = chr
     def u(x):
         return x
     def u_decode(x):
@@ -80,7 +87,6 @@ if PY3:
     get_function_name = operator.attrgetter("__name__")
 
     import builtins
-    # This is done to make filter importable
     from functools import reduce
     from io import StringIO
     cStringIO = StringIO
@@ -99,6 +105,7 @@ else:
 
     # String / unicode compatibility
     unicode = unicode
+    unichr = unichr
     def u(x):
         return codecs.unicode_escape_decode(x)[0]
     def u_decode(x):
@@ -182,10 +189,19 @@ def with_metaclass(meta, *bases):
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
 # I think putting them here also makes it easier to use them in the core.
 
+class NotIterable:
+    """
+    Use this as mixin when creating a class which is not supposed to return
+    true when iterable() is called on its instances. I.e. avoid infinite loop
+    when calling e.g. list() on the instance
+    """
+    pass
 
-def iterable(i, exclude=(string_types, dict)):
+def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
+    True also indicates that the iterator is finite, i.e. you e.g.
+    call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
@@ -267,39 +283,41 @@ def is_sequence(i, include=None):
             bool(include) and
             isinstance(i, include))
 
-def cmp_to_key(mycmp):
-    """
-    Convert a cmp= function into a key= function
+try:
+    from functools import cmp_to_key
+except ImportError: # <= Python 2.6
+    def cmp_to_key(mycmp):
+        """
+        Convert a cmp= function into a key= function
+        """
+        class K(object):
+            def __init__(self, obj, *args):
+                self.obj = obj
 
-    This code is included in Python 2.7 and 3.2 in functools.
-    """
-    class K(object):
-        def __init__(self, obj, *args):
-            self.obj = obj
+            def __lt__(self, other):
+                return mycmp(self.obj, other.obj) < 0
 
-        def __lt__(self, other):
-            return mycmp(self.obj, other.obj) < 0
+            def __gt__(self, other):
+                return mycmp(self.obj, other.obj) > 0
 
-        def __gt__(self, other):
-            return mycmp(self.obj, other.obj) > 0
+            def __eq__(self, other):
+                return mycmp(self.obj, other.obj) == 0
 
-        def __eq__(self, other):
-            return mycmp(self.obj, other.obj) == 0
+            def __le__(self, other):
+                return mycmp(self.obj, other.obj) <= 0
 
-        def __le__(self, other):
-            return mycmp(self.obj, other.obj) <= 0
+            def __ge__(self, other):
+                return mycmp(self.obj, other.obj) >= 0
 
-        def __ge__(self, other):
-            return mycmp(self.obj, other.obj) >= 0
-
-        def __ne__(self, other):
-            return mycmp(self.obj, other.obj) != 0
-    return K
+            def __ne__(self, other):
+                return mycmp(self.obj, other.obj) != 0
+        return K
 
 try:
     from itertools import zip_longest
 except ImportError: # <= Python 2.7
     from itertools import izip_longest as zip_longest
+
 try:
     from itertools import combinations_with_replacement
 except ImportError:  # <= Python 2.6
@@ -398,7 +416,7 @@ def default_sort_key(item, order=None):
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
-    The following are eqivalent ways of getting the key for an object:
+    The following are equivalent ways of getting the key for an object:
 
     >>> x.sort_key() == default_sort_key(x)
     True
@@ -528,8 +546,8 @@ def default_sort_key(item, order=None):
 def _nodes(e):
     """
     A helper for ordered() which returns the node count of ``e`` which
-    for Basic object is the number of Basic nodes in the expression tree
-    but for other object is 1 (unless the object is an iterable or dict
+    for Basic objects is the number of Basic nodes in the expression tree
+    but for other objects is 1 (unless the object is an iterable or dict
     for which the sum of nodes is returned).
     """
     from .basic import Basic
@@ -539,21 +557,25 @@ def _nodes(e):
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
     elif isinstance(e, dict):
-        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.iteritems())
+        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.items())
     else:
         return 1
 
 
 def ordered(seq, keys=None, default=True, warn=False):
-    """Return an iterator of the seq where keys are used to break ties.
-    Two default keys will be applied after and provided unless ``default``
-    is False. The two keys are _nodes and default_sort_key which will
-    place smaller expressions before larger ones (in terms of Basic nodes)
-    and where there are ties, they will be broken by the default_sort_key.
+    """Return an iterator of the seq where keys are used to break ties in
+    a conservative fashion: if, after applying a key, there are no ties
+    then no other keys will be computed.
+
+    Two default keys will be applied if 1) keys are not provided or 2) the
+    given keys don't resolve all ties (but only if `default` is True). The
+    two keys are `_nodes` (which places smaller expressions before large) and
+    `default_sort_key` which (if the `sort_key` for an object is defined
+    properly) should resolve any ties.
 
     If ``warn`` is True then an error will be raised if there were no
     keys remaining to break ties. This can be used if it was expected that
-    there should be no ties.
+    there should be no ties between items that are not identical.
 
     Examples
     ========
@@ -642,7 +664,11 @@ def ordered(seq, keys=None, default=True, warn=False):
                 d[k] = ordered(d[k], (_nodes, default_sort_key,),
                                default=False, warn=warn)
             elif warn:
-                raise ValueError('not enough keys to break ties')
+                from sympy.utilities.iterables import uniq
+                u = list(uniq(d[k]))
+                if len(u) > 1:
+                    raise ValueError(
+                        'not enough keys to break ties: %s' % u)
         for v in d[k]:
             yield v
         d.pop(k)
@@ -653,7 +679,7 @@ def ordered(seq, keys=None, default=True, warn=False):
 
 # Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
 # For example, int(gmpy.mpz(2**256)) would raise OverflowError.
-# See issue 1881.
+# See issue 4980.
 
 # Minimum version of gmpy changed to 1.13 to allow a single code base to also
 # work with gmpy2.
@@ -697,13 +723,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-
-import sys
-
-if sys.version_info[0] == 2:
-    SYMPY_INTS = (int, long)
-else:
-    SYMPY_INTS = (int,)
+SYMPY_INTS = integer_types
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
@@ -712,11 +732,10 @@ if GROUND_TYPES == 'gmpy':
 import os
 
 try:
-    from subprocess import CalledProcessError
     try:
         from subprocess import check_output
-    except ImportError:
-        from subprocess import check_call
+    except ImportError: # <= Python 2.6
+        from subprocess import CalledProcessError, check_call
         def check_output(*args, **kwargs):
             with open(os.devnull, 'w') as fh:
                 kwargs['stdout'] = fh
@@ -728,3 +747,181 @@ try:
 except ImportError:
     # running on platform like App Engine, no subprocess at all
     pass
+
+
+# lru_cache compatible with py2.6->py3.2 copied directly from
+#   http://code.activestate.com/
+#   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
+from collections import namedtuple
+from functools import update_wrapper
+from threading import RLock
+
+_CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize"])
+
+class _HashedSeq(list):
+    __slots__ = 'hashvalue'
+
+    def __init__(self, tup, hash=hash):
+        self[:] = tup
+        self.hashvalue = hash(tup)
+
+    def __hash__(self):
+        return self.hashvalue
+
+def _make_key(args, kwds, typed,
+             kwd_mark = (object(),),
+             fasttypes = set((int, str, frozenset, type(None))),
+             sorted=sorted, tuple=tuple, type=type, len=len):
+    'Make a cache key from optionally typed positional and keyword arguments'
+    key = args
+    if kwds:
+        sorted_items = sorted(kwds.items())
+        key += kwd_mark
+        for item in sorted_items:
+            key += item
+    if typed:
+        key += tuple(type(v) for v in args)
+        if kwds:
+            key += tuple(type(v) for k, v in sorted_items)
+    elif len(key) == 1 and type(key[0]) in fasttypes:
+        return key[0]
+    return _HashedSeq(key)
+
+def lru_cache(maxsize=100, typed=False):
+    """Least-recently-used cache decorator.
+
+    If *maxsize* is set to None, the LRU features are disabled and the cache
+    can grow without bound.
+
+    If *typed* is True, arguments of different types will be cached separately.
+    For example, f(3.0) and f(3) will be treated as distinct calls with
+    distinct results.
+
+    Arguments to the cached function must be hashable.
+
+    View the cache statistics named tuple (hits, misses, maxsize, currsize) with
+    f.cache_info().  Clear the cache and statistics with f.cache_clear().
+    Access the underlying function with f.__wrapped__.
+
+    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+
+    """
+
+    # Users should only access the lru_cache through its public API:
+    #       cache_info, cache_clear, and f.__wrapped__
+    # The internals of the lru_cache are encapsulated for thread safety and
+    # to allow the implementation to change (including a possible C version).
+
+    def decorating_function(user_function):
+
+        cache = dict()
+        stats = [0, 0]                  # make statistics updateable non-locally
+        HITS, MISSES = 0, 1             # names for the stats fields
+        make_key = _make_key
+        cache_get = cache.get           # bound method to lookup key or return None
+        _len = len                      # localize the global len() function
+        lock = RLock()                  # because linkedlist updates aren't threadsafe
+        root = []                       # root of the circular doubly linked list
+        root[:] = [root, root, None, None]      # initialize by pointing to self
+        nonlocal_root = [root]                  # make updateable non-locally
+        PREV, NEXT, KEY, RESULT = 0, 1, 2, 3    # names for the link fields
+
+        if maxsize == 0:
+
+            def wrapper(*args, **kwds):
+                # no caching, just do a statistics update after a successful call
+                result = user_function(*args, **kwds)
+                stats[MISSES] += 1
+                return result
+
+        elif maxsize is None:
+
+            def wrapper(*args, **kwds):
+                # simple caching without ordering or size limit
+                key = make_key(args, kwds, typed)
+                result = cache_get(key, root)   # root used here as a unique not-found sentinel
+                if result is not root:
+                    stats[HITS] += 1
+                    return result
+                result = user_function(*args, **kwds)
+                cache[key] = result
+                stats[MISSES] += 1
+                return result
+
+        else:
+
+            def wrapper(*args, **kwds):
+                # size limited caching that tracks accesses by recency
+                try:
+                    key = make_key(args, kwds, typed) if kwds or typed else args
+                except TypeError:
+                    stats[MISSES] += 1
+                    return user_function(*args, **kwds)
+                with lock:
+                    link = cache_get(key)
+                    if link is not None:
+                        # record recent use of the key by moving it to the front of the list
+                        root, = nonlocal_root
+                        link_prev, link_next, key, result = link
+                        link_prev[NEXT] = link_next
+                        link_next[PREV] = link_prev
+                        last = root[PREV]
+                        last[NEXT] = root[PREV] = link
+                        link[PREV] = last
+                        link[NEXT] = root
+                        stats[HITS] += 1
+                        return result
+                result = user_function(*args, **kwds)
+                with lock:
+                    root, = nonlocal_root
+                    if key in cache:
+                        # getting here means that this same key was added to the
+                        # cache while the lock was released.  since the link
+                        # update is already done, we need only return the
+                        # computed result and update the count of misses.
+                        pass
+                    elif _len(cache) >= maxsize:
+                        # use the old root to store the new key and result
+                        oldroot = root
+                        oldroot[KEY] = key
+                        oldroot[RESULT] = result
+                        # empty the oldest link and make it the new root
+                        root = nonlocal_root[0] = oldroot[NEXT]
+                        oldkey = root[KEY]
+                        oldvalue = root[RESULT]
+                        root[KEY] = root[RESULT] = None
+                        # now update the cache dictionary for the new links
+                        del cache[oldkey]
+                        cache[key] = oldroot
+                    else:
+                        # put result in a new link at the front of the list
+                        last = root[PREV]
+                        link = [last, root, key, result]
+                        last[NEXT] = root[PREV] = cache[key] = link
+                    stats[MISSES] += 1
+                return result
+
+        def cache_info():
+            """Report cache statistics"""
+            with lock:
+                return _CacheInfo(stats[HITS], stats[MISSES], maxsize, len(cache))
+
+        def cache_clear():
+            """Clear the cache and cache statistics"""
+            with lock:
+                cache.clear()
+                root = nonlocal_root[0]
+                root[:] = [root, root, None, None]
+                stats[:] = [0, 0]
+
+        wrapper.__wrapped__ = user_function
+        wrapper.cache_info = cache_info
+        wrapper.cache_clear = cache_clear
+        return update_wrapper(wrapper, user_function)
+
+    return decorating_function
+### End of backported lru_cache
+
+if sys.version_info[:2] >= (3, 3):
+    # 3.2 has an lru_cache with an incompatible API
+    from functools import lru_cache

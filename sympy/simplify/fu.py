@@ -33,7 +33,7 @@ docstrings for examples.
     TR22 - tan-cot powers to negative powers of sec-csc functions
     TR111 - negative sin-cos-tan powers to csc-sec-cot
 
-There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
+There are 4 combination transforms (CTR1 - CTR4) in which a sequence of
 transformations are applied and the simplest expression is selected from
 a few options.
 
@@ -201,7 +201,7 @@ from sympy.core.power import Pow
 from sympy.core.function import expand_mul, count_ops
 from sympy.core.add import Add
 from sympy.core.symbol import Dummy
-from sympy.core.exprtools import Factors, gcd_terms
+from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.rules import Transform
 from sympy.core.basic import S
 from sympy.core.numbers import Integer, pi, I
@@ -340,7 +340,7 @@ def TR2i(rv, half=False):
         def factorize(d, ddone):
             newk = []
             for k in d:
-                if k.is_Add and len(k.args) > 2:
+                if k.is_Add and len(k.args) > 1:
                     knew = factor(k) if half else factor_terms(k)
                     if knew != k:
                         newk.append((k, knew))
@@ -350,10 +350,11 @@ def TR2i(rv, half=False):
                     newk[i] = knew
                 newk = Mul(*newk).as_powers_dict()
                 for k in newk:
-                    if ok(k, d[k]):
-                        d[k] += newk[k]
+                    v = d[k] + newk[k]
+                    if ok(k, v):
+                        d[k] = v
                     else:
-                        ddone.append((k, d[k]))
+                        ddone.append((k, v))
                 del newk
         factorize(n, ndone)
         factorize(d, ddone)
@@ -426,7 +427,7 @@ def TR3(rv):
         if not isinstance(rv, C.TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
-        if (S.Pi/4 < rv.args[0]) is (rv.args[0] < S.Pi/2) is True:
+        if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
             rv = fmap[rv.func](S.Pi/2 - rv.args[0])
         return rv
@@ -496,9 +497,9 @@ def _TR56(rv, f, g, h, max, pow):
         if not (rv.is_Pow and rv.base.func == f):
             return rv
 
-        if (rv.exp < 0) is True:
+        if (rv.exp < 0) == True:
             return rv
-        if (rv.exp > max) is True:
+        if (rv.exp > max) == True:
             return rv
         if rv.exp == 2:
             return h(g(rv.base.args[0])**2)
@@ -1071,7 +1072,7 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor, fraction, factor_terms
+    from sympy import factor, fraction
 
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
@@ -1091,32 +1092,32 @@ def TR12i(rv):
                         all(fi.func is tan for fi in f.args):
                     return g, f
 
-        dargs = list(Mul.make_args(d))
-        for i, di in enumerate(dargs):
+        d_args = list(Mul.make_args(d))
+        for i, di in enumerate(d_args):
             m = ok(di)
             if m:
                 g, t = m
                 s = Add(*[_.args[0] for _ in t.args])
                 dok[s] = S.One
-                dargs[i] = g
+                d_args[i] = g
                 continue
             if di.is_Add:
                 di = factor(di)
                 if di.is_Mul:
-                    dargs.extend(di.args)
-                    dargs[i] = S.One
+                    d_args.extend(di.args)
+                    d_args[i] = S.One
             elif di.is_Pow and (di.exp.is_integer or di.base.is_positive):
                 m = ok(di.base)
                 if m:
                     g, t = m
                     s = Add(*[_.args[0] for _ in t.args])
                     dok[s] = di.exp
-                    dargs[i] = g**di.exp
+                    d_args[i] = g**di.exp
                 else:
                     di = factor(di)
                     if di.is_Mul:
-                        dargs.extend(di.args)
-                        dargs[i] = S.One
+                        d_args.extend(di.args)
+                        d_args[i] = S.One
         if not dok:
             return rv
 
@@ -1125,36 +1126,36 @@ def TR12i(rv):
                 a, b = ni.args
                 if a.func is tan and b.func is tan:
                     return a, b
-        nargs = list(Mul.make_args(factor_terms(n)))
+        n_args = list(Mul.make_args(factor_terms(n)))
         hit = False
-        for i, ni in enumerate(nargs):
+        for i, ni in enumerate(n_args):
             m = ok(ni)
             if not m:
                 m = ok(-ni)
                 if m:
-                    nargs[i] = S.NegativeOne
+                    n_args[i] = S.NegativeOne
                 else:
                     if ni.is_Add:
                         ni = factor(ni)
                         if ni.is_Mul:
-                            nargs.extend(ni.args)
-                            nargs[i] = S.One
+                            n_args.extend(ni.args)
+                            n_args[i] = S.One
                         continue
                     elif ni.is_Pow and (
                             ni.exp.is_integer or ni.base.is_positive):
                         m = ok(ni.base)
                         if m:
-                            nargs[i] = S.One
+                            n_args[i] = S.One
                         else:
                             ni = factor(ni)
                             if ni.is_Mul:
-                                nargs.extend(ni.args)
-                                nargs[i] = S.One
+                                n_args.extend(ni.args)
+                                n_args[i] = S.One
                             continue
                     else:
                         continue
             else:
-                nargs[i] = S.One
+                n_args[i] = S.One
             hit = True
             s = Add(*[_.args[0] for _ in m])
             ed = dok[s]
@@ -1164,10 +1165,10 @@ def TR12i(rv):
                     dok[s] = newed
                 else:
                     dok.pop(s)
-            nargs[i] *= -tan(s)
+            n_args[i] *= -tan(s)
 
         if hit:
-            rv = Mul(*nargs)/Mul(*dargs)/Mul(*[(Add(*[
+            rv = Mul(*n_args)/Mul(*d_args)/Mul(*[(Add(*[
                 tan(a) for a in i.args]) - 1)**e for i, e in dok.items()])
 
         return rv
@@ -1705,6 +1706,8 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     was = rv
     rv = sympify(rv)
+    if not isinstance(rv, C.Expr):
+        return rv.func(*[fu(a, measure=measure) for a in rv.args])
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = fRL1(rv)
@@ -1790,6 +1793,7 @@ def trig_split(a, b, two=False):
 
     Examples
     ========
+
     >>> from sympy.simplify.fu import trig_split
     >>> from sympy.abc import x, y, z
     >>> from sympy import cos, sin, sqrt

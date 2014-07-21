@@ -116,10 +116,10 @@ def test_domains():
 
     assert where(X > 3).set == FiniteSet(4, 5, 6)
     assert X.pspace.domain.dict == FiniteSet(
-        Dict({X.symbol: i}) for i in range(1, 7))
+        *[Dict({X.symbol: i}) for i in range(1, 7)])
 
-    assert where(X > Y).dict == FiniteSet(Dict({X.symbol: i, Y.symbol: j})
-            for i in range(1, 7) for j in range(1, 7) if i > j)
+    assert where(X > Y).dict == FiniteSet(*[Dict({X.symbol: i, Y.symbol: j})
+            for i in range(1, 7) for j in range(1, 7) if i > j])
 
 
 def test_dice_bayes():
@@ -179,12 +179,12 @@ def test_binomial_numeric():
     for n in nvals:
         for p in pvals:
             X = Binomial('X', n, p)
-            assert Eq(E(X), n*p)
-            assert Eq(variance(X), n*p*(1 - p))
+            assert E(X) == n*p
+            assert variance(X) == n*p*(1 - p)
             if n > 0 and 0 < p < 1:
-                assert Eq(skewness(X), (1 - 2*p)/sqrt(n*p*(1 - p)))
+                assert skewness(X) == (1 - 2*p)/sqrt(n*p*(1 - p))
             for k in range(n + 1):
-                assert Eq(P(Eq(X, k)), binomial(n, k)*p**k*(1 - p)**(n - k))
+                assert P(Eq(X, k)) == binomial(n, k)*p**k*(1 - p)**(n - k)
 
 
 @slow
@@ -213,8 +213,8 @@ def test_hypergeometric_numeric():
                     assert variance(X) == n*(m/N)*(N - m)/N*(N - n)/(N - 1)
                 # Only test for skewness when defined
                 if N > 2 and 0 < m < N and n < N:
-                    assert Eq(skewness(X), simplify((N - 2*m)*sqrt(N - 1)*(N - 2*n)
-                        / (sqrt(n*m*(N - m)*(N - n))*(N - 2))))
+                    assert skewness(X) == simplify((N - 2*m)*sqrt(N - 1)*(N - 2*n)
+                        / (sqrt(n*m*(N - m)*(N - n))*(N - 2)))
 
 
 def test_FiniteRV():

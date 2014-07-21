@@ -1,6 +1,6 @@
 from sympy import (Symbol, symbols, factorial, factorial2, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, simplify, expand_func)
+                   oo, zoo, simplify, expand_func)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -67,7 +67,7 @@ def test_factorial():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True, positive=True)
 
-    assert factorial(-2) == 0
+    assert factorial(-2) == zoo
     assert factorial(0) == 1
     assert factorial(7) == 5040
     assert factorial(n).func == factorial
@@ -76,6 +76,8 @@ def test_factorial():
     assert factorial(n).is_integer
     assert factorial(n).is_positive is None
     assert factorial(k).is_positive
+
+    assert factorial(oo) == oo
 
 
 def test_factorial_diff():

@@ -17,7 +17,7 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         sympify, Equality, solve, Lambda, DiracDelta)
 from sympy.core.compatibility import reduce
-from sympy.core.sets import FiniteSet, ProductSet
+from sympy.sets.sets import FiniteSet, ProductSet
 from sympy.abc import x
 
 
@@ -222,8 +222,10 @@ class RandomSymbol(Expr):
     """
 
     def __new__(cls, pspace, symbol):
-        assert isinstance(symbol, Symbol)
-        assert isinstance(pspace, PSpace)
+        if not isinstance(symbol, Symbol):
+            raise TypeError("symbol should be of type Symbol")
+        if not isinstance(pspace, PSpace):
+            raise TypeError("pspace variable should be of type PSpace")
         return Basic.__new__(cls, pspace, symbol)
 
     is_bounded = True
@@ -267,7 +269,7 @@ class ProductPSpace(PSpace):
             for value in space.values:
                 rs_space_dict[value] = space
 
-        symbols = FiniteSet(val.symbol for val in rs_space_dict.keys())
+        symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
         if len(symbols) < sum(len(space.symbols) for space in spaces):
@@ -294,7 +296,7 @@ class ProductPSpace(PSpace):
 
     @property
     def symbols(self):
-        return FiniteSet(val.symbol for val in self.rs_space_dict.keys())
+        return FiniteSet(*[val.symbol for val in self.rs_space_dict.keys()])
 
     @property
     def spaces(self):
@@ -345,7 +347,7 @@ class ProductDomain(RandomDomain):
                 domains2.append(domain)
             else:
                 domains2.extend(domain.domains)
-        domains2 = FiniteSet(domains2)
+        domains2 = FiniteSet(*domains2)
 
         if all(domain.is_Finite for domain in domains2):
             from sympy.stats.frv import ProductFiniteDomain
@@ -363,8 +365,8 @@ class ProductDomain(RandomDomain):
 
     @property
     def symbols(self):
-        return FiniteSet(sym for domain in self.domains
-                             for sym    in domain.symbols)
+        return FiniteSet(*[sym for domain in self.domains
+                               for sym    in domain.symbols])
 
     @property
     def domains(self):
@@ -517,7 +519,8 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     Returns the expected value of a random expression
 
     Parameters
-    ----------
+    ==========
+
     expr : Expr containing RandomSymbols
         The expression of which you want to compute the expectation value
     given : Expr containing RandomSymbols
@@ -572,7 +575,8 @@ def probability(condition, given_condition=None, numsamples=None,
     Probability that a condition is true, optionally given a second condition
 
     Parameters
-    ----------
+    ==========
+
     expr : Relational containing RandomSymbols
         The condition of which you want to compute the probability
     given_condition : Relational containing RandomSymbols
@@ -629,7 +633,7 @@ class Density(Basic):
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
         if not random_symbols(expr):
-            return Lambda(x, DiracDelta(x-expr))
+            return Lambda(x, DiracDelta(x - expr))
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution') and
             isinstance(pspace(expr), SinglePSpace)):
@@ -642,16 +646,24 @@ class Density(Basic):
             return result
 
 
-def density(expr, condition=None, evaluate=True, **kwargs):
+def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     """
-    Probability density of a random expression
-
-    Optionally given a second condition
+    Probability density of a random expression, optionally given a second
+    condition.
 
     This density will take on different forms for different types of
-    probability spaces.
-    Discrete variables produce Dicts.
-    Continuous variables produce Lambdas.
+    probability spaces. Discrete variables produce Dicts. Continuous
+    variables produce Lambdas.
+
+    Parameters
+    ==========
+
+    expr : Expr containing RandomSymbols
+        The expression of which you want to compute the density value
+    condition : Relational containing RandomSymbols
+        A conditional expression. density(X>1, X>0) is density of X>1 given X>0
+    numsamples : int
+        Enables sampling and approximates the density with this many samples
 
     Examples
     ========
@@ -670,6 +682,11 @@ def density(expr, condition=None, evaluate=True, **kwargs):
     >>> density(X)(x)
     sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
     """
+
+    if numsamples:
+        return sampling_density(expr, condition, numsamples=numsamples,
+                **kwargs)
+
     return Density(expr, condition).doit(evaluate=evaluate, **kwargs)
 
 
@@ -757,7 +774,7 @@ def sample(expr, condition=None, **kwargs):
     >>> from sympy.stats import Die, sample
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
 
-    >>> die_roll = sample(X+Y+Z) # A random realization of three dice
+    >>> die_roll = sample(X + Y + Z) # A random realization of three dice
     """
     return next(sample_iter(expr, condition, numsamples=1))
 
@@ -771,7 +788,8 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     numsamples: Length of the iterator (defaults to infinity)
 
     Examples
-    --------
+    ========
+
     >>> from sympy.stats import Normal, sample_iter
     >>> X = Normal('X', 0, 1)
     >>> expr = X*X + 3
@@ -819,7 +837,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
         fn(*args)
         if condition:
             given_fn(*args)
-    except:
+    except Exception:
         raise TypeError("Expr/condition too complex for lambdify")
 
     def return_generator():
@@ -830,10 +848,10 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
             if condition:  # Check that these values satisfy the condition
                 gd = given_fn(*args)
-                if not isinstance(gd, bool):
+                if gd != True and gd != False:
                     raise ValueError(
                         "Conditions must not contain free symbols")
-                if gd is False:  # If the values don't satisfy then try again
+                if not gd:  # If the values don't satisfy then try again
                     continue
 
             yield fn(*args)
@@ -853,19 +871,17 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
         ps = pspace(expr)
 
     count = 0
-
     while count < numsamples:
         d = ps.sample()  # a dictionary that maps RVs to values
 
         if condition is not None:  # Check that these values satisfy the condition
             gd = condition.xreplace(d)
-            if not isinstance(gd, bool):
+            if gd != True and gd != False:
                 raise ValueError("Conditions must not contain free symbols")
-            if gd is False:  # If the values don't satisfy then try again
+            if not gd:  # If the values don't satisfy then try again
                 continue
 
         yield expr.xreplace(d)
-
         count += 1
 
 
@@ -878,6 +894,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
     ========
     P
     sampling_E
+    sampling_density
     """
 
     count_true = 0
@@ -887,10 +904,10 @@ def sampling_P(condition, given_condition=None, numsamples=1,
                           numsamples=numsamples, **kwargs)
 
     for x in samples:
-        if not isinstance(x, bool):
+        if x != True and x != False:
             raise ValueError("Conditions must not contain free symbols")
 
-        if x is True:
+        if x:
             count_true += 1
         else:
             count_false += 1
@@ -902,7 +919,7 @@ def sampling_P(condition, given_condition=None, numsamples=1,
         return result
 
 
-def sampling_E(condition, given_condition=None, numsamples=1,
+def sampling_E(expr, given_condition=None, numsamples=1,
                evalf=True, **kwargs):
     """
     Sampling version of E
@@ -911,9 +928,10 @@ def sampling_E(condition, given_condition=None, numsamples=1,
     ========
     P
     sampling_P
+    sampling_density
     """
 
-    samples = sample_iter(condition, given_condition,
+    samples = sample_iter(expr, given_condition,
                           numsamples=numsamples, **kwargs)
 
     result = Add(*list(samples)) / numsamples
@@ -921,6 +939,23 @@ def sampling_E(condition, given_condition=None, numsamples=1,
         return result.evalf()
     else:
         return result
+
+def sampling_density(expr, given_condition=None, numsamples=1, **kwargs):
+    """
+    Sampling version of density
+
+    See Also
+    ========
+    density
+    sampling_P
+    sampling_E
+    """
+
+    results = {}
+    for result in sample_iter(expr, given_condition,
+                              numsamples=numsamples, **kwargs):
+        results[result] = results.get(result, 0) + 1
+    return results
 
 
 def dependent(a, b):
@@ -941,7 +976,7 @@ def dependent(a, b):
     False
     >>> dependent(2*X + Y, -Y)
     True
-    >>> X, Y = given(Tuple(X, Y), Eq(X+Y,3))
+    >>> X, Y = given(Tuple(X, Y), Eq(X + Y, 3))
     >>> dependent(X, Y)
     True
 
@@ -977,7 +1012,7 @@ def independent(a, b):
     True
     >>> independent(2*X + Y, -Y)
     False
-    >>> X, Y = given(Tuple(X, Y), Eq(X+Y,3))
+    >>> X, Y = given(Tuple(X, Y), Eq(X + Y, 3))
     >>> independent(X, Y)
     False
 
@@ -993,9 +1028,12 @@ def pspace_independent(a, b):
     Tests for independence between a and b by checking if their PSpaces have
     overlapping symbols. This is a sufficient but not necessary condition for
     independence and is intended to be used internally.
-    Note:
-    pspace_independent(a,b) implies independent(a,b)
-    independent(a,b) does not imply pspace_independent(a,b)
+
+    Notes
+    =====
+
+    pspace_independent(a, b) implies independent(a, b)
+    independent(a, b) does not imply pspace_independent(a, b)
     """
     a_symbols = pspace(b).symbols
     b_symbols = pspace(a).symbols
@@ -1033,5 +1071,5 @@ def _value_check(condition, message):
 
     Raises ValueError with message if condition is not True
     """
-    if condition is not True:
+    if condition != True:
         raise ValueError(message)

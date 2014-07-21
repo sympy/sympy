@@ -20,7 +20,7 @@ def polyval(ctx, coeffs, x, derivative=False):
     evaluates `P(x)` with the derivative, `P'(x)`, and returns the
     tuple `(P(x), P'(x))`.
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.pretty = True
         >>> polyval([3, 0, 2], 0.5)
         2.75
@@ -44,22 +44,24 @@ def polyval(ctx, coeffs, x, derivative=False):
         return p
 
 @defun
-def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
+def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10,
+        error=False):
     """
-    Computes all roots (real or complex) of a given polynomial. The roots are
-    returned as a sorted list, where real roots appear first followed by
-    complex conjugate roots as adjacent elements. The polynomial should be
-    given as a list of coefficients, in the format used by :func:`~mpmath.polyval`.
-    The leading coefficient must be nonzero.
+    Computes all roots (real or complex) of a given polynomial.
 
-    With *error=True*, :func:`~mpmath.polyroots` returns a tuple *(roots, err)* where
-    *err* is an estimate of the maximum error among the computed roots.
+    The roots are returned as a sorted list, where real roots appear first
+    followed by complex conjugate roots as adjacent elements. The polynomial
+    should be given as a list of coefficients, in the format used by
+    :func:`~mpmath.polyval`. The leading coefficient must be nonzero.
+
+    With *error=True*, :func:`~mpmath.polyroots` returns a tuple *(roots, err)*
+    where *err* is an estimate of the maximum error among the computed roots.
 
     **Examples**
 
     Finding the three real roots of `x^3 - x^2 - 14x + 24`::
 
-        >>> from mpmath import *
+        >>> from sympy.mpmath import *
         >>> mp.dps = 15; mp.pretty = True
         >>> nprint(polyroots([1,-1,-14,24]), 4)
         [-4.0, 2.0, 3.0]
@@ -97,8 +99,21 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
 
     **Precision and conditioning**
 
-    Provided there are no repeated roots, :func:`~mpmath.polyroots` can typically
-    compute all roots of an arbitrary polynomial to high precision::
+    The roots are computed to the current working precision accuracy. If this
+    accuracy cannot be achieved in `maxsteps` steps, then a `NoConvergence`
+    exception is raised. The algorithm internally is using the current working
+    precision extended by `extraprec`. If `NoConvergence` was raised, that is
+    caused either by not having enough extra precision to achieve convergence
+    (in which case increasing `extraprec` should fix the problem) or too low
+    `maxsteps` (in which case increasing `maxsteps` should fix the problem), or
+    a combination of both.
+
+    The user should always do a convergence study with regards to `extraprec`
+    to ensure accurate results. It is possible to get convergence to a wrong
+    answer with too low `extraprec`.
+
+    Provided there are no repeated roots, :func:`~mpmath.polyroots` can
+    typically compute all roots of an arbitrary polynomial to high precision::
 
         >>> mp.dps = 60
         >>> for r in polyroots([1, 0, -10, 0, 1]):
@@ -123,12 +138,12 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
     the convergence to simple roots is quadratic, just like Newton's
     method.
 
-    Although all roots are internally calculated using complex arithmetic,
-    any root found to have an imaginary part smaller than the estimated
-    numerical error is truncated to a real number. Real roots are placed
-    first in the returned list, sorted by value. The remaining complex
-    roots are sorted by real their parts so that conjugate roots end up
-    next to each other.
+    Although all roots are internally calculated using complex arithmetic, any
+    root found to have an imaginary part smaller than the estimated numerical
+    error is truncated to a real number (small real parts are also chopped).
+    Real roots are placed first in the returned list, sorted by value. The
+    remaining complex roots are sorted by their real parts so that conjugate
+    roots end up next to each other.
 
     **References**
 
@@ -141,11 +156,8 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
         # Constant polynomial with no roots
         return []
 
-    orig = ctx.prec
-    weps = +ctx.eps
-    try:
-        ctx.prec += 10
-        tol = ctx.eps * 128
+    tol = +ctx.eps
+    with ctx.extraprec(extraprec):
         deg = len(coeffs) - 1
         # Must be monic
         lead = ctx.convert(coeffs[0])
@@ -161,27 +173,29 @@ def polyroots(ctx, coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False)
             if abs(max(err)) < tol:
                 break
             for i in xrange(deg):
-                if not abs(err[i]) < tol:
-                    p = roots[i]
-                    x = f(p)
-                    for j in range(deg):
-                        if i != j:
-                            try:
-                                x /= (p-roots[j])
-                            except ZeroDivisionError:
-                                continue
-                    roots[i] = p - x
-                    err[i] = abs(x)
-        # Remove small imaginary parts
+                p = roots[i]
+                x = f(p)
+                for j in range(deg):
+                    if i != j:
+                        try:
+                            x /= (p-roots[j])
+                        except ZeroDivisionError:
+                            continue
+                roots[i] = p - x
+                err[i] = abs(x)
+        if abs(max(err)) >= tol:
+            raise ctx.NoConvergence("Didn't converge in maxsteps=%d steps." \
+                    % maxsteps)
+        # Remove small real or imaginary parts
         if cleanup:
             for i in xrange(deg):
-                if abs(ctx._im(roots[i])) < weps:
+                if abs(roots[i]) < tol:
+                    roots[i] = 0
+                elif abs(ctx._im(roots[i])) < tol:
                     roots[i] = roots[i].real
-                elif abs(ctx._re(roots[i])) < weps:
+                elif abs(ctx._re(roots[i])) < tol:
                     roots[i] = roots[i].imag * 1j
         roots.sort(key=lambda x: (abs(ctx._im(x)), ctx._re(x)))
-    finally:
-        ctx.prec = orig
     if error:
         err = max(err)
         err = max(err, ctx.ldexp(1, -orig+1))

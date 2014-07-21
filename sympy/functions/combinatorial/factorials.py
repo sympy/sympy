@@ -27,13 +27,12 @@ class CombinatorialFunction(Function):
 
 class factorial(CombinatorialFunction):
     """Implementation of factorial function over nonnegative integers.
-       For the sake of convenience and simplicity of procedures using
-       this function it is defined for negative integers and returns
-       zero in this case.
+       By convention (consistent with the gamma function and the binomial
+       coefficients), factorial of a negative integer is complex infinity.
 
        The factorial is very important in combinatorics where it gives
-       the number of ways in which 'n' objects can be permuted. It also
-       arises in calculus, probability, number theory etc.
+       the number of ways in which `n` objects can be permuted. It also
+       arises in calculus, probability, number theory, etc.
 
        There is strict relation of factorial with gamma function. In
        fact n! = gamma(n+1) for nonnegative integers. Rewrite of this
@@ -48,11 +47,8 @@ class factorial(CombinatorialFunction):
        Examples
        ========
 
-       >>> from sympy import Symbol, factorial
+       >>> from sympy import Symbol, factorial, S
        >>> n = Symbol('n', integer=True)
-
-       >>> factorial(-2)
-       0
 
        >>> factorial(0)
        1
@@ -60,19 +56,23 @@ class factorial(CombinatorialFunction):
        >>> factorial(7)
        5040
 
+       >>> factorial(-2)
+       zoo
+
        >>> factorial(n)
        factorial(n)
 
        >>> factorial(2*n)
        factorial(2*n)
 
+       >>> factorial(S(1)/2)
+       factorial(1/2)
+
        See Also
        ========
 
        factorial2, RisingFactorial, FallingFactorial
     """
-
-    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -136,9 +136,11 @@ class factorial(CombinatorialFunction):
         if n.is_Number:
             if n is S.Zero:
                 return S.One
+            elif n is S.Infinity:
+                return S.Infinity
             elif n.is_Integer:
                 if n.is_negative:
-                    return S.Zero
+                    return S.ComplexInfinity
                 else:
                     n, result = n.p, 1
 
@@ -157,9 +159,6 @@ class factorial(CombinatorialFunction):
                         result = cls._recursive(n)*2**(n - bits)
 
                     return C.Integer(result)
-
-        if n.is_negative:
-            return S.Zero
 
     def _eval_rewrite_as_gamma(self, n):
         return C.gamma(n + 1)
@@ -207,7 +206,6 @@ class subfactorial(CombinatorialFunction):
     ========
     factorial, sympy.utilities.iterables.generate_derangements
     """
-    nargs = 1
 
     @classmethod
     @cacheit
@@ -259,7 +257,6 @@ class factorial2(CombinatorialFunction):
 
     factorial, RisingFactorial, FallingFactorial
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, arg):
@@ -305,8 +302,6 @@ class RisingFactorial(CombinatorialFunction):
 
        factorial, factorial2, FallingFactorial
     """
-
-    nargs = 2
 
     @classmethod
     def eval(cls, x, k):
@@ -373,8 +368,6 @@ class FallingFactorial(CombinatorialFunction):
 
        factorial, factorial2, RisingFactorial
     """
-
-    nargs = 2
 
     @classmethod
     def eval(cls, x, k):
@@ -478,8 +471,6 @@ class binomial(CombinatorialFunction):
        n*(n - 2)*(n - 1)/6
 
     """
-
-    nargs = 2
 
     def fdiff(self, argindex=1):
         if argindex == 1:

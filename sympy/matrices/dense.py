@@ -68,16 +68,28 @@ class DenseMatrix(MatrixBase):
         >>> m[::2]
         [1, 3]
         """
-        if type(key) is tuple:
+        if isinstance(key, tuple):
             i, j = key
-            if type(i) is slice or type(j) is slice:
-                return self.submatrix(key)
-            else:
+            try:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
+            except (TypeError, IndexError):
+                if isinstance(i, slice):
+                    i = range(self.rows)[i]
+                elif is_sequence(i):
+                    pass
+                else:
+                    i = [i]
+                if isinstance(j, slice):
+                    j = range(self.cols)[j]
+                elif is_sequence(j):
+                    pass
+                else:
+                    j = [j]
+                return self.extract(i, j)
         else:
             # row-wise decomposition of matrix
-            if type(key) is slice:
+            if isinstance(key, slice):
                 return self._mat[key]
             return self._mat[a2idx(key)]
 
@@ -128,7 +140,7 @@ class DenseMatrix(MatrixBase):
         return [self._mat[i: i + self.cols]
             for i in range(0, len(self), self.cols)]
 
-    def row(self, i, f=None):
+    def row(self, i):
         """Elementary row selector.
 
         Examples
@@ -148,16 +160,9 @@ class DenseMatrix(MatrixBase):
         row_join
         row_insert
         """
-        if f is None:
-            return self[i, :]
-        SymPyDeprecationWarning(
-            feature="calling .row(i, f)",
-            useinstead=".row_op(i, f)",
-            deprecated_since_version="0.7.2",
-        ).warn()
-        self.row_op(i, f)
+        return self[i, :]
 
-    def col(self, j, f=None):
+    def col(self, j):
         """Elementary column selector.
 
         Examples
@@ -179,14 +184,7 @@ class DenseMatrix(MatrixBase):
         col_join
         col_insert
         """
-        if f is None:
-            return self[:, j]
-        SymPyDeprecationWarning(
-            feature="calling .col(j, f)",
-            useinstead=".col_op(j, f)",
-            deprecated_since_version="0.7.2",
-        ).warn()
-        self.col_op(j, f)
+        return self[:, j]
 
     def _eval_trace(self):
         """Calculate the trace of a square matrix.
@@ -511,15 +509,7 @@ class DenseMatrix(MatrixBase):
     @classmethod
     def zeros(cls, r, c=None):
         """Return an r x c matrix of zeros, square if c is omitted."""
-        if is_sequence(r):
-            SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r),
-                useinstead="zeros(%i, %i)." % tuple(r),
-                issue=3381, deprecated_since_version="0.7.2",
-            ).warn()
-            r, c = r
-        else:
-            c = r if c is None else c
+        c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
         return cls._new(r, c, [cls._sympify(0)]*r*c)
@@ -952,7 +942,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l):  # pragma: no cover
+def list2numpy(l, dtype=object):  # pragma: no cover
     """Converts python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -961,13 +951,13 @@ def list2numpy(l):  # pragma: no cover
     matrix2numpy
     """
     from numpy import empty
-    a = empty(len(l), dtype=object)
+    a = empty(len(l), dtype)
     for i, s in enumerate(l):
         a[i] = s
     return a
 
 
-def matrix2numpy(m):  # pragma: no cover
+def matrix2numpy(m, dtype=object):  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -976,7 +966,7 @@ def matrix2numpy(m):  # pragma: no cover
     list2numpy
     """
     from numpy import empty
-    a = empty(m.shape, dtype=object)
+    a = empty(m.shape, dtype)
     for i in range(m.rows):
         for j in range(m.cols):
             a[i, j] = m[i, j]
@@ -1180,24 +1170,6 @@ def rot_axis1(theta):
 ###############
 
 
-def matrix_add(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_add(A, B)",
-        useinstead="A + B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A + B
-
-
-def matrix_multiply(A, B):
-    SymPyDeprecationWarning(
-        feature="matrix_multiply(A, B)",
-        useinstead="A*B",
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return A*B
-
-
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
@@ -1235,15 +1207,7 @@ def ones(r, c=None):
     """
     from .dense import Matrix
 
-    if is_sequence(r):
-        SymPyDeprecationWarning(
-            feature="The syntax ones([%i, %i])" % tuple(r),
-            useinstead="ones(%i, %i)." % tuple(r),
-            issue=3381, deprecated_since_version="0.7.2",
-        ).warn()
-        r, c = r
-    else:
-        c = r if c is None else c
+    c = r if c is None else c
     r = as_int(r)
     c = as_int(c)
     return Matrix(r, c, [S.One]*r*c)

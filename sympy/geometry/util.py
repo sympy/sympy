@@ -10,39 +10,69 @@ are_similar
 from __future__ import print_function, division
 
 from sympy import Symbol, Function, solve
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, is_sequence
 
 
-def idiff(eq, y, x, dep=None):
-    """Return dy/dx assuming that y and any other variables given in dep
-    depend on x.
+def idiff(eq, y, x, n=1):
+    """Return ``dy/dx`` assuming that ``eq == 0``.
+
+    Parameters
+    ==========
+
+    y : the dependent variable or a list of dependent variables (with y first)
+    x : the variable that the derivative is being taken with respect to
+    n : the order of the derivative (default is 1)
+
+    Examples
+    ========
 
     >>> from sympy.abc import x, y, a
     >>> from sympy.geometry.util import idiff
 
-    >>> idiff(x**2 + y**2 - 4, y, x)
+    >>> circ = x**2 + y**2 - 4
+    >>> idiff(circ, y, x)
     -x/y
+    >>> idiff(circ, y, x, 2).simplify()
+    -(x**2 + y**2)/y**3
+
+    Here, ``a`` is assumed to be independent of ``x``:
+
     >>> idiff(x + a + y, y, x)
     -1
-    >>> idiff(x + a + y, y, x, [a])
+
+    Now the x-dependence of ``a`` is made explicit by listing ``a`` after
+    ``y`` in a list.
+
+    >>> idiff(x + a + y, [y, a], x)
     -Derivative(a, x) - 1
 
     See Also
     ========
 
-    sympy.core.function.Derivative
+    sympy.core.function.Derivative: represents unevaluated derivatives
+    sympy.core.function.diff: explicitly differentiates wrt symbols
 
     """
-    if not dep:
-        dep = []
-    dep = set(dep)
-    dep.add(y)
+    if is_sequence(y):
+        dep = set(y)
+        y = y[0]
+    elif isinstance(y, Symbol):
+        dep = set([y])
+    else:
+        raise ValueError("expecting x-dependent symbol(s) but got: %s" % y)
 
     f = dict([(s, Function(
-        s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
+        s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
     dydx = Function(y.name)(x).diff(x)
-    return solve(eq.subs(f).diff(x), dydx)[0].subs(
-        [(b, a) for a, b in f.items()])
+    eq = eq.subs(f)
+    derivs = {}
+    for i in range(n):
+        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
+        if i == n - 1:
+            return yp.subs([(v, k) for k, v in f.items()])
+        derivs[dydx] = yp
+        eq = dydx - yp
+        dydx = dydx.diff(x)
 
 
 def _symbol(s, matching_symbol=None):
@@ -191,7 +221,7 @@ def convex_hull(*args):
     [2] Andrew's Monotone Chain Algorithm
     (A.M. Andrew,
     "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-    http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
+    http://geomalgorithms.com/a10-_hull-1.html
 
     See Also
     ========
@@ -376,7 +406,7 @@ def centroid(*args):
             c = Point(0, 0)
             for g in args:
                 c += g
-            return c/len(args)
+            den = len(args)
         elif all(isinstance(g, Segment) for g in args):
             c = Point(0, 0)
             L = 0
@@ -384,7 +414,7 @@ def centroid(*args):
                 l = g.length
                 c += g.midpoint*l
                 L += l
-            return c/L
+            den = L
         elif all(isinstance(g, Polygon) for g in args):
             c = Point(0, 0)
             A = 0
@@ -392,4 +422,6 @@ def centroid(*args):
                 a = g.area
                 c += g.centroid*a
                 A += a
-            return c/A
+            den = A
+        c /= den
+        return c.func(*[i.simplify() for i in c.args])

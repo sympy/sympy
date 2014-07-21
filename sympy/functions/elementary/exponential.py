@@ -1,3 +1,4 @@
+
 from __future__ import print_function, division
 
 from sympy.core import C, sympify
@@ -26,7 +27,6 @@ from sympy.core.compatibility import xrange
 
 class ExpBase(Function):
 
-    nargs = 1
     unbranched = True
 
     def inverse(self, argindex=1):
@@ -114,9 +114,9 @@ class ExpBase(Function):
         if be.is_polar:
             return rv
         besmall = abs(be) <= S.Pi
-        if besmall is True:
+        if besmall == True:
             return rv
-        elif besmall is False and e.is_Rational and e.q == 2:
+        elif besmall == False and e.is_Rational and e.q == 2:
             return -rv
 
     def _eval_expand_power_exp(self, **hints):
@@ -395,15 +395,6 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_lseries(self, x):
-        s = self.args[0]
-        yield exp(s.subs(x, 0))
-        from sympy import integrate
-        t = Dummy("t")
-        f = s.subs(x, t)
-        for term in (exp(f)*f.diff(t)).lseries(t):
-            yield integrate(term, (t, 0, x))
-
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
@@ -468,8 +459,6 @@ class log(Function):
     exp
     """
 
-    nargs = (1, 2)
-
     def fdiff(self, argindex=1):
         """
         Returns the first derivative of the function.
@@ -529,21 +518,25 @@ class log(Function):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
-            elif arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + cls(-arg)
             elif arg.is_Rational:
                 if arg.q != 1:
                     return cls(arg.p) - cls(arg.q)
-        elif arg is S.ComplexInfinity:
-            return S.ComplexInfinity
-        elif arg is S.Exp1:
-            return S.One
-        elif arg.func is exp and arg.args[0].is_real:
+
+        if arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        #don't autoexpand Pow or Mul (see the issue 252):
-        elif not arg.is_Add:
+
+        if arg.is_number:
+            if arg.is_negative:
+                return S.Pi * S.ImaginaryUnit + cls(-arg)
+            elif arg is S.ComplexInfinity:
+                return S.ComplexInfinity
+            elif arg is S.Exp1:
+                return S.One
+
+        # don't autoexpand Pow or Mul (see the issue 3351):
+        if not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if coeff is not None:
@@ -644,7 +637,7 @@ class log(Function):
         (log(Abs(x)), arg(x))
         >>> log(I).as_real_imag()
         (0, pi/2)
-        >>> log(1+I).as_real_imag()
+        >>> log(1 + I).as_real_imag()
         (log(sqrt(2)), pi/4)
         >>> log(I*x).as_real_imag()
         (log(Abs(x)), arg(I*x))
@@ -686,8 +679,7 @@ class log(Function):
                 return True
             if arg.is_infinitesimal:
                 return False
-            if arg.is_Number:
-                return arg > 1
+            return (arg - 1).is_positive
 
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
@@ -753,7 +745,6 @@ class LambertW(Function):
     For more information, see:
     http://en.wikipedia.org/wiki/Lambert_W_function
     """
-    nargs = 1
 
     @classmethod
     def eval(cls, x):

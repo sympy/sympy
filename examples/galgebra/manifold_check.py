@@ -8,6 +8,7 @@ from sympy.galgebra.debug import oprint
 from sympy.galgebra.printing import GA_Printer, enhance_print, Get_Program, Print_Function
 from sympy.galgebra.manifold import Manifold
 
+
 def Test_Reciprocal_Frame():
     Print_Function()
     coords = symbols('x y z')
@@ -40,6 +41,7 @@ def Test_Reciprocal_Frame():
     print('ev.ev_r =', ev | ev_r)
     return
 
+
 def Plot_Mobius_Strip_Manifold():
     Print_Function()
     coords = symbols('x y z')
@@ -49,6 +51,7 @@ def Plot_Mobius_Strip_Manifold():
     MF = Manifold(X, mfvar, True, I=MV.I)
     MF.Plot2DSurface([0.0, 6.28, 48], [-0.3, 0.3, 12], surf=False, skip=[4, 4], tan=0.15)
     return
+
 
 def Distorted_manifold_with_scalar_function():
     Print_Function()
@@ -78,6 +81,7 @@ def Distorted_manifold_with_scalar_function():
     print('P(dPS) =', MF.Proj(MF.Grad(PS)))
     return
 
+
 def Simple_manifold_with_scalar_function_derivative():
     Print_Function()
     coords = (x, y, z) = symbols('x y z')
@@ -100,8 +104,10 @@ def Simple_manifold_with_scalar_function_derivative():
     print('Vector derivative =', dg.subs({u: 1, v: 0}))
     return
 
+
 def dummy():
     return
+
 
 def main():
     Get_Program(True)
@@ -110,7 +116,7 @@ def main():
         Test_Reciprocal_Frame()
         Distorted_manifold_with_scalar_function()
         Simple_manifold_with_scalar_function_derivative()
-        #Plot_Mobius_Strip_Manifold()
+        # Plot_Mobius_Strip_Manifold()
     return
 
 if __name__ == "__main__":

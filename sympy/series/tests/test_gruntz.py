@@ -373,9 +373,9 @@ def test_limit3():
 
 
 def test_limit4():
-    #issue 364
+    #issue 3463
     assert gruntz((3**x + 5**x)**(1/x), x, oo) == 5
-    #issue 364
+    #issue 3463
     assert gruntz((3**(1/x) + 5**(1/x))**x, x, 0) == 5
 
 
@@ -389,14 +389,15 @@ def test_MrvTestCase_page47_ex3_21():
 
 
 def test_I():
+    from sympy.functions import sign as sgn
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo).simplify() == sgn(y)*I*oo
 
 
-def test_issue1715():
+def test_issue_4814():
     assert gruntz((x + 1)**(1/log(x + 1)), x, oo) == E
 
 
@@ -421,22 +422,22 @@ def test_exp_log_series():
     assert gruntz(x/log(log(x*exp(x))), x, oo) == oo
 
 
-def test_issue545():
+def test_issue_3644():
     assert gruntz(((x**7 + x + 1)/(2**x + x**2))**(-1/x), x, oo) == 2
 
 
-def test_issue3744():
+def test_issue_6843():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
     assert gruntz(r, x, 1).simplify() == n/2
 
 
-def test_issue1091():
+def test_issue_4190():
     assert gruntz(x - gamma(1/x), x, oo) == S.EulerGamma
 
 
 @XFAIL
-def test_issue_2073():
+def test_issue_5172():
     n = Symbol('n')
     r = Symbol('r', positive=True)
     c = Symbol('c')
@@ -451,10 +452,15 @@ def test_issue_2073():
         (2**(p + 1) + r - 1)/(r + 1)**(p + 1)
 
 
-def test_issue_1010():
+def test_issue_4109():
     assert gruntz(1/gamma(x), x, 0) == 0
     assert gruntz(x*gamma(x), x, 0) == 1
 
 
-def test_issue_3583():
+def test_issue_6682():
     assert gruntz(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)
+
+
+def test_issue_7096():
+    from sympy.functions import sign
+    assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))

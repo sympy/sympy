@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import *
+from sympy.core.symbol import Dummy
+from sympy.utilities.lambdify import lambdify
 
 
 def textplot(expr, a, b, W=55, H=18):
@@ -16,7 +17,8 @@ def textplot(expr, a, b, W=55, H=18):
     """
 
     free = expr.free_symbols
-    assert len(free) <= 1
+    if len(free) > 1:
+        raise ValueError("length can not be greater than 1")
     x = free.pop() if free else Dummy()
     f = lambdify([x], expr)
     a = float(a)
@@ -47,7 +49,12 @@ def textplot(expr, a, b, W=55, H=18):
         s = [' '] * W
         for x in range(W):
             if y[x] == h:
-                s[x] = '.'
+                if (x == 0 or y[x - 1] == h - 1) and (x == W - 1 or y[x + 1] == h + 1):
+                    s[x] = '/'
+                elif (x == 0 or y[x - 1] == h + 1) and (x == W - 1 or y[x + 1] == h - 1):
+                    s[x] = '\\'
+                else:
+                    s[x] = '.'
 
         # Print y values
         if h == H - 1:

@@ -87,7 +87,7 @@ def Geometric(name, p):
     r"""
     Create a discrete random variable with a Geometric distribution.
 
-    The density of the Poisson distribution is given by
+    The density of the Geometric distribution is given by
 
     .. math::
         f(k) := p (1 - p)^{k - 1}

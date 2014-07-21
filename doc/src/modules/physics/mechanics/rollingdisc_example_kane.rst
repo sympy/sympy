@@ -13,7 +13,7 @@ drop out). ::
   >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
   >>> q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
   >>> r, m, g = symbols('r m g')
-  >>> mechanics_printing()
+  >>> mechanics_printing(pretty_print=False)
 
 The kinematics are formed by a series of simple rotations. Each simple rotation
 creates a new frame, and the next rotation is defined by the new frame's basis
@@ -81,4 +81,3 @@ for the u dots (time derivatives of the generalized speeds). ::
   [(4*g*sin(q2) + 6*r*u2*u3 - r*u3**2*tan(q2))/(5*r)],
   [                                       -2*u1*u3/3],
   [                          (-2*u2 + u3*tan(q2))*u1]])
-
