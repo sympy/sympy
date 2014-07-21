@@ -624,10 +624,10 @@ class Plane(GeometryEntity):
         >>> a = Plane(Point3D(1, 2, 3), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.intersection(b)
-        Point3D(1, 2, 3)
+        [Point3D(1, 2, 3)]
         >>> c = Line3D(Point3D(1, 4, 7), Point3D(2, 2, 2))
         >>> a.intersection(c)
-        Point3D(2, 2, 2)
+        [Point3D(2, 2, 2)]
         >>> d = Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))
         >>> e = Plane(Point3D(2, 0, 0), normal_vector=(3, 4, -3))
         >>> d.intersection(e)
