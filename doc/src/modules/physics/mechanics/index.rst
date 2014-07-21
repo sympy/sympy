@@ -77,6 +77,7 @@ Guide to Mechanics
 
     masses.rst
     kane.rst
+    linearize.rst
     examples.rst
     advanced.rst
     reference.rst
