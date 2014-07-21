@@ -518,21 +518,25 @@ class log(Function):
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
-            elif arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + cls(-arg)
             elif arg.is_Rational:
                 if arg.q != 1:
                     return cls(arg.p) - cls(arg.q)
-        elif arg is S.ComplexInfinity:
-            return S.ComplexInfinity
-        elif arg is S.Exp1:
-            return S.One
-        elif arg.func is exp and arg.args[0].is_real:
+
+        if arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        #don't autoexpand Pow or Mul (see the issue 3351):
-        elif not arg.is_Add:
+
+        if arg.is_number:
+            if arg.is_negative:
+                return S.Pi * S.ImaginaryUnit + cls(-arg)
+            elif arg is S.ComplexInfinity:
+                return S.ComplexInfinity
+            elif arg is S.Exp1:
+                return S.One
+
+        # don't autoexpand Pow or Mul (see the issue 3351):
+        if not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if coeff is not None:
@@ -633,7 +637,7 @@ class log(Function):
         (log(Abs(x)), arg(x))
         >>> log(I).as_real_imag()
         (0, pi/2)
-        >>> log(1+I).as_real_imag()
+        >>> log(1 + I).as_real_imag()
         (log(sqrt(2)), pi/4)
         >>> log(I*x).as_real_imag()
         (log(Abs(x)), arg(I*x))

@@ -501,11 +501,6 @@ def test_args():
     assert (x**y).args[1] == y
 
 
-def test_iter_basic_args():
-    assert list(sin(x*y).iter_basic_args()) == [x*y]
-    assert list((x**y).iter_basic_args()) == [x, y]
-
-
 def test_noncommutative_expand_issue_3757():
     A, B, C = symbols('A,B,C', commutative=False)
     assert A*B - B*A != 0
@@ -658,6 +653,12 @@ def test_replace():
         2*((2*x*y + 1)*(4*x*y + 1))})
     assert x.replace(x, y) == y
     assert (x + 1).replace(1, 2) == x + 2
+
+    # https://groups.google.com/forum/#!topic/sympy/8wCgeC95tz0
+    n1, n2, n3 = symbols('n1:4', commutative=False)
+    f = Function('f')
+    assert (n1*f(n2)).replace(f, lambda x: x) == n1*n2
+    assert (n3*f(n2)).replace(f, lambda x: x) == n3*n2
 
 
 def test_find():

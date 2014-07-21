@@ -269,7 +269,7 @@ class ProductPSpace(PSpace):
             for value in space.values:
                 rs_space_dict[value] = space
 
-        symbols = FiniteSet(val.symbol for val in rs_space_dict.keys())
+        symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
         if len(symbols) < sum(len(space.symbols) for space in spaces):
@@ -296,7 +296,7 @@ class ProductPSpace(PSpace):
 
     @property
     def symbols(self):
-        return FiniteSet(val.symbol for val in self.rs_space_dict.keys())
+        return FiniteSet(*[val.symbol for val in self.rs_space_dict.keys()])
 
     @property
     def spaces(self):
@@ -347,7 +347,7 @@ class ProductDomain(RandomDomain):
                 domains2.append(domain)
             else:
                 domains2.extend(domain.domains)
-        domains2 = FiniteSet(domains2)
+        domains2 = FiniteSet(*domains2)
 
         if all(domain.is_Finite for domain in domains2):
             from sympy.stats.frv import ProductFiniteDomain
@@ -365,8 +365,8 @@ class ProductDomain(RandomDomain):
 
     @property
     def symbols(self):
-        return FiniteSet(sym for domain in self.domains
-                             for sym    in domain.symbols)
+        return FiniteSet(*[sym for domain in self.domains
+                               for sym    in domain.symbols])
 
     @property
     def domains(self):

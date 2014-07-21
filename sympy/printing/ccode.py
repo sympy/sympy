@@ -178,11 +178,12 @@ class CCodePrinter(CodePrinter):
         if expr.args[-1].cond == True:
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
-            ecpairs.append("(%s) ? (\n%s\n" %
+            ecpairs.append("(%s) ? (\n%s\n)" %
                            (self._print(expr.args[-1].cond),
                             self._print(expr.args[-1].expr)))
         code = "%s" + last_line
-        return code % ": ".join(ecpairs) + " )"
+        return code % ": ".join(ecpairs) + " ".join(
+            [")" for ind in range(len(ecpairs))])
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:

@@ -841,6 +841,10 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
+        from sympy.assumptions.ask import ask, Q
+        if ask(Q.real(other)) is False:
+            return False
+
         if self.left_open:
             expr = other > self.start
         else:
@@ -1036,7 +1040,8 @@ class Union(Set, EvalfMixin):
         # Merge all finite sets
         finite_sets = [x for x in args if x.is_FiniteSet]
         if len(finite_sets) > 1:
-            finite_set = FiniteSet(x for set in finite_sets for x in set)
+            a = (x for set in finite_sets for x in set)
+            finite_set = FiniteSet(*a)
             args = [finite_set] + [x for x in args if not x.is_FiniteSet]
 
         # ===== Pair-wise Rules =====
@@ -1283,8 +1288,8 @@ class Intersection(Set):
         # all other sets in the intersection
         for s in args:
             if s.is_FiniteSet:
-                return s.__class__(x for x in s
-                        if all(x in other for other in args))
+                return s.func(*[x for x in s
+                                if all(x in other for other in args)])
 
         # If any of the sets are unions, return a Union of Intersections
         for s in args:
@@ -1381,7 +1386,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return self
 
     def _eval_powerset(self):
-        return FiniteSet([self])
+        return FiniteSet(self)
 
     @property
     def _boundary(self):
@@ -1463,9 +1468,6 @@ class FiniteSet(Set, EvalfMixin):
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         if evaluate:
-            if len(args) == 1 and iterable(args[0]):
-                args = args[0]
-
             args = list(map(sympify, args))
 
             if len(args) == 0:
@@ -1473,7 +1475,7 @@ class FiniteSet(Set, EvalfMixin):
         else:
             args = list(map(sympify, args))
 
-        args = list(ordered(frozenset(args)))
+        args = list(ordered(frozenset(tuple(args))))
         obj = Basic.__new__(cls, *args)
         obj._elements = frozenset(args)
         return obj
@@ -1503,7 +1505,7 @@ class FiniteSet(Set, EvalfMixin):
         # If other set contains one of my elements, remove it from myself
         if any(other.contains(x) is True for x in self):
             return set((
-                FiniteSet(x for x in self if other.contains(x) is not True),
+                FiniteSet(*[x for x in self if other.contains(x) is not True]),
                 other))
 
         return None
@@ -1577,7 +1579,7 @@ class FiniteSet(Set, EvalfMixin):
         return len(self.args)
 
     def __sub__(self, other):
-        return FiniteSet(el for el in self if el not in other)
+        return FiniteSet(*[el for el in self if el not in other])
 
     def as_relational(self, symbol):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
@@ -1592,7 +1594,7 @@ class FiniteSet(Set, EvalfMixin):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(elem.evalf(prec) for elem in self)
+        return FiniteSet(*[elem.evalf(prec) for elem in self])
 
     def _hashable_content(self):
         return (self._elements,)
@@ -1603,7 +1605,7 @@ class FiniteSet(Set, EvalfMixin):
         return sorted(self.args, key=default_sort_key)
 
     def _eval_powerset(self):
-        return self.func(self.func(s) for s in subsets(self.args))
+        return self.func(*[self.func(*s) for s in subsets(self.args)])
 
     def __ge__(self, other):
         return other.is_subset(self)
