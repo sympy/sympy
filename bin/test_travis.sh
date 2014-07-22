@@ -3,7 +3,7 @@
 # Exit on error
 set -e
 
-# Find out whether the commit to test is at the head of the branch to test
+# Find out whether the commit to test is at the head of its branch
 if [ x`git rev-list --max-count=1 $TRAVIS_BRANCH` != x$TRAVIS_COMMIT ]; then
     echo 'The current commit was superseded by a newer one.'
     echo 'Signalling a test failure to avoid testing an outdated commit.'
