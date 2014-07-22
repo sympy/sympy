@@ -10,6 +10,7 @@ if [ x`git rev-list --max-count=1 $TRAVIS_BRANCH` != x$TRAVIS_COMMIT ]; then
     echo '(To force a test, create a throwaway branch using'
     echo "  git checkout -b <throwaway_branch> $TRAVIS_COMMIT"
     echo 'and push it to github.)'
+    echo 'NO SYMPY TESTS FAILED. The current failure is just technical.'
     exit 1
 fi
 
