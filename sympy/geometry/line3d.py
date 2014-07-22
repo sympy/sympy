@@ -707,9 +707,7 @@ class LinearEntity3D(GeometryEntity):
             b = o.arbitrary_point(t2)
             c = solve([a.x - b.x, a.y - b.y], [t1, t2])
             d = solve([a.x - b.x, a.z - b.z], [t1, t2])
-            if len(c) == 1:
-                return []
-            if len(d) == 1:
+            if len(c) == 1 and len(d) == 1:
                 return []
             if c is {}:
                 e = a.subs(t1, d[t1])

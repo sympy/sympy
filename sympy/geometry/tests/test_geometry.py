@@ -564,6 +564,10 @@ def test_line3d():
     assert intersection(l1, p5) == []
     assert intersection(l1, l1.parallel_line(p1)) == [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))]
 
+    p = Ray3D(Point3D(1, 0, 0), Point3D(-1, 0, 0))
+    q = Ray3D(Point3D(0, 1, 0), Point3D(0, -1, 0))
+    assert intersection(p, q) == [Point3D(0, 0, 0)]
+
     # Concurrency
     assert Line3D.is_concurrent(l1) is False
     assert Line3D.is_concurrent(l1, l2)
@@ -736,10 +740,10 @@ def test_plane():
     assert pl6.perpendicular_line(Point3D(6, 4, 2)) == \
                Line3D(Point3D(6, 4, 2), Point3D(8, 6, 4))
 
-    assert pl6.intersection(pl6) == pl6
-    assert pl4.intersection(pl4.p1) == pl4.p1
+    assert pl6.intersection(pl6) == [pl6]
+    assert pl4.intersection(pl4.p1) == [pl4.p1]
     assert pl3.intersection(pl6) == [Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6))]
-    assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == Point3D(2, 8/3, 10/3)
+    assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == [Point3D(2, 8/3, 10/3)]
     assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))) == \
                [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
 
