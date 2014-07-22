@@ -3,13 +3,15 @@ import warnings
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
-from sympy.physics.vector import Vector, ReferenceFrame, Point
+from sympy.physics.vector import Vector, ReferenceFrame, Point, dynamicsymbols
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import sympify, Matrix, Symbol, Derivative, Dummy
 from sympy.core.basic import S
+from sympy.core.function import AppliedUndef
+from sympy.core.compatibility import reduce
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -437,10 +439,9 @@ def _mat_inv_mul(A, B):
     temp3 = Matrix([i.T for i in temp3]).T
     return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
 
-
 def _subs_keep_derivs(expr, sub_dict):
-    """ Performs subs exactly as subs normally would be,
-    but doesn't sub in expressions inside Derivatives. """
+    """Performs subs exactly as subs normally would be,
+    but doesn't sub in expressions inside Derivatives."""
 
     ds = expr.atoms(Derivative)
     gs = [Dummy() for d in ds]
@@ -450,3 +451,10 @@ def _subs_keep_derivs(expr, sub_dict):
     dict_to = dict(zip(ds, gs))
     dict_from = dict(zip(gs, ds))
     return expr.subs(deriv_dict).subs(dict_to).subs(sub_dict).subs(dict_from)
+
+def _find_dynamicsymbols(inlist, insyms=[]):
+    """Finds all non-supplied dynamicsymbols in the expressions."""
+    t = dynamicsymbols._t
+    return reduce(set.union, [set([i]) for j in inlist
+            for i in j.atoms(AppliedUndef, Derivative)
+            if i.free_symbols == set([t])], set()) - set(insyms)
