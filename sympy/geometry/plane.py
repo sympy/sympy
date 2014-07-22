@@ -624,10 +624,10 @@ class Plane(GeometryEntity):
         >>> a = Plane(Point3D(1, 2, 3), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.intersection(b)
-        Point3D(1, 2, 3)
+        [Point3D(1, 2, 3)]
         >>> c = Line3D(Point3D(1, 4, 7), Point3D(2, 2, 2))
         >>> a.intersection(c)
-        Point3D(2, 2, 2)
+        [Point3D(2, 2, 2)]
         >>> d = Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))
         >>> e = Plane(Point3D(2, 0, 0), normal_vector=(3, 4, -3))
         >>> d.intersection(e)
@@ -638,7 +638,7 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity
         if isinstance(o, Point) or isinstance(o, Point3D):
             if o in self:
-                return o
+                return [o]
             else:
                 return []
         if isinstance(o, LinearEntity3D):
@@ -655,7 +655,7 @@ class Plane(GeometryEntity):
                 else:
                     a = a.subs(t, c[0])
                     if a in o:
-                        return a
+                        return [a]
                     else:
                         return []
         if isinstance(o, LinearEntity):
@@ -673,7 +673,7 @@ class Plane(GeometryEntity):
                     return [Point(c[x], c[y])]
         if isinstance(o, Plane):
             if o == self:
-                return self
+                return [self]
             if self.is_parallel(o):
                 return []
             else:
