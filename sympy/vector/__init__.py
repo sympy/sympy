@@ -7,3 +7,5 @@ from sympy.vector.deloperator import Del
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import express, matrix_to_vector
 from sympy.vector.point import Point
+from sympy.vector.orienters import AxisOrienter, BodyOrienter, \
+     SpaceOrienter, QuaternionOrienter
