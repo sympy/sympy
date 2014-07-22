@@ -645,7 +645,7 @@ class CoordSysCartesian(Basic):
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = CoordSysCartesian('N')
-        >>> B = N.orient_new('B', 'Quaternion', [q0, q1, q2, q3])
+        >>> B = N.orient_new_quaternion('B', q0, q1, q2, q3)
 
         """
 
@@ -754,6 +754,7 @@ def _orient_space(amounts, rot_order):
     if not (len(amounts) == 3 & len(rot_order) == 3):
         raise TypeError('Space orientation takes 3 ' +
                         'values & 3 orders')
+    rot_order = [i.replace('X', '1') for i in rot_order]
     rot_order = [i.replace('Y', '2') for i in rot_order]
     rot_order = [i.replace('Z', '3') for i in rot_order]
     rot_order = ''.join(rot_order)
