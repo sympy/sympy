@@ -95,9 +95,9 @@ def express(expr, system, system2=None, variables=False):
         outdyad = Dyadic.zero
         var = variables
         for k, v in expr.components.items():
-            outdyad += (express(v, system, variables = var) *
-                        (express(k.args[0], system, variables = var) |
-                         express(k.args[1], system2, variables = var)))
+            outdyad += (express(v, system, variables=var) *
+                        (express(k.args[0], system, variables=var) |
+                         express(k.args[1], system2, variables=var)))
 
         return outdyad
 

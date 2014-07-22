@@ -677,8 +677,8 @@ def _orient_axis(amounts, rot_order, parent):
     if not rot_order == '':
         raise TypeError('Axis orientation takes no' +
                         'rotation order')
-    if not (isinstance(amounts, (list, tuple)) &
-                (len(amounts) == 2)):
+    if not (isinstance(amounts, (list, tuple))
+                and (len(amounts) == 2)):
         raise TypeError('Amounts should be of length 2')
     theta = amounts[0]
     axis = amounts[1]

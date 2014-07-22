@@ -101,7 +101,7 @@ class Vector(BasisDependent):
             return outvec
         from sympy.vector.deloperator import Del
         if not isinstance(other, Vector) and not isinstance(other, Del):
-            raise TypeError(str(other)+" is not a vector, dyadic or " +
+            raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 
         #Check if the other is a del operator
