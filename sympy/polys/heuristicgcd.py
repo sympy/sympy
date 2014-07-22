@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 from sympy.core.compatibility import xrange
+from .polyerrors import HeuristicGCDFailed
 
 HEU_GCD_MAX = 6
 
