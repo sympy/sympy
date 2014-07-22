@@ -56,11 +56,6 @@ def test_refraction_angle():
     assert refraction_angle(r1, n1, n2, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(n1/n2, n1/n2, -sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)))
     assert refraction_angle(r1, 1.33, 1, plane=P) == 0  # TIR
-
-
-@XFAIL
-def test_refraction_angle_failing():
-    # Failing due to issue https://github.com/sympy/sympy/issues/7757
     assert refraction_angle(r1, 1, 1, normal_ray) == \
         Ray3D(Point3D(0, 0, 0), direction_ratio=[1, 1, -1])
 

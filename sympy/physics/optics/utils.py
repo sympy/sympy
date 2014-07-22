@@ -100,7 +100,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         # an instance of Ray3D.
         if isinstance(incident, Ray3D):
             return_ray = True
-        intersection_pt = plane.intersection(incident)
+            intersection_pt = plane.intersection(incident)[0]
         _normal = plane.normal_vector
         if isinstance(_normal, list):
             _normal = Matrix(_normal)
