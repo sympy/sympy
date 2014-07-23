@@ -124,7 +124,7 @@ def test_latex_Float():
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
     assert latex(Float(1.0e-100), mul_symbol="times") == r"1.0 \times 10^{-100}"
     assert latex(1.0*oo) == r"\infty"
-    assert latex(-1.0*oo) == r"- \infty"
+    assert latex(-1.0*oo) == r"-\infty"
 
 
 def test_latex_symbols():

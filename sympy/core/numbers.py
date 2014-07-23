@@ -628,7 +628,12 @@ class Float(Number):
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
         elif isinstance(num, str):
-            _mpf_ = mlib.from_str(num, prec, rnd)
+            if num == 'inf' or num == '+inf':
+                return S.Infinity
+            elif num == '-inf':
+                return S.NegativeInfinity
+            else:
+                _mpf_ = mlib.from_str(num, prec, rnd)
         elif isinstance(num, decimal.Decimal):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, Rational):

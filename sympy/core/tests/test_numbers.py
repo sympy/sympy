@@ -553,30 +553,30 @@ def test_Infinity():
     assert S(2) - oo == -oo
     assert oo/I == -oo*I
     assert -oo/I == oo*I
-    assert oo*float(1) == Float('inf') and (oo*float(1)).is_Float
-    assert -oo*float(1) == Float('-inf') and (-oo*float(1)).is_Float
-    assert oo/float(1) == Float('inf') and (oo/float(1)).is_Float
-    assert -oo/float(1) == Float('-inf') and (-oo/float(1)).is_Float
-    assert oo*float(-1) == Float('-inf') and (oo*float(-1)).is_Float
-    assert -oo*float(-1) == Float('inf') and (-oo*float(-1)).is_Float
-    assert oo/float(-1) == Float('-inf') and (oo/float(-1)).is_Float
-    assert -oo/float(-1) == Float('inf') and (-oo/float(-1)).is_Float
-    assert oo + float(1) == Float('inf') and (oo + float(1)).is_Float
-    assert -oo + float(1) == Float('-inf') and (-oo + float(1)).is_Float
-    assert oo - float(1) == Float('inf') and (oo - float(1)).is_Float
-    assert -oo - float(1) == Float('-inf') and (-oo - float(1)).is_Float
-    assert float(1)*oo == Float('inf') and (float(1)*oo).is_Float
-    assert float(1)*-oo == Float('-inf') and (float(1)*-oo).is_Float
+    assert oo*float(1) == oo
+    assert -oo*float(1) == -oo
+    assert oo/float(1) == oo
+    assert -oo/float(1) == -oo
+    assert oo*float(-1) == -oo
+    assert -oo*float(-1) == oo
+    assert oo/float(-1) == -oo
+    assert -oo/float(-1) == oo
+    assert oo + float(1) == oo
+    assert -oo + float(1) == -oo
+    assert oo - float(1) == oo
+    assert -oo - float(1) == -oo
+    assert float(1)*oo == oo
+    assert float(1)*-oo == -oo
     assert float(1)/oo == 0
     assert float(1)/-oo == 0
-    assert float(-1)*oo == Float('-inf') and (float(-1)*oo).is_Float
-    assert float(-1)*-oo == Float('inf') and (float(-1)*-oo).is_Float
+    assert float(-1)*oo == -oo
+    assert float(-1)*-oo == oo
     assert float(-1)/oo == 0
     assert float(-1)/-oo == 0
-    assert float(1) + oo == Float('inf')
-    assert float(1) + -oo == Float('-inf')
-    assert float(1) - oo == Float('-inf')
-    assert float(1) - -oo == Float('inf')
+    assert float(1) + oo == oo
+    assert float(1) + -oo == -oo
+    assert float(1) - oo == -oo
+    assert float(1) - -oo == oo
 
     assert Float('nan') == nan
     assert nan*1.0 == nan
