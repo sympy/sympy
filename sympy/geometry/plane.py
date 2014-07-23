@@ -447,13 +447,13 @@ class Plane(GeometryEntity):
             ValueError('Enter Planes only')
 
     @staticmethod
-    def are_coplanar(*lines):
-        """ Returns True if the given lines are coplanar otherwise False
+    def are_coplanar(*o):
+        """ Returns True if the given entities are coplanar otherwise False
 
         Parameters
         ==========
 
-        lines: list
+        o: list
 
         Returns
         =======
@@ -471,19 +471,40 @@ class Plane(GeometryEntity):
         False
 
         """
-        if all(isinstance(i, Line3D) for i in lines):
-            if len(lines) < 2:
+        from sympy.geometry.line3d import LinearEntity3D
+        from sympy.geometry.line import LinearEntity
+        if all(isinstance(i, LinearEntity) for i in o):
+            if len(o) < 2:
                 return False
-            a = Matrix(lines[0].direction_ratio)
-            b = Matrix(lines[1].direction_ratio)
+            return True
+        elif all(isinstance(i, LinearEntity3D) for i in o):
+            if len(o) < 2:
+                return False
+            a = Matrix(o[0].direction_ratio)
+            b = Matrix(o[1].direction_ratio)
             c = list(a.cross(b))
-            d = Plane(lines[0].p1, normal_vector=c)
-            for i in lines[2:]:
+            d = Plane(o[0].p1, normal_vector=c)
+            for i in o[2:]:
                 if i not in d:
                     return False
             return True
+        elif all(isinstance(i, Point3D) for i in o):
+            if len(o) < 4:
+                return True
+            else:
+                a = Plane(o[0], o[1], o[2])
+                for i in o[3:]:
+                    if i not in a:
+                        return False
+                return True
+        elif all(isinstance(i, Plane) for i in o):
+            a = o[0]
+            for i in o[1:]:
+                if not i.is_coplanar(a):
+                    return False
+                return True
         else:
-            ValueError('Enter Lines only')
+            ValueError('Enter Entities of similar class')
 
     def perpendicular_line(self, pt):
         """A line perpendicular to the given plane.
@@ -718,7 +739,7 @@ class Plane(GeometryEntity):
         else:
             return False
 
-    def equal(self, pl):
+    def is_coplanar(self, pl):
         """ Returns True if the planes are mathematically equal otherwise False
         """
         return abs(self.equation()) == abs(pl.equation())

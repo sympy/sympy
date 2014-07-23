@@ -270,7 +270,7 @@ class Point3D(GeometryEntity):
                 return False
         return True
 
-    def are_coplanar(*points):
+    def is_coplanar(*points):
         """
 
         This function tests whether passed points are coplanar or not.
@@ -297,30 +297,15 @@ class Point3D(GeometryEntity):
         >>> p3 = Point3D(0, 0, 2)
         >>> p4 = Point3D(1, 1, 2)
         >>> p5 = Point3D(1, 2, 2)
-        >>> p1.are_coplanar(p2, p3, p4, p5)
+        >>> p1.is_coplanar(p2, p3, p4, p5)
         True
         >>> p6 = Point3D(0, 1, 3)
-        >>> p1.are_coplanar(p2, p3, p4, p5, p6)
+        >>> p1.is_coplanar(p2, p3, p4, p5, p6)
         False
 
         """
-        if not all(isinstance(p, Point3D) for p in points):
-            raise TypeError('Must pass only 3D Point objects')
-        if(len(points) < 4):
-            return True # These cases are always True
-        points = list(set(points))
-        for i in range(len(points) - 3):
-            pv1 = [j - k for j, k in zip(points[i].args,   \
-                points[i + 1].args)]
-            pv2 = [j - k for j, k in zip(points[i + 1].args,
-                points[i + 2].args)]
-            pv3 = [j - k for j, k in zip(points[i + 2].args,
-                points[i + 3].args)]
-            pv1, pv2, pv3 = Matrix(pv1), Matrix(pv2), Matrix(pv3)
-            stp = pv1.dot(pv2.cross(pv3))
-            if stp != 0:
-                return False
-        return True
+        from sympy.geometry.plane import Plane
+        return Plane.are_coplanar(*points)
 
     def distance(self, p):
         """The Euclidean distance from self to point p.

@@ -640,6 +640,7 @@ def test_plane():
 
     raises(NotImplementedError, lambda: Plane(p1, p2, p4))
     raises(NotImplementedError, lambda: Plane(p1, p2, p5))
+    raises(ValueError, lambda: Plane(p1, p2))
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
     pl5 = Plane(p3, normal_vector=(1, 2, 3))
@@ -651,7 +652,7 @@ def test_plane():
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
 
     assert Plane(p1, p2, p3) != Plane(p1, p3, p2)
-    assert Plane(p1, p2, p3).equal(Plane(p1, p3, p2))
+    assert Plane(p1, p2, p3).is_coplanar(Plane(p1, p3, p2))
     assert pl3 == Plane(Point3D(0, 0, 0), normal_vector=(1, -2, 1))
     assert pl3 != pl4
     assert pl5 == Plane(Point3D(1, 2, 3), normal_vector=(1, 2, 3))
@@ -694,24 +695,34 @@ def test_plane():
 
     assert pl3.is_parallel(pl6) is False
     assert pl4.is_parallel(pl6)
+    assert pl6.is_parallel(l1) is False
 
     assert pl3.is_perpendicular(pl6)
     assert pl4.is_perpendicular(pl7)
     assert pl6.is_perpendicular(pl7)
+    assert pl6.is_perpendicular(l1) is False
 
     assert pl7.distance(Point3D(1, 3, 5)) == 5*sqrt(6)/6
     assert pl6.distance(Point3D(0, 0, 0)) == 4*sqrt(3)
     assert pl6.distance(pl6.p1) == 0
     assert pl7.distance(pl6) == 0
+    assert pl7.distance(l1) == 0
+    assert pl6.distance(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == 4*sqrt(3)/3
+    pl6.distance(Plane(Point3D(5, 5, 5), normal_vector=(8, 8, 8))) == sqrt(3)
 
     assert pl6.angle_between(pl3) == pi/2
     assert pl6.angle_between(pl6) == 0
     assert pl6.angle_between(pl4) == 0
     assert pl7.angle_between(Line3D(Point3D(2, 3, 5), Point3D(2, 4, 6))) == -asin(sqrt(3)/6)
     assert pl6.angle_between(Ray3D(Point3D(2, 4, 1), Point3D(6, 5, 3))) == asin(sqrt(7)/3)
+    assert pl7.angle_between(Segment3D(Point3D(5, 6, 1), Point3D(1, 2, 4))) == -asin(7*sqrt(246)/246)
 
     assert Plane.are_coplanar(l1, l2, l3) is False
+    assert Plane.are_coplanar(l1) is False
+    assert Plane.are_coplanar(Point3D(2, 7, 2), Point3D(0, 0, 2), Point3D(1, 1, 2), Point3D(1, 2, 2))
+    assert Plane.are_coplanar(Plane(p1, p2, p3), Plane(p1, p3, p2))
     assert pl3.is_concurrent(pl4, pl5) is False
+    assert Plane.is_concurrent(pl6) is False
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))
@@ -729,6 +740,8 @@ def test_plane():
                [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
     assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == Point3D(-1, 3, 10)
     assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == []
+    assert pl7.intersection(Line(Point(2, 3), Point(4, 2))) == [Point(13/2, 3/4)]
+
 
     assert pl3.random_point() in pl3
 
