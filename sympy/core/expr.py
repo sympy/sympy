@@ -237,6 +237,8 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
+            if me is S.NaN:
+                raise TypeError("Invalid NaN comparison")
         if self.is_real and other.is_real:
             dif = self - other
             if dif.is_nonnegative is not None and \
@@ -252,6 +254,8 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
+            if me is S.NaN:
+                raise TypeError("Invalid NaN comparison")
         if self.is_real and other.is_real:
             dif = self - other
             if dif.is_nonpositive is not None and \
@@ -267,6 +271,8 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
+            if me is S.NaN:
+                raise TypeError("Invalid NaN comparison")
         if self.is_real and other.is_real:
             dif = self - other
             if dif.is_positive is not None and \
@@ -282,6 +288,8 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
+            if me is S.NaN:
+                raise TypeError("Invalid NaN comparison")
         if self.is_real and other.is_real:
             dif = self - other
             if dif.is_negative is not None and \

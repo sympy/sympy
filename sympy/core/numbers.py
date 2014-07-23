@@ -896,7 +896,7 @@ class Float(Number):
             return other.__le__(self)
         if other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__gt__(self, other)
@@ -910,7 +910,7 @@ class Float(Number):
             return other.__lt__(self)
         if other.is_comparable:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__ge__(self, other)
@@ -924,7 +924,7 @@ class Float(Number):
             return other.__ge__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__lt__(self, other)
@@ -938,7 +938,7 @@ class Float(Number):
             return other.__gt__(self)
         if other.is_real and other.is_number:
             other = other.evalf()
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other is not S.NaN:
             return _sympify(bool(
                 mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
         return Expr.__le__(self, other)
@@ -1355,8 +1355,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_gt(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__le__(self)
         elif other.is_number and other.is_real:
             self, other = Integer(self.p), self.q*other
         return Expr.__gt__(self, other)
@@ -1374,8 +1372,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_ge(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__lt__(self)
         elif other.is_number and other.is_real:
             self, other = Integer(self.p), self.q*other
         return Expr.__ge__(self, other)
@@ -1393,8 +1389,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_lt(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__ge__(self)
         elif other.is_number and other.is_real:
             self, other = Integer(self.p), self.q*other
         return Expr.__lt__(self, other)
@@ -1412,8 +1406,6 @@ class Rational(Number):
             if isinstance(other, Float):
                 return _sympify(bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_)))
-            if other is S.NaN:
-                return other.__gt__(self)
         elif other.is_number and other.is_real:
             self, other = Integer(self.p), self.q*other
         return Expr.__le__(self, other)
@@ -2658,6 +2650,9 @@ class NaN(with_metaclass(Singleton, Number)):
     explains the initially counter-intuitive results with ``Eq`` and ``==`` in
     the examples below.
 
+    NaN is not comparable so inequalities raise a TypeError.  This is in
+    constrast with floating point nan where all inequalities are false.
+
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
 
@@ -2743,33 +2738,11 @@ class NaN(with_metaclass(Singleton, Number)):
         # NaN is not mathematically equal to anything, even NaN
         return S.false
 
-    def __gt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
-        return S.false
-
-    def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        return S.false
-
-    def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        return S.false
-
-    def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        return S.false
+    # Expr will _sympify and raise TypeError
+    __gt__ = Expr.__gt__
+    __ge__ = Expr.__ge__
+    __lt__ = Expr.__lt__
+    __le__ = Expr.__le__
 
 nan = S.NaN
 
