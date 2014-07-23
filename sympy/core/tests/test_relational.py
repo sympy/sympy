@@ -416,3 +416,17 @@ def test_x_minus_y_not_same_as_x_lt_y():
     y = 2*I + 3
     raises(TypeError, lambda: x < y)
     raises(TypeError, lambda: x - y < 0)
+
+
+def test_nan_equality_exceptions():
+    # See issue #7774
+    import random
+    assert Equality(nan, nan) is S.false
+    assert Unequality(nan, nan) is S.true
+
+    # See issue #7773
+    A = (x, S(0), S(1)/3, pi, oo, -oo)
+    assert Equality(nan, random.choice(A)) is S.false
+    assert Equality(random.choice(A), nan) is S.false
+    assert Unequality(nan, random.choice(A)) is S.true
+    assert Unequality(random.choice(A), nan) is S.true
