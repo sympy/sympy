@@ -338,10 +338,10 @@ def test_Rational_cmp():
     assert not (Rational(-1) > 0)
     assert Rational(-1) < 0
 
-    assert (n1 < S.NaN) is S.false
-    assert (n1 <= S.NaN) is S.false
-    assert (n1 > S.NaN) is S.false
-    assert (n1 >= S.NaN) is S.false
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Float():
@@ -756,14 +756,14 @@ def test_NaN():
     assert 1/nan == nan
     assert 1/(-nan) == nan
     assert 8/nan == nan
-    assert not nan > 0
-    assert not nan < 0
-    assert not nan >= 0
-    assert not nan <= 0
-    assert not 0 < nan
-    assert not 0 > nan
-    assert not 0 <= nan
-    assert not 0 >= nan
+    raises(TypeError, lambda: nan > 0)
+    raises(TypeError, lambda: nan < 0)
+    raises(TypeError, lambda: nan >= 0)
+    raises(TypeError, lambda: nan <= 0)
+    raises(TypeError, lambda: 0 < nan)
+    raises(TypeError, lambda: 0 > nan)
+    raises(TypeError, lambda: 0 <= nan)
+    raises(TypeError, lambda: 0 >= nan)
     assert S.One + nan == nan
     assert S.One - nan == nan
     assert S.One*nan == nan
