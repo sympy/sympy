@@ -129,14 +129,14 @@ def test_math_transl():
     from sympy.utilities.lambdify import MATH_TRANSLATIONS
     for sym, mat in MATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__
-        assert mat in math.__dict__
+        assert mat in math.__dict__ or mat == 'abs'
 
 
 def test_mpmath_transl():
     from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
     for sym, mat in MPMATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__ or sym == 'Matrix'
-        assert mat in mpmath.__dict__
+        assert mat in mpmath.__dict__ or mat == 'abs'
 
 
 def test_numpy_transl():
