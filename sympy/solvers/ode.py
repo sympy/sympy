@@ -1571,7 +1571,8 @@ def check_linear_2eq_order2(eq, func, func_coef):
             return "type1"
 
         elif r['b1']==r['e1']==r['c2']==r['d2']==0 and all(not r[k].has(t) \
-        for k in 'a1 a2 b2 c1 d1 e2'.split()):
+        for k in 'a1 a2 b2 c1 d1 e2'.split()) and r['c1'] == -r['b2'] and \
+        r['d1'] == r['e2']:
             return "type3"
 
         elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
