@@ -191,6 +191,11 @@ def test_sqrt():
     assert f(6.25) == 2.5
     assert f(3+4j) == 2 + 1j
 
+    # if the math module is before the cmath module in the 'modules' kwarg,
+    # the sqrt function from the math module is used.
+    f = lambdify(x, sqrt(x), modules=['math', 'cmath'])
+    raises(TypeError, lambda: f(3+4j))
+    assert f(6.25) == 2.5
 
 def test_trig():
     f = lambdify([x], [cos(x), sin(x)], modules='math')
