@@ -34,6 +34,7 @@ CMATH_TRANSLATIONS = {
 }
 
 MATH_TRANSLATIONS = {
+    "Abs": "abs",
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",

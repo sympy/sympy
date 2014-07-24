@@ -162,8 +162,9 @@ def test_numpy_translation_abs():
 #================== Test some functions ============================
 
 def test_abs():
-    for absfunc in [Abs, abs]:
-        f = lambdify(x, absfunc(x))
+    from itertools import product
+    for absfunc, modules in product([Abs, abs], [None, 'math']):
+        f = lambdify(x, absfunc(x), modules=modules)
         assert f(-1) == 1
         assert f(1) == 1
         assert f(3+4j) == 5
