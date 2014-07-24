@@ -662,6 +662,8 @@ def solve(f, *symbols, **flags):
         - dsolve() for solving differential equations
 
     """
+    if f in [True, False]:
+	return []
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
