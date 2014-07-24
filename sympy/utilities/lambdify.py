@@ -28,14 +28,14 @@ SYMPY_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "Abs": "fabs",
+    "Abs": "abs",
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
 }
 
 MPMATH_TRANSLATIONS = {
-    "Abs": "fabs",
+    "Abs": "abs",
     "elliptic_k": "ellipk",
     "elliptic_f": "ellipf",
     "elliptic_e": "ellipe",
@@ -141,6 +141,9 @@ def _import(module, reload="False"):
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
+        if translation == 'abs':
+            namespace[sympyname] = abs
+            continue
         namespace[sympyname] = namespace[translation]
 
 
