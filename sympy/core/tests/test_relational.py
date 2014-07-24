@@ -313,3 +313,28 @@ def test_Not():
     assert Not(StrictLessThan(x, y)) == GreaterThan(x, y)
     assert Not(GreaterThan(x, y)) == StrictLessThan(x, y)
     assert Not(LessThan(x, y)) == StrictGreaterThan(x, y)
+
+
+@XFAIL
+def test_complex_ineq():
+    """Complex numbers are not orderable.  Inequalities involving complex
+    quantities should not evaluate.  FIXME: or they could throw
+    exceptions, but they should be consistent and are not at the
+    moment.
+    """
+    # these both return false
+    assert (I < I) not in [S.true, S.false, True, False]
+    assert Lt(I, I) not in [S.true, S.false, True, False]
+
+    # this returns a TypeError...
+    assert (I < 1) not in [S.true, S.false, True, False]
+    # ... while this is correctly unevaluated
+    assert Lt(I,1) not in [S.true, S.false, True, False]
+    assert str(StrictGreaterThan(I, 1)) == "I < 1"
+
+    # these say True!
+    assert (I <= I) not in [S.true, S.false, True, False]
+    assert (I + 1 < I + 2) not in [S.true, S.false, True, False]
+    assert Lt(I + 1, I + 2) not in [S.true, S.false, True, False]
+
+    # FIXME: should also add an `I` to the set in my cross-product test in PR #7783.
