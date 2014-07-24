@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies,
-    Xor)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
+    Implies, Xor)
 from sympy.core.relational import ( Relational, Equality, Unequality,
     GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
     Gt, Ge, Ne )
@@ -313,3 +313,53 @@ def test_Not():
     assert Not(StrictLessThan(x, y)) == GreaterThan(x, y)
     assert Not(GreaterThan(x, y)) == StrictLessThan(x, y)
     assert Not(LessThan(x, y)) == StrictGreaterThan(x, y)
+
+
+def test_nan_inequalities():
+    # inequalities involving NaN should not evaluate
+    for r in (nan, x, S(0), S(1), 1, -1, oo, -oo):
+        assert StrictGreaterThan(nan, r) not in [S.true, S.false, True, False]
+        assert StrictGreaterThan(r, nan) not in [S.true, S.false, True, False]
+        assert StrictLessThan(nan, r) not in [S.true, S.false, True, False]
+        assert StrictLessThan(r, nan) not in [S.true, S.false, True, False]
+        assert GreaterThan(nan, r) not in [S.true, S.false, True, False]
+        assert GreaterThan(r, nan) not in [S.true, S.false, True, False]
+        assert LessThan(nan, r) not in [S.true, S.false, True, False]
+        assert LessThan(r, nan) not in [S.true, S.false, True, False]
+        assert str(StrictGreaterThan(r, nan)) == (str(r) + ' > nan')
+        assert str(StrictGreaterThan(nan, r)) == ('nan > ' + str(r))
+        assert str(StrictLessThan(r, nan)) == (str(r) + ' < nan')
+        assert str(StrictLessThan(nan, r)) == ('nan < ' + str(r))
+        assert str(GreaterThan(r, nan)) == (str(r) + ' >= nan')
+        assert str(GreaterThan(nan, r)) == ('nan >= ' + str(r))
+        assert str(LessThan(r, nan)) == (str(r) + ' <= nan')
+        assert str(LessThan(nan, r)) == ('nan <= ' + str(r))
+
+
+@XFAIL
+def test_nan_inequalities_symbols_same():
+    # using the symbolic shortcuts should be the same as the long names
+    for r in (x, S(0), S(1), 1, -1, oo, -oo, nan):
+        print(r)
+        assert StrictGreaterThan(r, nan) == r > nan
+        assert StrictGreaterThan(nan, r) == nan > r
+        assert StrictLessThan(r, nan) == r < nan
+        assert StrictLessThan(nan, r) == nan < r
+        assert GreaterThan(r, nan) == r >= nan
+        assert GreaterThan(nan, r) == nan >= r
+        assert LessThan(r, nan) == r <= nan
+        assert LessThan(nan, r) == nan <= r
+
+@XFAIL
+def test_oo_inequalities_symbols_same():
+    # using the symbolic shortcuts should be the same as the long names
+    for r in (x, S(0), S(1), 1, -1, oo, -oo, nan):
+        print(r)
+        assert StrictGreaterThan(r, oo) == r > oo
+        assert StrictGreaterThan(oo, r) == oo > r
+        assert StrictLessThan(r, oo) == r < oo
+        assert StrictLessThan(oo, r) == oo < r
+        assert GreaterThan(r, oo) == r >= oo
+        assert GreaterThan(oo, r) == oo >= r
+        assert LessThan(r, oo) == r <= oo
+        assert LessThan(oo, r) == oo <= r
