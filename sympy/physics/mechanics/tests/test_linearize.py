@@ -1,8 +1,9 @@
 from sympy import symbols, Matrix, solve, simplify, cos, sin, atan, sqrt
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
-    dot, cross, inertia, KanesMethod, Particle, RigidBody, Linearizer
+    dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
+    LagrangesMethod
 
-def test_linearize_rolling_disc():
+def test_linearize_rolling_disc_kane():
     # Symbols for time and constant parameters
     t, r, m, g, v = symbols('t r m g v')
 
@@ -123,7 +124,7 @@ def test_linearize_rolling_disc():
     # Check eigenvalues at critical speed are all zero:
     assert A.subs(upright_nominal).subs(q3d, 1/sqrt(3)).eigenvals() == {0: 8}
 
-def test_linearize_pendulum_minimal():
+def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     u1 = dynamicsymbols('u1')                     # Angular velocity
     q1d = dynamicsymbols('q1', 1)                 # Angular velocity
@@ -160,7 +161,7 @@ def test_linearize_pendulum_minimal():
     assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
 
-def test_linearize_pendulum_nonminimal():
+def test_linearize_pendulum_kane_nonminimal():
     # Create generalized coordinates and speeds for this non-minimal realization
     # q1, q2 = N.x and N.y coordinates of pendulum
     # u1, u2 = N.x and N.y velocities of pendulum
@@ -223,3 +224,104 @@ def test_linearize_pendulum_nonminimal():
 
     assert A == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
+
+def test_linearize_pendulum_lagrange_minimal():
+    q1 = dynamicsymbols('q1')                     # angle of pendulum
+    q1d = dynamicsymbols('q1', 1)                 # Angular velocity
+    L, m, t = symbols('L, m, t')
+    g = 9.8
+
+    # Compose world frame
+    N = ReferenceFrame('N')
+    pN = Point('N*')
+    pN.set_vel(N, 0)
+
+    # A.x is along the pendulum
+    A = N.orientnew('A', 'axis', [q1, N.z])
+    A.set_ang_vel(N, q1d*N.z)
+
+    # Locate point P relative to the origin N*
+    P = pN.locatenew('P', L*A.x)
+    P.v2pt_theory(pN, N, A)
+    pP = Particle('pP', P, m)
+
+    # Solve for eom with Lagranges method
+    Lag = Lagrangian(N, pP)
+    LM = LagrangesMethod(Lag, [q1], forcelist=[(P, m*g*N.x)], frame=N)
+    LM.form_lagranges_equations()
+
+    # Linearize
+    A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True)
+
+    assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert B == Matrix([])
+
+def test_linearize_pendulum_lagrange_nonminimal():
+    q1, q2 = dynamicsymbols('q1:3')
+    q1d, q2d = dynamicsymbols('q1:3', level=1)
+    L, m, t = symbols('L, m, t')
+    g = 9.8
+    # Compose World Frame
+    N = ReferenceFrame('N')
+    pN = Point('N*')
+    pN.set_vel(N, 0)
+    # A.x is along the pendulum
+    theta1 = atan(q2/q1)
+    A = N.orientnew('A', 'axis', [theta1, N.z])
+    # Create point P, the pendulum mass
+    P = pN.locatenew('P1', q1*N.x + q2*N.y)
+    P.set_vel(N, P.pos_from(pN).dt(N))
+    pP = Particle('pP', P, m)
+    # Constraint Equations
+    f_c = Matrix([q1**2 + q2**2 - L**2])
+    # Calculate the lagrangian, and form the equations of motion
+    Lag = Lagrangian(N, pP)
+    LM = LagrangesMethod(Lag, [q1, q2], hol_coneqs=f_c, forcelist=[(P, m*g*N.x)], frame=N)
+    LM.form_lagranges_equations()
+    # Compose operating point
+    op_point = {q1: L, q2: 0, q1d: 0, q2d: 0, q1d.diff(t): 0, q2d.diff(t): 0}
+    # Solve for multiplier operating point
+    lam_op = LM.solve_multipliers(op_point=op_point)
+    op_point.update(lam_op)
+    # Perform the Linearization
+    A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
+            op_point=op_point, A_and_B=True)
+    assert A == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
+def test_linearize_rolling_disc_lagrange():
+    q1, q2, q3 = q = dynamicsymbols('q1 q2 q3')
+    q1d, q2d, q3d = qd = dynamicsymbols('q1 q2 q3', 1)
+    r, m, g = symbols('r m g')
+
+    N = ReferenceFrame('N')
+    Y = N.orientnew('Y', 'Axis', [q1, N.z])
+    L = Y.orientnew('L', 'Axis', [q2, Y.x])
+    R = L.orientnew('R', 'Axis', [q3, L.y])
+
+    C = Point('C')
+    C.set_vel(N, 0)
+    Dmc = C.locatenew('Dmc', r * L.z)
+    Dmc.v2pt_theory(C, N, R)
+
+    I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
+    BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
+    BodyD.set_potential_energy(- m * g * r * cos(q2))
+
+    Lag = Lagrangian(N, BodyD)
+    l = LagrangesMethod(Lag, q)
+    l.form_lagranges_equations()
+
+    # Linearize about steady-state upright rolling
+    op_point = {q1: 0, q2: 0, q3: 0,
+                q1d: 0, q2d: 0,
+                q1d.diff(): 0, q2d.diff(): 0, q3d.diff(): 0}
+    A = l.linearize(q_ind=q, qd_ind=qd, op_point=op_point, A_and_B=True)[0]
+    sol = Matrix([[0, 0, 0, 1, 0, 0],
+                  [0, 0, 0, 0, 1, 0],
+                  [0, 0, 0, 0, 0, 1],
+                  [0, 0, 0, 0, -6*q3d, 0],
+                  [0, -4*g/(5*r), 0, 6*q3d/5, 0, 0],
+                  [0, 0, 0, 0, 0, 0]])
+
+    assert A == sol

@@ -398,6 +398,7 @@ def test_line():
     pt1 = Point(0, 0)
     pt2 = Point(Rational(3)/2, Rational(3)/2)
     assert s1.distance(pt1) == 0
+    assert s1.distance((0, 0)) == 0
     assert s2.distance(pt1) == 2**(half)/2
     assert s2.distance(pt2) == 2**(half)
     # Line to point
@@ -406,6 +407,7 @@ def test_line():
     assert s.distance(Point(-1, 1)) == sqrt(2)
     assert s.distance(Point(1, -1)) == sqrt(2)
     assert s.distance(Point(2, 2)) == 0
+    assert s.distance((-1, 1)) == sqrt(2)
     assert Line((0, 0), (0, 1)).distance(p1) == 0
     assert Line((0, 0), (0, 1)).distance(p2) == 1
     assert Line((0, 0), (1, 0)).distance(p1) == 0
@@ -420,6 +422,29 @@ def test_line():
     assert r.distance(Point(1, 1)) == 0
     assert r.distance(Point(-1, 1)) == sqrt(2)
     assert Ray((1, 1), (2, 2)).distance(Point(1.5, 3)) == 3*sqrt(2)/4
+    assert r.distance((1, 1)) == 0
+
+    #Line contains
+    p1, p2 = Point(0, 1), Point(3, 4)
+    l = Line(p1, p2)
+    assert l.contains(p1) is True
+    assert l.contains((0, 1)) is True
+    assert l.contains((0, 0)) is False
+
+    #Ray contains
+    p1, p2 = Point(0, 0), Point(4, 4)
+    r = Ray(p1, p2)
+    assert r.contains(p1) is True
+    assert r.contains((1, 1)) is True
+    assert r.contains((1, 3)) is False
+    s = Segment((1, 1), (2, 2))
+    assert r.contains(s) is True
+    s = Segment((1, 2), (2, 5))
+    assert r.contains(s) is False
+    r1 = Ray((2, 2), (3, 3))
+    assert r.contains(r1) is True
+    r1 = Ray((2, 2), (3, 5))
+    assert r.contains(r1) is False
 
 
     # Special cases of projection and intersection
@@ -539,6 +564,10 @@ def test_line3d():
     assert intersection(l1, p5) == []
     assert intersection(l1, l1.parallel_line(p1)) == [Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))]
 
+    p = Ray3D(Point3D(1, 0, 0), Point3D(-1, 0, 0))
+    q = Ray3D(Point3D(0, 1, 0), Point3D(0, -1, 0))
+    assert intersection(p, q) == [Point3D(0, 0, 0)]
+
     # Concurrency
     assert Line3D.is_concurrent(l1) is False
     assert Line3D.is_concurrent(l1, l2)
@@ -588,12 +617,16 @@ def test_line3d():
     assert s1.distance(pt1) == 0
     assert s2.distance(pt1) == sqrt(3)/2
     assert s2.distance(pt2) == 2
+    assert s1.distance((0,0,0)) == 0
+    assert s2.distance((0,0,0)) == sqrt(3)/2
     # Line to point
     p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 1)
     s = Line3D(p1, p2)
     assert s.distance(Point3D(-1, 1, 1)) == 2*sqrt(6)/3
     assert s.distance(Point3D(1, -1, 1)) == 2*sqrt(6)/3
     assert s.distance(Point3D(2, 2, 2)) == 0
+    assert s.distance((2, 2, 2)) == 0
+    assert s.distance((1, -1, 1)) == 2*sqrt(6)/3
     assert Line3D((0, 0, 0), (0, 1, 0)).distance(p1) == 0
     assert Line3D((0, 0, 0), (0, 1, 0)).distance(p2) == sqrt(2)
     assert Line3D((0, 0, 0), (1, 0, 0)).distance(p1) == 0
@@ -602,6 +635,8 @@ def test_line3d():
     r = Ray3D(p1, p2)
     assert r.distance(Point3D(-1, -1, -1)) == sqrt(3)
     assert r.distance(Point3D(1, 1, 1)) == 0
+    assert r.distance((-1, -1, -1)) == sqrt(3)
+    assert r.distance((1, 1, 1)) == 0
     assert Ray3D((1, 1, 1), (2, 2, 2)).distance(Point3D(1.5, 3, 1)) == sqrt(17)/2
 
 
@@ -732,10 +767,10 @@ def test_plane():
     assert pl6.perpendicular_line(Point3D(6, 4, 2)) == \
                Line3D(Point3D(6, 4, 2), Point3D(8, 6, 4))
 
-    assert pl6.intersection(pl6) == pl6
-    assert pl4.intersection(pl4.p1) == pl4.p1
+    assert pl6.intersection(pl6) == [pl6]
+    assert pl4.intersection(pl4.p1) == [pl4.p1]
     assert pl3.intersection(pl6) == [Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6))]
-    assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == Point3D(2, 8/3, 10/3)
+    assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == [Point3D(2, 8/3, 10/3)]
     assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))) == \
                [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
     assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == Point3D(-1, 3, 10)

@@ -102,6 +102,7 @@ modules = [
     'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
+    'sympy.vector'
 ]
 
 class audit(Command):
@@ -268,6 +269,7 @@ tests = [
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
+    'sympy.vector'
     ]
 
 classifiers = [

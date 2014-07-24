@@ -537,7 +537,7 @@ class CCodeGen(CodeGen):
     Generator for C code
 
     The .write() method inherited from CodeGen will output a code file and an
-    inteface file, <prefix>.c and <prefix>.h respectively.
+    interface file, <prefix>.c and <prefix>.h respectively.
     """
 
     code_extension = "c"
@@ -693,7 +693,7 @@ class FCodeGen(CodeGen):
     Generator for Fortran 95 code
 
     The .write() method inherited from CodeGen will output a code file and an
-    inteface file, <prefix>.f90 and <prefix>.h respectively.
+    interface file, <prefix>.f90 and <prefix>.h respectively.
     """
 
     code_extension = "f90"

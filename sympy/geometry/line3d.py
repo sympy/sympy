@@ -21,6 +21,7 @@ from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .util import _symbol
+from sympy.core.compatibility import is_sequence
 
 class LinearEntity3D(GeometryEntity):
     """An base class for all linear entities (line, ray and segment)
@@ -924,6 +925,8 @@ class Line3D(LinearEntity3D):
 
     def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
+        if is_sequence(o):
+            o = Point3D(o)
         if isinstance(o, Point3D):
             if self.arbitrary_point == 0:
                 return True
@@ -963,9 +966,12 @@ class Line3D(LinearEntity3D):
         >>> s = Line3D(p1, p2)
         >>> s.distance(Point3D(-1, 1, 1))
         2*sqrt(6)/3
+        >>> s.distance((-1, 1, 1))
+        2*sqrt(6)/3
         """
         if not isinstance(o, Point3D):
-            raise NotImplementedError
+            if is_sequence(o):
+                o = Point3D(o)
         if o in self:
             return 0
         a = self.perpendicular_segment(o).length
@@ -1184,9 +1190,12 @@ class Ray3D(LinearEntity3D):
         >>> s = Ray3D(p1, p2)
         >>> s.distance(Point3D(-1, -1, 2))
         sqrt(6)
+        >>> s.distance((-1, -1, 2))
+        sqrt(6)
         """
         if not isinstance(o, Point3D):
-            raise NotImplementedError
+            if is_sequence(o):
+                o = Point3D(o)
         s = self.perpendicular_segment(o)
         if isinstance(s, Point3D):
             if self.contains(s):
@@ -1237,7 +1246,9 @@ class Ray3D(LinearEntity3D):
                     self.zdirection == o.zdirection)
         elif isinstance(o, Segment3D):
             return o.p1 in self and o.p2 in self
-        elif isinstance(o, Point3D):
+        elif is_sequence(o):
+            o = Point3D(o)
+        if isinstance(o, Point3D):
             if Point3D.is_collinear(self.p1, self.p2, o):
                 if self.xdirection is S.Infinity:
                     rv = o.x >= self.source.x
@@ -1413,7 +1424,11 @@ class Segment3D(LinearEntity3D):
         >>> s = Segment3D(p1, p2)
         >>> s.distance(Point3D(10, 15, 12))
         sqrt(341)
+        >>> s.distance((10, 15, 12))
+        sqrt(341)
         """
+        if is_sequence(o):
+            o = Point3D(o)
         if isinstance(o, Point3D):
             seg_vector = self.p2 - self.p1
             pt_vector = o - self.p1
@@ -1443,6 +1458,8 @@ class Segment3D(LinearEntity3D):
         >>> s.contains(s2)
         True
         """
+        if is_sequence(other):
+            other = Point3D(other)
         if isinstance(other, Segment3D):
             return other.p1 in self and other.p2 in self
         elif isinstance(other, Point3D):

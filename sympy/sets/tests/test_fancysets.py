@@ -50,7 +50,7 @@ def test_ImageSet():
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares
-    assert FiniteSet(range(10)).intersect(squares) == FiniteSet(1, 4, 9)
+    assert FiniteSet(*range(10)).intersect(squares) == FiniteSet(1, 4, 9)
 
     assert 16 not in squares.intersect(Interval(0, 10))
 
@@ -119,26 +119,26 @@ def test_Range():
 
 def test_range_interval_intersection():
     # Intersection with intervals
-    assert FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6))) == \
+    assert FiniteSet(*Range(0, 10, 1).intersect(Interval(2, 6))) == \
         FiniteSet(2, 3, 4, 5, 6)
 
     # Open Intervals are removed
-    assert (FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6, True, True)))
+    assert (FiniteSet(*Range(0, 10, 1).intersect(Interval(2, 6, True, True)))
             == FiniteSet(3, 4, 5))
 
     # Try this with large steps
-    assert (FiniteSet(Range(0, 100, 10).intersect(Interval(15, 55))) ==
+    assert (FiniteSet(*Range(0, 100, 10).intersect(Interval(15, 55))) ==
             FiniteSet(20, 30, 40, 50))
 
     # Going backwards
-    assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6))) == \
+    assert FiniteSet(*Range(10, -9, -3).intersect(Interval(-5, 6))) == \
         FiniteSet(-5, -2, 1, 4)
-    assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
+    assert FiniteSet(*Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
         FiniteSet(-2, 1, 4)
 
 
 def test_fun():
-    assert (FiniteSet(ImageSet(Lambda(x, sin(pi*x/4)),
+    assert (FiniteSet(*ImageSet(Lambda(x, sin(pi*x/4)),
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
 
 
@@ -147,10 +147,6 @@ def test_reals():
     assert S.Pi in S.Reals
     assert -sqrt(2) in S.Reals
     assert (2, 5) not in S.Reals
-
-
-@XFAIL  # this is because contains is now very strict
-def test_reals_fail():
     assert sqrt(-1) not in S.Reals
 
 
