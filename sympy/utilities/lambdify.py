@@ -286,11 +286,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
-        # Use either numpy (if available) or (python.cmath, python.math)
-        # where possible.
+        # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
-        modules = ["cmath", "math", "mpmath", "sympy"]
+        modules = ["math", "mpmath", "sympy"]
 
         # If numpy.array should be used instead of numpy.matrix
         if use_array:

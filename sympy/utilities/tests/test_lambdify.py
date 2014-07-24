@@ -163,7 +163,7 @@ def test_numpy_translation_abs():
 
 def test_abs():
     from itertools import product
-    for absfunc, modules in product([Abs, abs], [None, 'math']):
+    for absfunc, modules in product([Abs, abs], [None, 'math', 'cmath']):
         f = lambdify(x, absfunc(x), modules=modules)
         assert f(-1) == 1
         assert f(1) == 1
@@ -183,13 +183,17 @@ def test_exponentiation():
 
 
 def test_sqrt():
-    f = lambdify(x, sqrt(x))
-    assert f(0) == 0.0
-    assert f(1) == 1.0
-    assert f(4) == 2.0
-    assert abs(f(2) - 1.414) < 0.001
-    assert f(6.25) == 2.5
-    assert f(3+4j) == 2 + 1j
+    for modules in [None, ['cmath', 'math']]:
+        f = lambdify(x, sqrt(x), modules=modules)
+        assert f(0) == 0.0
+        assert f(1) == 1.0
+        assert f(4) == 2.0
+        assert abs(f(2) - 1.414) < 0.001
+        assert f(6.25) == 2.5
+        if modules is None:
+            raises(TypeError, lambda: f(3+4j))
+        else:
+            assert f(3+4j) == 2 + 1j
 
     # if the math module is before the cmath module in the 'modules' kwarg,
     # the sqrt function from the math module is used.
@@ -197,8 +201,9 @@ def test_sqrt():
     raises(TypeError, lambda: f(3+4j))
     assert f(6.25) == 2.5
 
+
 def test_trig():
-    f = lambdify([x], [cos(x), sin(x)], modules='math')
+    f = lambdify([x], [cos(x), sin(x)])
     d = f(pi)
     prec = 1e-11
     assert -prec < d[0] + 1 < prec
@@ -259,11 +264,11 @@ def test_math():
 
 def test_sin():
     f = lambdify(x, sin(x)**2)
-    assert isinstance(f(2), complex)  # the return type is a complex because
-                                      # it uses the sin function from the
-                                      # cmath module
+    assert isinstance(f(2), float)
     f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)
+    f = lambdify(x, sin(x)**2, modules="cmath")
+    assert isinstance(f(2), complex)
 
 
 def test_matrix():
