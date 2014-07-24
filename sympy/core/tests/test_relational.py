@@ -339,7 +339,7 @@ def test_nan_inequalities():
 @XFAIL
 def test_nan_inequalities_symbols_same():
     # using the symbolic shortcuts should be the same as the long names
-    for r in (nan, x, S(0), S(1), 1, -1, oo, -oo):
+    for r in (x, S(0), S(1), 1, -1, oo, -oo, nan):
         print(r)
         assert StrictGreaterThan(r, nan) == r > nan
         assert StrictGreaterThan(nan, r) == nan > r
@@ -349,3 +349,17 @@ def test_nan_inequalities_symbols_same():
         assert GreaterThan(nan, r) == nan >= r
         assert LessThan(r, nan) == r <= nan
         assert LessThan(nan, r) == nan <= r
+
+@XFAIL
+def test_oo_inequalities_symbols_same():
+    # using the symbolic shortcuts should be the same as the long names
+    for r in (x, S(0), S(1), 1, -1, oo, -oo, nan):
+        print(r)
+        assert StrictGreaterThan(r, oo) == r > oo
+        assert StrictGreaterThan(oo, r) == oo > r
+        assert StrictLessThan(r, oo) == r < oo
+        assert StrictLessThan(oo, r) == oo < r
+        assert GreaterThan(r, oo) == r >= oo
+        assert GreaterThan(oo, r) == oo >= r
+        assert LessThan(r, oo) == r <= oo
+        assert LessThan(oo, r) == oo <= r
