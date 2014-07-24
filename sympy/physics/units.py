@@ -185,6 +185,7 @@ inductance = H = henry = henrys = V*s/A
 speed = m/s
 acceleration = m/s**2
 density = kg/m**3
+optical_power = dioptre = D = 1/m
 
 # Common length units
 
