@@ -773,7 +773,7 @@ def test_plane():
     assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == [Point3D(2, 8/3, 10/3)]
     assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))) == \
                [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
-    assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == Point3D(-1, 3, 10)
+    assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [Point3D(-1, 3, 10)]
     assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == []
     assert pl7.intersection(Line(Point(2, 3), Point(4, 2))) == [Point(13/2, 3/4)]
 
