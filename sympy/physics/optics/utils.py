@@ -3,11 +3,12 @@
 
 * refraction_angle
 * deviation
+* lens_makers_formula
 """
 
 from __future__ import division
 
-__all__ = ['refraction_angle', 'deviation']
+__all__ = ['refraction_angle', 'deviation', 'lens_makers_formula']
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos
 from sympy.geometry.line3d import Ray3D
@@ -234,3 +235,43 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
         i = acos(_incident.dot(_normal))
         r = acos(refracted.dot(_normal))
         return i - r
+
+
+def lens_makers_formula(n_lens, n_surr, r1, r2):
+    """
+    This function calculates focal length of a thin lens.
+    It follows cartesian sign convention.
+
+    Parameters
+    ==========
+
+    n_lens : Medium or sympifiable
+        Index of refraction of lens.
+    n_surr : Medium or sympifiable
+        Index of reflection of surrounding.
+    r1 : sympifiable
+        Radius of curvature of first surface.
+    r2 : sympifiable
+        Radius of curvature of second surface.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics import lens_makers_formula
+    >>> lens_makers_formula(1.33, 1, 10, -10)
+    15.1515151515151
+
+    """
+    if isinstance(n_lens, Medium):
+        n_lens = n_lens.refractive_index
+    else:
+        n_lens = sympify(n_lens)
+    if isinstance(n_surr, Medium):
+        n_surr = n_surr.refractive_index
+    else:
+        n_surr = sympify(n_surr)
+
+    r1 = sympify(r1)
+    r2 = sympify(r2)
+
+    return 1/((n_lens - n_surr)/n_surr*(1/r1 - 1/r2))

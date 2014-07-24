@@ -30,5 +30,5 @@ __all__.extend(medium.__all__)
 
 
 from . import utils
-from .utils import refraction_angle, deviation
+from .utils import refraction_angle, deviation, lens_makers_formula
 __all__.extend(utils.__all__)
