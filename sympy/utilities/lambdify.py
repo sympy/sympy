@@ -11,6 +11,7 @@ from sympy.utilities.decorator import doctest_depends_on
 import inspect
 
 # These are the namespaces the lambda functions will use.
+CMATH = {}
 MATH = {}
 MPMATH = {}
 NUMPY = {}
@@ -20,14 +21,19 @@ SYMPY = {}
 # by simple variable maps, like I => 1j
 # These are separate from the names above because the above names are modified
 # throughout this file, whereas these should remain unmodified.
+CMATH_DEFAULT = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
-MATH_TRANSLATIONS = {
+
+CMATH_TRANSLATIONS = {
     "Abs": "abs",
+}
+
+MATH_TRANSLATIONS = {
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
@@ -86,6 +92,7 @@ NUMPY_TRANSLATIONS = {
 
 # Available modules:
 MODULES = {
+    "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("from cmath import *",)),
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
@@ -278,10 +285,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
-        # Use either numpy (if available) or python.math where possible.
+        # Use either numpy (if available) or (python.cmath, python.math)
+        # where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
-        modules = ["math", "mpmath", "sympy"]
+        modules = ["cmath", "math", "mpmath", "sympy"]
 
         # If numpy.array should be used instead of numpy.matrix
         if use_array:

@@ -156,8 +156,17 @@ def test_numpy_translation_abs():
     f = lambdify(x, Abs(x), "numpy")
     assert f(-1) == 1
     assert f(1) == 1
+    assert f(3+4j) == 5
+
 
 #================== Test some functions ============================
+
+def test_abs():
+    for absfunc in [Abs, abs]:
+        f = lambdify(x, absfunc(x))
+        assert f(-1) == 1
+        assert f(1) == 1
+        assert f(3+4j) == 5
 
 
 def test_exponentiation():
@@ -168,6 +177,8 @@ def test_exponentiation():
     assert f(-2) == 4
     assert f(2) == 4
     assert f(2.5) == 6.25
+    assert f(2.5j) == -6.25
+    assert f(1+2.5j) == 1 - 6.25 + 2*2.5j
 
 
 def test_sqrt():
@@ -177,10 +188,11 @@ def test_sqrt():
     assert f(4) == 2.0
     assert abs(f(2) - 1.414) < 0.001
     assert f(6.25) == 2.5
+    assert f(3+4j) == 2 + 1j
 
 
 def test_trig():
-    f = lambdify([x], [cos(x), sin(x)])
+    f = lambdify([x], [cos(x), sin(x)], modules='math')
     d = f(pi)
     prec = 1e-11
     assert -prec < d[0] + 1 < prec
@@ -241,7 +253,9 @@ def test_math():
 
 def test_sin():
     f = lambdify(x, sin(x)**2)
-    assert isinstance(f(2), float)
+    assert isinstance(f(2), complex)  # the return type is a complex because
+                                      # it uses the sin function from the
+                                      # cmath module
     f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)
 
