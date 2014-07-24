@@ -45,6 +45,18 @@ import sympy
 if not sympy.test('*theano*'):
     raise Exception('Tests failed')
 EOF
+    elif [[ "${TEST_GMPY}" == "true" ]]; then
+        cat << EOF | python
+import sympy
+if not sympy.test('sympy/polys/'):
+    raise Exception('Tests failed')
+EOF
+    elif [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
+        cat << EOF | python
+import sympy
+if not sympy.test('sympy/plotting/'):
+    raise Exception('Tests failed')
+EOF
     else
         cat << EOF | python
 import sympy
