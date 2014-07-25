@@ -90,4 +90,5 @@ Mechanics API
 
     api/part_bod.rst
     api/kane.rst
+    api/linearize.rst
     api/printing.rst
