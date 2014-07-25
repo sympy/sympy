@@ -78,7 +78,7 @@ def test_union():
     assert Union(Set()) == Set()
 
     assert FiniteSet(1) + FiniteSet(2) + FiniteSet(3) == FiniteSet(1, 2, 3)
-    assert FiniteSet(['ham']) + FiniteSet(['eggs']) == FiniteSet('ham', 'eggs')
+    assert FiniteSet('ham') + FiniteSet('eggs') == FiniteSet('ham', 'eggs')
     assert FiniteSet(1, 2, 3) + S.EmptySet == FiniteSet(1, 2, 3)
 
     assert FiniteSet(1, 2, 3) & FiniteSet(2, 3, 4) == FiniteSet(2, 3)
@@ -115,7 +115,7 @@ def test_difference():
         Union(Interval(0, 1, False, True), Interval(1, 2, True, False))
 
     assert FiniteSet(1, 2, 3) - FiniteSet(2) == FiniteSet(1, 3)
-    assert FiniteSet('ham', 'eggs') - FiniteSet(['eggs']) == FiniteSet(['ham'])
+    assert FiniteSet('ham', 'eggs') - FiniteSet('eggs') == FiniteSet('ham')
     assert FiniteSet(1, 2, 3, 4) - Interval(2, 10, True, False) == \
         FiniteSet(1, 2)
     assert FiniteSet(1, 2, 3, 4) - S.EmptySet == FiniteSet(1, 2, 3, 4)
@@ -179,8 +179,8 @@ def test_intersect():
         Union(Interval(0, 1), Interval(2, 2))
 
     assert FiniteSet(1, 2, x).intersect(FiniteSet(x)) == FiniteSet(x)
-    assert FiniteSet('ham', 'eggs').intersect(FiniteSet(['ham'])) == \
-        FiniteSet(['ham'])
+    assert FiniteSet('ham', 'eggs').intersect(FiniteSet('ham')) == \
+        FiniteSet('ham')
     assert FiniteSet(1, 2, 3, 4, 5).intersect(S.EmptySet) == S.EmptySet
 
     assert Interval(0, 5).intersect(FiniteSet(1, 3)) == FiniteSet(1, 3)
@@ -194,7 +194,7 @@ def test_intersect():
         S.EmptySet
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
         S.EmptySet
-    assert Union(Interval(0, 5), FiniteSet(['Ham'])).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
+    assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
         FiniteSet(2, 3, 4, 5)
 
     # tests for the intersection alias
@@ -304,13 +304,14 @@ def test_is_subset():
     assert FiniteSet(1, 2, 3, 4).issubset(Interval(0, 5)) is True
     assert S.EmptySet.issubset(FiniteSet(1, 2, 3)) is True
 
+
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
     assert Interval(0, 3).is_proper_subset(Interval(0, 2)) is False
     assert S.EmptySet.is_proper_subset(FiniteSet(1, 2, 3)) is True
 
-def test_is_superset():
 
+def test_is_superset():
     assert Interval(0, 1).is_superset(Interval(0, 2)) == False
     assert Interval(0, 3).is_superset(Interval(0, 2))
 
@@ -335,10 +336,12 @@ def test_is_superset():
     assert Interval(0, 1).issuperset(S.EmptySet) == True
     assert S.EmptySet.issuperset(S.EmptySet) == True
 
+
 def test_is_proper_superset():
     assert Interval(0, 1).is_proper_superset(Interval(0, 2)) is False
     assert Interval(0, 3).is_proper_superset(Interval(0, 2)) is True
     assert FiniteSet(1, 2, 3).is_proper_superset(S.EmptySet) is True
+
 
 def test_contains():
     assert Interval(0, 2).contains(1) is True
@@ -473,8 +476,13 @@ def test_finite_basic():
     assert FiniteSet(x, 1, 5).sup == Max(x, 5)
     assert FiniteSet(x, 1, 5).inf == Min(x, 1)
 
+    # issue 7335
+    assert FiniteSet(S.EmptySet) != S.EmptySet
+    assert FiniteSet(FiniteSet(1, 2, 3)) != FiniteSet(1, 2, 3)
+    assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
+
     # Ensure a variety of types can exist in a FiniteSet
-    S = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    s = FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -488,19 +496,18 @@ def test_finite_basic():
 
 
 def test_powerset():
-
     # EmptySet
     A = FiniteSet()
     pset = A.powerset()
     assert len(pset) == 1
-    assert pset ==  FiniteSet([S.EmptySet])
+    assert pset ==  FiniteSet(S.EmptySet)
 
     # FiniteSets
-    A = FiniteSet([1, 2])
+    A = FiniteSet(1, 2)
     pset = A.powerset()
     assert len(pset) == 2**len(A)
-    assert pset == FiniteSet([FiniteSet(), FiniteSet(1),
-                              FiniteSet(2), A])
+    assert pset == FiniteSet(FiniteSet(), FiniteSet(1),
+                             FiniteSet(2), A)
     # Not finite sets
     I = Interval(0, 1)
     raises(NotImplementedError, I.powerset)
@@ -651,9 +658,9 @@ def test_image_EmptySet():
     assert imageset(x, 2*x, S.EmptySet) == S.EmptySet
 
 
-def test_issue_5724():
-    raises(TypeError, lambda: I in Interval(-oo,oo))
-    raises(TypeError, lambda: Interval(-oo,oo).contains(I))
+def test_issue_5724_7680():
+    assert I not in S.Reals  # issue 7680
+    assert Interval(-oo,oo).contains(I) is False
     raises(TypeError, lambda: I > 2)
 
 

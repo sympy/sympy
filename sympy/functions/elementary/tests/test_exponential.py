@@ -206,6 +206,7 @@ def test_log_symbolic():
     assert log(p*q) != log(p) + log(q)
     assert log(p*q).expand() == log(p) + log(q)
 
+    assert log(-sqrt(3)) == log(sqrt(3)) + I*pi
     assert log(-exp(p)) != p + I*pi
     assert log(-exp(x)).expand() != x + I*pi
     assert log(-exp(r)).expand() == r + I*pi

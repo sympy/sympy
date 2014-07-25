@@ -1,9 +1,9 @@
 """For more tests on satisfiability, see test_dimacs"""
 
 from sympy import symbols, Q
-from sympy.logic.boolalg import And, Implies, Equivalent
+from sympy.logic.boolalg import And, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
-     pl_true, satisfiable, PropKB
+     pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
@@ -109,6 +109,15 @@ def test_satisfiable():
     assert satisfiable(A & (A >> B) & ~B) is False
 
 
+def test_valid():
+    A, B, C = symbols('A,B,C')
+    assert valid(A >> (B >> A)) is True
+    assert valid((A >> (B >> C)) >> ((A >> B) >> (A >> C))) is True
+    assert valid((~B >> ~A) >> (A >> B)) is True
+    assert valid(A | B | C) is False
+    assert valid(A >> B) is False
+
+
 def test_pl_true():
     A, B, C = symbols('A,B,C')
     assert pl_true(True) is True
@@ -142,33 +151,35 @@ def test_pl_true_wrong_input():
     raises(ValueError, lambda: pl_true(42))
 
 
+def test_entails():
+    A, B, C = symbols('A, B, C')
+    assert entails(A, [A >> B, ~B]) is False
+    assert entails(B, [Equivalent(A, B), A]) is True
+    assert entails((A >> B) >> (~A >> ~B)) is False
+    assert entails((A >> B) >> (~B >> ~A)) is True
+
+
 def test_PropKB():
     A, B, C = symbols('A,B,C')
     kb = PropKB()
+    assert kb.ask(A >> B) is False
+    assert kb.ask(A >> (B >> A)) is True
     kb.tell(A >> B)
     kb.tell(B >> C)
-    assert kb.ask(A) is True
-    assert kb.ask(B) is True
-    assert kb.ask(C) is True
-    assert kb.ask(~A) is True
-    assert kb.ask(~B) is True
-    assert kb.ask(~C) is True
+    assert kb.ask(A) is False
+    assert kb.ask(B) is False
+    assert kb.ask(C) is False
+    assert kb.ask(~A) is False
+    assert kb.ask(~B) is False
+    assert kb.ask(~C) is False
+    assert kb.ask(A >> C) is True
     kb.tell(A)
     assert kb.ask(A) is True
     assert kb.ask(B) is True
     assert kb.ask(C) is True
     assert kb.ask(~C) is False
     kb.retract(A)
-    assert kb.ask(~C) is True
-
-    kb2 = PropKB(Equivalent(A, B))
-    assert kb2.ask(A) is True
-    assert kb2.ask(B) is True
-    kb2.tell(A)
-    assert kb2.ask(A) is True
-
-    kb3 = PropKB()
-    kb3.tell(A)
+    assert kb.ask(C) is False
 
 
 def test_propKB_tolerant():
@@ -194,5 +205,8 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
 
 def test_satisfiable_bool():
-    assert satisfiable(True) == {}
-    assert satisfiable(False) == False
+    from sympy.core.singleton import S
+    assert satisfiable(true) == {true: true}
+    assert satisfiable(S.true) == {true: true}
+    assert satisfiable(false) is False
+    assert satisfiable(S.false) is False

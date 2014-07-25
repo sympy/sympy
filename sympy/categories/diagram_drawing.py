@@ -746,7 +746,7 @@ class DiagramGrid(object):
                 # the existing structure by a vertex.
 
                 candidates = sorted([e for e in tri if skeleton[e]],
-                                    key=lambda e: FiniteSet(e).sort_key())
+                                    key=lambda e: FiniteSet(*e).sort_key())
                 edges = [e for e in candidates if obj in e]
 
                 # Note that a meaningful edge (i.e., and edge that is
@@ -823,7 +823,7 @@ class DiagramGrid(object):
             iterable.
             """
             if iterable(group):
-                return FiniteSet(group)
+                return FiniteSet(*group)
             else:
                 return group
 
@@ -989,7 +989,7 @@ class DiagramGrid(object):
                     remaining_objects = all_objects - placed_objects
 
                     remaining_diagram = diagram.subdiagram_from_objects(
-                        FiniteSet(remaining_objects))
+                        FiniteSet(*remaining_objects))
                     remaining_grid = DiagramGrid(remaining_diagram)
 
                     # Now, let's glue ``remaining_grid`` to ``grid``.

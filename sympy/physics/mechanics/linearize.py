@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 __all__ = ['Linearizer']
 
-from sympy import Matrix, eye, zeros
+from sympy import Matrix, eye, zeros, Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import msubs
@@ -17,7 +17,7 @@ class Linearizer(object):
 
     Attributes
     ----------
-    f_0, f_1, f_2, f_3, f_c, f_v, f_a : Matrix
+    f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a : Matrix
         Matrices holding the general system form.
     q, u, r : Matrix
         Matrices holding the generalized coordinates, speeds, and
@@ -30,12 +30,12 @@ class Linearizer(object):
         Permutation matrix such that [q_ind, u_ind]^T = perm_mat*[q, u]^T
     """
 
-    def __init__(self, f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u,
-            q_i=None, q_d=None, u_i=None, u_d=None, r=None):
+    def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u,
+            q_i=None, q_d=None, u_i=None, u_d=None, r=None, lams=None):
         """
         Parameters
         ----------
-        f_0, f_1, f_2, f_3, f_c, f_v, f_a : array_like
+        f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a : array_like
             System of equations holding the general system form.
             Supply empty array or Matrix if the parameter
             doesn't exist.
@@ -43,12 +43,14 @@ class Linearizer(object):
             The generalized coordinates.
         u : array_like
             The generalized speeds
-        q_i, u_i : array_like, optional.
+        q_i, u_i : array_like, optional
             The independent generalized coordinates and speeds.
         q_d, u_d : array_like, optional
             The dependent generalized coordinates and speeds.
         r : array_like, optional
             The input variables.
+        lams : array_like, optional
+            The lagrange multipliers
         """
 
         # Generalized equation form
@@ -56,6 +58,7 @@ class Linearizer(object):
         self.f_1 = Matrix(f_1)
         self.f_2 = Matrix(f_2)
         self.f_3 = Matrix(f_3)
+        self.f_4 = Matrix(f_4)
         self.f_c = Matrix(f_c)
         self.f_v = Matrix(f_v)
         self.f_a = Matrix(f_a)
@@ -69,10 +72,27 @@ class Linearizer(object):
         self.u_i = none_handler(u_i)
         self.u_d = none_handler(u_d)
         self.r = none_handler(r)
+        self.lams = none_handler(lams)
 
         # Derivatives of generalized equation variables
         self._qd = self.q.diff(dynamicsymbols._t)
         self._ud = self.u.diff(dynamicsymbols._t)
+        # If the user doesn't actually use generalized variables, and the
+        # qd and u vectors have any intersecting variables, this can cause
+        # problems. We'll fix this with some hackery, and Dummy variables
+        dup_vars = set(self._qd).intersection(self.u)
+        self._qd_dup = Matrix([var if var not in dup_vars else Dummy()
+            for var in self._qd])
+
+        # Derive dimesion terms
+        l = len(self.f_c)
+        m = len(self.f_v)
+        n = len(self.q)
+        o = len(self.u)
+        s = len(self.r)
+        k = len(self.lams)
+        dims = collections.namedtuple('dims', ['l', 'm', 'n', 'o', 's', 'k'])
+        self._dims = dims(l, m, n, o, s, k)
 
         self._setup_done = False
 
@@ -88,10 +108,7 @@ class Linearizer(object):
         """Form the permutation matrices Pq and Pu."""
 
         # Extract dimension variables
-        n = len(self.q)
-        o = len(self.u)
-        l = len(self.f_c)
-        m = len(self.f_a)
+        l, m, n, o, s, k = self._dims
         # Compute permutation matrices
         if n != 0:
             self._Pq = permutation_matrix(self.q, Matrix([self.q_i, self.q_d]))
@@ -110,8 +127,8 @@ class Linearizer(object):
                 self._Pui = self._Pu
                 self._Pud = Matrix()
         # Compute combination permutation matrix for computing A and B
-        P_col1 = Matrix([self._Pqi, zeros(o, n - l)])
-        P_col2 = Matrix([zeros(n, o - m), self._Pui])
+        P_col1 = Matrix([self._Pqi, zeros(o + k, n - l)])
+        P_col2 = Matrix([zeros(n, o - m), self._Pui, zeros(k, o - m)])
         if P_col1:
             if P_col2:
                 self.perm_mat = P_col1.row_join(P_col2)
@@ -123,11 +140,8 @@ class Linearizer(object):
     def _form_coefficient_matrices(self):
         """Form the coefficient matrices C_0, C_1, and C_2."""
 
-        # Dimension terms
-        n = len(self.q)
-        o = len(self.u)
-        l = len(self.f_c)
-        m = len(self.f_a)
+        # Extract dimension variables
+        l, m, n, o, s, k = self._dims
         # Build up the coefficient matrices C_0, C_1, and C_2
         # If there are configuration constraints (l > 0), form C_0 as normal.
         # If not, C_0 is I_(nxn). Note that this works even if n=0
@@ -157,11 +171,8 @@ class Linearizer(object):
     def _form_block_matrices(self):
         """Form the block matrices for composing M, A, and B."""
 
-        # Dimension terms
-        n = len(self.q)
-        o = len(self.u)
-        s = len(self.r)
-        m = len(self.f_a)
+        # Extract dimension variables
+        l, m, n, o, s, k = self._dims
         # Block Matrix Definitions. These are only defined if under certain
         # conditions. If undefined, an empty matrix is used instead
         if n != 0:
@@ -170,35 +181,39 @@ class Linearizer(object):
         else:
             self._M_qq = Matrix()
             self._A_qq = Matrix()
+        if n != 0 and m != 0:
+            self._M_uqc = self.f_a.jacobian(self._qd_dup)
+            self._A_uqc = -self.f_a.jacobian(self.q)
+        else:
+            self._M_uqc = Matrix()
+            self._A_uqc = Matrix()
+        if n != 0 and o - m + k != 0:
+            self._M_uqd = self.f_3.jacobian(self._qd_dup)
+            self._A_uqd = -(self.f_2 + self.f_3 + self.f_4).jacobian(self.q)
+        else:
+            self._M_uqd = Matrix()
+            self._A_uqd = Matrix()
         if o != 0 and m != 0:
             self._M_uuc = self.f_a.jacobian(self._ud)
             self._A_uuc = -self.f_a.jacobian(self.u)
         else:
             self._M_uuc = Matrix()
             self._A_uuc = Matrix()
-        if o != 0 and o != m:
+        if o != 0 and o - m + k != 0:
             self._M_uud = self.f_2.jacobian(self._ud)
-            self._A_uud = -self.f_3.jacobian(self.u)
+            self._A_uud = -(self.f_2 + self.f_3).jacobian(self.u)
         else:
             self._M_uud = Matrix()
             self._A_uud = Matrix()
-        if n != 0 and m != 0:
-            self._M_uqc = self.f_a.jacobian(self._qd)
-            self._A_uqc = -self.f_a.jacobian(self.q)
-        else:
-            self._M_uqc = Matrix()
-            self._A_uqc = Matrix()
-        if n != 0 and o != m:
-            self._M_uqd = self.f_3.jacobian(self._qd)
-            self._A_uqd = -(self.f_2 + self.f_3).jacobian(self.q)
-        else:
-            self._M_uqd = Matrix()
-            self._A_uqd = Matrix()
         if o != 0 and n != 0:
             self._A_qu = -self.f_1.jacobian(self.u)
         else:
             self._A_qu = Matrix()
-        if s != 0 and o != m:
+        if k != 0 and o - m + k != 0:
+            self._M_uld = self.f_4.jacobian(self.lams)
+        else:
+            self._M_uld = Matrix()
+        if s != 0 and o - m + k != 0:
             self._B_u = -self.f_3.jacobian(self.r)
         else:
             self._B_u = Matrix()
@@ -251,41 +266,45 @@ class Linearizer(object):
         else:
             op_point_dict = {}
 
-        # Dimension terms
-        n = len(self.q)
-        o = len(self.u)
-        s = len(self.r)
-        m = len(self.f_a)
+        # Extract dimension variables
+        l, m, n, o, s, k = self._dims
 
         # Rename terms to shorten expressions
         M_qq = self._M_qq
-        A_qq = self._A_qq
-        M_uuc = self._M_uuc
-        A_uuc = self._A_uuc
-        M_uud = self._M_uud
-        A_uud = self._A_uud
         M_uqc = self._M_uqc
-        A_uqc = self._A_uqc
         M_uqd = self._M_uqd
+        M_uuc = self._M_uuc
+        M_uud = self._M_uud
+        M_uld = self._M_uld
+        A_qq = self._A_qq
+        A_uqc = self._A_uqc
         A_uqd = self._A_uqd
         A_qu = self._A_qu
+        A_uuc = self._A_uuc
+        A_uud = self._A_uud
         B_u = self._B_u
         C_0 = self._C_0
         C_1 = self._C_1
         C_2 = self._C_2
 
         # Build up Mass Matrix
-        #     |M_qq    0_nxo|
-        # M = |M_uqc   M_uuc|
-        #     |M_uqd   M_uud|
+        #     |M_qq    0_nxo   0_nxk|
+        # M = |M_uqc   M_uuc   0_mxk|
+        #     |M_uqd   M_uud   M_uld|
         if o != 0:
             col2 = Matrix([zeros(n, o), M_uuc, M_uud])
+        if k != 0:
+            col3 = Matrix([zeros(n + m, k), M_uld])
         if n != 0:
             col1 = Matrix([M_qq, M_uqc, M_uqd])
-            if o != 0:
+            if o != 0 and k != 0:
+                M = col1.row_join(col2).row_join(col3)
+            elif o != 0:
                 M = col1.row_join(col2)
             else:
                 M = col1
+        elif k != 0:
+            M = col2.row_join(col3)
         else:
             M = col2
         M_eq = msubs(M, op_point_dict)
@@ -307,7 +326,7 @@ class Linearizer(object):
                 r2c1 = r2c1 * C_0
             else:
                 r2c1 = Matrix()
-            if o != m:
+            if o - m + k != 0:
                 r3c1 = A_uqd
                 if o != 0:
                     r3c1 += (A_uud * C_1)
@@ -327,7 +346,7 @@ class Linearizer(object):
                 r2c2 = A_uuc * C_2
             else:
                 r2c2 = Matrix()
-            if o != m:
+            if o - m + k != 0:
                 r3c2 = A_uud * C_2
             else:
                 r3c2 = Matrix()
@@ -346,14 +365,14 @@ class Linearizer(object):
         # Build up the B matrix if there are forcing variables
         #     |0_(n + m)xs|
         # B = |B_u        |
-        if s != 0 and o != m:
+        if s != 0 and o - m + k != 0:
             Bmat = zeros(n + m, s).col_join(B_u)
             Bmat_eq = msubs(Bmat, op_point_dict)
         else:
             Bmat_eq = Matrix()
 
         # kwarg A_and_B indicates to return  A, B for forming the equation
-        # dx = [A]x + [B]r, where x = [q_ind, u_ind]^T,
+        # dx = [A]x + [B]r, where x = [q_indnd, u_indnd]^T,
         if A_and_B:
             A_cont = self.perm_mat.T * M_eq.LUsolve(Amat_eq)
             if Bmat_eq:
