@@ -332,42 +332,6 @@ class Stream(Basic):
         else:
             raise TypeError("Invalid argument type")
 
-    def __add__(self, other):
-        return self.__class__(imap(operator.add, self, other))
-
-    def __sub__(self, other):
-        from sympy.core import S
-        return self + other*S.NegativeOne
-
-    def __mul__(self, other):
-        from sympy.core import Number, Symbol, Basic, S
-        if not isinstance(other, Stream):
-            return self.__class__(imap(lambda x: x*other, self))
-        def mul():
-            k = 0
-            while True:
-                p = S.Zero
-                for i, a in enumerate(self):
-                    p += a*other[k - i]
-                    if i >= k:
-                        break
-                yield p
-                k += 1
-        return self.__class__(mul())
-
-    def __truediv__(self, other):
-        from sympy.core import S
-        if not isinstance(other, Stream):
-            return self*(S.One/other)
-        def invert_unit_series(s):
-            r = S.One
-            for t in s:
-                yield r
-                r = S.NegativeOne*r*t
-        c = S.One/other[0]
-        return self*self.__class__(invert_unit_series(other*c))*c
-    __div__ = __truediv__
-
     def shift(self, n):
         """ Right shift stream by n items """
         return self.__class__(islice(self, n, None))

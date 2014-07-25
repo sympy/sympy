@@ -37,7 +37,7 @@ def FormalSeries(x=None, x0=0, dir='+', *args, **kwargs):
     Lazyseries(...)
 
     """
-    k = Dummy('k')  # Positive and Integer should be True
+    k = Dummy('k', integer=True)
     generator = kwargs.pop("generator", None)
     if generator:
         c, e, k = generator
@@ -487,9 +487,8 @@ class Lazyseries(Expr):
         if self.is_empty:
             raise StopIteration
         yield self[0]
-        self = self.shift(1)
-        it = Lazyseries.series_mul(sym, other,
-                Stream(Lazyseries.series_compose(sym, self/sym, other)))
+        self = Stream(imap(lambda t: t/sym, self.shift(1)))
+        it = Lazyseries.series_mul(sym, other, Stream(Lazyseries.series_compose(sym, self, other)))
         for t in it:
             yield t
 
@@ -513,7 +512,7 @@ class Lazyseries(Expr):
 
     def __mul__(self, other):
         if not isinstance(other, Lazyseries):
-            return self.__class__(self.x, self.gen * other)
+            return self.__class__(self.x, Stream(imap(lambda t: t*other, self.gen)))
         if self.sym != other.sym:
             raise ValueError('Cannot multiply series of different variables')
         return self.__class__(self.sym, Stream(Lazyseries.series_mul(self.sym, self.gen, other.gen)))
@@ -526,14 +525,16 @@ class Lazyseries(Expr):
             raise StopIteration
         yield a * b
         self, other = self.shift(1), other.shift(1)
-        it = Stream(Lazyseries.series_add(sym, self*b, other*a,
-            Lazyseries.series_mul(sym, self, other)))
+        it = Stream(Lazyseries.series_add(sym,
+                Stream(imap(lambda t: t*b, self)),
+                Stream(imap(lambda t: t*a, other)),
+                Lazyseries.series_mul(sym, self, other)))
         for t in it:
             yield t
 
     def __truediv__(self, other):
         if not isinstance(other, Lazyseries):
-            return self.__class__(self.x, self.gen/other)
+            return self.__class__(self.x, Stream(imap(lambda t: t/other, self.gen)))
         if self.sym != other.sym:
             raise ValueError('Cannot multiply series of different variables')
         return self.__class__(self.sym, Stream(Lazyseries.series_div(self.sym, self.gen, other.gen)))
@@ -549,8 +550,8 @@ class Lazyseries(Expr):
         self, other = self.shift(1), other.shift(1)
         def gen():
             yield a/b
-            q = Lazyseries.series_mul(sym, other, Stream(gen()))
-            for t in Lazyseries.series_add(sym, self, (Stream(q)*S.NegativeOne)/b):
+            q = imap(lambda t: t*S.NegativeOne/b, Lazyseries.series_mul(sym, other, Stream(gen())))
+            for t in Lazyseries.series_add(sym, self, Stream(q)):
                 yield t
         for t in gen():
             yield t
