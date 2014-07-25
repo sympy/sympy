@@ -565,3 +565,27 @@ def _fraction_decomp(expr):
     num = Mul(*num)
     den = Mul(*den)
     return num, den
+
+
+def _f_list_parser(fl, ref_frame):
+    """Parses the provided forcelist composed of items
+    of the form (obj, force).
+    Returns a tuple containing:
+        vlist: The velocity (ang_vel for Frames, vel for Points) in
+                the provided reference frame.
+        flist: The forces.
+
+    Used internally in the KanesMethod and LagrangesMethod classes.
+    """
+    def flist_iter():
+        for obj, force in fl:
+            if isinstance(obj, ReferenceFrame):
+                yield obj.ang_vel_in(ref_frame), force
+            elif isinstance(obj, Point):
+                yield obj.vel(ref_frame), force
+            else:
+                raise TypeError('First entry in each forcelist pair must '
+                                'be a point or frame.')
+    unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
+    vel_list, f_list = unzip(list(flist_iter()))
+    return vel_list, f_list

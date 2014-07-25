@@ -4,11 +4,12 @@ __all__ = ['KanesMethod']
 
 from sympy import zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.utilities import default_sort_key
-from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
-     Point, partial_velocity
+from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
+        partial_velocity)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import msubs, find_dynamicsymbols
+from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
+        _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 import warnings
@@ -254,18 +255,8 @@ class KanesMethod(object):
 
         N = self._inertial
         # pull out relevant velocities for constructing partial velocities
-        def f_list_parser(f_list):
-            for obj, force in fl:
-                if isinstance(obj, ReferenceFrame):
-                    yield obj.ang_vel_in(N).subs(self._qdot_u_map), force
-                elif isinstance(obj, Point):
-                    yield obj.vel(N).subs(self._qdot_u_map), force
-                else:
-                    raise TypeError('First entry in each forcelist pair must '
-                                    'be a point or frame.')
-
-        unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
-        vel_list, f_list = unzip(list(f_list_parser(fl)))
+        vel_list, f_list = _f_list_parser(fl, N)
+        vel_list = [i.subs(self._qdot_u_map) for i in vel_list]
 
         # Fill Fr with dot product of partial velocities and forces
         o = len(self._u)
@@ -397,11 +388,11 @@ class KanesMethod(object):
         if self._f_nh and self._k_nh:
             f_v = self._f_nh + self._k_nh*Matrix(self._u)
         else:
-            f_v = Matrix([])
+            f_v = Matrix()
         if self._f_dnh and self._k_dnh:
             f_a = self._f_dnh + self._k_dnh*Matrix(self._udot)
         else:
-            f_a = Matrix([])
+            f_a = Matrix()
         # Dicts to sub to zero, for splitting up expressions
         u_zero = dict((i, 0) for i in self._u)
         ud_zero = dict((i, 0) for i in self._udot)
@@ -452,8 +443,8 @@ class KanesMethod(object):
             if diff(i, dynamicsymbols._t) in r:
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
-        return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i, q_d,
-                u_i, u_d, r)
+        return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
+                q_d, u_i, u_d, r)
 
     def linearize(self, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
@@ -524,7 +515,7 @@ class KanesMethod(object):
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = set(Matrix([q, self._qdot, u, self._udot, uaux, uauxdot]))
+        insyms = set(Matrix([self._q, self._qdot, self._u, self._udot, uaux, uauxdot]))
         if any(find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
                 self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
             raise ValueError('Cannot have dynamicsymbols outside dynamic \
@@ -668,7 +659,7 @@ class KanesMethod(object):
             f2_oths = f2.jacobian(other_dyns)
             f_lin_B = -f1_oths.col_join(f2_oths)
         else:
-            f_lin_B = Matrix([])
+            f_lin_B = Matrix()
         return (f_lin_A, f_lin_B, Matrix(other_dyns))
 
     def kanes_equations(self, FL, BL):
