@@ -53,5 +53,5 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
         git commit -am "Update dev doc after building $TRAVIS_BUILD_NUMBER"
         echo -e "Pushing commit"
-        git push -fq origin gh-pages > /dev/null
+        git push -fq origin gh-pages > /dev/null 2>&1
 fi
