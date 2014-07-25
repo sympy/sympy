@@ -340,16 +340,16 @@ def test_hyper_as_trig():
     eq = sinh(x)**2 + cosh(x)**2
     t, f = hyper_as_trig(eq)
     assert f(fu(t)) == cosh(2*x)
-    assert _osborne(cosh(x)) == cos(x)
-    assert _osborne(sinh(x)) == I*sin(x)
-    assert _osborne(tanh(x)) == I*tan(x)
-    assert _osborne(coth(x)) == cot(x)/I
-    assert _osbornei(cos(x)) == cosh(x)
-    assert _osbornei(sin(x)) == sinh(x)/I
-    assert _osbornei(tan(x)) == tanh(x)/I
-    assert _osbornei(cot(x)) == coth(x)*I
-    assert _osbornei(sec(x)) == 1/cosh(x)
-    assert _osbornei(csc(x)) == I/sinh(x)
+    assert _osborne(cosh(x), y) == cos(x*y)
+    assert _osborne(sinh(x), y) == I*sin(x*y)
+    assert _osborne(tanh(x), y) == I*tan(x*y)
+    assert _osborne(coth(x), y) == cot(x*y)/I
+    assert _osbornei(cos(x), y) == cosh(x/y)
+    assert _osbornei(sin(x), y) == sinh(x/y)/I
+    assert _osbornei(tan(x), y) == tanh(x/y)/I
+    assert _osbornei(cot(x), y) == coth(x/y)*I
+    assert _osbornei(sec(x), y) == 1/cosh(x/y)
+    assert _osbornei(csc(x), y) == I/sinh(x/y)
 
 
 def test_TR12i():

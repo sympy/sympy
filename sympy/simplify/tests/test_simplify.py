@@ -293,6 +293,10 @@ def test_trigsimp_issue_4032():
         2**(n/2)*cos(pi*n/4)/2 + 2**n/4
 
 
+def test_trigsimp_issue_7761():
+    assert trigsimp(cosh(pi/4)) == cosh(pi/4)
+
+
 def test_trigsimp_noncommutative():
     x, y = symbols('x,y')
     A, B = symbols('A,B', commutative=False)

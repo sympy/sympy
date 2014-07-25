@@ -2017,9 +2017,16 @@ def as_f_sign_1(e):
         return gcd, a, n2
 
 
-def _osborne(e):
+def _osborne(e, d):
     """Replace all hyperbolic functions with trig functions using
     the Osborne rule.
+
+    Notes
+    =====
+
+    ``d`` is a dummy variable to prevent automatic evaluation
+    of trigonometric/hyperbolic functions.
+
 
     References
     ==========
@@ -2031,22 +2038,28 @@ def _osborne(e):
         if not isinstance(rv, C.HyperbolicFunction):
             return rv
         if rv.func is sinh:
-            return I*sin(rv.args[0])
+            return I*sin(rv.args[0]*d)
         elif rv.func is cosh:
-            return cos(rv.args[0])
+            return cos(rv.args[0]*d)
         elif rv.func is tanh:
-            return I*tan(rv.args[0])
+            return I*tan(rv.args[0]*d)
         elif rv.func is coth:
-            return cot(rv.args[0])/I
+            return cot(rv.args[0]*d)/I
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
     return bottom_up(e, f)
 
 
-def _osbornei(e):
+def _osbornei(e, d):
     """Replace all trig functions with hyperbolic functions using
     the Osborne rule.
+
+    Notes
+    =====
+
+    ``d`` is a dummy variable to prevent automatic evaluation
+    of trigonometric/hyperbolic functions.
 
     References
     ==========
@@ -2058,17 +2071,17 @@ def _osbornei(e):
         if not isinstance(rv, C.TrigonometricFunction):
             return rv
         if rv.func is sin:
-            return sinh(rv.args[0])/I
+            return sinh(rv.args[0]/d)/I
         elif rv.func is cos:
-            return cosh(rv.args[0])
+            return cosh(rv.args[0]/d)
         elif rv.func is tan:
-            return tanh(rv.args[0])/I
+            return tanh(rv.args[0]/d)/I
         elif rv.func is cot:
-            return coth(rv.args[0])*I
+            return coth(rv.args[0]/d)*I
         elif rv.func is sec:
-            return 1/cosh(rv.args[0])
+            return 1/cosh(rv.args[0]/d)
         elif rv.func is csc:
-            return I/sinh(rv.args[0])
+            return I/sinh(rv.args[0]/d)
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
@@ -2103,7 +2116,7 @@ def hyper_as_trig(rv):
     """
     from sympy.simplify.simplify import signsimp
 
-    # mask of trig functions
+    # mask off trig functions
     trigs = rv.atoms(C.TrigonometricFunction)
     reps = [(t, Dummy()) for t in trigs]
     masked = rv.xreplace(dict(reps))
@@ -2111,5 +2124,7 @@ def hyper_as_trig(rv):
     # get inversion substitutions in place
     reps = [(v, k) for k, v in reps]
 
-    return _osborne(masked), lambda x: signsimp(
-        _osbornei(x).xreplace(dict(reps)))
+    d = Dummy()
+
+    return _osborne(masked, d), lambda x: signsimp(
+        _osbornei(x, d).xreplace(dict(reps)))
