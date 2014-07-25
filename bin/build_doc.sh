@@ -24,7 +24,7 @@
 # Exit on error
 set -e
 
-if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JOB_NUMBER" == "1" ]; then
 
         echo "Installing dependencies"
         sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern librsvg2-bin imagemagick docbook2x
