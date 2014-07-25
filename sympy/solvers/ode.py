@@ -7313,8 +7313,8 @@ def _linear_3eq_order1_type1(x, y, z, t, r):
 
     """
     C1, C2, C3, C4 = symbols('C1:5')
-    a = r['a1']; b = r['a2']; c = r['b2']
-    d = r['a3']; k = r['b3']; p = r['c3']
+    a = -r['a1']; b = -r['a2']; c = -r['b2']
+    d = -r['a3']; k = -r['b3']; p = -r['c3']
     sol1 = C1*exp(a*t)
     sol2 = b*C1*exp(a*t)/(a-c) + C2*exp(c*t)
     sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
@@ -7355,8 +7355,9 @@ def _linear_3eq_order1_type2(x, y, z, t, r):
 
     """
     C0, C1, C2, C3 = symbols('C0:4')
-    a = r['c2']; b = r['a3']; c = r['b1']
+    a = -r['c2']; b = -r['a3']; c = -r['b1']
     k = sqrt(a**2 + b**2 + c**2)
+    C3 = (-a*C1 - b*C2)/c
     sol1 = a*C0 + k*C1*cos(k*t) + (c*C2-b*C3)*sin(k*t)
     sol2 = b*C0 + k*C2*cos(k*t) + (a*C3-c*C1)*sin(k*t)
     sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
@@ -7396,6 +7397,7 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     c = sqrt(r['b1']*r['c2'])
     b = sqrt(r['b1']*r['a3'])
     a = sqrt(r['c2']*r['a3'])
+    C3 = (-a**2*C1-b**2*C2)/c**2
     k = sqrt(a**2 + b**2 + c**2)
     sol1 = C0 + k*C1*cos(k*t) + a**-1*b*c*(C2-C3)*sin(k*t)
     sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
