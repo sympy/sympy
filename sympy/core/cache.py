@@ -53,6 +53,10 @@ try:
         warn("fastcache version >= 0.4.0 required, detected {}"\
              .format(fastcache.__version__), UserWarning)
         raise ImportError
+    # Do not use fastcache if running under pypy
+    import platform
+    if platform.python_implementation() == 'PyPy':
+        raise ImportError
 
 except ImportError:
 

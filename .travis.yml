@@ -52,17 +52,22 @@ matrix:
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
+        - NOFASTCACHE="true"
     - python: "pypy"
       env:
         - SPLIT="1/4"
+        - NOFASTCACHE="true"
     - python: "pypy"
       env:
         - SPLIT="2/4"
+        - NOFASTCACHE="true"
     - python: "pypy"
       env:
         - SPLIT="3/4"
+        - NOFASTCACHE="true"
     - python: 2.7
-      env: TEST_SPHINX="true"
+      env: TEST_SPHINX="true" NOFASTCACHE="true"
+
     - python: 2.7
       env:
         - TEST_SLOW="true"
