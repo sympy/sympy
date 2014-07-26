@@ -4,11 +4,18 @@
 * refraction_angle
 * deviation
 * lens_makers_formula
+* mirror_formula
+* lens_formula
 """
 
 from __future__ import division
 
-__all__ = ['refraction_angle', 'deviation', 'lens_makers_formula']
+__all__ = ['refraction_angle',
+           'deviation',
+           'lens_makers_formula',
+           'mirror_formula',
+           'lens_formula'
+           ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos
 from sympy.geometry.line3d import Ray3D
@@ -275,3 +282,50 @@ def lens_makers_formula(n_lens, n_surr, r1, r2):
     r2 = sympify(r2)
 
     return 1/((n_lens - n_surr)/n_surr*(1/r1 - 1/r2))
+
+
+def mirror_formula(focal_length=None, u=None, v=None):
+    """
+    This function provides one of the three parameters
+    when two of them are supplied.
+    This is valid only for paraxial rays.
+
+    Parameters
+    ==========
+
+    focal_length : sympifiable
+        Focal length of the mirror.
+    u : sympifiable
+        Distance of object from the pole on
+        the principal axis.
+    v : sympifiable
+        Distance of the image from the pole
+        on the principal axis.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics import mirror_formula
+    >>> from sympy.abc import f, u, v
+    >>> mirror_formula(focal_length=f, u=u)
+    f*u/(-f + u)
+    >>> mirror_formula(focal_length=f, v=v)
+    f*v/(-f + v)
+    >>> mirror_formula(u=u, v=v)
+    u*v/(u + v)
+
+    """
+    if focal_length and u and v:
+        raise ValueError("Please provide only two parameters")
+
+    focal_length = sympify(focal_length)
+    u = sympify(u)
+    v = sympify(v)
+
+    if focal_length is None:
+        return v*u/(v + u)
+    if u is None:
+        return v*focal_length/(v - focal_length)
+    if v is None:
+        return u*focal_length/(u - focal_length)
+
