@@ -77,6 +77,7 @@ Guide to Mechanics
 
     masses.rst
     kane.rst
+    linearize.rst
     examples.rst
     advanced.rst
     reference.rst
@@ -89,4 +90,5 @@ Mechanics API
 
     api/part_bod.rst
     api/kane.rst
+    api/linearize.rst
     api/printing.rst
