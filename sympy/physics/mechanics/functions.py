@@ -422,16 +422,17 @@ def Lagrangian(frame, *body):
 def find_dynamicsymbols(expression, exclude=None):
     """Find all dynamicsymbols in expression.
 
+    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
     >>> x, y = dynamicsymbols('x, y')
     >>> expr = x + x.diff()*y
     >>> find_dynamicsymbols(expr)
-    {Derivative(x(t), t), x(t), y(t)}
+    set([x(t), y(t), Derivative(x(t), t)])
 
     If the optional `exclude` kwarg is used, only dynamicsymbols
     not in the iterable `exclude` are returned.
 
     >>> find_dynamicsymbols(expr, [x, y])
-    {Derivative(x(t), t)}
+    set([Derivative(x(t), t)])
     """
     t_set = set([dynamicsymbols._t])
     if exclude:
@@ -445,15 +446,16 @@ def find_dynamicsymbols(expression, exclude=None):
             i.free_symbols == t_set]) - exclude_set
 
 
-def msubs(expr, *sub_dicts, smart=False):
+def msubs(expr, *sub_dicts, **kwargs):
     """A custom subs for use on expressions derived in physics.mechanics.
 
     Traverses the expression tree once, performing the subs found in sub_dicts.
     Terms inside `Derivative` expressions are ignored:
 
+    >>> from sympy.physics.mechanics import dynamicsymbols, msubs
     >>> x = dynamicsymbols('x')
     >>> msubs(x.diff() + x, {x: 1})
-    Derivative(x, t) + 1
+    Derivative(x(t), t) + 1
 
     Note that sub_dicts can be a single dictionary, or several dictionaries:
 
@@ -466,9 +468,10 @@ def msubs(expr, *sub_dicts, smart=False):
     If smart=True, also checks for conditions that may result in `nan`, but
     if simplified would yield a valid expression. For example:
 
-    >>> (sin(a)/tan(a)).subs(a, 0)
+    >>> from sympy import sin, tan
+    >>> (sin(x)/tan(x)).subs(x, 0)
     nan
-    >>> msubs(sin(a)/tan(a), {a: 0}, smart=True)
+    >>> msubs(sin(x)/tan(x), {x: 0}, smart=True)
     1
 
     It does this by first replacing all `tan` with `sin/cos`. Then each node
@@ -478,6 +481,7 @@ def msubs(expr, *sub_dicts, smart=False):
     that result in 1/0 are targeted, resulting in faster performance."""
 
     sub_dict = dict_merge(*sub_dicts)
+    smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
     else:
