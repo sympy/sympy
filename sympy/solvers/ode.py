@@ -1765,7 +1765,7 @@ def checksysodesol(eqs, sols, func=None):
     for sol in sols:
         if len(sol.atoms(AppliedUndef)) != 1:
             raise ValueError("solution should have one function only")
-    if len(funcs) != len(sols):
+    if len(funcs) != len(set([sol.lhs for sol in sols])):
         raise ValueError("number of solution provided does not match the number of equations")
     t = funcs[0].args[0]
     dictsol = dict()
@@ -7635,9 +7635,9 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
     sol = []
     for sols in sol2:
-        sol.append(Eq(y(t), sols))
         sol.append(Eq(x(t),phi.subs(v, sols)))
-    return set(sol)
+        sol.append(Eq(y(t), sols))
+    return sol
 
 def _nonlinear_2eq_order1_type2(x, y, t, eq):
     r"""
@@ -7669,7 +7669,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     f = Wild('f')
     u, v, phi = symbols('u, v, phi', function=True)
     r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
-    g = (diff(y(t),t) - eq[1])/r[f]
+    g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
     F = r[f].subs(x(t),u).subs(y(t),v)
     n = r[n]
     if n:
@@ -7680,9 +7680,9 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
     sol = []
     for sols in sol2:
-        sol.append(Eq(y(t), sols))
         sol.append(Eq(x(t),phi.subs(v, sols)))
-    return set(sol)
+        sol.append(Eq(y(t), sols))
+    return sol
 
 def _nonlinear_2eq_order1_type3(x, y, t, eq):
     r"""
@@ -7717,7 +7717,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     for sols in sol1:
         sol.append(Eq(x(t), sols))
         sol.append(Eq(y(t), (sol2s.rhs).subs(u, sols)))
-    return set(sol)
+    return sol
 
 def _nonlinear_2eq_order1_type4(x, y, t, eq):
     r"""
