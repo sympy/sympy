@@ -9,7 +9,8 @@ from sympy.physics.vector import ReferenceFrame, dynamicsymbols, \
      Point, partial_velocity
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import _mat_inv_mul, _subs_keep_derivs
+from sympy.physics.mechanics.functions import _mat_inv_mul, _subs_keep_derivs,\
+        _find_dynamicsymbols
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 import warnings
@@ -158,21 +159,6 @@ class KanesMethod(object):
                 acceleration_constraints, u_auxiliary)
         if kd_eqs is not None:
             self._kindiffeq(kd_eqs)
-
-    def _find_dynamicsymbols(self, inlist, insyms=[]):
-        """Finds all non-supplied dynamicsymbols in the expressions."""
-        from sympy.core.function import AppliedUndef, Derivative
-        t = dynamicsymbols._t
-        return reduce(set.union, [set([i]) for j in inlist
-            for i in j.atoms(AppliedUndef, Derivative)
-            if i.free_symbols == set([t])], set()) - insyms
-
-        temp_f = set().union(*[i.atoms(AppliedUndef) for i in inlist])
-        temp_d = set().union(*[i.atoms(Derivative) for i in inlist])
-        set_f = set([a for a in temp_f if a.args == (t,)])
-        set_d = set([a for a in temp_d if ((a.args[0] in set_f) and all([i == t
-                     for i in a.variables]))])
-        return list(set.union(set_f, set_d) - set(insyms))
 
     def _find_othersymbols(self, inlist, insyms=[]):
         """Finds all non-dynamic symbols in the expressions."""
@@ -554,6 +540,7 @@ class KanesMethod(object):
         # Break the dynamic differential eqs into f_2 and f_3
         f_2 = _subs_keep_derivs(self._frstar, qd_u_zero)
         f_3 = self._frstar.subs(ud_zero) + self._fr
+        f_4 = zeros(len(f_2), 1)
 
         # Get the required vector components
         q = self._q
@@ -578,14 +565,14 @@ class KanesMethod(object):
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
         insyms = set(q + self._qdot + u + self._udot + uaux + uauxdot)
-        if any(self._find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
+        if any(_find_dynamicsymbols(i, insyms) for i in [self._k_kqdot,
                 self._k_ku, self._f_k, self._k_dnh, self._f_dnh, self._k_d]):
             raise ValueError('Cannot have dynamicsymbols outside dynamic \
                              forcing vector.')
 
         # Find all other dynamic symbols, forming the forcing vector r.
         # Sort r to make it canonical.
-        r = list(self._find_dynamicsymbols(self._f_d.subs(uaux_zero), insyms))
+        r = list(_find_dynamicsymbols(self._f_d.subs(uaux_zero), insyms))
         r.sort(key=default_sort_key)
 
         # Check for any derivatives of variables in r that are also found in r.
@@ -593,7 +580,7 @@ class KanesMethod(object):
             if diff(i, dynamicsymbols._t) in r:
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
-        return Linearizer(f_0, f_1, f_2, f_3, f_c, f_v, f_a, q, u, q_i, q_d,
+        return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i, q_d,
                 u_i, u_d, r)
 
     def linearize(self, **kwargs):

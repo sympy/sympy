@@ -12,4 +12,5 @@ Optics Module
 
     gaussopt.rst
     medium.rst
+    utils.rst
     waves.rst
