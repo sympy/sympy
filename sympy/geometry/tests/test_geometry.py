@@ -10,7 +10,7 @@ from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
-from sympy.geometry.util import idiff
+from sympy.geometry.util import idiff, are_coplanar
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
 from sympy.utilities.randtest import test_numerically
@@ -196,11 +196,11 @@ def test_point3D():
     p1_1 = Point3D(x1, x1, x1)
     p1_2 = Point3D(y2, y2, y2)
     p1_3 = Point3D(x1 + 1, x1, x1)
-    assert Point3D.is_collinear(p3)
-    assert Point3D.is_collinear(p3, p4)
-    assert Point3D.is_collinear(p3, p4, p1_1, p1_2)
-    assert Point3D.is_collinear(p3, p4, p1_1, p1_3) is False
-    assert Point3D.is_collinear(p3, p3, p4, p5) is False
+    assert Point3D.are_collinear(p3) is False
+    assert Point3D.are_collinear(p3, p4)
+    assert Point3D.are_collinear(p3, p4, p1_1, p1_2)
+    assert Point3D.are_collinear(p3, p4, p1_1, p1_3) is False
+    assert Point3D.are_collinear(p3, p3, p4, p5) is False
 
     assert p3.intersection(Point3D(0, 0, 0)) == [p3]
     assert p3.intersection(p4) == []
@@ -307,10 +307,10 @@ def test_line():
 
     # Concurrency
     l3_1 = Line(Point(5, x1), Point(-Rational(3, 5), x1))
-    assert Line.is_concurrent(l1) is False
-    assert Line.is_concurrent(l1, l3)
-    assert Line.is_concurrent(l1, l3, l3_1)
-    assert Line.is_concurrent(l1, l1_1, l3) is False
+    assert Line.are_concurrent(l1) is False
+    assert Line.are_concurrent(l1, l3)
+    assert Line.are_concurrent(l1, l3, l3_1)
+    assert Line.are_concurrent(l1, l1_1, l3) is False
 
     # Projection
     assert l2.projection(p4) == p4
@@ -569,9 +569,9 @@ def test_line3d():
     assert intersection(p, q) == [Point3D(0, 0, 0)]
 
     # Concurrency
-    assert Line3D.is_concurrent(l1) is False
-    assert Line3D.is_concurrent(l1, l2)
-    assert Line3D.is_concurrent(l1, l1_1, l3) is False
+    assert Line3D.are_concurrent(l1) is False
+    assert Line3D.are_concurrent(l1, l2)
+    assert Line3D.are_concurrent(l1, l1_1, l3) is False
 
     # Finding angles
     l1_1 = Line3D(p1, Point3D(5, 0, 0))
@@ -752,12 +752,12 @@ def test_plane():
     assert pl6.angle_between(Ray3D(Point3D(2, 4, 1), Point3D(6, 5, 3))) == asin(sqrt(7)/3)
     assert pl7.angle_between(Segment3D(Point3D(5, 6, 1), Point3D(1, 2, 4))) == -asin(7*sqrt(246)/246)
 
-    assert Plane.are_coplanar(l1, l2, l3) is False
-    assert Plane.are_coplanar(l1) is False
-    assert Plane.are_coplanar(Point3D(2, 7, 2), Point3D(0, 0, 2), Point3D(1, 1, 2), Point3D(1, 2, 2))
-    assert Plane.are_coplanar(Plane(p1, p2, p3), Plane(p1, p3, p2))
-    assert pl3.is_concurrent(pl4, pl5) is False
-    assert Plane.is_concurrent(pl6) is False
+    assert are_coplanar(l1, l2, l3) is False
+    assert are_coplanar(l1) is False
+    assert are_coplanar(Point3D(2, 7, 2), Point3D(0, 0, 2), Point3D(1, 1, 2), Point3D(1, 2, 2))
+    assert are_coplanar(Plane(p1, p2, p3), Plane(p1, p3, p2))
+    assert Plane.are_concurrent(pl3, pl4, pl5) is False
+    assert Plane.are_concurrent(pl6) is False
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))

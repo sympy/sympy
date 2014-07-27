@@ -205,7 +205,8 @@ class Point3D(GeometryEntity):
         return [(point.x - self.x) / b,(point.y - self.y) / b,
                 (point.z - self.z) / b]
 
-    def is_collinear(*points):
+    @staticmethod
+    def are_collinear(*points):
         """Is a sequence of points collinear?
 
         Test whether or not a set of points are collinear. Returns True if
@@ -219,7 +220,7 @@ class Point3D(GeometryEntity):
         Returns
         =======
 
-        is_collinear : boolean
+        are_collinear : boolean
 
         See Also
         ========
@@ -233,9 +234,9 @@ class Point3D(GeometryEntity):
         >>> from sympy.abc import x
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 1)
         >>> p3, p4, p5 = Point3D(2, 2, 2), Point3D(x, x, x), Point3D(1, 2, 6)
-        >>> p1.is_collinear(p2, p3, p4)
+        >>> Point3D.are_collinear(p1, p2, p3, p4)
         True
-        >>> p1.is_collinear(p2, p3, p5)
+        >>> Point3D.are_collinear(p1, p2, p3, p5)
         False
         """
         # Coincident points are irrelevant and can confuse this algorithm.
@@ -244,9 +245,9 @@ class Point3D(GeometryEntity):
         if not all(isinstance(p, Point3D) for p in points):
             raise TypeError('Must pass only 3D Point objects')
 
-        if len(points) == 0:
+        if len(points) < 2:
             return False
-        if len(points) <= 2:
+        if len(points) == 2:
             return True  # two points always form a line
         if len(points) == 3:
             a = (points[0].direction_cosine(points[1]))
@@ -270,7 +271,8 @@ class Point3D(GeometryEntity):
                 return False
         return True
 
-    def is_coplanar(*points):
+    @staticmethod
+    def are_coplanar(*points):
         """
 
         This function tests whether passed points are coplanar or not.
@@ -296,16 +298,27 @@ class Point3D(GeometryEntity):
         >>> p2 = Point3D(2, 7, 2)
         >>> p3 = Point3D(0, 0, 2)
         >>> p4 = Point3D(1, 1, 2)
-        >>> p5 = Point3D(1, 2, 2)
-        >>> p1.is_coplanar(p2, p3, p4, p5)
+        >>> Point3D.are_coplanar(p1, p2, p3, p4)
         True
-        >>> p6 = Point3D(0, 1, 3)
-        >>> p1.is_coplanar(p2, p3, p4, p5, p6)
+        >>> p5 = Point3D(0, 1, 3)
+        >>> Point3D.are_coplanar(p1, p2, p3, p5)
         False
 
         """
         from sympy.geometry.plane import Plane
-        return Plane.are_coplanar(*points)
+        points = list(set(points))
+        if len(points) < 3:
+            raise ValueError('At least 3 points are needed to define a plane.')
+        a, b = points[:2]
+        for i, c in enumerate(points[2:]):
+            try:
+                p = Plane(a, b, c)
+                for j in (0, 1, i):
+                    points.pop(j)
+                return all(p.is_coplanar(i) for i in points)
+            except NotImplementedError:  # XXX should be ValueError
+                pass
+        raise ValueError('At least 3 non-collinear points needed to define plane.')
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
