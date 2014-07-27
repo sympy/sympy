@@ -18,37 +18,10 @@ matrix:
   include:
     - python: 2.7
       env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="true"
-    - python: 2.7
-      env:
-        - TEST_GMPY="true"
-    - python: 2.7
-      env:
-        - TEST_MATPLOTLIB="true"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="true"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-    - python: 3.3
-      env:
-        - TEST_MATPLOTLIB="true"
+        - TEST_GMPY="true" TEST_MATPLOTLIB="true"
     - python: 3.4
       env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="true"
-    - python: 3.4
-      env:
-        - TEST_GMPY="true"
-    - python: 3.4
-      env:
-        - TEST_MATPLOTLIB="true"
+        - TEST_GMPY="true" TEST_MATPLOTLIB="true"
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
