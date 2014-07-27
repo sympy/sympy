@@ -61,7 +61,7 @@ the ``to_linearizer`` class method.
   In general, you may pick any of the coordinates and speeds to be dependent,
   but in practice some choices may result in undesirable singularites. Methods
   for deciding which coordinates/speeds to make dependent is behind the scope of
-  this guide. For more information, please see [REFERENCE_NEEDED].
+  this guide. For more information, please see [Blajer1994]_.
 
 Once the system is coerced into the generalized form, the linearized EOM can be
 solved for. The methods provided in :mod:`mechanics` allow for two different
@@ -323,9 +323,9 @@ along with some troubleshooting tips for solving them.
 2. The linearized form has ``nan``, ``zoo``, or ``oo`` as matrix elements
      There are two potential causes for this. The first (and the one you
      should check first) is that some choices of dependent coordinates
-     will result in singularities at certain operating points. Choosing
-     operating points in a systemic manner to avoid this is beyond the scope
-     of this guide; see [REFERENCE_NEEDED] for more information.
+     will result in singularities at certain operating points. Coordinate
+     partitioning in a systemic manner to avoid this is beyond the scope
+     of this guide; see [Blajer1994]_ for more information.
 
      The other potential cause for this is that the matrices may not have
      been in the most reduced form before the operating point was substituted
@@ -355,10 +355,10 @@ Further Examples
 ----------------
 
 The pendulum example used above was simple, but didn't include any dependent
-coordinates or speeds. For some more thorough example, the same pendulum
+coordinates or speeds. For a more thorough example, the same pendulum
 was linearized with dependent coordinates using both Kane's and Lagrange's
 methods:
 
-[LINK_TO_KANES_METHOD_EXAMPLE]
+.. toctree::
 
-[LINK_TO_LAGRANGES_METHOD_EXAMPLE]
+    examples/lin_pend_nonmin.rst
