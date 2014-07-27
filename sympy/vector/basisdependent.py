@@ -209,7 +209,7 @@ class BasisDependentAdd(BasisDependent, Add):
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
 
-        obj._sys = (list(components.keys()))[0]._sys
+        obj._sys = (components.keys())[0]._sys
 
         return obj
 

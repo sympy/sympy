@@ -2,6 +2,7 @@ from sympy.core.basic import Basic
 from sympy import (sympify, eye, sin, cos, rot_axis1, rot_axis2,
                    rot_axis3, ImmutableMatrix as Matrix, Symbol)
 from sympy.vector.functions import express
+from sympy.core.cache import cacheit
 
 
 class Orienter(Basic):
@@ -9,7 +10,6 @@ class Orienter(Basic):
     Super-class for all orienter classes.
     """
 
-    @property
     def rotation_matrix(self):
         """
         The rotation matrix corresponding to this orienter
@@ -27,23 +27,12 @@ class AxisOrienter(Orienter):
         from sympy.vector.vector import Vector
         if not isinstance(axis, Vector):
             raise TypeError("axis should be a Vector")
-        theta = sympify(angle)
-        vect_axis = axis
-        system = axis._sys
-        axis = express(axis, system).normalize()
-        axis = axis.to_matrix(system)
-        parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
-                Matrix([[0, -axis[2], axis[1]],
-                        [axis[2], 0, -axis[0]],
-                    [-axis[1], axis[0], 0]]) * sin(theta) +
-                         axis * axis.T)
-        parent_orient = parent_orient.T.simplify()
+        angle = sympify(angle)
 
-        obj = super(AxisOrienter, cls).__new__(cls, theta,
-                                               vect_axis)
-        obj._angle = theta
-        obj._axis = vect_axis
-        obj._parent_orient = parent_orient
+        obj = super(AxisOrienter, cls).__new__(cls, angle,
+                                               axis)
+        obj._angle = angle
+        obj._axis = axis
 
         return obj
 
@@ -71,11 +60,29 @@ class AxisOrienter(Orienter):
         >>> N = CoordSysCartesian('N')
         >>> from sympy.vector import AxisOrienter
         >>> orienter = AxisOrienter(q1, N.i + 2 * N.j)
-        >>> B = N.orient_new('B', orienter)
+        >>> B = N.orient_new('B', (orienter, ))
 
         """
         #Dummy initializer for docstrings
         pass
+
+    @cacheit
+    def rotation_matrix(self, system):
+        """
+        The rotation matrix corresponding to this orienter
+        instance.
+        """
+
+        axis = express(self.axis, system).normalize()
+        axis = axis.to_matrix(system)
+        theta = self.angle
+        parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
+                Matrix([[0, -axis[2], axis[1]],
+                        [axis[2], 0, -axis[0]],
+                    [-axis[1], axis[0], 0]]) * sin(theta) +
+                         axis * axis.T)
+        parent_orient = parent_orient.T
+        return parent_orient
 
     @property
     def angle(self):
@@ -194,16 +201,17 @@ class BodyOrienter(ThreeAngleOrienter):
         Therefore,
 
         >>> body_orienter = BodyOrienter(q1, q2, q3, '123')
-        >>> D = N.orient_new('D', body_orienter)
+        >>> D = N.orient_new('D', (body_orienter, ))
 
         is same as
 
+        >>> from sympy.vector import AxisOrienter
         >>> axis_orienter1 = AxisOrienter(q1, N.i)
-        >>> D = N.orient_new_axis('D', axis_orienter1)
+        >>> D = N.orient_new('D', (axis_orienter1, ))
         >>> axis_orienter2 = AxisOrienter(q2, D.j)
-        >>> D = D.orient_new_axis('D', axis_orienter2)
+        >>> D = D.orient_new('D', (axis_orienter2, ))
         >>> axis_orienter3 = AxisOrienter(q3, D.k)
-        >>> D = D.orient_new_axis('D', axis_orienter3)
+        >>> D = D.orient_new('D', (axis_orienter3, ))
 
         Acceptable rotation orders are of length 3, expressed in XYZ or
         123, and cannot have a rotation about about an axis twice in a row.
@@ -261,16 +269,17 @@ class SpaceOrienter(ThreeAngleOrienter):
         Therefore,
 
         >>> space_orienter = SpaceOrienter(q1, q2, q3, '312')
-        >>> D = N.orient_new('D', space_orienter)
+        >>> D = N.orient_new('D', (space_orienter, ))
 
         is same as
 
+        >>> from sympy.vector import AxisOrienter
         >>> axis_orienter1 = AxisOrienter(q1, N.i)
-        >>> B = N.orient_new_axis('B', axis_orienter1)
+        >>> B = N.orient_new('B', (axis_orienter1, ))
         >>> axis_orienter2 = AxisOrienter(q2, N.j)
-        >>> C = B.orient_new_axis('C', axis_orienter2)
+        >>> C = B.orient_new('C', (axis_orienter2, ))
         >>> axis_orienter3 = AxisOrienter(q3, N.k)
-        >>> D = C.orient_new_axis('C', axis_orienter3)
+        >>> D = C.orient_new('C', (axis_orienter3, ))
 
         docs of BodyOrienter
         ====================
@@ -341,7 +350,7 @@ class QuaternionOrienter(Orienter):
         >>> N = CoordSysCartesian('N')
         >>> from sympy.vector import QuaternionOrienter
         >>> q_orienter = QuaternionOrienter(q0, q1, q2, q3)
-        >>> B = N.orient_new('B', q_orienter)
+        >>> B = N.orient_new('B', (q_orienter, ))
 
         """
         #Dummy initializer for docstrings

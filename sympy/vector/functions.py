@@ -34,7 +34,7 @@ def express(expr, system, system2=None, variables=False):
     >>> from sympy import Symbol, cos, sin
     >>> N = CoordSysCartesian('N')
     >>> q = Symbol('q')
-    >>> B = N.orient_new('B', 'Axis', [q, N.k])
+    >>> B = N.orient_new_axis('B', q, N.k)
     >>> from sympy.vector import express
     >>> express(B.i, N)
     (cos(q))*N.i + (sin(q))*N.j
