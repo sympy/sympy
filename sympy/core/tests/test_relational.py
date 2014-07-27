@@ -1,9 +1,10 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies,
-    Xor)
-from sympy.core.relational import ( Relational, Equality, Unequality,
-    GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,
-    Gt, Ge, Ne )
+from sympy import (S, Symbol, symbols, oo, I, pi, Float, And, Or, Not,
+                   Implies, Xor)
+from sympy.core.relational import (Relational, Equality, Unequality,
+                                   GreaterThan, LessThan, StrictGreaterThan,
+                                   StrictLessThan, Rel, Eq, Lt, Le,
+                                   Gt, Ge, Ne)
 from sympy.sets.sets import Interval, FiniteSet
 
 x, y, z, t = symbols('x,y,z,t')
@@ -251,9 +252,9 @@ def test_new_relational():
     for i in range(100):
         while 1:
             strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
-            relation_type = strtype( randint(0, length) )
+            relation_type = strtype(randint(0, length))
             if randint(0, 1):
-                relation_type += strtype( randint(0, length) )
+                relation_type += strtype(randint(0, length))
             if relation_type not in ('==', 'eq', '!=', '<>', 'ne', '>=', 'ge',
                                      '<=', 'le', '>', 'gt', '<', 'lt'):
                 break
@@ -313,3 +314,15 @@ def test_Not():
     assert Not(StrictLessThan(x, y)) == GreaterThan(x, y)
     assert Not(GreaterThan(x, y)) == StrictLessThan(x, y)
     assert Not(LessThan(x, y)) == StrictGreaterThan(x, y)
+
+
+def test_evaluate():
+    assert str(Eq(x, x, evaluate=False)) == 'x == x'
+    assert Eq(x, x, evaluate=False).doit() == S.true
+    assert str(Ne(x, x, evaluate=False)) == 'x != x'
+    assert Ne(x, x, evaluate=False).doit() == S.false
+
+    assert str(Ge(x, x, evaluate=False)) == 'x >= x'
+    assert str(Le(x, x, evaluate=False)) == 'x <= x'
+    assert str(Gt(x, x, evaluate=False)) == 'x > x'
+    assert str(Lt(x, x, evaluate=False)) == 'x < x'
