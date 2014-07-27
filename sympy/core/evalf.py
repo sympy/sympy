@@ -1086,7 +1086,8 @@ def evalf_prod(expr, prec, options):
     if all((l[1] - l[2]).is_Integer for l in expr.limits):
         return evalf(expr.doit(), prec=prec, options=options)
     else:
-        return evalf(expr.rewrite(C.Sum), prec=prec, options=options)
+        s = evalf_sum(expr.rewrite(C.Sum).exp, prec, options)
+        return evalf(exp(s), prec=prec, options=options)
 
 
 def evalf_sum(expr, prec, options):
