@@ -352,6 +352,14 @@ class IndexedBase(AtomicExpr, NotIterable):
             return Indexed(self, indices)
 
     @property
+    def free_symbols(self):
+        if self.shape is None:
+            return self.label.free_symbols
+        else:
+            union = set.union
+            return reduce(union, [arg.free_symbols for arg in self.args], set())
+
+    @property
     def shape(self):
         """Returns the shape of the IndexedBase object.
 
