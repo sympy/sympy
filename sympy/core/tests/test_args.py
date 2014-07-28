@@ -2967,6 +2967,10 @@ def test_sympy__geometry__ellipse__Circle():
     from sympy.geometry.ellipse import Circle
     assert _test_args(Circle((0, 1), 2))
 
+def test_sympy__geometry__parabola__Parabola():
+    from sympy.geometry.parabola import Parabola
+    assert _test_args(Parabola(0, 1), 2)
+
 
 @SKIP("abstract class")
 def test_sympy__geometry__line__LinearEntity():

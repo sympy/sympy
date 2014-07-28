@@ -22,6 +22,7 @@ from sympy.geometry.line import Line, Ray, Segment
 from sympy.geometry.line3d import Line3D, Segment3D, Ray3D
 from sympy.geometry.plane import Plane
 from sympy.geometry.ellipse import Ellipse, Circle
+from sympy.geometry.parabola import Parabola
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle, rad, deg
 from sympy.geometry.util import are_similar, centroid, convex_hull, idiff, \
     intersection
