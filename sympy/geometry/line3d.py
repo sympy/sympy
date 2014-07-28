@@ -117,7 +117,7 @@ class LinearEntity3D(GeometryEntity):
 
     @property
     def direction_cosine(self):
-        """The direction ratio of a given line in 3D.
+        """The normalized direction ratio of a given line in 3D.
 
         See Also
         ========
@@ -132,6 +132,8 @@ class LinearEntity3D(GeometryEntity):
         >>> l = Line3D(p1, p2)
         >>> l.direction_cosine
         [sqrt(35)/7, 3*sqrt(35)/35, sqrt(35)/35]
+        >>> sum(i**2 for i in _)
+        1
         """
         p1, p2 = self.points
         return p1.direction_cosine(p2)
@@ -178,7 +180,8 @@ class LinearEntity3D(GeometryEntity):
         """
         return (self.p1, self.p2)
 
-    def is_concurrent(*lines):
+    @staticmethod
+    def are_concurrent(*lines):
         """Is a sequence of linear entities concurrent?
 
         Two or more linear entities are concurrent if they all
@@ -217,11 +220,11 @@ class LinearEntity3D(GeometryEntity):
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(3, 5, 2)
         >>> p3, p4 = Point3D(-2, -2, -2), Point3D(0, 2, 1)
         >>> l1, l2, l3 = Line3D(p1, p2), Line3D(p1, p3), Line3D(p1, p4)
-        >>> l1.is_concurrent(l2, l3)
+        >>> Line3D.are_concurrent(l1, l2, l3)
         True
 
         >>> l4 = Line3D(p2, p3)
-        >>> l4.is_concurrent(l2, l3)
+        >>> Line3D.are_concurrent(l4, l2, l3)
         False
 
         """
@@ -442,7 +445,7 @@ class LinearEntity3D(GeometryEntity):
         from sympy.core import Symbol
         t = Symbol('t')
         if p in self:
-            return p
+            return p  # XXX raise an error rather than return a point
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -495,7 +498,7 @@ class LinearEntity3D(GeometryEntity):
         from sympy.core import Symbol
         t = Symbol('t')
         if p in self:
-            return p
+            return p  # XXX raise an error instead of returning a point
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -854,7 +857,7 @@ class Line3D(LinearEntity3D):
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
                          p1.z + direction_ratio[2])
         else:
-            raise ValueError('A 2nd Point or keyword "direction_ratio" must'
+            raise ValueError('A 2nd Point or keyword "direction_ratio" must '
             'be used.')
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
@@ -917,6 +920,7 @@ class Line3D(LinearEntity3D):
         (x/4 - 1/4, y/3, zoo*z, k)
 
         """
+        # XXX should this return an Expr instead of a tuple?
         x, y, z, k = _symbol(x), _symbol(y), _symbol(z), _symbol(k)
         p1, p2 = self.points
         a = p1.direction_ratio(p2)
@@ -924,30 +928,45 @@ class Line3D(LinearEntity3D):
                 ((z - p1.z)/a[2]), k)
 
     def contains(self, o):
-        """Return True if o is on this Line, or False otherwise."""
+        """Return True if o is on this Line, or False otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy import Line3D
+        >>> a = (0, 0, 0)
+        >>> b = (1, 1, 1)
+        >>> c = (2, 2, 2)
+        >>> l1 = Line3D(a, b)
+        >>> l2 = Line3D(b, a)
+        >>> l1 == l2
+        False
+        >>> l1 in l2
+        True
+        >>> l1 in l3
+        """
         if is_sequence(o):
             o = Point3D(o)
         if isinstance(o, Point3D):
-            if self.arbitrary_point == 0:
+            sym = map(Dummy, 'xyz')
+            eq = self.equation(*sym)
+            a = []
+            for i in range(3):
+                k = eq[i].subs(sym[i], o.args[i])
+                if k != nan:
+                    a.append(k)
+            # XXX explain why the substitutions are being done one at a time
+            if len(a) == 1:
                 return True
-            else:
-                o = o.func(*[simplify(i) for i in o.args])
-                eq = self.equation()
-                a = []
-                for i in range(3):
-                    k = eq[i].subs(eq[i].free_symbols.pop(), o.args[i])
-                    if k != nan:
-                        a.append(k)
-                if len(set(a)) == 1:
-                    return True
-                else:
-                    return False
+            for i in a[1:]:
+                rv = a[0].equals(i)
+                if not rv:
+                    return rv
+            return True
         elif not isinstance(o, LinearEntity3D):
             return False
         elif isinstance(o, Line3D):
-            return self.__eq__(o)
-        else:
-            return o.p1 in self and o.p2 in self and o.p3 in self
+            return all(i in self for i in o.points)
 
     def distance(self, o):
         """
@@ -977,11 +996,11 @@ class Line3D(LinearEntity3D):
         a = self.perpendicular_segment(o).length
         return a
 
-    def equal(self, other):
+    def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line3D):
             return False
-        return Point3D.is_collinear(self.p1, other.p1, self.p2, other.p2)
+        return Point3D.are_collinear(self.p1, other.p1, self.p2, other.p2)
 
 class Ray3D(LinearEntity3D):
     """
@@ -1141,7 +1160,7 @@ class Ray3D(LinearEntity3D):
 
     @property
     def zdirection(self):
-        """The y direction of the ray.
+        """The z direction of the ray.
 
         Positive infinity if the ray points in the positive y direction,
         negative infinity if the ray points in the negative y direction,
@@ -1240,7 +1259,7 @@ class Ray3D(LinearEntity3D):
     def contains(self, o):
         """Is other GeometryEntity contained in this Ray?"""
         if isinstance(o, Ray3D):
-            return (Point3D.is_collinear(self.p1, self.p2, o.p1, o.p2) and
+            return (Point3D.are_collinear(self.p1, self.p2, o.p1, o.p2) and
                     self.xdirection == o.xdirection and
                     self.ydirection == o.ydirection and
                     self.zdirection == o.zdirection)
@@ -1249,7 +1268,7 @@ class Ray3D(LinearEntity3D):
         elif is_sequence(o):
             o = Point3D(o)
         if isinstance(o, Point3D):
-            if Point3D.is_collinear(self.p1, self.p2, o):
+            if Point3D.are_collinear(self.p1, self.p2, o):
                 if self.xdirection is S.Infinity:
                     rv = o.x >= self.source.x
                 elif self.xdirection is S.NegativeInfinity:
@@ -1274,7 +1293,7 @@ class Ray3D(LinearEntity3D):
         # No other known entity can be contained in a Ray
         return False
 
-    def equal(self, other):
+    def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Ray3D):
             return False
@@ -1463,7 +1482,7 @@ class Segment3D(LinearEntity3D):
         if isinstance(other, Segment3D):
             return other.p1 in self and other.p2 in self
         elif isinstance(other, Point3D):
-            if Point3D.is_collinear(self.p1, self.p2, other):
+            if Point3D.are_collinear(self.p1, self.p2, other):
                 if other.distance(self.p1) + other.distance(self.p2) == self.length:
                     return True
                 else:

@@ -142,7 +142,8 @@ class LinearEntity(GeometryEntity):
                 self.p2.x - self.p1.x,
                 self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
 
-    def is_concurrent(*lines):
+    @staticmethod
+    def are_concurrent(*lines):
         """Is a sequence of linear entities concurrent?
 
         Two or more linear entities are concurrent if they all
@@ -181,11 +182,11 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> p3, p4 = Point(-2, -2), Point(0, 2)
         >>> l1, l2, l3 = Line(p1, p2), Line(p1, p3), Line(p1, p4)
-        >>> l1.is_concurrent(l2, l3)
+        >>> l1.are_concurrent(l2, l3)
         True
 
         >>> l4 = Line(p2, p3)
-        >>> l4.is_concurrent(l2, l3)
+        >>> l4.are_concurrent(l2, l3)
         False
 
         """
@@ -1414,7 +1415,7 @@ class Ray(LinearEntity):
         t = _symbol(parameter)
         return [t, 0, 10]
 
-    def equal(self, other):
+    def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Ray):
             return False
