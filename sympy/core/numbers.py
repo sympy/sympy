@@ -2250,27 +2250,41 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return S.false
+        if other.is_real:
+            return S.false
+        return C.StrictLessThan(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return _sympify(other is S.Infinity)
+        if other.is_real:
+            if other.is_bounded or other is S.NegativeInfinity:
+                return S.false
+            elif other is S.Infinity:
+                return S.true
+        return C.LessThan(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return _sympify(other is not S.Infinity)
+        if other.is_real:
+            if other.is_bounded or other is S.NegativeInfinity:
+                return S.true
+            elif other is S.Infinity:
+                return S.false
+        return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return S.true
+        if other.is_real:
+            return S.true
+        return C.GreaterThan(self, other)
 
     def __mod__(self, other):
         return S.NaN
@@ -2443,27 +2457,41 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return _sympify(other is not S.NegativeInfinity)
+        if other.is_real:
+            if other.is_bounded or other is S.Infinity:
+                return S.true
+            elif other is S.NegativeInfinity:
+                return S.false
+        return C.StrictLessThan(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return S.true
+        if other.is_real:
+            return S.true
+        return C.LessThan(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return S.false
+        if other.is_real:
+            return S.false
+        return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
-        if other.is_number and other.is_real is False:
+        if other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
-        return _sympify(other is S.NegativeInfinity)
+        if other.is_real:
+            if other.is_bounded or other is S.Infinity:
+                return S.false
+            elif other is S.NegativeInfinity:
+                return S.true
+        return C.GreaterThan(self, other)
 
     def __mod__(self, other):
         return S.NaN
