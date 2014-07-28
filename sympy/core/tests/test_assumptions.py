@@ -605,12 +605,20 @@ def test_Add_is_pos_neg():
     n = Symbol('n', negative=True, bounded=False)
     p = Symbol('p', positive=True, bounded=False)
     x = Symbol('x')
+    xb = Symbol('xb', bounded=True)
     assert (n + p).is_positive is None
-    assert (n + x).is_positive is False
-    assert (p + x).is_positive is True
+    assert (n + x).is_positive is None
+    assert (p + x).is_positive is None
     assert (n + p).is_negative is None
-    assert (n + x).is_negative is True
-    assert (p + x).is_negative is False
+    assert (n + x).is_negative is None
+    assert (p + x).is_negative is None
+
+    assert (n + xb).is_positive is False
+    assert (p + xb).is_positive is True
+    assert (n + xb).is_negative is True
+    assert (p + xb).is_negative is False
+
+    assert (x - S.Infinity).is_negative is None  # issue 7798
 
 
 def test_special_is_rational():

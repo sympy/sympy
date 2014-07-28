@@ -781,3 +781,7 @@ def test_closure():
 
 def test_interior():
     assert Interval(0, 1, False, True).interior == Interval(0, 1, True, True)
+
+
+def test_issue_7841():
+    raises(TypeError, lambda: x in S.Reals)
