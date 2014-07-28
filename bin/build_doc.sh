@@ -24,7 +24,7 @@
 # Exit on error
 set -e
 
-ACTUAL_TRAVIS_JOB_NUMBER = `echo $TRAVIS_JOB_NUMBER| cut -d'.' -f 2`
+ACTUAL_TRAVIS_JOB_NUMBER=`echo $TRAVIS_JOB_NUMBER| cut -d'.' -f 2`
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$ACTUAL_TRAVIS_JOB_NUMBER" == "1" ]; then
 
