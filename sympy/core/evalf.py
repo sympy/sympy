@@ -1083,6 +1083,8 @@ def hypsum(expr, n, start, prec):
 
 
 def evalf_prod(expr, prec, options):
+    from sympy.functions.elementary.exponential import exp
+
     if all((l[1] - l[2]).is_Integer for l in expr.limits):
         return evalf(expr.doit(), prec=prec, options=options)
     else:
