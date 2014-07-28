@@ -151,9 +151,9 @@ def test_find_dynamicsymbols():
     expr = Matrix([[a*x + b, x*y.diff() + y],
                    [x.diff().diff(), z + sin(z.diff())]])
     # Test finding all dynamicsymbols
-    sol = {x, y.diff(), y, x.diff().diff(), z, z.diff()}
+    sol = set([x, y.diff(), y, x.diff().diff(), z, z.diff()])
     assert find_dynamicsymbols(expr) == sol
     # Test finding all but those in sym_list
     exclude = [x, y, z]
-    sol = {y.diff(), x.diff().diff(), z.diff()}
+    sol = set([y.diff(), x.diff().diff(), z.diff()])
     assert find_dynamicsymbols(expr, exclude) == sol

@@ -561,10 +561,10 @@ def _fraction_decomp(expr):
     num = []
     den = []
     for a in expr.args:
-        if a.is_Pow and a.args[1] == -1:
+        if a.is_Pow and a.args[1] < 0:
             den.append(1 / a)
-    else:
-        num.append(a)
+        else:
+            num.append(a)
     if not den:
         return expr, 1
     num = Mul(*num)
