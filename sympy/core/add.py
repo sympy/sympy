@@ -497,7 +497,7 @@ class Add(Expr, AssocOp):
             if ubound:
                 unbounded.add(ispos)
                 if len(unbounded) > 1:
-                    return None
+                    return
             if ispos:
                 pos = True
                 continue
@@ -511,22 +511,13 @@ class Add(Expr, AssocOp):
                 continue
 
             if ubound is None:
-                # sign is unknown; if we don't know the boundedness
-                # we're done: we don't know. That is technically true,
-                # but the only option is that we have something like
-                # oo - oo which is NaN and it really doesn't matter
-                # what sign we apply to that because it (when finally
-                # computed) will trump any sign. So instead of returning
-                # None, we pass.
-                pass
-            else:
-                return None
+                return
             unknown_sign = True
 
         if unbounded:
             return unbounded.pop()
         elif unknown_sign:
-            return None
+            return
         elif not nonpos and not nonneg and pos:
             return True
         elif not nonpos and pos:
@@ -548,7 +539,7 @@ class Add(Expr, AssocOp):
             if ubound:
                 unbounded.add(isneg)
                 if len(unbounded) > 1:
-                    return None
+                    return
             if isneg:
                 neg = True
                 continue
@@ -562,20 +553,13 @@ class Add(Expr, AssocOp):
                 continue
 
             if ubound is None:
-                # sign is unknown; if we don't know the boundedness
-                # we're done: we don't know. That is technically true,
-                # but the only option is that we have something like
-                # oo - oo which is NaN and it really doesn't matter
-                # what sign we apply to that because it (when finally
-                # computed) will trump any sign. So instead of returning
-                # None, we pass.
-                pass
+                return
             unknown_sign = True
 
         if unbounded:
             return unbounded.pop()
         elif unknown_sign:
-            return None
+            return
         elif not nonneg and not nonpos and neg:
             return True
         elif not nonneg and neg:
