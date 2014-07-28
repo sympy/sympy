@@ -1083,13 +1083,11 @@ def hypsum(expr, n, start, prec):
 
 
 def evalf_prod(expr, prec, options):
-    from sympy.functions.elementary.exponential import exp
-
     if all((l[1] - l[2]).is_Integer for l in expr.limits):
-        return evalf(expr.doit(), prec=prec, options=options)
+        re, im, re_acc, im_acc = evalf(expr.doit(), prec=prec, options=options)
     else:
-        s = evalf_sum(expr.rewrite(C.Sum).exp, prec, options)
-        return evalf(exp(s), prec=prec, options=options)
+        re, im, re_acc, im_acc = evalf(expr.rewrite(C.Sum), prec=prec, options=options)
+    return re, im, re_acc, im_acc
 
 
 def evalf_sum(expr, prec, options):
