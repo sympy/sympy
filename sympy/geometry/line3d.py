@@ -445,7 +445,7 @@ class LinearEntity3D(GeometryEntity):
         from sympy.core import Symbol
         t = Symbol('t')
         if p in self:
-            return p  # XXX raise an error rather than return a point
+            raise NotImplementedError("Given point should not be on the line")
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -498,7 +498,7 @@ class LinearEntity3D(GeometryEntity):
         from sympy.core import Symbol
         t = Symbol('t')
         if p in self:
-            return p  # XXX raise an error instead of returning a point
+            raise NotImplementedError("Given point should not be on the line")
         a = self.arbitrary_point(t)
         b = [i - j for i, j in zip(p.args, a.args)]
         c = sum([i*j for i, j in zip(b, self.direction_ratio)])
@@ -920,7 +920,6 @@ class Line3D(LinearEntity3D):
         (x/4 - 1/4, y/3, zoo*z, k)
 
         """
-        # XXX should this return an Expr instead of a tuple?
         x, y, z, k = _symbol(x), _symbol(y), _symbol(z), _symbol(k)
         p1, p2 = self.points
         a = p1.direction_ratio(p2)
@@ -943,19 +942,14 @@ class Line3D(LinearEntity3D):
         False
         >>> l1 in l2
         True
-        >>> l1 in l3
         """
         if is_sequence(o):
             o = Point3D(o)
         if isinstance(o, Point3D):
             sym = map(Dummy, 'xyz')
             eq = self.equation(*sym)
-            a = []
-            for i in range(3):
-                k = eq[i].subs(sym[i], o.args[i])
-                if k != nan:
-                    a.append(k)
-            # XXX explain why the substitutions are being done one at a time
+            a = [eq[0].subs(sym[0], o.args[0]), eq[1].subs(sym[1], o.args[1]), eq[2].subs(sym[2], o.args[2])]
+            a = [i for i in a if i != nan]
             if len(a) == 1:
                 return True
             for i in a[1:]:
@@ -1162,8 +1156,8 @@ class Ray3D(LinearEntity3D):
     def zdirection(self):
         """The z direction of the ray.
 
-        Positive infinity if the ray points in the positive y direction,
-        negative infinity if the ray points in the negative y direction,
+        Positive infinity if the ray points in the positive z direction,
+        negative infinity if the ray points in the negative z direction,
         or 0 if the ray is horizontal.
 
         See Also
@@ -1215,12 +1209,10 @@ class Ray3D(LinearEntity3D):
         if not isinstance(o, Point3D):
             if is_sequence(o):
                 o = Point3D(o)
+        if o in self:
+            return S.Zero
         s = self.perpendicular_segment(o)
-        if isinstance(s, Point3D):
-            if self.contains(s):
-                return S.Zero
-        else:
-            # since arg-order is arbitrary, find the non-o point
+        if not isinstance(s, Point3D):
             non_o = s.p1 if s.p1 == o else s.p2
             if self.contains(non_o):
                 return Line3D(self).distance(o)  # = s.length but simpler

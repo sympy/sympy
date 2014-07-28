@@ -187,7 +187,7 @@ class LinearEntity(GeometryEntity):
 
         >>> l4 = Line(p2, p3)
         >>> l4.are_concurrent(l2, l3)
-        False
+        True
 
         """
 
