@@ -428,8 +428,8 @@ def find_dynamicsymbols(expression, exclude=None):
     >>> find_dynamicsymbols(expr)
     set([x(t), y(t), Derivative(x(t), t)])
 
-    If the optional `exclude` kwarg is used, only dynamicsymbols
-    not in the iterable `exclude` are returned.
+    If the optional ``exclude`` kwarg is used, only dynamicsymbols
+    not in the iterable ``exclude`` are returned.
 
     >>> find_dynamicsymbols(expr, [x, y])
     set([Derivative(x(t), t)])
@@ -439,7 +439,7 @@ def find_dynamicsymbols(expression, exclude=None):
         if iterable(exclude):
             exclude_set = set(exclude)
         else:
-            raise TypeError("exclude must be an iterable")
+            raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
@@ -450,7 +450,7 @@ def msubs(expr, *sub_dicts, **kwargs):
     """A custom subs for use on expressions derived in physics.mechanics.
 
     Traverses the expression tree once, performing the subs found in sub_dicts.
-    Terms inside `Derivative` expressions are ignored:
+    Terms inside ``Derivative`` expressions are ignored:
 
     >>> from sympy.physics.mechanics import dynamicsymbols, msubs
     >>> x = dynamicsymbols('x')
@@ -465,8 +465,8 @@ def msubs(expr, *sub_dicts, **kwargs):
     >>> msubs(x.diff() + x + y + z, sub1, sub2)
     10
 
-    If smart=True, also checks for conditions that may result in `nan`, but
-    if simplified would yield a valid expression. For example:
+    If smart=True (default False), also checks for conditions that may result
+    in ``nan``, but if simplified would yield a valid expression. For example:
 
     >>> from sympy import sin, tan
     >>> (sin(x)/tan(x)).subs(x, 0)
@@ -474,11 +474,12 @@ def msubs(expr, *sub_dicts, **kwargs):
     >>> msubs(sin(x)/tan(x), {x: 0}, smart=True)
     1
 
-    It does this by first replacing all `tan` with `sin/cos`. Then each node
-    is traversed. If the node is a fraction, subs is first evaluated on the
-    denominator. If this results in 0, simplification of the entire fraction
-    is attempted. Using this selective simplification, only subexpressions
-    that result in 1/0 are targeted, resulting in faster performance."""
+    It does this by first replacing all ``tan`` with ``sin/cos``. Then each
+    node is traversed. If the node is a fraction, subs is first evaluated on
+    the denominator. If this results in 0, simplification of the entire
+    fraction is attempted. Using this selective simplification, only
+    subexpressions that result in 1/0 are targeted, resulting in faster
+    performance."""
 
     sub_dict = dict_merge(*sub_dicts)
     smart = kwargs.pop('smart', False)
@@ -510,7 +511,7 @@ def _sub_func(expr, sub_dict):
 
 
 def _tan_repl_func(expr):
-    """Replace tan with sin/tan."""
+    """Replace tan with sin/cos."""
     if isinstance(expr, tan):
         return sin(*expr.args) / cos(*expr.args)
     elif not expr.args or expr.is_Derivative:

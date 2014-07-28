@@ -53,7 +53,7 @@ class LagrangesMethod(object):
 
     In this example, we first need to do the kinematics.
     This involves creating generalized coordinates and their derivatives.
-    Then we create a point and set its velocity in a frame::
+    Then we create a point and set its velocity in a frame.
 
         >>> from sympy.physics.mechanics import LagrangesMethod, Lagrangian
         >>> from sympy.physics.mechanics import ReferenceFrame, Particle, Point
@@ -80,13 +80,13 @@ class LagrangesMethod(object):
         >>> L = Lagrangian(N, Pa)
         >>> fl = [(P, -b * qd * N.x)]
 
-     Finally we can generate the equations of motion.
-     First we create the LagrangesMethod object. To do this one must supply
-     the Lagrangian, and the generalized coordinates. The constraint equations,
-     the forcelist, and the inertial frame may also be provided, if relevant.
-     Next we generate Lagrange's equations of motion, such that:
-     Lagrange's equations of motion = 0.
-     We have the equations of motion at this point.
+    Finally we can generate the equations of motion.
+    First we create the LagrangesMethod object. To do this one must supply
+    the Lagrangian, and the generalized coordinates. The constraint equations,
+    the forcelist, and the inertial frame may also be provided, if relevant.
+    Next we generate Lagrange's equations of motion, such that:
+    Lagrange's equations of motion = 0.
+    We have the equations of motion at this point.
 
         >>> l = LagrangesMethod(L, [q], forcelist = fl, frame = N)
         >>> print(l.form_lagranges_equations())
@@ -290,7 +290,7 @@ class LagrangesMethod(object):
         efficient recalculation (i.e. about varying operating points).
 
         Parameters
-        ----------
+        ==========
         q_ind, qd_ind : array_like, optional
             The independent generalized coordinates and speeds.
         q_dep, qd_dep : array_like, optional
@@ -366,12 +366,12 @@ class LagrangesMethod(object):
         motion that are not part of q, u, q', or u'. They are sorted in
         canonical form.
 
-        The operating points may be also entered using the `op_point` kwarg.
+        The operating points may be also entered using the ``op_point`` kwarg.
         This takes a dictionary of {symbol: value}, or a an iterable of such
         dictionaries. The values may be numberic or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
-        For more documentation, please see the `Linearizer` class."""
+        For more documentation, please see the ``Linearizer`` class."""
 
         linearizer = self.to_linearizer(q_ind, qd_ind, q_dep, qd_dep)
         result = linearizer.linearize(**kwargs)
@@ -382,7 +382,7 @@ class LagrangesMethod(object):
         the specified operating point
 
         Parameters
-        ----------
+        ==========
         op_point : dict or iterable of dicts, optional
             Point at which to solve at. The operating point is specified as
             a dictionary or iterable of dictionaries of {symbol: value}. The
@@ -434,8 +434,8 @@ class LagrangesMethod(object):
 
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
-            list of valid methods, see :py:method:
-            `~sympy.matrices.matrices.MatrixBase.inv`
+            list of valid methods, see
+            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
         """
 
         if 'method' in kwargs:

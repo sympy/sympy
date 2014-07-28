@@ -2,7 +2,7 @@
 Kane's Method in Physics/Mechanics
 ==================================
 
-:mod:`mechanics` provides functionality for deriving equations of motion 
+:mod:`mechanics` provides functionality for deriving equations of motion
 using Kane's method [Kane1985]_. This document will describe Kane's method
 as used in this module, but not how the equations are actually derived.
 

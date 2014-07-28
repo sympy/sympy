@@ -1,6 +1,6 @@
-============================================================================
-Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module
-============================================================================
+=====================================================================
+Potential Issues/Advanced Topics/Future Features in Physics/Mechanics
+=====================================================================
 
 This document will describe some of the more advanced functionality that this
 module offers but which is not part of the "official" interface. Here, some of

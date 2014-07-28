@@ -243,13 +243,15 @@ class Linearizer(object):
             Determines if returned values are simplified before return.
             For large expressions this may be time consuming. Default is False.
 
-        Note that the process of solving with A_and_B=True is computationally
-        intensive if there are many symbolic parameters. For this reason,
-        it may be more desirable to use the default A_and_B=False,
-        returning M, A, and B. More values may then be substituted in to these
-        matrices later on. The state space form can then be found as
-        A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
-        P = Linearizer.perm_mat.
+        Potential Issues
+        ----------------
+            Note that the process of solving with A_and_B=True is
+            computationally intensive if there are many symbolic parameters.
+            For this reason, it may be more desirable to use the default
+            A_and_B=False, returning M, A, and B. More values may then be
+            substituted in to these matrices later on. The state space form can
+            then be found as A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
+            P = Linearizer.perm_mat.
         """
 
         # Run the setup if needed:

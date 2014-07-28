@@ -52,7 +52,7 @@ class KanesMethod(object):
     In this example, we first need to do the kinematics.
     This involves creating generalized speeds and coordinates and their
     derivatives.
-    Then we create a point and set its velocity in a frame::
+    Then we create a point and set its velocity in a frame.
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
@@ -71,7 +71,7 @@ class KanesMethod(object):
     Vectors represent the Force or Torque.
     Next a particle needs to be created, and it needs to have a point and mass
     assigned to it.
-    Finally, a list of all bodies and particles needs to be created::
+    Finally, a list of all bodies and particles needs to be created.
 
     >>> kd = [qd - u]
     >>> FL = [(P, (-k * q - c * u) * N.x)]
@@ -89,7 +89,7 @@ class KanesMethod(object):
     It makes sense to rearrnge them though, so we calculate the mass matrix and
     the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
     the mass matrix, udot is a vector of the time derivatives of the
-    generalized speeds, and forcing is a vector representing "forcing" terms::
+    generalized speeds, and forcing is a vector representing "forcing" terms.
 
         >>> KM = KanesMethod(N, q_ind=[q], u_ind=[u], kd_eqs=kd)
         >>> (fr, frstar) = KM.kanes_equations(FL, BL)
@@ -464,17 +464,17 @@ class KanesMethod(object):
         motion that are not part of q, u, q', or u'. They are sorted in
         canonical form.
 
-        The operating points may be also entered using the `op_point` kwarg.
+        The operating points may be also entered using the ``op_point`` kwarg.
         This takes a dictionary of {symbol: value}, or a an iterable of such
         dictionaries. The values may be numberic or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
         As part of the deprecation cycle, the new method will not be used unless
-        the kwarg `new_method` is set to True. If the kwarg is missing, or set
+        the kwarg ``new_method`` is set to True. If the kwarg is missing, or set
         to false, the old linearization method will be used. After next release
         the need for this kwarg will be removed.
 
-        For more documentation, please see the `Linearizer` class."""
+        For more documentation, please see the ``Linearizer`` class."""
 
         if 'new_method' not in kwargs or not kwargs['new_method']:
             # User is still using old code.
@@ -722,8 +722,8 @@ class KanesMethod(object):
 
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
-            list of valid methods, see :py:method:
-            `~sympy.matrices.matrices.MatrixBase.inv`
+            list of valid methods, see
+            :meth:`~sympy.matrices.matrices.MatrixBase.inv`
 
         """
         if inv_method is None:

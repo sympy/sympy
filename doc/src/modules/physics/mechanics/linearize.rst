@@ -1,5 +1,6 @@
-Linearization
-=============
+==================================
+Linearization in Physics/Mechanics
+==================================
 
 :mod:`mechanics` includes methods for linearizing the generated equations of
 motion (EOM) about an operating point (also known as the trim condition).
@@ -13,7 +14,7 @@ However, in the presence of constraints more care needs to be taken. The
 linearization methods provided here handle these constraints correctly.
 
 Background
-----------
+==========
 
 In :mod:`mechanics` we assume all systems can be represented in the following
 general form:
@@ -106,7 +107,7 @@ forms of the linearized EOM:
   To use this form set ``A_and_B=True`` in the ``linearize`` class method.
 
 Linearizing Kane's Equations
-----------------------------
+============================
 
 After initializing the ``KanesMethod`` object and forming `F_r` and `F_r^*`
 using the ``kanes_equations`` class method, linearization can be accomplished
@@ -145,7 +146,7 @@ pendulum system: ::
   >>> fr, frstar = KM.kanes_equations([(P, R)], [pP])
 
 1. Using the ``Linearizer`` class directly:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------
 
 A linearizer object can be created using the ``to_linearizer`` class method.
 This coerces the representation found in the ``KanesMethod`` object into the
@@ -203,7 +204,7 @@ can be made to perform simplification internally by setting the ``simplify``
 kwarg to ``True``.
 
 2. Using the ``linearize`` class method:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 The ``linearize`` method of the ``KanesMethod`` class is provided as a nice
 wrapper that calls ``to_linearizer`` internally, performs the linearization,
@@ -234,7 +235,7 @@ the vector is empty: ::
   kwarg will no longer be needed.
 
 Linearizing Lagrange's Equations
---------------------------------
+================================
 
 Linearization of Lagrange's equations proceeds much the same as that of
 Kane's equations. As before, the process will be demonstrated with a simple
@@ -253,10 +254,10 @@ pendulum system: ::
   >>> lag_eqs = LM.form_lagranges_equations()
 
 1. Using the ``Linearizer`` class directly:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------
 
 A ``Linearizer`` object can be formed from a ``LagrangesMethod`` object using
-the ``to_linearizer`` class method. The only difference between this process 
+the ``to_linearizer`` class method. The only difference between this process
 and that of the ``KanesMethod`` class is that the ``LagrangesMethod`` object
 doesn't already have its independent and dependent coordinates and speeds
 specified internally. These must be specified in the call to
@@ -276,7 +277,8 @@ Once in this form, everything is the same as it was before with the
   [-g/L, 0]])
 
 2. Using the ``linearize`` class method:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
+
 Similar to ``KanesMethod``, the ``LagrangesMethod`` class also provides a
 ``linearize`` method as a nice wrapper that calls ``to_linearizer``
 internally, performs the linearization, and returns the result. As before, the
@@ -290,69 +292,71 @@ must be specified in the call as well: ::
   [-g/L, 0]])
 
 Potential Issues
-----------------
+================
 
 While the ``Linearizer`` class *should* be able to linearize all systems,
 there are some potential issues that could occur. These are discussed below,
 along with some troubleshooting tips for solving them.
 
 1. Symbolic linearization with ``A_and_B=True`` is slow
-     This could be due to a number of things, but the most likely one is that
-     solving a large linear system symbolically is an expensive operation. 
-     Specifying an operating point will reduce the expression size and speed
-     this up. If a purely symbolic solution is desired though (for application
-     of many operating points at a later period, for example) a way to get
-     around this is to evaluate with ``A_and_B=False``, and then solve
-     manually after applying the operating point: ::
+-------------------------------------------------------
+This could be due to a number of things, but the most likely one is that
+solving a large linear system symbolically is an expensive operation.
+Specifying an operating point will reduce the expression size and speed
+this up. If a purely symbolic solution is desired though (for application
+of many operating points at a later period, for example) a way to get
+around this is to evaluate with ``A_and_B=False``, and then solve
+manually after applying the operating point: ::
 
-       >>> M, A, B = linearizer.linearize()
-       >>> M_op = msubs(M, op_point)
-       >>> A_op = msubs(A, op_point)
-       >>> perm_mat = linearizer.perm_mat
-       >>> A_lin = perm_mat.T * M_op.LUsolve(A_op)
-       >>> A_lin
-       Matrix([
-       [     0, 1],
-       [-g/L, 0]])
-     
-     The fewer symbols in ``A`` and ``M`` before solving, the faster this
-     solution will be. Thus, for large expressions, it may be to your benefit
-     to delay conversion to the `A` and `B` form until most symbols are subbed
-     in for their numeric values.
+  >>> M, A, B = linearizer.linearize()
+  >>> M_op = msubs(M, op_point)
+  >>> A_op = msubs(A, op_point)
+  >>> perm_mat = linearizer.perm_mat
+  >>> A_lin = perm_mat.T * M_op.LUsolve(A_op)
+  >>> A_lin
+  Matrix([
+  [     0, 1],
+  [-g/L, 0]])
+
+The fewer symbols in ``A`` and ``M`` before solving, the faster this
+solution will be. Thus, for large expressions, it may be to your benefit
+to delay conversion to the `A` and `B` form until most symbols are subbed
+in for their numeric values.
 
 2. The linearized form has ``nan``, ``zoo``, or ``oo`` as matrix elements
-     There are two potential causes for this. The first (and the one you
-     should check first) is that some choices of dependent coordinates
-     will result in singularities at certain operating points. Coordinate
-     partitioning in a systemic manner to avoid this is beyond the scope
-     of this guide; see [Blajer1994]_ for more information.
+-------------------------------------------------------------------------
+There are two potential causes for this. The first (and the one you
+should check first) is that some choices of dependent coordinates
+will result in singularities at certain operating points. Coordinate
+partitioning in a systemic manner to avoid this is beyond the scope
+of this guide; see [Blajer1994]_ for more information.
 
-     The other potential cause for this is that the matrices may not have
-     been in the most reduced form before the operating point was substituted
-     in. A simple example of this behavior is: ::
+The other potential cause for this is that the matrices may not have
+been in the most reduced form before the operating point was substituted
+in. A simple example of this behavior is: ::
 
-       >>> from sympy import sin, tan
-       >>> expr = sin(q1)/tan(q1)
-       >>> op_point = {q1: 0}
-       >>> expr.subs(op_point)
-       nan
-     
-     Note that if this expression was simplified before substitution, the
-     correct value results: ::
-       
-       >>> expr.simplify().subs(op_point)
-       1
+  >>> from sympy import sin, tan
+  >>> expr = sin(q1)/tan(q1)
+  >>> op_point = {q1: 0}
+  >>> expr.subs(op_point)
+  nan
 
-     A good way of avoiding this hasn't been found yet. For expressions of
-     reasonable size, using ``msubs`` with ``smart=True`` will apply an
-     algorithm that tries to avoid these conditions. For large expressions
-     though this is extremely time consuming. ::
+Note that if this expression was simplified before substitution, the
+correct value results: ::
 
-       >>> msubs(expr, op_point, smart=True)
-       1
+  >>> expr.simplify().subs(op_point)
+  1
+
+A good way of avoiding this hasn't been found yet. For expressions of
+reasonable size, using ``msubs`` with ``smart=True`` will apply an
+algorithm that tries to avoid these conditions. For large expressions
+though this is extremely time consuming. ::
+
+  >>> msubs(expr, op_point, smart=True)
+  1
 
 Further Examples
-----------------
+================
 
 The pendulum example used above was simple, but didn't include any dependent
 coordinates or speeds. For a more thorough example, the same pendulum
@@ -361,4 +365,4 @@ methods:
 
 .. toctree::
 
-    examples/lin_pend_nonmin.rst
+    examples/lin_pend_nonmin_example.rst
