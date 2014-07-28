@@ -448,6 +448,8 @@ class Add(Expr, AssocOp):
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr(
         'is_real', when_multiple=None)
+    _eval_is_complex = lambda self: self._eval_template_is_attr(
+        'is_complex', when_multiple=None)
     _eval_is_antihermitian = lambda self: self._eval_template_is_attr(
         'is_antihermitian', when_multiple=None)
     _eval_is_bounded = lambda self: self._eval_template_is_attr(

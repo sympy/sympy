@@ -215,7 +215,7 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
-        if self.is_real is False:
+        if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
@@ -227,7 +227,7 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
-        if self.is_real is False:
+        if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
@@ -239,7 +239,7 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
-        if self.is_real is False:
+        if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
@@ -251,7 +251,7 @@ class Expr(Basic, EvalfMixin):
 
     @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
-        if self.is_real is False:
+        if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
