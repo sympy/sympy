@@ -332,14 +332,18 @@ def test_checksysodesol():
     Eq(x(t), C1*exp(-1/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)), \
     Eq(x(t), C1*exp(-I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)), \
     Eq(x(t), C1*exp(I/(-1/(4*C2 + 4*t))**(S(1)/4))), Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
-    checksysodesol(eq, sol)
+    assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (Eq(diff(x(t),t), exp(3*x(t))*y(t)**3),Eq(diff(y(t),t), y(t)**5))
     sol = [Eq(x(t), -log(C1 - 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), -(-1/(4*C2 + 4*t))**(S(1)/4)), \
     Eq(x(t), -log(C1 + 3/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), (-1/(4*C2 + 4*t))**(S(1)/4)), \
     Eq(x(t), -log(C1 + 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), -I*(-1/(4*C2 + 4*t))**(S(1)/4)), \
     Eq(x(t), -log(C1 - 3*I/(-1/(4*C2 + 4*t))**(S(1)/4))/3), Eq(y(t), I*(-1/(4*C2 + 4*t))**(S(1)/4))]
-    checksysodesol(eq, sol)
+    assert checksysodesol(eq, sol) == (True, [0, 0])
+
+    eq = (Eq(x(t),t*diff(x(t),t)+diff(x(t),t)*diff(y(t),t)), Eq(y(t),t*diff(y(t),t)+diff(y(t),t)**2))
+    sol = set([Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)])
+    assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
 def test_checkodesol():
