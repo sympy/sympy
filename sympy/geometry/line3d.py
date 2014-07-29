@@ -946,7 +946,7 @@ class Line3D(LinearEntity3D):
         if is_sequence(o):
             o = Point3D(o)
         if isinstance(o, Point3D):
-            sym = map(Dummy, 'xyz')
+            sym = list(map(Dummy, 'xyz'))
             eq = self.equation(*sym)
             a = [eq[0].subs(sym[0], o.args[0]), eq[1].subs(sym[1], o.args[1]), eq[2].subs(sym[2], o.args[2])]
             a = [i for i in a if i != nan]
