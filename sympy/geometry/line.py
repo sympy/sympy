@@ -178,7 +178,7 @@ class LinearEntity(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Line
+        >>> from sympy import Point, Line, Line3D
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> p3, p4 = Point(-2, -2), Point(0, 2)
         >>> l1, l2, l3 = Line(p1, p2), Line(p1, p3), Line(p1, p4)
@@ -187,6 +187,8 @@ class LinearEntity(GeometryEntity):
 
         >>> l4 = Line(p2, p3)
         >>> l4.are_concurrent(l2, l3)
+        True
+        >>> Line3D.are_concurrent(l1, l2, l3)
         True
 
         """

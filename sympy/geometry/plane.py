@@ -451,7 +451,7 @@ class Plane(GeometryEntity):
         for i in planes:
             if not isinstance(i, Plane):
                 raise ValueError('All objects should be Planes but got %s' % i.func)
-        planes = list(planes)
+        planes = list(set(planes))
         first = planes.pop(0)
         sol = first.intersection(planes[0])
         if sol == []:
