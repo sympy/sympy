@@ -63,6 +63,8 @@ def test_vector():
     assert a * v1 == v1 * a
 
     assert isinstance(v5, VectorMul)
+    assert v5.base_vector == i
+    assert v5.measure_number == a
     assert isinstance(v4, Vector)
     assert isinstance(v4, VectorAdd)
     assert isinstance(v4, Vector)

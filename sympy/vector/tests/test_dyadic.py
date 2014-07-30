@@ -13,13 +13,18 @@ def test_dyadic():
     assert Dyadic.zero != 0
     assert isinstance(Dyadic.zero, DyadicZero)
     assert BaseDyadic(A.i, A.j) != BaseDyadic(A.j, A.i)
+    assert (BaseDyadic(Vector.zero, A.i) ==
+            BaseDyadic(A.i, Vector.zero) == Dyadic.zero)
 
     d1 = A.i | A.i
     d2 = A.j | A.j
     d3 = A.i | A.j
 
     assert isinstance(d1, BaseDyadic)
-    assert isinstance(a*d1, DyadicMul)
+    d_mul = a*d1
+    assert isinstance(d_mul, DyadicMul)
+    assert d_mul.base_dyadic == d1
+    assert d_mul.measure_number == a
     assert isinstance(a*d1 + b*d3, DyadicAdd)
     assert d1 == A.i.outer(A.i)
     assert d3 == A.i.outer(A.j)
@@ -36,6 +41,7 @@ def test_dyadic():
     assert d1 & d2 == Dyadic.zero
     assert d1.dot(A.i) == A.i == d1 & A.i
 
+    assert d1.cross(Vector.zero) == Dyadic.zero
     assert d1.cross(A.i) == Dyadic.zero
     assert d1 ^ A.j == d1.cross(A.j)
     assert d1.cross(A.k) == - A.i | A.j
@@ -43,9 +49,11 @@ def test_dyadic():
 
     assert A.i ^ d1 == Dyadic.zero
     assert A.j.cross(d1) == - A.k | A.i == A.j ^ d1
+    assert Vector.zero.cross(d1) == Dyadic.zero
     assert A.k ^ d1 == A.j | A.i
     assert A.i.dot(d1) == A.i & d1 == A.i
     assert A.j.dot(d1) == Vector.zero
+    assert Vector.zero.dot(d1) == Vector.zero
     assert A.j & d2 == A.j
 
     assert d1.dot(d3) == d1 & d3 == A.i | A.j == d3
