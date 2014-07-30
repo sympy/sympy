@@ -153,7 +153,7 @@ def encipher_shift(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 
 def encipher_affine(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-    r"""
+    """
     Performs the affine cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     Encryption is based on the map `x \rightarrow ax+b` (mod `26`). Decryption is based on
