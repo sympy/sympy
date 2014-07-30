@@ -8,6 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 from sympy.core.compatibility import xrange
@@ -193,6 +194,10 @@ class Product(ExprWithIntLimits):
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
+
+    def _eval_rewrite_as_Sum(self, *args):
+        from sympy.concrete.summations import Sum
+        return exp(Sum(log(self.function), *self.limits))
 
     @property
     def term(self):
