@@ -10,9 +10,11 @@ class Dyadic(BasisDependent):
     """
     Super class for all Dyadic-classes.
 
-    See:
-    http://en.wikipedia.org/wiki/Dyadic_tensor
-    Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Dyadic_tensor
+    .. [2] Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
     """
 
@@ -24,9 +26,6 @@ class Dyadic(BasisDependent):
         Returns the components of this dyadic in the form of a
         Python dictionary mapping BaseDyadic instances to the
         corresponding measure numbers.
-
-        Examples
-        ========
 
         """
         #The '_components' attribute is defined according to the
@@ -215,7 +214,7 @@ class DyadicMul(BasisDependentMul, Dyadic):
 
     @property
     def measure_number(self):
-        """ The scalar expression involved in the defition of
+        """ The scalar expression involved in the definition of
         this DyadicMul.
         """
         return self._measure_number

@@ -699,8 +699,8 @@ def _orient_quaternion(amounts, rot_order):
     if not rot_order == '':
         raise TypeError(
             'Quaternion orientation takes no rotation order')
-    if not (isinstance(amounts, (list, tuple)) &
-                (len(amounts) == 4)):
+    if not (isinstance(amounts, (list, tuple))
+                and (len(amounts) == 4)):
         raise TypeError('Amounts should be of length 4')
     q0, q1, q2, q3 = amounts
     parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - \
@@ -724,7 +724,8 @@ def _orient_body(amounts, rot_order):
                        '313', '323', '')
     rot_order = str(
         rot_order).upper()
-    if not (len(amounts) == 3 & len(rot_order) == 3):
+    if not (len(amounts) == 3
+                and len(rot_order) == 3):
         raise TypeError('Body orientation takes 3' +
                         'values & 3 orders')
     rot_order = [i.replace('X', '1') for i in rot_order]
@@ -751,7 +752,8 @@ def _orient_space(amounts, rot_order):
                        '313', '323', '')
     rot_order = str(
         rot_order).upper()
-    if not (len(amounts) == 3 & len(rot_order) == 3):
+    if not (len(amounts) == 3
+                and len(rot_order) == 3):
         raise TypeError('Space orientation takes 3 ' +
                         'values & 3 orders')
     rot_order = [i.replace('X', '1') for i in rot_order]

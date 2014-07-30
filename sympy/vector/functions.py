@@ -11,7 +11,7 @@ def express(expr, system, system2=None, variables=False):
 
     If 'variables' is True, then the coordinate variables (base scalars)
     of other coordinate systems present in the vector/scalar field or
-    dyadic aree also substituted in terms of the base scalars of the
+    dyadic are also substituted in terms of the base scalars of the
     given system.
 
     Parameters
@@ -22,6 +22,10 @@ def express(expr, system, system2=None, variables=False):
 
     system: CoordSysCartesian
         The coordinate system the expr is to be expressed in
+
+    system2: CoordSysCartesian
+        The other coordinate system required for re-expression
+        (only for a Dyadic Expr)
 
     variables : boolean
         Specifies whether to substitute the coordinate variables present
@@ -34,7 +38,7 @@ def express(expr, system, system2=None, variables=False):
     >>> from sympy import Symbol, cos, sin
     >>> N = CoordSysCartesian('N')
     >>> q = Symbol('q')
-    >>> B = N.orient_new('B', 'Axis', [q, N.k])
+    >>> B = N.orient_new_axis('B', q, N.k)
     >>> from sympy.vector import express
     >>> express(B.i, N)
     (cos(q))*N.i + (sin(q))*N.j
@@ -66,9 +70,8 @@ def express(expr, system, system2=None, variables=False):
             #the coordinate variables in the Vector
             system_list = []
             for x in expr.atoms():
-                if (isinstance(x, BaseScalar)
-                        or isinstance(x, BaseVector)
-                            and x.system != system):
+                if (isinstance(x, (BaseScalar, BaseVector))
+                        and x.system != system):
                     system_list.append(x.system)
             system_list = set(system_list)
             subs_dict = {}
