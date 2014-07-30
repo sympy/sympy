@@ -31,6 +31,10 @@ import random
 
 from sympy.utilities.decorator import doctest_depends_on
 
+# TODO: This should be removed for the release of 0.7.7
+from functools import partial
+lambdify = partial(lambdify, new_defaults=True)
+
 
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.

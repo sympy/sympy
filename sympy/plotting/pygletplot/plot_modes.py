@@ -8,6 +8,9 @@ from sympy.functions import sin, cos
 from math import sin as p_sin
 from math import cos as p_cos
 
+# TODO: This should be removed for the release of 0.7.7
+from functools import partial
+lambdify = partial(lambdify, new_defaults=True)
 
 def float_vec3(f):
     def inner(*args):

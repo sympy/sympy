@@ -20,6 +20,10 @@ from sympy.core.compatibility import reduce
 from sympy.sets.sets import FiniteSet, ProductSet
 from sympy.abc import x
 
+# TODO: This should be removed for the release of 0.7.7
+from functools import partial
+lambdify = partial(lambdify, new_defaults=True)
+
 
 class RandomDomain(Basic):
     """

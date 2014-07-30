@@ -8,8 +8,11 @@ from __future__ import print_function, division
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 from sympy.utilities.decorator import doctest_depends_on
-
 import inspect
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+import warnings
+
+warnings.simplefilter("always", SymPyDeprecationWarning)
 
 # These are the namespaces the lambda functions will use.
 MATH = {}
@@ -76,9 +79,9 @@ NUMPY_TRANSLATIONS = {
     "E": "e",
     "im": "imag",
     "ln": "log",
-    "Matrix": "matrix",
-    "MutableDenseMatrix": "matrix",
-    "ImmutableMatrix": "matrix",
+    "Matrix": "array",
+    "MutableDenseMatrix": "array",
+    "ImmutableMatrix": "array",
     "Max": "amax",
     "Min": "amin",
     "oo": "inf",
@@ -146,7 +149,7 @@ def _import(module, reload="False"):
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True, use_array=False):
+        dummify=True, new_defaults=False):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -168,16 +171,26 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     to view the lambdified function or provide "sympy" as the module, you
     should probably set dummify=False.
 
-    If numpy is installed, the default behavior is to substitute Sympy Matrices
-    with numpy.matrix. If you would rather have a numpy.array returned,
-    set use_array=True.
+    Deprecation Warnings
+    ====================
+
+    In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
+    by default. As of release 0.7.6 ``numpy.array`` is being transitioned to
+    the default. In release 0.7.7 this transition will be complete. For now,
+    to use the new default behavior you must pass in ``new_defaults=True``. If
+    you plan on using ``lambdify`` often in your code it may be to your benefit
+    to apply ``functools.partial``:
+
+        >>> from sympy import lambdify
+        >>> from functools import partial
+        >>> lambdify = partial(lambdify, new_defaults=True)
 
     Usage
     =====
 
     (1) Use one of the provided modules:
 
-        >>> from sympy import lambdify, sin, tan, gamma
+        >>> from sympy import sin, tan, gamma
         >>> from sympy.utilities.lambdify import lambdastr
         >>> from sympy.abc import x, y
         >>> f = lambdify(x, sin(x), "math")
@@ -215,7 +228,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Examples
     ========
 
-    >>> from sympy.utilities.lambdify import implemented_function, lambdify
+    >>> from sympy.utilities.lambdify import implemented_function
     >>> from sympy import sqrt, sin, Matrix
     >>> from sympy import Function
     >>> from sympy.abc import w, x, y, z
@@ -235,10 +248,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> row = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> row(1, 2)
     Matrix([[1, 3]])
-    >>> col = lambdify((x, y), Matrix((x, x + y)), use_array=True)
-    >>> col(1, 2)
-    array([[1],
-           [3]])
 
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
@@ -283,17 +292,25 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
-        #If numpy.array should be used instead of numpy.matrix
-        if use_array:
-            NUMPY_TRANSLATIONS.update({"Matrix": "array",
-                "MutableDenseMatrix": "array",
-                "ImmutableMatrix": "array"})
-        else:
-            #Ensures that the translation dict is set back
-            #to matrix if lambdify was already called
+        # If the new defaults should be used (part of the deprecation cycle)
+        if not new_defaults:
+            # Ensures that the translation dict is set back
+            # to matrix if lambdify was already called
             NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
                 "MutableDenseMatrix": "matrix",
                 "ImmutableMatrix": "matrix"})
+            SymPyDeprecationWarning("Replacing sympy.Matrix with numpy.matrix "
+                                    "by default is deprecated in favor of "
+                                    "numpy.array. For now, to use the new "
+                                    "behavior and remove the warning set "
+                                    "the kwarg new_defaults=True. The old "
+                                    "behavior can still be used by passing "
+                                    "in a custom dictionary to the modules "
+                                    "kwarg.").warn()
+        else:
+            NUMPY_TRANSLATIONS.update({"Matrix": "array",
+                "MutableDenseMatrix": "array",
+                "ImmutableMatrix": "array"})
         #Attempt to import numpy
         try:
             _import("numpy")
@@ -556,7 +573,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
-    >>> lam_f = lambdify(x, f(x))
+    >>> lam_f = lambdify(x, f(x), new_defaults=True)
     >>> lam_f(4)
     5
     """

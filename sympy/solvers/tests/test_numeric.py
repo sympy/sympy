@@ -4,6 +4,10 @@ from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL
 
+# TODO: This should be removed for the release of 0.7.7
+from functools import partial
+lambdify = partial(lambdify, new_defaults=True)
+
 
 def test_nsolve():
     # onedimensional

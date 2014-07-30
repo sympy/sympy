@@ -6,6 +6,10 @@ from sympy import (
 )
 from sympy.utilities.pytest import XFAIL, raises
 
+# TODO: This should be removed for the release of 0.7.7
+from functools import partial
+lambdify = partial(lambdify, new_defaults=True)
+
 x, y = symbols('x y')
 z = symbols('z', nonzero=True)
 
