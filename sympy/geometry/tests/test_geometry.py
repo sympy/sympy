@@ -761,11 +761,30 @@ def test_plane():
 
     assert pl3.parallel_plane(Point3D(1, 2, 5)) == Plane(Point3D(1, 2, 5), \
                                                       normal_vector=(1, -2, 1))
-    assert pl3.perpendicular_plane(Line3D(Point3D(22/3, 11/3, 0), Point3D(31/3, 11/3, -3)), Point3D(4, 4, 3)) == \
-               Plane(Point3D(4, 4, 3), normal_vector=(1, 1, 1))
 
-    assert pl6.perpendicular_line(Point3D(6, 4, 2)) == \
-               Line3D(Point3D(6, 4, 2), Point3D(8, 6, 4))
+    # perpendicular_plane
+    p = Plane((0, 0, 0), (1, 0, 0))
+    # default
+    assert p.perpendicular_plane() == Plane(Point3D(0, 0, 0), (0, 1, 0))
+    # 1 pt
+    assert p.perpendicular_plane(Point3D(1, 0, 1)) == Plane(Point3D(1, 0, 1), (0, 1, 0))
+    # pts as tuples
+    assert p.perpendicular_plane((1, 0, 1), (1, 1, 1)) == Plane(Point3D(1, 0, 1), (0, 0, -1))
+
+    a, b = Point3D(0, 0, 0), Point3D(0, 1, 0)
+    Z = (0, 0, 1)
+    p = Plane(a, normal_vector=Z)
+    # case 4
+    assert p.perpendicular_plane(a, b) == Plane(a, (1, 0, 0))
+    n = Point3D(*Z)
+    # case 1
+    assert p.perpendicular_plane(a, n) == Plane(a, (-1, 0, 0))
+    # case 2
+    assert Plane(a, normal_vector=b.args).perpendicular_plane(a, a + b) == Plane(Point3D(0, 0, 0), (1, 0, 0))
+    # case 1&3
+    assert Plane(b, normal_vector=Z).perpendicular_plane(b, b + n) == Plane(Point3D(0, 1, 0), (-1, 0, 0))
+    # case 2&3
+    assert Plane(b, normal_vector=b.args).perpendicular_plane(n, n + b) == Plane(Point3D(0, 0, 1), (1, 0, 0))
 
     assert pl6.intersection(pl6) == [pl6]
     assert pl4.intersection(pl4.p1) == [pl4.p1]
