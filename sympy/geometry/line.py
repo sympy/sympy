@@ -182,14 +182,12 @@ class LinearEntity(GeometryEntity):
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> p3, p4 = Point(-2, -2), Point(0, 2)
         >>> l1, l2, l3 = Line(p1, p2), Line(p1, p3), Line(p1, p4)
-        >>> l1.are_concurrent(l2, l3)
+        >>> Line.are_concurrent(l1, l2, l3)
         True
 
         >>> l4 = Line(p2, p3)
-        >>> l4.are_concurrent(l2, l3)
-        True
-        >>> Line3D.are_concurrent(l1, l2, l3)
-        True
+        >>> Line.are_concurrent(l2, l3, l4)
+        False
 
         """
 
@@ -1233,10 +1231,11 @@ class Ray(LinearEntity):
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError(
-                    'The 2nd argument was not a valid Point;\nif '
-                    'it was meant to be an angle it should be '
-                    'given with keyword "angle".')
+                from sympy.utilities.misc import filldedent
+                raise ValueError(filldedent('''
+                    The 2nd argument was not a valid Point; if
+                    it was meant to be an angle it should be
+                    given with keyword "angle".'''))
             if p1 == p2:
                 raise ValueError('A Ray requires two distinct points.')
         elif angle is not None and pt is None:

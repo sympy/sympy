@@ -224,7 +224,7 @@ class LinearEntity3D(GeometryEntity):
         True
 
         >>> l4 = Line3D(p2, p3)
-        >>> Line3D.are_concurrent(l4, l2, l3)
+        >>> Line3D.are_concurrent(l2, l3, l4)
         False
 
         """
@@ -851,7 +851,7 @@ class Line3D(LinearEntity3D):
                 pt = Point3D(pt)
             except NotImplementedError:
                 raise ValueError('The 2nd argument was not a valid Point. '
-                'If it was the direction_ratio of the desired line, enter it'
+                'If it was the direction_ratio of the desired line, enter it '
                 'with keyword "direction_ratio".')
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
@@ -952,8 +952,9 @@ class Line3D(LinearEntity3D):
             a = [i for i in a if i != nan]
             if len(a) == 1:
                 return True
-            for i in a[1:]:
-                rv = a[0].equals(i)
+            first = a.pop(0)
+            for i in a:
+                rv = first.equals(i)
                 if not rv:
                     return rv
             return True
@@ -986,7 +987,7 @@ class Line3D(LinearEntity3D):
             if is_sequence(o):
                 o = Point3D(o)
         if o in self:
-            return 0
+            return S.Zero
         a = self.perpendicular_segment(o).length
         return a
 
@@ -1056,7 +1057,7 @@ class Ray3D(LinearEntity3D):
                 pt = Point3D(pt)
             except NotImplementedError:
                 raise ValueError('The 2nd argument was not a valid Point. '
-                'If it was the direction_ratio of the desired line, enter it'
+                'If it was the direction_ratio of the desired line, enter it '
                 'with keyword "direction_ratio".')
         elif len(direction_ratio) == 3 and pt is None:
             pt = Point3D(p1.x + direction_ratio[0], p1.y + direction_ratio[1],
