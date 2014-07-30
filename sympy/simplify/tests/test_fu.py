@@ -1,6 +1,6 @@
 from sympy import (
     Add, Mul, S, Symbol, cos, cot, csc, pi, I, sec, sin, sqrt, tan, root,
-    powsimp, symbols, sinh, cosh, tanh, coth)
+    powsimp, symbols, sinh, cosh, tanh, coth, Dummy)
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
@@ -335,21 +335,38 @@ def test_TRmorrie():
 
 
 def test_hyper_as_trig():
-    from sympy.simplify.fu import _osborne, _osbornei
+    from sympy.simplify.fu import _osborne as o, _osbornei as i, TR12
 
     eq = sinh(x)**2 + cosh(x)**2
     t, f = hyper_as_trig(eq)
     assert f(fu(t)) == cosh(2*x)
-    assert _osborne(cosh(x), y) == cos(x*y)
-    assert _osborne(sinh(x), y) == I*sin(x*y)
-    assert _osborne(tanh(x), y) == I*tan(x*y)
-    assert _osborne(coth(x), y) == cot(x*y)/I
-    assert _osbornei(cos(x), y) == cosh(x/y)
-    assert _osbornei(sin(x), y) == sinh(x/y)/I
-    assert _osbornei(tan(x), y) == tanh(x/y)/I
-    assert _osbornei(cot(x), y) == coth(x/y)*I
-    assert _osbornei(sec(x), y) == 1/cosh(x/y)
-    assert _osbornei(csc(x), y) == I/sinh(x/y)
+    # The following was checked numerically:
+    # >>> (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
+    # (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
+    # >>> _.subs(x,1).subs(y,2).n()
+    # 0.995054753686730
+    # >>> tanh(1 + 2).n()
+    # 0.995054753686730
+    e, f = hyper_as_trig(tanh(x + y))
+    assert f(TR12(e)) == (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
+
+    d = Dummy()
+    assert o(sinh(x), d) == I*sin(x*d)
+    assert o(tanh(x), d) == I*tan(x*d)
+    assert o(coth(x), d) == cot(x*d)/I
+    assert o(cosh(x), d) == cos(x*d)
+    for func in (sinh, cosh, tanh, coth):
+        h = func(pi)
+        assert i(o(h, d), d) == h
+    # /!\ the _osborne functions are not meant to work
+    # in the o(i(trig, d), d) direction so we just check
+    # that they work as they are supposed to work
+    assert i(cos(x*y), y) == cosh(x)
+    assert i(sin(x*y), y) == sinh(x)/I
+    assert i(tan(x*y), y) == tanh(x)/I
+    assert i(cot(x*y), y) == coth(x)*I
+    assert i(sec(x*y), y) == 1/cosh(x)
+    assert i(csc(x*y), y) == I/sinh(x)
 
 
 def test_TR12i():
