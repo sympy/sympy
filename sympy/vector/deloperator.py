@@ -1,5 +1,5 @@
 from sympy.core import Basic
-from sympy import diff
+from sympy.core.function import Derivative
 from sympy.vector.vector import Vector
 from sympy.vector.functions import express
 from sympy.vector.coordsysrect import CoordSysCartesian
@@ -26,9 +26,10 @@ class Del(Basic):
     def system(self):
         return self._system
 
-    def __call__(self, scalar_field):
+    def gradient(self, scalar_field, doit=False):
         """
-        Represents the gradient of the given scalar field.
+        Returns the gradient of the given scalar field, as a
+        Vector instance.
 
         Parameters
         ==========
@@ -36,25 +37,37 @@ class Del(Basic):
         scalar_field : SymPy expression
             The scalar field to calculate the gradient of.
 
+        doit : bool
+            If True, the result is returned after calling .doit() on
+            each component. Else, the returned expression contains
+            Derivative instances
+
         Examples
         ========
 
         >>> from sympy.vector import CoordSysCartesian
         >>> C = CoordSysCartesian('C')
-        >>> C.delop(C.x*C.y*C.z)
+        >>> C.delop.gradient(9)
+        (Derivative(9, C.x))*C.i + (Derivative(9, C.y))*C.j + (Derivative(9, C.z))*C.k
+        >>> C.delop(C.x*C.y*C.z).doit()
         C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
         """
 
         scalar_field = express(scalar_field, self.system,
                                variables = True)
-        vx = diff(scalar_field, self._x)
-        vy = diff(scalar_field, self._y)
-        vz = diff(scalar_field, self._z)
+        vx = Derivative(scalar_field, self._x)
+        vy = Derivative(scalar_field, self._y)
+        vz = Derivative(scalar_field, self._z)
 
+        if doit:
+            return (vx*self._i + vy*self._j + vz*self._k).doit()
         return vx*self._i + vy*self._j + vz*self._k
 
-    def dot(self, vect):
+    __call__ = gradient
+    __call__.__doc__ = gradient.__doc__
+
+    def dot(self, vect, doit=False):
         """
         Represents the dot product between this operator and a given
         vector - equal to the divergence of the vector field.
@@ -65,16 +78,21 @@ class Del(Basic):
         vect : Vector
             The vector whose divergence is to be calculated.
 
+        doit : bool
+            If True, the result is returned after calling .doit() on
+            each component. Else, the returned expression contains
+            Derivative instances
+
         Examples
         ========
 
         >>> from sympy.vector import CoordSysCartesian
         >>> C = CoordSysCartesian('C')
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
-        >>> C.delop & v
+        >>> (C.delop & v).doit()
         C.x*C.y + C.x*C.z + C.y*C.z
-        >>> C.delop.dot(C.i)
-        0
+        >>> C.delop.dot(C.x*C.i)
+        Derivative(C.x, C.x)
 
         """
 
@@ -82,11 +100,14 @@ class Del(Basic):
         vy = _diff_conditional(vect.dot(self._j), self._y)
         vz = _diff_conditional(vect.dot(self._k), self._z)
 
+        if doit:
+            return (vx + vy + vz).doit()
         return vx + vy + vz
 
     __and__ = dot
+    __and__.__doc__ = dot.__doc__
 
-    def cross(self, vect):
+    def cross(self, vect, doit=False):
         """
         Represents the cross product between this operator and a given
         vector - equal to the curl of the vector field.
@@ -97,15 +118,20 @@ class Del(Basic):
         vect : Vector
             The vector whose curl is to be calculated.
 
+        doit : bool
+            If True, the result is returned after calling .doit() on
+            each component. Else, the returned expression contains
+            Derivative instances
+
         Examples
         ========
 
         >>> from sympy.vector import CoordSysCartesian
         >>> C = CoordSysCartesian('C')
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
-        >>> C.delop ^ v
+        >>> C.delop.cross(v, doit = True)
         (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j + (-C.x*C.z + C.y*C.z)*C.k
-        >>> C.delop.cross(C.i)
+        >>> (C.delop ^ C.i).doit()
         0
 
         """
@@ -114,13 +140,19 @@ class Del(Basic):
         vecty = express(vect.dot(self._j), self.system)
         vectz = express(vect.dot(self._k), self.system)
         outvec = Vector.zero
-        outvec += (diff(vectz, self._y) - diff(vecty, self._z)) * self._i
-        outvec += (diff(vectx, self._z) - diff(vectz, self._x)) * self._j
-        outvec += (diff(vecty, self._x) - diff(vectx, self._y)) * self._k
+        outvec += (Derivative(vectz, self._y) -
+                   Derivative(vecty, self._z)) * self._i
+        outvec += (Derivative(vectx, self._z) -
+                   Derivative(vectz, self._x)) * self._j
+        outvec += (Derivative(vecty, self._x) -
+                   Derivative(vectx, self._y)) * self._k
 
+        if doit:
+            return outvec.doit()
         return outvec
 
     __xor__ = cross
+    __xor__.__doc__ = cross.__doc__
 
     def __str__(self, printer=None):
         return self._name
@@ -140,5 +172,5 @@ def _diff_conditional(expr, base_scalar):
 
     new_expr = express(expr, base_scalar.system, variables = True)
     if base_scalar in new_expr.atoms():
-        return diff(new_expr, base_scalar)
+        return Derivative(new_expr, base_scalar)
     return S(0)

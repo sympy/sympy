@@ -60,7 +60,7 @@ def test_dyadic():
     assert d3 & d1 == Dyadic.zero
 
     q = symbols('q')
-    B = A.orient_new('B', 'Axis', [q, A.k])
+    B = A.orient_new_axis('B', q, A.k)
     assert express(d1, B) == express(d1, B, B)
     assert express(d1, B) == ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
             (B.i | B.j) + (-sin(q) * cos(q)) * (B.j | B.i) + (sin(q)**2) *
@@ -80,7 +80,7 @@ def test_dyadic():
                                       [b * d, b * e, b * f],
                                       [c * d, c * e, c * f]])
     d5 = v1.outer(v1)
-    C = A.orient_new('C', 'Axis', [q, A.i])
+    C = A.orient_new_axis('C', q, A.i)
     for expected, actual in zip(C.rotation_matrix(A) * d5.to_matrix(A) * \
                                C.rotation_matrix(A).T, d5.to_matrix(C)):
         assert (expected - actual).simplify() == 0
