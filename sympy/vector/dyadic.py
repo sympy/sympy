@@ -175,10 +175,10 @@ class BaseDyadic(Dyadic, AtomicExpr):
     Class to denote a base dyadic tensor component.
     """
     def __new__(cls, vector1, vector2):
-        from sympy.vector.vector import Vector, BaseVector
+        from sympy.vector.vector import Vector, BaseVector, VectorZero
         #Verify arguments
-        if not isinstance(vector1, (BaseVector, DyadicZero)) or \
-               not isinstance(vector2, (BaseVector, DyadicZero)):
+        if not isinstance(vector1, (BaseVector, VectorZero)) or \
+               not isinstance(vector2, (BaseVector, VectorZero)):
             raise TypeError("BaseDyadic cannot be composed of non-base "+
                             "vectors")
         #Handle special case of zero vector
