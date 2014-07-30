@@ -338,8 +338,8 @@ class CoordSysCartesian(Basic):
         orienters : iterable
             An iterable containing the orienters which should be applied
             to this system to get the orientation of the new system. The
-            orinters will be applied in the order in which they appear in
-            the iterable.
+            orienters will be applied in the order in which they appear
+            in the iterable.
 
         location : Vector(optional)
             The location of the new coordinate system's origin wrt this

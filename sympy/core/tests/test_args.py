@@ -3278,11 +3278,13 @@ def test_sympy__vector__vector__VectorZero():
 
 
 def test_sympy__vector__vector__Vector():
+    from sympy.vector.vector import Vector
     #Vector is never to be initialized using args
     pass
 
 
 def test_sympy__vector__dyadic__Dyadic():
+    from sympy.vector.dyadic import Dyadic
     #Dyadic is never to be initialized using args
     pass
 
