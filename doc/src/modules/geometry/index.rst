@@ -1,7 +1,7 @@
+===============
 Geometry Module
 ===============
 
-.. module:: sympy.geometry
 
 Introduction
 ------------
@@ -199,84 +199,19 @@ The plotting module is capable of plotting geometric entities. See
 :ref:`Plotting Geometric Entities <plot_geom>` in
 the plotting module entry.
 
-API Reference
--------------
+Submodules
+~~~~~~~~~~
 
-Entities
-~~~~~~~~
+.. toctree::
+    :maxdepth: 3
 
-.. module:: sympy.geometry.entity
-
-.. autoclass:: sympy.geometry.entity.GeometryEntity
-   :members:
-
-Utils
-~~~~~
-
-.. module:: sympy.geometry.util
-
-.. autofunction:: intersection
-
-.. autofunction:: convex_hull
-
-.. autofunction:: are_similar
-
-.. autofunction:: centroid
-
-Points
-~~~~~~
-
-.. module:: sympy.geometry.point
-
-.. autoclass:: Point
-   :members:
-
-Lines
-~~~~~
-
-.. module:: sympy.geometry.line
-
-.. autoclass:: LinearEntity
-   :members:
-
-.. autoclass:: Line
-   :members:
-
-.. autoclass:: Ray
-   :members:
-
-.. autoclass:: Segment
-   :members:
-
-Curves
-~~~~~~
-
-.. module:: sympy.geometry.curve
-
-.. autoclass:: Curve
-   :members:
-
-Ellipses
-~~~~~~~~
-
-.. module:: sympy.geometry.ellipse
-
-.. autoclass:: Ellipse
-   :members:
-
-.. autoclass:: Circle
-   :members:
-
-Polygons
-~~~~~~~~
-
-.. module:: sympy.geometry.polygon
-
-.. autoclass:: Polygon
-   :members:
-
-.. autoclass:: RegularPolygon
-   :members:
-
-.. autoclass:: Triangle
-   :members:
+    entities.rst
+    utils.rst
+    points.rst
+    point3d.rst
+    lines.rst
+    line3d.rst
+    curves.rst
+    ellipses.rst
+    polygons.rst
+    plane.rst

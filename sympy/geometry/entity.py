@@ -263,6 +263,9 @@ class GeometryEntity(Basic):
         """
         raise NotImplementedError()
 
+    def equals(self, o):
+        return self == o
+
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
