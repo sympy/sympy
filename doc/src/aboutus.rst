@@ -356,6 +356,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Sarwar Chahal: Fix to documentation
 #. Nathan Woods: Fix to C code printer
 #. Colin B. Macdonald: Fix to documentation
+#. Marcus Näslund: Fix to documentation
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
