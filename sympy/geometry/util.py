@@ -117,6 +117,20 @@ def _symbol(s, matching_symbol=None):
         raise ValueError('symbol must be string for symbol name or Symbol')
 
 
+def _uniquely_named_symbol(xname, *exprs):
+    """Return a symbol which, when printed, will have a name unique
+    from any other already in the expressions given. The name is made
+    unique by prepending underscores.
+    """
+    prefix = '%s'
+    x = prefix % xname
+    syms = set.union(*[e.free_symbols for e in exprs])
+    while any(x == str(s) for s in syms):
+        prefix = '_' + prefix
+        x = prefix % xname
+    return _symbol(x)
+
+
 def intersection(*entities):
     """The intersection of a collection of GeometryEntity instances.
 
