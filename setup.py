@@ -269,7 +269,7 @@ tests = [
     'sympy.tensor.tests',
     'sympy.unify.tests',
     'sympy.utilities.tests',
-    'sympy.vector'
+    'sympy.vector.tests'
     ]
 
 classifiers = [
