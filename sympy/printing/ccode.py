@@ -77,8 +77,8 @@ class CCodePrinter(CodePrinter):
         not_c = self._not_supported = set()
         self._number_symbols = set()
 
-        # We treat top level Piecewise here to get if tests outside loops
         lines = []
+        # We treat top level Piecewise here to get if tests outside loops
         if isinstance(expr, C.Piecewise):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
@@ -90,6 +90,15 @@ class CCodePrinter(CodePrinter):
                 code0 = self._doprint_a_piece(e, assign_to)
                 lines.extend(code0)
                 lines.append("}")
+        # Here we handle matrix terms, solving for each matrix element
+        elif isinstance(expr, C.ImmutableMatrix):
+            rows, cols = assign_to.shape
+            mat_name = str(assign_to)
+            for i in range(rows):
+                for j in range(cols):
+                    lhs = C.Symbol("{:}[{:}][{:}]".format(mat_name, i, j))
+                    code0 = self._doprint_a_piece(expr[i,j], lhs)
+                    lines.extend(code0)
         else:
             code0 = self._doprint_a_piece(expr, assign_to)
             lines.extend(code0)
@@ -195,6 +204,9 @@ class CCodePrinter(CodePrinter):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         return CodePrinter._print_Function(self, expr)
+
+    def _print_MatrixElement(self, expr):
+        return "{:}[{:}][{:}]".format(expr.parent, expr.i, expr.j)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

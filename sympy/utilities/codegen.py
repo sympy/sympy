@@ -86,6 +86,7 @@ from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
+from sympy.matrices import MatrixSymbol
 
 
 __all__ = [
@@ -167,11 +168,14 @@ class Routine(object):
                 elif isinstance(out_arg, Symbol):
                     dims = []
                     symbol = out_arg
+                elif isinstance(out_arg, MatrixSymbol):
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                    symbol = out_arg
                 else:
-                    raise CodeGenError(
-                        "Only Indexed or Symbol can define output arguments")
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
 
-                if expr.has(symbol):
+                if expr.has(symbol) or isinstance(out_arg, MatrixSymbol):
                     output_args.append(
                         InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 else:
@@ -187,6 +191,8 @@ class Routine(object):
         array_symbols = {}
         for array in expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
 
         for symbol in sorted(symbols, key=str):
             if symbol in array_symbols:
@@ -295,7 +301,7 @@ class Variable(object):
                           (lower, upper) bounds for each index of the array
            precision  --  FIXME
         """
-        if not isinstance(name, Symbol):
+        if not isinstance(name, (Symbol, MatrixSymbol)):
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
@@ -573,7 +579,12 @@ class CCodeGen(CodeGen):
         for arg in routine.arguments:
             name = ccode(arg.name)
             if arg.dimensions:
-                type_args.append((arg.get_datatype('C'), "*%s" % name))
+                if isinstance(arg.name, MatrixSymbol):
+                    type_args.append((arg.get_datatype('C'),
+                            "{:}[{:}][{:}]".format(name, arg.name.shape[0],
+                            arg.name.shape[1])))
+                else:
+                    type_args.append((arg.get_datatype('C'), "*%s" % name))
             elif isinstance(arg, ResultBase):
                 type_args.append((arg.get_datatype('C'), "&%s" % name))
             else:
