@@ -661,7 +661,6 @@ def test_image_EmptySet():
 def test_issue_5724_7680():
     assert I not in S.Reals  # issue 7680
     assert Interval(-oo,oo).contains(I) is False
-    raises(TypeError, lambda: I > 2)
 
 
 def test_boundary():
