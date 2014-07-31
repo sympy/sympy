@@ -340,13 +340,6 @@ def test_hyper_as_trig():
     eq = sinh(x)**2 + cosh(x)**2
     t, f = hyper_as_trig(eq)
     assert f(fu(t)) == cosh(2*x)
-    # The following was checked numerically:
-    # >>> (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
-    # (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
-    # >>> _.subs(x,1).subs(y,2).n()
-    # 0.995054753686730
-    # >>> tanh(1 + 2).n()
-    # 0.995054753686730
     e, f = hyper_as_trig(tanh(x + y))
     assert f(TR12(e)) == (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
 

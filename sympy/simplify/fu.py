@@ -2040,13 +2040,13 @@ def _osborne(e, d):
         a = rv.args[0]
         a = a*d if not a.is_Add else Add._from_args([i*d for i in a.args])
         if rv.func is sinh:
-            return I*sin(a, evaluate=False)
+            return I*sin(a)
         elif rv.func is cosh:
-            return cos(a, evaluate=False)
+            return cos(a)
         elif rv.func is tanh:
-            return I*tan(a, evaluate=False)
+            return I*tan(a)
         elif rv.func is coth:
-            return cot(a, evaluate=False)/I
+            return cot(a)/I
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
