@@ -677,6 +677,10 @@ class Float(Number):
             return S.Zero  # XXX this is different from Float which gives 0.0
         elif _mpf_ == _mpf_nan:
             return S.NaN
+        elif _mpf_ == _mpf_inf:
+            return S.Infinity
+        elif _mpf_ == _mpf_ninf:
+            return S.NegativeInfinity
 
         obj = Expr.__new__(cls)
         obj._mpf_ = mpf_norm(_mpf_, _prec)
