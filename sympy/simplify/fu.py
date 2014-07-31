@@ -2037,14 +2037,16 @@ def _osborne(e, d):
     def f(rv):
         if not isinstance(rv, C.HyperbolicFunction):
             return rv
+        a = rv.args[0]
+        a = a*d if not a.is_Add else Add._from_args([i*d for i in a.args])
         if rv.func is sinh:
-            return I*sin(rv.args[0]*d)
+            return I*sin(a)
         elif rv.func is cosh:
-            return cos(rv.args[0]*d)
+            return cos(a)
         elif rv.func is tanh:
-            return I*tan(rv.args[0]*d)
+            return I*tan(a)
         elif rv.func is coth:
-            return cot(rv.args[0]*d)/I
+            return cot(a)/I
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
@@ -2070,18 +2072,19 @@ def _osbornei(e, d):
     def f(rv):
         if not isinstance(rv, C.TrigonometricFunction):
             return rv
+        a = rv.args[0].xreplace({d: S.One})
         if rv.func is sin:
-            return sinh(rv.args[0]/d)/I
+            return sinh(a)/I
         elif rv.func is cos:
-            return cosh(rv.args[0]/d)
+            return cosh(a)
         elif rv.func is tan:
-            return tanh(rv.args[0]/d)/I
+            return tanh(a)/I
         elif rv.func is cot:
-            return coth(rv.args[0]/d)*I
+            return coth(a)*I
         elif rv.func is sec:
-            return 1/cosh(rv.args[0]/d)
+            return 1/cosh(a)
         elif rv.func is csc:
-            return I/sinh(rv.args[0]/d)
+            return I/sinh(a)
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
@@ -2114,7 +2117,7 @@ def hyper_as_trig(rv):
 
     http://en.wikipedia.org/wiki/Hyperbolic_function
     """
-    from sympy.simplify.simplify import signsimp
+    from sympy.simplify.simplify import signsimp, collect
 
     # mask off trig functions
     trigs = rv.atoms(C.TrigonometricFunction)
@@ -2126,5 +2129,5 @@ def hyper_as_trig(rv):
 
     d = Dummy()
 
-    return _osborne(masked, d), lambda x: signsimp(
-        _osbornei(x, d).xreplace(dict(reps)))
+    return _osborne(masked, d), lambda x: collect(signsimp(
+        _osbornei(x, d).xreplace(dict(reps))), S.ImaginaryUnit)
