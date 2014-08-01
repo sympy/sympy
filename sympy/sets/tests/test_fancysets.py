@@ -1,7 +1,7 @@
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-        Rational, sqrt, Eq, tan)
+        Rational, sqrt, Eq, tan, Union, pprint)
 from sympy.utilities.pytest import XFAIL
 import itertools
 
@@ -212,3 +212,29 @@ def test_ImageSet_simplification():
     assert imageset(Lambda(n, sin(n)),
                     imageset(Lambda(m, tan(m)), S.Integers)) == \
             imageset(Lambda(m, sin(tan(m))), S.Integers)
+
+
+def test_imageset_union():
+    from sympy.abc import n, m
+    assert Union(imageset(Lambda(n, 2*pi*n), S.Integers),
+                 imageset(Lambda(n, 2*pi*n + pi), S.Integers)) == \
+            imageset(Lambda(n, pi*n), S.Integers)
+    assert Union(imageset(Lambda(n, 2*pi*n), S.Integers),
+                 imageset(Lambda(n, 2*pi*n - pi), S.Integers)) == \
+            imageset(Lambda(n, pi*n), S.Integers)
+    assert Union(imageset(Lambda(m, 2*pi*m - pi), S.Integers),
+                 imageset(Lambda(n, 2*pi*n), S.Integers)) == \
+            imageset(Lambda(n, pi*n), S.Integers)
+
+    assert Union(imageset(Lambda(n, 2*n), S.Integers),
+                 imageset(Lambda(n, 2*n - S.One), S.Integers),
+                 imageset(Lambda(n, 2*n + S.One/2), S.Integers),
+                 imageset(Lambda(n, 2*n - S.One/2), S.Integers)) == \
+            imageset(Lambda(n, n/2), S.Integers)
+
+    assert Union(imageset(Lambda(n, 2*pi*n), S.Integers),
+                 imageset(Lambda(n, 2*pi*n - pi), S.Integers),
+                 imageset(Lambda(n, 2*pi*n + pi/2), S.Integers),
+                 imageset(Lambda(n, 2*pi*n - pi/2), S.Integers),
+                ) == \
+            imageset(Lambda(n, pi*n/2), S.Integers)

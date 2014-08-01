@@ -1035,6 +1035,7 @@ class Union(Set, EvalfMixin):
         Then we iterate through all pairs and ask the constituent sets if they
         can simplify themselves with any other constituent
         """
+        from sympy import ImageSet, gcd, Wild, expand, Lambda, Dummy
 
         # ===== Global Rules =====
         # Merge all finite sets
@@ -1043,6 +1044,26 @@ class Union(Set, EvalfMixin):
             a = (x for set in finite_sets for x in set)
             finite_set = FiniteSet(*a)
             args = [finite_set] + [x for x in args if not x.is_FiniteSet]
+
+        # ===== A special rule for ImageSet ======
+        if all(isinstance(s, ImageSet) and s.base_set == S.Integers
+               for s in args):
+            # TODO: fix for the case where imageset(Lambda(n, n), S.Integers)
+            # is converted to S.Integers Maybe add a special rule for it.
+            n = Dummy('n')
+            lamdas = [s.lamda for s in args]
+            if all(len(l.variables) == 1 for l in lamdas):
+                exprs = [l(n) for l in lamdas]
+                a, b = Wild('a'), Wild('b')
+                matches = [expr.match(a*n + b) for expr in exprs]
+                if len(set(m[a] for m in matches)) == 1:
+                    q = matches[0][a]
+                    c = q/(len(args))
+                    q = len(args)
+                    ps = [m[b]/c for m in matches]
+                    if set(p%q for p in ps) == set(i%q for i in range(q)):
+                        return imageset(Lambda(n, c*n), S.Integers)
+
 
         # ===== Pair-wise Rules =====
         # Here we depend on rules built into the constituent sets
