@@ -1,5 +1,5 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, oo, I, pi, Float, And, Or, Not,
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
                    Implies, Xor)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -326,3 +326,93 @@ def test_evaluate():
     assert str(Le(x, x, evaluate=False)) == 'x <= x'
     assert str(Gt(x, x, evaluate=False)) == 'x > x'
     assert str(Lt(x, x, evaluate=False)) == 'x < x'
+
+
+def assert_all_ineq_raise_TypeError(a, b):
+    raises(TypeError, lambda: a > b)
+    raises(TypeError, lambda: a >= b)
+    raises(TypeError, lambda: a < b)
+    raises(TypeError, lambda: a <= b)
+    raises(TypeError, lambda: b > a)
+    raises(TypeError, lambda: b >= a)
+    raises(TypeError, lambda: b < a)
+    raises(TypeError, lambda: b <= a)
+
+
+def assert_all_ineq_give_class_Inequality(a, b):
+    """All inequality operations on `a` and `b` result in class Inequality."""
+    from sympy.core.relational import _Inequality as Inequality
+    assert isinstance(a > b,  Inequality)
+    assert isinstance(a >= b, Inequality)
+    assert isinstance(a < b,  Inequality)
+    assert isinstance(a <= b, Inequality)
+    assert isinstance(b > a,  Inequality)
+    assert isinstance(b >= a, Inequality)
+    assert isinstance(b < a,  Inequality)
+    assert isinstance(b <= a, Inequality)
+
+
+def test_imaginary_compare_raises_TypeError():
+    # See issue #5724
+    assert_all_ineq_raise_TypeError(I, x)
+
+
+def test_complex_compare_not_real():
+    # two cases which are not real
+    y = Symbol('y', imaginary=True)
+    z = Symbol('z', complex=True, real=False)
+    for w in (y, z):
+        assert_all_ineq_raise_TypeError(2, w)
+    # some cases which should remain un-evaluated
+    t = Symbol('t')
+    x = Symbol('x', real=True)
+    z = Symbol('z', complex=True)
+    for w in (x, z, t):
+        assert_all_ineq_give_class_Inequality(2, w)
+
+
+def test_complex_pure_imag_not_ordered():
+    raises(TypeError, lambda: 2*I < 3*I)
+
+    # more generally
+    x = Symbol('x', real=True)
+    y = Symbol('y', imaginary=True)
+    z = Symbol('z', complex=True)
+    assert_all_ineq_raise_TypeError(I, y)
+
+    t = I*x   # an imaginary number, should raise errors
+    assert_all_ineq_raise_TypeError(2, t)
+
+    t = -I*y   # a real number, so no errors
+    assert_all_ineq_give_class_Inequality(2, t)
+
+    t = I*z   # unknown, should be unevaluated
+    assert_all_ineq_give_class_Inequality(2, t)
+
+
+def test_x_minus_y_not_same_as_x_lt_y():
+    """
+    A consequence of pull request #7792 is that `x - y < 0` and `x < y`
+    are not synonymous.
+    """
+    x = I + 2
+    y = I + 3
+    raises(TypeError, lambda: x < y)
+    assert x - y < 0
+
+    ineq = Lt(x, y, evaluate=False)
+    raises(TypeError, lambda: ineq.doit())
+    assert ineq.lhs - ineq.rhs < 0
+
+    t = Symbol('t', imaginary=True)
+    x = 2 + t
+    y = 3 + t
+    ineq = Lt(x, y, evaluate=False)
+    raises(TypeError, lambda: ineq.doit())
+    assert ineq.lhs - ineq.rhs < 0
+
+    # this one should give error either way
+    x = I + 2
+    y = 2*I + 3
+    raises(TypeError, lambda: x < y)
+    raises(TypeError, lambda: x - y < 0)
