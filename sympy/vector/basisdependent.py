@@ -189,7 +189,7 @@ class BasisDependentAdd(BasisDependent, Add):
             for x in arg.components:
                 components[x] = components.get(x, 0) + arg.components[x]
 
-        temp = components.keys()
+        temp = list(components.keys())
         for x in temp:
             if components[x] == 0:
                 del components[x]
