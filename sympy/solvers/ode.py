@@ -7910,6 +7910,27 @@ def sysode_nonlinear_3eq_order1(match_):
     return sol
 
 def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: a x' = (b - c) y z, \enspace b y' = (c - a) z x, \enspace c z' = (a - b) x y
+
+    First Integrals:
+
+    .. math:: a x^{2} + b y^{2} + c z^{2} = C_1
+
+    .. math:: a^{2} x^{2} + b^{2} y^{2} + c^{2} z^{2} = C_2
+
+    where `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
+    `z` and on substituting the resulting expressions into the first equation of the
+    system, we arrives at a separable first-order equation on `x`. Similarly doing that
+    for other two equations, we will arrive at first order equation on `y` and `z` too.
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
+
+    """
     C1, C2 = symbols('C1:3')
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
@@ -7947,6 +7968,31 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: a x' = (b - c) y z f(x, y, z, t)
+
+    .. math:: b y' = (c - a) z x f(x, y, z, t)
+
+    .. math:: c z' = (a - b) x y f(x, y, z, t)
+
+    First Integrals:
+
+    .. math:: a x^{2} + b y^{2} + c z^{2} = C_1
+
+    .. math:: a^{2} x^{2} + b^{2} y^{2} + c^{2} z^{2} = C_2
+
+    where `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
+    `z` and on substituting the resulting expressions into the first equation of the
+    system, we arrives at a first-order differential equations on `x`. Similarly doing
+    that for other two equations we will arrive at first order equation on `y` and `z`.
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
+
+    """
     C1, C2 = symbols('C1:3')
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
@@ -7986,6 +8032,33 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = c F_2 - b F_3, \enspace y' = a F_3 - c F_1, \enspace z' = b F_1 - a F_2
+
+    where `F_n = F_n(x, y, z, t)`.
+
+    1. First Integral:
+
+    .. math:: a x + b y + c z = C_1,
+
+    where C is an arbitrary constant.
+
+    2. If we assume function `F_n` to be independent of `t`,i.e, `F_n` = `F_n (x, y, z)`
+    Then, on eliminating `t` and `z` from the first two equation of the system, one
+    arrives at the first-order equation
+
+    .. math:: \frac{dy}{dx} = \frac{a F_3 (x, y, z) - c F_1 (x, y, z)}{c F_2 (x, y, z) -
+                b F_3 (x, y, z)}
+
+    where `z = \frac{1}{c} (C_1 - a x - b y)`
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
+
+    """
     C1 = symbols('C1')
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
@@ -8018,6 +8091,33 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = c z F_2 - b y F_3, \enspace y' = a x F_3 - c z F_1, \enspace z' = b y F_1 - a x F_2
+
+    where `F_n = F_n (x, y, z, t)`
+
+    1. First integral:
+
+    .. math:: a x^{2} + b y^{2} + c z^{2} = C_1
+
+    where `C` is an arbitrary constant.
+
+    2. Assuming the function `F_n` is independent of `t`: `F_n = F_n (x, y, z)`. Then on
+    eliminating `t` and `z` from the first two equations of the system, one arrives at
+    the first-order equation
+
+    .. math:: \frac{dy}{dx} = \frac{a x F_3 (x, y, z) - c z F_1 (x, y, z)}
+                {c z F_2 (x, y, z) - b y F_3 (x, y, z)}
+
+    where `z = \pm \sqrt{\frac{1}{c} (C_1 - a x^{2} - b y^{2})}`
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
+
+    """
     C1 = symbols('C1')
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
@@ -8050,6 +8150,24 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
 
 def _nonlinear_3eq_order1_type5(x, y, t, eq):
+    r"""
+    .. math:: x' = x (c F_2 - b F_3), \enspace y' = y (a F_3 - c F_1), \enspace z' = z (b F_1 - a F_2)
+
+    where `F_n = F_n (x, y, z, t)` and are arbitrary functions.
+
+    First Integral:
+
+    .. math:: \left|x\right|^{a} \left|y\right|^{b} \left|z\right|^{c} = C_1
+
+    where `C` is an arbitrary constant. If the function `F_n` is independent of `t`,
+    then, by eliminating `t` and `z` from the first two equations of the system, one
+    arrives at a first-order equation.
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
+
+    """
     C1 = symbols('C1')
     u, v, w = symbols('u, v, w')
     p = Wild('p', exclude=[x(t), y(t), z(t), t])
