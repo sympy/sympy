@@ -322,12 +322,13 @@ def test_symbols_exhausted_error():
     with raises(ValueError) as excinfo:
         cse(l, symbols=sym)
 
+
 def test_cse_Idx_IndexedBase():
     # There is only one cse in below expression: i+1
-    len_y=5
+    len_y = 5
     i = Idx('i', len_y-1)
     y = IndexedBase('y', shape=(len_y,))
     x = IndexedBase('x', shape=(len_y,))
-    cses = cse((y[i+1] - y[i])/(x[i+1] - x[i]))
+    cses = cse((y[i + 1] - y[i])/(x[i + 1] - x[i]))
     assert len(cses[0]) == 1
-    assert cses[0][0][1] - (i+1) == 0
+    assert cses[0][0][1] - (i + 1) == 0

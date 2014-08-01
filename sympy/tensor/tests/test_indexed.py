@@ -193,3 +193,16 @@ def test_Indexed_coeff():
     a = (1/y[i+1]*y[i]).coeff(y[i])
     b = (y[i]/y[i+1]).coeff(y[i])
     assert a == b
+
+
+def test_Indexed_free_symbols():
+    # Added in PR 7347: free_symbols method was added
+    # to make solve() work after modifications to Indexed.
+    N = Symbol('N', integer=True)
+    len_y = N
+    i = Idx('i', len_y-1)
+    y = IndexedBase('y', shape=(len_y,))
+    assert y[i].free_symbols == set([N, y, i])
+
+    z = IndexedBase('z')
+    assert z[i].free_symbols == set([z, i])
