@@ -1,8 +1,6 @@
-from sympy.core import Dict, Tuple, Rational
-from sympy.sets import Set
+from sympy.core import Rational
 from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
-
 
 class TypeF(Standard_Cartan):
 
