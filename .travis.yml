@@ -1,7 +1,7 @@
 language: python
 env:
   matrix:
-  - TEST_DOCTESTS="true" NOFASTCACHE="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false"
   - SPLIT="1/4"
   - SPLIT="2/4"
   - SPLIT="3/4"
@@ -25,22 +25,21 @@ matrix:
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
-        - NOFASTCACHE="true"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="1/4"
-        - NOFASTCACHE="true"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="2/4"
-        - NOFASTCACHE="true"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="3/4"
-        - NOFASTCACHE="true"
+        - FASTCACHE="false"
     - python: 2.7
-      env: TEST_SPHINX="true" NOFASTCACHE="true"
-
+      env: TEST_SPHINX="true" FASTCACHE="false"
     - python: 2.7
       env:
         - TEST_SLOW="true"
@@ -67,12 +66,12 @@ matrix:
     - python: 3.3 # Dummy value
       env:
         - TEST_SAGE="true"
-        - NOFASTCACHE="true"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="4/4"
 before_install:
-  - if [[ "${NOFASTCACHE}" != "true" ]]; then
+  - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install "fastcache==0.4.0";
     fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
