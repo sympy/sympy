@@ -2,7 +2,7 @@ from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import FiniteSet, Interval, imageset, EmptySet
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
         Rational, sqrt, Eq, tan)
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 import itertools
 
 x = Symbol('x')
@@ -113,8 +113,25 @@ def test_Range():
     assert Range(60, 7, -10).inf == 10
 
     assert len(Range(10, 38, 10)) == 3
-
     assert Range(0, 0, 5) == S.EmptySet
+
+    assert Range(1, 1) == S.EmptySet
+    raises(ValueError, lambda: Range(0, oo, oo))
+    raises(ValueError, lambda: Range(-oo, oo))
+    raises(ValueError, lambda: Range(-oo, oo, 2))
+
+    assert 5 in Range(0, oo, 5)
+    assert -5 in Range(-oo, 0, 5)
+
+    assert Range(0, oo)
+    assert Range(-oo, 0)
+    assert Range(0, -oo, -1)
+
+    assert Range(0, oo, 2)._last_element is oo
+    assert Range(-oo, 1, 1)._last_element is S.Zero
+
+    it = iter(Range(-oo, 0, 2))
+    assert (next(it), next(it)) == (-2, -4)
 
 
 def test_range_interval_intersection():
@@ -156,6 +173,7 @@ def take(n, iterable):
 
 
 def test_intersections():
+    assert S.Integers.intersect(S.Reals) == S.Integers
     assert 5 in S.Integers.intersect(S.Reals)
     assert 5 in S.Integers.intersect(S.Reals)
     assert -5 not in S.Naturals.intersect(S.Reals)
