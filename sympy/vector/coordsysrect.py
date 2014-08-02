@@ -111,9 +111,9 @@ class CoordSysCartesian(Basic):
             _check_strings('vector_names', vector_names)
             vector_names = list(vector_names)
         if latex_vects is None:
-            latex_vects = [(r"\mathbf{\hat{i}_{%s}}" % name),
-                           (r"\mathbf{\hat{j}_{%s}}" % name),
-                           (r"\mathbf{\hat{k}_{%s}}" % name)]
+            latex_vects = [(r'\mathbf{\hat{i}_{%s}}' % name),
+                           (r'\mathbf{\hat{j}_{%s}}' % name),
+                           (r'\mathbf{\hat{k}_{%s}}' % name)]
         else:
             _check_strings('latex_vects', latex_vects)
             latex_vects = list(latex_vects)

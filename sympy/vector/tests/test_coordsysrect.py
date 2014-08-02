@@ -60,10 +60,10 @@ def test_coordinate_vars():
     Tests the coordinate variables functionality with respect to
     reorientation of coordinate systems.
     """
-    assert BaseScalar('Ax', 0, A) == A.x
-    assert BaseScalar('Ay', 1, A) == A.y
-    assert BaseScalar('Az', 2, A) == A.z
-    assert BaseScalar('Ax', 0, A).__hash__() == A.x.__hash__()
+    assert BaseScalar('Ax', 0, A, ' ', ' ') == A.x
+    assert BaseScalar('Ay', 1, A, ' ', ' ') == A.y
+    assert BaseScalar('Az', 2, A, ' ', ' ') == A.z
+    assert BaseScalar('Ax', 0, A, ' ', ' ').__hash__() == A.x.__hash__()
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)

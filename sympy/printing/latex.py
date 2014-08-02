@@ -466,7 +466,11 @@ class LatexPrinter(Printer):
                     arg_str = '(' + LatexPrinter().doprint(v) + ')'
                     o1.append(' + ' + arg_str + k._latex_form)
 
-        outstr = (''.join(o1))[3:]
+        outstr = (''.join(o1))
+        if outstr[1] != '-':
+            outstr = outstr[3:]
+        else:
+            outstr = outstr[1:]
         return outstr
 
     def _print_Indexed(self, expr):

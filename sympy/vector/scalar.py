@@ -30,7 +30,7 @@ class BaseScalar(Symbol):
     def _latex(self, printer=None):
         return self._latex_form
 
-    def _pretty(self, printer=None):            
+    def _pretty(self, printer=None):
         return prettyForm(self._pretty_form)
 
     @property

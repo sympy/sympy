@@ -795,7 +795,6 @@ class PrettyPrinter(Printer):
                 lengths = []
                 strs = ['']
                 for i, partstr in enumerate(o1):
-                    
                     if '\n' in partstr:
                         tempstr = partstr
                         tempstr = tempstr.replace(vectstrs[i], '')
@@ -815,7 +814,7 @@ class PrettyPrinter(Printer):
                         else:
                             strs[j] += part + ' '*(lengths[-1] -
                                                    len(part) + 3)
-                
+
                 return u('\n').join([s[:-3] for s in strs])
         return Fake()
 

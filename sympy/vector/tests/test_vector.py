@@ -16,7 +16,7 @@ def test_vector_sympy():
     Test whether the Vector framework confirms to the hashing
     and equality testing properties of SymPy.
     """
-    i1 = BaseVector('i1', 0, C)
+    i1 = BaseVector('i1', 0, C, ' ', ' ')
     assert i1 == i
     assert i1.__hash__() == i.__hash__()
     v1 = 3*j

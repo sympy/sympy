@@ -367,7 +367,9 @@ class VectorAdd(BasisDependentAdd, Vector):
 
     def __str__(self, printer=None):
         ret_str = ''
-        for system, vect in self.separate().items():
+        items = self.separate().items()
+        items.sort(key = lambda x: x[0].__str__())
+        for system, vect in items:
             base_vects = system.base_vectors()
             for x in base_vects:
                 if x in vect.components:
