@@ -36,3 +36,9 @@ def test_medium():
     assert simplify(m5.refractive_index - 1.33000000000000) == 0
     assert simplify(m5.permittivity - 7.1e-10*A**2*s**4/(kg*m**3)) == 0
     assert simplify(m5.permeability - 2.77206575232851e-8*kg*m/(A**2*s**2)) == 0
+    m6 = Medium('m5', permittivity=710*10**(-12)*s**4*A**2/(m**3*kg), n=1.33)
+    assert m5 == m6
+    assert m5 != m4
+    n = Symbol('n')
+    m7 = Medium('m7', permeability=u0, n=Symbol('n'))
+    m7.refractive_index == sqrt(n**2)
