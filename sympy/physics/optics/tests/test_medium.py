@@ -7,6 +7,8 @@ from sympy.physics.units import c, u0, e0, m, kg, s, A
 
 def test_medium():
     m1 = Medium('m1')
+    m2 = Medium('m2', n=Symbol('m2'))
+    assert m2.refractive_index == 1
     assert m1.intrinsic_impedance == sqrt(u0/e0)
     assert m1.speed == 1/sqrt(e0*u0)
     assert m1.refractive_index == c*sqrt(e0*u0)
