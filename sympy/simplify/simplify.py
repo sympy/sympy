@@ -3655,6 +3655,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.functions.special.bessel import BesselBase
     from sympy.vector import Vector
 
+    expr = sympify(expr)
+
     try:
         return expr._eval_simplify(ratio=ratio, measure=measure)
     except AttributeError:
