@@ -4,10 +4,11 @@ from sympy.utilities.pytest import raises
 
 from sympy.logic.boolalg import (And, Implies, Or, Xor, true)
 from sympy.logic.FOL import (AppliedFunction, AppliedPredicate, Constant,
-    Exists, fol_true, ForAll, Function, mgu, Predicate, resolve,
-    standardize, to_pnf, to_snf)
+    entails, Exists, fol_true, ForAll, Function, mgu, Predicate, resolve,
+    standardize, to_cnf, to_dnf, to_pnf, to_snf)
 
 from sympy.abc import X, Y, Z
+
 
 def test_Predicate():
     A = Predicate('A')
@@ -72,8 +73,8 @@ def test_Exists():
 def test_fol_true():
     P = Predicate('P')
     f = Function('f')
-    _P = {(0,): False, 'default': True}
-    _f = {(0,): 1, 'default': 0}
+    _P = {0: False, 'default': True}
+    _f = {0: 1, 'default': 0}
     assert fol_true(P(0)) is None
     assert fol_true(P(f(0)), {P:_P, f:_f}) is True
     assert fol_true(P(f(X)), {X:1, P:_P, f:_f}) is False
@@ -160,11 +161,19 @@ def test_to_snf():
 
 
 def test_to_cnf():
-    pass
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert to_cnf(to_cnf((P(X) & Q(X)) | (P(Y) & Q(Y)))) == \
+        (P(X) | P(Y)) & (P(X) | Q(Y)) & (Q(X) | P(Y)) & (Q(X) | Q(Y))
+    assert to_cnf(ForAll(X, P(X) | ForAll(Y, Q(Y)))) == Or(P(X), Q(Y))
 
 
 def test_to_dnf():
-    pass
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert to_dnf((P(X) | Q(X)) & (P(Y) | Q(Y))) == \
+        (P(X) & P(Y)) | (P(X) & Q(Y)) | (Q(X) & P(Y)) | (Q(X) & Q(Y))
+    assert to_dnf(ForAll(X, P(X) | ForAll(Y, Q(Y)))) == Or(P(X), Q(Y))
 
 
 def test_mgu():
@@ -181,15 +190,25 @@ def test_mgu():
     assert mgu(P(X, Y), P(f(X), Z)) is False
     assert mgu(P(f(a)), P(f(b))) is False
     assert mgu(P(X, f(a)), P(Y, X)) == {X: f(a), Y: f(a)}
-    assert mgu(P(a, X, f(g(Z))), P(Z, f(Y), f(Y))) == {X: f(Y), Z: a, Y: g(a)}
+    assert mgu(P(a, X, f(g(Z))), P(Z, f(Y), f(Y))) == {X: f(g(a)), Z: a, Y: g(a)}
 
 
 def test_resolution():
     P = Predicate('P')
     Q = Predicate('Q')
     a = Constant('a')
+    assert resolve(And(Or(P(X), Q(X)), Or(~P(X), Q(X)))) is True
     assert resolve(And(P(X) >> Q(X), P(a), ~Q(a))) is False
 
 
 def test_entails():
-    pass
+    P = Predicate('P')
+    a = Constant('a')
+    b = Constant('b')
+    c = Constant('c')
+    formula_set = [
+        ForAll(X, ForAll(Y, (P(X, Y) & P(Y, Z)) >> P(X, Z))),
+        P(a, b),
+        P(b, c)
+    ]
+    assert entails(P(a, c), formula_set) is True

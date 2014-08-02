@@ -7,8 +7,8 @@ from itertools import combinations, product
 
 from sympy.core import Symbol
 from sympy.core.compatibility import ordered
-from sympy.logic.boolalg import (And, BooleanFunction,
-    eliminate_implications, Not, Or, true)
+from sympy.logic.boolalg import (And, Boolean, BooleanFunction,
+    eliminate_implications, false, Not, Or, true)
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -50,6 +50,8 @@ class Applied(FOL):
     def __init__(self, func, *args):
         if not args:
             raise ValueError("Use a constant instead of %s()" % func)
+        args = [arg if isinstance(arg, (Boolean, Symbol))
+                    else Constant(arg) for arg in args]
         self._func = func
         self._args = tuple(args)
 
@@ -125,9 +127,29 @@ class AppliedFunction(Applied):
     pass
 
 
-class Constant(Symbol):
+class Constant(Boolean):
+    """
+    Creates a constant with the given value.
+    """
     is_Constant = True
-    is_Symbol = False
+
+    def __new__(cls, name, **kwargs):
+        if isinstance(name, cls):
+            return name
+        return super(Boolean, cls).__new__(cls, name, **kwargs)
+
+    def __init__(self, name):
+        self._name = name
+
+    def __eq__(self, other):
+        return isinstance(other, self.func) and self.name == other.name
+
+    def _sympystr(self, *args, **kwargs):
+        return str(self.name)
+
+    @property
+    def name(self):
+        return self._name
 
 
 class Quantifier(FOL):
@@ -265,6 +287,33 @@ def fol_true(expr, model={}):
     >>> fol_true(expr, model)
     False
     """
+    model = dict(model)
+    for key, val in model.items():
+        if isinstance(key, Symbol):
+            if hasattr(val, '__iter__'):
+                model[key] = [Constant(v) for v in val]
+            else:
+                model[key] = Constant(val)
+
+        elif isinstance(key, Callable):
+            if hasattr(val, '__call__'):
+                continue
+            mapping = {}
+            for k, v in val.items():
+                if k != 'default':
+                    k = tuple(k) if hasattr(k, '__iter__') else (k,)
+                if v is None:
+                    mapping[k] = None
+                else:
+                    if isinstance(key, Predicate):
+                        mapping[k] = true if v else false
+                    else:
+                        mapping[k] = Constant(v)
+            model[key] = mapping
+
+        else:
+            raise ValueError()
+
     result = _fol_true(expr, model)
     if result is None:
         return None
@@ -310,17 +359,18 @@ def _fol_true(expr, model={}):
         else:
             return not flag
 
-    args = tuple([_fol_true(arg, model) for arg in expr.args])
+    args = [_fol_true(arg, model) for arg in expr.args]
 
     # Functions / Predicates
     if isinstance(expr, Applied):
+        args = [a.name if isinstance(a, Constant) else a for a in args]
         mapping = model.get(expr.func)
         if mapping is None:
             return None
         if hasattr(mapping, '__call__'):
             return mapping(*args)
         default = mapping.get('default')
-        return mapping.get(args, default)
+        return mapping.get(tuple(args), default)
 
     # PL Operators
     return expr.func(*args)
@@ -579,7 +629,7 @@ def mgu(expr1, expr2):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Unification_%28computer_science%29
+    .. [1] http://en.wikipedia.org/wiki/Unification_(computer_science)
     """
 
     if any([not isinstance(expr1, Applied), not isinstance(expr2, Applied),
@@ -590,14 +640,14 @@ def mgu(expr1, expr2):
     args1, args2 = list(expr1.args), list(expr2.args)
 
     while args1 and args2:
-        arg1, arg2 = args1.pop(0), args2.pop(0)
+        arg1, arg2 = args1.pop(), args2.pop()
 
         if arg1 == arg2:
             continue
 
         sub = {}
         if arg1.is_Symbol or arg2.is_Symbol:
-            if not arg1.is_Symbol:
+            if arg2.is_Symbol:
                 arg1, arg2 = arg2, arg1
             if isinstance(arg2, BooleanFunction) and arg1 in arg2.atoms():
                 return False
@@ -620,11 +670,8 @@ def mgu(expr1, expr2):
         return {true: true}
 
     for var, sub in subs.items():
-        while sub.is_Symbol:
-            if not sub in subs:
-                break
-            sub = subs[sub]
-        subs[var] = sub
+        for v in subs:
+            subs[v] = subs[v].subs({var:sub})
 
     return subs
 
@@ -641,7 +688,8 @@ def resolve(*expr):
     >>> P = Predicate('P')
     >>> Q = Predicate('Q')
     >>> f = Function('f')
-    >>> resolve((P(X) | ~Q(f(Z))), ~P(f('a')) & Q(Y))
+    >>> a = Constant('a')
+    >>> resolve((P(X) | ~Q(f(Z))), ~P(f(a)) & Q(Y))
     False
 
     References
