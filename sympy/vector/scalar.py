@@ -1,4 +1,5 @@
 from sympy.core.symbol import Symbol
+from sympy.core.compatibility import u
 
 
 class BaseScalar(Symbol):
@@ -9,7 +10,7 @@ class BaseScalar(Symbol):
 
     """
 
-    def __new__(cls, name, index, system):
+    def __new__(cls, name, index, system, pretty_str, latex_str):
         from sympy.vector.coordsysrect import CoordSysCartesian
         obj = super(BaseScalar, cls).__new__(cls, name)
         if not isinstance(system, CoordSysCartesian):
@@ -19,9 +20,17 @@ class BaseScalar(Symbol):
         #The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
         obj._name = name
+        obj._pretty_form = u(pretty_str)
+        obj._latex_form = latex_str
         obj._system = system
 
         return obj
+
+    def _latex(self, printer=None):
+        return self._latex_form
+
+    def _pretty(self, printer=None):
+        return self._pretty_form
 
     @property
     def system(self):

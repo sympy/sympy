@@ -4,6 +4,7 @@ from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy.core.assumptions import StdFactKB
 from sympy import ImmutableMatrix as Matrix
+from sympy.core.compatibility import u
 
 
 class Dyadic(BasisDependent):
@@ -190,6 +191,8 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._measure_number = 1
         obj._components = {obj: S(1)}
         obj._sys = vector1._sys
+        obj._pretty_form = u('(' + vector1._pretty_form + '|' +
+                             vector2._pretty_form + ')')
 
         return obj
 

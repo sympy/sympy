@@ -7,6 +7,7 @@ from sympy.vector.functions import express
 from sympy.vector.basisdependent import BasisDependent, \
      BasisDependentAdd, BasisDependentMul, BasisDependentZero
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
+from sympy.core.compatibility import u
 
 
 class Vector(BasisDependent):
@@ -313,7 +314,7 @@ class BaseVector(Vector, AtomicExpr):
     Class to denote a base vector.
     """
 
-    def __new__(cls, name, index, system):
+    def __new__(cls, name, index, system, pretty_str, latex_str):
         #Verify arguments
         if not index in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
@@ -329,6 +330,8 @@ class BaseVector(Vector, AtomicExpr):
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
         obj._name = name
+        obj._pretty_form = u(pretty_str)
+        obj._latex_form = latex_str
         obj._system = system
 
         assumptions = {}

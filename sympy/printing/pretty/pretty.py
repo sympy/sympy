@@ -746,6 +746,80 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[', ']'))
         return D
 
+    def _print_BasisDependent(self, expr):
+        from sympy.vector import Vector
+        e = expr
+
+        class Fake(object):
+            baseline = 0
+
+            def render(self, *args, **kwargs):
+                self = e
+                if self == e.zero:
+                    return unicode(0)
+                o1 = []
+                vectstrs = []
+                if isinstance(self, Vector):
+                    items = self.separate().items()
+                else:
+                    items = [(0, self)]
+                for system, vect in items:
+                    ar = vect.components
+                    inneritems = ar.items()
+                    inneritems.sort(key = lambda x: x[0].__str__())
+                    for k, v in inneritems:
+                        #if the coef of the basis vector is 1
+                        #we skip the 1
+                        if v == 1:
+                            o1.append(u("") +
+                                      k._pretty_form)
+                        #Same for -1
+                        elif v == -1:
+                            o1.append(u("(-1)") +
+                                      k._pretty_form)
+                        #For a general expr
+                        else:
+                            #We always wrap the measure numbers in
+                            #parantheses
+                            arg_str = PrettyPrinter()._print(
+                                v).parens()[0]
+
+                            o1.append(arg_str + ' ' + k._pretty_form)
+                        vectstrs.append(k._pretty_form)
+
+                #outstr = u("").join(o1)
+                if o1[0].startswith(u(" + ")):
+                    o1[0] = o1[0][3:]
+                elif o1[0].startswith(" "):
+                    o1[0] = o1[0][1:]
+                #Fixing the newlines
+                lengths = []
+                strs = ['']
+                for i, partstr in enumerate(o1):
+                    
+                    if '\n' in partstr:
+                        tempstr = partstr
+                        tempstr = tempstr.replace(vectstrs[i], '')
+                        tempstr = tempstr.replace(u('\u239e'),
+                                                  u('\u239e')
+                                                  + ' ' + vectstrs[i])
+                        o1[i] = tempstr
+                for i, partstr in enumerate(o1):
+                    parts = partstr.split('\n')
+                    lengths.append(len(parts[0]))
+                    for j, part in enumerate(parts):
+                        if j == len(strs):
+                            strs.append(' ' * (sum(lengths[:-1]) +
+                                               3*(len(lengths)-1)))
+                        if j == 0:
+                            strs[0] += part + ' + '
+                        else:
+                            strs[j] += part + ' '*(lengths[-1] -
+                                                   len(part) + 3)
+                
+                return u('\n').join([s[:-3] for s in strs])
+        return Fake()
+
     def _print_Piecewise(self, pexpr):
 
         P = {}

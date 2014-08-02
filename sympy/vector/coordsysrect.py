@@ -15,8 +15,10 @@ class CoordSysCartesian(Basic):
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, vector_names=None, variable_names=None,
-                location=None, rotation_matrix=None, parent=None):
+    def __new__(cls, name, location=None, rotation_matrix=None,
+                parent=None, vector_names=None, variable_names=None,
+                latex_vects=None, pretty_vects=None, latex_scalars=None,
+                pretty_scalars=None):
         """
         The orientation/location parameters are necessary if this system
         is being defined at a certain orientation or location wrt another.
@@ -26,10 +28,6 @@ class CoordSysCartesian(Basic):
 
         name : str
             The name of the new CoordSysCartesian instance.
-
-        vector_names, variable_names : tuples/lists(optional)
-            Tuples/Lists of 3 strings each, with custom names for base
-            vectors and base scalars of the new system respectively.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -43,6 +41,11 @@ class CoordSysCartesian(Basic):
         parent : CoordSysCartesian
             The coordinate system wrt which the orientation/location
             (or both) is being defined.
+
+        vector_names, variable_names : iterable(optional)
+            Iterables of 3 strings each, with custom names for base
+            vectors and base scalars of the new system respectively.
+            Use for simple str printing.
 
         """
 
@@ -94,16 +97,48 @@ class CoordSysCartesian(Basic):
         #Initialize the base vectors
         if vector_names is None:
             vector_names = (name + '.i', name + '.j', name + '.k')
-        obj._i = BaseVector(vector_names[0], 0, obj)
-        obj._j = BaseVector(vector_names[1], 1, obj)
-        obj._k = BaseVector(vector_names[2], 2, obj)
+        else:
+            vector_names = list(vector_names)
+        if latex_vects is None:
+            latex_vects = [(r"\mathbf{\hat{i}_{%s}}" % name),
+                           (r"\mathbf{\hat{j}_{%s}}" % name),
+                           (r"\mathbf{\hat{k}_{%s}}" % name)]
+        else:
+            latex_vects = list(latex_vects)
+        if pretty_vects is None:
+            pretty_vects = (name + '_i', name + '_j', name + '_k')
+        else:
+            pretty_vects = list(pretty_vects)
+
+        obj._i = BaseVector(vector_names[0], 0, obj,
+                            pretty_vects[0], latex_vects[0])
+        obj._j = BaseVector(vector_names[1], 1, obj,
+                            pretty_vects[1], latex_vects[1])
+        obj._k = BaseVector(vector_names[2], 2, obj,
+                            pretty_vects[2], latex_vects[2])
 
         #Initialize the base scalars
         if variable_names is None:
             variable_names = (name + '.x', name + '.y', name + '.z')
-        obj._x = BaseScalar(variable_names[0], 0, obj)
-        obj._y = BaseScalar(variable_names[1], 1, obj)
-        obj._z = BaseScalar(variable_names[2], 2, obj)
+        else:
+            variable_names = list(variable_names)
+        if latex_scalars is None:
+            latex_scalars = [(r"\mathbf{{x}_{%s}}" % name),
+                             (r"\mathbf{{y}_{%s}}" % name),
+                             (r"\mathbf{{z}_{%s}}" % name)]
+        else:
+            latex_scalars = list(latex_scalars)
+        if pretty_scalars is None:
+            pretty_scalars = (name + '_x', name + '_y', name + '_z')
+        else:
+            pretty_scalars = list(pretty_scalars)
+
+        obj._x = BaseScalar(variable_names[0], 0, obj,
+                            pretty_scalars[0], latex_scalars[0])
+        obj._y = BaseScalar(variable_names[1], 1, obj,
+                            pretty_scalars[1], latex_scalars[1])
+        obj._z = BaseScalar(variable_names[2], 2, obj,
+                            pretty_scalars[2], latex_scalars[2])
 
         #Assign a Del operator instance
         from sympy.vector.deloperator import Del
