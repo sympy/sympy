@@ -71,6 +71,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Boolean = False
     is_Not = False
     is_Matrix = False
+    is_Vector = False
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -1350,7 +1351,10 @@ class Basic(with_metaclass(ManagedProperties)):
                     mapping[expr] = new
                     if simultaneous:
                         # don't let this expression be changed during rebuilding
-                        d = Dummy()
+                        com = getattr(new, 'is_commutative', True)
+                        if com is None:
+                            com = True
+                        d = Dummy(commutative=com)
                         mask.append((d, new))
                         expr = d
                     else:

@@ -654,6 +654,12 @@ def test_replace():
     assert x.replace(x, y) == y
     assert (x + 1).replace(1, 2) == x + 2
 
+    # https://groups.google.com/forum/#!topic/sympy/8wCgeC95tz0
+    n1, n2, n3 = symbols('n1:4', commutative=False)
+    f = Function('f')
+    assert (n1*f(n2)).replace(f, lambda x: x) == n1*n2
+    assert (n3*f(n2)).replace(f, lambda x: x) == n3*n2
+
 
 def test_find():
     expr = (x + y + 2 + sin(3*x))

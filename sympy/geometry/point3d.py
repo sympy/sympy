@@ -13,6 +13,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.geometry.point import Point
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
@@ -41,7 +42,7 @@ class Point3D(GeometryEntity):
     ======
 
     NotImplementedError
-        When trying to create a point other than 3 dimensions.
+        When trying to create a point other than 2 or 3 dimensions.
         When `intersection` is called with object other than a Point.
     TypeError
         When trying to add or subtract points with different dimensions.
@@ -74,17 +75,21 @@ class Point3D(GeometryEntity):
     """
     def __new__(cls, *args, **kwargs):
         eval = kwargs.get('evaluate', global_evaluate[0])
-        if isinstance(args[0], Point3D):
+        if isinstance(args[0], (Point, Point3D)):
             if not eval:
                 return args[0]
+            args = args[0].args
+        elif isinstance(args[0], Point):
             args = args[0].args
         else:
             if iterable(args[0]):
                 args = args[0]
-            if len(args) != 3:
+            if len(args) not in (2, 3):
                 raise TypeError(
-                    "Enter a 3 dimensional point")
+                    "Enter a 2 or 3 dimensional point")
         coords = Tuple(*args)
+        if len(coords) == 2:
+            coords += (S.Zero,)
         if eval:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
@@ -205,7 +210,8 @@ class Point3D(GeometryEntity):
         return [(point.x - self.x) / b,(point.y - self.y) / b,
                 (point.z - self.z) / b]
 
-    def is_collinear(*points):
+    @staticmethod
+    def are_collinear(*points):
         """Is a sequence of points collinear?
 
         Test whether or not a set of points are collinear. Returns True if
@@ -219,7 +225,7 @@ class Point3D(GeometryEntity):
         Returns
         =======
 
-        is_collinear : boolean
+        are_collinear : boolean
 
         See Also
         ========
@@ -233,9 +239,9 @@ class Point3D(GeometryEntity):
         >>> from sympy.abc import x
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 1)
         >>> p3, p4, p5 = Point3D(2, 2, 2), Point3D(x, x, x), Point3D(1, 2, 6)
-        >>> p1.is_collinear(p2, p3, p4)
+        >>> Point3D.are_collinear(p1, p2, p3, p4)
         True
-        >>> p1.is_collinear(p2, p3, p5)
+        >>> Point3D.are_collinear(p1, p2, p3, p5)
         False
         """
         # Coincident points are irrelevant and can confuse this algorithm.
@@ -244,9 +250,9 @@ class Point3D(GeometryEntity):
         if not all(isinstance(p, Point3D) for p in points):
             raise TypeError('Must pass only 3D Point objects')
 
-        if len(points) == 0:
+        if len(points) < 2:
             return False
-        if len(points) <= 2:
+        if len(points) == 2:
             return True  # two points always form a line
         if len(points) == 3:
             a = (points[0].direction_cosine(points[1]))
@@ -270,6 +276,7 @@ class Point3D(GeometryEntity):
                 return False
         return True
 
+    @staticmethod
     def are_coplanar(*points):
         """
 
@@ -296,31 +303,27 @@ class Point3D(GeometryEntity):
         >>> p2 = Point3D(2, 7, 2)
         >>> p3 = Point3D(0, 0, 2)
         >>> p4 = Point3D(1, 1, 2)
-        >>> p5 = Point3D(1, 2, 2)
-        >>> p1.are_coplanar(p2, p3, p4, p5)
+        >>> Point3D.are_coplanar(p1, p2, p3, p4)
         True
-        >>> p6 = Point3D(0, 1, 3)
-        >>> p1.are_coplanar(p2, p3, p4, p5, p6)
+        >>> p5 = Point3D(0, 1, 3)
+        >>> Point3D.are_coplanar(p1, p2, p3, p5)
         False
 
         """
-        if not all(isinstance(p, Point3D) for p in points):
-            raise TypeError('Must pass only 3D Point objects')
-        if(len(points) < 4):
-            return True # These cases are always True
+        from sympy.geometry.plane import Plane
         points = list(set(points))
-        for i in range(len(points) - 3):
-            pv1 = [j - k for j, k in zip(points[i].args,   \
-                points[i + 1].args)]
-            pv2 = [j - k for j, k in zip(points[i + 1].args,
-                points[i + 2].args)]
-            pv3 = [j - k for j, k in zip(points[i + 2].args,
-                points[i + 3].args)]
-            pv1, pv2, pv3 = Matrix(pv1), Matrix(pv2), Matrix(pv3)
-            stp = pv1.dot(pv2.cross(pv3))
-            if stp != 0:
-                return False
-        return True
+        if len(points) < 3:
+            raise ValueError('At least 3 points are needed to define a plane.')
+        a, b = points[:2]
+        for i, c in enumerate(points[2:]):
+            try:
+                p = Plane(a, b, c)
+                for j in (0, 1, i):
+                    points.pop(j)
+                return all(p.is_coplanar(i) for i in points)
+            except NotImplementedError:  # XXX should be ValueError
+                pass
+        raise ValueError('At least 3 non-collinear points needed to define plane.')
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
@@ -526,6 +529,11 @@ class Point3D(GeometryEntity):
         x1, y1, z1 = self.args
         x2, y2, z2 = p2.args
         return x1*x2 + y1*y2 + z1*z2
+
+    def equals(self, other):
+        if not isinstance(other, Point3D):
+            return False
+        return all(a.equals(b) for a, b in zip(self.args, other.args))
 
     def __add__(self, other):
         """Add other to self by incrementing self's coordinates by those of

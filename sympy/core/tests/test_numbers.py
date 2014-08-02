@@ -1423,3 +1423,16 @@ def test_latex():
     assert latex(zoo) == r"\tilde{\infty}"
     assert latex(nan) == r"\mathrm{NaN}"
     assert latex(I) == r"i"
+
+
+def test_issue_7742():
+    assert -oo % 1 == nan
+
+
+def test_ImaginaryUnit():
+    # see issue 5724
+    raises(TypeError, lambda: I > 2)
+    raises(TypeError, lambda: I < I)
+    raises(TypeError, lambda: I <= I)
+    raises(TypeError, lambda: I >= I)
+    raises(TypeError, lambda: I + 1 < I + 2)

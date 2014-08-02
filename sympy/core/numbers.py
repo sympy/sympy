@@ -2465,6 +2465,11 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return _sympify(other is S.NegativeInfinity)
 
+    def __mod__(self, other):
+        return S.NaN
+
+    __rmod__ = __mod__
+
 
 class NaN(with_metaclass(Singleton, Number)):
     """
