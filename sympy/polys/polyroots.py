@@ -12,7 +12,7 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im, Abs, cos, sin, Piecewise
+from sympy.functions import exp, sqrt, re, im, Abs, cos, acos, sin, Piecewise
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
@@ -87,8 +87,19 @@ def roots_quadratic(f):
     return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
 
 
-def roots_cubic(f):
+def roots_cubic(f, trig=False):
     """Returns a list of roots of a cubic polynomial."""
+    if trig:
+        a, b, c, d = f.all_coeffs()
+        p = (3*a*c - b**2)/3/a**2
+        q = (2*b**3 - 9*a*b*c + 27*a**2*d)/(27*a**3)
+        D = 18*a*b*c*d - 4*b**3*d+b**2*c**2 - 4*a*c**3 - 27*a**2*d**2
+        if (D > 0) == True:
+            rv = []
+            for k in range(3):
+                rv.append(2*sqrt(-p/3)*cos(acos(3*q/2/p*sqrt(-3/p))/3 - k*2*pi/3))
+            return list(sorted([i - b/3/a for i in rv]))
+
     _, a, b, c = f.monic().all_coeffs()
 
     if c is S.Zero:
@@ -715,7 +726,11 @@ def roots(f, *gens, **flags):
     a complete set of roots use RootOf class or numerical methods
     instead. By default cubic and quartic formulas are used in
     the algorithm. To disable them because of unreadable output
-    set ``cubics=False`` or ``quartics=False`` respectively.
+    set ``cubics=False`` or ``quartics=False`` respectively. If cubic
+    roots are real but are expressed in terms of complex numbers
+    (casus irreducibilis [1]) the ``trig`` flag can be set to True to
+    have the solutions returned in terms of cosine and inverse cosine
+    functions.
 
     To get roots from a specific domain set the ``filter`` flag with
     one of the following specifiers: Z, Q, R, I, C. By default all
@@ -749,12 +764,18 @@ def roots(f, *gens, **flags):
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
 
+    References
+    ==========
+
+    1. http://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
+
     """
     from sympy.polys.polytools import to_rational_coeffs
     flags = dict(flags)
 
     auto = flags.pop('auto', True)
     cubics = flags.pop('cubics', True)
+    trig = flags.pop('trig', False)
     quartics = flags.pop('quartics', True)
     quintics = flags.pop('quintics', False)
     multiple = flags.pop('multiple', False)
@@ -839,7 +860,7 @@ def roots(f, *gens, **flags):
         elif f.is_cyclotomic:
             result += roots_cyclotomic(f)
         elif n == 3 and cubics:
-            result += roots_cubic(f)
+            result += roots_cubic(f, trig=trig)
         elif n == 4 and quartics:
             result += roots_quartic(f)
         elif n == 5 and quintics:

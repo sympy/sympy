@@ -25,7 +25,7 @@ access any SymPy module, or use this contens:
    numeric-computation.rst
    functions/index.rst
    galgebra/index.rst
-   geometry.rst
+   geometry/index.rst
    integrals/integrals.rst
    logic.rst
    matrices/index.rst

@@ -940,6 +940,10 @@ class Float(Number):
         import sage.all as sage
         return sage.RealNumber(str(self))
 
+    def __format__(self, format_spec):
+        return format(decimal.Decimal(str(self)), format_spec)
+
+
 # Add sympify converters
 converter[float] = converter[decimal.Decimal] = Float
 
@@ -2460,6 +2464,11 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if other.is_number and other.is_real is False:
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return _sympify(other is S.NegativeInfinity)
+
+    def __mod__(self, other):
+        return S.NaN
+
+    __rmod__ = __mod__
 
 
 class NaN(with_metaclass(Singleton, Number)):

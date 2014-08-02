@@ -9,7 +9,7 @@ from sympy import (
     catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
     factorial2, floor, gamma, groebner, hyper, log, lowergamma, meijerg,
     oo, pi, sin, sqrt, subfactorial, symbols, tan, uppergamma, lex, ilex,
-    grlex, elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
+    grlex, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, Range)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2938,13 +2938,13 @@ def test_any_object_in_sequence():
 
 def test_pretty_sets():
     s = FiniteSet
-    assert pretty(s([x*y, x**2])) == \
+    assert pretty(s(*[x*y, x**2])) == \
 """\
   2      \n\
 {x , x*y}\
 """
-    assert pretty(s(range(1, 6))) == "{1, 2, 3, 4, 5}"
-    assert pretty(s(range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+    assert pretty(s(*range(1, 6))) == "{1, 2, 3, 4, 5}"
+    assert pretty(s(*range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
     for s in (frozenset, set):
         assert pretty(s([x*y, x**2])) == \
 """\
@@ -2954,6 +2954,23 @@ def test_pretty_sets():
         assert pretty(s(range(1, 6))) == "%s([1, 2, 3, 4, 5])" % s.__name__
         assert pretty(s(range(1, 13))) == \
             "%s([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])" % s.__name__
+
+    assert pretty(Range(0, 3, 1)) == '{0, 1, 2}'
+
+    ascii_str = '{0, 1, ..., 29}'
+    ucode_str = u('{0, 1, …, 29}')
+    assert pretty(Range(0, 30, 1)) == ascii_str
+    assert upretty(Range(0, 30, 1)) == ucode_str
+
+    ascii_str = '{0, 2, ..., oo}'
+    ucode_str = u('{0, 2, …, ∞}')
+    assert pretty(Range(0, oo, 2)) == ascii_str
+    assert upretty(Range(0, oo, 2)) == ucode_str
+
+    ascii_str = '{-oo, ..., -3, -2}'
+    ucode_str = u('{-∞, …, -3, -2}')
+    assert pretty(Range(-2, -oo, -1)) == ascii_str
+    assert upretty(Range(-2, -oo, -1)) == ucode_str
 
 
 def test_pretty_limits():

@@ -25,6 +25,7 @@ ordering_of_classes = [
     "Line3D",
     "Ray3D",
     "Segment3D",
+    "Plane",
     "Triangle",
     "RegularPolygon",
     "Polygon",
@@ -261,6 +262,9 @@ class GeometryEntity(Basic):
 
         """
         raise NotImplementedError()
+
+    def equals(self, o):
+        return self == o
 
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""

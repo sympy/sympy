@@ -1316,15 +1316,15 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}"
 
     def _print_tuple(self, expr):
-        return r"\begin{pmatrix}%s\end{pmatrix}" % \
-            r", & ".join([ self._print(i) for i in expr ])
+        return r"\left ( %s\right )" % \
+            r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
 
     def _print_list(self, expr):
-        return r"\begin{bmatrix}%s\end{bmatrix}" % \
-            r", & ".join([ self._print(i) for i in expr ])
+        return r"\left [ %s\right ]" % \
+            r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1334,7 +1334,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)
+        return r"\left \{ %s\right \}" % r", \quad ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -1847,12 +1847,11 @@ def latex(expr, **settings):
     >>> print(latex(x**2, symbol_names={x:'x_i'}))
     x_i^{2}
 
-    Besides all Basic based expressions, you can recursively
-    convert Python containers (lists, tuples and dicts) and
-    also SymPy matrices:
+    ``latex`` also supports the builtin container types list, tuple, and
+    dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\begin{bmatrix}2 / x, & y\end{bmatrix}$
+    $\left [ 2 / x, \quad y\right ]$
 
     """
 

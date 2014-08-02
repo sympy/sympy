@@ -84,8 +84,8 @@ class SymPyDeprecationWarning(DeprecationWarning):
     Old feature has been deprecated. Use new feature instead. See
     https://github.com/sympy/sympy/issues/5241 for more info.
 
-    Every formal deprecation should have an associated issue in the Google
-    Code issue tracker.  All such issues should have the DeprecationRemoval
+    Every formal deprecation should have an associated issue in the GitHub
+    issue tracker.  All such issues should have the DeprecationRemoval
     tag.
 
     Additionally, each formal deprecation should mark the first release for

@@ -1557,7 +1557,7 @@ def diop_ternary_quadratic(eq):
     Usage
     =====
 
-    ``diop_ternary_quadratic(eq)``: Return a tuple containing an basic solution
+    ``diop_ternary_quadratic(eq)``: Return a tuple containing a basic solution
     to ``eq``.
 
     Details

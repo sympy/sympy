@@ -2,10 +2,15 @@ from __future__ import print_function, division
 
 __all__ = ['LagrangesMethod']
 
-from sympy import diff, zeros, Matrix, eye, sympify, Symbol
+from sympy import diff, zeros, Matrix, eye, sympify
 from sympy.physics.vector import (dynamicsymbols, ReferenceFrame, Point)
-from sympy.physics.mechanics.functions import _mat_inv_mul
+from sympy.physics.mechanics.functions import _mat_inv_mul, \
+        _find_dynamicsymbols, _subs_keep_derivs
+from sympy.physics.mechanics.linearize import Linearizer
+from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import filldedent
+import collections
 import warnings
 
 warnings.simplefilter("always", SymPyDeprecationWarning)
@@ -96,7 +101,8 @@ class LagrangesMethod(object):
 
     """
 
-    def __init__(self, Lagrangian, q_list, coneqs=None, forcelist=None, frame=None):
+    def __init__(self, Lagrangian, q_list, coneqs=None, forcelist=None,
+            frame=None, hol_coneqs=None, nonhol_coneqs=None):
         """Supply the following for the initialization of LagrangesMethod
 
         Lagrangian : Sympifyable
@@ -104,10 +110,11 @@ class LagrangesMethod(object):
         q_list : list
             A list of the generalized coordinates
 
-        coneqs : list
-            A list of the holonomic and non-holonomic constraint equations.
-            VERY IMPORTANT NOTE- The holonomic constraints must be
-            differentiated with respect to time and then included in coneqs.
+        hol_coneqs: list
+            A list of the holonomic constraint equations
+
+        nonhol_coneqs: list
+            A list of the nonholonomic constraint equations
 
         forcelist : list
             Takes a list of (Point, Vector) or (ReferenceFrame, Vector) tuples
@@ -148,7 +155,19 @@ class LagrangesMethod(object):
         self._qdots = [diff(i, dynamicsymbols._t) for i in self._q]
         self._qdoubledots = [diff(i, dynamicsymbols._t) for i in self._qdots]
 
-        self.coneqs = coneqs
+        # Deal with constraint equations
+        if coneqs:
+            SymPyDeprecationWarning(filldedent("""The `coneqs` kwarg is
+            deprecated in favor of `hol_coneqs` and `nonhol_coneqs`. Please
+            update your code""")).warn()
+            self.coneqs = coneqs
+        else:
+            mat_build = lambda x: Matrix(x) if x else Matrix()
+            hol_coneqs = mat_build(hol_coneqs)
+            nonhol_coneqs = mat_build(nonhol_coneqs)
+            self.coneqs = Matrix([hol_coneqs.diff(dynamicsymbols._t),
+                    nonhol_coneqs])
+            self._hol_coneqs = hol_coneqs
 
     def form_lagranges_equations(self):
         """Method to form Lagrange's equations of motion.
@@ -175,7 +194,7 @@ class LagrangesMethod(object):
 
         #term1 and term2 will be there no matter what so leave them as they are
 
-        if self.coneqs is not None:
+        if self.coneqs:
             coneqs = self.coneqs
             #If there are coneqs supplied then the following will be created
             coneqs = list(coneqs)
@@ -275,7 +294,7 @@ class LagrangesMethod(object):
         #THE FIRST TWO ROWS OF THE MATRIX
         row1 = eye(n).row_join(zeros(n, n))
         row2 = zeros(n, n).row_join(self.mass_matrix)
-        if self.coneqs is not None:
+        if self.coneqs:
             m = len(self.coneqs)
             I = eye(n).row_join(zeros(n, n + m))
             below_eye = zeros(n + m, n)
@@ -296,7 +315,7 @@ class LagrangesMethod(object):
         qdd = self._qdoubledots
         qddzero = dict(zip(qdd, [0] * len(qdd)))
 
-        if self.coneqs is not None:
+        if self.coneqs:
             lam = self.lam_vec
             lamzero = dict(zip(lam, [0] * len(lam)))
 
@@ -315,10 +334,150 @@ class LagrangesMethod(object):
 
         if self.eom is None:
             raise ValueError('Need to compute the equations of motion first')
-        if self.coneqs is not None:
+        if self.coneqs:
             return (Matrix(self._qdots)).col_join((self.forcing).col_join(self._f_cd))
         else:
             return (Matrix(self._qdots)).col_join(self.forcing)
+
+    def to_linearizer(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None):
+        """Returns an instance of the Linearizer class, initiated from the
+        data in the LagrangesMethod class. This may be more desirable than using
+        the linearize class method, as the Linearizer object will allow more
+        efficient recalculation (i.e. about varying operating points).
+
+        Parameters
+        ----------
+        q_ind, qd_ind : array_like, optional
+            The independent generalized coordinates and speeds.
+        q_dep, qd_dep : array_like, optional
+            The dependent generalized coordinates and speeds.
+        """
+
+        # Compose vectors
+        t = dynamicsymbols._t
+        q = Matrix(self._q)
+        u = Matrix(self._qdots)
+        ud = u.diff(t)
+        # Get vector of lagrange multipliers
+        lams = self.lam_vec
+
+        mat_build = lambda x: Matrix(x) if x else Matrix()
+        q_i = mat_build(q_ind)
+        q_d = mat_build(q_dep)
+        u_i = mat_build(qd_ind)
+        u_d = mat_build(qd_dep)
+
+        # Compose general form equations
+        f_c = self._hol_coneqs
+        f_v = self.coneqs
+        f_a = f_v.diff(t)
+        f_0 = u
+        f_1 = -u
+        f_2 = self._term1
+        f_3 = -(self._term2 + self._term4)
+        f_4 = -self._term3
+
+        # Check that there are an appropriate number of independent and
+        # dependent coordinates
+        if len(q_d) != len(f_c) or len(u_d) != len(f_v):
+            raise ValueError(("Must supply {:} dependent coordinates, and " +
+                    "{:} dependent speeds").format(len(f_c), len(f_v)))
+        if set(Matrix([q_i, q_d])) != set(q):
+            raise ValueError("Must partition q into q_ind and q_dep, with " +
+                    "no extra or missing symbols.")
+        if set(Matrix([u_i, u_d])) != set(u):
+            raise ValueError("Must partition qd into qd_ind and qd_dep, " +
+                    "with no extra or missing symbols.")
+
+        # Find all other dynamic symbols, forming the forcing vector r.
+        # Sort r to make it canonical.
+        insyms = set(Matrix([q, u, ud, lams]))
+        r = list(_find_dynamicsymbols(f_3, insyms))
+        r.sort(key=default_sort_key)
+        # Check for any derivatives of variables in r that are also found in r.
+        for i in r:
+            if diff(i, dynamicsymbols._t) in r:
+                raise ValueError('Cannot have derivatives of specified \
+                                 quantities when linearizing forcing terms.')
+
+        return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
+                q_d, u_i, u_d, r, lams)
+
+    def linearize(self, q_ind=None, qd_ind=None, q_dep=None, qd_dep=None,
+            **kwargs):
+        """ Linearize the equations of motion about a symbolic operating point.
+
+        If kwarg A_and_B is False (default), returns M, A, B, r for the
+        linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
+
+        If kwarg A_and_B is True, returns A, B, r for the linearized form
+        dx = A*x + B*r, where x = [q_ind, u_ind]^T. Note that this is
+        computationally intensive if there are many symbolic parameters. For
+        this reason, it may be more desirable to use the default A_and_B=False,
+        returning M, A, and B. Values may then be substituted in to these
+        matrices, and the state space form found as
+        A = P.T*M.inv()*A, B = P.T*M.inv()*B, where P = Linearizer.perm_mat.
+
+        In both cases, r is found as all dynamicsymbols in the equations of
+        motion that are not part of q, u, q', or u'. They are sorted in
+        canonical form.
+
+        The operating points may be also entered using the `op_point` kwarg.
+        This takes a dictionary of {symbol: value}, or a an iterable of such
+        dictionaries. The values may be numberic or symbolic. The more values
+        you can specify beforehand, the faster this computation will run.
+
+        For more documentation, please see the `Linearizer` class."""
+
+        linearizer = self.to_linearizer(q_ind, qd_ind, q_dep, qd_dep)
+        result = linearizer.linearize(**kwargs)
+        return result + (linearizer.r,)
+
+    def solve_multipliers(self, op_point=None, sol_type='dict'):
+        """Solves for the values of the lagrange multipliers symbolically at
+        the specified operating point
+
+        Parameters
+        ----------
+        op_point : dict or iterable of dicts, optional
+            Point at which to solve at. The operating point is specified as
+            a dictionary or iterable of dictionaries of {symbol: value}. The
+            value may be numeric or symbolic itself.
+
+        sol_type : str, optional
+            Solution return type. Valid options are:
+            - 'dict': A dict of {symbol : value} (default)
+            - 'Matrix': An ordered column matrix of the solution
+        """
+
+        # Determine number of multipliers
+        k = len(self.lam_vec)
+        if k == 0:
+            raise ValueError("System has no lagrange multipliers to solve for.")
+        # Compose dict of operating conditions
+        if isinstance(op_point, dict):
+            op_point_dict = op_point
+        elif isinstance(op_point, collections.Iterable):
+            op_point_dict = {}
+            for op in op_point:
+                op_point_dict.update(op)
+        else:
+            op_point_dict = {}
+        # Compose the system to be solved
+        mass_matrix = self.mass_matrix.col_join((-self.lam_coeffs.row_join(
+                zeros(k, k))))
+        force_matrix = self.forcing.col_join(self._f_cd)
+        # Sub in the operating point
+        mass_matrix = _subs_keep_derivs(mass_matrix, op_point_dict)
+        force_matrix = _subs_keep_derivs(force_matrix, op_point_dict)
+        # Solve for the multipliers
+        sol_list = mass_matrix.LUsolve(-force_matrix)[-k:]
+        if sol_type == 'dict':
+            return dict(zip(self.lam_vec, sol_list))
+        elif sol_type == 'Matrix':
+            return Matrix(sol_list)
+        else:
+            raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
     def rhs(self, inv_method=None, **kwargs):
         """ Returns equations that can be solved numerically

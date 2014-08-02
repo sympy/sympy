@@ -130,7 +130,12 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode='inline')
-            return _matplotlib_wrapper(s)
+            try:
+                return _matplotlib_wrapper(s)
+            except Exception:
+                # Matplotlib.mathtext cannot render some things (like
+                # matrices)
+                return None
 
     def _print_latex_text(o):
         """

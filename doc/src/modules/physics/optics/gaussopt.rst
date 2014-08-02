@@ -2,5 +2,5 @@
 Gaussian Optics
 ===============
 
-.. automodule:: sympy.physics.gaussopt
+.. automodule:: sympy.physics.optics.gaussopt
    :members:
