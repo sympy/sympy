@@ -202,7 +202,8 @@ def test_Indexed_free_symbols():
     len_y = N
     i = Idx('i', len_y-1)
     y = IndexedBase('y', shape=(len_y,))
-    assert y[i].free_symbols == set([N, y, i])
+    assert y[i].free_symbols == set([N, y.label, i.label])
 
     z = IndexedBase('z')
-    assert z[i].free_symbols == set([z, i])
+    j = Idx('j')
+    assert z[j].free_symbols == set([z.label, j.label])
