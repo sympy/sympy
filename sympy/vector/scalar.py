@@ -1,5 +1,6 @@
 from sympy.core.symbol import Symbol
 from sympy.core.compatibility import u
+from sympy.printing.pretty.stringpict import prettyForm
 
 
 class BaseScalar(Symbol):
@@ -29,8 +30,8 @@ class BaseScalar(Symbol):
     def _latex(self, printer=None):
         return self._latex_form
 
-    def _pretty(self, printer=None):
-        return self._pretty_form
+    def _pretty(self, printer=None):            
+        return prettyForm(self._pretty_form)
 
     @property
     def system(self):

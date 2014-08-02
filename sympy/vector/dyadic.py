@@ -193,6 +193,8 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._sys = vector1._sys
         obj._pretty_form = u('(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
+        obj._latex_form = ('(' + vector1._latex_form + "{|}" +
+                           vector2._latex_form + ')')
 
         return obj
 

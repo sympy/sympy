@@ -775,7 +775,7 @@ class PrettyPrinter(Printer):
                                       k._pretty_form)
                         #Same for -1
                         elif v == -1:
-                            o1.append(u("(-1)") +
+                            o1.append(u("(-1) ") +
                                       k._pretty_form)
                         #For a general expr
                         else:
