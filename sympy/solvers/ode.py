@@ -1764,9 +1764,9 @@ def checksysodesol(eqs, sols, func=None):
         raise ValueError("func must be a function of one variable, not %s" % func)
     for sol in sols:
         if len(sol.atoms(AppliedUndef)) != 1:
-            raise ValueError("solution should have one function only")
+            raise ValueError("solutions should have one function only")
     if len(funcs) != len(set([sol.lhs for sol in sols])):
-        raise ValueError("number of solution provided does not match the number of equations")
+        raise ValueError("number of solutions provided does not match the number of equations")
     t = funcs[0].args[0]
     dictsol = dict()
     for sol in sols:
