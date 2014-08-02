@@ -13,6 +13,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.geometry.point import Point
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
 from .entity import GeometryEntity
@@ -41,7 +42,7 @@ class Point3D(GeometryEntity):
     ======
 
     NotImplementedError
-        When trying to create a point other than 3 dimensions.
+        When trying to create a point other than 2 or 3 dimensions.
         When `intersection` is called with object other than a Point.
     TypeError
         When trying to add or subtract points with different dimensions.
@@ -74,17 +75,21 @@ class Point3D(GeometryEntity):
     """
     def __new__(cls, *args, **kwargs):
         eval = kwargs.get('evaluate', global_evaluate[0])
-        if isinstance(args[0], Point3D):
+        if isinstance(args[0], (Point, Point3D)):
             if not eval:
                 return args[0]
+            args = args[0].args
+        elif isinstance(args[0], Point):
             args = args[0].args
         else:
             if iterable(args[0]):
                 args = args[0]
-            if len(args) != 3:
+            if len(args) not in (2, 3):
                 raise TypeError(
-                    "Enter a 3 dimensional point")
+                    "Enter a 2 or 3 dimensional point")
         coords = Tuple(*args)
+        if len(coords) == 2:
+            coords += (S.Zero,)
         if eval:
             coords = coords.xreplace(dict(
                 [(f, simplify(nsimplify(f, rational=True)))
@@ -524,6 +529,11 @@ class Point3D(GeometryEntity):
         x1, y1, z1 = self.args
         x2, y2, z2 = p2.args
         return x1*x2 + y1*y2 + z1*z2
+
+    def equals(self, other):
+        if not isinstance(other, Point3D):
+            return False
+        return all(a.equals(b) for a, b in zip(self.args, other.args))
 
     def __add__(self, other):
         """Add other to self by incrementing self's coordinates by those of

@@ -707,25 +707,25 @@ def test_plane():
     assert p3 in pl5
 
     assert pl3.projection(Point(0, 0)) == p1
-    assert pl3.projection(p1) == p1
-    assert pl3.projection(p2) == Point3D(7/6, 2/3, 7/6)
-    assert pl6.projection(Point3D(1, 5, 7)) == Point3D(3, 7, 9)
-    assert pl7.projection(Point(2, 5)) == Point3D(25/6, 2/3, 13/6)
-    assert isinstance(pl7.projection(Point(2, 5)), Point3D)
+    p = pl3.projection(Point3D(1, 1, 0))
+    assert p == Point3D(7/6, 2/3, 1/6)
+    assert p in pl3
 
-    assert pl3.projection_line(Line(Point(0, 0), Point(1, 1))) == \
-               Line3D(Point3D(0, 0, 0), Point3D(7/6, 2/3, 1/6))
-    assert pl3.projection_line(Line(Point(0, 0), Point(1, 1))) in pl3
+    l = pl3.projection_line(Line(Point(0, 0), Point(1, 1)))
+    assert l == Line3D(Point3D(0, 0, 0), Point3D(7/6, 2/3, 1/6))
+    assert l in pl3
+    # get a segment that does not intersect the plane which is also
+    # parallel to pl3's normal veector
+    t = Dummy()
+    r = pl3.random_point()
+    a = pl3.perpendicular_line(r).arbitrary_point(t)
+    s = Segment3D(a.subs(t, 1), a.subs(t, 2))
+    assert s.p1 not in pl3 and s.p2 not in pl3
+    assert pl3.projection_line(s).equals(r)
     assert pl3.projection_line(Segment(Point(1, 0), Point(1, 1))) == \
                Segment3D(Point3D(5/6, 1/3, -1/6), Point3D(7/6, 2/3, 1/6))
     assert pl6.projection_line(Ray(Point(1, 0), Point(1, 1))) == \
                Ray3D(Point3D(14/3, 11/3, 11/3), Point3D(13/3, 13/3, 10/3))
-    assert pl7.projection_line(Line3D(Point3D(1, 4, 7), Point3D(4, 5, 8))) == \
-               Line3D(Point3D(3, 0, 9), Point3D(35/6, 4/3, 59/6))
-    assert pl6.projection_line(Segment3D(Point3D(2, 1, 4), Point3D(1, 4, 7))) == \
-               Segment3D(Point3D(10/3, 19/3, 28/3), Point3D(5, 4, 7))
-    assert pl7.projection_line(Ray3D(Point3D(2, 5, 1), Point3D(9, 5, 1))) == \
-               Ray3D(Point3D(25/6, 2/3, 19/6), Point3D(10, 3, 2))
 
 
     assert pl3.is_parallel(pl6) is False
@@ -742,7 +742,7 @@ def test_plane():
     assert pl6.distance(pl6.p1) == 0
     assert pl7.distance(pl6) == 0
     assert pl7.distance(l1) == 0
-    assert pl6.distance(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == 4*sqrt(3)/3
+    assert pl6.distance(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == 0
     pl6.distance(Plane(Point3D(5, 5, 5), normal_vector=(8, 8, 8))) == sqrt(3)
 
     assert pl6.angle_between(pl3) == pi/2
@@ -788,14 +788,21 @@ def test_plane():
 
     assert pl6.intersection(pl6) == [pl6]
     assert pl4.intersection(pl4.p1) == [pl4.p1]
-    assert pl3.intersection(pl6) == [Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6))]
-    assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == [Point3D(2, 8/3, 10/3)]
-    assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))) == \
-               [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
-    assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [Point3D(-1, 3, 10)]
-    assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == []
-    assert pl7.intersection(Line(Point(2, 3), Point(4, 2))) == [Point(13/2, 3/4)]
-
+    assert pl3.intersection(pl6) == [
+        Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6))]
+    assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == [
+        Point3D(2, 8/3, 10/3)]
+    assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))) == [
+        Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
+    assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
+        Point3D(-1, 3, 10)]
+    assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
+        Point3D(-1, 3, 10)]
+    assert pl7.intersection(Line(Point(2, 3), Point(4, 2))) == [
+        Point3D(13/2, 3/4, 0)]
+    r = Ray(Point(2, 3), Point(4, 2))
+    assert Plane((1,2,0), normal_vector=(0,0,1)).intersection(r) == [
+        Ray3D(Point(2, 3), Point(4, 2))]
 
     assert pl3.random_point() in pl3
 
