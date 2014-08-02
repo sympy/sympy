@@ -756,7 +756,7 @@ class PrettyPrinter(Printer):
             def render(self, *args, **kwargs):
                 self = e
                 if self == e.zero:
-                    return unicode(0)
+                    return e.zero._pretty_form
                 o1 = []
                 vectstrs = []
                 if isinstance(self, Vector):
@@ -764,8 +764,7 @@ class PrettyPrinter(Printer):
                 else:
                     items = [(0, self)]
                 for system, vect in items:
-                    ar = vect.components
-                    inneritems = ar.items()
+                    inneritems = vect.components.items()
                     inneritems.sort(key = lambda x: x[0].__str__())
                     for k, v in inneritems:
                         #if the coef of the basis vector is 1

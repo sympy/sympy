@@ -443,6 +443,32 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_BasisDependent(self, expr):
+        from sympy.vector import Vector
+
+        o1 = []
+        if expr == expr.zero:
+            return expr.zero._latex_form
+        if isinstance(expr, Vector):
+            items = expr.separate().items()
+        else:
+            items = [(0, expr)]
+
+        for system, vect in items:
+            inneritems = vect.components.items()
+            inneritems.sort(key = lambda x:x[0].__str__())
+            for k, v in inneritems:
+                if v == 1:
+                    o1.append(' + ' + k._latex_form)
+                elif v == -1:
+                    o1.append(' - ' + k._latex_form)
+                else:
+                    arg_str = '(' + LatexPrinter().doprint(v) + ')'
+                    o1.append(' + ' + arg_str + k._latex_form)
+
+        outstr = (''.join(o1))[3:]
+        return outstr
+
     def _print_Indexed(self, expr):
         tex = self._print(expr.base)+'_{%s}' % ','.join(
             map(self._print, expr.indices))
