@@ -821,6 +821,15 @@ class LatexPrinter(Printer):
         else:
             return r"\Gamma%s" % tex
 
+    def _print_beta(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"\operatorname{B}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{B}%s" % tex
+
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
                                         self._print(expr.args[1]))
