@@ -2,25 +2,30 @@ from sympy.vector.scalar import BaseScalar
 from sympy import sympify
 
 
-def express(expr, system, variables=False):
+def express(expr, system, system2=None, variables=False):
     """
     Global function for 'express' functionality.
 
-    Re-expresses a Vector, scalar(sympyfiable) in given coordinate
-    system.
+    Re-expresses a Vector, Dyadic or scalar(sympyfiable) in the given
+    coordinate system.
 
     If 'variables' is True, then the coordinate variables (base scalars)
-    of other coordinate systems present in the vector/scalar field are
-    also substituted in terms of the base scalars of the given system.
+    of other coordinate systems present in the vector/scalar field or
+    dyadic are also substituted in terms of the base scalars of the
+    given system.
 
     Parameters
     ==========
 
-    expr : Vector/scalar(sympyfiable)
+    expr : Vector/Dyadic/scalar(sympyfiable)
         The expression to re-express in ReferenceFrame 'frame'
 
     system: CoordSysCartesian
         The coordinate system the expr is to be expressed in
+
+    system2: CoordSysCartesian
+        The other coordinate system required for re-expression
+        (only for a Dyadic Expr)
 
     variables : boolean
         Specifies whether to substitute the coordinate variables present
@@ -30,32 +35,43 @@ def express(expr, system, variables=False):
     ========
 
     >>> from sympy.vector import CoordSysCartesian
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, cos, sin
     >>> N = CoordSysCartesian('N')
     >>> q = Symbol('q')
-    >>> B = N.orient_new('B', 'Axis', [q, N.k])
+    >>> B = N.orient_new_axis('B', q, N.k)
     >>> from sympy.vector import express
     >>> express(B.i, N)
     (cos(q))*N.i + (sin(q))*N.j
     >>> express(N.x, B, variables=True)
     B.x*cos(q) - B.y*sin(q)
+    >>> d = N.i.outer(N.i)
+    >>> express(d, B, N) == (cos(q))*(B.i|N.i) + (-sin(q))*(B.j|N.i)
+    True
 
     """
 
+    from sympy.vector.coordsysrect import CoordSysCartesian
     from sympy.vector.vector import Vector, BaseVector
+    from sympy.vector.dyadic import Dyadic
     if expr == 0 or expr == Vector.zero:
         return expr
 
+    if not isinstance(system, CoordSysCartesian):
+        raise TypeError("system should be a CoordSysCartesian \
+                        instance")
+
     if isinstance(expr, Vector):
+        if system2 is not None:
+            raise ValueError("system2 should not be provided for \
+                                Vectors")
         #Given expr is a Vector
         if variables:
             #If variables attribute is True, substitute
             #the coordinate variables in the Vector
             system_list = []
             for x in expr.atoms():
-                if (isinstance(x, BaseScalar) or \
-                    isinstance(x, BaseVector)) and \
-                    x.system != system:
+                if (isinstance(x, (BaseScalar, BaseVector))
+                        and x.system != system):
                     system_list.append(x.system)
             system_list = set(system_list)
             subs_dict = {}
@@ -73,7 +89,25 @@ def express(expr, system, variables=False):
                 outvec += parts[x]
         return outvec
 
+    elif isinstance(expr, Dyadic):
+        if system2 is None:
+            system2 = system
+        if not isinstance(system2, CoordSysCartesian):
+            raise TypeError("system2 shoule be a CoordSysCartesian \
+                            instance")
+        outdyad = Dyadic.zero
+        var = variables
+        for k, v in expr.components.items():
+            outdyad += (express(v, system, variables=var) *
+                        (express(k.args[0], system, variables=var) |
+                         express(k.args[1], system2, variables=var)))
+
+        return outdyad
+
     else:
+        if system2 is not None:
+            raise ValueError("system2 should not be provided for \
+                                Vectors")
         if variables:
             #Given expr is a scalar field
             system_set = set([])
@@ -100,7 +134,7 @@ def matrix_to_vector(matrix, system):
     Parameters
     ==========
 
-    matrix : SymPy Matrix, Dimensions: (1, 3)
+    matrix : SymPy Matrix, Dimensions: (3, 1)
         The matrix to be converted to a vector
 
     system : CoordSysCartesian
