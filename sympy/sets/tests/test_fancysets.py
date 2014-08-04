@@ -217,16 +217,14 @@ def test_infinitely_indexed_failed_diophantine():
             ImageSet(Lambda(t, -6*pi*t), S.Integers)
 
 
-@XFAIL
-def test_infinitely_indexed_set_3():
-    from sympy.abc import n
-    assert imageset(Lambda(n, 2*n + 1), S.Integers) == imageset(Lambda(n, 2*n - 1), S.Integers)
-    assert imageset(Lambda(n, 3*n + 2), S.Integers) == imageset(Lambda(n, 3*n - 1), S.Integers)
-
-
 def test_ImageSet_simplification():
     from sympy.abc import n, m
     assert imageset(Lambda(n, n), S.Integers) == S.Integers
     assert imageset(Lambda(n, sin(n)),
                     imageset(Lambda(m, tan(m)), S.Integers)) == \
             imageset(Lambda(m, sin(tan(m))), S.Integers)
+    assert Eq(imageset(Lambda(n, 2*n + 1), S.Integers),
+              imageset(Lambda(n, 2*n - 1), S.Integers)) is True
+    assert Eq(imageset(Lambda(n, 3*n + 2), S.Integers),
+              imageset(Lambda(n, 3*n - 1), S.Integers)) is True
+    assert Eq(S.Reals, Interval(-oo, oo)) is True
