@@ -30,7 +30,6 @@ def test_rcode_Pow():
     assert rcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "(3.5*g(x))^(-x + y^x)/(x^2 + y)"
     assert rcode(x**-1.0) == '1.0/x'
-    print(rcode(x**Rational(2, 3)))
     assert rcode(x**Rational(2, 3)) == 'x^(2.0/3.0)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
                    (lambda base, exp: not exp.is_integer, "pow")]
@@ -39,7 +38,6 @@ def test_rcode_Pow():
 
 def test_rcode_constants_mathh():
     p=rcode(exp(1)) 
-    print(">%s<" %p)
     assert p == "exp(1)" #nothing changes
     assert rcode(pi) == "pi" #nothing changes
     assert rcode(oo) == "Inf"
@@ -81,7 +79,7 @@ def test_rcode_inline_function():
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     res=rcode(g(A[i]), assign_to=A[i])
     ref=(
-        "for (i in 0:(n-1)){\n"
+        "for (i in 1:n){\n"
         "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
     ) 
@@ -142,7 +140,6 @@ def test_rcode_Piecewise_deep():
 """\
 2*ifelse(x < 1,x,ifelse(x < 2,x^2,x^3))\
 """
-    print(s)
     assert p == s
     # last condition missing
     p = rcode(2*Piecewise((x, x < 1)))
@@ -173,14 +170,12 @@ def test_rcode_Indexed():
 
     x = IndexedBase('x')[j]
     assert p._print_Indexed(x) == 'x[j]'
-#mm
     A = IndexedBase('A')[i, j]
-    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
+    assert p._print_Indexed(A) == 'A[i, j]' 
     B = IndexedBase('B')[i, j, k]
-    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
+    assert p._print_Indexed(B) == 'B[i, j, k]' 
 
     assert p._not_r == set()
-
 
 def test_rcode_Indexed_without_looking_for_contraction():
     len_y = 5
@@ -202,12 +197,12 @@ def test_rcode_loops_matrix_vector():
     j = Idx('j', n)
 
     s = (
-        'for (i in 0:(m-1)){\n'
+        'for (i in 1:m){\n'
         '   y[i] = 0;\n'
         '}\n'
-        'for (i in 0:(m-1)){\n'
-        '   for (j in 0:(n-1)){\n'
-        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
+        'for (i in 1:m){\n'
+        '   for (j in 1:n){\n'
+        '      y[i] = x[j]*A[i, j] + y[i];\n' 
         '   }\n'
         '}'
     )
@@ -225,7 +220,7 @@ def test_dummy_loops():
     i = Idx(i, m)
 
     expected = (
-            'for (i_%(icount)i in 0:(m_%(mcount)i-1)){\n'
+            'for (i_%(icount)i in 1:m_%(mcount)i){\n'
         '   y[i_%(icount)i] = x[i_%(icount)i];\n'
         '}'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
@@ -245,20 +240,21 @@ def test_rcode_loops_add():
     j = Idx('j', n)
 
     s = (
-        'for (i in 0:(m-1)){\n'
+        'for (i in 1:m){\n'
         '   y[i] = x[i] + z[i];\n'
         '}\n'
-        'for (i in 0:(m-1)){\n'
-        '   for (j in 0:(n-1)){\n'
-        '      y[i] = x[j]*A[%s] + y[i];\n' % (i*n + j) +\
+        'for (i in 1:m){\n'
+        '   for (j in 1:n){\n'
+        '      y[i] = x[j]*A[i, j] + y[i];\n' 
         '   }\n'
         '}'
     )
     c = rcode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
-    d=difflib.Differ()
-    #print(list(d.compare(c.splitlines(keepends=True),s.splitlines(keepends=True))))
     assert c == s
 
+#
+#mm
+#
 
 def test_rcode_loops_multiple_contractions():
     from sympy.tensor import IndexedBase, Idx
@@ -273,14 +269,14 @@ def test_rcode_loops_multiple_contractions():
     l = Idx('l', p)
 
     s = (
-        'for (i in 0:(m-1)){\n'
+        'for (i in 1:m){\n'
         '   y[i] = 0;\n'
         '}\n'
-        'for (i in 0:(m-1)){\n'
-        '   for (j in 0:(n-1)){\n'
-        '      for (k in 0:(o-1)){\n'
-        '         for (l in 0:(p-1)){\n'
-        '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
+        'for (i in 1:m){\n'
+        '   for (j in 1:n){\n'
+        '      for (k in 1:o){\n'
+        '         for (l in 1:p){\n'
+        '            y[i] = y[i] + b[j, k, l]*a[i, j, k, l];\n' 
         '         }\n'
         '      }\n'
         '   }\n'
@@ -304,14 +300,14 @@ def test_rcode_loops_addfactor():
     l = Idx('l', p)
 
     s = (
-        'for (i in 0:(m-1)){\n'
+        'for (i in 1:m){\n'
         '   y[i] = 0;\n'
         '}\n'
-        'for (i in 0:(m-1)){\n'
-        '   for (j in 0:(n-1)){\n'
-        '      for (k in 0:(o-1)){\n'
-        '         for (l in 0:(p-1)){\n'
-        '            y[i] = (a[%s] + b[%s])*c[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
+        'for (i in 1:m){\n'
+        '   for (j in 1:n){\n'
+        '      for (k in 1:o){\n'
+        '         for (l in 1:p){\n'
+        '            y[i] = (a[i, j, k, l] + b[i, j, k, l])*c[j, k, l] + y[i];\n' 
         '         }\n'
         '      }\n'
         '   }\n'
@@ -334,30 +330,30 @@ def test_rcode_loops_multiple_terms():
     k = Idx('k', o)
 
     s0 = (
-        'for (i in 0:(m-1)){\n'
+        'for (i in 1:m){\n'
         '   y[i] = 0;\n'
         '}\n'
     )
     s1 = (
-        'for (i in 0:(m-1)){\n'
-        '   for (j in 0:(n-1)){\n'
-        '      for (k in 0:(o-1)){\n'
-        '         y[i] = b[j]*b[k]*c[%s] + y[i];\n' % (i*n*o + j*o + k) +\
+        'for (i in 1:m){\n'
+        '   for (j in 1:n){\n'
+        '      for (k in 1:o){\n'
+        '         y[i] = b[j]*b[k]*c[i, j, k] + y[i];\n' 
         '      }\n'
         '   }\n'
         '}\n'
     )
     s2 = (
-        'for (i in 0:(m-1)){\n'
-        '   for (k in 0:(o-1)){\n'
-        '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
+        'for (i in 1:m){\n'
+        '   for (k in 1:o){\n'
+        '      y[i] = b[k]*a[i, k] + y[i];\n' 
         '   }\n'
         '}\n'
     )
     s3 = (
-        'for (i in 0:(m-1)){\n'
-        '   for (j in 0:(n-1)){\n'
-        '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
+        'for (i in 1:m){\n'
+        '   for (j in 1:n){\n'
+        '      y[i] = b[j]*a[i, j] + y[i];\n' 
         '   }\n'
         '}\n'
     )
