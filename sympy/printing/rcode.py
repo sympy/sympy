@@ -115,12 +115,12 @@ class RCodePrinter(CodePrinter):
         """
         open_lines = []
         close_lines = []
-        loopstart = "for (%(var)s in %(start)s:(%(end)s-1)){"
+        loopstart = "for (%(var)s in %(start)s:%(end)s){"
         for i in indices:
-            # C arrays start at 0 and end at dimension-1
+            # R arrays start at 1 and end at dimension
             open_lines.append(loopstart % {
                 'var': self._print(i.label),
-                'start': self._print(i.lower),
+                'start': self._print(i.lower+1),
                 'end': self._print(i.upper + 1)})
             close_lines.append("}")
         return open_lines, close_lines
@@ -142,14 +142,9 @@ class RCodePrinter(CodePrinter):
         return '%d.0/%d.0' % (p, q)
 
     def _print_Indexed(self, expr):
-        # calculate index for 1d array
-        dims = expr.shape
-        elem = S.Zero
-        offset = S.One
-        for i in reversed(range(expr.rank)):
-            elem += expr.indices[i]*offset
-            offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+        inds = [ self._print(i) for i in expr.indices ]
+        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
+        #return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
