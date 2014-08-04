@@ -49,13 +49,13 @@ def test_pretty_printing():
     assert pretty(v[1]) == u('N_i')
     assert pretty(v[5]) == u('(a) N_i + (-b) N_j')
     assert pretty(v[8]) == u('N_j + \u239b   2   \u2320        \u239e '+
-                             'N_k\n      \u239cC_x  - \u23ae f(b) db\u2' +
-                             '39f    \n      \u239d       \u2321        ' +
-                             '\u23a0    ')
+                             'N_k\n      \u239cC_x  - \u23ae f(b) db' +
+                             '\u239f    \n      \u239d       \u2321   ' +
+                             '     \u23a0    ')
     assert pretty(v[2]) == u('(-1) N_i')
     assert pretty(v[11]) == u('\u239b 2    \u239e N_i + \u239b\u2320     '+
-                              '   \u239e N_k\n\u239da  + b\u23a0       \u2' +
-                              '39c\u23ae f(b) db\u239f    \n         ' +
+                              '   \u239e N_k\n\u239da  + b\u23a0       ' +
+                              '\u239c\u23ae f(b) db\u239f    \n         ' +
                               '      \u239d\u2321        \u23a0    ')
     assert pretty(s) == u('         2\n3\u22c5C_y\u22c5N_x ')
     assert pretty(d[0]) == u('(0|0)')

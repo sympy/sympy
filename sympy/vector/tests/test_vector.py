@@ -84,6 +84,13 @@ def test_vector():
     assert VectorAdd(v1, Vector.zero) == v1
     assert VectorMul(0, Vector.zero) == Vector.zero
 
+    assert i.measure_numbers(C) == (1, 0, 0)
+    assert Vector.zero.measure_numbers(C) == (0, 0, 0)
+    assert v1.measure_numbers(C) == (a, b, c)
+    D = C.orient_new_axis('D', a, C.i)
+    assert v1.measure_numbers(D) == (a, c*sin(a) + b*cos(a),
+                                     -b*sin(a) + c*cos(a))
+
 
 def test_vector_magnitude_normalize():
     assert Vector.zero.magnitude() == 0

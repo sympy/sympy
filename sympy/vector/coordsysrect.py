@@ -82,6 +82,13 @@ class CoordSysCartesian(Basic):
                                 "CoordSysCartesian/None")
             if location is None:
                 location = Vector.zero
+            else:
+                #Check that location does not contain base
+                #scalars
+                for x in location.free_symbols:
+                    if isinstance(x, BaseScalar):
+                        raise ValueError("location should not contain" +
+                                         " BaseScalars")
             origin = parent.origin.locate_new(name + '.origin',
                                               location)
             arg_parent = parent
@@ -328,8 +335,13 @@ class CoordSysCartesian(Basic):
 
         """
 
+        relocated_scalars = []
+        origin_coords = self.position_wrt(other).measure_numbers(other)
+        for i, x in enumerate(other.base_scalars()):
+            relocated_scalars.append(x - origin_coords[i])
+
         vars_matrix = (self.rotation_matrix(other) *
-                       Matrix(other.base_scalars()))
+                       Matrix(relocated_scalars))
         mapping = {}
         for i, x in enumerate(self.base_scalars()):
             mapping[x] = trigsimp(vars_matrix[i])

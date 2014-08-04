@@ -102,6 +102,17 @@ def test_coordinate_vars():
            C.x/3 + 2*C.y*cos(q)/3 + C.y/3 - 2*C.z*sin(q + pi/6)/3 + C.z/3
     assert mapping[A.z] == -2*C.x*sin(q + pi/6)/3 + C.x/3 - \
            2*C.y*cos(q + pi/3)/3 + C.y/3 + 2*C.z*cos(q)/3 + C.z/3
+    D = A.locate_new('D', a*A.i + b*A.j + c*A.k)
+    assert D.scalar_map(A) == {D.z: A.z - c, D.x: A.x - a, D.y: A.y - b}
+    E = A.orient_new_axis('E', a, A.k, a*A.i + b*A.j + c*A.k)
+    assert A.scalar_map(E) == {A.z: E.z + c,
+                               A.x: E.x*cos(a) - E.y*sin(a) + a,
+                               A.y: E.x*sin(a) + E.y*cos(a) + b}
+    assert E.scalar_map(A) == {E.x: (A.x - a)*cos(a) + (A.y - b)*sin(a),
+                               E.y: (-A.x + a)*sin(a) + (A.y - b)*cos(a),
+                               E.z: A.z - c}
+    F = A.locate_new('F', Vector.zero)
+    assert A.scalar_map(F) == {A.z: F.z, A.x: F.x, A.y: F.y}
 
 
 def test_rotation_matrix():
