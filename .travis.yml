@@ -1,7 +1,7 @@
 language: python
 env:
   matrix:
-  - TEST_DOCTESTS="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false"
   - SPLIT="1/4"
   - SPLIT="2/4"
   - SPLIT="3/4"
@@ -18,93 +18,28 @@ matrix:
   include:
     - python: 2.7
       env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="true"
-    - python: 2.7
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="1/4"
-    - python: 2.7
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="2/4"
-    - python: 2.7
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="3/4"
-    - python: 2.7
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="4/4"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="true"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="1/4"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="2/4"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="3/4"
-    - python: 3.3
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="4/4"
+        - TEST_GMPY="true" TEST_MATPLOTLIB="true"
     - python: 3.4
       env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="true"
-    - python: 3.4
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="1/4"
-    - python: 3.4
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="2/4"
-    - python: 3.4
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="3/4"
-    - python: 3.4
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - SPLIT="4/4"
+        - TEST_GMPY="true" TEST_MATPLOTLIB="true"
     - python: "pypy"
       env:
         - TEST_DOCTESTS="true"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="1/4"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="2/4"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="3/4"
+        - FASTCACHE="false"
     - python: 2.7
-      env: TEST_SPHINX="true"
+      env: TEST_SPHINX="true" FASTCACHE="false"
     - python: 2.7
       env:
         - TEST_SLOW="true"
@@ -131,10 +66,14 @@ matrix:
     - python: 3.3 # Dummy value
       env:
         - TEST_SAGE="true"
+        - FASTCACHE="false"
     - python: "pypy"
       env:
         - SPLIT="4/4"
 before_install:
+  - if [[ "${FASTCACHE}" != "false" ]]; then
+      pip install "fastcache==0.4.0";
+    fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;
       sudo apt-get install libgmp-dev;
