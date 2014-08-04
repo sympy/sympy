@@ -845,8 +845,7 @@ class Interval(Set, EvalfMixin):
         if ask(Q.real(other)) is False:
             return False
         
-        if type(other) is Interval:
-            #an Interval can't contain another Interval
+        if isinstance(other, Set):
             return False
         
         if self.left_open:
