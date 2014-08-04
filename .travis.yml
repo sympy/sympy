@@ -2,7 +2,7 @@ language: python
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false"
-  - SPLIT="1/4" FASTCACHE="false"
+  - SPLIT="1/4"
   - SPLIT="2/4"
   - SPLIT="3/4"
   - SPLIT="4/4"
