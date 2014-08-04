@@ -16,8 +16,8 @@ class Point(Basic):
         #Check the args first
         if not isinstance(position, Vector):
             raise TypeError("position should be a Vector instance")
-        if not isinstance(parent_point, Point) and \
-           parent_point is not None:
+        if (not isinstance(parent_point, Point)
+                and parent_point is not None):
             raise TypeError("parent_point should be a Point instance")
         #Create an object
         if parent_point is None:
@@ -68,9 +68,9 @@ class Point(Basic):
 
         """
 
-        if not isinstance(other, Point) and \
-           not isinstance(other, CoordSysCartesian):
-            raise TypeError(str(other) + \
+        if (not isinstance(other, Point)
+                and not isinstance(other, CoordSysCartesian)):
+            raise TypeError(str(other) +
                             "is not a Point or CoordSysCartesian")
         if isinstance(other, CoordSysCartesian):
             other = other.origin

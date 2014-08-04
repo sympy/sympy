@@ -3222,6 +3222,30 @@ def test_sympy__vector__point__Point():
     assert _test_args(Point('P'))
 
 
+def test_sympy__vector__basisdependent__BasisDependent():
+    from sympy.vector.basisdependent import BasisDependent
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
+def test_sympy__vector__basisdependent__BasisDependentMul():
+    from sympy.vector.basisdependent import BasisDependentMul
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
+def test_sympy__vector__basisdependent__BasisDependentAdd():
+    from sympy.vector.basisdependent import BasisDependentAdd
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
+def test_sympy__vector__basisdependent__BasisDependentZero():
+    from sympy.vector.basisdependent import BasisDependentZero
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
 def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
     from sympy.vector.coordsysrect import CoordSysCartesian
@@ -3254,8 +3278,43 @@ def test_sympy__vector__vector__VectorZero():
 
 
 def test_sympy__vector__vector__Vector():
+    from sympy.vector.vector import Vector
     #Vector is never to be initialized using args
     pass
+
+
+def test_sympy__vector__dyadic__Dyadic():
+    from sympy.vector.dyadic import Dyadic
+    #Dyadic is never to be initialized using args
+    pass
+
+
+def test_sympy__vector__dyadic__BaseDyadic():
+    from sympy.vector.dyadic import BaseDyadic
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(BaseDyadic(C.i, C.j))
+
+
+def test_sympy__vector__dyadic__DyadicMul():
+    from sympy.vector.dyadic import BaseDyadic, DyadicMul
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(DyadicMul(3, BaseDyadic(C.i, C.j)))
+
+
+def test_sympy__vector__dyadic__DyadicAdd():
+    from sympy.vector.dyadic import BaseDyadic, DyadicAdd
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(2 * DyadicAdd(BaseDyadic(C.i, C.i),
+                                    BaseDyadic(C.i, C.j)))
+
+
+def test_sympy__vector__dyadic__DyadicZero():
+    from sympy.vector.dyadic import DyadicZero
+    assert _test_args(DyadicZero())
+
 
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del

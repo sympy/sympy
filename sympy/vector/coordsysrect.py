@@ -1,9 +1,9 @@
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.functions import express, _path
-from sympy import sin, cos, eye, sympify, trigsimp, \
-     ImmutableMatrix as Matrix, S, Symbol, rot_axis1, \
-     rot_axis2, rot_axis3
+from sympy import (sin, cos, eye, sympify, trigsimp,
+                   ImmutableMatrix as Matrix, S, Symbol, rot_axis1,
+                   rot_axis2, rot_axis3)
 from sympy.core.compatibility import string_types
 from sympy.core.cache import cacheit
 
@@ -91,7 +91,7 @@ class CoordSysCartesian(Basic):
         from sympy.vector.point import Point
         if parent is not None:
             if not isinstance(parent, CoordSysCartesian):
-                raise TypeError("parent should be a " + \
+                raise TypeError("parent should be a " +
                                 "CoordSysCartesian/None")
             if location is None:
                 location = Vector.zero
@@ -231,7 +231,7 @@ class CoordSysCartesian(Basic):
         """
 
         if not isinstance(other, CoordSysCartesian):
-            raise TypeError(str(other) + \
+            raise TypeError(str(other) +
                             " is not a CoordSysCartesian")
         #Handle special cases
         if other == self:
@@ -303,11 +303,11 @@ class CoordSysCartesian(Basic):
 
         """
 
-        vars_matrix = self.rotation_matrix(other) * \
-                      Matrix(other.base_scalars())
+        vars_matrix = (self.rotation_matrix(other) *
+                       Matrix(other.base_scalars()))
         mapping = {}
         for i, x in enumerate(self.base_scalars()):
-            mapping[x] = trigsimp(vars_matrix[i], method='matching')
+            mapping[x] = trigsimp(vars_matrix[i])
         return mapping
 
     def locate_new(self, name, position, vector_names=None,
@@ -645,7 +645,7 @@ class CoordSysCartesian(Basic):
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
         >>> N = CoordSysCartesian('N')
-        >>> B = N.orient_new('B', 'Quaternion', [q0, q1, q2, q3])
+        >>> B = N.orient_new_quaternion('B', q0, q1, q2, q3)
 
         """
 
@@ -675,10 +675,10 @@ def _orient_axis(amounts, rot_order, parent):
     Helper method for orientation using Axis method.
     """
     if not rot_order == '':
-        raise TypeError('Axis orientation takes no' +  \
+        raise TypeError('Axis orientation takes no' +
                         'rotation order')
-    if not (isinstance(amounts, (list, tuple)) & \
-            (len(amounts) == 2)):
+    if not (isinstance(amounts, (list, tuple))
+                and (len(amounts) == 2)):
         raise TypeError('Amounts should be of length 2')
     theta = amounts[0]
     axis = amounts[1]
@@ -687,7 +687,7 @@ def _orient_axis(amounts, rot_order, parent):
     parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
             Matrix([[0, -axis[2], axis[1]],
                     [axis[2], 0, -axis[0]],
-                [-axis[1], axis[0], 0]]) * sin(theta) + \
+                [-axis[1], axis[0], 0]]) * sin(theta) +
                      axis * axis.T)
     return parent_orient
 
@@ -699,8 +699,8 @@ def _orient_quaternion(amounts, rot_order):
     if not rot_order == '':
         raise TypeError(
             'Quaternion orientation takes no rotation order')
-    if not (isinstance(amounts, (list, tuple)) & \
-            (len(amounts) == 4)):
+    if not (isinstance(amounts, (list, tuple))
+                and (len(amounts) == 4)):
         raise TypeError('Amounts should be of length 4')
     q0, q1, q2, q3 = amounts
     parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - \
@@ -719,13 +719,14 @@ def _orient_body(amounts, rot_order):
     """
     Helper method for orientation using Body method.
     """
-    approved_orders = ('123', '231', '312', '132', '213', \
-                       '321', '121', '131', '212', '232', \
+    approved_orders = ('123', '231', '312', '132', '213',
+                       '321', '121', '131', '212', '232',
                        '313', '323', '')
     rot_order = str(
         rot_order).upper()
-    if not (len(amounts) == 3 & len(rot_order) == 3):
-        raise TypeError('Body orientation takes 3' + \
+    if not (len(amounts) == 3
+                and len(rot_order) == 3):
+        raise TypeError('Body orientation takes 3' +
                         'values & 3 orders')
     rot_order = [i.replace('X', '1') for i in rot_order]
     rot_order = [i.replace('Y', '2') for i in rot_order]
@@ -746,14 +747,16 @@ def _orient_space(amounts, rot_order):
     """
     Helper method for orientation using Space method.
     """
-    approved_orders = ('123', '231', '312', '132', '213', \
-                       '321', '121', '131', '212', '232', \
+    approved_orders = ('123', '231', '312', '132', '213',
+                       '321', '121', '131', '212', '232',
                        '313', '323', '')
     rot_order = str(
         rot_order).upper()
-    if not (len(amounts) == 3 & len(rot_order) == 3):
-        raise TypeError('Space orientation takes 3 ' + \
+    if not (len(amounts) == 3
+                and len(rot_order) == 3):
+        raise TypeError('Space orientation takes 3 ' +
                         'values & 3 orders')
+    rot_order = [i.replace('X', '1') for i in rot_order]
     rot_order = [i.replace('Y', '2') for i in rot_order]
     rot_order = [i.replace('Z', '3') for i in rot_order]
     rot_order = ''.join(rot_order)
@@ -762,7 +765,7 @@ def _orient_space(amounts, rot_order):
     a1 = int(rot_order[0])
     a2 = int(rot_order[1])
     a3 = int(rot_order[2])
-    parent_orient = (_rot(a3, amounts[2]) * \
-                     _rot(a2, amounts[1]) * \
+    parent_orient = (_rot(a3, amounts[2]) *
+                     _rot(a2, amounts[1]) *
                      _rot(a1, amounts[0]))
     return parent_orient
