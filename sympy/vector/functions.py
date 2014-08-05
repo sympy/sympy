@@ -2,7 +2,7 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
-from sympy import sympify
+from sympy import sympify, diff, integrate, S
 
 
 def express(expr, system, system2=None, variables=False):
@@ -121,6 +121,287 @@ def express(expr, system, system2=None, variables=False):
                 subs_dict.update(f.scalar_map(system))
             return expr.subs(subs_dict)
         return expr
+
+
+def curl(vect, coord_sys):
+    """
+    Returns the curl of a vector field computed wrt the base scalars
+    of the given coordinate system.
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector operand
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to calculate the curl in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, curl
+    >>> R = CoordSysCartesian('R')
+    >>> v1 = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
+    >>> curl(v1, R)
+    0
+    >>> v2 = R.x*R.y*R.z*R.i
+    >>> curl(v2, R)
+    R.x*R.y*R.j + (-R.x*R.z)*R.k
+
+    """
+
+    return coord_sys.delop.cross(vect).doit()
+
+
+def divergence(vect, coord_sys):
+    """
+    Returns the divergence of a vector field computed wrt the base
+    scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector operand
+
+    coord_sys : CoordSysCartesian
+        The cooordinate system to calculate the divergence in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, divergence
+    >>> R = CoordSysCartesian('R')
+    >>> v1 = R.x*R.y*R.z * (R.i+R.j+R.k)
+    >>> divergence(v1, R)
+    R.x*R.y + R.x*R.z + R.y*R.z
+    >>> v2 = 2*R.y*R.z*R.j
+    >>> divergence(v2, R)
+    2*R.z
+
+    """
+
+    return coord_sys.delop.dot(vect).doit()
+
+
+def gradient(scalar, coord_sys):
+    """
+    Returns the vector gradient of a scalar field computed wrt the
+    base scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    scalar : SymPy Expr
+        The scalar field to compute the gradient of
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to calculate the gradient in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, gradient
+    >>> R = CoordSysCartesian('R')
+    >>> s1 = R.x*R.y*R.z
+    >>> gradient(s1, R)
+    R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
+    >>> s2 = 5*R.x**2*R.z
+    >>> gradient(s2, R)
+    10*R.x*R.z*R.i + 5*R.x**2*R.k
+
+    """
+
+    return coord_sys.delop(scalar).doit()
+
+
+def is_conservative(field):
+    """
+    Checks if a field is conservative.
+
+    Paramaters
+    ==========
+
+    field : Vector
+        The field to check for conservative property
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian
+    >>> from sympy.vector import is_conservative
+    >>> R = CoordSysCartesian('R')
+    >>> is_conservative(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
+    True
+    >>> is_conservative(R.z*R.j)
+    False
+
+    """
+
+    #Field is conservative irrespective of system
+    #Take the first coordinate system in the result of the
+    #separate method of Vector
+    if not isinstance(field, Vector):
+        raise TypeError("field should be a Vector")
+    if field == Vector.zero:
+        return True
+    coord_sys = list(field.separate())[0]
+    return curl(field, coord_sys).simplify() == Vector.zero
+
+
+def is_solenoidal(field):
+    """
+    Checks if a field is solenoidal.
+
+    Paramaters
+    ==========
+
+    field : Vector
+        The field to check for solenoidal property
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian
+    >>> from sympy.vector import is_solenoidal
+    >>> R = CoordSysCartesian('R')
+    >>> is_solenoidal(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
+    True
+    >>> is_solenoidal(R.y * R.j)
+    False
+
+    """
+
+    #Field is solenoidal irrespective of system
+    #Take the first coordinate system in the result of the
+    #separate method in Vector
+    if not isinstance(field, Vector):
+        raise TypeError("field should be a Vector")
+    if field == Vector.zero:
+        return True
+    coord_sys = list(field.separate())[0]
+    return divergence(field, coord_sys).simplify() == S(0)
+
+
+def scalar_potential(field, coord_sys):
+    """
+    Returns the scalar potential function of a field in a given
+    coordinate system (without the added integration constant).
+
+    Parameters
+    ==========
+
+    field : Vector
+        The vector field whose scalar potential function is to be
+        calculated
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to do the calculation in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian
+    >>> from sympy.vector import scalar_potential, gradient
+    >>> R = CoordSysCartesian('R')
+    >>> scalar_potential(R.k, R) == R.z
+    True
+    >>> scalar_field = 2*R.x**2*R.y*R.z
+    >>> grad_field = gradient(scalar_field, R)
+    >>> scalar_potential(grad_field, R)
+    2*R.x**2*R.y*R.z
+
+    """
+
+    #Check whether field is conservative
+    if not is_conservative(field):
+        raise ValueError("Field is not conservative")
+    if field == Vector.zero:
+        return S(0)
+    #Express the field exntirely in coord_sys
+    #Subsitute coordinate variables also
+    if not isinstance(coord_sys, CoordSysCartesian):
+        raise TypeError("coord_sys must be a CoordSysCartesian")
+    field = express(field, coord_sys, variables=True)
+    dimensions = coord_sys.base_vectors()
+    scalars = coord_sys.base_scalars()
+    #Calculate scalar potential function
+    temp_function = integrate(field.dot(dimensions[0]), scalars[0])
+    for i, dim in enumerate(dimensions[1:]):
+        partial_diff = diff(temp_function, scalars[i + 1])
+        partial_diff = field.dot(dim) - partial_diff
+        temp_function += integrate(partial_diff, scalars[i + 1])
+    return temp_function
+
+
+def scalar_potential_difference(field, coord_sys, point1, point2):
+    """
+    Returns the scalar potential difference between two points in a
+    certain coordinate system, wrt a given field.
+
+    If a scalar field is provided, its values at the two points are
+    considered. If a conservative vector field is provided, the values
+    of its scalar potential function at the two points are used.
+
+    Returns (potential at point2) - (potential at point1)
+
+    The position vectors of the two Points are calculated wrt the
+    origin of the coordinate system provided.
+
+    Parameters
+    ==========
+
+    field : Vector/Expr
+        The field to calculate wrt
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to do the calculations in
+
+    point1 : Point
+        The initial Point in given coordinate system
+
+    position2 : Point
+        The second Point in the given coordinate system
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, Point
+    >>> from sympy.vector import scalar_potential_difference
+    >>> R = CoordSysCartesian('R')
+    >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
+    >>> vectfield = 4*R.x*R.y*R.i + 2*R.x**2*R.j
+    >>> scalar_potential_difference(vectfield, R, R.origin, P)
+    2*R.x**2*R.y
+    >>> Q = R.origin.locate_new('O', 3*R.i + R.j + 2*R.k)
+    >>> scalar_potential_difference(vectfield, R, P, Q)
+    -2*R.x**2*R.y + 18
+
+    """
+
+    if not isinstance(coord_sys, CoordSysCartesian):
+        raise TypeError("coord_sys must be a CoordSysCartesian")
+    if isinstance(field, Vector):
+        #Get the scalar potential function
+        scalar_fn = scalar_potential(field, coord_sys)
+    else:
+        #Field is a scalar
+        scalar_fn = field
+    #Express positions in required coordinate system
+    origin = coord_sys.origin
+    position1 = express(point1.position_wrt(origin), coord_sys,
+                        variables=True)
+    position2 = express(point2.position_wrt(origin), coord_sys,
+                        variables=True)
+    #Get the two positions as substitution dicts for coordinate variables
+    subs_dict1 = {}
+    subs_dict2 = {}
+    scalars = coord_sys.base_scalars()
+    for i, x in enumerate(coord_sys.base_vectors()):
+        subs_dict1[scalars[i]] = x.dot(position1)
+        subs_dict2[scalars[i]] = x.dot(position2)
+    return scalar_fn.subs(subs_dict2) - scalar_fn.subs(subs_dict1)
 
 
 def matrix_to_vector(matrix, system):
