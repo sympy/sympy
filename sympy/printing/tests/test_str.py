@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial, true, false, Equivalent, Xor)
+    MatrixSymbol, subfactorial, true, false, Equivalent, Xor, Complement)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -707,3 +707,6 @@ def test_Equivalent():
 
 def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+
+def test_Complement():
+    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'

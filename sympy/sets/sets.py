@@ -157,7 +157,7 @@ class Set(Basic):
         (-oo, 0) U (1, oo)
 
         >>> Interval(0, 1).complement(S.UniversalSet)
-        Complement(UniversalSet(), [0, 1])
+        UniversalSet() \ [0, 1]
 
         """
         return Complement(universe, self)
