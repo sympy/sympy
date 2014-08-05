@@ -3,7 +3,6 @@ from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.functions import express
 from sympy.vector.basisdependent import BasisDependent, \
      BasisDependentAdd, BasisDependentMul, BasisDependentZero
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
@@ -91,6 +90,7 @@ class Vector(BasisDependent):
 
         """
 
+        from sympy.vector.functions import express
         #Check special cases
         if isinstance(other, Dyadic):
             if isinstance(self, VectorZero):
@@ -337,6 +337,7 @@ class Vector(BasisDependent):
 
         """
 
+        from sympy.vector.functions import express
         if not isinstance(coord_sys, CoordSysCartesian):
             raise TypeError("coord_sys must be an instance of " +
                             "CoordSysCartesian")

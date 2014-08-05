@@ -1,3 +1,6 @@
+from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.vector.dyadic import Dyadic
+from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
 from sympy import sympify
 
@@ -50,9 +53,6 @@ def express(expr, system, system2=None, variables=False):
 
     """
 
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    from sympy.vector.vector import Vector, BaseVector
-    from sympy.vector.dyadic import Dyadic
     if expr == 0 or expr == Vector.zero:
         return expr
 
@@ -155,7 +155,6 @@ def matrix_to_vector(matrix, system):
 
     """
 
-    from sympy.vector.vector import Vector
     outvec = Vector.zero
     vects = system.base_vectors()
     for i, x in enumerate(matrix):

@@ -1,6 +1,5 @@
 from sympy.core.basic import Basic
 from sympy.vector.scalar import BaseScalar
-from sympy.vector.functions import express, _path
 from sympy import (sin, cos, eye, sympify, trigsimp,
                    ImmutableMatrix as Matrix, S, Symbol, rot_axis1,
                    rot_axis2, rot_axis3)
@@ -262,6 +261,7 @@ class CoordSysCartesian(Basic):
 
         """
 
+        from sympy.vector.functions import _path
         if not isinstance(other, CoordSysCartesian):
             raise TypeError(str(other) +
                             " is not a CoordSysCartesian")

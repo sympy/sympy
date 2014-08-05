@@ -1,7 +1,6 @@
 from sympy.core.basic import Basic
 from sympy import (sympify, eye, sin, cos, rot_axis1, rot_axis2,
                    rot_axis3, ImmutableMatrix as Matrix, Symbol)
-from sympy.vector.functions import express
 from sympy.core.cache import cacheit
 
 
@@ -73,6 +72,7 @@ class AxisOrienter(Orienter):
         instance.
         """
 
+        from sympy.vector.functions import express
         axis = express(self.axis, system).normalize()
         axis = axis.to_matrix(system)
         theta = self.angle
