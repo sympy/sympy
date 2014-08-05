@@ -1,9 +1,8 @@
-from sympy.core import Symbol, S, Rational, Integer
-from sympy.utilities.pytest import raises, XFAIL
 from sympy import I, sqrt, log, exp, sin, asin
-
+from sympy.core import Symbol, S, Rational, Integer
 from sympy.core.facts import InconsistentAssumptions
-from sympy.utilities.pytest import XFAIL
+
+from sympy.utilities.pytest import raises, XFAIL
 
 
 def test_symbol_unset():
@@ -717,8 +716,3 @@ def test_issue_6631():
 
 def test_issue_2730():
     assert (1/(1 + I)).is_real is False
-
-
-@XFAIL
-def test_is_complex():
-    assert (1 + I).is_complex is True
