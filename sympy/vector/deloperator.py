@@ -55,7 +55,7 @@ class Del(Basic):
         """
 
         scalar_field = express(scalar_field, self.system,
-                               variables = True)
+                               variables=True)
         vx = Derivative(scalar_field, self._x)
         vy = Derivative(scalar_field, self._y)
         vz = Derivative(scalar_field, self._z)
@@ -136,9 +136,9 @@ class Del(Basic):
 
         """
 
-        vectx = express(vect.dot(self._i), self.system)
-        vecty = express(vect.dot(self._j), self.system)
-        vectz = express(vect.dot(self._k), self.system)
+        vectx = express(vect.dot(self._i), self.system, variables=True)
+        vecty = express(vect.dot(self._j), self.system, variables=True)
+        vectz = express(vect.dot(self._k), self.system, variables=True)
         outvec = Vector.zero
         outvec += (Derivative(vectz, self._y) -
                    Derivative(vecty, self._z)) * self._i

@@ -21,7 +21,7 @@ def express(expr, system, system2=None, variables=False):
     ==========
 
     expr : Vector/Dyadic/scalar(sympyfiable)
-        The expression to re-express in ReferenceFrame 'frame'
+        The expression to re-express in CoordSysCartesian 'system'
 
     system: CoordSysCartesian
         The coordinate system the expr is to be expressed in
@@ -78,7 +78,7 @@ def express(expr, system, system2=None, variables=False):
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
             expr = expr.subs(subs_dict)
-        #Re-express in this frame
+        #Re-express in this coordinate system
         outvec = Vector.zero
         parts = expr.separate()
         for x in parts:
