@@ -18,6 +18,9 @@ class FOL(BooleanFunction):
     """
     is_Fol = True
 
+    def to_nnf(self, simplify=True):
+        return self
+
 
 class Callable(FOL):
 
@@ -195,6 +198,11 @@ class Quantifier(FOL):
     @property
     def expr(self):
         return self.args[-1]
+
+    def to_nnf(self, simplify=True):
+        from sympy.logic.boolalg import to_nnf
+        return self.func(*[to_nnf(arg, simplify=simplify)
+                                        for arg in self.args])
 
 
 class ForAll(Quantifier):
@@ -684,7 +692,7 @@ def resolve(*expr):
     ========
 
     >>> from sympy.abc import X, Y, Z
-    >>> from sympy.logic.FOL import Predicate, Function, resolve
+    >>> from sympy.logic.FOL import Predicate, Function, Constant, resolve
     >>> P = Predicate('P')
     >>> Q = Predicate('Q')
     >>> f = Function('f')
