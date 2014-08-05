@@ -455,7 +455,7 @@ class LatexPrinter(Printer):
             items = [(0, expr)]
 
         for system, vect in items:
-            inneritems = vect.components.items()
+            inneritems = list(vect.components.items())
             inneritems.sort(key = lambda x:x[0].__str__())
             for k, v in inneritems:
                 if v == 1:

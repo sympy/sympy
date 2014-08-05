@@ -93,7 +93,7 @@ def express(expr, system, system2=None, variables=False):
         if system2 is None:
             system2 = system
         if not isinstance(system2, CoordSysCartesian):
-            raise TypeError("system2 shoule be a CoordSysCartesian \
+            raise TypeError("system2 should be a CoordSysCartesian \
                             instance")
         outdyad = Dyadic.zero
         var = variables
