@@ -2251,6 +2251,11 @@ def _denest_pow(eq):
     transformation.
     """
     b, e = eq.as_base_exp()
+    if b.is_Pow or isinstance(b.func, exp) and e != 1:
+        new = b._eval_power(e)
+        if new is not None:
+            eq = new
+            b, e = new.as_base_exp()
 
     # denest exp with log terms in exponent
     if b is S.Exp1 and e.is_Mul:

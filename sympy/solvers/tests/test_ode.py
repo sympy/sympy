@@ -1847,7 +1847,7 @@ def test_almost_linear():
 
     eq = x*f(x)*d + 2*x*f(x)**2 + 1
     sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol[0].rhs == -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))
+    assert sol[0].rhs == -sqrt(C1 - 2*Ei(4*x))*exp(-2*x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*d + x*f(x) + 1

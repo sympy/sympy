@@ -2,8 +2,10 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan
+        sign, im, nan, cbrt
 )
+from sympy.core.evalf import PrecisionExhausted
+from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
@@ -166,9 +168,10 @@ def test_pow2():
     # x**(2*y) is always (x**y)**2 but is only (x**2)**y if
     #                                  x.is_positive or y.is_integer
     # let x = 1 to see why the following are not true.
-    assert ((-x)**2)**Rational(1, 3) != ((-x)**Rational(1, 3))**2
     assert (-x)**Rational(2, 3) != x**Rational(2, 3)
     assert (-x)**Rational(5, 7) != -x**Rational(5, 7)
+    assert ((-x)**2)**Rational(1, 3) != ((-x)**Rational(1, 3))**2
+    assert sqrt(x**2) != x
 
 
 def test_pow3():
