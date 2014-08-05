@@ -234,7 +234,7 @@ class DyadicAdd(BasisDependentAdd, Dyadic):
 
     def __str__(self, printer=None):
         ret_str = ''
-        items = self.components.items()
+        items = list(self.components.items())
         items.sort(key = lambda x: x[0].__str__())
         for k, v in items:
             temp_dyad = k * v
