@@ -1,9 +1,11 @@
 from __future__ import division
 
-from sympy.physics.optics.utils import refraction_angle, deviation
+from sympy.physics.optics.utils import (refraction_angle, deviation,
+    lens_makers_formula, mirror_formula, lens_formula)
 from sympy.physics.optics.medium import Medium
+from sympy.physics.units import e0
 
-from sympy import symbols, sqrt, Matrix
+from sympy import symbols, sqrt, Matrix, oo
 from sympy.geometry.point3d import Point3D
 from sympy.geometry.line3d import Ray3D
 from sympy.geometry.plane import Plane
@@ -76,3 +78,30 @@ def test_deviation():
     assert deviation(r1, 1.33, 1, plane=P) is None  # TIR
     assert deviation(r1, 1, 1, normal=[0, 0, 1]) == 0
     assert deviation([-1, -1, -1], 1, 1, normal=[0, 0, 1]) == 0
+
+
+def test_lens_makers_formula():
+    n1, n2 = symbols('n1, n2')
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert lens_makers_formula(n1, n2, 10, -10) == 5*n2/(n1 - n2)
+    assert round(lens_makers_formula(m1, m2, 10, -10), 2) == -20.15
+    assert round(lens_makers_formula(1.33, 1, 10, -10), 2) == 15.15
+
+
+def test_mirror_formula():
+    u, v, f = symbols('u, v, f')
+    assert mirror_formula(focal_length=f, u=u) == f*u/(-f + u)
+    assert mirror_formula(focal_length=f, v=v) == f*v/(-f + v)
+    assert mirror_formula(u=u, v=v) == u*v/(u + v)
+    assert mirror_formula(u=oo, v=v) == v
+    assert mirror_formula(u=oo, v=oo) == oo
+
+
+def test_lens_formula():
+    u, v, f = symbols('u, v, f')
+    assert lens_formula(focal_length=f, u=u) == f*u/(f + u)
+    assert lens_formula(focal_length=f, v=v) == f*v/(f - v)
+    assert lens_formula(u=u, v=v) == u*v/(u - v)
+    assert lens_formula(u=oo, v=v) == v
+    assert lens_formula(u=oo, v=oo) == oo

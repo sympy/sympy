@@ -17,10 +17,10 @@ __all__.extend(waves.__all__)
 
 
 from . import gaussopt
-from .gaussopt import RayTransferMatrix, FreeSpace, FlatRefraction,\
-    CurvedRefraction, FlatMirror, CurvedMirror, ThinLens, GeometricRay,\
-    BeamParameter, waist2rayleigh, rayleigh2waist, geometric_conj_ab,\
-    geometric_conj_af, geometric_conj_bf, gaussian_conj, conjugate_gauss_beams
+from .gaussopt import (RayTransferMatrix, FreeSpace, FlatRefraction,
+    CurvedRefraction, FlatMirror, CurvedMirror, ThinLens, GeometricRay,
+    BeamParameter, waist2rayleigh, rayleigh2waist, geometric_conj_ab,
+    geometric_conj_af, geometric_conj_bf, gaussian_conj, conjugate_gauss_beams)
 __all__.extend(gaussopt.__all__)
 
 
@@ -30,5 +30,6 @@ __all__.extend(medium.__all__)
 
 
 from . import utils
-from .utils import refraction_angle, deviation
+from .utils import (refraction_angle, deviation, lens_makers_formula,
+    mirror_formula, lens_formula)
 __all__.extend(utils.__all__)
