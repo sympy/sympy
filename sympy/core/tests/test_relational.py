@@ -1,5 +1,5 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, oo, I, pi, Float, And, Or, Not,
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
                    Implies, Xor)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -326,3 +326,27 @@ def test_evaluate():
     assert str(Le(x, x, evaluate=False)) == 'x <= x'
     assert str(Gt(x, x, evaluate=False)) == 'x > x'
     assert str(Lt(x, x, evaluate=False)) == 'x < x'
+
+
+def test_nan_inequalities():
+    """Inequalities involving NaN should not evaluate.  Quoting @Tempel:
+    > False should not be used as a stand-in to indicate
+    > that the comparison makes no sense.
+    """
+    for r in (nan, x, S(0), S(1)/3, pi, oo, -oo):
+        assert Gt(nan, r) not in [S.true, S.false, True, False]
+        assert Gt(r, nan) not in [S.true, S.false, True, False]
+        assert Lt(nan, r) not in [S.true, S.false, True, False]
+        assert Lt(r, nan) not in [S.true, S.false, True, False]
+        assert Ge(nan, r) not in [S.true, S.false, True, False]
+        assert Ge(r, nan) not in [S.true, S.false, True, False]
+        assert Le(nan, r) not in [S.true, S.false, True, False]
+        assert Le(r, nan) not in [S.true, S.false, True, False]
+        assert str(Gt(r, nan)) == (str(r) + ' > nan')
+        assert str(Gt(nan, r)) == ('nan > ' + str(r))
+        assert str(Lt(r, nan)) == (str(r) + ' < nan')
+        assert str(Lt(nan, r)) == ('nan < ' + str(r))
+        assert str(Ge(r, nan)) == (str(r) + ' >= nan')
+        assert str(Ge(nan, r)) == ('nan >= ' + str(r))
+        assert str(Le(r, nan)) == (str(r) + ' <= nan')
+        assert str(Le(nan, r)) == ('nan <= ' + str(r))
