@@ -213,50 +213,66 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    @_sympifyit('other', False)  # sympy >  other
+    @_sympifyit('other', False)
     def __ge__(self, other):
         if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % dif)
-        if dif.is_nonnegative is not None and \
+        if other in (S.Infinity, S.NegativeInfinity):
+            r = other <= self
+            if r in (S.true, S.false):
+                return r
+        elif dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
             return sympify(dif.is_nonnegative)
         return C.GreaterThan(self, other)
 
-    @_sympifyit('other', False)  # sympy >  other
+    @_sympifyit('other', False)
     def __le__(self, other):
         if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % dif)
-        if dif.is_nonpositive is not None and \
+        if other in (S.Infinity, S.NegativeInfinity):
+            r = other >= self
+            if r in (S.true, S.false):
+                return r
+        elif dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
             return sympify(dif.is_nonpositive)
         return C.LessThan(self, other)
 
-    @_sympifyit('other', False)  # sympy >  other
+    @_sympifyit('other', False)
     def __gt__(self, other):
         if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % dif)
-        if dif.is_positive is not None and \
+        if other in (S.Infinity, S.NegativeInfinity):
+            r = other < self
+            if r in (S.true, S.false):
+                return r
+        elif dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
             return sympify(dif.is_positive)
         return C.StrictGreaterThan(self, other)
 
-    @_sympifyit('other', False)  # sympy >  other
+    @_sympifyit('other', False)
     def __lt__(self, other):
         if self.is_complex and self.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % self)
         dif = self - other
         if dif.is_number and dif.is_real is False:
             raise TypeError("Invalid comparison of complex %s" % dif)
-        if dif.is_negative is not None and \
+        if other in (S.Infinity, S.NegativeInfinity):
+            r = other > self
+            if r in (S.true, S.false):
+                return r
+        elif dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
             return sympify(dif.is_negative)
         return C.StrictLessThan(self, other)
