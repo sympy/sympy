@@ -553,7 +553,7 @@ def test_sn_cn_dn_identities():
         # Abramowitz Table 16.5
         # cn(K, q) = 0; K is K(k), first complete elliptic integral
         equality = jcn(K, m)
-        assert(equality.ae(0))
+        assert(equality.ae(0, 10**(-mp.dps+1)))
 
         # Abramowitz Table 16.6.3
         # dn(z, 0) = 1, m == 0
