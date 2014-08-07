@@ -1,6 +1,6 @@
-=======================================================
-Mechanics: Masses, Inertias, Particles and Rigid Bodies
-=======================================================
+=================================================================
+Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
+=================================================================
 
 This document will describe how to represent masses and inertias in
 :mod:`mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
