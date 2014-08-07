@@ -381,13 +381,17 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
 def dsolve(eq, func=None, hint="default", simplify=True,
     ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
-    Solves any (supported) kind of ordinary differential equation.
+    Solves any (supported) kind of ordinary differential equation and
+    system of ordinary differential equations.
 
+    For single ordinary differential equation
+    ============================================
+
+    It is classified under this when number of equation in ``eq`` is one.
     **Usage**
 
         ``dsolve(eq, f(x), hint)`` -> Solve ordinary differential equation
         ``eq`` for function ``f(x)``, using method ``hint``.
-
 
     **Details**
 
@@ -520,10 +524,35 @@ def dsolve(eq, func=None, hint="default", simplify=True,
           specific hint, where ``<hintname>`` is the name of a hint without
           ``_Integral``.
 
+    For system of ordinary differential equations
+    =============================================
+
+   **Usage**
+        ``dsolve(eq, func)`` -> Solve system of ordinary differential
+        equations ``eq`` for ``func`` being list of functions including
+        `x(t)`, `y(t)`, `z(t)` where number of function in the list depends
+        upon the number of sytems of equations provided in ``eq``.
+
+    **Details**
+
+        ``eq`` can be any supported system of ordinary differential equations
+        This can either be an :py:class:`~sympy.core.relational.Equality`,
+        or an expression, which is assumed to be equal to ``0``.
+
+        ``func`` holds ``x(x)`` and ``y(t)`` being functions of one variable which
+        together with some of their derivatives make up the system of ordinary
+        differential equation ``eq``. It is not necessary to provide this; it
+        will be autodetected (and an error raised if it couldn't be detected).
+
+    **Hints**
+
+        The hints are formed by parameters returned by classify_sysode, combining
+        them give hints name used later for forming method name.
+
     Examples
     ========
 
-    >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
+    >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos, symbols
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
@@ -535,6 +564,16 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='almost_linear')
     [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
     f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
+    >>> t = symbols('t')
+    >>> x, y = symbols('x, y', function=True)
+    >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
+    >>> dsolve(eq)
+    [x(t) == C1*x0 + C2*x0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t),
+    y(t) == C1*y0 + C2(y0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t) +
+    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0)]
+    >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
+    >>> dsolve(eq)
+    set([x(t) == -exp(C1)/(C2*exp(C1) - cos(t)), y(t) == -1/(C1 - cos(t))])
     """
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -1825,7 +1864,7 @@ def checksysodesol(eqs, sols, func=None):
     r"""
     Substitutes corresponding ``sols`` for each functions into each ``eqs`` and
     checks that the result of substitutions for each equation is ``0``. The
-    equations and solutions passed can be any iterables being `list` or `tuple`
+    equations and solutions passed can be any iterable.
 
     This only works when each ``sols`` have one function only, like `x(t)` or `y(t)`.
     For each function, ``sols`` can have a single solution or a list of solutions.
@@ -1834,7 +1873,7 @@ def checksysodesol(eqs, sols, func=None):
     can be supplied through the ``func`` argument.
 
     When a sequence of equations is passed, the same sequence is used to return
-    the result for each equations with each functions substitued with corresponding
+    the result for each equation with each function substitued with corresponding
     solutions.
 
     It tries the following method to find zero equivalence for each equation:
