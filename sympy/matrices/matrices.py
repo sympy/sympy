@@ -23,6 +23,13 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
+try:
+    import csympy
+except ImportError:
+    csympy = None
+else:
+    sympify = csympy.sympify
+
 
 def _iszero(x):
     """Returns True if x is zero."""

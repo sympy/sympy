@@ -9,6 +9,11 @@ from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
 from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 
+try:
+    import csympy
+except ImportError:
+    csympy = None
+
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
            'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
@@ -599,12 +604,28 @@ def dynamicsymbols(names, level=0):
 
     esses = symbols(names, cls=Function)
     t = dynamicsymbols._t
+
+    def convert(sympy_f):
+        csympy_f = csympy.sympify(sympy_f)
+        for order in [t] * level:
+            csympy_f = csympy_f.diff(order)
+        return csympy_f
+
     if hasattr(esses, '__iter__'):
-        esses = [reduce(diff, [t] * level, e(t)) for e in esses]
-        return esses
+        if csympy:
+            esses = [convert(e(t)) for e in esses]
+            return esses
+        else:
+            esses = [reduce(diff, [t] * level, e(t)) for e in esses]
+            return esses
     else:
-        return reduce(diff, [t] * level, esses(t))
+        if csympy:
+            return convert(esses(t))
+        else:
+            return reduce(diff, [t] * level, esses(t))
 
-
-dynamicsymbols._t = Symbol('t')
+if csympy:
+    dynamicsymbols._t = csympy.Symbol('t')
+else:
+    dynamicsymbols._t = Symbol('t')
 dynamicsymbols._str = '\''

@@ -3,6 +3,11 @@ from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
 from sympy.core.compatibility import u
 from sympy.utilities.misc import filldedent
 
+try:
+    import csympy
+except ImportError:
+    csympy = None
+
 __all__ = ['Vector']
 
 
@@ -510,7 +515,10 @@ class Vector(object):
         """
 
         from sympy.physics.vector.frame import _check_frame
-        wrt = sympify(wrt)
+        if csympy:
+            wrt = csympy.sympify(wrt)
+        else:
+            wrt = sympify(wrt)
         _check_frame(otherframe)
         outvec = Vector(0)
         for i, v in enumerate(self.args):
