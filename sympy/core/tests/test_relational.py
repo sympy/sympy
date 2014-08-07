@@ -439,7 +439,6 @@ def test_nan_equality_exceptions():
     assert Unequality(random.choice(A), nan) is S.true
 
 
-@XFAIL
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # currently fails because rhs reduces to bool but the lhs does not
@@ -456,7 +455,6 @@ def test_inequalities_symbol_name_same():
             assert Le(a, b) == (a <= b)
 
 
-@XFAIL
 def test_inequalities_symbol_name_same_complex():
     """Using the operator and functional forms should give same results.
     With complex non-real numbers, both should raise errors.
