@@ -13,6 +13,9 @@ class AssignmentError(Exception):
     """
     pass
 
+class Assignment(C.Equality):
+    pass
+
 
 class CodePrinter(StrPrinter):
     """
@@ -25,8 +28,8 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    def _doprint_a_piece(self, expr, assign_to=None):
-        # Here we print an expression that may contain Indexed objects, they
+    def _doprint_indexed_loop(self, expr, assign_to=None):
+        # Here we print an expression that contains Indexed objects, they
         # correspond to arrays in the generated code.  The low-level implementation
         # involves looping over array elements and possibly storing results in temporary
         # variables or accumulate it in the assign_to object.
@@ -44,13 +47,13 @@ class CodePrinter(StrPrinter):
         # Setup loops over dummy indices  --  each term needs separate treatment
         from sympy.tensor import get_contraction_structure
         if self._settings.get('contract', True):
-            d = get_contraction_structure(expr)
+            dummies = get_contraction_structure(expr)
         else:
-            d = {None: (expr,)}
+            dummies = {None: (expr,)}
 
         # terms with no summations first
-        if None in d:
-            text = CodePrinter.doprint(self, Add(*d[None]))
+        if None in dummies:
+            text = CodePrinter.doprint(self, Add(*dummies[None]))
         else:
             # If all terms have summations we must initialize array to Zero
             text = CodePrinter.doprint(self, 0)
@@ -63,16 +66,16 @@ class CodePrinter(StrPrinter):
             lines.append(text)
             lines.extend(closeloop)
 
-        for dummies in d:
+        for d in dummies:
             # then terms with summations
-            if isinstance(dummies, tuple):
-                indices = self._sort_optimized(dummies, expr)
+            if isinstance(d, tuple):
+                indices = self._sort_optimized(d, expr)
                 openloop_d, closeloop_d = self._get_loop_opening_ending(
                     indices)
 
-                for term in d[dummies]:
-                    if term in d and not ([list(f.keys()) for f in d[term]]
-                            == [[None] for f in d[term]]):
+                for term in dummies[d]:
+                    if term in dummies and not ([list(f.keys()) for f in dummies[term]]
+                            == [[None] for f in dummies[term]]):
                         # If one factor in the term has it's own internal
                         # contractions, those must be computed first.
                         # (temporary variables?)
@@ -106,10 +109,10 @@ class CodePrinter(StrPrinter):
                         lines.extend(closeloop_d)
                         lines.extend(closeloop)
 
-        return lines
+        return "\n".join(lines)
 
     def get_expression_indices(self, expr, assign_to):
-        from sympy.tensor import get_indices, get_contraction_structure
+        from sympy.tensor import get_indices
         rinds, junk = get_indices(expr)
         linds, junk = get_indices(assign_to)
 
@@ -248,6 +251,9 @@ class CodePrinter(StrPrinter):
     _print_Limit = _print_not_supported
     _print_list = _print_not_supported
     _print_Matrix = _print_not_supported
+    _print_ImmutableMatrix = _print_not_supported
+    _print_MutableDenseMatrix = _print_not_supported
+    _print_MatrixBase = _print_not_supported
     _print_DeferredVector = _print_not_supported
     _print_NaN = _print_not_supported
     _print_NegativeInfinity = _print_not_supported

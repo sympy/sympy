@@ -15,7 +15,7 @@ from __future__ import print_function, division
 
 from sympy.core import S, C
 from sympy.core.compatibility import string_types
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
@@ -72,36 +72,19 @@ class CCodePrinter(CodePrinter):
             raise TypeError("CCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
+        if assign_to:
+            expr = Assignment(assign_to, expr)
+        elif isinstance(expr, C.Equality) and not isinstance(expr, Assignment):
+            # For backwards compatability, convert all root level equality to
+            # Assignment type.
+            expr = Assignment(*expr.args)
+
         # keep a set of expressions that are not strictly translatable to C
         # and number constants that must be declared and initialized
         not_c = self._not_supported = set()
         self._number_symbols = set()
 
-        lines = []
-        # We treat top level Piecewise here to get if tests outside loops
-        if isinstance(expr, C.Piecewise):
-            for i, (e, c) in enumerate(expr.args):
-                if i == 0:
-                    lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
-                    lines.append("else {")
-                else:
-                    lines.append("else if (%s) {" % self._print(c))
-                code0 = self._doprint_a_piece(e, assign_to)
-                lines.extend(code0)
-                lines.append("}")
-        # Here we handle matrix terms, solving for each matrix element
-        elif isinstance(expr, C.ImmutableMatrix):
-            rows, cols = assign_to.shape
-            mat_name = str(assign_to)
-            for i in range(rows):
-                for j in range(cols):
-                    lhs = C.Symbol("{:}[{:}][{:}]".format(mat_name, i, j))
-                    code0 = self._doprint_a_piece(expr[i,j], lhs)
-                    lines.extend(code0)
-        else:
-            code0 = self._doprint_a_piece(expr, assign_to)
-            lines.extend(code0)
+        lines = [self._print(expr)]
 
         # format the output
         if self._settings["human"]:
@@ -109,15 +92,16 @@ class CCodePrinter(CodePrinter):
             if len(not_c) > 0:
                 frontlines.append("// Not C:")
                 for expr in sorted(not_c, key=str):
-                    frontlines.append("// %s" % repr(expr))
+                    frontlines.append("\n".join(["// " + i for i in
+                            repr(expr).splitlines()]))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("double const %s = %s;" % (name, value))
             lines = frontlines + lines
-            lines = "\n".join(lines)
-            result = self.indent_code(lines)
+            code_text = "\n".join(lines)
+            result = self.indent_code(code_text)
         else:
-            lines = self.indent_code("\n".join(lines))
-            result = self._number_symbols, not_c, lines
+            code_text = self.indent_code("\n".join(lines))
+            result = (self._number_symbols, not_c, code_text)
         del self._not_supported
         del self._number_symbols
         return result
@@ -179,20 +163,36 @@ class CCodePrinter(CodePrinter):
         return '-HUGE_VAL'
 
     def _print_Piecewise(self, expr):
-        # This method is called only for inline if constructs
-        # Top level piecewise is handled in doprint()
-        ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
-                   for e, c in expr.args[:-1]]
-        last_line = ""
-        if expr.args[-1].cond == True:
-            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
+        lines = []
+        if expr.has(Assignment):
+            for i, (e, c) in enumerate(expr.args):
+                if i == 0:
+                    lines.append("if (%s) {" % self._print(c))
+                elif i == len(expr.args) - 1 and c == True:
+                    lines.append("else {")
+                else:
+                    lines.append("else if (%s) {" % self._print(c))
+                code0 = self._print(e)
+                lines.append(code0)
+                lines.append("}")
+            return "\n".join(lines)
         else:
-            ecpairs.append("(%s) ? (\n%s\n)" %
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
-        code = "%s" + last_line
-        return code % ": ".join(ecpairs) + " ".join(
-            [")" for ind in range(len(ecpairs))])
+            # The piecewise was used in an expression, need to do inline
+            # operators. This has the downside that if none of the conditions
+            # are true, the last expression will still be returned. Also, these
+            # inline operators will not work for statements that span multiple
+            # lines (Matrix or Indexed expressions).
+            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+                    for e, c in expr.args[:-1]]
+            last_line = ""
+            if expr.args[-1].cond == True:
+                last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
+            else:
+                ecpairs.append("(%s) ? (\n%s\n)" %
+                (self._print(expr.args[-1].cond),
+                    self._print(expr.args[-1].expr)))
+            code = "%s" + last_line
+            return code % ": ".join(ecpairs) + " ".join([")"*len(ecpairs)])
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -207,6 +207,39 @@ class CCodePrinter(CodePrinter):
 
     def _print_MatrixElement(self, expr):
         return "{:}[{:}][{:}]".format(expr.parent, expr.i, expr.j)
+
+    def _print_Assignment(self, expr):
+        lhs = expr.lhs
+        rhs = expr.rhs
+        # We special case assignments that take multiple lines
+        if isinstance(expr.rhs, C.Piecewise):
+            # Here we modify Piecewise so each expression is now
+            # an Assignment, and then continue on the print.
+            expressions = []
+            conditions = []
+            for (e, c) in rhs.args:
+                expressions.append(Assignment(lhs, e))
+                conditions.append(c)
+            temp = C.Piecewise(*zip(expressions, conditions))
+            return self._print(temp)
+        elif isinstance(lhs, C.MatrixSymbol):
+            # Here we form an Assignment for each element in the array,
+            # printing each one.
+            rows, cols = lhs.shape
+            lines = []
+            for i in range(rows):
+                for j in range(cols):
+                    temp = Assignment(lhs[i, j], rhs[i, j])
+                    code0 = self._print(temp)
+                    lines.append(code0)
+            return "\n".join(lines)
+        elif isinstance(lhs, C.Indexed):
+            # Here we handle an indexed loop
+            return self._doprint_indexed_loop(rhs, lhs)
+        else:
+            lhs_text = self._print(lhs)
+            rhs_text = self._print(rhs)
+            return "{:} = {:};".format(lhs_text, rhs_text)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

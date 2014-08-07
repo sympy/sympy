@@ -119,13 +119,14 @@ def test_ccode_Piecewise():
     p = ccode(Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-if (x < 1) {
+((x < 1) ? (
    x
-}
-else {
+)
+: (
    pow(x, 2)
-}\
+))\
 """
+
     assert p == s
 
 
@@ -141,7 +142,7 @@ def test_ccode_Piecewise_deep():
 )
 : (
    pow(x, 2)
-)) )\
+)))\
 """
     assert p == s
 
