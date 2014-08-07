@@ -2250,26 +2250,30 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.false
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is not S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.true
 
     def __mod__(self, other):
@@ -2443,26 +2447,30 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is not S.NegativeInfinity)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.true
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.false
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is S.NegativeInfinity)
 
     def __mod__(self, other):
