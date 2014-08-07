@@ -23,7 +23,7 @@ import string
 
 from sympy.core import S, C, Add, N
 from sympy.core.compatibility import string_types
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 
 class FCodePrinter(CodePrinter):
@@ -33,7 +33,6 @@ class FCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'assign_to': None,
         'precision': 15,
         'user_functions': {},
         'human': True,
@@ -61,12 +60,6 @@ class FCodePrinter(CodePrinter):
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
-        assign_to = self._settings['assign_to']
-        if isinstance(assign_to, string_types):
-            self._settings['assign_to'] = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("FCodePrinter cannot assign to object of type %s" %
-                    type(assign_to))
 
     def _rate_index_position(self, p):
         """function to calculate score based on position among indices
@@ -117,32 +110,25 @@ class FCodePrinter(CodePrinter):
             close_lines.append("end do")
         return open_lines, close_lines
 
-    def doprint(self, expr):
+    def doprint(self, expr, assign_to=None):
         """Returns Fortran code for expr (as a string)"""
-        # find all number symbols
-        self._number_symbols = set()
+
+        if isinstance(assign_to, string_types):
+            assign_to = C.Symbol(assign_to)
+        elif not isinstance(assign_to, (C.Basic, type(None))):
+            raise TypeError("FCodePrinter cannot assign to object of type %s" %
+                    type(assign_to))
+
+        if assign_to:
+            expr = Assignment(assign_to, expr)
 
         # keep a set of expressions that are not strictly translatable to
-        # Fortran.
-        self._not_supported = set()
+        # Fortran and number constants that must be declared and initialized
+        not_f = self._not_supported = set()
+        self._number_symbols = set()
 
-        lines = []
-        from sympy.functions import Piecewise
-        if isinstance(expr, Piecewise):
-            # support for top-level Piecewise function
-            for i, (e, c) in enumerate(expr.args):
-                if i == 0:
-                    lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
-                    lines.append("else")
-                else:
-                    lines.append("else if (%s) then" % self._print(c))
-                lines.extend(
-                    self._doprint_a_piece(e, self._settings['assign_to']))
-            lines.append("end if")
-        else:
-            lines.extend(
-                self._doprint_a_piece(expr, self._settings['assign_to']))
+        code = self._print(expr)
+        lines = code.splitlines()
 
         # format the output
         if self._settings["human"]:
@@ -163,10 +149,62 @@ class FCodePrinter(CodePrinter):
             lines = self._wrap_fortran(lines)
             result = self._number_symbols, self._not_supported, "\n".join(
                 lines)
-
         del self._not_supported
         del self._number_symbols
         return result
+
+    def _print_Piecewise(self, expr):
+        lines = []
+        if expr.has(Assignment):
+            for i, (e, c) in enumerate(expr.args):
+                if i == 0:
+                    lines.append("if (%s) then" % self._print(c))
+                elif i == len(expr.args) - 1 and c == True:
+                    lines.append("else")
+                else:
+                    lines.append("else if (%s) then" % self._print(c))
+                lines.append(self._print(e))
+            lines.append("end if")
+            return "\n".join(lines)
+        else:
+            # The piecewise was used in an expression, need to do inline
+            # operators.
+            raise NotImplementedError("Using Piecewise as an expression using "
+                                      "inline operators is not supported in "
+                                      "Fortran77.")
+
+    def _print_Assignment(self, expr):
+        lhs = expr.lhs
+        rhs = expr.rhs
+        # We special case assignments that take multiple lines
+        if isinstance(expr.rhs, C.Piecewise):
+            # Here we modify Piecewise so each expression is now
+            # an Assignment, and then continue on the print.
+            expressions = []
+            conditions = []
+            for (e, c) in rhs.args:
+                expressions.append(Assignment(lhs, e))
+                conditions.append(c)
+            temp = C.Piecewise(*zip(expressions, conditions))
+            return self._print(temp)
+        elif isinstance(lhs, C.MatrixSymbol):
+            # Here we form an Assignment for each element in the array,
+            # printing each one.
+            rows, cols = lhs.shape
+            lines = []
+            for i in range(rows):
+                for j in range(cols):
+                    temp = Assignment(lhs[i, j], rhs[i, j])
+                    code0 = self._print(temp)
+                    lines.append(code0)
+            return "\n".join(lines)
+        elif isinstance(lhs, C.Indexed):
+            # Here we handle an indexed loop
+            return self._doprint_indexed_loop(rhs, lhs)
+        else:
+            lhs_text = self._print(lhs)
+            rhs_text = self._print(rhs)
+            return "{:} = {:}".format(lhs_text, rhs_text)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -404,7 +442,7 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, **settings):
+def fcode(expr, assign_to=None, **settings):
     """Converts an expr to a string of Fortran 77 code
 
        Parameters
@@ -460,8 +498,7 @@ def fcode(expr, **settings):
 
     """
     # run the printer
-    printer = FCodePrinter(settings)
-    return printer.doprint(expr)
+    return FCodePrinter(settings).doprint(expr, assign_to)
 
 
 def print_fcode(expr, **settings):

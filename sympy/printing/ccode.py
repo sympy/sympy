@@ -74,10 +74,6 @@ class CCodePrinter(CodePrinter):
 
         if assign_to:
             expr = Assignment(assign_to, expr)
-        elif isinstance(expr, C.Equality) and not isinstance(expr, Assignment):
-            # For backwards compatability, convert all root level equality to
-            # Assignment type.
-            expr = Assignment(*expr.args)
 
         # keep a set of expressions that are not strictly translatable to C
         # and number constants that must be declared and initialized
