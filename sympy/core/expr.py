@@ -225,7 +225,7 @@ class Expr(Basic, EvalfMixin):
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
             return sympify(dif.is_nonnegative)
-        return C.GreaterThan(self, other)
+        return C.GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
         try:
@@ -239,7 +239,7 @@ class Expr(Basic, EvalfMixin):
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
             return sympify(dif.is_nonpositive)
-        return C.LessThan(self, other)
+        return C.LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
         try:
@@ -253,7 +253,7 @@ class Expr(Basic, EvalfMixin):
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
             return sympify(dif.is_positive)
-        return C.StrictGreaterThan(self, other)
+        return C.StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
         try:
@@ -267,7 +267,7 @@ class Expr(Basic, EvalfMixin):
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
             return sympify(dif.is_negative)
-        return C.StrictLessThan(self, other)
+        return C.StrictLessThan(self, other, evaluate=False)
 
     @staticmethod
     def _from_mpmath(x, prec):
