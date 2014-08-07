@@ -206,6 +206,9 @@ class FCodePrinter(CodePrinter):
             rhs_text = self._print(rhs)
             return "{:} = {:}".format(lhs_text, rhs_text)
 
+    def _print_MatrixElement(self, expr):
+        return "{:}({:}, {:})".format(expr.parent, expr.i + 1, expr.j + 1)
+
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.
         # collect the purely real and purely imaginary parts:

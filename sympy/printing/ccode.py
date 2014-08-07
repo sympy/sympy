@@ -223,8 +223,8 @@ class CCodePrinter(CodePrinter):
             # printing each one.
             rows, cols = lhs.shape
             lines = []
-            for i in range(rows):
-                for j in range(cols):
+            for j in range(cols):
+                for i in range(rows):
                     temp = Assignment(lhs[i, j], rhs[i, j])
                     code0 = self._print(temp)
                     lines.append(code0)
