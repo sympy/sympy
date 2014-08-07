@@ -130,10 +130,10 @@ def test_bool():
     assert Ge(1, 1) is S.true
     assert Eq(I, 2) is S.false
     assert Ne(I, 2) is S.true
-    assert Gt(I, 2) not in [S.true, S.false]
-    assert Ge(I, 2) not in [S.true, S.false]
-    assert Lt(I, 2) not in [S.true, S.false]
-    assert Le(I, 2) not in [S.true, S.false]
+    raises(TypeError, lambda: Gt(I, 2))
+    raises(TypeError, lambda: Ge(I, 2))
+    raises(TypeError, lambda: Lt(I, 2))
+    raises(TypeError, lambda: Le(I, 2))
     a = Float('.000000000000000000001', '')
     b = Float('.0000000000000000000001', '')
     assert Eq(pi + a, pi + b) is S.false
