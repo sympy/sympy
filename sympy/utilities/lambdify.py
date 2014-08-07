@@ -16,6 +16,11 @@ MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
+NUMEXPR = {}
+# we will need a regex for NUMEXPR
+# if lambdastr changes then this pattern will need to be updated
+import re
+NUMEXPR_PAT=re.compile(r": \(.*\)$", flags=re.DOTALL)
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -25,6 +30,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
+NUMEXPR_DEFAULT = {"I": 1j}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -85,6 +91,23 @@ NUMPY_TRANSLATIONS = {
     "re": "real",
 }
 
+NUMEXPR_TRANSLATIONS = {
+    "Abs": "abs",
+    "acos": "arccos",
+    "acosh": "arccosh",
+    "arg": "angle",
+    "asin": "arcsin",
+    "asinh": "arcsinh",
+    "atan": "arctan",
+    "atan2": "arctan2",
+    "atanh": "arctanh",
+    "ceiling": "ceil",
+    "E": "e",
+    "im": "imag",
+    "ln": "log",
+    "re": "real",
+}
+
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
@@ -94,6 +117,8 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
+                 ("import_module('numexpr')", )),
 }
 
 
@@ -113,6 +138,7 @@ def _import(module, reload="False"):
         raise NameError(
             "'%s' module can't be used for lambdification" % module)
 
+    is_numexpr = True if module == 'numexpr' else False
     # Clear namespace or exit
     if namespace != namespace_default:
         # The namespace was already generated, don't do it again if not forced.
@@ -140,6 +166,10 @@ def _import(module, reload="False"):
             "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
+    # This needs to be skipped for numexpr since numexpr functions are not
+    # really in a namespace
+    if is_numexpr:
+        return
     for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
 
@@ -155,7 +185,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy"
+     - the strings "math", "mpmath", "numpy", "sympy", "numexpr"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -329,6 +359,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
+    if 'numexpr' in namespaces:
+        if flat in lstr:
+            raise TypeError("numexpr can't be used with argument tuples.")
+        # need to add 'evaluate' to lstr
+        m = NUMEXPR_PAT.search(lstr)
+        st = m.start()
+        lstr = lstr[:st+2]+"evaluate('"+lstr[st+2:]+"')"
     if flat in lstr:
         import itertools
         namespace.update({flat: flatten})
