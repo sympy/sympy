@@ -10,7 +10,7 @@ Math object where possible.
 from __future__ import print_function, division
 
 from sympy.core import S, C
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 from sympy.core.compatibility import string_types
 
@@ -80,27 +80,15 @@ class JavascriptCodePrinter(CodePrinter):
             raise TypeError("JavascriptCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
-        # keep a set of expressions that are not strictly translatable to Javascript
-        # and number constants that must be declared and initialized
+        if assign_to:
+            expr = Assignment(assign_to, expr)
+
+        # Keep a set of expressions that are not strictly translatable to
+        # Javascript and number constants that must be declared and initialized
         not_js = self._not_supported = set()
         self._number_symbols = set()
 
-        # We treat top level Piecewise here to get if tests outside loops
-        lines = []
-        if isinstance(expr, C.Piecewise):
-            for i, (e, c) in enumerate(expr.args):
-                if i == 0:
-                    lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
-                    lines.append("else {")
-                else:
-                    lines.append("else if (%s) {" % self._print(c))
-                code0 = self._doprint_a_piece(e, assign_to)
-                lines.extend(code0)
-                lines.append("}")
-        else:
-            code0 = self._doprint_a_piece(expr, assign_to)
-            lines.extend(code0)
+        lines = [self._print(expr)]
 
         # format the output
         if self._settings["human"]:
@@ -174,19 +162,36 @@ class JavascriptCodePrinter(CodePrinter):
         return 'Number.NEGATIVE_INFINITY'
 
     def _print_Piecewise(self, expr):
-        # This method is called only for inline if constructs
-        # Top level piecewise is handled in doprint()
-        ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e))
-                   for e, c in expr.args[:-1]]
-        last_line = ""
-        if expr.args[-1].cond == True:
-            last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
+        lines = []
+        if expr.has(Assignment):
+            for i, (e, c) in enumerate(expr.args):
+                if i == 0:
+                    lines.append("if (%s) {" % self._print(c))
+                elif i == len(expr.args) - 1 and c == True:
+                    lines.append("else {")
+                else:
+                    lines.append("else if (%s) {" % self._print(c))
+                code0 = self._print(e)
+                lines.append(code0)
+                lines.append("}")
+            return "\n".join(lines)
         else:
-            ecpairs.append("(%s) {\n%s\n" %
-                           (self._print(expr.args[-1].cond),
-                            self._print(expr.args[-1].expr)))
-        code = "if %s" + last_line
-        return code % "else if ".join(ecpairs)
+            # The piecewise was used in an expression, need to do inline
+            # operators. This has the downside that if none of the conditions
+            # are true, the last expression will still be returned. Also, these
+            # inline operators will not work for statements that span multiple
+            # lines (Matrix or Indexed expressions).
+            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+                    for e, c in expr.args[:-1]]
+            last_line = ""
+            if expr.args[-1].cond == True:
+                last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
+            else:
+                ecpairs.append("(%s) ? (\n%s\n)" %
+                (self._print(expr.args[-1].cond),
+                    self._print(expr.args[-1].expr)))
+            code = "%s" + last_line
+            return code % ": ".join(ecpairs) + " ".join([")"*len(ecpairs)])
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -201,6 +206,13 @@ class JavascriptCodePrinter(CodePrinter):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         return CodePrinter._print_Function(self, expr)
+
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for i in range(rows) for j in range(cols))
+
+    def _print_MatrixElement(self, expr):
+        return "{:}[{:}][{:}]".format(expr.parent, expr.i, expr.j)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

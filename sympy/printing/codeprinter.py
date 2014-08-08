@@ -159,6 +159,7 @@ class CodePrinter(StrPrinter):
         elif isinstance(lhs, C.MatrixSymbol):
             # Here we form an Assignment for each element in the array,
             # printing each one.
+            lines = []
             for (i, j) in self._traverse_matrix_indices(lhs):
                 temp = Assignment(lhs[i, j], rhs[i, j])
                 code0 = self._print(temp)
