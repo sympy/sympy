@@ -659,6 +659,12 @@ def test_atan2():
     assert atan2(-1, -1) == -3*pi/4
     assert atan2(-1, 0) == -pi/2
     assert atan2(-1, 1) == -pi/4
+    i = symbols('i', imaginary=True)
+    r = symbols('r', real=True)
+    eq = atan2(r, i)
+    ans = -I*log((i + I*r)/sqrt(i**2 + r**2))
+    reps = ((r, 2), (i, I))
+    assert eq.subs(reps) == ans.subs(reps)
 
     u = Symbol("u", positive=True)
     assert atan2(0, u) == 0
@@ -673,9 +679,16 @@ def test_atan2():
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
-    assert ex.subs({x:2, y:3*I}).rewrite(arg) == 0
-    assert ex.subs({x:2*I, y:3}).rewrite(arg) == 0
-    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == 0
+    assert ex.subs({x:2, y:3*I}).rewrite(arg) == -pi - I*log(sqrt(5)*I/5)
+    assert ex.subs({x:2*I, y:3}).rewrite(arg) == -pi/2 - I*log(sqrt(5)*I)
+    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == -pi + atan(2/S(3)) + atan(3/S(2))
+    i = symbols('i', imaginary=True)
+    r = symbols('r', real=True)
+    e = atan2(i, r)
+    rewrite = e.rewrite(arg)
+    reps = {i: I, r: -2}
+    assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
+    assert (e - rewrite).subs(reps).equals(0)
 
     assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
 
@@ -684,8 +697,6 @@ def test_atan2():
 
     assert simplify(diff(atan2(y, x).rewrite(log), x)) == -y/(x**2 + y**2)
     assert simplify(diff(atan2(y, x).rewrite(log), y)) ==  x/(x**2 + y**2)
-
-    assert isinstance(atan2(2, 3*I).n(), atan2)
 
 
 def test_acot():
