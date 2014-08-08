@@ -30,7 +30,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
-NUMEXPR_DEFAULT = {"I": 1j}
+NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -95,17 +95,16 @@ NUMEXPR_TRANSLATIONS = {
     "Abs": "abs",
     "acos": "arccos",
     "acosh": "arccosh",
-    "arg": "angle",
     "asin": "arcsin",
     "asinh": "arcsinh",
     "atan": "arctan",
     "atan2": "arctan2",
     "atanh": "arctanh",
-    "ceiling": "ceil",
     "E": "e",
     "im": "imag",
     "ln": "log",
     "re": "real",
+    "I": "1j",
 }
 
 # Available modules:
@@ -366,6 +365,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         m = NUMEXPR_PAT.search(lstr)
         st = m.start()
         lstr = lstr[:st+2]+"evaluate('"+lstr[st+2:]+"')"
+        # use translation table to directly modify lstr
+        for k in sorted(NUMEXPR_TRANSLATIONS.keys(), key=len)[::-1]:
+            lstr = lstr.replace(k, NUMEXPR_TRANSLATIONS[k])
     if flat in lstr:
         import itertools
         namespace.update({flat: flatten})
