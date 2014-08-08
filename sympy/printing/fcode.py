@@ -29,6 +29,7 @@ from sympy.printing.precedence import precedence
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
     printmethod = "_fcode"
+    language = "Fortran"
 
     _default_settings = {
         'order': None,
@@ -59,20 +60,6 @@ class FCodePrinter(CodePrinter):
 
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
-        self._init_leading_padding()
-
-    def _rate_index_position(self, p):
-        """function to calculate score based on position among indices
-
-        This method is used to sort loops in an optimized order, see
-        CodePrinter._sort_optimized()
-        """
-        return -p*5
-
-    def _get_statement(self, codestring):
-        return codestring
-
-    def _init_leading_padding(self):
         # leading columns depend on fixed or free format
         if self._settings['source_format'] == 'fixed':
             self._lead_code = "      "
@@ -88,18 +75,26 @@ class FCodePrinter(CodePrinter):
                 'source_format']
             )
 
-    def _pad_leading_columns(self, lines):
-        result = []
-        for line in lines:
-            if line.startswith('!'):
-                result.append(self._lead_comment + line[1:].lstrip())
-            else:
-                result.append(self._lead_code + line)
-        return result
+    def _rate_index_position(self, p):
+        return -p*5
+
+    def _get_statement(self, codestring):
+        return codestring
+
+    def _get_comment(self, text):
+        return "! {:}".format(text)
+
+    def _declare_number_const(self, name, value):
+        return "parameter ({:} = {:})".format(name, value)
+
+    def _format_code(self, lines):
+        return self._wrap_fortran(self.indent_code(lines))
+
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for j in range(cols) for i in range(rows))
 
     def _get_loop_opening_ending(self, indices):
-        """Returns a tuple (open_lines, close_lines) containing lists of codelines
-        """
         open_lines = []
         close_lines = []
         for i in indices:
@@ -109,49 +104,6 @@ class FCodePrinter(CodePrinter):
             open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
         return open_lines, close_lines
-
-    def doprint(self, expr, assign_to=None):
-        """Returns Fortran code for expr (as a string)"""
-
-        if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("FCodePrinter cannot assign to object of type %s" %
-                    type(assign_to))
-
-        if assign_to:
-            expr = Assignment(assign_to, expr)
-
-        # keep a set of expressions that are not strictly translatable to
-        # Fortran and number constants that must be declared and initialized
-        not_f = self._not_supported = set()
-        self._number_symbols = set()
-
-        code = self._print(expr)
-        lines = code.splitlines()
-
-        # format the output
-        if self._settings["human"]:
-            frontlines = []
-            if len(self._not_supported) > 0:
-                frontlines.append("! Not Fortran:")
-                for expr in sorted(self._not_supported, key=self._print):
-                    frontlines.append("! %s" % repr(expr))
-            for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("parameter (%s = %s)" % (str(name), value))
-            frontlines.extend(lines)
-            lines = frontlines
-            lines = self.indent_code(lines)
-            lines = self._wrap_fortran(lines)
-            result = "\n".join(lines)
-        else:
-            lines = self.indent_code(lines)
-            lines = self._wrap_fortran(lines)
-            result = self._number_symbols, self._not_supported, "\n".join(
-                lines)
-        del self._not_supported
-        del self._number_symbols
-        return result
 
     def _print_Piecewise(self, expr):
         lines = []
@@ -172,10 +124,6 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError("Using Piecewise as an expression using "
                                       "inline operators is not supported in "
                                       "Fortran77.")
-
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for j in range(cols) for i in range(rows))
 
     def _print_MatrixElement(self, expr):
         return "{:}({:}, {:})".format(expr.parent, expr.i + 1, expr.j + 1)
@@ -293,6 +241,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    def _pad_leading_columns(self, lines):
+        result = []
+        for line in lines:
+            if line.startswith('!'):
+                result.append(self._lead_comment + line[1:].lstrip())
+            else:
+                result.append(self._lead_code + line)
+        return result
 
     def _wrap_fortran(self, lines):
         """Wrap long Fortran lines

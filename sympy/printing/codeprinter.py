@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import C, Add, Mul, Pow, S
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
@@ -28,6 +28,57 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
+    def doprint(self, expr, assign_to=None):
+        """
+        Print the expression as code.
+
+        Parameters
+        ----------
+        expr : Expression
+            The expression to be printed.
+
+        assign_to : Symbol, MatrixSymbol, or string (optional)
+            If provided, the printed code will set the expression to a
+            variable with name ``assign_to``.
+        """
+
+        if isinstance(assign_to, string_types):
+            assign_to = C.Symbol(assign_to)
+        elif not isinstance(assign_to, (C.Basic, type(None))):
+            raise TypeError("{:} cannot assign to object of type {:}".format(
+                    type(self).__name__, type(assign_to)))
+
+        if assign_to:
+            expr = Assignment(assign_to, expr)
+
+        # keep a set of expressions that are not strictly translatable to Code
+        # and number constants that must be declared and initialized
+        self._not_supported = set()
+        self._number_symbols = set()
+
+        lines = self._print(expr).splitlines()
+
+        # format the output
+        if self._settings["human"]:
+            frontlines = []
+            if len(self._not_supported) > 0:
+                frontlines.append(self._get_comment(
+                        "Not supported in {:}:".format(self.language)))
+                for expr in sorted(self._not_supported, key=str):
+                    frontlines.append(self._get_comment(type(expr).__name__))
+            for name, value in sorted(self._number_symbols, key=str):
+                frontlines.append(self._declare_number_const(name, value))
+            lines = frontlines + lines
+            lines = self._format_code(lines)
+            result = "\n".join(lines)
+        else:
+            lines = self._format_code(lines)
+            result = (self._number_symbols, self._not_supported,
+                    "\n".join(lines))
+        del self._not_supported
+        del self._number_symbols
+        return result
+
     def _doprint_loops(self, expr, assign_to=None):
         # Here we print an expression that contains Indexed objects, they
         # correspond to arrays in the generated code.  The low-level implementation
@@ -47,10 +98,10 @@ class CodePrinter(StrPrinter):
 
         # terms with no summations first
         if None in dummies:
-            text = CodePrinter.doprint(self, Add(*dummies[None]))
+            text = StrPrinter.doprint(self, Add(*dummies[None]))
         else:
             # If all terms have summations we must initialize array to Zero
-            text = CodePrinter.doprint(self, 0)
+            text = StrPrinter.doprint(self, 0)
 
         # skip redundant assignments (where lhs == rhs)
         lhs_printed = self._print(assign_to)
@@ -95,11 +146,11 @@ class CodePrinter(StrPrinter):
                                 "need assignment variable for loops")
                         if term.has(assign_to):
                             raise ValueError("FIXME: lhs present in rhs,\
-                                this is undefined in CCodePrinter")
+                                this is undefined in CodePrinter")
 
                         lines.extend(openloop)
                         lines.extend(openloop_d)
-                        text = "%s = %s" % (lhs_printed, CodePrinter.doprint(
+                        text = "%s = %s" % (lhs_printed, StrPrinter.doprint(
                             self, assign_to + term))
                         lines.append(self._get_statement(text))
                         lines.extend(closeloop_d)
@@ -141,6 +192,43 @@ class CodePrinter(StrPrinter):
                     pass
 
         return sorted(indices, key=lambda x: score_table[x])
+
+    def _rate_index_position(self, p):
+        """function to calculate score based on position among indices
+
+        This method is used to sort loops in an optimized order, see
+        CodePrinter._sort_optimized()
+        """
+        raise NotImplementedError("This function must be implemented by "
+                                  "subclass of CodePrinter.")
+
+    def _get_statement(self, codestring):
+        """Formats a codestring with the proper line ending."""
+        raise NotImplementedError("This function must be implemented by "
+                                  "subclass of CodePrinter.")
+
+    def _get_comment(self, text):
+        """Formats a text string as a comment."""
+        raise NotImplementedError("This function must be implemented by "
+                                  "subclass of CodePrinter.")
+
+    def _declare_number_const(self, name, value):
+        """Declare a numeric constant at the top of a function"""
+        raise NotImplementedError("This function must be implemented by "
+                                  "subclass of CodePrinter.")
+
+    def _format_code(self, lines):
+        """Take in a list of lines of code, and format them accordingly.
+
+        This may include indenting, wrapping long lines, etc..."""
+        raise NotImplementedError("This function must be implemented by "
+                                  "subclass of CodePrinter.")
+
+    def _get_loop_opening_ending(self, indices):
+        """Returns a tuple (open_lines, close_lines) containing lists
+        of codelines"""
+        raise NotImplementedError("This function must be implemented by "
+                                  "subclass of CodePrinter.")
 
     def _print_Assignment(self, expr):
         lhs = expr.lhs

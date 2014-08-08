@@ -123,9 +123,9 @@ def test_not_fortran():
     x = symbols('x')
     g = Function('g')
     assert fcode(
-        gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
-    assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
-    assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
+        gamma(x)) == "C     Not supported in Fortran:\nC     gamma\n      gamma(x)"
+    assert fcode(Integral(sin(x))) == "C     Not supported in Fortran:\nC     Integral\n      Integral(sin(x), x)"
+    assert fcode(g(x)) == "C     Not supported in Fortran:\nC     g\n      g(x)"
 
 
 def test_user_functions():

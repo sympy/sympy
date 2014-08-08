@@ -5,6 +5,7 @@ Mathematica code printer
 from __future__ import print_function, division
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 # Used in MCodePrinter._print_Function(self)
@@ -47,6 +48,8 @@ class MCodePrinter(CodePrinter):
             if not isinstance(v, list):
                 userfuncs[k] = [(lambda *x: True, v)]
                 self.known_functions.update(userfuncs)
+
+    doprint = StrPrinter.doprint
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)

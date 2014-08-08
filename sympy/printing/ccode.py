@@ -30,6 +30,7 @@ known_functions = {
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
     printmethod = "_ccode"
+    language = "C"
 
     _default_settings = {
         'order': None,
@@ -41,7 +42,6 @@ class CCodePrinter(CodePrinter):
     }
 
     def __init__(self, settings={}):
-        """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -51,60 +51,25 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
 
     def _rate_index_position(self, p):
-        """function to calculate score based on position among indices
-
-        This method is used to sort loops in an optimized order, see
-        CodePrinter._sort_optimized()
-        """
         return p*5
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
-    def doprint(self, expr, assign_to=None):
-        """
-        Actually format the expression as C code.
-        """
+    def _get_comment(self, text):
+        return "// {:}".format(text)
 
-        if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("CCodePrinter cannot assign to object of type %s" %
-                    type(assign_to))
+    def _declare_number_const(self, name, value):
+        return "double const {:} = {:};".format(name, value)
 
-        if assign_to:
-            expr = Assignment(assign_to, expr)
+    def _format_code(self, lines):
+        return self.indent_code(lines)
 
-        # keep a set of expressions that are not strictly translatable to C
-        # and number constants that must be declared and initialized
-        not_c = self._not_supported = set()
-        self._number_symbols = set()
-
-        lines = [self._print(expr)]
-
-        # format the output
-        if self._settings["human"]:
-            frontlines = []
-            if len(not_c) > 0:
-                frontlines.append("// Not C:")
-                for expr in sorted(not_c, key=str):
-                    frontlines.append("\n".join(["// " + i for i in
-                            repr(expr).splitlines()]))
-            for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("double const %s = %s;" % (name, value))
-            lines = frontlines + lines
-            code_text = "\n".join(lines)
-            result = self.indent_code(code_text)
-        else:
-            code_text = self.indent_code("\n".join(lines))
-            result = (self._number_symbols, not_c, code_text)
-        del self._not_supported
-        del self._number_symbols
-        return result
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for i in range(rows) for j in range(cols))
 
     def _get_loop_opening_ending(self, indices):
-        """Returns a tuple (open_lines, close_lines) containing lists of codelines
-        """
         open_lines = []
         close_lines = []
         loopstart = "for (int %(var)s=%(start)s; %(var)s<%(end)s; %(var)s++){"
@@ -200,10 +165,6 @@ class CCodePrinter(CodePrinter):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         return CodePrinter._print_Function(self, expr)
-
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for i in range(rows) for j in range(cols))
 
     def _print_MatrixElement(self, expr):
         return "{:}[{:}][{:}]".format(expr.parent, expr.i, expr.j)

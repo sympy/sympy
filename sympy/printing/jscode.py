@@ -39,6 +39,7 @@ class JavascriptCodePrinter(CodePrinter):
     """"A Printer to convert python expressions to strings of javascript code
     """
     printmethod = '_javascript'
+    language = 'Javascript'
 
     _default_settings = {
         'order': None,
@@ -49,7 +50,6 @@ class JavascriptCodePrinter(CodePrinter):
     }
 
     def __init__(self, settings={}):
-        """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -59,59 +59,25 @@ class JavascriptCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
 
     def _rate_index_position(self, p):
-        """function to calculate score based on position among indices
-
-        This method is used to sort loops in an optimized order, see
-        CodePrinter._sort_optimized()
-        """
         return p*5
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
-    def doprint(self, expr, assign_to=None):
-        """
-        Actually format the expression as Javascript code.
-        """
+    def _get_comment(self, text):
+        return "// {:}".format(text)
 
-        if isinstance(assign_to, string_types):
-            assign_to = C.Symbol(assign_to)
-        elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("JavascriptCodePrinter cannot assign to object of type %s" %
-                    type(assign_to))
+    def _declare_number_const(self, name, value):
+        return "var {:} = {:};".format(name, value)
 
-        if assign_to:
-            expr = Assignment(assign_to, expr)
+    def _format_code(self, lines):
+        return self.indent_code(lines)
 
-        # Keep a set of expressions that are not strictly translatable to
-        # Javascript and number constants that must be declared and initialized
-        not_js = self._not_supported = set()
-        self._number_symbols = set()
-
-        lines = [self._print(expr)]
-
-        # format the output
-        if self._settings["human"]:
-            frontlines = []
-            if len(not_js) > 0:
-                frontlines.append("// Not Javascript:")
-                for expr in sorted(not_js, key=str):
-                    frontlines.append("// %s" % repr(expr))
-            for name, value in sorted(self._number_symbols, key=str):
-                frontlines.append("var %s = %s;" % (name, value))
-            lines = frontlines + lines
-            lines = "\n".join(lines)
-            result = self.indent_code(lines)
-        else:
-            lines = self.indent_code("\n".join(lines))
-            result = self._number_symbols, not_js, lines
-        del self._not_supported
-        del self._number_symbols
-        return result
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for i in range(rows) for j in range(cols))
 
     def _get_loop_opening_ending(self, indices):
-        """Returns a tuple (open_lines, close_lines) containing lists of codelines
-        """
         open_lines = []
         close_lines = []
         loopstart = "for (var %(varble)s=%(start)s; %(varble)s<%(end)s; %(varble)s++){"
@@ -206,10 +172,6 @@ class JavascriptCodePrinter(CodePrinter):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         return CodePrinter._print_Function(self, expr)
-
-    def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for i in range(rows) for j in range(cols))
 
     def _print_MatrixElement(self, expr):
         return "{:}[{:}][{:}]".format(expr.parent, expr.i, expr.j)
