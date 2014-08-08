@@ -1571,7 +1571,8 @@ def check_linear_2eq_order2(eq, func, func_coef):
             return "type1"
 
         elif r['b1']==r['e1']==r['c2']==r['d2']==0 and all(not r[k].has(t) \
-        for k in 'a1 a2 b2 c1 d1 e2'.split()):
+        for k in 'a1 a2 b2 c1 d1 e2'.split()) and r['c1'] == -r['b2'] and \
+        r['d1'] == r['e2']:
             return "type3"
 
         elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
@@ -1740,6 +1741,60 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
 
 def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
+
+
+
+def checksysodesol(eqs, sols, func=None):
+    def _sympify(eq):
+        return list(map(sympify, eq if iterable(eq) else [eq]))
+    eqs = _sympify(eqs)
+    for i in range(len(eqs)):
+        if isinstance(eqs[i], Equality):
+            eqs[i] = eqs[i].lhs - eqs[i].rhs
+    if func is None:
+        funcs = []
+        for eq in eqs:
+            derivs = eq.atoms(Derivative)
+            func = set.union(*[d.atoms(AppliedUndef) for d in derivs])
+            for func_ in  func:
+                funcs.append(func_)
+        funcs = list(set(funcs))
+    if not all(isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs)\
+    and len(set([func.args for func in funcs]))!=1:
+        raise ValueError("func must be a function of one variable, not %s" % func)
+    for sol in sols:
+        if len(sol.atoms(AppliedUndef)) != 1:
+            raise ValueError("solutions should have one function only")
+    if len(funcs) != len(set([sol.lhs for sol in sols])):
+        raise ValueError("number of solutions provided does not match the number of equations")
+    t = funcs[0].args[0]
+    dictsol = dict()
+    for sol in sols:
+        sol_func = list(sol.atoms(AppliedUndef))[0]
+        if not (sol.lhs == sol_func and not sol.rhs.has(sol_func)) and not (\
+        sol.rhs == sol_func and not sol.lhs.has(sol_func)):
+            solved = solve(sol, sol_func)
+            if not solved:
+                raise NotImplementedError
+            dictsol[sol_func] = solved
+        if sol.lhs == sol_func:
+            dictsol[sol_func] = sol.rhs
+        if sol.rhs == sol_func:
+            dictsol[sol_func] = sol.lhs
+    checkeq = []
+    for eq in eqs:
+        for func in funcs:
+            eq = sub_func_doit(eq, func, dictsol[func])
+        ss = simplify(eq)
+        if ss != 0:
+            eq = ss.expand(force=True)
+        else:
+            eq = 0
+        checkeq.append(eq)
+    if len(set(checkeq)) == 1 and list(set(checkeq))[0] == 0:
+        return (True, checkeq)
+    else:
+        return (False, checkeq)
 
 
 @vectorize(0)
@@ -6331,6 +6386,7 @@ def _linear_2eq_order1_type2(x, y, t, r):
     .. math:: y = kx + (c_2 - c_1 k) t
 
     """
+    r['k1'] = -r['k1']; r['k2'] = -r['k2']
     x0, y0 = symbols('x0, y0')
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
@@ -7257,8 +7313,8 @@ def _linear_3eq_order1_type1(x, y, z, t, r):
 
     """
     C1, C2, C3, C4 = symbols('C1:5')
-    a = r['a1']; b = r['a2']; c = r['b2']
-    d = r['a3']; k = r['b3']; p = r['c3']
+    a = -r['a1']; b = -r['a2']; c = -r['b2']
+    d = -r['a3']; k = -r['b3']; p = -r['c3']
     sol1 = C1*exp(a*t)
     sol2 = b*C1*exp(a*t)/(a-c) + C2*exp(c*t)
     sol3 = C1*(d+b*k/(a-c))*exp(a*t)/(a-p) + k*C2*exp(c*t)/(c-p) + C3*exp(p*t)
@@ -7299,8 +7355,9 @@ def _linear_3eq_order1_type2(x, y, z, t, r):
 
     """
     C0, C1, C2, C3 = symbols('C0:4')
-    a = r['c2']; b = r['a3']; c = r['b1']
+    a = -r['c2']; b = -r['a3']; c = -r['b1']
     k = sqrt(a**2 + b**2 + c**2)
+    C3 = (-a*C1 - b*C2)/c
     sol1 = a*C0 + k*C1*cos(k*t) + (c*C2-b*C3)*sin(k*t)
     sol2 = b*C0 + k*C2*cos(k*t) + (a*C3-c*C1)*sin(k*t)
     sol3 = c*C0 + k*C3*cos(k*t) + (b*C1-a*C2)*sin(k*t)
@@ -7340,6 +7397,7 @@ def _linear_3eq_order1_type3(x, y, z, t, r):
     c = sqrt(r['b1']*r['c2'])
     b = sqrt(r['b1']*r['a3'])
     a = sqrt(r['c2']*r['a3'])
+    C3 = (-a**2*C1-b**2*C2)/c**2
     k = sqrt(a**2 + b**2 + c**2)
     sol1 = C0 + k*C1*cos(k*t) + a**-1*b*c*(C2-C3)*sin(k*t)
     sol2 = C0 + k*C2*cos(k*t) + a*b**-1*c*(C3-C1)*sin(k*t)
@@ -7577,9 +7635,9 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
     sol = []
     for sols in sol2:
-        sol.append(Eq(y(t), sols))
         sol.append(Eq(x(t),phi.subs(v, sols)))
-    return set(sol)
+        sol.append(Eq(y(t), sols))
+    return sol
 
 def _nonlinear_2eq_order1_type2(x, y, t, eq):
     r"""
@@ -7611,7 +7669,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     f = Wild('f')
     u, v, phi = symbols('u, v, phi', function=True)
     r = eq[0].match(diff(x(t),t) - exp(n*x(t))*f)
-    g = (diff(y(t),t) - eq[1])/r[f]
+    g = ((diff(y(t),t) - eq[1])/r[f]).subs(y(t),v)
     F = r[f].subs(x(t),u).subs(y(t),v)
     n = r[n]
     if n:
@@ -7622,9 +7680,9 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     sol2 = solve(C.Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
     sol = []
     for sols in sol2:
-        sol.append(Eq(y(t), sols))
         sol.append(Eq(x(t),phi.subs(v, sols)))
-    return set(sol)
+        sol.append(Eq(y(t), sols))
+    return sol
 
 def _nonlinear_2eq_order1_type3(x, y, t, eq):
     r"""
@@ -7659,7 +7717,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     for sols in sol1:
         sol.append(Eq(x(t), sols))
         sol.append(Eq(y(t), (sol2s.rhs).subs(u, sols)))
-    return set(sol)
+    return sol
 
 def _nonlinear_2eq_order1_type4(x, y, t, eq):
     r"""
