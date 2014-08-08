@@ -1,11 +1,6 @@
 =======================
-Vector & ReferenceFrame
+Introduction to Vectors
 =======================
-
-
-In :mod:`vector`, vectors and reference frames are the "building blocks" of
-dynamic systems. This document will describe these mathematically and describe
-how to use them with this module's code.
 
 Vector
 ======
@@ -23,7 +18,7 @@ Vector Algebra
 
 Vector algebra is the first topic to be discussed.
 
-Two vectors are said to be equal if and only if (iff) they have the same same
+Two vectors are said to be equal if and only if (iff) they have the same 
 magnitude and orientation.
 
 Vector Operations
