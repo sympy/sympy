@@ -5,8 +5,9 @@ from sympy import (sin, cos, eye, sympify, trigsimp,
                    rot_axis2, rot_axis3)
 from sympy.core.compatibility import string_types
 from sympy.core.cache import cacheit
-from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
+from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
+import sympy.vector
 
 
 class CoordSysCartesian(Basic):
@@ -58,12 +59,14 @@ class CoordSysCartesian(Basic):
 
         """
 
+        Vector = sympy.vector.Vector
+        BaseVector = sympy.vector.BaseVector
+        Point = sympy.vector.Point
         if not isinstance(name, string_types):
             raise TypeError("name should be a string")
 
         #If orientation information has been provided, store
         #the rotation matrix accordingly
-        from sympy.vector.vector import BaseVector, Vector
         if rotation_matrix is None:
             parent_orient = Matrix(eye(3))
         else:
@@ -74,7 +77,6 @@ class CoordSysCartesian(Basic):
 
         #If location information is not given, adjust the default
         #location as Vector.zero
-        from sympy.vector.point import Point
         if parent is not None:
             if not isinstance(parent, CoordSysCartesian):
                 raise TypeError("parent should be a " +
@@ -336,7 +338,7 @@ class CoordSysCartesian(Basic):
         """
 
         relocated_scalars = []
-        origin_coords = self.position_wrt(other).measure_numbers(other)
+        origin_coords = tuple(self.position_wrt(other).to_matrix(other))
         for i, x in enumerate(other.base_scalars()):
             relocated_scalars.append(x - origin_coords[i])
 
@@ -416,11 +418,13 @@ class CoordSysCartesian(Basic):
         name : str
             The name of the new CoordSysCartesian instance.
 
-        orienters : iterable
-            An iterable containing the orienters which should be applied
-            to this system to get the orientation of the new system. The
-            orienters will be applied in the order in which they appear
-            in the iterable.
+        orienters : iterable/Orienter
+            An Orienter or an iterable of Orienters for orienting the
+            new coordinate system.
+            If an Orienter is provided, it is applied to get the new
+            system.
+            If an iterable is provided, the orienters will be applied
+            in the order in which they appear in the iterable.
 
         location : Vector(optional)
             The location of the new coordinate system's origin wrt this
@@ -476,12 +480,18 @@ class CoordSysCartesian(Basic):
 
         """
 
-        final_matrix = Matrix(eye(3))
-        for orienter in orienters:
-            if isinstance(orienter, AxisOrienter):
-                final_matrix *= orienter.rotation_matrix(self)
+        if isinstance(orienters, Orienter):
+            if isinstance(orienters, AxisOrienter):
+                final_matrix = orienters.rotation_matrix(self)
             else:
-                final_matrix *= orienter.rotation_matrix()
+                final_matrix = orienters.rotation_matrix()
+        else:
+            final_matrix = Matrix(eye(3))
+            for orienter in orienters:
+                if isinstance(orienter, AxisOrienter):
+                    final_matrix *= orienter.rotation_matrix(self)
+                else:
+                    final_matrix *= orienter.rotation_matrix()
 
         return CoordSysCartesian(name, rotation_matrix=final_matrix,
                                  vector_names=vector_names,
@@ -545,7 +555,7 @@ class CoordSysCartesian(Basic):
         """
 
         orienter = AxisOrienter(angle, axis)
-        return self.orient_new(name, (orienter, ),
+        return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
                                variable_names=variable_names,
@@ -632,7 +642,7 @@ class CoordSysCartesian(Basic):
         """
 
         orienter = BodyOrienter(angle1, angle2, angle3, rotation_order)
-        return self.orient_new(name, (orienter, ),
+        return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
                                variable_names=variable_names,
@@ -713,7 +723,7 @@ class CoordSysCartesian(Basic):
         """
 
         orienter = SpaceOrienter(angle1, angle2, angle3, rotation_order)
-        return self.orient_new(name, (orienter, ),
+        return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
                                variable_names=variable_names,
@@ -779,7 +789,7 @@ class CoordSysCartesian(Basic):
         """
 
         orienter = QuaternionOrienter(q0, q1, q2, q3)
-        return self.orient_new(name, (orienter, ),
+        return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
                                variable_names=variable_names,

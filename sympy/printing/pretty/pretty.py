@@ -802,18 +802,26 @@ class PrettyPrinter(Printer):
                                                   u('\u239e')
                                                   + ' ' + vectstrs[i])
                         o1[i] = tempstr
-                for i, partstr in enumerate(o1):
-                    parts = partstr.split('\n')
+                o1 = [x.split('\n') for x in o1]
+                n_newlines = max([len(x) for x in o1])
+                for parts in o1:
                     lengths.append(len(parts[0]))
-                    for j, part in enumerate(parts):
-                        if j == len(strs):
-                            strs.append(' ' * (sum(lengths[:-1]) +
-                                               3*(len(lengths)-1)))
-                        if j == 0:
-                            strs[0] += part + ' + '
+                    for j in range(n_newlines):
+                        if j+1 <= len(parts):
+                            if j >= len(strs):
+                                strs.append(' ' * (sum(lengths[:-1]) +
+                                                   3*(len(lengths)-1)))
+                            if j == 0:
+                                strs[0] += parts[0] + ' + '
+                            else:
+                                strs[j] += parts[j] + ' '*(lengths[-1] -
+                                                           len(parts[j])+
+                                                           3)
                         else:
-                            strs[j] += part + ' '*(lengths[-1] -
-                                                   len(part) + 3)
+                            if j >= len(strs):
+                                strs.append(' ' * (sum(lengths[:-1]) +
+                                                   3*(len(lengths)-1)))
+                            strs[j] += ' '*(lengths[-1]+3)
 
                 return u('\n').join([s[:-3] for s in strs])
         return Fake()

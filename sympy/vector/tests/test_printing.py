@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
 from sympy import Integral, pretty, latex, Function
 from sympy.vector import CoordSysCartesian, Vector, Dyadic, express
 from sympy.abc import a, b, c
-from sympy.core.compatibility import u
+from sympy.core.compatibility import u_decode as u
 
 
 #Initialize the basic and tedious vector/dyadic expressions
-#needed for testing
+#needed for testing.
+#Some of the pretty forms shown denote how the expressions just
+#above them should look with pretty printing.
 N = CoordSysCartesian('N')
 C = N.orient_new_axis('C', a, N.k)
 v = []
@@ -20,12 +23,36 @@ v.append((a**2 + N.x)*N.i + N.k)
 v.append((a**2 + b)*N.i + 3*(C.y - c)*N.k)
 f = Function('f')
 v.append(N.j - (Integral(f(b)) - C.x**2)*N.k)
+pretty_v_8 = u(
+"""\
+N_j + ⎛   2   ⌠        ⎞ N_k\n\
+      ⎜C_x  - ⎮ f(b) db⎟    \n\
+      ⎝       ⌡        ⎠    \
+""")
 v.append(N.i + C.k)
 v.append(express(N.i, C))
 v.append((a**2 + b)*N.i + (Integral(f(b)))*N.k)
+pretty_v_11 = u(
+"""\
+⎛ 2    ⎞ N_i + ⎛⌠        ⎞ N_k\n\
+⎝a  + b⎠       ⎜⎮ f(b) db⎟    \n\
+               ⎝⌡        ⎠    \
+""")
 for x in v:
     d.append(x | N.k)
 s = 3*N.x**2*C.y
+pretty_s = u(
+"""\
+         2\n\
+3⋅C_y⋅N_x \
+""")
+
+#This is the pretty form for ((a**2 + b)*N.i + 3*(C.y - c)*N.k) | N.k
+pretty_d_7 = u(
+"""\
+⎛ 2    ⎞ (N_i|N_k) + (3⋅C_y - 3⋅c) (N_k|N_k)\n\
+⎝a  + b⎠                                    \
+""")
 
 
 def test_str_printing():
@@ -48,21 +75,13 @@ def test_pretty_printing():
     assert pretty(v[0]) == u('0')
     assert pretty(v[1]) == u('N_i')
     assert pretty(v[5]) == u('(a) N_i + (-b) N_j')
-    assert pretty(v[8]) == u('N_j + \u239b   2   \u2320        \u239e '+
-                             'N_k\n      \u239cC_x  - \u23ae f(b) db' +
-                             '\u239f    \n      \u239d       \u2321   ' +
-                             '     \u23a0    ')
+    assert pretty(v[8]) == pretty_v_8
     assert pretty(v[2]) == u('(-1) N_i')
-    assert pretty(v[11]) == u('\u239b 2    \u239e N_i + \u239b\u2320     '+
-                              '   \u239e N_k\n\u239da  + b\u23a0       ' +
-                              '\u239c\u23ae f(b) db\u239f    \n         ' +
-                              '      \u239d\u2321        \u23a0    ')
-    assert pretty(s) == u('         2\n3\u22c5C_y\u22c5N_x ')
+    assert pretty(v[11]) == pretty_v_11
+    assert pretty(s) == pretty_s
     assert pretty(d[0]) == u('(0|0)')
     assert pretty(d[5]) == u('(a) (N_i|N_k) + (-b) (N_j|N_k)')
-    assert pretty(d[7]) == u('\u239b 2    \u239e (N_i|N_k) + (3\u22c5'+
-                             'C_y - 3\u22c5c) (N_k|N_k)\n\u239da  + '+
-                             'b\u23a0          ')
+    assert pretty(d[7]) == pretty_d_7
     assert pretty(d[10]) == u('(cos(a)) (C_i|N_k) + (-sin(a)) (C_j|N_k)')
 
 

@@ -88,11 +88,11 @@ class Del(Basic):
 
         >>> from sympy.vector import CoordSysCartesian
         >>> C = CoordSysCartesian('C')
+        >>> C.delop.dot(C.x*C.i)
+        Derivative(C.x, C.x)
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
         >>> (C.delop & v).doit()
         C.x*C.y + C.x*C.z + C.y*C.z
-        >>> C.delop.dot(C.x*C.i)
-        Derivative(C.x, C.x)
 
         """
 

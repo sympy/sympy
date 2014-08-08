@@ -5,6 +5,7 @@ from sympy.core.expr import AtomicExpr
 from sympy.core.assumptions import StdFactKB
 from sympy import ImmutableMatrix as Matrix
 from sympy.core.compatibility import u
+import sympy.vector
 
 
 class Dyadic(BasisDependent):
@@ -60,7 +61,7 @@ class Dyadic(BasisDependent):
 
         """
 
-        from sympy.vector.vector import Vector
+        Vector = sympy.vector.Vector
         if isinstance(other, BasisDependentZero):
             return Vector.zero
         elif isinstance(other, Vector):
@@ -107,7 +108,7 @@ class Dyadic(BasisDependent):
 
         """
 
-        from sympy.vector.vector import Vector
+        Vector = sympy.vector.Vector
         if other == Vector.zero:
             return Dyadic.zero
         elif isinstance(other, Vector):
@@ -176,7 +177,9 @@ class BaseDyadic(Dyadic, AtomicExpr):
     Class to denote a base dyadic tensor component.
     """
     def __new__(cls, vector1, vector2):
-        from sympy.vector.vector import Vector, BaseVector, VectorZero
+        Vector = sympy.vector.Vector
+        BaseVector = sympy.vector.BaseVector
+        VectorZero = sympy.vector.VectorZero
         #Verify arguments
         if not isinstance(vector1, (BaseVector, VectorZero)) or \
                not isinstance(vector2, (BaseVector, VectorZero)):

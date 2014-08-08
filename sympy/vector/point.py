@@ -148,7 +148,7 @@ class Point(Basic):
         #Determine the position vector
         pos_vect = self.position_wrt(coordinate_system.origin)
         #Express it in the given coordinate system
-        return tuple(pos_vect.measure_numbers(coordinate_system))
+        return tuple(pos_vect.to_matrix(coordinate_system))
 
     def __str__(self, printer=None):
         return self._name

@@ -2,6 +2,7 @@ from sympy.core.basic import Basic
 from sympy import (sympify, eye, sin, cos, rot_axis1, rot_axis2,
                    rot_axis3, ImmutableMatrix as Matrix, Symbol)
 from sympy.core.cache import cacheit
+import sympy.vector
 
 
 class Orienter(Basic):
@@ -23,8 +24,7 @@ class AxisOrienter(Orienter):
     """
 
     def __new__(cls, angle, axis):
-        from sympy.vector.vector import Vector
-        if not isinstance(axis, Vector):
+        if not isinstance(axis, sympy.vector.Vector):
             raise TypeError("axis should be a Vector")
         angle = sympify(angle)
 
@@ -70,10 +70,16 @@ class AxisOrienter(Orienter):
         """
         The rotation matrix corresponding to this orienter
         instance.
+
+        Parameters
+        ==========
+
+        system : CoordSysCartesian
+            The coordinate system wrt which the rotation matrix
+            is to be computed
         """
 
-        from sympy.vector.functions import express
-        axis = express(self.axis, system).normalize()
+        axis = sympy.vector.express(self.axis, system).normalize()
         axis = axis.to_matrix(system)
         theta = self.angle
         parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +

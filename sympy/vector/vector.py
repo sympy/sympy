@@ -308,42 +308,6 @@ class Vector(BasisDependent):
                                   vect*measure)
         return parts
 
-    def measure_numbers(self, coord_sys):
-        """
-        Returns the measure numbers (coefficients of the base vectors)
-        of this vector, as expressed in the given coordinate system,
-        as a tuple of three.
-
-        Parameters
-        ==========
-
-        coord_sys : CoordSysCartesian
-            The coordinate system with respect to which the measure
-            numbers are to be returned
-
-        Examples
-        ========
-
-        >>> from sympy.vector import CoordSysCartesian
-        >>> from sympy import Symbol
-        >>> a = Symbol('a')
-        >>> A = CoordSysCartesian('A')
-        >>> B = A.orient_new_axis('B', a, A.i)
-        >>> vect = 3*A.i + 4*A.j + 5*A.k
-        >>> vect.measure_numbers(A)
-        (3, 4, 5)
-        >>> vect.measure_numbers(B)
-        (3, 5*sin(a) + 4*cos(a), -4*sin(a) + 5*cos(a))
-
-        """
-
-        from sympy.vector.functions import express
-        if not isinstance(coord_sys, CoordSysCartesian):
-            raise TypeError("coord_sys must be an instance of " +
-                            "CoordSysCartesian")
-        vect = express(self, coord_sys)
-        return tuple([vect.dot(x) for x in coord_sys.base_vectors()])
-
 
 class BaseVector(Vector, AtomicExpr):
     """
