@@ -28,28 +28,22 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    def _doprint_indexed_loop(self, expr, assign_to=None):
+    def _doprint_loops(self, expr, assign_to=None):
         # Here we print an expression that contains Indexed objects, they
         # correspond to arrays in the generated code.  The low-level implementation
         # involves looping over array elements and possibly storing results in temporary
         # variables or accumulate it in the assign_to object.
 
-        lhs_printed = self._print(assign_to)
-        lines = []
-
-        # Setup loops over non-dummy indices  --  all terms need these
         if self._settings.get('contract', True):
-            indices = self.get_expression_indices(expr, assign_to)
-        else:
-            indices = []
-        openloop, closeloop = self._get_loop_opening_ending(indices)
-
-        # Setup loops over dummy indices  --  each term needs separate treatment
-        from sympy.tensor import get_contraction_structure
-        if self._settings.get('contract', True):
+            from sympy.tensor import get_contraction_structure
+            # Setup loops over non-dummy indices  --  all terms need these
+            indices = self._get_expression_indices(expr, assign_to)
+            # Setup loops over dummy indices  --  each term needs separate treatment
             dummies = get_contraction_structure(expr)
         else:
+            indices = []
             dummies = {None: (expr,)}
+        openloop, closeloop = self._get_loop_opening_ending(indices)
 
         # terms with no summations first
         if None in dummies:
@@ -58,7 +52,9 @@ class CodePrinter(StrPrinter):
             # If all terms have summations we must initialize array to Zero
             text = CodePrinter.doprint(self, 0)
 
-        # skip redundant assignments
+        # skip redundant assignments (where lhs == rhs)
+        lhs_printed = self._print(assign_to)
+        lines = []
         if text != lhs_printed:
             lines.extend(openloop)
             if assign_to is not None:
@@ -66,8 +62,8 @@ class CodePrinter(StrPrinter):
             lines.append(text)
             lines.extend(closeloop)
 
+        # then terms with summations
         for d in dummies:
-            # then terms with summations
             if isinstance(d, tuple):
                 indices = self._sort_optimized(d, expr)
                 openloop_d, closeloop_d = self._get_loop_opening_ending(
@@ -111,7 +107,7 @@ class CodePrinter(StrPrinter):
 
         return "\n".join(lines)
 
-    def get_expression_indices(self, expr, assign_to):
+    def _get_expression_indices(self, expr, assign_to):
         from sympy.tensor import get_indices
         rinds, junk = get_indices(expr)
         linds, junk = get_indices(assign_to)
@@ -145,6 +141,37 @@ class CodePrinter(StrPrinter):
                     pass
 
         return sorted(indices, key=lambda x: score_table[x])
+
+    def _print_Assignment(self, expr):
+        lhs = expr.lhs
+        rhs = expr.rhs
+        # We special case assignments that take multiple lines
+        if isinstance(expr.rhs, C.Piecewise):
+            # Here we modify Piecewise so each expression is now
+            # an Assignment, and then continue on the print.
+            expressions = []
+            conditions = []
+            for (e, c) in rhs.args:
+                expressions.append(Assignment(lhs, e))
+                conditions.append(c)
+            temp = C.Piecewise(*zip(expressions, conditions))
+            return self._print(temp)
+        elif isinstance(lhs, C.MatrixSymbol):
+            # Here we form an Assignment for each element in the array,
+            # printing each one.
+            for (i, j) in self._traverse_matrix_indices(lhs):
+                temp = Assignment(lhs[i, j], rhs[i, j])
+                code0 = self._print(temp)
+                lines.append(code0)
+            return "\n".join(lines)
+        elif lhs.has(C.IndexedBase) or rhs.has(C.IndexedBase):
+            # Here we check if there is looping to be done, and if so
+            # print the required loops.
+            return self._doprint_loops(rhs, lhs)
+        else:
+            lhs_code = self._print(lhs)
+            rhs_code = self._print(rhs)
+            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod

@@ -201,41 +201,12 @@ class CCodePrinter(CodePrinter):
             return self._print(expr._imp_(*expr.args))
         return CodePrinter._print_Function(self, expr)
 
+    def _traverse_matrix_indices(self, mat):
+        rows, cols = mat.shape
+        return ((i, j) for i in range(rows) for j in range(cols))
+
     def _print_MatrixElement(self, expr):
         return "{:}[{:}][{:}]".format(expr.parent, expr.i, expr.j)
-
-    def _print_Assignment(self, expr):
-        lhs = expr.lhs
-        rhs = expr.rhs
-        # We special case assignments that take multiple lines
-        if isinstance(expr.rhs, C.Piecewise):
-            # Here we modify Piecewise so each expression is now
-            # an Assignment, and then continue on the print.
-            expressions = []
-            conditions = []
-            for (e, c) in rhs.args:
-                expressions.append(Assignment(lhs, e))
-                conditions.append(c)
-            temp = C.Piecewise(*zip(expressions, conditions))
-            return self._print(temp)
-        elif isinstance(lhs, C.MatrixSymbol):
-            # Here we form an Assignment for each element in the array,
-            # printing each one.
-            rows, cols = lhs.shape
-            lines = []
-            for j in range(cols):
-                for i in range(rows):
-                    temp = Assignment(lhs[i, j], rhs[i, j])
-                    code0 = self._print(temp)
-                    lines.append(code0)
-            return "\n".join(lines)
-        elif isinstance(lhs, C.Indexed):
-            # Here we handle an indexed loop
-            return self._doprint_indexed_loop(rhs, lhs)
-        else:
-            lhs_text = self._print(lhs)
-            rhs_text = self._print(rhs)
-            return "{:} = {:};".format(lhs_text, rhs_text)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
