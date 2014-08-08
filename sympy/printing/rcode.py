@@ -275,5 +275,5 @@ def rcode(expr, assign_to=None, **settings):
 
 
 def print_rcode(expr, **settings):
-    """Prints C representation of the given expression."""
+    """Prints R representation of the given expression."""
     print(rcode(expr, **settings))
