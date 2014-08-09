@@ -1,5 +1,5 @@
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
-from sympy.core.containers import tuple_wrapper
+from sympy.core.containers import tuple_wrapper, Stream
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import is_sequence, iterable, u
 
@@ -153,6 +153,45 @@ def test_Dict():
     # Test creating a Dict from a Dict.
     d = Dict({x: 1, y: 2, z: 3})
     assert d == Dict(d)
+
+
+def test_Stream():
+    def gen():
+        n = 0
+        while True:
+            yield n
+            n += 1
+    s = Stream(gen())
+    assert list(s[0:5]) == range(5)
+
+    raises(TypeError, lambda: s[-1])
+
+    s = s.shift(1)
+    assert list(s[0:5]) == [1, 2, 3, 4, 5]
+    s = s.shift(0)
+    assert list(s[0:5]) == [1, 2, 3, 4, 5]
+    raises(ValueError, lambda: s.shift(-1))
+
+    def gen():
+        return
+        yield
+    s = Stream(gen())
+    assert s.is_empty == True
+    def gen():
+        yield 1
+        raise StopIteration
+    s = Stream(gen())
+    s = s.shift(1)
+    assert s.is_empty == True
+
+    x, y = symbols('x, y')
+    def gen():
+        while True:
+            yield x
+    s = Stream(gen())
+    assert list(s[0:5]) == [x, x, x, x, x]
+    s = s.subs(x, y)
+    assert list(s[0:5]) == [y, y, y, y, y]
 
 
 def test_issue_5788():

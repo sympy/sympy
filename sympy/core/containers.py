@@ -334,6 +334,8 @@ class Stream(Basic):
 
     def shift(self, n):
         """ Right shift stream by n items """
+        if n < 0:
+            raise ValueError("Argument must be greater than 0")
         return self.__class__(islice(self, n, None))
 
     @property

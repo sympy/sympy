@@ -118,3 +118,13 @@ def test_series_compose():
     s2 = FormalSeries(x, function=exp(x))
     s = s2.compose(s1)
     assert s.as_series() == 1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
+
+
+def test_eval():
+    s = FormalSeries(x, function=sin(x))
+    assert s.diff(x).as_series() == 1 - x**2/2 + x**4/24 + O(x**6)
+    assert s.as_leading_term(x) == x
+    s = FormalSeries(x, function=exp(x))
+    assert s.diff(x).as_series() == 1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120 + O(x**6)
+    assert s.as_leading_term(x) == 1
+

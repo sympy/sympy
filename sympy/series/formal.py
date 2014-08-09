@@ -466,6 +466,16 @@ class Lazyseries(Expr):
     def is_empty(self):
         return self.gen.is_empty
 
+    @property
+    def free_symbols(self):
+        return self.x.free_symbols
+
+    def _eval_derivative(self, x):
+        return self.__class__(self.sym, Stream(imap(lambda t: t.diff(x), self.gen)))
+
+    def _eval_as_leading_term(self, x):
+        return self.__getitem__(0)
+
     def inverse(self):
         return self.__class__(self.sym, Stream(Lazyseries.series_inverse(self.sym, self.gen)))
 
