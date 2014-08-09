@@ -152,7 +152,7 @@ class Routine(object):
         local_vars = set([i.label for i in expressions.atoms(Idx)])
 
         # symbols that should be arguments
-        symbols = expressions.atoms(Symbol) - local_vars
+        symbols = expressions.free_symbols - local_vars
 
         # Decide whether to use output argument or return value
         return_val = []
@@ -537,7 +537,7 @@ class CCodeGen(CodeGen):
     Generator for C code
 
     The .write() method inherited from CodeGen will output a code file and an
-    inteface file, <prefix>.c and <prefix>.h respectively.
+    interface file, <prefix>.c and <prefix>.h respectively.
     """
 
     code_extension = "c"
@@ -693,7 +693,7 @@ class FCodeGen(CodeGen):
     Generator for Fortran 95 code
 
     The .write() method inherited from CodeGen will output a code file and an
-    inteface file, <prefix>.f90 and <prefix>.h respectively.
+    interface file, <prefix>.f90 and <prefix>.h respectively.
     """
 
     code_extension = "f90"

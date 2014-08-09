@@ -5576,7 +5576,7 @@ def _symbolic_factor_list(expr, opt, method):
 
             if exp is S.One:
                 factors.extend(_factors)
-            elif exp.is_integer or len(_factors) == 1:
+            elif exp.is_integer:
                 factors.extend([(f, k*exp) for f, k in _factors])
             else:
                 other = []
@@ -5587,11 +5587,7 @@ def _symbolic_factor_list(expr, opt, method):
                     else:
                         other.append((f, k))
 
-                if len(other) == 1:
-                    f, k = other[0]
-                    factors.append((f, k*exp))
-                else:
-                    factors.append((_factors_product(other), exp))
+                factors.append((_factors_product(other), exp))
 
     return coeff, factors
 
@@ -6276,7 +6272,7 @@ def reduced(f, G, *gens, **args):
 
     Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
     computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-    such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+    such that ``f = q_1*g_1 + ... + q_n*g_n + r``, where ``r`` vanishes or ``r``
     is a completely reduced polynomial with respect to ``G``.
 
     Examples

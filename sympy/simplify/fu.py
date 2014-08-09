@@ -201,7 +201,7 @@ from sympy.core.power import Pow
 from sympy.core.function import expand_mul, count_ops
 from sympy.core.add import Add
 from sympy.core.symbol import Dummy
-from sympy.core.exprtools import Factors, gcd_terms
+from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.rules import Transform
 from sympy.core.basic import S
 from sympy.core.numbers import Integer, pi, I
@@ -340,7 +340,7 @@ def TR2i(rv, half=False):
         def factorize(d, ddone):
             newk = []
             for k in d:
-                if k.is_Add and len(k.args) > 2:
+                if k.is_Add and len(k.args) > 1:
                     knew = factor(k) if half else factor_terms(k)
                     if knew != k:
                         newk.append((k, knew))
@@ -350,10 +350,11 @@ def TR2i(rv, half=False):
                     newk[i] = knew
                 newk = Mul(*newk).as_powers_dict()
                 for k in newk:
-                    if ok(k, d[k]):
-                        d[k] += newk[k]
+                    v = d[k] + newk[k]
+                    if ok(k, v):
+                        d[k] = v
                     else:
-                        ddone.append((k, d[k]))
+                        ddone.append((k, v))
                 del newk
         factorize(n, ndone)
         factorize(d, ddone)
@@ -1071,7 +1072,7 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor, fraction, factor_terms
+    from sympy import factor, fraction
 
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
@@ -2016,9 +2017,16 @@ def as_f_sign_1(e):
         return gcd, a, n2
 
 
-def _osborne(e):
+def _osborne(e, d):
     """Replace all hyperbolic functions with trig functions using
     the Osborne rule.
+
+    Notes
+    =====
+
+    ``d`` is a dummy variable to prevent automatic evaluation
+    of trigonometric/hyperbolic functions.
+
 
     References
     ==========
@@ -2029,23 +2037,31 @@ def _osborne(e):
     def f(rv):
         if not isinstance(rv, C.HyperbolicFunction):
             return rv
+        a = rv.args[0]
+        a = a*d if not a.is_Add else Add._from_args([i*d for i in a.args])
         if rv.func is sinh:
-            return I*sin(rv.args[0])
+            return I*sin(a)
         elif rv.func is cosh:
-            return cos(rv.args[0])
+            return cos(a)
         elif rv.func is tanh:
-            return I*tan(rv.args[0])
+            return I*tan(a)
         elif rv.func is coth:
-            return cot(rv.args[0])/I
+            return cot(a)/I
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
     return bottom_up(e, f)
 
 
-def _osbornei(e):
+def _osbornei(e, d):
     """Replace all trig functions with hyperbolic functions using
     the Osborne rule.
+
+    Notes
+    =====
+
+    ``d`` is a dummy variable to prevent automatic evaluation
+    of trigonometric/hyperbolic functions.
 
     References
     ==========
@@ -2056,18 +2072,19 @@ def _osbornei(e):
     def f(rv):
         if not isinstance(rv, C.TrigonometricFunction):
             return rv
+        a = rv.args[0].xreplace({d: S.One})
         if rv.func is sin:
-            return sinh(rv.args[0])/I
+            return sinh(a)/I
         elif rv.func is cos:
-            return cosh(rv.args[0])
+            return cosh(a)
         elif rv.func is tan:
-            return tanh(rv.args[0])/I
+            return tanh(a)/I
         elif rv.func is cot:
-            return coth(rv.args[0])*I
+            return coth(a)*I
         elif rv.func is sec:
-            return 1/cosh(rv.args[0])
+            return 1/cosh(a)
         elif rv.func is csc:
-            return I/sinh(rv.args[0])
+            return I/sinh(a)
         else:
             raise NotImplementedError('unhandled %s' % rv.func)
 
@@ -2100,9 +2117,9 @@ def hyper_as_trig(rv):
 
     http://en.wikipedia.org/wiki/Hyperbolic_function
     """
-    from sympy.simplify.simplify import signsimp
+    from sympy.simplify.simplify import signsimp, collect
 
-    # mask of trig functions
+    # mask off trig functions
     trigs = rv.atoms(C.TrigonometricFunction)
     reps = [(t, Dummy()) for t in trigs]
     masked = rv.xreplace(dict(reps))
@@ -2110,5 +2127,7 @@ def hyper_as_trig(rv):
     # get inversion substitutions in place
     reps = [(v, k) for k, v in reps]
 
-    return _osborne(masked), lambda x: signsimp(
-        _osbornei(x).xreplace(dict(reps)))
+    d = Dummy()
+
+    return _osborne(masked, d), lambda x: collect(signsimp(
+        _osbornei(x, d).xreplace(dict(reps))), S.ImaginaryUnit)

@@ -448,6 +448,8 @@ class Add(Expr, AssocOp):
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr(
         'is_real', when_multiple=None)
+    _eval_is_complex = lambda self: self._eval_template_is_attr(
+        'is_complex', when_multiple=None)
     _eval_is_antihermitian = lambda self: self._eval_template_is_attr(
         'is_antihermitian', when_multiple=None)
     _eval_is_bounded = lambda self: self._eval_template_is_attr(
@@ -629,7 +631,7 @@ class Add(Expr, AssocOp):
     @cacheit
     def extract_leading_order(self, symbols, point=None):
         """
-        Returns the leading term and it's order.
+        Returns the leading term and its order.
 
         Examples
         ========
@@ -665,7 +667,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple represeting a complex numbers
+        returns a tuple representing a complex numbers
 
         Examples
         ========

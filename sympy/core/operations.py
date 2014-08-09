@@ -322,7 +322,7 @@ class AssocOp(Basic):
         walks the args of the non-number part recursively (doing the same
         thing).
         """
-        x, tail = self.as_independent(C.Symbol)
+        x, tail = self.as_independent(C.Symbol, C.AppliedUndef)
 
         if tail is not self.identity:
             # here, we have a number so we just call to _evalf with prec;
@@ -444,7 +444,7 @@ class LatticeOp(AssocOp):
             elif arg == cls.identity:
                 continue
             elif arg.func == cls:
-                for x in arg.iter_basic_args():
+                for x in arg.args:
                     yield x
             else:
                 yield arg

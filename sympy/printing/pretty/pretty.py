@@ -141,9 +141,14 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Not(self, e):
+        from sympy import Equivalent, Implies
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
+            if isinstance(arg, Equivalent):
+                return self._print_Equivalent(arg, altchar=u("\u2262"))
+            if isinstance(arg, Implies):
+                return self._print_Implies(arg, altchar=u("\u219b"))
 
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
@@ -203,15 +208,15 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e, sort=True)
 
-    def _print_Implies(self, e):
+    def _print_Implies(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, u("\u2192"), sort=False)
+            return self.__print_Boolean(e, altchar or u("\u2192"), sort=False)
         else:
             return self._print_Function(e)
 
-    def _print_Equivalent(self, e):
+    def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, u("\u2261"))
+            return self.__print_Boolean(e, altchar or u("\u2261"))
         else:
             return self._print_Function(e, sort=True)
 
@@ -1329,7 +1334,10 @@ class PrettyPrinter(Printer):
         else:
             dots = '...'
 
-        if len(s) > 4:
+        if s.start is S.NegativeInfinity:
+            it = iter(s)
+            printset = s.start, dots, s._last_element - s.step, s._last_element
+        elif s.stop is S.Infinity or len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s._last_element
         else:
@@ -1636,7 +1644,7 @@ class PrettyPrinter(Printer):
             pform = prettyForm(*pform.right(self._print(d.as_boolean())))
             return pform
 
-        except:
+        except Exception:
             try:
                 pform = self._print('Domain: ')
                 pform = prettyForm(*pform.right(self._print(d.symbols)))

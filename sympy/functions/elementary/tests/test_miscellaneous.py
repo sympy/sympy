@@ -1,9 +1,12 @@
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.numbers import Float, I, oo, pi, Rational
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.numbers import Rational
-from sympy.utilities.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt, root, Min, Max, real_root
-from sympy import S, Float, I, cos, sin, oo, pi, Add
+from sympy.functions.elementary.trigonometric import cos, sin
 
+from sympy.utilities.pytest import raises
 
 def test_Min():
     from sympy.abc import x, y, z
@@ -101,6 +104,10 @@ def test_Min():
     a, b = Symbol('a', real=True), Symbol('b', real=True)
     # a and b are both real, Min(a, b) should be real
     assert Min(a, b).is_real
+
+    # issue 7619
+    f = Function('f')
+    assert Min(1, 2*Min(f(1), 2))  # doesn't fail
 
 
 def test_Max():

@@ -5,9 +5,10 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
 from sympy.core.function import PoleError
-from sympy.core.sets import FiniteSet
+from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.utilities.iterables import subsets, variations
+from sympy.core.cache import clear_cache
 
 f, g, h = symbols('f g h', cls=Function)
 
@@ -638,15 +639,37 @@ def test_issue_7231():
     from sympy.abc import a
     ans1 = f(x).series(x, a)
     _xi_1 = ans1.atoms(Dummy).pop()
-    res = (f(a) + x*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
-           x**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
-           x**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
-                     (_xi_1,), (a,))/6 +
-           x**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
-                     (_xi_1,), (a,))/24 +
-           x**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1,
-                                _xi_1, _xi_1, _xi_1),
-                     (_xi_1,), (a,))/120 + O(x**6))
+    res = (f(a) + (-a + x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (a,)) +
+           (-a + x)**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (a,))/2 +
+           (-a + x)**3*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/6 +
+           (-a + x)**4*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/24 +
+           (-a + x)**5*Subs(Derivative(f(_xi_1), _xi_1, _xi_1, _xi_1, _xi_1, _xi_1),
+                            (_xi_1,), (a,))/120 + O((-a + x)**6, (x, a)))
     assert res == ans1
     ans2 = f(x).series(x, a)
     assert res == ans2
+
+def test_issue_7687():
+    from sympy.core.function import Function
+    from sympy.abc import x
+    f = Function('f')(x)
+    ff = Function('f')(x)
+    match_with_cache = ff.matches(f)
+    assert isinstance(f, type(ff))
+    clear_cache()
+    ff = Function('f')(x)
+    assert isinstance(f, type(ff))
+    assert match_with_cache == ff.matches(f)
+
+def test_issue_7688():
+    from sympy.core.function import Function, UndefinedFunction
+    from sympy.abc import x
+
+    f = Function('f')  # actually an UndefinedFunction
+    clear_cache()
+    class A(UndefinedFunction):
+        pass
+    a = A('f')
+    assert isinstance(a, type(f))

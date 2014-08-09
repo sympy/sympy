@@ -476,11 +476,9 @@ def test_cot():
 def test_cot_series():
     assert cot(x).series(x, 0, 9) == \
         1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
-    # issue 6210:
-    assert cot(x**20 + x**21 + x**22).series(x, 0, 4) == \
-        x**(-20) - 1/x**19 + x**(-17) - 1/x**16 + x**(-14) - 1/x**13 + \
-        x**(-11) - 1/x**10 + x**(-8) - 1/x**7 + x**(-5) - 1/x**4 + \
-        x**(-2) - 1/x + x - x**2 + O(x**4)
+    # issue 6210
+    assert cot(x**4 + x**5).series(x, 0, 1) == \
+        x**(-4) - 1/x**3 + x**(-2) - 1/x + 1 + O(x)
 
 
 def test_cot_rewrite():
@@ -661,6 +659,12 @@ def test_atan2():
     assert atan2(-1, -1) == -3*pi/4
     assert atan2(-1, 0) == -pi/2
     assert atan2(-1, 1) == -pi/4
+    i = symbols('i', imaginary=True)
+    r = symbols('r', real=True)
+    eq = atan2(r, i)
+    ans = -I*log((i + I*r)/sqrt(i**2 + r**2))
+    reps = ((r, 2), (i, I))
+    assert eq.subs(reps) == ans.subs(reps)
 
     u = Symbol("u", positive=True)
     assert atan2(0, u) == 0
@@ -675,9 +679,16 @@ def test_atan2():
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
-    assert ex.subs({x:2, y:3*I}).rewrite(arg) == 0
-    assert ex.subs({x:2*I, y:3}).rewrite(arg) == 0
-    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == 0
+    assert ex.subs({x:2, y:3*I}).rewrite(arg) == -pi - I*log(sqrt(5)*I/5)
+    assert ex.subs({x:2*I, y:3}).rewrite(arg) == -pi/2 - I*log(sqrt(5)*I)
+    assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == -pi + atan(2/S(3)) + atan(3/S(2))
+    i = symbols('i', imaginary=True)
+    r = symbols('r', real=True)
+    e = atan2(i, r)
+    rewrite = e.rewrite(arg)
+    reps = {i: I, r: -2}
+    assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
+    assert (e - rewrite).subs(reps).equals(0)
 
     assert conjugate(atan2(x, y)) == atan2(conjugate(x), conjugate(y))
 
@@ -686,8 +697,6 @@ def test_atan2():
 
     assert simplify(diff(atan2(y, x).rewrite(log), x)) == -y/(x**2 + y**2)
     assert simplify(diff(atan2(y, x).rewrite(log), y)) ==  x/(x**2 + y**2)
-
-    assert isinstance(atan2(2, 3*I).n(), atan2)
 
 
 def test_acot():
@@ -774,7 +783,7 @@ def test_issue_4547():
     assert cot(x).fdiff() == -1 - cot(x)**2
 
 
-def test_as_leading_term_issue2173():
+def test_as_leading_term_issue_5272():
     assert sin(x).as_leading_term(x) == x
     assert cos(x).as_leading_term(x) == 1
     assert tan(x).as_leading_term(x) == x
@@ -797,9 +806,9 @@ def test_atan2_expansion():
     assert cancel(atan(y/x).series(y, 0, 5) - atan2(y, x).series(y, 0, 5)
                   + atan2(0, x) - atan(0)) == O(y**5)
     assert cancel(atan(y/x).series(x, 1, 4) - atan2(y, x).series(x, 1, 4)
-                  + atan2(y, 1) - atan(y)) == O(x**4)
+                  + atan2(y, 1) - atan(y)) == O((x - 1)**4, (x, 1))
     assert cancel(atan((y + x)/x).series(x, 1, 3) - atan2(y + x, x).series(x, 1, 3)
-                  + atan2(1 + y, 1) - atan(1 + y)) == O(x**3)
+                  + atan2(1 + y, 1) - atan(1 + y)) == O((x - 1)**3, (x, 1))
     assert Matrix([atan2(y, x)]).jacobian([y, x]) == \
         Matrix([[x/(y**2 + x**2), -y/(y**2 + x**2)]])
 
@@ -1049,6 +1058,11 @@ def test_sec():
     # https://github.com/sympy/sympy/issues/7166
     assert series(sqrt(sec(x))) == 1 + x**2/4 + 7*x**4/96 + O(x**6)
 
+    # https://github.com/sympy/sympy/issues/7167
+    assert (series(sqrt(sec(x)), x, x0=pi*3/2, n=4) ==
+            1/sqrt(x - 3*pi/2) + (x - 3*pi/2)**(S(3)/2)/12 +
+            (x - 3*pi/2)**(S(7)/2)/160 + O((x - 3*pi/2)**4, (x, 3*pi/2)))
+
     assert sec(x).diff(x) == tan(x)*sec(x)
 
     # Taylor Term checks
@@ -1107,7 +1121,8 @@ def test_csc():
     assert csc(x).is_bounded == None
     assert csc(pi/2).is_bounded == True
 
-    assert series(csc(x), x, x0=pi/2, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+    assert series(csc(x), x, x0=pi/2, n=6) == \
+        1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))
     assert series(csc(x), x, x0=0, n=6) == \
             1/x + x/6 + 7*x**3/360 + 31*x**5/15120 + O(x**6)
 

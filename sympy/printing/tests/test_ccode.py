@@ -32,6 +32,10 @@ def test_ccode_Pow():
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
     assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
+    _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
+                   (lambda base, exp: not exp.is_integer, "pow")]
+    assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
+    assert ccode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
 
 
 def test_ccode_constants_mathh():
@@ -126,15 +130,18 @@ else {
 
 
 def test_ccode_Piecewise_deep():
-    p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
+    p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
     s = \
 """\
 2*((x < 1) ? (
    x
 )
+: ((x < 2) ? (
+   x + 1
+)
 : (
    pow(x, 2)
-) )\
+)) )\
 """
     assert p == s
 

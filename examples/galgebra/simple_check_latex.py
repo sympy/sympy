@@ -5,6 +5,7 @@ from __future__ import print_function
 from sympy.galgebra import xdvi, Get_Program, Print_Function
 from sympy.galgebra import MV, Format
 
+
 def basic_multivector_operations_3D():
     Print_Function()
 
@@ -32,6 +33,7 @@ def basic_multivector_operations_3D():
     (X | Y).Fmt(2, 'X|Y')
     return
 
+
 def basic_multivector_operations_2D():
     Print_Function()
 
@@ -50,8 +52,10 @@ def basic_multivector_operations_2D():
     (A > X).Fmt(2, 'A>X')
     return
 
+
 def dummy():
     return
+
 
 def main():
     Get_Program(True)

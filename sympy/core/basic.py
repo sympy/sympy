@@ -71,6 +71,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Boolean = False
     is_Not = False
     is_Matrix = False
+    is_Vector = False
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -182,10 +183,10 @@ class Basic(with_metaclass(ManagedProperties)):
         if c:
             return c
         for l, r in zip(st, ot):
+            l = Basic(*l) if isinstance(l, frozenset) else l
+            r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
                 c = l.compare(r)
-            elif isinstance(l, frozenset):
-                c = 0
             else:
                 c = (l > r) - (l < r)
             if c:
@@ -218,63 +219,6 @@ class Basic(with_metaclass(ManagedProperties)):
                         return c
 
         return Basic.compare(a, b)
-
-    @staticmethod
-    @deprecated(useinstead="default_sort_key", issue=4590, deprecated_since_version="0.7.2")
-    def compare_pretty(a, b):
-        """
-        Is a > b in the sense of ordering in printing?
-
-        THIS FUNCTION IS DEPRECATED.  Use ``default_sort_key`` instead.
-
-        ::
-
-          yes ..... return 1
-          no ...... return -1
-          equal ... return 0
-
-        Strategy:
-
-        It uses Basic.compare as a fallback, but improves it in many cases,
-        like ``x**3``, ``x**4``, ``O(x**3)`` etc. In those simple cases, it just parses the
-        expression and returns the "sane" ordering such as::
-
-          1 < x < x**2 < x**3 < O(x**4) etc.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x
-        >>> from sympy import Basic, Number
-        >>> Basic._compare_pretty(x, x**2)
-        -1
-        >>> Basic._compare_pretty(x**2, x**2)
-        0
-        >>> Basic._compare_pretty(x**3, x**2)
-        1
-        >>> Basic._compare_pretty(Number(1, 2), Number(1, 3))
-        1
-        >>> Basic._compare_pretty(Number(0), Number(-1))
-        1
-
-        """
-        try:
-            a = _sympify(a)
-        except SympifyError:
-            pass
-
-        try:
-            b = _sympify(b)
-        except SympifyError:
-            pass
-
-        if not isinstance(b, Basic):
-            return +1   # sympy > other
-
-        # now both objects are from SymPy, so we can proceed to usual comparison
-        a = a.sort_key()
-        b = b.sort_key()
-        return (a > b) - (a < b)
 
     @classmethod
     def fromiter(cls, args, **assumptions):
@@ -391,17 +335,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
            but faster
         """
-
-        if type(self) is not type(other):
-            try:
-                other = _sympify(other)
-            except SympifyError:
-                return True     # sympy != other
-
-            if type(self) is not type(other):
-                return True
-
-        return self._hashable_content() != other._hashable_content()
+        return not self.__eq__(other)
 
     def dummy_eq(self, other, symbol=None):
         """
@@ -738,20 +672,10 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return self.args
 
+    @deprecated(useinstead="iter(self.args)", issue=7717, deprecated_since_version="0.7.6")
     def iter_basic_args(self):
         """
         Iterates arguments of ``self``.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x
-        >>> a = 2*x
-        >>> a.iter_basic_args()
-        <...iterator object at 0x...>
-        >>> list(a.iter_basic_args())
-        [2, x]
-
         """
         return iter(self.args)
 
@@ -963,12 +887,17 @@ class Basic(with_metaclass(ManagedProperties)):
             reps = {}
             rv = self
             kwargs['hack2'] = True
+            m = C.Dummy()
             for old, new in sequence:
                 d = C.Dummy(commutative=new.is_commutative)
-                rv = rv._subs(old, d, **kwargs)
-                reps[d] = new
+                # using d*m so Subs will be used on dummy variables
+                # in things like Derivative(f(x, y), x) in which x
+                # is both free and bound
+                rv = rv._subs(old, d*m, **kwargs)
                 if not isinstance(rv, Basic):
                     break
+                reps[d] = new
+            reps[m] = S.One  # get rid of m
             return rv.xreplace(reps)
         else:
             rv = self
@@ -1171,19 +1100,6 @@ class Basic(with_metaclass(ManagedProperties)):
             if not _aresame(args, self.args):
                 return self.func(*args)
         return self
-
-    @deprecated(useinstead="has", issue=5488, deprecated_since_version="0.7.2")
-    def __contains__(self, obj):
-        if self == obj:
-            return True
-        for arg in self.args:
-            try:
-                if obj in arg:
-                    return True
-            except TypeError:
-                if obj == arg:
-                    return True
-        return False
 
     @cacheit
     def has(self, *patterns):
@@ -1435,7 +1351,10 @@ class Basic(with_metaclass(ManagedProperties)):
                     mapping[expr] = new
                     if simultaneous:
                         # don't let this expression be changed during rebuilding
-                        d = Dummy()
+                        com = getattr(new, 'is_commutative', True)
+                        if com is None:
+                            com = True
+                        d = Dummy(commutative=com)
                         mask.append((d, new))
                         expr = d
                     else:
@@ -1608,11 +1527,20 @@ class Basic(with_metaclass(ManagedProperties)):
             if hasattr(self, rule):
                 return getattr(self, rule)()
             return self
-        sargs = self.args
-        terms = [ t._eval_rewrite(pattern, rule, **hints)
-                    if isinstance(t, Basic) else t
-                    for t in sargs ]
-        return self.func(*terms)
+
+        if hints.get('deep', True):
+            args = [ a._eval_rewrite(pattern, rule, **hints)
+                        if isinstance(a, Basic) else a
+                        for a in self.args ]
+        else:
+            args = self.args
+
+        if pattern is None or isinstance(self.func, pattern):
+            if hasattr(self, rule):
+                rewritten = getattr(self, rule)(*args)
+                if rewritten is not None:
+                    return rewritten
+        return self.func(*args)
 
     def rewrite(self, *args, **hints):
         """ Rewrite functions in terms of other functions.
@@ -1627,7 +1555,7 @@ class Basic(with_metaclass(ManagedProperties)):
         you can use string or a destination function instance (in
         this case rewrite() will use the str() function).
 
-        There is also possibility to pass hints on how to rewrite
+        There is also the possibility to pass hints on how to rewrite
         the given expressions. For now there is only one such hint
         defined called 'deep'. When 'deep' is set to False it will
         forbid functions to rewrite their contents.

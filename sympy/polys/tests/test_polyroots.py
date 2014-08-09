@@ -1,7 +1,8 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
-    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise)
+    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
+    acos)
 
 from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
     PolynomialError)
@@ -45,6 +46,13 @@ def test_roots_cubic():
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
     assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
          S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
+    eq = -x**3 + 2*x**2 + 3*x - 2
+    assert list(sorted((
+        roots(eq, trig=True, multiple=True)))) == \
+        roots_cubic(Poly(eq, x), trig=True) == [
+        -2*sqrt(13)*cos(-acos(8*sqrt(13)/169)/3 + pi/3)/3 + S(2)/3,
+        -2*sqrt(13)*sin(-acos(8*sqrt(13)/169)/3 + pi/6)/3 + S(2)/3,
+        S(2)/3 + 2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3)/3]
 
 
 def test_roots_quartic():

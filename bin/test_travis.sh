@@ -9,6 +9,7 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
     cd doc
     make html-errors
     make clean
+    make man
     make latex
     cd _build/latex
     export LATEXOPTIONS="-interaction=nonstopmode"
@@ -42,6 +43,13 @@ EOF
         cat << EOF | python
 import sympy
 if not sympy.test('*theano*'):
+    raise Exception('Tests failed')
+EOF
+    elif [[ "${TEST_GMPY}" == "true" ]] && [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
+        cat << EOF | python
+import sympy
+if not (sympy.test('sympy/polys/', 'sympy/plotting') and
+        sympy.doctest('sympy/polys/', 'sympy/plotting')):
     raise Exception('Tests failed')
 EOF
     else

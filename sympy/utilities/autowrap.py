@@ -320,7 +320,8 @@ class F2PyCodeWrapper(CodeWrapper):
     @property
     def command(self):
         filename = self.filename + '.' + self.generator.code_extension
-        command = ["f2py", "-m", self.module_name, "-c", filename]
+        args = ['-c', '-m', self.module_name, filename]
+        command = [sys.executable, "-c", "import numpy.f2py as f2py2e;f2py2e.main()"]+args
         return command
 
     def _prepare_files(self, routine):

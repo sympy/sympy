@@ -332,8 +332,31 @@ want to be mentioned here, so see our repository history for a full list).
 #. Juan Luis Cano Rodríguez: fixes to mechanics module
 #. Sahil Shekhawat: fixes to core
 #. Kundan Kumar: fixes to ODE identification of separable_reduced
+#. Stas Kelvich: fixes to quantum module
 #. sevaader: fix to assumptions
+#. Dhruvesh Vijay Parikh: implement Möbius function
+#. Venkatesh Halli: improvement to matrices
 #. Lennart Fricke: make sure that cse avoids symbol collision
+#. Vlad Seghete: fix an issue with autowrap
+#. shashank-agg: ensure that the range is correct for multiple plots
+#. carstimon: make Abs(polar_lift(arg)) -> abs(arg)
+#. Pierre Haessig: fix typos
+#. Maciej Baranski: refactor code in compilef
+#. Zamrath Nizam: replace atoms(Symbol) with free_symbols where appropriate
+#. Benjamin Gudehus: add sampling_density to stats
+#. Faisal Anees: Egyptian Fractions
+#. Robert Johansson: quantum field operators
+#. Kalevi Suominen: fix to assumptions
+#. Kaushik Varanasi: fix a typo
+#. Fawaz Alazemi: combinatorics cheat sheet
+#. Ambar Mehrotra: Fix to documentation
+#. Mark Shoulson: Enhanced Egyptian fractions
+#. David P. Sanders: Fix to latex printer
+#. John V. Siratt: Fix to documentation
+#. Sarwar Chahal: Fix to documentation
+#. Nathan Woods: Fix to C code printer
+#. Colin B. Macdonald: Fix to documentation
+#. Marcus Näslund: Fix to documentation
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

@@ -290,6 +290,8 @@ def test(*paths, **kwargs):
     - If sort=False, tests are run in random order (not default).
     - Paths can be entered in native system format or in unix,
       forward-slash format.
+    - Files that are on the blacklist can be tested by providing
+      their path; they are only excluded if no paths are given.
 
     **Explanation of test results**
 
@@ -443,9 +445,15 @@ def _test(*paths, **kwargs):
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
+    blacklist = kwargs.get('blacklist', [])
+    blacklist.extend([
+        "sympy/mpmath", # needs to be fixed upstream
+    ])
+    blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed)
+
 
     # Disable warnings for external modules
     import sympy.external
@@ -458,12 +466,15 @@ def _test(*paths, **kwargs):
 
     test_files = t.get_test_files('sympy')
 
+    not_blacklisted = [f for f in test_files
+                       if not any(b in f for b in blacklist)]
+
     if len(paths) == 0:
-        matched = test_files
+        matched = not_blacklisted
     else:
         paths = convert_to_native_paths(paths)
         matched = []
-        for f in test_files:
+        for f in not_blacklisted:
             basename = os.path.basename(f)
             for p in paths:
                 if p in f or fnmatch(basename, p):
@@ -554,9 +565,8 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/statistics",                # prints a deprecation
-        "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py"  # needs tcc
+        "sympy/utilities/compilef.py",  # needs tcc
+        "sympy/physics/gaussopt.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:

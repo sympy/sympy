@@ -2,7 +2,9 @@ from __future__ import print_function, division
 
 from sympy.core import S, C
 from sympy.core.compatibility import u
-from sympy.core.function import Function, Derivative, ArgumentIndexError
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import (Function, Derivative, ArgumentIndexError,
+    AppliedUndef)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
@@ -474,10 +476,20 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
-        x, y = re(arg), im(arg)
-        arg = C.atan2(y, x)
-        if arg.is_number:
-            return arg
+        if not arg.is_Atom:
+            c, arg_ = factor_terms(arg).as_coeff_Mul()
+            if arg_.is_Mul:
+                arg_ = Mul(*[a if (sign(a) not in (-1, 1)) else
+                    sign(a) for a in arg_.args])
+            arg_ = sign(c)*arg_
+        else:
+            arg_ = arg
+        x, y = re(arg_), im(arg_)
+        rv = C.atan2(y, x)
+        if rv.is_number and not rv.atoms(AppliedUndef):
+            return rv
+        if arg_ != arg:
+            return cls(arg_, evaluate=False)
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])
@@ -598,7 +610,7 @@ class adjoint(Function):
 
 class polar_lift(Function):
     """
-    Lift argument to the riemann surface of the logarithm, using the
+    Lift argument to the Riemann surface of the logarithm, using the
     standard branch.
 
     >>> from sympy import Symbol, polar_lift, I
@@ -663,10 +675,13 @@ class polar_lift(Function):
         """ Careful! any evalf of polar numbers is flaky """
         return self.args[0]._eval_evalf(prec)
 
+    def _eval_Abs(self):
+        return Abs(self.args[0], evaluate=True)
+
 
 class periodic_argument(Function):
     """
-    Represent the argument on a quotient of the riemann surface of the
+    Represent the argument on a quotient of the Riemann surface of the
     logarithm. That is, given a period P, always return a value in
     (-P/2, P/2], by using exp(P*I) == 1.
 
@@ -687,7 +702,7 @@ class periodic_argument(Function):
     ========
 
     sympy.functions.elementary.exponential.exp_polar
-    polar_lift : Lift argument to the riemann surface of the logarithm
+    polar_lift : Lift argument to the Riemann surface of the logarithm
     principal_branch
     """
 
@@ -716,7 +731,7 @@ class periodic_argument(Function):
 
     @classmethod
     def eval(cls, ar, period):
-        # Our strategy is to evaluate the argument on the riemann surface of the
+        # Our strategy is to evaluate the argument on the Riemann surface of the
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
         # period != 2*pi and non-polar numbers.
@@ -763,7 +778,7 @@ def unbranched_argument(arg):
 class principal_branch(Function):
     """
     Represent a polar number reduced to its principal branch on a quotient
-    of the riemann surface of the logarithm.
+    of the Riemann surface of the logarithm.
 
     This is a function of two arguments. The first argument is a polar
     number `z`, and the second one a positive real number of infinity, `p`.
@@ -782,7 +797,7 @@ class principal_branch(Function):
     ========
 
     sympy.functions.elementary.exponential.exp_polar
-    polar_lift : Lift argument to the riemann surface of the logarithm
+    polar_lift : Lift argument to the Riemann surface of the logarithm
     periodic_argument
     """
 

@@ -388,6 +388,12 @@ def test_Float():
     assert Float('0.0').is_unbounded is False
     assert Float('0.0').is_zero is True
 
+    # rationality properties
+    assert Float(1).is_rational is None
+    assert Float(1).is_irrational is None
+    assert sqrt(2).n(15).is_rational is None
+    assert sqrt(2).n(15).is_irrational is None
+
     # do not automatically evalf
     def teq(a):
         assert (a.evalf() == a) is False
@@ -442,6 +448,10 @@ def test_Float():
     assert Float(S.One) == Float(1.0)
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
+
+    assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
+    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+
 
 def test_Float_eval():
     a = Float(3.2)
@@ -733,6 +743,8 @@ def test_NaN():
     assert nan/S.One == nan
     assert nan**0 == 1  # as per IEEE 754
     assert 1**nan == nan # IEEE 754 is not the best choice for symbolic work
+    # test Pow._eval_power's handling of NaN
+    assert Pow(nan, 0, evaluate=False)**2 == 1
 
 
 def test_special_numbers():
@@ -1022,8 +1034,7 @@ def test_issue_3423():
 
 
 def test_issue_3449():
-    x = Symbol("x", real=True)
-    assert sqrt(x**2) == abs(x)
+    x = Symbol("x")
     assert sqrt(x - 1).subs(x, 5) == 2
 
 
@@ -1412,3 +1423,7 @@ def test_latex():
     assert latex(zoo) == r"\tilde{\infty}"
     assert latex(nan) == r"\mathrm{NaN}"
     assert latex(I) == r"i"
+
+
+def test_issue_7742():
+    assert -oo % 1 == nan
