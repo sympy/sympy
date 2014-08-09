@@ -202,13 +202,19 @@ def test_resolution():
 
 
 def test_entails():
-    P = Predicate('P')
-    a = Constant('a')
-    b = Constant('b')
-    c = Constant('c')
-    formula_set = [
-        ForAll(X, ForAll(Y, (P(X, Y) & P(Y, Z)) >> P(X, Z))),
-        P(a, b),
-        P(b, c)
+    Parent = Predicate('Parent')
+    Male = Predicate('Male')
+    Father = Predicate('Father')
+    Sibling = Predicate('Sibling')
+    Tom = Constant('Tom')
+    John = Constant('John')
+    Fred = Constant('Fred')
+    clauses = [
+        Parent(X, Y) & Male(X) >> Father(X, Y),
+        Father(X, Y) & Father(X, Z) >> Sibling(Y, Z),
+        Parent(Tom, John),
+        Male(Tom),
+        Parent(Tom, Fred)
     ]
-    assert entails(P(a, c), formula_set) is True
+    assert entails(Sibling(John, Fred), clauses) is True
+    assert entails(~Sibling(John, Fred), clauses) is False

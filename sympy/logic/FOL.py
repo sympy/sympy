@@ -3,12 +3,13 @@ First Order Logic module for SymPy
 """
 
 from __future__ import print_function
-from itertools import combinations, product
+from collections import defaultdict
+from itertools import chain, combinations, product
 
 from sympy.core import Symbol
 from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import (And, Boolean, BooleanFunction,
-    eliminate_implications, false, Not, Or, true)
+    conjuncts, disjuncts, eliminate_implications, false, Not, Or, true)
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -16,7 +17,6 @@ class FOL(BooleanFunction):
     """
     Base class for all First Order Logic
     """
-    is_Fol = True
 
     def to_nnf(self, simplify=True):
         return self
@@ -708,65 +708,60 @@ def resolve(*expr):
 
     expr = to_cnf(And(*expr))
     clauses = []
-    for clause in expr.args:
-        c = {}
-        if isinstance(clause, AppliedPredicate):
-            c[clause.func] = clause
-        elif isinstance(clause, Not):
-            c[Not(clause.args[0].func)] = clause
-        elif isinstance(clause, (And, Or)):
-            for literal in clause.args:
-                if literal.is_Not:
-                    c[Not(literal.args[0].func)] = literal
-                else:
-                    c[literal.func] = literal
-        else:
-            raise ValueError()
+    for clause in conjuncts(expr):
+        c = defaultdict(list)
+        for literal in disjuncts(clause):
+            func = literal.func
+            if isinstance(literal, Not):
+                literal = literal.args[0]
+                func = ~literal.func
+            if isinstance(literal, AppliedPredicate):
+                c[func].append(literal)
+            else:
+                raise ValueError()
         clauses.append(c)
 
     visited = set()
+    new_clauses = []
+    generator = combinations(clauses, 2)
     while True:
         temp = []
-        for c1, c2 in combinations(clauses, 2):
-            key = (tuple(c1.values()), tuple(c2.values()))
-
-            if not key in visited:
+        for c1, c2 in generator:
+            key = frozenset(frozenset(chain.from_iterable(c.values())) for c in (c1, c2))
+            if key not in visited:
                 visited.add(key)
                 t = _resolve(c1, c2)
                 if {} in t:
                     return False
-                temp.extend(t)
+                if t:
+                    temp.extend(t)
 
         if not temp:
             return True
-        clauses.extend(temp)
+        clauses.extend(new_clauses)
+        new_clauses = temp
+        generator = product(clauses, new_clauses)
 
 
 def _resolve(clause1, clause2):
-
     clauses = []
     if len(clause1) > len(clause2):
         clause1, clause2 = clause2, clause1
 
     for literal in clause1:
-        if Not(literal) in clause2:
-            pred1 = clause1[literal]
-            pred2 = clause2[Not(literal)]
-
-            if pred1.is_Not:
-                pred1 = pred1.args[0]
-            elif pred2.is_Not:
-                pred2 = pred2.args[0]
-            subs = mgu(pred1, pred2)
-
-            if subs:
-                c = dict(list(clause1.items()) + list(clause2.items()))
-                c.pop(literal)
-                c.pop(Not(literal))
-                for pred, literal in c.items():
-                    c[pred] = literal.subs(subs)
-                clauses.append(c)
-
+        if ~literal in clause2:
+            for P1, P2 in product(clause1[literal], clause2[~literal]):
+                subs = mgu(P1, P2)
+                if subs:
+                    c = defaultdict(list)
+                    for P, l in chain(clause1.items(), clause2.items()):
+                        c[P].extend([lit.subs(subs) for lit in l])
+                    P = P1.subs(subs)
+                    for lit in (literal, ~literal):
+                        c[lit].remove(P)
+                        if not c[lit]:
+                            c.pop(lit)
+                    clauses.append(c)
     return clauses
 
 
