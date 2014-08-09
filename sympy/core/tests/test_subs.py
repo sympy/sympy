@@ -56,6 +56,7 @@ def test_powers():
     assert (x**n).subs(x, 0) is S.ComplexInfinity
     assert exp(-1).subs(S.Exp1, 0) is S.ComplexInfinity
     assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
+    assert (2**(x + 2)).subs(2, 3) == 3**(x + 3)
 
 
 def test_logexppow():   # no eval()
@@ -409,7 +410,7 @@ def test_derivative_subs():
     assert Derivative(f(x), x).subs(f(x), y) != 0
     assert Derivative(f(x), x).subs(f(x), y).subs(y, f(x)) == \
         Derivative(f(x), x)
-    # issues 1986, 1938
+    # issues 5085, 5037
     assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)
@@ -576,6 +577,7 @@ def test_issue_6559():
 
 
 def test_issue_5261():
+    x = symbols('x', real=True)
     e = I*x
     assert exp(e).subs(exp(x), y) == y**I
     assert (2**e).subs(2**x, y) == y**I

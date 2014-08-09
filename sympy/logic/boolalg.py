@@ -587,7 +587,7 @@ class Xor(BooleanFunction):
             argset.remove(True)
             return Not(Xor(*argset))
         else:
-            obj._args = tuple(argset)
+            obj._args = tuple(ordered(argset))
             obj._argset = frozenset(argset)
             return obj
 

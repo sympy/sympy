@@ -1391,6 +1391,10 @@ def test_rewrite_trig():
         2*atan(S.Half + sqrt(2 + 2*sqrt(3)*I)/2 + sqrt(3)*I/2)]
     assert solve(sinh(x) + tanh(x)) == [0, I*pi]
 
+    # issue 6157
+    assert solve(2*sin(x) - cos(x), x) == [-2*atan(2 + sqrt(5)),
+                                           -2*atan(-sqrt(5) + 2)]
+
 
 @XFAIL
 def test_rewrite_trigh():

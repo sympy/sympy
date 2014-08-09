@@ -71,6 +71,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Boolean = False
     is_Not = False
     is_Matrix = False
+    is_Vector = False
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -182,10 +183,10 @@ class Basic(with_metaclass(ManagedProperties)):
         if c:
             return c
         for l, r in zip(st, ot):
+            l = Basic(*l) if isinstance(l, frozenset) else l
+            r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
                 c = l.compare(r)
-            elif isinstance(l, frozenset):
-                c = 0
             else:
                 c = (l > r) - (l < r)
             if c:
@@ -671,20 +672,10 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return self.args
 
+    @deprecated(useinstead="iter(self.args)", issue=7717, deprecated_since_version="0.7.6")
     def iter_basic_args(self):
         """
         Iterates arguments of ``self``.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x
-        >>> a = 2*x
-        >>> a.iter_basic_args()
-        <...iterator object at 0x...>
-        >>> list(a.iter_basic_args())
-        [2, x]
-
         """
         return iter(self.args)
 
@@ -1360,7 +1351,10 @@ class Basic(with_metaclass(ManagedProperties)):
                     mapping[expr] = new
                     if simultaneous:
                         # don't let this expression be changed during rebuilding
-                        d = Dummy()
+                        com = getattr(new, 'is_commutative', True)
+                        if com is None:
+                            com = True
+                        d = Dummy(commutative=com)
                         mask.append((d, new))
                         expr = d
                     else:
@@ -1561,7 +1555,7 @@ class Basic(with_metaclass(ManagedProperties)):
         you can use string or a destination function instance (in
         this case rewrite() will use the str() function).
 
-        There is also possibility to pass hints on how to rewrite
+        There is also the possibility to pass hints on how to rewrite
         the given expressions. For now there is only one such hint
         defined called 'deep'. When 'deep' is set to False it will
         forbid functions to rewrite their contents.

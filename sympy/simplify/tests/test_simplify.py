@@ -110,14 +110,14 @@ def test_trigsimp1():
     assert trigsimp(sin(x + y) - sin(x - y)) == 2*sin(y)*cos(x)
     assert trigsimp(cos(x + y) + cos(x - y)) == 2*cos(x)*cos(y)
     assert trigsimp(cos(x + y) - cos(x - y)) == -2*sin(x)*sin(y)
-    assert ratsimp(trigsimp(tan(x + y) - tan(x)/(1 - tan(x)*tan(y)))) == \
+    assert trigsimp(tan(x + y) - tan(x)/(1 - tan(x)*tan(y))) == \
         sin(y)/(-sin(y)*tan(x) + cos(y))  # -tan(y)/(tan(x)*tan(y) - 1)
 
     assert trigsimp(sinh(x + y) + sinh(x - y)) == 2*sinh(x)*cosh(y)
     assert trigsimp(sinh(x + y) - sinh(x - y)) == 2*sinh(y)*cosh(x)
     assert trigsimp(cosh(x + y) + cosh(x - y)) == 2*cosh(x)*cosh(y)
     assert trigsimp(cosh(x + y) - cosh(x - y)) == 2*sinh(x)*sinh(y)
-    assert ratsimp(trigsimp(tanh(x + y) - tanh(x)/(1 + tanh(x)*tanh(y)))) == \
+    assert trigsimp(tanh(x + y) - tanh(x)/(1 + tanh(x)*tanh(y))) == \
         sinh(y)/(sinh(y)*tanh(x) + cosh(y))
 
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
@@ -291,6 +291,10 @@ def test_trigsimp_issue_4032():
     n = Symbol('n', integer=True, positive=True)
     assert trigsimp(2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2) == \
         2**(n/2)*cos(pi*n/4)/2 + 2**n/4
+
+
+def test_trigsimp_issue_7761():
+    assert trigsimp(cosh(pi/4)) == cosh(pi/4)
 
 
 def test_trigsimp_noncommutative():
@@ -1087,7 +1091,7 @@ def test_nsimplify():
     assert nsimplify(-.2, tolerance=0) == -S.One/5
     assert nsimplify(.2222, tolerance=0) == S(1111)/5000
     assert nsimplify(-.2222, tolerance=0) == -S(1111)/5000
-    # issues 4112
+    # issue 7211, PR 4112
     assert nsimplify(S(2e-8)) == S(1)/50000000
 
 

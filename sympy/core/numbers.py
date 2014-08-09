@@ -940,6 +940,10 @@ class Float(Number):
         import sage.all as sage
         return sage.RealNumber(str(self))
 
+    def __format__(self, format_spec):
+        return format(decimal.Decimal(str(self)), format_spec)
+
+
 # Add sympify converters
 converter[float] = converter[decimal.Decimal] = Float
 
@@ -2461,6 +2465,11 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid comparison of %s and %s" % (self, other))
         return _sympify(other is S.NegativeInfinity)
 
+    def __mod__(self, other):
+        return S.NaN
+
+    __rmod__ = __mod__
+
 
 class NaN(with_metaclass(Singleton, Number)):
     """
@@ -2471,10 +2480,15 @@ class NaN(with_metaclass(Singleton, Number)):
     Python ``float('nan')``.
 
     NaN serves as a place holder for numeric values that are indeterminate.
-    Most operations on nan, produce another nan.  Most indeterminate forms,
-    such as ``0/0`` or ``oo - oo` produce nan.  Two exceptions are ``0**0``
+    Most operations on NaN, produce another NaN.  Most indeterminate forms,
+    such as ``0/0`` or ``oo - oo` produce NaN.  Two exceptions are ``0**0``
     and ``oo**0``, which all produce ``1`` (this is consistent with Python's
     float).
+
+    NaN is mathematically not equal to anything else, even NaN itself.  This
+    explains the initially counter-intuitive results with ``Eq`` and ``==`` in
+    the examples below.  NaN is not comparable so inequalities raise a
+    TypeError.
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
@@ -2482,13 +2496,17 @@ class NaN(with_metaclass(Singleton, Number)):
     Examples
     ========
 
-    >>> from sympy import nan, S, oo
+    >>> from sympy import nan, S, oo, Eq
     >>> nan is S.NaN
     True
     >>> oo - oo
     nan
     >>> nan + 1
     nan
+    >>> Eq(nan, nan)   # mathematical equality
+    False
+    >>> nan == nan     # structural equality
+    True
 
     References
     ==========
@@ -2545,10 +2563,15 @@ class NaN(with_metaclass(Singleton, Number)):
         return super(NaN, self).__hash__()
 
     def __eq__(self, other):
+        # NaN is structurally equal to another NaN
         return other is S.NaN
 
     def __ne__(self, other):
         return other is not S.NaN
+
+    def _eval_Eq(self, other):
+        # NaN is not mathematically equal to anything, even NaN
+        return S.false
 
     def __gt__(self, other):
         return S.false
