@@ -17,10 +17,6 @@ MPMATH = {}
 NUMPY = {}
 SYMPY = {}
 NUMEXPR = {}
-# we will need a regex for NUMEXPR
-# if lambdastr changes then this pattern will need to be updated
-import re
-NUMEXPR_PAT=re.compile(r": \(.*\)$", flags=re.DOTALL)
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -91,21 +87,7 @@ NUMPY_TRANSLATIONS = {
     "re": "real",
 }
 
-NUMEXPR_TRANSLATIONS = {
-    "Abs": "abs",
-    "acos": "arccos",
-    "acosh": "arccosh",
-    "asin": "arcsin",
-    "asinh": "arcsinh",
-    "atan": "arctan",
-    "atan2": "arctan2",
-    "atanh": "arctanh",
-    "E": "e",
-    "im": "imag",
-    "ln": "log",
-    "re": "real",
-    "I": "1j",
-}
+NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
@@ -137,7 +119,6 @@ def _import(module, reload="False"):
         raise NameError(
             "'%s' module can't be used for lambdification" % module)
 
-    is_numexpr = True if module == 'numexpr' else False
     # Clear namespace or exit
     if namespace != namespace_default:
         # The namespace was already generated, don't do it again if not forced.
@@ -165,10 +146,6 @@ def _import(module, reload="False"):
             "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
-    # This needs to be skipped for numexpr since numexpr functions are not
-    # really in a namespace
-    if is_numexpr:
-        return
     for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
 
@@ -331,7 +308,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         else:
             modules.insert(1, "numpy")
 
-
     # Get the needed namespaces.
     namespaces = []
     # First find any function implementations
@@ -355,19 +331,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
+    if 'numexpr' in namespaces and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import NumExprPrinter as printer
+
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
-    if 'numexpr' in namespaces:
-        if flat in lstr:
-            raise TypeError("numexpr can't be used with argument tuples.")
-        # need to add 'evaluate' to lstr
-        m = NUMEXPR_PAT.search(lstr)
-        st = m.start()
-        lstr = lstr[:st+2]+"evaluate('"+lstr[st+2:]+"')"
-        # use translation table to directly modify lstr
-        for k in sorted(NUMEXPR_TRANSLATIONS.keys(), key=len)[::-1]:
-            lstr = lstr.replace(k, NUMEXPR_TRANSLATIONS[k])
+
     if flat in lstr:
         import itertools
         namespace.update({flat: flatten})
