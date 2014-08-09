@@ -39,6 +39,7 @@ class FCodePrinter(CodePrinter):
         'human': True,
         'source_format': 'fixed',
         'contract': True,
+        'standard': 77
     }
 
     _implicit_functions = set([
@@ -70,10 +71,12 @@ class FCodePrinter(CodePrinter):
             self._lead_cont = "      "
             self._lead_comment = "! "
         else:
-            raise ValueError(
-                "Unknown source format: %s" % self._settings[
-                'source_format']
-            )
+            raise ValueError("Unknown source format: %s" % self._settings[
+                             'source_format'])
+        standards = set([66, 77, 90, 95, 2003, 2008])
+        if self._settings['standard'] not in standards:
+            raise ValueError("Unknown Fortran standard: %s" % self._settings[
+                             'standard'])
 
     def _rate_index_position(self, p):
         return -p*5
@@ -106,6 +109,14 @@ class FCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_Piecewise(self, expr):
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
         lines = []
         if expr.has(Assignment):
             for i, (e, c) in enumerate(expr.args):
@@ -118,12 +129,26 @@ class FCodePrinter(CodePrinter):
                 lines.append(self._print(e))
             lines.append("end if")
             return "\n".join(lines)
-        else:
+        elif self._settings["standard"] >= 95:
+            # Only supported in F95 and newer:
             # The piecewise was used in an expression, need to do inline
-            # operators.
+            # operators. This has the downside that inline operators will
+            # not work for statements that span multiple lines (Matrix or
+            # Indexed expressions).
+            pattern = "merge({T}, {F}, {COND})"
+            code = self._print(expr.args[-1].expr)
+            terms = list(expr.args[:-1])
+            while terms:
+                e, c = terms.pop()
+                expr = self._print(e)
+                cond = self._print(c)
+                code = pattern.format(T=expr, F=code, COND=cond)
+            return code
+        else:
+            # `merge` is not supported prior to F95
             raise NotImplementedError("Using Piecewise as an expression using "
                                       "inline operators is not supported in "
-                                      "Fortran77.")
+                                      "standards earlier than Fortran95.")
 
     def _print_MatrixElement(self, expr):
         return "{:}({:}, {:})".format(expr.parent, expr.i + 1, expr.j + 1)
@@ -398,6 +423,12 @@ def fcode(expr, assign_to=None, **settings):
        source_format : optional
            The source format can be either 'fixed' or 'free'.
            [default='fixed']
+       standard : optional
+           The Fortran standard to be followed. This is specified as an integer.
+           Acceptable standards are 66, 77, 90, 95, 2003, and 2008. Default is
+           77. Note that currently the only distinction internally is between
+           standards before 95, and those 95 and after. This may change later
+           as more features are added.
        contract: optional
            If True, `Indexed` instances are assumed to obey
            tensor contraction rules and the corresponding nested

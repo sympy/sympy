@@ -116,7 +116,8 @@ def test_ccode_boolean():
 
 
 def test_ccode_Piecewise():
-    p = ccode(Piecewise((x, x < 1), (x**2, True)))
+    expr = Piecewise((x, x < 1), (x**2, True))
+    p = ccode(expr)
     s = \
 """\
 ((x < 1) ? (
@@ -126,8 +127,17 @@ def test_ccode_Piecewise():
    pow(x, 2)
 ))\
 """
-
     assert p == s
+    assert ccode(expr, assign_to="c") == (
+    "if (x < 1) {\n"
+    "   c = x;\n"
+    "}\n"
+    "else {\n"
+    "   c = pow(x, 2);\n"
+    "}")
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: ccode(expr))
 
 
 def test_ccode_Piecewise_deep():

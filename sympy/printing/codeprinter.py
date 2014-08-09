@@ -14,6 +14,9 @@ class AssignmentError(Exception):
     pass
 
 class Assignment(C.Equality):
+    """
+    Represents variable assignment for code generation.
+    """
     pass
 
 
@@ -253,7 +256,8 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
-        elif lhs.has(C.IndexedBase) or rhs.has(C.IndexedBase):
+        elif self._settings["contract"] and (lhs.has(C.IndexedBase) or
+                rhs.has(C.IndexedBase)):
             # Here we check if there is looping to be done, and if so
             # print the required loops.
             return self._doprint_loops(rhs, lhs)

@@ -188,8 +188,8 @@ However, when the user_functions argument is not provided, ``fcode`` attempts to
 use a reasonable default and adds a comment to inform the user of the issue.
 
     >>> print(fcode(1 - gamma(x)**2))
-    C     Not Fortran:
-    C     gamma(x)
+    C     Not supported in Fortran:
+    C     gamma
           -gamma(x)**2 + 1
 
 By default the output is human readable code, ready for copy and paste. With the

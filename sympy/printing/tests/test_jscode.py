@@ -93,7 +93,8 @@ def test_jscode_boolean():
 
 
 def test_jscode_Piecewise():
-    p = jscode(Piecewise((x, x < 1), (x**2, True)))
+    expr = Piecewise((x, x < 1), (x**2, True))
+    p = jscode(expr)
     s = \
 """\
 ((x < 1) ? (
@@ -104,6 +105,16 @@ def test_jscode_Piecewise():
 ))\
 """
     assert p == s
+    assert jscode(expr, assign_to="c") == (
+    "if (x < 1) {\n"
+    "   c = x;\n"
+    "}\n"
+    "else {\n"
+    "   c = Math.pow(x, 2);\n"
+    "}")
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: jscode(expr))
 
 
 def test_jscode_Piecewise_deep():

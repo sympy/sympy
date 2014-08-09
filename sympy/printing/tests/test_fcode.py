@@ -351,15 +351,12 @@ def test_fcode_Relational():
 
 def test_fcode_Piecewise():
     x = symbols('x')
-    #code = fcode(Piecewise((x, x < 1), (x**2, True)))
-    #expected = (
-        #"      if (x < 1) then\n"
-        #"         x\n"
-        #"      else\n"
-        #"         x**2\n"
-        #"      end if"
-    #)
-    #assert code == expected
+    expr = Piecewise((x, x < 1), (x**2, True))
+    # Check that inline conditional (merge) fails if standard isn't 95+
+    raises(NotImplementedError, lambda: fcode(expr))
+    code = fcode(expr, standard=95)
+    expected = "      merge(x, x**2, x < 1)"
+    assert code == expected
     assert fcode(Piecewise((x, x < 1), (x**2, True)), assign_to="var") == (
         "      if (x < 1) then\n"
         "         var = x\n"
@@ -387,24 +384,12 @@ def test_fcode_Piecewise():
     )
     code = fcode(Piecewise((a, x < 0), (b, True)), assign_to="weird_name")
     assert code == expected
-    #assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True))) == (
-        #"      if (x < 1) then\n"
-        #"         x\n"
-        #"      else if (x > 1) then\n"
-        #"         x**2\n"
-        #"      else\n"
-        #"         sin(x)\n"
-        #"      end if"
-    #)
-    #assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))) == (
-        #"      if (x < 1) then\n"
-        #"         x\n"
-        #"      else if (x > 1) then\n"
-        #"         x**2\n"
-        #"      else if (x > 0) then\n"
-        #"         sin(x)\n"
-        #"      end if"
-    #)
+    code = fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True)), standard=95)
+    expected = "      merge(x, merge(x**2, sin(x), x > 1), x < 1)"
+    assert code == expected
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: fcode(expr))
 
 
 def test_wrap_fortran():

@@ -47,6 +47,7 @@ class JavascriptCodePrinter(CodePrinter):
         'precision': 15,
         'user_functions': {},
         'human': True,
+        'contract': True
     }
 
     def __init__(self, settings={}):
@@ -128,6 +129,14 @@ class JavascriptCodePrinter(CodePrinter):
         return 'Number.NEGATIVE_INFINITY'
 
     def _print_Piecewise(self, expr):
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
         lines = []
         if expr.has(Assignment):
             for i, (e, c) in enumerate(expr.args):
@@ -143,21 +152,13 @@ class JavascriptCodePrinter(CodePrinter):
             return "\n".join(lines)
         else:
             # The piecewise was used in an expression, need to do inline
-            # operators. This has the downside that if none of the conditions
-            # are true, the last expression will still be returned. Also, these
-            # inline operators will not work for statements that span multiple
-            # lines (Matrix or Indexed expressions).
+            # operators. This has the downside that inline operators will
+            # not work for statements that span multiple lines (Matrix or
+            # Indexed expressions).
             ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
                     for e, c in expr.args[:-1]]
-            last_line = ""
-            if expr.args[-1].cond == True:
-                last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
-            else:
-                ecpairs.append("(%s) ? (\n%s\n)" %
-                (self._print(expr.args[-1].cond),
-                    self._print(expr.args[-1].expr)))
-            code = "%s" + last_line
-            return code % ": ".join(ecpairs) + " ".join([")"*len(ecpairs)])
+            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
+            return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
