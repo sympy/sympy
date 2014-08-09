@@ -71,36 +71,73 @@ class LambdaPrinter(StrPrinter):
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
-# This class cannot be placed in lambdify.py due to circular imports
 class NumExprPrinter(LambdaPrinter):
-    # strings to substitute for sympy expressions
-    str_subs = {
-        "Abs": "abs",
-        "acos": "arccos",
-        "acosh": "arccosh",
-        "asin": "arcsin",
-        "asinh": "arcsinh",
-        "atan": "arctan",
-        "atan2": "arctan2",
-        "atanh": "arctanh",
-        "E": "e",
-        "im": "imag",
-        "ln": "log",
-        "re": "real",
-        "I": "1j",
+    # key, value pairs correspond to sympy name and numexpr name
+    # functions not appearing in this dict will raise a TypeError
+    _numexpr_functions = {
+        'sin' : 'sin',
+        'cos' : 'cos',
+        'tan' : 'tan',
+        'asin': 'arcsin',
+        'acos': 'arccos',
+        'atan': 'arctan',
+        'atan2' : 'arctan2',
+        'sinh' : 'sinh',
+        'cosh' : 'cosh',
+        'tanh' : 'tanh',
+        'asinh': 'arcsinh',
+        'acosh': 'arccosh',
+        'atanh': 'arctanh',
+        'ln' : 'log',
+        'log': 'log',
+        'exp': 'exp',
+        'sqrt' : 'sqrt',
+        'Abs' : 'abs',
+        'conjugate' : 'conj',
+        'im' : 'imag',
+        're' : 'real',
+        'where' : 'where',
+        'complex' : 'complex',
+        'contains' : 'contains',
     }
-    # numexpr does not support these operations, throw TypeError if found
-    blacklisted = ('matrix', 'list', 'tuple')
+
+    def _print_ImaginaryUnit(self, expr):
+        return '1j'
+
+    def _print_Function(self, e):
+        func_name = e.func.__name__
+        try:
+            nstr = self._numexpr_functions[func_name]
+        except KeyError:
+            raise TypeError("numexpr does not support function %s" %
+                            func_name)
+        return "%s(%s)" % (nstr, self._print(e.args[0]))
+
+    def blacklisted(self, expr):
+        raise TypeError("numexpr cannot be used with %s" %
+                        expr.__class__.__name__)
+
+    # blacklist all Matrix printing
+    _print_SparseMatrix = \
+    _print_MutableSparseMatrix = \
+    _print_ImmutableSparseMatrix = \
+    _print_Matrix = \
+    _print_DenseMatrix = \
+    _print_MutableDenseMatrix = \
+    _print_ImmutableMatrix = \
+    _print_ImmutableDenseMatrix = \
+    blacklisted
+    # blacklist some python expressions
+    _print_list = \
+    _print_tuple = \
+    _print_Tuple = \
+    _print_dict = \
+    _print_Dict = \
+    blacklisted
+
     def doprint(self, expr):
         lstr = super(NumExprPrinter, self).doprint(expr)
-        # check blacklisted
-        for b in self.blacklisted:
-            if b in lstr.lower():
-                raise TypeError("numexpr cannot be used with {}".format(b))
-        # substitute strings
-        for k, v in sorted(self.str_subs.items(), key=lambda x : -len(x[0])):
-            lstr = lstr.replace(k, v)
-        return "evaluate('"+lstr+"')"
+        return "evaluate('%s')" % lstr
 
 def lambdarepr(expr, **settings):
     """
