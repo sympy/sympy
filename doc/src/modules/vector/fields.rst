@@ -2,13 +2,20 @@
 Scalar and Vector Field Functionality
 =====================================
 
+References
+----------
+
+.. [WikiDelOperator] "Del." Wikipedia, the Free Encyclopedia. Web. 
+        <http://en.wikipedia.org/wiki/Del>.
+
 Introduction
 ============
 
 Vectors and Scalars
 -------------------
 
-In physics, we deal with two kinds of quantities – scalars and vectors.
+In physics and vector math in general, we deal with two kinds of 
+quantities – scalars and vectors.
 
 A scalar is an entity which only has a magnitude – no direction. Examples of
 scalar quantities include mass, electric charge, temperature, distance, etc.
@@ -40,14 +47,14 @@ m = :math:`5\sqrt{2}` m. The direction of travel is given by the unit vector
 Fields
 ------
 
-In general, a :math:`field` is a vector or scalar quantity that can be
+A :math:`field` is a vector or scalar quantity that can be
 specified everywhere in space as a function of position (Note that in general
-a field may also be dependent on time and other custom variables). In this
-module, we deal with 3-dimensional spaces only. Hence, a field is defined as
-a function of the :math:`x`, :math:`y` and :math:`z` coordinates corresponding
+a field may also be dependent on time and other custom variables). Since we 
+only deal with 3D spaces in this module, a field is defined as a function of 
+the :math:`x`, :math:`y` and :math:`z` coordinates corresponding
 to a location in 3D space.
 
-For example, temperate in 3 dimensional space (a temperature field) can be
+For example, temperature in 3 dimensional space (a temperature field) can be
 written as :math:`T(x, y, z)` – a scalar function of the position.
 An example of a scalar field in electromagnetism is the electric potential.
 
@@ -68,88 +75,74 @@ The magnitude of this electric field can in turn be expressed
 as a scalar field of the form
 :math:`\sqrt{4{x}^{4} + 16{x}^{2}{y}^{2}}`.
 
-Implementation of fields in sympy.physics.vector
-================================================
+Implementation in sympy.vector
+==============================
 
-In sympy.physics.vector, every :mod:`ReferenceFrame` instance is assigned basis
+Scalar and vector fields
+------------------------
+
+In sympy.vector, every :mod:`CoordSysCartesian` instance is assigned basis
 vectors corresponding to the :math:`X`, :math:`Y` and
-:math:`Z` directions. These can be accessed using the attributes
-named :mod:`x`, :mod:`y` and :mod:`z` respectively. Hence, to define a vector
+:math:`Z` directions. These can be accessed using the :mod:`property`s
+named :mod:`i`, :mod:`j` and :mod:`k` respectively. Hence, to define a vector
 :math:`\mathbf{v}` of the form
 :math:`3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}}` with
 respect to a given frame :math:`\mathbf{R}`, you would do
 
-  >>> from sympy.physics.vector import ReferenceFrame
-  >>> R = ReferenceFrame('R')
-  >>> v = 3*R.x + 4*R.y + 5*R.z
+  >>> from sympy.vector import CoordSysCartesian
+  >>> R = CoordSysCartesian('R')
+  >>> v = 3*R.i + 4*R.j + 5*R.k
 
 Vector math and basic calculus operations with respect to vectors have
-already been elaborated upon in other sections of this module's
+already been elaborated upon in earlier sections of this module's
 documentation.
 
 On the other hand, base scalars (or coordinate variables) are implemented
-as special :mod:`SymPy` :mod:`Symbol` s assigned to every frame, one for each
-direction from :math:`X`, :math:`Y` and :math:`Z`. For a frame
-:mod:`R`, the :math:`X`, :math:`Y` and :math:`Z`
-base scalar :mod:`Symbol` s can be accessed using the :mod:`R[0]`, :mod:`R[1]`
-and :mod:`R[2]` expressions respectively.
+in a special class called :mod:`BaseScalar`, and are assigned to every 
+coordinate system, one for each direction from :math:`X`, :math:`Y` and 
+:math:`Z`. These coordinate variables are used to form the expressions of
+vector or scalar fields in 3D space.
+For a system :mod:`R`, the :math:`X`, :math:`Y` and :math:`Z` 
+:mod:`BaseScalars` s can be accessed using the :mod:`R.x`, :mod:`R.y`
+and :mod:`R.z` expressions respectively.
 
 Therefore, to generate the expression for the aforementioned electric
 potential field :math:`2{x}^{2}y`, you would have to do
 
-  >>> from sympy.physics.vector import ReferenceFrame
-  >>> R = ReferenceFrame('R')
-  >>> electric_potential = 2*R[0]**2*R[1]
+  >>> from sympy.vector import CoordSysCartesian
+  >>> R = CoordSysCartesian('R')
+  >>> electric_potential = 2*R.x**2*R.y
   >>> electric_potential
-  2*R_x**2*R_y
+  2*R.x**2*R.y
 
-In string representation, :mod:`R_x` denotes the :math:`X` base
-scalar assigned to :mod:`ReferenceFrame` :mod:`R`. Essentially, :mod:`R_x` is
-the string representation of :mod:`R[0]`.
+It is to be noted that :mod:`BaseScalar` instances can be used just
+like any other SymPy :mod:`Symbol`, except that they store the information
+about the coordinate system and direction/axis they correspond to.
 
-Scalar fields can be treated just as any other :mod:`SymPy` expression,
+Scalar fields can be treated just as any other SymPy expression,
 for any math/calculus functionality. Hence, to differentiate the above
-electric potential with respect to :math:`x` (i.e. :mod:`R[0]`), you would
+electric potential with respect to :math:`x` (i.e. :mod:`R.x`), you would
 have to use the :mod:`diff` method.
 
-  >>> from sympy.physics.vector import ReferenceFrame
-  >>> R = ReferenceFrame('R')
-  >>> electric_potential = 2*R[0]**2*R[1]
+  >>> from sympy.vector import CoordSysCartesian
+  >>> R = CoordSysCartesian('R')
+  >>> electric_potential = 2*R.x**2*R.y
   >>> from sympy import diff
-  >>> diff(electric_potential, R[0])
-  4*R_x*R_y
+  >>> diff(electric_potential, R.x)
+  4*R.x*R.y
 
-Like vectors (and vector fields), scalar fields can also be re-expressed in
-other frames of reference, apart from the one they were defined in – assuming
-that an orientation relationship exists between the concerned frames. This
-can be done using the :mod:`express` method, in a way similar to vectors -
-but with the :mod:`variables` parameter set to :mod:`True`.
+It is to be noted that having a :mod:`BaseScalar` in the expression implies
+that a 'field' changes with position, in 3D space. Technically speaking, a
+simple :mod:`Expr` with no :mod:`BaseScalar`s is still a field, though 
+constant.
 
-  >>> from sympy.physics.vector import ReferenceFrame
-  >>> R = ReferenceFrame('R')
-  >>> electric_potential = 2*R[0]**2*R[1]
-  >>> from sympy.physics.vector import dynamicsymbols, express
-  >>> q = dynamicsymbols('q')
-  >>> R1 = R.orientnew('R1', rot_type = 'Axis', amounts = [q, R.z])
-  >>> express(electric_potential, R1, variables=True)
-  2*(R1_x*sin(q(t)) + R1_y*cos(q(t)))*(R1_x*cos(q(t)) - R1_y*sin(q(t)))**2
+Like scalar fields, vector fields that vary with position can also be 
+constructed using :mod:`BaseScalar`s in the measure-number expressions.
 
-Moreover, considering scalars can also be functions of time just as vectors,
-differentiation with respect to time is also possible. Depending on the
-:mod:`Symbol` s present in the expression and the frame with respect to which
-the time differentiation is being done, the output will change/remain the same.
+  >>> from sympy.vector import CoordSysCartesian
+  >>> R = CoordSysCartesian('R')
+  >>> v = R.x**2*R.i + 2*R.x*R.z*R.k
 
-  >>> from sympy.physics.vector import ReferenceFrame
-  >>> R = ReferenceFrame('R')
-  >>> electric_potential = 2*R[0]**2*R[1]
-  >>> q = dynamicsymbols('q')
-  >>> R1 = R.orientnew('R1', rot_type = 'Axis', amounts = [q, R.z])
-  >>> from sympy.physics.vector import time_derivative
-  >>> time_derivative(electric_potential, R)
-  0
-  >>> time_derivative(electric_potential, R1).simplify()
-  (R1_x*cos(q(t)) - R1_y*sin(q(t)))*(3*R1_x**2*cos(2*q(t)) - R1_x**2 -
-  6*R1_x*R1_y*sin(2*q(t)) - 3*R1_y**2*cos(2*q(t)) - R1_y**2)*Derivative(q(t), t)
 
 Field operators and other related functions
 ===========================================

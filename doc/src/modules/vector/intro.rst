@@ -2,10 +2,13 @@
 Introduction to Coordinate Systems, Vectors and Dyadics
 =======================================================
 
-A coordinate system is an abstract mathematical entity used to define
+The basics
+==========
+
+A :math:`coordinate system` is an abstract mathematical entity used to define
 the notion of directions and locations in n-dimensional spaces. This
-module deals with 3-dimensional spaces, with the conventional `\mathbf{X}`, 
-`\mathbf{Y}` and `\mathbf{Z}` directions (or axes) defined with respect 
+module deals with 3-dimensional spaces, with the conventional :math:`X`, 
+:math:`Y` and :math:`Z` directions (or axes) defined with respect 
 to each coordinate system.
 
 Each coordinate system also has a special reference point called the 
@@ -30,7 +33,7 @@ and coordinate variables/base scalars (i.e. the `\mathbf{x}`,
 `\mathbf{y}` and `\mathbf{z}` variables) corresponding to it. We will talk
 about coordinate variables in the later section on fields.
 
-The basis vectors for the `\mathbf{X}`, `\mathbf{Y}` and `\mathbf{Z}` 
+The basis vectors for the :math:`X`, :math:`Y` and :math:`Z` 
 directions can be accessed using the :mod:`i`, :mod:`j` and :mod:`k` 
 :mod:`property`'s respectively.
 
@@ -78,7 +81,7 @@ required.
   >>> Vector.zero == 2*Vector.zero
   True
 
-Few points worth noting about the :mod:`Vector` architecture in :mod:`sympy.vector`
+Two points worth noting about the :mod:`Vector` architecture in :mod:`sympy.vector`
 -----------------------------------------------------------------------------------
 
 1. All the classes shown above - :mod:`BaseVector`, :mod:`VectorMul`, 
@@ -101,9 +104,52 @@ and :mod:`/`.
   >>> (v/3)*4
   4/3*N.i + (-8/3)*N.j
 
+Other operations
+----------------
 
 In addition to the elementary mathematical operations, the vectorial 
 operations of :mod:`dot` and :mod:`cross` can also be performed on 
 :mod:`Vector`s.
 
-  >>> 
+  >>> v1 = 2*N.i + 3*N.j - N.k
+  >>> v2 = N.i - 4*N.j + N.k
+  >>> v1.dot(v2)
+  -11
+  >>> v1.cross(v2)
+  (-1)*N.i + (-3)*N.j + (-11)*N.k
+  >>> v2.cross(v1)
+  N.i + 3*N.j + 11*N.k
+
+Moreover, the outer products of vectors, leading to the formation of 
+second order tensors known as dyadics, can also be performed with
+:mod:`sympy.vector`.
+
+  >>> (N.i + 2*N.j).outer(N.k - N.i)
+  (-1)*(N.i|N.i) + (N.i|N.k) + (-2)*(N.j|N.i) + 2*(N.j|N.k)
+
+We will discuss :mod:`Dyadic`s in greater detail in a later section.
+
+SymPy operations on :mod:`Vector`s
+==================================
+
+The SymPy operations of :mod:`simplify`, :mod:`trigsimp`, :mod:`diff`,
+and :mod:`factor` work on :mod:`Vector`s, with the standard SymPy API.
+
+In essence, the methods work on the measure numbers present in the 
+provided vectorial expression.
+
+  >>> from sympy.abc import a, b, c
+  >>> from sympy import sin, cos, trigsimp, diff
+  >>> v = (a*b + a*c + b**2 + b*c)*N.i + N.j
+  >>> v.factor()
+  ((a + b)*(b + c))*N.i + N.j
+  >>> v = (sin(a)**2 + cos(a)**2)*N.i - (2*cos(b)**2 - 1)*N.k
+  >>> trigsimp(v)
+  N.i + (-cos(2*b))*N.k
+  >>> v.simplify()
+  N.i + (-cos(2*b))*N.k
+  >>> diff(v, b)
+  (4*sin(b)*cos(b))*N.k
+  >>> from sympy import Derivative
+  >>> Derivative(v, b).doit()
+  (4*sin(b)*cos(b))*N.k
