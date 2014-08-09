@@ -634,52 +634,22 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
-        if self.is_number:
-            if self.is_real is False:
-                return False
-            try:
-                # check to see that we can get a value
-                n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-            except (AttributeError, ValueError):
-                return None
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
-                return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n > 0:
-                    return True
-                return False
+        n2 = self.evalf(2, literal=True)
+        if n2 is None:
+            return
+        r, i = n2.as_real_imag()
+        if i:
+            return False
+        return bool(r > 0)
 
     def _eval_is_negative(self):
-        if self.is_number:
-            if self.is_real is False:
-                return False
-            try:
-                # check to see that we can get a value
-                n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-            except (AttributeError, ValueError):
-                return None
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
-                return False
-            if i:
-                if i._prec != 1:
-                    return False
-            elif n._prec != 1:
-                if n < 0:
-                    return True
-                return False
+        n2 = self.evalf(2, literal=True)
+        if n2 is None:
+            return
+        r, i = n2.as_real_imag()
+        if i:
+            return False
+        return bool(r < 0)
 
     def _eval_interval(self, x, a, b):
         """
