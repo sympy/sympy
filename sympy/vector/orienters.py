@@ -248,9 +248,6 @@ class SpaceOrienter(ThreeAngleOrienter):
         Space rotation is similar to Body rotation, but the rotations
         are applied in the opposite order.
 
-        Refer to the docs of BodyOrienter.__init__ for more information and
-        examples.
-
         Parameters
         ==========
 
@@ -259,6 +256,11 @@ class SpaceOrienter(ThreeAngleOrienter):
 
         rotation_order : string
             String defining the order of axes for rotation
+
+        See Also
+        ========
+
+        BodyOrienter : Orienter to orient systems wrt Euler angles.
 
         Examples
         ========
@@ -287,13 +289,9 @@ class SpaceOrienter(ThreeAngleOrienter):
         >>> axis_orienter3 = AxisOrienter(q3, N.k)
         >>> D = C.orient_new('C', (axis_orienter3, ))
 
-        docs of BodyOrienter
-        ====================
-
         """
         #Dummy initializer for docstrings
         pass
-    __init__.__doc__ += BodyOrienter.__init__.__doc__
 
 
 class QuaternionOrienter(Orienter):

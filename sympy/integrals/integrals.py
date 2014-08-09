@@ -70,6 +70,12 @@ class Integral(AddWithLimits):
         Integral(_x, (_x, x))
 
         """
+
+        #This will help other classes define their own definitions
+        #of behaviour with Integral.
+        if hasattr(function, '_eval_integral'):
+            return function._eval_integral(*symbols, **assumptions)
+
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 

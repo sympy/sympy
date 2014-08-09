@@ -16,9 +16,7 @@ class CoordSysCartesian(Basic):
     """
 
     def __new__(cls, name, location=None, rotation_matrix=None,
-                parent=None, vector_names=None, variable_names=None,
-                latex_vects=None, pretty_vects=None, latex_scalars=None,
-                pretty_scalars=None):
+                parent=None, vector_names=None, variable_names=None):
         """
         The orientation/location parameters are necessary if this system
         is being defined at a certain orientation or location wrt another.
@@ -46,16 +44,6 @@ class CoordSysCartesian(Basic):
             Iterables of 3 strings each, with custom names for base
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
-
-        latex_vects, pretty_vects : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
-        latex_scalars, pretty_scalars : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
 
         """
 
@@ -115,21 +103,16 @@ class CoordSysCartesian(Basic):
         #Initialize the base vectors
         if vector_names is None:
             vector_names = (name + '.i', name + '.j', name + '.k')
-        else:
-            _check_strings('vector_names', vector_names)
-            vector_names = list(vector_names)
-        if latex_vects is None:
             latex_vects = [(r'\mathbf{\hat{i}_{%s}}' % name),
                            (r'\mathbf{\hat{j}_{%s}}' % name),
                            (r'\mathbf{\hat{k}_{%s}}' % name)]
-        else:
-            _check_strings('latex_vects', latex_vects)
-            latex_vects = list(latex_vects)
-        if pretty_vects is None:
             pretty_vects = (name + '_i', name + '_j', name + '_k')
         else:
-            _check_strings('pretty_vects', pretty_vects)
-            pretty_vects = list(pretty_vects)
+            _check_strings('vector_names', vector_names)
+            vector_names = list(vector_names)
+            latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
+                           x in vector_names]
+            pretty_vects = [(name + '_' + x) for x in vector_names]
 
         obj._i = BaseVector(vector_names[0], 0, obj,
                             pretty_vects[0], latex_vects[0])
@@ -141,21 +124,16 @@ class CoordSysCartesian(Basic):
         #Initialize the base scalars
         if variable_names is None:
             variable_names = (name + '.x', name + '.y', name + '.z')
-        else:
-            _check_strings('variable_names', vector_names)
-            variable_names = list(variable_names)
-        if latex_scalars is None:
             latex_scalars = [(r"\mathbf{{x}_{%s}}" % name),
                              (r"\mathbf{{y}_{%s}}" % name),
                              (r"\mathbf{{z}_{%s}}" % name)]
-        else:
-            _check_strings('latex_scalars', latex_scalars)
-            latex_scalars = list(latex_scalars)
-        if pretty_scalars is None:
             pretty_scalars = (name + '_x', name + '_y', name + '_z')
         else:
-            _check_strings('pretty_scalars', pretty_scalars)
-            pretty_scalars = list(pretty_scalars)
+            _check_strings('variable_names', vector_names)
+            variable_names = list(variable_names)
+            latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
+                           x in variable_names]
+            pretty_scalars = [(name + '_' + x) for x in variable_names]
 
         obj._x = BaseScalar(variable_names[0], 0, obj,
                             pretty_scalars[0], latex_scalars[0])
@@ -350,9 +328,7 @@ class CoordSysCartesian(Basic):
         return mapping
 
     def locate_new(self, name, position, vector_names=None,
-                   variable_names=None, latex_vects=None,
-                   pretty_vects=None, latex_scalars=None,
-                   pretty_scalars=None):
+                   variable_names=None):
         """
         Returns a CoordSysCartesian with its origin located at the given
         position wrt this coordinate system's origin.
@@ -372,16 +348,6 @@ class CoordSysCartesian(Basic):
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
 
-        latex_vects, pretty_vects : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
-        latex_scalars, pretty_scalars : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
         Examples
         ========
 
@@ -396,15 +362,10 @@ class CoordSysCartesian(Basic):
         return CoordSysCartesian(name, location=position,
                                  vector_names=vector_names,
                                  variable_names=variable_names,
-                                 parent=self, latex_vects=latex_vects,
-                                 pretty_vects=pretty_vects,
-                                 latex_scalars=latex_scalars,
-                                 pretty_scalars=pretty_scalars)
+                                 parent=self)
 
     def orient_new(self, name, orienters, location=None,
-                   vector_names=None, variable_names=None,
-                   latex_vects=None, pretty_vects=None,
-                   latex_scalars=None, pretty_scalars=None):
+                   vector_names=None, variable_names=None):
         """
         Creates a new CoordSysCartesian oriented in the user-specified way
         with respect to this system.
@@ -435,16 +396,6 @@ class CoordSysCartesian(Basic):
             Iterables of 3 strings each, with custom names for base
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
-
-        latex_vects, pretty_vects : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
-        latex_scalars, pretty_scalars : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
 
         Examples
         ========
@@ -497,15 +448,10 @@ class CoordSysCartesian(Basic):
                                  vector_names=vector_names,
                                  variable_names=variable_names,
                                  location = location,
-                                 parent=self, latex_vects=latex_vects,
-                                 pretty_vects=pretty_vects,
-                                 latex_scalars=latex_scalars,
-                                 pretty_scalars=pretty_scalars)
+                                 parent=self)
 
     def orient_new_axis(self, name, angle, axis, location=None,
-                        vector_names=None, variable_names=None,
-                        latex_vects=None, pretty_vects=None,
-                        latex_scalars=None, pretty_scalars=None):
+                        vector_names=None, variable_names=None):
         """
         Axis rotation is a rotation about an arbitrary axis by
         some angle. The angle is supplied as a SymPy expr scalar, and
@@ -533,16 +479,6 @@ class CoordSysCartesian(Basic):
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
 
-        latex_vects, pretty_vects : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
-        latex_scalars, pretty_scalars : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
         Examples
         ========
 
@@ -558,17 +494,11 @@ class CoordSysCartesian(Basic):
         return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
-                               variable_names=variable_names,
-                               latex_vects=latex_vects,
-                               pretty_vects=pretty_vects,
-                               latex_scalars=latex_scalars,
-                               pretty_scalars=pretty_scalars)
+                               variable_names=variable_names)
 
     def orient_new_body(self, name, angle1, angle2, angle3,
                         rotation_order, location=None,
-                        vector_names=None, variable_names=None,
-                        latex_vects=None, pretty_vects=None,
-                        latex_scalars=None, pretty_scalars=None):
+                        vector_names=None, variable_names=None):
         """
         Body orientation takes this coordinate system through three
         successive simple rotations.
@@ -597,16 +527,6 @@ class CoordSysCartesian(Basic):
             Iterables of 3 strings each, with custom names for base
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
-
-        latex_vects, pretty_vects : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
-        latex_scalars, pretty_scalars : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
 
         Examples
         ========
@@ -645,23 +565,14 @@ class CoordSysCartesian(Basic):
         return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
-                               variable_names=variable_names,
-                               latex_vects=latex_vects,
-                               pretty_vects=pretty_vects,
-                               latex_scalars=latex_scalars,
-                               pretty_scalars=pretty_scalars)
+                               variable_names=variable_names)
 
     def orient_new_space(self, name, angle1, angle2, angle3,
                          rotation_order, location=None,
-                         vector_names=None, variable_names=None,
-                         latex_vects=None, pretty_vects=None,
-                         latex_scalars=None, pretty_scalars=None):
+                         vector_names=None, variable_names=None):
         """
         Space rotation is similar to Body rotation, but the rotations
         are applied in the opposite order.
-
-        Refer to the docs of orient_new_body for more information and
-        examples.
 
         Parameters
         ==========
@@ -685,15 +596,11 @@ class CoordSysCartesian(Basic):
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
 
-        latex_vects, pretty_vects : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
+        See Also
+        ========
 
-        latex_scalars, pretty_scalars : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
+        CoordSysCartesian.orient_new_body : method to orient via Euler
+            angles
 
         Examples
         ========
@@ -717,26 +624,16 @@ class CoordSysCartesian(Basic):
         >>> C = B.orient_new_axis('C', q2, N.j)
         >>> D = C.orient_new_axis('D', q3, N.k)
 
-        docs of orient_new_body
-        =======================
-
         """
 
         orienter = SpaceOrienter(angle1, angle2, angle3, rotation_order)
         return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
-                               variable_names=variable_names,
-                               latex_vects=latex_vects,
-                               pretty_vects=pretty_vects,
-                               latex_scalars=latex_scalars,
-                               pretty_scalars=pretty_scalars)
-    orient_new_space.__doc__ += orient_new_body.__doc__
+                               variable_names=variable_names)
 
     def orient_new_quaternion(self, name, q0, q1, q2, q3, location=None,
-                              vector_names=None, variable_names=None,
-                              latex_vects=None, pretty_vects=None,
-                              latex_scalars=None, pretty_scalars=None):
+                              vector_names=None, variable_names=None):
         """
         Quaternion orientation orients the new CoordSysCartesian with
         Quaternions, defined as a finite rotation about lambda, a unit
@@ -767,16 +664,6 @@ class CoordSysCartesian(Basic):
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
 
-        latex_vects, pretty_vects : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
-        latex_scalars, pretty_scalars : iterable(optional)
-            Iterables of 3 strings each, with custom LaTeX and Pretty-
-            printing string representations for the base vectors
-            corresponding to the new CoordSysCartesian.
-
         Examples
         ========
 
@@ -792,11 +679,7 @@ class CoordSysCartesian(Basic):
         return self.orient_new(name, orienter,
                                location=location,
                                vector_names=vector_names,
-                               variable_names=variable_names,
-                               latex_vects=latex_vects,
-                               pretty_vects=pretty_vects,
-                               latex_scalars=latex_scalars,
-                               pretty_scalars=pretty_scalars)
+                               variable_names=variable_names)
 
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
