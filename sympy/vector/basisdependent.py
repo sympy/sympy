@@ -104,7 +104,7 @@ class BasisDependent(Expr):
     def _eval_derivative(self, wrt):
         return self.diff(wrt)
 
-    def _eval_integral(self, *symbols, **assumptions):
+    def _eval_Integral(self, *symbols, **assumptions):
         integral_components = [Integral(v, *symbols, **assumptions) * k
                                for k, v in self.components.items()]
         return self._add_func(*integral_components)

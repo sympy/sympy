@@ -73,8 +73,8 @@ class Integral(AddWithLimits):
 
         #This will help other classes define their own definitions
         #of behaviour with Integral.
-        if hasattr(function, '_eval_integral'):
-            return function._eval_integral(*symbols, **assumptions)
+        if hasattr(function, '_eval_Integral'):
+            return function._eval_Integral(*symbols, **assumptions)
 
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
