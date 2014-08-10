@@ -1846,20 +1846,24 @@ def test_sympy__logic__FOL__Applied():
 
 def test_sympy__logic__FOL__Predicate():
     from sympy.logic.FOL import Predicate
+    assert _test_args(Predicate('P'))
 
 
-@SKIP("abstract class")
 def test_sympy__logic__FOL__AppliedPredicate():
-    pass
+    from sympy.logic.FOL import Predicate
+    P = Predicate('P')
+    assert _test_args(P(x, y))
 
 
 def test_sympy__logic__FOL__Function():
     from sympy.logic.FOL import Function
+    assert _test_args(Function('f'))
 
 
-@SKIP("abstract class")
 def test_sympy__logic__FOL__AppliedFunction():
-    pass
+    from sympy.logic.FOL import Function
+    f = Function('f')
+    assert _test_args(f(x, y))
 
 
 def test_sympy__logic__FOL__Constant():
@@ -1872,11 +1876,17 @@ def test_sympy__logic__FOL__Quantifier():
 
 
 def test_sympy__logic__FOL__ForAll():
-    from sympy.logic.FOL import ForAll
+    from sympy.logic.FOL import ForAll, Predicate
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert _test_args(ForAll(x, ForAll(y, P(x, y) >> Q(x, y))))
 
 
 def test_sympy__logic__FOL__Exists():
-    from sympy.logic.FOL import Exists
+    from sympy.logic.FOL import Exists, Predicate
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert _test_args(Exists(x, Exists(y, P(x, y) >> Q(x, y))))
 
 
 def test_sympy__matrices__matrices__DeferredVector():

@@ -160,7 +160,6 @@ class Constant(Boolean):
     """
     Creates a constant with the given value.
     """
-    is_Constant = True
 
     def __new__(cls, name, **kwargs):
         if isinstance(name, cls):
@@ -425,7 +424,7 @@ def standardize(expr, variables=None):
     >>> standardize(ForAll(X, P(X) & Q(X)) | ForAll(X, Q(X) >> P(X)))
     Or(ForAll((X), And(P(X), Q(X))), ForAll((X0), Implies(Q(X0), P(X0))))
     """
-    return _standardize(expr, {})
+    return _standardize(expr, {}, variables)
 
 
 def _standardize(expr, var_set, variables=None):
@@ -434,18 +433,17 @@ def _standardize(expr, var_set, variables=None):
         """ Adds variables to var_set and returns subsitutions to be made. """
         d = {}
         for var in vars:
-            if variables is None:
-                if var in var_set:
+            if var in var_set:
+                if variables is None:
                     if not var_set[var]:
                         var_set[var] = numbered_symbols(var.name)
                     v = next(var_set[var])
                     d[var] = v
                 else:
-                    var_set[var] = None
-                    d[var] = var
-            else:
-                if var in var_set:
                     d[var] = next(variables)
+            else:
+                var_set[var] = None
+                d[var] = var
         return d
 
     if not isinstance(expr, BooleanFunction):
@@ -470,18 +468,19 @@ def _standardize(expr, var_set, variables=None):
         args = []
         for arg in expr.args:
             if isinstance(arg, cls):
-                a = _standardize(arg.expr, var_set)
+                a = _standardize(arg.expr, var_set, variables)
                 args.append(arg.func(arg.vars, a))
             else:
-                args.append(_standardize(arg, var_set))
+                args.append(_standardize(arg, var_set, variables))
         return expr.func(*args)
 
     if isinstance(expr, Quantifier):
         d = update_var_set(expr.vars)
-        e = _standardize(expr.expr, var_set)
+        e = _standardize(expr.expr, var_set, variables)
         return expr.func(d.values(), e.subs(d))
 
-    return expr.func(*[_standardize(arg, var_set) for arg in expr.args])
+    return expr.func(*[_standardize(arg, var_set, variables)
+                                        for arg in expr.args])
 
 
 def to_pnf(expr, variables=None):
@@ -571,10 +570,10 @@ def to_snf(expr, functions=None, variables=None, constants=None):
 
     Parameters
     ==========
-    expr:      The formula to be converted to SNF.
-    functions:  Generator for Skolem Functions.
-    variables:  Ganerator for new variables for standardization.
-    Constants:  Generator for Skolem Constants.
+    expr:       The formula to be converted to SNF.
+    functions:  Generator/ Iterator for Skolem Functions.
+    variables:  Generator/ Iterator for new variables for standardization.
+    Constants:  Generator/ Iterator for Skolem Constants.
 
 
     Examples
@@ -587,13 +586,14 @@ def to_snf(expr, functions=None, variables=None, constants=None):
     >>> to_snf(ForAll(X, P(X) | Exists(Y, R(X, Y))))
     Or(P(X), R(X, f0(X)))
 
+
     References
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Skolem_normal_form
     """
 
-    expr = to_pnf(expr)
+    expr = to_pnf(expr, variables)
     var_list = []
 
     if functions is None:

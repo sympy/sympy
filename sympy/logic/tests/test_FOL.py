@@ -141,6 +141,8 @@ def test_to_pnf():
                 ForAll(X, P(X) & Q(X))
     assert to_pnf(Exists(X, P(X)) | Exists(X, Q(X))) == \
                 Exists(X, P(X) | Q(X))
+    assert to_pnf(ForAll(X, P(X)) >> ForAll(X, Q(X)), iter([Y])) == \
+                ForAll((X), Exists((Y), ~P(Y) | Q(X)))
 
 
 def test_to_snf():
@@ -149,17 +151,22 @@ def test_to_snf():
     Q = Predicate('Q')
     f0 = Function('f0')
     f1 = Function('f1')
+    F = Function('F')
     c0 = Constant('c0')
+    C = Constant('C')
     assert to_snf(ForAll((X, Y), P(X) >> Q(Y))) == ~P(X) | Q(Y)
     assert to_snf(Exists(X, ForAll(Y, P(X) | Q(Y)))) == P(c0) | Q(Y)
     assert to_snf(ForAll(X, Exists(Y, P(X) & Q(Y)))) == P(X) & Q(f0(X))
     assert to_snf(ForAll(W, Exists(X, ForAll(Y, Exists(Z, P(W, X) >>
         Q(Y, Z)))))) == ~P(W, f0(W)) | Q(Y, f1(W, Y))
+    assert to_snf(Exists(X, ForAll(Y, Exists(Z, P(X) | P(Y) | P(Z)))),
+        functions=iter([F]), constants=iter([C])) == P(C) | P(Y) | P(F(Y))
 
 
 def test_to_cnf():
     P = Predicate('P')
     Q = Predicate('Q')
+    assert to_cnf(P(X) | Q(X) | P(Y) | Q(Y)) == P(X) | Q(X) | P(Y) | Q(Y)
     assert to_cnf((P(X) & Q(X)) | (P(Y) & Q(Y))) == \
         (P(X) | P(Y)) & (P(X) | Q(Y)) & (Q(X) | P(Y)) & (Q(X) | Q(Y))
 
@@ -167,6 +174,7 @@ def test_to_cnf():
 def test_to_dnf():
     P = Predicate('P')
     Q = Predicate('Q')
+    assert to_dnf(P(X) & Q(X) & P(Y) & Q(Y)) == P(X) & Q(X) & P(Y) & Q(Y)
     assert to_dnf((P(X) | Q(X)) & (P(Y) | Q(Y))) == \
         (P(X) & P(Y)) | (P(X) & Q(Y)) | (Q(X) & P(Y)) | (Q(X) & Q(Y))
 
