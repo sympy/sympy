@@ -85,10 +85,10 @@ class FCodePrinter(CodePrinter):
         return codestring
 
     def _get_comment(self, text):
-        return "! {:}".format(text)
+        return "! {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "parameter ({:} = {:})".format(name, value)
+        return "parameter ({0} = {1})".format(name, value)
 
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
@@ -151,7 +151,7 @@ class FCodePrinter(CodePrinter):
                                       "standards earlier than Fortran95.")
 
     def _print_MatrixElement(self, expr):
-        return "{:}({:}, {:})".format(expr.parent, expr.i + 1, expr.j + 1)
+        return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.

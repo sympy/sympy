@@ -57,10 +57,10 @@ class CCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {:}".format(text)
+        return "// {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "double const {:} = {:};".format(name, value)
+        return "double const {0} = {1};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -167,7 +167,7 @@ class CCodePrinter(CodePrinter):
         return CodePrinter._print_Function(self, expr)
 
     def _print_MatrixElement(self, expr):
-        return "{:}[{:}][{:}]".format(expr.parent, expr.i, expr.j)
+        return "{0}[{1}][{2}]".format(expr.parent, expr.i, expr.j)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

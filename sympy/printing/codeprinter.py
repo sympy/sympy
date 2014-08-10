@@ -105,7 +105,7 @@ class CodePrinter(StrPrinter):
         if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("{:} cannot assign to object of type {:}".format(
+            raise TypeError("{0} cannot assign to object of type {1}".format(
                     type(self).__name__, type(assign_to)))
 
         if assign_to:
@@ -123,7 +123,7 @@ class CodePrinter(StrPrinter):
             frontlines = []
             if len(self._not_supported) > 0:
                 frontlines.append(self._get_comment(
-                        "Not supported in {:}:".format(self.language)))
+                        "Not supported in {0}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
                     frontlines.append(self._get_comment(type(expr).__name__))
             for name, value in sorted(self._number_symbols, key=str):
