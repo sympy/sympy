@@ -162,8 +162,6 @@ class ExprWithLimits(Expr):
 
     @property
     def free_symbols(self):
-        if self.function.is_zero:
-            return set()
         return self._free_symbols()
 
     def as_dummy(self):
