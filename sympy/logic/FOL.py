@@ -15,7 +15,7 @@ from sympy.utilities.iterables import numbered_symbols
 
 class FOL(BooleanFunction):
     """
-    Base class for all First Order Logic
+    Abstract base class for all First Order Logic
     """
 
     def to_nnf(self, simplify=True):
@@ -23,6 +23,9 @@ class FOL(BooleanFunction):
 
 
 class Callable(FOL):
+    """
+    Abstract base class for Predicate and Function.
+    """
 
     def __init__(self, name):
         self._name = name
@@ -41,6 +44,11 @@ class Callable(FOL):
 
     @classmethod
     def apply(cls):
+        """
+        Returns the 'Applied' version of the class.
+        This method is intended to be overridden by the subclass
+        returning the corresponding applied class.
+        """
         raise NotImplementedError()
 
     @property
@@ -49,6 +57,9 @@ class Callable(FOL):
 
 
 class Applied(FOL):
+    """
+    Abstract base class for AppliedPredicate and AppliedFunction.
+    """
 
     def __init__(self, func, *args):
         if not args:
@@ -74,6 +85,12 @@ class Applied(FOL):
 
     @property
     def func(self):
+        """
+        Returns the class from which the given class was applied.
+        This functionality is different from the usual SymPy convention.
+        This is necessary so that methods like 'subs' which recreate the
+        object using the 'func' method can work as intended.
+        """
         return self._func
 
 
@@ -100,7 +117,11 @@ class Predicate(Callable):
 
 
 class AppliedPredicate(Applied):
-    pass
+    """
+    Applied version of Predicate.
+    All AppliedPredicate objects are intended to be created by
+    calling the corresponding 'Predicate' object with arguments.
+    """
 
 
 class Function(Callable):
@@ -127,7 +148,11 @@ class Function(Callable):
 
 
 class AppliedFunction(Applied):
-    pass
+    """
+    Applied version of Predicate.
+    All AppliedFunction objects are intended to be created by
+    calling the corresponding 'Function' object with arguments.
+    """
 
 
 class Constant(Boolean):
@@ -453,9 +478,21 @@ def _standardize(expr, var_set):
     return expr.func(*[_standardize(arg, var_set) for arg in expr.args])
 
 
-def to_pnf(expr):
+def to_pnf(expr, functions=None, variables=None, constants=None):
     """
     Converts the given FOL expression into Prenex Normal Form.
+    A FOL formula is in Prenex Normal Form if it can be expressed as
+    a collection of quantifiers (prefix) followed by a quantifier-free
+    expr (matrix). The expr in PNF is equivalent to the given formula.
+
+
+    Parameters
+    ==========
+    expr1:      The formula to be converted to PNF.
+    functions:  Generator for Skolem Functions.
+    variables:  Ganerator for variables to be standardized.
+    Constants:  Generator for Skolem Constants.
+
 
     Examples
     ========
@@ -520,11 +557,16 @@ def _to_pnf(expr):
     raise ValueError()
 
 
-def to_snf(expr):
+def to_snf(expr, functions=None, constants=None):
     """
     Converts the given FOL expression into Skolem Normal Form.
+    A FOL formula is in Skolem Normal Form if it is in PNF with
+    no existential quantifier and all existentially quantified
+    variables replaced by Skolem functions/ constants.
+
     The formula in SNF is only equisatisfiable to the original
-    formula and not necessarily equivalent.
+    formula (satisfiable if and only if original formula is
+    satisfiable) and not necessarily equivalent (same truth table).
 
     Examples
     ========
@@ -686,7 +728,9 @@ def mgu(expr1, expr2):
 
 def resolve(*expr):
     """
-    Returns the resolution of given set of FOL formulas.
+    Returns the resolution of set of given FOL formulas.
+    Resolution in FOL is a refutation-complete inference system
+    that gives the (un)satisfiability of a set of clauses.
 
     Examples
     ========

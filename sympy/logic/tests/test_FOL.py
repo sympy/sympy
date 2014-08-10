@@ -218,3 +218,25 @@ def test_entails():
     ]
     assert entails(Sibling(John, Fred), clauses) is True
     assert entails(~Sibling(John, Fred), clauses) is False
+
+    Dog = Predicate('Dog')
+    AnimalLover = Predicate('AnimalLover')
+    Kills = Predicate('Kills')
+    Owns = Predicate('Owns')
+    Cat = Predicate('Cat')
+    Animal = Predicate('Animal')
+    D = Constant('D')
+    Jack = Constant('Jack')
+    Tuna = Constant('Tuna')
+    Curiosity = Constant('Curiosity')
+    clauses = [
+        ForAll((X, Y), (Dog(Y) & Owns(X, Y)) >> AnimalLover(X)),
+        ForAll((X, Y), (AnimalLover(X) & Animal(Y)) >> ~Kills(X, Y)),
+        ForAll(X, Cat(X) >> Animal(X)),
+        ForAll(X, Cat(X) >> (Kills(Jack, X) | Kills(Curiosity, X))),
+        Dog(D),
+        Cat(Tuna),
+        Owns(Jack, D)
+    ]
+    assert entails(Kills(Jack, Tuna), clauses) is False
+    assert entails(Kills(Curiosity, Tuna), clauses) is True

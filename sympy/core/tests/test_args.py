@@ -1829,6 +1829,56 @@ def test_sympy__logic__boolalg__Xor():
     assert _test_args(Xor(x, y, 2))
 
 
+@SKIP("abstract class")
+def test_sympy__logic__FOL__FOL():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__Callable():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__Applied():
+    pass
+
+
+def test_sympy__logic__FOL__Predicate():
+    from sympy.logic.FOL import Predicate
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__AppliedPredicate():
+    pass
+
+
+def test_sympy__logic__FOL__Function():
+    from sympy.logic.FOL import Function
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__AppliedFunction():
+    pass
+
+
+def test_sympy__logic__FOL__Constant():
+    from sympy.logic.FOL import Constant
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__Quantifier():
+    pass
+
+
+def test_sympy__logic__FOL__ForAll():
+    from sympy.logic.FOL import ForAll
+
+
+def test_sympy__logic__FOL__Exists():
+    from sympy.logic.FOL import Exists
+
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
