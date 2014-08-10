@@ -206,6 +206,10 @@ def ccode(expr, assign_to=None, **settings):
 
         expr : sympy.core.Expr
             a sympy expression to be converted
+        assign_to : optional
+            When given, the argument is used as the name of the
+            variable to which the Fortran expression is assigned.
+            (This is helpful in case of line-wrapping.)
         precision : optional
             the precision for numbers such as pi [default=15]
         user_functions : optional

@@ -4,6 +4,7 @@ from sympy.utilities.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
+from sympy.matrices import Matrix, MatrixSymbol
 
 # import test
 from sympy import jscode
@@ -327,3 +328,42 @@ def test_jscode_loops_multiple_terms():
             c == s0 + s2 + s3 + s1[:-1] or
             c == s0 + s3 + s1 + s2[:-1] or
             c == s0 + s3 + s2 + s1[:-1])
+
+def test_Matrix_codegen():
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert jscode(mat, A) == (
+        "A[0][0] = x*y;\n"
+        "if (y > 0) {\n"
+        "   A[1][0] = x + 2;\n"
+        "}\n"
+        "else {\n"
+        "   A[1][0] = y;\n"
+        "}\n"
+        "A[2][0] = Math.sin(z);")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert jscode(expr) == (
+        "((x > 0) ? (\n"
+        "   2*A[2][0]\n"
+        ")\n"
+        ": (\n"
+        "   A[2][0]\n"
+        ")) + Math.sin(A[1][0]) + A[0][0]")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert jscode(m, M) == (
+        "M[0][0] = Math.sin(q[1][0]);\n"
+        "M[0][1] = 0;\n"
+        "M[0][2] = Math.cos(q[2][0]);\n"
+        "M[1][0] = q[1][0] + q[2][0];\n"
+        "M[1][1] = q[3][0];\n"
+        "M[1][2] = 5;\n"
+        "M[2][0] = 2*q[4][0]*1/q[1][0];\n"
+        "M[2][1] = 4 + Math.sqrt(q[0][0]);\n"
+        "M[2][2] = 0;")

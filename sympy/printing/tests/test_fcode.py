@@ -10,6 +10,7 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import xrange
+from sympy.matrices import Matrix, MatrixSymbol
 
 
 def test_printmethod():
@@ -632,3 +633,37 @@ def test_indent():
     p = FCodePrinter({'source_format': 'free'})
     result = p.indent_code(codelines)
     assert result == expected
+
+def test_Matrix_codegen():
+    x, y, z = symbols('x,y,z')
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert fcode(mat, A) == (
+        "      A(1, 1) = x*y\n"
+        "      if (y > 0) then\n"
+        "         A(2, 1) = x + 2\n"
+        "      else\n"
+        "         A(2, 1) = y\n"
+        "      end if\n"
+        "      A(3, 1) = sin(z)")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert fcode(expr, standard=95) == (
+        "      merge(2*A(3, 1), A(3, 1), x > 0) + sin(A(2, 1)) + A(1, 1)")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert fcode(m, M) == (
+        "      M(1, 1) = sin(q(2, 1))\n"
+        "      M(2, 1) = q(2, 1) + q(3, 1)\n"
+        "      M(3, 1) = 2*q(5, 1)*1.0/q(2, 1)\n"
+        "      M(1, 2) = 0\n"
+        "      M(2, 2) = q(4, 1)\n"
+        "      M(3, 2) = 4 + sqrt(q(1, 1))\n"
+        "      M(1, 3) = cos(q(3, 1))\n"
+        "      M(2, 3) = 5\n"
+        "      M(3, 3) = 0")

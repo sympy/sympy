@@ -5,6 +5,7 @@ from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
+from sympy.core.sympify import _sympify
 
 
 class AssignmentError(Exception):
@@ -13,11 +14,67 @@ class AssignmentError(Exception):
     """
     pass
 
-class Assignment(C.Equality):
+
+class Assignment(C.Relational):
     """
     Represents variable assignment for code generation.
+
+    Parameters
+    ----------
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    rhs : Expr
+        Sympy object representing the rhs of the expression. This can be any
+        type, provided its shape corresponds to that of the lhs. For example,
+        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
+        the dimensions will not align.
+
+    Examples
+    --------
+
+    >>> from sympy import symbols, MatrixSymbol, Matrix
+    >>> from sympy.printing.codeprinter import Assignment
+    >>> x, y, z = symbols('x, y, z')
+    >>> Assignment(x, y)
+    x := y
+    >>> Assignment(x, 0)
+    x := 0
+    >>> A = MatrixSymbol('A', 1, 3)
+    >>> mat = Matrix([x, y, z]).T
+    >>> Assignment(A, mat)
+    A := Matrix([[x, y, z]])
+    >>> Assignment(A[0, 1], x)
+    A[0, 1] := x
     """
-    pass
+
+    rel_op = ':='
+    __slots__ = []
+
+    def __new__(cls, lhs, rhs=0, **assumptions):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (C.Symbol, C.MatrixSymbol, C.MatrixElement, C.Indexed)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        # Indexed types implement shape, but don't define it until later. This
+        # causes issues in assignment validation. For now, matrices are defined
+        # as anything with a shape that is not an Indexed
+        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, C.Indexed)
+        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, C.Indexed)
+        # If lhs and rhs have same structure, then this assignment is ok
+        if lhs_is_mat:
+            if not rhs_is_mat:
+                raise ValueError("Cannot assign a scalar to a matrix.")
+            elif lhs.shape != rhs.shape:
+                raise ValueError("Dimensions of lhs and rhs don't align.")
+        elif rhs_is_mat and not lhs_is_mat:
+            raise ValueError("Cannot assign a matrix to a scalar.")
+        return C.Relational.__new__(cls, lhs, rhs, **assumptions)
 
 
 class CodePrinter(StrPrinter):
