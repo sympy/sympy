@@ -3,10 +3,10 @@ from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.functions import express
 from sympy.vector.basisdependent import BasisDependent, \
      BasisDependentAdd, BasisDependentMul, BasisDependentZero
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
+from sympy.core.compatibility import u
 
 
 class Vector(BasisDependent):
@@ -90,6 +90,7 @@ class Vector(BasisDependent):
 
         """
 
+        from sympy.vector.functions import express
         #Check special cases
         if isinstance(other, Dyadic):
             if isinstance(self, VectorZero):
@@ -313,7 +314,7 @@ class BaseVector(Vector, AtomicExpr):
     Class to denote a base vector.
     """
 
-    def __new__(cls, name, index, system):
+    def __new__(cls, name, index, system, pretty_str, latex_str):
         #Verify arguments
         if not index in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
@@ -329,6 +330,8 @@ class BaseVector(Vector, AtomicExpr):
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
         obj._name = name
+        obj._pretty_form = u(pretty_str)
+        obj._latex_form = latex_str
         obj._system = system
 
         assumptions = {}
@@ -364,7 +367,9 @@ class VectorAdd(BasisDependentAdd, Vector):
 
     def __str__(self, printer=None):
         ret_str = ''
-        for system, vect in self.separate().items():
+        items = list(self.separate().items())
+        items.sort(key = lambda x: x[0].__str__())
+        for system, vect in items:
             base_vects = system.base_vectors()
             for x in base_vects:
                 if x in vect.components:
@@ -404,6 +409,8 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
+    _pretty_form = u('0')
+    _latex_form = '\mathbf{\hat{0}}'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)

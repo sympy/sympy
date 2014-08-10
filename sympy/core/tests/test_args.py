@@ -3275,7 +3275,7 @@ def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
-    assert _test_args(BaseVector('Ci', 0, C))
+    assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
 
 
 def test_sympy__vector__vector__VectorAdd():
@@ -3348,8 +3348,41 @@ def test_sympy__vector__deloperator__Del():
     assert _test_args(Del(C))
 
 
+def test_sympy__vector__orienters__Orienter():
+    from sympy.vector.orienters import Orienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__ThreeAngleOrienter():
+    from sympy.vector.orienters import ThreeAngleOrienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__AxisOrienter():
+    from sympy.vector.orienters import AxisOrienter
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(AxisOrienter(x, C.i))
+
+
+def test_sympy__vector__orienters__BodyOrienter():
+    from sympy.vector.orienters import BodyOrienter
+    assert _test_args(BodyOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__SpaceOrienter():
+    from sympy.vector.orienters import SpaceOrienter
+    assert _test_args(SpaceOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__QuaternionOrienter():
+    from sympy.vector.orienters import QuaternionOrienter
+    a, b, c, d = symbols('a b c d')
+    assert _test_args(QuaternionOrienter(a, b, c, d))
+
+
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
-    assert _test_args(BaseScalar('Cx', 0, C))
+    assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))

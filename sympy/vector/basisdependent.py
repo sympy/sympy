@@ -1,7 +1,7 @@
 from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
-from sympy import factor as fctr, diff as df
+from sympy import factor as fctr, diff as df, Integral
 from sympy.core import S, Add, Mul, count_ops
 from sympy.core.expr import Expr
 
@@ -103,6 +103,11 @@ class BasisDependent(Expr):
 
     def _eval_derivative(self, wrt):
         return self.diff(wrt)
+
+    def _eval_Integral(self, *symbols, **assumptions):
+        integral_components = [Integral(v, *symbols, **assumptions) * k
+                               for k, v in self.components.items()]
+        return self._add_func(*integral_components)
 
     def _eval_diff(self, *args, **kwargs):
         return self.diff(*args, **kwargs)
