@@ -622,7 +622,7 @@ def test_is_number():
 def test_free_symbols():
     for func in [Sum, Product]:
         assert func(1, (x, 1, 2)).free_symbols == set()
-        assert func(0, (x, 1, y)).free_symbols == set()
+        assert func(0, (x, 1, y)).free_symbols == set([y])
         assert func(2, (x, 1, y)).free_symbols == set([y])
         assert func(x, (x, 1, 2)).free_symbols == set()
         assert func(x, (x, 1, y)).free_symbols == set([y])
@@ -635,7 +635,9 @@ def test_free_symbols():
         assert func(x, (x, 1, y), (y, 1, y)).free_symbols == set([y])
         assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
-    assert Product(1, (x, 1, y)).free_symbols == set()
+    # free_symbols answers whether the object *as written* has free symbols,
+    # not whether the evaluated expression has free symbols
+    assert Product(1, (x, 1, y)).free_symbols == set([y])
 
 
 def test_conjugate_transpose():

@@ -216,8 +216,6 @@ class Product(ExprWithIntLimits):
         >>> Product(x, (x, y, 1)).free_symbols
         set([y])
         """
-        if self.function.is_zero or self.function == 1:
-            return set()
         return self._free_symbols()
 
     @property
