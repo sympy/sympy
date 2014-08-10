@@ -55,7 +55,7 @@ class BasisDependent(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    def evalf(self, *args):
+    def evalf(self, prec=None, **options):
         """
         Implements the SymPy evalf routine for this quantity.
 
@@ -65,7 +65,7 @@ class BasisDependent(Expr):
         """
         vec = self.zero
         for k, v in self.components.items():
-            vec += v.evalf(*args) * k
+            vec += v.evalf(prec, **options) * k
         return vec
     evalf.__doc__ += Expr.evalf.__doc__
 

@@ -1286,6 +1286,8 @@ class EvalfMixin(object):
                 Print debug information (default=False)
 
         """
+        n = n if n is not None else 15
+
         # for sake of sage that doesn't like evalf(1)
         if n == 1 and isinstance(self, C.Number):
             from sympy.core.expr import _mag
