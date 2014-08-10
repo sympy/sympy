@@ -20,12 +20,18 @@ class AskIntegerHandler(CommonHandler):
     def _number(expr, assumptions):
         # helper method
         try:
-            i = int(expr.round())
-            if not (expr - i).equals(0):
-                raise TypeError
-            return True
-        except TypeError:
-            return False
+            # let as_real_imag() work first since the expression may
+            # be simpler to evaluate
+            r, i = expr.as_real_imag()
+            i = i.evalf(2, literal=True)
+            if i is None:
+                return
+            if i != 0:
+                return False
+            n = int(r.round())
+            return (r - n).equals(0)
+        except (AttributeError, TypeError):
+            return None
 
     @staticmethod
     def Add(expr, assumptions):
@@ -34,8 +40,9 @@ class AskIntegerHandler(CommonHandler):
         Integer + !Integer      -> !Integer
         !Integer + !Integer -> ?
         """
-        if expr.is_number:
-            return AskIntegerHandler._number(expr, assumptions)
+        rv = AskIntegerHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
         return test_closed_group(expr, assumptions, Q.integer)
 
     @staticmethod
@@ -46,8 +53,9 @@ class AskIntegerHandler(CommonHandler):
         Odd/Even             -> !Integer
         Integer*Rational     -> ?
         """
-        if expr.is_number:
-            return AskIntegerHandler._number(expr, assumptions)
+        rv = AskIntegerHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
         _output = True
         for arg in expr.args:
             if not ask(Q.integer(arg), assumptions):
@@ -107,10 +115,16 @@ class AskRationalHandler(CommonHandler):
         Rational + !Rational    -> !Rational
         !Rational + !Rational   -> ?
         """
-        if expr.is_number:
-            if expr.as_real_imag()[1]:
-                return False
-        return test_closed_group(expr, assumptions, Q.rational)
+        # let as_real_imag() work first since the expression may
+        # be simpler to evaluate
+        r, i = expr.as_real_imag()
+        i = i.evalf(2, literal=True)
+        if i:
+            return False
+        elif i is None:
+            r = expr
+
+        return test_closed_group(r, assumptions, Q.rational)
 
     Mul = Add
 
@@ -179,8 +193,8 @@ class AskRealHandler(CommonHandler):
     def _number(expr, assumptions):
         # let as_real_imag() work first since the expression may
         # be simpler to evaluate
-        i = expr.as_real_imag()[1].evalf(2)
-        if i._prec != 1:
+        i = expr.as_real_imag()[1].evalf(2, literal=True)
+        if i is not None:
             return not i
         # allow None to be returned if we couldn't show for sure
         # that i was 0
@@ -191,8 +205,9 @@ class AskRealHandler(CommonHandler):
         Real + Real              -> Real
         Real + (Complex & !Real) -> !Real
         """
-        if expr.is_number:
-            return AskRealHandler._number(expr, assumptions)
+        rv = AskRealHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
         return test_closed_group(expr, assumptions, Q.real)
 
     @staticmethod
@@ -202,8 +217,10 @@ class AskRealHandler(CommonHandler):
         Real*Imaginary          -> !Real
         Imaginary*Imaginary     -> Real
         """
-        if expr.is_number:
-            return AskRealHandler._number(expr, assumptions)
+        rv = AskRealHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         result = True
         for arg in expr.args:
             if ask(Q.real(arg), assumptions):
@@ -228,8 +245,9 @@ class AskRealHandler(CommonHandler):
         b**Imaginary               -> Real if log(b) is imaginary and b != 0 and exponent != integer multiple of I*pi/log(b)
         Real**Real                 -> ? e.g. sqrt(-1) is imaginary and sqrt(2) is not
         """
-        if expr.is_number:
-            return AskRealHandler._number(expr, assumptions)
+        rv = AskRealHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
 
         if expr.base.func == C.exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
@@ -326,8 +344,10 @@ class AskHermitianHandler(AskRealHandler):
         Hermitian + Hermitian  -> Hermitian
         Hermitian + !Hermitian -> !Hermitian
         """
-        if expr.is_number:
-            return AskRealHandler._number(expr, assumptions)
+        rv = AskRealHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         return test_closed_group(expr, assumptions, Q.hermitian)
 
     @staticmethod
@@ -338,8 +358,10 @@ class AskHermitianHandler(AskRealHandler):
         Hermitian*Antihermitian     -> !Hermitian
         Antihermitian*Antihermitian -> Hermitian
         """
-        if expr.is_number:
-            return AskRealHandler._number(expr, assumptions)
+        rv = AskRealHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         nccount = 0
         result = True
         for arg in expr.args:
@@ -359,8 +381,10 @@ class AskHermitianHandler(AskRealHandler):
         """
         Hermitian**Integer -> Hermitian
         """
-        if expr.is_number:
-            return AskRealHandler._number(expr, assumptions)
+        rv = AskRealHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         if ask(Q.hermitian(expr.base), assumptions):
             if ask(Q.integer(expr.exp), assumptions):
                 return True
@@ -408,8 +432,8 @@ class AskImaginaryHandler(CommonHandler):
     def _number(expr, assumptions):
         # let as_real_imag() work first since the expression may
         # be simpler to evaluate
-        r = expr.as_real_imag()[0].evalf(2)
-        if r._prec != 1:
+        r = expr.as_real_imag()[0].evalf(2, literal=True)
+        if r is not None:
             return not r
         # allow None to be returned if we couldn't show for sure
         # that r was 0
@@ -421,8 +445,9 @@ class AskImaginaryHandler(CommonHandler):
         Imaginary + Complex   -> ?
         Imaginary + Real      -> !Imaginary
         """
-        if expr.is_number:
-            return AskImaginaryHandler._number(expr, assumptions)
+        rv = AskImaginaryHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
 
         reals = 0
         for arg in expr.args:
@@ -445,8 +470,10 @@ class AskImaginaryHandler(CommonHandler):
         Real*Imaginary      -> Imaginary
         Imaginary*Imaginary -> Real
         """
-        if expr.is_number:
-            return AskImaginaryHandler._number(expr, assumptions)
+        rv = AskImaginaryHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         result = False
         reals = 0
         for arg in expr.args:
@@ -472,8 +499,9 @@ class AskImaginaryHandler(CommonHandler):
         Real**Integer           -> Real
         Real**Positive          -> Real
         """
-        if expr.is_number:
-            return AskImaginaryHandler._number(expr, assumptions)
+        rv = AskImaginaryHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
 
         if expr.base.func == C.exp:
             if ask(Q.imaginary(expr.base.args[0]), assumptions):
@@ -550,8 +578,10 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
         Antihermitian + Antihermitian  -> Antihermitian
         Antihermitian + !Antihermitian -> !Antihermitian
         """
-        if expr.is_number:
-            return AskImaginaryHandler._number(expr, assumptions)
+        rv = AskImaginaryHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         return test_closed_group(expr, assumptions, Q.antihermitian)
 
     @staticmethod
@@ -562,8 +592,10 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
         Hermitian*Antihermitian     -> Antihermitian
         Antihermitian*Antihermitian -> !Antihermitian
         """
-        if expr.is_number:
-            return AskImaginaryHandler._number(expr, assumptions)
+        rv = AskImaginaryHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         nccount = 0
         result = False
         for arg in expr.args:
@@ -585,8 +617,10 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
         Antihermitian**Even -> !Antihermitian
         Antihermitian**Odd  -> Antihermitian
         """
-        if expr.is_number:
-            return AskImaginaryHandler._number(expr, assumptions)
+        rv = AskImaginaryHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         if ask(Q.hermitian(expr.base), assumptions):
             if ask(Q.integer(expr.exp), assumptions):
                 return False

@@ -19,27 +19,28 @@ class AskPrimeHandler(CommonHandler):
 
     @staticmethod
     def _number(expr, assumptions):
-        # helper method
         try:
-            i = int(expr.round())
-            if not (expr - i).equals(0):
-                raise TypeError
-        except TypeError:
-            return False
-        return isprime(i)
+            r, i = expr.as_real_imag()
+            i = i.evalf(2, literal=True)
+            if i is None:
+                return
+            if i != 0:
+                return False
+            n = int(r.round())
+            ok = (r - n).equals(0)
+            return isprime(n) if ok else ok
+        except (AttributeError, TypeError):
+            return None
 
     @staticmethod
     def Basic(expr, assumptions):
-        # Just use int(expr) once
-        # https://github.com/sympy/sympy/issues/4561
-        # is solved
-        if expr.is_number:
-            return AskPrimeHandler._number(expr, assumptions)
+        return AskPrimeHandler._number(expr, assumptions)
 
     @staticmethod
     def Mul(expr, assumptions):
-        if expr.is_number:
-            return AskPrimeHandler._number(expr, assumptions)
+        rv = AskPrimeHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
         for arg in expr.args:
             if ask(Q.integer(arg), assumptions):
                 pass
@@ -54,8 +55,9 @@ class AskPrimeHandler(CommonHandler):
         """
         Integer**Integer     -> !Prime
         """
-        if expr.is_number:
-            return AskPrimeHandler._number(expr, assumptions)
+        rv = AskPrimeHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
         if ask(Q.integer(expr.exp), assumptions) and \
                 ask(Q.integer(expr.base), assumptions):
             return False
@@ -83,9 +85,8 @@ class AskCompositeHandler(CommonHandler):
             _integer = ask(Q.integer(expr), assumptions)
             if _integer:
                 _prime = ask(Q.prime(expr), assumptions)
-                if _prime is None:
-                    return
-                return not _prime
+                if _prime is not None:
+                    return not _prime
             else:
                 return _integer
         else:
@@ -97,17 +98,23 @@ class AskEvenHandler(CommonHandler):
     def _number(expr, assumptions):
         # helper method
         try:
-            i = int(expr.round())
-            if not (expr - i).equals(0):
-                raise TypeError
-        except TypeError:
-            return False
-        return i % 2 == 0
+            r, i = expr.as_real_imag()
+            i = i.evalf(2, literal=True)
+            if i is None:
+                return
+            if i != 0:
+                return False
+            n = int(r.round())
+            ok = (r - n).equals(0)
+            return n % 2 == 0 if ok else ok
+        except (AttributeError, TypeError):
+            return None
 
     @staticmethod
     def Basic(expr, assumptions):
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
+        rv = AskEvenHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -120,8 +127,10 @@ class AskEvenHandler(CommonHandler):
         Integer * Integer -> Even if Integer + Integer = Odd
                           -> ? otherwise
         """
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
+        rv = AskEvenHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         even, odd, irrational, acc = False, 0, False, 1
         for arg in expr.args:
             # check for all integers and at least one even
@@ -158,8 +167,10 @@ class AskEvenHandler(CommonHandler):
         Odd  + Odd  -> Even
 
         """
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
+        rv = AskEvenHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
+
         _result = True
         for arg in expr.args:
             if ask(Q.even(arg), assumptions):
@@ -173,8 +184,9 @@ class AskEvenHandler(CommonHandler):
 
     @staticmethod
     def Pow(expr, assumptions):
-        if expr.is_number:
-            return AskEvenHandler._number(expr, assumptions)
+        rv = AskEvenHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
         if ask(Q.integer(expr.exp), assumptions):
             if ask(Q.positive(expr.exp), assumptions):
                 return ask(Q.even(expr.base), assumptions)

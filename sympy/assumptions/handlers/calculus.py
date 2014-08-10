@@ -19,20 +19,21 @@ class AskInfinitesimalHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        return expr.evalf() == 0
+        n = expr.evalf(literal=True)
+        return  n == 0 if n is not None else None
 
     @staticmethod
     def Basic(expr, assumptions):
-        if expr.is_number:
-            return AskInfinitesimalHandler._number(expr, assumptions)
+        return AskInfinitesimalHandler._number(expr, assumptions)
 
     @staticmethod
     def Mul(expr, assumptions):
         """
         Infinitesimal*Bounded -> Infinitesimal
         """
-        if expr.is_number:
-            return AskInfinitesimalHandler._number(expr, assumptions)
+        rv = AskInfinitesimalHandler._number(expr, assumptions)
+        if rv is not None:
+            return rv
         result = False
         for arg in expr.args:
             if ask(Q.infinitesimal(arg), assumptions):
