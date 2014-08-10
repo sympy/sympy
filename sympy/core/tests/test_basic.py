@@ -187,6 +187,7 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     # it should not attempt anything fancy; see is_zero, is_constant
     # and equals for more rigorous tests.
     assert f(1).is_number is True
+    assert f(1).is_comparable is False
     assert f(1).evalf(literal=True) is None
     i = Integral(0, (x, x, x))
     # expressions that are symbolically 0 can be difficult to prove
@@ -196,7 +197,11 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     # zero
     assert i.n() == 0
     assert i.is_zero
+    # is_number was already discussed above
     assert i.is_number is False
+    # is_comparable should agree with being able to compute the number with precision
+    assert i.is_comparable
+    # as for is_comparable, the same thing applies to strict evaluation
     assert i.evalf(2, strict=False) == 0
-    # literal evaluation fails if there are free symbols
+    # but literal evaluation fails if there are free symbols
     assert i.evalf(2, literal=True) is None
