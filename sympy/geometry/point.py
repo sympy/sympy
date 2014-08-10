@@ -380,6 +380,8 @@ class Point(GeometryEntity):
         Point(0.5, 1.5)
 
         """
+        if options.get('literal', False):
+            return
         coords = [x.evalf(prec, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 

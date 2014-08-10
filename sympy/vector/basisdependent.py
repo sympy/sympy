@@ -63,6 +63,8 @@ class BasisDependent(Expr):
         =====================
 
         """
+        if options.get('literal', False):
+            return
         vec = self.zero
         for k, v in self.components.items():
             vec += v.evalf(prec, **options) * k

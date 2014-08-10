@@ -1268,7 +1268,7 @@ class EvalfMixin(object):
 
     __slots__ = []
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False, literal=False):
         """
         Evaluate the given formula to an accuracy of n digits.
         Optional keyword arguments:
@@ -1299,11 +1299,36 @@ class EvalfMixin(object):
             verbose=<bool>
                 Print debug information (default=False)
 
+            literal=<bool>
+                If True, only return a result that is a literal number
+                with significance. This is like a quiet form of `strict`
+                but a quick test is done before attempting evaluation to
+                see that there are no free symbols or undefined functions
+                in the expression once any substitutions in `subs` are made.
+
+        Examples
+        ========
+
         """
         n = n if n is not None else 15
 
         if subs and is_sequence(subs):
             raise TypeError('subs must be given as a dictionary')
+
+        if literal:
+            if subs:
+                test = self.subs(subs)
+            else:
+                test = self
+            if test.is_number and not test.has(C.AppliedUndef):
+                try:
+                    strict = True
+                    rv = self.evalf(n, subs, maxn, chop, strict, quad, verbose)
+                    if isinstance(rv, C.Number) or pure_complex(rv):
+                        return rv
+                except PrecisionExhausted:
+                    pass
+            return
 
         # for sake of sage that doesn't like evalf(1)
         if n == 1 and isinstance(self, C.Number):
