@@ -9,13 +9,14 @@ from itertools import chain, combinations, product
 from sympy.core import Symbol
 from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import (And, Boolean, BooleanFunction,
-    conjuncts, disjuncts, eliminate_implications, false, Not, Or, true)
+    conjuncts, disjuncts, eliminate_implications, false, Not, Or,
+    to_cnf, true)
 from sympy.utilities.iterables import numbered_symbols
 
 
 class FOL(BooleanFunction):
     """
-    Abstract base class for all First Order Logic
+    Abstract base class for all First Order Logic.
     """
 
     def to_nnf(self, simplify=True):
@@ -24,7 +25,7 @@ class FOL(BooleanFunction):
 
 class Callable(FOL):
     """
-    Abstract base class for Predicate and Function.
+    Abstract base class for 'Predicate' and 'Function'.
     """
 
     def __init__(self, name):
@@ -302,8 +303,8 @@ def fol_true(expr, model={}):
     >>> T_domain = [1, 2, 3]
     >>> person = lambda X: X in X_domain
     >>> time = lambda T: T in T_domain
-    >>> CanFoolMap = {('John',2):False, ('John',3):False, 'default':True}
-    >>> model = {X:X_domain, T:T_domain, Person:person, Time:time, CanFool:CanFoolMap}
+    >>> CanFoolMap = {('John', 2): False, ('John', 3): False, 'default': True}
+    >>> model = {X: X_domain, T: T_domain, Person: person, Time: time, CanFool: CanFoolMap}
 
     # You can fool some of the people all of the time
     >>> expr = Exists(X, ForAll(T, (Person(X) & Time(T)) >> CanFool(X, T)))
@@ -320,6 +321,7 @@ def fol_true(expr, model={}):
     >>> fol_true(expr, model)
     False
     """
+
     model = dict(model)
     for key, val in model.items():
         if isinstance(key, Symbol):
@@ -409,7 +411,7 @@ def _fol_true(expr, model={}):
     return expr.func(*args)
 
 
-def standardize(expr):
+def standardize(expr, variables=None):
     """
     Rename variables so that each quantifier has its own unique variables.
 
@@ -426,20 +428,24 @@ def standardize(expr):
     return _standardize(expr, {})
 
 
-def _standardize(expr, var_set):
+def _standardize(expr, var_set, variables=None):
 
     def update_var_set(vars):
         """ Adds variables to var_set and returns subsitutions to be made. """
         d = {}
         for var in vars:
-            if var in var_set:
-                if not var_set[var]:
-                    var_set[var] = numbered_symbols(var.name)
-                v = next(var_set[var])
-                d[var] = v
+            if variables is None:
+                if var in var_set:
+                    if not var_set[var]:
+                        var_set[var] = numbered_symbols(var.name)
+                    v = next(var_set[var])
+                    d[var] = v
+                else:
+                    var_set[var] = None
+                    d[var] = var
             else:
-                var_set[var] = None
-                d[var] = var
+                if var in var_set:
+                    d[var] = next(variables)
         return d
 
     if not isinstance(expr, BooleanFunction):
@@ -478,20 +484,12 @@ def _standardize(expr, var_set):
     return expr.func(*[_standardize(arg, var_set) for arg in expr.args])
 
 
-def to_pnf(expr, functions=None, variables=None, constants=None):
+def to_pnf(expr, variables=None):
     """
     Converts the given FOL expression into Prenex Normal Form.
     A FOL formula is in Prenex Normal Form if it can be expressed as
     a collection of quantifiers (prefix) followed by a quantifier-free
     expr (matrix). The expr in PNF is equivalent to the given formula.
-
-
-    Parameters
-    ==========
-    expr1:      The formula to be converted to PNF.
-    functions:  Generator for Skolem Functions.
-    variables:  Ganerator for variables to be standardized.
-    Constants:  Generator for Skolem Constants.
 
 
     Examples
@@ -510,7 +508,7 @@ def to_pnf(expr, functions=None, variables=None, constants=None):
 
     .. [1] http://en.wikipedia.org/wiki/Prenex_normal_form
     """
-    expr = standardize(eliminate_implications(expr))
+    expr = standardize(eliminate_implications(expr), variables)
     return _to_pnf(expr)
 
 
@@ -557,16 +555,27 @@ def _to_pnf(expr):
     raise ValueError()
 
 
-def to_snf(expr, functions=None, constants=None):
+def to_snf(expr, functions=None, variables=None, constants=None):
     """
     Converts the given FOL expression into Skolem Normal Form.
-    A FOL formula is in Skolem Normal Form if it is in PNF with
-    no existential quantifier and all existentially quantified
-    variables replaced by Skolem functions/ constants.
+    A FOL formula is in Skolem Normal Form if it is in PNF with no
+    existential quantifier and all existentially quantified variables
+    replaced by Skolem functions/ constants.
+    The returned formula has universal quantifiers dropped and all
+    variables are assumed to be universally quantified.
 
     The formula in SNF is only equisatisfiable to the original
     formula (satisfiable if and only if original formula is
     satisfiable) and not necessarily equivalent (same truth table).
+
+
+    Parameters
+    ==========
+    expr:      The formula to be converted to SNF.
+    functions:  Generator for Skolem Functions.
+    variables:  Ganerator for new variables for standardization.
+    Constants:  Generator for Skolem Constants.
+
 
     Examples
     ========
@@ -576,7 +585,7 @@ def to_snf(expr, functions=None, constants=None):
     >>> P = Predicate('P')
     >>> R = Predicate('R')
     >>> to_snf(ForAll(X, P(X) | Exists(Y, R(X, Y))))
-    ForAll((X), Or(P(X), R(X, f0(X))))
+    Or(P(X), R(X, f0(X)))
 
     References
     ==========
@@ -587,8 +596,15 @@ def to_snf(expr, functions=None, constants=None):
     expr = to_pnf(expr)
     var_list = []
 
-    skolemFunc = numbered_symbols('f', Function)
-    skolemConst = numbered_symbols('c', Constant)
+    if functions is None:
+        skolemFunc = numbered_symbols('f', Function)
+    else:
+        skolemFunc = functions
+    if constants is None:
+        skolemConst = numbered_symbols('c', Constant)
+    else:
+        skolemConst = constants
+
     while isinstance(expr, Quantifier):
 
         if isinstance(expr, ForAll):
@@ -607,55 +623,7 @@ def to_snf(expr, functions=None, constants=None):
         else:
             raise ValueError()
 
-    return ForAll(var_list, expr)
-
-
-def to_cnf(expr):
-    """
-    Converts a given FOL formula into Conjunctive Normal Form.
-    The given expr is first converted to an equisatisfiable formula
-    in SNF followed by dropping of implicit universal quantification
-    and distribution of conjuction over disjunction.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import X, Y
-    >>> from sympy.logic.FOL import Predicate, ForAll, Exists, to_cnf
-    >>> P = Predicate('P')
-    >>> Q = Predicate('Q')
-    >>> to_cnf(ForAll(X, Exists(Y, P(X, Y) >> Q(X, Y))))
-    Or(Not(P(X, f0(X))), Q(X, f0(X)))
-    """
-    from sympy.logic.boolalg import to_cnf as to_cnf_prop
-    expr = to_snf(expr)
-    while isinstance(expr, ForAll):
-        expr = expr.expr
-    return to_cnf_prop(expr)
-
-
-def to_dnf(expr):
-    """
-    Converts a given FOL formula into Disjunctive Normal Form.
-    The given expr is first converted to an equisatisfiable formula
-    in SNF followed by dropping of implicit universal quantification
-    and distribution of disjunction over conjuction.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import X, Y
-    >>> from sympy.logic.FOL import Predicate, ForAll, Exists, to_dnf
-    >>> P = Predicate('P')
-    >>> Q = Predicate('Q')
-    >>> to_dnf(ForAll(X, Exists(Y, P(X, Y) >> Q(X, Y))))
-    Or(Not(P(X, f0(X))), Q(X, f0(X)))
-    """
-    from sympy.logic.boolalg import to_dnf as to_dnf_prop
-    expr = to_snf(expr)
-    while isinstance(expr, ForAll):
-        expr = expr.expr
-    return to_dnf_prop(expr)
+    return expr
 
 
 def mgu(expr1, expr2):
@@ -750,7 +718,7 @@ def resolve(*expr):
     .. [1] http://en.wikipedia.org/wiki/Resolution_(logic)
     """
 
-    expr = to_cnf(And(*expr))
+    expr = to_cnf(to_snf(And(*expr)))
     clauses = []
     for clause in conjuncts(expr):
         c = defaultdict(list)

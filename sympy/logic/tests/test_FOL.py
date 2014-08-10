@@ -2,10 +2,10 @@
 
 from sympy.utilities.pytest import raises
 
-from sympy.logic.boolalg import (And, Implies, Or, Xor, true)
+from sympy.logic.boolalg import (And, Implies, Or, Xor, to_cnf, to_dnf, true)
 from sympy.logic.FOL import (AppliedFunction, AppliedPredicate, Constant,
     entails, Exists, fol_true, ForAll, Function, mgu, Predicate, resolve,
-    standardize, to_cnf, to_dnf, to_pnf, to_snf)
+    standardize, to_pnf, to_snf)
 
 from sympy.abc import X, Y, Z
 
@@ -150,22 +150,18 @@ def test_to_snf():
     f0 = Function('f0')
     f1 = Function('f1')
     c0 = Constant('c0')
-    assert to_snf(ForAll((X, Y), P(X) >> Q(Y))) == \
-                ForAll((X, Y), ~P(X) | Q(Y))
-    assert to_snf(Exists(X, ForAll(Y, P(X) | Q(Y)))) == \
-                ForAll(Y, P(c0) | Q(Y))
-    assert to_snf(ForAll(X, Exists(Y, P(X) & Q(Y)))) == \
-                ForAll(X, P(X) & Q(f0(X)))
+    assert to_snf(ForAll((X, Y), P(X) >> Q(Y))) == ~P(X) | Q(Y)
+    assert to_snf(Exists(X, ForAll(Y, P(X) | Q(Y)))) == P(c0) | Q(Y)
+    assert to_snf(ForAll(X, Exists(Y, P(X) & Q(Y)))) == P(X) & Q(f0(X))
     assert to_snf(ForAll(W, Exists(X, ForAll(Y, Exists(Z, P(W, X) >>
-        Q(Y, Z)))))) == ForAll((W, Y), ~P(W, f0(W)) | Q(Y, f1(W, Y)))
+        Q(Y, Z)))))) == ~P(W, f0(W)) | Q(Y, f1(W, Y))
 
 
 def test_to_cnf():
     P = Predicate('P')
     Q = Predicate('Q')
-    assert to_cnf(to_cnf((P(X) & Q(X)) | (P(Y) & Q(Y)))) == \
+    assert to_cnf((P(X) & Q(X)) | (P(Y) & Q(Y))) == \
         (P(X) | P(Y)) & (P(X) | Q(Y)) & (Q(X) | P(Y)) & (Q(X) | Q(Y))
-    assert to_cnf(ForAll(X, P(X) | ForAll(Y, Q(Y)))) == Or(P(X), Q(Y))
 
 
 def test_to_dnf():
@@ -173,7 +169,6 @@ def test_to_dnf():
     Q = Predicate('Q')
     assert to_dnf((P(X) | Q(X)) & (P(Y) | Q(Y))) == \
         (P(X) & P(Y)) | (P(X) & Q(Y)) | (Q(X) & P(Y)) | (Q(X) & Q(Y))
-    assert to_dnf(ForAll(X, P(X) | ForAll(Y, Q(Y)))) == Or(P(X), Q(Y))
 
 
 def test_mgu():
