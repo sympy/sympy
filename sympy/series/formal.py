@@ -5,9 +5,10 @@ from sympy.core.containers import Stream, Tuple
 from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq
+from sympy.core.compatibility import integer_types
 from sympy.functions import sign
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.concrete import Sum
+from sympy.concrete import Sum, summation
 from sympy.core import Add, Pow
 from sympy.core.expr import Expr
 from sympy.polys import roots, lcm, degree
@@ -73,18 +74,7 @@ def FormalSeries(x=None, x0=0, dir='+', *args, **kwargs):
         generator = findgen(x, function, k)
         return sum(FormalSeries(x, generator=(c, e, k)) for c, e in generator)
 
-    if not e.has(k):
-        def gen():
-            yield c*x**e
-            raise StopIteration
-    else:
-        def gen():
-            n = 0
-            while True:
-                nc, ne = c.subs(k, n), e.subs(k, n)
-                yield nc*x**ne
-                n = n + 1
-    return Lazyseries(x, Stream(gen()))
+    return Series(x, c*x**e, k)
 
 
 def findgen_seq(sequence, k):
@@ -420,148 +410,56 @@ def findgen(x, function, k):
     return gen
 
 
-from heapq import merge
-from itertools import imap, islice, takewhile
-
-class Lazyseries(Expr):
+class Series(Expr):
     """
     Represents an infinite series
-    Use ``FormalSeries`` to create a Lazyseries object
-
-    Examples
-    ========
-
-    >>> from sympy import sin, cos
-    >>> from sympy.series.formal import FormalSeries
-    >>> from sympy.abc import x
-    >>> s = FormalSeries(x, function=sin(x))
-    >>> s.as_series(n=6)
-    x - x**3/6 + x**5/120 + O(x**6)
-    >>> t = FormalSeries(x, function=cos(x))
-    >>> t.as_series(n=6)
-    1 - x**2/2 + x**4/24 + O(x**6)
-    >>> u = s * t
-    >>> u.as_series(n=6)
-    x - 2*x**3/3 + 2*x**5/15 + O(x**6)
-
     """
-    def __init__(self, x, gen):
+    def __init__(self, x, gen, k):
         self.x = x
-        self.sym = x.atoms(Symbol).pop()
         self.gen = gen
-
-    def __iter__(self):
-        return self.gen.__iter__()
+        self.k = k
 
     def __getitem__(self, index):
-        return self.gen.__getitem__(index)
-
-    def as_series(self, n=6):
-        sym = self.sym
-        it = takewhile(lambda t: degree(t, sym) < n, self.gen)
-        s = [t for t in it]
-        return Add(*s) + C.Order(sym**n, sym)
-
-    @property
-    def is_empty(self):
-        return self.gen.is_empty
-
-    @property
-    def free_symbols(self):
-        return self.x.free_symbols
-
-    def _eval_derivative(self, x):
-        return self.__class__(self.sym, Stream(imap(lambda t: t.diff(x), self.gen)))
-
-    def _eval_as_leading_term(self, x):
-        return self.__getitem__(0)
-
-    def inverse(self):
-        return self.__class__(self.sym, Stream(Lazyseries.series_inverse(self.sym, self.gen)))
-
-    @staticmethod
-    def series_inverse(sym, self):
-        def gen():
-            yield S.One
-            raise StopIteration
-        for t in Lazyseries.series_div(sym, Stream(gen()), self):
-            yield t
-
-    def compose(self, other):
-        if self.sym != other.sym:
-            raise ValueError('Cannot compose series of different variables')
-        return self.__class__(self.sym, Stream(Lazyseries.series_compose(self.sym, self.gen, other.gen)))
-
-    @staticmethod
-    def series_compose(sym, self, other):
-        if self.is_empty:
-            raise StopIteration
-        yield self[0]
-        self = Stream(imap(lambda t: t/sym, self.shift(1)))
-        it = Lazyseries.series_mul(sym, other, Stream(Lazyseries.series_compose(sym, self, other)))
-        for t in it:
-            yield t
+        k = self.k
+        if isinstance(index, integer_types):
+            if index < 0:
+                raise ValueError("Argument must be greater than 0")
+            if not self.gen.has(self.k):
+                if index == 0:
+                    return self.gen
+                else:
+                    return S.Zero
+            return self.gen.subs(k, index).doit()
+        elif isinstance(index, slice):
+            if index.step == 0:
+                raise ValueError("Step must not be 0")
+            return [self[i] for i in xrange(index.start, index.stop, index.step or 1)]
 
     def __add__(self, other):
-        if self.sym != other.sym:
+        if self.x != other.x:
             raise ValueError('Cannot add series of different variables')
-        sym = self.sym
-        return self.__class__(sym, Stream(Lazyseries.series_add(sym, self.gen, other.gen)))
+        return self.__class__(self.x, self.gen + other.gen.subs(other.k, self.k), self.k)
 
-    @staticmethod
-    def series_add(sym, *iterables):
-        """ Custom add for series to produce terms in sorted order """
-        # Wrap the original term around Term to define __lt__ method for merge
-        class Term():
-            def __init__(self, term):
-                self.term = term
-            def __lt__(self, other):
-                return degree(self.term, sym) < degree(other.term, sym)
-        input_iter = [imap(lambda t: Term(t), it) for it in iterables]
-        return imap(lambda t: t.term, merge(*input_iter))
+    def __sub__(self, other):
+        if self.x != other.x:
+            raise ValueError('Cannot subtract series of different variables')
+        return self.__class__(self.x, self.gen - other.gen.subs(other.k, self.k), self.k)
 
     def __mul__(self, other):
-        if not isinstance(other, Lazyseries):
-            return self.__class__(self.x, Stream(imap(lambda t: t*other, self.gen)))
-        if self.sym != other.sym:
+        if self.x != other.x:
             raise ValueError('Cannot multiply series of different variables')
-        return self.__class__(self.sym, Stream(Lazyseries.series_mul(self.sym, self.gen, other.gen)))
+        j = Dummy('j', integer=True)
+        gen = self.gen.subs(self.k, j) * other.gen.subs(other.k, self.k - j)
+        return self.__class__(self.x, Sum(gen, (j, 0, self.k)), self.k)
 
-    @staticmethod
-    def series_mul(sym, self, other):
-        try:
-            a, b = self[0], other[0]
-        except IndexError:
-            raise StopIteration
-        yield a * b
-        self, other = self.shift(1), other.shift(1)
-        it = Stream(Lazyseries.series_add(sym,
-                Stream(imap(lambda t: t*b, self)),
-                Stream(imap(lambda t: t*a, other)),
-                Lazyseries.series_mul(sym, self, other)))
-        for t in it:
-            yield t
+    def as_series(self, n=6):
+        x = self.x
+        s = []
+        i = 0
+        if not self.gen.has(self.k):
+            return self[0]
+        while not (self[i] + C.Order(x**n)).is_Order:
+            s.append(self[i])
+            i += 1
+        return Add(*s) + C.Order(x**n)
 
-    def __truediv__(self, other):
-        if not isinstance(other, Lazyseries):
-            return self.__class__(self.x, Stream(imap(lambda t: t/other, self.gen)))
-        if self.sym != other.sym:
-            raise ValueError('Cannot multiply series of different variables')
-        return self.__class__(self.sym, Stream(Lazyseries.series_div(self.sym, self.gen, other.gen)))
-    __div__ = __truediv__
-
-    @staticmethod
-    def series_div(sym, self, other):
-        if self.is_empty:
-            raise StopIteration
-        if other.is_empty:
-            raise ZeroDivisionError
-        a, b = self[0], other[0]
-        self, other = self.shift(1), other.shift(1)
-        def gen():
-            yield a/b
-            q = imap(lambda t: t*S.NegativeOne/b, Lazyseries.series_mul(sym, other, Stream(gen())))
-            for t in Lazyseries.series_add(sym, self, Stream(q)):
-                yield t
-        for t in gen():
-            yield t
