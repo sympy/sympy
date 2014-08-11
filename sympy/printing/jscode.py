@@ -18,20 +18,19 @@ from sympy.core.compatibility import string_types
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
 # Used in JavascriptCodePrinter._print_Function(self)
 known_functions = {
-}
-
-function_translations = {
     'Abs': 'Math.abs',
+    'sin': 'Math.sin',
+    'cos': 'Math.cos',
+    'tan': 'Math.tan',
     'acos': 'Math.acos',
     'asin': 'Math.asin',
     'atan': 'Math.atan',
+    'atan2': 'Math.atan2',
     'ceiling': 'Math.ceil',
-    'cos': 'Math.cos',
-    'exp': 'Math.exp',
     'floor': 'Math.floor',
+    'sign': 'Math.sign',
+    'exp': 'Math.exp',
     'log': 'Math.log',
-    'sin': 'Math.sin',
-    'tan': 'Math.tan',
 }
 
 
@@ -54,9 +53,6 @@ class JavascriptCodePrinter(CodePrinter):
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
-        for k, v in userfuncs.items():
-            if not isinstance(v, tuple):
-                userfuncs[k] = (lambda *x: True, v)
         self.known_functions.update(userfuncs)
 
     def _rate_index_position(self, p):
@@ -108,13 +104,15 @@ class JavascriptCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
-        inds = [ i.label for i in expr.indices ]
         elem = S.Zero
         offset = S.One
         for i in reversed(range(expr.rank)):
-            elem += offset*inds[i]
+            elem += expr.indices[i]*offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
 
     def _print_Exp1(self, expr):
         return "Math.E"
@@ -160,20 +158,6 @@ class JavascriptCodePrinter(CodePrinter):
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
-    def _print_Function(self, expr):
-        if expr.func.__name__ in self.known_functions:
-            cond_cfunc = self.known_functions[expr.func.__name__]
-            for cond, cfunc in cond_cfunc:
-                if cond(*expr.args):
-                    return "%s(%s)" % (cfunc, self.stringify(expr.args, ", "))
-        if expr.func.__name__ in function_translations:
-            tr = function_translations[expr.func.__name__]
-            return "%s(%s)" % (tr, self.stringify(expr.args, ", "))
-        if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
-            # inlined function
-            return self._print(expr._imp_(*expr.args))
-        return CodePrinter._print_Function(self, expr)
-
     def _print_MatrixElement(self, expr):
         return "{0}[{1}][{2}]".format(expr.parent, expr.i, expr.j)
 
@@ -209,39 +193,108 @@ class JavascriptCodePrinter(CodePrinter):
 def jscode(expr, assign_to=None, **settings):
     """Converts an expr to a string of javascript code
 
-       Parameters
-       ==========
+    Parameters
+    ==========
 
-       expr : sympy.core.Expr
-           a sympy expression to be converted
-       assign_to : optional
-           When given, the argument is used as the name of the
-           variable to which the Fortran expression is assigned.
-           (This is helpful in case of line-wrapping.)
-       precision : optional
-           the precision for numbers such as pi [default=15]
-       user_functions : optional
-           A dictionary where keys are FunctionClass instances and values
-           are their string representations. Alternatively the
-           dictionary values can be a list of tuples i.e. [(argument_test,
-           jsfunction_string)].
-       human : optional
-           If True, the result is a single string that may contain some
-           constant declarations for the number symbols. If False, the
-           same information is returned in a more programmer-friendly
-           data structure.
+    expr : Expr
+        A sympy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
+        line-wrapping, or for expressions that generate multi-line statements.
+    precision : integer, optional
+        The precision for numbers such as pi [default=15].
+    user_functions : dict, optional
+        A dictionary where keys are ``FunctionClass`` instances and values are
+        their string representations. Alternatively, the dictionary value can
+        be a list of tuples i.e. [(argument_test, js_function_string)]. See
+        below for examples.
+    human : bool, optional
+        If True, the result is a single string that may contain some constant
+        declarations for the number symbols. If False, the same information is
+        returned in a tuple of (symbols_to_declare, not_supported_functions,
+        code_text). [default=True].
+    contract: bool, optional
+        If True, ``Indexed`` instances are assumed to obey tensor contraction
+        rules and the corresponding nested loops over indices are generated.
+        Setting contract=False will not generate loops, instead the user is
+        responsible to provide values for the indices in the code.
+        [default=True].
 
-       Examples
-       ========
+    Examples
+    ========
 
-       >>> from sympy import jscode, symbols, Rational, sin
-       >>> x, tau = symbols(["x", "tau"])
-       >>> jscode((2*tau)**Rational(7,2))
-       '8*Math.sqrt(2)*Math.pow(tau, 7/2)'
-       >>> jscode(sin(x), assign_to="s")
-       's = Math.sin(x);'
+    >>> from sympy import jscode, symbols, Rational, sin, ceiling, Abs
+    >>> x, tau = symbols("x, tau")
+    >>> jscode((2*tau)**Rational(7, 2))
+    '8*Math.sqrt(2)*Math.pow(tau, 7/2)'
+    >>> jscode(sin(x), assign_to="s")
+    's = Math.sin(x);'
 
+    Custom printing can be defined for certain types by passing a dictionary of
+    "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
+    dictionary value can be a list of tuples i.e. [(argument_test,
+    js_function_string)].
+
+    >>> custom_functions = {
+    ...   "ceiling": "CEIL",
+    ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
+    ...           (lambda x: x.is_integer, "ABS")]
+    ... }
+    >>> jscode(Abs(x) + ceiling(x), user_functions=custom_functions)
+    'fabs(x) + CEIL(x)'
+
+    ``Piecewise`` expressions are converted into conditionals. If an
+    ``assign_to`` variable is provided an if statement is created, otherwise
+    the ternary operator is used. Note that if the ``Piecewise`` lacks a
+    default term, represented by ``(expr, True)`` then an error will be thrown.
+    This is to prevent generating an expression that may not evaluate to
+    anything.
+
+    >>> from sympy import Piecewise
+    >>> expr = Piecewise((x + 1, x > 0), (x, True))
+    >>> print(jscode(expr, tau))
+    if (x > 0) {
+       tau = x + 1;
+    }
+    else {
+       tau = x;
+    }
+
+    Support for loops is provided through ``Indexed`` types. With
+    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=False`` will just print the assignment expression that should be
+    looped over:
+
+    >>> from sympy import Eq, IndexedBase, Idx
+    >>> len_y = 5
+    >>> y = IndexedBase('y', shape=(len_y,))
+    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+    >>> i = Idx('i', len_y-1)
+    >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> jscode(e.rhs, assign_to=e.lhs, contract=False)
+    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+
+    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
+    must be provided to ``assign_to``. Note that any expression that can be
+    generated normally can also exist inside a Matrix:
+
+    >>> from sympy import Matrix, MatrixSymbol
+    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
+    >>> A = MatrixSymbol('A', 3, 1)
+    >>> print(jscode(mat, A))
+    A[0][0] = Math.pow(x, 2);
+    if (x > 0) {
+       A[1][0] = x + 1;
+    }
+    else {
+       A[1][0] = x;
+    }
+    A[2][0] = Math.sin(x);
     """
+
     return JavascriptCodePrinter(settings).doprint(expr, assign_to)
 
 

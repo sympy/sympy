@@ -10,7 +10,6 @@ from sympy.matrices import Matrix, MatrixSymbol
 from sympy import ccode
 
 x, y, z = symbols('x,y,z')
-g = Function('g')
 
 
 def test_printmethod():
@@ -29,8 +28,9 @@ def test_ccode_sqrt():
 def test_ccode_Pow():
     assert ccode(x**3) == "pow(x, 3)"
     assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
+    g = implemented_function('g', Lambda(x, 2*x))
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+        "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
     assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
@@ -366,7 +366,7 @@ def test_ccode_loops_multiple_terms():
             c == s0 + s3 + s1 + s2[:-1] or
             c == s0 + s3 + s2 + s1[:-1])
 
-def test_Matrix_codegen():
+def test_Matrix_printing():
     # Test returning a Matrix
     mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
     A = MatrixSymbol('A', 3, 1)

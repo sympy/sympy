@@ -68,12 +68,13 @@ def test_fcode_functions():
 #issue 6814
 def test_fcode_functions_with_integers():
     x= symbols('x')
-    assert fcode(x * log(10)) == "      x*log(10.0d0)"
-    assert fcode(x * log(S(10))) == "      x*log(10.0d0)"
-    assert fcode(log(S(10))) == "      log(10.0d0)"
-    assert fcode(exp(10)) == "      exp(10.0d0)"
-    assert fcode(x * log(log(10))) == "      x*log(2.30258509299405d0)"
-    assert fcode(x * log(log(S(10)))) == "      x*log(2.30258509299405d0)"
+    assert fcode(x * log(10)) == "      x*2.30258509299405d0"
+    assert fcode(x * log(10)) == "      x*2.30258509299405d0"
+    assert fcode(x * log(S(10))) == "      x*2.30258509299405d0"
+    assert fcode(log(S(10))) == "      2.30258509299405d0"
+    assert fcode(exp(10)) == "      22026.4657948067d0"
+    assert fcode(x * log(log(10))) == "      x*0.834032445247956d0"
+    assert fcode(x * log(log(S(10)))) == "      x*0.834032445247956d0"
 
 
 def test_fcode_NumberSymbol():
@@ -131,15 +132,15 @@ def test_not_fortran():
 
 def test_user_functions():
     x = symbols('x')
-    assert fcode(sin(x), user_functions={sin: "zsin"}) == "      zsin(x)"
+    assert fcode(sin(x), user_functions={"sin": "zsin"}) == "      zsin(x)"
     x = symbols('x')
     assert fcode(
-        gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
+        gamma(x), user_functions={"gamma": "mygamma"}) == "      mygamma(x)"
     g = Function('g')
-    assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
+    assert fcode(g(x), user_functions={"g": "great"}) == "      great(x)"
     n = symbols('n', integer=True)
     assert fcode(
-        factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+        factorial(n), user_functions={"factorial": "fct"}) == "      fct(n)"
 
 
 def test_inline_function():
@@ -500,7 +501,7 @@ def test_free_form_continuation_line():
 
 
 def test_free_form_comment_line():
-    printer = FCodePrinter({ 'source_format': 'free'})
+    printer = FCodePrinter({'source_format': 'free'})
     lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
     expected = [
         '! This is a long comment on a single line that must be wrapped properly',
@@ -634,7 +635,7 @@ def test_indent():
     result = p.indent_code(codelines)
     assert result == expected
 
-def test_Matrix_codegen():
+def test_Matrix_printing():
     x, y, z = symbols('x,y,z')
     # Test returning a Matrix
     mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])

@@ -323,6 +323,24 @@ class CodePrinter(StrPrinter):
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
+    def _print_Function(self, expr):
+        if expr.func.__name__ in self.known_functions:
+            cond_func = self.known_functions[expr.func.__name__]
+            func = None
+            if isinstance(cond_func, str):
+                func = cond_func
+            else:
+                for cond, func in cond_func:
+                    if cond(*expr.args):
+                        break
+            if func is not None:
+                return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+        elif hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
+            # inlined function
+            return self._print(expr._imp_(*expr.args))
+        else:
+            return self._print_not_supported(expr)
+
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
         # is registered and evaluated
@@ -337,6 +355,8 @@ class CodePrinter(StrPrinter):
     _print_Catalan = _print_NumberSymbol
     _print_EulerGamma = _print_NumberSymbol
     _print_GoldenRatio = _print_NumberSymbol
+    _print_Exp1 = _print_NumberSymbol
+    _print_Pi = _print_NumberSymbol
 
     def _print_And(self, expr):
         PREC = precedence(expr)

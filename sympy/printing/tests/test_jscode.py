@@ -10,7 +10,6 @@ from sympy.matrices import Matrix, MatrixSymbol
 from sympy import jscode
 
 x, y, z = symbols('x,y,z')
-g = Function('g')
 
 
 def test_printmethod():
@@ -24,10 +23,11 @@ def test_jscode_sqrt():
 
 
 def test_jscode_Pow():
+    g = implemented_function('g', Lambda(x, 2*x))
     assert jscode(x**3) == "Math.pow(x, 3)"
     assert jscode(x**(y**3)) == "Math.pow(x, Math.pow(y, 3))"
     assert jscode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "Math.pow(3.5*g(x), -x + Math.pow(y, x))/(Math.pow(x, 2) + y)"
+        "Math.pow(3.5*2*x, -x + Math.pow(y, x))/(Math.pow(x, 2) + y)"
     assert jscode(x**-1.0) == '1/x'
 
 
@@ -139,17 +139,17 @@ def test_jscode_settings():
 def test_jscode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i, j, k, n, m, o = symbols('i j k n m o', integer=True)
-
+    n, m, o = symbols('n m o', integer=True)
+    i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = JavascriptCodePrinter()
     p._not_c = set()
 
-    x = IndexedBase('x')[Idx(j, n)]
+    x = IndexedBase('x')[j]
     assert p._print_Indexed(x) == 'x[j]'
-    A = IndexedBase('A')[Idx(i, m), Idx(j, n)]
-    assert p._print_Indexed(A) == 'A[%s]' % str(j + n*i)
-    B = IndexedBase('B')[Idx(i, m), Idx(j, n), Idx(k, o)]
-    assert p._print_Indexed(B) == 'B[%s]' % str(k + i*n*o + j*o)
+    A = IndexedBase('A')[i, j]
+    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
+    B = IndexedBase('B')[i, j, k]
+    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
 
     assert p._not_c == set()
 
@@ -168,7 +168,7 @@ def test_jscode_loops_matrix_vector():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[i*n + j] + y[i];\n'
+        '      y[i] = x[j]*A[n*i + j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -211,7 +211,7 @@ def test_jscode_loops_add():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[i*n + j] + y[i];\n'
+        '      y[i] = x[j]*A[n*i + j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -239,7 +239,7 @@ def test_jscode_loops_multiple_contractions():
         '   for (var j=0; j<n; j++){\n'
         '      for (var k=0; k<o; k++){\n'
         '         for (var l=0; l<p; l++){\n'
-        '            y[i] = y[i] + b[j*o*p + k*p + l]*a[i*n*o*p + j*o*p + k*p + l];\n'
+        '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -270,7 +270,7 @@ def test_jscode_loops_addfactor():
         '   for (var j=0; j<n; j++){\n'
         '      for (var k=0; k<o; k++){\n'
         '         for (var l=0; l<p; l++){\n'
-        '            y[i] = (a[i*n*o*p + j*o*p + k*p + l] + b[i*n*o*p + j*o*p + k*p + l])*c[j*o*p + k*p + l] + y[i];\n'
+        '            y[i] = (a[%s] + b[%s])*c[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -301,7 +301,7 @@ def test_jscode_loops_multiple_terms():
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
         '      for (var k=0; k<o; k++){\n'
-        '         y[i] = b[j]*b[k]*c[i*n*o + j*o + k] + y[i];\n'
+        '         y[i] = b[j]*b[k]*c[%s] + y[i];\n' % (i*n*o + j*o + k) +\
         '      }\n'
         '   }\n'
         '}\n'
@@ -309,14 +309,14 @@ def test_jscode_loops_multiple_terms():
     s2 = (
         'for (var i=0; i<m; i++){\n'
         '   for (var k=0; k<o; k++){\n'
-        '      y[i] = b[k]*a[i*o + k] + y[i];\n'
+        '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = b[j]*a[i*n + j] + y[i];\n'
+        '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}\n'
     )
@@ -329,7 +329,8 @@ def test_jscode_loops_multiple_terms():
             c == s0 + s3 + s1 + s2[:-1] or
             c == s0 + s3 + s2 + s1[:-1])
 
-def test_Matrix_codegen():
+
+def test_Matrix_printing():
     # Test returning a Matrix
     mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
     A = MatrixSymbol('A', 3, 1)
