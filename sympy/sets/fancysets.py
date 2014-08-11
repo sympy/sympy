@@ -259,7 +259,7 @@ class ImageSet(Set):
                 # order of the variable names, since the result should not depend
                 # on the variable name, they are replaced by the dummy variables
                 # below
-                a, b = Dummy('a'), Dummy('b')
+                a, b = Dummy('a', **n.assumptions0), Dummy('b', **m.assumptions0)
                 f, g = f.subs(n, a), g.subs(m, b)
                 solns_set = diophantine(f - g)
                 if solns_set == set():

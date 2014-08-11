@@ -1,6 +1,6 @@
-from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
+from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan, Lambda,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E, sin
 )
 from sympy.mpmath import mpi
 
@@ -731,3 +731,33 @@ def test_closure():
 
 def test_interior():
     assert Interval(0, 1, False, True).interior == Interval(0, 1, True, True)
+
+
+def test_imageset_var_assumptions():
+    from sympy.abc import n
+    s1 = imageset(Lambda(n, sin(n)), S.Reals)
+    s2 = imageset(lambda n: sin(n), S.Reals)
+    s3 = imageset(n, sin(n), S.Reals)
+    assert s1.lamda.variables[0].is_real is True
+    assert s2.lamda.variables[0].is_real is True
+    assert s3.lamda.variables[0].is_real is True
+
+    s4 = imageset(Lambda(n, sin(n)), S.Integers)
+    assert s4.lamda.variables[0].is_integer is True
+
+    s5 = imageset(Lambda(n, sin(n)), S.Naturals)
+    assert s5.lamda.variables[0].is_integer is True \
+            and s5.lamda.variables[0].is_positive is True
+
+    s6 = imageset(Lambda(n, sin(n)), S.Naturals0)
+    assert s6.lamda.variables[0].is_integer is True \
+            and s6.lamda.variables[0].is_nonnegative is True
+
+    s7 = imageset(Lambda(n, sin(n)), Interval(-10, oo))
+    assert s7.lamda.variables[0].is_real is True
+
+    s8 = imageset(Lambda(n, 2*n), S.Integers).intersect(
+        imageset(Lambda(n, 3*n), S.Integers))
+    assert s8.lamda.variables[0].is_integer is True
+
+

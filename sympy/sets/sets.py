@@ -1653,17 +1653,36 @@ def imageset(*args):
     """
     from sympy.core import Dummy, Lambda
     from sympy.sets.fancysets import ImageSet
+
+    set = args[-1]
     if len(args) == 3:
-        f = Lambda(*args[:2])
+        var, expr = args[:2]
     else:
         # var and expr are being defined this way to
         # support Python lambda and not just sympy Lambda
         f = args[0]
         if not isinstance(f, Lambda):
-            var = Dummy()
+            var = Dummy('n')
             expr = args[0](var)
-            f = Lambda(var, expr)
-    set = args[-1]
+        else:
+            # XXX: Not caring about multivariate Lambdas now,
+            var = f.variables[0]
+            expr = f.expr
+
+    if set is S.Integers:
+        n = Dummy(var.name, integer=True)
+    elif set is S.Naturals:
+        n = Dummy(var.name, integer=True, positive=True)
+    elif set is S.Naturals0:
+        n = Dummy(var.name, integer=True, nonnegative=True)
+    elif set.intersect(S.Reals) == set:
+        # XXX; I'm being lazy here the other
+        # more specific assumptions might still apply
+        n = Dummy(var.name, real=True)
+    else:
+        n = Dummy(var.name)
+
+    f = Lambda(n, expr.subs(var, n))
 
     r = set._eval_imageset(f)
     if isinstance(r, ImageSet):
