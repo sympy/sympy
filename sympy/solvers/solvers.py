@@ -58,9 +58,9 @@ from types import GeneratorType
 from collections import defaultdict
 import warnings
 
-# TODO: This should be removed for the release of 0.7.7
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
 from functools import partial
-lambdify = partial(lambdify, new_defaults=True)
+lambdify = partial(lambdify, default_array=True)
 
 
 def _ispow(e):

@@ -32,9 +32,9 @@ from sympy.utilities import lambdify, public
 
 from sympy.core.compatibility import xrange
 
-# TODO: This should be removed for the release of 0.7.7
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
 from functools import partial
-lambdify = partial(lambdify, new_defaults=True)
+lambdify = partial(lambdify, default_array=True)
 
 _reals_cache = {}
 _complexes_cache = {}

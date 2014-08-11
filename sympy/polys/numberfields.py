@@ -52,9 +52,9 @@ from sympy.mpmath import pslq, mp
 from sympy.core.compatibility import reduce
 from sympy.core.compatibility import xrange
 
-# TODO: This should be removed for the release of 0.7.7
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
 from functools import partial
-lambdify = partial(lambdify, new_defaults=True)
+lambdify = partial(lambdify, default_array=True)
 
 
 def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):

@@ -73,7 +73,7 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> d = 3
         >>> knots = range(10)
         >>> b0 = bspline_basis(d, knots, 0, x)
-        >>> f = lambdify(x, b0, new_defaults=True)
+        >>> f = lambdify(x, b0, default_array=True)
         >>> y = f(0.5)
 
     See Also

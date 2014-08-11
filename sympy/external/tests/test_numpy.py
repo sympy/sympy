@@ -31,9 +31,9 @@ from sympy import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
 
-# TODO: This should be removed for the release of 0.7.7
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
 from functools import partial
-lambdify = partial(lambdify, new_defaults=True)
+lambdify = partial(lambdify, default_array=True)
 
 # first, systematically check, that all operations are implemented and don't
 # raise an exception

@@ -53,7 +53,7 @@ class DeferredVector(Symbol, NotIterable):
     >>> X
     X
     >>> expr = (X[0] + 2, X[2] + 3)
-    >>> func = lambdify( X, expr, new_defaults=True )
+    >>> func = lambdify( X, expr, default_array=True )
     >>> func( [1, 2, 3] )
     (3, 6)
     """

@@ -149,7 +149,7 @@ def _import(module, reload="False"):
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True, new_defaults=False):
+        dummify=True, default_array=False):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -177,13 +177,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
     by default. As of release 0.7.6 ``numpy.array`` is being transitioned to
     the default. In release 0.7.7 this transition will be complete. For now,
-    to use the new default behavior you must pass in ``new_defaults=True``. If
+    to use the new default behavior you must pass in ``default_array=True``. If
     you plan on using ``lambdify`` often in your code it may be to your benefit
     to apply ``functools.partial``:
 
         >>> from sympy import lambdify
         >>> from functools import partial
-        >>> lambdify = partial(lambdify, new_defaults=True)
+        >>> lambdify = partial(lambdify, default_array=True)
 
     Usage
     =====
@@ -293,7 +293,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         modules = ["math", "mpmath", "sympy"]
 
         # If the new defaults should be used (part of the deprecation cycle)
-        if not new_defaults:
+        if not default_array:
             # Ensures that the translation dict is set back
             # to matrix if lambdify was already called
             NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
@@ -303,10 +303,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                                     "by default is deprecated in favor of "
                                     "numpy.array. For now, to use the new "
                                     "behavior and remove the warning set "
-                                    "the kwarg new_defaults=True. The old "
+                                    "the kwarg default_array=True. The old "
                                     "behavior can still be used by passing "
                                     "in a custom dictionary to the modules "
-                                    "kwarg.").warn()
+                                    "kwarg.", issue=7853).warn()
         else:
             NUMPY_TRANSLATIONS.update({"Matrix": "array",
                 "MutableDenseMatrix": "array",
@@ -573,7 +573,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
-    >>> lam_f = lambdify(x, f(x), new_defaults=True)
+    >>> lam_f = lambdify(x, f(x), default_array=True)
     >>> lam_f(4)
     5
     """
