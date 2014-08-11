@@ -1,6 +1,6 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E, Lambda
 )
 from sympy.mpmath import mpi
 
@@ -731,3 +731,12 @@ def test_closure():
 
 def test_interior():
     assert Interval(0, 1, False, True).interior == Interval(0, 1, True, True)
+
+
+def test_set_eq():
+    from sympy.abc import n
+    assert Eq(imageset(Lambda(n, 2*n + 1), S.Integers),
+              imageset(Lambda(n, 2*n - 1), S.Integers)) is True
+    assert Eq(imageset(Lambda(n, 3*n + 2), S.Integers),
+              imageset(Lambda(n, 3*n - 1), S.Integers)) is True
+    assert Eq(S.Reals, Interval(-oo, oo)) is True

@@ -6,7 +6,7 @@ from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, oo
 from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
@@ -452,6 +452,41 @@ class Set(Basic):
     @property
     def is_real(self):
         return None
+
+    def _eval_Eq(self, other):
+        """ Establishes the equivalence of two ImageSets"""
+        i1 = self.intersect(other)
+        i2 = other.intersect(self)
+        if self == other:
+            return True
+        if i1 == other and i2 == self:
+            return True
+        if i1 == self and i2 == other:
+            return True
+        if i1 == i2:
+            return True
+        if i1 == EmptySet() or i2 == EmptySet():
+            return False
+
+        if self == S.Real and other == Interval(-oo, oo):
+            return True
+        elif self == Interval(-oo, oo) and other == S.Real:
+            return True
+
+        # XXX: The is_subset and and is_superset properties cannot be
+        # relied upon on. Report a bug a make them more robust. Eg.
+        # S.Reals.is_subset(Interval(-oo, oo)) returns false
+        # In [15]: Interval(-oo, oo).is_subset(ImageSet(Lambda(x, tan(x)), S.Reals))
+        # Out[15]: False
+
+        # TODO: think of a methdo to test for non equality of sets.
+        # When working on paper the easiest way to show A != B is showing
+        # there exists some element x such x belongs to A and x not belongs to B
+        # or viceversa. That can be done for FiniteSets by iterating over all elments
+        # but not for non FiniteSets that is not possible.
+
+        # For establishing the equality of Unions or Intersections say A and B
+        # we have to show that for each argument of A there ex
 
 
 class ProductSet(Set):
