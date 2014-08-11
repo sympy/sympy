@@ -12,7 +12,7 @@ from sympy import (
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
+    uppergamma, zeta, subfactorial, totient, sigma, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not)
 
 from sympy.abc import mu, tau
@@ -328,6 +328,11 @@ def test_latex_functions():
         0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
 
     assert latex(totient(n)) == r'\phi\left( n \right)'
+    
+    assert latex(sigma(x)) == r"\sigma\left(x\right)"
+    assert latex(sigma(x)**2) == r"\sigma^{2}\left(x\right)"
+    assert latex(sigma(x, y)) == r"\sigma\left(x, y\right)"
+    assert latex(sigma(x, y)**2) == r"\sigma^{2}\left(x, y\right)"
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
