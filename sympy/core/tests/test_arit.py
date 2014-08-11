@@ -955,6 +955,8 @@ def test_Pow_is_real():
     n = Symbol('n', nonnegative=True)
     assert log(n).is_real is None
 
+    assert sqrt(-I).is_real is False  # issue 7843
+
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)

@@ -394,6 +394,9 @@ class Pow(Expr):
                 if c and c.is_Integer:
                     return C.Mul(
                         self.base**c, self.base**a, evaluate=False).is_real
+            elif self.base in (-S.ImaginaryUnit, S.ImaginaryUnit):
+                if (self.exp/2).is_integer is False:
+                    return False
         if real_b and im_e:
             if self.base is S.NegativeOne:
                 return True
