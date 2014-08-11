@@ -26,6 +26,8 @@ from .core import C
 from .singleton import S
 from .containers import Tuple
 
+from sympy.utilities.iterables import is_sequence
+
 LG10 = math.log(10, 2)
 rnd = round_nearest
 
@@ -1262,7 +1264,8 @@ class EvalfMixin(object):
 
             subs=<dict>
                 Substitute numerical values for symbols, e.g.
-                subs={x:3, y:1+pi}.
+                subs={x:3, y:1+pi}. The substitutions must be given as a
+                dictionary.
 
             maxn=<integer>
                 Allow a maximum temporary working precision of maxn digits
@@ -1287,6 +1290,9 @@ class EvalfMixin(object):
 
         """
         n = n if n is not None else 15
+
+        if subs and is_sequence(subs):
+            raise TypeError('subs must be given as a dictionary')
 
         # for sake of sage that doesn't like evalf(1)
         if n == 1 and isinstance(self, C.Number):
