@@ -322,7 +322,7 @@ class AssocOp(Basic):
         walks the args of the non-number part recursively (doing the same
         thing).
         """
-        x, tail = self.as_independent(C.Symbol)
+        x, tail = self.as_independent(C.Symbol, C.AppliedUndef)
 
         if tail is not self.identity:
             # here, we have a number so we just call to _evalf with prec;

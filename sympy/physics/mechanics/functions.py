@@ -3,15 +3,16 @@ import warnings
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
+from sympy.utilities import dict_merge
+from sympy.utilities.iterables import iterable
 from sympy.physics.vector import Vector, ReferenceFrame, Point, dynamicsymbols
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Symbol, Derivative, Dummy
-from sympy.core.basic import S
+from sympy import sympify, Matrix, Derivative, sin, cos, tan, simplify, Mul
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import reduce
+from sympy.core.basic import S
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -24,7 +25,9 @@ __all__ = ['inertia',
            'mprint',
            'msprint',
            'mpprint',
-           'mlatex']
+           'mlatex',
+           'msubs',
+           'find_dynamicsymbols']
 
 warnings.simplefilter("always", SymPyDeprecationWarning)
 
@@ -416,45 +419,178 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def _mat_inv_mul(A, B):
+def find_dynamicsymbols(expression, exclude=None):
+    """Find all dynamicsymbols in expression.
+
+    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
+    >>> x, y = dynamicsymbols('x, y')
+    >>> expr = x + x.diff()*y
+    >>> find_dynamicsymbols(expr)
+    set([x(t), y(t), Derivative(x(t), t)])
+
+    If the optional ``exclude`` kwarg is used, only dynamicsymbols
+    not in the iterable ``exclude`` are returned.
+
+    >>> find_dynamicsymbols(expr, [x, y])
+    set([Derivative(x(t), t)])
     """
-    Computes A^-1 * B symbolically w/ substitution, where B is not
-    necessarily a vector, but can be a matrix.
+    t_set = set([dynamicsymbols._t])
+    if exclude:
+        if iterable(exclude):
+            exclude_set = set(exclude)
+        else:
+            raise TypeError("exclude kwarg must be iterable")
+    else:
+        exclude_set = set()
+    return set([i for i in expression.atoms(AppliedUndef, Derivative) if
+            i.free_symbols == t_set]) - exclude_set
 
+
+def msubs(expr, *sub_dicts, **kwargs):
+    """A custom subs for use on expressions derived in physics.mechanics.
+
+    Traverses the expression tree once, performing the subs found in sub_dicts.
+    Terms inside ``Derivative`` expressions are ignored:
+
+    >>> from sympy.physics.mechanics import dynamicsymbols, msubs
+    >>> x = dynamicsymbols('x')
+    >>> msubs(x.diff() + x, {x: 1})
+    Derivative(x(t), t) + 1
+
+    Note that sub_dicts can be a single dictionary, or several dictionaries:
+
+    >>> x, y, z = dynamicsymbols('x, y, z')
+    >>> sub1 = {x: 1, y: 2}
+    >>> sub2 = {z: 3, x.diff(): 4}
+    >>> msubs(x.diff() + x + y + z, sub1, sub2)
+    10
+
+    If smart=True (default False), also checks for conditions that may result
+    in ``nan``, but if simplified would yield a valid expression. For example:
+
+    >>> from sympy import sin, tan
+    >>> (sin(x)/tan(x)).subs(x, 0)
+    nan
+    >>> msubs(sin(x)/tan(x), {x: 0}, smart=True)
+    1
+
+    It does this by first replacing all ``tan`` with ``sin/cos``. Then each
+    node is traversed. If the node is a fraction, subs is first evaluated on
+    the denominator. If this results in 0, simplification of the entire
+    fraction is attempted. Using this selective simplification, only
+    subexpressions that result in 1/0 are targeted, resulting in faster
+    performance."""
+
+    sub_dict = dict_merge(*sub_dicts)
+    smart = kwargs.pop('smart', False)
+    if smart:
+        func = _smart_subs
+    else:
+        func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
+    if isinstance(expr, Matrix):
+        return expr.applyfunc(lambda x: func(x, sub_dict))
+    else:
+        return func(expr, sub_dict)
+
+
+def _crawl(expr, func, *args, **kwargs):
+    """Crawl the expression tree, and apply func to every node."""
+    val = func(expr, *args, **kwargs)
+    if val is not None:
+        return val
+    new_args = (_crawl(arg, func, *args, **kwargs) for arg in expr.args)
+    return expr.func(*new_args)
+
+
+def _sub_func(expr, sub_dict):
+    """Perform direct matching substitution, ignoring derivatives."""
+    if expr in sub_dict:
+        return sub_dict[expr]
+    elif not expr.args or expr.is_Derivative:
+        return expr
+
+
+def _tan_repl_func(expr):
+    """Replace tan with sin/cos."""
+    if isinstance(expr, tan):
+        return sin(*expr.args) / cos(*expr.args)
+    elif not expr.args or expr.is_Derivative:
+        return expr
+
+
+def _smart_subs(expr, sub_dict):
+    """Performs subs, checking for conditions that may result in `nan` or
+    `oo`, and attempts to simplify them out.
+
+    The expression tree is traversed twice, and the following steps are
+    performed on each expression node:
+    - First traverse:
+        Replace all `tan` with `sin/cos`.
+    - Second traverse:
+        If node is a fraction, check if the denominator evaluates to 0.
+        If so, attempt to simplify it out. Then if node is in sub_dict,
+        sub in the corresponding value."""
+    expr = _crawl(expr, _tan_repl_func)
+    def _recurser(expr, sub_dict):
+        # Decompose the expression into num, den
+        num, den = _fraction_decomp(expr)
+        if den != 1:
+            # If there is a non trivial denominator, we need to handle it
+            denom_subbed = _recurser(den, sub_dict)
+            if denom_subbed.evalf() == 0:
+                # If denom is 0 after this, attempt to simplify the bad expr
+                expr = simplify(expr)
+            else:
+                # Expression won't result in nan, find numerator
+                num_subbed = _recurser(num, sub_dict)
+                return num_subbed / denom_subbed
+        # We have to crawl the tree manually, because `expr` may have been
+        # modified in the simplify step. First, perform subs as normal:
+        val = _sub_func(expr, sub_dict)
+        if val is not None:
+            return val
+        new_args = (_recurser(arg, sub_dict) for arg in expr.args)
+        return expr.func(*new_args)
+    return _recurser(expr, sub_dict)
+
+
+def _fraction_decomp(expr):
+    """Return num, den such that expr = num/den"""
+    if not isinstance(expr, Mul):
+        return expr, 1
+    num = []
+    den = []
+    for a in expr.args:
+        if a.is_Pow and a.args[1] < 0:
+            den.append(1 / a)
+        else:
+            num.append(a)
+    if not den:
+        return expr, 1
+    num = Mul(*num)
+    den = Mul(*den)
+    return num, den
+
+
+def _f_list_parser(fl, ref_frame):
+    """Parses the provided forcelist composed of items
+    of the form (obj, force).
+    Returns a tuple containing:
+        vlist: The velocity (ang_vel for Frames, vel for Points) in
+                the provided reference frame.
+        flist: The forces.
+
+    Used internally in the KanesMethod and LagrangesMethod classes.
     """
-
-    r1, c1 = A.shape
-    r2, c2 = B.shape
-    temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j) + str(r1 * i)))
-    temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j) + str(r2 * i)))
-    for i in range(len(temp1)):
-        if A[i] == 0:
-            temp1[i] = 0
-    for i in range(len(temp2)):
-        if B[i] == 0:
-            temp2[i] = 0
-    temp3 = []
-    for i in range(c2):
-        temp3.append(temp1.LDLsolve(temp2[:, i]))
-    temp3 = Matrix([i.T for i in temp3]).T
-    return temp3.subs(dict(list(zip(temp1, A)))).subs(dict(list(zip(temp2, B))))
-
-def _subs_keep_derivs(expr, sub_dict):
-    """Performs subs exactly as subs normally would be,
-    but doesn't sub in expressions inside Derivatives."""
-
-    ds = expr.atoms(Derivative)
-    gs = [Dummy() for d in ds]
-    items = sub_dict.items()
-    deriv_dict = dict((i, j) for (i, j) in items if i.is_Derivative)
-    sub_dict = dict((i, j) for (i, j) in items if not i.is_Derivative)
-    dict_to = dict(zip(ds, gs))
-    dict_from = dict(zip(gs, ds))
-    return expr.subs(deriv_dict).subs(dict_to).subs(sub_dict).subs(dict_from)
-
-def _find_dynamicsymbols(inlist, insyms=[]):
-    """Finds all non-supplied dynamicsymbols in the expressions."""
-    t = dynamicsymbols._t
-    return reduce(set.union, [set([i]) for j in inlist
-            for i in j.atoms(AppliedUndef, Derivative)
-            if i.free_symbols == set([t])], set()) - set(insyms)
+    def flist_iter():
+        for obj, force in fl:
+            if isinstance(obj, ReferenceFrame):
+                yield obj.ang_vel_in(ref_frame), force
+            elif isinstance(obj, Point):
+                yield obj.vel(ref_frame), force
+            else:
+                raise TypeError('First entry in each forcelist pair must '
+                                'be a point or frame.')
+    unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
+    vel_list, f_list = unzip(list(flist_iter()))
+    return vel_list, f_list

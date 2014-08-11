@@ -5,7 +5,7 @@ __all__ = ['Linearizer']
 from sympy import Matrix, eye, zeros, Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import _subs_keep_derivs
+from sympy.physics.mechanics.functions import msubs
 import collections
 
 
@@ -94,10 +94,15 @@ class Linearizer(object):
         dims = collections.namedtuple('dims', ['l', 'm', 'n', 'o', 's', 'k'])
         self._dims = dims(l, m, n, o, s, k)
 
-        # Calculates here only need to be run once:
+        self._setup_done = False
+
+    def _setup(self):
+        # Calculations here only need to be run once. They are moved out of
+        # the __init__ method to increase the speed of Linearizer creation.
         self._form_permutation_matrices()
         self._form_block_matrices()
         self._form_coefficient_matrices()
+        self._setup_done = True
 
     def _form_permutation_matrices(self):
         """Form the permutation matrices Pq and Pu."""
@@ -238,14 +243,20 @@ class Linearizer(object):
             Determines if returned values are simplified before return.
             For large expressions this may be time consuming. Default is False.
 
-        Note that the process of solving with A_and_B=True is computationally
-        intensive if there are many symbolic parameters. For this reason,
-        it may be more desirable to use the default A_and_B=False,
-        returning M, A, and B. More values may then be substituted in to these
-        matrices later on. The state space form can then be found as
-        A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
-        P = Linearizer.perm_mat.
+        Potential Issues
+        ----------------
+            Note that the process of solving with A_and_B=True is
+            computationally intensive if there are many symbolic parameters.
+            For this reason, it may be more desirable to use the default
+            A_and_B=False, returning M, A, and B. More values may then be
+            substituted in to these matrices later on. The state space form can
+            then be found as A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
+            P = Linearizer.perm_mat.
         """
+
+        # Run the setup if needed:
+        if not self._setup_done:
+            self._setup()
 
         # Compose dict of operating conditions
         if isinstance(op_point, dict):
@@ -298,7 +309,7 @@ class Linearizer(object):
             M = col2.row_join(col3)
         else:
             M = col2
-        M_eq = _subs_keep_derivs(M, op_point_dict)
+        M_eq = msubs(M, op_point_dict)
 
         # Build up state coefficient matrix A
         #     |(A_qq + A_qu*C_1)*C_0       A_qu*C_2|
@@ -351,14 +362,14 @@ class Linearizer(object):
                 Amat = col1
         else:
             Amat = col2
-        Amat_eq = _subs_keep_derivs(Amat, op_point_dict)
+        Amat_eq = msubs(Amat, op_point_dict)
 
         # Build up the B matrix if there are forcing variables
         #     |0_(n + m)xs|
         # B = |B_u        |
         if s != 0 and o - m + k != 0:
             Bmat = zeros(n + m, s).col_join(B_u)
-            Bmat_eq = _subs_keep_derivs(Bmat, op_point_dict)
+            Bmat_eq = msubs(Bmat, op_point_dict)
         else:
             Bmat_eq = Matrix()
 

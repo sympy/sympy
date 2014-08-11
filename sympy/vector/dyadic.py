@@ -4,6 +4,8 @@ from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy.core.assumptions import StdFactKB
 from sympy import ImmutableMatrix as Matrix
+from sympy.core.compatibility import u
+import sympy.vector
 
 
 class Dyadic(BasisDependent):
@@ -59,7 +61,7 @@ class Dyadic(BasisDependent):
 
         """
 
-        from sympy.vector.vector import Vector
+        Vector = sympy.vector.Vector
         if isinstance(other, BasisDependentZero):
             return Vector.zero
         elif isinstance(other, Vector):
@@ -106,7 +108,7 @@ class Dyadic(BasisDependent):
 
         """
 
-        from sympy.vector.vector import Vector
+        Vector = sympy.vector.Vector
         if other == Vector.zero:
             return Dyadic.zero
         elif isinstance(other, Vector):
@@ -175,7 +177,9 @@ class BaseDyadic(Dyadic, AtomicExpr):
     Class to denote a base dyadic tensor component.
     """
     def __new__(cls, vector1, vector2):
-        from sympy.vector.vector import Vector, BaseVector, VectorZero
+        Vector = sympy.vector.Vector
+        BaseVector = sympy.vector.BaseVector
+        VectorZero = sympy.vector.VectorZero
         #Verify arguments
         if not isinstance(vector1, (BaseVector, VectorZero)) or \
                not isinstance(vector2, (BaseVector, VectorZero)):
@@ -190,6 +194,10 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._measure_number = 1
         obj._components = {obj: S(1)}
         obj._sys = vector1._sys
+        obj._pretty_form = u('(' + vector1._pretty_form + '|' +
+                             vector2._pretty_form + ')')
+        obj._latex_form = ('(' + vector1._latex_form + "{|}" +
+                           vector2._latex_form + ')')
 
         return obj
 
@@ -229,7 +237,9 @@ class DyadicAdd(BasisDependentAdd, Dyadic):
 
     def __str__(self, printer=None):
         ret_str = ''
-        for k, v in self.components.items():
+        items = list(self.components.items())
+        items.sort(key = lambda x: x[0].__str__())
+        for k, v in items:
             temp_dyad = k * v
             ret_str += temp_dyad.__str__(printer) + " + "
         return ret_str[:-3]
@@ -244,6 +254,8 @@ class DyadicZero(BasisDependentZero, Dyadic):
     """
 
     _op_priority = 13.1
+    _pretty_form = u('(0|0)')
+    _latex_form = '(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)

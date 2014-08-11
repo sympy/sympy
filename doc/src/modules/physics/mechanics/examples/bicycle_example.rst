@@ -185,7 +185,7 @@ coordinate is also provided, with the holonomic constraint. Again, this is only
 comes into play in the linearization process, but is necessary for the
 linearization to correctly work. ::
 
-  >>> KM = KanesMethod(N, q_ind=[q1, q2, q3],
+  >>> KM = KanesMethod(N, q_ind=[q1, q2, q5],
   ...           q_dependent=[q4], configuration_constraints=conlist_coord,
   ...           u_ind=[u2, u3, u5],
   ...           u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,

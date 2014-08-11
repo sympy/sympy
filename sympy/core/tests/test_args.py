@@ -2803,6 +2803,31 @@ def test_sympy__physics__units__Unit():
     assert _test_args(Unit("meter", "m"))
 
 
+def test_sympy__physics__unitsystems__dimensions__Dimension():
+    from sympy.physics.unitsystems.dimensions import Dimension
+    assert _test_args(Dimension(name="length", symbol="L", length=1))
+
+
+def test_sympy__physics__unitsystems__quantities__Quantity():
+    from sympy.physics.unitsystems.quantities import Quantity
+    from sympy.physics.unitsystems.systems import mks
+    assert _test_args(Quantity(10, mks["m"]))
+
+
+def test_sympy__physics__unitsystems__units__Constant():
+    from sympy.physics.unitsystems.units import Constant
+    from sympy.physics.unitsystems.dimensions import Dimension
+    length = Dimension(length=1)
+    assert _test_args(Constant(length, abbrev="u", factor=10))
+
+
+def test_sympy__physics__unitsystems__units__Unit():
+    from sympy.physics.unitsystems.units import Unit
+    from sympy.physics.unitsystems.dimensions import Dimension
+    length = Dimension(length=1)
+    assert _test_args(Unit(length, abbrev="u", factor=10))
+
+
 def test_sympy__polys__numberfields__AlgebraicNumber():
     from sympy.polys.numberfields import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))
@@ -3250,7 +3275,7 @@ def test_sympy__vector__vector__BaseVector():
     from sympy.vector.vector import BaseVector
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
-    assert _test_args(BaseVector('Ci', 0, C))
+    assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
 
 
 def test_sympy__vector__vector__VectorAdd():
@@ -3323,8 +3348,41 @@ def test_sympy__vector__deloperator__Del():
     assert _test_args(Del(C))
 
 
+def test_sympy__vector__orienters__Orienter():
+    from sympy.vector.orienters import Orienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__ThreeAngleOrienter():
+    from sympy.vector.orienters import ThreeAngleOrienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__AxisOrienter():
+    from sympy.vector.orienters import AxisOrienter
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(AxisOrienter(x, C.i))
+
+
+def test_sympy__vector__orienters__BodyOrienter():
+    from sympy.vector.orienters import BodyOrienter
+    assert _test_args(BodyOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__SpaceOrienter():
+    from sympy.vector.orienters import SpaceOrienter
+    assert _test_args(SpaceOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__QuaternionOrienter():
+    from sympy.vector.orienters import QuaternionOrienter
+    a, b, c, d = symbols('a b c d')
+    assert _test_args(QuaternionOrienter(a, b, c, d))
+
+
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
-    assert _test_args(BaseScalar('Cx', 0, C))
+    assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))

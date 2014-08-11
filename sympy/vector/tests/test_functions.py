@@ -5,9 +5,9 @@ from sympy import symbols, S, sin, cos, ImmutableMatrix as Matrix
 
 N = CoordSysCartesian('N')
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
-A = N.orient_new('A', 'Axis', [q1, N.k])
-B = A.orient_new('B', 'Axis', [q2, A.i])
-C = B.orient_new('C', 'Axis', [q3, B.j])
+A = N.orient_new_axis('A', q1, N.k)
+B = A.orient_new_axis('B', q2, A.i)
+C = B.orient_new_axis('C', q3, B.j)
 
 
 def test_express():

@@ -1,14 +1,14 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
 
-from sympy.core.assumptions import ManagedProperties
-from sympy.core.cache import cacheit
-from sympy.core.core import BasicType, C
-from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
+from .assumptions import ManagedProperties
+from .cache import cacheit
+from .core import BasicType, C
+from .sympify import _sympify, sympify, SympifyError
+from .compatibility import (reduce, iterable, Iterator, ordered,
     string_types, with_metaclass, zip_longest)
-from sympy.core.decorators import deprecated
-from sympy.core.singleton import S
+from .decorators import deprecated
+from .singleton import S
 
 from inspect import getmro
 
