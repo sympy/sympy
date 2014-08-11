@@ -392,24 +392,26 @@ def test_totient():
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
     assert summation(totient(m), (m, 1, 11)) == 42
 
+
 def test_sigma():
     assert [sigma(k) for k in range(1, 12)] == \
-        [1,3,4,7,6,12,8,15,13,18,12]
-    assert [sigma(k,2) for k in range(1,12)] == \
+        [1, 3, 4, 7, 6, 12, 8, 15, 13, 18, 12]
+    assert [sigma(k, 2) for k in range(1, 12)] == \
         [1, 5, 10, 21, 26, 50, 50, 85, 91, 130, 122]
     assert sigma(23450) == 50592
-    assert sigma(23450,0) == 24
-    assert sigma(23450,1) == 50592
-    assert sigma(23450,2) == 730747500
-    assert sigma(23450,3) == 14666785333344
+    assert sigma(23450, 0) == 24
+    assert sigma(23450, 1) == 50592
+    assert sigma(23450, 2) == 730747500
+    assert sigma(23450, 3) == 14666785333344
 
     m = Symbol("m", integer=True)
     k = Symbol("k", integer=True)
     assert sigma(m)
-    assert sigma(m,k)
+    assert sigma(m, k)
     assert sigma(m).subs(m, 3**10) == 88573
-    assert sigma(m,k).subs([(m,3**10),(k, 3)]) == 213810021790597
+    assert sigma(m, k).subs([(m, 3**10), (k, 3)]) == 213810021790597
     assert summation(sigma(m), (m, 1, 11)) == 99
+
 
 def test_partitions():
     assert [npartitions(k) for k in range(13)] == \

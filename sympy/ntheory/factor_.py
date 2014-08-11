@@ -1335,18 +1335,21 @@ class totient(Function):
 class sigma(Function):
     """
     Calculate the divisor function sigma_k(n) for positive integer n
-    
+
     sigma(n,0) is equal to divisor_count(n)
     sigma(n,1) is equal to sum(divisors(n))
     sigma(n,k) is equal to sum([x**k for x in divisors(n)])
-    
+
     Default for k is 1.
 
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Divisor_function
-    
+    - [1] http://en.wikipedia.org/wiki/Divisor_function
+
+    Examples
+    ========
+
     >>> from sympy.ntheory import sigma
     >>> sigma(18,0)
     6
@@ -1362,8 +1365,8 @@ class sigma(Function):
 
     divisor_count, totient, divisors, factorint
     """
-    
-    @classmethod    
+
+    @classmethod
     def eval(cls, n, k=1):
         n = sympify(n)
         k = sympify(k)
@@ -1373,13 +1376,13 @@ class sigma(Function):
             if n <= 0:
                 raise ValueError("n must be a positive integer")
             else:
-                return Mul(*[cls.__geom_series(p,e,k) for p, e in factorint(n).items() if p > 1])
-    
+                return Mul(*[cls.__geom_series(p, e, k) for p, e in
+                             factorint(n).items() if p > 1])
+
     # computes the geometric series partial sum 1+p**k+p**(2*k)+...+p**(e*k)
-    @classmethod    
-    def __geom_series(cls,p,e,k): 
+    @classmethod
+    def __geom_series(cls, p, e, k):
         y = t = p**k
         for i in xrange(e-1):
             y = (y+1)*t
         return y+1
-        

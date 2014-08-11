@@ -3189,13 +3189,13 @@ def test_sympy__ntheory__factor___totient():
     k = symbols('k', integer=True)
     t = totient(k)
     assert _test_args(t)
-    
-    
+
+
 def test_sympy__ntheory__factor___sigma():
     from sympy.ntheory.factor_ import sigma
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
-    t = sigma(n,k)
+    t = sigma(n, k)
     assert _test_args(t)
 
 

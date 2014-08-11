@@ -328,7 +328,7 @@ def test_latex_functions():
         0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
 
     assert latex(totient(n)) == r'\phi\left( n \right)'
-    
+
     assert latex(sigma(x)) == r"\sigma\left(x\right)"
     assert latex(sigma(x)**2) == r"\sigma^{2}\left(x\right)"
     assert latex(sigma(x, y)) == r"\sigma\left(x, y\right)"
