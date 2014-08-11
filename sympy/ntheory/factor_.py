@@ -1376,13 +1376,5 @@ class sigma(Function):
             if n <= 0:
                 raise ValueError("n must be a positive integer")
             else:
-                return Mul(*[cls.__geom_series(p, e, k) for p, e in
+                return Mul(*[(p**(k*(e+1))-1)/(p**k-1) for p, e in
                              factorint(n).items() if p > 1])
-
-    # computes the geometric series partial sum 1+p**k+p**(2*k)+...+p**(e*k)
-    @classmethod
-    def __geom_series(cls, p, e, k):
-        y = t = p**k
-        for i in xrange(e-1):
-            y = (y+1)*t
-        return y+1
