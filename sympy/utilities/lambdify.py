@@ -161,7 +161,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy", "numexpr"
+     - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -177,6 +177,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     If numpy is installed, the default behavior is to substitute Sympy Matrices
     with numpy.matrix. If you would rather have a numpy.array returned,
     set use_array=True.
+
+    For functions involving large array calculations, numexpr can provide a
+    significant speedup over numpy.  Please note that the available functions
+    for numexpr are more limited than numpy but can be expanded with
+    implemented_function and user defined subclasses of Function.  The official
+    list of numexpr functions can be found at:
+    https://github.com/pydata/numexpr#supported-functions
 
     Usage
     =====

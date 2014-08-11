@@ -104,14 +104,26 @@ class NumExprPrinter(LambdaPrinter):
     def _print_ImaginaryUnit(self, expr):
         return '1j'
 
+    def _print_seq(self, seq, delimiter=', '):
+        # simplified _print_seq taken from pretty.py
+        s = [self._print(item) for item in seq]
+        if s:
+            return delimiter.join(s)
+        else:
+            return ""
+
     def _print_Function(self, e):
         func_name = e.func.__name__
-        try:
-            nstr = self._numexpr_functions[func_name]
-        except KeyError:
-            raise TypeError("numexpr does not support function %s" %
-                            func_name)
-        return "%s(%s)" % (nstr, self._print(e.args[0]))
+
+        nstr = self._numexpr_functions.get(func_name, None)
+        if nstr is None:
+            # check for implemented_function
+            if hasattr(e, '_imp_'):
+                return "(%s)" % self._print(e._imp_(*e.args))
+            else:
+                raise TypeError("numexpr does not support function '%s'" %
+                                func_name)
+        return "%s(%s)" % (nstr, self._print_seq(e.args))
 
     def blacklisted(self, expr):
         raise TypeError("numexpr cannot be used with %s" %
