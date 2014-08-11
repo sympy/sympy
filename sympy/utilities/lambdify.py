@@ -181,8 +181,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     For functions involving large array calculations, numexpr can provide a
     significant speedup over numpy.  Please note that the available functions
     for numexpr are more limited than numpy but can be expanded with
-    implemented_function and user defined subclasses of Function.  The official
-    list of numexpr functions can be found at:
+    implemented_function and user defined subclasses of Function.  If specified,
+    numexpr may be the only option in modules. The official list of numexpr
+    functions can be found at:
     https://github.com/pydata/numexpr#supported-functions
 
     Usage
@@ -324,6 +325,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
+        # consistency check
+        if 'numexpr' in modules and len(modules) > 1:
+            raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
     namespace = {}
