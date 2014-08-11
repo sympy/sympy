@@ -40,6 +40,9 @@ class Callable(FOL):
         else:
             return False
 
+    def __hash__(self):
+        return hash(self.name)
+
     def _sympystr(self, *args, **kwargs):
         return self.name
 
@@ -75,6 +78,9 @@ class Applied(FOL):
             return (self.func, self.args) == (other.func, other.args)
         else:
             return False
+
+    def __hash__(self):
+        return hash((self.func,) + self.args)
 
     def _sympystr(self, *args, **kwargs):
         return "%s(%s)" % (self.name,
@@ -171,6 +177,9 @@ class Constant(Boolean):
 
     def __eq__(self, other):
         return isinstance(other, self.func) and self.name == other.name
+
+    def __hash__(self):
+        return hash(self.name)
 
     def _sympystr(self, *args, **kwargs):
         return str(self.name)
