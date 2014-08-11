@@ -104,6 +104,10 @@ def test_union():
 
     assert X.is_iterable is False
 
+def test_set_not_in_interval():
+    assert not Interval(0,1) in Interval(-1,2)
+    assert not Interval(0,1) in Interval(0,1)
+
 
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
