@@ -69,6 +69,8 @@ class BasisDependent(Expr):
         return vec
     evalf.__doc__ += Expr.evalf.__doc__
 
+    n = evalf
+
     def simplify(self, ratio=1.7, measure=count_ops):
         """
         Implements the SymPy simplify routine for this quantity.
