@@ -2,8 +2,6 @@
 Classical Mechanics
 ===================
 
-:Authors: Gilbert Gede, Luke Peterson, Angadh Nanjangud
-
 .. topic:: Abstract
 
    In this documentation many components of the physics/mechanics module will
