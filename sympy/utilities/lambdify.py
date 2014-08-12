@@ -16,6 +16,7 @@ MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
+NUMEXPR = {}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -25,6 +26,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
+NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -85,6 +87,8 @@ NUMPY_TRANSLATIONS = {
     "re": "real",
 }
 
+NUMEXPR_TRANSLATIONS = {}
+
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
@@ -94,6 +98,8 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
+                 ("import_module('numexpr')", )),
 }
 
 
@@ -155,7 +161,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy"
+     - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -171,6 +177,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     If numpy is installed, the default behavior is to substitute Sympy Matrices
     with numpy.matrix. If you would rather have a numpy.array returned,
     set use_array=True.
+
+    For functions involving large array calculations, numexpr can provide a
+    significant speedup over numpy.  Please note that the available functions
+    for numexpr are more limited than numpy but can be expanded with
+    implemented_function and user defined subclasses of Function.  If specified,
+    numexpr may be the only option in modules. The official list of numexpr
+    functions can be found at:
+    https://github.com/pydata/numexpr#supported-functions
 
     Usage
     =====
@@ -302,7 +316,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         else:
             modules.insert(1, "numpy")
 
-
     # Get the needed namespaces.
     namespaces = []
     # First find any function implementations
@@ -312,6 +325,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
+        # consistency check
+        if 'numexpr' in modules and len(modules) > 1:
+            raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
     namespace = {}
@@ -326,9 +342,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
+    if 'numexpr' in namespaces and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import NumExprPrinter as printer
+
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
+
     if flat in lstr:
         import itertools
         namespace.update({flat: flatten})
