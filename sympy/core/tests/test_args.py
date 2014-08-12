@@ -459,6 +459,11 @@ def test_sympy__sets__sets__Union():
     assert _test_args(Union(Interval(0, 1), Interval(2, 3)))
 
 
+def test_sympy__sets__sets__Complement():
+    from sympy.sets.sets import Complement
+    assert _test_args(Complement(Interval(0, 2), Interval(0, 1)))
+
+
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
     a, b = symbols('a b')
