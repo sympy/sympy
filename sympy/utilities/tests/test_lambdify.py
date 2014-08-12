@@ -130,14 +130,14 @@ def test_math_transl():
     from sympy.utilities.lambdify import MATH_TRANSLATIONS
     for sym, mat in MATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__
-        assert mat in math.__dict__
+        assert mat in math.__dict__ or mat == 'abs'
 
 
 def test_mpmath_transl():
     from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
     for sym, mat in MPMATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__ or sym == 'Matrix'
-        assert mat in mpmath.__dict__
+        assert mat in mpmath.__dict__ or mat == 'abs'
 
 
 def test_numpy_transl():
@@ -157,6 +157,8 @@ def test_numpy_translation_abs():
     f = lambdify(x, Abs(x), "numpy")
     assert f(-1) == 1
     assert f(1) == 1
+    assert f(3+4j) == 5
+
 
 def test_numexpr_printer():
     if not numexpr:
@@ -183,6 +185,14 @@ def test_numexpr_printer():
 
 #================== Test some functions ============================
 
+def test_abs():
+    from itertools import product
+    for absfunc, modules in product([Abs, abs], [None, 'math', 'cmath']):
+        f = lambdify(x, absfunc(x), modules=modules)
+        assert f(-1) == 1
+        assert f(1) == 1
+        assert f(3+4j) == 5
+
 
 def test_exponentiation():
     f = lambdify(x, x**2)
@@ -192,14 +202,27 @@ def test_exponentiation():
     assert f(-2) == 4
     assert f(2) == 4
     assert f(2.5) == 6.25
+    assert f(2.5j) == -6.25
+    assert f(1+2.5j) == 1 - 6.25 + 2*2.5j
 
 
 def test_sqrt():
-    f = lambdify(x, sqrt(x))
-    assert f(0) == 0.0
-    assert f(1) == 1.0
-    assert f(4) == 2.0
-    assert abs(f(2) - 1.414) < 0.001
+    for modules in [None, ['cmath', 'math']]:
+        f = lambdify(x, sqrt(x), modules=modules)
+        assert f(0) == 0.0
+        assert f(1) == 1.0
+        assert f(4) == 2.0
+        assert abs(f(2) - 1.414) < 0.001
+        assert f(6.25) == 2.5
+        if modules is None:
+            raises(TypeError, lambda: f(3+4j))
+        else:
+            assert f(3+4j) == 2 + 1j
+
+    # if the math module is before the cmath module in the 'modules' kwarg,
+    # the sqrt function from the math module is used.
+    f = lambdify(x, sqrt(x), modules=['math', 'cmath'])
+    raises(TypeError, lambda: f(3+4j))
     assert f(6.25) == 2.5
 
 
@@ -268,6 +291,8 @@ def test_sin():
     assert isinstance(f(2), float)
     f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)
+    f = lambdify(x, sin(x)**2, modules="cmath")
+    assert isinstance(f(2), complex)
 
 
 def test_matrix():

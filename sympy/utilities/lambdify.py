@@ -5,13 +5,13 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
-from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 from sympy.utilities.decorator import doctest_depends_on
 
 import inspect
 
 # These are the namespaces the lambda functions will use.
+CMATH = {}
 MATH = {}
 MPMATH = {}
 NUMPY = {}
@@ -22,6 +22,7 @@ NUMEXPR = {}
 # by simple variable maps, like I => 1j
 # These are separate from the names above because the above names are modified
 # throughout this file, whereas these should remain unmodified.
+CMATH_DEFAULT = {}
 MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
@@ -29,15 +30,20 @@ SYMPY_DEFAULT = {}
 NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
+
+CMATH_TRANSLATIONS = {
+    "Abs": "abs",
+}
+
 MATH_TRANSLATIONS = {
-    "Abs": "fabs",
+    "Abs": "abs",
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
 }
 
 MPMATH_TRANSLATIONS = {
-    "Abs": "fabs",
+    "Abs": "abs",
     "elliptic_k": "ellipk",
     "elliptic_f": "ellipf",
     "elliptic_e": "ellipe",
@@ -48,9 +54,9 @@ MPMATH_TRANSLATIONS = {
     "E": "e",
     "I": "j",
     "ln": "log",
-    #"lowergamma":"lower_gamma",
+    # "lowergamma":"lower_gamma",
     "oo": "inf",
-    #"uppergamma":"upper_gamma",
+    # "uppergamma":"upper_gamma",
     "LambertW": "lambertw",
     "Matrix": "matrix",
     "MutableDenseMatrix": "matrix",
@@ -91,6 +97,7 @@ NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
+    "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("from cmath import *",)),
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
@@ -130,6 +137,7 @@ def _import(module, reload="False"):
 
     for import_command in import_commands:
         if import_command.startswith('import_module'):
+            from sympy.external import import_module
             module = eval(import_command)
 
             if module is not None:
@@ -147,12 +155,15 @@ def _import(module, reload="False"):
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
+        if translation == 'abs':
+            namespace[sympyname] = abs
+            continue
         namespace[sympyname] = namespace[translation]
 
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True, use_array=False):
+             dummify=True, use_array=False):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -192,7 +203,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     (1) Use one of the provided modules:
 
         >>> from sympy import lambdify, sin, tan, gamma
-        >>> from sympy.utilities.lambdify import lambdastr
         >>> from sympy.abc import x, y
         >>> f = lambdify(x, sin(x), "math")
 
@@ -289,26 +299,24 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     from sympy.utilities.iterables import flatten
 
     # If the user hasn't specified any modules, use what is available.
-    module_provided = True
     if modules is None:
-        module_provided = False
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
-        #If numpy.array should be used instead of numpy.matrix
+        # If numpy.array should be used instead of numpy.matrix
         if use_array:
             NUMPY_TRANSLATIONS.update({"Matrix": "array",
-                "MutableDenseMatrix": "array",
-                "ImmutableMatrix": "array"})
+                                       "MutableDenseMatrix": "array",
+                                       "ImmutableMatrix": "array"})
         else:
-            #Ensures that the translation dict is set back
-            #to matrix if lambdify was already called
+            # Ensures that the translation dict is set back
+            # to matrix if lambdify was already called
             NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
-                "MutableDenseMatrix": "matrix",
-                "ImmutableMatrix": "matrix"})
-        #Attempt to import numpy
+                                       "MutableDenseMatrix": "matrix",
+                                       "ImmutableMatrix": "matrix"})
+        # Attempt to import numpy
         try:
             _import("numpy")
         except ImportError:
@@ -336,8 +344,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         namespace.update(buf)
 
     if hasattr(expr, "atoms"):
-        #Try if you can extract symbols from the expression.
-        #Move on if expr.atoms in not implemented.
+        # Try if you can extract symbols from the expression.
+        # Move on if expr.atoms in not implemented.
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
@@ -351,7 +359,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     flat = '__flatten_args__'
 
     if flat in lstr:
-        import itertools
         namespace.update({flat: flatten})
     return eval(lstr, namespace)
 
@@ -417,10 +424,10 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            #Sub in dummy variables for functions or symbols
+            # Sub in dummy variables for functions or symbols
             if isinstance(args, (Function, Symbol)):
                 dummies = Dummy()
-                dummies_dict.update({args : dummies})
+                dummies_dict.update({args: dummies})
                 return str(dummies)
             else:
                 return str(args)
@@ -446,11 +453,10 @@ def lambdastr(args, expr, printer=None, dummify=False):
         return iterable(l, exclude=(str, DeferredVector))
 
     if isiter(args) and any(isiter(i) for i in args):
-        from sympy.utilities.iterables import flatten
         import re
         dum_args = [str(Dummy(str(i))) for i in range(len(args))]
         iter_args = ','.join([i if isiter(a) else i
-            for i, a in zip(dum_args, args)])
+                              for i, a in zip(dum_args, args)])
         lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
         flat = '__flatten_args__'
         rv = 'lambda %s: (%s)(*list(%s([%s])))' % (
@@ -533,7 +539,7 @@ def _imp_namespace(expr, namespace=None):
     if isinstance(func, FunctionClass):
         imp = getattr(func, '_imp_', None)
         if imp is not None:
-            name = expr.func.__name__
+            name = func.__name__
             if name in namespace and namespace[name] != imp:
                 raise ValueError('We found more than one '
                                  'implementation with name '
