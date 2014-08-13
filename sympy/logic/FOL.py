@@ -9,8 +9,8 @@ from itertools import chain, combinations, product
 from sympy.core import Symbol
 from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import (And, Boolean, BooleanFunction,
-    conjuncts, disjuncts, eliminate_implications, false, Not, Or,
-    to_cnf, true)
+    conjuncts, disjuncts, eliminate_implications, false, Implies,
+    Not, Or, to_cnf, true)
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -41,7 +41,10 @@ class Callable(FOL):
             return False
 
     def __hash__(self):
-        return hash(self.name)
+        return super(Callable, self).__hash__()
+
+    def _hashable_content(self):
+        return (self.func, self.name)
 
     def _sympystr(self, *args, **kwargs):
         return self.name
@@ -80,7 +83,10 @@ class Applied(FOL):
             return False
 
     def __hash__(self):
-        return hash((self.func,) + self.args)
+        return super(Applied, self).__hash__()
+
+    def _hashable_content(self):
+        return (self.__class__, self.name) + self.args
 
     def _sympystr(self, *args, **kwargs):
         return "%s(%s)" % (self.name,
@@ -179,7 +185,10 @@ class Constant(Boolean):
         return isinstance(other, self.func) and self.name == other.name
 
     def __hash__(self):
-        return hash(self.name)
+        return super(Constant, self).__hash__()
+
+    def _hashable_content(self):
+        return (self.func, self.name)
 
     def _sympystr(self, *args, **kwargs):
         return str(self.name)
