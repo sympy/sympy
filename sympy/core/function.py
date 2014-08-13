@@ -1526,10 +1526,7 @@ class Subs(Expr):
         return self.expr.doit().subs(list(zip(self.variables, self.point)))
 
     def evalf(self, prec=None, **options):
-        if prec is None:
-            return self.doit().evalf(**options)
-        else:
-            return self.doit().evalf(prec, **options)
+        return self.doit().evalf(prec, **options)
 
     n = evalf
 

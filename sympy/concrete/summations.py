@@ -18,7 +18,7 @@ from sympy.core.compatibility import xrange
 
 
 class Sum(AddWithLimits,ExprWithIntLimits):
-    """Represents unevaluated summation.
+    r"""Represents unevaluated summation.
 
     ``Sum`` represents a finite or infinite series, with the first argument
     being the general form of terms in the series, and the second argument

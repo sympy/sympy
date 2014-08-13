@@ -3,7 +3,7 @@ Unit systems
 ============
 
 This module integrates unit systems into SymPy, allowing a user choose which
-system to use when doing his computations and providing utilities to display
+system to use when doing their computations and providing utilities to display
 and convert units.
 
 Unit systems are composed of units and constants, which are themselves

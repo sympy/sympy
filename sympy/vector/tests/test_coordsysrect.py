@@ -269,3 +269,9 @@ def test_locatenew_point():
     p2 = p.locate_new('p2', A.i)
     assert p1.position_wrt(p2) == 2*v - A.i
     assert p2.express_coordinates(C) == (-2*a + 1, -2*b, -2*c)
+
+
+def test_evalf():
+    v = 3*A.i + 4*A.j + a*A.k
+    assert v.n() == v.evalf()
+    assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()
