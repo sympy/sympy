@@ -328,7 +328,8 @@ class AssocOp(Basic):
             # here, we have a number so we just call to _evalf with prec;
             # prec is not the same as n, it is the binary precision so
             # that's why we don't call to evalf.
-            x = x._evalf(prec) if x is not self.identity else self.identity
+            x = x._evalf_binprec(prec) if x is not self.identity \
+                else self.identity
             args = []
             for a in self.func.make_args(tail):
                 # here we call to _eval_evalf since we don't know what we

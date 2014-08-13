@@ -883,11 +883,11 @@ class Pow(Expr):
 
     def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()
-        base = base._evalf(prec)
+        base = base._evalf_binprec(prec)
         if not exp.is_Integer:
-            exp = exp._evalf(prec)
+            exp = exp._evalf_binprec(prec)
         if exp.is_negative and base.is_number and base.is_real is False:
-            base = base.conjugate() / (base * base.conjugate())._evalf(prec)
+            base = base.conjugate() / (base * base.conjugate())._evalf_binprec(prec)
             exp = -exp
             return self.func(base, exp).expand()
         return self.func(base, exp)

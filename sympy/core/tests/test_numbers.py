@@ -1178,11 +1178,11 @@ def test_Float_gcd_lcm_cofactors():
 
 
 def test_issue_4611():
-    assert abs(pi._evalf(50) - 3.14159265358979) < 1e-10
-    assert abs(E._evalf(50) - 2.71828182845905) < 1e-10
-    assert abs(Catalan._evalf(50) - 0.915965594177219) < 1e-10
-    assert abs(EulerGamma._evalf(50) - 0.577215664901533) < 1e-10
-    assert abs(GoldenRatio._evalf(50) - 1.61803398874989) < 1e-10
+    assert abs(pi._evalf_binprec(50) - 3.14159265358979) < 1e-10
+    assert abs(E._evalf_binprec(50) - 2.71828182845905) < 1e-10
+    assert abs(Catalan._evalf_binprec(50) - 0.915965594177219) < 1e-10
+    assert abs(EulerGamma._evalf_binprec(50) - 0.577215664901533) < 1e-10
+    assert abs(GoldenRatio._evalf_binprec(50) - 1.61803398874989) < 1e-10
     x = Symbol("x")
     assert (pi + x).evalf() == pi.evalf() + x
     assert (E + x).evalf() == E.evalf() + x
