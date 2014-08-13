@@ -26,33 +26,33 @@ def test_DEtoRE():
     r = Function('r')
 
     DE = f(x) + Derivative(f(x), x, x)
-    assert DEtoRE(DE, r, k) == (k + 1)*(k + 2)*r(k + 2) + r(k)
+    assert DEtoRE(DE, r(k)) == (k + 1)*(k + 2)*r(k + 2) + r(k)
     DE = 2*f(x) - 2*Derivative(f(x), x) + Derivative(f(x), x, x)
-    assert DEtoRE(DE, r, k) == (-2*k - 2)*r(k + 1) + (k + 1)*(k + 2)*r(k + 2) + 2*r(k)
+    assert DEtoRE(DE, r(k)) == (-2*k - 2)*r(k + 1) + (k + 1)*(k + 2)*r(k + 2) + 2*r(k)
     DE = (x**10 + 4)*Derivative(f(x), x) + x*(x**10 - 1)*Derivative(f(x), x, x)
-    assert DEtoRE(DE, r, k) == k*(k - 1)*r(k) + k*r(k) - (k + 9)*(k + 10)*r(k + 10) + (4*k + 40)*r(k + 10)
+    assert DEtoRE(DE, r(k)) == k*(k - 1)*r(k) + k*r(k) - (k + 9)*(k + 10)*r(k + 10) + (4*k + 40)*r(k + 10)
     DE = -x*f(x) + Derivative(f(x), x, x)
-    assert DEtoRE(DE, r, k) == (k + 2)*(k + 3)*r(k + 3) - r(k)
+    assert DEtoRE(DE, r(k)) == (k + 2)*(k + 3)*r(k + 3) - r(k)
     DE = 2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
-    assert DEtoRE(DE, r, k) == k*r(k) + 2*n*r(k + 1) + (-k - 2)*r(k + 2)
+    assert DEtoRE(DE, r(k)) == k*r(k) + 2*n*r(k + 1) + (-k - 2)*r(k + 2)
 
 def test_solveRE():
     r = Function('r')
 
     RE = (k + 1)*r(k + 1) - r(k)
-    assert solveRE(RE, r, k, exp(x)) == [(1/factorial(k), k)]
+    assert solveRE(RE, r(k), exp(x)) == [(1/factorial(k), k)]
     RE = (k + 1)*(k + 2)*r(k + 2) + r(k)
-    assert solveRE(RE, r, k, sin(x)) == [((-1/4)**k/(RisingFactorial(3/2, k)*factorial(k)), 2*k + 1)]
-    assert solveRE(RE, r, k, cos(x)) == [((-1/4)**k/(RisingFactorial(1/2, k)*factorial(k)), 2*k)]
+    assert solveRE(RE, r(k), sin(x)) == [((-1/4)**k/(RisingFactorial(3/2, k)*factorial(k)), 2*k + 1)]
+    assert solveRE(RE, r(k), cos(x)) == [((-1/4)**k/(RisingFactorial(1/2, k)*factorial(k)), 2*k)]
     RE = k*(k - 1)*r(k) + k*r(k) - (k + 1)*(k + 2)*r(k + 2)
-    assert solveRE(RE, r, k, asin(x)) == [(RisingFactorial(1/2, k)**2/(RisingFactorial(3/2, k)*factorial(k)), 2*k + 1)]
+    assert solveRE(RE, r(k), asin(x)) == [(RisingFactorial(1/2, k)**2/(RisingFactorial(3/2, k)*factorial(k)), 2*k + 1)]
     RE = k*(k - 1)*r(k) + 2*k*r(k) + (k + 1)*(k + 2)*r(k + 2)
-    assert solveRE(RE, r, k, atan(x)) == [((-1)**k*RisingFactorial(1/2, k)/RisingFactorial(3/2, k), 2*k + 1)]
+    assert solveRE(RE, r(k), atan(x)) == [((-1)**k*RisingFactorial(1/2, k)/RisingFactorial(3/2, k), 2*k + 1)]
     RE = k*(k - 1)*r(k) + k*r(k) + (k + 1)*(k + 2)*r(k + 2) - r(k)
-    assert solveRE(RE, r, k, exp(asinh(x))) == [((-1)**k*RisingFactorial(-1/2, k)/factorial(k), 2*k),
+    assert solveRE(RE, r(k), exp(asinh(x))) == [((-1)**k*RisingFactorial(-1/2, k)/factorial(k), 2*k),
             ((-1)**k*RisingFactorial(0, k)/RisingFactorial(3/2, k), 2*k + 1)]
     RE = 4*k*(k + 1)*r(k + 1) + 10*(k + 1)*r(k + 1) + r(k) + 2*r(k + 1)
-    assert solveRE(RE, r, k, sin(sqrt(x))/x) == [((-1/4)**k/(RisingFactorial(3/2, k)*factorial(k)), k - 1/2)]
+    assert solveRE(RE, r(k), sin(sqrt(x))/x) == [((-1/4)**k/(RisingFactorial(3/2, k)*factorial(k)), k - 1/2)]
 
 
 def test_series():
@@ -93,33 +93,6 @@ def test_series_mul():
     assert (s*x**2).as_series() == x**2 + 2*x**3 + 3*x**4 + x**5 + O(x**6)
 
 
-def test_series_div():
-    s1 = FormalSeries(x, function=sin(x))
-    s2 = FormalSeries(x, function=exp(x))
-    s = s1 / s2
-    assert s.as_series() == x - x**2 + x**3/3 - x**5/30 + O(x**6)
-    s1 = FormalSeries(x, function=1/(1-x))
-    s2 = FormalSeries(x, function=1/(1+x))
-    s = s1 / s2
-    assert s.as_series() == 1 + 2*x + 2*x**2 + 2*x**3 + 2*x**4 + 2*x**5 + O(x**6)
-
-
-def test_series_inverse():
-    s = FormalSeries(x, function=1/(1-x))
-    assert s.inverse().as_series() == 1 - x + O(x**6)
-    s = FormalSeries(x, function=exp(x))
-    assert s.inverse().as_series() == 1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
-    s = FormalSeries(x, sequence=(1, 2, 3))
-    assert s.inverse().as_series() == 1 - 2*x + x**2 + 3*x**3 - 9*x**4 + 9*x**5 + O(x**6)
-
-
-def test_series_compose():
-    s1 = FormalSeries(x, function=sin(x))
-    s2 = FormalSeries(x, function=exp(x))
-    s = s2.compose(s1)
-    assert s.as_series() == 1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
-
-
 def test_eval():
     s = FormalSeries(x, function=sin(x))
     assert s.diff(x).as_series() == 1 - x**2/2 + x**4/24 + O(x**6)
@@ -127,4 +100,3 @@ def test_eval():
     s = FormalSeries(x, function=exp(x))
     assert s.diff(x).as_series() == 1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120 + O(x**6)
     assert s.as_leading_term(x) == 1
-

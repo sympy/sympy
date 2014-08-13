@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy import C, S, collect, Function, Add, Mul, simplify, cancel, sympify, Basic
-from sympy.core.containers import Stream, Tuple
 from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq
@@ -16,68 +15,7 @@ from sympy.polys.partfrac import apart
 from sympy.solvers import solve, rsolve
 
 
-def FormalSeries(x=None, x0=0, dir='+', *args, **kwargs):
-    """
-    Finds generator for given function and returns a ``Lazyseries`` object.
-
-    Kwargs
-    ======
-
-    function
-    sequence
-    generator
-
-    Examples
-    ========
-
-    >>> from sympy.series.formal import FormalSeries
-    >>> from sympy.abc import x
-    >>> FormalSeries(x, function=1/(1-x))
-    Lazyseries(...)
-    >>> FormalSeries(x, sequence=(1, 2, 3))
-    Lazyseries(...)
-
-    """
-    k = Dummy('k', integer=True)
-    generator = kwargs.pop("generator", None)
-    if generator:
-        c, e, k = generator
-
-    sequence = kwargs.pop('sequence', None)
-    if sequence:
-        c, e = findgen_seq(sequence, k)
-
-    function = kwargs.pop('function', None)
-    if function is not None:
-        function = sympify(function)
-
-        if len(dir) != 1 or dir not in '+-':
-            raise ValueError("Dir must be '+' or '-'")
-
-        if x0 in [S.Infinity, S.NegativeInfinity]:
-            dir = {S.Infinity: '+', S.NegativeInfinity: '-'}[x0]
-            return FormalSeries(x, dir=dir, function=function.subs(x, 1/x)).subs(x, 1/x)
-
-        if x0 or dir == '-':
-            if dir == '-':
-                rep = -x + x0
-                rep2 = -x + x0
-            else:
-                rep = x + x0
-                rep2 = x - x0
-            return FormalSeries(x, function=function.subs(x, rep)).subs(x, rep2)
-
-        if x.is_positive is x.is_negative is None:
-            xpos = Dummy('x', positive=True, bounded=True)
-            return FormalSeries(xpos, function=function.subs(x, xpos)).subs(xpos, x)
-
-        generator = findgen(x, function, k)
-        return sum(FormalSeries(x, generator=(c, e, k)) for c, e in generator)
-
-    return Series(x, c*x**e, k)
-
-
-def findgen_seq(sequence, k):
+def findgen_seq(sequence):
     """
     Returns generator for a sequence in terms of k
 
@@ -86,18 +24,22 @@ def findgen_seq(sequence, k):
 
     >>> from sympy.series.formal import findgen_seq
     >>> from sympy.abc import x, k
-    >>> findgen_seq((1, 2, 3), k)
+    >>> f = findgen_seq((1, 2, 3))
+    >>> f(k)
     (Piecewise((1, Mod(k, 3) == 0), (2, Mod(k, 3) == 1), (3, Mod(k, 3) == 2)), k)
-    >>> findgen_seq([1], k)
+    >>> f = findgen_seq([1])
+    >>> f(k)
     (Piecewise((1, Mod(k, 1) == 0)), k)
 
     """
     l = len(sequence)
-    cond = [(sequence[i], Eq(k%l, i)) for i in range(l)]
-    return (Piecewise(*cond), k)
+    def gen(k):
+        cond = [(sequence[i], Eq(k%l, i)) for i in range(l)]
+        return (Piecewise(*cond), k)
+    return gen
 
 
-def findgen_rational(x, function, k):
+def findgen_rational(function, x=None):
     """
     Returns the generator for a given rational function in x in terms of k
 
@@ -106,27 +48,37 @@ def findgen_rational(x, function, k):
 
     >>> from sympy.series.formal import findgen_rational
     >>> from sympy.abc import x, k
-    >>> findgen_rational(x, 1/(1-x), k)
+    >>> f = findgen_rational(1/(1-x), x)
+    >>> f(k)
     [(1, k)]
-    >>> findgen_rational(x, 1/(1+x), k)
+    >>> f = findgen_rational(1/(1+x), x)
+    >>> f(k)
     [(-(-1)**(-k - 1), k)]
 
     """
-    gen = []
-    m = Wild('m', exclude=(0,))
-    terms = Add.make_args(apart(function))
-    for t in terms:
-        n, d = t.as_numer_denom()
-        if not d.has(x):
-            c, e = t.as_coeff_exponent(x)
-            gen += [(c, e)]
-        elif not d.match(x+m):
-            raise ValueError('Expected denominator of type "x + a", got: %s' % d)
-        else:
-            d, j = d.as_base_exp()
-            a = -d.as_coeff_add()[0]
-            c, e = (-1)**j * n * C.binomial(j+k-1, k).rewrite(C.factorial) / a**(j+k), k
-            gen += [(c, e)]
+    if x is None:
+        syms = function.atoms(C.Symbol)
+        if len(syms) > 1:
+            raise ValueError('x must be given for multivariate functions')
+        x = syms.pop()
+
+    def gen(k):
+        g = []
+        m = Wild('m', exclude=(0,))
+        terms = Add.make_args(apart(function))
+        for t in terms:
+            n, d = t.as_numer_denom()
+            if not d.has(x):
+                c, e = t.as_coeff_exponent(x)
+                g += [(c, e)]
+            elif not d.match(x+m):
+                raise ValueError('Expected denominator of type "x + a", got: %s' % d)
+            else:
+                d, j = d.as_base_exp()
+                a = -d.as_coeff_add()[0]
+                c, e = (-1)**j * n * C.binomial(j+k-1, k).rewrite(C.factorial) / a**(j+k), k
+                g += [(c, e)]
+        return g
     return gen
 
 
@@ -162,7 +114,7 @@ def rational_independent(x, terms):
     return ind
 
 
-def simpleDE(x, function, f):
+def simpleDE(x, function, f, order=4):
     """
     Converts a function into a simple differential equation.
 
@@ -182,7 +134,7 @@ def simpleDE(x, function, f):
     f(x) + Derivative(f(x), x, x)
 
     """
-    a = symbols('a:4')
+    a = symbols('a:%d' % order)
 
     makeDE = lambda k: (function.diff(x, k) + \
             Add(*[a[i]*function.diff(x, i) for i in range(0, k)]), f(x).diff(x, k) +
@@ -200,7 +152,7 @@ def simpleDE(x, function, f):
     # Solve for cases from k=2
     # Search upto 4th order DE
     # Good enough for most functions
-    for k in range(2, 5):
+    for k in range(2, order+1):
         eq, DE = makeDE(k)
         eq = eq.expand()
         terms = [t for t in eq.as_ordered_terms()]
@@ -217,13 +169,13 @@ def simpleDE(x, function, f):
     raise NotImplementedError('Cannot find simple differential equation for %s' % function)
 
 
-def DEtoRE(DE, r, k):
+def DEtoRE(DE, r):
     """
     Converts a differential equation into a recurrence equation
 
     Parameters:
-        r: Function in which RE whill be expressed
-        n: Argument of recurr function
+        DE: Function in which RE whill be expressed
+        r: Argument of recurr function
 
     Examples
     ========
@@ -233,7 +185,7 @@ def DEtoRE(DE, r, k):
     >>> from sympy.abc import x, k
     >>> f, r = Function('f'), Function('r')
     >>> DE = -f(x) + Derivative(f(x), x)
-    >>> DEtoRE(DE, r, k)
+    >>> DEtoRE(DE, r(k))
     (k + 1)*r(k + 1) - r(k)
 
     """
@@ -242,6 +194,7 @@ def DEtoRE(DE, r, k):
 
     f = DE.atoms(Function).pop()
     x = f.atoms(Symbol).pop()
+    k = r.args[0]
 
     # Minimum argument of ``r`` in the RE
     # This converts recurrences like
@@ -258,7 +211,7 @@ def DEtoRE(DE, r, k):
             j = len(d.args) - 1
         else:
             j = 0
-        RE += c * C.RisingFactorial(k+1-l, j) * r(k+j-l)
+        RE += c * C.RisingFactorial(k+1-l, j) * r.subs(k, k+j-l)
         if not m or k+j-l < m:
             m = k+j-l
     sol = solve(m, k)
@@ -317,7 +270,7 @@ def rsolve_hypergeometric(P, Q, m, k, function):
     return gen
 
 
-def solveRE(RE, r, k, function):
+def solveRE(RE, r, function):
     """
     Returns generator for a given recurrence equation
 
@@ -329,11 +282,12 @@ def solveRE(RE, r, k, function):
     >>> from sympy.abc import x, k
     >>> r = Function('r')
     >>> RE = (k+1)*r(k+1) - r(k)
-    >>> solveRE(RE, r, k, exp(x))
+    >>> solveRE(RE, r(k), exp(x))
     [(1/(factorial(k)), k)]
 
     """
-    RE = RE.expand().collect(r(k).func(Wild('m')))
+    RE = RE.expand().collect(r.func(Wild('m')))
+    k = r.args[0]
     terms = Add.make_args(RE)
 
     if len(terms) == 2:
@@ -346,18 +300,18 @@ def solveRE(RE, r, k, function):
         return rsolve_hypergeometric(P, Q, m, k, function)
 
     x = function.atoms(Symbol).pop()
-    key = [r(i) for i in range(0, len(terms)-1)]
+    key = [r.subs(k, i) for i in range(0, len(terms)-1)]
     val = [function.diff(x, i).subs(x, 0)/C.factorial(i) for i in range(0, len(terms)-1)]
     init = dict(zip(key, val))
 
-    sol = rsolve(RE, r(k), init)
+    sol = rsolve(RE, r, init)
     if sol:
         return [(sol, k)]
 
     raise NotImplementedError('Cannot solve %s' % RE)
 
 
-def findgen(x, function, k):
+def findgen(function, x=None):
     """
     Returns the generator for a given function in x
 
@@ -372,9 +326,11 @@ def findgen(x, function, k):
     >>> from sympy import sin, exp
     >>> from sympy.series.formal import findgen
     >>> from sympy.abc import x, k
-    >>> findgen(x, sin(x), k)
+    >>> f = findgen(sin(x), x)
+    >>> f(k)
     [((-1/4)**k/(RisingFactorial(3/2, k)*factorial(k)), 2*k + 1)]
-    >>> findgen(x, exp(x), k)
+    >>> f = findgen(exp(x), x)
+    >>> f(k)
     [(1/(factorial(k)), k)]
 
     References
@@ -388,69 +344,142 @@ def findgen(x, function, k):
 
     simplDE, DEtoRE, solveRE
     """
+    if x is None:
+        syms = function.atoms(C.Symbol)
+        if len(syms) > 1:
+            raise ValueError('x must be given for multivariate functions')
+        x = syms.pop()
+
     # Search upto 4th order DE
     # Good enough for most functions
     for order in range(0, 5):
         diff = function.diff(x, order)
         if diff.is_rational_function():
             try:
-                gen = findgen_rational(x, diff, k)  # Integrate order times
+                gen = findgen_rational(diff, x)
                 integral = lambda e, k: e if k == 0 else integral(e.integrate(x, conds="none"), k - 1)
-                return [integral(c*x**e, order).as_coeff_exponent(x) for c, e in gen]
+                return lambda k: [integral(c*x**e, order).as_coeff_exponent(x) for c, e in gen(k)]
             except ValueError:
                 break
 
     f = Function('f')
     r = Function('r')
 
-    DE = simpleDE(x, function, f)
-    RE = DEtoRE(DE, r, k)
-    gen = solveRE(RE, r, k, function)
+    def gen(k):
+        DE = simpleDE(x, function, f)
+        RE = DEtoRE(DE, r(k))
+        return solveRE(RE, r(k), function)
 
     return gen
 
 
-class Series(Expr):
+class FormalSeries(Expr):
     """
     Represents an infinite series
+
+    Kwargs
+    ======
+
+    function
+    sequence
+    generator
+
+    Examples
+    ========
+
+    >>> from sympy import sin
+    >>> from sympy.series.formal import FormalSeries
+    >>> from sympy.abc import x
+    >>> s = FormalSeries(x, function=sin(x))
+    >>> s.as_series()
+    x - x**3/6 + x**5/120 + O(x**6)
+    >>> s = FormalSeries(x, sequence=(1, 2, 3))
+    >>> s.as_series()
+    1 + 2*x + 3*x**2 + x**3 + 2*x**4 + 3*x**5 + O(x**6)
+
     """
-    def __init__(self, x, gen, k):
-        self.x = x
-        self.gen = gen
-        self.k = k
+    def __new__(cls, x, *args, **kwargs):
+        k = Dummy('k', integer=True)
+
+        generator = kwargs.pop("generator", None)
+        if generator:
+            gen, k = generator
+
+        sequence = kwargs.pop('sequence', None)
+        if sequence:
+            c, e = findgen_seq(sequence)(k)
+            gen = c*x**e
+
+        function = kwargs.pop('function', None)
+        if function is not None:
+            function = sympify(function)
+            generator = findgen(function, x)
+            gen = sum(c*x**e for c, e in generator(k))
+
+        obj = Expr.__new__(cls, x, gen, k)
+        obj.x, obj.gen, obj.k = x, gen, k
+        return obj
 
     def __getitem__(self, index):
         k = self.k
         if isinstance(index, integer_types):
             if index < 0:
                 raise ValueError("Argument must be greater than 0")
-            if not self.gen.has(self.k):
-                if index == 0:
-                    return self.gen
+            terms = Add.make_args(self.gen)
+            val = S.Zero
+            for t in terms:
+                if not t.has(self.k):
+                    if index == 0:
+                        val += t.doit()
                 else:
-                    return S.Zero
-            return self.gen.subs(k, index).doit()
+                    val += t.subs(k, index).doit()
+            return val
         elif isinstance(index, slice):
             if index.step == 0:
                 raise ValueError("Step must not be 0")
             return [self[i] for i in xrange(index.start, index.stop, index.step or 1)]
 
+    @property
+    def free_symbols(self):
+        return self.x.free_symbols
+
+    def _eval_derivative(self, x):
+        gen = self.gen.diff(x)
+        return FormalSeries(self.x, generator=(gen, self.k))
+
+    def _eval_as_leading_term(self, x):
+        if x == self.x:
+            return self[0]
+        else:
+            return self
+
     def __add__(self, other):
+        if not isinstance(other, FormalSeries):
+            gen = self.gen + other
+            return FormalSeries(self.x, generator=(gen, self.k))
         if self.x != other.x:
             raise ValueError('Cannot add series of different variables')
-        return self.__class__(self.x, self.gen + other.gen.subs(other.k, self.k), self.k)
+        gen = self.gen + other.gen.subs(other.k, self.k)
+        return FormalSeries(self.x, generator=(gen, self.k))
 
     def __sub__(self, other):
+        if not isinstance(other, FormalSeries):
+            gen = self.gen - other
+            return FormalSeries(self.x, generator=(gen, self.k))
         if self.x != other.x:
             raise ValueError('Cannot subtract series of different variables')
-        return self.__class__(self.x, self.gen - other.gen.subs(other.k, self.k), self.k)
+        gen = self.gen - other.gen.subs(other.k, self.k)
+        return FormalSeries(self.x, generator=(gen, self.k))
 
     def __mul__(self, other):
+        if not isinstance(other, FormalSeries):
+            gen = self.gen * other
+            return FormalSeries(self.x, generator=(gen, self.k))
         if self.x != other.x:
             raise ValueError('Cannot multiply series of different variables')
         j = Dummy('j', integer=True)
         gen = self.gen.subs(self.k, j) * other.gen.subs(other.k, self.k - j)
-        return self.__class__(self.x, Sum(gen, (j, 0, self.k)), self.k)
+        return FormalSeries(self.x, generator=(Sum(gen, (j, 0, self.k)), self.k))
 
     def as_series(self, n=6):
         x = self.x
@@ -458,7 +487,9 @@ class Series(Expr):
         i = 0
         if not self.gen.has(self.k):
             return self[0]
-        while not (self[i] + C.Order(x**n)).is_Order:
+        while True:
+            if self[i].has(self.x) and (self[i] + C.Order(x**n)).is_Order:
+                break
             s.append(self[i])
             i += 1
         return Add(*s) + C.Order(x**n)
