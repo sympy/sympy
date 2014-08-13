@@ -195,9 +195,9 @@ def reduce_rational_inequalities(exprs, gen, assume=True, relational=True):
     x == 0
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
-    x > -2
+    And(-2 < x, x < oo)
     >>> reduce_rational_inequalities([[(x + 2, ">")]], x)
-    x > -2
+    And(-2 < x, x < oo)
     >>> reduce_rational_inequalities([[x + 2]], x)
     x == -2
     """
@@ -347,7 +347,7 @@ def reduce_abs_inequalities(exprs, gen, assume=True):
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
     ... (Abs(x + 25) - 13, '>')], x, assume=Q.real(x))
-    And(-2/3 < x, Or(x < -38, x > -12), x < 4)
+    And(-2/3 < x, Or(And(-12 < x, x < oo), And(-oo < x, x < -38)), x < 4)
 
     >>> reduce_abs_inequalities([(Abs(x - 4) + Abs(3*x - 5) - 7, '<')], x,
     ... assume=Q.real(x))
@@ -372,7 +372,8 @@ def solve_univariate_inequality(expr, gen, assume=True, relational=True):
     >>> x = Symbol('x', real=True)
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
-    Or(x <= -2, x >= 2)
+    Or(And(-oo < x, x <= -2), And(2 <= x, x < oo))
+
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     (-oo, -2] U [2, oo)
 
@@ -444,7 +445,7 @@ def reduce_inequalities(inequalities, assume=True, symbols=[]):
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
     >>> reduce_inequalities(S(0) <= x + 3, Q.real(x), [])
-    x >= -3
+    And(-3 <= x, x < oo)
 
     >>> reduce_inequalities(S(0) <= x + y*2 - 1, True, [x])
     -2*y + 1 <= x
