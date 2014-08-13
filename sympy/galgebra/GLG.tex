@@ -1,0 +1,134 @@
+
+\documentclass[12pt,fleqn]{report}
+
+\pagestyle{empty}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsbsy}
+\usepackage{tensor}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{bm}
+\definecolor{gray}{rgb}{0.95,0.95,0.95}
+\setlength{\parindent}{0pt}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\Adj}{Adj}
+\newcommand{\bfrac}[2]{\displaystyle\frac{#1}{#2}}
+\newcommand{\lp}{\left (}
+\newcommand{\rp}{\right )}
+\newcommand{\paren}[1]{\lp {#1} \rp}
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\llt}{\left <}
+\newcommand{\rgt}{\right >}
+\newcommand{\abs}[1]{\left |{#1}\right | }
+\newcommand{\pdiff}[2]{\bfrac{\partial {#1}}{\partial {#2}}}
+\newcommand{\lbrc}{\left \{}
+\newcommand{\rbrc}{\right \}}
+\newcommand{\W}{\wedge}
+\newcommand{\prm}[1]{{#1}'}
+\newcommand{\ddt}[1]{\bfrac{d{#1}}{dt}}
+\newcommand{\R}{\dagger}
+\newcommand{\deriv}[3]{\bfrac{d^{#3}#1}{d{#2}^{#3}}}
+\newcommand{\grade}[1]{\left < {#1} \right >}
+\newcommand{\f}[2]{{#1}\lp{#2}\rp}
+\newcommand{\eval}[2]{\left . {#1} \right |_{#2}}
+\usepackage{float}
+\floatstyle{plain} % optionally change the style of the new float
+\newfloat{Code}{H}{myc}
+\lstloadlanguages{Python}
+
+\begin{document}
+\begin{lstlisting}[language=Python,showspaces=false,showstringspaces=false]
+#Lie Algebras
+from sympy import symbols
+from sympy.galgebra.ga import Ga
+from sympy.galgebra.mv import Com
+from sympy.galgebra.printer import Format, xpdf
+
+Estr1 = r'E_{ij}'
+Fstr1 = r'F_{ij}'
+Kstr1= r'K_{i}'
+Estr2 = r'E_{mn}'
+Fstr2 = r'F_{mn}'
+Kstr2= r'K_{m}'
+lm = '% '
+sp = r'\:\:'
+eq = ' ='
+x = r' \times '
+
+def E(i,j):
+    global e,eb
+    B = e[i]*e[j] - eb[i]*eb[j]
+    Bstr = 'E_{' + i + j + '} '
+    print '%' + Bstr + ' =',B
+    return Bstr, B
+
+def F(i,j):
+    global e,eb
+    B = e[i]*eb[j] - eb[i]*e[j]
+    Bstr = 'F_{' + i + j + '} '
+    print '%' + Bstr + ' =',B
+    return Bstr, B
+
+def K(i):
+    global e,eb
+    B = e[i]*eb[i]
+    Bstr = 'K_{' + i + '} '
+    print '%' + Bstr + ' =',B
+    return Bstr, B
+
+def ComP(A,B):
+    AxB = Com(A[1],B[1])
+    AxBstr = '%' + A[0] + r' \times ' + B[0] + ' ='
+    print AxBstr, AxB
+    return
+
+Format()
+
+(glg,ei,ej,em,en,ebi,ebj,ebm,ebn) = Ga.build(r'e_i e_j e_k e_l \bar{e}_i \bar{e}_j \bar{e}_k \bar{e}_l',g=[1,1,1,1,-1,-1,-1,-1])
+
+e = {'i':ei,'j':ej,'k':em,'l':en}
+eb = {'i':ebi,'j':ebj,'k':ebm,'l':ebn}
+
+print r'#\center{General Linear Group of Order $n$\newline}'
+print r'#Lie Algebra Generators: $1\le i < j \le n$ and $1 \le i < l \le n$'
+
+Eij = E('i','j')
+Fij = F('i','j')
+Ki = K('i')
+Eil = E('i','l')
+Fil = F('i','l')
+
+print r'#Non Zero Commutators'
+
+ComP(Eij,Fij)
+ComP(Eij,Ki)
+ComP(Fij,Ki)
+ComP(Eij,Eil)
+ComP(Fij,Fil)
+ComP(Fij,Eil)
+
+xpdf(paper='letter',pt='12pt',debug=True,prog=True)
+
+
+
+\end{lstlisting}
+ {\Large \bf Code Output:} 
+\center{General Linear Group of Order $n$\newline}
+Lie Algebra Generators: $1\le i < j \le n$ and $1 \le i < l \le n$
+\begin{equation*} E_{ij}  =  e_{i}\wedge e_{j} - \bar{e}_{i}\wedge \bar{e}_{j} \end{equation*}
+\begin{equation*} F_{ij}  =  e_{i}\wedge \bar{e}_{j} + e_{j}\wedge \bar{e}_{i} \end{equation*}
+\begin{equation*} K_{i}  =  e_{i}\wedge \bar{e}_{i} \end{equation*}
+\begin{equation*} E_{il}  =  e_{i}\wedge e_{l} - \bar{e}_{i}\wedge \bar{e}_{l} \end{equation*}
+\begin{equation*} F_{il}  =  e_{i}\wedge \bar{e}_{l} + e_{l}\wedge \bar{e}_{i} \end{equation*}
+Non Zero Commutators
+\begin{equation*} E_{ij}  \times F_{ij}  = 2 e_{i}\wedge \bar{e}_{i} -2 e_{j}\wedge \bar{e}_{j} \end{equation*}
+\begin{equation*} E_{ij}  \times K_{i}  = - e_{i}\wedge \bar{e}_{j} - e_{j}\wedge \bar{e}_{i} \end{equation*}
+\begin{equation*} F_{ij}  \times K_{i}  = - e_{i}\wedge e_{j} + \bar{e}_{i}\wedge \bar{e}_{j} \end{equation*}
+\begin{equation*} E_{ij}  \times E_{il}  = - e_{j}\wedge e_{l} + \bar{e}_{j}\wedge \bar{e}_{l} \end{equation*}
+\begin{equation*} F_{ij}  \times F_{il}  =  e_{j}\wedge e_{l} - \bar{e}_{j}\wedge \bar{e}_{l} \end{equation*}
+\begin{equation*} F_{ij}  \times E_{il}  =  e_{j}\wedge \bar{e}_{l} + e_{l}\wedge \bar{e}_{j} \end{equation*}
+\end{document}

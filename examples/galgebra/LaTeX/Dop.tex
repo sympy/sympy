@@ -1,0 +1,60 @@
+
+\documentclass[10pt,fleqn]{report}
+\usepackage[vcentering]{geometry}
+\geometry{papersize={14in,11in},total={13in,10in}}
+
+\pagestyle{empty}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsbsy}
+\usepackage{tensor}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{bm}
+\definecolor{gray}{rgb}{0.95,0.95,0.95}
+\setlength{\parindent}{0pt}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\Adj}{Adj}
+\newcommand{\bfrac}[2]{\displaystyle\frac{#1}{#2}}
+\newcommand{\lp}{\left (}
+\newcommand{\rp}{\right )}
+\newcommand{\paren}[1]{\lp {#1} \rp}
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\llt}{\left <}
+\newcommand{\rgt}{\right >}
+\newcommand{\abs}[1]{\left |{#1}\right | }
+\newcommand{\pdiff}[2]{\bfrac{\partial {#1}}{\partial {#2}}}
+\newcommand{\lbrc}{\left \{}
+\newcommand{\rbrc}{\right \}}
+\newcommand{\W}{\wedge}
+\newcommand{\prm}[1]{{#1}'}
+\newcommand{\ddt}[1]{\bfrac{d{#1}}{dt}}
+\newcommand{\R}{\dagger}
+\newcommand{\deriv}[3]{\bfrac{d^{#3}#1}{d{#2}^{#3}}}
+\newcommand{\grade}[1]{\left < {#1} \right >}
+\newcommand{\f}[2]{{#1}\lp{#2}\rp}
+\newcommand{\eval}[2]{\left . {#1} \right |_{#2}}
+\usepackage{float}
+\floatstyle{plain} % optionally change the style of the new float
+\newfloat{Code}{H}{myc}
+\lstloadlanguages{Python}
+
+\begin{document}
+\begin{equation*} \boldsymbol{\nabla}  = e_{x} \bfrac{\partial}{\partial x} + e_{y} \bfrac{\partial}{\partial y} + e_{z} \bfrac{\partial}{\partial z} \end{equation*}
+\begin{equation*} \nabla^{2} = \nabla\cdot\nabla = \bfrac{\partial^{2}}{\partial x^{2}} + \bfrac{\partial^{2}}{\partial y^{2}} + \bfrac{\partial^{2}}{\partial z^{2}} \end{equation*}
+\begin{equation*} \lp\nabla^{2}\rp f = \partial^{2}_{x} f  + \partial^{2}_{y} f  + \partial^{2}_{z} f \end{equation*}
+\begin{equation*} \nabla\cdot\lp\nabla f\rp = \partial^{2}_{x} f  + \partial^{2}_{y} f  + \partial^{2}_{z} f \end{equation*}
+\begin{equation*} \nabla = e_{r} \bfrac{\partial}{\partial r} + e_{\theta } \frac{1}{r} \bfrac{\partial}{\partial \theta } + e_{\phi } \frac{1}{r \sin{\left (\theta  \right )}} \bfrac{\partial}{\partial \phi } \end{equation*}
+\begin{equation*} \nabla^{2} = \nabla\cdot\nabla = \frac{2}{r} \bfrac{\partial}{\partial r} + \frac{\cos{\left (\theta  \right )}}{r^{2} \sin{\left (\theta  \right )}} \bfrac{\partial}{\partial \theta } + \bfrac{\partial^{2}}{\partial r^{2}} + r^{-2} \bfrac{\partial^{2}}{\partial \theta ^{2}} + \frac{1}{r^{2} \sin^{2}{\left (\theta  \right )}} \bfrac{\partial^{2}}{\partial \phi ^{2}} \end{equation*}
+\begin{equation*} \lp\nabla^{2}\rp f = \frac{1}{r^{2}} \left(r^{2} \partial^{2}_{r} f  + 2 r \partial_{r} f  + \partial^{2}_{\theta } f  + \frac{\partial_{\theta } f }{\tan{\left (\theta  \right )}} + \frac{\partial^{2}_{\phi } f }{\sin^{2}{\left (\theta  \right )}}\right) \end{equation*}
+\begin{equation*} \nabla\cdot\lp\nabla f\rp = \frac{1}{r^{2}} \left(r^{2} \partial^{2}_{r} f  + 2 r \partial_{r} f  + \partial^{2}_{\theta } f  + \frac{\partial_{\theta } f }{\tan{\left (\theta  \right )}} + \frac{\partial^{2}_{\phi } f }{\sin^{2}{\left (\theta  \right )}}\right) \end{equation*}
+\begin{equation*} 0 \end{equation*}
+\begin{equation*} A^{x} \bfrac{\partial}{\partial x} + A^{y} \bfrac{\partial}{\partial y} + A^{z} \bfrac{\partial}{\partial z} + e_{x}\wedge e_{y} \left ( - A^{y} \bfrac{\partial}{\partial x} + A^{x} \bfrac{\partial}{\partial y}\right )  + e_{x}\wedge e_{z} \left ( - A^{z} \bfrac{\partial}{\partial x} + A^{x} \bfrac{\partial}{\partial z}\right )  + e_{y}\wedge e_{z} \left ( - A^{z} \bfrac{\partial}{\partial y} + A^{y} \bfrac{\partial}{\partial z}\right ) \end{equation*}
+\begin{equation*} e_{x} \end{equation*}
+\begin{equation*} e_{x} x \bfrac{\partial}{\partial x} + e_{y} x \bfrac{\partial}{\partial y} + e_{z} x \bfrac{\partial}{\partial z} \end{equation*}
+\begin{equation*} \bfrac{\partial^{2}}{\partial x^{2}} + \bfrac{\partial^{2}}{\partial y^{2}} + \bfrac{\partial^{2}}{\partial z^{2}} + e_{x}e_{x} 1 \end{equation*}
+\begin{equation*} \bfrac{\partial^{2}}{\partial x^{2}} + \bfrac{\partial^{2}}{\partial y^{2}} + \bfrac{\partial^{2}}{\partial z^{2}} + e_{x} x \bfrac{\partial}{\partial x} + e_{y} x \bfrac{\partial}{\partial y} + e_{z} x \bfrac{\partial}{\partial z} \end{equation*}
+\end{document}

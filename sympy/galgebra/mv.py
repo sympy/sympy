@@ -576,6 +576,8 @@ class Mv(object):
             l_coef = printer.latex(coef)
             if l_coef == '1' and base != S(1):
                 l_coef = ''
+            if l_coef == '-1' and base != S(1):
+                l_coef = '-'
             if base == S(1):
                 l_base = ''
             else:

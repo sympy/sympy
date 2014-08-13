@@ -941,7 +941,7 @@ def Format(Fmode=True, Dmode=True, ipy=False, dop=1):
     return
 
 
-def xpdf(filename=None, paper=(14, 11), crop=False, png=False, prog=False, debug=False):
+def xpdf(filename=None, paper=(14, 11), crop=False, png=False, prog=False, debug=False, pt='10pt'):
 
     """
     Post processes LaTeX output (see comments below), adds preamble and
@@ -1035,12 +1035,12 @@ def xpdf(filename=None, paper=(14, 11), crop=False, png=False, prog=False, debug
     if paper == 'letter':
         paper_size = \
 """
-\\documentclass[10pt,fleqn]{report}
+\\documentclass[@10pt@,fleqn]{report}
 """
     else:
         paper_size = \
 """
-\\documentclass[10pt,fleqn]{report}
+\\documentclass[@10pt@,fleqn]{report}
 \\usepackage[vcentering]{geometry}
 """
         if paper == 'landscape':
@@ -1049,6 +1049,7 @@ def xpdf(filename=None, paper=(14, 11), crop=False, png=False, prog=False, debug
                       'in,' + str(paper[1]) + 'in},total={' + str(paper[0] - 1) + \
                       'in,' + str(paper[1] - 1) + 'in}}\n'
 
+    paper_size = paper_size.replace('@10pt@',pt)
     latex_str = paper_size + GaLatexPrinter.preamble + latex_str + GaLatexPrinter.postscript
 
     if filename is None:

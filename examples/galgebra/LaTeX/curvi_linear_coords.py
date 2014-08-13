@@ -7,7 +7,7 @@ from sympy.galgebra.printer import Format, xpdf,Get_Program,Print_Function,Eprin
 def derivatives_in_spherical_coordinates():
     Print_Function()
     coords = (r,th,phi) = symbols('r theta phi', real=True)
-    (sp3d,er,eth,ephi) = Ga.build('e_r e_theta e_phi',g=[1,r**2,r**2*sin(th)**2],coords=coords)
+    (sp3d,er,eth,ephi) = Ga.build('e_r e_theta e_phi',g=[1,r**2,r**2*sin(th)**2],coords=coords,norm=True)
     grad = sp3d.grad
 
     f = sp3d.mv('f','scalar',f=True)

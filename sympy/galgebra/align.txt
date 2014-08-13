@@ -1,0 +1,15 @@
+I think my second step might have been written in a confusing manner, I'm not rotating B2 about an A1A2 axis.
+
+Step two should have been written as "rotate from B2 to A2 about an axis going through A1/B1. (The result of
+this step will be points A1/B1 and A2/B2 being aligned)"
+
+Component A is deemed fixed in space. After step 1, component B has 3 rotational degrees of freedom left, with
+B1 being the point on the component that the rotations are about. For step 2 I wish to rotate from B2 to A2 about
+an arbitrary axis going through B1/A1 (which are coicident at this point). Once B2 and A2 are coincident there is
+one rotational degree of freedom left, which is about an axis connecting A1/B1 and A2/B2.
+
+For step 3 I would rotate B3 (not B2) about A1A2 until it is in the plane A1A2A3
+(meaning all three B points are coincident with A points). The rotation angle is viewed from the positive direction
+of the axis, measured counter-clockwise from the "from point" (in this case B3) to the "to point" (A3).
+
+Does that help?
