@@ -1092,10 +1092,7 @@ class MatrixBase(object):
 
     def evalf(self, prec=None, **options):
         """Apply evalf() to each element of self."""
-        if prec is None:
-            return self.applyfunc(lambda i: i.evalf(**options))
-        else:
-            return self.applyfunc(lambda i: i.evalf(prec, **options))
+        return self.applyfunc(lambda i: i.evalf(prec, **options))
 
     n = evalf
 
