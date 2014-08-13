@@ -11,6 +11,10 @@ from sympy.external import import_module
 import math
 import sympy
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
@@ -287,16 +291,12 @@ def test_numpy_matrix():
     if not numpy:
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
-    sol_mat = numpy.matrix([[1, 2], [numpy.sin(3) + 4, 1]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     #Lambdify array first, to ensure return to matrix as default
-    f_arr = lambdify((x, y, z), A, use_array=True)(1, 2, 3)
-    f_mat = lambdify((x, y, z), A)(1, 2, 3)
-    numpy.testing.assert_allclose(f_mat, sol_mat)
-    numpy.testing.assert_allclose(f_arr, sol_arr)
+    f = lambdify((x, y, z), A)
+    numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     #Check that the types are arrays and matrices
-    assert isinstance(f_mat, numpy.matrix)
-    assert isinstance(f_arr, numpy.ndarray)
+    assert isinstance(f(1, 2, 3), numpy.ndarray)
 
 def test_numpy_numexpr():
     if not numpy:
@@ -452,7 +452,7 @@ def test_python_keywords():
     # functions. This is an additional regression test.
     python_if = symbols('if')
     expr = python_if / 2
-    f = sympy.lambdify(python_if, expr)
+    f = lambdify(python_if, expr)
     assert f(4.0) == 2.0
 
 
