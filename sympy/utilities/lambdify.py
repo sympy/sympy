@@ -572,7 +572,7 @@ def implemented_function(symfunc, implementation):
 
     Be aware that this is a quick workaround, not a general method to create
     special symbolic functions. If you want to create a symbolic function to be
-    used by all the machinery of sympy you should subclass the ``Function``
+    used by all the machinery of SymPy you should subclass the ``Function``
     class.
 
     Parameters
