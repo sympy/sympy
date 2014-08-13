@@ -200,7 +200,11 @@ def complex_accuracy(result):
 
 
 def get_abs(expr, prec, options):
+<<<<<<< Updated upstream
     re, im, re_acc, im_acc = evalf(expr, prec + 2, options)
+=======
+    re, im, re_acc, im_acc = _evalf(expr, prec + 2, options)
+>>>>>>> Stashed changes
     if not re:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
@@ -216,7 +220,11 @@ def get_complex_part(expr, no, prec, options):
     workprec = prec
     i = 0
     while 1:
+<<<<<<< Updated upstream
         res = evalf(expr, workprec, options)
+=======
+        res = _evalf(expr, workprec, options)
+>>>>>>> Stashed changes
         value, accuracy = res[no::2]
         # XXX is the last one correct? Consider re((1+I)**2).n()
         if (not value) or accuracy >= prec or -value[2] > prec:
@@ -294,7 +302,11 @@ def get_integer_part(expr, no, options, return_ints=False):
 
     # The expression is likely less than 2^30 or so
     assumed_size = 30
+<<<<<<< Updated upstream
     ire, iim, ire_acc, iim_acc = evalf(expr, assumed_size, options)
+=======
+    ire, iim, ire_acc, iim_acc = _evalf(expr, assumed_size, options)
+>>>>>>> Stashed changes
 
     # We now know the size, so we can calculate how much extra precision
     # (if any) is needed to get within the nearest integer
@@ -312,7 +324,11 @@ def get_integer_part(expr, no, options, return_ints=False):
 
     if gap >= -margin:
         ire, iim, ire_acc, iim_acc = \
+<<<<<<< Updated upstream
             evalf(expr, margin + assumed_size + gap, options)
+=======
+            _evalf(expr, margin + assumed_size + gap, options)
+>>>>>>> Stashed changes
 
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
@@ -322,7 +338,11 @@ def get_integer_part(expr, no, options, return_ints=False):
         n, c, p, b = nexpr
         if c != 1 and p != 0:
             expr = C.Add(expr, -nint, evaluate=False)
+<<<<<<< Updated upstream
             x, _, x_acc, _ = evalf(expr, 10, options)
+=======
+            x, _, x_acc, _ = _evalf(expr, 10, options)
+>>>>>>> Stashed changes
             try:
                 check_target(expr, (x, None, x_acc, None), 3)
             except PrecisionExhausted:
@@ -397,7 +417,11 @@ def add_terms(terms, prec, target_prec):
             special.append(arg)
     if special:
         from sympy.core.add import Add
+<<<<<<< Updated upstream
         rv = evalf(Add(*special), prec + 4, {})
+=======
+        rv = _evalf(Add(*special), prec + 4, {})
+>>>>>>> Stashed changes
         return rv[0], rv[2]
 
     working_prec = 2*prec
@@ -447,8 +471,13 @@ def evalf_add(v, prec, options):
     res = pure_complex(v)
     if res:
         h, c = res
+<<<<<<< Updated upstream
         re, _, re_acc, _ = evalf(h, prec, options)
         im, _, im_acc, _ = evalf(c, prec, options)
+=======
+        re, _, re_acc, _ = _evalf(h, prec, options)
+        im, _, im_acc, _ = _evalf(c, prec, options)
+>>>>>>> Stashed changes
         return re, im, re_acc, im_acc
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
@@ -458,7 +487,11 @@ def evalf_add(v, prec, options):
     while 1:
         options['maxprec'] = min(oldmaxprec, 2*prec)
 
+<<<<<<< Updated upstream
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
+=======
+        terms = [_evalf(arg, prec + 10, options) for arg in v.args]
+>>>>>>> Stashed changes
         re, re_acc = add_terms(
             [a[0::2] for a in terms if a[0]], prec, target_prec)
         im, im_acc = add_terms(
@@ -492,14 +525,22 @@ def evalf_mul(v, prec, options):
     if res:
         # the only pure complex that is a mul is h*I
         _, h = res
+<<<<<<< Updated upstream
         im, _, im_acc, _ = evalf(h, prec, options)
+=======
+        im, _, im_acc, _ = _evalf(h, prec, options)
+>>>>>>> Stashed changes
         return None, im, None, im_acc
     args = list(v.args)
 
     # see if any argument is NaN or oo and thus warrants a special return
     special = []
     for arg in args:
+<<<<<<< Updated upstream
         arg = evalf(arg, prec, options)
+=======
+        arg = _evalf(arg, prec, options)
+>>>>>>> Stashed changes
         if arg[0] is None:
             continue
         arg = C.Float._new(arg[0], 1)
@@ -508,7 +549,11 @@ def evalf_mul(v, prec, options):
     if special:
         from sympy.core.mul import Mul
         special = Mul(*special)
+<<<<<<< Updated upstream
         return evalf(special, prec + 4, {})
+=======
+        return _evalf(special, prec + 4, {})
+>>>>>>> Stashed changes
 
     # With guard digits, multiplication in the real case does not destroy
     # accuracy. This is also true in the complex case when considering the
@@ -537,7 +582,11 @@ def evalf_mul(v, prec, options):
             continue
         elif i == last and arg is S.One:
             continue
+<<<<<<< Updated upstream
         re, im, re_acc, im_acc = evalf(arg, working_prec, options)
+=======
+        re, im, re_acc, im_acc = _evalf(arg, working_prec, options)
+>>>>>>> Stashed changes
         if re and im:
             complex_factors.append((re, im, re_acc, im_acc))
             continue
@@ -616,7 +665,11 @@ def evalf_pow(v, prec, options):
         # Exponentiation by p magnifies relative error by |p|, so the
         # base must be evaluated with increased precision if p is large
         prec += int(math.log(abs(p), 2))
+<<<<<<< Updated upstream
         re, im, re_acc, im_acc = evalf(base, prec + 5, options)
+=======
+        re, im, re_acc, im_acc = _evalf(base, prec + 5, options)
+>>>>>>> Stashed changes
         # Real to integer power
         if re and not im:
             return mpf_pow_int(re, p, target_prec), None, target_prec, None
@@ -642,7 +695,11 @@ def evalf_pow(v, prec, options):
 
     # Pure square root
     if exp is S.Half:
+<<<<<<< Updated upstream
         xre, xim, _, _ = evalf(base, prec + 5, options)
+=======
+        xre, xim, _, _ = _evalf(base, prec + 5, options)
+>>>>>>> Stashed changes
         # General complex square root
         if xim:
             re, im = libmp.mpc_sqrt((xre or fzero, xim), prec)
@@ -658,7 +715,11 @@ def evalf_pow(v, prec, options):
     # We first evaluate the exponent to find its magnitude
     # This determines the working precision that must be used
     prec += 10
+<<<<<<< Updated upstream
     yre, yim, _, _ = evalf(exp, prec, options)
+=======
+    yre, yim, _, _ = _evalf(exp, prec, options)
+>>>>>>> Stashed changes
     # Special cases: x**0
     if not (yre or yim):
         return fone, None, prec, None
@@ -668,7 +729,11 @@ def evalf_pow(v, prec, options):
     # XXX: prec + ysize might exceed maxprec
     if ysize > 5:
         prec += ysize
+<<<<<<< Updated upstream
         yre, yim, _, _ = evalf(exp, prec, options)
+=======
+        yre, yim, _, _ = _evalf(exp, prec, options)
+>>>>>>> Stashed changes
 
     # Pure exponential function; no need to evalf the base
     if base is S.Exp1:
@@ -677,7 +742,11 @@ def evalf_pow(v, prec, options):
             return finalize_complex(re, im, target_prec)
         return mpf_exp(yre, target_prec), None, target_prec, None
 
+<<<<<<< Updated upstream
     xre, xim, _, _ = evalf(base, prec + 5, options)
+=======
+    xre, xim, _, _ = _evalf(base, prec + 5, options)
+>>>>>>> Stashed changes
     # 0**y
     if not (xre or xim):
         return None, None, None, None
@@ -722,11 +791,19 @@ def evalf_trig(v, prec, options):
     # 20 extra bits is possibly overkill. It does make the need
     # to restart very unlikely
     xprec = prec + 20
+<<<<<<< Updated upstream
     re, im, re_acc, im_acc = evalf(arg, xprec, options)
     if im:
         if 'subs' in options:
             v = v.subs(options['subs'])
         return evalf(v._eval_evalf(prec), prec, options)
+=======
+    re, im, re_acc, im_acc = _evalf(arg, xprec, options)
+    if im:
+        if 'subs' in options:
+            v = v.subs(options['subs'])
+        return _evalf(v._eval_evalf(prec), prec, options)
+>>>>>>> Stashed changes
     if not re:
         if v.func is C.cos:
             return fone, None, prec, None
@@ -745,7 +822,11 @@ def evalf_trig(v, prec, options):
     # Very large
     if xsize >= 10:
         xprec = prec + xsize
+<<<<<<< Updated upstream
         re, im, re_acc, im_acc = evalf(arg, xprec, options)
+=======
+        re, im, re_acc, im_acc = _evalf(arg, xprec, options)
+>>>>>>> Stashed changes
     # Need to repeat in case the argument is very close to a
     # multiple of pi (or pi/2), hitting close to a root
     while 1:
@@ -760,7 +841,11 @@ def evalf_trig(v, prec, options):
             if xprec > options.get('maxprec', DEFAULT_MAXPREC):
                 return y, None, accuracy, None
             xprec += gap
+<<<<<<< Updated upstream
             re, im, re_acc, im_acc = evalf(arg, xprec, options)
+=======
+            re, im, re_acc, im_acc = _evalf(arg, xprec, options)
+>>>>>>> Stashed changes
             continue
         else:
             return y, None, prec, None
@@ -769,7 +854,11 @@ def evalf_trig(v, prec, options):
 def evalf_log(expr, prec, options):
     arg = expr.args[0]
     workprec = prec + 10
+<<<<<<< Updated upstream
     xre, xim, xacc, _ = evalf(arg, workprec, options)
+=======
+    xre, xim, xacc, _ = _evalf(arg, workprec, options)
+>>>>>>> Stashed changes
 
     if xim:
         # XXX: use get_abs etc instead
@@ -800,7 +889,11 @@ def evalf_log(expr, prec, options):
 
 def evalf_atan(v, prec, options):
     arg = v.args[0]
+<<<<<<< Updated upstream
     xre, xim, reacc, imacc = evalf(arg, prec + 5, options)
+=======
+    xre, xim, reacc, imacc = _evalf(arg, prec + 5, options)
+>>>>>>> Stashed changes
     if xre is xim is None:
         return (None,)*4
     if xim:
@@ -825,11 +918,19 @@ def evalf_piecewise(expr, prec, options):
         newopts = options.copy()
         del newopts['subs']
         if hasattr(expr, 'func'):
+<<<<<<< Updated upstream
             return evalf(expr, prec, newopts)
         if type(expr) == float:
             return evalf(C.Float(expr), prec, newopts)
         if type(expr) == int:
             return evalf(C.Integer(expr), prec, newopts)
+=======
+            return _evalf(expr, prec, newopts)
+        if type(expr) == float:
+            return _evalf(C.Float(expr), prec, newopts)
+        if type(expr) == int:
+            return _evalf(C.Integer(expr), prec, newopts)
+>>>>>>> Stashed changes
 
     # We still have undefined symbols
     raise NotImplementedError
@@ -861,7 +962,11 @@ def as_mpmath(x, prec, options):
     if isinstance(x, C.NegativeInfinity):
         return mpf('-inf')
     # XXX
+<<<<<<< Updated upstream
     re, im, _, _ = evalf(x, prec, options)
+=======
+    re, im, _, _ = _evalf(x, prec, options)
+>>>>>>> Stashed changes
     if im:
         return mpc(re or fzero, im)
     return mpf(re)
@@ -902,7 +1007,11 @@ def do_integral(expr, prec, options):
         max_imag_term = [MINUS_INF]
 
         def f(t):
+<<<<<<< Updated upstream
             re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
+=======
+            re, im, re_acc, im_acc = _evalf(func, mp.prec, {'subs': {x: t}})
+>>>>>>> Stashed changes
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
@@ -1089,9 +1198,15 @@ def hypsum(expr, n, start, prec):
 
 def evalf_prod(expr, prec, options):
     if all((l[1] - l[2]).is_Integer for l in expr.limits):
+<<<<<<< Updated upstream
         re, im, re_acc, im_acc = evalf(expr.doit(), prec=prec, options=options)
     else:
         re, im, re_acc, im_acc = evalf(expr.rewrite(C.Sum), prec=prec, options=options)
+=======
+        re, im, re_acc, im_acc = _evalf(expr.doit(), prec=prec, options=options)
+    else:
+        re, im, re_acc, im_acc = _evalf(expr.rewrite(C.Sum), prec=prec, options=options)
+>>>>>>> Stashed changes
     return re, im, re_acc, im_acc
 
 
@@ -1125,8 +1240,13 @@ def evalf_sum(expr, prec, options):
             err = err.evalf()
             if err <= eps:
                 break
+<<<<<<< Updated upstream
         err = fastlog(evalf(abs(err), 20, options)[0])
         re, im, re_acc, im_acc = evalf(s, prec2, options)
+=======
+        err = fastlog(_evalf(abs(err), 20, options)[0])
+        re, im, re_acc, im_acc = _evalf(s, prec2, options)
+>>>>>>> Stashed changes
         if re_acc is None:
             re_acc = -err
         if im_acc is None:
@@ -1153,7 +1273,11 @@ def evalf_symbol(x, prec, options):
         cached, cached_prec = cache.get(x.name, (None, MINUS_INF))
         if cached_prec >= prec:
             return cached
+<<<<<<< Updated upstream
         v = evalf(sympify(val), prec, options)
+=======
+        v = _evalf(sympify(val), prec, options)
+>>>>>>> Stashed changes
         cache[x.name] = (v, prec)
         return v
 
@@ -1205,7 +1329,11 @@ def _create_evalf_table():
     }
 
 
+<<<<<<< Updated upstream
 def evalf(x, prec, options):
+=======
+def _evalf(x, prec, options):
+>>>>>>> Stashed changes
     from sympy import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
@@ -1315,7 +1443,11 @@ class EvalfMixin(object):
         if quad is not None:
             options['quad'] = quad
         try:
+<<<<<<< Updated upstream
             result = evalf(self, prec + 4, options)
+=======
+            result = _evalf(self, prec + 4, options)
+>>>>>>> Stashed changes
         except NotImplementedError:
             # Fall back to the ordinary evalf
             v = self._eval_evalf(prec)
@@ -1323,7 +1455,11 @@ class EvalfMixin(object):
                 return self
             try:
                 # If the result is numerical, normalize it
+<<<<<<< Updated upstream
                 result = evalf(v, prec, options)
+=======
+                result = _evalf(v, prec, options)
+>>>>>>> Stashed changes
             except NotImplementedError:
                 # Probably contains symbols or unknown functions
                 return v
@@ -1362,7 +1498,11 @@ class EvalfMixin(object):
         if hasattr(self, '_as_mpf_val'):
             return make_mpf(self._as_mpf_val(prec))
         try:
+<<<<<<< Updated upstream
             re, im, _, _ = evalf(self, prec, {})
+=======
+            re, im, _, _ = _evalf(self, prec, {})
+>>>>>>> Stashed changes
             if im:
                 if not re:
                     re = fzero
