@@ -888,7 +888,7 @@ def test_latex_MatrixSlice():
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert latex(where(X > 0)) == "Domain: x_{1} > 0"
+    assert latex(where(X > 0)) == r"Domain: 0 < x_{1} \wedge x_{1} < \infty"
 
     D = Die('d1', 6)
     assert latex(where(D > 4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
@@ -896,7 +896,8 @@ def test_latex_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert latex(
-        pspace(Tuple(A, B)).domain) == "Domain: a \geq 0 \wedge b \geq 0"
+        pspace(Tuple(A, B)).domain) == \
+        r"Domain: 0 \leq a \wedge 0 \leq b \wedge a < \infty \wedge b < \infty"
 
 
 def test_PrettyPoly():
