@@ -1,9 +1,9 @@
-=======================================================
-Introduction to Coordinate Systems, Vectors and Dyadics
-=======================================================
+============
+Introduction 
+============
 
-The basics
-==========
+Coordinate Systems and Vectors - The basics
+===========================================
 
 A :math:`coordinate system` is an abstract mathematical entity used to define
 the notion of directions and locations in n-dimensional spaces. This
@@ -12,9 +12,9 @@ module deals with 3-dimensional spaces, with the conventional :math:`X`,
 to each coordinate system.
 
 Each coordinate system also has a special reference point called the 
-'origin' defined for it. This point is used either while pointing to 
+'origin' defined for it. This point is used either while referring to 
 locations in 3D space, or while calculating the coordinates of 
-pre-defined points with respect to the system in question.
+pre-defined points with respect to the system.
 
 As of now, :mod:`sympy.vector` only deals with the Cartesian (also called 
 rectangular) coordinate systems. A 3D Cartesian coordinate system can
@@ -28,14 +28,15 @@ system, and will primarily be used for printing purposes.
 
 Once a coordinate system (in essence, a :mod:`CoordSysCartesian` instance)
 has been defined, we can access the basis/base vectors (i.e. the 
-`\mathbf{\hat{i}}`, `\mathbf{\hat{j}}` and `\mathbf{\hat{k}}` vectors) 
-and coordinate variables/base scalars (i.e. the `\mathbf{x}`, 
-`\mathbf{y}` and `\mathbf{z}` variables) corresponding to it. We will talk
-about coordinate variables in the later section on fields.
+:math:`\mathbf{\hat{i}}`, :math:`\mathbf{\hat{j}}` and 
+:math:`\mathbf{\hat{k}}` vectors) and coordinate variables/base 
+scalars (i.e. the :math:`\mathbf{x}`, :math:`\mathbf{y}` and 
+:math:`\mathbf{z}` variables) corresponding to it. We will talk
+about coordinate variables in the later sections.
 
 The basis vectors for the :math:`X`, :math:`Y` and :math:`Z` 
 directions can be accessed using the :mod:`i`, :mod:`j` and :mod:`k` 
-:mod:`property`'s respectively.
+properties respectively.
 
   >>> N.i
   N.i
@@ -46,7 +47,7 @@ As seen above, the basis vectors are all instances of a class called
 :mod:`BaseVector`.
 
 When a :mod:`BaseVector` is multiplied by a scalar (essentially any
-:mod:`SymPy` :mod:`Expr`), we get a :mod:`VectorMul` - the product of
+SymPy :mod:`Expr`), we get a :mod:`VectorMul` - the product of
 a base vector and a scalar.
 
   >>> 3*N.i
@@ -54,8 +55,8 @@ a base vector and a scalar.
   >>> type(3*N.i)
   <class 'sympy.vector.vector.VectorMul'>
 
-Addition of :mod:`VectorMul`s and :mod:`BaseVectors`s gives rise to
-formation of :mod:`VectorAdd`s - except for special cases, ofcourse.
+Addition of :mod:`VectorMul` s and :mod:`BaseVectors` s gives rise to
+formation of :mod:`VectorAdd` s - except for special cases, ofcourse.
 
   >>> v = 2*N.i + N.j
   >>> type(v)
@@ -81,14 +82,11 @@ required.
   >>> Vector.zero == 2*Vector.zero
   True
 
-Two points worth noting about the :mod:`Vector` architecture in :mod:`sympy.vector`
------------------------------------------------------------------------------------
-
-1. All the classes shown above - :mod:`BaseVector`, :mod:`VectorMul`, 
+All the classes shown above - :mod:`BaseVector`, :mod:`VectorMul`, 
 :mod:`VectorAdd` and :mod:`VectorZero` are subclasses of :mod:`Vector`.
 
-2. The user should never have to instantiate objects of any of the
-subclasses of :mod:`Vector` - using the base vectors assigned to a
+You should never have to instantiate objects of any of the
+subclasses of :mod:`Vector`. Using the :mod:`BaseVector` s assigned to a
 :mod:`CoordSysCartesian` instance and (if needed) :mod:`Vector.zero`
 as building blocks, any sort of vectorial expression can be constructed
 with the basic mathematical operators :mod:`+`, :mod:`-`, :mod:`*`
@@ -104,12 +102,10 @@ and :mod:`/`.
   >>> (v/3)*4
   4/3*N.i + (-8/3)*N.j
 
-Other operations
-----------------
 
 In addition to the elementary mathematical operations, the vectorial 
 operations of :mod:`dot` and :mod:`cross` can also be performed on 
-:mod:`Vector`s.
+:mod:`Vector` s.
 
   >>> v1 = 2*N.i + 3*N.j - N.k
   >>> v2 = N.i - 4*N.j + N.k
@@ -120,20 +116,24 @@ operations of :mod:`dot` and :mod:`cross` can also be performed on
   >>> v2.cross(v1)
   N.i + 3*N.j + 11*N.k
 
-Moreover, the outer products of vectors, leading to the formation of 
-second order tensors known as dyadics, can also be performed with
-:mod:`sympy.vector`.
+The :mod:`&` and :mod:`^` operators have been overloaded for the
+:mod:`dot` and :mod:`cross` methods respectively.
 
-  >>> (N.i + 2*N.j).outer(N.k - N.i)
-  (-1)*(N.i|N.i) + (N.i|N.k) + (-2)*(N.j|N.i) + 2*(N.j|N.k)
+  >>> v1 & v2
+  -11
+  >>> v1 ^ v2
+  (-1)*N.i + (-3)*N.j + (-11)*N.k
 
-We will discuss :mod:`Dyadic`s in greater detail in a later section.
+In addition to these operations, it is also possible to compute the
+outer products of :mod:`Vector` s in :mod:`sympy.vector`. More
+on that in a little bit.
 
-SymPy operations on :mod:`Vector`s
-==================================
+
+SymPy operations on Vectors
+===========================
 
 The SymPy operations of :mod:`simplify`, :mod:`trigsimp`, :mod:`diff`,
-and :mod:`factor` work on :mod:`Vector`s, with the standard SymPy API.
+and :mod:`factor` work on :mod:`Vector` s, with the standard SymPy API.
 
 In essence, the methods work on the measure numbers present in the 
 provided vectorial expression.
@@ -153,3 +153,114 @@ provided vectorial expression.
   >>> from sympy import Derivative
   >>> Derivative(v, b).doit()
   (4*sin(b)*cos(b))*N.k
+
+:mod:`Integral` also works with :mod:`Vector` s similar to
+:mod:`Derivative`.
+
+  >>> v1 = a*N.i + sin(a)*N.j - N.k
+  >>> Integral(v1, a)
+  (Integral(a, a))*N.i + (Integral(sin(a), a))*N.j + (Integral(-1, a))*N.k
+  >>> Integral(v1, a).doit()
+  a**2/2*N.i + (-cos(a))*N.j + (-a)*N.k
+
+Points
+======
+
+As mentioned before, every coordinate system corresponds to a unique origin
+point. Points, in general, have been implemented in :mod:`sympy.vector` in the
+form of the :mod:`Point` class.
+
+To access the origin of system, use the :mod:`origin` property of the
+:mod:`CoordSysCartesian` class.
+
+  >>> from sympy.vector import CoordSysCartesian
+  >>> N = CoordSysCartesian('N')
+  >>> N.origin
+  N.origin
+  >>> type(N.origin)
+  <class 'sympy.vector.point.Point'>
+
+You can instantiate new points in space using the :mod:`locate_new` 
+method of :mod:`Point`. The arguments include the name(string) of the 
+new :mod:`Point`, and its position vector with respect to the 
+'parent' :mod:`Point`.
+
+  >>> from sympy.abc import a, b, c
+  >>> P = N.origin.locate_new('P', a*N.i + b*N.j + c*N.k)
+  >>> Q = P.locate_new('Q', -b*N.j)
+
+Like :mod:`Vector` s, a user never has to expressly instantiate an object of
+:mod:`Point`. This is because any location in space (albeit relative) can be 
+pointed at by using the :mod:`origin` of a :mod:`CoordSysCartesian` as the 
+reference, and then using :mod:`locate_new` on it and subsequent 
+:mod:`Point` instances.
+
+The position vector of a :mod:`Point` with respect to another :mod:`Point` can
+be computed using the :mod:`position_wrt` method.
+
+  >>> P.position_wrt(Q)
+  b*N.j
+  >>> Q.position_wrt(N.origin)
+  a*N.i + c*N.k
+
+Additionally, it is possible to obtain the :math:`X`, :math:`Y` and :math:`Z`
+coordinates of a :mod:`Point` with respect to a :mod:`CoordSysCartesian`
+in the form of a tuple. This is done using the :mod:`express_coordinates` 
+method.
+
+  >>> Q.express_coordinates(N)
+  (a, 0, c)
+
+
+Dyadics
+=======
+
+A dyadic, or dyadic tensor, is a second-order tensor formed by the 
+juxtaposition of pairs of vectors. Therefore, the outer products of vectors
+give rise to the formation of dyadics. Dyadic tensors have been implemented 
+in :mod:`sympy.vector` in the :mod:`Dyadic` class.
+
+Once again, you never have to instantiate objects of :mod:`Dyadic`.
+The outer products of vectors can be computed using the :mod:`outer`
+method of :mod:`Vector`. The :mod:`|` operator has been overloaded for
+:mod:`outer`.
+
+  >>> from sympy.vector import CoordSysCartesian
+  >>> N = CoordSysCartesian('N')
+  >>> N.i.outer(N.j)
+  (N.i|N.j)
+  >>> N.i|N.j
+  (N.i|N.j)
+
+Similar to :mod:`Vector`, :mod:`Dyadic` also has subsequent subclasses like
+:mod:`BaseDyadic`, :mod:`DyadicMul`, :mod:`DyadicAdd`. As with :mod:`Vector`,
+a zero dyadic can be accessed from :mod:`Dyadic.zero`.
+
+All basic mathematical operations work with :mod:`Dyadic` s too.
+
+  >>> dyad = N.i.outer(N.k)
+  >>> dyad*3
+  3*(N.i|N.k)
+  >>> dyad - dyad
+  0
+  >>> dyad + 2*(N.j|N.i)
+  (N.i|N.k) + 2*(N.j|N.i)
+
+:mod:`dot` and :mod:`cross` also work among :mod:`Dyadic` instances as well as
+between a :mod:`Dyadic` and :mod:`Vector` (and also vice versa) - as per the
+respective mathematical definitions. As with :mod:`Vector`, :mod:`&` and
+:mod:`^` have been overloaded for :mod:`dot` and :mod:`cross`.
+
+  >>> d = N.i.outer(N.j)
+  >>> d.dot(N.j|N.j)
+  (N.i|N.j)
+  >>> d.dot(N.i)
+  0
+  >>> d.dot(N.j)
+  N.i
+  >>> N.i.dot(d)
+  N.j
+  >>> d.dot(N.k)
+  (N.i|N.i)
+  >>> N.k ^ d
+  (N.j|N.j)

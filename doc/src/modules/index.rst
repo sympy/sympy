@@ -52,6 +52,7 @@ access any SymPy module, or use this contens:
    physics/index.rst
    categories.rst
    diffgeom.rst
+   vector/index.rst
 
 Contributions to docs
 ---------------------

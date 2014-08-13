@@ -1,29 +1,32 @@
+===========================================
+Essential Class docstrings for sympy.vector
+===========================================
+
+CoordSysCartesian
 =================
-Essential Classes
-=================
 
-CoordinateSym
-=============
-
-.. autoclass:: sympy.physics.vector.frame.CoordinateSym
-
-
-ReferenceFrame
-==============
-
-.. autoclass:: sympy.physics.vector.frame.ReferenceFrame
+.. autoclass:: sympy.vector.coordsysrect.CoordSysCartesian
    :members:
+
+   .. automethod:: sympy.vector.coordsysrect.CoordSysCartesian.__init__
 
 
 Vector
 ======
 
-.. autoclass:: sympy.physics.vector.vector.Vector
+.. autoclass:: sympy.vector.vector.Vector
    :members:
 
 
 Dyadic
 ======
 
-.. autoclass:: sympy.physics.vector.dyadic.Dyadic
+.. autoclass:: sympy.vector.dyadic.Dyadic
+   :members:
+
+
+Del
+===
+
+.. autoclass:: sympy.vector.deloperator.Del
    :members:

@@ -1,15 +1,12 @@
-=========================
-The Physics Vector Module
-=========================
-
-:Authors: Gilbert Gede, Luke Peterson, Angadh Nanjangud, Sachin Joglekar
+=================
+The Vector Module
+=================
 
 .. topic:: Abstract
 
-   In this documentation the components of the sympy.physics.vector module
-   have been discussed. :mod:`vector` has been written to facilitate the
-   operations pertaining to 3-dimensional vectors, as functions of time or
-   otherwise, in sympy.physics.
+   This documentation details the components and functionality present
+   in the :mod:`sympy.vector` module. It also provides relevant examples
+   to explain the usage of the code wherever needed.
 
 
 References for Physics/Vector
@@ -19,8 +16,8 @@ References for Physics/Vector
         2011. <http://en.wikipedia.org/wiki/Dyadics>.
 .. [WikiDyadicProducts] "Dyadic Product." Wikipedia, the Free Encyclopedia.
         Web. 05 Aug. 2011. <http://en.wikipedia.org/wiki/Dyadic_product>.
-.. [Likins1973] Likins, Peter W. Elements of Engineering Mechanics.
-        McGraw-Hill, Inc. 1973. Print.
+.. [WikiDelOperator] "Del." Wikipedia, the Free Encyclopedia. Web. 
+        <http://en.wikipedia.org/wiki/Del>.
 
 Guide to Vector
 ===============
@@ -28,10 +25,9 @@ Guide to Vector
 .. toctree::
     :maxdepth: 2
 
-    vectors.rst
-    kinematics.rst
-    advanced.rst
+    intro.rst
     fields.rst
+    coordsys.rst
 
 Vector API
 ==========
@@ -40,7 +36,5 @@ Vector API
     :maxdepth: 2
 
     api/classes.rst
-    api/kinematics.rst
-    api/printing.rst
-    api/functions.rst
-    api/fieldfunctions.rst
+    api/orienterclasses.rst
+    api/vectorfunctions.rst
