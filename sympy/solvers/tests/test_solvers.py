@@ -516,7 +516,7 @@ def test_solve_inequalities():
 
     # issue 6627, 3448
     assert solve((x - 3)/(x - 2) < 0, x, assume=Q.real(x)) == And(Lt(2, x), Lt(x, 3))
-    assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == Lt(x, -1)
+    assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == And(Lt(-oo, x), Lt(x, -1))
 
 def test_issue_4793():
     assert solve(1/x) == []

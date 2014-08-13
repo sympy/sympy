@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
-    cos, exp, Abs, Not
+    cos, exp, Abs, Not, Symbol
 )
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -135,6 +135,8 @@ def test_piecewise_free_symbols():
 
 
 def test_piecewise_integrate():
+    x, y = symbols('x y', real=True, bounded=True)
+
     # XXX Use '<=' here! '>=' is not yet implemented ..
     f = Piecewise(((x - 2)**2, 0 <= x), (1, True))
     assert integrate(f, (x, -2, 2)) == Rational(14, 3)
@@ -225,7 +227,10 @@ def test_piecewise_integrate_inequality_conditions():
 
 
 def test_piecewise_integrate_symbolic_conditions():
-    from sympy.abc import a, b, x, y
+    a = Symbol('a', real=True, bounded=True)
+    b = Symbol('b', real=True, bounded=True)
+    x = Symbol('x', real=True, bounded=True)
+    y = Symbol('y', real=True, bounded=True)
     p0 = Piecewise((0, Or(x < a, x > b)), (1, True))
     p1 = Piecewise((0, x < a), (0, x > b), (1, True))
     p2 = Piecewise((0, x > b), (0, x < a), (1, True))

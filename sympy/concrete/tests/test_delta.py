@@ -1,15 +1,11 @@
 from sympy.concrete import Sum
-from sympy.concrete.delta import deltaproduct, deltasummation
+from sympy.concrete.delta import deltaproduct as dp, deltasummation as ds
 from sympy.core import Eq, S, symbols, oo
-from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
+from sympy.functions import KroneckerDelta as KD, Piecewise, piecewise_fold
 from sympy.logic import And
 
-i, j, k, l, m = symbols("i j k l m", integer=True)
+i, j, k, l, m = symbols("i j k l m", integer=True, bounded=True)
 x, y = symbols("x y", commutative=False)
-
-dp = deltaproduct
-ds = deltasummation
-KD = KroneckerDelta
 
 
 def test_deltaproduct_trivial():
