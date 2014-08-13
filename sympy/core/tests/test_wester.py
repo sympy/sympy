@@ -1156,17 +1156,20 @@ def test_N8():
 
 def test_N9():
     with assuming(Q.real(x)):
-        assert solve(abs(x - 1) > 2) == Or(x < -1, x > 3)
+        assert solve(abs(x - 1) > 2) == Or(And(Lt(-oo, x), Lt(x, -1)),
+                                           And(Lt(3, x), Lt(x, oo)))
 
 
 def test_N10():
     p = (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
     assert solve(expand(p) < 0, assume=Q.real(x)) == Or(
-        And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+        And(Lt(-oo, x), Lt(x, 1)), And(Lt(2, x), Lt(x, 3)),
+        And(Lt(4, x), Lt(x, 5)))
 
 
 def test_N11():
-    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
+    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == \
+        Or(And(Le(5, x), Lt(x, oo)), And(Lt(-oo, x), Lt(x, 3)))
 
 
 @XFAIL
@@ -2526,7 +2529,7 @@ def test_W22():
     s = Lambda(x, Piecewise((1, And(x >= 1, x <= 2)), (0, True)))
     assert (integrate(s(t)*cos(t), (t, 0, u)) ==
             Piecewise((sin(u) - sin(1), And(u <= 2, u >= 1)),
-                      (0, u <= 1),
+                      (0, And(u <= 1, u >= -oo)),
                       (-sin(1) + sin(2), True)))
 
 
