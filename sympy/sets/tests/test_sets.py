@@ -464,13 +464,13 @@ def test_Interval_as_relational():
     assert Interval(-1, 2, True, True).as_relational(x) == \
         And(Lt(-1, x), Lt(x, 2))
 
-    assert Interval(-oo, 2, right_open=False).as_relational(x) == Le(x, 2)
-    assert Interval(-oo, 2, right_open=True).as_relational(x) == Lt(x, 2)
+    assert Interval(-oo, 2, right_open=False).as_relational(x) == And(Le(x, 2), Lt(-oo, x))
+    assert Interval(-oo, 2, right_open=True).as_relational(x) == And(Lt(x, 2), Lt(-oo, x))
 
-    assert Interval(-2, oo, left_open=False).as_relational(x) == Ge(x, -2)
-    assert Interval(-2, oo, left_open=True).as_relational(x) == Gt(x, -2)
+    assert Interval(-2, oo, left_open=False).as_relational(x) == And(Le(-2, x), Lt(x, oo))
+    assert Interval(-2, oo, left_open=True).as_relational(x) == And(Lt(-2, x), Lt(x, oo))
 
-    assert Interval(-oo, oo).as_relational(x) is S.true
+    assert Interval(-oo, oo).as_relational(x) == And(Lt(-oo, x), Lt(x, oo))
 
 
 def test_Finite_as_relational():
