@@ -2817,6 +2817,31 @@ def test_sympy__physics__units__Unit():
     assert _test_args(Unit("meter", "m"))
 
 
+def test_sympy__physics__unitsystems__dimensions__Dimension():
+    from sympy.physics.unitsystems.dimensions import Dimension
+    assert _test_args(Dimension(name="length", symbol="L", length=1))
+
+
+def test_sympy__physics__unitsystems__quantities__Quantity():
+    from sympy.physics.unitsystems.quantities import Quantity
+    from sympy.physics.unitsystems.systems import mks
+    assert _test_args(Quantity(10, mks["m"]))
+
+
+def test_sympy__physics__unitsystems__units__Constant():
+    from sympy.physics.unitsystems.units import Constant
+    from sympy.physics.unitsystems.dimensions import Dimension
+    length = Dimension(length=1)
+    assert _test_args(Constant(length, abbrev="u", factor=10))
+
+
+def test_sympy__physics__unitsystems__units__Unit():
+    from sympy.physics.unitsystems.units import Unit
+    from sympy.physics.unitsystems.dimensions import Dimension
+    length = Dimension(length=1)
+    assert _test_args(Unit(length, abbrev="u", factor=10))
+
+
 def test_sympy__polys__numberfields__AlgebraicNumber():
     from sympy.polys.numberfields import AlgebraicNumber
     assert _test_args(AlgebraicNumber(sqrt(2), [1, 2, 3]))
@@ -3224,3 +3249,154 @@ def test_sympy__physics__optics__gaussopt__BeamParameter():
 def test_sympy__physics__optics__medium__Medium():
     from sympy.physics.optics import Medium
     assert _test_args(Medium('m'))
+
+
+def test_sympy__vector__coordsysrect__CoordSysCartesian():
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    assert _test_args(CoordSysCartesian('C'))
+
+
+def test_sympy__vector__point__Point():
+    from sympy.vector.point import Point
+    assert _test_args(Point('P'))
+
+
+def test_sympy__vector__basisdependent__BasisDependent():
+    from sympy.vector.basisdependent import BasisDependent
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
+def test_sympy__vector__basisdependent__BasisDependentMul():
+    from sympy.vector.basisdependent import BasisDependentMul
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
+def test_sympy__vector__basisdependent__BasisDependentAdd():
+    from sympy.vector.basisdependent import BasisDependentAdd
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
+def test_sympy__vector__basisdependent__BasisDependentZero():
+    from sympy.vector.basisdependent import BasisDependentZero
+    #These classes have been created to maintain an OOP hierarchy
+    #for Vectors and Dyadics. Are NOT meant to be initialized
+
+
+def test_sympy__vector__vector__BaseVector():
+    from sympy.vector.vector import BaseVector
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(BaseVector('Ci', 0, C, ' ', ' '))
+
+
+def test_sympy__vector__vector__VectorAdd():
+    from sympy.vector.vector import VectorAdd, VectorMul
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    from sympy.abc import a, b, c, x, y, z
+    v1 = a*C.i + b*C.j + c*C.k
+    v2 = x*C.i + y*C.j + z*C.k
+    assert _test_args(VectorAdd(v1, v2))
+    assert _test_args(VectorMul(x, v1))
+
+
+def test_sympy__vector__vector__VectorMul():
+    from sympy.vector.vector import VectorMul
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    from sympy.abc import a
+    assert _test_args(VectorMul(a, C.i))
+
+
+def test_sympy__vector__vector__VectorZero():
+    from sympy.vector.vector import VectorZero
+    assert _test_args(VectorZero())
+
+
+def test_sympy__vector__vector__Vector():
+    from sympy.vector.vector import Vector
+    #Vector is never to be initialized using args
+    pass
+
+
+def test_sympy__vector__dyadic__Dyadic():
+    from sympy.vector.dyadic import Dyadic
+    #Dyadic is never to be initialized using args
+    pass
+
+
+def test_sympy__vector__dyadic__BaseDyadic():
+    from sympy.vector.dyadic import BaseDyadic
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(BaseDyadic(C.i, C.j))
+
+
+def test_sympy__vector__dyadic__DyadicMul():
+    from sympy.vector.dyadic import BaseDyadic, DyadicMul
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(DyadicMul(3, BaseDyadic(C.i, C.j)))
+
+
+def test_sympy__vector__dyadic__DyadicAdd():
+    from sympy.vector.dyadic import BaseDyadic, DyadicAdd
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(2 * DyadicAdd(BaseDyadic(C.i, C.i),
+                                    BaseDyadic(C.i, C.j)))
+
+
+def test_sympy__vector__dyadic__DyadicZero():
+    from sympy.vector.dyadic import DyadicZero
+    assert _test_args(DyadicZero())
+
+
+def test_sympy__vector__deloperator__Del():
+    from sympy.vector.deloperator import Del
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(Del(C))
+
+
+def test_sympy__vector__orienters__Orienter():
+    from sympy.vector.orienters import Orienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__ThreeAngleOrienter():
+    from sympy.vector.orienters import ThreeAngleOrienter
+    #Not to be initialized
+
+
+def test_sympy__vector__orienters__AxisOrienter():
+    from sympy.vector.orienters import AxisOrienter
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(AxisOrienter(x, C.i))
+
+
+def test_sympy__vector__orienters__BodyOrienter():
+    from sympy.vector.orienters import BodyOrienter
+    assert _test_args(BodyOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__SpaceOrienter():
+    from sympy.vector.orienters import SpaceOrienter
+    assert _test_args(SpaceOrienter(x, y, z, '123'))
+
+
+def test_sympy__vector__orienters__QuaternionOrienter():
+    from sympy.vector.orienters import QuaternionOrienter
+    a, b, c, d = symbols('a b c d')
+    assert _test_args(QuaternionOrienter(a, b, c, d))
+
+
+def test_sympy__vector__scalar__BaseScalar():
+    from sympy.vector.scalar import BaseScalar
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(BaseScalar('Cx', 0, C, ' ', ' '))

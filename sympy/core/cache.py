@@ -41,48 +41,96 @@ clear_cache = CACHE.clear_cache
 from sympy.core.compatibility import lru_cache
 from functools import update_wrapper
 
-def __cacheit(maxsize):
-    """caching decorator.
+try:
+    import fastcache
+    from warnings import warn
+    # the version attribute __version__ is not present for all versions
+    if not hasattr(fastcache, '__version__'):
+        warn("fastcache version >= 0.4.0 required", UserWarning)
+        raise ImportError
+        # ensure minimum required version of fastcache is present
+    if fastcache.__version__ < '0.4.0':
+        warn("fastcache version >= 0.4.0 required, detected {}"\
+             .format(fastcache.__version__), UserWarning)
+        raise ImportError
+    # Do not use fastcache if running under pypy
+    import platform
+    if platform.python_implementation() == 'PyPy':
+        raise ImportError
 
-       important: the result of cached function must be *immutable*
+except ImportError:
+
+    def __cacheit(maxsize):
+        """caching decorator.
+
+           important: the result of cached function must be *immutable*
 
 
-       Examples
-       ========
+           Examples
+           ========
 
-       >>> from sympy.core.cache import cacheit
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return a+b
+           >>> from sympy.core.cache import cacheit
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return a+b
 
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return [a,b] # <-- WRONG, returns mutable object
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return [a,b] # <-- WRONG, returns mutable object
 
-       to force cacheit to check returned results mutability and consistency,
-       set environment variable SYMPY_USE_CACHE to 'debug'
-    """
-    def func_wrapper(func):
-        cfunc = lru_cache(maxsize, typed=True)(func)
+           to force cacheit to check returned results mutability and consistency,
+           set environment variable SYMPY_USE_CACHE to 'debug'
+        """
+        def func_wrapper(func):
+            cfunc = lru_cache(maxsize, typed=True)(func)
 
-        # wraps here does not propagate all the necessary info
-        # for py2.7, use update_wrapper below
-        def wrapper(*args, **kwargs):
-            try:
-                retval = cfunc(*args, **kwargs)
-            except TypeError:
-                retval = func(*args, **kwargs)
-            return retval
+            # wraps here does not propagate all the necessary info
+            # for py2.7, use update_wrapper below
+            def wrapper(*args, **kwargs):
+                try:
+                    retval = cfunc(*args, **kwargs)
+                except TypeError:
+                    retval = func(*args, **kwargs)
+                return retval
 
-        wrapper.__wrapped__ = cfunc.__wrapped__
-        wrapper.cache_info = cfunc.cache_info
-        wrapper.cache_clear = cfunc.cache_clear
-        uw = update_wrapper(wrapper, func)
-        CACHE.append(uw)
-        return wrapper
+            wrapper.__wrapped__ = cfunc.__wrapped__
+            wrapper.cache_info = cfunc.cache_info
+            wrapper.cache_clear = cfunc.cache_clear
+            uw = update_wrapper(wrapper, func)
+            CACHE.append(uw)
+            return wrapper
 
-    return func_wrapper
+        return func_wrapper
+else:
 
+    def __cacheit(maxsize):
+        """caching decorator.
+
+           important: the result of cached function must be *immutable*
+
+
+           Examples
+           ========
+
+           >>> from sympy.core.cache import cacheit
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return a+b
+
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return [a,b] # <-- WRONG, returns mutable object
+
+           to force cacheit to check returned results mutability and consistency,
+           set environment variable SYMPY_USE_CACHE to 'debug'
+        """
+        def func_wrapper(func):
+
+            cfunc = fastcache.clru_cache(maxsize, typed=True, unhashable='ignore')(func)
+            CACHE.append(cfunc)
+            return cfunc
+
+        return func_wrapper
 ########################################
 
 

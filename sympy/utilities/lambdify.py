@@ -8,14 +8,18 @@ from __future__ import print_function, division
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 from sympy.utilities.decorator import doctest_depends_on
-
 import inspect
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+import warnings
+
+warnings.simplefilter("always", SymPyDeprecationWarning)
 
 # These are the namespaces the lambda functions will use.
 MATH = {}
 MPMATH = {}
 NUMPY = {}
 SYMPY = {}
+NUMEXPR = {}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -25,6 +29,7 @@ MATH_DEFAULT = {}
 MPMATH_DEFAULT = {}
 NUMPY_DEFAULT = {"I": 1j}
 SYMPY_DEFAULT = {}
+NUMEXPR_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
@@ -76,14 +81,16 @@ NUMPY_TRANSLATIONS = {
     "E": "e",
     "im": "imag",
     "ln": "log",
-    "Matrix": "matrix",
-    "MutableDenseMatrix": "matrix",
-    "ImmutableMatrix": "matrix",
+    "Matrix": "array",
+    "MutableDenseMatrix": "array",
+    "ImmutableMatrix": "array",
     "Max": "amax",
     "Min": "amin",
     "oo": "inf",
     "re": "real",
 }
+
+NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
@@ -94,6 +101,8 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
+                 ("import_module('numexpr')", )),
 }
 
 
@@ -146,7 +155,7 @@ def _import(module, reload="False"):
 
 @doctest_depends_on(modules=('numpy'))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-        dummify=True, use_array=False):
+        dummify=True, default_array=False):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -155,7 +164,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions - exactly in this order. To change this behavior, the "modules"
     argument can be used. It accepts:
 
-     - the strings "math", "mpmath", "numpy", "sympy"
+     - the strings "math", "mpmath", "numpy", "numexpr", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
@@ -168,16 +177,34 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     to view the lambdified function or provide "sympy" as the module, you
     should probably set dummify=False.
 
-    If numpy is installed, the default behavior is to substitute Sympy Matrices
-    with numpy.matrix. If you would rather have a numpy.array returned,
-    set use_array=True.
+    Deprecation Warnings
+    ====================
+
+    In previous releases ``lambdify`` replaced ``Matrix`` with ``numpy.matrix``
+    by default. As of release 0.7.6 ``numpy.array`` is being transitioned to
+    the default. In release 0.7.7 this transition will be complete. For now,
+    to use the new default behavior you must pass in ``default_array=True``. If
+    you plan on using ``lambdify`` often in your code it may be to your benefit
+    to apply ``functools.partial``:
+
+        >>> from sympy import lambdify
+        >>> from functools import partial
+        >>> lambdify = partial(lambdify, default_array=True)
+
+    For functions involving large array calculations, numexpr can provide a
+    significant speedup over numpy.  Please note that the available functions
+    for numexpr are more limited than numpy but can be expanded with
+    implemented_function and user defined subclasses of Function.  If specified,
+    numexpr may be the only option in modules. The official list of numexpr
+    functions can be found at:
+    https://github.com/pydata/numexpr#supported-functions
 
     Usage
     =====
 
     (1) Use one of the provided modules:
 
-        >>> from sympy import lambdify, sin, tan, gamma
+        >>> from sympy import sin, tan, gamma
         >>> from sympy.utilities.lambdify import lambdastr
         >>> from sympy.abc import x, y
         >>> f = lambdify(x, sin(x), "math")
@@ -215,7 +242,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     Examples
     ========
 
-    >>> from sympy.utilities.lambdify import implemented_function, lambdify
+    >>> from sympy.utilities.lambdify import implemented_function
     >>> from sympy import sqrt, sin, Matrix
     >>> from sympy import Function
     >>> from sympy.abc import w, x, y, z
@@ -235,10 +262,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> row = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> row(1, 2)
     Matrix([[1, 3]])
-    >>> col = lambdify((x, y), Matrix((x, x + y)), use_array=True)
-    >>> col(1, 2)
-    array([[1],
-           [3]])
 
     Tuple arguments are handled and the lambdified function should
     be called with the same type of arguments as were used to create
@@ -283,17 +306,25 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         #      might be the reason for irreproducible errors.
         modules = ["math", "mpmath", "sympy"]
 
-        #If numpy.array should be used instead of numpy.matrix
-        if use_array:
-            NUMPY_TRANSLATIONS.update({"Matrix": "array",
-                "MutableDenseMatrix": "array",
-                "ImmutableMatrix": "array"})
-        else:
-            #Ensures that the translation dict is set back
-            #to matrix if lambdify was already called
+        # If the new defaults should be used (part of the deprecation cycle)
+        if not default_array:
+            # Ensures that the translation dict is set back
+            # to matrix if lambdify was already called
             NUMPY_TRANSLATIONS.update({"Matrix": "matrix",
                 "MutableDenseMatrix": "matrix",
                 "ImmutableMatrix": "matrix"})
+            SymPyDeprecationWarning("Replacing sympy.Matrix with numpy.matrix "
+                                    "by default is deprecated in favor of "
+                                    "numpy.array. For now, to use the new "
+                                    "behavior and remove the warning set "
+                                    "the kwarg default_array=True. The old "
+                                    "behavior can still be used by passing "
+                                    "in a custom dictionary to the modules "
+                                    "kwarg.", issue=7853).warn()
+        else:
+            NUMPY_TRANSLATIONS.update({"Matrix": "array",
+                "MutableDenseMatrix": "array",
+                "ImmutableMatrix": "array"})
         #Attempt to import numpy
         try:
             _import("numpy")
@@ -301,7 +332,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             pass
         else:
             modules.insert(1, "numpy")
-
 
     # Get the needed namespaces.
     namespaces = []
@@ -312,6 +342,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
+        # consistency check
+        if 'numexpr' in modules and len(modules) > 1:
+            raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
     namespace = {}
@@ -326,9 +359,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         for term in syms:
             namespace.update({str(term): term})
 
+    if 'numexpr' in namespaces and printer is None:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import NumExprPrinter as printer
+
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
+
     if flat in lstr:
         import itertools
         namespace.update({flat: flatten})
@@ -534,7 +572,7 @@ def implemented_function(symfunc, implementation):
 
     Be aware that this is a quick workaround, not a general method to create
     special symbolic functions. If you want to create a symbolic function to be
-    used by all the machinery of sympy you should subclass the ``Function``
+    used by all the machinery of SymPy you should subclass the ``Function``
     class.
 
     Parameters
@@ -556,7 +594,7 @@ def implemented_function(symfunc, implementation):
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
-    >>> lam_f = lambdify(x, f(x))
+    >>> lam_f = lambdify(x, f(x), default_array=True)
     >>> lam_f(4)
     5
     """

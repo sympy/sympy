@@ -58,6 +58,10 @@ from types import GeneratorType
 from collections import defaultdict
 import warnings
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
@@ -2252,7 +2256,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> tsolve(3**(2*x + 5) - 4, x)
-    [-5/2 + log(2)/log(3), log(-2*sqrt(3)/27)/log(3)]
+    [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]

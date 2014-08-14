@@ -1,6 +1,6 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E, sqrt
 )
 from sympy.mpmath import mpi
 
@@ -103,6 +103,9 @@ def test_union():
     raises(TypeError, lambda: Union(1, 2, 3))
 
     assert X.is_iterable is False
+
+    # issue 7843
+    assert Union(S.EmptySet, FiniteSet(-sqrt(-I), sqrt(-I))) == FiniteSet(-sqrt(-I), sqrt(-I))
 
 
 def test_difference():
@@ -661,7 +664,6 @@ def test_image_EmptySet():
 def test_issue_5724_7680():
     assert I not in S.Reals  # issue 7680
     assert Interval(-oo,oo).contains(I) is False
-    raises(TypeError, lambda: I > 2)
 
 
 def test_boundary():

@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo)
+                   Function, Product, Rational, Sum, oo, exp, log, S)
 from sympy.utilities.pytest import raises
 from sympy import simplify
 
@@ -333,3 +333,8 @@ def test_reverse_order():
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
     assert Product(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+
+def test_rewrite_Sum():
+    assert Product(1 - S.Half**2/k**2,(k,1,oo)).rewrite(Sum) == \
+        exp(Sum(log(1 - 1/(4*k**2)), (k, 1, oo)))

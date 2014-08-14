@@ -7,18 +7,20 @@ Plane
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy, nan, Eq, symbols, Symbol
+from sympy.core import S, C, sympify, Dummy, nan, Eq, symbols, Symbol, Rational
+from sympy.core.function import expand_mul
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
     sqrt
 from sympy.core.logic import fuzzy_and
 from sympy.core.exprtools import factor_terms
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
+from sympy.polys.polytools import cancel
 from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point3d import Point3D
 from .point import Point
-from .line3d import Line3D, Segment3D, Ray3D
+from .line3d import LinearEntity3D, Line3D, Segment3D, Ray3D
 from .line import Line, Segment, Ray
 from sympy.matrices import Matrix
 
@@ -49,19 +51,24 @@ class Plane(GeometryEntity):
     Plane(Point3D(1, 1, 1), (1, 4, 7))
 
     """
-    def __new__(cls, p1, pt1=None, pt2=None, normal_vector=(), **kwargs):
+    def __new__(cls, p1, a=None, b=None, **kwargs):
         p1 = Point3D(p1)
-        if pt1 is None and pt2 is None and len(normal_vector) == 3:
-            pass
-        elif pt1 and pt2 and len(normal_vector) == 0:
-            pt1, pt2 = Point3D(pt1), Point3D(pt2)
-            if Point3D.is_collinear(p1, pt1, pt2):
+        if not a and not b and kwargs.get('normal_vector', None):
+            a = kwargs.pop('normal_vector')
+
+        if not b and not isinstance(a, Point3D) and \
+                len(a) == 3:
+            normal_vector = a
+        elif a and b:
+            p2 = Point3D(a)
+            p3 = Point3D(b)
+            if Point3D.are_collinear(p1, p2, p3):
                 raise NotImplementedError('Enter three non-collinear points')
-            a = p1.direction_ratio(pt1)
-            b = p1.direction_ratio(pt2)
+            a = p1.direction_ratio(p2)
+            b = p1.direction_ratio(p3)
             normal_vector = tuple(Matrix(a).cross(Matrix(b)))
         else:
-            raise ValueError('Either provide 3 3D points or a point with a'
+            raise ValueError('Either provide 3 3D points or a point with a '
             'normal vector')
         return GeometryEntity.__new__(cls, p1, normal_vector, **kwargs)
 
@@ -126,8 +133,7 @@ class Plane(GeometryEntity):
         return (sum(i*j for i, j in zip(b, c)))
 
     def projection(self, pt):
-        """Projection of any point on the plane
-           Will result in a 3D point.
+        """Project the given point onto the plane along the plane normal.
 
         Parameters
         ==========
@@ -139,41 +145,36 @@ class Plane(GeometryEntity):
 
         Point3D
 
-        Notes
-        =====
-
-        For the interaction between 2D and 3D points, you should convert the 2D
-        point to 3D by using this method. For example for finding the distance
-        between Point(1, 2) and Point3D(1, 2, 3) you can convert the 2D point
-        to Point3D(1, 2, 0) by projecting it to plane which is parallel to xy
-        plane.
-
         Examples
         ========
 
         >>> from sympy import Plane, Point, Point3D
-        >>> a = Plane(Point3D(1, 1, 1), normal_vector=(1, 1, 1))
-        >>> b = Point(1, 2)
-        >>> a.projection(b)
-        Point3D(1, 2, 0)
-        >>> c = Point3D(1, 1, 1)
-        >>> a.projection(c)
-        Point3D(4/3, 4/3, 4/3)
+        >>> A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
 
+        The projection is along the normal vector direction, not the z
+        axis, so (1, 1) does not project to (1, 1, 2) on the plane A:
+
+        >>> b = Point(1, 1)
+        >>> A.projection(b)
+        Point3D(5/3, 5/3, 2/3)
+        >>> _ in A
+        True
+
+        But the point (1, 1, 2) projects to (1, 1) on the XY-plane:
+
+        >>> XY = Plane((0, 0, 0), (0, 0, 1))
+        >>> XY.projection((1, 1, 2))
+        Point3D(1, 1, 0)
         """
-        x, y, z = map(Dummy, 'xyz')
-        k = self.equation(x, y, z)
-        a, b, c = [k.coeff(i) for i in (x, y, z)]
-        d = k.xreplace({x: pt.args[0], y: pt.args[1], z:0})
-        t = -d/(a**2 + b**2 + c**2)
-        if isinstance(pt, Point):
-            return Point3D(pt.x + t*a, pt.y + t*b, t*c)
-        if isinstance(pt, Point3D):
-            return Point3D(pt.x + t*a, pt.y + t*b, pt.z + t*c)
+        rv = Point3D(pt)
+        if rv in self:
+            return rv
+        return self.intersection(Line3D(rv, rv + Point3D(self.normal_vector)))[0]
 
-    def projection_line(self, l):
-        """Projection of any line on the plane.
-           Result will be a 3D line or Ray or segment.
+
+    def projection_line(self, line):
+        """Project the given line onto the plane through the normal plane
+        containing the line.
 
         Parameters
         ==========
@@ -183,7 +184,7 @@ class Plane(GeometryEntity):
         Returns
         =======
 
-        Line3D
+        Point3D, Line3D, Ray3D or Segment3D
 
         Notes
         =====
@@ -204,19 +205,24 @@ class Plane(GeometryEntity):
         Line3D(Point3D(4/3, 4/3, 1/3), Point3D(5/3, 5/3, -1/3))
         >>> c = Line3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
         >>> a.projection_line(c)
-        Line3D(Point3D(4/3, 4/3, 4/3), Point3D(5/3, 5/3, 5/3))
+        Point3D(1, 1, 1)
 
         """
         from sympy.geometry.line import LinearEntity
         from sympy.geometry.line3d import LinearEntity3D
-        if not isinstance(l, (LinearEntity, LinearEntity3D)):
+        if not isinstance(line, (LinearEntity, LinearEntity3D)):
             raise NotImplementedError('Enter a linear entity only')
-        a, b = self.projection(l.p1), self.projection(l.p2)
-        if isinstance(l, (Line, Line3D)):
+        a, b = self.projection(line.p1), self.projection(line.p2)
+        if a == b:
+            # projection does not imply intersection so for
+            # this case (line parallel to plane's normal) we
+            # return the projection point
+            return a
+        if isinstance(line, (Line, Line3D)):
             return Line3D(a, b)
-        if isinstance(l, (Ray, Ray3D)):
+        if isinstance(line, (Ray, Ray3D)):
             return Ray3D(a, b)
-        if isinstance(l, (Segment, Segment3D)):
+        if isinstance(line, (Segment, Segment3D)):
             return Segment3D(a, b)
 
     def is_parallel(self, l):
@@ -408,8 +414,13 @@ class Plane(GeometryEntity):
             e = sqrt(sum([i**2 for i in o.normal_vector]))
             return C.acos(c/(d*e))
 
-    def is_concurrent(*planes):
-        """ Returns True if the given Planes are concurrent otherwise False
+
+    @staticmethod
+    def are_concurrent(*planes):
+        """Is a sequence of Planes concurrent?
+
+        Two or more Planes are concurrent if their intersections
+        are a common line.
 
         Parameters
         ==========
@@ -428,62 +439,30 @@ class Plane(GeometryEntity):
         >>> a = Plane(Point3D(5, 0, 0), normal_vector=(1, -1, 1))
         >>> b = Plane(Point3D(0, -2, 0), normal_vector=(3, 1, 1))
         >>> c = Plane(Point3D(0, -1, 0), normal_vector=(5, -1, 9))
-        >>> Plane.is_concurrent(a, b, c)
+        >>> Plane.are_concurrent(a, b)
+        True
+        >>> Plane.are_concurrent(a, b, c)
         False
 
         """
-        if all(isinstance(i, Plane) for i in planes):
-            if len(planes) < 2:
-                return False
-            a = planes[0].intersection(planes[1])
-            if a == []:
-                return False
-            else:
-                for i in planes[2:]:
-                    if planes[0].intersection(i) != a:
-                        return False
-                return True
+        planes = set(planes)
+        if len(planes) < 2:
+            return False
+        for i in planes:
+            if not isinstance(i, Plane):
+                raise ValueError('All objects should be Planes but got %s' % i.func)
+        planes = list(planes)
+        first = planes.pop(0)
+        sol = first.intersection(planes[0])
+        if sol == []:
+            return False
         else:
-            ValueError('Enter Planes only')
-
-    @staticmethod
-    def are_coplanar(*lines):
-        """ Returns True if the given lines are coplanar otherwise False
-
-        Parameters
-        ==========
-
-        lines: list
-
-        Returns
-        =======
-
-        Boolean
-
-        Examples
-        ========
-
-        >>> from sympy import Plane, Point3D, Line3D
-        >>> a = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
-        >>> b = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
-        >>> c = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
-        >>> Plane.are_coplanar(a, b, c)
-        False
-
-        """
-        if all(isinstance(i, Line3D) for i in lines):
-            if len(lines) < 2:
-                return False
-            a = Matrix(lines[0].direction_ratio)
-            b = Matrix(lines[1].direction_ratio)
-            c = list(a.cross(b))
-            d = Plane(lines[0].p1, normal_vector=c)
-            for i in lines[2:]:
-                if i not in d:
+            line = sol[0]
+            for i in planes[1:]:
+                l = first.intersection(i)
+                if not l or not l[0] in line:
                     return False
             return True
-        else:
-            ValueError('Enter Lines only')
 
     def perpendicular_line(self, pt):
         """A line perpendicular to the given plane.
@@ -536,16 +515,23 @@ class Plane(GeometryEntity):
         a = self.normal_vector
         return Plane(pt, normal_vector=a)
 
-    def perpendicular_plane(self, l, pt):
+    def perpendicular_plane(self, *pts):
         """
-        Plane perpendicular to the given plane and passing through a line in the
-        given plane.
+        Return a perpendicular passing through the given points. If the
+        direction ratio between the points is the same as the Plane's normal
+        vector then, to select from the infinite number of possible planes,
+        a third point will be chosen on the z-axis (or the y-axis
+        if the normal vector is already parallel to the z-axis). If less than
+        two points are given they will be supplied as follows: if no point is
+        given then pt1 will be self.p1; if a second point is not given it will
+        be a point through pt1 on a line parallel to the z-axis (if the normal
+        is not already the z-axis, otherwise on the line parallel to the
+        y-axis).
 
         Parameters
         ==========
 
-        pt: Point3D
-        l: LinearEntity or LinearEntity3D
+        pts: 0, 1 or 2 Point3D
 
         Returns
         =======
@@ -556,23 +542,44 @@ class Plane(GeometryEntity):
         ========
 
         >>> from sympy import Plane, Point3D, Line3D
-        >>> a = Plane(Point3D(1, 4, 6), normal_vector=(2, 4, 6))
-        >>> b = Line3D(Point3D(-27, 27, 0), Point3D(-37, 35, -2))
-        >>> a.perpendicular_plane(b, Point3D(1, 2, 3))
-        Plane(Point3D(1, 2, 3), (-26, -26, 26))
-
+        >>> a, b = Point3D(0, 0, 0), Point3D(0, 1, 0)
+        >>> Z = (0, 0, 1)
+        >>> p = Plane(a, normal_vector=Z)
+        >>> p.perpendicular_plane(a, b)
+        Plane(Point3D(0, 0, 0), (1, 0, 0))
         """
-        if l in self:
-            a = l
+        if len(pts) > 2:
+            raise ValueError('No more than 2 pts should be provided.')
+
+        pts = list(pts)
+        if len(pts) == 0:
+            pts.append(self.p1)
+        if len(pts) == 1:
+            x, y, z = self.normal_vector
+            if x == y == 0:
+                dir = (0, 1, 0)
+            else:
+                dir = (0, 0, 1)
+            pts.append(pts[0] + Point3D(*dir))
+
+        p1, p2 = [Point3D(i) for i in pts]
+        l = Line3D(p1, p2)
+        n = Line3D(p1, direction_ratio=self.normal_vector)
+        if l in n:  # XXX should an error be raised instead?
+            # there are infinitely many perpendicular planes;
+            x, y, z = self.normal_vector
+            if x == y == 0:
+                # the z axis is the normal so pick a pt on the y-axis
+                p3 = Point3D(0, 1, 0)  # case 1
+            else:
+                # else pick a pt on the z axis
+                p3 = Point3D(0, 0, 1)  # case 2
+            # in case that point is already given, move it a bit
+            if p3 in l:
+                p3 *= 2  # case 3
         else:
-            a = self.projection_line(l)
-        b, c, d = a.p1, a.p2, pt
-        e = Plane(d, b, c)
-        if e.is_perpendicular(self):
-            return e
-        else:
-            return NotImplementedError('The plane passing through the given line'
-                                        'is not perpendicular to the given plane')
+            p3 = p1 + Point3D(*self.normal_vector)  # case 4
+        return Plane(p1, p2, p3)
 
     def random_point(self, seed=None):
         """ Returns a random point on the Plane.
@@ -583,26 +590,48 @@ class Plane(GeometryEntity):
         Point3D
 
         """
-        x, y, z = symbols("x, y, z")
-        a = self.equation(x, y, z)
-        from sympy import Rational
         import random
         if seed is not None:
             rng = random.Random(seed)
         else:
             rng = random
-        for i in range(10):
-            c = 2*Rational(rng.random()) - 1
-            s = sqrt(1 - c**2)
-            a = solve(a.subs([(y, c), (z, s)]))
-            if a is []:
-                d = Point3D(0, c, s)
-            else:
-                d = Point3D(a[0], c, s)
-            if d in self:
-                return d
-        raise GeometryError(
-            'Having problems generating a point in the plane')
+        t = Dummy('t')
+        return self.arbitrary_point(t).subs(t, Rational(rng.random()))
+
+    def arbitrary_point(self, t=None):
+        """ Returns an arbitrary point on the Plane; varying `t` from 0 to 2*pi
+        will move the point in a circle of radius 1 about p1 of the Plane.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.plane import Plane
+        >>> from sympy.abc import t
+        >>> p = Plane((0, 0, 0), (0, 0, 1), (0, 1, 0))
+        >>> p.arbitrary_point(t)
+        Point3D(0, cos(t), sin(t))
+        >>> _.distance(p.p1).simplify()
+        1
+
+        Returns
+        =======
+
+        Point3D
+
+        """
+        from sympy import cos, sin
+        t = t or Dummy('t')
+        x, y, z = self.normal_vector
+        a, b, c = self.p1.args
+        if x == y == 0:
+            return Point3D(a + cos(t), b + sin(t), c)
+        elif x == z == 0:
+            return Point3D(a + cos(t), b, c + sin(t))
+        elif y == z == 0:
+            return Point3D(a, b + cos(t), c + sin(t))
+        m = Dummy()
+        p = self.projection(Point3D(self.p1.x + cos(t), self.p1.y + sin(t), 0)*m)
+        return p.xreplace({m: solve(p.distance(self.p1) - 1, m)[0]})
 
     def intersection(self, o):
         """ The intersection with other geometrical entity.
@@ -624,10 +653,10 @@ class Plane(GeometryEntity):
         >>> a = Plane(Point3D(1, 2, 3), normal_vector=(1, 1, 1))
         >>> b = Point3D(1, 2, 3)
         >>> a.intersection(b)
-        Point3D(1, 2, 3)
+        [Point3D(1, 2, 3)]
         >>> c = Line3D(Point3D(1, 4, 7), Point3D(2, 2, 2))
         >>> a.intersection(c)
-        Point3D(2, 2, 2)
+        [Point3D(2, 2, 2)]
         >>> d = Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))
         >>> e = Plane(Point3D(2, 0, 0), normal_vector=(3, 4, -3))
         >>> d.intersection(e)
@@ -636,59 +665,54 @@ class Plane(GeometryEntity):
         """
         from sympy.geometry.line3d import LinearEntity3D
         from sympy.geometry.line import LinearEntity
-        if isinstance(o, Point) or isinstance(o, Point3D):
+        if isinstance(o, (Point, Point3D)):
             if o in self:
-                return o
+                return [Point3D(o)]
             else:
                 return []
-        if isinstance(o, LinearEntity3D):
-            t = symbols('t')
-            x, y, z = map(Dummy, 'xyz')
+        if isinstance(o, (LinearEntity, LinearEntity3D)):
             if o in self:
+                p1, p2 = o.p1, o.p2
+                if isinstance(o, Segment):
+                    o = Segment3D(p1, p2)
+                elif isinstance(o, Ray):
+                    o = Ray3D(p1, p2)
+                elif isinstance(o, Line):
+                    o = Line3D(p1, p2)
+                else:
+                    raise ValueError('unhandled linear entity: %s' % o.func)
                 return [o]
             else:
-                a = o.arbitrary_point(t)
+                x, y, z = map(Dummy, 'xyz')
+                t = Dummy()  # unnamed else it may clash with a symbol in o
+                a = Point3D(o.arbitrary_point(t))
                 b = self.equation(x, y, z)
-                c = solve(b.subs([(x, a.x), (y, a.y), (z, a.z)]))
-                if c == []:
+                c = solve(b.subs(list(zip((x, y, z), a.args))), t)
+                if not c:
                     return []
                 else:
-                    a = a.subs(t, c[0])
-                    if a in o:
-                        return a
-                    else:
-                        return []
-        if isinstance(o, LinearEntity):
-            t = symbols('t')
-            x, y, z = map(Dummy, 'xyz')
-            if o in self:
-                return [o]
-            else:
-                a = self.equation(x, y, z).subs(z,0)
-                b = o.equation(x, y)
-                c = solve((a,b),[x, y])
-                if c is {}:
-                    return []
-                else:
-                    return [Point(c[x], c[y])]
+                    p = a.subs(t, c[0])
+                    if p not in self:
+                        return []  # e.g. a segment might not intersect a plane
+                    return [p]
         if isinstance(o, Plane):
             if o == self:
-                return self
+                return [self]
             if self.is_parallel(o):
                 return []
             else:
                 x, y, z = map(Dummy, 'xyz')
-                a, b= Matrix([self.normal_vector]), Matrix([o.normal_vector])
+                a, b = Matrix([self.normal_vector]), Matrix([o.normal_vector])
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
                 e = o.equation(x, y, z)
-                f = solve((d.subs(z,0), e.subs(z,0)),[x, y])
-                g = solve((d.subs(y,0), e.subs(y,0)),[x, z])
-                h = solve((d.subs(x,0), e.subs(x,0)),[y, z])
+                f = solve((d.subs(z, 0), e.subs(z, 0)), [x, y])
                 if len(f) == 2:
                     return [Line3D(Point3D(f[x], f[y], 0), direction_ratio=c)]
+                g = solve((d.subs(y, 0), e.subs(y, 0)),[x, z])
                 if len(g) == 2:
                     return [Line3D(Point3D(g[x], 0, g[z]), direction_ratio=c)]
+                h = solve((d.subs(x, 0), e.subs(x, 0)),[y, z])
                 if len(h) == 2:
                     return [Line3D(Point3D(0, h[y], h[z]), direction_ratio=c)]
 
@@ -697,28 +721,40 @@ class Plane(GeometryEntity):
         from sympy.geometry.line import LinearEntity
         x, y, z = map(Dummy, 'xyz')
         k = self.equation(x, y, z)
+        if isinstance(o, Point):
+            o = Point3D(o)
         if isinstance(o, Point3D):
-            d = k.subs([(x, o.x), (y, o.y), (z, o.z)])
-            return d == 0
-        elif isinstance(o, Point):
-            if self.projection(o) == Point3D(o.x, o.y, 0):
-                return True
-            else:
-                return False
-        elif isinstance(o, LinearEntity3D):
-            d = o.arbitrary_point()
+            d = k.xreplace(dict(zip((x, y, z), o.args)))
+            return d.equals(0)
+        elif isinstance(o, (LinearEntity, LinearEntity3D)):
+            t = Dummy()
+            d = Point3D(o.arbitrary_point(t))
             e = k.subs([(x, d.x), (y, d.y), (z, d.z)])
-            return e == 0
-        elif isinstance(o, LinearEntity):
-            if self.projection_line(o) == Line3D(Point3D(o.p1.x, o.p1.y, 0),
-                                                Point3D(o.p2.x, o.p2.y, 0)):
-                return True
-            else:
-                return False
+            return e.equals(0)
         else:
             return False
 
-    def equal(self, pl):
-        """ Returns True if the planes are mathematically equal otherwise False
+    def is_coplanar(self, o):
+        """ Returns True if `o` is coplanar with self, else False.
+
+        Examples
+        ========
+
+        >>> from sympy import Plane, Point3D
+        >>> o = (0, 0, 0)
+        >>> p = Plane(o, (1, 1, 1))
+        >>> p2 = Plane(o, (2, 2, 2))
+        >>> p == p2
+        False
+        >>> p.is_coplanar(p2)
+        True
         """
-        return self.equation() == pl.equation()
+        if isinstance(o, Plane):
+            x, y, z = map(Dummy, 'xyz')
+            return not cancel(self.equation(x, y, z)/o.equation(x, y, z)).has(x, y, z)
+        if isinstance(o, Point3D):
+            return o in self
+        elif isinstance(o, LinearEntity3D):
+            return all(i in self for i in self)
+        elif isinstance(o, GeometryEntity):  # XXX should only be handling 2D objects now
+            return all(i == 0 for i in self.normal_vector[:2])

@@ -426,6 +426,10 @@ void evalonarray(double *array, int length)
 from sympy import sqrt, pi, lambdify
 from math import exp as _exp, cos as _cos, sin as _sin
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'

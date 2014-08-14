@@ -31,6 +31,10 @@ import random
 
 from sympy.utilities.decorator import doctest_depends_on
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
@@ -558,18 +562,7 @@ class Ellipse(GeometryEntity):
         zeros define the rotated ellipse is given.
 
         """
-        def _uniquely_named_symbol(xname, *exprs):
-            """Return a symbol which, when printed, will have a name unique
-            from any other already in the expressions given. The name is made
-            unique by prepending underscores.
-            """
-            prefix = '%s'
-            x = prefix % xname
-            syms = set.union(*[e.free_symbols for e in exprs])
-            while any(x == str(s) for s in syms):
-                prefix = '_' + prefix
-                x = prefix % xname
-            return _symbol(x)
+        from .util import _uniquely_named_symbol
 
         if line.slope in (0, oo):
             c = self.center

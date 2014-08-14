@@ -11,7 +11,7 @@ See the webpage for more information and documentation:
 
 from __future__ import absolute_import, print_function
 
-__version__ = "0.7.5-git"
+from sympy.release import __version__
 
 import sys
 if sys.version_info[0] == 2 and sys.version_info[1] < 6:

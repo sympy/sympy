@@ -950,6 +950,8 @@ class Mul(Expr, AssocOp):
         'is_commutative')
     _eval_is_rational = lambda self: self._eval_template_is_attr('is_rational',
         when_multiple=None)
+    _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex',
+        when_multiple=None)
 
     def _eval_is_integer(self):
         is_rational = self.is_rational

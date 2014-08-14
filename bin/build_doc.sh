@@ -24,7 +24,9 @@
 # Exit on error
 set -e
 
-if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+ACTUAL_TRAVIS_JOB_NUMBER=`echo $TRAVIS_JOB_NUMBER| cut -d'.' -f 2`
+
+if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$ACTUAL_TRAVIS_JOB_NUMBER" == "1" ]; then
 
         echo "Installing dependencies"
         sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern librsvg2-bin imagemagick docbook2x
@@ -53,5 +55,5 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
         git commit -am "Update dev doc after building $TRAVIS_BUILD_NUMBER"
         echo -e "Pushing commit"
-        git push -fq origin gh-pages > /dev/null
+        git push -fq origin gh-pages > /dev/null 2>&1
 fi

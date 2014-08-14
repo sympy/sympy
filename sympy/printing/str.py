@@ -648,6 +648,9 @@ class StrPrinter(Printer):
     def _print_Unit(self, expr):
         return expr.abbrev
 
+    def _print_Dimension(self, expr):
+        return str(expr)
+
     def _print_Wild(self, expr):
         return expr.name + '_'
 

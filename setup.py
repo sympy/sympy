@@ -27,14 +27,11 @@ Or, if all else fails, feel free to write to the sympy list at
 sympy@googlegroups.com and ask for help.
 """
 
-from distutils.core import setup
-from distutils.core import Command
-from distutils.command.build_scripts import build_scripts
+from distutils.core import setup, Command
 import sys
 import subprocess
 import os
-
-import sympy
+import re
 
 PY3 = sys.version_info[0] > 2
 
@@ -43,66 +40,16 @@ if sys.version_info[:2] < (2, 6):
     print("SymPy requires Python 2.6 or newer. Python %d.%d detected" % sys.version_info[:2])
     sys.exit(-1)
 
-# Check that this list is uptodate against the result of the command:
-# for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" | egrep -v "tests$" `; do echo "'${i//\//.}',"; done | sort
-modules = [
-    'sympy.assumptions',
-    'sympy.assumptions.handlers',
-    'sympy.calculus',
-    'sympy.categories',
-    'sympy.combinatorics',
-    'sympy.concrete',
-    'sympy.core',
-    'sympy.crypto',
-    'sympy.diffgeom',
-    'sympy.external',
-    'sympy.functions',
-    'sympy.functions.combinatorial',
-    'sympy.functions.elementary',
-    'sympy.functions.special',
-    'sympy.galgebra',
-    'sympy.geometry',
-    'sympy.integrals',
-    'sympy.interactive',
-    'sympy.liealgebras',
-    'sympy.logic',
-    'sympy.logic.algorithms',
-    'sympy.logic.utilities',
-    'sympy.matrices',
-    'sympy.matrices.expressions',
-    'sympy.mpmath',
-    'sympy.mpmath.calculus',
-    'sympy.mpmath.functions',
-    'sympy.mpmath.libmp',
-    'sympy.mpmath.matrices',
-    'sympy.ntheory',
-    'sympy.parsing',
-    'sympy.physics',
-    'sympy.physics.hep',
-    'sympy.physics.mechanics',
-    'sympy.physics.optics',
-    'sympy.physics.quantum',
-    'sympy.physics.vector',
-    'sympy.plotting',
-    'sympy.plotting.intervalmath',
-    'sympy.plotting.pygletplot',
-    'sympy.polys',
-    'sympy.polys.agca',
-    'sympy.polys.domains',
-    'sympy.printing',
-    'sympy.printing.pretty',
-    'sympy.series',
-    'sympy.sets',
-    'sympy.simplify',
-    'sympy.solvers',
-    'sympy.stats',
-    'sympy.strategies',
-    'sympy.strategies.branch',
-    'sympy.tensor',
-    'sympy.unify',
-    'sympy.utilities',
-    'sympy.utilities.mathml',
-]
+try:
+    from setuptools import find_packages
+except ImportError:
+    def find_packages(where='.'):
+        ret = []
+        for root, dirs, files in os.walk(where):
+            if '__init__.py' in files:
+                ret.append(re.sub('^[^A-z0-9_]+', '', root.replace('/', '.')))
+        return ret
+
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -182,7 +129,8 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        sympy.utilities.runtests.run_all_tests()
+        from sympy.utilities import runtests
+        runtests.run_all_tests()
 
 
 class run_benchmarks(Command):
@@ -211,6 +159,7 @@ class run_benchmarks(Command):
     def run(self):
         from sympy.utilities import benchmarking
         benchmarking.main(['sympy'])
+
 
 cmdclass = {'test': test_sympy,
             'bench': run_benchmarks,
@@ -290,9 +239,11 @@ to become a full-featured computer algebra system (CAS) while keeping the code
 as simple as possible in order to be comprehensible and easily extensible.
 SymPy is written entirely in Python and does not require any external libraries.'''
 
+exec(open('sympy/release.py').read())
+
 setup_args = {
     "name": 'sympy',
-    "version": sympy.__version__,
+    "version": __version__,
     "description": 'Computer algebra system (CAS) in Python',
     "long_description": long_description,
     "author": 'SymPy development team',
@@ -300,7 +251,7 @@ setup_args = {
     "license": 'BSD',
     "keywords": "Math CAS",
     "url": 'http://sympy.org',
-    "packages": ['sympy'] + modules + tests,
+    "packages": find_packages(),
     "scripts": ['bin/isympy'],
     "ext_modules": [],
     "package_data": { 'sympy.utilities.mathml': ['data/*.xsl'] },

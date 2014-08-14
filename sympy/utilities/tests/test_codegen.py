@@ -17,7 +17,7 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
        this wrapper returns the contents of that stream as a string. This
        auxiliary function is used by many tests below.
 
-       The header and the empty lines are not generator to facilitate the
+       The header and the empty lines are not generated to facilitate the
        testing of the output.
     """
     output = StringIO()

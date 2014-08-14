@@ -24,7 +24,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, SKIP
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -1986,7 +1986,7 @@ def test_S5():
             factorial(n - Rational(1, 2))/(sqrt(pi)*factorial(n)))
 
 
-@XFAIL
+@SKIP("https://github.com/sympy/sympy/issues/7133")
 def test_S6():
     n, k = symbols('n k', integer=True, positive=True)
     # Product raises Infinite recursion error.
@@ -2012,7 +2012,7 @@ def test_S8():
     assert T.simplify() == 2/pi
 
 
-@XFAIL
+@SKIP("https://github.com/sympy/sympy/issues/7133")
 def test_S9():
     k = symbols('k', integer=True, positive=True)
     Pr = Product(1 + (-1)**(k + 1)/(2*k - 1), (k, 1, oo))
@@ -2022,7 +2022,7 @@ def test_S9():
     assert T.simplify() == sqrt(2)
 
 
-@XFAIL
+@SKIP("https://github.com/sympy/sympy/issues/7137")
 def test_S10():
     k = symbols('k', integer=True, positive=True)
     Pr = Product((k*(k + 1) + 1 + I)/(k*(k + 1) + 1 - I), (k, 0, oo))
@@ -2536,6 +2536,15 @@ def test_W23():
     a, b = symbols('a b', real=True, positive=True)
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
     assert r1.simplify() == pi*(-a + b)
+
+@SKIP("integrate raises RuntimeError: maximum recursion depth exceeded")
+@slow
+def test_W23b():
+    # this used to be test_W23.  Can't really split since r1 is needed
+    # in the second assert
+    a, b = symbols('a b', real=True, positive=True)
+    r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
+    assert r1.simplify() == pi*(-a + b)
     # integrate raises RuntimeError: maximum recursion depth exceeded
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
     assert r1 == r2
@@ -2687,7 +2696,7 @@ def test_X14():
                   n, x==oo, n=1) == 1/(sqrt(pi)*sqrt(n)) + O(1/x, (x, oo))
 
 
-@XFAIL
+@SKIP("https://github.com/sympy/sympy/issues/7164")
 def test_X15():
     # => 0!/x - 1!/x^2 + 2!/x^3 - 3!/x^4 + O(1/x^5)   [Knopp, p. 544]
     x, t = symbols('x t', real=True)
@@ -2917,7 +2926,7 @@ def test_Y10():
             (-8*pi**2*z**2 + 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81))
 
 
-@XFAIL
+@SKIP("https://github.com/sympy/sympy/issues/7181")
 @slow
 def test_Y11():
     # => pi cot(pi s)   (0 < Re s < 1)   [Gradshteyn and Ryzhik 17.43(5)]

@@ -26,6 +26,8 @@ from .core import C
 from .singleton import S
 from .containers import Tuple
 
+from sympy.utilities.iterables import is_sequence
+
 LG10 = math.log(10, 2)
 rnd = round_nearest
 
@@ -1025,6 +1027,9 @@ def hypsum(expr, n, start, prec):
     polynomials.
     """
     from sympy import hypersimp, lambdify
+    # TODO: This should be removed for the release of 0.7.7, see issue #7853
+    from functools import partial
+    lambdify = partial(lambdify, default_array=True)
 
     if start:
         expr = expr.subs(n, n + start)
@@ -1080,6 +1085,14 @@ def hypsum(expr, n, start, prec):
         finally:
             mp.prec = orig
         return v._mpf_
+
+
+def evalf_prod(expr, prec, options):
+    if all((l[1] - l[2]).is_Integer for l in expr.limits):
+        re, im, re_acc, im_acc = evalf(expr.doit(), prec=prec, options=options)
+    else:
+        re, im, re_acc, im_acc = evalf(expr.rewrite(C.Sum), prec=prec, options=options)
+    return re, im, re_acc, im_acc
 
 
 def evalf_sum(expr, prec, options):
@@ -1185,6 +1198,7 @@ def _create_evalf_table():
 
         C.Integral: evalf_integral,
         C.Sum: evalf_sum,
+        C.Product: evalf_prod,
         C.Piecewise: evalf_piecewise,
 
         C.bernoulli: evalf_bernoulli,
@@ -1253,7 +1267,8 @@ class EvalfMixin(object):
 
             subs=<dict>
                 Substitute numerical values for symbols, e.g.
-                subs={x:3, y:1+pi}.
+                subs={x:3, y:1+pi}. The substitutions must be given as a
+                dictionary.
 
             maxn=<integer>
                 Allow a maximum temporary working precision of maxn digits
@@ -1277,6 +1292,11 @@ class EvalfMixin(object):
                 Print debug information (default=False)
 
         """
+        n = n if n is not None else 15
+
+        if subs and is_sequence(subs):
+            raise TypeError('subs must be given as a dictionary')
+
         # for sake of sage that doesn't like evalf(1)
         if n == 1 and isinstance(self, C.Number):
             from sympy.core.expr import _mag

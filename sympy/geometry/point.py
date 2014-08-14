@@ -380,10 +380,7 @@ class Point(GeometryEntity):
         Point(0.5, 1.5)
 
         """
-        if prec is None:
-            coords = [x.evalf(**options) for x in self.args]
-        else:
-            coords = [x.evalf(prec, **options) for x in self.args]
+        coords = [x.evalf(prec, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
     n = evalf

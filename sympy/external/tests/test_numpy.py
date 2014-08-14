@@ -31,6 +31,10 @@ from sympy import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 # first, systematically check, that all operations are implemented and don't
 # raise an exception
 
@@ -246,7 +250,7 @@ def test_lambdify():
 
 def test_lambdify_matrix():
     f = lambdify(x, Matrix([[x, 2*x], [1, 2]]), "numpy")
-    assert (f(1) == matrix([[1, 2], [1, 2]])).all()
+    assert (f(1) == array([[1, 2], [1, 2]])).all()
 
 
 def test_lambdify_matrix_multi_input():
@@ -256,9 +260,9 @@ def test_lambdify_matrix_multi_input():
     f = lambdify((x, y, z), M, "numpy")
 
     xh, yh, zh = 1.0, 2.0, 3.0
-    expected = matrix([[xh**2, xh*yh, xh*zh],
-                       [yh*xh, yh**2, yh*zh],
-                       [zh*xh, zh*yh, zh**2]])
+    expected = array([[xh**2, xh*yh, xh*zh],
+                      [yh*xh, yh**2, yh*zh],
+                      [zh*xh, zh*yh, zh**2]])
     actual = f(xh, yh, zh)
     assert numpy.allclose(actual, expected)
 
@@ -272,9 +276,9 @@ def test_lambdify_matrix_vec_input():
     f = lambdify(X, M, "numpy")
 
     Xh = array([1.0, 2.0, 3.0])
-    expected = matrix([[Xh[0]**2, Xh[0]*Xh[1], Xh[0]*Xh[2]],
-                       [Xh[1]*Xh[0], Xh[1]**2, Xh[1]*Xh[2]],
-                       [Xh[2]*Xh[0], Xh[2]*Xh[1], Xh[2]**2]])
+    expected = array([[Xh[0]**2, Xh[0]*Xh[1], Xh[0]*Xh[2]],
+                      [Xh[1]*Xh[0], Xh[1]**2, Xh[1]*Xh[2]],
+                      [Xh[2]*Xh[0], Xh[2]*Xh[1], Xh[2]**2]])
     actual = f(Xh)
     assert numpy.allclose(actual, expected)
 

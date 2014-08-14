@@ -519,22 +519,25 @@ def var(names, **args):
     into the *global* namespace. It's recommended not to use :func:`var` in
     library code, where :func:`symbols` has to be used::
 
-        >>> from sympy import var
+    Examples
+    ========
 
-        >>> var('x')
-        x
-        >>> x
-        x
+    >>> from sympy import var
 
-        >>> var('a,ab,abc')
-        (a, ab, abc)
-        >>> abc
-        abc
+    >>> var('x')
+    x
+    >>> x
+    x
 
-        >>> var('x,y', real=True)
-        (x, y)
-        >>> x.is_real and y.is_real
-        True
+    >>> var('a,ab,abc')
+    (a, ab, abc)
+    >>> abc
+    abc
+
+    >>> var('x,y', real=True)
+    (x, y)
+    >>> x.is_real and y.is_real
+    True
 
     See :func:`symbol` documentation for more details on what kinds of
     arguments can be passed to :func:`var`.

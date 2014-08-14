@@ -8,6 +8,7 @@ from .core import C
 from .singleton import S
 from .expr import Expr
 
+from sympy.core.evalf import PrecisionExhausted
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
 from sympy.core.logic import fuzzy_bool
@@ -206,27 +207,87 @@ class Pow(Expr):
         return 3, 2, cls.__name__
 
     def _eval_power(self, other):
-        from sympy.functions.elementary.exponential import log
-
         b, e = self.as_base_exp()
-        b_nneg = b.is_nonnegative
-        if b.is_real and not b_nneg and e.is_even:
-            b = abs(b)
-            b_nneg = True
-
-        # Special case for when b is nan. See pull req 1714 for details
         if b is S.NaN:
-            smallarg = abs(e).is_negative
-        else:
-            smallarg = (abs(e) - abs(S.Pi/log(b))).is_negative
-        if (other.is_Rational and other.q == 2 and
-                e.is_real is False and smallarg is False):
-            return -self.func(b, e*other)
-        if (other.is_integer or
-            e.is_real and (b_nneg or (abs(e) < 1) == True) or
-            e.is_real is False and smallarg is True or
-                b.is_polar):
-            return self.func(b, e*other)
+            return (b**e)**other  # let __new__ handle it
+
+        s = None
+        if other.is_integer:
+            s = 1
+        elif b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
+            s = 1
+        elif e.is_real is not None:
+            # helper functions ===========================
+            def _half(e):
+                """Return True if the exponent has a literal 2 as the
+                denominator, else None."""
+                if getattr(e, 'q', None) == 2:
+                    return True
+                n, d = e.as_numer_denom()
+                if n.is_integer and d == 2:
+                    return True
+            def _n2(e):
+                """Return ``e`` evaluated to a Number with 2 significant
+                digits, else None."""
+                try:
+                    rv = e.evalf(2, strict=True)
+                    if rv.is_Number:
+                        return rv
+                except PrecisionExhausted:
+                    pass
+            # ===================================================
+            if e.is_real:
+                # we need _half(other) with constant floor or
+                # floor(S.Half - e*arg(b)/2/pi) == 0
+
+                # handle -1 as special case
+                if (e == -1) == True:
+                    # floor arg. is 1/2 + arg(b)/2/pi
+                    if _half(other):
+                        if b.is_negative is True:
+                            return S.NegativeOne**other*Pow(-b, e*other)
+                        if b.is_real is False:
+                            return Pow(b.conjugate()/C.Abs(b)**2, other)
+                elif e.is_even:
+                    if b.is_real:
+                        b = abs(b)
+                    if b.is_imaginary:
+                        b = abs(C.im(b))*S.ImaginaryUnit
+
+                if (abs(e) < 1) == True or (e == 1) == True:
+                    s = 1  # floor = 0
+                elif b.is_nonnegative:
+                    s = 1  # floor = 0
+                elif C.re(b).is_nonnegative and (abs(e) < 2) == True:
+                    s = 1  # floor = 0
+                elif C.im(b).is_nonzero and (abs(e) == 2) == True:
+                    s = 1  # floor = 0
+                elif _half(other):
+                    s = C.exp(2*S.Pi*S.ImaginaryUnit*other*C.floor(
+                        S.Half - e*C.arg(b)/(2*S.Pi)))
+                    if s.is_real and _n2(C.sign(s) - s) == 0:
+                        s = C.sign(s)
+                    else:
+                        s = None
+            else:
+                # e.is_real is False requires:
+                #     _half(other) with constant floor or
+                #     floor(S.Half - im(e*log(b))/2/pi) == 0
+                try:
+                    s = C.exp(2*S.ImaginaryUnit*S.Pi*other*
+                        C.floor(S.Half - C.im(e*C.log(b))/2/S.Pi))
+                    # be careful to test that s is -1 or 1 b/c sign(I) == I:
+                    # so check that s is real
+                    if s.is_real and _n2(C.sign(s) - s) == 0:
+                        s = C.sign(s)
+                    else:
+                        s = None
+                except PrecisionExhausted:
+                    s = None
+
+        if s is not None:
+            return s*Pow(b, e*other)
+
 
     def _eval_is_even(self):
         if self.exp.is_integer and self.exp.is_positive:
@@ -333,6 +394,9 @@ class Pow(Expr):
                 if c and c.is_Integer:
                     return C.Mul(
                         self.base**c, self.base**a, evaluate=False).is_real
+            elif self.base in (-S.ImaginaryUnit, S.ImaginaryUnit):
+                if (self.exp/2).is_integer is False:
+                    return False
         if real_b and im_e:
             if self.base is S.NegativeOne:
                 return True
@@ -371,30 +435,67 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        if old.func is self.func and self.base == old.base:
-            coeff1, terms1 = self.exp.as_independent(C.Symbol, as_Add=False)
-            coeff2, terms2 = old.exp.as_independent(C.Symbol, as_Add=False)
+        def _check(ct1, ct2, old):
+            """Return bool, pow where, if bool is True, then the exponent of
+            Pow `old` will combine with `pow` so the substitution is valid,
+            otherwise bool will be False,
+
+            cti are the coefficient and terms of an exponent of self or old
+            In this _eval_subs routine a change like (b**(2*x)).subs(b**x, y)
+            will give y**2 since (b**x)**2 == b**(2*x); if that equality does
+            not hold then the substitution should not occur so `bool` will be
+            False.
+            """
+            coeff1, terms1 = ct1
+            coeff2, terms2 = ct2
             if terms1 == terms2:
                 pow = coeff1/coeff2
-                ok = False  # True if int(pow) == pow OR self.base.is_positive
                 try:
                     pow = as_int(pow)
-                    ok = True
+                    combines = True
                 except ValueError:
-                    ok = self.base.is_positive
+                    combines = Pow._eval_power(
+                        Pow(*old.as_base_exp(), evaluate=False),
+                        pow) is not None
+                return combines, pow
+            return False, None
+
+        if old == self.base:
+            return new**self.exp._subs(old, new)
+
+        if old.func is self.func and self.base is old.base:
+            if self.exp.is_Add is False:
+                ct1 = self.exp.as_independent(C.Symbol, as_Add=False)
+                ct2 = old.exp.as_independent(C.Symbol, as_Add=False)
+                ok, pow = _check(ct1, ct2, old)
                 if ok:
-                    # issue 5180
-                    return self.func(new, pow)  # (x**(6*y)).subs(x**(3*y),z)->z**2
+                    # issue 5180: (x**(6*y)).subs(x**(3*y),z)->z**2
+                    return self.func(new, pow)
+            else:  # b**(6*x+a).subs(b**(3*x), y) -> y**2 * b**a
+                # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
+                oarg = old.exp
+                new_l = []
+                o_al = []
+                ct2 = oarg.as_coeff_mul()
+                for a in self.exp.args:
+                    newa = a._subs(old, new)
+                    ct1 = newa.as_coeff_mul()
+                    ok, pow = _check(ct1, ct2, old)
+                    if ok:
+                        new_l.append(new**pow)
+                        continue
+                    o_al.append(newa)
+                if new_l:
+                    new_l.append(Pow(self.base, Add(*o_al), evaluate=False))
+                    return Mul(*new_l)
+
         if old.func is C.exp and self.exp.is_real and self.base.is_positive:
-            coeff1, terms1 = old.args[0].as_independent(C.Symbol, as_Add=False)
-            # we can only do this when the base is positive AND the exponent
-            # is real
-            coeff2, terms2 = (self.exp*C.log(self.base)).as_independent(
+            ct1 = old.args[0].as_independent(C.Symbol, as_Add=False)
+            ct2 = (self.exp*C.log(self.base)).as_independent(
                 C.Symbol, as_Add=False)
-            if terms1 == terms2:
-                pow = coeff1/coeff2
-                if pow == int(pow) or self.base.is_positive:
-                    return self.func(new, pow)  # (2**x).subs(exp(x*log(2)), z) -> z
+            ok, pow = _check(ct1, ct2, old)
+            if ok:
+                return self.func(new, pow)  # (2**x).subs(exp(x*log(2)), z) -> z
 
     def as_base_exp(self):
         """Return base and exp of self.
