@@ -493,4 +493,3 @@ class FormalSeries(Expr):
             s.append(self[i])
             i += 1
         return Add(*s) + C.Order(x**n)
-

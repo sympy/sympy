@@ -2794,6 +2794,11 @@ def test_sympy__polys__rootoftools__RootSum():
     assert _test_args(RootSum(x**3 + x + 1, sin))
 
 
+def test_sympy__series__formal__FormalSeries():
+    from sympy.series.formal import FormalSeries
+    assert _test_args(FormalSeries(x, function=sin(x)))
+
+
 def test_sympy__series__limits__Limit():
     from sympy.series.limits import Limit
     assert _test_args(Limit(x, x, 0, dir='-'))
