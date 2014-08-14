@@ -1465,6 +1465,9 @@ class LatexPrinter(Printer):
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
 
+    def _print_Complement(self, u):
+        return r" \setminus ".join([self._print(i) for i in u.args])
+
     def _print_Intersection(self, u):
         return r" \cap ".join([self._print(i) for i in u.args])
 

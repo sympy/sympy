@@ -1,7 +1,7 @@
 from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E, sqrt
-)
+    FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
+    sqrt, Complement, EmptySet)
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
@@ -125,42 +125,61 @@ def test_difference():
     assert Union(Interval(0, 2), FiniteSet(2, 3, 4)) - Interval(1, 3) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
 
+    assert -1 in S.Reals - S.Naturals
+
+
+def test_Complement():
+    assert Complement(Interval(1, 3), Interval(1, 2)) == Interval(2, 3, True)
+    assert Complement(FiniteSet(1, 3, 4), FiniteSet(3, 4)) == FiniteSet(1)
+    assert Complement(Union(Interval(0, 2),
+                            FiniteSet(2, 3, 4)), Interval(1, 3)) == \
+        Union(Interval(0, 1, False, True), FiniteSet(4))
+
+    assert not 3 in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
+    assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
+    assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
+
+    assert S.UniversalSet.complement(S.Integers) == EmptySet()
+
 
 def test_complement():
-    assert Interval(0, 1).complement == \
+    assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
-    assert Interval(0, 1, True, False).complement == \
+    assert Interval(0, 1, True, False).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, False), Interval(1, oo, True, True))
-    assert Interval(0, 1, False, True).complement == \
+    assert Interval(0, 1, False, True).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, False, True))
-    assert Interval(0, 1, True, True).complement == \
+    assert Interval(0, 1, True, True).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, False), Interval(1, oo, False, True))
 
-    assert -S.EmptySet == S.EmptySet.complement
-    assert ~S.EmptySet == S.EmptySet.complement
+    assert S.UniversalSet.complement(S.EmptySet) == S.EmptySet
+    assert S.UniversalSet.complement(S.Reals) == S.EmptySet
+    assert S.UniversalSet.complement(S.UniversalSet) == S.EmptySet
 
-    assert S.EmptySet.complement == S.UniversalSet
-    assert S.UniversalSet.complement == S.EmptySet
-
-    assert Union(Interval(0, 1), Interval(2, 3)).complement == \
+    assert Union(Interval(0, 1), Interval(2, 3)).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, 2, True, True),
               Interval(3, oo, True, True))
 
-    assert FiniteSet(0).complement == Union(Interval(-oo, 0, True, True),
-            Interval(0, oo, True, True))
+    assert FiniteSet(0).complement(S.Reals) ==  \
+        Union(Interval(-oo, 0, True, True), Interval(0, oo, True, True))
 
-    assert (FiniteSet(5) + Interval(S.NegativeInfinity, 0)).complement == \
+    assert (FiniteSet(5) + Interval(S.NegativeInfinity,
+                                    0)).complement(S.Reals) == \
         Interval(0, 5, True, True) + Interval(5, S.Infinity, True, True)
 
-    assert FiniteSet(1, 2, 3).complement == \
-        Interval(S.NegativeInfinity, 1, True, True) + Interval(1, 2, True, True) + \
-        Interval(2, 3, True, True) + Interval(3, S.Infinity, True, True)
+    assert FiniteSet(1, 2, 3).complement(S.Reals) == \
+        Interval(S.NegativeInfinity, 1, True, True) + \
+        Interval(1, 2, True, True) + Interval(2, 3, True, True) +\
+        Interval(3, S.Infinity, True, True)
 
-    X = Interval(1, 3) + FiniteSet(5)
-    assert X.intersect(X.complement) == S.EmptySet
+    assert FiniteSet(x).complement(S.Reals) == Complement(S.Reals, FiniteSet(x))
+
+    assert FiniteSet(0, x).complement(S.Reals) == Complement(Interval(-oo, 0, True, True) +
+                                                             Interval(0, oo, True, True)
+                                                             ,FiniteSet(x), evaluate=False)
 
     square = Interval(0, 1) * Interval(0, 1)
-    notsquare = square.complement
+    notsquare = square.complement(S.Reals*S.Reals)
 
     assert all(pt in square for pt in [(0, 0), (.5, .5), (1, 0), (1, 1)])
     assert not any(
@@ -221,7 +240,6 @@ def test_intersection():
 
     # Singleton special cases
     assert Intersection(Interval(0, 1), S.EmptySet) == S.EmptySet
-    assert Intersection(Interval(0, 1), S.UniversalSet) == Interval(0, 1)
 
     # Products
     line = Interval(0, 5)
@@ -535,14 +553,11 @@ def test_product_basic():
 
     assert (d4*d4).is_subset(d6*d6)
 
-    inf, neginf = S.Infinity, S.NegativeInfinity
-    assert square.complement == Union(
-        Interval(0, 1) *
-        (Interval(neginf, 0, True, True) + Interval(1, inf, True, True)),
-        (Interval(neginf, 0, True, True) + Interval(1, inf, True, True)) *
-        Interval(0, 1),
-        ((Interval(neginf, 0, True, True) + Interval(1, inf, True, True))
-         * (Interval(neginf, 0, True, True) + Interval(1, inf, True, True))))
+    assert square.complement(Interval(-oo, oo)*Interval(-oo, oo)) == Union(
+        (Interval(-oo, 0, True, True) +
+         Interval(1, oo, True, True))*Interval(-oo, oo),
+         Interval(-oo, oo)*(Interval(-oo, 0, True, True) +
+                  Interval(1, oo, True, True)))
 
     assert (Interval(-5, 5)**3).is_subset(Interval(-10, 10)**3)
     assert not (Interval(-10, 10)**3).is_subset(Interval(-5, 5)**3)
