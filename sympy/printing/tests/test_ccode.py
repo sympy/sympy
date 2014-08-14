@@ -4,12 +4,12 @@ from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
+from sympy.matrices import Matrix, MatrixSymbol
 
 # import test
 from sympy import ccode
 
 x, y, z = symbols('x,y,z')
-g = Function('g')
 
 
 def test_printmethod():
@@ -28,8 +28,9 @@ def test_ccode_sqrt():
 def test_ccode_Pow():
     assert ccode(x**3) == "pow(x, 3)"
     assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
+    g = implemented_function('g', Lambda(x, 2*x))
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+        "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
     assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
@@ -116,17 +117,28 @@ def test_ccode_boolean():
 
 
 def test_ccode_Piecewise():
-    p = ccode(Piecewise((x, x < 1), (x**2, True)))
+    expr = Piecewise((x, x < 1), (x**2, True))
+    p = ccode(expr)
     s = \
 """\
-if (x < 1) {
+((x < 1) ? (
    x
-}
-else {
+)
+: (
    pow(x, 2)
-}\
+))\
 """
     assert p == s
+    assert ccode(expr, assign_to="c") == (
+    "if (x < 1) {\n"
+    "   c = x;\n"
+    "}\n"
+    "else {\n"
+    "   c = pow(x, 2);\n"
+    "}")
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: ccode(expr))
 
 
 def test_ccode_Piecewise_deep():
@@ -141,7 +153,7 @@ def test_ccode_Piecewise_deep():
 )
 : (
    pow(x, 2)
-)) )\
+)))\
 """
     assert p == s
 
@@ -353,3 +365,42 @@ def test_ccode_loops_multiple_terms():
             c == s0 + s2 + s3 + s1[:-1] or
             c == s0 + s3 + s1 + s2[:-1] or
             c == s0 + s3 + s2 + s1[:-1])
+
+def test_Matrix_printing():
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert ccode(mat, A) == (
+        "A[0][0] = x*y;\n"
+        "if (y > 0) {\n"
+        "   A[1][0] = x + 2;\n"
+        "}\n"
+        "else {\n"
+        "   A[1][0] = y;\n"
+        "}\n"
+        "A[2][0] = sin(z);")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert ccode(expr) == (
+        "((x > 0) ? (\n"
+        "   2*A[2][0]\n"
+        ")\n"
+        ": (\n"
+        "   A[2][0]\n"
+        ")) + sin(A[1][0]) + A[0][0]")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert ccode(m, M) == (
+        "M[0][0] = sin(q[1][0]);\n"
+        "M[0][1] = 0;\n"
+        "M[0][2] = cos(q[2][0]);\n"
+        "M[1][0] = q[1][0] + q[2][0];\n"
+        "M[1][1] = q[3][0];\n"
+        "M[1][2] = 5;\n"
+        "M[2][0] = 2*q[4][0]*1.0/q[1][0];\n"
+        "M[2][1] = 4 + sqrt(q[0][0]);\n"
+        "M[2][2] = 0;")
