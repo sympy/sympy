@@ -141,6 +141,8 @@ def test_Complement():
 
     assert S.UniversalSet.complement(S.Integers) == EmptySet()
 
+    assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
+
 
 def test_complement():
     assert Interval(0, 1).complement(S.Reals) == \
@@ -247,6 +249,9 @@ def test_intersection():
     assert (2, 2) not in i
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
+
+    Intersection(S.Reals, S.Integers - FiniteSet(0)) == \
+            Complement(Intersection(S.Reals, S.Integers), FiniteSet(0))
 
 
 def test_is_disjoint():
