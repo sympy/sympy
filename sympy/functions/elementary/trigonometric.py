@@ -21,8 +21,6 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
-    nargs = 1
-
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
@@ -1448,20 +1446,22 @@ class csc(ReciprocalTrigonometricFunction):
 
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
-    nargs = 1
+
+    pass
 
 
 class asin(InverseTrigonometricFunction):
     """
     The inverse sine function.
 
-    Returns the arc sine of x (measured in radians).
+    Returns the arcsine of x in radians.
 
     Notes
     =====
 
-    asin(x) will evaluate automatically in the cases
-    oo, -oo, 0, 1, -1.
+    asin(x) will evaluate automatically in the cases oo, -oo, 0, 1,
+    -1 and if the result is a some rational multiple of pi (see the
+    eval class method).
 
     Examples
     ========
