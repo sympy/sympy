@@ -528,10 +528,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     =============================================
 
    **Usage**
-        ``dsolve(eq, func)`` -> Solve system of ordinary differential
+        ``dsolve(eq, func)`` -> Solve a system of ordinary differential
         equations ``eq`` for ``func`` being list of functions including
-        `x(t)`, `y(t)`, `z(t)` where number of function in the list depends
-        upon the number of sytems of equations provided in ``eq``.
+        `x(t)`, `y(t)`, `z(t)` where number of functions in the list depends
+        upon the number of equations provided in ``eq``.
 
     **Details**
 
@@ -539,7 +539,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         This can either be an :py:class:`~sympy.core.relational.Equality`,
         or an expression, which is assumed to be equal to ``0``.
 
-        ``func`` holds ``x(x)`` and ``y(t)`` being functions of one variable which
+        ``func`` holds ``x(t)`` and ``y(t)`` being functions of one variable which
         together with some of their derivatives make up the system of ordinary
         differential equation ``eq``. It is not necessary to provide this; it
         will be autodetected (and an error raised if it couldn't be detected).
@@ -1885,8 +1885,7 @@ def checksysodesol(eqs, sols, func=None):
     reduce the expression to ``0``.  If an expression returned by each function
     vanishes identically, then ``sols`` really is a solution to ``eqs``.
 
-    If this function seems to hang, it is probably because of a hard
-    simplification.
+    If this function seems to hang, it is probably because of a difficult simplification.
 
     Examples
     ========
