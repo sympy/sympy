@@ -1,6 +1,6 @@
 """Tests for cartesian.py"""
 
-from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi
+from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi, oo, Heaviside
 
 from sympy.physics.quantum import qapply, represent, L2, Dagger
 from sympy.physics.quantum import Commutator, hbar
@@ -26,10 +26,10 @@ def test_x():
     assert represent(XKet(x)) == DiracDelta(x - x_1)
     assert represent(XBra(x)) == DiracDelta(-x + x_1)
     assert XBra(x).position == x
-    assert represent(XOp()*XKet()) == x*DiracDelta(x - x_2)
+    assert represent(XOp()*XKet()) == -x*DiracDelta(x - x_2)*Heaviside(-x - oo) + x*DiracDelta(x - x_2)
     assert represent(XOp()*XKet()*XBra('y')) == \
-        x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-    assert represent(XBra("y")*XKet()) == DiracDelta(x - y)
+        -x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)*Heaviside(-x - oo) + x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+    assert represent(XBra("y")*XKet()) == -DiracDelta(x - y)*Heaviside(-x - oo) + DiracDelta(x - y)
     assert represent(
         XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
 
@@ -39,8 +39,8 @@ def test_x():
     assert rep_p == represent(XOp(), basis=PxKet)
     assert rep_p == represent(XOp(), basis=PxKet())
 
-    assert represent(XOp()*PxKet(), basis=PxKet) == \
-        hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
+    assert str(represent(XOp()*PxKet(), basis=PxKet)) == \
+        '-hbar*I*DiracDelta(px - px_2)*Heaviside(-px - oo)*px + hbar*I*DiracDelta(px - px_2)*px'
 
 
 def test_p():
@@ -59,10 +59,10 @@ def test_p():
     assert rep_x == represent(PxOp(), basis=XKet)
     assert rep_x == represent(PxOp(), basis=XKet())
 
-    assert represent(PxOp()*XKet(), basis=XKet) == \
-        -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
-    assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
-        -hbar*I*DiracDelta(x - y)*DifferentialOperator(x)
+    assert str(represent(PxOp()*XKet(), basis=XKet)) == \
+        'hbar*I*DiracDelta(x - x_2)*Heaviside(-x - oo)*x - hbar*I*DiracDelta(x - x_2)*x'
+    assert str(represent(XBra("y")*PxOp()*XKet(), basis=XKet)) == \
+        '-hbar*I*DiracDelta(x - y)*Heaviside(-x - oo)**2*x + 2*hbar*I*DiracDelta(x - y)*Heaviside(-x - oo)*x - hbar*I*DiracDelta(x - y)*x'
 
 
 def test_3dpos():
