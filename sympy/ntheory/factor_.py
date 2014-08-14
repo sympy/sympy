@@ -1304,6 +1304,88 @@ def divisor_count(n, modulus=1):
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
 
+def _antidivisors(n):
+    """Helper function for antidivisors which generates the antidivisors."""
+
+    for d in _divisors(n):
+        y = 2*d
+        if n > y and n % y:
+            yield y
+    for d in _divisors(2*n-1):
+        if n > d >= 2 and n % d:
+            yield d
+    for d in _divisors(2*n+1):
+        if n > d >= 2 and n % d:
+            yield d
+
+
+def antidivisors(n, generator=False):
+    r"""
+    Return all antidivisors of n sorted from 1..n by default.
+    If generator is True an unordered generator is returned.
+
+    References
+    ==========
+
+    - [1] http://oeis.org/A066272/a066272a.html
+
+    Examples
+    ========
+
+    >>> from sympy import antidivisors
+    >>> antidivisors(24)
+    [7, 16]
+
+    >>> list(antidivisors(128, generator=True))
+    [3, 5, 15, 17, 51, 85]
+
+
+    See Also
+    ========
+
+    primefactors, factorint, divisors, divisor_count
+    """
+
+    n = int(abs(n))
+    if n <= 2:
+        return []
+    rv = _antidivisors(n)
+    if not generator:
+        return sorted(rv)
+    return rv
+
+
+def antidivisor_count(n):
+    """
+    Return the number of antidivisors of ``n``.
+
+    References
+    ==========
+
+    - [1] https://oeis.org/A066272
+
+    Examples
+    ========
+
+    >>> from sympy import antidivisor_count
+    >>> antidivisor_count(13)
+    4
+    >>> antidivisor_count(27)
+    5
+
+    See Also
+    ========
+
+    factorint, divisors, antidivisors, divisor_count, totient
+    """
+
+    n = int(abs(n))
+    if n <= 2:
+        return 0
+    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+        divisor_count(n) - divisor_count(n, 2) - 5
+
+
 class totient(Function):
     """
     Calculate the Euler totient function phi(n)
