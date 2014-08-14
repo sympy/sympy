@@ -3242,6 +3242,36 @@ def test_sympy__physics__optics__medium__Medium():
     assert _test_args(Medium('m'))
 
 
+@SKIP("abstract class")
+def test_sympy__physics__optics__mirrors__Mirror():
+    pass
+
+
+def test_sympy__physics__optics__mirrors__SphericalMirror():
+    from sympy.physics.optics.mirrors import SphericalMirror
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(SphericalMirror(Point3D(0, 0, 0), x))
+
+
+def test_sympy__physics__optics__mirrors__ConcaveMirror():
+    from sympy.physics.optics.mirrors import ConcaveMirror
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(ConcaveMirror(Point3D(0, 0, 0), Point3D(1, 2, 3)))
+
+
+def test_sympy__physics__optics__mirrors__ConvexMirror():
+    from sympy.physics.optics.mirrors import ConvexMirror
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(ConvexMirror(Point3D(0, 0, 0), Point3D(1, 2, 3)))
+
+
+def test_sympy__physics__optics__mirrors__PlaneMirror():
+    from sympy.physics.optics.mirrors import PlaneMirror
+    from sympy.matrices import Matrix
+    from sympy.geometry.point3d import Point3D
+    assert _test_args(PlaneMirror(0, 0, 0), Matrix([-1, 0, 0]), x)
+
+
 def test_sympy__vector__coordsysrect__CoordSysCartesian():
     from sympy.vector.coordsysrect import CoordSysCartesian
     assert _test_args(CoordSysCartesian('C'))
