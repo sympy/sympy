@@ -1128,7 +1128,7 @@ class AlgebraicNumber(Expr):
         return super(AlgebraicNumber, self).__hash__()
 
     def _eval_evalf(self, prec):
-        return self.as_expr()._evalf(prec)
+        return self.as_expr()._evalf_binprec(prec)
 
     @property
     def is_aliased(self):

@@ -91,7 +91,7 @@ class Relational(Boolean, Expr, EvalfMixin):
                 return cls._eval_relation(diff, S.Zero)
 
     def _eval_evalf(self, prec):
-        return self.func(*[s._evalf(prec) for s in self.args])
+        return self.func(*[s._evalf_binprec(prec) for s in self.args])
 
     def doit(self, **hints):
         lhs = self.lhs
