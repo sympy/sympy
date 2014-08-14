@@ -8,7 +8,7 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import Add, Expr, I, integrate, Mul, Pow
+from sympy import Add, Expr, I, integrate, Mul, Pow, Symbol
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -362,7 +362,7 @@ def integrate_result(orig_expr, result, **options):
     >>> from sympy.physics.quantum.cartesian import XOp, XKet
     >>> x_ket = XKet()
     >>> X_op = XOp()
-    >>> x, x_1, x_2 = symbols('x, x_1, x_2')
+    >>> x, x_1, x_2 = symbols('x, x_1, x_2', real=True, bounded=True)
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2))
     x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2),
@@ -391,7 +391,7 @@ def integrate_result(orig_expr, result, **options):
         return result
 
     kets = enumerate_states(basis, unities)
-    coords = [k.label[0] for k in kets]
+    coords = [Symbol(str(k.label[0]), real=True, bounded=True) for k in kets]
 
     for coord in coords:
         if coord in result.free_symbols:

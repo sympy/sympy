@@ -1,6 +1,6 @@
 """Tests for cartesian.py"""
 
-from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi
+from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi, oo, Heaviside
 
 from sympy.physics.quantum import qapply, represent, L2, Dagger
 from sympy.physics.quantum import Commutator, hbar
@@ -10,8 +10,8 @@ from sympy.physics.quantum.cartesian import (
 )
 from sympy.physics.quantum.operator import DifferentialOperator
 
-x, y, z, x_1, x_2, x_3, y_1, z_1 = symbols('x,y,z,x_1,x_2,x_3,y_1,z_1')
-px, py, px_1, px_2 = symbols('px py px_1 px_2')
+x, y, z, x_1, x_2, x_3, y_1, z_1 = symbols('x,y,z,x_1,x_2,x_3,y_1,z_1', real=True, bounded=True)
+px, py, px_1, px_2 = symbols('px py px_1 px_2', real=True, bounded=True)
 
 
 def test_x():
@@ -69,7 +69,7 @@ def test_3dpos():
     assert Y.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
     assert Z.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    test_ket = PositionKet3D(x, y, z)
+    test_ket = PositionKet3D('x', 'y', 'z')
     assert qapply(X*test_ket) == x*test_ket
     assert qapply(Y*test_ket) == y*test_ket
     assert qapply(Z*test_ket) == z*test_ket
