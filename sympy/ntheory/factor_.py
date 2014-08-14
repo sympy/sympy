@@ -1259,7 +1259,7 @@ def divisors(n, generator=False):
     primefactors, factorint, divisor_count
     """
 
-    n = int(abs(n))
+    n = as_int(abs(n))
     if isprime(n):
         return [1, n]
     if n == 1:
@@ -1301,6 +1301,89 @@ def divisor_count(n, modulus=1):
     if n == 0:
         return 0
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
+
+
+def _antidivisors(n):
+    """Helper function for antidivisors which generates the antidivisors."""
+
+    for d in _divisors(n):
+        y = 2*d
+        if n > y and n % y:
+            yield y
+    for d in _divisors(2*n-1):
+        if n > d >= 2 and n % d:
+            yield d
+    for d in _divisors(2*n+1):
+        if n > d >= 2 and n % d:
+            yield d
+
+
+def antidivisors(n, generator=False):
+    r"""
+    Return all antidivisors of n sorted from 1..n by default.
+
+    Antidivisors [1]_ of n are numbers that do not divide n by the largest
+    possible margin.  If generator is True an unordered generator is returned.
+
+    References
+    ==========
+
+    .. [1] definition is described in http://oeis.org/A066272/a066272a.html
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import antidivisors
+    >>> antidivisors(24)
+    [7, 16]
+
+    >>> sorted(antidivisors(128, generator=True))
+    [3, 5, 15, 17, 51, 85]
+
+    See Also
+    ========
+
+    primefactors, factorint, divisors, divisor_count, antidivisor_count
+    """
+
+    n = as_int(abs(n))
+    if n <= 2:
+        return []
+    rv = _antidivisors(n)
+    if not generator:
+        return sorted(rv)
+    return rv
+
+
+def antidivisor_count(n):
+    """
+    Return the number of antidivisors [1]_ of ``n``.
+
+    References
+    ==========
+
+    .. [1] formula from https://oeis.org/A066272
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import antidivisor_count
+    >>> antidivisor_count(13)
+    4
+    >>> antidivisor_count(27)
+    5
+
+    See Also
+    ========
+
+    factorint, divisors, antidivisors, divisor_count, totient
+    """
+
+    n = as_int(abs(n))
+    if n <= 2:
+        return 0
+    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+        divisor_count(n) - divisor_count(n, 2) - 5
 
 
 class totient(Function):
