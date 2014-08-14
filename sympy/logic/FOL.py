@@ -176,7 +176,7 @@ class Constant(Boolean):
     def __new__(cls, name, **kwargs):
         if isinstance(name, cls):
             return name
-        return super(Boolean, cls).__new__(cls, name, **kwargs)
+        return super(Boolean, cls).__new__(cls, str(name), **kwargs)
 
     def __init__(self, name):
         self._name = name
@@ -188,7 +188,7 @@ class Constant(Boolean):
         return super(Constant, self).__hash__()
 
     def _hashable_content(self):
-        return (self.func, self.name)
+        return (self.func, str(self.name))
 
     def _sympystr(self, *args, **kwargs):
         return str(self.name)
@@ -316,12 +316,12 @@ def fol_true(expr, model={}):
     >>> Person = Predicate('Person')
     >>> Time = Predicate('Time')
     >>> CanFool = Predicate('CanFool')
-    >>> X_domain = ['John', 'Jack']
-    >>> T_domain = [1, 2, 3]
-    >>> person = lambda X: X in X_domain
-    >>> time = lambda T: T in T_domain
-    >>> CanFoolMap = {('John', 2): False, ('John', 3): False, 'default': True}
-    >>> model = {X: X_domain, T: T_domain, Person: person, Time: time, CanFool: CanFoolMap}
+    >>> _X = ['John', 'Jack']
+    >>> _T = [1, 2, 3]
+    >>> _Person = lambda X: X in _X
+    >>> _Time = lambda T: T in _T
+    >>> _CanFool = {('John', 2): False, ('John', 3): False, 'default': True}
+    >>> model = {X: _X, T: _T, Person: _Person, Time: _Time, CanFool: _CanFool}
 
     # You can fool some of the people all of the time
     >>> expr = Exists(X, ForAll(T, (Person(X) & Time(T)) >> CanFool(X, T)))
@@ -397,16 +397,16 @@ def _fol_true(expr, model={}):
         if None in domains:
             return None
         values = product(*domains)
-        N = False
+        none = False
         for value in values:
             m = dict(zip(var, value))
             result = _fol_true(expr.expr.xreplace(m), model)
             if result is None:
-                N = True
+                none = True
                 continue
             if flag == result:
                 return result
-        if N:
+        if none:
             return None
         else:
             return not flag
@@ -814,3 +814,137 @@ def entails(expr, formula_set=[]):
     formula_set = list(formula_set)
     formula_set.append(~expr)
     return not resolve(*formula_set)
+
+
+class FOL_KB():
+    """
+    First Order Logic Knowledge Base.
+
+    This KB allows addition of pure Horn clauses and facts only and
+    uses backward chaining to provide results.
+    """
+
+    def __init__(self):
+        self.clauses = {}
+        self.facts = defaultdict(list)
+
+    def tellClause(self, clause):
+        """
+        Add a clause to the Knowledge Base.
+        The clause must be of the form: (P1 & P2 & ... & Pn) >> Q,
+        where P and Q are non-negative (Applied)Predicates.
+        """
+        if not isinstance(clause, Implies):
+            raise ValueError("Clauses must be in the form: \
+                                (P1 & P2 & ... & Pn) >> Q")
+        ante, cons = clause.args
+        ante = tuple(conjuncts(ante))
+        for pred in chain(ante, (cons,)):
+            self._check(pred)
+
+        if cons.func in self.clauses:
+            unifier = mgu(self.clauses[cons.func][0], cons)
+            if not unifier:
+                raise ValueError("%s and %s could not be unified." %
+                                (self.clauses[cons.func][0], cons))
+            ante = tuple(arg.subs(unifier) for arg in ante)
+            self.clauses[cons.func][1].append(ante)
+        else:
+            self.clauses[cons.func] = (cons, [ante])
+
+    def tellFact(self, fact):
+        """
+        Add a fact to the Knowledge Base.
+        The fact must be of the form: P, where P is a (Applied)Predicate
+        """
+        self._check(fact)
+        self.facts[fact.func].append(fact)
+
+    def ask(self, query):
+        """
+        Ask a query.
+        Returns True/ False if the query contains only Constants.
+        Returns list of possible answers if the query contains Variables.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import X
+        >>> from sympy.logic.FOL import Predicate, Constant, FOL_KB
+        >>> KB = FOL_KB()
+        >>> Croaks = Predicate('Croaks')
+        >>> EatsFlies = Predicate('EatsFlies')
+        >>> Chirps = Predicate('Chirps')
+        >>> Sings = Predicate('Sings')
+        >>> Frog = Predicate('Frog')
+        >>> Green = Predicate('Green')
+        >>> Canary = Predicate('Canary')
+        >>> Yellow = Predicate('Yellow')
+        >>> Fritz = Constant('Fritz')
+        >>> Tweety = Constant('Tweety')
+        >>> KB.tellClause((Croaks(X) & EatsFlies(X)) >> Frog(X))
+        >>> KB.tellClause((Chirps(X) & Sings(X)) >> Canary(X))
+        >>> KB.tellClause(Frog(X) >> Green(X))
+        >>> KB.tellClause(Canary(X) >> Yellow(X))
+        >>> KB.tellFact(Croaks(Fritz))
+        >>> KB.tellFact(EatsFlies(Fritz))
+        >>> KB.tellFact(Yellow(Tweety))
+        >>> KB.tellFact(EatsFlies(Tweety))
+        >>> KB.ask(Frog(Fritz))
+        True
+        >>> KB.ask(Frog(Tweety))
+        False
+        >>> KB.ask(Green(X))
+        [(Fritz,)]
+        """
+
+        if query.atoms():
+            return list(self._ask(query))
+        func = query.func
+        if func in self.facts:
+            if query in self.facts[func]:
+                return True
+        if func in self.clauses:
+            cons, ante = self.clauses[func]
+            unifier = mgu(cons, query)
+            if unifier:
+                ante = ((q.subs(unifier) for q in c) for c in ante)
+                return any(all(self.ask(q) for q in c) for c in ante)
+        return False
+
+    def _ask(self, query):
+        """
+        Helper method to return answers when query contains Variables.
+        """
+        results = set()
+        func = query.func
+        if func in self.facts:
+            for fact in self.facts[func]:
+                unifier = mgu(fact, query)
+                if unifier:
+                    q = query.subs(unifier)
+                    results.add(tuple(q.args))
+        if func in self.clauses:
+            cons, ante = self.clauses[func]
+            unifier = mgu(cons, query)
+            if unifier:
+                ante = ((q.subs(unifier) for q in c) for c in ante)
+                results = set()
+                for c in ante:
+                    temp = self._ask(next(c))
+                    for q in c:
+                        temp &= self._ask(q)
+                        if not temp:
+                            break
+                    results.update(temp)
+        return results
+
+    @staticmethod
+    def _check(pred):
+        """
+        Helper method to check for valid Predicates.
+        """
+        if isinstance(pred, Not):
+            raise ValueError("Negative Predicate found: %s" % pred)
+        if not isinstance(pred, AppliedPredicate):
+            raise ValueError("Invalid Predicate: %s" % pred)
