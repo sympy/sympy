@@ -1,7 +1,7 @@
 from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
                    sin, sqrt, sstr, sympify, S, integrate, atan, product,
-                   Sum, Product)
+                   Sum, Product, Integral)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
 from sympy.mpmath import inf, ninf, nan
@@ -434,3 +434,9 @@ def test_issue_4945():
     from sympy.abc import H
     from sympy import zoo
     assert (H/0).evalf(subs={H:1}) == zoo*H
+
+
+def test_evalf_integral():
+    # test that workprec has to increase in order to get a result other than 0
+    eps = Rational(1, 1000000)
+    assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
