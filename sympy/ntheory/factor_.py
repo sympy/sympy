@@ -1260,7 +1260,7 @@ def divisors(n, generator=False):
     primefactors, factorint, divisor_count
     """
 
-    n = int(abs(n))
+    n = as_int(abs(n))
     if isprime(n):
         return [1, n]
     if n == 1:
@@ -1322,12 +1322,14 @@ def _antidivisors(n):
 def antidivisors(n, generator=False):
     r"""
     Return all antidivisors of n sorted from 1..n by default.
+    Antidivisors of n are numbers that do not divide n by the largest
+    possible margin.
     If generator is True an unordered generator is returned.
 
     References
     ==========
 
-    - [1] http://oeis.org/A066272/a066272a.html
+    - [1] definition is described in http://oeis.org/A066272/a066272a.html
 
     Examples
     ========
@@ -1346,7 +1348,7 @@ def antidivisors(n, generator=False):
     primefactors, factorint, divisors, divisor_count
     """
 
-    n = int(abs(n))
+    n = as_int(abs(n))
     if n <= 2:
         return []
     rv = _antidivisors(n)
@@ -1362,7 +1364,7 @@ def antidivisor_count(n):
     References
     ==========
 
-    - [1] https://oeis.org/A066272
+    - [1] formula from https://oeis.org/A066272
 
     Examples
     ========
@@ -1379,7 +1381,7 @@ def antidivisor_count(n):
     factorint, divisors, antidivisors, divisor_count, totient
     """
 
-    n = int(abs(n))
+    n = as_int(abs(n))
     if n <= 2:
         return 0
     return divisor_count(2*n-1) + divisor_count(2*n+1) + \
