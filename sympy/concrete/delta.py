@@ -258,8 +258,9 @@ def deltasummation(f, limit, no_piecewise=False):
     Examples
     ========
 
-    >>> from sympy import oo
-    >>> from sympy.abc import i, j, k
+    >>> from sympy import oo, symbols
+    >>> from sympy.abc import k
+    >>> i, j = symbols('i, j', integer=True, bounded=True)
     >>> from sympy.concrete.delta import deltasummation
     >>> from sympy import KroneckerDelta, Piecewise
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
