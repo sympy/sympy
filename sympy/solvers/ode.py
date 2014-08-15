@@ -385,7 +385,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     system of ordinary differential equations.
 
     For single ordinary differential equation
-    ============================================
+    =========================================
 
     It is classified under this when number of equation in ``eq`` is one.
     **Usage**
