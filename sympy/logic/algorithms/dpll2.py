@@ -45,7 +45,7 @@ def dpll_satisfiable(expr, allModels=False):
     result = solver._find_model()
 
     if allModels:
-        return result
+        return Model(result)
     try:
         return next(result)
     except StopIteration:
@@ -55,6 +55,21 @@ def dpll_satisfiable(expr, allModels=False):
     #else:
         #for cls in clauses_int_repr:
             #assert solver.var_settings.intersection(cls)
+
+
+class Model(object):
+
+    def __init__(self, models):
+        self.models = models
+
+    def __iter__(self):
+        return self.models
+
+    def __call__(self):
+        try:
+            return next(self.models)
+        except StopIteration:
+            return False
 
 
 class SATSolver(object):

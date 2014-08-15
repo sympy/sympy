@@ -214,10 +214,28 @@ def test_satisfiable_bool():
 
 def test_satisfiable_allModels():
     from sympy.abc import A, B
-    assert not satisfiable(False, allModels=True)
-    assert not list(satisfiable(A & ~A , allModels=True))
-    assert list(satisfiable(True, allModels=True)) == [{true: true}]
+    assert satisfiable(False, all_models=True) is False
+    assert satisfiable(A & ~A , all_models=True)() is False
+    assert list(satisfiable(True, all_models=True)) == [{true: true}]
 
-    models = [{A: True, B: True}, {A: False, B: False}]
-    result = satisfiable(Equivalent(A, B), allModels=True)
-    assert all(model in models for model in result)
+    models = [{A: True, B: False}, {A: False, B: True}]
+    result = satisfiable(A ^ B, all_models=True)
+    models.remove(result())
+    models.remove(result())
+    assert result() is False
+    assert not models
+
+    assert list(satisfiable(Equivalent(A, B), all_models=True)) == \
+    [{A: False, B: False}, {A: True, B: True}]
+
+    models = [{A: False, B: False}, {A: False, B: True}, {A: True, B: True}]
+    for model in satisfiable(A >> B, all_models=True):
+        models.remove(model)
+
+    from sympy import numbered_symbols
+    from sympy.logic.boolalg import Or
+    sym = numbered_symbols()
+    X = [next(sym) for i in range(100)]
+    result = satisfiable(Or(*X), all_models=True)
+    for i in range(10):
+        result()

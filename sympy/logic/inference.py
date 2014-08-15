@@ -38,12 +38,16 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm="dpll2", allModels=False):
+def satisfiable(expr, algorithm="dpll2", all_models=False):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
     Returns {true: true} for trivially true expressions.
-    Returns a generator of all models if allModel is True.
+
+    If all_models is True then returns a Model object.
+    Calling this object returns the next model or False if no more
+    models are available. The object also supports iteration.
+
 
     Examples
     ========
@@ -64,7 +68,7 @@ def satisfiable(expr, algorithm="dpll2", allModels=False):
         return dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr, allModels)
+        return dpll_satisfiable(expr, all_models)
     raise NotImplementedError
 
 
