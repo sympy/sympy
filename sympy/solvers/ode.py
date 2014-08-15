@@ -249,7 +249,7 @@ from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
     sign, Piecewise, atan2, conjugate
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian, Matrix, eye, zeros
-from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError, div, lcm
 from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
@@ -1737,6 +1737,83 @@ def check_nonlinear_2eq_order2(eq, func, func_coef):
     return None
 
 def check_nonlinear_3eq_order1(eq, func, func_coef):
+    x = func[0].func
+    y = func[1].func
+    z = func[2].func
+    fc = func_coef
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    u, v, w = symbols('u, v, w')
+    a = Wild('a', exclude=[x(t), y(t), z(t), t])
+    b = Wild('b', exclude=[x(t), y(t), z(t), t])
+    c = Wild('c', exclude=[x(t), y(t), z(t), t])
+    f = Wild('f')
+    F1 = Wild('F1')
+    F2 = Wild('F2')
+    F3 = Wild('F3')
+    for i in range(3):
+        eqs = 0
+        for terms in Add.make_args(eq[i]):
+            eqs += terms/fc[i,func[i],1]
+        eq[i] = eqs
+    r1 = eq[0].match(diff(x(t),t) - a*y(t)*z(t))
+    r2 = eq[1].match(diff(y(t),t) - b*z(t)*x(t))
+    r3 = eq[2].match(diff(z(t),t) - c*x(t)*y(t))
+    if r1 and r2 and r3:
+        num1, den1 = r1[a].as_numer_denom()
+        num2, den2 = r2[b].as_numer_denom()
+        num3, den3 = r3[c].as_numer_denom()
+        if solve([num1*u-den1*(v-w), num2*v-den2*(w-u), num3*w-den3*(u-v)],[u, v]):
+            return 'type1'
+    r = eq[0].match(diff(x(t),t) - y(t)*z(t)*f)
+    if r:
+        r1 = collect_const(r[f]).match(a*f)
+        r2 = ((diff(y(t),t) - eq[1])/r1[f]).match(b*z(t)*x(t))
+        r3 = ((diff(z(t),t) - eq[2])/r1[f]).match(c*x(t)*y(t))
+    if r1 and r2 and r3:
+        num1, den1 = r1[a].as_numer_denom()
+        num2, den2 = r2[b].as_numer_denom()
+        num3, den3 = r3[c].as_numer_denom()
+        if solve([num1*u-den1*(v-w), num2*v-den2*(w-u), num3*w-den3*(u-v)],[u, v]):
+            return 'type2'
+    r = eq[0].match(diff(x(t),t) - (F2-F3))
+    if r:
+        r1 = collect_const(r[F2]).match(c*F2)
+        r1.update(collect_const(r[F3]).match(b*F3))
+        if r1:
+            if eq[1].has(r1[F2]) and not eq[1].has(r1[F3]):
+                r1[F2], r1[F3] = r1[F3], r1[F2]
+                r1[c], r1[b] = -r1[b], -r1[c]
+            r2 = eq[1].match(diff(y(t),t) - a*r1[F3] + r1[c]*F1)
+        if r2:
+            r3 = (eq[2] == diff(z(t),t) - r1[b]*r2[F1] + r2[a]*r1[F2])
+        if r1 and r2 and r3:
+            return 'type3'
+    r = eq[0].match(diff(x(t),t) - z(t)*F2 + y(t)*F3)
+    if r:
+        r1 = collect_const(r[F2]).match(c*F2)
+        r1.update(collect_const(r[F3]).match(b*F3))
+        if r1:
+            if eq[1].has(r1[F2]) and not eq[1].has(r1[F3]):
+                r1[F2], r1[F3] = r1[F3], r1[F2]
+                r1[c], r1[b] = -r1[b], -r1[c]
+            r2 = (diff(y(t),t) - eq[1]).match(a*x(t)*r1[F3] - r1[c]*z(t)*F1)
+        if r2:
+            r3 = (diff(z(t),t) - eq[2] == r1[b]*y(t)*r2[F1] - r2[a]*x(t)*r1[F2])
+        if r1 and r2 and r3:
+            return 'type4'
+    r = (diff(x(t),t) - eq[0]).match(x(t)*(F2 - F3))
+    if r:
+        r1 = collect_const(r[F2]).match(c*F2)
+        r1.update(collect_const(r[F3]).match(b*F3))
+        if r1:
+            if eq[1].has(r1[F2]) and not eq[1].has(r1[F3]):
+                r1[F2], r1[F3] = r1[F3], r1[F2]
+                r1[c], r1[b] = -r1[b], -r1[c]
+            r2 = (diff(y(t),t) - eq[1]).match(y(t)*(a*r1[F3] - r1[c]*F1))
+        if r2:
+            r3 = (diff(z(t),t) - eq[2] == z(t)*(r1[b]*r2[F1] - r2[a]*r1[F2]))
+        if r1 and r2 and r3:
+            return 'type5'
     return None
 
 def check_nonlinear_3eq_order2(eq, func, func_coef):
@@ -7811,3 +7888,313 @@ def _nonlinear_2eq_order1_type5(func, t, eq):
                 x, y = y, x
     x1 = diff(x(t),t); y1 = diff(y(t),t)
     return set([Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))])
+
+def sysode_nonlinear_3eq_order1(match_):
+    x = match_['func'][0].func
+    y = match_['func'][1].func
+    z = match_['func'][2].func
+    eq = match_['eq']
+    fc = match_['func_coeff']
+    func = match_['func']
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if match_['type_of_equation'] == 'type1':
+        sol = _nonlinear_3eq_order1_type1(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type2':
+        sol = _nonlinear_3eq_order1_type2(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type3':
+        sol = _nonlinear_3eq_order1_type3(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type4':
+        sol = _nonlinear_3eq_order1_type4(x, y, z, t, eq)
+    if match_['type_of_equation'] == 'type5':
+        sol = _nonlinear_3eq_order1_type5(x, y, z, t, eq)
+    return sol
+
+def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: a x' = (b - c) y z, \enspace b y' = (c - a) z x, \enspace c z' = (a - b) x y
+
+    First Integrals:
+
+    .. math:: a x^{2} + b y^{2} + c z^{2} = C_1
+
+    .. math:: a^{2} x^{2} + b^{2} y^{2} + c^{2} z^{2} = C_2
+
+    where `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
+    `z` and on substituting the resulting expressions into the first equation of the
+    system, we arrives at a separable first-order equation on `x`. Similarly doing that
+    for other two equations, we will arrive at first order equation on `y` and `z` too.
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
+
+    """
+    C1, C2 = symbols('C1:3')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    r = (diff(x(t),t) - eq[0]).match(p*y(t)*z(t))
+    r.update((diff(y(t),t) - eq[1]).match(q*z(t)*x(t)))
+    r.update((diff(z(t),t) - eq[2]).match(s*x(t)*y(t)))
+    n1, d1 = r[p].as_numer_denom()
+    n2, d2 = r[q].as_numer_denom()
+    n3, d3 = r[s].as_numer_denom()
+    val = solve([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, d3*u-d3*v-n3*w],[u,v])
+    vals = [val[v], val[u]]
+    c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
+    b = vals[0].subs(w,c)
+    a = vals[1].subs(w,c)
+    y_x = sqrt(((c*C1-C2) - a*(c-a)*x(t)**2)/(b*(c-b)))
+    z_x = sqrt(((b*C1-C2) - a*(b-a)*x(t)**2)/(c*(b-c)))
+    z_y = sqrt(((a*C1-C2) - b*(a-b)*y(t)**2)/(c*(a-c)))
+    x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
+    x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
+    y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
+    try:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x).rhs
+    except:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x, hint='separable_Integral')
+    try:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y).rhs
+    except:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y, hint='separable_Integral')
+    try:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z).rhs
+    except:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z, hint='separable_Integral')
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: a x' = (b - c) y z f(x, y, z, t)
+
+    .. math:: b y' = (c - a) z x f(x, y, z, t)
+
+    .. math:: c z' = (a - b) x y f(x, y, z, t)
+
+    First Integrals:
+
+    .. math:: a x^{2} + b y^{2} + c z^{2} = C_1
+
+    .. math:: a^{2} x^{2} + b^{2} y^{2} + c^{2} z^{2} = C_2
+
+    where `C_1` and `C_2` are arbitrary constants. On solving the integrals for `y` and
+    `z` and on substituting the resulting expressions into the first equation of the
+    system, we arrives at a first-order differential equations on `x`. Similarly doing
+    that for other two equations we will arrive at first order equation on `y` and `z`.
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
+
+    """
+    C1, C2 = symbols('C1:3')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    f = Wild('f')
+    r1 = (diff(x(t),t) - eq[0]).match(y(t)*z(t)*f)
+    r = collect_const(r1[f]).match(p*f)
+    r.update(((diff(y(t),t) - eq[1])/r[f]).match(q*z(t)*x(t)))
+    r.update(((diff(z(t),t) - eq[2])/r[f]).match(s*x(t)*y(t)))
+    n1, d1 = r[p].as_numer_denom()
+    n2, d2 = r[q].as_numer_denom()
+    n3, d3 = r[s].as_numer_denom()
+    val = solve([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, -d3*u+d3*v+n3*w],[u,v])
+    vals = [val[v], val[u]]
+    c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
+    a = vals[0].subs(w,c)
+    b = vals[1].subs(w,c)
+    y_x = sqrt(((c*C1-C2) - a*(c-a)*x(t)**2)/(b*(c-b)))
+    z_x = sqrt(((b*C1-C2) - a*(b-a)*x(t)**2)/(c*(b-c)))
+    z_y = sqrt(((a*C1-C2) - b*(a-b)*y(t)**2)/(c*(a-c)))
+    x_y = sqrt(((c*C1-C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
+    x_z = sqrt(((b*C1-C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
+    y_z = sqrt(((a*C1-C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
+    try:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f]).rhs
+    except:
+        sol1 = dsolve(a*diff(x(t),t) - (b-c)*y_x*z_x*r[f], hint='separable_Integral')
+    try:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f]).rhs
+    except:
+        sol2 = dsolve(b*diff(y(t),t) - (c-a)*z_y*x_y*r[f], hint='separable_Integral')
+    try:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f]).rhs
+    except:
+        sol3 = dsolve(c*diff(z(t),t) - (a-b)*x_z*y_z*r[f], hint='separable_Integral')
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = c F_2 - b F_3, \enspace y' = a F_3 - c F_1, \enspace z' = b F_1 - a F_2
+
+    where `F_n = F_n(x, y, z, t)`.
+
+    1. First Integral:
+
+    .. math:: a x + b y + c z = C_1,
+
+    where C is an arbitrary constant.
+
+    2. If we assume function `F_n` to be independent of `t`,i.e, `F_n` = `F_n (x, y, z)`
+    Then, on eliminating `t` and `z` from the first two equation of the system, one
+    arrives at the first-order equation
+
+    .. math:: \frac{dy}{dx} = \frac{a F_3 (x, y, z) - c F_1 (x, y, z)}{c F_2 (x, y, z) -
+                b F_3 (x, y, z)}
+
+    where `z = \frac{1}{c} (C_1 - a x - b y)`
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
+
+    """
+    C1 = symbols('C1')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    F1, F2, F3 = symbols('F1, F2, F3', cls=Wild)
+    r1 = (diff(x(t),t) - eq[0]).match(F2-F3)
+    r = collect_const(r1[F2]).match(s*F2)
+    r.update(collect_const(r1[F3]).match(q*F3))
+    if eq[1].has(r[F2]) and not eq[1].has(r[F3]):
+        r[F2], r[F3] = r[F3], r[F2]
+        r[s], r[q] = -r[q], -r[s]
+    r.update((diff(y(t),t) - eq[1]).match(p*r[F3] - r[s]*F1))
+    a = r[p]; b = r[q]; c = r[s]
+    F1 = r[F1].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F2 = r[F2].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F3 = r[F3].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    z_xy = (C1-a*u-b*v)/c
+    y_zx = (C1-a*u-c*w)/b
+    x_yz = (C1-b*v-c*w)/a
+    y_x = dsolve(diff(v(u),u) - ((a*F3-c*F1)/(c*F2-b*F3)).subs(w,z_xy).subs(v,v(u))).rhs
+    z_x = dsolve(diff(w(u),u) - ((b*F1-a*F2)/(c*F2-b*F3)).subs(v,y_zx).subs(w,w(u))).rhs
+    z_y = dsolve(diff(w(v),v) - ((b*F1-a*F2)/(a*F3-c*F1)).subs(u,x_yz).subs(w,w(v))).rhs
+    x_y = dsolve(diff(u(v),v) - ((c*F2-b*F3)/(a*F3-c*F1)).subs(w,z_xy).subs(u,u(v))).rhs
+    y_z = dsolve(diff(v(w),w) - ((a*F3-c*F1)/(b*F1-a*F2)).subs(u,x_yz).subs(v,v(w))).rhs
+    x_z = dsolve(diff(u(w),w) - ((c*F2-b*F3)/(b*F1-a*F2)).subs(v,y_zx).subs(u,u(w))).rhs
+    sol1 = dsolve(diff(u(t),t) - (c*F2 - b*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
+    sol2 = dsolve(diff(v(t),t) - (a*F3 - c*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
+    sol3 = dsolve(diff(w(t),t) - (b*F1 - a*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
+    r"""
+    Equations:
+
+    .. math:: x' = c z F_2 - b y F_3, \enspace y' = a x F_3 - c z F_1, \enspace z' = b y F_1 - a x F_2
+
+    where `F_n = F_n (x, y, z, t)`
+
+    1. First integral:
+
+    .. math:: a x^{2} + b y^{2} + c z^{2} = C_1
+
+    where `C` is an arbitrary constant.
+
+    2. Assuming the function `F_n` is independent of `t`: `F_n = F_n (x, y, z)`. Then on
+    eliminating `t` and `z` from the first two equations of the system, one arrives at
+    the first-order equation
+
+    .. math:: \frac{dy}{dx} = \frac{a x F_3 (x, y, z) - c z F_1 (x, y, z)}
+                {c z F_2 (x, y, z) - b y F_3 (x, y, z)}
+
+    where `z = \pm \sqrt{\frac{1}{c} (C_1 - a x^{2} - b y^{2})}`
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
+
+    """
+    C1 = symbols('C1')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    F1, F2, F3 = symbols('F1, F2, F3', cls=Wild)
+    r1 = eq[0].match(diff(x(t),t) - z(t)*F2 + y(t)*F3)
+    r = collect_const(r1[F2]).match(s*F2)
+    r.update(collect_const(r1[F3]).match(q*F3))
+    if eq[1].has(r[F2]) and not eq[1].has(r[F3]):
+        r[F2], r[F3] = r[F3], r[F2]
+        r[s], r[q] = -r[q], -r[s]
+    r.update((diff(y(t),t) - eq[1]).match(p*x(t)*r[F3] - r[s]*z(t)*F1))
+    a = r[p]; b = r[q]; c = r[s]
+    F1 = r[F1].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F2 = r[F2].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F3 = r[F3].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    x_yz = sqrt((C1 - b*v**2 - c*w**2)/a)
+    y_zx = sqrt((C1 - c*w**2 - a*u**2)/b)
+    z_xy = sqrt((C1 - a*u**2 - b*v**2)/c)
+    y_x = dsolve(diff(v(u),u) - ((a*u*F3-c*w*F1)/(c*w*F2-b*v*F3)).subs(w,z_xy).subs(v,v(u))).rhs
+    z_x = dsolve(diff(w(u),u) - ((b*v*F1-a*u*F2)/(c*w*F2-b*v*F3)).subs(v,y_zx).subs(w,w(u))).rhs
+    z_y = dsolve(diff(w(v),v) - ((b*v*F1-a*u*F2)/(a*u*F3-c*w*F1)).subs(u,x_yz).subs(w,w(v))).rhs
+    x_y = dsolve(diff(u(v),v) - ((c*w*F2-b*v*F3)/(a*u*F3-c*w*F1)).subs(w,z_xy).subs(u,u(v))).rhs
+    y_z = dsolve(diff(v(w),w) - ((a*u*F3-c*w*F1)/(b*v*F1-a*u*F2)).subs(u,x_yz).subs(v,v(w))).rhs
+    x_z = dsolve(diff(u(w),w) - ((c*w*F2-b*v*F3)/(b*v*F1-a*u*F2)).subs(v,y_zx).subs(u,u(w))).rhs
+    sol1 = dsolve(diff(u(t),t) - (c*w*F2 - b*v*F3).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
+    sol2 = dsolve(diff(v(t),t) - (a*u*F3 - c*w*F1).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
+    sol3 = dsolve(diff(w(t),t) - (b*v*F1 - a*u*F2).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
+
+def _nonlinear_3eq_order1_type5(x, y, t, eq):
+    r"""
+    .. math:: x' = x (c F_2 - b F_3), \enspace y' = y (a F_3 - c F_1), \enspace z' = z (b F_1 - a F_2)
+
+    where `F_n = F_n (x, y, z, t)` and are arbitrary functions.
+
+    First Integral:
+
+    .. math:: \left|x\right|^{a} \left|y\right|^{b} \left|z\right|^{c} = C_1
+
+    where `C` is an arbitrary constant. If the function `F_n` is independent of `t`,
+    then, by eliminating `t` and `z` from the first two equations of the system, one
+    arrives at a first-order equation.
+
+    References
+    ==========
+    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
+
+    """
+    C1 = symbols('C1')
+    u, v, w = symbols('u, v, w')
+    p = Wild('p', exclude=[x(t), y(t), z(t), t])
+    q = Wild('q', exclude=[x(t), y(t), z(t), t])
+    s = Wild('s', exclude=[x(t), y(t), z(t), t])
+    F1, F2, F3 = symbols('F1, F2, F3', cls=Wild)
+    r1 = eq[0].match(diff(x(t),t) - x(t)*(F2 - F3))
+    r = collect_const(r1[F2]).match(s*F2)
+    r.update(collect_const(r1[F3]).match(q*F3))
+    if eq[1].has(r[F2]) and not eq[1].has(r[F3]):
+        r[F2], r[F3] = r[F3], r[F2]
+        r[s], r[q] = -r[q], -r[s]
+    r.update((diff(y(t),t) - eq[1]).match(y(t)*(a*r[F3] - r[c]*F1)))
+    a = r[p]; b = r[q]; c = r[s]
+    F1 = r[F1].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F2 = r[F2].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    F3 = r[F3].subs(x(t),u).subs(y(t),v).subs(z(t),w)
+    x_yz = (C1*v**-b*w**-c)**-a
+    y_zx = (C1*w**-c*u**-a)**-b
+    z_xy = (C1*u**-a*v**-b)**-c
+    y_x = dsolve(diff(v(u),u) - ((v*(a*F3-c*F1))/(u*(c*F2-b*F3))).subs(w,z_xy).subs(v,v(u))).rhs
+    z_x = dsolve(diff(w(u),u) - ((w*(b*F1-a*F2))/(u*(c*F2-b*F3))).subs(v,y_zx).subs(w,w(u))).rhs
+    z_y = dsolve(diff(w(v),v) - ((w*(b*F1-a*F2))/(v*(a*F3-c*F1))).subs(u,x_yz).subs(w,w(v))).rhs
+    x_y = dsolve(diff(u(v),v) - ((u*(c*F2-b*F3))/(v*(a*F3-c*F1))).subs(w,z_xy).subs(u,u(v))).rhs
+    y_z = dsolve(diff(v(w),w) - ((v*(a*F3-c*F1))/(w*(b*F1-a*F2))).subs(u,x_yz).subs(v,v(w))).rhs
+    x_z = dsolve(diff(u(w),w) - ((u*(c*F2-b*F3))/(w*(b*F1-a*F2))).subs(v,y_zx).subs(u,u(w))).rhs
+    sol1 = dsolve(diff(u(t),t) - (u*(c*F2-b*F3)).subs(v,y_x).subs(w,z_x).subs(u,u(t))).rhs
+    sol2 = dsolve(diff(v(t),t) - (v*(a*F3-c*F1)).subs(u,x_y).subs(w,z_y).subs(v,v(t))).rhs
+    sol3 = dsolve(diff(w(t),t) - (w*(b*F1-a*F2)).subs(u,x_z).subs(v,y_z).subs(w,w(t))).rhs
+    return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
