@@ -603,7 +603,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
+                if match['no_of_equation'] > 3:
+                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
+                else:
+                    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
             sols = solvefunc(match)
@@ -1463,15 +1466,11 @@ def classify_sysode(eq, funcs=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_2eq_order1(eq, funcs, func_coef)
-                elif order_eq == 2:
-                    type_of_equation = check_nonlinear_2eq_order2(eq, funcs, func_coef)
                 else:
                     type_of_equation = None
             elif matching_hints['no_of_equation'] == 3:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_3eq_order1(eq, funcs, func_coef)
-                elif order_eq == 2:
-                    type_of_equation = check_nonlinear_3eq_order2(eq, funcs, func_coef)
                 else:
                     type_of_equation = None
             else:
@@ -1681,11 +1680,7 @@ def check_linear_3eq_order1(eq, func, func_coef):
                     return 'type4'
                 else:
                     break
-        if r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
-        and r['b1'] == r['c2'] == r['d3'] == 0:
-            return 'type5'
-        else:
-            return None
+    return None
 
 def check_linear_neq_order1(eq, func, func_coef):
     x = func[0].func
@@ -1772,6 +1767,7 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
         return 'type4'
     return None
 
+
 def check_nonlinear_2eq_order2(eq, func, func_coef):
     return None
 
@@ -1857,7 +1853,6 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
 
 def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
-
 
 
 def checksysodesol(eqs, sols, func=None):
@@ -7452,8 +7447,6 @@ def sysode_linear_3eq_order1(match_):
         sol = _linear_3eq_order1_type3(x, y, z, t, r)
     if match_['type_of_equation'] == 'type4':
         sol = _linear_3eq_order1_type4(x, y, z, t, r)
-    if match_['type_of_equation'] == 'type5':
-        sol = _linear_3eq_order1_type5(x, y, z, t, r)
     if match_['type_of_equation'] == 'type6':
         sol = _linear_neq_order1_type1(match_)
     return sol
@@ -7614,9 +7607,6 @@ def _linear_3eq_order1_type4(x, y, z, t, r):
     sol2 = exp(C.Integral(g,t))*((sol[1].rhs).subs(t, C.Integral(f,t)))
     sol3 = exp(C.Integral(g,t))*((sol[2].rhs).subs(t, C.Integral(f,t)))
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-
-def _linear_3eq_order1_type5(x, y, z, t, r):
-    return None
 
 def sysode_linear_neq_order1(match_):
     sol = _linear_neq_order1_type1(match_)
