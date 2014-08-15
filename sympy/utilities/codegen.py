@@ -593,12 +593,7 @@ class CCodeGen(CodeGen):
             name = ccode(arg.name)
             if arg.dimensions:
                 dims = arg.dimensions
-                if isinstance(arg.name, MatrixSymbol):
-                    type_args.append((arg.get_datatype('C'),
-                            "{:}[{:}][{:}]".format(name, dims[0][1] + 1,
-                            dims[1][1] + 1)))
-                else:
-                    type_args.append((arg.get_datatype('C'), "*%s" % name))
+                type_args.append((arg.get_datatype('C'), "*%s" % name))
             elif isinstance(arg, ResultBase):
                 type_args.append((arg.get_datatype('C'), "&%s" % name))
             else:

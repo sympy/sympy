@@ -159,7 +159,8 @@ class JavascriptCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}][{2}]".format(expr.parent, expr.i, expr.j)
+        return "{0}[{1}]".format(expr.parent, expr.j +
+                expr.i*expr.parent.shape[1])
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -285,14 +286,14 @@ def jscode(expr, assign_to=None, **settings):
     >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
     >>> A = MatrixSymbol('A', 3, 1)
     >>> print(jscode(mat, A))
-    A[0][0] = Math.pow(x, 2);
+    A[0] = Math.pow(x, 2);
     if (x > 0) {
-       A[1][0] = x + 1;
+       A[1] = x + 1;
     }
     else {
-       A[1][0] = x;
+       A[1] = x;
     }
-    A[2][0] = Math.sin(x);
+    A[2] = Math.sin(x);
     """
 
     return JavascriptCodePrinter(settings).doprint(expr, assign_to)

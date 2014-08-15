@@ -371,23 +371,23 @@ def test_Matrix_printing():
     mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
     A = MatrixSymbol('A', 3, 1)
     assert ccode(mat, A) == (
-        "A[0][0] = x*y;\n"
+        "A[0] = x*y;\n"
         "if (y > 0) {\n"
-        "   A[1][0] = x + 2;\n"
+        "   A[1] = x + 2;\n"
         "}\n"
         "else {\n"
-        "   A[1][0] = y;\n"
+        "   A[1] = y;\n"
         "}\n"
-        "A[2][0] = sin(z);")
+        "A[2] = sin(z);")
     # Test using MatrixElements in expressions
     expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
     assert ccode(expr) == (
         "((x > 0) ? (\n"
-        "   2*A[2][0]\n"
+        "   2*A[2]\n"
         ")\n"
         ": (\n"
-        "   A[2][0]\n"
-        ")) + sin(A[1][0]) + A[0][0]")
+        "   A[2]\n"
+        ")) + sin(A[1]) + A[0]")
     # Test using MatrixElements in a Matrix
     q = MatrixSymbol('q', 5, 1)
     M = MatrixSymbol('M', 3, 3)
@@ -395,12 +395,12 @@ def test_Matrix_printing():
         [q[1,0] + q[2,0], q[3, 0], 5],
         [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
     assert ccode(m, M) == (
-        "M[0][0] = sin(q[1][0]);\n"
-        "M[0][1] = 0;\n"
-        "M[0][2] = cos(q[2][0]);\n"
-        "M[1][0] = q[1][0] + q[2][0];\n"
-        "M[1][1] = q[3][0];\n"
-        "M[1][2] = 5;\n"
-        "M[2][0] = 2*q[4][0]*1.0/q[1][0];\n"
-        "M[2][1] = 4 + sqrt(q[0][0]);\n"
-        "M[2][2] = 0;")
+        "M[0] = sin(q[1]);\n"
+        "M[1] = 0;\n"
+        "M[2] = cos(q[2]);\n"
+        "M[3] = q[1] + q[2];\n"
+        "M[4] = q[3];\n"
+        "M[5] = 5;\n"
+        "M[6] = 2*q[4]*1.0/q[1];\n"
+        "M[7] = 4 + sqrt(q[0]);\n"
+        "M[8] = 0;")
