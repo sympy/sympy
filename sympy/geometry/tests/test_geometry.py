@@ -14,7 +14,7 @@ from sympy.geometry.util import idiff, are_coplanar
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import cartes
 from sympy.utilities.randtest import test_numerically
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
@@ -1587,3 +1587,12 @@ def test_issue_2941():
     c, d = (-2, -3), (-2, 0)
     a, b = (0, 0), (1, 1)
     _check()
+
+
+@slow
+def test_symbolic_intersect():
+    # Issue 7814.
+    circle = Circle(Point(x, 0), y)
+    line = Line(Point(k, z), slope=0)
+    assert line.intersection(circle) == [
+        Point(x - sqrt(y**2 - z**2), z), Point(x + sqrt(y**2 - z**2), z)]
