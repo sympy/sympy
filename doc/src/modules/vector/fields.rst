@@ -5,42 +5,10 @@ Scalar and Vector Field Functionality
 Introduction
 ============
 
-Vectors and Scalars
--------------------
-
-In vector math, we deal with two kinds of quantities – scalars and vectors.
-
-A scalar is an entity which only has a magnitude – no direction. Examples of
-scalar quantities include mass, electric charge, temperature, distance, etc.
-
-A vector, on the other hand, is an entity that is characterized by a
-magnitude and a direction. Examples of vector quantities are displacement,
-velocity, magnetic field, etc.
-
-A scalar can be depicted just by a number, for e.g. a temperature of 300 K.
-On the other hand, vectorial quantities like acceleration are usually denoted
-by a vector. Given a vector :math:`\mathbf{V}`, the magnitude of the
-corresponding quantity can be calculated as the magnitude of the vector
-itself :math:`\Vert \mathbf{V} \Vert`, while the direction would be specified
-by a unit vector in the direction of the original vector,
-:math:`\mathbf{\hat{V}} = \frac{\mathbf{V}}{\Vert \mathbf{V} \Vert}`.
-
-For example, consider a displacement of
-:math:`(3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}})` m,
-where , as per standard convention, :math:`\mathbf{\hat{i}}`,
-:math:`\mathbf{\hat{j}}` and :math:`\mathbf{\hat{k}}` represent unit vectors
-in the :math:`\mathbf{X}`, :math:`\mathbf{Y}` and :math:`\mathbf{Z}`
-directions respectively. Therefore, it can be concluded that the distance
-traveled is
-:math:`\Vert 3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}} \Vert`
-m = :math:`5\sqrt{2}` m. The direction of travel is given by the unit vector
-:math:`\frac{3}{5\sqrt{2}}\mathbf{\hat{i}} +
-\frac{4}{5\sqrt{2}}\mathbf{\hat{j}} + \frac{5}{5\sqrt{2}}\mathbf{\hat{k}}`.
-
 Fields
 ------
 
-A :math:`field` is a vector or scalar quantity that can be
+A field is a vector or scalar quantity that can be
 specified everywhere in space as a function of position (Note that in general
 a field may also be dependent on time and other custom variables). Since we 
 only deal with 3D spaces in this module, a field is defined as a function of 
@@ -75,10 +43,10 @@ Implementation in sympy.vector
 Scalar and vector fields
 ------------------------
 
-In :mod:`sympy.vector`, every :mod:`CoordSysCartesian` instance is assigned basis
+In :mod:`sympy.vector`, every ``CoordSysCartesian`` instance is assigned basis
 vectors corresponding to the :math:`X`, :math:`Y` and
 :math:`Z` directions. These can be accessed using the properties
-named :mod:`i`, :mod:`j` and :mod:`k` respectively. Hence, to define a vector
+named ``i``, ``j`` and ``k`` respectively. Hence, to define a vector
 :math:`\mathbf{v}` of the form
 :math:`3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}}` with
 respect to a given frame :math:`\mathbf{R}`, you would do
@@ -92,13 +60,13 @@ already been elaborated upon in the earlier section of this module's
 documentation.
 
 On the other hand, base scalars (or coordinate variables) are implemented
-in a special class called :mod:`BaseScalar`, and are assigned to every 
+in a special class called ``BaseScalar``, and are assigned to every 
 coordinate system, one for each direction from :math:`X`, :math:`Y` and 
 :math:`Z`. These coordinate variables are used to form the expressions of
 vector or scalar fields in 3D space.
-For a system :mod:`R`, the :math:`X`, :math:`Y` and :math:`Z` 
-:mod:`BaseScalars` s can be accessed using the :mod:`R.x`, :mod:`R.y`
-and :mod:`R.z` expressions respectively.
+For a system ``R``, the :math:`X`, :math:`Y` and :math:`Z` 
+``BaseScalars`` instances can be accessed using the ``R.x``, ``R.y``
+and ``R.z`` expressions respectively.
 
 Therefore, to generate the expression for the aforementioned electric
 potential field :math:`2{x}^{2}y`, you would have to do
@@ -109,14 +77,14 @@ potential field :math:`2{x}^{2}y`, you would have to do
   >>> electric_potential
   2*R.x**2*R.y
 
-It is to be noted that :mod:`BaseScalar` instances can be used just
-like any other SymPy :mod:`Symbol`, except that they store the information
+It is to be noted that ``BaseScalar`` instances can be used just
+like any other SymPy ``Symbol``, except that they store the information
 about the coordinate system and direction/axis they correspond to.
 
 Scalar fields can be treated just as any other SymPy expression,
 for any math/calculus functionality. Hence, to differentiate the above
-electric potential with respect to :math:`x` (i.e. :mod:`R.x`), you would
-use the :mod:`diff` method.
+electric potential with respect to :math:`x` (i.e. ``R.x``), you would
+use the ``diff`` method.
 
   >>> from sympy.vector import CoordSysCartesian
   >>> R = CoordSysCartesian('R')
@@ -125,13 +93,13 @@ use the :mod:`diff` method.
   >>> diff(electric_potential, R.x)
   4*R.x*R.y
 
-It is worth noting that having a :mod:`BaseScalar` in the expression implies
+It is worth noting that having a ``BaseScalar`` in the expression implies
 that a 'field' changes with position, in 3D space. Technically speaking, a
-simple :mod:`Expr` with no :mod:`BaseScalar` s is still a field, though 
+simple ``Expr`` with no ``BaseScalar`` s is still a field, though 
 constant.
 
 Like scalar fields, vector fields that vary with position can also be 
-constructed using :mod:`BaseScalar` s in the measure-number expressions.
+constructed using ``BaseScalar`` s in the measure-number expressions.
 
   >>> from sympy.vector import CoordSysCartesian
   >>> R = CoordSysCartesian('R')
@@ -151,13 +119,13 @@ but a convenient mathematical notation to denote any one of the
 aforementioned field operations.
 
 In :mod:`sympy.vector`, :math:`\mathbf{\nabla}` has been implemented
-as the :mod:`delop` property of the :mod:`CoordSysCartesian` class.
-Hence, assuming :mod:`C` is a coordinate system, the 
+as the ``delop`` property of the ``CoordSysCartesian`` class.
+Hence, assuming ``C`` is a coordinate system, the 
 :math:`\mathbf{\nabla}` operator corresponding to the vector
-differentials wrt :mod:`C`'s coordinate variables and basis vectors
-would be accessible as :mod:`C.delop`.
+differentials wrt ``C``'s coordinate variables and basis vectors
+would be accessible as ``C.delop``.
 
-Given below is an example of usage of the :mod:`delop` object.
+Given below is an example of usage of the ``delop`` object.
 
   >>> from sympy.vector import CoordSysCartesian
   >>> C = CoordSysCartesian('C')
@@ -165,7 +133,7 @@ Given below is an example of usage of the :mod:`delop` object.
   >>> gradient_field
   (Derivative(C.x*C.y*C.z, C.x))*C.i + (Derivative(C.x*C.y*C.z, C.y))*C.j + (Derivative(C.x*C.y*C.z, C.z))*C.k
 
-The above expression can be evaluated using the SymPy :mod:`doit()`
+The above expression can be evaluated using the SymPy ``doit()``
 routine.
 
   >>> gradient_field.doit()
@@ -202,7 +170,7 @@ where :math:`F_x` denotes the :math:`X` component of vector :math:`\mathbf{F}`.
 Computing the curl of a vector field in :mod:`sympy.vector` can be 
 accomplished in two ways.
 
-One, by using the :mod:`delop` property
+One, by using the ``delop`` property
 
   >>> from sympy.vector import CoordSysCartesian
   >>> C = CoordSysCartesian('C')
@@ -239,7 +207,7 @@ where :math:`U`, :math:`V` and :math:`W` denote the :math:`X`, :math:`Y` and
 Computing the divergence of a vector field in :mod:`sympy.vector` can be 
 accomplished in two ways.
 
-One, by using the :mod:`delop` property
+One, by using the ``delop`` property
 
   >>> from sympy.vector import CoordSysCartesian
   >>> C = CoordSysCartesian('C')
@@ -272,7 +240,7 @@ denoted by :math:`\nabla f` is given by -
 Computing the divergence of a vector field in :mod:`sympy.vector` can be 
 accomplished in two ways.
 
-One, by using the :mod:`delop` property
+One, by using the ``delop`` property
 
   >>> from sympy.vector import CoordSysCartesian
   >>> C = CoordSysCartesian('C')
@@ -292,7 +260,7 @@ Directional Derivative
 
 Apart from the above three common applications of :math:`\mathbf{\nabla}`,
 it is also possible to compute the directional derivative of a field wrt
-a :mod:`Vector` in :mod:`sympy.vector`.
+a ``Vector`` in :mod:`sympy.vector`.
 
 By definition, the directional derivative of a field :math:`\mathbf{F}`
 along a vector :math:`v` at point :math:`x` represents the instantaneous 
@@ -301,8 +269,8 @@ velocity :math:`v`. It is represented mathematically as -
 :math:`(\vec v \cdot \nabla) \, \mathbf{F}(x)`.
 
 Directional derivatives of vector and scalar fields can be computed in
-:mod:`sympy.vector` using the :mod:`delop` property of
-:mod:`CoordSysCartesian`.
+:mod:`sympy.vector` using the ``delop`` property of
+``CoordSysCartesian``.
 
   >>> from sympy.vector import CoordSysCartesian
   >>> C = CoordSysCartesian('C')
@@ -328,7 +296,7 @@ In physics, conservative fields represent forces in physical systems where
 energy is conserved.
 
 To check if a vector field is conservative in :mod:`sympy.vector`, the 
-:mod:`is_conservative` function can be used.
+``is_conservative`` function can be used.
 
   >>> from sympy.vector import CoordSysCartesian, is_conservative
   >>> R = CoordSysCartesian('R')
@@ -342,7 +310,7 @@ A solenoidal field, on the other hand, is a vector field whose divergence
 is zero at all points in space.
 
 To check if a vector field is solenoidal in :mod:`sympy.vector`, the 
-:mod:`is_solenoidal` function can be used.
+``is_solenoidal`` function can be used.
 
   >>> from sympy.vector import CoordSysCartesian, is_solenoidal
   >>> R = CoordSysCartesian('R')
@@ -359,7 +327,7 @@ We have previously mentioned that every conservative field can be defined as
 the gradient of some scalar field. This scalar field is also called the 'scalar
 potential field' corresponding to the aforementioned conservative field.
 
-The :mod:`scalar_potential` function in :mod:`sympy.vector` calculates the
+The ``scalar_potential`` function in :mod:`sympy.vector` calculates the
 scalar potential field corresponding to a given conservative vector field in
 3D space - minus the extra constant of integration, of course.
 
@@ -372,7 +340,7 @@ Example of usage -
   2*R.x**2*R.y*R.z
 
 Providing a non-conservative vector field as an argument to
-:mod:`scalar_potential` raises a :mod:`ValueError`.
+``scalar_potential`` raises a ``ValueError``.
 
 The scalar potential difference, or simply 'potential difference',
 corresponding to a conservative vector field can be defined as the difference
@@ -391,5 +359,5 @@ This computation is performed as follows in :mod:`sympy.vector`.
   4
 
 If provided with a scalar expression instead of a vector field,
-:mod:`scalar_potential_difference` returns the difference between the values
+``scalar_potential_difference`` returns the difference between the values
 of that scalar field at the two given points in space.

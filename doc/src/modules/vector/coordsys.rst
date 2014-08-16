@@ -2,7 +2,7 @@
 More about Coordinate Systems
 =============================
 
-It is a pretty well-known concept that there is no :math:`absolute` notion 
+It is a pretty well-known concept that there is no absolute notion 
 of location or orientation in space. Any given coordinate system
 defines a unique 'perspective' of quantifying positions and directions. 
 Therefore, even if we assume that all systems deal with the same
@@ -10,7 +10,7 @@ units of measurement, the expression of vectorial and scalar quantities
 differs according to the coordinate system a certain observer deals with.
 
 Consider two points :math:`P` and :math:`Q` in space. Assuming units to
-be common throughtout, the :math:`distance` between these points remains
+be common throughtout, the distance between these points remains
 the same regardless of the coordinate system in which the measurements are
 being made. However, the 3-D coordinates of each of the two points, as well
 as the position vector of any of the points with respect to the other, 
@@ -34,8 +34,8 @@ ways with respect to already-existing systems.
 Locating new systems
 ====================
 
-We already know that the :mod:`origin` property of a 
-:mod:`CoordSysCartesian` corresponds to the :mod:`Point` instance
+We already know that the ``origin`` property of a 
+``CoordSysCartesian`` corresponds to the ``Point`` instance
 denoting its origin reference point.
 
 Consider a coordinate system :math:`N`. Suppose we want to define
@@ -60,7 +60,7 @@ It is worth noting that :math:`M`'s orientation is the same as that of
 :math:`N`. This means that the rotation matrix of :math`N` with respect 
 to :math:`M`, and also vice versa, is equal to the identity matrix of
 dimensions 3x3.
-The :mod:`locate_new` method initializes a :mod:`CoordSysCartesian` that
+The ``locate_new`` method initializes a ``CoordSysCartesian`` that
 is only translated in space, not re-oriented, relative to the 'parent'
 system.
 
@@ -68,7 +68,7 @@ Orienting new systems
 =====================
 
 Similar to 'locating' new systems, :mod:`sympy.vector` also allows for
-initialization of new :mod:`CoordSysCartesian` instances that are oriented
+initialization of new ``CoordSysCartesian`` instances that are oriented
 in user-defined ways with respect to existing systems.
 
 There are two ways to achieve this.
@@ -88,20 +88,20 @@ You can do this as follows -
   >>> N = CoordSysCartesian('N')
   >>> M = N.orient_new_body('M', a, b, c, 'XYZ')
 
-The rotation order can also be given as :mod:`123` instead of :mod:`XYZ`.
+The rotation order can also be given as ``123`` instead of ``XYZ``.
 
-:mod:`CoordSysCartesian` provides the following direct orientation methods
+``CoordSysCartesian`` provides the following direct orientation methods
 in its API-
 
-1. :mod:`orient_new_axis`
+1. ``orient_new_axis``
 
-2. :mod:`orient_new_body`
+2. ``orient_new_body``
 
-3. :mod:`orient_new_space`
+3. ``orient_new_space``
 
-4. :mod:`orient_new_quaternion`
+4. ``orient_new_quaternion``
 
-Please look at the :mod:`CoordSysCartesian` class API given in the docs
+Please look at the ``CoordSysCartesian`` class API given in the docs
 of this module, to know their functionality and required arguments 
 in detail.
 
@@ -111,7 +111,7 @@ Using Orienter(s) and the orient_new method
 Suppose you want to rotate the new system about the axis
 :math:`\mathbf{\hat{k}}`, by angle :math:`a`.
 
-You would first have to initialize an :mod:`AxisOrienter` instance for 
+You would first have to initialize an ``AxisOrienter`` instance for 
 storing the rotation information.
 
   >>> from sympy.vector import CoordSysCartesian, AxisOrienter
@@ -119,30 +119,30 @@ storing the rotation information.
   >>> N = CoordSysCartesian('N')
   >>> axis_orienter = AxisOrienter(a, N.k)
 
-And then apply it using the :mod:`orient_new` method.
+And then apply it using the ``orient_new`` method.
 
   >>> M = N.orient_new('M', axis_orienter)
 
-:mod:`orient_new` also lets you orient new systems using multiple
-:mod:`Orienter` instances, provided in an iterable. The rotations/orientations
-are applied to the new system in the order the :mod:`Orienter` s appear
-in the iterable.
+``orient_new`` also lets you orient new systems using multiple
+``Orienter`` instances, provided in an iterable. The rotations/orientations
+are applied to the new system in the order the ``Orienter`` instances 
+appear in the iterable.
 
   >>> from sympy.vector import BodyOrienter
   >>> from sympy.abc import a, b, c
   >>> body_orienter = BodyOrienter(a, b, c, 'XYZ')
   >>> M = N.orient_new('M', (axis_orienter, body_orienter))
 
-The :mod:`sympy.vector` API provides the following four :mod:`Orienter`
+The :mod:`sympy.vector` API provides the following four ``Orienter``
 classes for orientation purposes-
 
-1. :mod:`AxisOrienter`
+1. ``AxisOrienter``
 
-2. :mod:`BodyOrienter`
+2. ``BodyOrienter``
 
-3. :mod:`SpaceOrienter`
+3. ``SpaceOrienter``
 
-4. :mod:`QuaternionOrienter`
+4. ``QuaternionOrienter``
 
 Please refer to the API of the respective classes in the docs of this
 module to know more.
@@ -155,7 +155,7 @@ coincides with the origin of the 'parent' system.
   0
 
 To compute the rotation matrix of any coordinate system with respect 
-to another one, use the :mod:`rotation_matrix` method.
+to another one, use the ``rotation_matrix`` method.
 
   >>> M = N.orient_new_axis('M', a, N.k)
   >>> M.rotation_matrix(N)
@@ -176,11 +176,11 @@ Orienting AND Locating new systems
 What if you want to initialize a new system that is not only oriented
 in a pre-defined way, but also translated with respect to the parent?
 
-Each of the :mod:`orient_new_<method of orientation>` methods, as well
-as the :mod:`orient_new` method, support a :mod:`location` keyword
+Each of the ``orient_new_<method of orientation>`` methods, as well
+as the ``orient_new`` method, support a ``location`` keyword
 argument.
 
-If a :mod:`Vector` is supplied as the value for this :mod:`kwarg`, the
+If a ``Vector`` is supplied as the value for this ``kwarg``, the
 new system's origin is automatically defined to be located at that
 position vector with respect to the parent coordinate system.
 
@@ -194,7 +194,7 @@ location of the new systems.
   >>> express(N.position_wrt(M), M)
   (-2*sin(a))*M.i + (-2*cos(a))*M.j
 
-More on the :mod:`express` function in a bit.
+More on the ``express`` function in a bit.
 
 Expression of quantities in different coordinate systems
 ========================================================
@@ -207,7 +207,7 @@ different coordinate systems. In general, the same is true for scalar
 expressions and dyadic tensors.
 
 :mod:`sympy.vector` supports the expression of vector/scalar quantities
-in different coordinate systems using the :mod:`express` function.
+in different coordinate systems using the ``express`` function.
 
 For purposes of this section, assume the following initializations-
 
@@ -216,8 +216,8 @@ For purposes of this section, assume the following initializations-
   >>> N = CoordSysCartesian('N')
   >>> M = N.orient_new_axis('M', a, N.k)
 
-:mod:`Vector` s can be expressed in user defined systems using 
-:mod:`express`.
+``Vector`` instances can be expressed in user defined systems using 
+``express``.
 
   >>> v1 = N.i + N.j + N.k
   >>> express(v1, M)
@@ -226,12 +226,12 @@ For purposes of this section, assume the following initializations-
   >>> express(v2, N)
   (-sin(a) + 1)*N.i + (cos(a))*N.j
 
-Apart from :mod:`Vector` instances, :mod:`express` also supports
-reexpression of scalars (general SymPy :mod:`Expr` s) and
-:mod:`Dyadic` s.
+Apart from ``Vector`` instances, ``express`` also supports
+reexpression of scalars (general SymPy ``Expr``) and
+``Dyadic`` objects.
 
-:mod:`express` also accepts a second coordinate system 
-for re-expressing :mod:`Dyadic` s.
+``express`` also accepts a second coordinate system 
+for re-expressing ``Dyadic`` instances.
 
   >>> d = 2*(M.i | N.j) + 3* (M.j | N.k)
   >>> express(d, M)
@@ -243,10 +243,10 @@ Coordinate Variables
 --------------------
 
 The location of a coordinate system's origin does not affect the 
-re-expression of :mod:`BaseVector` instances. However, it does affect
-the way :mod:`BaseScalar` s are expressed in different systems.
+re-expression of ``BaseVector`` instances. However, it does affect
+the way ``BaseScalar`` instances are expressed in different systems.
 
-:mod:`BaseScalar` s, are coordinate 'symbols' meant to denote the 
+``BaseScalar`` s, are coordinate 'symbols' meant to denote the 
 variables used in the definition of vector/scalar fields in 
 :mod:`sympy.vector`.
 
@@ -263,7 +263,7 @@ Therefore, the expression for :math:`\mathbf{{T}_{N}}` in :math:`R` becomes
 
 Coordinate variables, if present in a vector/scalar/dyadic expression,
 can also be re-expressed in a given coordinate system, by setting the
-:mod:`variables` keyword argument of :mod:`express` to :mod:`True`.
+``variables`` keyword argument of ``express`` to ``True``.
 
 The above mentioned example, done programatically, would look like 
 this -
@@ -276,8 +276,8 @@ this -
 Other expression-dependent methods
 ----------------------------------
 
-The :mod:`to_matrix` method of :mod:`Vector` and 
-:mod:`express_coordinates` method of :mod:`Point` also return 
+The ``to_matrix`` method of ``Vector`` and 
+``express_coordinates`` method of ``Point`` also return 
 different results depending on the coordinate system being provided.
 
   >>> P = R.origin.locate_new('P', a*R.i + b*R.j + c*R.k)
