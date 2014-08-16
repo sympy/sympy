@@ -1,254 +1,109 @@
-============================
-Basic Implementation details
-============================
+============
+Introduction
+============
 
-Coordinate Systems and Vectors
-==============================
+This page gives a brief conceptual overview of the functionality present in
+:mod:`sympy.vector`.
 
-As of now, :mod:`sympy.vector` only deals with the Cartesian (also called 
-rectangular) coordinate systems. A 3D Cartesian coordinate system can
-be initialized in :mod:`sympy.vector` as
+Vectors and Scalars
+===================
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+In vector math, we deal with two kinds of quantities – scalars and vectors.
 
-The string parameter to the constructor denotes the name assigned to the
-system, and will primarily be used for printing purposes.
+A scalar is an entity which only has a magnitude – no direction. Examples of
+scalar quantities include mass, electric charge, temperature, distance, etc.
 
-Once a coordinate system (in essence, a ``CoordSysCartesian`` instance)
-has been defined, we can access the basis/base vectors (i.e. the 
-:math:`\mathbf{\hat{i}}`, :math:`\mathbf{\hat{j}}` and 
-:math:`\mathbf{\hat{k}}` vectors) and coordinate variables/base 
-scalars (i.e. the :math:`\mathbf{x}`, :math:`\mathbf{y}` and 
-:math:`\mathbf{z}` variables) corresponding to it. We will talk
-about coordinate variables in the later sections.
+A vector, on the other hand, is an entity that is characterized by a
+magnitude and a direction. Examples of vector quantities are displacement,
+velocity, magnetic field, etc.
 
-The basis vectors for the :math:`X`, :math:`Y` and :math:`Z` 
-directions can be accessed using the ``i``, ``j`` and ``k``
-properties respectively.
+A scalar can be depicted just by a number, for e.g. a temperature of 300 K.
+On the other hand, vectorial quantities like acceleration are usually denoted
+by a vector. Given a vector :math:`\mathbf{V}`, the magnitude of the
+corresponding quantity can be calculated as the magnitude of the vector
+itself :math:`\Vert \mathbf{V} \Vert`, while the direction would be specified
+by a unit vector in the direction of the original vector,
+:math:`\mathbf{\hat{V}} = \frac{\mathbf{V}}{\Vert \mathbf{V} \Vert}`.
 
-  >>> N.i
-  N.i
-  >>> type(N.i)
-  <class 'sympy.vector.vector.BaseVector'>
+For example, consider a displacement of
+:math:`(3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}})` m,
+where , as per standard convention, :math:`\mathbf{\hat{i}}`,
+:math:`\mathbf{\hat{j}}` and :math:`\mathbf{\hat{k}}` represent unit vectors
+in the :math:`\mathbf{X}`, :math:`\mathbf{Y}` and :math:`\mathbf{Z}`
+directions respectively. Therefore, it can be concluded that the distance
+traveled is
+:math:`\Vert 3\mathbf{\hat{i}} + 4\mathbf{\hat{j}} + 5\mathbf{\hat{k}} \Vert`
+m = :math:`5\sqrt{2}` m. The direction of travel is given by the unit vector
+:math:`\frac{3}{5\sqrt{2}}\mathbf{\hat{i}} +
+\frac{4}{5\sqrt{2}}\mathbf{\hat{j}} + \frac{5}{5\sqrt{2}}\mathbf{\hat{k}}`.
 
-As seen above, the basis vectors are all instances of a class called 
-``BaseVector``.
+Coordinate Systems
+==================
 
-When a ``BaseVector`` is multiplied by a scalar (essentially any
-SymPy ``Expr``), we get a ``VectorMul`` - the product of
-a base vector and a scalar.
+A coordinate system is an abstract mathematical entity used to define
+the notion of directions and locations in n-dimensional spaces. This
+module deals with 3-dimensional spaces, with the conventional :math:`X`, 
+:math:`Y` and :math:`Z` directions (or axes) defined with respect 
+to each coordinate system.
 
-  >>> 3*N.i
-  3*N.i
-  >>> type(3*N.i)
-  <class 'sympy.vector.vector.VectorMul'>
+Each coordinate system also has a special reference point called the 
+'origin' defined for it. This point is used either while referring to 
+locations in 3D space, or while calculating the coordinates of 
+pre-defined points with respect to the system.
 
-Addition of ``VectorMul`` and ``BaseVectors`` gives rise to
-formation of ``VectorAdd`` - except for special cases, ofcourse.
+It is a pretty well-known concept that there is no absolute notion 
+of location or orientation in space. Any given coordinate system
+defines a unique 'perspective' of quantifying positions and directions. 
+Therefore, even if we assume that all systems deal with the same
+units of measurement, the expression of vectorial and scalar quantities
+differs according to the coordinate system a certain observer deals with.
 
-  >>> v = 2*N.i + N.j
-  >>> type(v)
-  <class 'sympy.vector.vector.VectorAdd'>
-  >>> v - N.j
-  2*N.i
-  >>> type(v - N.j)
-  <class 'sympy.vector.vector.VectorMul'>
+Consider two points :math:`P` and :math:`Q` in space. Assuming units to
+be common throughtout, the distance between these points remains
+the same regardless of the coordinate system in which the measurements are
+being made. However, the 3-D coordinates of each of the two points, as well
+as the position vector of any of the points with respect to the other, 
+do not.
+In fact, these two quantities don't make sense at all, unless they are being
+measured keeping in mind a certain location and orientation of the measurer
+(essentially the coordinate system).
 
-What about a zero vector? It can be accessed using the ``zero``
-attribute assigned to class ``Vector``. Since the notion of a zero
-vector remains the same regardless of the coordinate system in 
-consideration, we use ``Vector.zero`` wherever such a quantity is
-required.
+Therefore, it is quite clear that the orientation and location (of the origin)
+of a coordinate system define the way different quantities will be expressed
+with respect to it.  Neither of the two properties can be measured on an 
+absolute scale, but rather with respect to another coordinate system. The 
+orientation of one system with respect to another is measured using the 
+the rotation matrix, while the relative position can be quantified via
+the position vector of one system's origin with respect to the other.
 
-  >>> from sympy.vector import Vector
-  >>> Vector.zero
-  0
-  >>> type(Vector.zero)
-  <class 'sympy.vector.vector.VectorZero'>
-  >>> N.i + Vector.zero
-  N.i
-  >>> Vector.zero == 2*Vector.zero
-  True
-
-All the classes shown above - ``BaseVector``, ``VectorMul``, 
-``VectorAdd`` and ``VectorZero`` are subclasses of ``Vector``.
-
-You should never have to instantiate objects of any of the
-subclasses of ``Vector``. Using the ``BaseVector`` instances assigned to a
-``CoordSysCartesian`` instance and (if needed) ``Vector.zero``
-as building blocks, any sort of vectorial expression can be constructed
-with the basic mathematical operators ``+``, ``-``, ``*``.
-and ``/``.
-
-  >>> v = N.i - 2*N.j
-  >>> v/3
-  1/3*N.i + (-2/3)*N.j
-  >>> v + N.k
-  N.i + (-2)*N.j + N.k
-  >>> Vector.zero/2
-  0
-  >>> (v/3)*4
-  4/3*N.i + (-8/3)*N.j
-
-
-In addition to the elementary mathematical operations, the vector 
-operations of ``dot`` and ``cross`` can also be performed on 
-``Vector``.
-
-  >>> v1 = 2*N.i + 3*N.j - N.k
-  >>> v2 = N.i - 4*N.j + N.k
-  >>> v1.dot(v2)
-  -11
-  >>> v1.cross(v2)
-  (-1)*N.i + (-3)*N.j + (-11)*N.k
-  >>> v2.cross(v1)
-  N.i + 3*N.j + 11*N.k
-
-The ``&`` and ``^`` operators have been overloaded for the
-``dot`` and ``cross`` methods respectively.
-
-  >>> v1 & v2
-  -11
-  >>> v1 ^ v2
-  (-1)*N.i + (-3)*N.j + (-11)*N.k
-
-In addition to these operations, it is also possible to compute the
-outer products of ``Vector`` instances in :mod:`sympy.vector`. More
-on that in a little bit.
-
-
-SymPy operations on Vectors
-===========================
-
-The SymPy operations of ``simplify``, ``trigsimp``, ``diff``,
-and ``factor`` work on ``Vector`` objects, with the standard SymPy API.
-
-In essence, the methods work on the measure numbers(The coefficients 
-of the basis vectors) present in the provided vectorial expression.
-
-  >>> from sympy.abc import a, b, c
-  >>> from sympy import sin, cos, trigsimp, diff
-  >>> v = (a*b + a*c + b**2 + b*c)*N.i + N.j
-  >>> v.factor()
-  ((a + b)*(b + c))*N.i + N.j
-  >>> v = (sin(a)**2 + cos(a)**2)*N.i - (2*cos(b)**2 - 1)*N.k
-  >>> trigsimp(v)
-  N.i + (-cos(2*b))*N.k
-  >>> v.simplify()
-  N.i + (-cos(2*b))*N.k
-  >>> diff(v, b)
-  (4*sin(b)*cos(b))*N.k
-  >>> from sympy import Derivative
-  >>> Derivative(v, b).doit()
-  (4*sin(b)*cos(b))*N.k
-
-``Integral`` also works with ``Vector`` instances, similar to
-``Derivative``.
-
-  >>> from sympy import Integral
-  >>> v1 = a*N.i + sin(a)*N.j - N.k
-  >>> Integral(v1, a)
-  (Integral(a, a))*N.i + (Integral(sin(a), a))*N.j + (Integral(-1, a))*N.k
-  >>> Integral(v1, a).doit()
-  a**2/2*N.i + (-cos(a))*N.j + (-a)*N.k
-
-Points
+Fields
 ======
 
-As mentioned before, every coordinate system corresponds to a unique origin
-point. Points, in general, have been implemented in :mod:`sympy.vector` in the
-form of the ``Point`` class.
+A field is a vector or scalar quantity that can be
+specified everywhere in space as a function of position (Note that in general
+a field may also be dependent on time and other custom variables). Since we 
+only deal with 3D spaces in this module, a field is defined as a function of 
+the :math:`x`, :math:`y` and :math:`z` coordinates corresponding
+to a location in 3D space.
 
-To access the origin of system, use the ``origin`` property of the
-``CoordSysCartesian`` class.
+For example, temperature in 3 dimensional space (a temperature field) can be
+written as :math:`T(x, y, z)` – a scalar function of the position.
+An example of a scalar field in electromagnetism is the electric potential.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
-  >>> N.origin
-  N.origin
-  >>> type(N.origin)
-  <class 'sympy.vector.point.Point'>
+In a similar manner, a vector field can be defined as a vectorial function
+of the location :math:`(x, y, z)` of any point in space.
 
-You can instantiate new points in space using the ``locate_new`` 
-method of ``Point``. The arguments include the name(string) of the 
-new ``Point``, and its position vector with respect to the 
-'parent' ``Point``.
+For instance, every point on the earth may be considered to be in the
+gravitational force field of the earth. We may specify the field by the
+magnitude and the direction of acceleration due to gravity
+(i.e. force per unit mass ) :math:`\vec g(x, y, z)` at every point in 
+space.
 
-  >>> from sympy.abc import a, b, c
-  >>> P = N.origin.locate_new('P', a*N.i + b*N.j + c*N.k)
-  >>> Q = P.locate_new('Q', -b*N.j)
-
-Like ``Vector``, a user never has to expressly instantiate an object of
-``Point``. This is because any location in space (albeit relative) can be 
-pointed at by using the ``origin`` of a ``CoordSysCartesian`` as the 
-reference, and then using ``locate_new`` on it and subsequent 
-``Point`` instances.
-
-The position vector of a ``Point`` with respect to another ``Point`` can
-be computed using the ``position_wrt`` method.
-
-  >>> P.position_wrt(Q)
-  b*N.j
-  >>> Q.position_wrt(N.origin)
-  a*N.i + c*N.k
-
-Additionally, it is possible to obtain the :math:`X`, :math:`Y` and :math:`Z`
-coordinates of a ``Point`` with respect to a ``CoordSysCartesian``
-in the form of a tuple. This is done using the ``express_coordinates``
-method.
-
-  >>> Q.express_coordinates(N)
-  (a, 0, c)
-
-
-Dyadics
-=======
-
-A dyadic, or dyadic tensor, is a second-order tensor formed by the 
-juxtaposition of pairs of vectors. Therefore, the outer products of vectors
-give rise to the formation of dyadics. Dyadic tensors have been implemented 
-in :mod:`sympy.vector` in the ``Dyadic`` class.
-
-Once again, you never have to instantiate objects of ``Dyadic``.
-The outer products of vectors can be computed using the ``outer``
-method of ``Vector``. The ``|`` operator has been overloaded for
-``outer``.
-
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
-  >>> N.i.outer(N.j)
-  (N.i|N.j)
-  >>> N.i|N.j
-  (N.i|N.j)
-
-Similar to ``Vector``, ``Dyadic`` also has subsequent subclasses like
-``BaseDyadic``, ``DyadicMul``, ``DyadicAdd``. As with ``Vector``,
-a zero dyadic can be accessed from ``Dyadic.zero``.
-
-All basic mathematical operations work with ``Dyadic`` too.
-
-  >>> dyad = N.i.outer(N.k)
-  >>> dyad*3
-  3*(N.i|N.k)
-  >>> dyad - dyad
-  0
-  >>> dyad + 2*(N.j|N.i)
-  (N.i|N.k) + 2*(N.j|N.i)
-
-``dot`` and ``cross`` also work among ``Dyadic`` instances as well as
-between a ``Dyadic`` and ``Vector`` (and also vice versa) - as per the
-respective mathematical definitions. As with ``Vector``, ``&`` and
-``^`` have been overloaded for ``dot`` and ``cross``.
-
-  >>> d = N.i.outer(N.j)
-  >>> d.dot(N.j|N.j)
-  (N.i|N.j)
-  >>> d.dot(N.i)
-  0
-  >>> d.dot(N.j)
-  N.i
-  >>> N.i.dot(d)
-  N.j
-  >>> N.k ^ d
-  (N.j|N.j)
+To give an example from electromagnetism, consider an electric potential
+of form :math:`2{x}^{2}y`, a scalar field in 3D space. The corresponding
+conservative electric field can be computed as the gradient of the electric
+potential function, and expressed as :math:`4xy\mathbf{\hat{i}} +
+2{x}^{2}\mathbf{\hat{j}}`.
+The magnitude of this electric field can in turn be expressed
+as a scalar field of the form
+:math:`\sqrt{4{x}^{4} + 16{x}^{2}{y}^{2}}`.

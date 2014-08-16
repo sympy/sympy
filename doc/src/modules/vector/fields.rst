@@ -2,41 +2,6 @@
 Scalar and Vector Field Functionality
 =====================================
 
-Introduction
-============
-
-Fields
-------
-
-A field is a vector or scalar quantity that can be
-specified everywhere in space as a function of position (Note that in general
-a field may also be dependent on time and other custom variables). Since we 
-only deal with 3D spaces in this module, a field is defined as a function of 
-the :math:`x`, :math:`y` and :math:`z` coordinates corresponding
-to a location in 3D space.
-
-For example, temperature in 3 dimensional space (a temperature field) can be
-written as :math:`T(x, y, z)` – a scalar function of the position.
-An example of a scalar field in electromagnetism is the electric potential.
-
-In a similar manner, a vector field can be defined as a vectorial function
-of the location :math:`(x, y, z)` of any point in space.
-
-For instance, every point on the earth may be considered to be in the
-gravitational force field of the earth. We may specify the field by the
-magnitude and the direction of acceleration due to gravity
-(i.e. force per unit mass ) :math:`\vec g(x, y, z)` at every point in 
-space.
-
-To give an example from electromagnetism, consider an electric potential
-of form :math:`2{x}^{2}y`, a scalar field in 3D space. The corresponding
-conservative electric field can be computed as the gradient of the electric
-potential function, and expressed as :math:`4xy\mathbf{\hat{i}} +
-2{x}^{2}\mathbf{\hat{j}}`.
-The magnitude of this electric field can in turn be expressed
-as a scalar field of the form
-:math:`\sqrt{4{x}^{4} + 16{x}^{2}{y}^{2}}`.
-
 Implementation in sympy.vector
 ==============================
 

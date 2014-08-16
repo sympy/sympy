@@ -2,6 +2,11 @@
 Essential Functions in sympy.vector (docstrings)
 ================================================
 
+matrix_to_vector
+----------------
+
+.. autofunction:: sympy.vector.matrix_to_vector
+
 express
 -------
 
