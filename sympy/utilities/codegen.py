@@ -175,7 +175,7 @@ class Routine(object):
                     raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
                                        "can define output arguments.")
 
-                if expr.has(symbol) or isinstance(out_arg, MatrixSymbol):
+                if expr.has(symbol):
                     output_args.append(
                         InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 else:
@@ -185,10 +185,10 @@ class Routine(object):
                 # avoid duplicate arguments
                 symbols.remove(symbol)
             elif isinstance(expr, ImmutableMatrix):
-                # Create a "dummy" MatrixSymbol to use as the InOut arg
-                out_arg = MatrixSymbol('inout_%s' % abs(hash(expr)), *expr.shape)
-                dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
-                output_args.append(InOutArgument(out_arg, out_arg, expr,
+                # Create a "dummy" MatrixSymbol to use as the Output arg
+                out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
+                dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
+                output_args.append(OutputArgument(out_arg, out_arg, expr,
                         dimensions=dims))
             else:
                 return_val.append(Result(expr))
@@ -591,11 +591,8 @@ class CCodeGen(CodeGen):
         type_args = []
         for arg in routine.arguments:
             name = ccode(arg.name)
-            if arg.dimensions:
-                dims = arg.dimensions
+            if arg.dimensions or isinstance(arg, ResultBase):
                 type_args.append((arg.get_datatype('C'), "*%s" % name))
-            elif isinstance(arg, ResultBase):
-                type_args.append((arg.get_datatype('C'), "&%s" % name))
             else:
                 type_args.append((arg.get_datatype('C'), name))
         arguments = ", ".join([ "%s %s" % t for t in type_args])
@@ -621,28 +618,41 @@ class CCodeGen(CodeGen):
 
     def _call_printer(self, routine):
         code_lines = []
+
+        # Compose a list of symbols to be dereferenced in the function
+        # body. These are the arguments that were passed by a reference
+        # pointer, excluding arrays.
+        dereference = []
+        for arg in routine.arguments:
+            if isinstance(arg, ResultBase) and not arg.dimensions:
+                dereference.append(arg.name)
+
+        return_val = None
         for result in routine.result_variables:
             if isinstance(result, Result):
-                assign_to = None
-            elif isinstance(result, (OutputArgument, InOutArgument)):
+                assign_to = routine.name + "_result"
+                t = result.get_datatype('c')
+                code_lines.append("{0} {1};\n".format(t, str(assign_to)))
+                return_val = assign_to
+            else:
                 assign_to = result.result_var
 
             try:
-                constants, not_c, c_expr = ccode(
-                    result.expr, assign_to=assign_to, human=False)
+                constants, not_c, c_expr = ccode(result.expr, human=False,
+                        assign_to=assign_to, dereference=dereference)
             except AssignmentError:
                 assign_to = result.result_var
                 code_lines.append(
                     "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
-                constants, not_c, c_expr = ccode(
-                    result.expr, assign_to=assign_to, human=False)
+                constants, not_c, c_expr = ccode(result.expr, human=False,
+                        assign_to=assign_to, dereference=dereference)
 
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
-            if assign_to:
-                code_lines.append("%s\n" % c_expr)
-            else:
-                code_lines.append("   return %s;\n" % c_expr)
+            code_lines.append("%s\n" % c_expr)
+
+        if return_val:
+            code_lines.append("   return %s;\n" % return_val)
         return code_lines
 
     def _indent_code(self, codelines):
@@ -980,7 +990,9 @@ def codegen(
     #include "test.h"
     #include <math.h>
     double f(double x, double y, double z) {
-      return x + y*z;
+      double f_result;
+      f_result = x + y*z;
+      return f_result;
     }
     >>> print(h_name)
     test.h

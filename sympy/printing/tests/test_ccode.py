@@ -366,6 +366,12 @@ def test_ccode_loops_multiple_terms():
             c == s0 + s3 + s1 + s2[:-1] or
             c == s0 + s3 + s2 + s1[:-1])
 
+
+def test_dereference_printing():
+    expr = x + y + sin(z) + z
+    assert ccode(expr, dereference=[z]) == "x + y + (*z) + sin((*z))"
+
+
 def test_Matrix_printing():
     # Test returning a Matrix
     mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
