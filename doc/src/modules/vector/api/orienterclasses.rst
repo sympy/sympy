@@ -1,6 +1,6 @@
-===================================
-Docstrings for the Orienter classes
-===================================
+=============================
+Orienter classes (docstrings)
+=============================
 
 
 Orienter

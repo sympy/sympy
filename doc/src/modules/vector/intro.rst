@@ -146,6 +146,7 @@ of the basis vectors) present in the provided vectorial expression.
 ``Integral`` also works with ``Vector`` instances, similar to
 ``Derivative``.
 
+  >>> from sympy import Integral
   >>> v1 = a*N.i + sin(a)*N.j - N.k
   >>> Integral(v1, a)
   (Integral(a, a))*N.i + (Integral(sin(a), a))*N.j + (Integral(-1, a))*N.k
@@ -249,7 +250,5 @@ respective mathematical definitions. As with ``Vector``, ``&`` and
   N.i
   >>> N.i.dot(d)
   N.j
-  >>> d.dot(N.k)
-  (N.i|N.i)
   >>> N.k ^ d
   (N.j|N.j)

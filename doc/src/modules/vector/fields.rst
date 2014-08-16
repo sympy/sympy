@@ -213,7 +213,7 @@ One, by using the ``delop`` property
   >>> C = CoordSysCartesian('C')
   >>> C.delop.dot(C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
   C.x*C.y + C.x*C.z + C.y*C.z
-  >>> (C.delop ^ C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
+  >>> (C.delop & C.x*C.y*C.z*(C.i + C.j + C.k)).doit()
   C.x*C.y + C.x*C.z + C.y*C.z
 
 Or by using the dedicated function
@@ -353,7 +353,7 @@ This computation is performed as follows in :mod:`sympy.vector`.
   >>> from sympy.vector import CoordSysCartesian, Point
   >>> from sympy.vector import scalar_potential_difference
   >>> R = CoordSysCartesian('R')
-  >>> P = R.origin.locatenew('P', 1*R.x + 2*R.y + 3*R.z)
+  >>> P = R.origin.locate_new('P', 1*R.i + 2*R.j + 3*R.k)
   >>> vectfield = 4*R.x*R.y*R.i + 2*R.x**2*R.j
   >>> scalar_potential_difference(vectfield, R, R.origin, P)
   4

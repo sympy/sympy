@@ -235,7 +235,7 @@ for re-expressing ``Dyadic`` instances.
 
   >>> d = 2*(M.i | N.j) + 3* (M.j | N.k)
   >>> express(d, M)
-  (2*cos(a))*(M.i|M.j) + (2*sin(a))*(M.i|M.i) + 3*(M.j|M.k)
+  (2*sin(a))*(M.i|M.i) + (2*cos(a))*(M.i|M.j) + 3*(M.j|M.k)
   >>> express(d, M, N)
   2*(M.i|N.j) + 3*(M.j|N.k)
 

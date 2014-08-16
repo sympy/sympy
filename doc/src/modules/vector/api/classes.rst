@@ -1,6 +1,6 @@
-===========================================
-Essential Class docstrings for sympy.vector
-===========================================
+=============================================
+Essential Classes in sympy.vector (doctrings)
+=============================================
 
 CoordSysCartesian
 =================
