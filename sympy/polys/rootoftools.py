@@ -100,8 +100,14 @@ class RootOf(Expr):
         """Construct new ``RootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
-        obj.poly = poly
+        obj.poly = PurePoly(poly)
         obj.index = index
+
+        try:
+            _reals_cache[obj.poly] = _reals_cache[poly]
+            _complexes_cache[obj.poly] = _complexes_cache[poly]
+        except KeyError:
+            pass
 
         return obj
 
