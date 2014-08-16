@@ -292,6 +292,10 @@ class _Inequality(Relational):
         evaluate = options.pop('evaluate', global_evaluate[0])
 
         if evaluate:
+            # If infinity is involved, defer to its implementation.
+            _infs = (S.Infinity, S.NegativeInfinity)
+            if lhs.has(*_infs) or rhs.has(*_infs):
+                return cls._eval_relation(lhs, rhs)
             # Try to evaluate the difference between sides.
             r = cls._eval_sides(lhs, rhs)
             if r is not None:
