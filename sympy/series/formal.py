@@ -17,7 +17,7 @@ from sympy.solvers import solve, rsolve
 
 def findgen_seq(sequence):
     """
-    Returns generator for a sequence in terms of k
+    Returns coefficient for a sequence in terms of k
 
     Examples
     ========
@@ -41,7 +41,7 @@ def findgen_seq(sequence):
 
 def findgen_rational(function, x=None):
     """
-    Returns the generator for a given rational function in x in terms of k
+    Returns the coefficient of series for a given rational function in x
 
     Examples
     ========
@@ -150,8 +150,6 @@ def simpleDE(x, function, f, order=4):
         return DE.as_numer_denom()[0]
 
     # Solve for cases from k=2
-    # Search upto 4th order DE
-    # Good enough for most functions
     for k in range(2, order+1):
         eq, DE = makeDE(k)
         eq = eq.expand()
@@ -172,10 +170,6 @@ def simpleDE(x, function, f, order=4):
 def DEtoRE(DE, r):
     """
     Converts a differential equation into a recurrence equation
-
-    Parameters:
-        DE: Function in which RE whill be expressed
-        r: Argument of recurr function
 
     Examples
     ========
@@ -350,8 +344,6 @@ def findgen(function, x=None):
             raise ValueError('x must be given for multivariate functions')
         x = syms.pop()
 
-    # Search upto 4th order DE
-    # Good enough for most functions
     for order in range(0, 5):
         diff = function.diff(x, order)
         if diff.is_rational_function():
