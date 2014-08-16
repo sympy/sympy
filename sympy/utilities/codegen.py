@@ -86,6 +86,7 @@ from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
+from sympy.matrices import MatrixSymbol, ImmutableMatrix, MatrixBase
 
 
 __all__ = [
@@ -141,7 +142,7 @@ class Routine(object):
         """
         arg_list = []
 
-        if is_sequence(expr):
+        if is_sequence(expr) and not isinstance(expr, MatrixBase):
             if not expr:
                 raise ValueError("No expression given")
             expressions = Tuple(*expr)
@@ -167,11 +168,14 @@ class Routine(object):
                 elif isinstance(out_arg, Symbol):
                     dims = []
                     symbol = out_arg
+                elif isinstance(out_arg, MatrixSymbol):
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                    symbol = out_arg
                 else:
-                    raise CodeGenError(
-                        "Only Indexed or Symbol can define output arguments")
+                    raise CodeGenError("Only Indexed, Symbol, or MatrixSymbol "
+                                       "can define output arguments.")
 
-                if expr.has(symbol):
+                if expr.has(symbol) or isinstance(out_arg, MatrixSymbol):
                     output_args.append(
                         InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 else:
@@ -180,6 +184,12 @@ class Routine(object):
 
                 # avoid duplicate arguments
                 symbols.remove(symbol)
+            elif isinstance(expr, ImmutableMatrix):
+                # Create a "dummy" MatrixSymbol to use as the InOut arg
+                out_arg = MatrixSymbol('inout_%s' % abs(hash(expr)), *expr.shape)
+                dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
+                output_args.append(InOutArgument(out_arg, out_arg, expr,
+                        dimensions=dims))
             else:
                 return_val.append(Result(expr))
 
@@ -187,6 +197,8 @@ class Routine(object):
         array_symbols = {}
         for array in expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
+        for array in expressions.atoms(MatrixSymbol):
+            array_symbols[array] = array
 
         for symbol in sorted(symbols, key=str):
             if symbol in array_symbols:
@@ -277,6 +289,11 @@ def get_default_datatype(expr):
     """Derives a decent data type based on the assumptions on the expression."""
     if expr.is_integer:
         return default_datatypes["int"]
+    elif isinstance(expr, MatrixBase):
+        for element in expr:
+            if not element.is_integer:
+                return(default_datatypes["float"])
+        return default_datatypes["int"]
     else:
         return default_datatypes["float"]
 
@@ -287,7 +304,7 @@ class Variable(object):
     def __init__(self, name, datatype=None, dimensions=None, precision=None):
         """Initializes a Variable instance
 
-           name  --  must be of class Symbol
+           name  --  must be of class Symbol or MatrixSymbol
            datatype  --  When not given, the data type will be guessed based
                          on the assumptions on the symbol argument.
            dimension  --  If present, the argument is interpreted as an array.
@@ -295,7 +312,7 @@ class Variable(object):
                           (lower, upper) bounds for each index of the array
            precision  --  FIXME
         """
-        if not isinstance(name, Symbol):
+        if not isinstance(name, (Symbol, MatrixSymbol)):
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
@@ -382,6 +399,8 @@ class InOutArgument(Argument, ResultBase):
     def __init__(self, name, result_var, expr, datatype=None, dimensions=None, precision=None):
         """ See docstring of Variable.__init__
         """
+        if not datatype:
+            datatype = get_default_datatype(expr)
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
 
@@ -403,7 +422,7 @@ class Result(ResultBase):
         if not isinstance(expr, Expr):
             raise TypeError("The first argument must be a sympy expression.")
 
-        temp_var = Variable(Symbol('result_%s' % hash(expr)),
+        temp_var = Variable(Symbol('result_%s' % abs(hash(expr))),
                 datatype=datatype, dimensions=None, precision=precision)
         ResultBase.__init__(self, expr, temp_var.name)
         self._temp_variable = temp_var
@@ -573,7 +592,13 @@ class CCodeGen(CodeGen):
         for arg in routine.arguments:
             name = ccode(arg.name)
             if arg.dimensions:
-                type_args.append((arg.get_datatype('C'), "*%s" % name))
+                dims = arg.dimensions
+                if isinstance(arg.name, MatrixSymbol):
+                    type_args.append((arg.get_datatype('C'),
+                            "{:}[{:}][{:}]".format(name, dims[0][1] + 1,
+                            dims[1][1] + 1)))
+                else:
+                    type_args.append((arg.get_datatype('C'), "*%s" % name))
             elif isinstance(arg, ResultBase):
                 type_args.append((arg.get_datatype('C'), "&%s" % name))
             else:

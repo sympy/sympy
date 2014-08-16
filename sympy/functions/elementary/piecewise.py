@@ -514,7 +514,7 @@ class Piecewise(Function):
 
     def as_expr_set_pairs(self):
         exp_sets = []
-        U = S.UniversalSet
+        U = S.Reals
         for expr, cond in self.args:
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int

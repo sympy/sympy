@@ -973,13 +973,21 @@ def evalf_integral(expr, prec, options):
     maxprec = options.get('maxprec', INF)
     while 1:
         result = do_integral(expr, workprec, options)
-        # if a scaled_zero comes back accuracy will compute to -1
-        # which will cause workprec to increment by 1
         accuracy = complex_accuracy(result)
-        if accuracy >= prec or workprec >= maxprec:
-            return result
-        workprec += prec - max(-2**i, accuracy)
+        if accuracy >= prec:  # achieved desired precision
+            break
+        if workprec >= maxprec:  # can't increase accuracy any more
+            break
+        if accuracy == -1:
+            # maybe the answer really is zero and maybe we just haven't increased
+            # the precision enough. So increase by doubling to not take too long
+            # to get to maxprec.
+            workprec *= 2
+        else:
+            workprec += max(prec, 2**i)
+        workprec = min(workprec, maxprec)
         i += 1
+    return result
 
 
 def check_convergence(numer, denom, n):

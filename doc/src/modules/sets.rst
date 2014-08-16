@@ -40,6 +40,11 @@ ProductSet
 .. autoclass:: ProductSet
    :members:
 
+Complement
+^^^^^^^^^^
+.. autoclass:: Complement
+   :members:
+
 Singleton Sets
 --------------
 

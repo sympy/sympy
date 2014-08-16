@@ -23,9 +23,9 @@ def test_reduce_poly_inequalities_real_interval():
         assert reduce_rational_inequalities(
             [[Ge(x**2, 0)]], x, relational=False) == Interval(-oo, oo)
         assert reduce_rational_inequalities(
-            [[Gt(x**2, 0)]], x, relational=False) == FiniteSet(0).complement
+            [[Gt(x**2, 0)]], x, relational=False) == FiniteSet(0).complement(S.Reals)
         assert reduce_rational_inequalities(
-            [[Ne(x**2, 0)]], x, relational=False) == FiniteSet(0).complement
+            [[Ne(x**2, 0)]], x, relational=False) == FiniteSet(0).complement(S.Reals)
 
         assert reduce_rational_inequalities(
             [[Eq(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1)
@@ -35,9 +35,9 @@ def test_reduce_poly_inequalities_real_interval():
             [[Lt(x**2, 1)]], x, relational=False) == Interval(-1, 1, True, True)
         assert reduce_rational_inequalities([[Ge(x**2, 1)]], x, relational=False) == Union(Interval(-oo, -1), Interval(1, oo))
         assert reduce_rational_inequalities(
-            [[Gt(x**2, 1)]], x, relational=False) == Interval(-1, 1).complement
+            [[Gt(x**2, 1)]], x, relational=False) == Interval(-1, 1).complement(S.Reals)
         assert reduce_rational_inequalities(
-            [[Ne(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1).complement
+            [[Ne(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1).complement(S.Reals)
         assert reduce_rational_inequalities([[Eq(
             x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).evalf()
         assert reduce_rational_inequalities(
@@ -47,7 +47,7 @@ def test_reduce_poly_inequalities_real_interval():
         assert reduce_rational_inequalities([[Ge(x**2, 1.0)]], x, relational=False) == Union(Interval(-inf, -1.0), Interval(1.0, inf))
         assert reduce_rational_inequalities([[Gt(x**2, 1.0)]], x, relational=False) == Union(Interval(-inf, -1.0, right_open=True), Interval(1.0, inf, left_open=True))
         assert reduce_rational_inequalities([[Ne(
-            x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).complement
+            x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).complement(S.Reals)
 
         s = sqrt(2)
 
