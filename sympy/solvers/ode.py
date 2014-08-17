@@ -381,13 +381,17 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
 def dsolve(eq, func=None, hint="default", simplify=True,
     ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
-    Solves any (supported) kind of ordinary differential equation.
+    Solves any (supported) kind of ordinary differential equation and
+    system of ordinary differential equations.
 
+    For single ordinary differential equation
+    =========================================
+
+    It is classified under this when number of equation in ``eq`` is one.
     **Usage**
 
         ``dsolve(eq, f(x), hint)`` -> Solve ordinary differential equation
         ``eq`` for function ``f(x)``, using method ``hint``.
-
 
     **Details**
 
@@ -520,10 +524,35 @@ def dsolve(eq, func=None, hint="default", simplify=True,
           specific hint, where ``<hintname>`` is the name of a hint without
           ``_Integral``.
 
+    For system of ordinary differential equations
+    =============================================
+
+   **Usage**
+        ``dsolve(eq, func)`` -> Solve a system of ordinary differential
+        equations ``eq`` for ``func`` being list of functions including
+        `x(t)`, `y(t)`, `z(t)` where number of functions in the list depends
+        upon the number of equations provided in ``eq``.
+
+    **Details**
+
+        ``eq`` can be any supported system of ordinary differential equations
+        This can either be an :py:class:`~sympy.core.relational.Equality`,
+        or an expression, which is assumed to be equal to ``0``.
+
+        ``func`` holds ``x(t)`` and ``y(t)`` being functions of one variable which
+        together with some of their derivatives make up the system of ordinary
+        differential equation ``eq``. It is not necessary to provide this; it
+        will be autodetected (and an error raised if it couldn't be detected).
+
+    **Hints**
+
+        The hints are formed by parameters returned by classify_sysode, combining
+        them give hints name used later for forming method name.
+
     Examples
     ========
 
-    >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
+    >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos, symbols
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
@@ -535,6 +564,16 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='almost_linear')
     [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
     f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
+    >>> t = symbols('t')
+    >>> x, y = symbols('x, y', function=True)
+    >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))
+    >>> dsolve(eq)
+    [x(t) == C1*x0 + C2*x0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t),
+    y(t) == C1*y0 + C2(y0*Integral(8*exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0**2, t) +
+    exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0)]
+    >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
+    >>> dsolve(eq)
+    set([x(t) == -exp(C1)/(C2*exp(C1) - cos(t)), y(t) == -1/(C1 - cos(t))])
     """
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -564,7 +603,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
+                if match['no_of_equation'] > 3:
+                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
+                else:
+                    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
             sols = solvefunc(match)
@@ -1424,15 +1466,11 @@ def classify_sysode(eq, funcs=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_2eq_order1(eq, funcs, func_coef)
-                elif order_eq == 2:
-                    type_of_equation = check_nonlinear_2eq_order2(eq, funcs, func_coef)
                 else:
                     type_of_equation = None
             elif matching_hints['no_of_equation'] == 3:
                 if order_eq == 1:
                     type_of_equation = check_nonlinear_3eq_order1(eq, funcs, func_coef)
-                elif order_eq == 2:
-                    type_of_equation = check_nonlinear_3eq_order2(eq, funcs, func_coef)
                 else:
                     type_of_equation = None
             else:
@@ -1642,11 +1680,7 @@ def check_linear_3eq_order1(eq, func, func_coef):
                     return 'type4'
                 else:
                     break
-        if r['c1'] == -r['b2'] and r['d1'] == -r['b3'] and r['d2'] == -r['c3'] \
-        and r['b1'] == r['c2'] == r['d3'] == 0:
-            return 'type5'
-        else:
-            return None
+    return None
 
 def check_linear_neq_order1(eq, func, func_coef):
     x = func[0].func
@@ -1732,6 +1766,7 @@ def check_nonlinear_2eq_order1(eq, func, func_coef):
     if R1 and R2:
         return 'type4'
     return None
+
 
 def check_nonlinear_2eq_order2(eq, func, func_coef):
     return None
@@ -1820,8 +1855,58 @@ def check_nonlinear_3eq_order2(eq, func, func_coef):
     return None
 
 
-
 def checksysodesol(eqs, sols, func=None):
+    r"""
+    Substitutes corresponding ``sols`` for each functions into each ``eqs`` and
+    checks that the result of substitutions for each equation is ``0``. The
+    equations and solutions passed can be any iterable.
+
+    This only works when each ``sols`` have one function only, like `x(t)` or `y(t)`.
+    For each function, ``sols`` can have a single solution or a list of solutions.
+    In most cases it will not be necessary to explicitly identify the function,
+    but if the function cannot be inferred from the original equation it
+    can be supplied through the ``func`` argument.
+
+    When a sequence of equations is passed, the same sequence is used to return
+    the result for each equation with each function substitued with corresponding
+    solutions.
+
+    It tries the following method to find zero equivalence for each equation:
+
+    Substitute the solutions for functions, like `x(t)` and `y(t)` into the
+    original equations containing those functions.
+    This function returns a tuple.  The first item in the tuple is ``True`` if
+    the substitution results for each equation is ``0``, and ``False`` otherwise.
+    The second item in the tuple is what the substitution results in.  Each element
+    of the ``list`` should always be ``0`` corresponding to each equation if the
+    first item is ``True``. Note that sometimes this function may return ``False``,
+    but with an expression that is identically equal to ``0``, instead of returning
+    ``True``.  This is because :py:meth:`~sympy.simplify.simplify.simplify` cannot
+    reduce the expression to ``0``.  If an expression returned by each function
+    vanishes identically, then ``sols`` really is a solution to ``eqs``.
+
+    If this function seems to hang, it is probably because of a difficult simplification.
+
+    Examples
+    ========
+
+    >>> from sympy import Eq, diff, symbols, sin, cos, exp, sqrt, S
+    >>> from sympy.solvers.ode import checksysodesol
+    >>> C1, C2 = symbols('C1:3')
+    >>> t = symbols('t')
+    >>> x, y = symbols('x, y', function=True)
+    >>> eq = (Eq(diff(x(t),t), x(t) + y(t) + 17), Eq(diff(y(t),t), -2*x(t) + y(t) + 12))
+    >>> sol = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - S(5)/3),
+    ... Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - S(46)/3)]
+    >>> checksysodesol(eq, sol)
+    (True, [0, 0])
+    >>> eq = (Eq(diff(x(t),t),x(t)*y(t)**4), Eq(diff(y(t),t),y(t)**3))
+    >>> sol = [Eq(x(t), C1*exp(-1/(4*(C2 + t)))), Eq(y(t), -sqrt(2)*sqrt(-1/(C2 + t))/2),
+    ... Eq(x(t), C1*exp(-1/(4*(C2 + t)))), Eq(y(t), sqrt(2)*sqrt(-1/(C2 + t))/2)]
+    >>> checksysodesol(eq, sol)
+    (True, [0, 0])
+
+    """
     def _sympify(eq):
         return list(map(sympify, eq if iterable(eq) else [eq]))
     eqs = _sympify(eqs)
@@ -7361,8 +7446,6 @@ def sysode_linear_3eq_order1(match_):
         sol = _linear_3eq_order1_type3(x, y, z, t, r)
     if match_['type_of_equation'] == 'type4':
         sol = _linear_3eq_order1_type4(x, y, z, t, r)
-    if match_['type_of_equation'] == 'type5':
-        sol = _linear_3eq_order1_type5(x, y, z, t, r)
     if match_['type_of_equation'] == 'type6':
         sol = _linear_neq_order1_type1(match_)
     return sol
@@ -7523,9 +7606,6 @@ def _linear_3eq_order1_type4(x, y, z, t, r):
     sol2 = exp(C.Integral(g,t))*((sol[1].rhs).subs(t, C.Integral(f,t)))
     sol3 = exp(C.Integral(g,t))*((sol[2].rhs).subs(t, C.Integral(f,t)))
     return [Eq(x(t), sol1), Eq(y(t), sol2), Eq(z(t), sol3)]
-
-def _linear_3eq_order1_type5(x, y, z, t, r):
-    return None
 
 def sysode_linear_neq_order1(match_):
     sol = _linear_neq_order1_type1(match_)
