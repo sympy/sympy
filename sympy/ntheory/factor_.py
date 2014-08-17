@@ -1322,14 +1322,14 @@ def _antidivisors(n):
 def antidivisors(n, generator=False):
     r"""
     Return all antidivisors of n sorted from 1..n by default.
+
     Antidivisors of n are numbers that do not divide n by the largest
-    possible margin.
-    If generator is True an unordered generator is returned.
+    possible margin. If generator is True an unordered generator is returned.
 
     References
     ==========
 
-    - [1] definition is described in http://oeis.org/A066272/a066272a.html
+    .. [1] definition is described in http://oeis.org/A066272/a066272a.html
 
     Examples
     ========
@@ -1345,7 +1345,7 @@ def antidivisors(n, generator=False):
     See Also
     ========
 
-    primefactors, factorint, divisors, divisor_count
+    primefactors, factorint, divisors, divisor_count, antidivisor_count
     """
 
     n = as_int(abs(n))
@@ -1364,7 +1364,7 @@ def antidivisor_count(n):
     References
     ==========
 
-    - [1] formula from https://oeis.org/A066272
+    .. [1] formula from https://oeis.org/A066272
 
     Examples
     ========
