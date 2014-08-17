@@ -10,10 +10,10 @@ Vectors and Scalars
 
 In vector math, we deal with two kinds of quantities – scalars and vectors.
 
-A scalar is an entity which only has a magnitude – no direction. Examples of
+A **scalar** is an entity which only has a magnitude – no direction. Examples of
 scalar quantities include mass, electric charge, temperature, distance, etc.
 
-A vector, on the other hand, is an entity that is characterized by a
+A **vector**, on the other hand, is an entity that is characterized by a
 magnitude and a direction. Examples of vector quantities are displacement,
 velocity, magnetic field, etc.
 
@@ -40,7 +40,7 @@ m = :math:`5\sqrt{2}` m. The direction of travel is given by the unit vector
 Coordinate Systems
 ==================
 
-A coordinate system is an abstract mathematical entity used to define
+A **coordinate system** is an abstract mathematical entity used to define
 the notion of directions and locations in n-dimensional spaces. This
 module deals with 3-dimensional spaces, with the conventional :math:`X`, 
 :math:`Y` and :math:`Z` directions (or axes) defined with respect 
@@ -79,7 +79,7 @@ the position vector of one system's origin with respect to the other.
 Fields
 ======
 
-A field is a vector or scalar quantity that can be
+A **field** is a vector or scalar quantity that can be
 specified everywhere in space as a function of position (Note that in general
 a field may also be dependent on time and other custom variables). Since we 
 only deal with 3D spaces in this module, a field is defined as a function of 

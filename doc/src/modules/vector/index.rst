@@ -18,6 +18,7 @@ Guide to Vector
     basics.rst
     coordsys.rst
     fields.rst
+    examples.rst
 
 Vector API
 ==========
