@@ -105,33 +105,40 @@ class Integral(AddWithLimits):
         """
         return AddWithLimits.free_symbols.fget(self)
 
-    @property
-    def is_zero(self):
-        """Since Integral doesn't autosimplify, it is useful to see if
-        it would simplify to zero or not in a trivial manner.
-
-        This is a very naive and quick test, not intended to check for special
-        patterns like Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)) == 0 or even
-        test if the upper and lower limits are the same. So even though it
-        is zero in those cases, None is returned instead.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, y, z
-        >>> Integral(0, (x, y, z)).is_zero
-        True
-        >>> Integral(1, (x, 1, 2)).is_zero
-        >>> Integral(1, (x, 1, 1)).is_zero
-
-        See Also
-        ========
-
-        is_number
-        """
+    def _eval_is_zero(self):
+        # This is a very naive and quick test, not intended to do the integral to
+        # answer whether it is zero or not, e.g. Integral(sin(x), (x, 0, 2*pi))
+        # is zero but this routine should return None for that case. But, like
+        # Mul, there are trivial situations for which the integral will be
+        # zero so we check for those.
         if self.function.is_zero:
             return True
+        got_none = False
+        for l in self.limits:
+            if len(l) == 3:
+                z = (l[1] - l[2]).is_zero
+                if z:
+                    return True
+                elif z is None:
+                    got_none = True
+        free = self.function.free_symbols
+        for xab in self.limits:
+            if len(xab) == 1:
+                free.add(xab[0])
+                continue
+            if len(xab) == 2 and xab[0] not in free:
+                if xab[1].is_zero:
+                    return True
+                elif xab[1].is_zero is None:
+                    got_none = True
+            # take integration symbol out of free since it will be replaced
+            # with the free symbols in the limits
+            free.discard(xab[0])
+            # add in the new symbols
+            for i in xab[1:]:
+                free.update(i.free_symbols)
+        if self.function.is_zero is False and got_none is False:
+            return False
 
     @property
     def is_number(self):
@@ -388,23 +395,9 @@ class Integral(AddWithLimits):
         if risch and any(len(xab) > 1 for xab in self.limits):
             raise ValueError('risch=True is only allowed for indefinite integrals.')
 
-        # check for the trivial case
-        if (self.is_zero or
-                any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
+        # check for the trivial zero
+        if self.is_zero:
             return S.Zero
-        free = self.function.free_symbols
-        for xab in self.limits:
-            if len(xab) == 1:
-                free.add(xab[0])
-                continue
-            if len(xab) == 2 and xab[1].is_zero and xab[0] not in free:
-                return S.Zero
-            # take integration symbol out of free since it will be replaced
-            # with the free symbols in the limits
-            free.discard(xab[0])
-            # add in the new symbols
-            for i in xab[1:]:
-                free.update(i.free_symbols)
 
         # now compute and check the function
         function = self.function

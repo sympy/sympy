@@ -527,7 +527,8 @@ def test_subs5():
     e = Integral(exp(-x**2), (x, x))
     assert e.subs(x, 5) == Integral(exp(-x**2), (x, 5))
     e = Integral(exp(x), x)
-    assert (e.subs(x,1)-e.subs(x,0) - Integral(exp(x),(x,0,1))).doit().is_zero
+    assert (e.subs(x,1) - e.subs(x,0) - Integral(exp(x), (x, 0, 1))
+        ).doit().is_zero
 
 
 def test_subs6():
@@ -721,13 +722,19 @@ def test_symbols():
 
 
 def test_is_zero():
-    from sympy.abc import x, m, n
+    from sympy.abc import x, m
     assert Integral(0, (x, 1, x)).is_zero
-    # these are zero but these cases are beyond the scope of what is_zero
+    assert Integral(1, (x, 1, 1)).is_zero
+    assert Integral(1, (x, 1, 2), (y, 2)).is_zero is False
+    assert Integral(x, (m, 0)).is_zero
+    assert Integral(x + m, (m, 0)).is_zero is None
+    i = Integral(m, (m, 1, exp(x)), (x, 0))
+    assert i.is_zero is None
+    assert Integral(m, (x, 0), (m, 1, exp(x))).is_zero is True
+
+    # this is zero but is beyond the scope of what is_zero
     # should be doing
-    assert Integral(1, (x, 1, 1)).is_zero is None
-    assert Integral(1, (x, 1, 2)).is_zero is None
-    assert Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)).is_zero is None
+    assert Integral(sin(x), (x, 0, 2*pi)).is_zero is None
 
 
 def test_series():
