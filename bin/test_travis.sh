@@ -52,6 +52,12 @@ if not (sympy.test('sympy/polys/', 'sympy/plotting') and
         sympy.doctest('sympy/polys/', 'sympy/plotting')):
     raise Exception('Tests failed')
 EOF
+    elif [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+        cat << EOF | python
+import sympy
+if not sympy.test('sympy/external/tests/test_autowrap.py'):
+    raise Exception('Tests failed')
+EOF
     else
         cat << EOF | python
 import sympy
