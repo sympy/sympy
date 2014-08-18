@@ -4,8 +4,8 @@ from sympy.utilities.pytest import raises
 
 from sympy.logic.boolalg import (And, Implies, Or, Xor, to_cnf, to_dnf, true)
 from sympy.logic.FOL import (AppliedFunction, AppliedPredicate, Constant,
-    entails, Exists, fol_true, ForAll, Function, mgu, Predicate, resolve,
-    standardize, to_pnf, to_snf)
+    entails, Exists, fol_true, FOL_KB, ForAll, Function, mgu, Predicate,
+    resolve, standardize, to_pnf, to_snf)
 
 from sympy.abc import X, Y, Z
 
@@ -243,3 +243,18 @@ def test_entails():
     ]
     assert entails(Kills(Jack, Tuna), clauses) is False
     assert entails(Kills(Curiosity, Tuna), clauses) is True
+
+
+def test_FOL_KB():
+    KB = FOL_KB()
+    Knows = Predicate('Knows')
+    P = Constant('P')
+    Q = Constant('Q')
+    R = Constant('R')
+    KB.tell((Knows(X, Y) & Knows(Y, Z)) >> Knows(X, Z))
+    KB.tell(Knows(P, Q))
+    KB.tell(Knows(Q, R))
+    assert KB.ask(Knows(P, Q))
+    assert KB.ask(Knows(Q, R))
+    assert KB.ask(Knows(P, R))
+    assert not KB.ask(Knows(R, P))
