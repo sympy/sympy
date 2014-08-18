@@ -130,12 +130,23 @@ def test_ccode_Piecewise():
 """
     assert p == s
     assert ccode(expr, assign_to="c") == (
-    "if (x < 1) {\n"
-    "   c = x;\n"
-    "}\n"
-    "else {\n"
-    "   c = pow(x, 2);\n"
-    "}")
+            "if (x < 1) {\n"
+            "   c = x;\n"
+            "}\n"
+            "else {\n"
+            "   c = pow(x, 2);\n"
+            "}")
+    p = ccode(Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)), assign_to='c')
+    assert p == (
+            "if (x < 1) {\n"
+            "   c = x;\n"
+            "}\n"
+            "else if (x < 2) {\n"
+            "   c = x + 1;\n"
+            "}\n"
+            "else {\n"
+            "   c = pow(x, 2);\n"
+            "}")
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: ccode(expr))
@@ -156,6 +167,21 @@ def test_ccode_Piecewise_deep():
 )))\
 """
     assert p == s
+    expr = x*y*z + x**2 + y**2 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
+    assert ccode(expr) == (
+            "pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1")
+    assert ccode(expr, assign_to='c') == (
+            "c = pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1;")
 
 
 def test_ccode_settings():
