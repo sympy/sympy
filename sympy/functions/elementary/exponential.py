@@ -647,12 +647,7 @@ class log(Function):
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
         #     without it. There's probably a nicer way though.
-        if self.args[0] is S.One:
-            return True
-        elif self.args[0].is_number:
-            return self.args[0].expand() is S.One
-        elif self.args[0].is_negative:
-            return False
+        return (self.args[0] - 1).is_zero
 
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
