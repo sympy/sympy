@@ -21,12 +21,15 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5)) == Range(1, 6)
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
+    assert N.boundary == N
+
     assert N.inf == 1
     assert N.sup == oo
 
 def test_naturals0():
     N = S.Naturals0
     assert 0 in N
+    assert -1 not in N
     assert next(iter(N)) == 0
 
 def test_integers():
@@ -44,6 +47,8 @@ def test_integers():
 
     assert Z.inf == -oo
     assert Z.sup == oo
+
+    assert Z.boundary == Z
 
 
 def test_ImageSet():
@@ -105,6 +110,8 @@ def test_Range():
     assert list(Range(0, 5)) == list(range(5))
     assert list(Range(5, 0, -1)) == list(range(1, 6))
 
+    assert Range(0, 10, -1) == S.EmptySet
+
     assert Range(5, 15).sup == 14
     assert Range(5, 15).inf == 5
     assert Range(15, 5, -1).sup == 15
@@ -119,6 +126,7 @@ def test_Range():
     raises(ValueError, lambda: Range(0, oo, oo))
     raises(ValueError, lambda: Range(-oo, oo))
     raises(ValueError, lambda: Range(-oo, oo, 2))
+    raises(ValueError, lambda: Range(0, pi, 1))
 
     assert 5 in Range(0, oo, 5)
     assert -5 in Range(-oo, 0, 5)
@@ -132,6 +140,14 @@ def test_Range():
 
     it = iter(Range(-oo, 0, 2))
     assert (next(it), next(it)) == (-2, -4)
+
+    assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
+
+    assert Range(1, 10, 1)._ith_element(5) == 6 # the index starts from zero
+    assert Range(1, 10, 1)._last_element == 9
+
+    assert Range(1, 10, 1).boundary == Range(1, 10, 1)
 
 
 def test_range_interval_intersection():

@@ -1310,9 +1310,9 @@ class Intersection(Set):
 
         for s in args:
             if s.is_Complement:
-                other_sets = set(args) - set((s,))
-                other = Intersection(other_sets)
-                return Complement(Intersection(*list(other_sets)), s)
+                other_sets = args + [s.args[0]]
+                other_sets.remove(s)
+                return Complement(Intersection(*other_sets), s.args[1])
 
         # At this stage we are guaranteed not to have any
         # EmptySets, FiniteSets, or Unions in the intersection
