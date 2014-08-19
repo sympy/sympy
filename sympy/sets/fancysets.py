@@ -50,8 +50,7 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.positive(other)) and ask(Q.integer(other)):
+        if other.is_positive and other.is_integer:
             return True
         return False
 
@@ -78,8 +77,7 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.negative(other)) == False and ask(Q.integer(other)):
+        if other.is_negative is False and other.is_integer:
             return True
         return False
 
@@ -126,8 +124,7 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.integer(other)):
+        if other.is_integer:
             return True
         return False
 
@@ -376,10 +373,9 @@ class Range(Set):
         return None
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
         return (other >= self.inf and other <= self.sup and
-                (ask(Q.integer((self.start - other)/self.step)) or
-                 ask(Q.integer((self.stop - other)/self.step))))
+                (((self.start - other)/self.step).is_integer or
+                 ((self.stop - other)/self.step).is_integer))
 
     def __iter__(self):
         if self.start is S.NegativeInfinity:

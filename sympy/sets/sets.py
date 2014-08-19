@@ -492,12 +492,10 @@ class Set(Basic):
         return Complement(self, other)
 
     def __contains__(self, other):
-        from sympy.assumptions import ask
         symb = self.contains(other)
-        result = ask(symb)
-        if result is None:
+        if symb != True and symb != False:
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
-        return result
+        return symb
 
     @property
     def is_real(self):
@@ -893,8 +891,7 @@ class Interval(Set, EvalfMixin):
         return FiniteSet(self.start, self.end)
 
     def _contains(self, other):
-        from sympy.assumptions.ask import ask, Q
-        if ask(Q.real(other)) is False:
+        if other.is_real is False:
             return False
 
         if self.left_open:
