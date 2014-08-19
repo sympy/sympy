@@ -91,7 +91,7 @@ def valid(expr):
     return not satisfiable(Not(expr))
 
 
-def pl_true(expr, model={}):
+def pl_true(expr, model={}, deep=False):
     """
     Return True if the propositional logic expression is true in the model,
     and False if it is false. If the model does not specify the value for
@@ -109,58 +109,22 @@ def pl_true(expr, model={}):
     True
 
     """
-
     if isinstance(expr, bool):
         return expr
-
     expr = sympify(expr)
-
-    if expr.is_Symbol:
-        return model.get(expr)
-
-    args = expr.args
-    func = expr.func
-
-    if func is Not:
-        p = pl_true(args[0], model)
-        if p is None:
-            return None
-        else:
-            return not p
-    elif func is Or:
-        result = False
-        for arg in args:
-            p = pl_true(arg, model)
-            if p is True:
+    model = dict((k, v) for k, v in model.items() if v == True or v == False)
+    result = expr.subs(model)
+    if result == True or result == False:
+        return bool(result)
+    if deep:
+        model = dict((k, True) for k in result.atoms())
+        if pl_true(result, model):
+            if valid(expr):
                 return True
-            if p is None:
-                result = None
-        return result
-    elif func is And:
-        result = True
-        for arg in args:
-            p = pl_true(arg, model)
-            if p is False:
+        else:
+            if not satisfiable(expr):
                 return False
-            if p is None:
-                result = None
-        return result
-
-    elif func is Implies:
-        p, q = args
-        return pl_true(Or(Not(p), q), model)
-
-    elif func is Equivalent:
-        p, q = args
-        pt = pl_true(p, model)
-        if pt is None:
-            return None
-        qt = pl_true(q, model)
-        if qt is None:
-            return None
-        return pt == qt
-    else:
-        raise ValueError("Illegal operator in logic expression" + str(expr))
+    return None
 
 
 def entails(expr, formula_set={}):
