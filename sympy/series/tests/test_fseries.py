@@ -7,18 +7,18 @@ from sympy.abc import x, k, m, n
 def test_simpleDE():
     f = Function('f')
 
-    assert simpleDE(x, sin(x), f) == f(x) + Derivative(f(x), x, x)
-    assert simpleDE(x, exp(x), f) == -f(x) + Derivative(f(x), x)
-    assert simpleDE(x, sin(x)*exp(x), f) == 2*f(x) - 2*Derivative(f(x), x) + Derivative(f(x), x, x)
-    assert simpleDE(x, airyai(x), f) == -x*f(x) + Derivative(f(x), x, x)
-    assert simpleDE(x, asin(x), f) == x*Derivative(f(x), x) + (x**2 - 1)*Derivative(f(x), x, x)
-    assert simpleDE(x, asin(x**5), f) == (x**10 + 4)*Derivative(f(x), x) + x*(x**10 - 1)*Derivative(f(x), x, x)
-    assert simpleDE(x, asin(x)**3, f) == x**4*Derivative(f(x), x, x, x, x) + 6*x**3*Derivative(f(x), x, x, x) + \
+    assert simpleDE(sin(x), f) == f(x) + Derivative(f(x), x, x)
+    assert simpleDE(exp(x), f) == -f(x) + Derivative(f(x), x)
+    assert simpleDE(sin(x)*exp(x), f) == 2*f(x) - 2*Derivative(f(x), x) + Derivative(f(x), x, x)
+    assert simpleDE(airyai(x), f) == -x*f(x) + Derivative(f(x), x, x)
+    assert simpleDE(asin(x), f) == x*Derivative(f(x), x) + (x**2 - 1)*Derivative(f(x), x, x)
+    assert simpleDE(asin(x**5), f) == (x**10 + 4)*Derivative(f(x), x) + x*(x**10 - 1)*Derivative(f(x), x, x)
+    assert simpleDE(asin(x)**3, f) == x**4*Derivative(f(x), x, x, x, x) + 6*x**3*Derivative(f(x), x, x, x) + \
             7*x**2*Derivative(f(x), x, x) - 2*x**2*Derivative(f(x), x, x, x, x) + x*Derivative(f(x), x) - \
             6*x*Derivative(f(x), x, x, x) - 4*Derivative(f(x), x, x) + Derivative(f(x), x, x, x, x)
-    assert simpleDE(x, x**n*exp(m*x), f) == x*Derivative(f(x), x) - (m*x + n)*f(x)
-    assert simpleDE(x, ((1+x)/(1-x))**n, f) == 2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
-    assert simpleDE(x, exp(m*x)*sin(n*x), f) == -2*m*Derivative(f(x), x) + (m**2 + n**2)*f(x) + Derivative(f(x), x, x)
+    assert simpleDE(x**n*exp(m*x), f, x) == x*Derivative(f(x), x) - (m*x + n)*f(x)
+    assert simpleDE(((1+x)/(1-x))**n, f, x) == 2*n*f(x) + (x**2 - 1)*Derivative(f(x), x)
+    assert simpleDE(exp(m*x)*sin(n*x), f, x) == -2*m*Derivative(f(x), x) + (m**2 + n**2)*f(x) + Derivative(f(x), x, x)
 
 
 def test_DEtoRE():
