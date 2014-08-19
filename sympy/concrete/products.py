@@ -218,10 +218,8 @@ class Product(ExprWithIntLimits):
         """
         return self._free_symbols()
 
-    @property
-    def is_zero(self):
-        """A Product is zero only if its term is zero.
-        """
+    def _eval_is_zero(self):
+        # a Product is zero only if its term is zero.
         return self.term.is_zero
 
     @property
