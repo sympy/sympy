@@ -1075,19 +1075,13 @@ class Ellipse(GeometryEntity):
         if det == 0:
             t = -b / a
             result.append(lp[0] + (lp[1] - lp[0]) * t)
-        else:
-            is_good = True
-            try:
-                is_good = (det > 0)
-            except NotImplementedError:  # symbolic, allow
-                is_good = True
-
-            if is_good:
-                root = sqrt(det)
-                t_a = (-b - root) / a
-                t_b = (-b + root) / a
-                result.append( lp[0] + (lp[1] - lp[0]) * t_a )
-                result.append( lp[0] + (lp[1] - lp[0]) * t_b )
+        # Definite and potential symbolic intersections are allowed.
+        elif (det > 0) != False:
+            root = sqrt(det)
+            t_a = (-b - root) / a
+            t_b = (-b + root) / a
+            result.append( lp[0] + (lp[1] - lp[0]) * t_a )
+            result.append( lp[0] + (lp[1] - lp[0]) * t_b )
 
         return [r for r in result if r in o]
 
