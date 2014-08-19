@@ -155,36 +155,8 @@ class Sum(AddWithLimits,ExprWithIntLimits):
 
     @property
     def is_number(self):
-        """
-        Return True if the Sum will result in a number, else False.
-
-        Sums are a special case since they contain symbols that can
-        be replaced with numbers. Whether the sum can be done or not in
-        closed form is another issue. But answering whether the final
-        result is a number is not difficult.
-
-        Examples
-        ========
-
-        >>> from sympy import Sum
-        >>> from sympy.abc import x, y
-        >>> Sum(x, (y, 1, x)).is_number
-        False
-        >>> Sum(1, (y, 1, x)).is_number
-        False
-        >>> Sum(0, (y, 1, x)).is_number
-        True
-        >>> Sum(x, (y, 1, 2)).is_number
-        False
-        >>> Sum(x, (y, 1, 1)).is_number
-        False
-        >>> Sum(x, (x, 1, 2)).is_number
-        True
-        >>> Sum(x*y, (x, 1, 2), (y, 1, 3)).is_number
-        True
-        """
-
-        return self.function.is_zero or not self.free_symbols
+        """Return True if the Sum has no free symbols, else False."""
+        return not self.free_symbols
 
     def doit(self, **hints):
         if hints.get('deep', True):
