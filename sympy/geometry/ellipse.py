@@ -497,18 +497,27 @@ class Ellipse(GeometryEntity):
     def rotate(self, angle=0, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
 
-        Note: since the general ellipse is not supported, the axes of
-        the ellipse will not be rotated. Only the center is rotated to
-        a new position.
+        Note: since the general ellipse is not supported, only rotations that
+        are integer multiples of pi/2 are allowed.
 
         Examples
         ========
 
         >>> from sympy import Ellipse, pi
         >>> Ellipse((1, 0), 2, 1).rotate(pi/2)
-        Ellipse(Point(0, 1), 2, 1)
+        Ellipse(Point(0, 1), 1, 2)
+        >>> Ellipse((1, 0), 2, 1).rotate(pi)
+        Ellipse(Point(-1, 0), 2, 1)
         """
-        return super(Ellipse, self).rotate(angle, pt)
+        if self.hradius == self.vradius:
+            return self.func(*self.args)
+        if (angle/S.Pi).is_integer:
+            return super(Ellipse, self).rotate(angle, pt)
+        if (2*angle/S.Pi).is_integer:
+            return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
+        # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
+        raise NotImplementedError('Only rotations of pi/2 are currently supported for Ellipse.')
+
 
     def scale(self, x=1, y=1, pt=None):
         """Override GeometryEntity.scale since it is the major and minor
@@ -1211,6 +1220,8 @@ class Ellipse(GeometryEntity):
         >>> e1.evolute()
         2**(2/3)*y**(2/3) + (3*x - 3)**(2/3) - 5**(2/3)
         """
+        if len(self.args) != 3:
+            raise NotImplementedError('Evolute of arbitrary Ellipse is not supported.')
         x = _symbol(x)
         y = _symbol(y)
         t1 = (self.hradius*(x - self.center.x))**Rational(2, 3)
