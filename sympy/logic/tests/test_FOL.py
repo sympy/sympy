@@ -42,6 +42,15 @@ def test_Function():
     assert And(fx) == f(X)
 
 
+def test_Constant():
+    A = Constant('A')
+    B = Constant('B')
+    assert A == Constant('A')
+    assert not A == B
+    assert A.name == 'A'
+    assert Constant(A) == A
+
+
 def test_ForAll():
     A = Predicate('A')
     B = Predicate('B')
@@ -247,6 +256,15 @@ def test_entails():
 
 def test_FOL_KB():
     KB = FOL_KB()
+    Man = Predicate('Man')
+    Mortal = Predicate('Mortal')
+    Socrates = Constant('Socrates')
+    KB.tell(Man(X) >> Mortal(X))
+    KB.tell(Man(Socrates))
+    assert KB.ask(Mortal(Socrates))
+    assert not KB.ask(~Mortal(Socrates))
+
+    KB = FOL_KB()
     Knows = Predicate('Knows')
     P = Constant('P')
     Q = Constant('Q')
@@ -258,3 +276,27 @@ def test_FOL_KB():
     assert KB.ask(Knows(Q, R))
     assert KB.ask(Knows(P, R))
     assert not KB.ask(Knows(R, P))
+
+    KB = FOL_KB()
+    Dangerous = Predicate('Dangerous')
+    Predator = Predicate('Predator')
+    Lion = Predicate('Lion')
+    Human = Predicate('Human')
+    Jack = Constant('Jack')
+    Leo = Constant('Leo')
+    Simba = Constant('Simba')
+    KB.tell((Predator(X) & Human(Y)) >> Dangerous(X, Y))
+    KB.tell(Lion(X) >> Predator(X))
+    KB.tell(Human(Jack))
+    KB.tell(Lion(Leo))
+    KB.tell(Lion(Simba))
+    assert KB.ask(Predator(Simba))
+    assert KB.ask(Dangerous(Leo, Jack))
+    assert not KB.ask(Dangerous(Leo, Simba))
+
+    KB = FOL_KB()
+    P = Predicate('P')
+    Q = Predicate('Q')
+    raises(ValueError, lambda: KB.tell(P(X) >> ~Q(X)))
+    raises(ValueError, lambda: KB.tell(~P(X) >> Q(X)))
+    raises(ValueError, lambda: KB.tell(~P(X)))

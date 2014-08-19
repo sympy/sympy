@@ -7,7 +7,7 @@ from collections import defaultdict
 from itertools import chain, combinations, product
 
 from sympy.core import Symbol
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import iterable, ordered
 from sympy.logic.boolalg import (And, Boolean, BooleanFunction,
     conjuncts, disjuncts, eliminate_implications, false, Implies,
     Not, Or, to_cnf, true)
@@ -16,7 +16,9 @@ from sympy.utilities.iterables import numbered_symbols
 
 class FOL(BooleanFunction):
     """
-    Abstract base class for all First Order Logic.
+    Abstract base class for all First Order Logic classes.
+    Only attributes and dispatcher methods that need to be inherited by
+    every other classes in the module should go here.
     """
 
     def to_nnf(self, simplify=True):
@@ -26,19 +28,26 @@ class FOL(BooleanFunction):
 class Callable(FOL):
     """
     Abstract base class for 'Predicate' and 'Function'.
+    This class provides the functionality for the 'Predicate' and
+    'Function' objects to be called to yield its 'Applied' version.
+    The classes extending 'Callable' simply need to override 'apply'
+    method to return the appropriate 'Applied' class. This class is
+    then called with the arguments supplied to the call to return an
+    object of type 'AppliedPredicate' or 'AppliedFunction'.
     """
 
     def __init__(self, name):
         self._name = name
 
     def __call__(self, *args):
+        """
+        Uses internal dispatching to return the appropriate Applied
+        object with the given arguments.
+        """
         return self.apply()(self, *args)
 
     def __eq__(self, other):
-        if isinstance(other, self.func):
-            return self.name == other.name
-        else:
-            return False
+        return isinstance(other, self.func) and self.name == other.name
 
     def __hash__(self):
         return super(Callable, self).__hash__()
@@ -65,7 +74,11 @@ class Callable(FOL):
 
 class Applied(FOL):
     """
-    Abstract base class for AppliedPredicate and AppliedFunction.
+    Abstract base class for 'AppliedPredicate' and 'AppliedFunction'.
+    This class provides common functionality for all subclasses to
+    sanitize given arguments such that any non-Boolean argument is
+    converted to a Constant. It also provides methods to return the
+    original Callable object which was called to obtain this object.
     """
 
     def __init__(self, func, *args):
@@ -73,8 +86,8 @@ class Applied(FOL):
             raise ValueError("Use a constant instead of %s()" % func)
         args = [arg if isinstance(arg, (Boolean, Symbol))
                     else Constant(arg) for arg in args]
-        self._func = func
         self._args = tuple(args)
+        self._func = func
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -94,15 +107,17 @@ class Applied(FOL):
 
     @property
     def name(self):
-        return self._func.name
+        """
+        Returns the name of the original 'Predicate' or 'Function'
+        """
+        return self.func.name
 
     @property
     def func(self):
         """
         Returns the class from which the given class was applied.
-        This functionality is different from the usual SymPy convention.
-        This is necessary so that methods like 'subs' which recreate the
-        object using the 'func' method can work as intended.
+        This functionality is different from the usual SymPy convention
+        of returning the __class__ of the object.
         """
         return self._func
 
@@ -162,7 +177,7 @@ class Function(Callable):
 
 class AppliedFunction(Applied):
     """
-    Applied version of Predicate.
+    Applied version of Function.
     All AppliedFunction objects are intended to be created by
     calling the corresponding 'Function' object with arguments.
     """
@@ -171,15 +186,41 @@ class AppliedFunction(Applied):
 class Constant(Boolean):
     """
     Creates a constant with the given value.
+    All non-Boolean objects in the FOL universe are Constants and are
+    implicitly converted when 'Applied' or used for interpretation.
+    Boolean objects include all 'BooleanFunctions', true/ false constants
+    and Symbols (which also extends 'Boolean').
+
+    Examples
+    ========
+
+    >>> from sympy.logic.FOL import Constant
+    >>> Cons = Constant('Cons')
+    >>> Cons
+    Cons
+    >>> isinstance(Cons, Constant)
+    True
+
+    Notes
+    =====
+    It is possible to make do without a separate class for Constants
+    simply by using Symbols in its place. However during unification,
+    which is critical to the inference system, it is important to be
+    able to differentiate between Symbols and Constants as Symbols can be
+    unified with some other object but the same is not true for Constants.
+    In future if some technique can be used to differentiate between these
+    without using the Constants class or using some pre-existing SymPy
+    construct then this class can be safely removed.
     """
 
     def __new__(cls, name, **kwargs):
-        if isinstance(name, cls):
-            return name
         return super(Boolean, cls).__new__(cls, str(name), **kwargs)
 
     def __init__(self, name):
-        self._name = name
+        if isinstance(name, self.func):
+            self._name = name.name
+        else:
+            self._name = name
 
     def __eq__(self, other):
         return isinstance(other, self.func) and self.name == other.name
@@ -207,7 +248,7 @@ class Quantifier(FOL):
 
         var = args[:-1]
         expr = args[-1]
-        if len(var) == 1 and hasattr(var[0], '__iter__'):
+        if len(var) == 1 and iterable(var[0]):
             var = set(var[0])
         else:
             var = set(var)
@@ -236,10 +277,16 @@ class Quantifier(FOL):
 
     @property
     def vars(self):
+        """
+        Returns the list of bound variables.
+        """
         return self.args[:-1]
 
     @property
     def expr(self):
+        """
+        Returns the quantified expression.
+        """
         return self.args[-1]
 
     def to_nnf(self, simplify=True):
@@ -342,7 +389,7 @@ def fol_true(expr, model={}):
     model = dict(model)
     for key, val in model.items():
         if isinstance(key, Symbol):
-            if hasattr(val, '__iter__'):
+            if iterable(val):
                 model[key] = [Constant(v) for v in val]
             else:
                 model[key] = Constant(val)
@@ -353,7 +400,7 @@ def fol_true(expr, model={}):
             mapping = {}
             for k, v in val.items():
                 if k != 'default':
-                    k = tuple(k) if hasattr(k, '__iter__') else (k,)
+                    k = tuple(k) if iterable(k) else (k,)
                 if v is None:
                     mapping[k] = None
                 else:
@@ -588,10 +635,10 @@ def to_snf(expr, functions=None, variables=None, constants=None):
 
     Parameters
     ==========
-    expr:       The formula to be converted to SNF.
-    functions:  Generator/ Iterator for Skolem Functions.
-    variables:  Generator/ Iterator for new variables for standardization.
-    Constants:  Generator/ Iterator for Skolem Constants.
+    expr :       The formula to be converted to SNF.
+    functions :  Generator/ Iterator for Skolem Functions.
+    variables :  Generator/ Iterator for new variables for standardization.
+    Constants :  Generator/ Iterator for Skolem Constants.
 
 
     Examples
@@ -647,6 +694,9 @@ def to_snf(expr, functions=None, variables=None, constants=None):
 def mgu(expr1, expr2):
     """
     Returns the Most General Unifier of two Predicates if it exists.
+    This function is critical for the entire inference system as it
+    determines if two clauses can be resolved together, and the value
+    of the resolved clause.
 
     Examples
     ========
