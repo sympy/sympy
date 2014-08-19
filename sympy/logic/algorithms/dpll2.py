@@ -17,11 +17,11 @@ from sympy import default_sort_key, ordered
 from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
 
 
-def dpll_satisfiable(expr, allModels=False):
+def dpll_satisfiable(expr, all_models=False):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
-    Returns a generator of all models if allModel is True.
+    Returns a Model object if all_models is True.
 
     Examples
     ========
@@ -44,7 +44,7 @@ def dpll_satisfiable(expr, allModels=False):
     solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
     result = solver._find_model()
 
-    if allModels:
+    if all_models:
         return Model(result)
     try:
         return next(result)

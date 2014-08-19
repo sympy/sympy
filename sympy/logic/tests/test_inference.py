@@ -212,7 +212,7 @@ def test_satisfiable_bool():
     assert satisfiable(S.false) is False
 
 
-def test_satisfiable_allModels():
+def test_satisfiable_all_models():
     from sympy.abc import A, B
     assert satisfiable(False, all_models=True) is False
     assert satisfiable(A & ~A , all_models=True)() is False
