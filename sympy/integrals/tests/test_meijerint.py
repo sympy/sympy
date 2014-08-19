@@ -327,8 +327,8 @@ def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y, z
     from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp, sin
-    mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
-    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
+    mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, bounded=True)
+    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
                              bounded=True, positive=True)
     rate = Symbol('lambda', real=True, positive=True, bounded=True)
 
