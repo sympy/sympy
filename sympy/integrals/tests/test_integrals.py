@@ -679,7 +679,7 @@ def test_is_number():
     assert Integral(x, (y, 1, x)).is_number is False
     assert Integral(x, (y, 1, 2)).is_number is False
     assert Integral(x, (x, 1, 2)).is_number is True
-    # is_number should always be eqivalent to no foo.free_symbols
+    # `foo.is_number` should always be eqivalent to `not foo.free_symbols`
     # in each of these cases, there are pseudo-free symbols
     i = Integral(x, (y, 1, 1))
     assert i.is_number is False and i.n() == 0
