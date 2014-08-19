@@ -2,8 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
-    conjuncts, to_cnf, true
-from sympy.core.basic import C
+    conjuncts, to_cnf
 from sympy.core.compatibility import ordered
 from sympy.core.sympify import sympify
 
@@ -15,7 +14,6 @@ def literal_symbol(literal):
     Examples
     ========
 
-    >>> from sympy import Symbol
     >>> from sympy.abc import A
     >>> from sympy.logic.inference import literal_symbol
     >>> literal_symbol(A)
@@ -43,11 +41,7 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
     Returns {true: true} for trivially true expressions.
-
-    If all_models is True then returns a Model object.
-    Calling this object returns the next model or False if no more
-    models are available. The object also supports iteration.
-
+    Returns a generator of all models if all_models is True.
 
     Examples
     ========
@@ -60,6 +54,13 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     False
     >>> satisfiable(True)
     {True: True}
+    >>> satisfiable(A & ~A, all_models=True)
+    False
+    >>> models = satisfiable((A >> B) & B, all_models=True)
+    >>> next(models)
+    {A: False, B: True}
+    >>> next(models)
+    {A: True, B: True}
 
     """
     expr = to_cnf(expr)
