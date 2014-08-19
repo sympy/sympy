@@ -583,12 +583,6 @@ def test_issue_4170():
     assert summation(1/factorial(k), (k, 0, oo)) == E
 
 
-def test_is_zero():
-    for func in [Sum, Product]:
-        assert func(0, (x, 1, 1)).is_zero is True
-        assert func(x, (x, 1, 1)).is_zero is None
-
-
 def test_is_commutative():
     from sympy.physics.secondquant import NO, F, Fd
     m = Symbol('m', commutative=False)
@@ -600,10 +594,18 @@ def test_is_commutative():
         assert f(NO(Fd(x)*F(y))*z, (z, 1, 2)).is_commutative is False
 
 
+def test_is_zero():
+    for func in [Sum, Product]:
+        assert func(0, (x, 1, 1)).is_zero is True
+        assert func(x, (x, 1, 1)).is_zero is None
+
+
 def test_is_number():
+    # is number should not rely on evaluation or assumptions,
+    # it should be equivalent to `not foo.free_symbols`
     assert Sum(1, (x, 1, 1)).is_number is True
     assert Sum(1, (x, 1, x)).is_number is False
-    assert Sum(0, (x, y, z)).is_number is True
+    assert Sum(0, (x, y, z)).is_number is False
     assert Sum(x, (y, 1, 2)).is_number is False
     assert Sum(x, (y, 1, 1)).is_number is False
     assert Sum(x, (x, 1, 2)).is_number is True
@@ -611,8 +613,8 @@ def test_is_number():
 
     assert Product(2, (x, 1, 1)).is_number is True
     assert Product(2, (x, 1, y)).is_number is False
-    assert Product(0, (x, y, z)).is_number is True
-    assert Product(1, (x, y, z)).is_number is True
+    assert Product(0, (x, y, z)).is_number is False
+    assert Product(1, (x, y, z)).is_number is False
     assert Product(x, (y, 1, x)).is_number is False
     assert Product(x, (y, 1, 2)).is_number is False
     assert Product(x, (y, 1, 1)).is_number is False

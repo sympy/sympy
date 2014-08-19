@@ -224,27 +224,8 @@ class Product(ExprWithIntLimits):
 
     @property
     def is_number(self):
-        """
-        Return True if the Product will result in a number, else False.
-
-        Examples
-        ========
-
-        >>> from sympy import log, Product
-        >>> from sympy.abc import x, y, z
-        >>> log(2).is_number
-        True
-        >>> Product(x, (x, 1, 2)).is_number
-        True
-        >>> Product(y, (x, 1, 2)).is_number
-        False
-        >>> Product(1, (x, y, z)).is_number
-        True
-        >>> Product(2, (x, y, z)).is_number
-        False
-        """
-
-        return self.function.is_zero or self.function == 1 or not self.free_symbols
+        """Return True if the Sum has no free symbols, else False."""
+        return not self.free_symbols
 
     def doit(self, **hints):
         f = self.function
