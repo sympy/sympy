@@ -129,10 +129,6 @@ class Symbol(AtomicExpr, Boolean):
         return not self in wrt
 
     @property
-    def is_number(self):
-        return False
-
-    @property
     def free_symbols(self):
         return set([self])
 
