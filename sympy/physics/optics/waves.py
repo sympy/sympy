@@ -258,6 +258,9 @@ class TWave(Expr):
                              self.frequency,
                              self._phase + other._phase
                              )
+            else:
+                raise NotImplementedError("Interference of waves with different frequencies"
+                    " has not been implemented.")
         else:
             raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
 
