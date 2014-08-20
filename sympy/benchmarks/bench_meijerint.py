@@ -17,8 +17,8 @@ apos, bpos, cpos, dpos, posk, p = symbols('a b c d k p', positive=True)
 k = Symbol('k', real=True)
 negk = Symbol('k', negative=True)
 
-mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
-sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
+mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, bounded=True)
+sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
                          bounded=True, positive=True)
 rate = Symbol('lambda', real=True, positive=True, bounded=True)
 

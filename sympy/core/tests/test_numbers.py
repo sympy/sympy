@@ -368,21 +368,18 @@ def test_Float():
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
     assert Float('+inf').is_bounded is False
-    assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
     assert Float('+inf').is_positive is True
     assert Float('+inf').is_unbounded is True
     assert Float('+inf').is_zero is False
 
     assert Float('-inf').is_bounded is False
-    assert Float('-inf').is_finite is False
     assert Float('-inf').is_negative is True
     assert Float('-inf').is_positive is False
     assert Float('-inf').is_unbounded is True
     assert Float('-inf').is_zero is False
 
     assert Float('0.0').is_bounded is True
-    assert Float('0.0').is_finite is False
     assert Float('0.0').is_negative is False
     assert Float('0.0').is_positive is False
     assert Float('0.0').is_unbounded is False
@@ -1292,15 +1289,11 @@ def test_issue_4122():
     assert (oo + x).is_Add
     x = Symbol('x', bounded=True)
     assert (oo + x).is_Add  # x could be imaginary
-    x = Symbol('x', finite=True)
-    assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', infinitesimal=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
     assert oo + x == oo
     x = Symbol('x', bounded=True, real=True)
-    assert oo + x == oo
-    x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
     x = Symbol('x', infinitesimal=True, real=True)
     assert oo + x == oo
@@ -1310,15 +1303,11 @@ def test_issue_4122():
     assert (-oo + x).is_Add
     x = Symbol('x', bounded=True)
     assert (-oo + x).is_Add
-    x = Symbol('x', finite=True)
-    assert (-oo + x).is_Add
     x = Symbol('x', infinitesimal=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
     assert -oo + x == -oo
     x = Symbol('x', bounded=True, real=True)
-    assert -oo + x == -oo
-    x = Symbol('x', finite=True, real=True)
     assert -oo + x == -oo
     x = Symbol('x', infinitesimal=True, real=True)
     assert -oo + x == -oo

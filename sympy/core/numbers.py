@@ -74,7 +74,7 @@ def seterr(divide=False):
 
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
-    if not dec.is_finite():  # NOTE: this is_finite is not SymPy's
+    if not dec.is_finite():
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)
@@ -306,9 +306,6 @@ class Number(AtomicExpr):
         return self  # there is no other possibility
 
     def _eval_is_bounded(self):
-        return True
-
-    def _eval_is_finite(self):
         return True
 
     @classmethod
@@ -712,11 +709,6 @@ class Float(Number):
 
     def _eval_is_bounded(self):
         if self._mpf_ in (_mpf_inf, _mpf_ninf):
-            return False
-        return True
-
-    def _eval_is_finite(self):
-        if self._mpf_ in (_mpf_inf, _mpf_ninf, _mpf_zero):
             return False
         return True
 
@@ -1186,6 +1178,9 @@ class Rational(Number):
 
     def _eval_is_zero(self):
         return self.p == 0
+
+    def _eval_is_infinitesimal(self):
+        return self.is_zero
 
     def __neg__(self):
         return Rational(-self.p, self.q)
@@ -1897,7 +1892,6 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     q = 1
     is_positive = False
     is_negative = False
-    is_finite = False
     is_zero = True
     is_composite = False
 
@@ -2111,7 +2105,6 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_commutative = True
     is_positive = True
     is_bounded = False
-    is_finite = False
     is_infinitesimal = False
     is_integer = None
     is_rational = None
@@ -2300,7 +2293,6 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_real = True
     is_positive = False
     is_bounded = False
-    is_finite = False
     is_infinitesimal = False
     is_integer = None
     is_rational = None
@@ -2527,7 +2519,6 @@ class NaN(with_metaclass(Singleton, Number)):
     is_rational = None
     is_integer = None
     is_comparable = False
-    is_finite = None
     is_bounded = None
     is_zero = None
     is_prime = None
@@ -2666,7 +2657,6 @@ class NumberSymbol(AtomicExpr):
 
     is_commutative = True
     is_bounded = True
-    is_finite = True
     is_number = True
 
     __slots__ = []
@@ -2749,6 +2739,9 @@ class NumberSymbol(AtomicExpr):
 
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
+
+    def _eval_is_infinitesimal(self):
+        return self.is_zero
 
 
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
@@ -3080,8 +3073,8 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     is_commutative = True
     is_imaginary = True
     is_bounded = True
-    is_finite = True
     is_number = True
+    is_infinitesimal = False
 
     __slots__ = []
 
