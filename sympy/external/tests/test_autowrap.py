@@ -4,8 +4,8 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
 from sympy.utilities.pytest import XFAIL, skip
 
-numpy = import_module('numpy')
-Cython = import_module('Cython')
+numpy = import_module('numpy', min_module_version='1.6.1')
+Cython = import_module('Cython', min_module_version='0.15.1')
 f2py = import_module('numpy.f2py', __import__kwargs={'fromlist': ['f2py']})
 
 f2pyworks = False
@@ -133,33 +133,26 @@ def test_ufuncify_f95_f2py():
 
 # Cython
 
-# See issue 6107.  This XFAIL can be removed if we can accurately determine the
-# correct minimum Cython version required.
-@XFAIL
 def test_wrap_twice_c_cython():
     has_module('Cython')
     runtest_autowrap_twice('C', 'cython')
 
 
-@XFAIL
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
     runtest_autowrap_trace('C', 'cython')
 
 
-@XFAIL
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_vector('C', 'cython')
 
 
-@XFAIL
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_matrix('C', 'cython')
 
 
-@XFAIL
 def test_ufuncify_C_Cython():
     has_module('Cython')
     runtest_ufuncify('C', 'cython')

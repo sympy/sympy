@@ -62,6 +62,11 @@ matrix:
     - python: 3.4
       env:
         - TEST_THEANO="true"
+    - python: 2.7
+      env:
+        - TEST_AUTOWRAP="true"
+      virtualenv:
+        system_site_packages: true
   allow_failures:
     - python: 3.3 # Dummy value
       env:
@@ -73,6 +78,11 @@ matrix:
 before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install "fastcache==0.4.0";
+    fi
+  - if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
+      pip uninstall -y numpy;
+      sudo apt-get update;
+      sudo apt-get install gfortran gcc python-numpy cython;
     fi
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update;

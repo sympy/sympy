@@ -56,6 +56,7 @@ class CCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'contract': True,
+        'dereference': set()
     }
 
     def __init__(self, settings={}):
@@ -63,6 +64,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
+        self._dereference = set(settings.get('dereference', []))
 
     def _rate_index_position(self, p):
         return p*5
@@ -170,7 +172,14 @@ class CCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}][{2}]".format(expr.parent, expr.i, expr.j)
+        return "{0}[{1}]".format(expr.parent, expr.j +
+                expr.i*expr.parent.shape[1])
+
+    def _print_Symbol(self, expr):
+        if expr in self._dereference:
+            return '(*{0})'.format(expr.name)
+        else:
+            return expr.name
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -221,6 +230,11 @@ def ccode(expr, assign_to=None, **settings):
         their string representations. Alternatively, the dictionary value can
         be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
         for examples.
+    dereference : iterable, optional
+        An iterable of symbols that should be dereferenced in the printed code
+        expression. These would be values passed by address to the function.
+        For example, if ``dereference=[a]``, the resulting code would print
+        ``(*a)`` instead of ``a``.
     human : bool, optional
         If True, the result is a single string that may contain some constant
         declarations for the number symbols. If False, the same information is
@@ -296,14 +310,14 @@ def ccode(expr, assign_to=None, **settings):
     >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
     >>> A = MatrixSymbol('A', 3, 1)
     >>> print(ccode(mat, A))
-    A[0][0] = pow(x, 2);
+    A[0] = pow(x, 2);
     if (x > 0) {
-       A[1][0] = x + 1;
+       A[1] = x + 1;
     }
     else {
-       A[1][0] = x;
+       A[1] = x;
     }
-    A[2][0] = sin(x);
+    A[2] = sin(x);
     """
 
     return CCodePrinter(settings).doprint(expr, assign_to)

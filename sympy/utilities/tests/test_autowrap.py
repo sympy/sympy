@@ -13,7 +13,7 @@ from sympy.core import symbols, Eq
 from sympy.core.compatibility import StringIO
 
 
-def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
+def get_string(dump_fn, routines, prefix="file"):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This
        auxiliary function is used by many tests below.
@@ -22,7 +22,7 @@ def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
        testing of the output.
     """
     output = StringIO()
-    dump_fn(routines, output, prefix, header, empty)
+    dump_fn(routines, output, prefix)
     source = output.getvalue()
     output.close()
     return source
@@ -35,11 +35,12 @@ def test_cython_wrapper_scalar_function():
     code_gen = CythonCodeWrapper(CCodeGen())
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
-        'cdef extern from "file.h":\n'
-        '   double test(double x, double y, double z)\n'
-        'def test_c(double x, double y, double z):\n'
-        '   return test(x, y, z)\n'
-    )
+        "cdef extern from 'file.h':\n"
+        "    double test(double x, double y, double z)\n"
+        "\n"
+        "def test_c(double x, double y, double z):\n"
+        "\n"
+        "    return test(x, y, z)")
     assert source == expected
 
 
@@ -51,13 +52,14 @@ def test_cython_wrapper_outarg():
     routine = Routine("test", Equality(z, x + y))
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
-        'cdef extern from "file.h":\n'
-        '   void test(double x, double y, double &z)\n'
-        'def test_c(double x, double y):\n'
-        '   cdef double z\n'
-        '   test(x, y, z)\n'
-        '   return z\n'
-    )
+        "cdef extern from 'file.h':\n"
+        "    void test(double x, double y, double *z)\n"
+        "\n"
+        "def test_c(double x, double y):\n"
+        "\n"
+        "    cdef double z = 0\n"
+        "    test(x, y, &z)\n"
+        "    return z")
     assert source == expected
 
 
@@ -68,12 +70,13 @@ def test_cython_wrapper_inoutarg():
     routine = Routine("test", Equality(z, x + y + z))
     source = get_string(code_gen.dump_pyx, [routine])
     expected = (
-        'cdef extern from "file.h":\n'
-        '   void test(double x, double y, double &z)\n'
-        'def test_c(double x, double y, double z):\n'
-        '   test(x, y, z)\n'
-        '   return z\n'
-    )
+        "cdef extern from 'file.h':\n"
+        "    void test(double x, double y, double *z)\n"
+        "\n"
+        "def test_c(double x, double y, double z):\n"
+        "\n"
+        "    test(x, y, &z)\n"
+        "    return z")
     assert source == expected
 
 
