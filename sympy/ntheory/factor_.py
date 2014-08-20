@@ -1332,32 +1332,45 @@ class totient(Function):
             return t
 
 
-class sigma(Function):
+class divisor_sigma(Function):
     """
     Calculate the divisor function sigma_k(n) for positive integer n
 
-    sigma(n,0) is equal to divisor_count(n)
-    sigma(n,1) is equal to sum(divisors(n))
-    sigma(n,k) is equal to sum([x**k for x in divisors(n)])
+    divisor_sigma(n, k) is equal to sum([x**k for x in divisors(n)])
+
+    for k = 0, 1:
+    divisor_sigma(n, 0) is equal to divisor_count(n)
+    divisor_sigma(n, 1) is equal to sum(divisors(n))
 
     Default for k is 1.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^\omega p_i^{m_i},
+
+    then
+
+    .. math ::
+        \sigma_k(n) = \prod_{i=1}^\omega (1+p_i^k+p_i^{2k}+\cdots
+        + p_i^{m_ik}).
 
     References
     ==========
 
-    - [1] http://en.wikipedia.org/wiki/Divisor_function
+    .. [1] http://en.wikipedia.org/wiki/Divisor_function
 
     Examples
     ========
 
-    >>> from sympy.ntheory import sigma
-    >>> sigma(18,0)
+    >>> from sympy.ntheory import divisor_sigma
+    >>> divisor_sigma(18, 0)
     6
-    >>> sigma(39,1)
+    >>> divisor_sigma(39, 1)
     56
-    >>> sigma(12,2)
+    >>> divisor_sigma(12, 2)
     210
-    >>> sigma(37)
+    >>> divisor_sigma(37)
     38
 
     See Also
@@ -1371,21 +1384,11 @@ class sigma(Function):
         n = sympify(n)
         k = sympify(k)
         if n.is_prime:
-            return 1+n**k
+            return 1 + n**k
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
             else:
-                return Mul(*[cls.__geom_series(p, e, k) for p, e in
+                i = Dummy('i', integer=True)
+                return Mul(*[summation(p**(k*i), (i, 0, e)) for p, e in
                              factorint(n).items() if p > 1])
-
-    # computes the geometric series partial sum 1+p**k+p**(2*k)+...+p**(e*k)
-    @classmethod
-    def __geom_series(cls, p, e, k):
-        if k == 0:
-            return e+1
-        if e == 1:
-            return 1+p**k
-        if e == 2:
-            return (1+p**k)*(p**k)+1
-        return (p**(k*(e+1))-1)/(p**k-1)

@@ -329,10 +329,10 @@ def test_latex_functions():
 
     assert latex(totient(n)) == r'\phi\left( n \right)'
 
-    assert latex(sigma(x)) == r"\sigma\left(x\right)"
-    assert latex(sigma(x)**2) == r"\sigma^{2}\left(x\right)"
-    assert latex(sigma(x, y)) == r"\sigma\left(x, y\right)"
-    assert latex(sigma(x, y)**2) == r"\sigma^{2}\left(x, y\right)"
+    assert latex(divisor_sigma(x)) == r"\sigma\left(x\right)"
+    assert latex(divisor_sigma(x)**2) == r"\sigma^{2}\left(x\right)"
+    assert latex(divisor_sigma(x, y)) == r"\sigma\left(x, y\right)"
+    assert latex(divisor_sigma(x, y)**2) == r"\sigma^{2}\left(x, y\right)"
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
