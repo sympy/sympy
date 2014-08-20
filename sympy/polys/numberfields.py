@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from sympy import (
     S, C, Expr, Rational,
-    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi
+    Symbol, Add, Mul, sympify, Dummy, Tuple, expand_mul, I, pi
 )
 
 from sympy.polys.polytools import (
@@ -1107,7 +1107,7 @@ class AlgebraicNumber(Expr):
         else:
             rep = DMP.from_list([1, 0], 0, dom)
 
-            if ask(Q.negative(root)):
+            if root.is_negative:
                 rep = -rep
 
             sargs = (root, coeffs)
@@ -1195,7 +1195,7 @@ def isolate(alg, eps=None, fast=False):
 
     if alg.is_Rational:
         return (alg, alg)
-    elif not ask(Q.real(alg)):
+    elif not alg.is_real:
         raise NotImplementedError(
             "complex algebraic numbers are not supported")
 
