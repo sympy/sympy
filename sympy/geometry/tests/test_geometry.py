@@ -1042,9 +1042,9 @@ def test_ellipse():
 
     assert e.scale(2, 3) == Ellipse((0, 0), 4, 3)
     assert e.scale(3, 6) == Ellipse((0, 0), 6, 6)
-    assert e.rotate(pi/3) == e
-    assert e.rotate(pi/3, (1, 2)) == \
-        Ellipse(Point(1/2 + sqrt(3), -sqrt(3)/2 + 1), 2, 1)
+    assert e.rotate(pi) == e
+    assert e.rotate(pi, (1, 2)) == Ellipse(Point(2, 4), 2, 1)
+    raises(NotImplementedError, lambda: e.rotate(pi/3))
 
     # transformations
     c = Circle((1, 1), 2)
