@@ -1338,7 +1338,7 @@ def antidivisors(n, generator=False):
     >>> antidivisors(24)
     [7, 16]
 
-    >>> list(antidivisors(128, generator=True))
+    >>> sorted(antidivisors(128, generator=True))
     [3, 5, 15, 17, 51, 85]
 
 
