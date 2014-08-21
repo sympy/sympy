@@ -3,7 +3,7 @@ First Order Logic module for SymPy
 """
 
 from __future__ import print_function
-from collections import defaultdict
+from collections import defaultdict, deque
 from itertools import chain, combinations, product
 
 from sympy.core import Symbol
@@ -875,8 +875,10 @@ class FOL_KB():
 
     def __init__(self):
         self.vars = numbered_symbols()
-        self.clauses = defaultdict(list)
+        self.clauses = defaultdict(deque)
         self.visited = None
+        self.max_limit = 8
+        self.limit_increment_func = lambda x: x * 2
 
     def tell(self, clause):
         """
@@ -907,7 +909,7 @@ class FOL_KB():
             self.clauses[cons.func].append((cons, ante))
         else:
             _validate(clause)
-            self.clauses[clause.func].append((clause, None))
+            self.clauses[clause.func].appendleft((clause, None))
 
     def ask(self, query):
         """
@@ -942,28 +944,32 @@ class FOL_KB():
         >>> KB.ask(Frog(Tweety))
         False
         """
-        self.visited = set()
-        result = self._ask(list(conjuncts(query)))
-        self.visited = None
+        limit = 1
+        while limit <= self.max_limit:
+            result = self._ask(list(conjuncts(query)), limit)
+            limit = self.limit_increment_func(limit)
+            if result:
+                break
         return result
 
-    def _ask(self, query):
+    def _ask(self, query, limit, level=0):
         if not query:
             return True
+        if level > limit:
+            return False
         literal = query.pop()
         if literal.func in self.clauses:
             for clause in self.clauses[literal.func]:
-                if clause in self.visited:
-                    continue
                 goal = query
                 cons, ante = clause
-                if ante is not None:
-                    self.visited.add(clause)
                 unifier = mgu(literal, cons)
                 if unifier:
                     goal = [l.subs(unifier) for l in goal]
                     if ante:
-                        goal.extend(l.subs(unifier) for l in ante)
-                    if self._ask(goal):
+                        u = list(unifier.items()) + [(a, next(self.vars))
+                        for a in chain.from_iterable((l.args for l in ante))
+                            if isinstance(a, Symbol)]
+                        goal.extend(l.subs(u) for l in ante)
+                    if self._ask(goal, limit, level+1):
                         return True
         return False
