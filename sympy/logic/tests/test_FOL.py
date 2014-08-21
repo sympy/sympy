@@ -265,27 +265,6 @@ def test_FOL_KB():
     assert not KB.ask(~Mortal(Socrates))
 
     KB = FOL_KB()
-    KB.max_limit = 8
-    Knows = Predicate('Knows')
-    P = Constant('P')
-    Q = Constant('Q')
-    R = Constant('R')
-    S = Constant('S')
-    KB.tell((Knows(X, Y) & Knows(Y, Z)) >> Knows(X, Z))
-    KB.tell(Knows(P, Q))
-    KB.tell(Knows(Q, R))
-    assert KB.ask(Knows(P, Q))
-    assert KB.ask(Knows(Q, R))
-    assert KB.ask(Knows(P, R))
-    assert not KB.ask(Knows(P, S))
-    KB.tell(Knows(R, S))
-    assert KB.ask(Knows(P, S))
-    assert not KB.ask(Knows(R, P))
-    KB.tell(Knows(X, Y) >> Knows(Y, X))
-    assert KB.ask(Knows(R, P))
-    assert KB.ask(Knows(S, P))
-
-    KB = FOL_KB()
     Dangerous = Predicate('Dangerous')
     Predator = Predicate('Predator')
     Lion = Predicate('Lion')
@@ -301,6 +280,30 @@ def test_FOL_KB():
     assert KB.ask(Predator(Simba))
     assert KB.ask(Dangerous(Leo, Jack))
     assert not KB.ask(Dangerous(Leo, Simba))
+    assert KB.ask(Lion(X), all_answers=True) == [Lion(Leo), Lion(Simba)]
+
+    KB = FOL_KB()
+    Knows = Predicate('Knows')
+    P = Constant('P')
+    Q = Constant('Q')
+    R = Constant('R')
+    S = Constant('S')
+    KB.tell((Knows(X, Y) & Knows(Y, Z)) >> Knows(X, Z))
+    KB.tell(Knows(P, Q))
+    KB.tell(Knows(Q, R))
+    assert KB.ask(Knows(P, Q))
+    assert KB.ask(Knows(Q, R))
+    assert KB.ask(Knows(P, R))
+    assert KB.ask(Knows(X, Y), all_answers=True) == \
+                    [Knows(P, Q), Knows(P, R), Knows(Q, R)]
+    KB.tell(Knows(X, Y) >> Knows(Y, X))
+    assert KB.ask(Knows(R, P))
+    assert KB.ask(Knows(X, Y), all_answers=True) == [Knows(P, P),
+                Knows(P, Q), Knows(P, R), Knows(Q, P), Knows(Q, Q),
+                Knows(Q, R), Knows(R, P), Knows(R, Q), Knows(R, R)]
+    KB.tell(Knows(R, S))
+    assert KB.ask(Knows(P, S))
+    assert KB.ask(Knows(S, P))
 
     KB = FOL_KB()
     P = Predicate('P')

@@ -911,9 +911,12 @@ class FOL_KB():
             _validate(clause)
             self.clauses[clause.func].appendleft((clause, None))
 
-    def ask(self, query):
+    def ask(self, query, all_answers=False):
         """
         Ask a query.
+        If query contains variables then returns a possible answer.
+        If all_answers is True then returns all possible answers.
+        Setting all_answers does nothing if query contains no variables.
 
         Examples
         ========
@@ -943,17 +946,28 @@ class FOL_KB():
         True
         >>> KB.ask(Frog(Tweety))
         False
+        >>> KB.ask(EatsFlies(X), all_answers=True)
+        [EatsFlies(Fritz), EatsFlies(Tweety)]
+        >>> KB.ask(Frog(X))
+        [Frog(Fritz)]
         """
         limit = 1
+        self.query = query
+        self.query_vars = query.atoms()
         while limit <= self.max_limit:
-            result = self._ask(list(conjuncts(query)), limit)
+            self.models = set()
+            result = self._ask(list(conjuncts(query)), limit,
+                                self.query_vars and all_answers)
             limit = self.limit_increment_func(limit)
             if result:
                 break
+        if all_answers or self.query_vars:
+            return list(ordered(self.models))
         return result
 
-    def _ask(self, query, limit, level=0):
+    def _ask(self, query, limit, all_answers=False, level=0, unifiers=[]):
         if not query:
+            self.models.add(self.query.subs(dict(unifiers)))
             return True
         if level > limit:
             return False
@@ -964,12 +978,15 @@ class FOL_KB():
                 cons, ante = clause
                 unifier = mgu(literal, cons)
                 if unifier:
+                    t = unifiers + list((key, value) for key, value in
+                            unifier.items() if key in self.query_vars)
                     goal = [l.subs(unifier) for l in goal]
                     if ante:
                         u = list(unifier.items()) + [(a, next(self.vars))
                         for a in chain.from_iterable((l.args for l in ante))
                             if isinstance(a, Symbol)]
                         goal.extend(l.subs(u) for l in ante)
-                    if self._ask(goal, limit, level+1):
+                    if self._ask(goal, limit, all_answers, level+1, t) \
+                            and not all_answers:
                         return True
         return False
