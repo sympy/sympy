@@ -763,6 +763,11 @@ class Mv(object):
         self.versor_flg = test.is_vector()
         return self.versor_flg
 
+    def is_zero(self):
+        if self.obj == 0:
+            return True
+        return False
+
     def scalar(self):
         # return scalar part of multivector
         # as sympy expression
