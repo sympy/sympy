@@ -2134,6 +2134,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_bounded = False
     is_integer = None
     is_rational = None
+    is_algebraic = None
     is_odd = None
     is_number = True
 
@@ -2349,6 +2350,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_integer = None
     is_rational = None
     is_number = True
+    is_algebraic = None
 
     __slots__ = []
 
@@ -2595,6 +2597,7 @@ class NaN(with_metaclass(Singleton, Number)):
     is_commutative = True
     is_real = None
     is_rational = None
+    is_algebraic = None
     is_integer = None
     is_comparable = False
     is_bounded = None
@@ -2882,6 +2885,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
     is_negative = False  # XXX Forces is_negative/is_nonnegative
     is_irrational = True
     is_number = True
+    is_algebraic = False
 
     __slots__ = []
 
@@ -2959,6 +2963,7 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     is_negative = False
     is_irrational = True
     is_number = True
+    is_algebraic = False
 
     __slots__ = []
 
@@ -3018,6 +3023,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     is_negative = False
     is_irrational = True
     is_number = True
+    is_algebraic = True
 
     __slots__ = []
 
@@ -3187,6 +3193,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     is_imaginary = True
     is_bounded = True
     is_number = True
+    is_algebraic = True
 
     __slots__ = []
 

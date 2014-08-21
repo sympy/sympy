@@ -20,6 +20,7 @@ def test_zero():
     assert z.is_commutative is True
     assert z.is_integer is True
     assert z.is_rational is True
+    assert z.is_algebraic is True
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -44,6 +45,7 @@ def test_one():
     assert z.is_commutative is True
     assert z.is_integer is True
     assert z.is_rational is True
+    assert z.is_algebraic is True
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -72,6 +74,7 @@ def test_negativeone():
     assert z.is_commutative is True
     assert z.is_integer is True
     assert z.is_rational is True
+    assert z.is_algebraic is True
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -97,6 +100,7 @@ def test_infinity():
     assert oo.is_commutative is True
     assert oo.is_integer is None
     assert oo.is_rational is None
+    assert oo.is_algebraic is None
     assert oo.is_real is True
     assert oo.is_complex is True
     assert oo.is_noninteger is None
@@ -122,6 +126,7 @@ def test_neg_infinity():
     assert mm.is_commutative is True
     assert mm.is_integer is None
     assert mm.is_rational is None
+    assert mm.is_algebraic is None
     assert mm.is_real is True
     assert mm.is_complex is True
     assert mm.is_noninteger is None
@@ -147,6 +152,7 @@ def test_nan():
     assert nan.is_commutative is True
     assert nan.is_integer is None
     assert nan.is_rational is None
+    assert nan.is_algebraic is None
     assert nan.is_real is None
     assert nan.is_complex is None
     assert nan.is_noninteger is None
@@ -171,6 +177,7 @@ def test_pos_rational():
     assert r.is_commutative is True
     assert r.is_integer is False
     assert r.is_rational is True
+    assert r.is_algebraic is True
     assert r.is_real is True
     assert r.is_complex is True
     assert r.is_noninteger is True
@@ -233,6 +240,7 @@ def test_pi():
     assert z.is_commutative is True
     assert z.is_integer is False
     assert z.is_rational is False
+    assert z.is_algebraic is False
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is True
@@ -256,6 +264,7 @@ def test_E():
     assert z.is_commutative is True
     assert z.is_integer is False
     assert z.is_rational is False
+    assert z.is_algebraic is False
     assert z.is_real is True
     assert z.is_complex is True
     assert z.is_noninteger is True
@@ -279,6 +288,7 @@ def test_I():
     assert z.is_commutative is True
     assert z.is_integer is False
     assert z.is_rational is False
+    assert z.is_algebraic is True
     assert z.is_real is False
     assert z.is_complex is True
     assert z.is_noninteger is False
@@ -487,6 +497,7 @@ def test_symbol_noncommutative():
     x = Symbol('x', commutative=False)
     assert x.is_integer is False
     assert x.is_rational is False
+    assert x.is_algebraic is False
     assert x.is_irrational is False
     assert x.is_real is False
     assert x.is_complex is False
@@ -618,6 +629,44 @@ def test_Add_is_pos_neg():
     assert (p + xb).is_negative is False
 
     assert (x - S.Infinity).is_negative is None  # issue 7798
+
+
+def test_Add_is_algebraic():
+    a = Symbol('a', algebraic=True)
+    b = Symbol('a', algebraic=True)
+    na = Symbol('na', algebraic=False)
+    nb = Symbol('nb', algebraic=False)
+    x = Symbol('x')
+    assert (a + b).is_algebraic
+    assert (na + nb).is_algebraic is None
+    assert (a + na).is_algebraic is False
+    assert (a + x).is_algebraic is None
+    assert (na + x).is_algebraic is None
+
+
+def test_Mul_is_algebraic():
+    a = Symbol('a', algebraic=True)
+    b = Symbol('a', algebraic=True)
+    na = Symbol('na', algebraic=False)
+    an = Symbol('an', algebraic=True, nonzero=True)
+    nb = Symbol('nb', algebraic=False)
+    x = Symbol('x')
+    assert (a*b).is_algebraic
+    assert (na*nb).is_algebraic is None
+    assert (a*na).is_algebraic is None
+    assert (an*na).is_algebraic is False
+    assert (a*x).is_algebraic is None
+    assert (na*x).is_algebraic is None
+
+
+def test_Pow_is_algebraic():
+    a = Symbol('a', algebraic=True)
+    na = Symbol('na', algebraic=False)
+    r = Symbol('r', rational=True)
+    x = Symbol('x')
+    assert (a**r).is_algebraic
+    assert (a*x).is_algebraic is None
+    assert (na*r).is_algebraic is False
 
 
 def test_special_is_rational():

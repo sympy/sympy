@@ -21,6 +21,8 @@ Here follows a list of possible assumption names:
                         of real numbers
     - integer       - object can have only values from the set
                         of integers
+    - algebraic     - object can have only values from the set
+                        of algebraic numbers
     - bounded       - object absolute value is bounded
     - positive      - object can have only positive values
     - negative      - object can have only negative values
@@ -66,6 +68,8 @@ _assume_rules = FactRules([
 
     'integer        ->  rational',
     'rational       ->  real',
+    'rational       ->  algebraic',
+    'algebraic      ->  complex',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',

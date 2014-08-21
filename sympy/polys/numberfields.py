@@ -1071,6 +1071,7 @@ class AlgebraicNumber(Expr):
     __slots__ = ['rep', 'root', 'alias', 'minpoly']
 
     is_AlgebraicNumber = True
+    is_algebraic = True
 
     def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
         """Construct a new algebraic number. """
