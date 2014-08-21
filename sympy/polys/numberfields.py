@@ -1072,6 +1072,7 @@ class AlgebraicNumber(Expr):
 
     is_AlgebraicNumber = True
     is_algebraic = True
+    is_number = True
 
     def __new__(cls, expr, coeffs=Tuple(), alias=None, **args):
         """Construct a new algebraic number. """
