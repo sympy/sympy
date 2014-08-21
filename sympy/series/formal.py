@@ -4,7 +4,7 @@ from sympy import C, S, collect, Function, Add, Mul, simplify, cancel, sympify, 
 from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq
-from sympy.core.compatibility import integer_types
+from sympy.core.compatibility import integer_types, xrange
 from sympy.functions import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.concrete import Sum, summation
@@ -164,7 +164,7 @@ def simpleDE(function, f, x=None, order=4):
         if len(ind) == k:
             sol = solve(ind, a, dict=True)
             if sol:
-                for key, val in sol[0].iteritems():
+                for key, val in sol[0].items():
                     val = cancel(val)
                     DE = DE.subs(key, val)
             DE = simplify(DE)
@@ -267,9 +267,9 @@ def rsolve_hypergeometric(P, Q, m, k, function):
         c = -c1/c2
 
         res = S.One
-        for sol, mul in roots(p, k).iteritems():
+        for sol, mul in roots(p, k).items():
             res *= C.RisingFactorial(-sol, k)**mul
-        for sol, mul in roots(q, k).iteritems():
+        for sol, mul in roots(q, k).items():
             res /= C.RisingFactorial(-sol, k)**mul
         res *= c**k
         gen += [(res, (m*k + j + shift)/scale)]
