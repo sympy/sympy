@@ -1499,3 +1499,8 @@ def test_issue_7547():
         [['4442890172.68209'],
          ['4289299466.1432'],
          ['70.5389666628177']]))
+
+
+def test_issue_7895():
+    r = symbols('r', real=True)
+    assert solve(sqrt(r) - 2) == [4]
