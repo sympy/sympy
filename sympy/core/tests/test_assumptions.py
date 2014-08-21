@@ -687,7 +687,7 @@ def test_special_is_rational():
     assert log(r).is_rational is False
     assert log(x).is_rational is None
     assert (sqrt(3) + sqrt(5)).is_rational is None
-    assert (sqrt(3) + S.Pi).is_rational is None
+    assert (sqrt(3) + S.Pi).is_rational is False
     assert (x**i).is_rational is None
     assert (i**i).is_rational is True
     assert (r**i).is_rational is True
