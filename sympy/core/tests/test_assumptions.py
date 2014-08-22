@@ -733,3 +733,10 @@ def test_issue_4149():
 def test_issue_2920():
     n = Symbol('n', negative=True)
     assert sqrt(n).is_imaginary
+
+
+def test_issue_7899():
+    x = Symbol('x', real=True)
+    assert (I*x).is_real is None
+    assert ((x - I)*(x - 1)).is_zero is None
+    assert ((x - I)*(x - 1)).is_real is None
