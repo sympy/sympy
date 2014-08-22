@@ -21,6 +21,8 @@ class StrPrinter(Printer):
     _default_settings = {
         "order": None,
         "full_prec": "auto",
+        "min": None,
+        "max": None,
     }
 
     _relationals = dict()
@@ -536,6 +538,8 @@ class StrPrinter(Printer):
 
     def _print_Float(self, expr):
         prec = expr._prec
+        low = self._settings["min"]
+        high = self._settings["max"]
         if prec < 5:
             dps = 0
         else:
@@ -546,7 +550,11 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib.to_str(expr._mpf_, dps, strip_zeros=strip)
+        if low is None:
+            low = min(-(dps//3), -5)
+        if high is None:
+            high = dps
+        rv = mlib.to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
