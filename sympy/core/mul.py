@@ -993,43 +993,59 @@ class Mul(Expr, AssocOp):
                     is_neither = True
             else:
                 return
+
         if is_neither:
             if im_count % 2 == 0:
                 if is_zero is False:
                     return False
         else:
-            return im_count % 2 == 0
+            if im_count % 2 == 0:
+                return True
+            else:
+                return is_zero
 
     def _eval_is_imaginary(self):
         if self.is_nonzero:
             return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
+        from sympy.core.logic import fuzzy_not
         nc_count = 0
         im_count = 0
         is_neither = False
+        is_zero = False
         for t in self.args:
             if not t.is_commutative:
                 nc_count += 1
                 if nc_count > 1:
-                    return None
+                    return
             if t.is_antihermitian:
                 im_count += 1
                 continue
             t_real = t.is_hermitian
             if t_real:
+                if not is_zero:
+                    is_zero = fuzzy_not(t.is_nonzero)
+                    if is_zero:
+                        return True
                 continue
             elif t_real is False:
                 if is_neither:
-                    return None
+                    return
                 else:
                     is_neither = True
             else:
-                return None
-        if is_neither:
-            return False
+                return
 
-        return (im_count % 2 == 0)
+        if is_neither:
+            if im_count % 2 == 0:
+                if is_zero is False:
+                    return False
+        else:
+            if im_count % 2 == 0:
+                return True
+            else:
+                return is_zero
 
     def _eval_is_antihermitian(self):
         nc_count = 0
