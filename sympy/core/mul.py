@@ -1005,8 +1005,37 @@ class Mul(Expr, AssocOp):
                 return is_zero
 
     def _eval_is_imaginary(self):
-        if self.is_nonzero:
-            return (S.ImaginaryUnit*self).is_real
+        from sympy.core.logic import fuzzy_not
+        im_count = 0
+        is_neither = False
+        is_zero = False
+        for t in self.args:
+            if t.is_imaginary:
+                im_count += 1
+                continue
+            t_real = t.is_real
+            if t_real:
+                if not is_zero:
+                    is_zero = fuzzy_not(t.is_nonzero)
+                    if is_zero:
+                        return False
+                continue
+            elif t_real is False:
+                if is_neither:
+                    return None
+                else:
+                    is_neither = True
+            else:
+                return None
+
+        if is_neither:
+            return is_zero
+        else:
+            if im_count % 2 == 1:
+                if is_zero is False:
+                    return True
+            else:
+                return False
 
     def _eval_is_hermitian(self):
         from sympy.core.logic import fuzzy_not
