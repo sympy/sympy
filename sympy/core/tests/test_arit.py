@@ -1134,8 +1134,8 @@ def test_Mul_is_imaginary_real():
     assert (I*I).is_imaginary is False
     assert (I*I).is_real is True
 
-    assert (r*i).is_imaginary is True
-    assert (r*i).is_real is False
+    assert (r*i).is_imaginary is None
+    assert (r*i).is_real is None
 
     assert (x*i).is_imaginary is None
     assert (x*i).is_real is None
