@@ -493,6 +493,7 @@ def test_Add_is_even_odd():
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
     y = Symbol('y', real=False)
+    i, j = symbols('i j', imaginary=True)
 
     neg = Symbol('neg', negative=True)
     pos = Symbol('pos', positive=True)
@@ -500,6 +501,8 @@ def test_Mul_is_negative_positive():
     npos = Symbol('npos', nonpositive=True)
 
     assert neg.is_negative is True
+    assert (i*j).is_negative is True
+    assert (i*j).is_positive is False
     assert (-neg).is_negative is False
     assert (2*neg).is_negative is True
 
