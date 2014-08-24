@@ -734,6 +734,11 @@ def test_issue_4149():
     assert ([(i**a).is_imaginary for a in range(4)] ==
             [False, True, False, True])
 
+    # tests from the PR #7887:
+    e = S("-sqrt(3)*I/2 + 0.866025403784439*I")
+    assert e.is_real is False
+    assert e.is_imaginary
+
 
 def test_issue_2920():
     n = Symbol('n', negative=True)
