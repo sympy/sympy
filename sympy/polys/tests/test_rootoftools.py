@@ -368,3 +368,9 @@ def test_RootSum_independent():
     r1 = RootSum(x**4 - b, h, x)
 
     assert RootSum(f, g, x).as_ordered_terms() == [10*r0, 15*r1, 126]
+
+
+def test_issue_7876():
+    l1 = Poly(x**6 - x + 1, x).all_roots()
+    l2 = [RootOf(x**6 - x + 1, i) for i in range(6)]
+    assert frozenset(l1) == frozenset(l2)
