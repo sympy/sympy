@@ -87,8 +87,11 @@ class Relational(Boolean, Expr, EvalfMixin):
                     diff = S.Zero
                 elif know == False:
                     diff = diff.evalf()
-            if diff.is_Number and diff.is_real:
-                return cls._eval_relation(diff, S.Zero)
+            if diff.is_Number:
+                if diff.is_real:
+                    return cls._eval_relation(diff, S.Zero)
+                elif diff is S.NaN:
+                    return cls._eval_relation(lhs, rhs)
 
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])

@@ -2753,10 +2753,18 @@ class NumberSymbol(AtomicExpr):
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
-        return _sympify((-self) < (-other))
+        r = _sympify((-self) < (-other))
+        if r in (S.true, S.false):
+            return r
+        else:
+            return Expr.__gt__(self, other)
 
     def __ge__(self, other):
-        return _sympify((-self) <= (-other))
+        r = _sympify((-self) <= (-other))
+        if r in (S.true, S.false):
+            return r
+        else:
+            return Expr.__ge__(self, other)
 
     def __int__(self):
         # subclass with appropriate return value

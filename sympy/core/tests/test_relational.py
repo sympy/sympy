@@ -439,12 +439,8 @@ def test_nan_equality_exceptions():
     assert Unequality(random.choice(A), nan) is S.true
 
 
-@XFAIL
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
-    # currently fails because rhs reduces to bool but the lhs does not
-    assert Lt(x, oo) == (x < oo)
-
     # We test all combinations from a set
     # FIXME: could replace with random selection after test passes
     A = (x, y, S(0), S(1)/3, pi, oo, -oo)
