@@ -1138,8 +1138,7 @@ class Mul(Expr, AssocOp):
         cannot be determined.
 
         This algorithm is non-recursive and works by keeping track of the
-        sign which changes when a negative or nonpositive is encountered and
-        when a pair of imaginaries is encountered.
+        sign which changes when a negative or nonpositive is encountered.
         Whether a nonpositive or nonnegative is seen is also tracked since
         the presence of these makes it impossible to return True, but
         possible to return False if the end result is nonpositive. e.g.
@@ -1162,13 +1161,11 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_nonnegative:
                 saw_NON = True
-            elif t.is_imaginary:
-                sign *= S.ImaginaryUnit
             else:
                 return
         if sign == 1 and saw_NON is False:
             return True
-        if type(sign) is not int or sign < 0:
+        if sign < 0:
             return False
 
     def _eval_is_negative(self):
