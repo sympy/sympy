@@ -441,9 +441,6 @@ def test_nan_equality_exceptions():
 
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
-    # currently fails because rhs reduces to bool but the lhs does not
-    assert Lt(x, oo) == (x < oo)
-
     # We test all combinations from a set
     # FIXME: could replace with random selection after test passes
     A = (x, y, S(0), S(1)/3, pi, oo, -oo)
@@ -453,6 +450,18 @@ def test_inequalities_symbol_name_same():
             assert Lt(a, b) == (a < b)
             assert Ge(a, b) == (a >= b)
             assert Le(a, b) == (a <= b)
+
+    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+        assert Gt(x, b, evaluate=False) == (x > b)
+        assert Lt(x, b, evaluate=False) == (x < b)
+        assert Ge(x, b, evaluate=False) == (x >= b)
+        assert Le(x, b, evaluate=False) == (x <= b)
+
+    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+        assert Gt(b, x, evaluate=False) == (b > x)
+        assert Lt(b, x, evaluate=False) == (b < x)
+        assert Ge(b, x, evaluate=False) == (b >= x)
+        assert Le(b, x, evaluate=False) == (b <= x)
 
 
 def test_inequalities_symbol_name_same_complex():
