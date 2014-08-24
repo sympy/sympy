@@ -1460,8 +1460,8 @@ class asin(InverseTrigonometricFunction):
     =====
 
     asin(x) will evaluate automatically in the cases oo, -oo, 0, 1,
-    -1 and if the result is a some rational multiple of pi (see the
-    eval class method).
+    -1 and for some instances when the result is a rational multiple
+    of pi (see the eval class method).
 
     Examples
     ========
