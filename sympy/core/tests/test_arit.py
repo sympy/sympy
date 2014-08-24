@@ -494,6 +494,7 @@ def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
     y = Symbol('y', real=False)
     z = Symbol('z', zero=True)
+    i, j = symbols('i j', imaginary=True)
 
     e = 2*z
     assert e.is_Mul and e.is_positive is False and e.is_negative is False
@@ -504,6 +505,18 @@ def test_Mul_is_negative_positive():
     npos = Symbol('npos', nonpositive=True)
 
     assert neg.is_negative is True
+    assert (i*j).is_negative is None  # could be (2*I)*(-3*I)
+    assert (i*j).is_positive is None  # ditto
+    assert (I*sqrt(1 - sqrt(3))).is_negative
+    assert Mul(2*I, I, evaluate=False).is_negative is True
+    assert Mul(Mul(2, I, evaluate=False), I, evaluate=False).is_negative \
+        is True
+    assert Mul(Mul(-2, I, evaluate=False), I, evaluate=False).is_negative \
+        is False
+    assert Mul(Mul(0, I, evaluate=False), I, evaluate=False).is_negative \
+        is False
+    assert Mul(Mul(nneg, I, evaluate=False), I, evaluate=False).is_negative \
+        is None
     assert (-neg).is_negative is False
     assert (2*neg).is_negative is True
 
