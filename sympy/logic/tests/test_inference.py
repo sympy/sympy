@@ -143,12 +143,19 @@ def test_pl_true():
     assert pl_true(Equivalent(A, B), {A: None}) is None
     assert pl_true(Equivalent(A, B), {A: True, B: None}) is None
 
+    # Test for deep
+    assert pl_true(A | B, {A: False}, deep=True) is None
+    assert pl_true(~A & ~B, {A: False}, deep=True) is None
+    assert pl_true(A | B, {A: False, B: False}, deep=True) is False
+    assert pl_true(A & B & (~A | ~B), {A: True}, deep=True) is False
+    assert pl_true((C >> A) >> (B >> A), {C: True}, deep=True) is True
 
-# def test_pl_true_wrong_input():
-#     from sympy import pi
-#     raises(ValueError, lambda: pl_true('John Cleese'))
-#     raises(ValueError, lambda: pl_true(42 + pi + pi ** 2))
-#     raises(ValueError, lambda: pl_true(42))
+
+def test_pl_true_wrong_input():
+    from sympy import pi
+    raises(ValueError, lambda: pl_true('John Cleese'))
+    raises(ValueError, lambda: pl_true(42 + pi + pi ** 2))
+    raises(ValueError, lambda: pl_true(42))
 
 
 def test_entails():
