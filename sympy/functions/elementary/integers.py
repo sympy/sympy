@@ -55,7 +55,7 @@ class RoundFunction(Function):
             except (PrecisionExhausted, NotImplementedError):
                 pass
 
-        spart = npart + spart
+        spart += npart
         if not spart:
             return ipart
         elif spart.is_imaginary or (S.ImaginaryUnit*spart).is_real:

@@ -683,7 +683,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple representing a complex numbers
+        returns a tuple representing a complex number
 
         Examples
         ========
