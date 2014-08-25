@@ -411,6 +411,34 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
+    def _eval_is_imaginary(self):
+        if self.base.is_imaginary:
+            if self.exp.is_integer:
+                odd = self.exp.is_odd
+                if odd is not None:
+                    return odd
+                return
+
+        if self.exp.is_imaginary:
+            imlog = C.log(self.base).is_imaginary
+            if imlog is not None:
+                return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
+
+        if self.base.is_real and self.exp.is_real:
+            if self.base.is_positive:
+                return False
+            else:
+                r = self.exp.is_rational
+                if self.exp.is_integer:
+                    return False
+                else:
+                    r = (2*self.exp).is_integer
+                    if r:
+                        return self.base.is_negative
+                    else:
+                        return r
+                return r
+
     def _eval_is_odd(self):
         if self.exp.is_integer:
             if self.exp.is_positive:
