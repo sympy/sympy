@@ -407,7 +407,7 @@ class Abs(Function):
             return arg
         if arg.is_nonpositive:
             return -arg
-        if arg.is_imaginary:
+        if arg.is_imaginary and arg.has(S.ImaginaryUnit):
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_nonnegative:
                 return arg2
