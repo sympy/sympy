@@ -428,16 +428,17 @@ class Pow(Expr):
             if self.base.is_positive:
                 return False
             else:
-                r = self.exp.is_rational
+                rat = self.exp.is_rational
+                if not rat:
+                    return rat
                 if self.exp.is_integer:
                     return False
                 else:
-                    r = (2*self.exp).is_integer
-                    if r:
+                    half = (2*self.exp).is_integer
+                    if half:
                         return self.base.is_negative
-                    else:
-                        return r
-                return r
+                    return half
+
 
     def _eval_is_odd(self):
         if self.exp.is_integer:

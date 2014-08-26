@@ -498,16 +498,17 @@ class AskImaginaryHandler(CommonHandler):
             if ask(Q.positive(expr.base), assumptions):
                 return False
             else:
-                r = ask(Q.rational(expr.exp), assumptions)
+                rat = ask(Q.rational(expr.exp), assumptions)
+                if not rat:
+                    return rat
                 if ask(Q.integer(expr.exp), assumptions):
                     return False
                 else:
-                    r = ask(Q.integer(2*expr.exp), assumptions)
-                    if r:
+                    half = ask(Q.integer(2*expr.exp), assumptions)
+                    if half:
                         return ask(Q.negative(expr.base), assumptions)
-                    else:
-                        return r
-                return r
+                    return half
+
 
     @staticmethod
     def log(expr, assumptions):
