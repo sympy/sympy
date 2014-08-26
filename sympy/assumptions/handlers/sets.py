@@ -462,14 +462,14 @@ class AskImaginaryHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         """
-        Imaginary**integer/odd  -> Imaginary
-        Imaginary**integer/even -> Real if integer % 2 == 0
-        b**Imaginary            -> !Imaginary if exponent is an integer multiple of I*pi/log(b)
-        Imaginary**Real         -> ?
-        Positive**Real          -> Real
-        Negative**Integer       -> Real
-        Negative**(Integer/2)   -> Imaginary
-        Negative**Real          -> not Imaginary if exponent is not Rational
+        Imaginary**Odd        -> Imaginary
+        Imaginary**Even       -> Real
+        b**Imaginary          -> !Imaginary if exponent is an integer multiple of I*pi/log(b)
+        Imaginary**Real       -> ?
+        Positive**Real        -> Real
+        Negative**Integer     -> Real
+        Negative**(Integer/2) -> Imaginary
+        Negative**Real        -> not Imaginary if exponent is not Rational
         """
         if expr.is_number:
             return AskImaginaryHandler._number(expr, assumptions)
