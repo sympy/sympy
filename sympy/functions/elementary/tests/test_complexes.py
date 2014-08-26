@@ -315,7 +315,7 @@ def test_Abs():
     assert Abs(x).diff(x) == -sign(x)
 
     eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
-    # if there is a fast way to know when and when you cannot prove an
+    # if there is a fast way to know when you can and when you cannot prove an
     # expression like this is zero then the equality to zero is ok
     assert abs(eq).func is Abs or abs(eq) == 0
     # but sometimes it's hard to do this so it's better not to load
