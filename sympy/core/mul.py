@@ -677,16 +677,19 @@ class Mul(Expr, AssocOp):
     def as_real_imag(self, deep=True, **hints):
         from sympy import expand_mul
         other = []
-        coeff = S.One
+        coeffr = []
+        coeffi = []
         addterms = S.One
         for a in self.args:
-            if a.is_real or a.is_imaginary:
-                coeff *= a
+            if a.is_real:
+                coeffr.append(a)
+            elif a.is_imaginary:
+                coeffi.append(a)
             elif a.is_commutative:
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
                     if x == a.conjugate():
-                        coeff *= C.Abs(x)**2
+                        coeffr.append(C.Abs(x)**2)
                         del other[i]
                         break
                 else:
@@ -699,9 +702,23 @@ class Mul(Expr, AssocOp):
         m = self.func(*other)
         if hints.get('ignore') == m:
             return None
+        if not (addterms == 1 and m == 1):
+            coeff = Mul(*(coeffr + coeffi))
+            del coeffr, coeffi
         if addterms == 1:
             if m == 1:
-                return (C.re(coeff), C.im(coeff))
+                # every factor is known to be real or imaginary
+                # if there is an odd number of imaginaries, remove
+                # one and put the others in pairs with the reals
+                if len(coeffi) % 2:
+                    i = coeffi.pop(0)
+                else:
+                    i = None
+                r = self.func(*(coeffr + coeffi))
+                if i is None:
+                    return (r, S.Zero)
+                else:
+                    return (S.Zero, r*C.im(i))
             rem, imm = (C.re(m), C.im(m))
             if coeff.is_real:
                 return (coeff*rem, coeff*imm)
