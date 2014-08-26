@@ -1167,6 +1167,48 @@ def test_Mul_is_imaginary_real():
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
 
+    # is_zero detection
+    a = Symbol('a', real=True, zero=False)
+    b = Symbol('b', real=True)
+    bb = Symbol('b', real=True, zero=False)
+    c = Symbol('c', real=False)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    assert e1.is_imaginary is None
+    assert e2.is_imaginary is None
+    e1 = Mul(a, bb, c, evaluate=False)
+    assert e1.is_imaginary is False
+    a = Symbol('a', hermitian=True, zero=False)
+    b = Symbol('b', hermitian=True)
+    bb = Symbol('b', hermitian=True, zero=False)
+    c = Symbol('c', hermitian=False)
+    d = Symbol('d', antihermitian=True)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    e3 = Mul(a, b, c, d, evaluate=False)
+    e4 = Mul(b, a, c, d, evaluate=False)
+    assert e1.is_antihermitian is None
+    assert e2.is_antihermitian is None
+    assert e3.is_antihermitian is None
+    assert e4.is_antihermitian is None
+    e1 = Mul(a, bb, c, evaluate=False)
+    e3 = Mul(a, bb, c, d, evaluate=False)
+    assert e1.is_antihermitian is False
+    assert e3.is_antihermitian is False
+
+    a = Symbol('a', real=True, zero=False)
+    b = Symbol('b', real=True)
+    bb = Symbol('b', real=True, zero=False)
+    c = Symbol('c', imaginary=True)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    assert e1.is_real is None
+    assert e2.is_real is None
+    assert e1.is_hermitian is None
+    assert e2.is_hermitian is None
+    e1 = Mul(a, bb, c, evaluate=False)
+    assert e1.is_real is False
+
 
 def test_Add_is_comparable():
     assert (x + y).is_comparable is False
