@@ -677,16 +677,19 @@ class Mul(Expr, AssocOp):
     def as_real_imag(self, deep=True, **hints):
         from sympy import expand_mul
         other = []
-        coeff = S.One
+        coeffr = []
+        coeffi = []
         addterms = S.One
         for a in self.args:
-            if a.is_real or a.is_imaginary:
-                coeff *= a
+            if a.is_real:
+                coeffr.append(a)
+            elif a.is_imaginary:
+                coeffi.append(a)
             elif a.is_commutative:
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
                     if x == a.conjugate():
-                        coeff *= C.Abs(x)**2
+                        coeffr.append(C.Abs(x)**2)
                         del other[i]
                         break
                 else:
@@ -699,9 +702,23 @@ class Mul(Expr, AssocOp):
         m = self.func(*other)
         if hints.get('ignore') == m:
             return None
+        if not (addterms == 1 and m == 1):
+            coeff = Mul(*(coeffr + coeffi))
+            del coeffr, coeffi
         if addterms == 1:
             if m == 1:
-                return (C.re(coeff), C.im(coeff))
+                # every factor is known to be real or imaginary
+                # if there is an odd number of imaginaries, remove
+                # one and put the others in pairs with the reals
+                if len(coeffi) % 2:
+                    i = coeffi.pop(0)
+                else:
+                    i = None
+                r = self.func(*(coeffr + coeffi))
+                if i is None:
+                    return (r, S.Zero)
+                else:
+                    return (S.Zero, r*C.im(i))
             rem, imm = (C.re(m), C.im(m))
             if coeff.is_real:
                 return (coeff*rem, coeff*imm)
@@ -972,70 +989,53 @@ class Mul(Expr, AssocOp):
 
     def _eval_is_real(self):
         from sympy.core.logic import fuzzy_not
-        im_count = 0
-        is_neither = False
-        is_zero = False
+        real = True
+        is_zero = one_neither = False
         for t in self.args:
             if t.is_imaginary:
-                im_count += 1
-                continue
-            t_real = t.is_real
-            if t_real:
-                if not is_zero:
+                real = not real
+            elif t.is_real:
+                if is_zero is False:
                     is_zero = fuzzy_not(t.is_nonzero)
                     if is_zero:
                         return True
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return
-                else:
-                    is_neither = True
-            else:
+            elif t.is_real is None:
                 return
-
-        if is_neither:
-            if im_count % 2 == 0:
-                if is_zero is False:
-                    return False
-        else:
-            if im_count % 2 == 0:
-                return True
             else:
-                return is_zero
+                if one_neither:
+                    return  # complex terms might cancel
+                one_neither = True
+        if one_neither:
+            if real and is_zero is False:
+                return False
+            else:
+                return  # imag*imag is real but imag*(a+I*b) is not
+        elif is_zero is False or real:
+            return real
 
     def _eval_is_imaginary(self):
         from sympy.core.logic import fuzzy_not
-        im_count = 0
-        is_neither = False
-        is_zero = False
+        real = True
+        is_zero = one_neither = False
         for t in self.args:
             if t.is_imaginary:
-                im_count += 1
-                continue
-            t_real = t.is_real
-            if t_real:
-                if not is_zero:
+                real = not real
+            elif t.is_real:
+                if is_zero is False:
                     is_zero = fuzzy_not(t.is_nonzero)
                     if is_zero:
                         return False
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return None
-                else:
-                    is_neither = True
+            elif t.is_real is None:
+                return
             else:
-                return None
-
-        if is_neither:
-            return is_zero
-        else:
-            if im_count % 2 == 1:
-                if is_zero is False:
-                    return True
-            else:
-                return False
+                if one_neither:
+                    return  # complex terms might cancel
+                one_neither = True
+        if is_zero is False:
+            if one_neither:
+                return False  # neither real*(a+I*b) nor I*(a+I*b) is imag
+            if not real:
+                return True
 
     def _eval_is_hermitian(self):
         from sympy.core.logic import fuzzy_not
@@ -1053,11 +1053,47 @@ class Mul(Expr, AssocOp):
                 continue
             t_real = t.is_hermitian
             if t_real:
-                if not is_zero:
+                if is_zero is False:
                     is_zero = fuzzy_not(t.is_nonzero)
                     if is_zero:
                         return True
+            elif t_real is False:
+                if is_neither:
+                    return
+                else:
+                    is_neither = True
+            else:
+                return
+
+        real = im_count % 2 == 0
+        if is_neither:
+            if real:
+                return is_zero
+        else:
+            if real:
+                return True
+            return is_zero
+
+    def _eval_is_antihermitian(self):
+        from sympy.core.logic import fuzzy_not
+        nc_count = 0
+        im_count = 0
+        is_neither = False
+        is_zero = False
+        for t in self.args:
+            if not t.is_commutative:
+                nc_count += 1
+                if nc_count > 1:
+                    return
+            if t.is_antihermitian:
+                im_count += 1
                 continue
+            t_real = t.is_hermitian
+            if t_real:
+                if is_zero is False:
+                    is_zero = fuzzy_not(t.is_nonzero)
+                    if is_zero:
+                        return False
             elif t_real is False:
                 if is_neither:
                     return
@@ -1067,41 +1103,10 @@ class Mul(Expr, AssocOp):
                 return
 
         if is_neither:
-            if im_count % 2 == 0:
-                if is_zero is False:
-                    return False
+            return is_zero
         else:
             if im_count % 2 == 0:
-                return True
-            else:
                 return is_zero
-
-    def _eval_is_antihermitian(self):
-        nc_count = 0
-        im_count = 0
-        is_neither = False
-        for t in self.args:
-            if not t.is_commutative:
-                nc_count += 1
-                if nc_count > 1:
-                    return None
-            if t.is_antihermitian:
-                im_count += 1
-                continue
-            t_real = t.is_hermitian
-            if t_real:
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return None
-                else:
-                    is_neither = True
-            else:
-                return None
-        if is_neither:
-            return False
-
-        return (im_count % 2 == 1)
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1168,7 +1173,8 @@ class Mul(Expr, AssocOp):
         cannot be determined.
 
         This algorithm is non-recursive and works by keeping track of the
-        sign which changes when a negative or nonpositive is encountered.
+        sign which changes when a negative or nonpositive is encountered and
+        when a pair of imaginaries is encountered.
         Whether a nonpositive or nonnegative is seen is also tracked since
         the presence of these makes it impossible to return True, but
         possible to return False if the end result is nonnegative. e.g.
@@ -1191,11 +1197,13 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_nonnegative:
                 saw_NON = True
+            elif t.is_imaginary:
+                sign *= S.ImaginaryUnit
             else:
                 return
         if sign == -1 and saw_NON is False:
             return True
-        if sign > 0:
+        if type(sign) is not int or sign > 0:
             return False
 
     def _eval_is_odd(self):

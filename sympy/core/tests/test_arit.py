@@ -493,6 +493,7 @@ def test_Add_is_even_odd():
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
     y = Symbol('y', real=False)
+    i, j = symbols('i j', imaginary=True)
 
     neg = Symbol('neg', negative=True)
     pos = Symbol('pos', positive=True)
@@ -500,6 +501,8 @@ def test_Mul_is_negative_positive():
     npos = Symbol('npos', nonpositive=True)
 
     assert neg.is_negative is True
+    assert (i*j).is_negative is True
+    assert (i*j).is_positive is False
     assert (-neg).is_negative is False
     assert (2*neg).is_negative is True
 
@@ -1121,6 +1124,7 @@ def test_Pow_is_nonpositive_nonnegative():
 
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
     i = Symbol('i', imaginary=True)
     ii = Symbol('ii', imaginary=True)
     x = Symbol('x')
@@ -1133,6 +1137,18 @@ def test_Mul_is_imaginary_real():
     assert (3*I).is_real is False
     assert (I*I).is_imaginary is False
     assert (I*I).is_real is True
+    e = (p + p*I)
+    assert (e**3).is_complex
+    assert (e**-1).is_imaginary is False
+    assert (e**2).is_imaginary
+    assert (e**3).is_imaginary is False
+    assert (e**4).is_imaginary is False
+    assert (e**5).is_imaginary is False
+    assert (e**-1).is_real is False
+    assert (e**2).is_real is False
+    assert (e**3).is_real is False
+    assert (e**4).is_real
+    assert (e**5).is_real is False
 
     assert (r*i).is_imaginary is None
     assert (r*i).is_real is None
@@ -1153,6 +1169,48 @@ def test_Mul_is_imaginary_real():
     assert (i*nr).is_real is None
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
+
+    # is_zero detection
+    a = Symbol('a', real=True, zero=False)
+    b = Symbol('b', real=True)
+    bb = Symbol('b', real=True, zero=False)
+    c = Symbol('c', real=False)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    assert e1.is_imaginary is None
+    assert e2.is_imaginary is None
+    e1 = Mul(a, bb, c, evaluate=False)
+    assert e1.is_imaginary is False
+    a = Symbol('a', hermitian=True, zero=False)
+    b = Symbol('b', hermitian=True)
+    bb = Symbol('b', hermitian=True, zero=False)
+    c = Symbol('c', hermitian=False)
+    d = Symbol('d', antihermitian=True)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    e3 = Mul(a, b, c, d, evaluate=False)
+    e4 = Mul(b, a, c, d, evaluate=False)
+    assert e1.is_antihermitian is None
+    assert e2.is_antihermitian is None
+    assert e3.is_antihermitian is None
+    assert e4.is_antihermitian is None
+    e1 = Mul(a, bb, c, evaluate=False)
+    e3 = Mul(a, bb, c, d, evaluate=False)
+    assert e1.is_antihermitian is False
+    assert e3.is_antihermitian is False
+
+    a = Symbol('a', real=True, zero=False)
+    b = Symbol('b', real=True)
+    bb = Symbol('b', real=True, zero=False)
+    c = Symbol('c', imaginary=True)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    assert e1.is_real is None
+    assert e2.is_real is None
+    assert e1.is_hermitian is None
+    assert e2.is_hermitian is None
+    e1 = Mul(a, bb, c, evaluate=False)
+    assert e1.is_real is False
 
 
 def test_Add_is_comparable():

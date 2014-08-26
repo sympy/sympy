@@ -411,6 +411,17 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
+        i = C.arg(self.base)*self.exp/S.Pi
+        if i.is_rational and i.is_nonzero:
+            if i.is_integer:
+                return True  # real
+            return False  # either a+I*b or I*b
+
+    def _eval_is_complex(self):
+        i = C.arg(self.base)*self.exp/S.Pi
+        if i.is_rational:
+            return True  # it's real, imaginary or a+I*b
+
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:
             if self.exp.is_integer:
@@ -428,16 +439,24 @@ class Pow(Expr):
             if self.base.is_positive:
                 return False
             else:
-                r = self.exp.is_rational
+                rat = self.exp.is_rational
+                if not rat:
+                    return rat
                 if self.exp.is_integer:
                     return False
                 else:
-                    r = (2*self.exp).is_integer
-                    if r:
+                    half = (2*self.exp).is_integer
+                    if half:
                         return self.base.is_negative
-                    else:
-                        return r
-                return r
+                    return half
+
+        i = C.arg(self.base)*self.exp/S.Pi
+        if i.is_rational and i.is_nonzero:
+            if i.is_integer:
+                return False  # real
+            if (2*i).is_integer:
+                return True  # b*I
+            return False  # a + I*b
 
     def _eval_is_odd(self):
         if self.exp.is_integer:
