@@ -1155,6 +1155,10 @@ def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
 def test_sympy__functions__elementary__trigonometric__ReciprocalTrigonometricFunction():
     pass
 
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__InverseTrigonometricFunction():
+    pass
+
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
     assert _test_args(acos(2))
@@ -1168,6 +1172,16 @@ def test_sympy__functions__elementary__trigonometric__acot():
 def test_sympy__functions__elementary__trigonometric__asin():
     from sympy.functions.elementary.trigonometric import asin
     assert _test_args(asin(2))
+
+
+def test_sympy__functions__elementary__trigonometric__asec():
+    from sympy.functions.elementary.trigonometric import asec
+    assert _test_args(asec(2))
+
+
+def test_sympy__functions__elementary__trigonometric__acsc():
+    from sympy.functions.elementary.trigonometric import acsc
+    assert _test_args(acsc(2))
 
 
 def test_sympy__functions__elementary__trigonometric__atan():

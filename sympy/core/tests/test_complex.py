@@ -76,8 +76,8 @@ def test_evalc():
 
     assert tan(I*x).expand(complex=True) == tanh(x) * I
     assert tan(x + I*y).expand(complex=True) == (
-        (sin(x)*cos(x) + I*cosh(y)*sinh(y)) /
-        (cos(x)**2 + sinh(y)**2)).expand()
+        sin(2*x)/(cos(2*x) + cosh(2*y)) +
+        I*sinh(2*y)/(cos(2*x) + cosh(2*y)))
 
     assert sinh(I*x).expand(complex=True) == I * sin(x)
     assert sinh(x + I*y).expand(complex=True) == sinh(x)*cos(y) + \
