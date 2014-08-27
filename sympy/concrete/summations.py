@@ -153,11 +153,6 @@ class Sum(AddWithLimits,ExprWithIntLimits):
         if self.function.is_zero:
             return True
 
-    @property
-    def is_number(self):
-        """Return True if the Sum has no free symbols, else False."""
-        return not self.free_symbols
-
     def doit(self, **hints):
         if hints.get('deep', True):
             f = self.function.doit(**hints)
