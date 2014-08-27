@@ -417,9 +417,8 @@ class Pow(Expr):
             return i.is_integer
 
     def _eval_is_complex(self):
-        i = C.arg(self.base)*self.exp/S.Pi
-        if i.is_rational:
-            return True  # it's real, imaginary or a+I*b
+        if self.base.is_complex:
+            return self.exp.is_complex
 
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:

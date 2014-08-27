@@ -1166,6 +1166,9 @@ def test_Mul_is_imaginary_real():
     assert (e**4).is_real
     assert (e**5).is_real is False
 
+    # why can't this be figured out with adding the _eval_is_complex routine?
+    assert (e**3).is_complex
+
     assert (r*i).is_imaginary is None
     assert (r*i).is_real is None
 
