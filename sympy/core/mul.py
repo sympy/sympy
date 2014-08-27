@@ -964,6 +964,18 @@ class Mul(Expr, AssocOp):
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex',
         when_multiple=None)
 
+    def _eval_is_nonzero(self):
+        rv = True
+        for i in self.args:
+            nz = i.is_nonzero
+            if nz:
+                continue
+            elif nz is False:
+                return False
+            elif rv:
+                rv = None
+        return rv
+
     def _eval_is_integer(self):
         is_rational = self.is_rational
 

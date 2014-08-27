@@ -1645,3 +1645,11 @@ def test_mul_coeff():
     # This can be tricky when powers combine to produce those numbers
     p = exp(I*pi/3)
     assert p**2*x*p*y*p*x*p**2 == x**2*y
+
+def test_mul_nonzero():
+    i = Symbol('i', integer=True, zero=False)
+    n = Symbol('n', nonzero=False)
+    assert (2*i).is_nonzero
+    assert (2*x).is_nonzero is None
+    assert Mul(x, n, evaluate=False).is_nonzero is False
+    assert Mul(n, x, evaluate=False).is_nonzero is False
