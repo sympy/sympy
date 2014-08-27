@@ -140,6 +140,7 @@ def test_sign():
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
     assert sign(2 + 2*I).simplify() == sign(1 + I)
+    assert sign(im(sqrt(1 - sqrt(3)))) == 1
 
     x = Symbol('x')
     assert sign(x).is_bounded is True
