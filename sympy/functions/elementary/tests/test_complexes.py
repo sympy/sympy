@@ -311,8 +311,9 @@ def test_Abs():
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
 
-    x = Symbol('x', imaginary=True)
-    assert Abs(x).diff(x) == -sign(x)
+    i = Symbol('i', imaginary=True)
+    assert Abs(i).diff(i) == -sign(i)
+    assert sqrt(i**2).as_real_imag() == (0, Abs(i))
 
     eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
     # if there is a fast way to know when you can and when you cannot prove an
