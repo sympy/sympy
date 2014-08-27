@@ -99,7 +99,22 @@ class Symbol(AtomicExpr, Boolean):
 
         """
         cls._sanitize(assumptions, cls)
-        return Symbol.__xnew_cached_(cls, name, **assumptions)
+
+        x = Symbol.__xnew_cached_(cls, name, **assumptions)
+
+        from sympy.assumptions.ask import Q
+        from sympy.assumptions.assume import global_assumptions
+
+        for key in assumptions.keys():
+            if not hasattr(Q, str(key)):
+                continue
+
+            if assumptions[key]:
+                global_assumptions.add(getattr(Q, str(key))(x))
+            elif assumptions[key] is False:
+                global_assumptions.add(~getattr(Q, str(key))(x))
+
+        return x
 
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):

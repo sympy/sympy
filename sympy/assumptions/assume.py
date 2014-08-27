@@ -20,17 +20,16 @@ class AssumptionsContext(set):
     ========
 
     >>> from sympy import AppliedPredicate, Q
-    >>> from sympy.assumptions.assume import global_assumptions
-    >>> global_assumptions
-    AssumptionsContext()
+    >>> from sympy.assumptions.assume import AssumptionsContext
+    >>> assumptions = AssumptionsContext()
     >>> from sympy.abc import x
-    >>> global_assumptions.add(Q.real(x))
-    >>> global_assumptions
+    >>> assumptions.add(Q.real(x))
+    >>> assumptions
     AssumptionsContext([Q.real(x)])
-    >>> global_assumptions.remove(Q.real(x))
-    >>> global_assumptions
+    >>> assumptions.remove(Q.real(x))
+    >>> assumptions
     AssumptionsContext()
-    >>> global_assumptions.clear()
+    >>> assumptions.clear()
 
     """
 
@@ -186,6 +185,7 @@ class Predicate(Boolean):
                         raise ValueError('incompatible resolutors')
                 break
         return res
+
 
 @contextmanager
 def assuming(*assumptions):
