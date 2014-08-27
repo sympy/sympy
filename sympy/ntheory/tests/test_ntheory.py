@@ -301,6 +301,7 @@ def test_factorint():
     assert factorint(
         12345, limit=3) == {4115: 1, 3: 1}  # the 5 is greater than the limit
     assert factorint(1, limit=1) == {}
+    assert factorint(0, 3) == {0: 1}
     assert factorint(12, limit=1) == {12: 1}
     assert factorint(30, limit=2) == {2: 1, 15: 1}
     assert factorint(16, limit=2) == {2: 4}
