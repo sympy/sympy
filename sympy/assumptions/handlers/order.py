@@ -25,6 +25,10 @@ class AskNegativeHandler(CommonHandler):
     """
 
     @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_negative
+
+    @staticmethod
     def _number(expr, assumptions):
         r, i = expr.as_real_imag()
         # If the imaginary part can symbolically be shown to be zero then
@@ -116,6 +120,11 @@ class AskNegativeHandler(CommonHandler):
 
 
 class AskNonNegativeHandler(CommonHandler):
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_nonnegative
+
     @staticmethod
     def Basic(expr, assumptions):
         if expr.is_number:
@@ -131,6 +140,10 @@ class AskNonZeroHandler(CommonHandler):
     Handler for key 'zero'
     Test that an expression is not identically zero
     """
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_nonzero
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -168,6 +181,11 @@ class AskNonZeroHandler(CommonHandler):
         return ask(Q.nonzero(expr.args[0]), assumptions)
 
 class AskZeroHandler(CommonHandler):
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_zero
+
     @staticmethod
     def Basic(expr, assumptions):
         return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
@@ -179,6 +197,11 @@ class AskZeroHandler(CommonHandler):
         return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
 
 class AskNonPositiveHandler(CommonHandler):
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_nonpositive
+
     @staticmethod
     def Basic(expr, assumptions):
         if expr.is_number:
@@ -193,6 +216,10 @@ class AskPositiveHandler(CommonHandler):
     Handler for key 'positive'
     Test that an expression is greater (strict) than zero
     """
+
+    @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_positive
 
     @staticmethod
     def _number(expr, assumptions):
