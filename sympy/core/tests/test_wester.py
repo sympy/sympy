@@ -19,7 +19,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_periodic as cf_p, continued_fraction_convergents as cf_c,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
-    residue, Derivative, logcombine)
+    residue, Derivative, logcombine, Symbol)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
@@ -1155,38 +1155,43 @@ def test_N8():
 
 
 def test_N9():
-    with assuming(Q.real(x)):
-        assert solve(abs(x - 1) > 2) == Or(And(Lt(-oo, x), Lt(x, -1)),
+    x = Symbol('x', real=True)
+    assert solve(abs(x - 1) > 2) == Or(And(Lt(-oo, x), Lt(x, -1)),
                                            And(Lt(3, x), Lt(x, oo)))
 
 
 def test_N10():
+    x = Symbol('x', real=True)
     p = (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
-    assert solve(expand(p) < 0, assume=Q.real(x)) == Or(
+    assert solve(expand(p) < 0) == Or(
         And(Lt(-oo, x), Lt(x, 1)), And(Lt(2, x), Lt(x, 3)),
         And(Lt(4, x), Lt(x, 5)))
 
 
 def test_N11():
-    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == \
+    x = Symbol('x', real=True)
+    assert solve(6/(x - 3) <= 3) == \
         Or(And(Le(5, x), Lt(x, oo)), And(Lt(-oo, x), Lt(x, 3)))
 
 
 @XFAIL
 def test_N12():
-    assert solve(sqrt(x) < 2, assume=Q.real(x)) == And(Le(0, x), Lt(x, 4))
+    x = Symbol('x', real=True)
+    assert solve(sqrt(x) < 2) == And(Le(0, x), Lt(x, 4))
 
 
 @XFAIL
 def test_N13():
     # raises NotImplementedError: can't reduce [sin(x) < 2]
-    assert solve(sin(x) < 2, assume=Q.real(x)) == [] # S.Reals not found
+    x = Symbol('x', real=True)
+    assert solve(sin(x) < 2) == [] # S.Reals not found
 
 
 @XFAIL
 def test_N14():
     # raises NotImplementedError: can't reduce [sin(x) < 1]
-    assert (solve(sin(x) < 1, assume=Q.real(x)) == Ne(x, pi/2))
+    x = Symbol('x', real=True)
+    assert (solve(sin(x) < 1) == Ne(x, pi/2))
 
 
 @XFAIL
