@@ -245,7 +245,12 @@ def test_log_assumptions():
     z = 2 - pi - pi*(1/pi - 1)
     assert log(2) > 0
     assert log(1).is_zero
-    assert log(z).is_zero is None  # is_zero is naive
+    # is_zero is not supposed to work real hard so this
+    # should be None -- no simplification but if numerical
+    # evaluation is used it should be used to calculate the
+    # `value` not `value - 1` since the former can be done with
+    # precision but the latter can't
+    assert log(2 - pi - pi*(1/pi - 1)).is_zero is None
     assert log(p).is_zero is None
     assert log(n).is_zero is False
     assert log(0.5).is_negative is True

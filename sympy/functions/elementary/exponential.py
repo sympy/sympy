@@ -644,11 +644,6 @@ class log(Function):
                 return False
             return (arg - 1).is_positive
 
-    def _eval_is_zero(self):
-        # XXX This is not quite useless. Try evaluating log(0.5).is_negative
-        #     without it. There's probably a nicer way though.
-        return (self.args[0] - 1).is_zero
-
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
