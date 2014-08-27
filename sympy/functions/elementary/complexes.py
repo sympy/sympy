@@ -244,6 +244,8 @@ class sign(Function):
                 else:
                     ai = im(a)
                     if a.is_imaginary and ai.is_comparable:  # i.e. a = I*real
+                        if is_imag:
+                            is_neg = not is_neg  # I*I = -1
                         is_imag = not is_imag
                         if ai.is_negative:
                             is_neg = not is_neg
