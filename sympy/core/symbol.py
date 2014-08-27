@@ -132,6 +132,10 @@ class Symbol(AtomicExpr, Boolean):
     def free_symbols(self):
         return set([self])
 
+    @property
+    def is_number(self):
+        return False
+
 
 class Dummy(Symbol):
     """Dummy symbols are each unique, identified by an internal count index:
@@ -180,6 +184,10 @@ class Dummy(Symbol):
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
+
+    @property
+    def is_number(self):
+        return False
 
 
 class Wild(Symbol):
@@ -290,6 +298,10 @@ class Wild(Symbol):
 
     def __call__(self, *args, **kwargs):
         raise TypeError("'%s' object is not callable" % type(self).__name__)
+
+    @property
+    def is_number(self):
+        return False
 
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
