@@ -234,28 +234,25 @@ class sign(Function):
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
             unk = []
-            is_imag = c.is_imaginary
-            is_neg = c.is_negative
+            s = sign(c)
             for a in args:
                 if a.is_negative:
-                    is_neg = not is_neg
+                    s = -s
                 elif a.is_positive:
                     pass
                 else:
                     ai = im(a)
                     if a.is_imaginary and ai.is_comparable:  # i.e. a = I*real
-                        if is_imag:
-                            is_neg = not is_neg  # I*I = -1
-                        is_imag = not is_imag
+                        s *= S.ImaginaryUnit
                         if ai.is_negative:
-                            is_neg = not is_neg
+                            # can't use sign(ai) here since ai might not be
+                            # a Number
+                            s = -s
                     else:
                         unk.append(a)
             if c is S.One and len(unk) == len(args):
                 return None
-            return (S.NegativeOne if is_neg else S.One) \
-                * (S.ImaginaryUnit if is_imag else S.One) \
-                * cls(arg._new_rawargs(*unk))
+            return s * cls(arg._new_rawargs(*unk))
         if arg is S.NaN:
             return S.NaN
         if arg.is_zero:  # it may be an Expr that is zero
