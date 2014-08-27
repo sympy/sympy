@@ -140,10 +140,6 @@ class Integral(AddWithLimits):
         if self.function.is_zero is False and got_none is False:
             return False
 
-    @property
-    def is_number(self):
-        return not self.free_symbols
-
     def transform(self, x, u):
         r"""
         Performs a change of variables from `x` to `u` using the relationship
