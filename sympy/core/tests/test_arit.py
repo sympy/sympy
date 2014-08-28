@@ -492,7 +492,7 @@ def test_Add_is_even_odd():
 
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
-    y = Symbol('y', real=False)
+    y = Symbol('y', real=False, complex=True)
     z = Symbol('z', zero=True)
 
     e = 2*z
@@ -1160,7 +1160,7 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False)
+    nr = Symbol('nr', real=False, complex=True)
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i*nr).is_real is None
@@ -1171,7 +1171,7 @@ def test_Mul_is_imaginary_real():
     a = Symbol('a', real=True, zero=False)
     b = Symbol('b', real=True)
     bb = Symbol('b', real=True, zero=False)
-    c = Symbol('c', real=False)
+    c = Symbol('c', real=False, complex=True)
     e1 = Mul(a, b, c, evaluate=False)
     e2 = Mul(b, a, c, evaluate=False)
     assert e1.is_imaginary is None

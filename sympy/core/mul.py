@@ -982,57 +982,60 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_real(self):
-        from sympy.core.logic import fuzzy_not
         real = True
-        is_zero = one_neither = False
+        zero = one_neither = False
+
         for t in self.args:
-            if t.is_imaginary:
+            if not t.is_complex:
+                return
+            elif t.is_imaginary:
                 real = not real
             elif t.is_real:
-                if is_zero is False:
-                    is_zero = fuzzy_not(t.is_nonzero)
-                    if is_zero:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
                         return True
-            elif t.is_real is None:
-                return
-            else:
+            elif t.is_real is False:
                 if one_neither:
                     return  # complex terms might cancel
                 one_neither = True
-        if one_neither:
-            if real and is_zero is False:
-                return False
             else:
-                return  # imag*imag is real but imag*(a+I*b) is not
-        elif is_zero is False or real:
+                return
+
+        if one_neither:
+            if real:
+                return zero  # imag*imag is real but imag*(a+I*b) is not
+        elif zero is False or real:
             return real
 
     def _eval_is_imaginary(self):
-        from sympy.core.logic import fuzzy_not
         real = True
-        is_zero = one_neither = False
+        zero = one_neither = False
+
         for t in self.args:
-            if t.is_imaginary:
+            if not t.is_complex:
+                return
+            elif t.is_imaginary:
                 real = not real
             elif t.is_real:
-                if is_zero is False:
-                    is_zero = fuzzy_not(t.is_nonzero)
-                    if is_zero:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
                         return False
-            elif t.is_real is None:
-                return
-            else:
+            elif t.is_real is False:
                 if one_neither:
                     return  # complex terms might cancel
                 one_neither = True
-        if is_zero is False:
+            else:
+                return
+
+        if zero is False:
             if one_neither:
                 return False  # neither real*(a+I*b) nor I*(a+I*b) is imag
             if not real:
                 return True
 
     def _eval_is_hermitian(self):
-        from sympy.core.logic import fuzzy_not
         nc_count = 0
         im_count = 0
         is_neither = False
@@ -1069,7 +1072,6 @@ class Mul(Expr, AssocOp):
             return is_zero
 
     def _eval_is_antihermitian(self):
-        from sympy.core.logic import fuzzy_not
         nc_count = 0
         im_count = 0
         is_neither = False
