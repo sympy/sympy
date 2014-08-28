@@ -338,7 +338,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         A, u = constant_system(M, zeros(dc + 1, 1), DE)
         c = eye(m).row_join(-eye(m))
         #vertical concatenation of A & B
-        big_cols = max([qi for qi in A.cols, B.cols, c.cols])
+        big_cols = max([A.cols, B.cols, c.cols])
         big_rows = A.rows + B.rows + c.rows
         concat = zeros(big_rows , big_cols)
         concat[0, 0] = A
