@@ -121,7 +121,7 @@ class StrPrinter(Printer):
     def _print_RandomDomain(self, d):
         try:
             return 'Domain: ' + self._print(d.as_boolean())
-        except:
+        except Exception:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))
@@ -645,8 +645,15 @@ class StrPrinter(Printer):
     def _print_Union(self, expr):
         return ' U '.join(self._print(set) for set in expr.args)
 
+    def _print_Complement(self, expr):
+        return ' \ '.join(self._print(set) for set in expr.args)
+
+
     def _print_Unit(self, expr):
         return expr.abbrev
+
+    def _print_Dimension(self, expr):
+        return str(expr)
 
     def _print_Wild(self, expr):
         return expr.name + '_'

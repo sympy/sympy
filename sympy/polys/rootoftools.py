@@ -32,6 +32,10 @@ from sympy.utilities import lambdify, public
 
 from sympy.core.compatibility import xrange
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 _reals_cache = {}
 _complexes_cache = {}
 
@@ -96,8 +100,14 @@ class RootOf(Expr):
         """Construct new ``RootOf`` object from raw data. """
         obj = Expr.__new__(cls)
 
-        obj.poly = poly
+        obj.poly = PurePoly(poly)
         obj.index = index
+
+        try:
+            _reals_cache[obj.poly] = _reals_cache[poly]
+            _complexes_cache[obj.poly] = _complexes_cache[poly]
+        except KeyError:
+            pass
 
         return obj
 
@@ -334,9 +344,9 @@ class RootOf(Expr):
         if not radicals:
             return None
 
-        if radicals and poly.degree() == 2:
+        if poly.degree() == 2:
             return roots_quadratic(poly)
-        elif radicals and poly.length() == 2 and poly.TC():
+        elif poly.length() == 2 and poly.TC():
             return roots_binomial(poly)
         else:
             return None

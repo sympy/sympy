@@ -52,6 +52,10 @@ from sympy.mpmath import pslq, mp
 from sympy.core.compatibility import reduce
 from sympy.core.compatibility import xrange
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 
 def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     """
@@ -282,9 +286,6 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
 
     deg1 = degree(mp1, x)
     deg2 = degree(mp2, y)
-    if op is Add and gcd(deg1, deg2) == 1:
-        # `r` is irreducible, see [2]
-        return r
     if op is Mul and deg1 == 1 or deg2 == 1:
         # if deg1 = 1, then mp1 = x - a; mp1a = x - y - a;
         # r = mp2(x - a), so that `r` is irreducible

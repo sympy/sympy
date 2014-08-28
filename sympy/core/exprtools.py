@@ -532,8 +532,9 @@ class Factors(object):
         factors = {}
 
         for factor, exp in self.factors.items():
+            factor, exp = sympify(factor), sympify(exp)
             if factor in other.factors:
-                lt = (exp < other.factors[factor])
+                lt = (exp - other.factors[factor]).is_negative
                 if lt == True:
                     factors[factor] = exp
                 elif lt == False:

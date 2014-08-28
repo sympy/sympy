@@ -92,16 +92,21 @@ def test_exp_infinity():
 
 def test_exp_subs():
     x, y = symbols('x,y')
-    e = (exp(3*log(x), evaluate=False))
+    e = (exp(3*log(x), evaluate=False))  # evaluates to x**3
     assert e.subs(x**3, y**3) == e
     assert e.subs(x**2, 5) == e
-    assert exp(3*log(x)).subs(x**2, y) == x**3
-    assert exp(5*x).subs(exp(7*x), y) == y**Rational(5, 7)
-    assert exp(2*x + 7).subs(exp(3*x), y) == y**Rational(2, 3) * exp(7)
+    assert (x**3).subs(x**2, y) != y**(3/S(2))
     assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
     assert exp(x).subs(E, y) == y**x
+    x = symbols('x', real=True)
+    assert exp(5*x).subs(exp(7*x), y) == y**Rational(5, 7)
+    assert exp(2*x + 7).subs(exp(3*x), y) == y**Rational(2, 3) * exp(7)
     x = symbols('x', positive=True)
     assert exp(3*log(x)).subs(x**2, y) == y**Rational(3, 2)
+    # differentiate between E and exp
+    assert exp(exp(x + E)).subs(exp, 3) == 3**(3**(x + E))
+    assert exp(exp(x + E)).subs(E, 3) == 3**(3**(x + 3))
+    assert exp(3).subs(E, sin) == sin(3)
 
 
 def test_exp_conjugate():
@@ -206,6 +211,7 @@ def test_log_symbolic():
     assert log(p*q) != log(p) + log(q)
     assert log(p*q).expand() == log(p) + log(q)
 
+    assert log(-sqrt(3)) == log(sqrt(3)) + I*pi
     assert log(-exp(p)) != p + I*pi
     assert log(-exp(x)).expand() != x + I*pi
     assert log(-exp(r)).expand() == r + I*pi

@@ -1,9 +1,11 @@
 from __future__ import division
 
-from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
+from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan
+        sign, im, nan, cbrt
 )
+from sympy.core.evalf import PrecisionExhausted
+from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
@@ -152,13 +154,15 @@ def test_pow():
     assert (x**(y**(x + exp(x + y)) + z)).expand() == \
         x**z*x**(y**x*y**(exp(x)*exp(y)))
 
-    n = Symbol('k', even=False)
+    n = Symbol('n', even=False)
     k = Symbol('k', even=True)
+    o = Symbol('o', odd=True)
 
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
-    assert (-2*x)**k == (-2*x)**k  # we choose not to auto expand this
+    assert (-2*x)**k == (2*x)**k  # we choose not to auto expand this
+    assert (-2*x)**o == -(2*x)**o  # but we do handle coefficient sign
     assert (-1)**k == 1
 
 
@@ -166,9 +170,10 @@ def test_pow2():
     # x**(2*y) is always (x**y)**2 but is only (x**2)**y if
     #                                  x.is_positive or y.is_integer
     # let x = 1 to see why the following are not true.
-    assert ((-x)**2)**Rational(1, 3) != ((-x)**Rational(1, 3))**2
     assert (-x)**Rational(2, 3) != x**Rational(2, 3)
     assert (-x)**Rational(5, 7) != -x**Rational(5, 7)
+    assert ((-x)**2)**Rational(1, 3) != ((-x)**Rational(1, 3))**2
+    assert sqrt(x**2) != x
 
 
 def test_pow3():
@@ -194,7 +199,7 @@ def test_pow_E():
     assert test_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1)
 
 
-def test_pow_issue417():
+def test_pow_issue_3516():
     assert 4**Rational(1, 4) == sqrt(2)
 
 
@@ -952,6 +957,8 @@ def test_Pow_is_real():
     n = Symbol('n', nonnegative=True)
     assert log(n).is_real is None
 
+    assert sqrt(-I).is_real is False  # issue 7843
+
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -1127,8 +1134,8 @@ def test_Mul_is_imaginary_real():
     assert (I*I).is_imaginary is False
     assert (I*I).is_real is True
 
-    assert (r*i).is_imaginary is True
-    assert (r*i).is_real is False
+    assert (r*i).is_imaginary is None
+    assert (r*i).is_real is None
 
     assert (x*i).is_imaginary is None
     assert (x*i).is_real is None
@@ -1492,7 +1499,10 @@ def test_issue_6040():
 
 
 def test_issue_6082():
-    assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
+    assert Basic.compare(Max(x, 1), Max(x, 2)) == -1
+    assert Basic.compare(Max(x, 2), Max(x, 1)) == 1
+    assert Basic.compare(Max(x, 1), Max(x, 1)) == 0
+    assert Basic.compare(Max(1, x), frozenset((1, x))) == -1
 
 
 def test_issue_6077():

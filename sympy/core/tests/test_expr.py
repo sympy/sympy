@@ -501,12 +501,7 @@ def test_args():
     assert (x**y).args[1] == y
 
 
-def test_iter_basic_args():
-    assert list(sin(x*y).iter_basic_args()) == [x*y]
-    assert list((x**y).iter_basic_args()) == [x, y]
-
-
-def test_noncommutative_expand_issue658():
+def test_noncommutative_expand_issue_3757():
     A, B, C = symbols('A,B,C', commutative=False)
     assert A*B - B*A != 0
     assert (A*(A + B)*B).expand() == A**2*B + A*B**2
@@ -658,6 +653,12 @@ def test_replace():
         2*((2*x*y + 1)*(4*x*y + 1))})
     assert x.replace(x, y) == y
     assert (x + 1).replace(1, 2) == x + 2
+
+    # https://groups.google.com/forum/#!topic/sympy/8wCgeC95tz0
+    n1, n2, n3 = symbols('n1:4', commutative=False)
+    f = Function('f')
+    assert (n1*f(n2)).replace(f, lambda x: x) == n1*n2
+    assert (n3*f(n2)).replace(f, lambda x: x) == n3*n2
 
 
 def test_find():
@@ -1040,6 +1041,8 @@ def test_coeff():
     assert (4*x).coeff(2*x) == 0
     assert (2*x).coeff(2*x) == 1
     assert (-oo*x).coeff(x*oo) == -1
+    assert (10*x).coeff(x, 0) == 0
+    assert (10*x).coeff(10*x, 0) == 0
 
     n1, n2 = symbols('n1 n2', commutative=False)
     assert (n1*n2).coeff(n1) == 1
@@ -1151,8 +1154,6 @@ def test_action_verbs():
         (x**y*x**z*y**z).powsimp(combine='all')
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
-    # Not tested because it's deprecated
-    #assert separate((x*(y*z)**3)**2) == ((x*(y*z)**3)**2).separate()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == \
         (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)
@@ -1173,7 +1174,7 @@ def test_as_powers_dict():
 def test_as_coefficients_dict():
     check = [S(1), x, y, x*y, 1]
     assert [Add(3*x, 2*x, y, 3).as_coefficients_dict()[i] for i in check] == \
-        [3, 5, 1, 0, 0]
+        [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
     assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
@@ -1466,7 +1467,7 @@ def test_equals():
         assert eq.equals(0)
     assert sqrt(x).equals(0) is False
 
-    # from integrate(x*sqrt(1+2*x), x);
+    # from integrate(x*sqrt(1 + 2*x), x);
     # diff is zero only when assumptions allow
     i = 2*sqrt(2)*x**(S(5)/2)*(1 + 1/(2*x))**(S(5)/2)/5 + \
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
@@ -1620,3 +1621,8 @@ def test_issue_6325():
     assert diff(e, t, 2) == ans
     e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
+
+def test_issue_7426():
+    f1 = a % c
+    f2 = x % z
+    assert f1.equals(f2) == False

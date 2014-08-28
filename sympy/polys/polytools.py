@@ -49,7 +49,7 @@ from sympy.utilities import group, sift, public
 import sympy.polys
 import sympy.mpmath
 
-from sympy.polys.domains import FF, QQ
+from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
@@ -3344,9 +3344,18 @@ class Poly(Expr):
         else:
             return group(roots, multiple=False)
 
-    def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
+    def nroots(f, n=15, maxsteps=50, cleanup=True):
         """
         Compute numerical approximations of roots of ``f``.
+
+        Parameters
+        ==========
+
+        n ... the number of digits to calculate
+        maxsteps ... the maximum number of iterations to do
+
+        If the accuracy `n` cannot be reached in `maxsteps`, it will raise an
+        exception. You need to rerun with higher maxsteps.
 
         Examples
         ========
@@ -3367,35 +3376,44 @@ class Poly(Expr):
         if f.degree() <= 0:
             return []
 
-        coeffs = [coeff.evalf(n=n).as_real_imag()
-                  for coeff in f.all_coeffs()]
+        # For integer and rational coefficients, convert them to integers only
+        # (for accuracy). Otherwise just try to convert the coefficients to
+        # mpmath.mpc and raise an exception if the conversion fails.
+        if f.rep.dom is ZZ:
+            coeffs = [int(coeff) for coeff in f.all_coeffs()]
+        elif f.rep.dom is QQ:
+            denoms = [coeff.q for coeff in f.all_coeffs()]
+            from sympy.core.numbers import ilcm
+            fac = ilcm(*denoms)
+            coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
+        else:
+            coeffs = [coeff.evalf(n=n).as_real_imag()
+                    for coeff in f.all_coeffs()]
+            try:
+                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
+            except TypeError:
+                raise DomainError("Numerical domain expected, got %s" % \
+                        f.rep.dom)
 
         dps = sympy.mpmath.mp.dps
         sympy.mpmath.mp.dps = n
 
         try:
-            try:
-                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
-            except TypeError:
-                raise DomainError(
-                    "numerical domain expected, got %s" % f.rep.dom)
+            # We need to add extra precision to guard against losing accuracy.
+            # 10 times the degree of the polynomial seems to work well.
+            roots = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps,
+                    cleanup=cleanup, error=False, extraprec=f.degree()*10)
 
-            result = sympy.mpmath.polyroots(
-                coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
-
-            if error:
-                roots, error = result
-            else:
-                roots, error = result, None
-
-            roots = list(map(sympify, sorted(roots, key=lambda r: (r.real, r.imag))))
+            # Mpmath puts real roots first, then complex ones. SymPy polynomial
+            # module orders roots by their real components (if they are equal,
+            # then by their imaginary components). So we reorder the roots here
+            # to conform to the SymPy ordering.
+            roots = list(map(sympify,
+                sorted(roots, key=lambda r: (r.real, r.imag))))
         finally:
             sympy.mpmath.mp.dps = dps
 
-        if error is not None:
-            return roots, sympify(error)
-        else:
-            return roots
+        return roots
 
     def ground_roots(f):
         """
@@ -5127,6 +5145,8 @@ def terms_gcd(f, *gens, **args):
     sympy.core.exprtools.gcd_terms, sympy.core.exprtools.factor_terms
 
     """
+    from sympy.core.relational import Equality
+
     orig = sympify(f)
     if not isinstance(f, Expr) or f.is_Atom:
         return orig
@@ -5136,6 +5156,9 @@ def terms_gcd(f, *gens, **args):
         args.pop('deep')
         args['expand'] = False
         return terms_gcd(new, *gens, **args)
+
+    if isinstance(f, Equality):
+        return f
 
     clear = args.pop('clear', True)
     options.allowed_flags(args, ['polys'])
@@ -5553,7 +5576,7 @@ def _symbolic_factor_list(expr, opt, method):
 
             if exp is S.One:
                 factors.extend(_factors)
-            elif exp.is_integer or len(_factors) == 1:
+            elif exp.is_integer:
                 factors.extend([(f, k*exp) for f, k in _factors])
             else:
                 other = []
@@ -5564,11 +5587,7 @@ def _symbolic_factor_list(expr, opt, method):
                     else:
                         other.append((f, k))
 
-                if len(other) == 1:
-                    f, k = other[0]
-                    factors.append((f, k*exp))
-                else:
-                    factors.append((_factors_product(other), exp))
+                factors.append((_factors_product(other), exp))
 
     return coeff, factors
 
@@ -6080,7 +6099,7 @@ def real_roots(f, multiple=True):
 
 
 @public
-def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
+def nroots(f, n=15, maxsteps=50, cleanup=True):
     """
     Compute numerical approximations of roots of ``f``.
 
@@ -6102,7 +6121,7 @@ def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
         raise PolynomialError(
             "can't compute numerical roots of %s, not a polynomial" % f)
 
-    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup, error=error)
+    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup)
 
 
 @public
@@ -6253,7 +6272,7 @@ def reduced(f, G, *gens, **args):
 
     Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
     computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
-    such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+    such that ``f = q_1*g_1 + ... + q_n*g_n + r``, where ``r`` vanishes or ``r``
     is a completely reduced polynomial with respect to ``G``.
 
     Examples

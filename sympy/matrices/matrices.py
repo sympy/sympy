@@ -18,7 +18,7 @@ from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
-from sympy.core.compatibility import reduce, as_int
+from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
@@ -53,7 +53,7 @@ class DeferredVector(Symbol, NotIterable):
     >>> X
     X
     >>> expr = (X[0] + 2, X[2] + 3)
-    >>> func = lambdify( X, expr )
+    >>> func = lambdify( X, expr, default_array=True )
     >>> func( [1, 2, 3] )
     (3, 6)
     """
@@ -161,7 +161,7 @@ class MatrixBase(object):
             flat_list = [cls._sympify(i) for i in flat_list]
 
         # Matrix(numpy.ones((2, 2)))
-        elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
+        elif len(args) == 1 and hasattr(args[0], "__array__"):
             # NumPy array or matrix or some other object that implements
             # __array__. So let's first use this method to get a
             # numpy.array() and then make a python list out of it.
@@ -171,8 +171,8 @@ class MatrixBase(object):
                 flat_list = [cls._sympify(i) for i in arr.ravel()]
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
-                rows, cols = 1, arr.shape[0]
-                flat_list = [S.Zero]*cols
+                rows, cols = arr.shape[0], 1
+                flat_list = [S.Zero]*rows
                 for i in range(len(arr)):
                     flat_list[i] = cls._sympify(arr[i])
                 return rows, cols, flat_list
@@ -663,16 +663,16 @@ class MatrixBase(object):
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
         align = {
-            'left': str.ljust,
-            'right': str.rjust,
-            'center': str.center,
-            '<': str.ljust,
-            '>': str.rjust,
-            '^': str.center,
+            'left': 'ljust',
+            'right': 'rjust',
+            'center': 'center',
+            '<': 'ljust',
+            '>': 'rjust',
+            '^': 'center',
             }[align]
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
-                row[j] = align(elem, maxlen[j])
+                row[j] = getattr(elem, align)(maxlen[j])
             res[i] = "[" + colsep.join(row) + "]"
         return rowsep.join(res)
 
@@ -1092,15 +1092,15 @@ class MatrixBase(object):
 
     def evalf(self, prec=None, **options):
         """Apply evalf() to each element of self."""
-        if prec is None:
-            return self.applyfunc(lambda i: i.evalf(**options))
-        else:
-            return self.applyfunc(lambda i: i.evalf(prec, **options))
+        return self.applyfunc(lambda i: i.evalf(prec, **options))
 
     n = evalf
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
+
+        Examples
+        ========
 
         >>> from sympy.abc import x, y
         >>> from sympy.matrices import Matrix
@@ -1119,6 +1119,21 @@ class MatrixBase(object):
         for i in self:
             result.update( i.atoms(*types) )
         return result
+
+    @property
+    def free_symbols(self):
+        """Returns the free symbols within the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x
+        >>> from sympy.matrices import Matrix
+        >>> Matrix([[x], [1]]).free_symbols
+        set([x])
+        """
+
+        return set.union(*[i.free_symbols for i in self])
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
@@ -1807,7 +1822,7 @@ class MatrixBase(object):
                 # Minimum singular value
                 return Min(*self.singular_values())
 
-            elif (ord is None or isinstance(ord, str) and ord.lower() in
+            elif (ord is None or isinstance(ord, string_types) and ord.lower() in
                     ['f', 'fro', 'frobenius', 'vector']):
                 # Reshape as vector and send back to norm function
                 return self.vec().norm(ord=2)
@@ -2593,8 +2608,7 @@ class MatrixBase(object):
 
         return self.adjugate() / d
 
-    def rref(self, simplified=False, iszerofunc=_iszero,
-            simplify=False):
+    def rref(self, iszerofunc=_iszero, simplify=False):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         To simplify elements before finding nonzero pivots set simplify=True
@@ -2612,14 +2626,6 @@ class MatrixBase(object):
         [1, 0],
         [0, 1]]), [0, 1])
         """
-        if simplified is not False:
-            SymPyDeprecationWarning(
-                feature="'simplified' as a keyword to rref",
-                useinstead="simplify=True, or set simplify equal to your "
-                "own custom simplification function",
-                issue=6481, deprecated_since_version="0.7.2",
-            ).warn()
-            simplify = simplify or True
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
         # pivot: index of next row to contain a pivot
@@ -2651,8 +2657,7 @@ class MatrixBase(object):
             pivot += 1
         return self._new(r), pivotlist
 
-    def rank(self, simplified=False, iszerofunc=_iszero,
-        simplify=False):
+    def rank(self, iszerofunc=_iszero, simplify=False):
         """
         Returns the rank of a matrix
 
@@ -2665,23 +2670,15 @@ class MatrixBase(object):
         >>> n.rank()
         2
         """
-        row_reduced = self.rref(simplified=simplified, iszerofunc=iszerofunc, simplify=simplify)
+        row_reduced = self.rref(iszerofunc=iszerofunc, simplify=simplify)
         rank = len(row_reduced[-1])
         return rank
 
-    def nullspace(self, simplified=False, simplify=False):
+    def nullspace(self, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self
         """
         from sympy.matrices import zeros
 
-        if simplified is not False:
-            SymPyDeprecationWarning(
-                feature="'simplified' as a keyword to nullspace",
-                useinstead="simplify=True, or set simplify equal to your "
-                "own custom simplification function",
-                issue=6481, deprecated_since_version="0.7.2",
-            ).warn()
-            simplify = simplify or True
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
         reduced, pivots = self.rref(simplify=simpfunc)
@@ -4098,7 +4095,7 @@ def classof(A, B):
             return A.__class__
         else:
             return B.__class__
-    except:
+    except Exception:
         pass
     try:
         import numpy
@@ -4106,7 +4103,7 @@ def classof(A, B):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except:
+    except Exception:
         pass
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
 

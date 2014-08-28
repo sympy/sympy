@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol, subfactorial, true, false, Equivalent, Xor)
+    MatrixSymbol, subfactorial, true, false, Equivalent, Xor, Complement)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -350,7 +350,7 @@ def test_FracField():
 
 
 def test_PolyElement():
-    Ruv, u,v = ring("u,v", ZZ);
+    Ruv, u,v = ring("u,v", ZZ)
     Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert str(x - x) == "0"
@@ -367,7 +367,7 @@ def test_PolyElement():
 
 
 def test_FracElement():
-    Fuv, u,v = field("u,v", ZZ);
+    Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     assert str(x - x) == "0"
@@ -647,8 +647,8 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
-    assert str(FiniteSet(range(1, 6))) == '{1, 2, 3, 4, 5}'
+    assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
+    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
 
 
 def test_PrettyPoly():
@@ -707,3 +707,6 @@ def test_Equivalent():
 
 def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
+
+def test_Complement():
+    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'

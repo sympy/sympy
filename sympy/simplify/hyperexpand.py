@@ -586,7 +586,7 @@ class Hyper_Function(Expr):
         """
         for a in self.ap:
             for b in self.bq:
-                if (a - b).is_integer and (a < b) == False:
+                if (a - b).is_integer and (a - b).is_negative == False:
                     return False
         for a in self.ap:
             if a == 0:
@@ -1777,7 +1777,7 @@ def try_lerchphi(func):
         # bigger than all the a they differ from by an integer. In particular
         # if there are any negative b left, this function is not well-defined.
         for a, b in zip(avalue, bvalue):
-            if a > b:
+            if (a - b).is_positive:
                 k = a - b
                 numer *= rf(b + t, k)
                 denom *= rf(b, k)

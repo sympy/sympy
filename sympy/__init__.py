@@ -7,11 +7,11 @@ libraries, except optionally for plotting support.
 
 See the webpage for more information and documentation:
 
-    http://code.google.com/p/sympy/"""
+    http://sympy.org"""
 
 from __future__ import absolute_import, print_function
 
-__version__ = "0.7.5-git"
+from sympy.release import __version__
 
 import sys
 if sys.version_info[0] == 2 and sys.version_info[1] < 6:
@@ -51,10 +51,10 @@ from .calculus import *
 # from combinatorics import *
 # This module is slow to import:
 #from physics import units
-from .plotting import plot, Plot, textplot, plot_backends, plot_implicit
+from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import ccode, fcode, jscode, latex, preview
+from .printing import ccode, fcode, jscode, mathematica_code, latex, preview
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
 

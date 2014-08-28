@@ -26,6 +26,8 @@ from .core import C
 from .singleton import S
 from .containers import Tuple
 
+from sympy.utilities.iterables import is_sequence
+
 LG10 = math.log(10, 2)
 rnd = round_nearest
 
@@ -317,15 +319,17 @@ def get_integer_part(expr, no, options, return_ints=False):
     # positive or negative (which may fail if very close).
     def calc_part(expr, nexpr):
         nint = int(to_int(nexpr, rnd))
-        expr = C.Add(expr, -nint, evaluate=False)
-        x, _, x_acc, _ = evalf(expr, 10, options)
-        try:
-            check_target(expr, (x, None, x_acc, None), 3)
-        except PrecisionExhausted:
-            if not expr.equals(0):
-                raise PrecisionExhausted
-            x = fzero
-        nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
+        n, c, p, b = nexpr
+        if c != 1 and p != 0:
+            expr = C.Add(expr, -nint, evaluate=False)
+            x, _, x_acc, _ = evalf(expr, 10, options)
+            try:
+                check_target(expr, (x, None, x_acc, None), 3)
+            except PrecisionExhausted:
+                if not expr.equals(0):
+                    raise PrecisionExhausted
+                x = fzero
+            nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
         return nint, fastlog(nint) + 10
 
@@ -783,7 +787,8 @@ def evalf_log(expr, prec, options):
         arg = C.Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, _, _ = evalf_add(arg, prec, options)
         prec2 = workprec - fastlog(xre)
-        re = mpf_log(mpf_add(xre, fone, prec2), prec, rnd)
+        # xre is now x - 1 so we add 1 back here to calculate x
+        re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
 
     re_acc = prec
 
@@ -865,6 +870,17 @@ def as_mpmath(x, prec, options):
 def do_integral(expr, prec, options):
     func = expr.args[0]
     x, xlow, xhigh = expr.args[1]
+    if xlow == xhigh:
+        xlow = xhigh = 0
+    elif x not in func.free_symbols:
+        # only the difference in limits matters in this case
+        # so if there is a symbol in common that will cancel
+        # out when taking the difference, then use that
+        # difference
+        if xhigh.free_symbols & xlow.free_symbols:
+            diff = xhigh - xlow
+            if not diff.free_symbols:
+                xlow, xhigh = 0, diff
     orig = mp.prec
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
@@ -957,13 +973,21 @@ def evalf_integral(expr, prec, options):
     maxprec = options.get('maxprec', INF)
     while 1:
         result = do_integral(expr, workprec, options)
-        # if a scaled_zero comes back accuracy will compute to -1
-        # which will cause workprec to increment by 1
         accuracy = complex_accuracy(result)
-        if accuracy >= prec or workprec >= maxprec:
-            return result
-        workprec += prec - max(-2**i, accuracy)
+        if accuracy >= prec:  # achieved desired precision
+            break
+        if workprec >= maxprec:  # can't increase accuracy any more
+            break
+        if accuracy == -1:
+            # maybe the answer really is zero and maybe we just haven't increased
+            # the precision enough. So increase by doubling to not take too long
+            # to get to maxprec.
+            workprec *= 2
+        else:
+            workprec += max(prec, 2**i)
+        workprec = min(workprec, maxprec)
         i += 1
+    return result
 
 
 def check_convergence(numer, denom, n):
@@ -1011,6 +1035,9 @@ def hypsum(expr, n, start, prec):
     polynomials.
     """
     from sympy import hypersimp, lambdify
+    # TODO: This should be removed for the release of 0.7.7, see issue #7853
+    from functools import partial
+    lambdify = partial(lambdify, default_array=True)
 
     if start:
         expr = expr.subs(n, n + start)
@@ -1066,6 +1093,14 @@ def hypsum(expr, n, start, prec):
         finally:
             mp.prec = orig
         return v._mpf_
+
+
+def evalf_prod(expr, prec, options):
+    if all((l[1] - l[2]).is_Integer for l in expr.limits):
+        re, im, re_acc, im_acc = evalf(expr.doit(), prec=prec, options=options)
+    else:
+        re, im, re_acc, im_acc = evalf(expr.rewrite(C.Sum), prec=prec, options=options)
+    return re, im, re_acc, im_acc
 
 
 def evalf_sum(expr, prec, options):
@@ -1171,6 +1206,7 @@ def _create_evalf_table():
 
         C.Integral: evalf_integral,
         C.Sum: evalf_sum,
+        C.Product: evalf_prod,
         C.Piecewise: evalf_piecewise,
 
         C.bernoulli: evalf_bernoulli,
@@ -1239,7 +1275,8 @@ class EvalfMixin(object):
 
             subs=<dict>
                 Substitute numerical values for symbols, e.g.
-                subs={x:3, y:1+pi}.
+                subs={x:3, y:1+pi}. The substitutions must be given as a
+                dictionary.
 
             maxn=<integer>
                 Allow a maximum temporary working precision of maxn digits
@@ -1263,6 +1300,11 @@ class EvalfMixin(object):
                 Print debug information (default=False)
 
         """
+        n = n if n is not None else 15
+
+        if subs and is_sequence(subs):
+            raise TypeError('subs must be given as a dictionary')
+
         # for sake of sage that doesn't like evalf(1)
         if n == 1 and isinstance(self, C.Number):
             from sympy.core.expr import _mag

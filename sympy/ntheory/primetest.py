@@ -46,6 +46,7 @@ def _test(n, base, s, t):
     """Miller-Rabin strong pseudoprime test for one base.
     Return False if n is definitely composite, True if n is
     probably prime, with a probability greater than 3/4.
+
     """
     # do the Fermat test
     b = pow(base, t, n)
@@ -83,6 +84,7 @@ def mr(n, bases):
     False
     >>> mr(479001599, [31, 73])
     True
+
     """
     from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
@@ -128,11 +130,9 @@ def _mr_safe(n):
     2. http://www.trnicely.net/misc/mpzspsp.html
     3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
         Accuracy_of_the_test
-    4. http://zdu.spaces.live.com/?_c11_BlogPart_pagedir=
-        Next&_c11_BlogPart_handle=cns!C95152CB25EF2037!
-        138&_c11_BlogPart_BlogPart=blogview&_c=BlogPart
-    5. http://primes.utm.edu/glossary/xpage/Pseudoprime.html
-    6. http://uucode.com/obf/dalbec/alg.html#sprp
+    4. http://primes.utm.edu/glossary/xpage/Pseudoprime.html
+    5. http://uucode.com/obf/dalbec/alg.html#sprp
+
     """
 
     if n < 1373653:
@@ -202,6 +202,7 @@ def isprime(n):
     sympy.ntheory.generate.primerange : Generates all primes in a given range
     sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n
     sympy.ntheory.generate.prime : Return the nth prime
+
     """
     n = int(n)
     if n < 2:
@@ -242,6 +243,7 @@ def _mr_safe_helper(_s):
      # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
     >>> print(_mr_safe_helper('return mr(n, [2, 379215, 457083754])'))
      # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
+
     """
 
     def _info(bases):
@@ -253,6 +255,7 @@ def _mr_safe_helper(_s):
         This info tag should then be appended to any new mr_safe line
         that is added so someone can easily see whether that line satisfies
         the requirements of mr_safe (see docstring there for details).
+
         """
         from sympy.ntheory.factor_ import factorint, trailing
 

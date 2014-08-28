@@ -312,7 +312,7 @@ def test_evalf_fast_series():
               fac(2*n + 1)**5, (n, 0, oo)), 100) == astr
 
 
-def test_evalf_fast_series_issue998():
+def test_evalf_fast_series_issue_4021():
     # Catalan's constant
     assert NS(Sum((-1)**(n - 1)*2**(8*n)*(40*n**2 - 24*n + 3)*fac(2*n)**3*
         fac(n)**2/n**3/(2*n - 1)/fac(4*n)**2, (n, 1, oo))/64, 100) == \
@@ -797,3 +797,7 @@ def test_issue_2787():
     assert res == Piecewise((n*p, And(Or(-n + 1 < 0, -n + 1 >= 0),
         Or(-n + 1 < 0, Ne(p/(p - 1), 1)), p*Abs(1/(p - 1)) <= 1)),
         (Sum(k*p**k*(-p + 1)**(-k)*(-p + 1)**n*binomial(n, k), (k, 0, n)), True))
+
+
+def test_issue_4668():
+    assert summation(1/n, (n, 2, oo)) == oo

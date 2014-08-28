@@ -504,12 +504,9 @@ class Domain(object):
         """Returns square root of ``a``. """
         raise NotImplementedError
 
-    def evalf(self, a, prec=None, **args):
+    def evalf(self, a, prec=None, **options):
         """Returns numerical approximation of ``a``. """
-        if prec is None:
-            return self.to_sympy(a).evalf(**args)
-        else:
-            return self.to_sympy(a).evalf(prec, **args)
+        return self.to_sympy(a).evalf(prec, **options)
 
     n = evalf
 

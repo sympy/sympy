@@ -335,8 +335,8 @@ def symbols(names, **args):
     To reduce typing, range syntax is supported to create indexed symbols.
     Ranges are indicated by a colon and the type of range is determined by
     the character to the right of the colon. If the character is a digit
-    then all continguous digits to the left are taken as the nonnegative
-    starting value (or 0 if there are no digit of the colon) and all
+    then all contiguous digits to the left are taken as the nonnegative
+    starting value (or 0 if there is no digit left of the colon) and all
     contiguous digits to the right are taken as 1 greater than the ending
     value::
 
@@ -519,22 +519,25 @@ def var(names, **args):
     into the *global* namespace. It's recommended not to use :func:`var` in
     library code, where :func:`symbols` has to be used::
 
-        >>> from sympy import var
+    Examples
+    ========
 
-        >>> var('x')
-        x
-        >>> x
-        x
+    >>> from sympy import var
 
-        >>> var('a,ab,abc')
-        (a, ab, abc)
-        >>> abc
-        abc
+    >>> var('x')
+    x
+    >>> x
+    x
 
-        >>> var('x,y', real=True)
-        (x, y)
-        >>> x.is_real and y.is_real
-        True
+    >>> var('a,ab,abc')
+    (a, ab, abc)
+    >>> abc
+    abc
+
+    >>> var('x,y', real=True)
+    (x, y)
+    >>> x.is_real and y.is_real
+    True
 
     See :func:`symbol` documentation for more details on what kinds of
     arguments can be passed to :func:`var`.

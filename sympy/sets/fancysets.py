@@ -2,11 +2,13 @@ from __future__ import print_function, division
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass
-from sympy.core.sets import Set, Interval, Intersection
+from sympy.sets.sets import Set, Interval, Intersection, \
+    FiniteSet, Union, Complement, EmptySet
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
 from sympy.core.decorators import deprecated
+from sympy.core.function import Lambda
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -116,7 +118,9 @@ class Integers(with_metaclass(Singleton, Set)):
 
     def _intersect(self, other):
         from sympy.functions.elementary.integers import floor, ceiling
-        if other.is_Interval and other.measure < S.Infinity:
+        if other is Interval(S.NegativeInfinity, S.Infinity) or other is S.Reals:
+            return self
+        elif other.is_Interval:
             s = Range(ceiling(other.left), floor(other.right) + 1)
             return s.intersect(other)  # take out endpoints if open interval
         return None
@@ -146,6 +150,26 @@ class Integers(with_metaclass(Singleton, Set)):
     @property
     def _boundary(self):
         return self
+
+    def _eval_imageset(self, f):
+        from sympy import Wild
+        expr = f.expr
+        if len(f.variables) > 1:
+            return
+        n = f.variables[0]
+
+        a = Wild('a')
+        b = Wild('b')
+
+        match = expr.match(a*n + b)
+        if match[a].is_negative:
+            expr = -expr
+
+        match = expr.match(a*n + b)
+        if match[a] is S.One and match[b].is_integer:
+            expr = expr - match[b]
+
+        return ImageSet(Lambda(n, expr), S.Integers)
 
 
 class Reals(with_metaclass(Singleton, Interval)):
@@ -223,6 +247,33 @@ class ImageSet(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
+    def _intersect(self, other):
+        from sympy import Dummy
+        from sympy.solvers.diophantine import diophantine
+        from sympy.sets.sets import imageset
+        if self.base_set is S.Integers:
+            if isinstance(other, ImageSet) and other.base_set is S.Integers:
+                f, g = self.lamda.expr, other.lamda.expr
+                n, m = self.lamda.variables[0], other.lamda.variables[0]
+
+                # Diophantine sorts the solutions according to the alphabetic
+                # order of the variable names, since the result should not depend
+                # on the variable name, they are replaced by the dummy variables
+                # below
+                a, b = Dummy('a'), Dummy('b')
+                f, g = f.subs(n, a), g.subs(m, b)
+                solns_set = diophantine(f - g)
+                if solns_set == set():
+                    return EmptySet()
+                solns = list(diophantine(f - g))
+                if len(solns) == 1:
+                    t = list(solns[0][0].free_symbols)[0]
+                else:
+                    return None
+
+                # since 'a' < 'b'
+                return imageset(Lambda(t, f.subs(a, solns[0][0])), S.Integers)
+
 
 @deprecated(useinstead="ImageSet", issue=7057, deprecated_since_version="0.7.4")
 def TransformationSet(*args, **kwargs):
@@ -257,20 +308,34 @@ class Range(Set):
         slc = slice(*args)
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         try:
-            start, stop, step = [S(as_int(w)) for w in (start, stop, step)]
+            start, stop, step = [w if w in [S.NegativeInfinity, S.Infinity] else S(as_int(w))
+                                 for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
                     "Use ImageSets of Ranges for other cases")
+
+        if not step.is_bounded:
+            raise ValueError("Infinite step is not allowed")
+        if start == stop:
+            return S.EmptySet
+
         n = ceiling((stop - start)/step)
         if n <= 0:
             return S.EmptySet
 
         # normalize args: regardless of how they are entered they will show
         # canonically as Range(inf, sup, step) with step > 0
-        start, stop = sorted((start, start + (n - 1)*step))
-        step = abs(step)
+        if n.is_bounded:
+            start, stop = sorted((start, start + (n - 1)*step))
+        else:
+            start, stop = sorted((start, stop - step))
 
-        return Basic.__new__(cls, start, stop + step, step)
+        step = abs(step)
+        if (start, stop) == (S.NegativeInfinity, S.Infinity):
+            raise ValueError("Both the start and end value of "
+                             "Range cannot be unbounded")
+        else:
+            return Basic.__new__(cls, start, stop + step, step)
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
@@ -293,7 +358,10 @@ class Range(Set):
             inf = ceiling(Max(self.inf, oinf))
             sup = floor(Min(self.sup, osup))
             # if we are off the sequence, get back on
-            off = (inf - self.inf) % self.step
+            if inf.is_bounded and self.inf.is_bounded:
+                off = (inf - self.inf) % self.step
+            else:
+                off = S.Zero
             if off:
                 inf += self.step - off
 
@@ -310,23 +378,40 @@ class Range(Set):
     def _contains(self, other):
         from sympy.assumptions.ask import ask, Q
         return (other >= self.inf and other <= self.sup and
-                ask(Q.integer((self.start - other)/self.step)))
+                (ask(Q.integer((self.start - other)/self.step)) or
+                 ask(Q.integer((self.stop - other)/self.step))))
 
     def __iter__(self):
-        i = self.start
-        while(i < self.stop):
+        if self.start is S.NegativeInfinity:
+            i = self.stop - self.step
+            step = -self.step
+        else:
+            i = self.start
+            step = self.step
+
+        while(i < self.stop and i >= self.start):
             yield i
-            i = i + self.step
+            i += step
 
     def __len__(self):
-        return ((self.stop - self.start)//self.step)
+        return (self.stop - self.start)//self.step
+
+    def __nonzero__(self):
+        return True
+
+    __bool__ = __nonzero__
 
     def _ith_element(self, i):
         return self.start + i*self.step
 
     @property
     def _last_element(self):
-        return self._ith_element(len(self) - 1)
+        if self.stop is S.Infinity:
+            return S.Infinity
+        elif self.start is S.NegativeInfinity:
+            return self.stop - self.step
+        else:
+            return self._ith_element(len(self) - 1)
 
     @property
     def _inf(self):

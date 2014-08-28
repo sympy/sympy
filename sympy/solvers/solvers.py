@@ -58,6 +58,10 @@ from types import GeneratorType
 from collections import defaultdict
 import warnings
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
@@ -153,6 +157,8 @@ def checksol(f, symbol, sol=None, **flags):
            make positive all symbols without assumptions regarding sign.
 
     """
+    from sympy.physics.units import Unit
+
     minimal = flags.get('minimal', False)
 
     if sol is not None:
@@ -181,6 +187,7 @@ def checksol(f, symbol, sol=None, **flags):
     elif isinstance(f, Equality):
         f = f.lhs - f.rhs
 
+
     if not f:
         return True
 
@@ -202,6 +209,8 @@ def checksol(f, symbol, sol=None, **flags):
         attempt += 1
         if attempt == 0:
             val = f.subs(sol)
+            if isinstance(val, Mul):
+                val = val.as_independent(Unit)[0]
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
@@ -566,7 +575,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y**2/exp(x), x, y)
             [{x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
-            [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+            [{y: -x*sqrt(exp(x))}, {y: x*sqrt(exp(x))}]
 
     * iterable of one or more of the above
 
@@ -697,8 +706,10 @@ def solve(f, *symbols, **flags):
         freei = f[i].free_symbols
         if freei and all(s.is_real or s.is_imaginary for s in freei):
             fr, fi = f[i].as_real_imag()
-            if fr and fi and not any(i.has(re, im, arg) for i in (fr, fi)) \
-                    and fr != fi:
+            # accept as long as new re, im, arg or atan2 are not introduced
+            had = f[i].atoms(re, im, arg, atan2)
+            if fr and fi and fr != fi and not any(
+                    i.atoms(re, im, arg, atan2) - had for i in (fr, fi)):
                 if bare_f:
                     bare_f = False
                 f[i: i + 1] = [fr, fi]
@@ -2223,16 +2234,6 @@ def inv_quick(M):
     return ret
 
 
-def tsolve(eq, sym):
-    SymPyDeprecationWarning(
-        feature="tsolve()",
-        useinstead="solve()",
-        issue=6484,
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return _tsolve(eq, sym)
-
-
 # these are functions that have multiple inverse values per period
 multi_inverses = {
     sin: lambda x: (asin(x), S.Pi - asin(x)),
@@ -2257,7 +2258,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> tsolve(3**(2*x + 5) - 4, x)
-    [-5/2 + log(2)/log(3), log(-2*sqrt(3)/27)/log(3)]
+    [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]
@@ -2441,7 +2442,11 @@ def nsolve(*args, **kwargs):
         raise TypeError('nsolve expected at most 3 arguments, got %i'
                         % len(args))
     modules = kwargs.get('modules', ['mpmath'])
-    if isinstance(f, (list, tuple)):
+    if iterable(f):
+        f = list(f)
+        for i, fi in enumerate(f):
+            if isinstance(fi, Equality):
+                f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
     if not isinstance(f, Matrix):
         # assume it's a sympy expression

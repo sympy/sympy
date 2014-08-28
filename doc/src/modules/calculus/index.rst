@@ -9,3 +9,6 @@ Calculus
 
 .. automodule:: sympy.calculus.singularities
     :members:
+
+.. automodule :: sympy.calculus.finite_diff
+    :members:

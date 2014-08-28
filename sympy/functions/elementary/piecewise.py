@@ -13,6 +13,10 @@ class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
     def __new__(cls, expr, cond):
+        if cond == True:
+            return Tuple.__new__(cls, expr, true)
+        elif cond == False:
+            return Tuple.__new__(cls, expr, false)
         return Tuple.__new__(cls, expr, cond)
 
     @property
@@ -56,7 +60,7 @@ class Piecewise(Function):
     Usage:
 
       Piecewise( (expr,cond), (expr,cond), ... )
-        - Each argument is a 2-tuple defining a expression and condition
+        - Each argument is a 2-tuple defining an expression and condition
         - The conds are evaluated in turn returning the first that is True.
           If any of the evaluated conds are not determined explicitly False,
           e.g. x < 1, the function is returned in symbolic form.
@@ -510,7 +514,7 @@ class Piecewise(Function):
 
     def as_expr_set_pairs(self):
         exp_sets = []
-        U = S.UniversalSet
+        U = S.Reals
         for expr, cond in self.args:
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int

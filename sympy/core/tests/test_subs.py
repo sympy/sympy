@@ -2,10 +2,10 @@ from __future__ import division
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul,
-        factor, nsimplify, zoo)
+        factor, nsimplify, zoo, Subs)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 
 def test_subs():
@@ -56,6 +56,7 @@ def test_powers():
     assert (x**n).subs(x, 0) is S.ComplexInfinity
     assert exp(-1).subs(S.Exp1, 0) is S.ComplexInfinity
     assert (x**(4.0*y)).subs(x**(2.0*y), n) == n**2.0
+    assert (2**(x + 2)).subs(2, 3) == 3**(x + 3)
 
 
 def test_logexppow():   # no eval()
@@ -386,7 +387,7 @@ def test_add():
     assert e.subs(-y + 1, x) == ans
 
 
-def test_subs_issue910():
+def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
 
 
@@ -409,7 +410,7 @@ def test_derivative_subs():
     assert Derivative(f(x), x).subs(f(x), y) != 0
     assert Derivative(f(x), x).subs(f(x), y).subs(y, f(x)) == \
         Derivative(f(x), x)
-    # issues 1986, 1938
+    # issues 5085, 5037
     assert cse(Derivative(f(x), x) + f(x))[1][0].has(Derivative)
     assert cse(Derivative(f(x, y), x) +
                Derivative(f(x, y), y))[1][0].has(Derivative)
@@ -554,6 +555,8 @@ def test_simultaneous_subs():
     assert (x/y).subs(reps) != (y/x).subs(reps)
     assert (x/y).subs(reps, simultaneous=True) == \
         (y/x).subs(reps, simultaneous=True)
+    assert Derivative(x, y, z).subs(reps, simultaneous=True) == \
+        Subs(Derivative(0, y, z), (y,), (0,))
 
 
 def test_issue_6419_6421():
@@ -574,6 +577,7 @@ def test_issue_6559():
 
 
 def test_issue_5261():
+    x = symbols('x', real=True)
     e = I*x
     assert exp(e).subs(exp(x), y) == y**I
     assert (2**e).subs(2**x, y) == y**I

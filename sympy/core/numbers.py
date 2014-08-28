@@ -74,7 +74,7 @@ def seterr(divide=False):
 
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
-    if not dec.is_finite():  # NOTE: this is_finite is not SymPy's
+    if not dec.is_finite():
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)
@@ -306,9 +306,6 @@ class Number(AtomicExpr):
         return self  # there is no other possibility
 
     def _eval_is_bounded(self):
-        return True
-
-    def _eval_is_finite(self):
         return True
 
     @classmethod
@@ -580,7 +577,11 @@ class Float(Number):
     """
     __slots__ = ['_mpf_', '_prec']
 
-    is_rational = True
+    # A Float represents many real numbers,
+    # both rational and irrational.
+    is_rational = None
+    is_irrational = None
+
     is_real = True
 
     is_Float = True
@@ -708,11 +709,6 @@ class Float(Number):
 
     def _eval_is_bounded(self):
         if self._mpf_ in (_mpf_inf, _mpf_ninf):
-            return False
-        return True
-
-    def _eval_is_finite(self):
-        if self._mpf_ in (_mpf_inf, _mpf_ninf, _mpf_zero):
             return False
         return True
 
@@ -935,6 +931,10 @@ class Float(Number):
     def _sage_(self):
         import sage.all as sage
         return sage.RealNumber(str(self))
+
+    def __format__(self, format_spec):
+        return format(decimal.Decimal(str(self)), format_spec)
+
 
 # Add sympify converters
 converter[float] = converter[decimal.Decimal] = Float
@@ -1178,6 +1178,9 @@ class Rational(Number):
 
     def _eval_is_zero(self):
         return self.p == 0
+
+    def _eval_is_infinitesimal(self):
+        return self.is_zero
 
     def __neg__(self):
         return Rational(-self.p, self.q)
@@ -1710,7 +1713,7 @@ class Integer(Rational):
         return Rational.__le__(self, other)
 
     def __hash__(self):
-        return super(Integer, self).__hash__()
+        return hash(self.p)
 
     def __index__(self):
         return self.p
@@ -1889,7 +1892,6 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     q = 1
     is_positive = False
     is_negative = False
-    is_finite = False
     is_zero = True
     is_composite = False
 
@@ -2103,7 +2105,6 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_commutative = True
     is_positive = True
     is_bounded = False
-    is_finite = False
     is_infinitesimal = False
     is_integer = None
     is_rational = None
@@ -2242,26 +2243,30 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.false
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is not S.Infinity)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.true
 
     def __mod__(self, other):
@@ -2288,7 +2293,6 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_real = True
     is_positive = False
     is_bounded = False
-    is_finite = False
     is_infinitesimal = False
     is_integer = None
     is_rational = None
@@ -2435,27 +2439,36 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __lt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is not S.NegativeInfinity)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.true
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return S.false
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
-        if other.is_number and other.is_real is False:
-            raise TypeError("Invalid comparison of %s and %s" % (self, other))
+        if other.is_complex and other.is_real is False:
+            raise TypeError("Invalid complex comparison: %s and %s" %
+                            (self, other))
         return _sympify(other is S.NegativeInfinity)
+
+    def __mod__(self, other):
+        return S.NaN
+
+    __rmod__ = __mod__
 
 
 class NaN(with_metaclass(Singleton, Number)):
@@ -2467,10 +2480,15 @@ class NaN(with_metaclass(Singleton, Number)):
     Python ``float('nan')``.
 
     NaN serves as a place holder for numeric values that are indeterminate.
-    Most operations on nan, produce another nan.  Most indeterminate forms,
-    such as ``0/0`` or ``oo - oo` produce nan.  Two exceptions are ``0**0``
+    Most operations on NaN, produce another NaN.  Most indeterminate forms,
+    such as ``0/0`` or ``oo - oo` produce NaN.  Two exceptions are ``0**0``
     and ``oo**0``, which all produce ``1`` (this is consistent with Python's
     float).
+
+    NaN is mathematically not equal to anything else, even NaN itself.  This
+    explains the initially counter-intuitive results with ``Eq`` and ``==`` in
+    the examples below.  NaN is not comparable so inequalities raise a
+    TypeError.
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
@@ -2478,13 +2496,17 @@ class NaN(with_metaclass(Singleton, Number)):
     Examples
     ========
 
-    >>> from sympy import nan, S, oo
+    >>> from sympy import nan, S, oo, Eq
     >>> nan is S.NaN
     True
     >>> oo - oo
     nan
     >>> nan + 1
     nan
+    >>> Eq(nan, nan)   # mathematical equality
+    False
+    >>> nan == nan     # structural equality
+    True
 
     References
     ==========
@@ -2497,7 +2519,6 @@ class NaN(with_metaclass(Singleton, Number)):
     is_rational = None
     is_integer = None
     is_comparable = False
-    is_finite = None
     is_bounded = None
     is_zero = None
     is_prime = None
@@ -2541,10 +2562,15 @@ class NaN(with_metaclass(Singleton, Number)):
         return super(NaN, self).__hash__()
 
     def __eq__(self, other):
+        # NaN is structurally equal to another NaN
         return other is S.NaN
 
     def __ne__(self, other):
         return other is not S.NaN
+
+    def _eval_Eq(self, other):
+        # NaN is not mathematically equal to anything, even NaN
+        return S.false
 
     def __gt__(self, other):
         return S.false
@@ -2631,7 +2657,6 @@ class NumberSymbol(AtomicExpr):
 
     is_commutative = True
     is_bounded = True
-    is_finite = True
     is_number = True
 
     __slots__ = []
@@ -2714,6 +2739,9 @@ class NumberSymbol(AtomicExpr):
 
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
+
+    def _eval_is_infinitesimal(self):
+        return self.is_zero
 
 
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
@@ -3045,8 +3073,8 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     is_commutative = True
     is_imaginary = True
     is_bounded = True
-    is_finite = True
     is_number = True
+    is_infinitesimal = False
 
     __slots__ = []
 

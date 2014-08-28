@@ -18,9 +18,14 @@ from sympy.matrices import eye
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
     "Point",
+    "Point3D",
     "Segment",
     "Ray",
     "Line",
+    "Line3D",
+    "Ray3D",
+    "Segment3D",
+    "Plane",
     "Triangle",
     "RegularPolygon",
     "Polygon",
@@ -258,6 +263,9 @@ class GeometryEntity(Basic):
         """
         raise NotImplementedError()
 
+    def equals(self, o):
+        return self == o
+
     def __ne__(self, o):
         """Test inequality of two geometrical entities."""
         return not self.__eq__(o)
@@ -322,11 +330,15 @@ class GeometryEntity(Basic):
 
     def _eval_subs(self, old, new):
         from sympy.geometry.point import Point
+        from sympy.geometry.point3d import Point3D
         if is_sequence(old) or is_sequence(new):
-            old = Point(old)
-            new = Point(new)
-            return self._subs(old, new)
-
+            if isinstance(self, Point3D):
+                old = Point3D(old)
+                new = Point3D(new)
+            else:
+                old = Point(old)
+                new = Point(new)
+            return  self._subs(old, new)
 
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""

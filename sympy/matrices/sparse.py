@@ -654,8 +654,7 @@ class SparseMatrix(MatrixBase):
 
         Symbolic Sparse Cholesky Factorization using Elimination Trees,
         Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582,
-        downloaded from http://tinyurl.com/9o2jsxj
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
         """
         # Algorithm 2.4, p 17 of reference
 
@@ -699,8 +698,7 @@ class SparseMatrix(MatrixBase):
 
         Symbolic Sparse Cholesky Factorization using Elimination Trees,
         Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582,
-        downloaded from http://tinyurl.com/9o2jsxj
+        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
         """
 
         R, parent = self.liupc()
@@ -1079,15 +1077,7 @@ class SparseMatrix(MatrixBase):
     @classmethod
     def zeros(cls, r, c=None):
         """Return an r x c matrix of zeros, square if c is omitted."""
-        if is_sequence(r):
-            SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r),
-                useinstead="zeros(%i, %i)." % tuple(r),
-                issue=6480, deprecated_since_version="0.7.2",
-            ).warn()
-            r, c = r
-        else:
-            c = r if c is None else c
+        c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
         return cls(r, c, {})

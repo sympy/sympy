@@ -5,6 +5,7 @@ from .expr import Expr
 from .evalf import EvalfMixin
 from .symbol import Symbol
 from .sympify import _sympify
+from .evaluate import global_evaluate
 
 from sympy.logic.boolalg import Boolean
 
@@ -184,31 +185,35 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs=0, **assumptions):
+    def __new__(cls, lhs, rhs=0, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-        # If one expression has an _eval_Eq, return its results.
-        if hasattr(lhs, '_eval_Eq'):
-            r = lhs._eval_Eq(rhs)
+
+        evaluate = options.pop('evaluate', global_evaluate[0])
+
+        if evaluate:
+            # If one expression has an _eval_Eq, return its results.
+            if hasattr(lhs, '_eval_Eq'):
+                r = lhs._eval_Eq(rhs)
+                if r is not None:
+                    return r
+            if hasattr(rhs, '_eval_Eq'):
+                r = rhs._eval_Eq(lhs)
+                if r is not None:
+                    return r
+            # If expressions have the same structure, they must be equal.
+            if lhs == rhs:
+                return S.true
+            # If one side is real and the other complex, they must be unequal.
+            elif (lhs.is_real != rhs.is_real and
+                  None not in (lhs.is_real, rhs.is_real)):
+                return S.false
+            # Otherwise, see if the difference can be evaluated.
+            r = cls._eval_sides(lhs, rhs)
             if r is not None:
                 return r
-        if hasattr(rhs, '_eval_Eq'):
-            r = rhs._eval_Eq(lhs)
-            if r is not None:
-                return r
-        # If expressions have the same structure, they must be equal.
-        if lhs == rhs:
-            return S.true
-        # If one side is real and the other complex, they must be unequal.
-        elif (lhs.is_real != rhs.is_real and
-                None not in (lhs.is_real, rhs.is_real)):
-            return S.false
-        # Otherwise, see if the difference can be evaluated.
-        r = cls._eval_sides(lhs, rhs)
-        if r is not None:
-            return r
-        # If not, pass arguments to Relational.
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
+
+        return Relational.__new__(cls, lhs, rhs, **options)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -251,13 +256,18 @@ class Unequality(Relational):
 
     __slots__ = []
 
-    def __new__(cls, lhs, rhs, **assumptions):
+    def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-        is_equal = Equality(lhs, rhs)
-        if is_equal == True or is_equal == False:
-            return ~is_equal
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
+
+        evaluate = options.pop('evaluate', global_evaluate[0])
+
+        if evaluate:
+            is_equal = Equality(lhs, rhs)
+            if is_equal == True or is_equal == False:
+                return ~is_equal
+
+        return Relational.__new__(cls, lhs, rhs, **options)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -275,15 +285,19 @@ class _Inequality(Relational):
     """
     __slots__ = []
 
-    def __new__(cls, lhs, rhs, **assumptions):
+    def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-        # Try to evaluate the difference between sides.
-        r = cls._eval_sides(lhs, rhs)
-        if r is not None:
-            return r
-        # If that fails, pass arguments to Relational.
-        return Relational.__new__(cls, lhs, rhs, **assumptions)
+
+        evaluate = options.pop('evaluate', global_evaluate[0])
+
+        if evaluate:
+            # Try to evaluate the difference between sides.
+            r = cls._eval_sides(lhs, rhs)
+            if r is not None:
+                return r
+
+        return Relational.__new__(cls, lhs, rhs, **options)
 
     @classmethod
     def _eval_relation_doit(cls, lhs, rhs):
@@ -530,7 +544,7 @@ class GreaterThan(_Greater):
     .. [1] This implementation detail is that Python provides no reliable
        method to determine that a chained inequality is being built.  Chained
        comparison operators are evaluated pairwise, using "and" logic (see
-       http://docs.python.org/reference/expressions.html#notin).  This is done
+       http://docs.python.org/2/reference/expressions.html#notin).  This is done
        in an efficient way, so that each object being compared is only
        evaluated once and the comparison can short-circuit.  For example, ``1
        > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2 > 3)``.  The

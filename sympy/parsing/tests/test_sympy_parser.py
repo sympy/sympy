@@ -54,6 +54,7 @@ def test_factorial_fail():
         except TokenError:
             assert True
 
+
 def test_local_dict():
     local_dict = {
         'my_function': lambda x: x + 2
@@ -63,6 +64,7 @@ def test_local_dict():
     }
     for text, result in inputs.items():
         assert parse_expr(text, local_dict=local_dict) == result
+
 
 def test_global_dict():
     global_dict = {
@@ -74,6 +76,12 @@ def test_global_dict():
     for text, result in inputs.items():
         assert parse_expr(text, global_dict=global_dict) == result
 
+
 def test_issue_2515():
     raises(TokenError, lambda: parse_expr('(()'))
     raises(TokenError, lambda: parse_expr('"""'))
+
+
+def test_issue_7663():
+    x = Symbol('x')
+    parse_expr('2*(x+1)', evaluate=0) == Mul(2, x + 1, evaluate=False)

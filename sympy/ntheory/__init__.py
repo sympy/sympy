@@ -10,8 +10,10 @@ from .factor_ import divisors, factorint, multiplicity, perfect_power, \
 from .partitions_ import npartitions
 from .residue_ntheory import is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, n_order, sqrt_mod, quadratic_residues, \
-    primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter
+    primitive_root, nthroot_mod, is_nthpow_residue, sqrt_mod_iter, mobius
 from .multinomial import binomial_coefficients, binomial_coefficients_list, \
     multinomial_coefficients
 from .continued_fraction import continued_fraction_periodic, \
-    continued_fraction_iterator
+    continued_fraction_iterator, continued_fraction_reduce, \
+    continued_fraction_convergents
+from .egyptian_fraction import egyptian_fraction

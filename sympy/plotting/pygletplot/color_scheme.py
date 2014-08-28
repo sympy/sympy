@@ -4,6 +4,10 @@ from sympy import Basic, Symbol, symbols, lambdify
 from util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.core.compatibility import xrange
 
+# TODO: This should be removed for the release of 0.7.7, see issue #7853
+from functools import partial
+lambdify = partial(lambdify, default_array=True)
+
 
 class ColorGradient(object):
     colors = [0.4, 0.4, 0.4], [0.9, 0.9, 0.9]
@@ -117,7 +121,7 @@ class ColorScheme(object):
         elif len(lists) == 3:
             try:
                 (r1, r2), (g1, g2), (b1, b2) = lists
-            except:
+            except Exception:
                 raise ValueError("If three color arguments are given, "
                                  "they must be given in the format "
                                  "(r1, r2), (g1, g2), (b1, b2). To create "

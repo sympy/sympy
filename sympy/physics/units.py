@@ -154,7 +154,7 @@ yocto = ten**-24
 
 rad = radian = radians = 1
 deg = degree = degrees = pi/180
-
+sr = steradian = steradians = 1
 
 # Base units
 
@@ -185,6 +185,7 @@ inductance = H = henry = henrys = V*s/A
 speed = m/s
 acceleration = m/s**2
 density = kg/m**3
+optical_power = dioptre = D = 1/m
 
 # Common length units
 
@@ -301,7 +302,7 @@ def find_unit(quantity):
             try:
                 if units == eval('u.' + i).as_coeff_Mul()[1]:
                     rv.append(str(i))
-            except:
+            except Exception:
                 pass
     return sorted(rv, key=len)
 

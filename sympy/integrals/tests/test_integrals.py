@@ -4,7 +4,7 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, tan, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan, And, Eq, Or
+    Tuple, nan, And, Eq, Or, re, im
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -284,6 +284,11 @@ def test_issue_4516():
     assert integrate(2**x - 2*x, x) == 2**x/log(2) - x**2
 
 
+def test_issue_7450():
+    ans = integrate(exp(-(1 + I)*x), (x, 0, oo))
+    assert re(ans) == S.Half and im(ans) == -S.Half
+
+
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i + j + 1)*sin((i + j + 1)*x))
 
@@ -292,10 +297,9 @@ def test_matrices():
         [-cos(2*x), -cos(3*x)],
     ])
 
-# issue1012
-
 
 def test_integrate_functions():
+    # issue 4111
     assert integrate(f(x), x) == Integral(f(x), x)
     assert integrate(f(x), (x, 0, 1)) == Integral(f(x), (x, 0, 1))
     assert integrate(f(x)*diff(f(x), x), x) == f(x)**2/2
@@ -665,18 +669,26 @@ def test_is_number():
     assert Integral(1, (x, 1)).is_number is True
     assert Integral(1, (x, 1, 2)).is_number is True
     assert Integral(1, (x, 1, y)).is_number is False
+    assert Integral(1, (x, y)).is_number is False
     assert Integral(x, y).is_number is False
     assert Integral(x, (y, 1, x)).is_number is False
     assert Integral(x, (y, 1, 2)).is_number is False
     assert Integral(x, (x, 1, 2)).is_number is True
-    assert Integral(x, (y, 1, 1)).is_number is True
+    i = Integral(x, (y, 1, 1))
+    assert i.is_number is True and i.n() == 0
+    i = Integral(x, (y, z, z))
+    assert i.is_number is True and i.n() == 0
+    i = Integral(1, (y, z, z + 2))
+    assert i.is_number is True and i.n() == 2
     assert Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number is True
     assert Integral(x*y, (x, 1, 2), (y, 1, z)).is_number is False
     assert Integral(x, (x, 1)).is_number is True
     assert Integral(x, (x, 1, Integral(y, (y, 1, 2)))).is_number is True
+    assert Integral(Sum(z, (z, 1, 2)), (x, 1, 2)).is_number is True
     # it is possible to get a false negative if the integrand is
     # actually an unsimplified zero, but this is true of is_number in general.
     assert Integral(sin(x)**2 + cos(x)**2 - 1, x).is_number is False
+    assert Integral(f(x), (x, 0, 1)).is_number is True
 
 
 def test_symbols():
@@ -706,6 +718,11 @@ def test_is_zero():
     assert Integral(1, (x, 1, 1)).is_zero
     assert Integral(1, (x, 1, 2)).is_zero is False
     assert Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)).is_zero is None
+    assert Integral(x, (m, 0)).is_zero
+    assert Integral(x + 1/m, (m, 0)).is_zero is None
+    i = Integral(m, (m, 1, exp(x)), (x, 0))
+    assert i.is_zero is None and i.doit() == S(1)/4
+    assert Integral(m, (x, 0), (m, 1, exp(x))).is_zero is True
 
 
 def test_series():
@@ -751,16 +768,16 @@ def test_issue_5167():
     assert Integral(Integral(Integral(f(x), x), y), z).args == \
         (f(x), Tuple(x), Tuple(y), Tuple(z))
     assert integrate(Integral(f(x), x), x) == Integral(f(x), x, x)
-    assert integrate(Integral(f(x), y), x) == Integral(y*f(x), x)
-    assert integrate(Integral(f(x), x), y) == Integral(y*f(x), x)
+    assert integrate(Integral(f(x), y), x) == y*Integral(f(x), x)
+    assert integrate(Integral(f(x), x), y) in [Integral(y*f(x), x), y*Integral(f(x), x)]
     assert integrate(Integral(2, x), x) == x**2
     assert integrate(Integral(2, x), y) == 2*x*y
     # don't re-order given limits
     assert Integral(1, x, y).args != Integral(1, y, x).args
     # do as many as possibble
-    assert Integral(f(x), y, x, y, x).doit() == Integral(y**2*f(x)/2, x, x)
+    assert Integral(f(x), y, x, y, x).doit() == y**2*Integral(f(x), x, x)/2
     assert Integral(f(x), (x, 1, 2), (w, 1, x), (z, 1, y)).doit() == \
-        Integral(-f(x) + y*f(x), (x, 1, 2), (w, 1, x))
+        y*(x - 1)*Integral(f(x), (x, 1, 2)) - (x - 1)*Integral(f(x), (x, 1, 2))
 
 
 def test_issue_4890():
@@ -822,7 +839,6 @@ def test_issue_3940():
         sqrt(pi)*exp(d**2/a)/sqrt(a)
 
 
-
 def test_issue_5413():
     # Note that this is not the same as testing ratint() becuase integrate()
     # pulls out the coefficient.
@@ -865,7 +881,7 @@ def test_issue_4892b():
 
 def test_issue_5178():
     assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
-        Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))
+        2*Integral(f(y, z), (y, 0, pi), (z, 0, pi))
 
 
 def test_integrate_series():
@@ -1013,3 +1029,12 @@ def test_issue_4492():
             (8*sqrt(x**2 - 5)), Abs(x**2)/5 > 1),
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
+
+
+def test_issue_2708():
+    # This test needs to use an integration function that can
+    # not be evaluated in closed form.  Update as needed.
+    f = 1/(a + z + log(z))
+    integral_f = NonElementaryIntegral(f, (z, 2, 3))
+    assert Integral(f, (z, 2, 3)).doit() == integral_f
+    assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)

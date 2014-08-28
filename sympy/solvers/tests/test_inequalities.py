@@ -1,7 +1,7 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, im, Interval, Le, Lt, Ne, oo,
-        Or, Q, re, S, sin, sqrt, Symbol, Union)
+        Or, Q, re, S, sin, sqrt, Symbol, Union, Integral, Sum, Function)
 from sympy.assumptions import assuming
 from sympy.abc import x, y
 from sympy.solvers.inequalities import (reduce_inequalities,
@@ -23,9 +23,9 @@ def test_reduce_poly_inequalities_real_interval():
         assert reduce_rational_inequalities(
             [[Ge(x**2, 0)]], x, relational=False) == Interval(-oo, oo)
         assert reduce_rational_inequalities(
-            [[Gt(x**2, 0)]], x, relational=False) == FiniteSet(0).complement
+            [[Gt(x**2, 0)]], x, relational=False) == FiniteSet(0).complement(S.Reals)
         assert reduce_rational_inequalities(
-            [[Ne(x**2, 0)]], x, relational=False) == FiniteSet(0).complement
+            [[Ne(x**2, 0)]], x, relational=False) == FiniteSet(0).complement(S.Reals)
 
         assert reduce_rational_inequalities(
             [[Eq(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1)
@@ -35,9 +35,9 @@ def test_reduce_poly_inequalities_real_interval():
             [[Lt(x**2, 1)]], x, relational=False) == Interval(-1, 1, True, True)
         assert reduce_rational_inequalities([[Ge(x**2, 1)]], x, relational=False) == Union(Interval(-oo, -1), Interval(1, oo))
         assert reduce_rational_inequalities(
-            [[Gt(x**2, 1)]], x, relational=False) == Interval(-1, 1).complement
+            [[Gt(x**2, 1)]], x, relational=False) == Interval(-1, 1).complement(S.Reals)
         assert reduce_rational_inequalities(
-            [[Ne(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1).complement
+            [[Ne(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1).complement(S.Reals)
         assert reduce_rational_inequalities([[Eq(
             x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).evalf()
         assert reduce_rational_inequalities(
@@ -47,7 +47,7 @@ def test_reduce_poly_inequalities_real_interval():
         assert reduce_rational_inequalities([[Ge(x**2, 1.0)]], x, relational=False) == Union(Interval(-inf, -1.0), Interval(1.0, inf))
         assert reduce_rational_inequalities([[Gt(x**2, 1.0)]], x, relational=False) == Union(Interval(-inf, -1.0, right_open=True), Interval(1.0, inf, left_open=True))
         assert reduce_rational_inequalities([[Ne(
-            x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).complement
+            x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).complement(S.Reals)
 
         s = sqrt(2)
 
@@ -223,6 +223,15 @@ def test_issue_6343():
     eq = -3*x**2/2 - 45*x/4 + S(33)/2 > 0
     assert reduce_inequalities(eq, Q.real(x)) == \
         And(x < -S(15)/4 + sqrt(401)/4, -sqrt(401)/4 - S(15)/4 < x)
+
+
+def test_issue_5526():
+    assert reduce_inequalities(S(0) <= x + Integral(y**2, (y, 1, 3)) - 1, True, [x]) == \
+        (-Integral(y**2, (y, 1, 3)) + 1 <= x)
+    f = Function('f')
+    e = Sum(f(x), (x, 1, 3))
+    assert reduce_inequalities(S(0) <= x + e + y**2, True, [x]) == \
+        (-y**2 - Sum(f(x), (x, 1, 3)) <= x)
 
 
 def test_solve_univariate_inequality():

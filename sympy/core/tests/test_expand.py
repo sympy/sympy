@@ -133,15 +133,10 @@ def test_expand_frac():
 
 def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
-    assert cse((eq).expand(complex=True), optimizations='basic') \
-        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, atan2(x1, x0)/2),
-        (x3, sin(x2)), (x4, cos(x2))], [sqrt(2)*(x3 + I*x3 - x4 +
-        I*x4)/(8*pi**(3/2)*(x0**2 + x1**2)**(1/4))])''')
+    assert eq.expand(complex=True)  # does not give oo recursion
 
 
 def test_expand_power_base():
-    # was test_separate()
-
     assert expand_power_base((x*y*z)**4) == x**4*y**4*z**4
     assert expand_power_base((x*y*z)**x).is_Pow
     assert expand_power_base((x*y*z)**x, force=True) == x**x*y**x*z**x

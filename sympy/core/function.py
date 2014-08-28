@@ -49,6 +49,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.compatibility import string_types, with_metaclass, xrange
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
+from sympy.core.evaluate import global_evaluate
 
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
@@ -161,10 +162,10 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
         >>> len(f(1).args)
         1
         """
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
-        return FiniteSet(self._nargs) if self._nargs else S.Naturals0
+        return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def __repr__(cls):
         return cls.__name__
@@ -183,10 +184,10 @@ class Application(with_metaclass(FunctionClass, Basic)):
     @cacheit
     def __new__(cls, *args, **options):
         from sympy.sets.fancysets import Naturals0
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
 
         args = list(map(sympify, args))
-        evaluate = options.pop('evaluate', True)
+        evaluate = options.pop('evaluate', global_evaluate[0])
         # WildFunction (and anything else like it) may have nargs defined
         # and we throw that value away here
         options.pop('nargs', None)
@@ -207,13 +208,19 @@ class Application(with_metaclass(FunctionClass, Basic)):
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
-            obj.nargs = FiniteSet(obj.nargs) if obj.nargs is not None \
+            # Canonicalize nargs here; change to set in nargs.
+            if is_sequence(obj.nargs):
+                obj.nargs = tuple(ordered(set(obj.nargs)))
+            elif obj.nargs is not None:
+                obj.nargs = (as_int(obj.nargs),)
+
+            obj.nargs = FiniteSet(*obj.nargs) if obj.nargs is not None \
                 else Naturals0()
         except AttributeError:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
-            obj.nargs = FiniteSet(obj._nargs) if obj._nargs is not None \
+            obj.nargs = FiniteSet(*obj._nargs) if obj._nargs is not None \
                 else Naturals0()
         return obj
 
@@ -364,7 +371,7 @@ class Function(Application, Expr):
                 'plural': 's'*(min(cls.nargs) != 1),
                 'given': n})
 
-        evaluate = options.get('evaluate', True)
+        evaluate = options.get('evaluate', global_evaluate[0])
         result = super(Function, cls).__new__(cls, *args, **options)
         if not evaluate or not isinstance(result, cls):
             return result
@@ -548,7 +555,7 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded is False for t in args0):
@@ -558,8 +565,7 @@ class Function(Application, Expr):
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any([t.has(oo, -oo, zoo, nan) for t in a0]):
-                return self._eval_aseries(n, args0, x, logx
-                                          )._eval_nseries(x, n, logx)
+                return self._eval_aseries(n, args0, x, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
             # are supposed to do a power series expansion "around the
             # logarithmic term". e.g.
@@ -631,21 +637,6 @@ class Function(Application, Expr):
             l.append(g)
         return Add(*l) + C.Order(x**n, x)
 
-    def _eval_rewrite(self, pattern, rule, **hints):
-        if hints.get('deep', False):
-            args = [a._eval_rewrite(pattern, rule, **hints) for a in self.args]
-        else:
-            args = self.args
-
-        if pattern is None or isinstance(self.func, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
-
-                if rewritten is not None:
-                    return rewritten
-
-        return self.func(*args)
-
     def fdiff(self, argindex=1):
         """
         Returns the first derivative of the function.
@@ -713,6 +704,9 @@ class UndefinedFunction(FunctionClass):
         ret.__module__ = None
         return ret
 
+    def __instancecheck__(cls, instance):
+        return cls in type(instance).__mro__
+
 UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
                                          (s.class_key() == o.class_key()))
 
@@ -767,11 +761,16 @@ class WildFunction(Function, AtomicExpr):
     include = set()
 
     def __init__(cls, name, **assumptions):
-        from sympy.core.sets import Set, FiniteSet
+        from sympy.sets.sets import Set, FiniteSet
         cls.name = name
         nargs = assumptions.pop('nargs', S.Naturals0)
         if not isinstance(nargs, Set):
-            nargs = FiniteSet(nargs)
+            # Canonicalize nargs here.  See also FunctionClass.
+            if is_sequence(nargs):
+                nargs = tuple(ordered(set(nargs)))
+            elif nargs is not None:
+                nargs = (as_int(nargs),)
+            nargs = FiniteSet(*nargs)
         cls.nargs = nargs
 
     def matches(self, expr, repl_dict={}, old=False):
@@ -1026,7 +1025,7 @@ class Derivative(Expr):
             if i == iwas:  # didn't get an update because of bad input
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
-                Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
+                Can\'t calculate %s-th derivative wrt %s.''' % (count, v)))
 
             if all_zero and not count == 0:
                 all_zero = False
@@ -1345,11 +1344,11 @@ class Lambda(Expr):
     is_Function = True
 
     def __new__(cls, variables, expr):
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         try:
             for v in variables if iterable(variables) else [variables]:
                 if not v.is_Symbol:
-                    raise TypeError("v is not a symbol")
+                    raise TypeError('variable is not a symbol: %s' % v)
         except (AssertionError, AttributeError):
             raise ValueError('variable is not a Symbol: %s' % v)
         try:
@@ -1378,7 +1377,7 @@ class Lambda(Expr):
         return self.expr.free_symbols - set(self.variables)
 
     def __call__(self, *args):
-        from sympy.core.sets import FiniteSet
+        from sympy.sets.sets import FiniteSet
         n = len(args)
         if n not in self.nargs:  # Lambda only ever has 1 value in nargs
             # XXX: exception message must be in exactly this format to
@@ -1491,8 +1490,15 @@ class Subs(Expr):
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
+        from sympy.printing import StrPrinter
+        class CustomStrPrinter(StrPrinter):
+            def _print_Dummy(self, expr):
+                return str(expr) + str(expr.dummy_index)
+        def mystr(expr, **settings):
+            p = CustomStrPrinter(settings)
+            return p.doprint(expr)
         while 1:
-            s_pts = dict([(p, Symbol(pre + str(p))) for p in pts])
+            s_pts = dict([(p, Symbol(pre + mystr(p))) for p in pts])
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
             # if any underscore-preppended symbol is already a free symbol
@@ -1503,7 +1509,7 @@ class Subs(Expr):
             # symbols
             if any(r in expr.free_symbols and
                    r in variables and
-                   Symbol(pre + str(point[variables.index(r)])) != r
+                   Symbol(pre + mystr(point[variables.index(r)])) != r
                    for _, r in reps):
                 pre += "_"
                 continue
@@ -1520,10 +1526,7 @@ class Subs(Expr):
         return self.expr.doit().subs(list(zip(self.variables, self.point)))
 
     def evalf(self, prec=None, **options):
-        if prec is None:
-            return self.doit().evalf(**options)
-        else:
-            return self.doit().evalf(prec, **options)
+        return self.doit().evalf(prec, **options)
 
     n = evalf
 
@@ -1638,6 +1641,10 @@ def diff(f, *symbols, **kwargs):
 
     """
     kwargs.setdefault('evaluate', True)
+    try:
+        return f._eval_diff(*symbols, **kwargs)
+    except AttributeError:
+        pass
     return Derivative(f, *symbols, **kwargs)
 
 
@@ -2239,6 +2246,7 @@ def count_ops(expr, visual=False):
 
     """
     from sympy.simplify.simplify import fraction
+    from sympy.logic.boolalg import BooleanFunction
 
     expr = sympify(expr)
     if isinstance(expr, Expr):
@@ -2321,12 +2329,29 @@ def count_ops(expr, visual=False):
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
+    elif isinstance(expr, BooleanFunction):
+        ops = []
+        for arg in expr.args:
+            ops.append(count_ops(arg, visual=True))
+        o = C.Symbol(expr.func.__name__.upper())
+        ops.append(o)
     elif not isinstance(expr, Basic):
         ops = []
     else:  # it's Basic not isinstance(expr, Expr):
         if not isinstance(expr, Basic):
             raise TypeError("Invalid type of expr")
-        ops = [count_ops(a, visual=visual) for a in expr.args]
+        else:
+            ops = []
+            args = [expr]
+            while args:
+                a = args.pop()
+                if a.args:
+                    o = C.Symbol(a.func.__name__.upper())
+                    if a.is_Boolean:
+                        ops.append(o*(len(a.args)-1))
+                    else:
+                        ops.append(o)
+                    args.extend(a.args)
 
     if not ops:
         if visual:

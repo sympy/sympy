@@ -21,19 +21,16 @@ def test_integers_cache():
 
     assert python_int in _intcache
     assert hash(python_int) not in _intcache
-    assert sympy_int not in _intcache
 
     sympy_int_int = Integer(sympy_int)
 
     assert python_int in _intcache
     assert hash(python_int) not in _intcache
-    assert sympy_int_int not in _intcache
 
     sympy_hash_int = Integer(hash(python_int))
 
     assert python_int in _intcache
     assert hash(python_int) in _intcache
-    assert sympy_hash_int not in _intcache
 
 
 def test_seterr():
@@ -371,25 +368,28 @@ def test_Float():
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
     assert Float('+inf').is_bounded is False
-    assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
     assert Float('+inf').is_positive is True
     assert Float('+inf').is_unbounded is True
     assert Float('+inf').is_zero is False
 
     assert Float('-inf').is_bounded is False
-    assert Float('-inf').is_finite is False
     assert Float('-inf').is_negative is True
     assert Float('-inf').is_positive is False
     assert Float('-inf').is_unbounded is True
     assert Float('-inf').is_zero is False
 
     assert Float('0.0').is_bounded is True
-    assert Float('0.0').is_finite is False
     assert Float('0.0').is_negative is False
     assert Float('0.0').is_positive is False
     assert Float('0.0').is_unbounded is False
     assert Float('0.0').is_zero is True
+
+    # rationality properties
+    assert Float(1).is_rational is None
+    assert Float(1).is_irrational is None
+    assert sqrt(2).n(15).is_rational is None
+    assert sqrt(2).n(15).is_irrational is None
 
     # do not automatically evalf
     def teq(a):
@@ -445,6 +445,10 @@ def test_Float():
     assert Float(S.One) == Float(1.0)
 
     assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
+
+    assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
+    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+
 
 def test_Float_eval():
     a = Float(3.2)
@@ -736,6 +740,8 @@ def test_NaN():
     assert nan/S.One == nan
     assert nan**0 == 1  # as per IEEE 754
     assert 1**nan == nan # IEEE 754 is not the best choice for symbolic work
+    # test Pow._eval_power's handling of NaN
+    assert Pow(nan, 0, evaluate=False)**2 == 1
 
 
 def test_special_numbers():
@@ -1025,8 +1031,7 @@ def test_issue_3423():
 
 
 def test_issue_3449():
-    x = Symbol("x", real=True)
-    assert sqrt(x**2) == abs(x)
+    x = Symbol("x")
     assert sqrt(x - 1).subs(x, 5) == 2
 
 
@@ -1284,15 +1289,11 @@ def test_issue_4122():
     assert (oo + x).is_Add
     x = Symbol('x', bounded=True)
     assert (oo + x).is_Add  # x could be imaginary
-    x = Symbol('x', finite=True)
-    assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', infinitesimal=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
     assert oo + x == oo
     x = Symbol('x', bounded=True, real=True)
-    assert oo + x == oo
-    x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
     x = Symbol('x', infinitesimal=True, real=True)
     assert oo + x == oo
@@ -1302,15 +1303,11 @@ def test_issue_4122():
     assert (-oo + x).is_Add
     x = Symbol('x', bounded=True)
     assert (-oo + x).is_Add
-    x = Symbol('x', finite=True)
-    assert (-oo + x).is_Add
     x = Symbol('x', infinitesimal=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
     assert -oo + x == -oo
     x = Symbol('x', bounded=True, real=True)
-    assert -oo + x == -oo
-    x = Symbol('x', finite=True, real=True)
     assert -oo + x == -oo
     x = Symbol('x', infinitesimal=True, real=True)
     assert -oo + x == -oo
@@ -1328,12 +1325,10 @@ def test_as_content_primitive():
     assert S(3.1).as_content_primitive() == (1, 3.1)
 
 
-@XFAIL
 def test_hashing_sympy_integers():
     # Test for issue 5072
-    # https://github.com/sympy/sympy/issues/5072
-    assert hash(S(4)) == 4
-    assert hash(S(4)) == hash(int(4))
+    assert set([Integer(3)]) == set([int(3)])
+    assert hash(Integer(4)) == hash(int(4))
 
 
 def test_issue_4172():
@@ -1417,3 +1412,7 @@ def test_latex():
     assert latex(zoo) == r"\tilde{\infty}"
     assert latex(nan) == r"\mathrm{NaN}"
     assert latex(I) == r"i"
+
+
+def test_issue_7742():
+    assert -oo % 1 == nan

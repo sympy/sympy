@@ -443,6 +443,36 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_BasisDependent(self, expr):
+        from sympy.vector import Vector
+
+        o1 = []
+        if expr == expr.zero:
+            return expr.zero._latex_form
+        if isinstance(expr, Vector):
+            items = expr.separate().items()
+        else:
+            items = [(0, expr)]
+
+        for system, vect in items:
+            inneritems = list(vect.components.items())
+            inneritems.sort(key = lambda x:x[0].__str__())
+            for k, v in inneritems:
+                if v == 1:
+                    o1.append(' + ' + k._latex_form)
+                elif v == -1:
+                    o1.append(' - ' + k._latex_form)
+                else:
+                    arg_str = '(' + LatexPrinter().doprint(v) + ')'
+                    o1.append(' + ' + arg_str + k._latex_form)
+
+        outstr = (''.join(o1))
+        if outstr[1] != '-':
+            outstr = outstr[3:]
+        else:
+            outstr = outstr[1:]
+        return outstr
+
     def _print_Indexed(self, expr):
         tex = self._print(expr.base)+'_{%s}' % ','.join(
             map(self._print, expr.indices))
@@ -645,7 +675,7 @@ class LatexPrinter(Printer):
             symbols = self._print(tuple(symbols))
 
         args = (symbols, self._print(expr))
-        tex = r"\Lambda {\left (%s \right )}" % ", ".join(args)
+        tex = r"\left( %s \mapsto %s \right)" % (symbols, self._print(expr))
 
         return tex
 
@@ -711,13 +741,17 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
+        from sympy import Equivalent, Implies
+        if isinstance(e.args[0], Equivalent):
+            return self._print_Equivalent(e.args[0], r"\not\equiv")
+        if isinstance(e.args[0], Implies):
+            return self._print_Implies(e.args[0], r"\not\Rightarrow")
         if (e.args[0].is_Boolean):
             return r"\neg (%s)" % self._print(e.args[0])
         else:
             return r"\neg %s" % self._print(e.args[0])
 
-    def _print_And(self, e):
-        args = sorted(e.args, key=default_sort_key)
+    def _print_LogOp(self, args, char):
         arg = args[0]
         if arg.is_Boolean and not arg.is_Not:
             tex = r"\left(%s\right)" % self._print(arg)
@@ -726,33 +760,26 @@ class LatexPrinter(Printer):
 
         for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
-                tex += r" \wedge \left(%s\right)" % (self._print(arg))
+                tex += r" %s \left(%s\right)" % (char, self._print(arg))
             else:
-                tex += r" \wedge %s" % (self._print(arg))
+                tex += r" %s %s" % (char, self._print(arg))
 
         return tex
+
+    def _print_And(self, e):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, r"\wedge")
 
     def _print_Or(self, e):
         args = sorted(e.args, key=default_sort_key)
-        arg = args[0]
-        if arg.is_Boolean and not arg.is_Not:
-            tex = r"\left(%s\right)" % self._print(arg)
-        else:
-            tex = r"%s" % self._print(arg)
+        return self._print_LogOp(args, r"\vee")
 
-        for arg in args[1:]:
-            if arg.is_Boolean and not arg.is_Not:
-                tex += r" \vee \left(%s\right)" % (self._print(arg))
-            else:
-                tex += r" \vee %s" % (self._print(arg))
+    def _print_Implies(self, e, altchar=None):
+        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\Rightarrow", self._print(e.args[1]))
 
-        return tex
-
-    def _print_Implies(self, e):
-        return r"%s \Rightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
-
-    def _print_Equivalent(self, e):
-        return r"%s \Leftrightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
+    def _print_Equivalent(self, e, altchar=None):
+        args = sorted(e.args, key=default_sort_key)
+        return self._print_LogOp(args, altchar or r"\equiv")
 
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])
@@ -1319,15 +1346,15 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}"
 
     def _print_tuple(self, expr):
-        return r"\begin{pmatrix}%s\end{pmatrix}" % \
-            r", & ".join([ self._print(i) for i in expr ])
+        return r"\left ( %s\right )" % \
+            r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
 
     def _print_list(self, expr):
-        return r"\begin{bmatrix}%s\end{bmatrix}" % \
-            r", & ".join([ self._print(i) for i in expr ])
+        return r"\left [ %s\right ]" % \
+            r", \quad ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1337,7 +1364,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)
+        return r"\left \{ %s\right \}" % r", \quad ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -1388,7 +1415,7 @@ class LatexPrinter(Printer):
     def _print_RandomDomain(self, d):
         try:
             return 'Domain: ' + self._print(d.as_boolean())
-        except:
+        except Exception:
             try:
                 return ('Domain: ' + self._print(d.symbols) + ' in ' +
                         self._print(d.set))
@@ -1437,6 +1464,9 @@ class LatexPrinter(Printer):
 
     def _print_Union(self, u):
         return r" \cup ".join([self._print(i) for i in u.args])
+
+    def _print_Complement(self, u):
+        return r" \setminus ".join([self._print(i) for i in u.args])
 
     def _print_Intersection(self, u):
         return r" \cap ".join([self._print(i) for i in u.args])
@@ -1850,12 +1880,11 @@ def latex(expr, **settings):
     >>> print(latex(x**2, symbol_names={x:'x_i'}))
     x_i^{2}
 
-    Besides all Basic based expressions, you can recursively
-    convert Python containers (lists, tuples and dicts) and
-    also SymPy matrices:
+    ``latex`` also supports the builtin container types list, tuple, and
+    dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\begin{bmatrix}2 / x, & y\end{bmatrix}$
+    $\left [ 2 / x, \quad y\right ]$
 
     """
 

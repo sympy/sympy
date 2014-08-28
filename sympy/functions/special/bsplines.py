@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core import S, sympify, expand
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.functions.elementary.piecewise import ExprCondPair
-from sympy.core.sets import Interval
+from sympy.sets.sets import Interval
 
 
 def _add_splines(c, b1, d, b2):
@@ -73,7 +73,7 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> d = 3
         >>> knots = range(10)
         >>> b0 = bspline_basis(d, knots, 0, x)
-        >>> f = lambdify(x, b0)
+        >>> f = lambdify(x, b0, default_array=True)
         >>> y = f(0.5)
 
     See Also

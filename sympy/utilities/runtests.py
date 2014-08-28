@@ -290,6 +290,8 @@ def test(*paths, **kwargs):
     - If sort=False, tests are run in random order (not default).
     - Paths can be entered in native system format or in unix,
       forward-slash format.
+    - Files that are on the blacklist can be tested by providing
+      their path; they are only excluded if no paths are given.
 
     **Explanation of test results**
 
@@ -443,9 +445,15 @@ def _test(*paths, **kwargs):
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
+    blacklist = kwargs.get('blacklist', [])
+    blacklist.extend([
+        "sympy/mpmath", # needs to be fixed upstream
+    ])
+    blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed)
+
 
     # Disable warnings for external modules
     import sympy.external
@@ -458,12 +466,15 @@ def _test(*paths, **kwargs):
 
     test_files = t.get_test_files('sympy')
 
+    not_blacklisted = [f for f in test_files
+                       if not any(b in f for b in blacklist)]
+
     if len(paths) == 0:
-        matched = test_files
+        matched = not_blacklisted
     else:
         paths = convert_to_native_paths(paths)
         matched = []
-        for f in test_files:
+        for f in not_blacklisted:
             basename = os.path.basename(f)
             for p in paths:
                 if p in f or fnmatch(basename, p):
@@ -554,9 +565,8 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        "sympy/statistics",                # prints a deprecation
-        "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py"  # needs tcc
+        "sympy/utilities/compilef.py",  # needs tcc
+        "sympy/physics/gaussopt.py", # raises deprecation warning
     ])
 
     if import_module('numpy') is None:
@@ -1398,10 +1408,6 @@ class SymPyDocTestFinder(DocTestFinder):
                                    source_lines, globs, seen)
                     except KeyboardInterrupt:
                         raise
-                    except ValueError:
-                        raise
-                    except Exception:
-                        pass
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
@@ -1431,19 +1437,21 @@ class SymPyDocTestFinder(DocTestFinder):
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
-                    inspect.isclass(val) or
-                    isinstance(val, property)):
+                        inspect.isclass(val) or
+                        isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
-                        if val.fget.__module__ != module.__name__:
-                            continue
+                        if hasattr(val.fget, '__module__'):
+                            if val.fget.__module__ != module.__name__:
+                                continue
                     else:
                         if val.__module__ != module.__name__:
                             continue
 
                     assert self._from_module(module, val), \
-                        "%s is not in module %s (valname %s)" % (val, module, valname)
+                        "%s is not in module %s (valname %s)" % (
+                            val, module, valname)
 
                     valname = '%s.%s' % (name, valname)
                     self._find(tests, val, valname, module, source_lines,
@@ -1500,10 +1508,16 @@ class SymPyDocTestFinder(DocTestFinder):
         if lineno is None:
             # handling of properties is not implemented in _find_lineno so do
             # it here
-            tobj = obj if not isinstance(obj, property) else obj.fget
+            if hasattr(obj, 'func_closure') and obj.func_closure is not None:
+                tobj = obj.func_closure[0].cell_contents
+            elif isinstance(obj, property):
+                tobj = obj.fget
+            else:
+                tobj = obj
             lineno = self._find_lineno(tobj, source_lines)
 
-        assert lineno is not None
+        if lineno is None:
+            return None
 
         # Return a DocTest for this object.
         if module is None:

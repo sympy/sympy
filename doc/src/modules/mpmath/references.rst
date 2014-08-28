@@ -7,7 +7,7 @@ References not listed here can be found in the source code.
 
 .. [AbramowitzStegun] M Abramowitz & I Stegun. *Handbook of Mathematical Functions, 9th Ed.*, Tenth Printing, December 1972, with corrections (electronic copy: http://people.math.sfu.ca/~cbm/aands/)
 
-.. [Bailey] D H Bailey. "Tanh-Sinh High-Precision Quadrature", http://crd.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf
+.. [Bailey] D H Bailey. "Tanh-Sinh High-Precision Quadrature", http://crd-legacy.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf
 
 .. [BenderOrszag] C M Bender & S A Orszag. *Advanced Mathematical Methods for
     Scientists and Engineers*, Springer 1999

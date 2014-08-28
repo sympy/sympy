@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function, division
 
+from sympy.core.singleton import S
 from sympy.core.numbers import igcd, igcdex
 from sympy.core.compatibility import as_int, xrange
+from sympy.core.function import Function
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient
 from random import randint
@@ -862,3 +866,61 @@ def jacobi_symbol(m, n):
         if s % 2 and n % 8 in [3, 5]:
             j *= -1
     return j
+
+
+class mobius(Function):
+    """
+    Möbius function maps natural number to {-1, 0, 1}
+
+    It is defined as follows:
+        1) `1` if `n = 1`.
+        2) `0` if `n` has a squared prime factor.
+        3) `(-1)^k` if `n` is a square-free positive integer with `k`
+           number of prime factors.
+
+    It is an important multiplicative function in number theory
+    and combinatorics.  It has applications in mathematical series,
+    algebraic number theory and also physics (Fermion operator has very
+    concrete realization with Möbius Function model).
+
+    Parameters
+    ==========
+
+    n : positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import mobius
+    >>> mobius(13*7)
+    1
+    >>> mobius(1)
+    1
+    >>> mobius(13*7*5)
+    -1
+    >>> mobius(13**2)
+    0
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/M%C3%B6bius_function
+    .. [2] Thomas Koshy "Elementary Number Theory with Applications"
+
+    """
+    @classmethod
+    def eval(cls, n):
+        if n.is_integer:
+            if n.is_positive is not True:
+                raise ValueError("n should be a positive integer")
+        else:
+            raise TypeError("n should be an integer")
+        if n.is_prime:
+            return S.NegativeOne
+        elif n is S.One:
+            return S.One
+        elif n.is_Integer:
+            a = factorint(n)
+            if any(i > 1 for i in a.values()):
+                return S.Zero
+            return S.NegativeOne**len(a)

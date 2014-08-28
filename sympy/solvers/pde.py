@@ -34,8 +34,6 @@ more information on each (run help(pde)):
 """
 from __future__ import print_function, division
 
-from copy import deepcopy
-
 from sympy.simplify import simplify
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
@@ -232,8 +230,8 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     The tuple is ordered so that first item is the classification that
     pdsolve() uses to solve the PDE by default.  In general,
-    classifications at the near the beginning of the list will produce
-    better solutions faster than those near the end, thought there are
+    classifications near the beginning of the list will produce
+    better solutions faster than those near the end, though there are
     always exceptions.  To make pdsolve use a different classification,
     use pdsolve(PDE, func, hint=<classification>).  See also the pdsolve()
     docstring for different meta-hints you can use.
@@ -317,7 +315,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     reduced_eq = None
     if eq.is_Add:
         var = set(combinations_with_replacement((x,y), order))
-        dummyvar = deepcopy(var)
+        dummyvar = var.copy()
         power = None
         for i in var:
             coeff = eq.coeff(f(x,y).diff(*i))
