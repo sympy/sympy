@@ -58,6 +58,9 @@ class Set(Basic):
         """
         Returns the union of 'self' and 'other'.
 
+        Examples
+        ========
+
         As a shortcut it is possible to use the '+' operator:
 
         >>> from sympy import Interval, FiniteSet
@@ -114,6 +117,9 @@ class Set(Basic):
         """
         Returns True if 'self' and 'other' are disjoint
 
+        Examples
+        ========
+
         >>> from sympy import Interval
         >>> Interval(0, 2).is_disjoint(Interval(1, 2))
         False
@@ -151,8 +157,10 @@ class Set(Basic):
         """
         The complement of 'self' w.r.t the given the universe.
 
-        >>> from sympy import Interval, S
+        Examples
+        ========
 
+        >>> from sympy import Interval, S
         >>> Interval(0, 1).complement(S.Reals)
         (-oo, 0) U (1, oo)
 
@@ -202,8 +210,10 @@ class Set(Basic):
         """
         The infimum of 'self'
 
-        >>> from sympy import Interval, Union
+        Examples
+        ========
 
+        >>> from sympy import Interval, Union
         >>> Interval(0, 1).inf
         0
         >>> Union(Interval(0, 1), Interval(2, 3)).inf
@@ -221,8 +231,10 @@ class Set(Basic):
         """
         The supremum of 'self'
 
-        >>> from sympy import Interval, Union
+        Examples
+        ========
 
+        >>> from sympy import Interval, Union
         >>> Interval(0, 1).sup
         1
         >>> Union(Interval(0, 1), Interval(2, 3)).sup
@@ -241,8 +253,10 @@ class Set(Basic):
 
         As a shortcut it is possible to use the 'in' operator:
 
-        >>> from sympy import Interval
+        Examples
+        ========
 
+        >>> from sympy import Interval
         >>> Interval(0, 1).contains(0.5)
         True
         >>> 0.5 in Interval(0, 1)
@@ -269,6 +283,9 @@ class Set(Basic):
         """
         Returns True if 'self' is a subset of 'other'.
 
+        Examples
+        ========
+
         >>> from sympy import Interval
         >>> Interval(0, 0.5).is_subset(Interval(0, 1))
         True
@@ -291,6 +308,9 @@ class Set(Basic):
         """
         Returns True if 'self' is a proper subset of 'other'.
 
+        Examples
+        ========
+
         >>> from sympy import Interval
         >>> Interval(0, 0.5).is_proper_subset(Interval(0, 1))
         True
@@ -306,6 +326,9 @@ class Set(Basic):
     def is_superset(self, other):
         """
         Returns True if 'self' is a superset of 'other'.
+
+        Examples
+        ========
 
         >>> from sympy import Interval
         >>> Interval(0, 0.5).is_superset(Interval(0, 1))
@@ -328,6 +351,9 @@ class Set(Basic):
     def is_proper_superset(self, other):
         """
         Returns True if 'self' is a proper superset of 'other'.
+
+        Examples
+        ========
 
         >>> from sympy import Interval
         >>> Interval(0, 1).is_proper_superset(Interval(0, 0.5))
@@ -352,11 +378,9 @@ class Set(Basic):
         ========
 
         >>> from sympy import FiniteSet, EmptySet
-
         >>> A = EmptySet()
         >>> A.powerset()
         {EmptySet()}
-
         >>> A = FiniteSet(1, 2)
         >>> A.powerset() == FiniteSet(FiniteSet(1), FiniteSet(2), FiniteSet(1, 2), EmptySet())
         True
@@ -374,8 +398,10 @@ class Set(Basic):
         """
         The (Lebesgue) measure of 'self'
 
-        >>> from sympy import Interval, Union
+        Examples
+        ========
 
+        >>> from sympy import Interval, Union
         >>> Interval(0, 1).measure
         1
         >>> Union(Interval(0, 1), Interval(2, 3)).measure
@@ -403,10 +429,12 @@ class Set(Basic):
         For example, the boundary of an interval is its start and end points.
         This is true regardless of whether or not the interval is open.
 
+        Examples
+        ========
+
         >>> from sympy import Interval
         >>> Interval(0, 1).boundary
         {0, 1}
-
         >>> Interval(0, 1, True, False).boundary
         {0, 1}
         """
@@ -488,21 +516,20 @@ class ProductSet(Set):
     Examples
     ========
 
-        >>> from sympy import Interval, FiniteSet, ProductSet
+    >>> from sympy import Interval, FiniteSet, ProductSet
+    >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
+    >>> ProductSet(I, S)
+    [0, 5] x {1, 2, 3}
 
-        >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
-        >>> ProductSet(I, S)
-        [0, 5] x {1, 2, 3}
+    >>> (2, 2) in ProductSet(I, S)
+    True
 
-        >>> (2, 2) in ProductSet(I, S)
-        True
+    >>> Interval(0, 1) * Interval(0, 1) # The unit square
+    [0, 1] x [0, 1]
 
-        >>> Interval(0, 1) * Interval(0, 1) # The unit square
-        [0, 1] x [0, 1]
-
-        >>> coin = FiniteSet('H', 'T')
-        >>> set(coin**2)
-        set([(H, H), (H, T), (T, H), (T, T)])
+    >>> coin = FiniteSet('H', 'T')
+    >>> set(coin**2)
+    set([(H, H), (H, T), (T, H), (T, T)])
 
 
     Notes
@@ -540,8 +567,10 @@ class ProductSet(Set):
         """
         'in' operator for ProductSets
 
-        >>> from sympy import Interval
+        Examples
+        ========
 
+        >>> from sympy import Interval
         >>> (2, 3) in Interval(0, 5) * Interval(0, 5)
         True
 
@@ -634,7 +663,6 @@ class Interval(Set, EvalfMixin):
     ========
 
     >>> from sympy import Symbol, Interval
-
     >>> Interval(0, 1)
     [0, 1]
     >>> Interval(0, 1, False, True)
@@ -701,8 +729,10 @@ class Interval(Set, EvalfMixin):
 
         This property takes the same value as the 'inf' property.
 
-        >>> from sympy import Interval
+        Examples
+        ========
 
+        >>> from sympy import Interval
         >>> Interval(0, 1).start
         0
 
@@ -718,8 +748,10 @@ class Interval(Set, EvalfMixin):
 
         This property takes the same value as the 'sup' property.
 
-        >>> from sympy import Interval
+        Examples
+        ========
 
+        >>> from sympy import Interval
         >>> Interval(0, 1).end
         1
 
@@ -733,8 +765,10 @@ class Interval(Set, EvalfMixin):
         """
         True if 'self' is left-open.
 
-        >>> from sympy import Interval
+        Examples
+        ========
 
+        >>> from sympy import Interval
         >>> Interval(0, 1, left_open=True).left_open
         True
         >>> Interval(0, 1, left_open=False).left_open
@@ -748,8 +782,10 @@ class Interval(Set, EvalfMixin):
         """
         True if 'self' is right-open.
 
-        >>> from sympy import Interval
+        Examples
+        ========
 
+        >>> from sympy import Interval
         >>> Interval(0, 1, right_open=True).right_open
         True
         >>> Interval(0, 1, right_open=False).right_open
@@ -990,16 +1026,15 @@ class Union(Set, EvalfMixin):
     Examples
     ========
 
-        >>> from sympy import Union, Interval
+    >>> from sympy import Union, Interval
+    >>> Union(Interval(1, 2), Interval(3, 4))
+    [1, 2] U [3, 4]
 
-        >>> Union(Interval(1, 2), Interval(3, 4))
-        [1, 2] U [3, 4]
+    The Union constructor will always try to merge overlapping intervals,
+    if possible. For example:
 
-        The Union constructor will always try to merge overlapping intervals,
-        if possible. For example:
-
-        >>> Union(Interval(1, 2), Interval(2, 3))
-        [1, 3]
+    >>> Union(Interval(1, 2), Interval(2, 3))
+    [1, 3]
 
     See Also
     ========
@@ -1198,15 +1233,14 @@ class Intersection(Set):
     Examples
     ========
 
-        >>> from sympy import Intersection, Interval
+    >>> from sympy import Intersection, Interval
+    >>> Intersection(Interval(1, 3), Interval(2, 4))
+    [2, 3]
 
-        >>> Intersection(Interval(1, 3), Interval(2, 4))
-        [2, 3]
+    We often use the .intersect method
 
-        We often use the .intersect method
-
-        >>> Interval(1,3).intersect(Interval(2,4))
-        [2, 3]
+    >>> Interval(1,3).intersect(Interval(2,4))
+    [2, 3]
 
     See Also
     ========
@@ -1408,13 +1442,12 @@ class EmptySet(with_metaclass(Singleton, Set)):
     Examples
     ========
 
-        >>> from sympy import S, Interval
+    >>> from sympy import S, Interval
+    >>> S.EmptySet
+    EmptySet()
 
-        >>> S.EmptySet
-        EmptySet()
-
-        >>> Interval(1, 2).intersect(S.EmptySet)
-        EmptySet()
+    >>> Interval(1, 2).intersect(S.EmptySet)
+    EmptySet()
 
     See Also
     ========
@@ -1468,13 +1501,12 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     Examples
     ========
 
-        >>> from sympy import S, Interval
+    >>> from sympy import S, Interval
+    >>> S.UniversalSet
+    UniversalSet()
 
-        >>> S.UniversalSet
-        UniversalSet()
-
-        >>> Interval(1, 2).intersect(S.UniversalSet)
-        [1, 2]
+    >>> Interval(1, 2).intersect(S.UniversalSet)
+    [1, 2]
 
     See Also
     ========
@@ -1519,7 +1551,6 @@ class FiniteSet(Set, EvalfMixin):
     ========
 
     >>> from sympy import FiniteSet
-
     >>> FiniteSet(1, 2, 3, 4)
     {1, 2, 3, 4}
     >>> 3 in FiniteSet(1, 2, 3, 4)
@@ -1605,8 +1636,10 @@ class FiniteSet(Set, EvalfMixin):
         Relies on Python's set class. This tests for object equality
         All inputs are sympified
 
-        >>> from sympy import FiniteSet
+        Examples
+        ========
 
+        >>> from sympy import FiniteSet
         >>> 1 in FiniteSet(1, 2)
         True
         >>> 5 in FiniteSet(1, 2)
