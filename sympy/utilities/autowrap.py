@@ -74,11 +74,12 @@ import os
 import shutil
 import tempfile
 from subprocess import STDOUT, CalledProcessError
+from string import Template
 
 from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument, InputArgument,
-    CodeGenArgumentListError, Result, ResultBase
+    CodeGenArgumentListError, Result, ResultBase, CCodeGen
 )
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
@@ -146,7 +147,7 @@ class CodeWrapper:
             if not self.filepath:
                 shutil.rmtree(workdir)
 
-        return self._get_wrapped_function(mod)
+        return self._get_wrapped_function(mod, routine.name)
 
     def _process_files(self, routine):
         command = self.command
@@ -199,8 +200,8 @@ def %(name)s():
         return
 
     @classmethod
-    def _get_wrapped_function(cls, mod):
-        return mod.autofunc
+    def _get_wrapped_function(cls, mod, name):
+        return getattr(mod, name)
 
 
 class CythonCodeWrapper(CodeWrapper):
@@ -251,8 +252,8 @@ class CythonCodeWrapper(CodeWrapper):
             f.write(self.setup_template.format(ext_args=", ".join(ext_args)))
 
     @classmethod
-    def _get_wrapped_function(cls, mod):
-        return mod.autofunc_c
+    def _get_wrapped_function(cls, mod, name):
+        return getattr(mod, name + '_c')
 
     def dump_pyx(self, routines, f, prefix):
         """Write a Cython file with python wrappers
@@ -392,8 +393,8 @@ class F2PyCodeWrapper(CodeWrapper):
         pass
 
     @classmethod
-    def _get_wrapped_function(cls, mod):
-        return mod.autofunc
+    def _get_wrapped_function(cls, mod, name):
+        return getattr(mod, name)
 
 
 def _get_code_wrapper_class(backend):
@@ -491,8 +492,240 @@ def binary_function(symfunc, expr, **kwargs):
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
+#################################################################
+#                           UFUNCIFY                            #
+#################################################################
+
+# Template Definitions
+# --------------------
+# FUNCTION: The function body. Must return double.
+# DECLARE_ARGS: Argument Declarations. One for each arg (input and output).
+# DECLARE_STEPS: Step Declarations. One for each arg (input and output).
+# CALL_ARGS: The call signature, with type conversions.
+# STEP_INCREMENTS: Increment each step.
+# TYPES: An array of arg types.
+# N_IN: Number of input args
+# N_OUT: Number of output args
+# DOCSTRING: Python function docstring.
+
+ufunc_top = Template("""\
+#include "Python.h"
+#include "math.h"
+#include "numpy/ndarraytypes.h"
+#include "numpy/ufuncobject.h"
+#include "numpy/halffloat.h"
+#include ${INCLUDE_FILE}
+
+static PyMethodDef ${MODULE}Methods[] = {
+        {NULL, NULL, 0, NULL}
+};""")
+
+ufunc_body = Template("""\
+static void ${FUNCNAME}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+{
+    npy_intp i;
+    npy_intp n = dimensions[0];
+    ${DECLARE_ARGS}
+    ${DECLARE_STEPS}
+    for (i = 0; i < n; i++) {
+        *((double *)out1) = ${FUNCNAME}(${CALL_ARGS});
+        ${STEP_INCREMENTS}
+    }
+}
+PyUFuncGenericFunction ${FUNCNAME}_funcs[1] = {&${FUNCNAME}_ufunc};
+static char ${FUNCNAME}_types[${N_TYPES}] = ${TYPES}
+static void *${FUNCNAME}_data[1] = {NULL};""")
+
+ufunc_bottom = Template("""\
+#if PY_VERSION_HEX >= 0x03000000
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "${MODULE}",
+    NULL,
+    -1,
+    ${MODULE}Methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC PyInit_${MODULE}(void)
+{
+    PyObject *m, *d;
+    ${FUNCTION_CREATION}
+    m = PyModule_Create(&moduledef);
+    if (!m) {
+        return NULL;
+    }
+    import_array();
+    import_umath();
+    d = PyModule_GetDict(m);
+    ${UFUNC_INIT}
+    return m;
+}
+#else
+PyMODINIT_FUNC init${MODULE}(void)
+{
+    PyObject *m, *d;
+    ${FUNCTION_CREATION}
+    m = Py_InitModule("${MODULE}", ${MODULE}Methods);
+    if (m == NULL) {
+        return;
+    }
+    import_array();
+    import_umath();
+    d = PyModule_GetDict(m);
+    ${UFUNC_INIT}
+}
+#endif\
+""")
+
+ufunc_init_form = Template("""\
+ufunc${IND} = PyUFunc_FromFuncAndData(${FUNCNAME}_funcs, ${FUNCNAME}_data, ${FUNCNAME}_types, 1, ${N_IN}, ${N_OUT},
+            PyUFunc_None, "${MODULE}", ${DOCSTRING}, 0);
+    PyDict_SetItemString(d, "${FUNCNAME}", ufunc${IND});
+    Py_DECREF(ufunc${IND});""")
+
+ufunc_setup = Template("""\
+def configuration(parent_package='', top_path=None):
+    import numpy
+    from numpy.distutils.misc_util import Configuration
+
+    config = Configuration('',
+                           parent_package,
+                           top_path)
+    config.add_extension('${MODULE}', sources=['${MODULE}.c', '${FILENAME}.c'])
+
+    return config
+
+if __name__ == "__main__":
+    from numpy.distutils.core import setup
+    setup(configuration=configuration)""")
+
+class UfuncifyCodeWrapper(CodeWrapper):
+    """Wrapper for Ufuncify"""
+
+    @property
+    def command(self):
+        command = [sys.executable, "setup.py", "build_ext", "--inplace"]
+        return command
+
+    def _prepare_files(self, routine):
+
+        # C
+        codefilename = self.module_name + '.c'
+        with open(codefilename, 'w') as f:
+            self.dump_c([routine], f, self.filename)
+
+        # setup.py
+        with open('setup.py', 'w') as f:
+            self.dump_setup(f)
+
+    @classmethod
+    def _get_wrapped_function(cls, mod, name):
+        return getattr(mod, name)
+
+    def dump_setup(self, f):
+        setup = ufunc_setup.substitute(MODULE=self.module_name, FILENAME=self.filename)
+        f.write(setup)
+
+    def dump_c(self, routines, f, prefix):
+        """Write a C file with python wrappers
+
+        This file contains all the definitions of the routines in c code.
+
+        Arguments
+        ---------
+        routines
+            List of Routine instances
+        f
+            File-like object to write the file to
+        prefix
+            The filename prefix, used to name the imported module.
+        """
+        functions = []
+        FUNCTION_CREATION = []
+        UFUNC_INIT = []
+        MODULE = self.module_name
+        INCLUDE_FILE = "\"{0}.h\"".format(prefix)
+        top = ufunc_top.substitute(INCLUDE_FILE=INCLUDE_FILE, MODULE=MODULE)
+        for r_index, routine in enumerate(routines):
+            NAME = routine.name
+
+            # Partition the C function arguments into categories
+            py_in, py_out = self._partition_args(routine.arguments)
+            N_IN = len(py_in)
+            N_OUT = 1
+
+            # Declare Args
+            form = "char *{0}{1} = args[{2}];"
+            arg_decs = [form.format('in', i, i) for i in range(N_IN)]
+            arg_decs.append(form.format('out', 1, N_IN))
+            DECLARE_ARGS = '\n    '.join(arg_decs)
+
+            # Declare Steps
+            form = "npy_intp {0}{1}_step = steps[{2}];"
+            step_decs = [form.format('in', i, i) for i in range(N_IN)]
+            step_decs.append(form.format('out', 1, N_IN))
+            DECLARE_STEPS = '\n    '.join(step_decs)
+
+            # Call Args
+            form = "*(double *)in{0}"
+            CALL_ARGS = ', '.join([form.format(a) for a in range(N_IN)])
+
+            # Step Increments
+            form = "{0}{1} += {0}{1}_step;"
+            step_incs = [form.format('in', i) for i in range(N_IN)]
+            step_incs.append(form.format('out', 1))
+            STEP_INCREMENTS = '\n        '.join(step_incs)
+
+            # Types
+            N_TYPES = N_IN + N_OUT
+            TYPES = "{" + ', '.join(["NPY_DOUBLE"]*N_TYPES) + "};"
+
+            # Docstring
+            DOCSTRING = '"Placeholder Docstring"'
+
+            # Function Creation
+            FUNCTION_CREATION.append("PyObject *ufunc{0};".format(r_index))
+
+            # Ufunc initialization
+            UFUNC_INIT.append(ufunc_init_form.substitute(MODULE=MODULE,
+                FUNCNAME=NAME, DOCSTRING=DOCSTRING, N_IN=N_IN, N_OUT=N_OUT,
+                IND=r_index))
+
+            functions.append(ufunc_body.substitute(MODULE=MODULE,
+                    FUNCNAME=NAME, DECLARE_ARGS=DECLARE_ARGS, DECLARE_STEPS=DECLARE_STEPS,
+                    CALL_ARGS=CALL_ARGS, STEP_INCREMENTS=STEP_INCREMENTS,
+                    N_TYPES=N_TYPES, TYPES=TYPES))
+
+        body = '\n\n'.join(functions)
+        UFUNC_INIT = '\n    '.join(UFUNC_INIT)
+        FUNCTION_CREATION = '\n    '.join(FUNCTION_CREATION)
+        bottom = ufunc_bottom.substitute(MODULE=MODULE, UFUNC_INIT=UFUNC_INIT,
+                FUNCTION_CREATION=FUNCTION_CREATION)
+        text = [top, body, bottom]
+        f.write('\n\n'.join(text))
+
+    def _partition_args(self, args):
+        """Group function arguments into categories."""
+        py_in = []
+        py_out = []
+        for arg in args:
+            if isinstance(arg, OutputArgument):
+                if py_out:
+                    raise ValueError("Ufuncify doesn't support multiple OutputArguments")
+                py_out.append(arg)
+            elif isinstance(arg, InOutArgument):
+                raise ValueError("Ufuncify doesn't support InOutArguments")
+            else:
+                py_in.append(arg)
+        return py_in, py_out
+
+
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
-def ufuncify(args, expr, **kwargs):
+def ufuncify(args, expr, tempdir=None, flags=[], verbose=False, helpers=[]):
     """
     Generates a binary ufunc-like lambda function for numpy arrays
 
@@ -502,9 +735,6 @@ def ufuncify(args, expr, **kwargs):
 
     ``expr``
         A SymPy expression that defines the element wise operation
-
-    ``kwargs``
-        Optional keyword arguments are forwarded to autowrap().
 
     The returned function can only act on one array at a time, as only the
     first argument accept arrays as input.
@@ -533,22 +763,14 @@ def ufuncify(args, expr, **kwargs):
     [ 3. 4. 7. 12. 19.]
 
     """
-    y = C.IndexedBase(C.Dummy('y'))
-    x = C.IndexedBase(C.Dummy('x'))
-    m = C.Dummy('m', integer=True)
-    i = C.Dummy('i', integer=True)
-    i = C.Idx(i, m)
-    l = C.Lambda(args, expr)
-    f = implemented_function('f', l)
-
     if isinstance(args, C.Symbol):
         args = [args]
     else:
         args = list(args)
 
-    # ensure correct order of arguments
-    kwargs['args'] = [y, x] + args[1:] + [m]
-
-    # first argument accepts an array
-    args[0] = x[i]
-    return autowrap(C.Equality(y[i], f(*args)), **kwargs)
+    code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir, flags, verbose)
+    routine = Routine('autofunc', expr, args)
+    helps = []
+    for name, expr, args in helpers:
+        helps.append(Routine(name, expr, args))
+    return code_wrapper.wrap_code(routine, helpers=helps)
