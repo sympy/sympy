@@ -71,7 +71,7 @@ def test_CheckOldAssump():
             return False
 
     class Test2(Expr):
-        def _eval_is_finite(self):
+        def _eval_is_bounded(self):
             return True
         def _eval_is_positive(self):
             return True
@@ -82,8 +82,8 @@ def test_CheckOldAssump():
     t2 = Test2()
 
     # We can't say if it's positive or negative in the old assumptions without
-    # finite. Remember, True means "no new knowledge", and Q.positive(t2)
-    # means "t2 is positive."
+    # bounded. Remember, True means "no new knowledge", and
+    # Q.positive(t2) means "t2 is positive."
     assert CheckOldAssump(Q.positive(t1)) == True
     assert CheckOldAssump(Q.negative(t1)) == ~Q.negative(t1)
 
