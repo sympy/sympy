@@ -1036,73 +1036,64 @@ class Mul(Expr, AssocOp):
                 return True
 
     def _eval_is_hermitian(self):
-        nc_count = 0
-        im_count = 0
-        is_neither = False
-        is_zero = False
+        real = True
+        one_nc = zero = one_neither = False
+
         for t in self.args:
             if not t.is_commutative:
-                nc_count += 1
-                if nc_count > 1:
+                if one_nc:
                     return
+                one_nc = True
+
             if t.is_antihermitian:
-                im_count += 1
-                continue
-            t_real = t.is_hermitian
-            if t_real:
-                if is_zero is False:
-                    is_zero = fuzzy_not(t.is_nonzero)
-                    if is_zero:
+                real = not real
+            elif t.is_hermitian:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
                         return True
-            elif t_real is False:
-                if is_neither:
+            elif t.is_hermitian is False:
+                if one_neither:
                     return
-                else:
-                    is_neither = True
+                one_neither = True
             else:
                 return
 
-        real = im_count % 2 == 0
-        if is_neither:
+        if one_neither:
             if real:
-                return is_zero
-        else:
-            if real:
-                return True
-            return is_zero
+                return zero
+        elif zero is False or real:
+            return real
 
     def _eval_is_antihermitian(self):
-        nc_count = 0
-        im_count = 0
-        is_neither = False
-        is_zero = False
+        real = True
+        one_nc = zero = one_neither = False
+
         for t in self.args:
             if not t.is_commutative:
-                nc_count += 1
-                if nc_count > 1:
+                if one_nc:
                     return
+                one_nc = True
+
             if t.is_antihermitian:
-                im_count += 1
-                continue
-            t_real = t.is_hermitian
-            if t_real:
-                if is_zero is False:
-                    is_zero = fuzzy_not(t.is_nonzero)
-                    if is_zero:
+                real = not real
+            elif t.is_hermitian:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
                         return False
-            elif t_real is False:
-                if is_neither:
+            elif t.is_hermitian is False:
+                if one_neither:
                     return
-                else:
-                    is_neither = True
+                one_neither = True
             else:
                 return
 
-        if is_neither:
-            return is_zero
-        else:
-            if im_count % 2 == 0:
-                return is_zero
+        if zero is False:
+            if one_neither:
+                return False
+            if not real:
+                return True
 
     def _eval_is_irrational(self):
         for t in self.args:
