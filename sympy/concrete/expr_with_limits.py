@@ -360,7 +360,10 @@ class AddWithLimits(ExprWithLimits):
             free = function.free_symbols
             if len(free) != 1:
                 raise ValueError(
-                    "specify dummy variables for %s" % function)
+                    " specify dummy variables for %s. If the integrand contains"
+                    " more than one free symbol, an integration variable should"
+                    " be supplied explicitly e.g., integrate(f(x, y), x)"
+                    % function)
             limits, orientation = [Tuple(s) for s in free], 1
 
         # denest any nested calls
