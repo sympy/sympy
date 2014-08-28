@@ -109,6 +109,12 @@ def test_Min():
     f = Function('f')
     assert Min(1, 2*Min(f(1), 2))  # doesn't fail
 
+    # issue 7233
+    e = Min(0, x)
+    assert e.evalf == e.n
+    assert e.n().subs(x, .5) == 0
+    assert e.args == (0, x)
+
 
 def test_Max():
     from sympy.abc import x, y, z
@@ -158,6 +164,13 @@ def test_Max():
     a, b = Symbol('a', real=True), Symbol('b', real=True)
     # a and b are both real, Max(a, b) should be real
     assert Max(a, b).is_real
+
+    # issue 7233
+    e = Max(0, x)
+    assert e.evalf == e.n
+    assert e.n().subs(x, .5) == .5
+    assert e.args == (0, x)
+
 
 def test_root():
     from sympy.abc import x, y, z
