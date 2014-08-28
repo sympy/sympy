@@ -1573,7 +1573,7 @@ class FiniteSet(Set, EvalfMixin):
         else:
             args = list(map(sympify, args))
 
-        args = list(ordered(frozenset(tuple(args))))
+        args = list(ordered(frozenset(tuple(args)), Set._infimum_key))
         obj = Basic.__new__(cls, *args)
         obj._elements = frozenset(args)
         return obj
