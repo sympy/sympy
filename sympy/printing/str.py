@@ -485,7 +485,8 @@ class StrPrinter(Printer):
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
                 return "1/sqrt(%s)" % self._print(expr.base)
-            if expr.exp == -1:
+            if expr.exp is -S.One:
+                # Similarly to the S.Half case, don't test with "==" here.
                 return '1/%s' % self.parenthesize(expr.base, PREC)
 
         e = self.parenthesize(expr.exp, PREC)
