@@ -41,18 +41,18 @@ class Set(Basic):
     is_UniversalSet = None
     is_Complement = None
 
-    def sort_key(self, order=None):
+    @staticmethod
+    def _infimum_key(self):
         """
-        Give sort_key of infimum (if possible) else sort_key of the set.
+        Return infimum (if possible) else None.
         """
         try:
             infimum = self.inf
-            if infimum.is_comparable:
-                return default_sort_key(infimum, order)
-        except (NotImplementedError, ValueError):
-            pass
-        args = tuple([default_sort_key(a, order) for a in self._sorted_args])
-        return self.class_key(), (len(args), args), S.One.class_key(), S.One
+            assert infimum.is_comparable
+        except (NotImplementedError,
+                AttributeError, AssertionError, ValueError):
+            infimum = None
+        return infimum
 
     def union(self, other):
         """
@@ -1067,11 +1067,11 @@ class Union(Set, EvalfMixin):
         if len(args) == 0:
             return S.EmptySet
 
-        args = sorted(args, key=default_sort_key)
-
         # Reduce sets using known rules
         if evaluate:
             return Union.reduce(args)
+
+        args = list(ordered(args, Set._infimum_key))
 
         return Basic.__new__(cls, *args)
 
@@ -1272,11 +1272,11 @@ class Intersection(Set):
         if len(args) == 0:
             raise TypeError("Intersection expected at least one argument")
 
-        args = sorted(args, key=default_sort_key)
-
         # Reduce sets using known rules
         if evaluate:
             return Intersection.reduce(args)
+
+        args = list(ordered(args, Set._infimum_key))
 
         return Basic.__new__(cls, *args)
 
@@ -1693,7 +1693,7 @@ class FiniteSet(Set, EvalfMixin):
     @property
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
-        return sorted(self.args, key=default_sort_key)
+        return list(ordered(self.args, Set._infimum_key))
 
     def _eval_powerset(self):
         return self.func(*[self.func(*s) for s in subsets(self.args)])
