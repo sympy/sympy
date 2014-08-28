@@ -378,11 +378,16 @@ class CodePrinter(StrPrinter):
         # dummies must be printed as unique symbols
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
-    _print_Catalan = _print_NumberSymbol
-    _print_EulerGamma = _print_NumberSymbol
-    _print_GoldenRatio = _print_NumberSymbol
-    _print_Exp1 = _print_NumberSymbol
-    _print_Pi = _print_NumberSymbol
+    def _print_Catalan(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_EulerGamma(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_GoldenRatio(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_Exp1(self, expr):
+        return self._print_NumberSymbol(expr)
+    def _print_Pi(self, expr):
+        return self._print_NumberSymbol(expr)
 
     def _print_And(self, expr):
         PREC = precedence(expr)
