@@ -42,12 +42,12 @@ class Set(Basic):
     is_Complement = None
 
     @staticmethod
-    def _infimum_key(self):
+    def _infimum_key(expr):
         """
         Return infimum (if possible) else None.
         """
         try:
-            infimum = self.inf
+            infimum = expr.inf
             assert infimum.is_comparable
         except (NotImplementedError,
                 AttributeError, AssertionError, ValueError):
