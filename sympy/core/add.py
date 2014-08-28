@@ -2,13 +2,14 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core.basic import C, Basic
-from sympy.core.compatibility import cmp_to_key, reduce, is_sequence
-from sympy.core.singleton import S
-from sympy.core.operations import AssocOp
-from sympy.core.cache import cacheit
-from sympy.core.numbers import ilcm, igcd
-from sympy.core.expr import Expr
+from .basic import C, Basic
+from .compatibility import cmp_to_key, reduce, is_sequence
+from .logic import fuzzy_group
+from .singleton import S
+from .operations import AssocOp
+from .cache import cacheit
+from .numbers import ilcm, igcd
+from .expr import Expr
 
 
 # Key for sorting commutative args in canonical order
@@ -444,26 +445,26 @@ class Add(Expr, AssocOp):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: self._eval_template_is_attr(
-        'is_real', when_multiple=None)
-    _eval_is_complex = lambda self: self._eval_template_is_attr(
-        'is_complex', when_multiple=None)
-    _eval_is_antihermitian = lambda self: self._eval_template_is_attr(
-        'is_antihermitian', when_multiple=None)
-    _eval_is_bounded = lambda self: self._eval_template_is_attr(
-        'is_bounded', when_multiple=None)
-    _eval_is_hermitian = lambda self: self._eval_template_is_attr(
-        'is_hermitian', when_multiple=None)
-    _eval_is_integer = lambda self: self._eval_template_is_attr(
-        'is_integer', when_multiple=None)
-    _eval_is_rational = lambda self: self._eval_template_is_attr(
-        'is_rational', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr(
-        'is_commutative')
+    _eval_is_real = lambda self: fuzzy_group(
+        (a.is_real for a in self.args), multi_false=None)
+    _eval_is_complex = lambda self: fuzzy_group(
+        (a.is_complex for a in self.args), multi_false=None)
+    _eval_is_antihermitian = lambda self: fuzzy_group(
+        (a.is_antihermitian for a in self.args), multi_false=None)
+    _eval_is_bounded = lambda self: fuzzy_group(
+        (a.is_bounded for a in self.args), multi_false=None)
+    _eval_is_hermitian = lambda self: fuzzy_group(
+        (a.is_hermitian for a in self.args), multi_false=None)
+    _eval_is_integer = lambda self: fuzzy_group(
+        (a.is_integer for a in self.args), multi_false=None)
+    _eval_is_rational = lambda self: fuzzy_group(
+        (a.is_rational for a in self.args), multi_false=None)
+    _eval_is_commutative = lambda self: fuzzy_group(
+        (a.is_commutative for a in self.args))
 
     def _eval_is_imaginary(self):
         from sympy import im
-        ret = self._eval_template_is_attr('is_imaginary', when_multiple=None)
+        ret = fuzzy_group((a.is_imaginary for a in self.args))
         if not ret:
             return ret
         newarg = []

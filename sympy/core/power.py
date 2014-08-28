@@ -5,15 +5,15 @@ from math import log as _log
 from .sympify import _sympify
 from .cache import cacheit
 from .core import C
+from .logic import fuzzy_group
 from .singleton import S
 from .expr import Expr
-
-from sympy.core.evalf import PrecisionExhausted
-from sympy.core.function import (_coeff_isneg, expand_complex,
-    expand_multinomial, expand_mul)
-from sympy.core.logic import fuzzy_bool
-from sympy.core.compatibility import as_int, xrange
-from sympy.core.evaluate import global_evaluate
+from .evalf import PrecisionExhausted
+from .function import (_coeff_isneg, expand_complex, expand_multinomial,
+    expand_mul)
+from .logic import fuzzy_bool
+from .compatibility import as_int, xrange
+from .evaluate import global_evaluate
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
@@ -417,8 +417,7 @@ class Pow(Expr):
             return i.is_integer
 
     def _eval_is_complex(self):
-        if self.base.is_complex:
-            return self.exp.is_complex
+        return fuzzy_group((a.is_complex for a in self.args)) or None
 
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:

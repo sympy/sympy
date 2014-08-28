@@ -11,6 +11,37 @@ from __future__ import print_function, division
 from sympy.core.compatibility import iterable
 
 
+def fuzzy_group(args, multi_false=False):
+    """Return True if all True, None if any is None, and
+    False if there is only one False. The `multi_false` flag tells
+    what to do when multiple False values are encountered: if
+    `multi_false` is None then None will be returned, otherwise False
+    will be returned.
+
+    Examples
+    ========
+
+    >>> from sympy.core.logic import fuzzy_group
+    >>> fuzzy_group([False, False])
+    False
+    >>> fuzzy_group([True, False], None)
+    False
+    >>> fuzzy_group([False, False], None)
+
+    """
+    quick = multi_false is None
+    sawFalse = False
+    for a in args:
+        if a is True:
+            continue
+        if a is None:
+            return
+        if quick and sawFalse:
+            return None
+        sawFalse = True
+    return not sawFalse
+
+
 def fuzzy_bool(x):
     """Return True, False or None according to x.
 
