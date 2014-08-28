@@ -1409,3 +1409,143 @@ def test_fcode_matrixsymbol_slice_autoname():
     out = b[1]
     expected = expected % {'hash': out}
     assert source == expected
+
+
+def test_empty_m_code():
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [])
+    assert source == ""
+
+
+def test_empty_m_code_with_header():
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [], header=True)
+    assert source[:29] == (
+        '%% Code generated with sympy '  # ... 0.7.5-git
+    )
+    assert source[-86:] == (
+        "% See http://www.sympy.org/ for more information.\n"
+        "% \n"
+        "% This file is part of 'project'\n"
+    )
+
+
+def test_simple_m_code():
+    x, y, z = symbols('x,y,z')
+    expr = (x + y)*z
+    routine = Routine("test", expr)
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function out1 = test(x, y, z)\n"
+        "  out1 = z*(x + y);\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_numbersymbol_m_code():
+    routine = Routine("test", pi**Catalan)
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function out1 = test()\n"
+        "  Catalan = 0.915965594177219;\n"
+        "  out1 = pi^Catalan;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_m_code_argument_order():
+    x, y, z = symbols('x,y,z')
+    expr = x + y
+    routine = Routine("test", expr, argument_sequence=[z, x, y])
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function out1 = test(z, x, y)\n"
+        "  out1 = x + y;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_multiple_results_m():
+    x, y, z = symbols('x,y,z')
+    expr1 = (x + y)*z
+    expr2 = (x - y)*z
+    routine = Routine("test", [expr1, expr2])
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function [out1, out2] = test(x, y, z)\n"
+        "  out1 = z*(x + y);\n"
+        "  out2 = z*(x - y);\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_complicated_m_codegen():
+    from sympy import sin, cos, tan
+    x, y, z = symbols('x,y,z')
+    name_expr = ("testlong",
+            [ ((sin(x) + cos(y) + tan(z))**3).expand(),
+            cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
+    ])
+    result = codegen(name_expr, "Octave", "file", header=False, empty=False)
+    assert result[0][0] == "file.m"
+    expected = (
+        "function [out1, out2] = testlong(x, y, z)\n"
+        "  out1 = sin(x)^3 + 3*sin(x)^2*cos(y) + 3*sin(x)^2*tan(z)"
+        " + 3*sin(x)*cos(y)^2 + 6*sin(x)*cos(y)*tan(z) + 3*sin(x)*tan(z)^2"
+        " + cos(y)^3 + 3*cos(y)^2*tan(z) + 3*cos(y)*tan(z)^2 + tan(z)^3;\n"
+        "  out2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))));\n"
+        "end\n"
+    )
+    assert result[0][1] == expected
+
+
+def test_matrix_vector_m():
+    x, y, z = symbols('x,y,z')
+    e1 = (x + y)
+    e2 = Matrix([[x, y, z]])
+    e3 = Matrix([[x], [y], [z]])
+    e4 = Matrix([[x, y], [z, 16]])
+    routine = Routine("test", (e1, e2, e3, e4))
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function [out1, out2, out3, out4] = test(x, y, z)\n"
+        "  out1 = x + y;\n"
+        "  out2 = [x, y, z];\n"
+        "  out3 = [[x];  [y];  [z]];\n"
+        "  out4 = [[x,  y]; ...\n"
+        "[z, 16]];\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+def test_piecewise_m():
+    """ FIXME: currently broken. """
+    x = symbols('x')
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1))
+    routine = Routine("pwtest", pw)
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function out1 = pwtest(x)\n"
+        "  if (x < -1)\n"
+        "  out1 = 0\n"
+        "  elseif (x <= 1)\n"
+        "  out1 = x^2\n"
+        "  elseif (x > 1)\n"
+        "  out1 = -x + 2\n"
+        "  end\n"
+        "end\n"
+    )
+    print(source)
+    print(expected)
+    assert source == expected
