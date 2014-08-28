@@ -1574,7 +1574,7 @@ class Mul(Expr, AssocOp):
 
     @property
     def _sorted_args(self):
-        return self.as_ordered_factors()
+        return tuple(self.as_ordered_factors())
 
 
 def prod(a, start=1):

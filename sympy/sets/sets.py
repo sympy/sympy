@@ -1693,7 +1693,7 @@ class FiniteSet(Set, EvalfMixin):
     @property
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
-        return list(ordered(self.args, Set._infimum_key))
+        return tuple(ordered(self.args, Set._infimum_key))
 
     def _eval_powerset(self):
         return self.func(*[self.func(*s) for s in subsets(self.args)])
