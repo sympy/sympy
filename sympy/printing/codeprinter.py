@@ -73,7 +73,8 @@ class Assignment(C.Relational):
             elif lhs.shape != rhs.shape:
                 raise ValueError("Dimensions of lhs and rhs don't align.")
         elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
+            print("FIXME: temporarily disabled assign-matrix-to-scale error")
+            #raise ValueError("Cannot assign a matrix to a scalar.")
         return C.Relational.__new__(cls, lhs, rhs, **assumptions)
 
 

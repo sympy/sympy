@@ -145,8 +145,14 @@ def test_octave_piecewise():
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: mcode(expr))
 
+
 @XFAIL
 def test_octave_piecewise_times_const():
     # FIXME: self.parenthesize something! but where?
     expr = Piecewise((x, x < 1), (x**2, True))
     assert mcode(2*expr) == ("2*((x < 1).*(x) + (~(x < 1)).*(x^2))")
+
+
+def test_octave_matrix_assign_to():
+    A = Matrix([[1, 2, 3]])
+    assert mcode(A, assign_to='a') == "a = [1 2 3];"
