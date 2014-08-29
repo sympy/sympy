@@ -173,8 +173,7 @@ class Tr(Expr):
 
     @property
     def is_number(self):
-        #TODO : This function to be reviewed
-        # and implementation improved.
+        # TODO : improve this implementation
         return True
 
     #TODO: Review if the permute method is needed

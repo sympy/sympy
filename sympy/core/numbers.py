@@ -216,13 +216,12 @@ class Number(AtomicExpr):
     """
     is_commutative = True
     is_number = True
+    is_Number = True
 
     __slots__ = []
 
     # Used to make max(x._prec, y._prec) return x._prec when only x is a float
     _prec = -1
-
-    is_Number = True
 
     def __new__(cls, *obj):
         if len(obj) == 1:
