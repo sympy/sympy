@@ -1334,7 +1334,7 @@ def antidivisors(n, generator=False):
     Examples
     ========
 
-    >>> from sympy import antidivisors
+    >>> from sympy.ntheory.factor_ import antidivisors
     >>> antidivisors(24)
     [7, 16]
 
@@ -1369,7 +1369,7 @@ def antidivisor_count(n):
     Examples
     ========
 
-    >>> from sympy import antidivisor_count
+    >>> from sympy.ntheory.factor_ import antidivisor_count
     >>> antidivisor_count(13)
     4
     >>> antidivisor_count(27)

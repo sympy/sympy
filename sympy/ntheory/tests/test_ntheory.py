@@ -11,10 +11,11 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1, \
     sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
-    nthroot_mod, sqrt_mod_iter, mobius, antidivisors, antidivisor_count
+    nthroot_mod, sqrt_mod_iter, mobius
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
-from sympy.ntheory.factor_ import smoothness, smoothness_p
+from sympy.ntheory.factor_ import smoothness, smoothness_p, \
+    antidivisors, antidivisor_count
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
