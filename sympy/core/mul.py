@@ -8,7 +8,7 @@ from .basic import Basic, C
 from .singleton import S
 from .operations import AssocOp
 from .cache import cacheit
-from .logic import fuzzy_not, fuzzy_group
+from .logic import fuzzy_not, fuzzy_group, fuzzy_group_inverse
 from .compatibility import cmp_to_key, reduce, xrange
 from .expr import Expr
 
@@ -961,21 +961,11 @@ class Mul(Expr, AssocOp):
     _eval_is_commutative = lambda self: fuzzy_group(
         (a.is_commutative for a in self.args))
     _eval_is_rational = lambda self: fuzzy_group(
-        (a.is_rational for a in self.args), multi_false=None)
+        (a.is_rational for a in self.args), wait=False)
     _eval_is_complex = lambda self: fuzzy_group(
-        (a.is_complex for a in self.args), multi_false=None)
-
-    def _eval_is_nonzero(self):
-        rv = True
-        for i in self.args:
-            nz = i.is_nonzero
-            if nz:
-                continue
-            elif nz is False:
-                return False
-            elif rv:
-                rv = None
-        return rv
+        (a.is_complex for a in self.args), wait=False)
+    _eval_is_nonzero = lambda self: fuzzy_group_inverse(
+        (a.is_nonzero for a in self.args))
 
     def _eval_is_integer(self):
         is_rational = self.is_rational

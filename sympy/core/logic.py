@@ -11,35 +11,90 @@ from __future__ import print_function, division
 from sympy.core.compatibility import iterable
 
 
-def fuzzy_group(args, multi_false=False):
-    """Return True if all True, None if any is None, and
-    False if there is only one False. The `multi_false` flag tells
-    what to do when multiple False values are encountered: if
-    `multi_false` is None then None will be returned, otherwise False
-    will be returned.
+def fuzzy_group(args, wait=True):
+    """Return True if all args are True, None if any is None, otherwise False.
+    This default behavior is modified by setting `wait` to False. When `wait`
+    is False there is no need to wait for any None -- 2 False are as good as
+    a None.
 
     Examples
     ========
 
     >>> from sympy.core.logic import fuzzy_group
+
+    By default, multiple Falses mean you are out of the group
+
     >>> fuzzy_group([False, False])
     False
-    >>> fuzzy_group([True, False], None)
+
+    If multiple Falses mean the group status is unknown then
+    there is no need to wait for a None -- the None should
+    be returned as soon as a second False is seen. So set `wait`
+    to False:
+
+    >>> fuzzy_group([False, False], wait=False)
+
+    But if only a single False is seen then the group is known to
+    be broken
+
+    >>> fuzzy_group([True, False], wait=False)
     False
-    >>> fuzzy_group([False, False], None)
 
     """
-    quick = multi_false is None
-    sawFalse = False
+    quick = not wait
+    saw_other = False
     for a in args:
         if a is True:
             continue
         if a is None:
             return
-        if quick and sawFalse:
-            return None
-        sawFalse = True
-    return not sawFalse
+        if quick and saw_other:
+            return
+        saw_other = True
+    return not saw_other
+
+
+def fuzzy_group_inverse(args, wait=True):
+    """Return True if all args are True, False if any is False, otherwise None.
+    This default behavior is modified by setting `wait` to False. When `wait`
+    is False there is no need to wait for any False -- 2 None are as good as
+    a False.
+
+    Examples
+    ========
+
+    >>> from sympy.core.logic import fuzzy_group_inverse
+
+    By default, multiple None mean you are uncertain about the group but
+    are waiting for a False
+
+    >>> fuzzy_group_inverse([None, None])
+
+    If multiple None mean the group status is unknown then
+    there is no need to wait for a False -- the False should
+    be returned as soon as a second None is seen. So set `wait`
+    to False:
+
+    >>> fuzzy_group_inverse([None, None], wait=False)
+    False
+
+    But if only a single None is seen then the group is known to
+    be broken
+
+    >>> fuzzy_group_inverse([True, None], wait=False)
+
+    """
+    quick = not wait
+    saw_other = False
+    for a in args:
+        if a is True:
+            continue
+        if a is False:
+            return False
+        if quick and saw_other:
+            return False
+        saw_other = True
+    return None if saw_other else True
 
 
 def fuzzy_bool(x):

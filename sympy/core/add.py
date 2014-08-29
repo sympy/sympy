@@ -446,19 +446,19 @@ class Add(Expr, AssocOp):
 
     # assumption methods
     _eval_is_real = lambda self: fuzzy_group(
-        (a.is_real for a in self.args), multi_false=None)
+        (a.is_real for a in self.args), wait=False)
     _eval_is_complex = lambda self: fuzzy_group(
-        (a.is_complex for a in self.args), multi_false=None)
+        (a.is_complex for a in self.args), wait=False)
     _eval_is_antihermitian = lambda self: fuzzy_group(
-        (a.is_antihermitian for a in self.args), multi_false=None)
+        (a.is_antihermitian for a in self.args), wait=False)
     _eval_is_bounded = lambda self: fuzzy_group(
-        (a.is_bounded for a in self.args), multi_false=None)
+        (a.is_bounded for a in self.args), wait=False)
     _eval_is_hermitian = lambda self: fuzzy_group(
-        (a.is_hermitian for a in self.args), multi_false=None)
+        (a.is_hermitian for a in self.args), wait=False)
     _eval_is_integer = lambda self: fuzzy_group(
-        (a.is_integer for a in self.args), multi_false=None)
+        (a.is_integer for a in self.args), wait=False)
     _eval_is_rational = lambda self: fuzzy_group(
-        (a.is_rational for a in self.args), multi_false=None)
+        (a.is_rational for a in self.args), wait=False)
     _eval_is_commutative = lambda self: fuzzy_group(
         (a.is_commutative for a in self.args))
 
