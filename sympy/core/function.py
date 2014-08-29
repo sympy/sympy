@@ -783,10 +783,6 @@ class WildFunction(Function, AtomicExpr):
         repl_dict[self] = expr
         return repl_dict
 
-    @property
-    def is_number(self):
-        return False
-
 
 class Derivative(Expr):
     """

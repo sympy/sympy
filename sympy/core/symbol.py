@@ -129,10 +129,6 @@ class Symbol(AtomicExpr, Boolean):
         return not self in wrt
 
     @property
-    def is_number(self):
-        return False
-
-    @property
     def free_symbols(self):
         return set([self])
 
@@ -254,9 +250,9 @@ class Wild(Symbol):
     {a_: 2, b_: x**3*y*z}
 
     """
+    is_Wild = True
 
     __slots__ = ['exclude', 'properties']
-    is_Wild = True
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])
