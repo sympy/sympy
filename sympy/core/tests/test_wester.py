@@ -2898,6 +2898,7 @@ def test_Y5_Y6():
 #   => y(t) = cos t + 4 {[1 - cos(t - 1)] H(t - 1) - [1 - cos(t - 2)] H(t - 2)}
 
 
+@SKIP("stackoverflow with fastcache")
 @XFAIL
 def test_Y7():
     # What is the Laplace transform of an infinite square wave?
