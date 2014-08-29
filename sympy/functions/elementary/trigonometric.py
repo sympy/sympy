@@ -1130,7 +1130,9 @@ class cot(ReciprocalTrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     def taylor_term(n, x, *previous_terms):
-        if n < 0 or n % 2 != 1:
+        if n == 0:
+            return 1/sympify(x)
+        elif n < 0 or n % 2 != 1:
             return S.Zero
         else:
             x = sympify(x)
