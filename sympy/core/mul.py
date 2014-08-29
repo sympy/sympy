@@ -1055,34 +1055,8 @@ class Mul(Expr, AssocOp):
             return real
 
     def _eval_is_antihermitian(self):
-        real = True
-        one_nc = zero = one_neither = False
-
-        for t in self.args:
-            if not t.is_commutative:
-                if one_nc:
-                    return
-                one_nc = True
-
-            if t.is_antihermitian:
-                real = not real
-            elif t.is_hermitian:
-                if zero is False:
-                    zero = fuzzy_not(t.is_nonzero)
-                    if zero:
-                        return False
-            elif t.is_hermitian is False:
-                if one_neither:
-                    return
-                one_neither = True
-            else:
-                return
-
-        if zero is False:
-            if one_neither:
-                return False
-            if not real:
-                return True
+        if self.is_nonzero:
+            return (S.ImaginaryUnit*self).is_hermitian
 
     def _eval_is_irrational(self):
         for t in self.args:
