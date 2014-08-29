@@ -9,6 +9,7 @@ from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import XFAIL
+import sympy
 
 # import test:
 #FIXME: Fails due to circular import in with core
@@ -1420,14 +1421,15 @@ def test_empty_m_code():
 def test_empty_m_code_with_header():
     code_gen = OctaveCodeGen()
     source = get_string(code_gen.dump_m, [], header=True)
-    assert source[:29] == (
-        '%% Code generated with sympy '  # ... 0.7.5-git
-    )
-    assert source[-86:] == (
+    print("")
+    print(source)
+    expected = (
+        "%% Code generated with sympy " + sympy.__version__ + "\n"
+        "% \n"
         "% See http://www.sympy.org/ for more information.\n"
         "% \n"
-        "% This file is part of 'project'\n"
-    )
+        "% This file is part of 'project'\n")
+    assert source == expected
 
 
 def test_simple_m_code():
