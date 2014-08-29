@@ -1,6 +1,6 @@
-from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
+from sympy.core import S, symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
-from sympy import erf, Integral
+from sympy import erf, Integral, Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (codegen, make_routine, CCodeGen,
@@ -10,6 +10,8 @@ from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import XFAIL
 import sympy
+from sympy.utilities.pytest import XFAIL
+
 
 # import test:
 #FIXME: Fails due to circular import in with core
@@ -1421,8 +1423,6 @@ def test_empty_m_code():
 def test_empty_m_code_with_header():
     code_gen = OctaveCodeGen()
     source = get_string(code_gen.dump_m, [], header=True)
-    print("")
-    print(source)
     expected = (
         "%% Code generated with sympy " + sympy.__version__ + "\n"
         "% \n"
@@ -1446,14 +1446,34 @@ def test_simple_m_code():
     assert source == expected
 
 
+def test_m_simple_code_nameout():
+    x, y, z = symbols('x,y,z')
+    expr = Equality(z, (x + y))
+    routine = Routine("test", expr)
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function z = test(x, y)\n"
+        "  z = x + y;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
 def test_numbersymbol_m_code():
     routine = Routine("test", pi**Catalan)
     code_gen = OctaveCodeGen()
     source = get_string(code_gen.dump_m, [routine])
+    # FIXME: see comments in _print_NumberSymbol
+    # expected = (
+    #     "function out1 = test()\n"
+    #     "  Catalan = 0.915965594177219011;\n"
+    #     "  out1 = pi^Catalan;\n"
+    #     "end\n"
+    # )
     expected = (
         "function out1 = test()\n"
-        "  Catalan = 0.915965594177219;\n"
-        "  out1 = pi^Catalan;\n"
+        "  out1 = pi^0.915965594177219011;\n"
         "end\n"
     )
     assert source == expected
@@ -1474,6 +1494,7 @@ def test_m_code_argument_order():
 
 
 def test_multiple_results_m():
+    # FIXME: is output order deterministic here, presumably input order?
     x, y, z = symbols('x,y,z')
     expr1 = (x + y)*z
     expr2 = (x - y)*z
@@ -1489,6 +1510,44 @@ def test_multiple_results_m():
     assert source == expected
 
 
+def test_results_named_unordered():
+    x, y, z, A, B, C = symbols('x,y,z,A,B,C')
+    expr1 = Equality(C, (x + y)*z)
+    expr2 = Equality(A, (x - y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    result = codegen(name_expr, "Octave", "test", header=False, empty=False)
+    assert result[0][0] == "test.m"
+    source = result[0][1]
+    expected = (
+        "function [A, B, C] = test(x, y, z)\n"
+        "  A = z*(x - y);\n"
+        "  B = 2*x;\n"
+        "  C = z*(x + y);\n"
+        "end\n"
+    )
+    assert source == expected
+
+def test_results_named_ordered():
+    x, y, z, A, B, C = symbols('x,y,z,A,B,C')
+    expr1 = Equality(C, (x + y)*z)
+    expr2 = Equality(A, (x - y)*z)
+    expr3 = Equality(B, 2*x)
+    name_expr = ("test", [expr1, expr2, expr3])
+    result = codegen(name_expr, "Octave", "test", header=False, empty=False,
+                     argument_sequence=(x, z, y, C, A, B))
+    assert result[0][0] == "test.m"
+    source = result[0][1]
+    expected = (
+        "function [C, A, B] = test(x, z, y)\n"
+        "  C = z*(x + y);\n"
+        "  A = z*(x - y);\n"
+        "  B = 2*x;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
 def test_complicated_m_codegen():
     from sympy import sin, cos, tan
     x, y, z = symbols('x,y,z')
@@ -1496,8 +1555,8 @@ def test_complicated_m_codegen():
             [ ((sin(x) + cos(y) + tan(z))**3).expand(),
             cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
     ])
-    result = codegen(name_expr, "Octave", "file", header=False, empty=False)
-    assert result[0][0] == "file.m"
+    result = codegen(name_expr, "Octave", "testlong", header=False, empty=False)
+    assert result[0][0] == "testlong.m"
     expected = (
         "function [out1, out2] = testlong(x, y, z)\n"
         "  out1 = sin(x)^3 + 3*sin(x)^2*cos(y) + 3*sin(x)^2*tan(z)"
@@ -1509,45 +1568,71 @@ def test_complicated_m_codegen():
     assert result[0][1] == expected
 
 
-def test_matrix_vector_m():
-    x, y, z = symbols('x,y,z')
-    e1 = (x + y)
-    e2 = Matrix([[x, y, z]])
-    e3 = Matrix([[x], [y], [z]])
-    e4 = Matrix([[x, y], [z, 16]])
-    routine = Routine("test", (e1, e2, e3, e4))
-    code_gen = OctaveCodeGen()
-    source = get_string(code_gen.dump_m, [routine])
+def test_m_output_arg_mixed_unordered():
+    from sympy import sin, cos, tan
+    x, y, z, a = symbols("x,y,z,a")
+    r = Routine("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
+    ocg = OctaveCodeGen()
+    result = ocg.write([r], "foo", header=False, empty=False)
+    assert result[0][0] == "foo.m"
+    source = result[0][1];
     expected = (
-        "function [out1, out2, out3, out4] = test(x, y, z)\n"
-        "  out1 = x + y;\n"
-        "  out2 = [x, y, z];\n"
-        "  out3 = [[x];  [y];  [z]];\n"
-        "  out4 = [[x,  y]; ...\n"
-        "[z, 16]];\n"
-        "end\n"
+        'function [a, y, out3, out4] = foo(x)\n'
+        '  a = sin(2*x);\n'
+        '  y = sin(x);\n'
+        '  out3 = cos(2*x);\n'
+        '  out4 = cos(x);\n'
+        'end\n'
     )
     assert source == expected
 
 
 def test_piecewise_m():
-    """ FIXME: currently broken. """
     x = symbols('x')
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1))
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
     routine = Routine("pwtest", pw)
     code_gen = OctaveCodeGen()
     source = get_string(code_gen.dump_m, [routine])
+    # FIXME: fix the indent
     expected = (
         "function out1 = pwtest(x)\n"
         "  if (x < -1)\n"
-        "  out1 = 0\n"
-        "  elseif (x <= 1)\n"
-        "  out1 = x^2\n"
-        "  elseif (x > 1)\n"
-        "  out1 = -x + 2\n"
-        "  end\n"
+        "out1 = 0;\n"
+        "elseif (x <= 1)\n"
+        "out1 = x^2;\n"
+        "elseif (x > 1)\n"
+        "out1 = -x + 2;\n"
+        "else\n"
+        "out1 = 1;\n"
+        "end\n"
         "end\n"
     )
-    print(source)
-    print(expected)
     assert source == expected
+
+
+def test_m_multifcns_per_file():
+    x, y, z = symbols('x,y,z')
+    name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
+    result = codegen(name_expr, "Octave", "foo", header=False, empty=False)
+    assert result[0][0] == "foo.m"
+    source = result[0][1];
+    expected = (
+        "function [out1, out2] = foo(x, y)\n"
+        "  out1 = 2*x;\n"
+        "  out2 = 3*y;\n"
+        "end\n"
+        "function [out1, out2] = bar(y)\n"
+        "  out1 = y^2;\n"
+        "  out2 = 4*y;\n"
+        "end\n"
+    )
+    assert source == expected
+
+
+@XFAIL
+def test_m_filename_match_first_fcn():
+    x, y, z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
+    name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
+    raises(NameError, lambda: codegen(name_expr,
+                        "Octave", "bar", header=False, empty=False))

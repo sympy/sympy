@@ -1128,8 +1128,8 @@ class OctaveCodeGen(CodeGen):
         #                 for i in range(0,len(routine.results)))
         args = []
         for i,result in enumerate(routine.result_variables):
-            #args.append(self._get_symbol(arg.result_var).replace('_-', ''))
             try:
+                #print(('found symbol for result', self._get_symbol(result.name)))
                 args.append(self._get_symbol(result.name))
             except:
                 args.append("out%d" % (i+1))
@@ -1177,25 +1177,31 @@ class OctaveCodeGen(CodeGen):
         declarations = []
         code_lines = []
         for i, result in enumerate(routine.result_variables):
+            # FIXME: can this just be a single try: catch: like in the args above?
             if isinstance(result, Result):
-                # FIXME: see codeprinter _print_Assignment, should not be doing this ourselves...
-                #assign_to = routine.name + "_result" + str(i)
-                assign_to = None
-            elif isinstance(result, (OutputArgument, InOutArgument)):
-                # FIXME: see above, this probably fails?
+                try:
+                    print(('FIXME: can happen?  found symbol', self._get_symbol(result.name)))
+                    assign_to = self._get_symbol(result.name)
+                except:
+                    assign_to = "out%d" % (i+1)
+            elif isinstance(result, OutputArgument):
+                # FIXME: double-check I understand this
+                #assign_to = self._get_symbol(result.name)
                 assign_to = result.result_var
+                #print(("outputargument", assign_to))
+            elif isinstance(result, InOutArgument):
+                # FIXME: is this true?  write a test that read x and
+                # outputs x, bit hard to do with the current Equality
+                raise NameError("Octave does not support InOutArgument?")
             else:
-                assign_to = None
-            # FIXME: what about OutputArgument?
+                raise NameError("ACK, CAN THIS HAPPEN?")
 
-            # FIXME: doublecheck: i think if assign_to is not None, we get two semicolons?
-            # FIXME removed assign_to?  Do we need tihs OutputArg, InOutArg stuff?
-            constants, not_supported, f_expr = octave_code(result.expr,
+            constants, not_supported, oct_expr = octave_code(result.expr,
                 assign_to=assign_to, human=False)
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
-                    "  %s = %s;\n" % (obj, v))
+                    "  FIXME%s = %s;\n" % (obj, v))
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
@@ -1203,11 +1209,7 @@ class OctaveCodeGen(CodeGen):
                     name = obj
                 declarations.append(
                     "  %% unsupported: %s (FIXME: what is this for?)\n" % (name))
-            try:
-                asn = self._get_symbol(result.name)
-            except:
-                asn = "out%d" % (i+1)
-            code_lines.append("  %s = %s;\n" % (asn,f_expr))
+            code_lines.append("  %s\n" % (oct_expr))
         return declarations + code_lines
 
     def _indent_code(self, codelines):
@@ -1253,7 +1255,7 @@ def codegen(name_expr, language, prefix=None, project="project",
 
     language : string
         A string that indicates the source code language.  This is case
-        insensitive.  For the moment, only 'C' and 'F95' is supported.
+        insensitive.  Currently, 'C', 'F95' and 'Octave' are supported.
 
     prefix : string, optional
         A prefix for the names of the files that contain the source code.
