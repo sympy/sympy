@@ -115,4 +115,4 @@ def test_closed_group(expr, assumptions, key):
     to the current operation
     """
     return fuzzy_group(
-        (ask(key(a), assumptions) for a in expr.args), wait=False)
+        (ask(key(a), assumptions) for a in expr.args), quick_exit=True)

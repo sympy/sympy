@@ -961,9 +961,9 @@ class Mul(Expr, AssocOp):
     _eval_is_commutative = lambda self: fuzzy_group(
         (a.is_commutative for a in self.args))
     _eval_is_rational = lambda self: fuzzy_group(
-        (a.is_rational for a in self.args), wait=False)
+        (a.is_rational for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: fuzzy_group(
-        (a.is_complex for a in self.args), wait=False)
+        (a.is_complex for a in self.args), quick_exit=True)
     _eval_is_nonzero = lambda self: fuzzy_group_inverse(
         (a.is_nonzero for a in self.args))
 
