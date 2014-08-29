@@ -263,8 +263,7 @@ def entropy(density):
 
 
 def fidelity(state1, state2):
-    """ Computes the fidelity between two quantum states
-    (http://en.wikipedia.org/wiki/Fidelity_of_quantum_states)
+    """ Computes the fidelity [1]_ between two quantum states
 
     The arguments provided to this function should be a square matrix or a
     Density object. If it is a square matrix, it is assumed to be diagonalizable.
@@ -300,6 +299,11 @@ def fidelity(state1, state2):
     0
     >>> fidelity(up_dm, updown_dm).evalf().round(3)
     0.707
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Fidelity_of_quantum_states
 
     """
     state1 = represent(state1) if isinstance(state1, Density) else state1

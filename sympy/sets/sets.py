@@ -130,7 +130,7 @@ class Set(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Disjoint_sets
+        .. [1] http://en.wikipedia.org/wiki/Disjoint_sets
         """
         return self.intersect(other) == S.EmptySet
 
@@ -388,7 +388,7 @@ class Set(Basic):
         References
         ==========
 
-        http://en.wikipedia.org/wiki/Power_set
+        .. [1] http://en.wikipedia.org/wiki/Power_set
 
         """
         return self._eval_powerset()
@@ -533,12 +533,14 @@ class ProductSet(Set):
 
     Notes
     =====
+
     - Passes most operations down to the argument sets
     - Flattens Products of ProductSets
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Cartesian_product
+
+    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -682,7 +684,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Interval_(mathematics)
+    .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
 
@@ -1041,11 +1043,13 @@ class Union(Set, EvalfMixin):
 
     See Also
     ========
+
     Intersection
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Union_(set_theory)
+
+    .. [1] http://en.wikipedia.org/wiki/Union_%28set_theory%29
     """
     is_Union = True
 
@@ -1248,11 +1252,13 @@ class Intersection(Set):
 
     See Also
     ========
+
     Union
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Intersection_(set_theory)
+
+    .. [1] http://en.wikipedia.org/wiki/Intersection_%28set_theory%29
     """
     is_Intersection = True
 
@@ -1455,11 +1461,13 @@ class EmptySet(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     UniversalSet
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Empty_set
+
+    .. [1] http://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
     is_FiniteSet = True
@@ -1514,11 +1522,13 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     EmptySet
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Universal_set
+
+    .. [1] http://en.wikipedia.org/wiki/Universal_set
     """
 
     is_UniversalSet = True
@@ -1562,7 +1572,8 @@ class FiniteSet(Set, EvalfMixin):
 
     References
     ==========
-    http://en.wikipedia.org/wiki/Finite_set
+
+    .. [1] http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True
