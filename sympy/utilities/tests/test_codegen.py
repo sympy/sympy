@@ -1636,3 +1636,30 @@ def test_m_filename_match_first_fcn():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     raises(NameError, lambda: codegen(name_expr,
                         "Octave", "bar", header=False, empty=False))
+
+
+@XFAIL
+def test_matrix_m():
+    #FIXME: codegen wants to do component-wise stuff here, we must stop it
+    x, y, z = symbols('x,y,z')
+    e1 = (x + y)
+    e2 = Matrix([[2*x, 2*y, 2*z]])
+    e3 = Matrix([[x], [y], [z]])
+    e4 = Matrix([[x, y], [z, 16]])
+    routine = Routine("test", (e1, e2, e3, e4))
+    code_gen = OctaveCodeGen()
+    source = get_string(code_gen.dump_m, [routine])
+    expected = (
+        "function [out1, out2, out3, out4] = test(x, y, z)\n"
+        "  out1 = x + y;\n"
+        "  out2 = [2*x 2*y 2*z];\n"
+        "  out3 = [x; y; z];\n"
+        "  out4 = [x y; ...\n"
+        "z 16];\n"
+        "end\n"
+    )
+    if not source == expected:
+        print('')
+        print(expected)
+        print(source)
+    assert source == expected
