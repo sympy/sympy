@@ -411,9 +411,8 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
-        a = C.arg(self.base)
-        if a.is_nonzero:
-            i = a*self.exp/S.Pi
+        if self.base.is_real is False:  # we already know it's not imag
+            i = C.arg(self.base)*self.exp/S.Pi
             return i.is_integer
 
     def _eval_is_complex(self):
@@ -447,9 +446,8 @@ class Pow(Expr):
                         return self.base.is_negative
                     return half
 
-        a = C.arg(self.base)
-        if a.is_nonzero:
-            i = a*self.exp/S.Pi
+        if self.base.is_real is False:  # we already know it's not imag
+            i = C.arg(self.base)*self.exp/S.Pi
             return (2*i).is_odd
 
     def _eval_is_odd(self):
