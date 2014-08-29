@@ -1177,7 +1177,7 @@ def test_Mul_is_imaginary_real():
     assert e1.is_imaginary is None
     assert e2.is_imaginary is None
     e1 = Mul(a, bb, c, evaluate=False)
-    assert e1.is_imaginary is False
+    assert e1.is_imaginary is None
     a = Symbol('a', hermitian=True, zero=False)
     b = Symbol('b', hermitian=True)
     bb = Symbol('b', hermitian=True, zero=False)

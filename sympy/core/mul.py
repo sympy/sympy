@@ -1040,8 +1040,10 @@ class Mul(Expr, AssocOp):
                 return
 
         if zero is False:
-            if one_neither:
-                return False  # neither real*(a+I*b) nor I*(a+I*b) is imag
+            if one_neither:  # N = a+I*b or I*b
+                if real:
+                    return  # r*N is like N: could be either
+                return False  # neither I*N values is imaginary
             if not real:
                 return True
 
