@@ -1021,31 +1021,8 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        real = True
-        zero = one_neither = False
-
-        for t in self.args:
-            if t.is_imaginary:
-                real = not real
-            elif t.is_real:
-                if zero is False:
-                    zero = fuzzy_not(t.is_nonzero)
-                    if zero:
-                        return False
-            elif t.is_real is False:
-                if one_neither:
-                    return  # complex terms might cancel
-                one_neither = True
-            else:
-                return
-
-        if zero is False:
-            if one_neither:  # N = a+I*b or I*b
-                if real:
-                    return  # r*N is like N: could be either
-                return False  # neither I*N values is imaginary
-            if not real:
-                return True
+        if self.is_nonzero:
+            return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
         real = True
