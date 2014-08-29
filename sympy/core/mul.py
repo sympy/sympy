@@ -3,14 +3,14 @@ from __future__ import print_function, division
 from collections import defaultdict
 import operator
 
-from sympy.core.sympify import sympify
-from sympy.core.basic import Basic, C
-from sympy.core.singleton import S
-from sympy.core.operations import AssocOp
-from sympy.core.cache import cacheit
-from sympy.core.logic import fuzzy_not
-from sympy.core.compatibility import cmp_to_key, reduce, xrange
-from sympy.core.expr import Expr
+from .sympify import sympify
+from .basic import Basic, C
+from .singleton import S
+from .operations import AssocOp
+from .cache import cacheit
+from .logic import fuzzy_not
+from .compatibility import cmp_to_key, reduce, xrange
+from .expr import Expr
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -982,7 +982,6 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_real(self):
-        from sympy.core.logic import fuzzy_not
         im_count = 0
         is_neither = False
         is_zero = False
@@ -1016,7 +1015,6 @@ class Mul(Expr, AssocOp):
                 return is_zero
 
     def _eval_is_imaginary(self):
-        from sympy.core.logic import fuzzy_not
         im_count = 0
         is_neither = False
         is_zero = False
@@ -1049,7 +1047,6 @@ class Mul(Expr, AssocOp):
                 return False
 
     def _eval_is_hermitian(self):
-        from sympy.core.logic import fuzzy_not
         nc_count = 0
         im_count = 0
         is_neither = False
@@ -1189,6 +1186,7 @@ class Mul(Expr, AssocOp):
         """
 
         sign = 1
+        im_count = 0
         saw_NON = False
         args = list(self.args)
         while args:
@@ -1206,12 +1204,17 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_imaginary:
                 args.append(C.sign(C.im(t)))
-                sign *= S.ImaginaryUnit
+                im_count += 1
             else:
                 return
+        im_count = im_count % 4
+        if im_count in (1, 3):
+            return False  # the imaginaries persist
+        elif im_count == 2:
+            sign = -sign
         if sign == -1 and saw_NON is False:
             return True
-        if type(sign) is not int or sign > 0:
+        if sign > 0:
             return False
 
     def _eval_is_odd(self):
