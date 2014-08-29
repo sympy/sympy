@@ -998,9 +998,7 @@ class Mul(Expr, AssocOp):
         zero = one_neither = False
 
         for t in self.args:
-            if not t.is_complex:
-                return
-            elif t.is_imaginary:
+            if t.is_imaginary:
                 real = not real
             elif t.is_real:
                 if zero is False:
@@ -1014,20 +1012,20 @@ class Mul(Expr, AssocOp):
             else:
                 return
 
-        if one_neither:
+        if one_neither:  # N = a+I*b or I*b
             if real:
-                return zero  # imag*imag is real but imag*(a+I*b) is not
-        elif zero is False or real:
-            return real
+                return zero  # real*N is like N: neither is real
+        elif zero is False:
+            return real  # real*N that can't be trumped by 0
+        elif real:
+            return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
         real = True
         zero = one_neither = False
 
         for t in self.args:
-            if not t.is_complex:
-                return
-            elif t.is_imaginary:
+            if t.is_imaginary:
                 real = not real
             elif t.is_real:
                 if zero is False:
