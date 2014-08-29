@@ -112,8 +112,7 @@ def test_Min():
     # issue 7233
     e = Min(0, x)
     assert e.evalf == e.n
-    assert e.n().subs(x, .5) == 0
-    assert e.args == (0, x)
+    assert e.n().args == (0, x)
 
 
 def test_Max():
@@ -168,8 +167,7 @@ def test_Max():
     # issue 7233
     e = Max(0, x)
     assert e.evalf == e.n
-    assert e.n().subs(x, .5) == .5
-    assert e.args == (0, x)
+    assert e.n().args == (0, x)
 
 
 def test_root():
