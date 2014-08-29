@@ -46,8 +46,10 @@ def test_Pow():
     assert mcode(sqrt(x)) == "sqrt(x)"
     assert mcode(x**-S.Half) == '1/sqrt(x)'
 
+
 def test_Mul():
     assert mcode(x*y*z) == "x*y*z"
+
 
 def test_imag():
     I = S('I')
@@ -55,6 +57,7 @@ def test_imag():
     assert mcode(5*I) == "5i"
     assert mcode((S(3)/2)*I) == "(3/2)*1i"
     assert mcode(3+4*I) == "3 + 4i"
+
 
 def test_constants():
     assert mcode(pi) == "pi"
@@ -65,10 +68,12 @@ def test_constants():
     assert mcode(S.Exp1) == "exp(1)"
     assert mcode(exp(1)) == "exp(1)"
 
+
 def test_ccode_constants_other():
     assert mcode(2*GoldenRatio) == "2*(1+sqrt(5))/2"
     assert mcode(2*Catalan) == "2*0.915965594177219011"
     assert mcode(2*EulerGamma) == "2*0.577215664901532866"
+
 
 def test_ccode_boolean():
     assert mcode(x & y) == "x && y"
@@ -79,21 +84,25 @@ def test_ccode_boolean():
     assert mcode((x & y) | z) == "z || x && y"
     assert mcode((x | y) & z) == "z && (x || y)"
 
+
 def test_Matrices():
-    assert mcode(Matrix(1, 1, [10])) == "[10]"
+    assert mcode(Matrix(1, 1, [10])) == "10"
     A = Matrix([[1, sin(x/2), abs(x)],
                 [0, 1, EulerGamma],
                 [0, exp(1), ceiling(x)]]);
     assert mcode(A) == (
-        "[[1, sin((1/2)*x),               abs(x)]; ...\n"
-        "[0,            1, 0.577215664901532866]; ...\n"
-        "[0,       exp(1),              ceil(x)]]")
+        "[1 sin((1/2)*x)               abs(x); ...\n"
+        "0            1 0.577215664901532866; ...\n"
+        "0       exp(1)              ceil(x)]")
     # row and columns
-    assert mcode(A[:,0]) == "[[1];  [0];  [0]]"
-    assert mcode(A[0,:]) == "[1, sin((1/2)*x), abs(x)]"
+    assert mcode(A[:,0]) == "[1; 0; 0]"
+    assert mcode(A[0,:]) == "[1 sin((1/2)*x) abs(x)]"
     # empty matrices
     assert mcode(Matrix(0, 0, [])) == '[]'
-    assert mcode(Matrix(0, 3, [])) == 'zeros(0,3)'
+    assert mcode(Matrix(0, 3, [])) == 'zeros(0, 3)'
+    # annoying to read but correct
+    assert mcode(Matrix([[x, x - y, -y]])) == "[x x - y -y]"
+
 
 def test_containers():
     assert mcode([1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]) == \
@@ -103,6 +112,9 @@ def test_containers():
     assert mcode((1,)) == "{1}"
     assert mcode(Tuple(*[1, 2, 3])) == "{1, 2, 3}"
     assert mcode((1, x*y, (3, x**2))) == "{1, x*y, {3, x^2}}"
+    # scalar, matrix, empty matrix and empty list
+    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0; ...\n0 1 0; ...\n0 0 1], [], {}}"
+
 
 def test_octave_piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))

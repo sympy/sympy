@@ -163,15 +163,20 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
-        if A.rows == 0 and A.cols == 0:
+        if (A.rows, A.cols) == (0, 0):
             return '[]'
         elif A.rows == 0 or A.cols == 0:
-            return 'zeros(%s,%s)' % (A.rows, A.cols)
+            return 'zeros(%s, %s)' % (A.rows, A.cols)
+        elif (A.rows, A.cols) == (1, 1):
+            # Octave does not distinguish between scalars and 1x1 matrices
+            return self._print(A[0, 0])
         elif A.rows == 1 :
-            return "%s" % A.table(self, colsep=', ')
+            return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
         elif A.cols == 1 :
-            return "[%s]" % A.table(self, rowsep=';  ')
-        return "[%s]" % A.table(self, rowsep='; ...\n', colsep=', ')
+            return "[%s]" % A.table(self, rowstart='', rowend='',
+                                    rowsep='; ', colsep=' ')
+        return "[%s]" % A.table(self, rowstart='', rowend='',
+                                rowsep='; ...\n', colsep=' ')
     # FIXME: see my prosposed change for _print_NumberSymbol, same here
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
