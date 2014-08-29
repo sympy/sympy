@@ -1112,10 +1112,16 @@ class tan(TrigonometricFunction):
         return sage.tan(self.args[0]._sage_())
 
 
-class cot(TrigonometricFunction):
+class cot(ReciprocalTrigonometricFunction):
     """
     cot(x) -> Returns the cotangent of x (measured in radians)
     """
+
+    _reciprocal_of = tan
+    _is_odd = True
+
+    def _eval_rewrite_as_tan(self, arg):
+        return (1/tan(arg))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1123,196 +1129,16 @@ class cot(TrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return acot
-
-    @classmethod
-    def eval(cls, arg):
-        if arg.is_Number:
-            if arg is S.NaN:
-                return S.NaN
-            if arg is S.Zero:
-                return S.ComplexInfinity
-
-        if arg.could_extract_minus_sign():
-            return -cls(-arg)
-
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-        if i_coeff is not None:
-            return -S.ImaginaryUnit * C.coth(i_coeff)
-
-        pi_coeff = _pi_coeff(arg, 2)
-        if pi_coeff is not None:
-            if pi_coeff.is_integer:
-                return S.ComplexInfinity
-
-            if not pi_coeff.is_Rational:
-                narg = pi_coeff*S.Pi
-                if narg != arg:
-                    return cls(narg)
-                return None
-
-            if pi_coeff.is_Rational:
-                narg = (((pi_coeff + S.Half) % 1) - S.Half)*S.Pi
-                # see cos() to specify which expressions should be
-                # expanded automatically in terms of radicals
-                cresult, sresult = cos(narg), cos(narg - S.Pi/2)
-                if not isinstance(cresult, cos) \
-                        and not isinstance(sresult, cos):
-                    if sresult == 0:
-                        return S.ComplexInfinity
-                    return cresult / sresult
-                if narg != arg:
-                    return cls(narg)
-
-        if arg.is_Add:
-            x, m = _peeloff_pi(arg)
-            if m:
-                cotm = cot(m)
-                if cotm == 0:
-                    return -tan(x)
-                cotx = cot(x)
-                if cotm is S.ComplexInfinity:
-                    return cotx
-                if cotm.is_Rational:
-                    return (cotm*cotx - 1) / (cotm + cotx)
-            return None
-
-        if arg.func is acot:
-            return arg.args[0]
-
-        if arg.func is atan:
-            x = arg.args[0]
-            return 1 / x
-
-        if arg.func is atan2:
-            y, x = arg.args
-            return x/y
-
-        if arg.func is asin:
-            x = arg.args[0]
-            return sqrt(1 - x**2) / x
-
-        if arg.func is acos:
-            x = arg.args[0]
-            return x / sqrt(1 - x**2)
-
-    @staticmethod
-    @cacheit
     def taylor_term(n, x, *previous_terms):
-        if n == 0:
-            return 1 / sympify(x)
-        elif n < 0 or n % 2 == 0:
+        if n < 0 or n % 2 != 1:
             return S.Zero
         else:
             x = sympify(x)
 
-            B = C.bernoulli(n + 1)
-            F = C.factorial(n + 1)
+            B = C.bernoulli(n)
+            F = C.factorial(n)
 
-            return (-1)**((n + 1)//2) * 2**(n + 1) * B/F * x**n
-
-    def _eval_nseries(self, x, n, logx):
-        i = self.args[0].limit(x, 0)/S.Pi
-        if i and i.is_Integer:
-            return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
-        return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx)
-
-    def _eval_conjugate(self):
-        assert len(self.args) == 1
-        return self.func(self.args[0].conjugate())
-
-    def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
-        denom = sin(re)**2 + C.sinh(im)**2
-        return (sin(re)*cos(re)/denom, -C.sinh(im)*C.cosh(im)/denom)
-
-    def _eval_rewrite_as_exp(self, arg):
-        exp, I = C.exp, S.ImaginaryUnit
-        if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
-            arg = arg.func(arg.args[0]).rewrite(exp)
-        neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
-        return I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
-
-    def _eval_rewrite_as_Pow(self, arg):
-        if arg.func is log:
-            I = S.ImaginaryUnit
-            x = arg.args[0]
-            return -I*(x**-I + x**I)/(x**-I - x**I)
-
-    def _eval_rewrite_as_sin(self, x):
-        return 2*sin(2*x)/sin(x)**2
-
-    def _eval_rewrite_as_cos(self, x):
-        return -cos(x)/cos(x + S.Pi/2)
-
-    def _eval_rewrite_as_sincos(self, arg):
-        return cos(arg)/sin(arg)
-
-    def _eval_rewrite_as_tan(self, arg):
-        return 1/tan(arg)
-
-    def _eval_rewrite_as_pow(self, arg):
-        y = self.rewrite(cos).rewrite(pow)
-        if y.has(cos):
-            return None
-        return y
-
-    def _eval_rewrite_as_sqrt(self, arg):
-        y = self.rewrite(cos).rewrite(sqrt)
-        if y.has(cos):
-            return None
-        return y
-
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and C.Order(1, x).contains(arg):
-            return 1/arg
-        else:
-            return self.func(arg)
-
-    def _eval_is_real(self):
-        return self.args[0].is_real
-
-    def _eval_expand_trig(self, **hints):
-        arg = self.args[0]
-        x = None
-        if arg.is_Add:
-            from sympy import symmetric_poly
-            n = len(arg.args)
-            CX = []
-            for x in arg.args:
-                cx = cot(x, evaluate=False)._eval_expand_trig()
-                CX.append(cx)
-
-            Yg = numbered_symbols('Y')
-            Y = [ next(Yg) for i in xrange(n) ]
-
-            p = [0, 0]
-            for i in xrange(n, -1, -1):
-                p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
-            return (p[0]/p[1]).subs(list(zip(Y, CX)))
-        else:
-            coeff, terms = arg.as_coeff_Mul(rational=True)
-            if coeff.is_Integer and coeff > 1:
-                I = S.ImaginaryUnit
-                z = C.Symbol('dummy', real=True)
-                P = ((z + I)**coeff).expand()
-                return (C.re(P)/C.im(P)).subs([(z, cot(terms))])
-        return cot(arg)
+            return (-1)*(2**n)*(B/F)*x**(n-1)
 
     def _sage_(self):
         import sage.all as sage
