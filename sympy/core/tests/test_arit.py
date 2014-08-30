@@ -11,19 +11,14 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
 
 
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
+a, c, x, y, z = symbols('a,c,x,y,z')
+b = Symbol("b", positive=True)
 
 
 def test_bug1():
     assert re(x) != x
     x.series(x, 0, 1)
     assert re(x) != x
-
-a = Symbol("a")
-b = Symbol("b", positive=True)
-c = Symbol("c")
 
 
 def test_Symbol():
@@ -32,6 +27,17 @@ def test_Symbol():
     assert a*b*b == a*b**2
     assert a*b*b + c == c + a*b**2
     assert a*b*b - c == -c + a*b**2
+
+    x = Symbol('x', complex=True, real=False)
+    assert x.is_imaginary is None  # could be I or 1 + I
+    x = Symbol('x', complex=True, imaginary=False)
+    assert x.is_real is None  # could be 1 or 1 + I
+    x = Symbol('x', real=True)
+    assert x.is_complex
+    x = Symbol('x', imaginary=True)
+    assert x.is_complex
+    x = Symbol('x', real=False, imaginary=False)
+    assert x.is_complex is None  # might be a non-number
 
 
 def test_arit0():
