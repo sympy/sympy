@@ -1388,7 +1388,7 @@ class divisor_sigma(Function):
     def eval(cls, n, k=1):
         from sympy.concrete.summations import summation
         n = sympify(n)
-        k = sympify(k)        
+        k = sympify(k)
         if n.is_prime:
             return 1 + n**k
         if n.is_Integer:
