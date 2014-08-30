@@ -16,6 +16,7 @@ from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.singleton import S
 from sympy.core.function import Function
+from sympy.core.symbol import Dummy
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -1379,8 +1380,15 @@ class divisor_sigma(Function):
     divisor_count, totient, divisors, factorint
     """
 
+    i = Dummy('i', integer=True)
+    p = Dummy('p', integer=True)
+    e = Dummy('e', integer=True)
+    k = Dummy('k', integer=True)
+
     @classmethod
     def eval(cls, n, k=1):
+        from sympy.concrete.summations import summation
+        s = summation(cls.p**(cls.k*cls.i), (cls.i, 0, cls.e))
         n = sympify(n)
         k = sympify(k)
         if n.is_prime:
@@ -1389,6 +1397,5 @@ class divisor_sigma(Function):
             if n <= 0:
                 raise ValueError("n must be a positive integer")
             else:
-                i = Dummy('i', integer=True)
-                return Mul(*[summation(p**(k*i), (i, 0, e)) for p, e in
-                             factorint(n).items() if p > 1])
+                return Mul(*[s.subs([(cls.p, p), (cls.e, e), (cls.k, k)])
+                           for p, e in factorint(n).items() if p > 1])
