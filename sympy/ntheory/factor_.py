@@ -1383,19 +1383,18 @@ class divisor_sigma(Function):
     i = Dummy('i', integer=True)
     p = Dummy('p', integer=True)
     e = Dummy('e', integer=True)
-    k = Dummy('k', integer=True)
 
     @classmethod
     def eval(cls, n, k=1):
         from sympy.concrete.summations import summation
-        s = summation(cls.p**(cls.k*cls.i), (cls.i, 0, cls.e))
         n = sympify(n)
         k = sympify(k)
+        s = summation(cls.p**(k*cls.i), (cls.i, 0, cls.e))
         if n.is_prime:
             return 1 + n**k
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
             else:
-                return Mul(*[s.subs([(cls.p, p), (cls.e, e), (cls.k, k)])
+                return Mul(*[s.subs([(cls.p, p), (cls.e, e)])
                            for p, e in factorint(n).items() if p > 1])
