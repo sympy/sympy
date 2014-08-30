@@ -953,6 +953,14 @@ def _check_antecedents(g1, g2, x):
     theta = (pi*(v - s - t) + abs(arg(sigma)))/(v - u)
     lambda_c = (q - p)*abs(omega)**(1/(q - p))*cos(psi) \
         + (v - u)*abs(sigma)**(1/(v - u))*cos(theta)
+    # `psi` could be NaN.  If that happens, `lambda_c` and `lambda_s`
+    # will be NaN.  `lambda_c` and `lambda_s` are used (only?) in the
+    # computation of `c15` below.  Two examples that activate this in
+    # test_integrals.py are 'test_issue_4992' and 'test_issue_6253'.
+    # FIXME: probably an expert on MeijerG should think about this!
+    #if psi is S.NaN:
+    #    raise NameError('psi is NaN, what to do?')
+
 
     def lambda_s0(c1, c2):
         return c1*(q - p)*abs(omega)**(1/(q - p))*sin(psi) \
@@ -1020,8 +1028,21 @@ def _check_antecedents(g1, g2, x):
                   Or(And(Ne(zos, 1), abs(arg_(1 - zos)) < pi),
                      And(re(mu + rho + v - u) < 1, Eq(zos, 1))))
 
+        # Note: if `zso` is 1 then we get a NaN below.  This raises a
+        # TypeError on `NaN < pi`.  Previously this gave `False` so
+        # I've hardcoded that behaviour.
+
+        # FIXME: someone should check if this NaN is more serious!
+        # test_meijerint() in test_meijerint.py can hit this.
+        # Specifically: `meijerint_definite(exp(x), x, 0, I)`
+
+        tmp = abs(arg_(1 - zso))
+        if tmp is S.NaN:
+            absarg_1mzso_lt_pi = False
+        else:
+            absarg_1mzso_lt_pi = tmp < pi;
         c14_alt = And(Eq(phi, 0), cstar - 1 + bstar <= 0,
-                  Or(And(Ne(zso, 1), abs(arg_(1 - zso)) < pi),
+                  Or(And(Ne(zso, 1), absarg_1mzso_lt_pi),
                      And(re(mu + rho + q - p) < 1, Eq(zso, 1))))
 
         # Since r=k=l=1, in our case there is c14_alt which is the same as calling
@@ -1033,12 +1054,18 @@ def _check_antecedents(g1, g2, x):
         # Hence the following seems correct:
         c14 = Or(c14, c14_alt)
 
-    tmp = [lambda_c > 0,
-           And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
-           And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
-    c15 = Or(*tmp)
-    if _eval_cond(lambda_c > 0) != False:
-        c15 = (lambda_c > 0)
+    # Previously `NaN > 0` was False, which resulted in `c15` being
+    # False.  Now `NaN > 0` raises TypeError.  We hardcode `c15` to
+    # False in that case.  See discussion about `psi` being NaN above.
+    if lambda_c is S.NaN and lambda_s is S.NaN:
+        c15 = False;
+    else:
+        tmp = [lambda_c > 0,
+               And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
+               And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
+        c15 = Or(*tmp)
+        if _eval_cond(lambda_c > 0) != False:
+            c15 = (lambda_c > 0)
 
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
                     (c7, 7), (c8, 8), (c9, 9), (c10, 10), (c11, 11),
