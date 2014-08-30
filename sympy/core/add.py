@@ -460,11 +460,11 @@ class Add(Expr, AssocOp):
     _eval_is_rational = lambda self: fuzzy_group(
         (a.is_rational for a in self.args), quick_exit=True)
     _eval_is_commutative = lambda self: fuzzy_group(
-        (a.is_commutative for a in self.args))
+        a.is_commutative for a in self.args)
 
     def _eval_is_imaginary(self):
         from sympy import im
-        ret = fuzzy_group((a.is_imaginary for a in self.args))
+        ret = fuzzy_group(a.is_imaginary for a in self.args)
         if not ret:
             return ret
         newarg = []

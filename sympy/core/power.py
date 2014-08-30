@@ -416,7 +416,7 @@ class Pow(Expr):
             return i.is_integer
 
     def _eval_is_complex(self):
-        return fuzzy_group((a.is_complex for a in self.args)) or None
+        return fuzzy_group(a.is_complex for a in self.args) or None
 
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:
