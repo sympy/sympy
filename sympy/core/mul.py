@@ -998,7 +998,9 @@ class Mul(Expr, AssocOp):
         zero = one_neither = False
 
         for t in self.args:
-            if t.is_imaginary:
+            if not t.is_complex:
+                return
+            elif t.is_imaginary:
                 real = not real
             elif t.is_real:
                 if zero is False:
@@ -1009,8 +1011,6 @@ class Mul(Expr, AssocOp):
                 if one_neither:
                     return  # complex terms might cancel
                 one_neither = True
-            else:
-                return
 
         if one_neither:  # N = a+I*b or I*b
             if real:
