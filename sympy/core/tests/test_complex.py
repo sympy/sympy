@@ -187,6 +187,9 @@ def test_real_imag():
     r = Symbol('r', real=True)
     i = Symbol('i', imaginary=True)
     assert (i*r*x).as_real_imag() == (I*i*r*im(x), -I*i*r*re(x))
+    assert (i*r*x*(y + 2)).as_real_imag() == (
+        I*i*r*(re(y) + 2)*im(x) + I*i*r*re(x)*im(y),
+        -I*i*r*(re(y) + 2)*re(x) + I*i*r*im(x)*im(y))
 
     # issue 7106:
     assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)

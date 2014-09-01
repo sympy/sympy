@@ -216,13 +216,12 @@ class Number(AtomicExpr):
     """
     is_commutative = True
     is_number = True
+    is_Number = True
 
     __slots__ = []
 
     # Used to make max(x._prec, y._prec) return x._prec when only x is a float
     _prec = -1
-
-    is_Number = True
 
     def __new__(cls, *obj):
         if len(obj) == 1:
@@ -581,6 +580,7 @@ class Float(Number):
     # both rational and irrational.
     is_rational = None
     is_irrational = None
+    is_number = True
 
     is_real = True
 
@@ -1031,6 +1031,7 @@ class Rational(Number):
     is_real = True
     is_integer = False
     is_rational = True
+    is_number = True
 
     __slots__ = ['p', 'q']
 
@@ -1546,6 +1547,7 @@ class Integer(Rational):
 
     q = 1
     is_integer = True
+    is_number = True
 
     is_Integer = True
 
@@ -1894,6 +1896,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     is_negative = False
     is_zero = True
     is_composite = False
+    is_number = True
 
     __slots__ = []
 
@@ -1948,6 +1951,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
 
     .. [1] http://en.wikipedia.org/wiki/1_%28number%29
     """
+    is_number = True
 
     p = 1
     q = 1
@@ -1999,6 +2003,7 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
 
     """
+    is_number = True
 
     p = -1
     q = 1
@@ -2053,6 +2058,7 @@ class Half(with_metaclass(Singleton, RationalConstant)):
 
     .. [1] http://en.wikipedia.org/wiki/One_half
     """
+    is_number = True
 
     p = 1
     q = 2
@@ -2109,6 +2115,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_integer = None
     is_rational = None
     is_odd = None
+    is_number = True
 
     __slots__ = []
 
@@ -2310,6 +2317,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_infinitesimal = False
     is_integer = None
     is_rational = None
+    is_number = True
 
     __slots__ = []
 
@@ -2552,6 +2560,7 @@ class NaN(with_metaclass(Singleton, Number)):
     is_prime = None
     is_positive = None
     is_negative = None
+    is_number = True
 
     __slots__ = []
 
@@ -2809,6 +2818,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
     is_positive = True
     is_negative = False  # XXX Forces is_negative/is_nonnegative
     is_irrational = True
+    is_number = True
 
     __slots__ = []
 
@@ -2885,6 +2895,7 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     is_positive = True
     is_negative = False
     is_irrational = True
+    is_number = True
 
     __slots__ = []
 
@@ -2943,6 +2954,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     is_positive = True
     is_negative = False
     is_irrational = True
+    is_number = True
 
     __slots__ = []
 
@@ -3005,6 +3017,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     is_positive = True
     is_negative = False
     is_irrational = None
+    is_number = True
 
     __slots__ = []
 
@@ -3060,6 +3073,7 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
     is_positive = True
     is_negative = False
     is_irrational = None
+    is_number = True
 
     __slots__ = []
 

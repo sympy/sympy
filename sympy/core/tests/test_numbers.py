@@ -335,7 +335,7 @@ def test_Rational_cmp():
     assert (n1 < S.NaN) is S.false
     assert (n1 <= S.NaN) is S.false
     assert (n1 > S.NaN) is S.false
-    assert (n1 <= S.NaN) is S.false
+    assert (n1 >= S.NaN) is S.false
 
 
 def test_Float():

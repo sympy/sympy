@@ -677,16 +677,19 @@ class Mul(Expr, AssocOp):
     def as_real_imag(self, deep=True, **hints):
         from sympy import expand_mul
         other = []
-        coeff = S.One
+        coeffr = []
+        coeffi = []
         addterms = S.One
         for a in self.args:
-            if a.is_real or a.is_imaginary:
-                coeff *= a
+            if a.is_real:
+                coeffr.append(a)
+            elif a.is_imaginary:
+                coeffi.append(a)
             elif a.is_commutative:
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
                     if x == a.conjugate():
-                        coeff *= C.Abs(x)**2
+                        coeffr.append(C.Abs(x)**2)
                         del other[i]
                         break
                 else:
@@ -698,22 +701,30 @@ class Mul(Expr, AssocOp):
                 other.append(a)
         m = self.func(*other)
         if hints.get('ignore') == m:
-            return None
+            return
+        if len(coeffi) % 2:
+            imco = C.im(coeffi.pop(0))
+            # all other pairs make a real factor; they will be
+            # put into reco below
+        else:
+            imco = S.Zero
+        reco = self.func(*(coeffr + coeffi))
+        r, i = (reco*C.re(m), reco*C.im(m))
         if addterms == 1:
             if m == 1:
-                return (C.re(coeff), C.im(coeff))
-            rem, imm = (C.re(m), C.im(m))
-            if coeff.is_real:
-                return (coeff*rem, coeff*imm)
-            imco = C.im(coeff)
-            return (-imco*imm, imco*rem)
+                if imco is S.Zero:
+                    return (reco, S.Zero)
+                else:
+                    return (S.Zero, reco*imco)
+            if imco is S.Zero:
+                return (r, i)
+            return (-imco*i, imco*r)
         addre, addim = expand_mul(addterms, deep=False).as_real_imag()
-        if coeff.is_real:
-            return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
+        if imco is S.Zero:
+            return (r*addre - i*addim, i*addre + r*addim)
         else:
-            re = - C.im(coeff)*C.im(m)
-            im = C.im(coeff)*C.re(m)
-            return (re*addre - im*addim, re*addim + im*addre)
+            r, i = -imco*i, imco*r
+            return (r*addre - i*addim, r*addim + i*addre)
 
     @staticmethod
     def _expandsums(sums):
@@ -1563,7 +1574,7 @@ class Mul(Expr, AssocOp):
 
     @property
     def _sorted_args(self):
-        return self.as_ordered_factors()
+        return tuple(self.as_ordered_factors())
 
 
 def prod(a, start=1):

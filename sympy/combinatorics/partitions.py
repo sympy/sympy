@@ -38,7 +38,7 @@ class Partition(C.FiniteSet):
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([1, 2], [3])
         >>> a
-        {{1, 2}, {3}}
+        {{3}, {1, 2}}
         >>> a.partition
         [[1, 2], [3]]
         >>> len(a)
@@ -223,7 +223,7 @@ class Partition(C.FiniteSet):
         >>> a.RGS
         (0, 0, 1, 2, 2)
         >>> a + 1
-        {{1, 2}, {3}, {4}, {5}}
+        {{3}, {4}, {5}, {1, 2}}
         >>> _.RGS
         (0, 0, 1, 2, 3)
         """
@@ -256,7 +256,7 @@ class Partition(C.FiniteSet):
         {{e}, {a, c}, {b, d}}
         >>> a = Partition([1, 4], [2], [3, 5])
         >>> Partition.from_rgs(a.RGS, a.members)
-        {{1, 4}, {2}, {3, 5}}
+        {{2}, {1, 4}, {3, 5}}
         """
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')

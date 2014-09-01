@@ -252,4 +252,4 @@ class Dict(Basic):
     @property
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
-        return sorted(self.args, key=default_sort_key)
+        return tuple(sorted(self.args, key=default_sort_key))
