@@ -629,10 +629,10 @@ def test_hash_vs_eq():
 
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
-    n = Symbol('n', negative=True, bounded=False)
-    p = Symbol('p', positive=True, bounded=False)
+    n = Symbol('n', negative=True, finite=False)
+    p = Symbol('p', positive=True, finite=False)
     x = Symbol('x')
-    xb = Symbol('xb', bounded=True)
+    xb = Symbol('xb', finite=True)
     assert (n + p).is_positive is None
     assert (n + x).is_positive is None
     assert (p + x).is_positive is None
@@ -741,7 +741,7 @@ def test_issue_6275():
     # This is similar to x/x => 1 even though if x = 0, it is really nan.
     assert isinstance(x*0, type(0*S.Infinity))
     if 0*S.Infinity is S.NaN:
-        b = Symbol('b', bounded=None)
+        b = Symbol('b', finite=None)
         assert (b*0).is_zero is None
 
 

@@ -270,7 +270,7 @@ def test_issue_5184():
     assert limit(cos(x)/x, x, oo) == 0
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
-    r = Symbol('r', real=True, bounded=True)
+    r = Symbol('r', real=True, finite=True)
     assert limit(r*sin(1/r), r, 0) == 0
 
 
@@ -335,7 +335,7 @@ def test_extended_real_line():
 @XFAIL
 def test_order_oo():
     from sympy import C
-    x = Symbol('x', positive=True, bounded=True)
+    x = Symbol('x', positive=True, finite=True)
     assert C.Order(x)*oo != C.Order(1, x)
     assert limit(oo/(x**2 - 4), x, oo) == oo
 

@@ -414,7 +414,7 @@ def limitinf(e, x):
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical bechavior from the expression.
         # We need a fresh variable.
-        p = Dummy('p', positive=True, bounded=True)
+        p = Dummy('p', positive=True, finite=True)
         e = e.subs(x, p)
         x = p
     c0, e0 = mrv_leadterm(e, x)
@@ -497,7 +497,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True, bounded=True)
+    w = Dummy("w", real=True, positive=True, finite=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
     return series.leadterm(w)

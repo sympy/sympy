@@ -339,7 +339,7 @@ def test_inverse_mellin_transform():
     # Now test the inverses of all direct transforms tested above
 
     # Section 8.4.2
-    nu = symbols('nu', real=True, bounded=True)
+    nu = symbols('nu', real=True, finite=True)
     assert IMT(-1/(nu + s), s, x, (-oo, None)) == x**nu*Heaviside(x - 1)
     assert IMT(1/(nu + s), s, x, (None, oo)) == x**nu*Heaviside(1 - x)
     assert simp_pows(IMT(gamma(beta)*gamma(s)/gamma(s + beta), s, x, (0, oo))) \
@@ -509,7 +509,7 @@ def test_inverse_laplace_transform():
     from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
                        unpolarify, simplify, factor_terms)
     ILT = inverse_laplace_transform
-    a, b, c, = symbols('a b c', positive=True, bounded=True)
+    a, b, c, = symbols('a b c', positive=True, finite=True)
     t = symbols('t')
 
     def simp_hyp(expr):

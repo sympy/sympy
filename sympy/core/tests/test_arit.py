@@ -367,7 +367,7 @@ def test_Add_Mul_is_integer():
 
 
 def test_Add_Mul_is_finite():
-    x = Symbol('x', real=True, bounded=False)
+    x = Symbol('x', real=True, finite=False)
 
     assert sin(x).is_finite is True
     assert (x*sin(x)).is_finite is False
@@ -460,7 +460,7 @@ def test_Mul_is_rational():
     z = Symbol('z', zero=True)
     i = Symbol('i', imaginary=True)
     assert (z*i).is_rational is None
-    bi = Symbol('i', imaginary=True, bounded=True)
+    bi = Symbol('i', imaginary=True, finite=True)
     assert (z*bi).is_zero is True
 
 
@@ -1689,11 +1689,11 @@ def test_mul_coeff():
 
 
 def test_mul_zero_detection():
-    nz = Dummy(real=True, zero=False, bounded=True)
+    nz = Dummy(real=True, zero=False, finite=True)
     r = Dummy(real=True)
-    c = Dummy(real=False, complex=True, bounded=True)
-    c2 = Dummy(real=False, complex=True, bounded=True)
-    i = Dummy(imaginary=True, bounded=True)
+    c = Dummy(real=False, complex=True, finite=True)
+    c2 = Dummy(real=False, complex=True, finite=True)
+    i = Dummy(imaginary=True, finite=True)
     e = nz*r*c
     assert e.is_imaginary is None
     assert e.is_real is None
@@ -1724,11 +1724,11 @@ def test_mul_zero_detection():
 
     for iz, ib in cartes(*[[True, False, None]]*2):
         z = Dummy(nonzero=iz)
-        b = Dummy(bounded=ib)
+        b = Dummy(finite=ib)
         e = Mul(z, b, evaluate=False)
         test(z, b, e)
         z = Dummy(nonzero=iz)
-        b = Dummy(bounded=ib)
+        b = Dummy(finite=ib)
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 
@@ -1741,10 +1741,10 @@ def test_mul_zero_detection():
 
     for iz, ib in cartes(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz, real=True)
-        b = Dummy('b', bounded=ib, real=True)
+        b = Dummy('b', finite=ib, real=True)
         e = Mul(z, b, evaluate=False)
         test(z, b, e)
         z = Dummy('z', nonzero=iz, real=True)
-        b = Dummy('b', bounded=ib, real=True)
+        b = Dummy('b', finite=ib, real=True)
         e = Mul(b, z, evaluate=False)
         test(z, b, e)

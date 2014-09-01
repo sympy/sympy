@@ -592,7 +592,7 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True, bounded=True)
+    x = Symbol('x', real=True, finite=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)

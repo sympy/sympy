@@ -716,7 +716,7 @@ def test_Infinity_inequations():
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
 
     x = Symbol('x')
-    b = Symbol('b', bounded=True, real=True)
+    b = Symbol('b', finite=True, real=True)
     assert (x < oo) == Lt(x, oo)  # issue 7775
     assert b < oo and b > -oo and b <= oo and b >= -oo
     assert oo > b and oo >= b and (oo < b) == False and (oo <= b) == False
@@ -1246,15 +1246,15 @@ def test_Rational_int():
 
 
 def test_zoo():
-    b = Symbol('b', bounded=True)
+    b = Symbol('b', finite=True)
     nz = Symbol('nz', nonzero=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     im = Symbol('i', imaginary=True)
     c = Symbol('c', complex=True)
-    pb = Symbol('pb', positive=True, bounded=True)
-    nb = Symbol('nb', negative=True, bounded=True)
-    imb = Symbol('ib', imaginary=True, bounded=True)
+    pb = Symbol('pb', positive=True, finite=True)
+    nb = Symbol('nb', negative=True, finite=True)
+    imb = Symbol('ib', imaginary=True, finite=True)
     for i in [I, S.Infinity, S.NegativeInfinity, S.Zero, S.One, S.Pi, S.Half, S(3), log(3),
               b, nz, p, n, im, pb, nb, imb, c]:
         if i.is_finite and (i.is_real or i.is_imaginary):
@@ -1308,21 +1308,21 @@ def test_zoo():
 def test_issue_4122():
     x = Symbol('x', nonpositive=True)
     assert (oo + x).is_Add
-    x = Symbol('x', bounded=True)
+    x = Symbol('x', finite=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
     assert oo + x == oo
-    x = Symbol('x', bounded=True, real=True)
+    x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
 
     # similarily for negative infinity
     x = Symbol('x', nonnegative=True)
     assert (-oo + x).is_Add
-    x = Symbol('x', bounded=True)
+    x = Symbol('x', finite=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
     assert -oo + x == -oo
-    x = Symbol('x', bounded=True, real=True)
+    x = Symbol('x', finite=True, real=True)
     assert -oo + x == -oo
 
 
