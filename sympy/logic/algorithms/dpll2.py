@@ -12,7 +12,6 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 from heapq import heappush, heappop
-from itertools import chain
 
 from sympy import default_sort_key, ordered
 from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
@@ -37,6 +36,8 @@ def dpll_satisfiable(expr, all_models=False):
     """
     clauses = conjuncts(to_cnf(expr))
     if False in clauses:
+        if all_models:
+            return (f for f in [False])
         return False
     symbols = sorted(_find_predicates(expr), key=default_sort_key)
     symbols_int_repr = range(1, len(symbols) + 1)
@@ -45,21 +46,29 @@ def dpll_satisfiable(expr, all_models=False):
     solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
     models = solver._find_model()
 
-    try:
-        model = next(models)
-    except StopIteration:
-        model = False
-
-    if not model:
-        return False
     if all_models:
-        return chain([model], models)
-    return model
+        return _all_models(models)
+
+    try:
+        return next(models)
+    except StopIteration:
+        return False
 
     # Uncomment to confirm the solution is valid (hitting set for the clauses)
     #else:
         #for cls in clauses_int_repr:
             #assert solver.var_settings.intersection(cls)
+
+
+def _all_models(models):
+    satisfiable = False
+    try:
+        while True:
+            yield next(models)
+            satisfiable = True
+    except StopIteration:
+        if not satisfiable:
+            yield False
 
 
 class SATSolver(object):

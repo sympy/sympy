@@ -41,7 +41,11 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
     Returns {true: true} for trivially true expressions.
-    Returns a generator of all models if all_models is True.
+
+    If all_models is True:
+    If given expr is satisfiable then returns a generator of models.
+    If given expr is unsatisfiable then returns a generator containing
+        the single element False (yielded on the first iteration).
 
     Examples
     ========
@@ -54,13 +58,25 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     False
     >>> satisfiable(True)
     {True: True}
-    >>> satisfiable(A & ~A, all_models=True)
+    >>> next(satisfiable(A & ~A, all_models=True))
     False
     >>> models = satisfiable((A >> B) & B, all_models=True)
     >>> next(models)
     {A: False, B: True}
     >>> next(models)
     {A: True, B: True}
+    >>> def use_models(models):
+    ...     for model in models:
+    ...         if model:
+    ...             # Do something with the model.
+    ...             print(model)
+    ...         else:
+    ...             # Given expr is unsatisfiable.
+    ...             print("UNSAT")
+    >>> use_models(satisfiable(A >> ~A, all_models=True))
+    {A: False}
+    >>> use_models(satisfiable(A ^ A, all_models=True))
+    UNSAT
 
     """
     expr = to_cnf(expr)

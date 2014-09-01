@@ -214,8 +214,8 @@ def test_satisfiable_bool():
 
 def test_satisfiable_all_models():
     from sympy.abc import A, B
-    assert satisfiable(False, all_models=True) is False
-    assert satisfiable((A >> ~A) & A , all_models=True) is False
+    assert next(satisfiable(False, all_models=True)) is False
+    assert list(satisfiable((A >> ~A) & A , all_models=True)) == [False]
     assert list(satisfiable(True, all_models=True)) == [{true: true}]
 
     models = [{A: True, B: False}, {A: False, B: True}]
