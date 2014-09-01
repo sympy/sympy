@@ -1175,8 +1175,8 @@ class Mul(Expr, AssocOp):
         """Return True if self is negative, False if not, and None if it
         cannot be determined.
 
-        This algorithm is non-recursive and works by keeping track of the
-        sign which changes when a negative, nonpositive or imaginary is encountered.
+        This algorithm works by keeping track of the sign which changes
+        when a negative, nonpositive or imaginary is encountered.
         Whether a nonpositive or nonnegative is seen is also tracked since
         the presence of these makes it impossible to return True, but
         possible to return False if the end result is nonnegative. e.g.
@@ -1188,25 +1188,27 @@ class Mul(Expr, AssocOp):
         sign = 1
         im_count = 0
         saw_NON = False
-        args = list(self.args)
-        while args:
-            t = args.pop()
-            if t.is_positive:
-                continue
-            elif t.is_negative:
-                sign = -sign
-            elif t.is_zero:
-                return False
-            elif t.is_nonpositive:
-                sign = -sign
-                saw_NON = True
-            elif t.is_nonnegative:
-                saw_NON = True
-            elif t.is_imaginary:
-                args.append(C.sign(C.im(t)))
-                im_count += 1
-            else:
-                return
+        for t in self.args:
+            while True:
+                if t.is_positive:
+                    pass
+                elif t.is_negative:
+                    sign = -sign
+                elif t.is_zero:
+                    return False
+                elif t.is_nonpositive:
+                    sign = -sign
+                    saw_NON = True
+                elif t.is_nonnegative:
+                    saw_NON = True
+                elif t.is_imaginary:
+                    t = C.sign(C.im(t))
+                    im_count += 1
+                    continue
+                else:
+                    return
+                break
+
         im_count = im_count % 4
         if im_count in (1, 3):
             return False  # the imaginaries persist
@@ -1214,7 +1216,7 @@ class Mul(Expr, AssocOp):
             sign = -sign
         if sign == -1 and saw_NON is False:
             return True
-        if sign > 0:
+        if sign == 1:
             return False
 
     def _eval_is_odd(self):

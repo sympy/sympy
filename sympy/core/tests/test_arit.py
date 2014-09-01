@@ -508,15 +508,20 @@ def test_Mul_is_negative_positive():
     assert (i*j).is_negative is None  # could be (2*I)*(-3*I)
     assert (i*j).is_positive is None  # ditto
     assert (I*sqrt(1 - sqrt(3))).is_negative
-    assert Mul(2*I, I, evaluate=False).is_negative is True
-    assert Mul(Mul(2, I, evaluate=False), I, evaluate=False).is_negative \
-        is True
-    assert Mul(Mul(-2, I, evaluate=False), I, evaluate=False).is_negative \
-        is False
+
     assert Mul(Mul(0, I, evaluate=False), I, evaluate=False).is_negative \
         is False
-    assert Mul(Mul(nneg, I, evaluate=False), I, evaluate=False).is_negative \
-        is None
+    assert Mul(I, Mul(I, pos, evaluate=False), evaluate=False).is_negative
+    assert Mul(I, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(I, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is None
+    assert Mul(I, Mul(I, npos, evaluate=False), evaluate=False).is_negative is None
+    assert Mul(I, Mul(I, i, evaluate=False), evaluate=False).is_negative is None
+    assert Mul(2, Mul(I, pos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, npos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(2, Mul(I, i, evaluate=False), evaluate=False).is_negative is None
+
     assert (-neg).is_negative is False
     assert (2*neg).is_negative is True
 
