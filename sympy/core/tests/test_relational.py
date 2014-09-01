@@ -481,3 +481,27 @@ def test_inequalities_cant_sympify_other():
     for a in (x, S(0), S(1)/3, pi, I, zoo, oo, -oo, nan):
         for op in (lt, gt, le, ge):
             raises(TypeError, lambda: op(a, bar))
+
+
+@XFAIL
+def test_inequalities_wild_symbol_no_flip():
+    # see issue #7951.
+    from sympy.core.symbol import Wild
+    p = symbols('p', cls=Wild)
+    # here's particular failure I encountered which gave `q_ > x`
+    e = Lt(x, y)
+    e = e.subs({y: p})
+    x_lt_p = Lt(x, p, evaluate=False)
+    assert e == x_lt_p
+    # and some generalized tests
+    x_gt_p = Gt(x, p, evaluate=False)
+    x_le_p = Le(x, p, evaluate=False)
+    x_ge_p = Ge(x, p, evaluate=False)
+    assert x < p == x_lt_p
+    assert x > p == x_gt_p
+    assert x <= p == x_le_p
+    assert x >= p == x_ge_p
+    assert Lt(x, p) == x_lt_p
+    assert Gt(x, p) == x_gt_p
+    assert Le(x, p) == x_le_p
+    assert Ge(x, p) == x_ge_p
