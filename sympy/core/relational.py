@@ -596,7 +596,8 @@ class GreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs >= rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return lhs.__ge__(rhs)
 
 Ge = GreaterThan
 
@@ -609,7 +610,8 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs <= rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return lhs.__le__(rhs)
 
 Le = LessThan
 
@@ -622,7 +624,8 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs > rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return lhs.__gt__(rhs)
 
 Gt = StrictGreaterThan
 
@@ -635,7 +638,8 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
-        return _sympify(lhs < rhs)
+        # We don't use the op symbol here: workaround issue #7951
+        return lhs.__lt__(rhs)
 
 Lt = StrictLessThan
 
