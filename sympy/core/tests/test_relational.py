@@ -466,3 +466,27 @@ def test_inequalities_symbol_name_same_complex():
         raises(TypeError, lambda: a >= I)
         raises(TypeError, lambda: Le(a, I))
         raises(TypeError, lambda: a <= I)
+
+
+def test_inequalities_wild_longform_no_gotcha_flip():
+    # x < p might flip to p > x (see "gotcha") but Lt() should not
+    from sympy.core.symbol import Wild
+    p, q = symbols('p,q', cls=Wild)
+    # here's particular failure I encountered which gave `q_ > x`
+    e = Lt(x, y)
+    e = e.subs({y: q})
+    assert str(e) == 'x < q_'
+    # and some generalized tests
+    assert str(x < p) == 'x < p_' or 'p_ > x'
+    assert str(x > p) == 'x > p_' or 'p_ < x'
+    assert str(x <= p) == 'x <= p_' or 'p_ >= x'
+    assert str(x >= p) == 'x >= p_' or 'p_ <= x'
+    assert str(Lt(x, p)) == 'x < p_'
+    assert str(Gt(x, p)) == 'x > p_'
+    assert str(Le(x, p)) == 'x <= p_'
+    assert str(Ge(x, p)) == 'x >= p_'
+
+def test_inequalities_eval_relation_no_gotcha_flip():
+    # Here's one particular failure related to the above tests
+    e = Lt(1, x)
+    assert str(e._eval_relation(1, x)) == '1 < x'
