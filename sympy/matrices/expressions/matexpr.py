@@ -217,6 +217,22 @@ class MatrixExpr(Basic):
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
+        elif isinstance(key, (int, Integer)):
+            # row-wise decomposition of matrix
+            rows, cols = self.shape
+            if not (isinstance(rows, Integer) and isinstance(cols, Integer)):
+                raise IndexError("Single index only supported for "
+                                 "non-symbolic matrix shapes.")
+            key = sympify(key)
+            i = key // cols
+            j = key % cols
+            if self.valid_index(i, j) != False:
+                return self._entry(i, j)
+            else:
+                raise IndexError("Invalid index %s" % key)
+        elif isinstance(key, (Symbol, Expr)):
+                raise IndexError("Single index only supported for "
+                                 "non-symbolic indices.")
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):

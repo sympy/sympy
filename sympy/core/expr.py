@@ -293,8 +293,6 @@ class Expr(Basic, EvalfMixin):
         True
 
         """
-        if not self.args:
-            return False
         return all(obj.is_number for obj in self.args)
 
     def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
@@ -3044,7 +3042,7 @@ class AtomicExpr(Atom, Expr):
     For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
-
+    is_number = False
     is_Atom = True
 
     __slots__ = []

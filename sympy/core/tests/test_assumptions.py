@@ -706,3 +706,37 @@ def test_issue_6631():
 
 def test_issue_2730():
     assert (1/(1 + I)).is_real is False
+
+
+def test_issue_4149():
+    assert (3 + I).is_complex
+    assert (3 + I).is_imaginary is False
+    assert (3*I + S.Pi*I).is_imaginary
+    # as Zero.is_imaginary is False, see issue 7649
+    y = Symbol('y', real=True)
+    assert (3*I + S.Pi*I + y*I).is_imaginary is None
+    p = Symbol('p', positive=True)
+    assert (3*I + S.Pi*I + p*I).is_imaginary
+    n = Symbol('n', negative=True)
+    assert (-3*I - S.Pi*I + n*I).is_imaginary
+
+    i = Symbol('i', imaginary=True)
+    assert ([(i**a).is_imaginary for a in range(4)] ==
+            [False, True, False, True])
+
+    # tests from the PR #7887:
+    e = S("-sqrt(3)*I/2 + 0.866025403784439*I")
+    assert e.is_real is False
+    assert e.is_imaginary
+
+
+def test_issue_2920():
+    n = Symbol('n', negative=True)
+    assert sqrt(n).is_imaginary
+
+
+def test_issue_7899():
+    x = Symbol('x', real=True)
+    assert (I*x).is_real is None
+    assert ((x - I)*(x - 1)).is_zero is None
+    assert ((x - I)*(x - 1)).is_real is None

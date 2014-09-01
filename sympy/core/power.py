@@ -167,7 +167,12 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
-            elif b is S.One:
+            elif e.is_integer and _coeff_isneg(b):
+                if e.is_even:
+                    b = -b
+                elif e.is_odd:
+                    return -Pow(-b, e)
+            if b is S.One:
                 if e in (S.NaN, S.Infinity, -S.Infinity):
                     return S.NaN
                 return S.One
@@ -405,6 +410,34 @@ class Pow(Expr):
                 ok = (c*C.log(self.base)/S.Pi).is_Integer
                 if ok is not None:
                     return ok
+
+    def _eval_is_imaginary(self):
+        if self.base.is_imaginary:
+            if self.exp.is_integer:
+                odd = self.exp.is_odd
+                if odd is not None:
+                    return odd
+                return
+
+        if self.exp.is_imaginary:
+            imlog = C.log(self.base).is_imaginary
+            if imlog is not None:
+                return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
+
+        if self.base.is_real and self.exp.is_real:
+            if self.base.is_positive:
+                return False
+            else:
+                r = self.exp.is_rational
+                if self.exp.is_integer:
+                    return False
+                else:
+                    r = (2*self.exp).is_integer
+                    if r:
+                        return self.base.is_negative
+                    else:
+                        return r
+                return r
 
     def _eval_is_odd(self):
         if self.exp.is_integer:

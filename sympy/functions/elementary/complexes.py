@@ -53,9 +53,9 @@ class re(Function):
             return S.NaN
         elif arg.is_real:
             return arg
-        elif arg.is_imaginary:
+        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return S.Zero
-        elif arg.is_Function and arg.func == conjugate:
+        elif arg.is_Function and arg.func is conjugate:
             return re(arg.args[0])
         else:
 
@@ -140,9 +140,9 @@ class im(Function):
             return S.NaN
         elif arg.is_real:
             return S.Zero
-        elif arg.is_imaginary:
+        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return -S.ImaginaryUnit * arg
-        elif arg.is_Function and arg.func == conjugate:
+        elif arg.is_Function and arg.func is conjugate:
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
@@ -414,6 +414,10 @@ class Abs(Function):
         if arg.is_real is False and arg.is_imaginary is False:
             from sympy import expand_mul
             return sqrt( expand_mul(arg * arg.conjugate()) )
+        if arg.is_real is None and arg.is_imaginary is None and arg.is_Add:
+            if all(a.is_real or a.is_imaginary or (S.ImaginaryUnit*a).is_real for a in arg.args):
+                from sympy import expand_mul
+                return sqrt(expand_mul(arg * arg.conjugate()))
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:

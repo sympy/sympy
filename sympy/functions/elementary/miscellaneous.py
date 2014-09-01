@@ -420,6 +420,10 @@ class MinMaxBase(Expr, LatticeOp):
             l.append(df * da)
         return Add(*l)
 
+    def evalf(self, prec=None, **options):
+        return self.func(*[a.evalf(prec, options) for a in self.args])
+    n = evalf
+
     @property
     def is_real(self):
         return fuzzy_and(arg.is_real for arg in self.args)

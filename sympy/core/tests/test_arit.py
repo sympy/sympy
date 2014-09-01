@@ -154,13 +154,15 @@ def test_pow():
     assert (x**(y**(x + exp(x + y)) + z)).expand() == \
         x**z*x**(y**x*y**(exp(x)*exp(y)))
 
-    n = Symbol('k', even=False)
+    n = Symbol('n', even=False)
     k = Symbol('k', even=True)
+    o = Symbol('o', odd=True)
 
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
-    assert (-2*x)**k == (-2*x)**k  # we choose not to auto expand this
+    assert (-2*x)**k == (2*x)**k  # we choose not to auto expand this
+    assert (-2*x)**o == -(2*x)**o  # but we do handle coefficient sign
     assert (-1)**k == 1
 
 
@@ -1132,8 +1134,8 @@ def test_Mul_is_imaginary_real():
     assert (I*I).is_imaginary is False
     assert (I*I).is_real is True
 
-    assert (r*i).is_imaginary is True
-    assert (r*i).is_real is False
+    assert (r*i).is_imaginary is None
+    assert (r*i).is_real is None
 
     assert (x*i).is_imaginary is None
     assert (x*i).is_real is None
