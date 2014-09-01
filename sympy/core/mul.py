@@ -1011,6 +1011,8 @@ class Mul(Expr, AssocOp):
                 if one_neither:
                     return  # complex terms might cancel
                 one_neither = True
+            else:
+                return
 
         if one_neither:  # N = a+I*b or I*b
             if real:
