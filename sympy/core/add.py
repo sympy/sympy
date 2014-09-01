@@ -512,8 +512,8 @@ class Add(Expr, AssocOp):
             return False
         for a in args:
             ispos = a.is_positive
-            ubound = a.is_infinite
-            if ubound:
+            infinite = a.is_infinite
+            if infinite:
                 unbounded.add(ispos)
                 if len(unbounded) > 1:
                     return
@@ -529,7 +529,7 @@ class Add(Expr, AssocOp):
             elif a.is_zero:
                 continue
 
-            if ubound is None:
+            if infinite is None:
                 return
             unknown_sign = True
 
@@ -554,8 +554,8 @@ class Add(Expr, AssocOp):
             return False
         for a in args:
             isneg = a.is_negative
-            ubound = a.is_infinite
-            if ubound:
+            infinite = a.is_infinite
+            if infinite:
                 unbounded.add(isneg)
                 if len(unbounded) > 1:
                     return
@@ -571,7 +571,7 @@ class Add(Expr, AssocOp):
             elif a.is_zero:
                 continue
 
-            if ubound is None:
+            if infinite is None:
                 return
             unknown_sign = True
 

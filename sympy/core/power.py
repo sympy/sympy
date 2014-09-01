@@ -1169,8 +1169,8 @@ class Pow(Expr):
             """return the integer value (if possible) of e and a
             flag indicating whether it is bounded or not."""
             n = e.limit(x, 0)
-            unbounded = n.is_infinite
-            if not unbounded:
+            infinite = n.is_infinite
+            if not infinite:
                 # XXX was int or floor intended? int used to behave like floor
                 # so int(-Rational(1, 2)) returned -1 rather than int's 0
                 try:
@@ -1182,12 +1182,12 @@ class Pow(Expr):
                     except TypeError:
                         pass  # hope that base allows this to be resolved
                 n = _sympify(n)
-            return n, unbounded
+            return n, infinite
 
         order = O(x**n, x)
-        ei, unbounded = e2int(e)
+        ei, infinite = e2int(e)
         b0 = b.limit(x, 0)
-        if unbounded and (b0 is S.One or b0.has(Symbol)):
+        if infinite and (b0 is S.One or b0.has(Symbol)):
             # XXX what order
             if b0 is S.One:
                 resid = (b - 1)
@@ -1200,7 +1200,7 @@ class Pow(Expr):
             return b0**ei
 
         if (b0 is S.Zero or b0.is_infinite):
-            if unbounded is not False:
+            if infinite is not False:
                 return b0**e  # XXX what order
 
             if not ei.is_number:  # if not, how will we proceed?
@@ -1251,21 +1251,21 @@ class Pow(Expr):
                 rv += order
             return rv
 
-        # either b0 is bounded but neither 1 nor 0 or e is unbounded
+        # either b0 is bounded but neither 1 nor 0 or e is infinite
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
         o2 = order*(b0**-e)
         z = (b/b0 - 1)
         o = O(z, x)
         #r = self._compute_oseries3(z, o2, self.taylor_term)
         if o is S.Zero or o2 is S.Zero:
-            unbounded = True
+            infinite = True
         else:
             if o.expr.is_number:
                 e2 = log(o2.expr*x)/log(x)
             else:
                 e2 = log(o2.expr)/log(o.expr)
-            n, unbounded = e2int(e2)
-        if unbounded:
+            n, infinite = e2int(e2)
+        if infinite:
             # requested accuracy gives infinite series,
             # order is probably non-polynomial e.g. O(exp(-1/x), x).
             r = 1 + z
