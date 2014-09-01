@@ -354,7 +354,7 @@ class Pow(Expr):
                 return True
             if self.exp.is_negative:
                 return False
-        if c1 and e.is_negative and e.is_bounded:  # int**neg
+        if c1 and e.is_negative and e.is_finite:  # int**neg
             return False
         if b.is_Number and e.is_Number:
             # int**nonneg or rat**?
@@ -460,16 +460,16 @@ class Pow(Expr):
             elif self.base is S.NegativeOne:
                 return True
 
-    def _eval_is_bounded(self):
+    def _eval_is_finite(self):
         if self.exp.is_negative:
             if self.base.is_zero:
                 return False
             if self.base.is_unbounded:
                 return True
-        c1 = self.base.is_bounded
+        c1 = self.base.is_finite
         if c1 is None:
             return
-        c2 = self.exp.is_bounded
+        c2 = self.exp.is_finite
         if c2 is None:
             return
         if c1 and c2:

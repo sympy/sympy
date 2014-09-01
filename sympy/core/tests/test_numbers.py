@@ -367,19 +367,19 @@ def test_Float():
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
-    assert Float('+inf').is_bounded is False
+    assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
     assert Float('+inf').is_positive is True
     assert Float('+inf').is_unbounded is True
     assert Float('+inf').is_zero is False
 
-    assert Float('-inf').is_bounded is False
+    assert Float('-inf').is_finite is False
     assert Float('-inf').is_negative is True
     assert Float('-inf').is_positive is False
     assert Float('-inf').is_unbounded is True
     assert Float('-inf').is_zero is False
 
-    assert Float('0.0').is_bounded is True
+    assert Float('0.0').is_finite is True
     assert Float('0.0').is_negative is False
     assert Float('0.0').is_positive is False
     assert Float('0.0').is_unbounded is False
@@ -1257,12 +1257,12 @@ def test_zoo():
     imb = Symbol('ib', imaginary=True, bounded=True)
     for i in [I, S.Infinity, S.NegativeInfinity, S.Zero, S.One, S.Pi, S.Half, S(3), log(3),
               b, nz, p, n, im, pb, nb, imb, c]:
-        if i.is_bounded and (i.is_real or i.is_imaginary):
+        if i.is_finite and (i.is_real or i.is_imaginary):
             assert i + zoo is zoo
             assert i - zoo is zoo
             assert zoo + i is zoo
             assert zoo - i is zoo
-        elif i.is_bounded is not False:
+        elif i.is_finite is not False:
             assert (i + zoo).is_Add
             assert (i - zoo).is_Add
             assert (zoo + i).is_Add

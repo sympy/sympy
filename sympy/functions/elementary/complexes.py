@@ -239,7 +239,7 @@ class sign(Function):
     Abs, conjugate
     """
 
-    is_bounded = True
+    is_finite = True
     is_complex = True
 
     def doit(self):
@@ -506,7 +506,7 @@ class arg(Function):
     """Returns the argument (in radians) of a complex number"""
 
     is_real = True
-    is_bounded = True
+    is_finite = True
 
     @classmethod
     def eval(cls, arg):

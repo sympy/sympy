@@ -366,22 +366,22 @@ def test_Add_Mul_is_integer():
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
 
 
-def test_Add_Mul_is_bounded():
+def test_Add_Mul_is_finite():
     x = Symbol('x', real=True, bounded=False)
 
-    assert sin(x).is_bounded is True
-    assert (x*sin(x)).is_bounded is False
-    assert (1024*sin(x)).is_bounded is True
-    assert (sin(x)*exp(x)).is_bounded is not True
-    assert (sin(x)*cos(x)).is_bounded is True
-    assert (x*sin(x)*exp(x)).is_bounded is not True
+    assert sin(x).is_finite is True
+    assert (x*sin(x)).is_finite is False
+    assert (1024*sin(x)).is_finite is True
+    assert (sin(x)*exp(x)).is_finite is not True
+    assert (sin(x)*cos(x)).is_finite is True
+    assert (x*sin(x)*exp(x)).is_finite is not True
 
-    assert (sin(x) - 67).is_bounded is True
-    assert (sin(x) + exp(x)).is_bounded is not True
-    assert (1 + x).is_bounded is False
-    assert (1 + x**2 + (1 + x)*(1 - x)).is_bounded is None
-    assert (sqrt(2)*(1 + x)).is_bounded is False
-    assert (sqrt(2)*(1 + x)*(1 - x)).is_bounded is False
+    assert (sin(x) - 67).is_finite is True
+    assert (sin(x) + exp(x)).is_finite is not True
+    assert (1 + x).is_finite is False
+    assert (1 + x**2 + (1 + x)*(1 - x)).is_finite is None
+    assert (sqrt(2)*(1 + x)).is_finite is False
+    assert (sqrt(2)*(1 + x)*(1 - x)).is_finite is False
 
 
 def test_Mul_is_even_odd():
@@ -986,21 +986,21 @@ def test_real_Pow():
     assert (k**(I*pi/log(k))).is_real
 
 
-def test_Pow_is_bounded():
+def test_Pow_is_finite():
     x = Symbol('x', real=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
 
-    assert (x**2).is_bounded is None  # x could be oo
-    assert (x**x).is_bounded is None  # ditto
-    assert (p**x).is_bounded is None  # ditto
-    assert (n**x).is_bounded is None  # ditto
-    assert (1/S.Pi).is_bounded
-    assert (sin(x)**2).is_bounded is True
-    assert (sin(x)**x).is_bounded is None
-    assert (sin(x)**exp(x)).is_bounded is None
-    assert (1/sin(x)).is_bounded is None  # if zero, no, otherwise yes
-    assert (1/exp(x)).is_bounded is None  # x could be -oo
+    assert (x**2).is_finite is None  # x could be oo
+    assert (x**x).is_finite is None  # ditto
+    assert (p**x).is_finite is None  # ditto
+    assert (n**x).is_finite is None  # ditto
+    assert (1/S.Pi).is_finite
+    assert (sin(x)**2).is_finite is True
+    assert (sin(x)**x).is_finite is None
+    assert (sin(x)**exp(x)).is_finite is None
+    assert (1/sin(x)).is_finite is None  # if zero, no, otherwise yes
+    assert (1/exp(x)).is_finite is None  # x could be -oo
 
 
 def test_Pow_is_even_odd():
@@ -1717,7 +1717,7 @@ def test_mul_zero_detection():
 
     # real is unknonwn
     def test(z, b, e):
-        if z.is_zero and b.is_bounded:
+        if z.is_zero and b.is_finite:
             assert e.is_real and e.is_zero
         else:
             assert e.is_real == e.is_zero == None
@@ -1734,7 +1734,7 @@ def test_mul_zero_detection():
 
     # real is True
     def test(z, b, e):
-        if z.is_zero and not b.is_bounded:
+        if z.is_zero and not b.is_finite:
             assert e.is_real is None
         else:
             assert e.is_real

@@ -33,7 +33,7 @@ def test_zero():
     assert z.is_nonnegative is True
     assert z.is_even is True
     assert z.is_odd is False
-    assert z.is_bounded is True
+    assert z.is_finite is True
     assert z.is_unbounded is False
     assert z.is_comparable is True
     assert z.is_prime is False
@@ -59,7 +59,7 @@ def test_one():
     assert z.is_nonnegative is True
     assert z.is_even is False
     assert z.is_odd is True
-    assert z.is_bounded is True
+    assert z.is_finite is True
     assert z.is_unbounded is False
     assert z.is_comparable is True
     assert z.is_prime is False
@@ -89,7 +89,7 @@ def test_negativeone():
     assert z.is_nonnegative is False
     assert z.is_even is False
     assert z.is_odd is True
-    assert z.is_bounded is True
+    assert z.is_finite is True
     assert z.is_unbounded is False
     assert z.is_comparable is True
     assert z.is_prime is False
@@ -116,7 +116,7 @@ def test_infinity():
     assert oo.is_nonnegative is True
     assert oo.is_even is None
     assert oo.is_odd is None
-    assert oo.is_bounded is False
+    assert oo.is_finite is False
     assert oo.is_unbounded is True
     assert oo.is_comparable is True
     assert oo.is_prime is None
@@ -143,7 +143,7 @@ def test_neg_infinity():
     assert mm.is_nonnegative is False
     assert mm.is_even is None
     assert mm.is_odd is None
-    assert mm.is_bounded is False
+    assert mm.is_finite is False
     assert mm.is_unbounded is True
     assert mm.is_comparable is True
     assert mm.is_prime is False
@@ -170,7 +170,7 @@ def test_nan():
     assert nan.is_nonnegative is None
     assert nan.is_even is None
     assert nan.is_odd is None
-    assert nan.is_bounded is None
+    assert nan.is_finite is None
     assert nan.is_unbounded is None
     assert nan.is_comparable is False
     assert nan.is_prime is None
@@ -196,7 +196,7 @@ def test_pos_rational():
     assert r.is_nonnegative is True
     assert r.is_even is False
     assert r.is_odd is False
-    assert r.is_bounded is True
+    assert r.is_finite is True
     assert r.is_unbounded is False
     assert r.is_comparable is True
     assert r.is_prime is False
@@ -260,7 +260,7 @@ def test_pi():
     assert z.is_nonnegative is True
     assert z.is_even is False
     assert z.is_odd is False
-    assert z.is_bounded is True
+    assert z.is_finite is True
     assert z.is_unbounded is False
     assert z.is_comparable is True
     assert z.is_prime is False
@@ -285,7 +285,7 @@ def test_E():
     assert z.is_nonnegative is True
     assert z.is_even is False
     assert z.is_odd is False
-    assert z.is_bounded is True
+    assert z.is_finite is True
     assert z.is_unbounded is False
     assert z.is_comparable is True
     assert z.is_prime is False
@@ -310,7 +310,7 @@ def test_I():
     assert z.is_nonnegative is False
     assert z.is_even is False
     assert z.is_odd is False
-    assert z.is_bounded is True
+    assert z.is_finite is True
     assert z.is_unbounded is False
     assert z.is_comparable is False
     assert z.is_prime is False

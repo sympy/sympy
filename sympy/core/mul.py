@@ -956,8 +956,8 @@ class Mul(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    _eval_is_bounded = lambda self: _fuzzy_group(
-        a.is_bounded for a in self.args)
+    _eval_is_finite = lambda self: _fuzzy_group(
+        a.is_finite for a in self.args)
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
     _eval_is_complex = lambda self: _fuzzy_group(
@@ -986,7 +986,7 @@ class Mul(Expr, AssocOp):
                     return  # 0*oo is nan and nan.is_zero is None
                 zero = True
             else:
-                if not a.is_bounded:
+                if not a.is_finite:
                     if zero:
                         return  # 0*oo is nan and nan.is_zero is None
                     unbound = True
@@ -1026,7 +1026,7 @@ class Mul(Expr, AssocOp):
                     if not z and zero is False:
                         zero = z
                     elif z:
-                        if all(a.is_bounded for a in self.args):
+                        if all(a.is_finite for a in self.args):
                             return True
                         return
             elif t.is_real is False:
