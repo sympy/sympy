@@ -2255,7 +2255,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                             (self, other))
         if other.is_real:
             return S.false
-        return C.StrictLessThan(self, other)
+        return Expr.__lt__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
@@ -2267,7 +2267,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other is S.Infinity:
                 return S.true
-        return C.LessThan(self, other)
+        return Expr.__le__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
@@ -2279,7 +2279,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other is S.Infinity:
                 return S.false
-        return C.StrictGreaterThan(self, other)
+        return Expr.__gt__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
@@ -2288,7 +2288,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                             (self, other))
         if other.is_real:
             return S.true
-        return C.GreaterThan(self, other)
+        return Expr.__ge__(self, other)
 
     def __mod__(self, other):
         return S.NaN
@@ -2469,7 +2469,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other is S.NegativeInfinity:
                 return S.false
-        return C.StrictLessThan(self, other)
+        return Expr.__lt__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __le__(self, other):
@@ -2478,7 +2478,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                             (self, other))
         if other.is_real:
             return S.true
-        return C.LessThan(self, other)
+        return Expr.__le__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __gt__(self, other):
@@ -2487,7 +2487,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                             (self, other))
         if other.is_real:
             return S.false
-        return C.StrictGreaterThan(self, other)
+        return Expr.__gt__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __ge__(self, other):
@@ -2499,7 +2499,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other is S.NegativeInfinity:
                 return S.true
-        return C.GreaterThan(self, other)
+        return Expr.__ge__(self, other)
 
     def __mod__(self, other):
         return S.NaN
