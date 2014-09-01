@@ -25,13 +25,13 @@ Here follows a list of possible assumption names:
                         of algebraic numbers
     - transcendental - object can have only values from the set
                         of transcendental numbers
-    - bounded       - object absolute value is bounded
+    - finite        - object absolute value is bounded
     - positive      - object can have only positive values
     - negative      - object can have only negative values
     - nonpositive      - object can have only nonpositive values
     - nonnegative      - object can have only nonnegative values
     - irrational    - object value cannot be represented exactly by Rational
-    - unbounded     - object value is arbitrarily large
+    - infinite      - object value is arbitrarily large
 
 Implementation note: assumption values are stored in
 ._assumptions dictionary or are returned by getter methods (with
@@ -101,7 +101,7 @@ _assume_rules = FactRules([
 
     'imaginary      ->  !real',
 
-    '!bounded     ==  unbounded',
+    '!finite        ==  infinite',
     'noninteger     ==  real & !integer',
     '!zero        ==  nonzero',
 ])
