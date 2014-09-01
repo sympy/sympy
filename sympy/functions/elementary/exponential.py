@@ -77,7 +77,7 @@ class ExpBase(Function):
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_unbounded:
+        if arg.is_infinite:
             if arg.is_negative:
                 return True
             if arg.is_positive:
@@ -661,7 +661,7 @@ class log(Function):
     def _eval_is_positive(self):
         arg = self.args[0]
         if arg.is_positive:
-            if arg.is_unbounded:
+            if arg.is_infinite:
                 return True
             if arg.is_zero:
                 return False

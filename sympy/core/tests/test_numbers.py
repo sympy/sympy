@@ -370,19 +370,19 @@ def test_Float():
     assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
     assert Float('+inf').is_positive is True
-    assert Float('+inf').is_unbounded is True
+    assert Float('+inf').is_infinite is True
     assert Float('+inf').is_zero is False
 
     assert Float('-inf').is_finite is False
     assert Float('-inf').is_negative is True
     assert Float('-inf').is_positive is False
-    assert Float('-inf').is_unbounded is True
+    assert Float('-inf').is_infinite is True
     assert Float('-inf').is_zero is False
 
     assert Float('0.0').is_finite is True
     assert Float('0.0').is_negative is False
     assert Float('0.0').is_positive is False
-    assert Float('0.0').is_unbounded is False
+    assert Float('0.0').is_infinite is False
     assert Float('0.0').is_zero is True
 
     # rationality properties

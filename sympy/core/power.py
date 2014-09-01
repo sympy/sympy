@@ -464,7 +464,7 @@ class Pow(Expr):
         if self.exp.is_negative:
             if self.base.is_zero:
                 return False
-            if self.base.is_unbounded:
+            if self.base.is_infinite:
                 return True
         c1 = self.base.is_finite
         if c1 is None:
@@ -1169,7 +1169,7 @@ class Pow(Expr):
             """return the integer value (if possible) of e and a
             flag indicating whether it is bounded or not."""
             n = e.limit(x, 0)
-            unbounded = n.is_unbounded
+            unbounded = n.is_infinite
             if not unbounded:
                 # XXX was int or floor intended? int used to behave like floor
                 # so int(-Rational(1, 2)) returned -1 rather than int's 0
@@ -1199,7 +1199,7 @@ class Pow(Expr):
 
             return b0**ei
 
-        if (b0 is S.Zero or b0.is_unbounded):
+        if (b0 is S.Zero or b0.is_infinite):
             if unbounded is not False:
                 return b0**e  # XXX what order
 

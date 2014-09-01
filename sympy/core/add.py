@@ -512,7 +512,7 @@ class Add(Expr, AssocOp):
             return False
         for a in args:
             ispos = a.is_positive
-            ubound = a.is_unbounded
+            ubound = a.is_infinite
             if ubound:
                 unbounded.add(ispos)
                 if len(unbounded) > 1:
@@ -554,7 +554,7 @@ class Add(Expr, AssocOp):
             return False
         for a in args:
             isneg = a.is_negative
-            ubound = a.is_unbounded
+            ubound = a.is_infinite
             if ubound:
                 unbounded.add(isneg)
                 if len(unbounded) > 1:
@@ -698,7 +698,7 @@ class Add(Expr, AssocOp):
         if not self.is_Add:
             return self.as_leading_term(x)
 
-        unbounded = [t for t in self.args if t.is_unbounded]
+        unbounded = [t for t in self.args if t.is_infinite]
 
         self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
         if not self:

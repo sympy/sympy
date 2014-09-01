@@ -144,7 +144,7 @@ def compare(a, b, x):
     c = limitinf(la/lb, x)
     if c == 0:
         return "<"
-    elif c.is_unbounded:
+    elif c.is_infinite:
         return ">"
     else:
         return "="
@@ -273,7 +273,7 @@ def mrv(e, x):
         # be simplified here, and doing so is vital for termination.
         if e.args[0].func is log:
             return mrv(e.args[0].args[0], x)
-        if limitinf(e.args[0], x).is_unbounded:
+        if limitinf(e.args[0], x).is_infinite:
             s1 = SubsSet()
             e1 = s1[e]
             s2, e2 = mrv(e.args[0], x)
