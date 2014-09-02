@@ -975,25 +975,21 @@ class Mul(Expr, AssocOp):
         return zero
 
     def _eval_is_nonzero(self):
-        # unbounded: might iniclude oo, could be zero
-        # bounded: doesn't include oo, could be zero
-        # not bounded is +/oo
-        # not unbounded is not +/-oo
-        # 0*oo = nan and nan.is_nonzero is None so
-        # if we don't know if a factor is zero or not then the answer is None
-        # if we don't know if a factor is bounded or not then the answer is None
-        # otherwise the answer is False if there was a zero else True
         zero = unbound = False
-        for i in self.args:
-            if i.is_zero:
+        for a in self.args:
+            if a.is_zero:
                 zero = True
-            elif i.is_zero is None:
-                return
-            elif i.is_bounded is False:
+            elif a.is_zero is None:
+                return  # might be zero or nonzero
+            elif a.is_unbounded:
                 unbound = True
-            elif i.is_bounded is None:
-                return
+            elif a.is_unbounded is None:
+                # it *could* be True but this is only a problem
+                # if we see a zero
+                unbound = True
             if unbound == zero == True:
+                # Since 0*oo = nan and nan.is_nonzero is None, if we've seen a
+                # zero and a factor that could be unbounded, we are done
                 return
         return not zero
 
