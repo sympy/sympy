@@ -1665,11 +1665,13 @@ def test_denest_add_mul():
     assert 2*eq == Mul(-4, x - 2, evaluate=False)
     assert -eq == Mul(2, x - 2, evaluate=False)
 
+
 def test_mul_coeff():
     # It is important that all Numbers be removed from the seq;
     # This can be tricky when powers combine to produce those numbers
     p = exp(I*pi/3)
     assert p**2*x*p*y*p*x*p**2 == x**2*y
+
 
 def test_mul_nonzero():
     i = Symbol('i', integer=True, zero=False)
@@ -1687,3 +1689,8 @@ def test_mul_nonzero():
     assert Mul(ub, z, x, evaluate=False).is_nonzero is None
     assert Mul(ub, i, evaluate=False).is_nonzero
     assert Mul(ub, i, x, evaluate=False).is_nonzero is None
+
+
+def test_Mul_is_zero():
+    z = Symbol('n', nonzero=False)
+    assert Mul(oo, z, evaluate=False)._eval_is_zero() is None

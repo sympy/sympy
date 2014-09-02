@@ -964,6 +964,16 @@ class Mul(Expr, AssocOp):
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex',
         when_multiple=None)
 
+    def _eval_is_zero(self):
+        zero = None
+        bound = True
+        for a in self.args:
+            if a.is_zero:
+                zero = True
+            elif not a.is_bounded:  # None or False
+                return  # (0*oo).is_zero is None
+        return zero
+
     def _eval_is_nonzero(self):
         zero = False
         bounded = True
@@ -1081,18 +1091,6 @@ class Mul(Expr, AssocOp):
             if a is None:
                 return
         return False
-
-    def _eval_is_zero(self):
-        zero = None
-        for a in self.args:
-            if a.is_zero:
-                zero = True
-                continue
-            bound = a.is_bounded
-            if not bound:
-                return bound
-        if zero:
-            return True
 
     def _eval_is_positive(self):
         """Return True if self is positive, False if not, and None if it
