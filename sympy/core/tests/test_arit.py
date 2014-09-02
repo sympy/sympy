@@ -1688,13 +1688,5 @@ def test_mul_nonzero():
 
     assert Mul(oo, i, evaluate=False).is_nonzero
     assert Mul(oo, i, x, evaluate=False).is_nonzero is None
-    # replace these with the two XFAIL tests below when they pass
-    assert Mul(oo, z, evaluate=False)._eval_is_nonzero() is None
-    assert Mul(oo, z, x, evaluate=False)._eval_is_nonzero() is None
-
-
-@XFAIL
-def test_mul_nonzero_fail():
-    z = Symbol('z', nonzero=False)
     assert Mul(oo, z, evaluate=False).is_nonzero is None
     assert Mul(oo, z, x, evaluate=False).is_nonzero is None

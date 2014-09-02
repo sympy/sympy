@@ -1027,7 +1027,7 @@ class Mul(Expr, AssocOp):
                 if zero is False:
                     zero = fuzzy_not(t.is_nonzero)
                     if zero:
-                        return True
+                        return self.is_zero  # let _eval_is_zero decide
             elif t.is_real is False:
                 if one_neither:
                     return  # complex terms might cancel
@@ -1035,11 +1035,11 @@ class Mul(Expr, AssocOp):
             else:
                 return
 
-        if one_neither:  # N = a+I*b or I*b
+        if one_neither:  # self is a+I*b or I*b
             if real:
-                return zero  # real*N is like N: neither is real
+                return zero  # real*self is like self: neither is real
         elif zero is False:
-            return real  # real*N that can't be trumped by 0
+            return real  # can't be trumped by 0
         elif real:
             return real  # doesn't matter what zero is
 
