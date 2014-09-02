@@ -1185,38 +1185,28 @@ class Mul(Expr, AssocOp):
             pos * neg * nonnegative -> neg or zero -> None is returned
         """
 
-        sign = 1
-        im_count = 0
+        sign = S.One
         saw_NON = False
         for t in self.args:
-            while True:
-                if t.is_positive:
-                    pass
-                elif t.is_negative:
-                    sign = -sign
-                elif t.is_zero:
-                    return False
-                elif t.is_nonpositive:
-                    sign = -sign
-                    saw_NON = True
-                elif t.is_nonnegative:
-                    saw_NON = True
-                elif t.is_imaginary:
-                    t = C.sign(C.im(t))
-                    im_count += 1
-                    continue
-                else:
-                    return
-                break
+            if t.is_positive:
+                pass
+            elif t.is_negative:
+                sign = -sign
+            elif t.is_zero:
+                return False
+            elif t.is_nonpositive:
+                sign = -sign
+                saw_NON = True
+            elif t.is_nonnegative:
+                saw_NON = True
+            elif t.is_imaginary:
+                sign *= S.ImaginaryUnit*C.sign(C.im(t))
+            else:
+                return
 
-        im_count = im_count % 4
-        if im_count in (1, 3):
-            return False  # the imaginaries persist
-        elif im_count == 2:
-            sign = -sign
-        if sign == -1 and saw_NON is False:
+        if sign.is_negative and saw_NON is False:
             return True
-        if sign == 1:
+        elif sign.is_nonnegative:
             return False
 
     def _eval_is_odd(self):
