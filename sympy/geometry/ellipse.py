@@ -770,8 +770,8 @@ class Ellipse(GeometryEntity):
             inter = self.intersection(o)
             if isinstance(inter, Ellipse):
                 return False
-            return (inter is not None and isinstance(inter[0], Point)
-                    and len(inter) == 1)
+            return (inter is not None and len(inter) == 1
+                    and isinstance(inter[0], Point))
         elif isinstance(o, LinearEntity):
             inter = self._do_line_intersection(o)
             if inter is not None and len(inter) == 1:
