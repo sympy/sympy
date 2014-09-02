@@ -1200,7 +1200,7 @@ class Mul(Expr, AssocOp):
             elif t.is_nonnegative:
                 saw_NON = True
             elif t.is_imaginary:
-                sign *= S.ImaginaryUnit*C.sign(C.im(t))
+                sign *= C.sign(t)
             else:
                 return
 

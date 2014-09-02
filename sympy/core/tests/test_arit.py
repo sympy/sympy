@@ -490,6 +490,12 @@ def test_Add_is_even_odd():
     assert (k + n + x + m).is_odd is None
 
 
+@XFAIL
+def test_f():
+    # move this line to line 511 (after ditto) once
+    # Pow.is_imaginary is improved
+    assert (I*sqrt(1 - sqrt(3))).is_negative
+
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
     y = Symbol('y', real=False)
@@ -507,7 +513,6 @@ def test_Mul_is_negative_positive():
     assert neg.is_negative is True
     assert (i*j).is_negative is None  # could be (2*I)*(-3*I)
     assert (i*j).is_positive is None  # ditto
-    assert (I*sqrt(1 - sqrt(3))).is_negative
 
     assert Mul(Mul(0, I, evaluate=False), I, evaluate=False).is_negative \
         is False
