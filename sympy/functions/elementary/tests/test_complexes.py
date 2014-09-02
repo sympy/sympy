@@ -216,6 +216,14 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+    assert sign(Symbol('x', nonnegative=True)).is_nonnegative
+    assert sign(Symbol('x', nonnegative=True)).is_nonpositive is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonnegative is None
+    assert sign(Symbol('x', nonpositive=True)).is_nonpositive
+    assert sign(Symbol('x', real=True)).is_nonnegative is None
+    assert sign(Symbol('x', real=True)).is_nonpositive is None
+    assert sign(Symbol('x', real=True, zero=False)).is_nonpositive is None
+
     x, y = Symbol('x', real=True), Symbol('y')
     assert sign(x).rewrite(Piecewise) == \
         Piecewise((1, x > 0), (-1, x < 0), (0, True))
