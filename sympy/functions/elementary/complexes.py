@@ -5,6 +5,7 @@ from sympy.core.compatibility import u
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
+from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
@@ -291,6 +292,14 @@ class sign(Function):
             from sympy.functions.special.delta_functions import DiracDelta
             return 2 * Derivative(self.args[0], x, evaluate=True) \
                 * DiracDelta(-S.ImaginaryUnit * self.args[0])
+
+    def _eval_is_nonnegative(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_nonpositive(self):
+        if self.args[0].is_nonpositive:
+            return True
 
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
