@@ -11,7 +11,7 @@ from __future__ import print_function, division
 __all__ = ['TWave']
 
 from sympy import (sympify, pi, sin, cos, sqrt, simplify, Symbol, S, C, I,
-    symbols, Derivative)
+    symbols, Derivative, atan2)
 from sympy.core.expr import Expr
 from sympy.physics.units import c
 
@@ -256,7 +256,10 @@ class TWave(Expr):
                                   self.amplitude*other.amplitude*cos(
                                       self._phase - other.phase)),
                              self.frequency,
-                             self._phase + other._phase
+                             atan2(self._amplitude*cos(self._phase)
+                             +other._amplitude*cos(other._phase),
+                             self._amplitude*sin(self._phase)
+                             +other._amplitude*sin(other._phase))
                              )
             else:
                 raise NotImplementedError("Interference of waves with different frequencies"
