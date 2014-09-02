@@ -42,10 +42,9 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     Returns a model when it succeeds.
     Returns {true: true} for trivially true expressions.
 
-    If all_models is True:
-    If given expr is satisfiable then returns a generator of models.
-    If given expr is unsatisfiable then returns a generator containing
-        the single element False (yielded on the first iteration).
+    On setting all_models to True, if given expr is satisfiable then
+    returns a generator of models. However, if expr is unsatisfiable
+    then returns a generator containing the single element False.
 
     Examples
     ========
