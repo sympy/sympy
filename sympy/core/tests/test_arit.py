@@ -1173,23 +1173,6 @@ def test_Mul_is_imaginary_real():
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
 
-    # is_zero detection
-    a = Symbol('a', real=True, zero=False)
-    b = Symbol('b', real=True)
-    c = Symbol('c', real=False, complex=True)
-    e1 = Mul(a, b, c, evaluate=False)
-    e2 = Mul(b, a, c, evaluate=False)
-    e3 = Mul(a, c, evaluate=False)
-    e4 = Mul(a, i, c, evaluate=False)
-    assert e1.is_imaginary is None
-    assert e2.is_imaginary is None
-    assert e3.is_imaginary is None
-    assert e4.is_imaginary is False
-    assert e1.is_real is None
-    assert e2.is_real is None
-    assert e3.is_real is False
-    assert e4.is_imaginary is False
-
 
 def test_Mul_hermitian_antihermitian():
     a = Symbol('a', hermitian=True, zero=False)
@@ -1674,10 +1657,28 @@ def test_mul_coeff():
 
 
 def test_mul_nonzero():
-    i = Symbol('i', integer=True, zero=False)
-    z = Symbol('n', nonzero=False)
+    # is_zero detection
+    nz = Symbol('a', real=True, zero=False, bounded=True)
+    r = Symbol('b', real=True)
+    c = Symbol('c', real=False, complex=True, bounded=True)
+    i = Symbol('i', imaginary=True, bounded=True)
+    e1 = Mul(nz, r, c, evaluate=False)
+    e2 = Mul(r, nz, c, evaluate=False)
+    e3 = Mul(nz, c, evaluate=False)
+    e4 = Mul(nz, i, c, evaluate=False)
+    assert e1.is_imaginary is None
+    assert e2.is_imaginary is None
+    assert e3.is_imaginary is None
+    assert e4.is_imaginary is False
+    assert e1.is_real is None
+    assert e2.is_real is None
+    assert e3.is_real is False
+    assert e4.is_imaginary is False
+
+
+    i = Symbol('i', integer=True, zero=False, bounded=True)
+    z = Symbol('z', nonzero=False)
     b = Symbol('b', bounded=True)
-    ub = Symbol('ub', unbounded=True)
     assert (2*i).is_nonzero
     assert (2*x).is_nonzero is None
     assert Mul(b, z, evaluate=False).is_nonzero is False
@@ -1685,12 +1686,15 @@ def test_mul_nonzero():
     assert Mul(b, i, evaluate=False).is_nonzero is None
     assert Mul(b, i, x, evaluate=False).is_nonzero is None
 
-    assert Mul(ub, z, evaluate=False).is_nonzero is None
-    assert Mul(ub, z, x, evaluate=False).is_nonzero is None
-    assert Mul(ub, i, evaluate=False).is_nonzero
-    assert Mul(ub, i, x, evaluate=False).is_nonzero is None
+    assert Mul(oo, i, evaluate=False).is_nonzero
+    assert Mul(oo, i, x, evaluate=False).is_nonzero is None
+    # replace these with the two XFAIL tests below when they pass
+    assert Mul(oo, z, evaluate=False)._eval_is_nonzero() is None
+    assert Mul(oo, z, x, evaluate=False)._eval_is_nonzero() is None
 
 
-def test_Mul_is_zero():
-    z = Symbol('n', nonzero=False)
-    assert Mul(oo, z, evaluate=False)._eval_is_zero() is None
+@XFAIL
+def test_mul_nonzero_fail():
+    z = Symbol('z', nonzero=False)
+    assert Mul(oo, z, evaluate=False).is_nonzero is None
+    assert Mul(oo, z, x, evaluate=False).is_nonzero is None

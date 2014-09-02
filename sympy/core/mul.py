@@ -975,25 +975,27 @@ class Mul(Expr, AssocOp):
         return zero
 
     def _eval_is_nonzero(self):
-        zero = False
-        bounded = True
+        # unbounded: might iniclude oo, could be zero
+        # bounded: doesn't include oo, could be zero
+        # not bounded is +/oo
+        # not unbounded is not +/-oo
+        # 0*oo = nan and nan.is_nonzero is None so
+        # if we don't know if a factor is zero or not then the answer is None
+        # if we don't know if a factor is bounded or not then the answer is None
+        # otherwise the answer is False if there was a zero else True
+        zero = unbound = False
         for i in self.args:
-            b = i.is_bounded
-            if not b:
-                if bounded is not None:
-                    bounded = b
-            nz = i.is_nonzero
-            if nz:
-                continue
-            elif nz is False:
+            if i.is_zero:
                 zero = True
-            elif zero is False:
-                zero = None
-        if bounded:
-            if zero:
-                return True
-        elif zero is False:
-            return True
+            elif i.is_zero is None:
+                return
+            elif i.is_bounded is False:
+                unbound = True
+            elif i.is_bounded is None:
+                return
+            if unbound == zero == True:
+                return
+        return not zero
 
     def _eval_is_integer(self):
         is_rational = self.is_rational
