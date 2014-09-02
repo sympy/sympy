@@ -1673,8 +1673,17 @@ def test_mul_coeff():
 
 def test_mul_nonzero():
     i = Symbol('i', integer=True, zero=False)
-    n = Symbol('n', nonzero=False)
+    z = Symbol('n', nonzero=False)
+    b = Symbol('b', bounded=True)
+    ub = Symbol('ub', unbounded=True)
     assert (2*i).is_nonzero
     assert (2*x).is_nonzero is None
-    assert Mul(x, n, evaluate=False).is_nonzero is False
-    assert Mul(n, x, evaluate=False).is_nonzero is False
+    assert Mul(b, z, evaluate=False).is_nonzero is False
+    assert Mul(b, z, x, evaluate=False).is_nonzero is None
+    assert Mul(b, i, evaluate=False).is_nonzero is None
+    assert Mul(b, i, x, evaluate=False).is_nonzero is None
+
+    assert Mul(ub, z, evaluate=False).is_nonzero is None
+    assert Mul(ub, z, x, evaluate=False).is_nonzero is None
+    assert Mul(ub, i, evaluate=False).is_nonzero
+    assert Mul(ub, i, x, evaluate=False).is_nonzero is None

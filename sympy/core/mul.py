@@ -965,16 +965,25 @@ class Mul(Expr, AssocOp):
         when_multiple=None)
 
     def _eval_is_nonzero(self):
-        rv = True
+        zero = False
+        bounded = True
         for i in self.args:
+            b = i.is_bounded
+            if not b:
+                if bounded is not None:
+                    bounded = b
             nz = i.is_nonzero
             if nz:
                 continue
             elif nz is False:
-                return False
-            elif rv:
-                rv = None
-        return rv
+                zero = True
+            elif zero is False:
+                zero = None
+        if bounded:
+            if zero:
+                return True
+        elif zero is False:
+            return True
 
     def _eval_is_integer(self):
         is_rational = self.is_rational
