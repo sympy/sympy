@@ -81,6 +81,13 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         if isinstance(lhs, Expr) and isinstance(rhs, Expr):
             diff = lhs - rhs
+            # FIXME: move this code elsewhere, it should only be used
+            # by Equality.  For now, just checking if anyone else calls it.
+            assert cls is Equality
+            # check if difference is known to be negative or positive
+            # (e.g., by assumption)
+            if diff.is_negative == True or diff.is_positive == True:
+                return S.false
             if not diff.has(Symbol):
                 know = diff.equals(0)
                 if know == True:
