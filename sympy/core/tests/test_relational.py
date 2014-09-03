@@ -165,6 +165,37 @@ def test_doit():
     assert Eq(x, 0).doit() == Eq(x, 0)
 
 
+@XFAIL
+def test_eq_pos_neg_assumptions():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    np = Symbol('np', nonpositive=True)
+    nn = Symbol('nn', nonnegative=True)
+    assert Eq(p, 0) is S.false
+    assert Ne(p, 0) is S.true
+    assert Eq(n, 0) is S.false
+    assert Ne(n, 0) is S.true
+    assert Eq(np, 0) == Eq(np, 0, evaluate=False)
+    assert Eq(nn, 0) == Eq(nn, 0, evaluate=False)
+    assert Ne(np, 0) == Ne(np, 0, evaluate=False)
+    assert Ne(nn, 0) == Ne(nn, 0, evaluate=False)
+
+
+def test_eq_pos_neg_times_I_assump():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    np = Symbol('np', nonpositive=True)
+    nn = Symbol('nn', nonnegative=True)
+    assert Eq(p*I, 0) is S.false
+    assert Ne(p*I, 0) is S.true
+    assert Eq(n*I, 0) is S.false
+    assert Ne(n*I, 0) is S.true
+    assert Eq(np*I, 0) == Eq(np*I, 0, evaluate=False)
+    assert Eq(nn*I, 0) == Eq(nn*I, 0, evaluate=False)
+    assert Ne(np*I, 0) == Ne(np*I, 0, evaluate=False)
+    assert Ne(nn*I, 0) == Ne(nn*I, 0, evaluate=False)
+
+
 def test_new_relational():
     x = Symbol('x')
 
