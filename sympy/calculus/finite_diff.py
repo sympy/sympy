@@ -129,7 +129,7 @@ def finite_diff_weights(order, x_list, x0):
     """
     # The notation below closely corresponds to the one used in the paper.
     if order < 0:
-        raise ValueError("Negtive derivative order illegal.")
+        raise ValueError("Negative derivative order illegal.")
     if int(order) != order:
         raise ValueError("Non-integer order illegal")
     M = order
