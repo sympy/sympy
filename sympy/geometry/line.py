@@ -1257,9 +1257,12 @@ class Ray(LinearEntity):
                 if p2 is None:
                     c *= S.Pi
             else:
-                c = angle
+                c = angle % (2*S.Pi)
             if not p2:
-                p2 = p1 + Point(1, C.tan(c))
+                left = 1 < 2*c/S.Pi < 3  # is it in quadrant 2 or 3?
+                x = -1 if left else 1
+                y = -C.tan(c) if left else C.tan(c)
+                p2 = p1 + Point(x, y)
         else:
             raise ValueError('A 2nd point or keyword "angle" must be used.')
 
