@@ -115,6 +115,14 @@ class Relational(Boolean, Expr, EvalfMixin):
             if rr is not None:
                 return rr
         return r
+        # Note: In the case of equality, simplier code is possible:
+        #if not dif.has(Symbol):
+        #    rr = dif.equals(0)
+        #    if rr is not None:
+        #        return rr
+        # So perhaps we want to remove _eval_sides and define _eval_simplify
+        # separately for _Inequality and for Equality/Unequality
+
 
     def __nonzero__(self):
         raise TypeError("symbolic boolean expression has no truth value.")
@@ -155,10 +163,17 @@ Rel = Relational
 class Equality(Relational):
     """An equal relation between two objects.
 
-    Represents that two objects are equal.  If they can be shown to be
-    definitively equal, this will reduce to True; if definitively unequal,
-    this will reduce to False.  Otherwise, the relation is maintained as an
-    Equality object.
+    Represents that two objects are equal.  If the two objects can be easily
+    shown to be definitively equal, this will reduce to True; if definitively
+    unequal, (for example by incompatibility) this will reduce to False.
+    Otherwise, the relation is maintained as an Equality object.
+
+    However, note that this class does not attempt simplification to prove
+    equality.  If this is desired, use the ``simplify`` function on the
+    unevaluated Equality.
+
+    Pass the keyword argument ``evaluate=False`` to prevent any reduction to
+    True/False.
 
     Examples
     ========
@@ -167,6 +182,17 @@ class Equality(Relational):
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
     y == x**2 + x
+    >>> Eq(2, 5)
+    False
+    >>> Eq(2, 5, evaluate=False)
+    2 == 5
+    >>> _.doit()
+    False
+    >>> from sympy import simplify, sin, cos
+    >>> Eq(sin(x)**2 + cos(x)**2, 1)
+    sin(x)**2 + cos(x)**2 == 1
+    >>> simplify(_)
+    True
 
     See Also
     ========
@@ -215,11 +241,15 @@ class Equality(Relational):
             elif (lhs.is_real != rhs.is_real and
                   None not in (lhs.is_real, rhs.is_real)):
                 return S.false
-            # Otherwise, see if the difference can be evaluated.
-            r = cls._eval_sides(lhs, rhs)
-            if r is not None:
-                return r
+            # Consider the difference of lhs and rhs.  Here "is_zero" should
+            # detect incompatibilities (e.g., lhs negative and rhs positive).
+            if (isinstance(lhs, Expr) and isinstance(rhs, Expr)
+                r = (lhs - rhs).is_zero
+                if r is not None:
+                    return _sympify(r)
+            # Note: do not attempt simplification; user can call simplify.
 
+        # Return unevaluted
         return Relational.__new__(cls, lhs, rhs, **options)
 
     @classmethod
