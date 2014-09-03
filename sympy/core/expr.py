@@ -221,16 +221,22 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        # Note: currently this `dif` code handles assumptions and the
-        # `_eval_sides` bit deals with simplification.  Some reworking
-        # might be in order.
+        # try to deal with assumptions
         dif = self - other
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
             return sympify(dif.is_nonnegative)
-        r = C.GreaterThan._eval_sides(self, other)
-        if r is not None:
-            return r
+        # try to simplify expressions without symbols
+        if not dif.has(C.Symbol):
+            print("DEBUG: $$$ >=:" + str(dif))
+            know = dif.equals(0)
+            # could be None for don't know: return unevaluated
+            if know == True:
+                return True
+            elif know == False:
+                print("DEBUG: $$$$$$$$$$$$$$$$$$$")
+                return dif.evalf().__ge__(S.zero)
+        # NOTE: what about a complicated with symbols but the symbols go away with simplification?
         return C.GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
@@ -241,16 +247,21 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        # Note: currently this `dif` code handles assumptions and the
-        # `_eval_sides` bit deals with simplification.  Some reworking
-        # might be in order.
+        # try to deal with assumptions
         dif = self - other
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
             return sympify(dif.is_nonpositive)
-        r = C.LessThan._eval_sides(self, other)
-        if r is not None:
-            return r
+        # try to simplify expressions without symbols
+        if not dif.has(C.Symbol):
+            print("DEBUG: $$$ <=:" + str(dif))
+            know = dif.equals(0)
+            # could be None for don't know: return unevaluated
+            if know == True:
+                return True
+            elif know == False:
+                print("DEBUG: $$$$$$$$$$$$$$$$$$$")
+                return dif.evalf().__le__(S.zero)
         return C.LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -261,16 +272,21 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        # Note: currently this `dif` code handles assumptions and the
-        # `_eval_sides` bit deals with simplification.  Some reworking
-        # might be in order.
+        # try to deal with assumptions
         dif = self - other
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
             return sympify(dif.is_positive)
-        r = C.StrictGreaterThan._eval_sides(self, other)
-        if r is not None:
-            return r
+        # try to simplify expressions without symbols
+        if not dif.has(C.Symbol):
+            print("DEBUG: $$$ >:" + str(dif))
+            know = dif.equals(0)
+            # could be None for don't know: return unevaluated
+            if know == True:
+                return False
+            elif know == False:
+                print("DEBUG: $$$$$$$$$$$$$$$$$$$")
+                return dif.evalf().__gt__(S.zero)
         return C.StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
@@ -281,16 +297,21 @@ class Expr(Basic, EvalfMixin):
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
-        # Note: currently this `dif` code handles assumptions and the
-        # `_eval_sides` bit deals with simplification.  Some reworking
-        # might be in order.
         dif = self - other
+        # try to deal with assumptions
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
             return sympify(dif.is_negative)
-        r = C.StrictLessThan._eval_sides(self, other)
-        if r is not None:
-            return r
+        # try to simplify expressions without symbols
+        if not dif.has(C.Symbol):
+            print("DEBUG: $$$ <:" + str(dif))
+            know = dif.equals(0)
+            # could be None for don't know: return unevaluated
+            if know == True:
+                return False
+            elif know == False:
+                print("DEBUG: $$$$$$$$$$$$$$$$$$$")
+                return dif.evalf().__lt__(S.zero)
         return C.StrictLessThan(self, other, evaluate=False)
 
     @staticmethod
