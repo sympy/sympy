@@ -1594,6 +1594,10 @@ def test_round():
     # issue 6914
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
 
+    # issue 7961
+    assert str(S(0.006).round(2)) == '0.01'
+    assert str(S(0.00106).round(4)) == '0.0011'
+
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
