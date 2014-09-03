@@ -165,6 +165,22 @@ def test_doit():
     assert Eq(x, 0).doit() == Eq(x, 0)
 
 
+@XFAIL
+def test_eq_pos_neg_assumptions():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    np = Symbol('np', nonpositive=True)
+    nn = Symbol('nn', nonnegative=True)
+    assert Eq(p, 0) is S.false
+    assert Ne(p, 0) is S.true
+    assert Eq(n, 0) is S.false
+    assert Ne(n, 0) is S.true
+    assert Eq(np, 0) is Eq(np, 0, evaluate=False)
+    assert Eq(nn, 0) is Eq(nn, 0, evaluate=False)
+    assert Ne(np, 0) is Ne(np, 0, evaluate=False)
+    assert Ne(nn, 0) is Ne(nn, 0, evaluate=False)
+
+
 def test_new_relational():
     x = Symbol('x')
 
