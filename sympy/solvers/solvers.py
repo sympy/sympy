@@ -115,10 +115,11 @@ def checksol(f, symbol, sol=None, **flags):
     """Checks whether sol is a solution of equation f == 0.
 
     Input can be either a single symbol and corresponding value
-    or a dictionary of symbols and values. ``f`` can be a single
-    equation or an iterable of equations. A solution must satisfy
-    all equations in ``f`` to be considered valid; if a solution
-    does not satisfy any equation, False is returned; if one or
+    or a dictionary of symbols and values. When given as a dictionary
+    and flag ``simplify=True``, the values in the dictionary will be
+    simplified. ``f`` can be a single equation or an iterable of equations.
+    A solution must satisfy all equations in ``f`` to be considered valid;
+    if a solution does not satisfy any equation, False is returned; if one or
     more checks are inconclusive (and none are False) then None
     is returned.
 
@@ -166,7 +167,7 @@ def checksol(f, symbol, sol=None, **flags):
     elif isinstance(symbol, dict):
         sol = symbol
     else:
-        msg = 'Expecting sym, val or {sym: val}, None but got %s, %s'
+        msg = 'Expecting (sym, val) or ({sym: val}, None) but got (%s, %s)'
         raise ValueError(msg % (symbol, sol))
 
     if iterable(f):
@@ -1451,7 +1452,7 @@ def _solve_system(exprs, symbols, **flags):
         dens.update(denoms(g, symbols))
         i, d = _invert(g, *symbols)
         g = d - i
-        g = exprs[j] = g.as_numer_denom()[0]
+        g = g.as_numer_denom()[0]
         if manual:
             failed.append(g)
             continue
@@ -1485,7 +1486,8 @@ def _solve_system(exprs, symbols, **flags):
                 result = solve_linear_system(matrix, *symbols, **flags)
             if result:
                 # it doesn't need to be checked but we need to see
-                # that it didn't set any denominators to 0
+                # that it didn't set any denominators to 0; the simplification
+                # is also handled by checksol
                 if any(checksol(d, result, **flags) for d in dens):
                     result = None
             if failed:
@@ -1537,8 +1539,26 @@ def _solve_system(exprs, symbols, **flags):
                     # or not, so let solve resolve that. A list of dictionaries
                     # is going to always be returned from here.
                     #
-                    # We do not check the solution obtained from polys, either.
                     result = [dict(list(zip(solved_syms, r))) for r in result]
+
+            if result:
+                # check & simplify nonlinear solutions
+                # simplify first
+                if flags.get('simplfy', True):
+                    for sol in result:
+                        for k in sol:
+                            sol[k] = simplify(sol[k])
+                flags['simplify'] = False  # don't need to do so in checksol now
+                if check:
+                    ok = []
+                    for sol in result:
+                        if any(checksol(e, sol, **flags) is False for e in exprs):
+                            continue
+                        if any(checksol(d, sol, **flags) for d in dens):
+                            continue
+                        ok.append(sol)
+                    result = ok
+                    del ok
 
     if failed:
         # For each failed equation, see if we can solve for one of the
