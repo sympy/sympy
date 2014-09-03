@@ -965,33 +965,19 @@ class Mul(Expr, AssocOp):
         when_multiple=None)
 
     def _eval_is_zero(self):
-        zero = None
-        bound = True
-        for a in self.args:
-            if a.is_zero:
-                zero = True
-            elif not a.is_bounded:  # None or False
-                return  # (0*oo).is_zero is None
-        return zero
-
-    def _eval_is_nonzero(self):
         zero = unbound = False
         for a in self.args:
             if a.is_zero:
                 zero = True
-            elif a.is_zero is None:
-                return  # might be zero or nonzero
-            elif a.is_unbounded:
+                if unbound:  # 0*oo is nan and nan.is_zero is None
+                    return
+            elif zero is False and a.is_zero is None:
+                zero = None
+            elif not a.is_bounded:
                 unbound = True
-            elif a.is_unbounded is None:
-                # it *could* be True but this is only a problem
-                # if we see a zero
-                unbound = True
-            if unbound == zero == True:
-                # Since 0*oo = nan and nan.is_nonzero is None, if we've seen a
-                # zero and a factor that could be unbounded, we are done
-                return
-        return not zero
+                if zero:  # 0*oo is nan and nan.is_zero is None
+                    return
+        return zero
 
     def _eval_is_integer(self):
         is_rational = self.is_rational
