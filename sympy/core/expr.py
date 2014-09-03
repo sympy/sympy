@@ -2426,9 +2426,7 @@ class Expr(Basic, EvalfMixin):
                         if newn != ngot:
                             ndo = n + (n - ngot)*more/(newn - ngot)
                             s1 = self._eval_nseries(x, n=ndo, logx=logx)
-                            print(1)
                             while s1.getn() < n:
-                                print(2)
                                 s1 = self._eval_nseries(x, n=ndo, logx=logx)
                                 ndo += 1
                             break
