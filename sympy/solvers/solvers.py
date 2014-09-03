@@ -391,7 +391,7 @@ def solve(f, *symbols, **flags):
             do a fast numerical check if ``f`` has only one symbol.
         'minimal=True (default is False)'
             a very fast, minimal testing.
-        'warning=True (default is False)'
+        'warn=True (default is False)'
             show a warning if checksol() could not conclude.
         'simplify=True (default)'
             simplify all but cubic and quartic solutions before
@@ -988,7 +988,7 @@ def solve(f, *symbols, **flags):
 
     if check and solution:
 
-        warning = flags.get('warn', False)
+        warn = flags.get('warn', False)
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
         if type(solution) is list:
@@ -1043,7 +1043,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(solution, (Relational, And, Or)):
             if len(symbols) != 1:
                 raise ValueError("Length should be 1")
-            if warning and symbols[0].assumptions0:
+            if warn and symbols[0].assumptions0:
                 warnings.warn(filldedent("""
                     \tWarning: assumptions about variable '%s' are
                     not handled currently.""" % symbols[0]))
@@ -1053,7 +1053,7 @@ def solve(f, *symbols, **flags):
             raise TypeError('Unrecognized solution')  # improve the checker
 
         solution = no_False
-        if warning and got_None:
+        if warn and got_None:
             warnings.warn(filldedent("""
                 \tWarning: assumptions concerning following solution(s)
                 can't be checked:""" + '\n\t' +
