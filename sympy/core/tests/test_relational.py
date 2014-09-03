@@ -165,7 +165,6 @@ def test_doit():
     assert Eq(x, 0).doit() == Eq(x, 0)
 
 
-@XFAIL
 def test_eq_pos_neg_assumptions():
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
