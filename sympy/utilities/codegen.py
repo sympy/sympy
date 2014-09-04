@@ -769,7 +769,7 @@ class FCodeGen(CodeGen):
         args = ", ".join("%s" % self._get_symbol(arg.name)
                         for arg in routine.arguments)
 
-        call_sig = "{}({})\n".format(routine.name, args)
+        call_sig = "{0}({1})\n".format(routine.name, args)
         # Fortran 95 requires all lines be less than 132 characters, so wrap
         # this line before appending.
         call_sig = ' &\n'.join(textwrap.wrap(call_sig,
