@@ -3032,6 +3032,8 @@ class Expr(Basic, EvalfMixin):
             # use str or else it won't be a float
             return C.Float(str(rv), digits_needed)
         else:
+            if not allow and rv > self:
+                allow += 1
             return C.Float(rv, allow)
 
 
