@@ -116,6 +116,14 @@ def test_autowrap_args():
     assert f.args == "y, x, z"
     assert f.returns == "z"
 
+    long_x, long_y = symbols('a_very_long_symbol_which_requires_wrapping',
+                             'b_another_very_long_symbol_with_a_nice_name')
+    f = autowrap(Eq(z, long_x + long_y), backend = 'dummy',
+                 args =[long_x, long_y])
+    assert f.returns == "z"
+    assert f.args == ("a_very_long_symbol_which_requires_wrapping,"
+                      " b_another_very_long_symbol_with_a_nice_name")
+
 
 def test_autowrap_store_files():
     x, y = symbols('x y')

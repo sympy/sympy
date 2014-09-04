@@ -768,6 +768,31 @@ class FCodeGen(CodeGen):
         args = ", ".join("%s" % self._get_symbol(arg.name)
                 for arg in routine.arguments)
 
+        # if function declaration is too long to fit on one line
+        if (len(args) + len(routine.name) + 3) > 78:
+            # first function line can only be (78 - len(routine.name)) long
+            # the + 3 are 2 whitespaces and the open parens
+            
+            line_end = 77 - (len(routine.name) + 3)
+
+            arg_lines = []
+            while len(args) > line_end:
+                line_idx = args[:line_end].rfind(" ")
+                # look for first whitespace, starting from the right
+
+                if (line_idx == -1) or (line_idx > line_end):
+                    raise CodeGenError(
+                        "Cannot split the arguments of your function into"
+                        " 78 length lines")
+                
+                arg_lines.append("%s &" %args[:line_idx])
+                args = args[line_idx:]
+                line_end = 77
+                # subsequent lines can be up to 77 characters long
+
+            arg_lines.append("%s" %args)
+            args = args = "\n".join(arg_lines)
+
         # name of the routine + arguments
         code_list.append("%s(%s)\n" % (routine.name, args))
         code_list = [ " ".join(code_list) ]
