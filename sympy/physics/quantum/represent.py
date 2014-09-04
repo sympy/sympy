@@ -129,9 +129,9 @@ def represent(expr, **options):
     >>> x = XKet()
     >>> y = XBra('y')
     >>> represent(X*x)
-    x*DiracDelta(x - x_2)
+    -x*DiracDelta(x - x_2)*Heaviside(-x - oo) + x*DiracDelta(x - x_2)
     >>> represent(X*x*y)
-    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+    -x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)*Heaviside(-x - oo) + x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
 
     """
 
@@ -367,7 +367,7 @@ def integrate_result(orig_expr, result, **options):
     x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2),
     ...     unities=[1])
-    x*DiracDelta(x - x_2)
+    -x*DiracDelta(x - x_2)*Heaviside(-x - oo) + x*DiracDelta(x - x_2)
 
     """
     if not isinstance(result, Expr):

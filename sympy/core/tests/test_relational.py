@@ -130,10 +130,6 @@ def test_bool():
     assert Ge(1, 1) is S.true
     assert Eq(I, 2) is S.false
     assert Ne(I, 2) is S.true
-    assert Gt(I, 2) not in [S.true, S.false]
-    assert Ge(I, 2) not in [S.true, S.false]
-    assert Lt(I, 2) not in [S.true, S.false]
-    assert Le(I, 2) not in [S.true, S.false]
     a = Float('.000000000000000000001', '')
     b = Float('.0000000000000000000001', '')
     assert Eq(pi + a, pi + b) is S.false
@@ -439,12 +435,8 @@ def test_nan_equality_exceptions():
     assert Unequality(random.choice(A), nan) is S.true
 
 
-@XFAIL
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
-    # currently fails because rhs reduces to bool but the lhs does not
-    assert Lt(x, oo) == (x < oo)
-
     # We test all combinations from a set
     # FIXME: could replace with random selection after test passes
     A = (x, y, S(0), S(1)/3, pi, oo, -oo)
@@ -456,7 +448,6 @@ def test_inequalities_symbol_name_same():
             assert Le(a, b) == (a <= b)
 
 
-@XFAIL
 def test_inequalities_symbol_name_same_complex():
     """Using the operator and functional forms should give same results.
     With complex non-real numbers, both should raise errors.
@@ -472,3 +463,27 @@ def test_inequalities_symbol_name_same_complex():
         raises(TypeError, lambda: a >= I)
         raises(TypeError, lambda: Le(a, I))
         raises(TypeError, lambda: a <= I)
+
+
+def test_inequalities_wild_longform_no_gotcha_flip():
+    # x < p might flip to p > x (see "gotcha") but Lt() should not
+    from sympy.core.symbol import Wild
+    p, q = symbols('p,q', cls=Wild)
+    # here's particular failure I encountered which gave `q_ > x`
+    e = Lt(x, y)
+    e = e.subs({y: q})
+    assert str(e) == 'x < q_'
+    # and some generalized tests
+    assert str(x < p) == 'x < p_' or 'p_ > x'
+    assert str(x > p) == 'x > p_' or 'p_ < x'
+    assert str(x <= p) == 'x <= p_' or 'p_ >= x'
+    assert str(x >= p) == 'x >= p_' or 'p_ <= x'
+    assert str(Lt(x, p)) == 'x < p_'
+    assert str(Gt(x, p)) == 'x > p_'
+    assert str(Le(x, p)) == 'x <= p_'
+    assert str(Ge(x, p)) == 'x >= p_'
+
+def test_inequalities_eval_relation_no_gotcha_flip():
+    # Here's one particular failure related to the above tests
+    e = Lt(1, x)
+    assert str(e._eval_relation(1, x)) == '1 < x'

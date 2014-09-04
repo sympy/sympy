@@ -435,7 +435,7 @@ def solve(f, *symbols, **flags):
     * boolean or univariate Relational
 
         >>> solve(x < 3)
-        And(im(x) == 0, re(x) < 3)
+        And(-oo < re(x), im(x) == 0, re(x) < 3)
 
     * to always get a list of solution mappings, use flag dict=True
 
