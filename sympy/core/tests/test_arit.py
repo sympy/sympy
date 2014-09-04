@@ -2,11 +2,12 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan, cbrt
+        sign, im, nan, cbrt, Dummy
 )
 from sympy.core.evalf import PrecisionExhausted
 from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
+from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
 
@@ -1656,37 +1657,63 @@ def test_mul_coeff():
     assert p**2*x*p*y*p*x*p**2 == x**2*y
 
 
-def test_mul_nonzero():
-    # is_zero detection
-    nz = Symbol('a', real=True, zero=False, bounded=True)
-    r = Symbol('b', real=True)
-    c = Symbol('c', real=False, complex=True, bounded=True)
-    i = Symbol('i', imaginary=True, bounded=True)
-    e1 = Mul(nz, r, c, evaluate=False)
-    e2 = Mul(r, nz, c, evaluate=False)
-    e3 = Mul(nz, c, evaluate=False)
-    e4 = Mul(nz, i, c, evaluate=False)
-    assert e1.is_imaginary is None
-    assert e2.is_imaginary is None
-    assert e3.is_imaginary is None
-    assert e4.is_imaginary is False
-    assert e1.is_real is None
-    assert e2.is_real is None
-    assert e3.is_real is False
-    assert e4.is_imaginary is False
+def test_mul_zero_detection():
+    nz = Dummy(real=True, zero=False, bounded=True)
+    r = Dummy(real=True)
+    c = Dummy(real=False, complex=True, bounded=True)
+    c2 = Dummy(real=False, complex=True, bounded=True)
+    i = Dummy(imaginary=True, bounded=True)
+    e = nz*r*c
+    assert e.is_imaginary is None
+    assert e.is_real is None
+    e = nz*c
+    assert e.is_imaginary is None
+    assert e.is_real is False
+    e = nz*i*c
+    assert e.is_imaginary is False
+    assert e.is_real is None
+    # check for more than one complex; it is important to use
+    # uniquely named Symbols to ensure that two factors appear
+    # e.g. if the symbols have the same name they just become
+    # a single factor, a power.
+    e = nz*i*c*c2
+    assert e.is_imaginary is None
+    assert e.is_real is None
 
+    # _eval_is_real and _eval_is_zero both employ trapping of the
+    # zero value so args should be tested in both directions and to
+    # AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
 
-    i = Symbol('i', integer=True, zero=False, bounded=True)
-    z = Symbol('z', nonzero=False)
-    b = Symbol('b', bounded=True)
-    assert (2*i).is_nonzero
-    assert (2*x).is_nonzero is None
-    assert Mul(b, z, evaluate=False).is_nonzero is False
-    assert Mul(b, z, x, evaluate=False).is_nonzero is None
-    assert Mul(b, i, evaluate=False).is_nonzero is None
-    assert Mul(b, i, x, evaluate=False).is_nonzero is None
+    # real is unknonwn
+    def test(z, b, e):
+        if z.is_zero and b.is_bounded:
+            assert e.is_real and e.is_zero
+        else:
+            assert e.is_real == e.is_zero == None
 
-    assert Mul(oo, i, evaluate=False).is_nonzero
-    assert Mul(oo, i, x, evaluate=False).is_nonzero is None
-    assert Mul(oo, z, evaluate=False).is_nonzero is None
-    assert Mul(oo, z, x, evaluate=False).is_nonzero is None
+    for iz, ib in cartes(*[[True, False, None]]*2):
+        z = Dummy(nonzero=iz)
+        b = Dummy(bounded=ib)
+        e = Mul(z, b, evaluate=False)
+        test(z, b, e)
+        z = Dummy(nonzero=iz)
+        b = Dummy(bounded=ib)
+        e = Mul(b, z, evaluate=False)
+        test(z, b, e)
+
+    # real is True
+    def test(z, b, e):
+        if z.is_zero and not b.is_bounded:
+            assert e.is_real is None
+        else:
+            assert e.is_real
+
+    for iz, ib in cartes(*[[True, False, None]]*2):
+        z = Dummy('z', nonzero=iz, real=True)
+        b = Dummy('b', bounded=ib, real=True)
+        e = Mul(z, b, evaluate=False)
+        test(z, b, e)
+        z = Dummy('z', nonzero=iz, real=True)
+        b = Dummy('b', bounded=ib, real=True)
+        e = Mul(b, z, evaluate=False)
+        test(z, b, e)

@@ -967,16 +967,18 @@ class Mul(Expr, AssocOp):
     def _eval_is_zero(self):
         zero = unbound = False
         for a in self.args:
-            if a.is_zero:
+            z = a.is_zero
+            if z:
+                if unbound:
+                    return  # 0*oo is nan and nan.is_zero is None
                 zero = True
-                if unbound:  # 0*oo is nan and nan.is_zero is None
-                    return
-            elif zero is False and a.is_zero is None:
-                zero = None
-            elif not a.is_bounded:
-                unbound = True
-                if zero:  # 0*oo is nan and nan.is_zero is None
-                    return
+            else:
+                if not a.is_bounded:
+                    if zero:
+                        return  # 0*oo is nan and nan.is_zero is None
+                    unbound = True
+                if zero is False and z is None:  # trap None
+                    zero = None
         return zero
 
     def _eval_is_integer(self):
@@ -1006,10 +1008,14 @@ class Mul(Expr, AssocOp):
             elif t.is_imaginary:
                 real = not real
             elif t.is_real:
-                if zero is False:
-                    zero = fuzzy_not(t.is_nonzero)
-                    if zero:
-                        return self.is_zero  # let _eval_is_zero decide
+                if not zero:
+                    z = t.is_zero
+                    if not z and zero is False:
+                        zero = z
+                    elif z:
+                        if all(a.is_bounded for a in self.args):
+                            return True
+                        return
             elif t.is_real is False:
                 if one_neither:
                     return  # complex terms might cancel
