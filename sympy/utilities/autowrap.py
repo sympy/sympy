@@ -75,6 +75,7 @@ import shutil
 import tempfile
 from subprocess import STDOUT, CalledProcessError
 
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument, InputArgument,
@@ -401,11 +402,11 @@ def _get_code_wrapper_class(backend):
         'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
-
+@cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
-    expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
-        verbose=False, helpers=[]):
+    expr, language='F95', backend='f2py', tempdir=None, args=None, flags=(),
+        verbose=False, helpers=()):
     """Generates python callable binaries based on the math expression.
 
     expr
