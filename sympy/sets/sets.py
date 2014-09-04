@@ -44,14 +44,14 @@ class Set(Basic):
     @staticmethod
     def _infimum_key(expr):
         """
-        Return infimum (if possible) else None.
+        Return infimum (if possible) else S.Infinity.
         """
         try:
             infimum = expr.inf
             assert infimum.is_comparable
         except (NotImplementedError,
                 AttributeError, AssertionError, ValueError):
-            infimum = None
+            infimum = S.Infinity
         return infimum
 
     def union(self, other):

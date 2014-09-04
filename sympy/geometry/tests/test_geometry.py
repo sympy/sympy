@@ -339,6 +339,11 @@ def test_line():
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
 
+    # issue 7963
+    assert Ray((0, 0), angle=3*pi/4) == Ray((0, 0), (-1, 1))
+    assert Ray((0, 0), angle=5*pi/4) == Ray((0, 0), (-1, -1))
+    assert Ray((0, 0), angle=-pi/4) == Ray((0, 0), (1, -1))
+
     r1 = Ray(p1, Point(-1, 5))
     r2 = Ray(p1, Point(-1, 1))
     r3 = Ray(p3, p5)
@@ -900,6 +905,7 @@ def test_ellipse():
         Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is True
     assert c1.is_tangent(
         Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) is False
+    assert Circle(Point(5, 5), 3).is_tangent(Circle(Point(0, 5), 1)) is False
 
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
         [Line(Point(0, 0), Point(77/25, 132/25)),
