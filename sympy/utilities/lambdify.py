@@ -612,18 +612,26 @@ def implemented_function(symfunc, implementation):
 
 
 def state_space_lambdify(f_vect, t, x_vect, u_vect, *args):
-    """
-    Given a state space description of a dynamic system, create
-    a lambda funtion to simulate it with.
+    """Convert state space description to lambda function.
 
-    Input
-        f_vect : sympy matrix of expressions for
-            the derivative of x (continuous),
-            or for the change in x (discrete)
-        t : the indenpendent time-like variable
-        x_vect : sympy matrix of symbols in x vector
-        u_vect : sympy matrix of symbols in u vector
-        *args: other parameters that are not states or inputs
+    Given a state space description of a dynamic system, create
+    a lambda function with a signature compatible with
+    scipy.ode.integrate: f(t, x, u, *args).
+
+    Parameters
+    ----------
+    f_vect : sympy.Matrix
+        Column vector of expressions for
+        the derivative of x (continuous),
+        or for the change in x (discrete).
+    t : sympy.Symbol
+        The independent time-like variable.
+    x_vect : sympy.Matrix
+        Column vector of symbols in the x vector.
+    u_vect : sympy.Matrix
+        Column vector of symbols in the u vector.
+    *args: Tuple
+        Additioinal symbols in f_vect that are not states or inputs.
     """
     from sympy.matrices import DeferredVector
     x = DeferredVector('x')
