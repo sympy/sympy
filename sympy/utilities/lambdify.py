@@ -609,3 +609,25 @@ def implemented_function(symfunc, implementation):
     # We need to attach as a method because symfunc will be a class
     symfunc._imp_ = staticmethod(implementation)
     return symfunc
+
+
+def state_space_lambdify(f_vect, t, x_vect, u_vect, *args):
+    """
+    Given a state space description of a dynamic system, create
+    a lambda funtion to simulate it with.
+
+    Input
+        f_vect : sympy matrix of expressions for
+            the derivative of x (continuous),
+            or for the change in x (discrete)
+        t : the indenpendent time-like variable
+        x_vect : sympy matrix of symbols in x vector
+        u_vect : sympy matrix of symbols in u vector
+        *args: other parameters that are not states or inputs
+    """
+    from sympy.matrices import DeferredVector
+    x = DeferredVector('x')
+    u = DeferredVector('u')
+    ss_subs = {x_vect[i]: x[i] for i in range(len(x_vect))}
+    ss_subs.update({u_vect[i]: u[i] for i in range(len(u_vect))})
+    return lambdify((t, x, u) + args, f_vect.subs(ss_subs), default_array=True)

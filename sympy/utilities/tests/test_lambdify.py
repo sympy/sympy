@@ -493,3 +493,16 @@ def test_issue_2790():
     assert lambdify((x, (y, z)), x + y)(1, (2, 4)) == 3
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
+
+
+#================== Test scipy support =============================
+def test_state_space_lambdify():
+    from sympy.utilities.lambdify import state_space_lambdify
+    x1, x2, u1, u2, a, b, t = symbols('x1, x2, u1, u2, a, b, t')
+    x_vect = Matrix([x1, x2])
+    u_vect = Matrix([u1, u2])
+    f_vect = Matrix([1, x1 + x2 + u1 + u2 + a + b])
+    f = state_space_lambdify(f_vect, t, x_vect, u_vect, a, b)
+    xdot = f(0, [1,2],[3,4],5,6)
+    assert(xdot[0] ==  1)
+    assert(xdot[1] ==  21)
