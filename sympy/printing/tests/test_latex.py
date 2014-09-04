@@ -20,7 +20,7 @@ from sympy.printing.latex import latex, translate
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, Xor
 from sympy.core.trace import Tr
 
 x, y, z, t, a, b = symbols('x y z t a b')
@@ -1066,6 +1066,10 @@ def test_boolean_args_order():
 
     expr = Equivalent(*syms)
     assert latex(expr) == 'a \\equiv b \\equiv c \\equiv d \\equiv e \\equiv f'
+
+    expr = Xor(*syms)
+    assert latex(expr) == 'a \\veebar b \\veebar c \\veebar d \\veebar e \\veebar f'
+
 
 
 def test_imaginary():

@@ -18,10 +18,21 @@ def apart(f, x=None, full=False, **options):
     """
     Compute partial fraction decomposition of a rational function.
 
-    Given a rational function ``f`` compute partial fraction decomposition
-    of ``f``. Two algorithms are available: one is based on undetermined
-    coefficients method and the other is Bronstein's full partial fraction
-    decomposition algorithm.
+    Given a rational function ``f``, computes the partial fraction
+    decomposition of ``f``. Two algorithms are available: One is based on the
+    undertermined coefficients method, the other is Bronstein's full partial
+    fraction decomposition algorithm.
+
+    The undetermined coefficients method (selected by ``full=False``) uses
+    polynomial factorization (and therefore accepts the same options as
+    factor) for the denominator. Per default it works over the rational
+    numbers, therefore decomposition of denominators with non-rational roots
+    (e.g. irrational, complex roots) is not supported by default (see options
+    of factor).
+
+    Bronstein's algorithm can be selected by using ``full=True`` and allows a
+    decomposition of denominators with non-rational roots. A human-readable
+    result can be obtained via ``doit()`` (see examples below).
 
     Examples
     ========
@@ -34,12 +45,23 @@ def apart(f, x=None, full=False, **options):
     >>> apart(y/(x + 2)/(x + 1), x)
     -y/(x + 2) + y/(x + 1)
 
-    You can choose Bronstein's algorithm by setting ``full=True``:
+    The undetermined coefficients method does not provide a result when the
+    denominators roots are not rational:
 
     >>> apart(y/(x**2 + x + 1), x)
     y/(x**2 + x + 1)
+
+    You can choose Bronstein's algorithm by setting ``full=True``:
+
     >>> apart(y/(x**2 + x + 1), x, full=True)
     RootSum(_w**2 + _w + 1, Lambda(_a, (-2*_a*y/3 - y/3)/(-_a + x)))
+
+    Calling ``doit()`` yields a human-readable result:
+
+    >>> apart(y/(x**2 + x + 1), x, full=True).doit()
+    (-y/3 - 2*y*(-1/2 - sqrt(3)*I/2)/3)/(x + 1/2 + sqrt(3)*I/2) + (-y/3 -
+        2*y*(-1/2 + sqrt(3)*I/2)/3)/(x + 1/2 - sqrt(3)*I/2)
+
 
     See Also
     ========
