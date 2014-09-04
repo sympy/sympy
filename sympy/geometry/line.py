@@ -11,10 +11,12 @@ Segment
 from __future__ import print_function, division
 
 from sympy.core import S, C, sympify, Dummy
-from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
-    sqrt
 from sympy.core.logic import fuzzy_and
 from sympy.core.exprtools import factor_terms
+from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff, \
+    sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -1259,9 +1261,10 @@ class Ray(LinearEntity):
             else:
                 c = angle % (2*S.Pi)
             if not p2:
-                left = 1 < 2*c/S.Pi < 3  # is it in quadrant 2 or 3?
-                x = -1 if left else 1
-                y = -C.tan(c) if left else C.tan(c)
+                m = 2*c/S.Pi
+                left = And(1 < m, m < 3)  # is it in quadrant 2 or 3?
+                x = Piecewise((-1, left), (1, True))
+                y = Piecewise((-C.tan(c), left), (C.tan(c), True))
                 p2 = p1 + Point(x, y)
         else:
             raise ValueError('A 2nd point or keyword "angle" must be used.')
