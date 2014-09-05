@@ -228,7 +228,7 @@ def test_point3D():
     assert p.translate(z=1) == Point3D(1, 1, 2)
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
-def test_line():
+def test_line_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
     p3 = Point(x1, x1)
@@ -340,9 +340,12 @@ def test_line():
     raises(ValueError, lambda: Ray((1, 1), 1))
 
     # issue 7963
-    assert Ray((0, 0), angle=3*pi/4) == Ray((0, 0), (-1, 1))
-    assert Ray((0, 0), angle=5*pi/4) == Ray((0, 0), (-1, -1))
-    assert Ray((0, 0), angle=-pi/4) == Ray((0, 0), (1, -1))
+    r = Ray((0, 0), angle=x)
+    assert r.subs(x, 3*pi/4) == Ray((0, 0), (-1, 1))
+    assert r.subs(x, 5*pi/4) == Ray((0, 0), (-1, -1))
+    assert r.subs(x, -pi/4) == Ray((0, 0), (1, -1))
+    assert r.subs(x, pi/2) == Ray((0, 0), (0, 1))
+    assert r.subs(x, -pi/2) == Ray((0, 0), (0, -1))
 
     r1 = Ray(p1, Point(-1, 5))
     r2 = Ray(p1, Point(-1, 1))
@@ -811,7 +814,7 @@ def test_plane():
 
     assert pl3.random_point() in pl3
 
-def test_ellipse():
+def test_ellipse_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
     p4 = Point(0, 1)
