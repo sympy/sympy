@@ -411,12 +411,13 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
-        if self.base.is_real is False:  # we already know it's not imag
+        if real_b is False:  # we already know it's not imag
             i = C.arg(self.base)*self.exp/S.Pi
             return i.is_integer
 
     def _eval_is_complex(self):
-        return fuzzy_group(a.is_complex for a in self.args) or None
+        if all(a.is_complex for a in self.args):
+            return True
 
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:

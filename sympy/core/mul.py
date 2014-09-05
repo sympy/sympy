@@ -964,6 +964,7 @@ class Mul(Expr, AssocOp):
         (a.is_rational for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
+    # XXX delete when PR #7920 is merged
     _eval_is_nonzero = lambda self: _fuzzy_group_inverse(
         a.is_nonzero for a in self.args)
 

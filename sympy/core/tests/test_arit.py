@@ -1165,8 +1165,6 @@ def test_Mul_is_imaginary_real():
     assert (e**3).is_real is False
     assert (e**4).is_real
     assert (e**5).is_real is False
-
-    # why can't this be figured out with adding the _eval_is_complex routine?
     assert (e**3).is_complex
 
     assert (r*i).is_imaginary is None
@@ -1622,6 +1620,7 @@ def test_float_int():
     assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == \
         12345678901234567891
 
+
 def test_issue_6611a():
     assert Mul.flatten([3**Rational(1, 3),
         Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
@@ -1643,11 +1642,13 @@ def test_denest_add_mul():
     assert 2*eq == Mul(-4, x - 2, evaluate=False)
     assert -eq == Mul(2, x - 2, evaluate=False)
 
+
 def test_mul_coeff():
     # It is important that all Numbers be removed from the seq;
     # This can be tricky when powers combine to produce those numbers
     p = exp(I*pi/3)
     assert p**2*x*p*y*p*x*p**2 == x**2*y
+
 
 def test_mul_nonzero():
     i = Symbol('i', integer=True, zero=False)
