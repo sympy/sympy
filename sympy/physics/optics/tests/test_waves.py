@@ -27,17 +27,13 @@ def test_twave():
     assert w3.time_period == 1/f
     assert w3.angular_velocity == 2*pi*f
     assert w3.wavenumber == 2*pi*f*n/c
-    
     assert simplify(w3.rewrite('sin') - sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
-     + A2**2)*sin(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + atan2(A1*cos(phi1)
-     + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)) + pi/2)) == 0
-        
+    + A2**2)*sin(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + atan2(A1*cos(phi1)
+    + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)) + pi/2)) == 0
     assert w3.rewrite('pde') == epsilon*mu*Derivative(E(x, t), t, t) + Derivative(E(x, t), x, x)
-    
-    assert w3.rewrite(cos) == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) 
+    assert w3.rewrite(cos) == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
     + A2**2)*cos(pi*f*n*x*s/(149896229*m) - 2*pi*f*t + atan2(A1*cos(phi1)
     + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)))
-
-    assert w3.rewrite('exp') == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) 
-    + A2**2)*exp(I*(pi*f*n*x*s/(149896229*m) - 2*pi*f*t 
+    assert w3.rewrite('exp') == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
+    + A2**2)*exp(I*(pi*f*n*x*s/(149896229*m) - 2*pi*f*t
     + atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))))
