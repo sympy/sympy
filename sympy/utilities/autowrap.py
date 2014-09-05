@@ -426,17 +426,17 @@ def autowrap(
         Sequence of the formal parameters of the generated code, if ommited the
         function signature is determined by the code generator.
     flags
-        Additional option flags that will be passed to the backend
+        Tuple of additional option flags that will be passed to the backend
     verbose
         If True, autowrap will not mute the command line backends.  This can be
         helpful for debugging.
     helpers
         Used to define auxillary expressions needed for the main expr.  If the
         main expression need to do call a specialized function it should be put
-        in the ``helpers`` list.  Autowrap will then make sure that the compiled
-        main expression can link to the helper routine.  Items should be tuples
-        with (<funtion_name>, <sympy_expression>, <arguments>).  It is
-        mandatory to supply an argument sequence to helper routines.
+        in the ``helpers`` tuple.  Autowrap will then make sure that the
+        compiled main expression can link to the helper routine.  Items should
+        also be tuples with (<funtion_name>, <sympy_expression>, <arguments>).
+        It is mandatory to supply an argument sequence to helper routines.
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
