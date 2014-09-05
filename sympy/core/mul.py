@@ -964,9 +964,23 @@ class Mul(Expr, AssocOp):
         (a.is_rational for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
-    # XXX delete when PR #7920 is merged
-    _eval_is_nonzero = lambda self: _fuzzy_group_inverse(
-        a.is_nonzero for a in self.args)
+
+    def _eval_is_zero(self):
+        zero = unbound = False
+        for a in self.args:
+            z = a.is_zero
+            if z:
+                if unbound:
+                    return  # 0*oo is nan and nan.is_zero is None
+                zero = True
+            else:
+                if not a.is_bounded:
+                    if zero:
+                        return  # 0*oo is nan and nan.is_zero is None
+                    unbound = True
+                if zero is False and z is None:  # trap None
+                    zero = None
+        return zero
 
     def _eval_is_integer(self):
         is_rational = self.is_rational
@@ -1130,18 +1144,6 @@ class Mul(Expr, AssocOp):
             if a is None:
                 return
         return False
-
-    def _eval_is_zero(self):
-        zero = None
-        for a in self.args:
-            if a.is_zero:
-                zero = True
-                continue
-            bound = a.is_bounded
-            if not bound:
-                return bound
-        if zero:
-            return True
 
     def _eval_is_positive(self):
         """Return True if self is positive, False if not, and None if it

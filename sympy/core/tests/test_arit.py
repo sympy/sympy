@@ -1655,5 +1655,5 @@ def test_mul_nonzero():
     n = Symbol('n', nonzero=False)
     assert (2*i).is_nonzero
     assert (2*x).is_nonzero is None
-    assert Mul(x, n, evaluate=False).is_nonzero is False
+    assert Mul(x, n, evaluate=False).is_nonzero is None
     assert Mul(n, x, evaluate=False).is_nonzero is False
