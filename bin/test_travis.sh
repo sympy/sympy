@@ -32,7 +32,7 @@ EOF
         cd ..
         bin/doctest doc/
     elif [[ "${TEST_SLOW}" == "true" ]]; then
-        cat << EOF | python
+        cat << EOF | SYMPY_CACHE_SIZE=None python
 import sympy
 if not sympy.test(split='${SPLIT}', slow=True, timeout=180):
     # Travis times out if no activity is seen for 10 minutes. It also times
