@@ -130,10 +130,10 @@ def test_bool():
     assert Ge(1, 1) is S.true
     assert Eq(I, 2) is S.false
     assert Ne(I, 2) is S.true
-    assert Gt(I, 2) not in [S.true, S.false]
-    assert Ge(I, 2) not in [S.true, S.false]
-    assert Lt(I, 2) not in [S.true, S.false]
-    assert Le(I, 2) not in [S.true, S.false]
+    raises(TypeError, lambda: Gt(I, 2))
+    raises(TypeError, lambda: Ge(I, 2))
+    raises(TypeError, lambda: Lt(I, 2))
+    raises(TypeError, lambda: Le(I, 2))
     a = Float('.000000000000000000001', '')
     b = Float('.0000000000000000000001', '')
     assert Eq(pi + a, pi + b) is S.false
@@ -163,6 +163,36 @@ def test_doit():
     assert Lt(nn, 0).doit() is S.false
 
     assert Eq(x, 0).doit() == Eq(x, 0)
+
+
+def test_eq_pos_neg_assumptions():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    np = Symbol('np', nonpositive=True)
+    nn = Symbol('nn', nonnegative=True)
+    assert Eq(p, 0) is S.false
+    assert Ne(p, 0) is S.true
+    assert Eq(n, 0) is S.false
+    assert Ne(n, 0) is S.true
+    assert Eq(np, 0) == Eq(np, 0, evaluate=False)
+    assert Eq(nn, 0) == Eq(nn, 0, evaluate=False)
+    assert Ne(np, 0) == Ne(np, 0, evaluate=False)
+    assert Ne(nn, 0) == Ne(nn, 0, evaluate=False)
+
+
+def test_eq_pos_neg_times_I_assump():
+    p = Symbol('p', positive=True)
+    n = Symbol('n', negative=True)
+    np = Symbol('np', nonpositive=True)
+    nn = Symbol('nn', nonnegative=True)
+    assert Eq(p*I, 0) is S.false
+    assert Ne(p*I, 0) is S.true
+    assert Eq(n*I, 0) is S.false
+    assert Ne(n*I, 0) is S.true
+    assert Eq(np*I, 0) == Eq(np*I, 0, evaluate=False)
+    assert Eq(nn*I, 0) == Eq(nn*I, 0, evaluate=False)
+    assert Ne(np*I, 0) == Ne(np*I, 0, evaluate=False)
+    assert Ne(nn*I, 0) == Ne(nn*I, 0, evaluate=False)
 
 
 def test_new_relational():
@@ -439,7 +469,6 @@ def test_nan_equality_exceptions():
     assert Unequality(random.choice(A), nan) is S.true
 
 
-@XFAIL
 def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # currently fails because rhs reduces to bool but the lhs does not
@@ -456,7 +485,6 @@ def test_inequalities_symbol_name_same():
             assert Le(a, b) == (a <= b)
 
 
-@XFAIL
 def test_inequalities_symbol_name_same_complex():
     """Using the operator and functional forms should give same results.
     With complex non-real numbers, both should raise errors.
@@ -483,3 +511,27 @@ def test_inequalities_cant_sympify_other():
     for a in (x, S(0), S(1)/3, pi, I, zoo, oo, -oo, nan):
         for op in (lt, gt, le, ge):
             raises(TypeError, lambda: op(a, bar))
+
+
+@XFAIL
+def test_inequalities_wild_symbol_no_flip():
+    # see issue #7951.
+    from sympy.core.symbol import Wild
+    p = symbols('p', cls=Wild)
+    # here's particular failure I encountered which gave `q_ > x`
+    e = Lt(x, y)
+    e = e.subs({y: p})
+    x_lt_p = Lt(x, p, evaluate=False)
+    assert e == x_lt_p
+    # and some generalized tests
+    x_gt_p = Gt(x, p, evaluate=False)
+    x_le_p = Le(x, p, evaluate=False)
+    x_ge_p = Ge(x, p, evaluate=False)
+    assert x < p == x_lt_p
+    assert x > p == x_gt_p
+    assert x <= p == x_le_p
+    assert x >= p == x_ge_p
+    assert Lt(x, p) == x_lt_p
+    assert Gt(x, p) == x_gt_p
+    assert Le(x, p) == x_le_p
+    assert Ge(x, p) == x_ge_p
