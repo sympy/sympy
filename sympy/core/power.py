@@ -339,6 +339,15 @@ class Pow(Expr):
             if self.exp.is_even:
                 return False
 
+    def _eval_is_zero(self):
+        if self.base.is_zero:
+            if self.exp.is_nonzero:
+                return True
+            if self.exp.is_zero:
+                return False
+        if self.base.is_nonzero:
+            return False
+
     def _eval_is_integer(self):
         b, e = self.args
         c1 = b.is_integer
