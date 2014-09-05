@@ -1,4 +1,4 @@
-from sympy.core.logic import fuzzy_group
+from sympy.core.logic import _fuzzy_group
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 
@@ -114,5 +114,5 @@ def test_closed_group(expr, assumptions, key):
     Test for membership in a group with respect
     to the current operation
     """
-    return fuzzy_group(
+    return _fuzzy_group(
         (ask(key(a), assumptions) for a in expr.args), quick_exit=True)

@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from sympy.core.containers import Dict
 from sympy.core.compatibility import is_sequence, as_int
-from sympy.core.logic import fuzzy_and, fuzzy_group_inverse
+from sympy.core.logic import fuzzy_and, _fuzzy_group_inverse
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
@@ -573,12 +573,12 @@ class SparseMatrix(MatrixBase):
             d = self._smat
             yield self.is_square
             if len(d) <= self.rows:
-                yield fuzzy_group_inverse(
+                yield _fuzzy_group_inverse(
                     d[i, i].is_real for i, j in d if i == j)
             else:
-                yield fuzzy_group_inverse(
+                yield _fuzzy_group_inverse(
                     d[i, i].is_real for i in range(self.rows) if (i, i) in d)
-            yield fuzzy_group_inverse(
+            yield _fuzzy_group_inverse(
                     ((self[i, j] - self[j, i].conjugate()).is_zero
                     if (j, i) in d else False) for (i, j) in d)
         return fuzzy_and(i for i in cond())

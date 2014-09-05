@@ -5,7 +5,7 @@ from math import log as _log
 from .sympify import _sympify
 from .cache import cacheit
 from .core import C
-from .logic import fuzzy_group
+from .logic import _fuzzy_group
 from .singleton import S
 from .expr import Expr
 from .evalf import PrecisionExhausted

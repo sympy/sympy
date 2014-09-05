@@ -11,7 +11,7 @@ from __future__ import print_function, division
 from sympy.core.compatibility import iterable
 
 
-def fuzzy_group(args, quick_exit=False):
+def _fuzzy_group(args, quick_exit=False):
     """Return True if all args are True, None if any is None, otherwise False.
     This default behavior is modified by setting `quick_exit` to True which
     will cause None to be returned if a 2nd False is seen.
@@ -19,22 +19,22 @@ def fuzzy_group(args, quick_exit=False):
     Examples
     ========
 
-    >>> from sympy.core.logic import fuzzy_group
+    >>> from sympy.core.logic import _fuzzy_group
 
     By default, multiple Falses mean the group is broken:
 
-    >>> fuzzy_group([False, False, True])
+    >>> _fuzzy_group([False, False, True])
     False
 
     If multiple Falses mean the group status is unknown then set
     `quick_exit` to True so None can be returned when the 2nd False is seen:
 
-    >>> fuzzy_group([False, False, True], quick_exit=True)
+    >>> _fuzzy_group([False, False, True], quick_exit=True)
 
     But if only a single False is seen then the group is known to
     be broken:
 
-    >>> fuzzy_group([False, True, True], quick_exit=True)
+    >>> _fuzzy_group([False, True, True], quick_exit=True)
     False
 
     """
@@ -50,7 +50,7 @@ def fuzzy_group(args, quick_exit=False):
     return not saw_other
 
 
-def fuzzy_group_inverse(args, quick_exit=False):
+def _fuzzy_group_inverse(args, quick_exit=False):
     """Return True if all args are True, False if any is False, otherwise None.
     This default behavior is modified by setting `quick_exit` to True which
     will cause False to be returned if a second None is seen.
@@ -58,21 +58,21 @@ def fuzzy_group_inverse(args, quick_exit=False):
     Examples
     ========
 
-    >>> from sympy.core.logic import fuzzy_group_inverse
+    >>> from sympy.core.logic import _fuzzy_group_inverse
 
     By default, multiple None mean the group status is unknown:
 
-    >>> fuzzy_group_inverse([None, None, True])
+    >>> _fuzzy_group_inverse([None, None, True])
 
     If multiple None mean the group is broken then set
     `quick_exit` to True so False can be returned when the 2nd None is seen:
 
-    >>> fuzzy_group_inverse([None, None, True], quick_exit=True)
+    >>> _fuzzy_group_inverse([None, None, True], quick_exit=True)
     False
 
     But if only a single None is seen then the group status is unknown:
 
-    >>> fuzzy_group_inverse([None, True, True], quick_exit=True)
+    >>> _fuzzy_group_inverse([None, True, True], quick_exit=True)
 
     """
     saw_other = False
