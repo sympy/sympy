@@ -67,7 +67,7 @@ When is this module NOT the best approach?
 
 from __future__ import print_function, division
 
-_doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
+_doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'), 'modules': ('numpy',)}
 
 import sys
 import os
@@ -77,13 +77,16 @@ from subprocess import STDOUT, CalledProcessError
 from string import Template
 
 from sympy.core.compatibility import check_output
+from sympy.core.function import Lambda
+from sympy.core.relational import Eq
+from sympy.core.symbol import Dummy, Symbol
+from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument, InputArgument,
     CodeGenArgumentListError, Result, ResultBase, CCodeGen
 )
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
-from sympy import C
 
 
 class CodeWrapError(Exception):
@@ -338,14 +341,14 @@ class CythonCodeWrapper(CodeWrapper):
         # locally in the Cython code.
             if isinstance(arg, (InputArgument, InOutArgument)) and arg.dimensions:
                 dims = [d[1] + 1 for d in arg.dimensions]
-                sym_dims = [(i, d) for (i, d) in enumerate(dims) if isinstance(d, C.Symbol)]
+                sym_dims = [(i, d) for (i, d) in enumerate(dims) if isinstance(d, Symbol)]
                 for (i, d) in sym_dims:
                     py_inferred[d] = (arg.name, i)
         for arg in args:
             if arg.name in py_inferred:
                 py_inferred[arg] = py_inferred.pop(arg.name)
         # Filter inferred arguments from py_args
-        py_args = [a for a in py_args if not a in py_inferred]
+        py_args = [a for a in py_args if a not in py_inferred]
         return py_returns, py_args, py_locals, py_inferred
 
     def _prototype_arg(self, arg):
@@ -398,7 +401,7 @@ class F2PyCodeWrapper(CodeWrapper):
 
 
 def _get_code_wrapper_class(backend):
-    wrappers = { 'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper,
+    wrappers = {'F2PY': F2PyCodeWrapper, 'CYTHON': CythonCodeWrapper,
         'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
@@ -496,64 +499,52 @@ def binary_function(symfunc, expr, **kwargs):
 #                           UFUNCIFY                            #
 #################################################################
 
-# Template Definitions
-# --------------------
-# FUNCTION: The function body. Must return double.
-# DECLARE_ARGS: Argument Declarations. One for each arg (input and output).
-# DECLARE_STEPS: Step Declarations. One for each arg (input and output).
-# CALL_ARGS: The call signature, with type conversions.
-# STEP_INCREMENTS: Increment each step.
-# TYPES: An array of arg types.
-# N_IN: Number of input args
-# N_OUT: Number of output args
-# DOCSTRING: Python function docstring.
-
 ufunc_top = Template("""\
 #include "Python.h"
 #include "math.h"
 #include "numpy/ndarraytypes.h"
 #include "numpy/ufuncobject.h"
 #include "numpy/halffloat.h"
-#include ${INCLUDE_FILE}
+#include ${include_file}
 
-static PyMethodDef ${MODULE}Methods[] = {
+static PyMethodDef ${module}Methods[] = {
         {NULL, NULL, 0, NULL}
 };""")
 
 ufunc_body = Template("""\
-static void ${FUNCNAME}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
+static void ${funcname}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
 {
     npy_intp i;
     npy_intp n = dimensions[0];
-    ${DECLARE_ARGS}
-    ${DECLARE_STEPS}
+    ${declare_args}
+    ${declare_steps}
     for (i = 0; i < n; i++) {
-        *((double *)out1) = ${FUNCNAME}(${CALL_ARGS});
-        ${STEP_INCREMENTS}
+        *((double *)out1) = ${funcname}(${call_args});
+        ${step_increments}
     }
 }
-PyUFuncGenericFunction ${FUNCNAME}_funcs[1] = {&${FUNCNAME}_ufunc};
-static char ${FUNCNAME}_types[${N_TYPES}] = ${TYPES}
-static void *${FUNCNAME}_data[1] = {NULL};""")
+PyUFuncGenericFunction ${funcname}_funcs[1] = {&${funcname}_ufunc};
+static char ${funcname}_types[${n_types}] = ${types}
+static void *${funcname}_data[1] = {NULL};""")
 
 ufunc_bottom = Template("""\
 #if PY_VERSION_HEX >= 0x03000000
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "${MODULE}",
+    "${module}",
     NULL,
     -1,
-    ${MODULE}Methods,
+    ${module}Methods,
     NULL,
     NULL,
     NULL,
     NULL
 };
 
-PyMODINIT_FUNC PyInit_${MODULE}(void)
+PyMODINIT_FUNC PyInit_${module}(void)
 {
     PyObject *m, *d;
-    ${FUNCTION_CREATION}
+    ${function_creation}
     m = PyModule_Create(&moduledef);
     if (!m) {
         return NULL;
@@ -561,31 +552,31 @@ PyMODINIT_FUNC PyInit_${MODULE}(void)
     import_array();
     import_umath();
     d = PyModule_GetDict(m);
-    ${UFUNC_INIT}
+    ${ufunc_init}
     return m;
 }
 #else
-PyMODINIT_FUNC init${MODULE}(void)
+PyMODINIT_FUNC init${module}(void)
 {
     PyObject *m, *d;
-    ${FUNCTION_CREATION}
-    m = Py_InitModule("${MODULE}", ${MODULE}Methods);
+    ${function_creation}
+    m = Py_InitModule("${module}", ${module}Methods);
     if (m == NULL) {
         return;
     }
     import_array();
     import_umath();
     d = PyModule_GetDict(m);
-    ${UFUNC_INIT}
+    ${ufunc_init}
 }
 #endif\
 """)
 
 ufunc_init_form = Template("""\
-ufunc${IND} = PyUFunc_FromFuncAndData(${FUNCNAME}_funcs, ${FUNCNAME}_data, ${FUNCNAME}_types, 1, ${N_IN}, ${N_OUT},
-            PyUFunc_None, "${MODULE}", ${DOCSTRING}, 0);
-    PyDict_SetItemString(d, "${FUNCNAME}", ufunc${IND});
-    Py_DECREF(ufunc${IND});""")
+ufunc${ind} = PyUFunc_FromFuncAndData(${funcname}_funcs, ${funcname}_data, ${funcname}_types, 1, ${n_in}, ${n_out},
+            PyUFunc_None, "${module}", ${docstring}, 0);
+    PyDict_SetItemString(d, "${funcname}", ufunc${ind});
+    Py_DECREF(ufunc${ind});""")
 
 ufunc_setup = Template("""\
 def configuration(parent_package='', top_path=None):
@@ -595,13 +586,14 @@ def configuration(parent_package='', top_path=None):
     config = Configuration('',
                            parent_package,
                            top_path)
-    config.add_extension('${MODULE}', sources=['${MODULE}.c', '${FILENAME}.c'])
+    config.add_extension('${module}', sources=['${module}.c', '${filename}.c'])
 
     return config
 
 if __name__ == "__main__":
     from numpy.distutils.core import setup
     setup(configuration=configuration)""")
+
 
 class UfuncifyCodeWrapper(CodeWrapper):
     """Wrapper for Ufuncify"""
@@ -627,7 +619,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         return getattr(mod, name)
 
     def dump_setup(self, f):
-        setup = ufunc_setup.substitute(MODULE=self.module_name, FILENAME=self.filename)
+        setup = ufunc_setup.substitute(module=self.module_name, filename=self.filename)
         f.write(setup)
 
     def dump_c(self, routines, f, prefix):
@@ -645,66 +637,67 @@ class UfuncifyCodeWrapper(CodeWrapper):
             The filename prefix, used to name the imported module.
         """
         functions = []
-        FUNCTION_CREATION = []
-        UFUNC_INIT = []
-        MODULE = self.module_name
-        INCLUDE_FILE = "\"{0}.h\"".format(prefix)
-        top = ufunc_top.substitute(INCLUDE_FILE=INCLUDE_FILE, MODULE=MODULE)
+        function_creation = []
+        ufunc_init = []
+        module = self.module_name
+        include_file = "\"{0}.h\"".format(prefix)
+        top = ufunc_top.substitute(include_file=include_file, module=module)
+
         for r_index, routine in enumerate(routines):
-            NAME = routine.name
+            name = routine.name
 
             # Partition the C function arguments into categories
             py_in, py_out = self._partition_args(routine.arguments)
-            N_IN = len(py_in)
-            N_OUT = 1
+            n_in = len(py_in)
+            n_out = 1
 
             # Declare Args
             form = "char *{0}{1} = args[{2}];"
-            arg_decs = [form.format('in', i, i) for i in range(N_IN)]
-            arg_decs.append(form.format('out', 1, N_IN))
-            DECLARE_ARGS = '\n    '.join(arg_decs)
+            arg_decs = [form.format('in', i, i) for i in range(n_in)]
+            arg_decs.append(form.format('out', 1, n_in))
+            declare_args = '\n    '.join(arg_decs)
 
             # Declare Steps
             form = "npy_intp {0}{1}_step = steps[{2}];"
-            step_decs = [form.format('in', i, i) for i in range(N_IN)]
-            step_decs.append(form.format('out', 1, N_IN))
-            DECLARE_STEPS = '\n    '.join(step_decs)
+            step_decs = [form.format('in', i, i) for i in range(n_in)]
+            step_decs.append(form.format('out', 1, n_in))
+            declare_steps = '\n    '.join(step_decs)
 
             # Call Args
             form = "*(double *)in{0}"
-            CALL_ARGS = ', '.join([form.format(a) for a in range(N_IN)])
+            call_args = ', '.join([form.format(a) for a in range(n_in)])
 
             # Step Increments
             form = "{0}{1} += {0}{1}_step;"
-            step_incs = [form.format('in', i) for i in range(N_IN)]
+            step_incs = [form.format('in', i) for i in range(n_in)]
             step_incs.append(form.format('out', 1))
-            STEP_INCREMENTS = '\n        '.join(step_incs)
+            step_increments = '\n        '.join(step_incs)
 
             # Types
-            N_TYPES = N_IN + N_OUT
-            TYPES = "{" + ', '.join(["NPY_DOUBLE"]*N_TYPES) + "};"
+            n_types = n_in + n_out
+            types = "{" + ', '.join(["NPY_DOUBLE"]*n_types) + "};"
 
             # Docstring
-            DOCSTRING = '"Placeholder Docstring"'
+            docstring = '"Created in SymPy with Ufuncify"'
 
             # Function Creation
-            FUNCTION_CREATION.append("PyObject *ufunc{0};".format(r_index))
+            function_creation.append("PyObject *ufunc{0};".format(r_index))
 
             # Ufunc initialization
-            UFUNC_INIT.append(ufunc_init_form.substitute(MODULE=MODULE,
-                FUNCNAME=NAME, DOCSTRING=DOCSTRING, N_IN=N_IN, N_OUT=N_OUT,
-                IND=r_index))
+            ufunc_init.append(ufunc_init_form.substitute(module=module,
+                funcname=name, docstring=docstring, n_in=n_in, n_out=n_out,
+                ind=r_index))
 
-            functions.append(ufunc_body.substitute(MODULE=MODULE,
-                    FUNCNAME=NAME, DECLARE_ARGS=DECLARE_ARGS, DECLARE_STEPS=DECLARE_STEPS,
-                    CALL_ARGS=CALL_ARGS, STEP_INCREMENTS=STEP_INCREMENTS,
-                    N_TYPES=N_TYPES, TYPES=TYPES))
+            functions.append(ufunc_body.substitute(module=module,
+                    funcname=name, declare_args=declare_args, declare_steps=declare_steps,
+                    call_args=call_args, step_increments=step_increments,
+                    n_types=n_types, types=types))
 
         body = '\n\n'.join(functions)
-        UFUNC_INIT = '\n    '.join(UFUNC_INIT)
-        FUNCTION_CREATION = '\n    '.join(FUNCTION_CREATION)
-        bottom = ufunc_bottom.substitute(MODULE=MODULE, UFUNC_INIT=UFUNC_INIT,
-                FUNCTION_CREATION=FUNCTION_CREATION)
+        ufunc_init = '\n    '.join(ufunc_init)
+        function_creation = '\n    '.join(function_creation)
+        bottom = ufunc_bottom.substitute(module=module, ufunc_init=ufunc_init,
+                function_creation=function_creation)
         text = [top, body, bottom]
         f.write('\n\n'.join(text))
 
@@ -724,53 +717,95 @@ class UfuncifyCodeWrapper(CodeWrapper):
         return py_in, py_out
 
 
-@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
-def ufuncify(args, expr, tempdir=None, flags=[], verbose=False, helpers=[]):
-    """
-    Generates a binary ufunc-like lambda function for numpy arrays
+@doctest_depends_on(exe=('gcc'), modules=('numpy',))
+def ufuncify(args, expr, backend='numpy', tempdir=None, flags=[],
+        verbose=False, helpers=[]):
+    """Generates a binary function that supports broadcasting on numpy arrays.
 
-    ``args``
+    Parameters
+    ----------
+    args
         Either a Symbol or a tuple of symbols. Specifies the argument sequence
-        for the ufunc-like function.
+        for the function.
+    expr
+        A SymPy expression that defines the element wise operation.
+    backend : string, optional
+        Backend used to wrap the generated code. Either 'numpy' [default],
+        'cython', or 'f2py'.
+    tempdir : string, optional
+        Path to directory for temporary files. If this argument is supplied,
+        the generated code and the wrapper input files are left intact in the
+        specified path.
+    flags : iterable, optional
+        Additional option flags that will be passed to the backend
+    verbose : bool, optional
+        If True, autowrap will not mute the command line backends. This can be
+        helpful for debugging.
+    helpers : list, optional
+        Used to define auxillary expressions needed for the main expr. If the
+        main expression needs to call a specialized function it should be put
+        in the ``helpers`` list. Autowrap will then make sure that the
+        compiled main expression can link to the helper routine. Items should
+        be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
+        is mandatory to supply an argument sequence to helper routines.
 
-    ``expr``
-        A SymPy expression that defines the element wise operation
-
-    The returned function can only act on one array at a time, as only the
-    first argument accept arrays as input.
-
-    .. Note:: a *proper* numpy ufunc is required to support broadcasting, type
-       casting and more.  The function returned here, may not qualify for
-       numpy's definition of a ufunc.  That why we use the term ufunc-like.
+    Note
+    ----
+    The default backend ('numpy') will create actual instances of
+    ``numpy.ufunc``. These support ndimensional broadcasting, and implicit type
+    conversion. Use of the other backends will result in a "ufunc-like"
+    function, which requires equal length 1-dimensional arrays for all
+    arguments, and will not perform any type conversions.
 
     References
-    ==========
+    ----------
     [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     Examples
-    ========
-
+    --------
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y
     >>> import numpy as np
     >>> f = ufuncify([x, y], y + x**2)
+    >>> type(f)
+    numpy.ufunc
     >>> f([1, 2, 3], 2)
-    [ 3.  6.  11.]
-    >>> a = f(np.arange(5), 3)
-    >>> isinstance(a, np.ndarray)
-    True
-    >>> print a
-    [ 3. 4. 7. 12. 19.]
-
+    array([ 3.  6.  11.])
+    >>> f(np.arange(5), 3)
+    array([ 3. 4. 7. 12. 19.])
     """
-    if isinstance(args, C.Symbol):
+
+    if isinstance(args, Symbol):
         args = [args]
     else:
         args = list(args)
 
-    code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir, flags, verbose)
-    routine = Routine('autofunc', expr, args)
-    helps = []
-    for name, expr, args in helpers:
-        helps.append(Routine(name, expr, args))
-    return code_wrapper.wrap_code(routine, helpers=helps)
+    lang_lookup = {'CYTHON': 'C',
+                   'F2PY': 'F95'}
+    backend = backend.upper()
+
+    if backend == 'NUMPY':
+        routine = Routine('autofunc', expr, args)
+        helps = []
+        for name, expr, args in helpers:
+            helps.append(Routine(name, expr, args))
+        code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir,
+                flags, verbose)
+        return code_wrapper.wrap_code(routine, helpers=helps)
+    elif backend in lang_lookup:
+        # Dummies are used for all added expressions to prevent name clashes
+        # within the original expression.
+        y = IndexedBase(Dummy())
+        m = Dummy(integer=True)
+        i = Idx(Dummy(integer=True), m)
+        f = implemented_function(Dummy().name, Lambda(args, expr))
+        # For each of the args create an indexed version.
+        indexed_args = [IndexedBase(Dummy(str(a))) for a in args]
+        # Order the arguments (out, args, dim)
+        args = [y] + indexed_args + [m]
+        args_with_indices = [a[i] for a in indexed_args]
+        lang = lang_lookup[backend]
+        return autowrap(Eq(y[i], f(*args_with_indices)), lang, backend,
+                tempdir, args, flags, verbose, helpers)
+    else:
+        raise ValueError("Unrecognized backend: " + backend)
