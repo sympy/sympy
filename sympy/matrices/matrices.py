@@ -5,7 +5,6 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic, C, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
-from sympy.core.logic import _fuzzy_group_inverse, fuzzy_and
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Rational, Float
@@ -2123,45 +2122,6 @@ class MatrixBase(object):
         return all(self[i, j].is_zero
             for i in range(self.rows)
             for j in range(i + 1, self.cols))
-
-    @property
-    def is_hermitian(self):
-        """Checks if the matrix is Hermitian.
-
-        In a Hermitian matrix element i,j is the complex conjugate of
-        element j,i.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy import I
-        >>> from sympy.abc import x
-        >>> a = Matrix([[1, I], [-I, 1]])
-        >>> a
-        Matrix([
-        [ 1, I],
-        [-I, 1]])
-        >>> a.is_hermitian
-        True
-        >>> a[0, 0] = 2*I
-        >>> a.is_hermitian
-        False
-        >>> a[0, 0] = x
-        >>> a.is_hermitian
-        >>> a[0, 1] = a[1, 0]*I
-        >>> a.is_hermitian
-        False
-        """
-        def cond():
-            yield self.is_square
-            yield _fuzzy_group_inverse(
-                    self[i, i].is_real for i in range(self.rows))
-            yield _fuzzy_group_inverse(
-                    (self[i, j] - self[j, i].conjugate()).is_zero
-                    for i in range(self.rows)
-                    for j in range(i + 1, self.cols))
-        return fuzzy_and(i for i in cond())
 
     @property
     def is_upper_hessenberg(self):
