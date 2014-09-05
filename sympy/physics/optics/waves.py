@@ -61,11 +61,12 @@ class TWave(Expr):
     >>> w2 = TWave(A2, f, phi2)
     >>> w3 = w1 + w2  # Superposition of two waves
     >>> w3
-    TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f, phi1 + phi2)
+    TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f, 
+        atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2)))
     >>> w3.amplitude
     sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2)
     >>> w3.phase
-    phi1 + phi2
+    atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))
     >>> w3.speed
     299792458*m/(n*s)
     >>> w3.angular_velocity
