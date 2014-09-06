@@ -167,33 +167,22 @@ def test_doit():
 
 
 def test_eq_pos_neg_assumptions():
-    p = Symbol('p', positive=True)
-    n = Symbol('n', negative=True)
-    np = Symbol('np', nonpositive=True)
-    nn = Symbol('nn', nonnegative=True)
+    # see issue #6116
+    p = Dummy(positive=True)
+    n = Dummy(negative=True)
+    np = Dummy(nonpositive=True)
+    nn = Dummy(nonnegative=True)
     assert Eq(p, 0) is S.false
-    assert Ne(p, 0) is S.true
     assert Eq(n, 0) is S.false
-    assert Ne(n, 0) is S.true
     assert Eq(np, 0) == Eq(np, 0, evaluate=False)
     assert Eq(nn, 0) == Eq(nn, 0, evaluate=False)
-    assert Ne(np, 0) == Ne(np, 0, evaluate=False)
-    assert Ne(nn, 0) == Ne(nn, 0, evaluate=False)
 
 
-def test_eq_pos_neg_times_I_assump():
-    p = Symbol('p', positive=True)
-    n = Symbol('n', negative=True)
-    np = Symbol('np', nonpositive=True)
-    nn = Symbol('nn', nonnegative=True)
-    assert Eq(p*I, 0) is S.false
-    assert Ne(p*I, 0) is S.true
-    assert Eq(n*I, 0) is S.false
-    assert Ne(n*I, 0) is S.true
-    assert Eq(np*I, 0) == Eq(np*I, 0, evaluate=False)
-    assert Eq(nn*I, 0) == Eq(nn*I, 0, evaluate=False)
-    assert Ne(np*I, 0) == Ne(np*I, 0, evaluate=False)
-    assert Ne(nn*I, 0) == Ne(nn*I, 0, evaluate=False)
+def test_eq_incompatibility_gives_false():
+    # Incompatibility between lhs and rhs should be detected by 'is_zero'
+    a = Dummy(irrational=True)
+    b = Dummy(integer=True)
+    assert Eq(a, b) is S.false
 
 
 def test_eq_noncommutative():
