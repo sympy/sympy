@@ -383,14 +383,14 @@ def test_is_proper_superset():
     raises(ValueError, lambda: Interval(0, 1).is_proper_superset(0))
 
 def test_contains():
-    assert Interval(0, 2).contains(1) is True
-    assert Interval(0, 2).contains(3) is False
-    assert Interval(0, 2, True, False).contains(0) is False
-    assert Interval(0, 2, True, False).contains(2) is True
-    assert Interval(0, 2, False, True).contains(0) is True
-    assert Interval(0, 2, False, True).contains(2) is False
-    assert Interval(0, 2, True, True).contains(0) is False
-    assert Interval(0, 2, True, True).contains(2) is False
+    assert Interval(0, 2).contains(1) is S.true
+    assert Interval(0, 2).contains(3) is S.false
+    assert Interval(0, 2, True, False).contains(0) is S.false
+    assert Interval(0, 2, True, False).contains(2) is S.true
+    assert Interval(0, 2, False, True).contains(0) is S.true
+    assert Interval(0, 2, False, True).contains(2) is S.false
+    assert Interval(0, 2, True, True).contains(0) is S.false
+    assert Interval(0, 2, True, True).contains(2) is S.false
 
     assert FiniteSet(1, 2, 3).contains(2)
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x'))
@@ -398,13 +398,13 @@ def test_contains():
     items = [1, 2, S.Infinity, S('ham'), -1.1]
     fset = FiniteSet(*items)
     assert all(item in fset for item in items)
-    assert all(fset.contains(item) is True for item in items)
+    assert all(fset.contains(item) is S.true for item in items)
 
-    assert Union(Interval(0, 1), Interval(2, 5)).contains(3) is True
-    assert Union(Interval(0, 1), Interval(2, 5)).contains(6) is False
-    assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is False
+    assert Union(Interval(0, 1), Interval(2, 5)).contains(3) is S.true
+    assert Union(Interval(0, 1), Interval(2, 5)).contains(6) is S.false
+    assert Union(Interval(0, 1), FiniteSet(2, 5)).contains(3) is S.false
 
-    assert S.EmptySet.contains(1) is False
+    assert S.EmptySet.contains(1) is S.false
 
 
 def test_interval_symbolic():
@@ -637,7 +637,7 @@ def test_universalset():
     assert U.intersect(Interval(2, 4)) == Interval(2, 4)
     assert U.measure == S.Infinity
     assert U.boundary == S.EmptySet
-    assert U.contains(0) is True
+    assert U.contains(0) is S.true
 
 
 def test_Union_of_ProductSets_shares():
@@ -710,7 +710,7 @@ def test_image_EmptySet():
 
 def test_issue_5724_7680():
     assert I not in S.Reals  # issue 7680
-    assert Interval(-oo,oo).contains(I) is False
+    assert Interval(-oo, oo).contains(I) is S.false
 
 
 def test_boundary():

@@ -11,6 +11,7 @@ from sympy.core.compatibility import iterable, with_metaclass, ordered
 from sympy.core.evaluate import global_evaluate
 from sympy.core.decorators import deprecated
 from sympy.core.mul import Mul
+from sympy.sets.contains import Contains
 
 from sympy.mpmath import mpi, mpf
 from sympy.logic.boolalg import And, Or, Not, true, false
@@ -263,11 +264,10 @@ class Set(Basic):
         True
 
         """
-        c = self._contains(sympify(other, strict=True))
-        if c in (true, false):
-            # TODO: would we want to return the Basic type here?
-            return bool(c)
-        return c
+        ret = self._contains(sympify(other, strict=True))
+        if ret is None:
+            ret = Contains(other, self, evaluate=False)
+        return ret
 
     def _contains(self, other):
         raise NotImplementedError("(%s)._contains(%s)" % (self, other))
@@ -493,9 +493,9 @@ class Set(Basic):
 
     def __contains__(self, other):
         symb = self.contains(other)
-        if symb != True and symb != False:
+        if symb not in (true, false):
             raise TypeError('contains did not evaluate to a bool: %r' % symb)
-        return symb
+        return bool(symb)
 
     @property
     def is_real(self):
@@ -579,9 +579,9 @@ class ProductSet(Set):
         """
         try:
             if len(element) != len(self.args):
-                return False
+                return false
         except TypeError:  # maybe element isn't an iterable
-            return False
+            return false
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
     def _intersect(self, other):
@@ -876,8 +876,8 @@ class Interval(Set, EvalfMixin):
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open and other.contains(self.start) is True) or
-                (self.right_open and other.contains(self.end) is True)):
+        if ((self.left_open and other.contains(self.start) is true) or
+                (self.right_open and other.contains(self.end) is true)):
             # Fill in my end points and return
             open_left = self.left_open and self.start not in other
             open_right = self.right_open and self.end not in other
@@ -892,7 +892,7 @@ class Interval(Set, EvalfMixin):
 
     def _contains(self, other):
         if other.is_real is False:
-            return False
+            return false
 
         if self.left_open:
             expr = other > self.start
@@ -904,7 +904,7 @@ class Interval(Set, EvalfMixin):
         else:
             expr = And(expr, other <= self.end)
 
-        return expr
+        return _sympify(expr)
 
     def _eval_imageset(self, f):
         from sympy.functions.elementary.miscellaneous import Min, Max
@@ -1465,7 +1465,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
         return 0
 
     def _contains(self, other):
-        return False
+        return false
 
     def as_relational(self, symbol):
         return False
@@ -1527,7 +1527,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
         return S.Infinity
 
     def _contains(self, other):
-        return True
+        return true
 
     def as_relational(self, symbol):
         return True
@@ -1619,9 +1619,9 @@ class FiniteSet(Set, EvalfMixin):
             return FiniteSet(*(self._elements | other._elements))
 
         # If other set contains one of my elements, remove it from myself
-        if any(other.contains(x) is True for x in self):
+        if any(other.contains(x) is true for x in self):
             return set((
-                FiniteSet(*[x for x in self if other.contains(x) is not True]),
+                FiniteSet(*[x for x in self if other.contains(x) is not true]),
                 other))
 
         return None
@@ -1643,7 +1643,13 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        return other in self._elements
+        if other in self._elements:
+            return true
+        else:
+            if not other.free_symbols:
+                return false
+            elif all(e.is_Symbol for e in self._elements):
+                return false
 
     def _eval_imageset(self, f):
         return FiniteSet(*map(f, self))

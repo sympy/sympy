@@ -6,7 +6,7 @@ from sympy.sets.sets import Set, Interval, Intersection, \
     FiniteSet, Union, Complement, EmptySet
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import symbols
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.decorators import deprecated
 from sympy.core.function import Lambda
 
@@ -51,8 +51,9 @@ class Naturals(with_metaclass(Singleton, Set)):
 
     def _contains(self, other):
         if other.is_positive and other.is_integer:
-            return True
-        return False
+            return S.true
+        elif other.is_integer is False or other.is_positive is False:
+            return S.false
 
     def __iter__(self):
         i = self._inf
@@ -77,9 +78,10 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if other.is_negative is False and other.is_integer:
-            return True
-        return False
+        if other.is_integer and other.is_nonnegative:
+            return S.true
+        elif other.is_integer is False or other.is_nonnegative is False:
+            return S.false
 
 
 class Integers(with_metaclass(Singleton, Set)):
@@ -125,8 +127,9 @@ class Integers(with_metaclass(Singleton, Set)):
 
     def _contains(self, other):
         if other.is_integer:
-            return True
-        return False
+            return S.true
+        elif other.is_integer is False:
+            return S.false
 
     def __iter__(self):
         yield S.Zero
@@ -234,11 +237,11 @@ class ImageSet(Set):
         for soln in solns:
             try:
                 if soln in self.base_set:
-                    return True
+                    return S.true
             except TypeError:
                 if soln.evalf() in self.base_set:
-                    return True
-        return False
+                    return S.true
+        return S.false
 
     @property
     def is_iterable(self):
@@ -373,9 +376,12 @@ class Range(Set):
         return None
 
     def _contains(self, other):
-        return (other >= self.inf and other <= self.sup and
-                (((self.start - other)/self.step).is_integer or
-                 ((self.stop - other)/self.step).is_integer))
+        if (((self.start - other)/self.step).is_integer or
+            ((self.stop - other)/self.step).is_integer):
+            return _sympify(other >= self.inf and other <= self.sup)
+        elif (((self.start - other)/self.step).is_integer is False and
+            ((self.stop - other)/self.step).is_integer is False):
+            return S.false
 
     def __iter__(self):
         if self.start is S.NegativeInfinity:
