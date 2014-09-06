@@ -75,6 +75,7 @@ import shutil
 import tempfile
 from subprocess import STDOUT, CalledProcessError
 
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument, InputArgument,
@@ -401,11 +402,11 @@ def _get_code_wrapper_class(backend):
         'DUMMY': DummyWrapper}
     return wrappers[backend.upper()]
 
-
+@cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
-    expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
-        verbose=False, helpers=[]):
+    expr, language='F95', backend='f2py', tempdir=None, args=None, flags=(),
+        verbose=False, helpers=()):
     """Generates python callable binaries based on the math expression.
 
     expr
@@ -425,17 +426,17 @@ def autowrap(
         Sequence of the formal parameters of the generated code, if ommited the
         function signature is determined by the code generator.
     flags
-        Additional option flags that will be passed to the backend
+        Tuple of additional option flags that will be passed to the backend
     verbose
         If True, autowrap will not mute the command line backends.  This can be
         helpful for debugging.
     helpers
         Used to define auxillary expressions needed for the main expr.  If the
         main expression need to do call a specialized function it should be put
-        in the ``helpers`` list.  Autowrap will then make sure that the compiled
-        main expression can link to the helper routine.  Items should be tuples
-        with (<funtion_name>, <sympy_expression>, <arguments>).  It is
-        mandatory to supply an argument sequence to helper routines.
+        in the ``helpers`` tuple.  Autowrap will then make sure that the
+        compiled main expression can link to the helper routine.  Items should
+        also be tuples with (<funtion_name>, <sympy_expression>, <arguments>).
+        It is mandatory to supply an argument sequence to helper routines.
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
