@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
                    Implies, Xor, zoo)
+from sympy.core.symbol import Dummy
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -193,6 +194,11 @@ def test_eq_pos_neg_times_I_assump():
     assert Eq(nn*I, 0) == Eq(nn*I, 0, evaluate=False)
     assert Ne(np*I, 0) == Ne(np*I, 0, evaluate=False)
     assert Ne(nn*I, 0) == Ne(nn*I, 0, evaluate=False)
+
+
+def test_eq_noncommutative():
+    A, B = symbols('A B', commutative=False)
+    assert Eq(A, B) == Eq(A, B, evaluate=False)
 
 
 def test_new_relational():
