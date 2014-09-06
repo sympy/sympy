@@ -19,7 +19,10 @@ class RoundFunction(Function):
         if arg.is_integer:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
-            return cls(C.im(arg))*S.ImaginaryUnit
+            i = C.im(arg)
+            if not i.has(S.ImaginaryUnit):
+                return cls(i)*S.ImaginaryUnit
+            return cls(arg, evaluate=False)
 
         v = cls._eval_number(arg)
         if v is not None:
