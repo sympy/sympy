@@ -243,7 +243,10 @@ class Equality(Relational):
                 return S.false
             # Consider the difference of lhs and rhs.  Here "is_zero" should
             # detect incompatibilities (e.g., lhs negative and rhs positive).
-            if (isinstance(lhs, Expr) and isinstance(rhs, Expr)
+            # [Note: clean-up after pr #7997.]  Do not use this for
+            # non-complex things such as non-commutative symbols.
+            if (isinstance(lhs, Expr) and isinstance(rhs, Expr) and
+                    lhs.is_complex and rhs.is_complex):
                 r = (lhs - rhs).is_zero
                 if r is not None:
                     return _sympify(r)
