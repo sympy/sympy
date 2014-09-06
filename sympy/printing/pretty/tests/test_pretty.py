@@ -9,7 +9,8 @@ from sympy import (
     catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
     factorial2, floor, gamma, groebner, hyper, log, lowergamma, meijerg,
     oo, pi, sin, sqrt, subfactorial, symbols, tan, uppergamma, lex, ilex,
-    grlex, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, Range, Complement)
+    grlex, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, Range,
+    Complement, Contains)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -4778,3 +4779,8 @@ def test_issue_7180():
 def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
     assert upretty(S.Reals - S.Naturals) == u('ℝ \ ℕ')
+
+
+def test_pretty_Contains():
+    assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers())'
+    assert upretty(Contains(x, S.Integers)) == u('x ∈ ℤ')

@@ -13,7 +13,8 @@ from sympy import (
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not)
+    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
+    Contains)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex, translate
@@ -517,6 +518,11 @@ def test_latex_ImageSet():
     x = Symbol('x')
     assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
+
+
+def test_latex_Contains():
+    x = Symbol('x')
+    assert latex(Contains(x, S.Naturals)) == r"x \in \mathbb{N}"
 
 
 def test_latex_sum():
