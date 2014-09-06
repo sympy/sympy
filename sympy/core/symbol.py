@@ -64,8 +64,6 @@ class Symbol(AtomicExpr, Boolean):
 
         """
 
-        if assumptions.get('zero', False):
-            return S.Zero
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
             raise ValueError(
