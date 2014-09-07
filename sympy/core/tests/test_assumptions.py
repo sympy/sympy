@@ -673,16 +673,6 @@ def test_sanitize_assumptions():
 
 
 def test_special_assumptions():
-    x = Symbol('x')
-    z2 = z = Symbol('z', zero=True)
-    assert z2 == z == S.Zero
-    assert (2*z).is_positive is False
-    assert (2*z).is_negative is False
-    assert (2*z).is_zero is True
-    assert (z2*z).is_positive is False
-    assert (z2*z).is_negative is False
-    assert (z2*z).is_zero is True
-
     e = -3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2
     assert (e < 0) is S.false
     assert (e > 0) is S.false
