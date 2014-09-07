@@ -779,7 +779,7 @@ class LatexPrinter(Printer):
         return self._print_LogOp(args, r"\veebar")
 
     def _print_Implies(self, e, altchar=None):
-        return r"%s %s %s" % (self._print(e.args[0]), altchar or r"\Rightarrow", self._print(e.args[1]))
+        return self._print_LogOp(e.args, altchar or r"\Rightarrow")
 
     def _print_Equivalent(self, e, altchar=None):
         args = sorted(e.args, key=default_sort_key)
