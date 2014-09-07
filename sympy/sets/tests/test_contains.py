@@ -2,7 +2,7 @@ from sympy import Symbol, Contains, S, Interval, FiniteSet
 
 
 def test_contains_basic():
-    assert Contains(2, S.Integers)
+    assert Contains(2, S.Integers) is S.true
     assert Contains(-2, S.Naturals) is S.false
 
     i = Symbol('i', integer=True)

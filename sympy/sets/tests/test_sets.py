@@ -392,8 +392,8 @@ def test_contains():
     assert Interval(0, 2, True, True).contains(0) is S.false
     assert Interval(0, 2, True, True).contains(2) is S.false
 
-    assert FiniteSet(1, 2, 3).contains(2)
-    assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x'))
+    assert FiniteSet(1, 2, 3).contains(2) is S.true
+    assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
     items = [1, 2, S.Infinity, S('ham'), -1.1]
     fset = FiniteSet(*items)
