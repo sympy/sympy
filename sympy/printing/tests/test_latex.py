@@ -12,7 +12,7 @@ from sympy import (
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial, totient, sigma, elliptic_k, elliptic_f,
+    uppergamma, zeta, subfactorial, totient, divisor_sigma, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not)
 
 from sympy.abc import mu, tau
@@ -331,8 +331,8 @@ def test_latex_functions():
 
     assert latex(divisor_sigma(x)) == r"\sigma\left(x\right)"
     assert latex(divisor_sigma(x)**2) == r"\sigma^{2}\left(x\right)"
-    assert latex(divisor_sigma(x, y)) == r"\sigma\left(x, y\right)"
-    assert latex(divisor_sigma(x, y)**2) == r"\sigma^{2}\left(x, y\right)"
+    assert latex(divisor_sigma(x, y)) == r"\sigma_y\left(x\right)"
+    assert latex(divisor_sigma(x, y)**2) == r"\sigma^{2}_y\left(x\right)"
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')

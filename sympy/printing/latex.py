@@ -1708,7 +1708,7 @@ class LatexPrinter(Printer):
     def _print_totient(self, expr):
         return r'\phi\left( %s \right)' %  self._print(expr.args[0])
 
-    def _print_sigma(self, expr, exp=None):
+    def _print_divisor_sigma(self, expr, exp=None):
         if len(expr.args) == 2:
             tex = r"\left(%s, %s\right)" % tuple(map(self._print, expr.args))
         else:

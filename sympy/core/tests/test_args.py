@@ -3191,11 +3191,11 @@ def test_sympy__ntheory__factor___totient():
     assert _test_args(t)
 
 
-def test_sympy__ntheory__factor___sigma():
-    from sympy.ntheory.factor_ import sigma
+def test_sympy__ntheory__factor___divisor_sigma():
+    from sympy.ntheory.factor_ import divisor_sigma
     k = symbols('k', integer=True)
     n = symbols('n', integer=True)
-    t = sigma(n, k)
+    t = divisor_sigma(n, k)
     assert _test_args(t)
 
 
