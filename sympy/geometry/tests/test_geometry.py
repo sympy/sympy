@@ -914,9 +914,9 @@ def test_ellipse_geom():
         [Line(Point(0, 0), Point(77/25, 132/25)),
      Line(Point(0, 0), Point(33/5, 22/5))]
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
-        [Line(Point(3, 4), Point(3, 5)), Line(Point(3, 4), Point(5, 4))]
+        [Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
-        [Line(Point(3, 3), Point(3, 5)), Line(Point(3, 3), Point(5, 3))]
+        [Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
@@ -1020,7 +1020,7 @@ def test_ellipse_geom():
     assert e1.intersection(e2) == ans
     e2 = Ellipse(Point(x, y), 4, 8)
     c = sqrt(3991)
-    ans = [Point(c/68 + a, -2*c/17 + a/2), Point(-c/68 + a, 2*c/17 + a/2)]
+    ans = [Point(-c/68 + a, 2*c/17 + a/2), Point(c/68 + a, -2*c/17 + a/2)]
     assert [p.subs({x: 2, y:1}) for p in e1.intersection(e2)] == ans
 
     # Combinations of above
