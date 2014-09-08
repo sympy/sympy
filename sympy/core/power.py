@@ -450,7 +450,7 @@ class Pow(Expr):
 
     def _eval_is_bounded(self):
         if self.exp.is_negative:
-            if self.base.is_infinitesimal:
+            if self.base.is_zero:
                 return False
             if self.base.is_unbounded:
                 return True

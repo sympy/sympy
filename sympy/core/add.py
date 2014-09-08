@@ -215,13 +215,11 @@ class Add(Expr, AssocOp):
         # oo, -oo
         if coeff is S.Infinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonnegative or f.is_real and
-                       (f.is_bounded or f.is_infinitesimal))]
+                      (f.is_nonnegative or f.is_real and f.is_bounded)]
 
         elif coeff is S.NegativeInfinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonpositive or f.is_real and
-                       (f.is_bounded or f.is_infinitesimal))]
+                      (f.is_nonpositive or f.is_real and f.is_bounded)]
 
         if coeff is S.ComplexInfinity:
             # zoo might be

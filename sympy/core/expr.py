@@ -654,6 +654,8 @@ class Expr(Basic, EvalfMixin):
                     raise AttributeError
                 if n2._prec == 1:  # no significance
                     raise AttributeError
+                if n2 == S.NaN:
+                    raise AttributeError
             except (AttributeError, ValueError):
                 return None
             n, i = self.evalf(2).as_real_imag()
@@ -677,6 +679,8 @@ class Expr(Basic, EvalfMixin):
                 if n2 is None:
                     raise AttributeError
                 if n2._prec == 1:  # no significance
+                    raise AttributeError
+                if n2 == S.NaN:
                     raise AttributeError
             except (AttributeError, ValueError):
                 return None

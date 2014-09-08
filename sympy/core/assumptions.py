@@ -28,8 +28,6 @@ Here follows a list of possible assumption names:
     - nonnegative      - object can have only nonnegative values
     - irrational    - object value cannot be represented exactly by Rational
     - unbounded     - object value is arbitrarily large
-    - infinitesimal - object value is infinitesimal
-
 
 Implementation note: assumption values are stored in
 ._assumptions dictionary or are returned by getter methods (with
@@ -61,7 +59,6 @@ from sympy.core.compatibility import integer_types, with_metaclass
 # imaginary     -- http://en.wikipedia.org/wiki/Imaginary_number
 # composite     -- http://en.wikipedia.org/wiki/Composite_number
 # finite        -- http://en.wikipedia.org/wiki/Finite
-# infinitesimal -- http://en.wikipedia.org/wiki/Infinitesimal
 # irrational    -- http://en.wikipedia.org/wiki/Irrational_number
 # ...
 
@@ -87,7 +84,7 @@ _assume_rules = FactRules([
     'nonpositive    ==  real & !positive',
     'nonnegative    ==  real & !negative',
 
-    'zero           ->  infinitesimal & even',
+    'zero           ->  even',
 
     'prime          ->  integer & positive',
     'composite      ==  integer & positive & !prime',
