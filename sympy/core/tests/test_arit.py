@@ -447,6 +447,12 @@ def test_Mul_is_rational():
     assert (n/pi).is_rational is False
 
 
+def test_Add_is_zero():
+    A, B = symbols('A B', commutative=False)
+    assert (A - B).is_zero is None  # could be zero
+    assert (A + B).is_zero is False  # can't be zero
+
+
 def test_Add_is_rational():
     x = Symbol('x')
     n = Symbol('n', rational=True)
