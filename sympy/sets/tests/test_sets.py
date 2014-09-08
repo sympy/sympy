@@ -592,21 +592,21 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True)
+    x = Symbol('x', real=True, bounded=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)
-    A = FiniteSet(1, 2, 30, x, S.Pi, S.Infinity)
+    A = FiniteSet(1, 2, 30, x, S.Pi)
     B = FiniteSet(-4, 0)
-    C = FiniteSet(100, S.NegativeInfinity)
+    C = FiniteSet(100)
     D = FiniteSet('Ham', 'Eggs')
 
-    assert all(s.is_real for s in [I, J, A, B, C])
-    assert not D.is_real
-    assert all((a + b).is_real for a in [I, J, A, B, C] for b in [I, J, A, B, C])
-    assert not any((a + D).is_real for a in [I, J, A, B, C, D])
+    assert all(s.is_subset(S.Reals) for s in [I, J, A, B, C])
+    assert not D.is_subset(S.Reals)
+    assert all((a + b).is_subset(S.Reals) for a in [I, J, A, B, C] for b in [I, J, A, B, C])
+    assert not any((a + D).is_subset(S.Reals) for a in [I, J, A, B, C, D])
 
-    assert not (I + A + D).is_real
+    assert not (I + A + D).is_subset(S.Reals)
 
 
 def test_supinf():
