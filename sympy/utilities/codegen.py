@@ -78,6 +78,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 from __future__ import print_function, division
 
 import os
+import textwrap
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
@@ -766,12 +767,16 @@ class FCodeGen(CodeGen):
             code_list.append("subroutine")
 
         args = ", ".join("%s" % self._get_symbol(arg.name)
-                for arg in routine.arguments)
+                        for arg in routine.arguments)
 
-        # name of the routine + arguments
-        code_list.append("%s(%s)\n" % (routine.name, args))
-        code_list = [ " ".join(code_list) ]
-
+        call_sig = "{0}({1})\n".format(routine.name, args)
+        # Fortran 95 requires all lines be less than 132 characters, so wrap
+        # this line before appending.
+        call_sig = ' &\n'.join(textwrap.wrap(call_sig,
+                                             width=60,
+                                             break_long_words=False)) + '\n'
+        code_list.append(call_sig)
+        code_list = [' '.join(code_list)]
         code_list.append('implicit none\n')
         return code_list
 

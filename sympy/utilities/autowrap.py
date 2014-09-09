@@ -76,6 +76,7 @@ import tempfile
 from subprocess import STDOUT, CalledProcessError
 from string import Template
 
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import check_output
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
@@ -432,9 +433,11 @@ def _validate_backend_language(backend, language):
                           "incompatible").format(backend, language))
 
 
+@cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
-def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
-        flags=[], verbose=False, helpers=[]):
+def autowrap(
+    expr, language=None, backend='f2py', tempdir=None, args=None, flags=(),
+        verbose=False, helpers=()):
     """Generates python callable binaries based on the math expression.
 
     Parameters
@@ -747,7 +750,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
 
 @doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
 def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
-        flags=[], verbose=False, helpers=[]):
+        flags=(), verbose=False, helpers=()):
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters

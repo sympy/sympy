@@ -493,6 +493,10 @@ def test_Add_is_even_odd():
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
     y = Symbol('y', real=False)
+    z = Symbol('z', zero=True)
+
+    e = 2*z
+    assert e.is_Mul and e.is_positive is False and e.is_negative is False
 
     neg = Symbol('neg', negative=True)
     pos = Symbol('pos', positive=True)
@@ -1035,42 +1039,51 @@ def test_Pow_is_even_odd():
 
 
 def test_Pow_is_negative_positive():
-    x = Symbol('x', real=True)
+    r = Symbol('r', real=True)
 
     k = Symbol('k', integer=True, positive=True)
     n = Symbol('n', even=True)
     m = Symbol('m', odd=True)
 
-    z = Symbol('z')
+    x = Symbol('x')
 
-    assert (2**x).is_positive is True
-    assert ((-2)**x).is_positive is None
+    assert (2**r).is_positive is True
+    assert ((-2)**r).is_positive is None
     assert ((-2)**n).is_positive is True
     assert ((-2)**m).is_positive is False
 
     assert (k**2).is_positive is True
     assert (k**(-2)).is_positive is True
 
-    assert (k**x).is_positive is True
-    assert ((-k)**x).is_positive is None
+    assert (k**r).is_positive is True
+    assert ((-k)**r).is_positive is None
     assert ((-k)**n).is_positive is True
     assert ((-k)**m).is_positive is False
 
-    assert (2**x).is_negative is False
-    assert ((-2)**x).is_negative is None
+    assert (2**r).is_negative is False
+    assert ((-2)**r).is_negative is None
     assert ((-2)**n).is_negative is False
     assert ((-2)**m).is_negative is True
 
     assert (k**2).is_negative is False
     assert (k**(-2)).is_negative is False
 
-    assert (k**x).is_negative is False
-    assert ((-k)**x).is_negative is None
+    assert (k**r).is_negative is False
+    assert ((-k)**r).is_negative is None
     assert ((-k)**n).is_negative is False
     assert ((-k)**m).is_negative is True
 
-    assert (2**z).is_positive is None
-    assert (2**z).is_negative is None
+    assert (2**x).is_positive is None
+    assert (2**x).is_negative is None
+
+
+@XFAIL
+def test_Pow_is_zero():
+    z = Symbol('z', zero=True)
+    e = z**2
+    assert e.is_zero
+    assert e.is_positive is False
+    assert e.is_negative is False
 
 
 def test_Pow_is_nonpositive_nonnegative():

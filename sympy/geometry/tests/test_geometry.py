@@ -228,7 +228,7 @@ def test_point3D():
     assert p.translate(z=1) == Point3D(1, 1, 2)
     assert p.translate(*p.args) == Point3D(2, 2, 2)
 
-def test_line():
+def test_line_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
     p3 = Point(x1, x1)
@@ -338,6 +338,14 @@ def test_line():
                Point(2, 1 + C.tan(4.05*pi)))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
+
+    # issue 7963
+    r = Ray((0, 0), angle=x)
+    assert r.subs(x, 3*pi/4) == Ray((0, 0), (-1, 1))
+    assert r.subs(x, 5*pi/4) == Ray((0, 0), (-1, -1))
+    assert r.subs(x, -pi/4) == Ray((0, 0), (1, -1))
+    assert r.subs(x, pi/2) == Ray((0, 0), (0, 1))
+    assert r.subs(x, -pi/2) == Ray((0, 0), (0, -1))
 
     r1 = Ray(p1, Point(-1, 5))
     r2 = Ray(p1, Point(-1, 1))
@@ -806,7 +814,7 @@ def test_plane():
 
     assert pl3.random_point() in pl3
 
-def test_ellipse():
+def test_ellipse_geom():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
     p4 = Point(0, 1)
@@ -900,14 +908,15 @@ def test_ellipse():
         Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is True
     assert c1.is_tangent(
         Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) is False
+    assert Circle(Point(5, 5), 3).is_tangent(Circle(Point(0, 5), 1)) is False
 
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(0, 0)) == \
         [Line(Point(0, 0), Point(77/25, 132/25)),
      Line(Point(0, 0), Point(33/5, 22/5))]
     assert Ellipse(Point(5, 5), 2, 1).tangent_lines(Point(3, 4)) == \
-        [Line(Point(3, 4), Point(3, 5)), Line(Point(3, 4), Point(5, 4))]
+        [Line(Point(3, 4), Point(4, 4)), Line(Point(3, 4), Point(3, 5))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
-        [Line(Point(3, 3), Point(3, 5)), Line(Point(3, 3), Point(5, 3))]
+        [Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
@@ -1011,7 +1020,7 @@ def test_ellipse():
     assert e1.intersection(e2) == ans
     e2 = Ellipse(Point(x, y), 4, 8)
     c = sqrt(3991)
-    ans = [Point(c/68 + a, -2*c/17 + a/2), Point(-c/68 + a, 2*c/17 + a/2)]
+    ans = [Point(-c/68 + a, 2*c/17 + a/2), Point(c/68 + a, -2*c/17 + a/2)]
     assert [p.subs({x: 2, y:1}) for p in e1.intersection(e2)] == ans
 
     # Combinations of above

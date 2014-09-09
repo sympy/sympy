@@ -48,6 +48,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 ]
 
     # To be overridden with True in the appropriate subclasses
+    is_number = False
     is_Atom = False
     is_Symbol = False
     is_Dummy = False
@@ -490,8 +491,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Any other method that uses bound variables should implement a symbols
         method."""
-        union = set.union
-        return reduce(union, [arg.free_symbols for arg in self.args], set())
+        return reduce(set.union, [a.free_symbols for a in self.args], set())
 
     @property
     def canonical_variables(self):
@@ -559,19 +559,6 @@ class Basic(with_metaclass(ManagedProperties)):
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
         return hypersimp(self, k) is not None
-
-    @property
-    def is_number(self):
-        """Returns ``True`` if 'self' contains no free symbols.
-
-        See Also
-        ========
-        is_comparable
-        sympy.core.expr.is_number
-
-        """
-        # should be overriden by subclasses
-        return False
 
     @property
     def is_comparable(self):

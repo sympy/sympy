@@ -902,7 +902,7 @@ class Add(Expr, AssocOp):
     @property
     def _sorted_args(self):
         from sympy.core.compatibility import default_sort_key
-        return sorted(self.args, key=lambda w: default_sort_key(w))
+        return tuple(sorted(self.args, key=lambda w: default_sort_key(w)))
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

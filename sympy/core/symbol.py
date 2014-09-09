@@ -64,8 +64,6 @@ class Symbol(AtomicExpr, Boolean):
 
         """
 
-        if assumptions.get('zero', False):
-            return S.Zero
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
             raise ValueError(
@@ -127,10 +125,6 @@ class Symbol(AtomicExpr, Boolean):
         if not wrt:
             return False
         return not self in wrt
-
-    @property
-    def is_number(self):
-        return False
 
     @property
     def free_symbols(self):
@@ -254,9 +248,9 @@ class Wild(Symbol):
     {a_: 2, b_: x**3*y*z}
 
     """
+    is_Wild = True
 
     __slots__ = ['exclude', 'properties']
-    is_Wild = True
 
     def __new__(cls, name, exclude=(), properties=(), **assumptions):
         exclude = tuple([sympify(x) for x in exclude])

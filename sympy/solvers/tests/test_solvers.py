@@ -119,7 +119,7 @@ def test_solve_args():
     assert solve(a*x**2 + b*x + c -
                 ((x - h)**2 + 4*p*k)/4/p,
                 [h, p, k], exclude=[a, b, c], dict=True) == \
-        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
+        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
@@ -650,11 +650,9 @@ def test_issue_4671_4463_4467():
 def test_issue_5132():
     r, t = symbols('r,t')
     assert set(solve([r - x**2 - y**2, tan(t) - y/x], [x, y])) == \
-        set([
-            (-sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),
-        -sqrt(r*tan(t)**2/(tan(t)**2 + 1))),
-        (sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t),
-        sqrt(r*tan(t)**2/(tan(t)**2 + 1)))])
+        set([(
+            -sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
+            (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2))])
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -1164,8 +1162,8 @@ def test_exclude():
         {
             Rf: Ri*(C*R*s + 1)**2/(C*R*s),
             Vminus: Vplus,
-            V1: Vplus*(2*C*R*s + 1)/(C*R*s),
-            Vout: Vplus*(C**2*R**2*s**2 + 3*C*R*s + 1)/(C*R*s)},
+            V1: 2*Vplus + Vplus/(C*R*s),
+            Vout: C*R*Vplus*s + 3*Vplus + Vplus/(C*R*s)},
         {
             Vplus: 0,
             Vminus: 0,
@@ -1504,3 +1502,17 @@ def test_issue_7547():
 def test_issue_7895():
     r = symbols('r', real=True)
     assert solve(sqrt(r) - 2) == [4]
+
+
+def test_issue_2777():
+    # the equations represent two circles
+    x, y = symbols('x y', real=True)
+    e1, e2 = sqrt(x**2 + y**2) - 10, sqrt(y**2 + (-x + 10)**2) - 3
+    a, b = 191/S(20), 3*sqrt(391)/20
+    ans = [(a, -b), (a, b)]
+    assert solve((e1, e2), (x, y)) == ans
+    assert solve((e1, e2/(x - a)), (x, y)) == []
+    # make the 2nd circle's radius be -3
+    e2 += 6
+    assert solve((e1, e2), (x, y)) == []
+    assert solve((e1, e2), (x, y), check=False) == ans

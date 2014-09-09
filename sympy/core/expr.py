@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from .core import C
-from .sympify import sympify
+from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex
@@ -213,8 +213,11 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -224,8 +227,11 @@ class Expr(Basic, EvalfMixin):
             return sympify(dif.is_nonnegative)
         return C.GreaterThan(self, other)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -235,8 +241,11 @@ class Expr(Basic, EvalfMixin):
             return sympify(dif.is_nonpositive)
         return C.LessThan(self, other)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -246,8 +255,11 @@ class Expr(Basic, EvalfMixin):
             return sympify(dif.is_positive)
         return C.StrictGreaterThan(self, other)
 
-    @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
             if me.is_complex and me.is_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
@@ -293,8 +305,6 @@ class Expr(Basic, EvalfMixin):
         True
 
         """
-        if not self.args:
-            return False
         return all(obj.is_number for obj in self.args)
 
     def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
@@ -3034,6 +3044,8 @@ class Expr(Basic, EvalfMixin):
             # use str or else it won't be a float
             return C.Float(str(rv), digits_needed)
         else:
+            if not allow and rv > self:
+                allow += 1
             return C.Float(rv, allow)
 
 
@@ -3044,7 +3056,7 @@ class AtomicExpr(Atom, Expr):
     For example: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
-
+    is_number = False
     is_Atom = True
 
     __slots__ = []
