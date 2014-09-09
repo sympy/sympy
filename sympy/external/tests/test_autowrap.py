@@ -96,8 +96,8 @@ def runtest_ufuncify(language, backend):
     b = numpy.linspace(-5, 4, 50)
     c = numpy.linspace(-1, 1, 50)
     expected = grid*b + c
-    assert numpy.all(numpy.sum(numpy.abs(expected - fabc(grid, b, c))) < 1e-13)
-    assert numpy.all(numpy.sum(numpy.abs(expected - facb(grid, c, b))) < 1e-13)
+    numpy.testing.assert_allclose(fabc(grid, b, c), expected)
+    numpy.testing.assert_allclose(facb(grid, c, b), expected)
 
 #
 # tests of language-backend combinations

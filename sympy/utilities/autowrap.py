@@ -406,40 +406,64 @@ def _get_code_wrapper_class(backend):
     return wrappers[backend.upper()]
 
 
+# Here we define a lookup of backends -> tuples of languages. For now, each
+# tuple is of length 1, but if a backend supports more than one language,
+# the most preferable language is listed first.
+_lang_lookup = {'CYTHON': ('C',),
+                'F2PY': ('F95',),
+                'NUMPY': ('C',),
+                'DUMMY': ('F95',)}     # Dummy here just for testing
+
+def _infer_language(backend):
+    """For a given backend, return the top choice of language"""
+    langs = _lang_lookup.get(backend.upper(), False)
+    if not langs:
+        raise ValueError("Unrecognized backend: " + backend)
+    return langs[0]
+
+
+def _validate_backend_language(backend, language):
+    """Throws error if backend and language are incompatible"""
+    langs = _lang_lookup.get(backend.upper(), False)
+    if not langs:
+        raise ValueError("Unrecognized backend: " + backend)
+    if language.upper() not in langs:
+        raise ValueError(("Backend {0} and language {1} are"
+                          "incompatible").format(backend, language))
+
+
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
-def autowrap(
-    expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
-        verbose=False, helpers=[]):
+def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
+        flags=[], verbose=False, helpers=[]):
     """Generates python callable binaries based on the math expression.
 
+    Parameters
+    ----------
     expr
-        The SymPy expression that should be wrapped as a binary routine
-
-    :Optional arguments:
-
-    language
-        The programming language to use, currently 'C' or 'F95'
-    backend
-        The wrapper backend to use, currently f2py or Cython
-    tempdir
-        Path to directory for temporary files.  If this argument is supplied,
+        The SymPy expression that should be wrapped as a binary routine.
+    language : string, optional
+        If supplied, (options: 'C' or 'F95'), specifies the language of the
+        generated code. If ``None`` [default], the language is inferred based
+        upon the specified backend.
+    backend : string, optional
+        Backend used to wrap the generated code. Either 'f2py' [default],
+        or 'cython'.
+    tempdir : string, optional
+        Path to directory for temporary files. If this argument is supplied,
         the generated code and the wrapper input files are left intact in the
         specified path.
-    args
-        Sequence of the formal parameters of the generated code, if ommited the
-        function signature is determined by the code generator.
-    flags
+    flags : iterable, optional
         Additional option flags that will be passed to the backend
-    verbose
-        If True, autowrap will not mute the command line backends.  This can be
+    verbose : bool, optional
+        If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
-    helpers
-        Used to define auxillary expressions needed for the main expr.  If the
-        main expression need to do call a specialized function it should be put
-        in the ``helpers`` list.  Autowrap will then make sure that the compiled
-        main expression can link to the helper routine.  Items should be tuples
-        with (<funtion_name>, <sympy_expression>, <arguments>).  It is
-        mandatory to supply an argument sequence to helper routines.
+    helpers : list, optional
+        Used to define auxillary expressions needed for the main expr. If the
+        main expression needs to call a specialized function it should be put
+        in the ``helpers`` list. Autowrap will then make sure that the
+        compiled main expression can link to the helper routine. Items should
+        be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
+        is mandatory to supply an argument sequence to helper routines.
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
@@ -447,8 +471,12 @@ def autowrap(
     >>> binary_func = autowrap(expr)
     >>> binary_func(1, 4, 2)
     -1.0
-
     """
+
+    if language:
+        _validate_backend_language(backend, language)
+    else:
+        language = _infer_language(backend)
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
@@ -717,9 +745,9 @@ class UfuncifyCodeWrapper(CodeWrapper):
         return py_in, py_out
 
 
-@doctest_depends_on(exe=('gcc'), modules=('numpy',))
-def ufuncify(args, expr, backend='numpy', tempdir=None, flags=[],
-        verbose=False, helpers=[]):
+@doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
+def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
+        flags=[], verbose=False, helpers=[]):
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters
@@ -729,6 +757,10 @@ def ufuncify(args, expr, backend='numpy', tempdir=None, flags=[],
         for the function.
     expr
         A SymPy expression that defines the element wise operation.
+    language : string, optional
+        If supplied, (options: 'C' or 'F95'), specifies the language of the
+        generated code. If ``None`` [default], the language is inferred based
+        upon the specified backend.
     backend : string, optional
         Backend used to wrap the generated code. Either 'numpy' [default],
         'cython', or 'f2py'.
@@ -770,9 +802,26 @@ def ufuncify(args, expr, backend='numpy', tempdir=None, flags=[],
     >>> type(f)
     numpy.ufunc
     >>> f([1, 2, 3], 2)
-    array([ 3.  6.  11.])
+    array([ 3.,  6.,  11.])
     >>> f(np.arange(5), 3)
-    array([ 3. 4. 7. 12. 19.])
+    array([ 3.,  4.,  7.,  12.,  19.])
+
+    For the F2Py and Cython backends, inputs are required to be equal length
+    1-dimensional arrays. The F2Py backend will perform type conversion, but
+    the Cython backend will error if the inputs are not of the expected type.
+
+    >>> f_fortran = ufuncify([x, y], y + x**2, backend='F2Py')
+    >>> f_fortran(1, 2)
+    3
+    >>> f_fortran(numpy.array([1, 2, 3]), numpy.array([1.0, 2.0, 3.0]))
+    array([2.,  6.,  12.])
+    >>> f_cython = ufuncify([x, y], y + x**2, backend='Cython')
+    >>> f_cython(1, 2)
+    Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+    TypeError: Argument '_x' has incorrect type (expected numpy.ndarray, got int)
+    >>> f_cython(numpy.array([1.0]), numpy.array([2.0]))
+    array([ 3.])
     """
 
     if isinstance(args, Symbol):
@@ -780,11 +829,12 @@ def ufuncify(args, expr, backend='numpy', tempdir=None, flags=[],
     else:
         args = list(args)
 
-    lang_lookup = {'CYTHON': 'C',
-                   'F2PY': 'F95'}
-    backend = backend.upper()
+    if language:
+        _validate_backend_language(backend, language)
+    else:
+        language = _infer_language(backend)
 
-    if backend == 'NUMPY':
+    if backend.upper() == 'NUMPY':
         routine = Routine('autofunc', expr, args)
         helps = []
         for name, expr, args in helpers:
@@ -792,7 +842,7 @@ def ufuncify(args, expr, backend='numpy', tempdir=None, flags=[],
         code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir,
                 flags, verbose)
         return code_wrapper.wrap_code(routine, helpers=helps)
-    elif backend in lang_lookup:
+    else:
         # Dummies are used for all added expressions to prevent name clashes
         # within the original expression.
         y = IndexedBase(Dummy())
@@ -804,8 +854,5 @@ def ufuncify(args, expr, backend='numpy', tempdir=None, flags=[],
         # Order the arguments (out, args, dim)
         args = [y] + indexed_args + [m]
         args_with_indices = [a[i] for a in indexed_args]
-        lang = lang_lookup[backend]
-        return autowrap(Eq(y[i], f(*args_with_indices)), lang, backend,
+        return autowrap(Eq(y[i], f(*args_with_indices)), language, backend,
                 tempdir, args, flags, verbose, helpers)
-    else:
-        raise ValueError("Unrecognized backend: " + backend)
