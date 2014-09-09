@@ -496,6 +496,7 @@ def test_f():
     # Pow.is_imaginary is improved
     assert (I*sqrt(1 - sqrt(3))).is_negative
 
+
 def test_Mul_is_negative_positive():
     z = Symbol('z', zero=True)
 

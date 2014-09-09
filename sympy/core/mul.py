@@ -1200,9 +1200,10 @@ class Mul(Expr, AssocOp):
             elif t.is_nonnegative:
                 saw_NON = True
             elif t.is_imaginary:
-                if t.is_Symbol:
-                    return  # can't resolve sign(i)
-                sign *= C.sign(t)
+                s = C.sign(t)
+                if s not in (S.ImaginaryUnit, -S.ImaginaryUnit):
+                    return  # didn't resolve sign
+                sign *= s
             else:
                 return
 
