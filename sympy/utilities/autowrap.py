@@ -436,8 +436,8 @@ def _validate_backend_language(backend, language):
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
-    expr, language=None, backend='f2py', tempdir=None, args=None, flags=(),
-        verbose=False, helpers=()):
+    expr, language=None, backend='f2py', tempdir=None, args=None, flags=None,
+    verbose=False, helpers=None):
     """Generates python callable binaries based on the math expression.
 
     Parameters
@@ -456,16 +456,16 @@ def autowrap(
         the generated code and the wrapper input files are left intact in the
         specified path.
     args : iterable, optional
-        A tuple of symbols. Specifies the argument sequence for the function.
+        An iterable of symbols. Specifies the argument sequence for the function.
     flags : iterable, optional
-        Additional option flags that will be passed to the backend
+        Additional option flags that will be passed to the backend.
     verbose : bool, optional
         If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
-    helpers : list, optional
+    helpers : iterable, optional
         Used to define auxillary expressions needed for the main expr. If the
         main expression needs to call a specialized function it should be put
-        in the ``helpers`` list. Autowrap will then make sure that the
+        in the ``helpers`` iterable. Autowrap will then make sure that the
         compiled main expression can link to the helper routine. Items should
         be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
         is mandatory to supply an argument sequence to helper routines.
@@ -482,6 +482,9 @@ def autowrap(
         _validate_backend_language(backend, language)
     else:
         language = _infer_language(backend)
+
+    helpers = helpers if helpers else ()
+    flags = flags if flags else ()
 
     code_generator = get_code_generator(language, "autowrap")
     CodeWrapperClass = _get_code_wrapper_class(backend)
@@ -753,14 +756,14 @@ class UfuncifyCodeWrapper(CodeWrapper):
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
 def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
-        flags=(), verbose=False, helpers=()):
+        flags=None, verbose=False, helpers=None):
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters
     ----------
-    args
-        Either a Symbol or a tuple of symbols. Specifies the argument sequence
-        for the function.
+    args : iterable
+        Either a Symbol or an iterable of symbols. Specifies the argument
+        sequence for the function.
     expr
         A SymPy expression that defines the element wise operation.
     language : string, optional
@@ -779,10 +782,10 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     verbose : bool, optional
         If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
-    helpers : list, optional
+    helpers : iterable, optional
         Used to define auxillary expressions needed for the main expr. If the
         main expression needs to call a specialized function it should be put
-        in the ``helpers`` list. Autowrap will then make sure that the
+        in the ``helpers`` iterable. Autowrap will then make sure that the
         compiled main expression can link to the helper routine. Items should
         be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
         is mandatory to supply an argument sequence to helper routines.
@@ -839,6 +842,9 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         _validate_backend_language(backend, language)
     else:
         language = _infer_language(backend)
+
+    helpers = helpers if helpers else ()
+    flags = flags if flags else ()
 
     if backend.upper() == 'NUMPY':
         routine = Routine('autofunc', expr, args)
