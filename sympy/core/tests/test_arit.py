@@ -1141,6 +1141,7 @@ def test_Pow_is_nonpositive_nonnegative():
 
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
     i = Symbol('i', imaginary=True)
     ii = Symbol('ii', imaginary=True)
     x = Symbol('x')
@@ -1153,6 +1154,25 @@ def test_Mul_is_imaginary_real():
     assert (3*I).is_real is False
     assert (I*I).is_imaginary is False
     assert (I*I).is_real is True
+
+    e = (p + p*I)
+    j = Symbol('j', integer=True, zero=False)
+    assert (e**j).is_real is None
+    assert (e**(2*j)).is_real is None
+    assert (e**j).is_imaginary is None
+    assert (e**(2*j)).is_imaginary is None
+
+    assert (e**-1).is_imaginary is False
+    assert (e**2).is_imaginary
+    assert (e**3).is_imaginary is False
+    assert (e**4).is_imaginary is False
+    assert (e**5).is_imaginary is False
+    assert (e**-1).is_real is False
+    assert (e**2).is_real is False
+    assert (e**3).is_real is False
+    assert (e**4).is_real
+    assert (e**5).is_real is False
+    assert (e**3).is_complex
 
     assert (r*i).is_imaginary is None
     assert (r*i).is_real is None
@@ -1628,6 +1648,7 @@ def test_float_int():
     assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == \
         12345678901234567891
 
+
 def test_issue_6611a():
     assert Mul.flatten([3**Rational(1, 3),
         Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
@@ -1681,8 +1702,8 @@ def test_mul_zero_detection():
     assert e.is_real is None
 
     # _eval_is_real and _eval_is_zero both employ trapping of the
-    # zero value so args should be tested in both directions and to
-    # AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
+    # zero value so args should be tested in both directions and
+    # TO AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
 
     # real is unknonwn
     def test(z, b, e):

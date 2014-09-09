@@ -5,15 +5,15 @@ from math import log as _log
 from .sympify import _sympify
 from .cache import cacheit
 from .core import C
+from .logic import _fuzzy_group
 from .singleton import S
 from .expr import Expr
-
-from sympy.core.evalf import PrecisionExhausted
-from sympy.core.function import (_coeff_isneg, expand_complex,
-    expand_multinomial, expand_mul)
-from sympy.core.logic import fuzzy_bool
-from sympy.core.compatibility import as_int, xrange
-from sympy.core.evaluate import global_evaluate
+from .evalf import PrecisionExhausted
+from .function import (_coeff_isneg, expand_complex, expand_multinomial,
+    expand_mul)
+from .logic import fuzzy_bool
+from .compatibility import as_int, xrange
+from .evaluate import global_evaluate
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
@@ -411,6 +411,14 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
+        if real_b is False:  # we already know it's not imag
+            i = C.arg(self.base)*self.exp/S.Pi
+            return i.is_integer
+
+    def _eval_is_complex(self):
+        if all(a.is_complex for a in self.args):
+            return True
+
     def _eval_is_imaginary(self):
         if self.base.is_imaginary:
             if self.exp.is_integer:
@@ -428,16 +436,20 @@ class Pow(Expr):
             if self.base.is_positive:
                 return False
             else:
-                r = self.exp.is_rational
+                rat = self.exp.is_rational
+                if not rat:
+                    return rat
                 if self.exp.is_integer:
                     return False
                 else:
-                    r = (2*self.exp).is_integer
-                    if r:
+                    half = (2*self.exp).is_integer
+                    if half:
                         return self.base.is_negative
-                    else:
-                        return r
-                return r
+                    return half
+
+        if self.base.is_real is False:  # we already know it's not imag
+            i = C.arg(self.base)*self.exp/S.Pi
+            return (2*i).is_odd
 
     def _eval_is_odd(self):
         if self.exp.is_integer:

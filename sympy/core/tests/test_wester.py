@@ -742,7 +742,6 @@ def test_K1():
     assert im(z1 + I*z2) == im(z1) + re(z2)
 
 
-@XFAIL  # abs(...).n() does evaluate to 1.00000...
 def test_K2():
     assert abs(3 - sqrt(7) + I*sqrt(6*sqrt(7) - 15)) == 1
 
@@ -952,6 +951,7 @@ def test_M21():
     assert solve(x + sqrt(x) - 2) == [1]
 
 
+@slow
 def test_M22():
     assert solve(2*sqrt(x) + 3*x**R(1, 4) - 2) == [R(1, 16)]
 
@@ -1912,6 +1912,7 @@ def test_R18():
     assert T.simplify() == -log(2)**2/2 + pi**2/12
 
 
+@slow
 @XFAIL
 def test_R19():
     k = symbols('k', integer=True, positive=True)
@@ -2051,6 +2052,7 @@ def test_T4():
                  - exp(x))/x, x, oo) == -exp(2)
 
 
+@slow
 def test_T5():
     assert  limit(x*log(x)*log(x*exp(x) - x**2)**2/log(log(x**2
                   + 2*exp(exp(3*x**3*log(x))))), x, oo) == Rational(1, 3)
@@ -2333,6 +2335,7 @@ def test_V12():
     assert r1 == -1/(tan(x/2) + 2)
 
 
+@slow
 @XFAIL
 def test_V13():
     r1 = integrate(1/(6 + 3*cos(x) + 4*sin(x)), x)
@@ -2341,6 +2344,7 @@ def test_V13():
     assert r1.simplify() == 2*sqrt(11)*atan(sqrt(11)*(3*tan(x/2) + 4)/11)/11
 
 
+@slow
 @XFAIL
 def test_V14():
     r1 = integrate(log(abs(x**2 - y**2)), x)
@@ -2367,6 +2371,7 @@ def test_V16():
     raise NotImplementedError("cosine integral function not supported")
 
 
+@slow
 @XFAIL
 def test_V17():
     r1 = integrate((diff(f(x), x)*g(x)
@@ -2853,6 +2858,7 @@ def test_Y2():
     assert f == cos(t*abs(w - 1))
 
 
+@slow
 @XFAIL
 def test_Y3():
     t = symbols('t', real=True, positive=True)

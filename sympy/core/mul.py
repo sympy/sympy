@@ -3,14 +3,14 @@ from __future__ import print_function, division
 from collections import defaultdict
 import operator
 
-from sympy.core.sympify import sympify
-from sympy.core.basic import Basic, C
-from sympy.core.singleton import S
-from sympy.core.operations import AssocOp
-from sympy.core.cache import cacheit
-from sympy.core.logic import fuzzy_not
-from sympy.core.compatibility import cmp_to_key, reduce, xrange
-from sympy.core.expr import Expr
+from .sympify import sympify
+from .basic import Basic, C
+from .singleton import S
+from .operations import AssocOp
+from .cache import cacheit
+from .logic import fuzzy_not, _fuzzy_group, _fuzzy_group_inverse
+from .compatibility import cmp_to_key, reduce, xrange
+from .expr import Expr
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -956,13 +956,14 @@ class Mul(Expr, AssocOp):
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
-    _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
-    _eval_is_commutative = lambda self: self._eval_template_is_attr(
-        'is_commutative')
-    _eval_is_rational = lambda self: self._eval_template_is_attr('is_rational',
-        when_multiple=None)
-    _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex',
-        when_multiple=None)
+    _eval_is_bounded = lambda self: _fuzzy_group(
+        a.is_bounded for a in self.args)
+    _eval_is_commutative = lambda self: _fuzzy_group(
+        a.is_commutative for a in self.args)
+    _eval_is_rational = lambda self: _fuzzy_group(
+        (a.is_rational for a in self.args), quick_exit=True)
+    _eval_is_complex = lambda self: _fuzzy_group(
+        (a.is_complex for a in self.args), quick_exit=True)
 
     def _eval_is_zero(self):
         zero = unbound = False
