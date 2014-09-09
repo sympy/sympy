@@ -1004,7 +1004,7 @@ class Mul(Expr, AssocOp):
 
         for t in self.args:
             if not t.is_complex:
-                return
+                return t.is_complex
             elif t.is_imaginary:
                 real = not real
             elif t.is_real:
