@@ -5,12 +5,14 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+import inspect
+import textwrap
+import warnings
+
 from sympy.external import import_module
 from sympy.core.compatibility import exec_, is_sequence, iterable, string_types
 from sympy.utilities.decorator import doctest_depends_on
-import inspect
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-import warnings
 
 warnings.simplefilter("always", SymPyDeprecationWarning)
 
@@ -363,6 +365,25 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import NumExprPrinter as printer
 
+    # Get the names of the args, for creating a docstring
+    if not iterable(args):
+        args = (args,)
+    names = []
+    # Grab the callers frame, for getting the names by inspection (if needed)
+    callers_local_vars = inspect.currentframe().f_back.f_locals.items()
+    for n, var in enumerate(args):
+        if hasattr(var, 'name'):
+            names.append(var.name)
+        else:
+            # It's an iterable. Try to get name by inspection of calling frame.
+            name_list = [var_name for var_name, var_val in callers_local_vars
+                    if var_val is var]
+            if len(name_list) == 1:
+                names.append(name_list[0])
+            else:
+                # Cannot infer name with certainty. arg_# will have to do.
+                names.append('arg_' + str(n))
+
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
@@ -370,7 +391,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if flat in lstr:
         import itertools
         namespace.update({flat: flatten})
-    return eval(lstr, namespace)
+    func = eval(lstr, namespace)
+    # Apply the docstring
+    sig = "func({0})".format(", ".join(str(i) for i in names))
+    sig = textwrap.fill(sig, subsequent_indent=' '*8)
+    func.__doc__ = "Created with lambdify. Signature:\n\n" + sig
+    return func
 
 
 def _get_namespace(m):
