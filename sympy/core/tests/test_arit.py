@@ -7,23 +7,19 @@ from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
 from sympy.core.evalf import PrecisionExhausted
 from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
+from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
 
 
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
+a, c, x, y, z = symbols('a,c,x,y,z')
+b = Symbol("b", positive=True)
 
 
 def test_bug1():
     assert re(x) != x
     x.series(x, 0, 1)
     assert re(x) != x
-
-a = Symbol("a")
-b = Symbol("b", positive=True)
-c = Symbol("c")
 
 
 def test_Symbol():
@@ -32,6 +28,17 @@ def test_Symbol():
     assert a*b*b == a*b**2
     assert a*b*b + c == c + a*b**2
     assert a*b*b - c == -c + a*b**2
+
+    x = Symbol('x', complex=True, real=False)
+    assert x.is_imaginary is None  # could be I or 1 + I
+    x = Symbol('x', complex=True, imaginary=False)
+    assert x.is_real is None  # could be 1 or 1 + I
+    x = Symbol('x', real=True)
+    assert x.is_complex
+    x = Symbol('x', imaginary=True)
+    assert x.is_complex
+    x = Symbol('x', real=False, imaginary=False)
+    assert x.is_complex is None  # might be a non-number
 
 
 def test_arit0():
@@ -503,6 +510,7 @@ def test_Mul_is_negative_positive():
     e = 2*z
     assert e.is_Mul and e.is_positive is False and e.is_negative is False
 
+    nc = Dummy(complex=False)
     r = Dummy(real=True)
     nr = Dummy(real=False)
     neg = Dummy(negative=True)
@@ -514,14 +522,15 @@ def test_Mul_is_negative_positive():
     assert neg.is_negative is True
     assert (i*j).is_negative is None  # could be (2*I)*(-3*I)
     assert (i*j).is_positive is None  # ditto
+    assert (-nc).is_negative is False
 
     assert Mul(Mul(0, I, evaluate=False), I, evaluate=False).is_negative \
         is False
     assert Mul(I, Mul(I, pos, evaluate=False), evaluate=False).is_negative
     assert Mul(I, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
     assert Mul(I, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is None
-    assert Mul(I, Mul(I, npos, evaluate=False), evaluate=False).is_negative is None
-    assert Mul(I, Mul(I, i, evaluate=False), evaluate=False).is_negative is None
+    assert Mul(I, Mul(I, npos, evaluate=False), evaluate=False).is_negative is False
+    assert Mul(I, Mul(I, i, evaluate=False), evaluate=False).is_negative is False
     assert Mul(2, Mul(I, pos, evaluate=False), evaluate=False).is_negative is False
     assert Mul(2, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
     assert Mul(2, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is False
@@ -1158,6 +1167,7 @@ def test_Pow_is_nonpositive_nonnegative():
 
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
+    p = Symbol('p', positive=True)
     i = Symbol('i', imaginary=True)
     ii = Symbol('ii', imaginary=True)
     x = Symbol('x')
@@ -1170,6 +1180,25 @@ def test_Mul_is_imaginary_real():
     assert (3*I).is_real is False
     assert (I*I).is_imaginary is False
     assert (I*I).is_real is True
+
+    e = (p + p*I)
+    j = Symbol('j', integer=True, zero=False)
+    assert (e**j).is_real is None
+    assert (e**(2*j)).is_real is None
+    assert (e**j).is_imaginary is None
+    assert (e**(2*j)).is_imaginary is None
+
+    assert (e**-1).is_imaginary is False
+    assert (e**2).is_imaginary
+    assert (e**3).is_imaginary is False
+    assert (e**4).is_imaginary is False
+    assert (e**5).is_imaginary is False
+    assert (e**-1).is_real is False
+    assert (e**2).is_real is False
+    assert (e**3).is_real is False
+    assert (e**4).is_real
+    assert (e**5).is_real is False
+    assert (e**3).is_complex
 
     assert (r*i).is_imaginary is None
     assert (r*i).is_real is None
@@ -1184,12 +1213,33 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False)
+    nr = Symbol('nr', real=False, complex=True)
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i*nr).is_real is None
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
+
+
+def test_Mul_hermitian_antihermitian():
+    a = Symbol('a', hermitian=True, zero=False)
+    b = Symbol('b', hermitian=True)
+    c = Symbol('c', hermitian=False)
+    d = Symbol('d', antihermitian=True)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    e3 = Mul(a, b, c, d, evaluate=False)
+    e4 = Mul(b, a, c, d, evaluate=False)
+    e5 = Mul(a, c, evaluate=False)
+    e6 = Mul(a, c, d, evaluate=False)
+    assert e1.is_hermitian is None
+    assert e2.is_hermitian is None
+    assert e1.is_antihermitian is None
+    assert e2.is_antihermitian is None
+    assert e3.is_antihermitian is None
+    assert e4.is_antihermitian is None
+    assert e5.is_antihermitian is None
+    assert e6.is_antihermitian is None
 
 
 def test_Add_is_comparable():
@@ -1624,6 +1674,7 @@ def test_float_int():
     assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == \
         12345678901234567891
 
+
 def test_issue_6611a():
     assert Mul.flatten([3**Rational(1, 3),
         Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
@@ -1645,8 +1696,71 @@ def test_denest_add_mul():
     assert 2*eq == Mul(-4, x - 2, evaluate=False)
     assert -eq == Mul(2, x - 2, evaluate=False)
 
+
 def test_mul_coeff():
     # It is important that all Numbers be removed from the seq;
     # This can be tricky when powers combine to produce those numbers
     p = exp(I*pi/3)
     assert p**2*x*p*y*p*x*p**2 == x**2*y
+
+
+def test_mul_zero_detection():
+    nz = Dummy(real=True, zero=False, bounded=True)
+    r = Dummy(real=True)
+    c = Dummy(real=False, complex=True, bounded=True)
+    c2 = Dummy(real=False, complex=True, bounded=True)
+    i = Dummy(imaginary=True, bounded=True)
+    e = nz*r*c
+    assert e.is_imaginary is None
+    assert e.is_real is None
+    e = nz*c
+    assert e.is_imaginary is None
+    assert e.is_real is False
+    e = nz*i*c
+    assert e.is_imaginary is False
+    assert e.is_real is None
+    # check for more than one complex; it is important to use
+    # uniquely named Symbols to ensure that two factors appear
+    # e.g. if the symbols have the same name they just become
+    # a single factor, a power.
+    e = nz*i*c*c2
+    assert e.is_imaginary is None
+    assert e.is_real is None
+
+    # _eval_is_real and _eval_is_zero both employ trapping of the
+    # zero value so args should be tested in both directions and
+    # TO AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
+
+    # real is unknonwn
+    def test(z, b, e):
+        if z.is_zero and b.is_bounded:
+            assert e.is_real and e.is_zero
+        else:
+            assert e.is_real == e.is_zero == None
+
+    for iz, ib in cartes(*[[True, False, None]]*2):
+        z = Dummy(nonzero=iz)
+        b = Dummy(bounded=ib)
+        e = Mul(z, b, evaluate=False)
+        test(z, b, e)
+        z = Dummy(nonzero=iz)
+        b = Dummy(bounded=ib)
+        e = Mul(b, z, evaluate=False)
+        test(z, b, e)
+
+    # real is True
+    def test(z, b, e):
+        if z.is_zero and not b.is_bounded:
+            assert e.is_real is None
+        else:
+            assert e.is_real
+
+    for iz, ib in cartes(*[[True, False, None]]*2):
+        z = Dummy('z', nonzero=iz, real=True)
+        b = Dummy('b', bounded=ib, real=True)
+        e = Mul(z, b, evaluate=False)
+        test(z, b, e)
+        z = Dummy('z', nonzero=iz, real=True)
+        b = Dummy('b', bounded=ib, real=True)
+        e = Mul(b, z, evaluate=False)
+        test(z, b, e)
