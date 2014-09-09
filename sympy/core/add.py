@@ -458,8 +458,22 @@ class Add(Expr, AssocOp):
         'is_integer', when_multiple=None)
     _eval_is_rational = lambda self: self._eval_template_is_attr(
         'is_rational', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr(
-        'is_commutative')
+
+    def _eval_is_zero(self):
+        if not self.is_commutative:
+            # if the nc parts are made positive and you can tell the sign
+            # of the result then self cannot be zero since there is no
+            # way for the nc parts to cancel; otherwise we don't know
+            # since the nc parts might cancel
+            args = []
+            for a in self.args:
+                c, nc = a.args_cnc()
+                if nc:
+                    args.append(Mul._from_args(c + [C.Dummy(positive=True)]))
+                else:
+                    args.append(a)
+            if Add._from_args(args).is_positive:
+                return False
 
     def _eval_is_imaginary(self):
         from sympy import im
