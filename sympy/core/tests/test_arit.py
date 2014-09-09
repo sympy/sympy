@@ -2,28 +2,24 @@ from __future__ import division
 
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im, nan, cbrt
+        sign, im, nan, cbrt, Dummy
 )
 from sympy.core.evalf import PrecisionExhausted
 from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
+from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
 
 
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
+a, c, x, y, z = symbols('a,c,x,y,z')
+b = Symbol("b", positive=True)
 
 
 def test_bug1():
     assert re(x) != x
     x.series(x, 0, 1)
     assert re(x) != x
-
-a = Symbol("a")
-b = Symbol("b", positive=True)
-c = Symbol("c")
 
 
 def test_Symbol():
@@ -32,6 +28,17 @@ def test_Symbol():
     assert a*b*b == a*b**2
     assert a*b*b + c == c + a*b**2
     assert a*b*b - c == -c + a*b**2
+
+    x = Symbol('x', complex=True, real=False)
+    assert x.is_imaginary is None  # could be I or 1 + I
+    x = Symbol('x', complex=True, imaginary=False)
+    assert x.is_real is None  # could be 1 or 1 + I
+    x = Symbol('x', real=True)
+    assert x.is_complex
+    x = Symbol('x', imaginary=True)
+    assert x.is_complex
+    x = Symbol('x', real=False, imaginary=False)
+    assert x.is_complex is None  # might be a non-number
 
 
 def test_arit0():
@@ -492,7 +499,7 @@ def test_Add_is_even_odd():
 
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
-    y = Symbol('y', real=False)
+    y = Symbol('y', real=False, complex=True)
     z = Symbol('z', zero=True)
 
     e = 2*z
@@ -1180,12 +1187,33 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False)
+    nr = Symbol('nr', real=False, complex=True)
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i*nr).is_real is None
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
+
+
+def test_Mul_hermitian_antihermitian():
+    a = Symbol('a', hermitian=True, zero=False)
+    b = Symbol('b', hermitian=True)
+    c = Symbol('c', hermitian=False)
+    d = Symbol('d', antihermitian=True)
+    e1 = Mul(a, b, c, evaluate=False)
+    e2 = Mul(b, a, c, evaluate=False)
+    e3 = Mul(a, b, c, d, evaluate=False)
+    e4 = Mul(b, a, c, d, evaluate=False)
+    e5 = Mul(a, c, evaluate=False)
+    e6 = Mul(a, c, d, evaluate=False)
+    assert e1.is_hermitian is None
+    assert e2.is_hermitian is None
+    assert e1.is_antihermitian is None
+    assert e2.is_antihermitian is None
+    assert e3.is_antihermitian is None
+    assert e4.is_antihermitian is None
+    assert e5.is_antihermitian is None
+    assert e6.is_antihermitian is None
 
 
 def test_Add_is_comparable():
@@ -1650,10 +1678,63 @@ def test_mul_coeff():
     assert p**2*x*p*y*p*x*p**2 == x**2*y
 
 
-def test_mul_nonzero():
-    i = Symbol('i', integer=True, zero=False)
-    n = Symbol('n', nonzero=False)
-    assert (2*i).is_nonzero
-    assert (2*x).is_nonzero is None
-    assert Mul(x, n, evaluate=False).is_nonzero is None
-    assert Mul(n, x, evaluate=False).is_nonzero is False
+def test_mul_zero_detection():
+    nz = Dummy(real=True, zero=False, bounded=True)
+    r = Dummy(real=True)
+    c = Dummy(real=False, complex=True, bounded=True)
+    c2 = Dummy(real=False, complex=True, bounded=True)
+    i = Dummy(imaginary=True, bounded=True)
+    e = nz*r*c
+    assert e.is_imaginary is None
+    assert e.is_real is None
+    e = nz*c
+    assert e.is_imaginary is None
+    assert e.is_real is False
+    e = nz*i*c
+    assert e.is_imaginary is False
+    assert e.is_real is None
+    # check for more than one complex; it is important to use
+    # uniquely named Symbols to ensure that two factors appear
+    # e.g. if the symbols have the same name they just become
+    # a single factor, a power.
+    e = nz*i*c*c2
+    assert e.is_imaginary is None
+    assert e.is_real is None
+
+    # _eval_is_real and _eval_is_zero both employ trapping of the
+    # zero value so args should be tested in both directions and
+    # TO AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
+
+    # real is unknonwn
+    def test(z, b, e):
+        if z.is_zero and b.is_bounded:
+            assert e.is_real and e.is_zero
+        else:
+            assert e.is_real == e.is_zero == None
+
+    for iz, ib in cartes(*[[True, False, None]]*2):
+        z = Dummy(nonzero=iz)
+        b = Dummy(bounded=ib)
+        e = Mul(z, b, evaluate=False)
+        test(z, b, e)
+        z = Dummy(nonzero=iz)
+        b = Dummy(bounded=ib)
+        e = Mul(b, z, evaluate=False)
+        test(z, b, e)
+
+    # real is True
+    def test(z, b, e):
+        if z.is_zero and not b.is_bounded:
+            assert e.is_real is None
+        else:
+            assert e.is_real
+
+    for iz, ib in cartes(*[[True, False, None]]*2):
+        z = Dummy('z', nonzero=iz, real=True)
+        b = Dummy('b', bounded=ib, real=True)
+        e = Mul(z, b, evaluate=False)
+        test(z, b, e)
+        z = Dummy('z', nonzero=iz, real=True)
+        b = Dummy('b', bounded=ib, real=True)
+        e = Mul(b, z, evaluate=False)
+        test(z, b, e)
