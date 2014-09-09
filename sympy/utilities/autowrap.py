@@ -455,6 +455,8 @@ def autowrap(
         Path to directory for temporary files. If this argument is supplied,
         the generated code and the wrapper input files are left intact in the
         specified path.
+    args : iterable, optional
+        A tuple of symbols. Specifies the argument sequence for the function.
     flags : iterable, optional
         Additional option flags that will be passed to the backend
     verbose : bool, optional
@@ -748,6 +750,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         return py_in, py_out
 
 
+@cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
 def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         flags=(), verbose=False, helpers=()):
@@ -801,7 +804,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y
     >>> import numpy as np
-    >>> f = ufuncify([x, y], y + x**2)
+    >>> f = ufuncify((x, y), y + x**2)
     >>> type(f)
     numpy.ufunc
     >>> f([1, 2, 3], 2)
@@ -813,12 +816,12 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     1-dimensional arrays. The F2Py backend will perform type conversion, but
     the Cython backend will error if the inputs are not of the expected type.
 
-    >>> f_fortran = ufuncify([x, y], y + x**2, backend='F2Py')
+    >>> f_fortran = ufuncify((x, y), y + x**2, backend='F2Py')
     >>> f_fortran(1, 2)
     3
     >>> f_fortran(numpy.array([1, 2, 3]), numpy.array([1.0, 2.0, 3.0]))
     array([2.,  6.,  12.])
-    >>> f_cython = ufuncify([x, y], y + x**2, backend='Cython')
+    >>> f_cython = ufuncify((x, y), y + x**2, backend='Cython')
     >>> f_cython(1, 2)
     Traceback (most recent call last):
     File "<stdin>", line 1, in <module>
@@ -828,9 +831,9 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     """
 
     if isinstance(args, Symbol):
-        args = [args]
+        args = (args,)
     else:
-        args = list(args)
+        args = tuple(args)
 
     if language:
         _validate_backend_language(backend, language)
