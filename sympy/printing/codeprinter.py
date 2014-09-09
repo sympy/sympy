@@ -110,6 +110,8 @@ class CodePrinter(StrPrinter):
 
         if assign_to:
             expr = Assignment(assign_to, expr)
+        else:
+            expr = _sympify(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
