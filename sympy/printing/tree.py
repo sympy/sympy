@@ -82,7 +82,6 @@ def print_tree(node):
       nonzero: True
       comparable: True
       commutative: True
-      infinitesimal: False
       unbounded: False
       noninteger: False
       zero: False

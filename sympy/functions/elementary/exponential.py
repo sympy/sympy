@@ -631,7 +631,7 @@ class log(Function):
 
     def _eval_is_bounded(self):
         arg = self.args[0]
-        if arg.is_infinitesimal:
+        if arg.is_zero:
             return False
         return arg.is_bounded
 
@@ -640,7 +640,7 @@ class log(Function):
         if arg.is_positive:
             if arg.is_unbounded:
                 return True
-            if arg.is_infinitesimal:
+            if arg.is_zero:
                 return False
             return (arg - 1).is_positive
 

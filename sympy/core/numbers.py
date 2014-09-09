@@ -1196,9 +1196,6 @@ class Rational(Number):
     def _eval_is_zero(self):
         return self.p == 0
 
-    def _eval_is_infinitesimal(self):
-        return self.is_zero
-
     def __neg__(self):
         return Rational(-self.p, self.q)
 
@@ -2135,7 +2132,6 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_commutative = True
     is_positive = True
     is_bounded = False
-    is_infinitesimal = False
     is_integer = None
     is_rational = None
     is_odd = None
@@ -2336,7 +2332,6 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_real = True
     is_positive = False
     is_bounded = False
-    is_infinitesimal = False
     is_integer = None
     is_rational = None
     is_number = True
@@ -2821,9 +2816,6 @@ class NumberSymbol(AtomicExpr):
     def __hash__(self):
         return super(NumberSymbol, self).__hash__()
 
-    def _eval_is_infinitesimal(self):
-        return self.is_zero
-
 
 class Exp1(with_metaclass(Singleton, NumberSymbol)):
     r"""The `e` constant.
@@ -3160,7 +3152,6 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     is_imaginary = True
     is_bounded = True
     is_number = True
-    is_infinitesimal = False
 
     __slots__ = []
 

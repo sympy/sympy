@@ -1289,13 +1289,9 @@ def test_issue_4122():
     assert (oo + x).is_Add
     x = Symbol('x', bounded=True)
     assert (oo + x).is_Add  # x could be imaginary
-    x = Symbol('x', infinitesimal=True)
-    assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
     assert oo + x == oo
     x = Symbol('x', bounded=True, real=True)
-    assert oo + x == oo
-    x = Symbol('x', infinitesimal=True, real=True)
     assert oo + x == oo
 
     # similarily for negative infinity
@@ -1303,13 +1299,9 @@ def test_issue_4122():
     assert (-oo + x).is_Add
     x = Symbol('x', bounded=True)
     assert (-oo + x).is_Add
-    x = Symbol('x', infinitesimal=True)
-    assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
     assert -oo + x == -oo
     x = Symbol('x', bounded=True, real=True)
-    assert -oo + x == -oo
-    x = Symbol('x', infinitesimal=True, real=True)
     assert -oo + x == -oo
 
 
