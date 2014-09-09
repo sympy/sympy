@@ -964,6 +964,23 @@ class Mul(Expr, AssocOp):
     _eval_is_complex = lambda self: self._eval_template_is_attr('is_complex',
         when_multiple=None)
 
+    def _eval_is_zero(self):
+        zero = unbound = False
+        for a in self.args:
+            z = a.is_zero
+            if z:
+                if unbound:
+                    return  # 0*oo is nan and nan.is_zero is None
+                zero = True
+            else:
+                if not a.is_bounded:
+                    if zero:
+                        return  # 0*oo is nan and nan.is_zero is None
+                    unbound = True
+                if zero is False and z is None:  # trap None
+                    zero = None
+        return zero
+
     def _eval_is_integer(self):
         is_rational = self.is_rational
 
@@ -982,137 +999,75 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_real(self):
-        from sympy.core.logic import fuzzy_not
-        im_count = 0
-        is_neither = False
-        is_zero = False
+        real = True
+        zero = one_neither = False
+
         for t in self.args:
-            if t.is_imaginary:
-                im_count += 1
-                continue
-            t_real = t.is_real
-            if t_real:
-                if not is_zero:
-                    is_zero = fuzzy_not(t.is_nonzero)
-                    if is_zero:
-                        return True
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return
-                else:
-                    is_neither = True
+            if not t.is_complex:
+                return t.is_complex
+            elif t.is_imaginary:
+                real = not real
+            elif t.is_real:
+                if not zero:
+                    z = t.is_zero
+                    if not z and zero is False:
+                        zero = z
+                    elif z:
+                        if all(a.is_bounded for a in self.args):
+                            return True
+                        return
+            elif t.is_real is False:
+                if one_neither:
+                    return  # complex terms might cancel
+                one_neither = True
             else:
                 return
 
-        if is_neither:
-            if im_count % 2 == 0:
-                if is_zero is False:
-                    return False
-        else:
-            if im_count % 2 == 0:
-                return True
-            else:
-                return is_zero
+        if one_neither:  # self is a+I*b or I*b
+            if real:
+                return zero  # real*self is like self: neither is real
+        elif zero is False:
+            return real  # can't be trumped by 0
+        elif real:
+            return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        from sympy.core.logic import fuzzy_not
-        im_count = 0
-        is_neither = False
-        is_zero = False
-        for t in self.args:
-            if t.is_imaginary:
-                im_count += 1
-                continue
-            t_real = t.is_real
-            if t_real:
-                if not is_zero:
-                    is_zero = fuzzy_not(t.is_nonzero)
-                    if is_zero:
-                        return False
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return None
-                else:
-                    is_neither = True
-            else:
-                return None
-
-        if is_neither:
-            return is_zero
-        else:
-            if im_count % 2 == 1:
-                if is_zero is False:
-                    return True
-            else:
-                return False
+        if self.is_nonzero:
+            return (S.ImaginaryUnit*self).is_real
 
     def _eval_is_hermitian(self):
-        from sympy.core.logic import fuzzy_not
-        nc_count = 0
-        im_count = 0
-        is_neither = False
-        is_zero = False
+        real = True
+        one_nc = zero = one_neither = False
+
         for t in self.args:
             if not t.is_commutative:
-                nc_count += 1
-                if nc_count > 1:
+                if one_nc:
                     return
+                one_nc = True
+
             if t.is_antihermitian:
-                im_count += 1
-                continue
-            t_real = t.is_hermitian
-            if t_real:
-                if not is_zero:
-                    is_zero = fuzzy_not(t.is_nonzero)
-                    if is_zero:
+                real = not real
+            elif t.is_hermitian:
+                if zero is False:
+                    zero = fuzzy_not(t.is_nonzero)
+                    if zero:
                         return True
-                continue
-            elif t_real is False:
-                if is_neither:
+            elif t.is_hermitian is False:
+                if one_neither:
                     return
-                else:
-                    is_neither = True
+                one_neither = True
             else:
                 return
 
-        if is_neither:
-            if im_count % 2 == 0:
-                if is_zero is False:
-                    return False
-        else:
-            if im_count % 2 == 0:
-                return True
-            else:
-                return is_zero
+        if one_neither:
+            if real:
+                return zero
+        elif zero is False or real:
+            return real
 
     def _eval_is_antihermitian(self):
-        nc_count = 0
-        im_count = 0
-        is_neither = False
-        for t in self.args:
-            if not t.is_commutative:
-                nc_count += 1
-                if nc_count > 1:
-                    return None
-            if t.is_antihermitian:
-                im_count += 1
-                continue
-            t_real = t.is_hermitian
-            if t_real:
-                continue
-            elif t_real is False:
-                if is_neither:
-                    return None
-                else:
-                    is_neither = True
-            else:
-                return None
-        if is_neither:
-            return False
-
-        return (im_count % 2 == 1)
+        if self.is_nonzero:
+            return (S.ImaginaryUnit*self).is_hermitian
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1126,18 +1081,6 @@ class Mul(Expr, AssocOp):
             if a is None:
                 return
         return False
-
-    def _eval_is_zero(self):
-        zero = None
-        for a in self.args:
-            if a.is_zero:
-                zero = True
-                continue
-            bound = a.is_bounded
-            if not bound:
-                return bound
-        if zero:
-            return True
 
     def _eval_is_positive(self):
         """Return True if self is positive, False if not, and None if it
