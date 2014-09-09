@@ -5,6 +5,7 @@ from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sign, im, nan, cbrt
 )
 from sympy.core.evalf import PrecisionExhausted
+from sympy.core.evaluate import evaluate
 from sympy.core.tests.test_evalf import NS
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
@@ -514,18 +515,19 @@ def test_Mul_is_negative_positive():
     assert (i*j).is_negative is None  # could be (2*I)*(-3*I)
     assert (i*j).is_positive is None  # ditto
 
-    assert Mul(Mul(0, I, evaluate=False), I, evaluate=False).is_negative \
-        is False
-    assert Mul(I, Mul(I, pos, evaluate=False), evaluate=False).is_negative
-    assert Mul(I, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
-    assert Mul(I, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is None
-    assert Mul(I, Mul(I, npos, evaluate=False), evaluate=False).is_negative is None
-    assert Mul(I, Mul(I, i, evaluate=False), evaluate=False).is_negative is None
-    assert Mul(2, Mul(I, pos, evaluate=False), evaluate=False).is_negative is False
-    assert Mul(2, Mul(I, neg, evaluate=False), evaluate=False).is_negative is False
-    assert Mul(2, Mul(I, nneg, evaluate=False), evaluate=False).is_negative is False
-    assert Mul(2, Mul(I, npos, evaluate=False), evaluate=False).is_negative is False
-    assert Mul(2, Mul(I, i, evaluate=False), evaluate=False).is_negative is None
+    with evaluate(False):
+        assert Mul(Mul(0, I), I).is_negative \
+            is False
+        assert Mul(I, Mul(I, pos)).is_negative
+        assert Mul(I, Mul(I, neg)).is_negative is False
+        assert Mul(I, Mul(I, nneg)).is_negative is None
+        assert Mul(I, Mul(I, npos)).is_negative is None
+        assert Mul(I, Mul(I, i)).is_negative is None
+        assert Mul(2, Mul(I, pos)).is_negative is False
+        assert Mul(2, Mul(I, neg)).is_negative is False
+        assert Mul(2, Mul(I, nneg)).is_negative is False
+        assert Mul(2, Mul(I, npos)).is_negative is False
+        assert Mul(2, Mul(I, i)).is_negative is None
 
     assert (-neg).is_negative is False
     assert (2*neg).is_negative is True
@@ -924,15 +926,16 @@ def test_Pow_is_integer():
 
     assert sqrt(3).is_integer is False
     assert sqrt(.3).is_integer is False
-    assert Pow(3, 2, evaluate=False).is_integer is True
-    assert Pow(3, 0, evaluate=False).is_integer is True
-    assert Pow(3, -2, evaluate=False).is_integer is False
-    assert Pow(S.Half, 3, evaluate=False).is_integer is False
-    # decided by re-evaluating
-    assert Pow(3, S.Half, evaluate=False).is_integer is False
-    assert Pow(3, S.Half, evaluate=False).is_integer is False
-    assert Pow(4, S.Half, evaluate=False).is_integer is True
-    assert Pow(S.Half, -2, evaluate=False).is_integer is True
+    with evaluate(False):
+        assert Pow(3, 2).is_integer is True
+        assert Pow(3, 0).is_integer is True
+        assert Pow(3, -2).is_integer is False
+        assert Pow(S.Half, 3).is_integer is False
+        # decided by re-evaluating
+        assert Pow(3, S.Half).is_integer is False
+        assert Pow(3, S.Half).is_integer is False
+        assert Pow(4, S.Half).is_integer is True
+        assert Pow(S.Half, -2).is_integer is True
 
     assert ((-1)**k).is_integer
 
@@ -1264,18 +1267,19 @@ def test_bug3():
 
 
 def test_suppressed_evaluation():
-    a = Add(0, 3, 2, evaluate=False)
-    b = Mul(1, 3, 2, evaluate=False)
-    c = Pow(3, 2, evaluate=False)
-    assert a != 6
-    assert a.func is Add
-    assert a.args == (3, 2)
-    assert b != 6
-    assert b.func is Mul
-    assert b.args == (3, 2)
-    assert c != 9
-    assert c.func is Pow
-    assert c.args == (3, 2)
+    with evaluate(False):
+        a = Add(0, 3, 2)
+        b = Mul(1, 3, 2)
+        c = Pow(3, 2)
+        assert a != 6
+        assert a.func is Add
+        assert a.args == (3, 2)
+        assert b != 6
+        assert b.func is Mul
+        assert b.args == (3, 2)
+        assert c != 9
+        assert c.func is Pow
+        assert c.args == (3, 2)
 
 
 def test_Add_as_coeff_mul():
