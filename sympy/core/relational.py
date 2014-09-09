@@ -106,8 +106,15 @@ class Relational(Boolean, Expr, EvalfMixin):
         return cls(lhs, rhs)
 
     def _eval_simplify(self, ratio, measure):
-        return self.__class__(self.lhs.simplify(ratio=ratio),
-                              self.rhs.simplify(ratio=ratio))
+        r = self.__class__(self.lhs.simplify(ratio=ratio),
+                           self.rhs.simplify(ratio=ratio))
+        if r not in (S.true, S.false):
+            # try harder to reduce to boolean
+            # NOTE: may want to move _eval_sides() code here
+            rr = self._eval_sides(self.lhs, self.rhs)
+            if rr is not None:
+                return rr
+        return r
 
     def __nonzero__(self):
         raise TypeError("symbolic boolean expression has no truth value.")
