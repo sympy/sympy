@@ -30,7 +30,7 @@ Do not enforce any naming conventions on the release branch. By tradition, the
 name of the release branch is the same as the version being released (like
 0.7.3), but this is not required. Use get_sympy_version() and
 get_sympy_short_version() to get the SymPy version (the SymPy __version__
-*must* be changed in __init__.py for this to work).
+*must* be changed in sympy/release.py for this to work).
 """
 from __future__ import print_function
 
