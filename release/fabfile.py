@@ -382,7 +382,6 @@ git_whitelist = {
     'bin/coverage_report.py',
     'bin/diagnose_imports',
     'bin/doctest',
-    'bin/generate_test_list.py',
     'bin/get_sympy.py',
     'bin/py.bench',
     'bin/mailmap_update.py',
