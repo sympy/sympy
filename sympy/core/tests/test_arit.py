@@ -505,7 +505,7 @@ def test_Mul_is_negative_positive():
 
     nc = Dummy(complex=False)
     r = Dummy(real=True)
-    nr = Dummy(real=False)
+    nr = Dummy(real=False, complex=True)
     neg = Dummy(negative=True)
     pos = Dummy(positive=True)
     nneg = Dummy(nonnegative=True)
