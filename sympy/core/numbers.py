@@ -2742,15 +2742,15 @@ class NaN(with_metaclass(Singleton, Number)):
     """
     Not a Number.
 
-    This represents the corresponding data type to floating point nan, which
-    is defined in the IEEE 754 floating point standard, and corresponds to the
-    Python ``float('nan')``.
-
-    NaN serves as a place holder for numeric values that are indeterminate.
+    This serves as a place holder for numeric values that are indeterminate.
     Most operations on NaN, produce another NaN.  Most indeterminate forms,
     such as ``0/0`` or ``oo - oo` produce NaN.  Two exceptions are ``0**0``
     and ``oo**0``, which all produce ``1`` (this is consistent with Python's
     float).
+
+    NaN is loosely related to floating point nan, which is defined in the
+    IEEE 754 floating point standard, and corresponds to the Python
+    ``float('nan')``.  Differences are noted below.
 
     NaN is mathematically not equal to anything else, even NaN itself.  This
     explains the initially counter-intuitive results with ``Eq`` and ``==`` in
