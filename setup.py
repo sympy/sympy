@@ -182,12 +182,10 @@ classifiers = [
     'Programming Language :: Python :: 3.4',
 ]
 
-long_description = '''SymPy is a Python library for symbolic mathematics. It aims
-to become a full-featured computer algebra system (CAS) while keeping the code
-as simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python and does not require any external libraries.'''
-
+# read __version__ and __doc__ attributes:
 exec(open('sympy/release.py').read())
+with open('sympy/__init__.py') as f:
+    long_description = f.read().split('"""')[1]
 
 setup_args = {
     "name": 'sympy',
