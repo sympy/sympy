@@ -332,6 +332,16 @@ def test_lambertw():
         Float("0.701338383413663009202120278965", 30), 1e-29)
 
 
+def test_issue_5673():
+    e = LambertW(-1)
+    assert e.is_comparable is False
+    assert e.is_positive is not True
+    e2 = 1 - 1/(1 - exp(-1000))
+    assert e.is_positive is not True
+    e3 = -2 + exp(exp(LambertW(log(2)))*LambertW(log(2)))
+    assert e3.is_nonzero is not True
+
+
 def test_exp_expand_NC():
     A, B, C = symbols('A,B,C', commutative=False)
     x, y, z = symbols('x,y,z')
