@@ -2538,8 +2538,7 @@ class NaN(with_metaclass(Singleton, Number)):
 
     NaN is mathematically not equal to anything else, even NaN itself.  This
     explains the initially counter-intuitive results with ``Eq`` and ``==`` in
-    the examples below.  NaN is not comparable so inequalities raise a
-    TypeError.
+    the examples below.
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.
