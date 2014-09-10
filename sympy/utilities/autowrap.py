@@ -535,7 +535,7 @@ def binary_function(symfunc, expr, **kwargs):
 #                           UFUNCIFY                            #
 #################################################################
 
-ufunc_top = Template("""\
+_ufunc_top = Template("""\
 #include "Python.h"
 #include "math.h"
 #include "numpy/ndarraytypes.h"
@@ -547,7 +547,7 @@ static PyMethodDef ${module}Methods[] = {
         {NULL, NULL, 0, NULL}
 };""")
 
-ufunc_body = Template("""\
+_ufunc_body = Template("""\
 static void ${funcname}_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
 {
     npy_intp i;
@@ -563,7 +563,7 @@ PyUFuncGenericFunction ${funcname}_funcs[1] = {&${funcname}_ufunc};
 static char ${funcname}_types[${n_types}] = ${types}
 static void *${funcname}_data[1] = {NULL};""")
 
-ufunc_bottom = Template("""\
+_ufunc_bottom = Template("""\
 #if PY_VERSION_HEX >= 0x03000000
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
@@ -608,13 +608,13 @@ PyMODINIT_FUNC init${module}(void)
 #endif\
 """)
 
-ufunc_init_form = Template("""\
+_ufunc_init_form = Template("""\
 ufunc${ind} = PyUFunc_FromFuncAndData(${funcname}_funcs, ${funcname}_data, ${funcname}_types, 1, ${n_in}, ${n_out},
             PyUFunc_None, "${module}", ${docstring}, 0);
     PyDict_SetItemString(d, "${funcname}", ufunc${ind});
     Py_DECREF(ufunc${ind});""")
 
-ufunc_setup = Template("""\
+_ufunc_setup = Template("""\
 def configuration(parent_package='', top_path=None):
     import numpy
     from numpy.distutils.misc_util import Configuration
@@ -655,7 +655,8 @@ class UfuncifyCodeWrapper(CodeWrapper):
         return getattr(mod, name)
 
     def dump_setup(self, f):
-        setup = ufunc_setup.substitute(module=self.module_name, filename=self.filename)
+        setup = _ufunc_setup.substitute(module=self.module_name,
+                                        filename=self.filename)
         f.write(setup)
 
     def dump_c(self, routines, f, prefix):
@@ -677,7 +678,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         ufunc_init = []
         module = self.module_name
         include_file = "\"{0}.h\"".format(prefix)
-        top = ufunc_top.substitute(include_file=include_file, module=module)
+        top = _ufunc_top.substitute(include_file=include_file, module=module)
 
         for r_index, routine in enumerate(routines):
             name = routine.name
@@ -720,20 +721,27 @@ class UfuncifyCodeWrapper(CodeWrapper):
             function_creation.append("PyObject *ufunc{0};".format(r_index))
 
             # Ufunc initialization
-            ufunc_init.append(ufunc_init_form.substitute(module=module,
-                funcname=name, docstring=docstring, n_in=n_in, n_out=n_out,
-                ind=r_index))
+            init_form = _ufunc_init_form.substitute(module=module,
+                                                    funcname=name,
+                                                    docstring=docstring,
+                                                    n_in=n_in, n_out=n_out,
+                                                    ind=r_index)
+            ufunc_init.append(init_form)
 
-            functions.append(ufunc_body.substitute(module=module,
-                    funcname=name, declare_args=declare_args, declare_steps=declare_steps,
-                    call_args=call_args, step_increments=step_increments,
-                    n_types=n_types, types=types))
+            body = _ufunc_body.substitute(module=module, funcname=name,
+                                          declare_args=declare_args,
+                                          declare_steps=declare_steps,
+                                          call_args=call_args,
+                                          step_increments=step_increments,
+                                          n_types=n_types, types=types)
+            functions.append(body)
 
         body = '\n\n'.join(functions)
         ufunc_init = '\n    '.join(ufunc_init)
         function_creation = '\n    '.join(function_creation)
-        bottom = ufunc_bottom.substitute(module=module, ufunc_init=ufunc_init,
-                function_creation=function_creation)
+        bottom = _ufunc_bottom.substitute(module=module,
+                                          ufunc_init=ufunc_init,
+                                          function_creation=function_creation)
         text = [top, body, bottom]
         f.write('\n\n'.join(text))
 
@@ -744,7 +752,8 @@ class UfuncifyCodeWrapper(CodeWrapper):
         for arg in args:
             if isinstance(arg, OutputArgument):
                 if py_out:
-                    raise ValueError("Ufuncify doesn't support multiple OutputArguments")
+                    msg = "Ufuncify doesn't support multiple OutputArguments"
+                    raise ValueError(msg)
                 py_out.append(arg)
             elif isinstance(arg, InOutArgument):
                 raise ValueError("Ufuncify doesn't support InOutArguments")
@@ -756,7 +765,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
 @cacheit
 @doctest_depends_on(exe=('f2py', 'gfortran', 'gcc'), modules=('numpy',))
 def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
-        flags=None, verbose=False, helpers=None):
+             flags=None, verbose=False, helpers=None):
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters
@@ -852,7 +861,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         for name, expr, args in helpers:
             helps.append(Routine(name, expr, args))
         code_wrapper = UfuncifyCodeWrapper(CCodeGen("ufuncify"), tempdir,
-                flags, verbose)
+                                           flags, verbose)
         return code_wrapper.wrap_code(routine, helpers=helps)
     else:
         # Dummies are used for all added expressions to prevent name clashes
@@ -867,4 +876,4 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         args = [y] + indexed_args + [m]
         args_with_indices = [a[i] for a in indexed_args]
         return autowrap(Eq(y[i], f(*args_with_indices)), language, backend,
-                tempdir, args, flags, verbose, helpers)
+                        tempdir, args, flags, verbose, helpers)
