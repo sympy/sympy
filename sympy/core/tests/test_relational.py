@@ -521,3 +521,16 @@ def test_ineq_avoid_wild_symbol_flip():
     # Previously failed as 'p <= x':
     e = Ge(x, p).doit()
     assert e == Ge(x, p, evaluate=False)
+
+
+def test_eq_no_simplification():
+    from sympy import sin, cos, sqrt
+    data = [ (cos(x)**2 + sin(x)**2, 1, S.true),
+             (cos(x)**2 + sin(x)**2, 2, S.false),
+             (x*(y + z), x*y + x*z, S.true),
+             (sqrt(4*sqrt(2) + 4), 2*sqrt(sqrt(2) + 1), S.true),
+             ((6**pi + 2**pi)**(1/pi), 2*(3**pi + 1)**(1/pi), S.true) ]
+    for (lhs, rhs, truth) in data:
+        e = Eq(lhs, rhs)
+        assert e == Eq(lhs, rhs, evaluate=False)
+        assert e.simplify() is truth
