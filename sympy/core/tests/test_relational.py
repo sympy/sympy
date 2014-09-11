@@ -546,3 +546,19 @@ def test_eq_simplify_to_true():
     assert e.subs(x, 10).simplify()
     assert e.simplify()  # FAIL
     #print((lhs - rhs).equals(0))
+
+
+@XFAIL
+def test_eq_simplify_cancels_lhs_rhs():
+    # should simplifying an Equality cancel terms from lhs and rhs?
+    b = Dummy(bounded=True)
+    r = Dummy(real=True)
+    data = [(2 + I, r + I, Eq(2, r)),
+            (2 + I, x + I, Eq(2, x)),
+            (2 + b, x + b, Eq(2, x)),
+            (x + 1, y + 1, Eq(x, y)),
+            (2 + y, x + y, Eq(2, x))]  # maybe not this one
+    for (lhs, rhs, expected_simplify) in data:
+        e = Eq(lhs, rhs)
+        assert e == Eq(lhs, rhs, evaluate=False)
+        assert e.simplify() == expected_simplify
