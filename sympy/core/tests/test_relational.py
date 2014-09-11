@@ -534,3 +534,15 @@ def test_eq_no_simplification():
         e = Eq(lhs, rhs)
         assert e == Eq(lhs, rhs, evaluate=False)
         assert e.simplify() is truth
+
+
+@XFAIL
+def test_eq_simplify_to_true():
+    # should probably simplify but doesn't with a variable.  The
+    # simplification is based on .equals(0) which returns None here.
+    lhs = (2**pi*x + 2**pi)**(1/pi)
+    rhs = 2*(x + 1)**(1/pi)
+    e = Eq(lhs, rhs)
+    assert e.subs(x, 10).simplify()
+    assert e.simplify()  # FAIL
+    #print((lhs - rhs).equals(0))
