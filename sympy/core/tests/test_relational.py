@@ -564,3 +564,13 @@ def test_relational_simplify_with_x_both_sides():
         ge = Ge(lhs, rhs)
         assert ge == Ge(lhs, rhs, evaluate=False)
         assert ge.simplify() in (eq_truth, gt_truth)
+
+
+@XFAIL
+def test_eq_simplify_with_variable():
+    # should probably simplify but doesn't with a variable.
+    lhs = (2**pi*x + 2**pi)**(1/pi)
+    rhs = 2*(x + 1)**(1/pi)
+    e = Eq(lhs, rhs)
+    assert e.subs(x, 10).simplify()
+    assert e.simplify()  # FAIL
