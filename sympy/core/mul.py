@@ -1040,10 +1040,14 @@ class Mul(Expr, AssocOp):
             if t.is_imaginary:
                 real = not real
             elif t.is_real:
-                if zero is False:
-                    zero = fuzzy_not(t.is_nonzero)
-                    if zero:
-                        return False
+                if not zero:
+                    z = t.is_zero
+                    if not z and zero is False:
+                        zero = z
+                    elif z:
+                        if all(a.is_bounded for a in self.args):
+                            return False
+                        return
             elif t.is_real is False:
                 if one_neither:
                     return  # complex terms might cancel
