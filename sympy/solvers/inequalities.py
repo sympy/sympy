@@ -12,6 +12,7 @@ from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
+from sympy.simplify import simplify
 
 
 def solve_poly_inequality(poly, rel):
@@ -390,17 +391,17 @@ def solve_univariate_inequality(expr, gen, assume=True, relational=True):
 
     for x in sorted(s for s in solns if s.is_real):
         end = x
-        if expr.subs(gen, (start + end)/2 if start != -oo else end - 1):
+        if simplify(expr.subs(gen, (start + end)/2 if start != -oo else end - 1)):
             sol_sets.append(Interval(start, end, True, True))
 
-        if expr.subs(gen, x):
+        if simplify(expr.subs(gen, x)):
             sol_sets.append(FiniteSet(x))
 
         start = end
 
     end = oo
 
-    if expr.subs(gen, start + 1):
+    if simplify(expr.subs(gen, start + 1)):
         sol_sets.append(Interval(start, end, True, True))
 
     rv = Union(*sol_sets)
