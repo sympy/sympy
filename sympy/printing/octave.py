@@ -9,6 +9,8 @@ from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
+# FIXME: causes errors on import
+#from sympy.functions import sqrt
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in OctaveCodePrinter._print_Function(self)
@@ -33,7 +35,7 @@ known_functions = {
     "gamma": "gamma",
     "sign": "sign",
     "floor": "floor",
-    "Abs": "abs",       # different names after this point
+    "Abs": "abs",       # different names after this line
     "ceiling": "ceil",
     "conjugate": "conj",
 }
@@ -79,7 +81,7 @@ class OctaveCodePrinter(CodePrinter):
     # some from C?
 
     def __init__(self, settings={}):
-        CodePrinter.__init__(self, settings)
+        super(OctaveCodePrinter, self).__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -216,6 +218,7 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_GoldenRatio(self, expr):
         # FIXME: how to do better, e.g., for octave_code(2*GoldenRatio)?
+        #return self._print((1+sqrt(S(5)))/2)
         return "(1+sqrt(5))/2"
 
     def _print_NumberSymbol(self, expr):
@@ -247,9 +250,10 @@ class OctaveCodePrinter(CodePrinter):
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
             return self._print(A[0, 0])
-        elif A.rows == 1 :
+        elif A.rows == 1:
             return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
-        elif A.cols == 1 :
+        elif A.cols == 1:
+            # FIXME: not ideal, makes each equispaced
             return "[%s]" % A.table(self, rowstart='', rowend='',
                                     rowsep='; ', colsep=' ')
         return "[%s]" % A.table(self, rowstart='', rowend='',
@@ -318,6 +322,7 @@ class OctaveCodePrinter(CodePrinter):
         inc_token = ('if ', 'function ', 'else', 'elseif ')
         dec_token = ('end')
 
+        # pre-strip left-space from the code
         code = [ line.lstrip(' \t') for line in code ]
 
         increase = [ int(any(map(line.startswith, inc_token)))

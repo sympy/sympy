@@ -1209,10 +1209,13 @@ class OctaveCodeGen(CodeGen):
                     name = obj
                 declarations.append(
                     "  %% unsupported: %s (FIXME: what is this for?)\n" % (name))
-            code_lines.append("  %s\n" % (oct_expr))
+            code_lines.append("%s\n" % (oct_expr))
         return declarations + code_lines
 
     def _indent_code(self, codelines):
+        # FIXME: this gets called twice?  I'd like to stop trimming the
+        # leading whitespace in OctaveCodePrinter.indent_code.  But if I do,
+        # some bits (notably PieceWise) get double-indented.
         p = OctaveCodePrinter({'human': False})
         return p.indent_code(codelines)
         return codelines

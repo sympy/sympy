@@ -109,13 +109,13 @@ def test_constants():
     assert mcode(exp(1)) == "exp(1)"
 
 
-def test_ccode_constants_other():
+def test_constants_other():
     assert mcode(2*GoldenRatio) == "2*(1+sqrt(5))/2"
     assert mcode(2*Catalan) == "2*0.915965594177219011"
     assert mcode(2*EulerGamma) == "2*0.577215664901532866"
 
 
-def test_ccode_boolean():
+def test_boolean():
     assert mcode(x & y) == "x && y"
     assert mcode(x | y) == "x || y"
     assert mcode(~x) == "~x"

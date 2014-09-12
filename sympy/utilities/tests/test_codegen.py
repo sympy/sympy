@@ -1594,7 +1594,6 @@ def test_piecewise_m():
     routine = Routine("pwtest", pw)
     code_gen = OctaveCodeGen()
     source = get_string(code_gen.dump_m, [routine])
-    # FIXME: fix the indent
     expected = (
         "function out1 = pwtest(x)\n"
         "  if (x < -1)\n"
