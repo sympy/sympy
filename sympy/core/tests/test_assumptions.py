@@ -730,3 +730,31 @@ def test_issue_7899():
     assert (I*x).is_real is None
     assert ((x - I)*(x - 1)).is_zero is None
     assert ((x - I)*(x - 1)).is_real is None
+
+
+def test_finite_unbounded_bounded():
+    d = lambda **x: Symbol('x', **x)
+    assert d(zero=True).is_bounded
+    assert d(finite=True).is_bounded
+    assert d(unbounded=True).is_bounded is False
+
+    assert d(zero=True).is_finite is False
+    assert d(bounded=True).is_finite is None
+    assert d(unbounded=True).is_finite is False
+
+    assert d(zero=True).is_unbounded is False
+    assert d(bounded=True).is_unbounded is False
+    assert d(finite=True).is_unbounded is False
+
+    assert d(unbounded=True).is_zero is False
+    assert d(finite=True).is_zero is False
+    assert d(bounded=True).is_zero is None
+
+    assert d(finite=True).is_complex
+    assert d(unbounded=True).is_complex
+    assert d(bounded=True).is_complex
+
+    # finite=False --x--> unbounded=True, etc...
+    assert d(finite=False).is_unbounded is None
+    assert d(unbounded=False).is_finite is None
+    assert d(bounded=False).is_complex is None

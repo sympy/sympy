@@ -2131,7 +2131,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     is_commutative = True
     is_positive = True
-    is_bounded = False
+    is_unbounded = True
     is_integer = None
     is_rational = None
     is_odd = None
@@ -2345,7 +2345,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_commutative = True
     is_real = True
     is_positive = False
-    is_bounded = False
+    is_unbounded = True
     is_integer = None
     is_rational = None
     is_number = True
@@ -2712,7 +2712,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     """
 
     is_commutative = True
-    is_bounded = False
+    is_unbounded = True
     is_real = None
     is_number = True
 

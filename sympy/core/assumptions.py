@@ -93,9 +93,14 @@ _assume_rules = FactRules([
 
     'imaginary      ->  !real',
 
-    '!bounded     ==  unbounded',
     'noninteger     ==  real & !integer',
-    '!zero        ==  nonzero',
+
+    '!zero          ==  nonzero',
+
+    'finite         ->  nonzero & !unbounded',
+    'bounded        ==  finite | zero',
+    'bounded        ->  complex & !unbounded',
+    'unbounded      ==  complex & !finite & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
