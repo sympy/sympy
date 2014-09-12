@@ -229,12 +229,33 @@ class OctaveCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        # A No-op for now
-        # FIXME: search for end, but need special case for if else
-        return code
-        #if isinstance(code, string_types):
-        #    code_lines = self.indent_code(code.splitlines(True))
-        #    return ''.join(code_lines)
+
+        # code mostly copied from ccode
+        if isinstance(code, string_types):
+            code_lines = self.indent_code(code.splitlines(True))
+            return ''.join(code_lines)
+
+        tab = "  "
+        inc_token = ('if ', 'function ', 'else', 'elseif ')
+        dec_token = ('end')
+
+        code = [ line.lstrip(' \t') for line in code ]
+
+        increase = [ int(any(map(line.startswith, inc_token)))
+                     for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_token)))
+                     for line in code ]
+
+        pretty = []
+        level = 0
+        for n, line in enumerate(code):
+            if line == '' or line == '\n':
+                pretty.append(line)
+                continue
+            level -= decrease[n]
+            pretty.append("%s%s" % (tab*level, line))
+            level += increase[n]
+        return pretty
 
 
 def octave_code(expr, assign_to=None, **settings):
