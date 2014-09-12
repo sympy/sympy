@@ -65,9 +65,6 @@ class OctaveCodePrinter(CodePrinter):
         'not': '~',
     }
 
-    # StrPrinter's _print_Pow is fine, except for ** instead of ^
-    _exponentsymbol = "^"
-
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
@@ -127,6 +124,12 @@ class OctaveCodePrinter(CodePrinter):
             )
         else:
             return CodePrinter._print_Mul(self, expr)
+
+    def _print_Pow(self, expr):
+        return super(OctaveCodePrinter, self)._print_Pow(expr, powsymbol='.^')
+
+    def _print_MatPow(self, expr):
+        return super(OctaveCodePrinter, self)._print_MatPow(expr, powsymbol='^')
 
     def _print_Pi(self, expr):
         return 'pi'
