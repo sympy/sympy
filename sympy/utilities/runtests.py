@@ -33,7 +33,8 @@ import stat
 from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
+from sympy.core.compatibility import (exec_, PY3, get_function_code,
+                                      string_types, xrange)
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -408,17 +409,30 @@ def test(*paths, **kwargs):
 
     If the seed is not set, a random seed will be chosen.
 
-    Note that to reproduce the same hash values, you must use both the same as
-    well as the same architecture (32-bit vs. 64-bit).
+    Note that to reproduce the same hash values, you must use both the same seed
+    as well as the same architecture (32-bit vs. 64-bit).
 
     """
     subprocess = kwargs.pop("subprocess", True)
+    rerun = kwargs.pop("rerun", 0)
+
     if subprocess:
-        ret = run_in_subprocess_with_hash_randomization("_test",
-            function_args=paths, function_kwargs=kwargs)
-        if ret is not False:
-            return not bool(ret)
-    return not bool(_test(*paths, **kwargs))
+        # loop backwards so last i is 0
+        for i in xrange(rerun, -1, -1):
+            ret = run_in_subprocess_with_hash_randomization("_test",
+                        function_args=paths, function_kwargs=kwargs)
+            if ret is False:
+                break
+            val = not bool(ret)
+            # exit on the first failure or if done
+            if not val or i == 0:
+                return val
+
+    # rerun even if hash randomization is not supported
+    for i in xrange(rerun, -1, -1):
+        val = not bool(_test(*paths, **kwargs))
+        if not val or i == 0:
+            return val
 
 
 def _test(*paths, **kwargs):

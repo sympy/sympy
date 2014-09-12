@@ -53,6 +53,9 @@ parser.add_option("-E", "--enhance-asserts", action="store_true", dest="enhance_
                   default=False, help="Rewrite assert statements to give more useful error messages.")
 parser.add_option('--split', action="store", type='str', default=None,
     help="Only run part of the tests. Should be of the form a/b, e.g., 1/2")
+parser.add_option('--rerun', action="store", dest="rerun",
+                  default=0, help="Number of times to rerun the specified tests",
+                  type='int')
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
@@ -80,7 +83,7 @@ ok = sympy.test(*args, verbose=options.verbose, kw=options.kw,
     force_colors=options.force_colors, sort=options.sort,
     seed=options.seed, slow=options.slow, timeout=options.timeout,
     subprocess=options.subprocess, enhance_asserts=options.enhance_asserts,
-    split=options.split)
+    split=options.split, rerun=options.rerun)
 
 if ok:
     sys.exit(0)
