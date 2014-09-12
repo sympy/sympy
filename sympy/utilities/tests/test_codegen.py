@@ -1473,7 +1473,7 @@ def test_numbersymbol_m_code():
     # )
     expected = (
         "function out1 = test()\n"
-        "  out1 = pi.^0.915965594177219011;\n"
+        "  out1 = pi^0.915965594177219011;\n"
         "end\n"
     )
     assert source == expected

@@ -202,7 +202,11 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Pow(self, expr):
-        return super(OctaveCodePrinter, self)._print_Pow(expr, powsymbol='.^')
+        if all([x.is_constant() for x in expr.args]):
+            sym = '^'
+        else:
+            sym = '.^'
+        return super(OctaveCodePrinter, self)._print_Pow(expr, powsymbol=sym)
 
     def _print_MatPow(self, expr):
         return super(OctaveCodePrinter, self)._print_MatPow(expr, powsymbol='^')

@@ -91,6 +91,15 @@ def test_mix_number_mult_symbols():
     assert mcode(S(3)/5*x*y/pi) == "3*x.*y/(5*pi)"
 
 
+def test_mix_number_pow_symbols():
+    assert mcode(pi**3) == 'pi^3'
+    assert mcode(x**2) == 'x.^2'
+    assert mcode(x**(pi**3)) == 'x.^(pi^3)'
+    assert mcode(x**y) == 'x.^y'
+    assert mcode(x**(y**z)) == 'x.^(y.^z)'
+    assert mcode((x**y)**z) == '(x.^y).^z'
+
+
 def test_imag():
     I = S('I')
     assert mcode(I) == "1i"
