@@ -266,6 +266,10 @@ class sign(Function):
             if arg.func is sign:
                 return arg
         if arg.is_imaginary:
+            if arg.is_Pow and arg.exp is S.Half:
+                # we catch this because non-trivial sqrt args are not expanded
+                # e.g. sqrt(1-sqrt(2)) --x-->  to I*sqrt(sqrt(2) - 1)
+                return S.ImaginaryUnit
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_positive:
                 return S.ImaginaryUnit
