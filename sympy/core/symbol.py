@@ -76,6 +76,8 @@ class Symbol(AtomicExpr, Boolean):
     def __new_stage2__(cls, name, **assumptions):
         if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
+        for key in assumptions.keys():
+            assumptions[key] = bool(assumptions[key])
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)

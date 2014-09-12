@@ -1,5 +1,5 @@
 from sympy import I, sqrt, log, exp, sin, asin
-from sympy.core import Symbol, S, Rational, Integer
+from sympy.core import Symbol, S, Rational, Integer, Dummy
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
 
@@ -661,6 +661,7 @@ def test_sanitize_assumptions():
     x = Symbol('x', real=1, positive=0)
     assert x.is_real is True
     assert x.is_positive is False
+    x = Dummy(real=1).is_real is True
 
 
 def test_special_assumptions():
