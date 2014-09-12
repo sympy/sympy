@@ -1440,7 +1440,7 @@ def test_simple_m_code():
     source = get_string(code_gen.dump_m, [routine])
     expected = (
         "function out1 = test(x, y, z)\n"
-        "  out1 = z*(x + y);\n"
+        "  out1 = z.*(x + y);\n"
         "end\n"
     )
     assert source == expected
@@ -1473,7 +1473,7 @@ def test_numbersymbol_m_code():
     # )
     expected = (
         "function out1 = test()\n"
-        "  out1 = pi^0.915965594177219011;\n"
+        "  out1 = pi.^0.915965594177219011;\n"
         "end\n"
     )
     assert source == expected
@@ -1503,8 +1503,8 @@ def test_multiple_results_m():
     source = get_string(code_gen.dump_m, [routine])
     expected = (
         "function [out1, out2] = test(x, y, z)\n"
-        "  out1 = z*(x + y);\n"
-        "  out2 = z*(x - y);\n"
+        "  out1 = z.*(x + y);\n"
+        "  out2 = z.*(x - y);\n"
         "end\n"
     )
     assert source == expected
@@ -1521,9 +1521,9 @@ def test_results_named_unordered():
     source = result[0][1]
     expected = (
         "function [A, B, C] = test(x, y, z)\n"
-        "  A = z*(x - y);\n"
+        "  A = z.*(x - y);\n"
         "  B = 2*x;\n"
-        "  C = z*(x + y);\n"
+        "  C = z.*(x + y);\n"
         "end\n"
     )
     assert source == expected
@@ -1540,8 +1540,8 @@ def test_results_named_ordered():
     source = result[0][1]
     expected = (
         "function [C, A, B] = test(x, z, y)\n"
-        "  C = z*(x + y);\n"
-        "  A = z*(x - y);\n"
+        "  C = z.*(x + y);\n"
+        "  A = z.*(x - y);\n"
         "  B = 2*x;\n"
         "end\n"
     )
@@ -1557,15 +1557,16 @@ def test_complicated_m_codegen():
     ])
     result = codegen(name_expr, "Octave", "testlong", header=False, empty=False)
     assert result[0][0] == "testlong.m"
+    source = result[0][1]
     expected = (
         "function [out1, out2] = testlong(x, y, z)\n"
-        "  out1 = sin(x)^3 + 3*sin(x)^2*cos(y) + 3*sin(x)^2*tan(z)"
-        " + 3*sin(x)*cos(y)^2 + 6*sin(x)*cos(y)*tan(z) + 3*sin(x)*tan(z)^2"
-        " + cos(y)^3 + 3*cos(y)^2*tan(z) + 3*cos(y)*tan(z)^2 + tan(z)^3;\n"
+        "  out1 = sin(x).^3 + 3*sin(x).^2.*cos(y) + 3*sin(x).^2.*tan(z)"
+        " + 3*sin(x).*cos(y).^2 + 6*sin(x).*cos(y).*tan(z) + 3*sin(x).*tan(z).^2"
+        " + cos(y).^3 + 3*cos(y).^2.*tan(z) + 3*cos(y).*tan(z).^2 + tan(z).^3;\n"
         "  out2 = cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))));\n"
         "end\n"
     )
-    assert result[0][1] == expected
+    assert source == expected
 
 
 def test_m_output_arg_mixed_unordered():
@@ -1597,14 +1598,14 @@ def test_piecewise_m():
     expected = (
         "function out1 = pwtest(x)\n"
         "  if (x < -1)\n"
-        "out1 = 0;\n"
-        "elseif (x <= 1)\n"
-        "out1 = x^2;\n"
-        "elseif (x > 1)\n"
-        "out1 = -x + 2;\n"
-        "else\n"
-        "out1 = 1;\n"
-        "end\n"
+        "    out1 = 0;\n"
+        "  elseif (x <= 1)\n"
+        "    out1 = x.^2;\n"
+        "  elseif (x > 1)\n"
+        "    out1 = -x + 2;\n"
+        "  else\n"
+        "    out1 = 1;\n"
+        "  end\n"
         "end\n"
     )
     assert source == expected
@@ -1622,7 +1623,7 @@ def test_m_multifcns_per_file():
         "  out2 = 3*y;\n"
         "end\n"
         "function [out1, out2] = bar(y)\n"
-        "  out1 = y^2;\n"
+        "  out1 = y.^2;\n"
         "  out2 = 4*y;\n"
         "end\n"
     )
