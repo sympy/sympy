@@ -164,12 +164,26 @@ class Equality(Relational):
     ========
 
     >>> from sympy import Eq
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, z
     >>> Eq(y, x+x**2)
     y == x**2 + x
 
+    Equality supports operations among equalities:
+
+    >>> eq1 = Eq(x, y)
+    >>> eq1**2
+    x**2 == y**2
+    >>> eq1+z
+    x + z == y + z
+    >>> 1/eq1
+    1/x == 1/y
+    >>> eq2 = Eq(z, y)
+    >>> eq1 + eq2
+    x + z == 2*y
+
     See Also
     ========
+
     sympy.logic.boolalg.Equivalent : for representing equality between two
         boolean expressions
 
@@ -187,6 +201,7 @@ class Equality(Relational):
 
     """
     rel_op = '=='
+    _op_priority = 11.0
 
     __slots__ = []
 
@@ -225,6 +240,72 @@ class Equality(Relational):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
+
+    def __neg__(self):
+        return Equality(-self.lhs, -self.rhs)
+
+    def __add__(self, other):
+        if isinstance(other, Equality):
+            return Equality(self.lhs+other.lhs, self.rhs+other.rhs)
+        other = _sympify(other)
+        return Equality(self.lhs+other, self.rhs+other)
+
+    def __radd__(self, other):
+        if isinstance(other, Equality):
+            return Equality(other.lhs+self.lhs, other.rhs+self.rhs)
+        other = _sympify(other)
+        return Equality(other+self.lhs, other+self.rhs)
+
+    def __sub__(self, other):
+        return self.__add__(self, -other)
+
+    def __rsub__(self, other):
+        return Equality(other-self.lhs, other-self.rhs)
+
+    def __mul__(self, other):
+        if isinstance(other, Equality):
+            return Equality(self.lhs*other.lhs, self.rhs*other.rhs)
+        other = _sympify(other)
+        return Equality(self.lhs*other, self.rhs*other)
+
+    def __rmul__(self, other):
+        if isinstance(other, Equality):
+            return Equality(other.lhs*self.lhs, other.rhs*self.rhs)
+        other = _sympify(other)
+        return Equality(other*self.lhs, other*self.rhs)
+
+    def __div__(self, other):
+        if isinstance(other, Equality):
+            return Equality(self.lhs/other.lhs, self.rhs/other.rhs)
+        other = _sympify(other)
+        return self.__mul__(self, 1/other)
+
+    def __rdiv__(self, other):
+        if isinstance(other, Equality):
+            return Equality(other.lhs/self.lhs, other.rhs/self.rhs)
+        other = _sympify(other)
+        return Equality(S.One*other/self.lhs, S.One*other/self.rhs)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    def __pow__(self, other):
+        if isinstance(other, Equality):
+            raise ValueError("ambiguous power")
+        other = _sympify(other)
+        return Equality(self.lhs**other, self.rhs**other)
+
+    def __rpow__(self, other):
+        if isinstance(other, Equality):
+            raise ValueError("ambiguous power")
+        other = _sympify(other)
+        return Equality(other**self.lhs, other**self.rhs)
+
+    def swap_hs(self):
+        """
+        Return a new Equality by swapping LHS and RHS.
+        """
+        return Equality(self.rhs, self.lhs)
 
 Eq = Equality
 

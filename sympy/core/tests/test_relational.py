@@ -496,3 +496,29 @@ def test_ineq_avoid_wild_symbol_flip():
     # Previously failed as 'p <= x':
     e = Ge(x, p).doit()
     assert e == Ge(x, p, evaluate=False)
+
+
+def test_operations_on_equality():
+    x, y, z, t = symbols('x y z t')
+    eq1 = Equality(x, y)
+    eq2 = Equality(z, t)
+
+    assert eq1+eq2 == Equality(x+z, y+t)
+    assert eq1+z == Equality(x+z, y+z)
+    assert z+eq1 == Equality(x+z, y+z)
+    assert eq1*3 == Equality(3*x, 3*y)
+    assert -3*eq1 == Equality(-3*x, -3*y)
+    assert eq1**2 == Equality(x**2, y**2)
+    assert eq1**z == Equality(x**z, y**z)
+    assert -eq1 == Equality(-x, -y)
+    assert 1/eq1 == Equality(1/x, 1/y)
+    assert z-eq1 == Equality(z-x, z-y)
+    assert 5/eq1 == Equality(5/x, 5/y)
+    assert eq1*eq2 == Equality(x*z, y*t)
+    assert eq1/eq2 == Equality(x/z, y/t)
+    assert z**eq1 == Equality(z**x, z**y)
+
+    assert eq1.swap_hs() == Equality(y, x)
+    assert eq1.swap_hs() != Equality(x, y)
+
+    raises(ValueError, lambda: eq2**eq1)
