@@ -257,7 +257,7 @@ class Equality(Relational):
         return Equality(other+self.lhs, other+self.rhs)
 
     def __sub__(self, other):
-        return self.__add__(self, -other)
+        return self + (-other)
 
     def __rsub__(self, other):
         return Equality(other-self.lhs, other-self.rhs)

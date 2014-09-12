@@ -2823,12 +2823,12 @@ def ode_1st_exact(eq, func, order, match):
         >>> from sympy import Function, Eq, Integral, symbols, pprint
         >>> x, y, t, x0, y0, C1= symbols('x,y,t,x0,y0,C1')
         >>> P, Q, F= map(Function, ['P', 'Q', 'F'])
-        >>> pprint(Eq(Eq(F(x, y), Integral(P(t, y), (t, x0, x)) +
-        ... Integral(Q(x0, t), (t, y0, y))), C1))
+        >>> pprint(Eq(F(x, y), Integral(P(t, y), (t, x0, x)) +
+        ... Integral(Q(x0, t), (t, y0, y))))
                     x                y
                     /                /
                    |                |
-        F(x, y) =  |  P(t, y) dt +  |  Q(x0, t) dt = C1
+        F(x, y) =  |  P(t, y) dt +  |  Q(x0, t) dt
                    |                |
                   /                /
                   x0               y0
