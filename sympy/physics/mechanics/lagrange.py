@@ -33,17 +33,16 @@ class LagrangesMethod(object):
 
     mass_matrix : Matrix
         The system's mass matrix
-
     forcing : Matrix
         The system's forcing vector
-
     mass_matrix_full : Matrix
         The "mass matrix" for the qdot's, qdoubledot's, and the
         lagrange multipliers (lam)
-
     forcing_full : Matrix
         The forcing vector for the qdot's, qdoubledot's and
         lagrange multipliers (lam)
+    q : Matrix
+        Matrix of the generalized coordinates
 
     Examples
     ========
@@ -152,8 +151,8 @@ class LagrangesMethod(object):
         # Creating the qs, qdots and qdoubledots
         if not iterable(qs):
             raise TypeError('Generalized coordinates must be an iterable')
-        self._q = Matrix(qs)
-        self._qdots = self._q.diff(dynamicsymbols._t)
+        self.q = Matrix(qs)
+        self._qdots = self.q.diff(dynamicsymbols._t)
         self._qdoubledots = self._qdots.diff(dynamicsymbols._t)
 
         # Deal with constraint equations
@@ -179,7 +178,7 @@ class LagrangesMethod(object):
 
         qds = self._qdots
         qdd_zero = dict((i, 0) for i in self._qdoubledots)
-        n = len(self._q)
+        n = len(self.q)
 
         # Internally we represent the EOM as four terms:
         # EOM = term1 - term2 - term3 - term4 = 0
@@ -189,7 +188,7 @@ class LagrangesMethod(object):
         self._term1 = self._term1.diff(dynamicsymbols._t).T
 
         # Second term
-        self._term2 = self._L.jacobian(self._q).T
+        self._term2 = self._L.jacobian(self.q).T
 
         # Third term
         if self.coneqs:
@@ -254,7 +253,7 @@ class LagrangesMethod(object):
 
         if self.eom is None:
             raise ValueError('Need to compute the equations of motion first')
-        n = len(self._q)
+        n = len(self.q)
         m = len(self.coneqs)
         row1 = eye(n).row_join(zeros(n, n + m))
         row2 = zeros(n, n).row_join(self.mass_matrix)
@@ -299,7 +298,7 @@ class LagrangesMethod(object):
 
         # Compose vectors
         t = dynamicsymbols._t
-        q = self._q
+        q = self.q
         u = self._qdots
         ud = u.diff(t)
         # Get vector of lagrange multipliers
