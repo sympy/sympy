@@ -8,7 +8,7 @@ TODO:
 
 from __future__ import print_function, division
 
-from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
+from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt, Symbol
 
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
@@ -161,7 +161,7 @@ class XKet(Ket):
     @property
     def position(self):
         """The position of the state."""
-        return self.label[0]
+        return Symbol(str(self.label[0]), real=True, bounded=True)
 
     def _enumerate_state(self, num_states, **options):
         return _enumerate_continuous_1D(self, num_states, **options)
@@ -187,7 +187,7 @@ class XBra(Bra):
     @property
     def position(self):
         """The position of the state."""
-        return self.label[0]
+        return Symbol(str(self.label[0]), real=True, bounded=True)
 
 
 class PositionState3D(State):
@@ -208,17 +208,17 @@ class PositionState3D(State):
     @property
     def position_x(self):
         """ The x coordinate of the state """
-        return self.label[0]
+        return Symbol(str(self.label[0]), real=True, bounded=True)
 
     @property
     def position_y(self):
         """ The y coordinate of the state """
-        return self.label[1]
+        return Symbol(str(self.label[1]), real=True, bounded=True)
 
     @property
     def position_z(self):
         """ The z coordinate of the state """
-        return self.label[2]
+        return Symbol(str(self.label[2]), real=True, bounded=True)
 
 
 class PositionKet3D(Ket, PositionState3D):
@@ -270,7 +270,7 @@ class PxKet(Ket):
     @property
     def momentum(self):
         """The momentum of the state."""
-        return self.label[0]
+        return Symbol(str(self.label[0]), real=True, bounded=True)
 
     def _enumerate_state(self, *args, **options):
         return _enumerate_continuous_1D(self, *args, **options)
@@ -296,7 +296,7 @@ class PxBra(Bra):
     @property
     def momentum(self):
         """The momentum of the state."""
-        return self.label[0]
+        return Symbol(str(self.label[0]), real=True, bounded=True)
 
 #-------------------------------------------------------------------------
 # Global helper functions
