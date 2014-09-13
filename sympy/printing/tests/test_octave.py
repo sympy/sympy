@@ -240,3 +240,10 @@ def test_octave_piecewise_times_const():
 def test_octave_matrix_assign_to():
     A = Matrix([[1, 2, 3]])
     assert mcode(A, assign_to='a') == "a = [1 2 3];"
+
+
+def test_octave_boolean():
+    assert mcode(True) == "true"
+    assert mcode(S.true) == "true"
+    assert mcode(False) == "false"
+    assert mcode(S.false) == "false"

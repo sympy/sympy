@@ -245,6 +245,16 @@ class OctaveCodePrinter(CodePrinter):
     _print_tuple = _print_list
     _print_Tuple = _print_list
 
+    # FIXME: ccode (and fcode?) need better bool support
+    def _print_BooleanTrue(self, expr):
+        return "true"
+
+    def _print_BooleanFalse(self, expr):
+        return "false"
+
+    def _print_bool(self, expr):
+        return str(expr).lower()
+
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
         if (A.rows, A.cols) == (0, 0):
